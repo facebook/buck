@@ -416,14 +416,14 @@ public class FetchRuleKeyLogsResponse implements org.apache.thrift.TBase<FetchRu
           case 1: // RULE_KEY_LOGS
             if (schemeField.type == org.apache.thrift.protocol.TType.LIST) {
               {
-                org.apache.thrift.protocol.TList _list184 = iprot.readListBegin();
-                struct.ruleKeyLogs = new java.util.ArrayList<RuleKeyLogEntry>(_list184.size);
-                RuleKeyLogEntry _elem185;
-                for (int _i186 = 0; _i186 < _list184.size; ++_i186)
+                org.apache.thrift.protocol.TList _list192 = iprot.readListBegin();
+                struct.ruleKeyLogs = new java.util.ArrayList<RuleKeyLogEntry>(_list192.size);
+                RuleKeyLogEntry _elem193;
+                for (int _i194 = 0; _i194 < _list192.size; ++_i194)
                 {
-                  _elem185 = new RuleKeyLogEntry();
-                  _elem185.read(iprot);
-                  struct.ruleKeyLogs.add(_elem185);
+                  _elem193 = new RuleKeyLogEntry();
+                  _elem193.read(iprot);
+                  struct.ruleKeyLogs.add(_elem193);
                 }
                 iprot.readListEnd();
               }
@@ -435,13 +435,13 @@ public class FetchRuleKeyLogsResponse implements org.apache.thrift.TBase<FetchRu
           case 2: // LOOKED_UP_STORE_IDS
             if (schemeField.type == org.apache.thrift.protocol.TType.LIST) {
               {
-                org.apache.thrift.protocol.TList _list187 = iprot.readListBegin();
-                struct.lookedUpStoreIds = new java.util.ArrayList<java.lang.String>(_list187.size);
-                java.lang.String _elem188;
-                for (int _i189 = 0; _i189 < _list187.size; ++_i189)
+                org.apache.thrift.protocol.TList _list195 = iprot.readListBegin();
+                struct.lookedUpStoreIds = new java.util.ArrayList<java.lang.String>(_list195.size);
+                java.lang.String _elem196;
+                for (int _i197 = 0; _i197 < _list195.size; ++_i197)
                 {
-                  _elem188 = iprot.readString();
-                  struct.lookedUpStoreIds.add(_elem188);
+                  _elem196 = iprot.readString();
+                  struct.lookedUpStoreIds.add(_elem196);
                 }
                 iprot.readListEnd();
               }
@@ -470,9 +470,9 @@ public class FetchRuleKeyLogsResponse implements org.apache.thrift.TBase<FetchRu
           oprot.writeFieldBegin(RULE_KEY_LOGS_FIELD_DESC);
           {
             oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, struct.ruleKeyLogs.size()));
-            for (RuleKeyLogEntry _iter190 : struct.ruleKeyLogs)
+            for (RuleKeyLogEntry _iter198 : struct.ruleKeyLogs)
             {
-              _iter190.write(oprot);
+              _iter198.write(oprot);
             }
             oprot.writeListEnd();
           }
@@ -484,9 +484,9 @@ public class FetchRuleKeyLogsResponse implements org.apache.thrift.TBase<FetchRu
           oprot.writeFieldBegin(LOOKED_UP_STORE_IDS_FIELD_DESC);
           {
             oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, struct.lookedUpStoreIds.size()));
-            for (java.lang.String _iter191 : struct.lookedUpStoreIds)
+            for (java.lang.String _iter199 : struct.lookedUpStoreIds)
             {
-              oprot.writeString(_iter191);
+              oprot.writeString(_iter199);
             }
             oprot.writeListEnd();
           }
@@ -521,18 +521,18 @@ public class FetchRuleKeyLogsResponse implements org.apache.thrift.TBase<FetchRu
       if (struct.isSetRuleKeyLogs()) {
         {
           oprot.writeI32(struct.ruleKeyLogs.size());
-          for (RuleKeyLogEntry _iter192 : struct.ruleKeyLogs)
+          for (RuleKeyLogEntry _iter200 : struct.ruleKeyLogs)
           {
-            _iter192.write(oprot);
+            _iter200.write(oprot);
           }
         }
       }
       if (struct.isSetLookedUpStoreIds()) {
         {
           oprot.writeI32(struct.lookedUpStoreIds.size());
-          for (java.lang.String _iter193 : struct.lookedUpStoreIds)
+          for (java.lang.String _iter201 : struct.lookedUpStoreIds)
           {
-            oprot.writeString(_iter193);
+            oprot.writeString(_iter201);
           }
         }
       }
@@ -544,27 +544,27 @@ public class FetchRuleKeyLogsResponse implements org.apache.thrift.TBase<FetchRu
       java.util.BitSet incoming = iprot.readBitSet(2);
       if (incoming.get(0)) {
         {
-          org.apache.thrift.protocol.TList _list194 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
-          struct.ruleKeyLogs = new java.util.ArrayList<RuleKeyLogEntry>(_list194.size);
-          RuleKeyLogEntry _elem195;
-          for (int _i196 = 0; _i196 < _list194.size; ++_i196)
+          org.apache.thrift.protocol.TList _list202 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
+          struct.ruleKeyLogs = new java.util.ArrayList<RuleKeyLogEntry>(_list202.size);
+          RuleKeyLogEntry _elem203;
+          for (int _i204 = 0; _i204 < _list202.size; ++_i204)
           {
-            _elem195 = new RuleKeyLogEntry();
-            _elem195.read(iprot);
-            struct.ruleKeyLogs.add(_elem195);
+            _elem203 = new RuleKeyLogEntry();
+            _elem203.read(iprot);
+            struct.ruleKeyLogs.add(_elem203);
           }
         }
         struct.setRuleKeyLogsIsSet(true);
       }
       if (incoming.get(1)) {
         {
-          org.apache.thrift.protocol.TList _list197 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, iprot.readI32());
-          struct.lookedUpStoreIds = new java.util.ArrayList<java.lang.String>(_list197.size);
-          java.lang.String _elem198;
-          for (int _i199 = 0; _i199 < _list197.size; ++_i199)
+          org.apache.thrift.protocol.TList _list205 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, iprot.readI32());
+          struct.lookedUpStoreIds = new java.util.ArrayList<java.lang.String>(_list205.size);
+          java.lang.String _elem206;
+          for (int _i207 = 0; _i207 < _list205.size; ++_i207)
           {
-            _elem198 = iprot.readString();
-            struct.lookedUpStoreIds.add(_elem198);
+            _elem206 = iprot.readString();
+            struct.lookedUpStoreIds.add(_elem206);
           }
         }
         struct.setLookedUpStoreIdsIsSet(true);

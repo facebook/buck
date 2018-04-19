@@ -103,8 +103,8 @@ public class BuildPhase {
 
   private static final Logger LOG = Logger.get(BuildPhase.class);
 
-  private static final int WAIT_FOR_ALL_WORKER_FINAL_STATUS_TIMEOUT_MILLIS = 6000;
-  private static final int WAIT_FOR_ALL_BUILD_EVENTS_TIMEOUT_MILLIS = 5000;
+  private static final int DEFAULT_WAIT_FOR_ALL_WORKER_FINAL_STATUS_TIMEOUT_MILLIS = 6000;
+  private static final int DEFAULT_WAIT_FOR_ALL_BUILD_EVENTS_TIMEOUT_MILLIS = 5000;
 
   private final BuildExecutorArgs buildExecutorArgs;
   private final ImmutableSet<BuildTarget> topLevelTargets;
@@ -121,6 +121,8 @@ public class BuildPhase {
   private final Clock clock;
   private final BuildRuleEventManager buildRuleEventManager;
   private final ConsoleEventsDispatcher consoleEventsDispatcher;
+  private final int waitForAllWorkerFinalStatusTimeoutMillis;
+  private final int waitForAllBuildEventsTimeoutMillis;
 
   private volatile long firstFinishedBuildStatusReceviedTs = -1;
 
@@ -137,7 +139,9 @@ public class BuildPhase {
       int statusPollIntervalMillis,
       RemoteBuildRuleCompletionNotifier remoteBuildRuleCompletionNotifier,
       ConsoleEventsDispatcher consoleEventsDispatcher,
-      Clock clock) {
+      Clock clock,
+      int waitForAllWorkerFinalStatusTimeoutMillis,
+      int waitForAllBuildEventsTimeoutMillis) {
     this.buildExecutorArgs = buildExecutorArgs;
     this.topLevelTargets = topLevelTargets;
     this.buildGraphs = buildGraphs;
@@ -158,6 +162,9 @@ public class BuildPhase {
             clock,
             new DistBuildConfig(buildExecutorArgs.getBuckConfig())
                 .getCacheSynchronizationSafetyMarginMillis());
+
+    this.waitForAllWorkerFinalStatusTimeoutMillis = waitForAllWorkerFinalStatusTimeoutMillis;
+    this.waitForAllBuildEventsTimeoutMillis = waitForAllBuildEventsTimeoutMillis;
   }
 
   public BuildPhase(
@@ -184,7 +191,9 @@ public class BuildPhase {
         statusPollIntervalMillis,
         remoteBuildRuleCompletionNotifier,
         consoleEventsDispatcher,
-        new DefaultClock());
+        new DefaultClock(),
+        DEFAULT_WAIT_FOR_ALL_WORKER_FINAL_STATUS_TIMEOUT_MILLIS,
+        DEFAULT_WAIT_FOR_ALL_BUILD_EVENTS_TIMEOUT_MILLIS);
   }
 
   private void runLocalCoordinatorAsync(
@@ -534,8 +543,7 @@ public class BuildPhase {
       // have marked themselves finished, so wait for this to happen before returning.
       // (Without this we have no guarantees about BuildSlaveFinishedStats being uploaded yet).
       if (!allSlavesFinished(job)) {
-        if (elapseMillisSinceFirstFinishedStatus
-            < WAIT_FOR_ALL_WORKER_FINAL_STATUS_TIMEOUT_MILLIS) {
+        if (elapseMillisSinceFirstFinishedStatus < waitForAllWorkerFinalStatusTimeoutMillis) {
           LOG.warn(
               String.format(
                   "Build has been finished for %s ms, but still missing finished status from some workers.",
@@ -550,7 +558,7 @@ public class BuildPhase {
       }
 
       if (!buildRuleEventManager.allBuildRulesFinishedEventReceived()) {
-        if (elapseMillisSinceFirstFinishedStatus < WAIT_FOR_ALL_BUILD_EVENTS_TIMEOUT_MILLIS) {
+        if (elapseMillisSinceFirstFinishedStatus < waitForAllBuildEventsTimeoutMillis) {
           LOG.warn(
               String.format(
                   "Build has been finished for %s ms, but still waiting for final build rule finished events.",

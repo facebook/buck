@@ -318,14 +318,14 @@ public class MultiGetBuildSlaveEventsRequest implements org.apache.thrift.TBase<
           case 1: // REQUESTS
             if (schemeField.type == org.apache.thrift.protocol.TType.LIST) {
               {
-                org.apache.thrift.protocol.TList _list152 = iprot.readListBegin();
-                struct.requests = new java.util.ArrayList<BuildSlaveEventsQuery>(_list152.size);
-                BuildSlaveEventsQuery _elem153;
-                for (int _i154 = 0; _i154 < _list152.size; ++_i154)
+                org.apache.thrift.protocol.TList _list160 = iprot.readListBegin();
+                struct.requests = new java.util.ArrayList<BuildSlaveEventsQuery>(_list160.size);
+                BuildSlaveEventsQuery _elem161;
+                for (int _i162 = 0; _i162 < _list160.size; ++_i162)
                 {
-                  _elem153 = new BuildSlaveEventsQuery();
-                  _elem153.read(iprot);
-                  struct.requests.add(_elem153);
+                  _elem161 = new BuildSlaveEventsQuery();
+                  _elem161.read(iprot);
+                  struct.requests.add(_elem161);
                 }
                 iprot.readListEnd();
               }
@@ -354,9 +354,9 @@ public class MultiGetBuildSlaveEventsRequest implements org.apache.thrift.TBase<
           oprot.writeFieldBegin(REQUESTS_FIELD_DESC);
           {
             oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, struct.requests.size()));
-            for (BuildSlaveEventsQuery _iter155 : struct.requests)
+            for (BuildSlaveEventsQuery _iter163 : struct.requests)
             {
-              _iter155.write(oprot);
+              _iter163.write(oprot);
             }
             oprot.writeListEnd();
           }
@@ -388,9 +388,9 @@ public class MultiGetBuildSlaveEventsRequest implements org.apache.thrift.TBase<
       if (struct.isSetRequests()) {
         {
           oprot.writeI32(struct.requests.size());
-          for (BuildSlaveEventsQuery _iter156 : struct.requests)
+          for (BuildSlaveEventsQuery _iter164 : struct.requests)
           {
-            _iter156.write(oprot);
+            _iter164.write(oprot);
           }
         }
       }
@@ -402,14 +402,14 @@ public class MultiGetBuildSlaveEventsRequest implements org.apache.thrift.TBase<
       java.util.BitSet incoming = iprot.readBitSet(1);
       if (incoming.get(0)) {
         {
-          org.apache.thrift.protocol.TList _list157 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
-          struct.requests = new java.util.ArrayList<BuildSlaveEventsQuery>(_list157.size);
-          BuildSlaveEventsQuery _elem158;
-          for (int _i159 = 0; _i159 < _list157.size; ++_i159)
+          org.apache.thrift.protocol.TList _list165 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
+          struct.requests = new java.util.ArrayList<BuildSlaveEventsQuery>(_list165.size);
+          BuildSlaveEventsQuery _elem166;
+          for (int _i167 = 0; _i167 < _list165.size; ++_i167)
           {
-            _elem158 = new BuildSlaveEventsQuery();
-            _elem158.read(iprot);
-            struct.requests.add(_elem158);
+            _elem166 = new BuildSlaveEventsQuery();
+            _elem166.read(iprot);
+            struct.requests.add(_elem166);
           }
         }
         struct.setRequestsIsSet(true);

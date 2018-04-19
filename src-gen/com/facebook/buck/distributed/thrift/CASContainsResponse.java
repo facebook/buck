@@ -315,13 +315,13 @@ public class CASContainsResponse implements org.apache.thrift.TBase<CASContainsR
           case 1: // EXISTS
             if (schemeField.type == org.apache.thrift.protocol.TType.LIST) {
               {
-                org.apache.thrift.protocol.TList _list64 = iprot.readListBegin();
-                struct.exists = new java.util.ArrayList<java.lang.Boolean>(_list64.size);
-                boolean _elem65;
-                for (int _i66 = 0; _i66 < _list64.size; ++_i66)
+                org.apache.thrift.protocol.TList _list72 = iprot.readListBegin();
+                struct.exists = new java.util.ArrayList<java.lang.Boolean>(_list72.size);
+                boolean _elem73;
+                for (int _i74 = 0; _i74 < _list72.size; ++_i74)
                 {
-                  _elem65 = iprot.readBool();
-                  struct.exists.add(_elem65);
+                  _elem73 = iprot.readBool();
+                  struct.exists.add(_elem73);
                 }
                 iprot.readListEnd();
               }
@@ -350,9 +350,9 @@ public class CASContainsResponse implements org.apache.thrift.TBase<CASContainsR
           oprot.writeFieldBegin(EXISTS_FIELD_DESC);
           {
             oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.BOOL, struct.exists.size()));
-            for (boolean _iter67 : struct.exists)
+            for (boolean _iter75 : struct.exists)
             {
-              oprot.writeBool(_iter67);
+              oprot.writeBool(_iter75);
             }
             oprot.writeListEnd();
           }
@@ -384,9 +384,9 @@ public class CASContainsResponse implements org.apache.thrift.TBase<CASContainsR
       if (struct.isSetExists()) {
         {
           oprot.writeI32(struct.exists.size());
-          for (boolean _iter68 : struct.exists)
+          for (boolean _iter76 : struct.exists)
           {
-            oprot.writeBool(_iter68);
+            oprot.writeBool(_iter76);
           }
         }
       }
@@ -398,13 +398,13 @@ public class CASContainsResponse implements org.apache.thrift.TBase<CASContainsR
       java.util.BitSet incoming = iprot.readBitSet(1);
       if (incoming.get(0)) {
         {
-          org.apache.thrift.protocol.TList _list69 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.BOOL, iprot.readI32());
-          struct.exists = new java.util.ArrayList<java.lang.Boolean>(_list69.size);
-          boolean _elem70;
-          for (int _i71 = 0; _i71 < _list69.size; ++_i71)
+          org.apache.thrift.protocol.TList _list77 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.BOOL, iprot.readI32());
+          struct.exists = new java.util.ArrayList<java.lang.Boolean>(_list77.size);
+          boolean _elem78;
+          for (int _i79 = 0; _i79 < _list77.size; ++_i79)
           {
-            _elem70 = iprot.readBool();
-            struct.exists.add(_elem70);
+            _elem78 = iprot.readBool();
+            struct.exists.add(_elem78);
           }
         }
         struct.setExistsIsSet(true);

@@ -115,12 +115,17 @@ public class MultiSlaveBuildModeRunnerFactory {
                     executorService),
             executorService);
     Optional<String> minionQueue = distBuildConfig.getMinionQueue();
+
     Preconditions.checkArgument(
         minionQueue.isPresent(),
         "Minion queue name is missing to be able to run in Coordinator mode.");
+
+    MinionQueueProvider minionQueueProvider =
+        createMinionQueueProvider(distBuildConfig.getLowSpecMinionQueue(), minionQueue.get());
+
     CoordinatorEventListener listenerAndMinionCountProvider =
         new CoordinatorEventListener(
-            distBuildService, stampedeId, minionQueue.get(), isLocalMinionAlsoRunning);
+            distBuildService, stampedeId, minionQueueProvider, isLocalMinionAlsoRunning);
     MinionHealthTracker minionHealthTracker =
         new MinionHealthTracker(
             new DefaultClock(),
@@ -266,5 +271,19 @@ public class MultiSlaveBuildModeRunnerFactory {
             minionBuildProgressTracker,
             coordinatorBuildCapacityRatio,
             eventBus));
+  }
+
+  /** @return MinionQueueProvider populated with standard queue, and optionally low spec queue. */
+  private static MinionQueueProvider createMinionQueueProvider(
+      Optional<String> lowSpecMinionQueue, String standardSpecMinionQueue) {
+    MinionQueueProvider queueProvider = new MinionQueueProvider();
+
+    if (lowSpecMinionQueue.isPresent()) {
+      queueProvider.registerMinionQueue(MinionType.LOW_SPEC, lowSpecMinionQueue.get());
+    }
+
+    queueProvider.registerMinionQueue(MinionType.STANDARD_SPEC, standardSpecMinionQueue);
+
+    return queueProvider;
   }
 }

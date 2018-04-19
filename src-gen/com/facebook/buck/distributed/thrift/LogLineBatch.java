@@ -479,13 +479,13 @@ public class LogLineBatch implements org.apache.thrift.TBase<LogLineBatch, LogLi
           case 2: // LINES
             if (schemeField.type == org.apache.thrift.protocol.TType.LIST) {
               {
-                org.apache.thrift.protocol.TList _list0 = iprot.readListBegin();
-                struct.lines = new java.util.ArrayList<java.lang.String>(_list0.size);
-                java.lang.String _elem1;
-                for (int _i2 = 0; _i2 < _list0.size; ++_i2)
+                org.apache.thrift.protocol.TList _list8 = iprot.readListBegin();
+                struct.lines = new java.util.ArrayList<java.lang.String>(_list8.size);
+                java.lang.String _elem9;
+                for (int _i10 = 0; _i10 < _list8.size; ++_i10)
                 {
-                  _elem1 = iprot.readString();
-                  struct.lines.add(_elem1);
+                  _elem9 = iprot.readString();
+                  struct.lines.add(_elem9);
                 }
                 iprot.readListEnd();
               }
@@ -527,9 +527,9 @@ public class LogLineBatch implements org.apache.thrift.TBase<LogLineBatch, LogLi
           oprot.writeFieldBegin(LINES_FIELD_DESC);
           {
             oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, struct.lines.size()));
-            for (java.lang.String _iter3 : struct.lines)
+            for (java.lang.String _iter11 : struct.lines)
             {
-              oprot.writeString(_iter3);
+              oprot.writeString(_iter11);
             }
             oprot.writeListEnd();
           }
@@ -575,9 +575,9 @@ public class LogLineBatch implements org.apache.thrift.TBase<LogLineBatch, LogLi
       if (struct.isSetLines()) {
         {
           oprot.writeI32(struct.lines.size());
-          for (java.lang.String _iter4 : struct.lines)
+          for (java.lang.String _iter12 : struct.lines)
           {
-            oprot.writeString(_iter4);
+            oprot.writeString(_iter12);
           }
         }
       }
@@ -596,13 +596,13 @@ public class LogLineBatch implements org.apache.thrift.TBase<LogLineBatch, LogLi
       }
       if (incoming.get(1)) {
         {
-          org.apache.thrift.protocol.TList _list5 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, iprot.readI32());
-          struct.lines = new java.util.ArrayList<java.lang.String>(_list5.size);
-          java.lang.String _elem6;
-          for (int _i7 = 0; _i7 < _list5.size; ++_i7)
+          org.apache.thrift.protocol.TList _list13 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, iprot.readI32());
+          struct.lines = new java.util.ArrayList<java.lang.String>(_list13.size);
+          java.lang.String _elem14;
+          for (int _i15 = 0; _i15 < _list13.size; ++_i15)
           {
-            _elem6 = iprot.readString();
-            struct.lines.add(_elem6);
+            _elem14 = iprot.readString();
+            struct.lines.add(_elem14);
           }
         }
         struct.setLinesIsSet(true);

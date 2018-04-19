@@ -13,13 +13,14 @@ public class CreateBuildRequest implements org.apache.thrift.TBase<CreateBuildRe
 
   private static final org.apache.thrift.protocol.TField CREATE_TIMESTAMP_MILLIS_FIELD_DESC = new org.apache.thrift.protocol.TField("createTimestampMillis", org.apache.thrift.protocol.TType.I64, (short)1);
   private static final org.apache.thrift.protocol.TField BUILD_MODE_FIELD_DESC = new org.apache.thrift.protocol.TField("buildMode", org.apache.thrift.protocol.TType.I32, (short)2);
-  private static final org.apache.thrift.protocol.TField NUMBER_OF_MINIONS_FIELD_DESC = new org.apache.thrift.protocol.TField("numberOfMinions", org.apache.thrift.protocol.TType.I32, (short)3);
+  private static final org.apache.thrift.protocol.TField TOTAL_NUMBER_OF_MINIONS_FIELD_DESC = new org.apache.thrift.protocol.TField("totalNumberOfMinions", org.apache.thrift.protocol.TType.I32, (short)3);
   private static final org.apache.thrift.protocol.TField REPOSITORY_FIELD_DESC = new org.apache.thrift.protocol.TField("repository", org.apache.thrift.protocol.TType.STRING, (short)4);
   private static final org.apache.thrift.protocol.TField TENANT_ID_FIELD_DESC = new org.apache.thrift.protocol.TField("tenantId", org.apache.thrift.protocol.TType.STRING, (short)5);
   private static final org.apache.thrift.protocol.TField BUCK_BUILD_UUID_FIELD_DESC = new org.apache.thrift.protocol.TField("buckBuildUuid", org.apache.thrift.protocol.TType.STRING, (short)6);
   private static final org.apache.thrift.protocol.TField USERNAME_FIELD_DESC = new org.apache.thrift.protocol.TField("username", org.apache.thrift.protocol.TType.STRING, (short)7);
   private static final org.apache.thrift.protocol.TField BUILD_TARGETS_FIELD_DESC = new org.apache.thrift.protocol.TField("buildTargets", org.apache.thrift.protocol.TType.LIST, (short)8);
   private static final org.apache.thrift.protocol.TField BUILD_LABEL_FIELD_DESC = new org.apache.thrift.protocol.TField("buildLabel", org.apache.thrift.protocol.TType.STRING, (short)9);
+  private static final org.apache.thrift.protocol.TField MINION_REQUIREMENTS_FIELD_DESC = new org.apache.thrift.protocol.TField("minionRequirements", org.apache.thrift.protocol.TType.STRUCT, (short)10);
 
   private static final org.apache.thrift.scheme.SchemeFactory STANDARD_SCHEME_FACTORY = new CreateBuildRequestStandardSchemeFactory();
   private static final org.apache.thrift.scheme.SchemeFactory TUPLE_SCHEME_FACTORY = new CreateBuildRequestTupleSchemeFactory();
@@ -30,13 +31,14 @@ public class CreateBuildRequest implements org.apache.thrift.TBase<CreateBuildRe
    * @see BuildMode
    */
   public BuildMode buildMode; // optional
-  public int numberOfMinions; // optional
+  public int totalNumberOfMinions; // optional
   public java.lang.String repository; // optional
   public java.lang.String tenantId; // optional
   public java.lang.String buckBuildUuid; // optional
   public java.lang.String username; // optional
   public java.util.List<java.lang.String> buildTargets; // optional
   public java.lang.String buildLabel; // optional
+  public MinionRequirements minionRequirements; // optional
 
   /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
   public enum _Fields implements org.apache.thrift.TFieldIdEnum {
@@ -46,13 +48,14 @@ public class CreateBuildRequest implements org.apache.thrift.TBase<CreateBuildRe
      * @see BuildMode
      */
     BUILD_MODE((short)2, "buildMode"),
-    NUMBER_OF_MINIONS((short)3, "numberOfMinions"),
+    TOTAL_NUMBER_OF_MINIONS((short)3, "totalNumberOfMinions"),
     REPOSITORY((short)4, "repository"),
     TENANT_ID((short)5, "tenantId"),
     BUCK_BUILD_UUID((short)6, "buckBuildUuid"),
     USERNAME((short)7, "username"),
     BUILD_TARGETS((short)8, "buildTargets"),
-    BUILD_LABEL((short)9, "buildLabel");
+    BUILD_LABEL((short)9, "buildLabel"),
+    MINION_REQUIREMENTS((short)10, "minionRequirements");
 
     private static final java.util.Map<java.lang.String, _Fields> byName = new java.util.HashMap<java.lang.String, _Fields>();
 
@@ -71,8 +74,8 @@ public class CreateBuildRequest implements org.apache.thrift.TBase<CreateBuildRe
           return CREATE_TIMESTAMP_MILLIS;
         case 2: // BUILD_MODE
           return BUILD_MODE;
-        case 3: // NUMBER_OF_MINIONS
-          return NUMBER_OF_MINIONS;
+        case 3: // TOTAL_NUMBER_OF_MINIONS
+          return TOTAL_NUMBER_OF_MINIONS;
         case 4: // REPOSITORY
           return REPOSITORY;
         case 5: // TENANT_ID
@@ -85,6 +88,8 @@ public class CreateBuildRequest implements org.apache.thrift.TBase<CreateBuildRe
           return BUILD_TARGETS;
         case 9: // BUILD_LABEL
           return BUILD_LABEL;
+        case 10: // MINION_REQUIREMENTS
+          return MINION_REQUIREMENTS;
         default:
           return null;
       }
@@ -126,9 +131,9 @@ public class CreateBuildRequest implements org.apache.thrift.TBase<CreateBuildRe
 
   // isset id assignments
   private static final int __CREATETIMESTAMPMILLIS_ISSET_ID = 0;
-  private static final int __NUMBEROFMINIONS_ISSET_ID = 1;
+  private static final int __TOTALNUMBEROFMINIONS_ISSET_ID = 1;
   private byte __isset_bitfield = 0;
-  private static final _Fields optionals[] = {_Fields.CREATE_TIMESTAMP_MILLIS,_Fields.BUILD_MODE,_Fields.NUMBER_OF_MINIONS,_Fields.REPOSITORY,_Fields.TENANT_ID,_Fields.BUCK_BUILD_UUID,_Fields.USERNAME,_Fields.BUILD_TARGETS,_Fields.BUILD_LABEL};
+  private static final _Fields optionals[] = {_Fields.CREATE_TIMESTAMP_MILLIS,_Fields.BUILD_MODE,_Fields.TOTAL_NUMBER_OF_MINIONS,_Fields.REPOSITORY,_Fields.TENANT_ID,_Fields.BUCK_BUILD_UUID,_Fields.USERNAME,_Fields.BUILD_TARGETS,_Fields.BUILD_LABEL,_Fields.MINION_REQUIREMENTS};
   public static final java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
   static {
     java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new java.util.EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
@@ -136,7 +141,7 @@ public class CreateBuildRequest implements org.apache.thrift.TBase<CreateBuildRe
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I64)));
     tmpMap.put(_Fields.BUILD_MODE, new org.apache.thrift.meta_data.FieldMetaData("buildMode", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
         new org.apache.thrift.meta_data.EnumMetaData(org.apache.thrift.protocol.TType.ENUM, BuildMode.class)));
-    tmpMap.put(_Fields.NUMBER_OF_MINIONS, new org.apache.thrift.meta_data.FieldMetaData("numberOfMinions", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
+    tmpMap.put(_Fields.TOTAL_NUMBER_OF_MINIONS, new org.apache.thrift.meta_data.FieldMetaData("totalNumberOfMinions", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I32)));
     tmpMap.put(_Fields.REPOSITORY, new org.apache.thrift.meta_data.FieldMetaData("repository", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
@@ -151,6 +156,8 @@ public class CreateBuildRequest implements org.apache.thrift.TBase<CreateBuildRe
             new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING))));
     tmpMap.put(_Fields.BUILD_LABEL, new org.apache.thrift.meta_data.FieldMetaData("buildLabel", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
+    tmpMap.put(_Fields.MINION_REQUIREMENTS, new org.apache.thrift.meta_data.FieldMetaData("minionRequirements", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
+        new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, MinionRequirements.class)));
     metaDataMap = java.util.Collections.unmodifiableMap(tmpMap);
     org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(CreateBuildRequest.class, metaDataMap);
   }
@@ -169,7 +176,7 @@ public class CreateBuildRequest implements org.apache.thrift.TBase<CreateBuildRe
     if (other.isSetBuildMode()) {
       this.buildMode = other.buildMode;
     }
-    this.numberOfMinions = other.numberOfMinions;
+    this.totalNumberOfMinions = other.totalNumberOfMinions;
     if (other.isSetRepository()) {
       this.repository = other.repository;
     }
@@ -189,6 +196,9 @@ public class CreateBuildRequest implements org.apache.thrift.TBase<CreateBuildRe
     if (other.isSetBuildLabel()) {
       this.buildLabel = other.buildLabel;
     }
+    if (other.isSetMinionRequirements()) {
+      this.minionRequirements = new MinionRequirements(other.minionRequirements);
+    }
   }
 
   public CreateBuildRequest deepCopy() {
@@ -201,14 +211,15 @@ public class CreateBuildRequest implements org.apache.thrift.TBase<CreateBuildRe
     this.createTimestampMillis = 0;
     this.buildMode = com.facebook.buck.distributed.thrift.BuildMode.REMOTE_BUILD;
 
-    setNumberOfMinionsIsSet(false);
-    this.numberOfMinions = 0;
+    setTotalNumberOfMinionsIsSet(false);
+    this.totalNumberOfMinions = 0;
     this.repository = null;
     this.tenantId = null;
     this.buckBuildUuid = null;
     this.username = null;
     this.buildTargets = null;
     this.buildLabel = null;
+    this.minionRequirements = null;
   }
 
   public long getCreateTimestampMillis() {
@@ -266,27 +277,27 @@ public class CreateBuildRequest implements org.apache.thrift.TBase<CreateBuildRe
     }
   }
 
-  public int getNumberOfMinions() {
-    return this.numberOfMinions;
+  public int getTotalNumberOfMinions() {
+    return this.totalNumberOfMinions;
   }
 
-  public CreateBuildRequest setNumberOfMinions(int numberOfMinions) {
-    this.numberOfMinions = numberOfMinions;
-    setNumberOfMinionsIsSet(true);
+  public CreateBuildRequest setTotalNumberOfMinions(int totalNumberOfMinions) {
+    this.totalNumberOfMinions = totalNumberOfMinions;
+    setTotalNumberOfMinionsIsSet(true);
     return this;
   }
 
-  public void unsetNumberOfMinions() {
-    __isset_bitfield = org.apache.thrift.EncodingUtils.clearBit(__isset_bitfield, __NUMBEROFMINIONS_ISSET_ID);
+  public void unsetTotalNumberOfMinions() {
+    __isset_bitfield = org.apache.thrift.EncodingUtils.clearBit(__isset_bitfield, __TOTALNUMBEROFMINIONS_ISSET_ID);
   }
 
-  /** Returns true if field numberOfMinions is set (has been assigned a value) and false otherwise */
-  public boolean isSetNumberOfMinions() {
-    return org.apache.thrift.EncodingUtils.testBit(__isset_bitfield, __NUMBEROFMINIONS_ISSET_ID);
+  /** Returns true if field totalNumberOfMinions is set (has been assigned a value) and false otherwise */
+  public boolean isSetTotalNumberOfMinions() {
+    return org.apache.thrift.EncodingUtils.testBit(__isset_bitfield, __TOTALNUMBEROFMINIONS_ISSET_ID);
   }
 
-  public void setNumberOfMinionsIsSet(boolean value) {
-    __isset_bitfield = org.apache.thrift.EncodingUtils.setBit(__isset_bitfield, __NUMBEROFMINIONS_ISSET_ID, value);
+  public void setTotalNumberOfMinionsIsSet(boolean value) {
+    __isset_bitfield = org.apache.thrift.EncodingUtils.setBit(__isset_bitfield, __TOTALNUMBEROFMINIONS_ISSET_ID, value);
   }
 
   public java.lang.String getRepository() {
@@ -448,6 +459,30 @@ public class CreateBuildRequest implements org.apache.thrift.TBase<CreateBuildRe
     }
   }
 
+  public MinionRequirements getMinionRequirements() {
+    return this.minionRequirements;
+  }
+
+  public CreateBuildRequest setMinionRequirements(MinionRequirements minionRequirements) {
+    this.minionRequirements = minionRequirements;
+    return this;
+  }
+
+  public void unsetMinionRequirements() {
+    this.minionRequirements = null;
+  }
+
+  /** Returns true if field minionRequirements is set (has been assigned a value) and false otherwise */
+  public boolean isSetMinionRequirements() {
+    return this.minionRequirements != null;
+  }
+
+  public void setMinionRequirementsIsSet(boolean value) {
+    if (!value) {
+      this.minionRequirements = null;
+    }
+  }
+
   public void setFieldValue(_Fields field, java.lang.Object value) {
     switch (field) {
     case CREATE_TIMESTAMP_MILLIS:
@@ -466,11 +501,11 @@ public class CreateBuildRequest implements org.apache.thrift.TBase<CreateBuildRe
       }
       break;
 
-    case NUMBER_OF_MINIONS:
+    case TOTAL_NUMBER_OF_MINIONS:
       if (value == null) {
-        unsetNumberOfMinions();
+        unsetTotalNumberOfMinions();
       } else {
-        setNumberOfMinions((java.lang.Integer)value);
+        setTotalNumberOfMinions((java.lang.Integer)value);
       }
       break;
 
@@ -522,6 +557,14 @@ public class CreateBuildRequest implements org.apache.thrift.TBase<CreateBuildRe
       }
       break;
 
+    case MINION_REQUIREMENTS:
+      if (value == null) {
+        unsetMinionRequirements();
+      } else {
+        setMinionRequirements((MinionRequirements)value);
+      }
+      break;
+
     }
   }
 
@@ -533,8 +576,8 @@ public class CreateBuildRequest implements org.apache.thrift.TBase<CreateBuildRe
     case BUILD_MODE:
       return getBuildMode();
 
-    case NUMBER_OF_MINIONS:
-      return getNumberOfMinions();
+    case TOTAL_NUMBER_OF_MINIONS:
+      return getTotalNumberOfMinions();
 
     case REPOSITORY:
       return getRepository();
@@ -554,6 +597,9 @@ public class CreateBuildRequest implements org.apache.thrift.TBase<CreateBuildRe
     case BUILD_LABEL:
       return getBuildLabel();
 
+    case MINION_REQUIREMENTS:
+      return getMinionRequirements();
+
     }
     throw new java.lang.IllegalStateException();
   }
@@ -569,8 +615,8 @@ public class CreateBuildRequest implements org.apache.thrift.TBase<CreateBuildRe
       return isSetCreateTimestampMillis();
     case BUILD_MODE:
       return isSetBuildMode();
-    case NUMBER_OF_MINIONS:
-      return isSetNumberOfMinions();
+    case TOTAL_NUMBER_OF_MINIONS:
+      return isSetTotalNumberOfMinions();
     case REPOSITORY:
       return isSetRepository();
     case TENANT_ID:
@@ -583,6 +629,8 @@ public class CreateBuildRequest implements org.apache.thrift.TBase<CreateBuildRe
       return isSetBuildTargets();
     case BUILD_LABEL:
       return isSetBuildLabel();
+    case MINION_REQUIREMENTS:
+      return isSetMinionRequirements();
     }
     throw new java.lang.IllegalStateException();
   }
@@ -620,12 +668,12 @@ public class CreateBuildRequest implements org.apache.thrift.TBase<CreateBuildRe
         return false;
     }
 
-    boolean this_present_numberOfMinions = true && this.isSetNumberOfMinions();
-    boolean that_present_numberOfMinions = true && that.isSetNumberOfMinions();
-    if (this_present_numberOfMinions || that_present_numberOfMinions) {
-      if (!(this_present_numberOfMinions && that_present_numberOfMinions))
+    boolean this_present_totalNumberOfMinions = true && this.isSetTotalNumberOfMinions();
+    boolean that_present_totalNumberOfMinions = true && that.isSetTotalNumberOfMinions();
+    if (this_present_totalNumberOfMinions || that_present_totalNumberOfMinions) {
+      if (!(this_present_totalNumberOfMinions && that_present_totalNumberOfMinions))
         return false;
-      if (this.numberOfMinions != that.numberOfMinions)
+      if (this.totalNumberOfMinions != that.totalNumberOfMinions)
         return false;
     }
 
@@ -683,6 +731,15 @@ public class CreateBuildRequest implements org.apache.thrift.TBase<CreateBuildRe
         return false;
     }
 
+    boolean this_present_minionRequirements = true && this.isSetMinionRequirements();
+    boolean that_present_minionRequirements = true && that.isSetMinionRequirements();
+    if (this_present_minionRequirements || that_present_minionRequirements) {
+      if (!(this_present_minionRequirements && that_present_minionRequirements))
+        return false;
+      if (!this.minionRequirements.equals(that.minionRequirements))
+        return false;
+    }
+
     return true;
   }
 
@@ -698,9 +755,9 @@ public class CreateBuildRequest implements org.apache.thrift.TBase<CreateBuildRe
     if (isSetBuildMode())
       hashCode = hashCode * 8191 + buildMode.getValue();
 
-    hashCode = hashCode * 8191 + ((isSetNumberOfMinions()) ? 131071 : 524287);
-    if (isSetNumberOfMinions())
-      hashCode = hashCode * 8191 + numberOfMinions;
+    hashCode = hashCode * 8191 + ((isSetTotalNumberOfMinions()) ? 131071 : 524287);
+    if (isSetTotalNumberOfMinions())
+      hashCode = hashCode * 8191 + totalNumberOfMinions;
 
     hashCode = hashCode * 8191 + ((isSetRepository()) ? 131071 : 524287);
     if (isSetRepository())
@@ -725,6 +782,10 @@ public class CreateBuildRequest implements org.apache.thrift.TBase<CreateBuildRe
     hashCode = hashCode * 8191 + ((isSetBuildLabel()) ? 131071 : 524287);
     if (isSetBuildLabel())
       hashCode = hashCode * 8191 + buildLabel.hashCode();
+
+    hashCode = hashCode * 8191 + ((isSetMinionRequirements()) ? 131071 : 524287);
+    if (isSetMinionRequirements())
+      hashCode = hashCode * 8191 + minionRequirements.hashCode();
 
     return hashCode;
   }
@@ -757,12 +818,12 @@ public class CreateBuildRequest implements org.apache.thrift.TBase<CreateBuildRe
         return lastComparison;
       }
     }
-    lastComparison = java.lang.Boolean.valueOf(isSetNumberOfMinions()).compareTo(other.isSetNumberOfMinions());
+    lastComparison = java.lang.Boolean.valueOf(isSetTotalNumberOfMinions()).compareTo(other.isSetTotalNumberOfMinions());
     if (lastComparison != 0) {
       return lastComparison;
     }
-    if (isSetNumberOfMinions()) {
-      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.numberOfMinions, other.numberOfMinions);
+    if (isSetTotalNumberOfMinions()) {
+      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.totalNumberOfMinions, other.totalNumberOfMinions);
       if (lastComparison != 0) {
         return lastComparison;
       }
@@ -827,6 +888,16 @@ public class CreateBuildRequest implements org.apache.thrift.TBase<CreateBuildRe
         return lastComparison;
       }
     }
+    lastComparison = java.lang.Boolean.valueOf(isSetMinionRequirements()).compareTo(other.isSetMinionRequirements());
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    if (isSetMinionRequirements()) {
+      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.minionRequirements, other.minionRequirements);
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+    }
     return 0;
   }
 
@@ -862,10 +933,10 @@ public class CreateBuildRequest implements org.apache.thrift.TBase<CreateBuildRe
       }
       first = false;
     }
-    if (isSetNumberOfMinions()) {
+    if (isSetTotalNumberOfMinions()) {
       if (!first) sb.append(", ");
-      sb.append("numberOfMinions:");
-      sb.append(this.numberOfMinions);
+      sb.append("totalNumberOfMinions:");
+      sb.append(this.totalNumberOfMinions);
       first = false;
     }
     if (isSetRepository()) {
@@ -928,6 +999,16 @@ public class CreateBuildRequest implements org.apache.thrift.TBase<CreateBuildRe
       }
       first = false;
     }
+    if (isSetMinionRequirements()) {
+      if (!first) sb.append(", ");
+      sb.append("minionRequirements:");
+      if (this.minionRequirements == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.minionRequirements);
+      }
+      first = false;
+    }
     sb.append(")");
     return sb.toString();
   }
@@ -935,6 +1016,9 @@ public class CreateBuildRequest implements org.apache.thrift.TBase<CreateBuildRe
   public void validate() throws org.apache.thrift.TException {
     // check for required fields
     // check for sub-struct validity
+    if (minionRequirements != null) {
+      minionRequirements.validate();
+    }
   }
 
   private void writeObject(java.io.ObjectOutputStream out) throws java.io.IOException {
@@ -989,10 +1073,10 @@ public class CreateBuildRequest implements org.apache.thrift.TBase<CreateBuildRe
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
             break;
-          case 3: // NUMBER_OF_MINIONS
+          case 3: // TOTAL_NUMBER_OF_MINIONS
             if (schemeField.type == org.apache.thrift.protocol.TType.I32) {
-              struct.numberOfMinions = iprot.readI32();
-              struct.setNumberOfMinionsIsSet(true);
+              struct.totalNumberOfMinions = iprot.readI32();
+              struct.setTotalNumberOfMinionsIsSet(true);
             } else { 
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
@@ -1032,13 +1116,13 @@ public class CreateBuildRequest implements org.apache.thrift.TBase<CreateBuildRe
           case 8: // BUILD_TARGETS
             if (schemeField.type == org.apache.thrift.protocol.TType.LIST) {
               {
-                org.apache.thrift.protocol.TList _list48 = iprot.readListBegin();
-                struct.buildTargets = new java.util.ArrayList<java.lang.String>(_list48.size);
-                java.lang.String _elem49;
-                for (int _i50 = 0; _i50 < _list48.size; ++_i50)
+                org.apache.thrift.protocol.TList _list56 = iprot.readListBegin();
+                struct.buildTargets = new java.util.ArrayList<java.lang.String>(_list56.size);
+                java.lang.String _elem57;
+                for (int _i58 = 0; _i58 < _list56.size; ++_i58)
                 {
-                  _elem49 = iprot.readString();
-                  struct.buildTargets.add(_elem49);
+                  _elem57 = iprot.readString();
+                  struct.buildTargets.add(_elem57);
                 }
                 iprot.readListEnd();
               }
@@ -1051,6 +1135,15 @@ public class CreateBuildRequest implements org.apache.thrift.TBase<CreateBuildRe
             if (schemeField.type == org.apache.thrift.protocol.TType.STRING) {
               struct.buildLabel = iprot.readString();
               struct.setBuildLabelIsSet(true);
+            } else { 
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+            }
+            break;
+          case 10: // MINION_REQUIREMENTS
+            if (schemeField.type == org.apache.thrift.protocol.TType.STRUCT) {
+              struct.minionRequirements = new MinionRequirements();
+              struct.minionRequirements.read(iprot);
+              struct.setMinionRequirementsIsSet(true);
             } else { 
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
@@ -1082,9 +1175,9 @@ public class CreateBuildRequest implements org.apache.thrift.TBase<CreateBuildRe
           oprot.writeFieldEnd();
         }
       }
-      if (struct.isSetNumberOfMinions()) {
-        oprot.writeFieldBegin(NUMBER_OF_MINIONS_FIELD_DESC);
-        oprot.writeI32(struct.numberOfMinions);
+      if (struct.isSetTotalNumberOfMinions()) {
+        oprot.writeFieldBegin(TOTAL_NUMBER_OF_MINIONS_FIELD_DESC);
+        oprot.writeI32(struct.totalNumberOfMinions);
         oprot.writeFieldEnd();
       }
       if (struct.repository != null) {
@@ -1120,9 +1213,9 @@ public class CreateBuildRequest implements org.apache.thrift.TBase<CreateBuildRe
           oprot.writeFieldBegin(BUILD_TARGETS_FIELD_DESC);
           {
             oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, struct.buildTargets.size()));
-            for (java.lang.String _iter51 : struct.buildTargets)
+            for (java.lang.String _iter59 : struct.buildTargets)
             {
-              oprot.writeString(_iter51);
+              oprot.writeString(_iter59);
             }
             oprot.writeListEnd();
           }
@@ -1133,6 +1226,13 @@ public class CreateBuildRequest implements org.apache.thrift.TBase<CreateBuildRe
         if (struct.isSetBuildLabel()) {
           oprot.writeFieldBegin(BUILD_LABEL_FIELD_DESC);
           oprot.writeString(struct.buildLabel);
+          oprot.writeFieldEnd();
+        }
+      }
+      if (struct.minionRequirements != null) {
+        if (struct.isSetMinionRequirements()) {
+          oprot.writeFieldBegin(MINION_REQUIREMENTS_FIELD_DESC);
+          struct.minionRequirements.write(oprot);
           oprot.writeFieldEnd();
         }
       }
@@ -1160,7 +1260,7 @@ public class CreateBuildRequest implements org.apache.thrift.TBase<CreateBuildRe
       if (struct.isSetBuildMode()) {
         optionals.set(1);
       }
-      if (struct.isSetNumberOfMinions()) {
+      if (struct.isSetTotalNumberOfMinions()) {
         optionals.set(2);
       }
       if (struct.isSetRepository()) {
@@ -1181,15 +1281,18 @@ public class CreateBuildRequest implements org.apache.thrift.TBase<CreateBuildRe
       if (struct.isSetBuildLabel()) {
         optionals.set(8);
       }
-      oprot.writeBitSet(optionals, 9);
+      if (struct.isSetMinionRequirements()) {
+        optionals.set(9);
+      }
+      oprot.writeBitSet(optionals, 10);
       if (struct.isSetCreateTimestampMillis()) {
         oprot.writeI64(struct.createTimestampMillis);
       }
       if (struct.isSetBuildMode()) {
         oprot.writeI32(struct.buildMode.getValue());
       }
-      if (struct.isSetNumberOfMinions()) {
-        oprot.writeI32(struct.numberOfMinions);
+      if (struct.isSetTotalNumberOfMinions()) {
+        oprot.writeI32(struct.totalNumberOfMinions);
       }
       if (struct.isSetRepository()) {
         oprot.writeString(struct.repository);
@@ -1206,21 +1309,24 @@ public class CreateBuildRequest implements org.apache.thrift.TBase<CreateBuildRe
       if (struct.isSetBuildTargets()) {
         {
           oprot.writeI32(struct.buildTargets.size());
-          for (java.lang.String _iter52 : struct.buildTargets)
+          for (java.lang.String _iter60 : struct.buildTargets)
           {
-            oprot.writeString(_iter52);
+            oprot.writeString(_iter60);
           }
         }
       }
       if (struct.isSetBuildLabel()) {
         oprot.writeString(struct.buildLabel);
       }
+      if (struct.isSetMinionRequirements()) {
+        struct.minionRequirements.write(oprot);
+      }
     }
 
     @Override
     public void read(org.apache.thrift.protocol.TProtocol prot, CreateBuildRequest struct) throws org.apache.thrift.TException {
       org.apache.thrift.protocol.TTupleProtocol iprot = (org.apache.thrift.protocol.TTupleProtocol) prot;
-      java.util.BitSet incoming = iprot.readBitSet(9);
+      java.util.BitSet incoming = iprot.readBitSet(10);
       if (incoming.get(0)) {
         struct.createTimestampMillis = iprot.readI64();
         struct.setCreateTimestampMillisIsSet(true);
@@ -1230,8 +1336,8 @@ public class CreateBuildRequest implements org.apache.thrift.TBase<CreateBuildRe
         struct.setBuildModeIsSet(true);
       }
       if (incoming.get(2)) {
-        struct.numberOfMinions = iprot.readI32();
-        struct.setNumberOfMinionsIsSet(true);
+        struct.totalNumberOfMinions = iprot.readI32();
+        struct.setTotalNumberOfMinionsIsSet(true);
       }
       if (incoming.get(3)) {
         struct.repository = iprot.readString();
@@ -1251,13 +1357,13 @@ public class CreateBuildRequest implements org.apache.thrift.TBase<CreateBuildRe
       }
       if (incoming.get(7)) {
         {
-          org.apache.thrift.protocol.TList _list53 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, iprot.readI32());
-          struct.buildTargets = new java.util.ArrayList<java.lang.String>(_list53.size);
-          java.lang.String _elem54;
-          for (int _i55 = 0; _i55 < _list53.size; ++_i55)
+          org.apache.thrift.protocol.TList _list61 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, iprot.readI32());
+          struct.buildTargets = new java.util.ArrayList<java.lang.String>(_list61.size);
+          java.lang.String _elem62;
+          for (int _i63 = 0; _i63 < _list61.size; ++_i63)
           {
-            _elem54 = iprot.readString();
-            struct.buildTargets.add(_elem54);
+            _elem62 = iprot.readString();
+            struct.buildTargets.add(_elem62);
           }
         }
         struct.setBuildTargetsIsSet(true);
@@ -1265,6 +1371,11 @@ public class CreateBuildRequest implements org.apache.thrift.TBase<CreateBuildRe
       if (incoming.get(8)) {
         struct.buildLabel = iprot.readString();
         struct.setBuildLabelIsSet(true);
+      }
+      if (incoming.get(9)) {
+        struct.minionRequirements = new MinionRequirements();
+        struct.minionRequirements.read(iprot);
+        struct.setMinionRequirementsIsSet(true);
       }
     }
   }

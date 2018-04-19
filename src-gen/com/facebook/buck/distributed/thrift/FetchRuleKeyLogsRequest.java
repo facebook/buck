@@ -557,13 +557,13 @@ public class FetchRuleKeyLogsRequest implements org.apache.thrift.TBase<FetchRul
           case 1: // RULE_KEYS
             if (schemeField.type == org.apache.thrift.protocol.TType.LIST) {
               {
-                org.apache.thrift.protocol.TList _list176 = iprot.readListBegin();
-                struct.ruleKeys = new java.util.ArrayList<java.lang.String>(_list176.size);
-                java.lang.String _elem177;
-                for (int _i178 = 0; _i178 < _list176.size; ++_i178)
+                org.apache.thrift.protocol.TList _list184 = iprot.readListBegin();
+                struct.ruleKeys = new java.util.ArrayList<java.lang.String>(_list184.size);
+                java.lang.String _elem185;
+                for (int _i186 = 0; _i186 < _list184.size; ++_i186)
                 {
-                  _elem177 = iprot.readString();
-                  struct.ruleKeys.add(_elem177);
+                  _elem185 = iprot.readString();
+                  struct.ruleKeys.add(_elem185);
                 }
                 iprot.readListEnd();
               }
@@ -616,9 +616,9 @@ public class FetchRuleKeyLogsRequest implements org.apache.thrift.TBase<FetchRul
           oprot.writeFieldBegin(RULE_KEYS_FIELD_DESC);
           {
             oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, struct.ruleKeys.size()));
-            for (java.lang.String _iter179 : struct.ruleKeys)
+            for (java.lang.String _iter187 : struct.ruleKeys)
             {
-              oprot.writeString(_iter179);
+              oprot.writeString(_iter187);
             }
             oprot.writeListEnd();
           }
@@ -678,9 +678,9 @@ public class FetchRuleKeyLogsRequest implements org.apache.thrift.TBase<FetchRul
       if (struct.isSetRuleKeys()) {
         {
           oprot.writeI32(struct.ruleKeys.size());
-          for (java.lang.String _iter180 : struct.ruleKeys)
+          for (java.lang.String _iter188 : struct.ruleKeys)
           {
-            oprot.writeString(_iter180);
+            oprot.writeString(_iter188);
           }
         }
       }
@@ -701,13 +701,13 @@ public class FetchRuleKeyLogsRequest implements org.apache.thrift.TBase<FetchRul
       java.util.BitSet incoming = iprot.readBitSet(4);
       if (incoming.get(0)) {
         {
-          org.apache.thrift.protocol.TList _list181 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, iprot.readI32());
-          struct.ruleKeys = new java.util.ArrayList<java.lang.String>(_list181.size);
-          java.lang.String _elem182;
-          for (int _i183 = 0; _i183 < _list181.size; ++_i183)
+          org.apache.thrift.protocol.TList _list189 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, iprot.readI32());
+          struct.ruleKeys = new java.util.ArrayList<java.lang.String>(_list189.size);
+          java.lang.String _elem190;
+          for (int _i191 = 0; _i191 < _list189.size; ++_i191)
           {
-            _elem182 = iprot.readString();
-            struct.ruleKeys.add(_elem182);
+            _elem190 = iprot.readString();
+            struct.ruleKeys.add(_elem190);
           }
         }
         struct.setRuleKeysIsSet(true);

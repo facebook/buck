@@ -318,14 +318,14 @@ public class MultiGetBuildSlaveEventsResponse implements org.apache.thrift.TBase
           case 1: // RESPONSES
             if (schemeField.type == org.apache.thrift.protocol.TType.LIST) {
               {
-                org.apache.thrift.protocol.TList _list160 = iprot.readListBegin();
-                struct.responses = new java.util.ArrayList<BuildSlaveEventsRange>(_list160.size);
-                BuildSlaveEventsRange _elem161;
-                for (int _i162 = 0; _i162 < _list160.size; ++_i162)
+                org.apache.thrift.protocol.TList _list168 = iprot.readListBegin();
+                struct.responses = new java.util.ArrayList<BuildSlaveEventsRange>(_list168.size);
+                BuildSlaveEventsRange _elem169;
+                for (int _i170 = 0; _i170 < _list168.size; ++_i170)
                 {
-                  _elem161 = new BuildSlaveEventsRange();
-                  _elem161.read(iprot);
-                  struct.responses.add(_elem161);
+                  _elem169 = new BuildSlaveEventsRange();
+                  _elem169.read(iprot);
+                  struct.responses.add(_elem169);
                 }
                 iprot.readListEnd();
               }
@@ -354,9 +354,9 @@ public class MultiGetBuildSlaveEventsResponse implements org.apache.thrift.TBase
           oprot.writeFieldBegin(RESPONSES_FIELD_DESC);
           {
             oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, struct.responses.size()));
-            for (BuildSlaveEventsRange _iter163 : struct.responses)
+            for (BuildSlaveEventsRange _iter171 : struct.responses)
             {
-              _iter163.write(oprot);
+              _iter171.write(oprot);
             }
             oprot.writeListEnd();
           }
@@ -388,9 +388,9 @@ public class MultiGetBuildSlaveEventsResponse implements org.apache.thrift.TBase
       if (struct.isSetResponses()) {
         {
           oprot.writeI32(struct.responses.size());
-          for (BuildSlaveEventsRange _iter164 : struct.responses)
+          for (BuildSlaveEventsRange _iter172 : struct.responses)
           {
-            _iter164.write(oprot);
+            _iter172.write(oprot);
           }
         }
       }
@@ -402,14 +402,14 @@ public class MultiGetBuildSlaveEventsResponse implements org.apache.thrift.TBase
       java.util.BitSet incoming = iprot.readBitSet(1);
       if (incoming.get(0)) {
         {
-          org.apache.thrift.protocol.TList _list165 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
-          struct.responses = new java.util.ArrayList<BuildSlaveEventsRange>(_list165.size);
-          BuildSlaveEventsRange _elem166;
-          for (int _i167 = 0; _i167 < _list165.size; ++_i167)
+          org.apache.thrift.protocol.TList _list173 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
+          struct.responses = new java.util.ArrayList<BuildSlaveEventsRange>(_list173.size);
+          BuildSlaveEventsRange _elem174;
+          for (int _i175 = 0; _i175 < _list173.size; ++_i175)
           {
-            _elem166 = new BuildSlaveEventsRange();
-            _elem166.read(iprot);
-            struct.responses.add(_elem166);
+            _elem174 = new BuildSlaveEventsRange();
+            _elem174.read(iprot);
+            struct.responses.add(_elem174);
           }
         }
         struct.setResponsesIsSet(true);

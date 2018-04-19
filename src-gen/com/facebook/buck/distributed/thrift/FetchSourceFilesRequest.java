@@ -315,13 +315,13 @@ public class FetchSourceFilesRequest implements org.apache.thrift.TBase<FetchSou
           case 1: // CONTENT_HASHES
             if (schemeField.type == org.apache.thrift.protocol.TType.LIST) {
               {
-                org.apache.thrift.protocol.TList _list80 = iprot.readListBegin();
-                struct.contentHashes = new java.util.ArrayList<java.lang.String>(_list80.size);
-                java.lang.String _elem81;
-                for (int _i82 = 0; _i82 < _list80.size; ++_i82)
+                org.apache.thrift.protocol.TList _list88 = iprot.readListBegin();
+                struct.contentHashes = new java.util.ArrayList<java.lang.String>(_list88.size);
+                java.lang.String _elem89;
+                for (int _i90 = 0; _i90 < _list88.size; ++_i90)
                 {
-                  _elem81 = iprot.readString();
-                  struct.contentHashes.add(_elem81);
+                  _elem89 = iprot.readString();
+                  struct.contentHashes.add(_elem89);
                 }
                 iprot.readListEnd();
               }
@@ -350,9 +350,9 @@ public class FetchSourceFilesRequest implements org.apache.thrift.TBase<FetchSou
           oprot.writeFieldBegin(CONTENT_HASHES_FIELD_DESC);
           {
             oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, struct.contentHashes.size()));
-            for (java.lang.String _iter83 : struct.contentHashes)
+            for (java.lang.String _iter91 : struct.contentHashes)
             {
-              oprot.writeString(_iter83);
+              oprot.writeString(_iter91);
             }
             oprot.writeListEnd();
           }
@@ -384,9 +384,9 @@ public class FetchSourceFilesRequest implements org.apache.thrift.TBase<FetchSou
       if (struct.isSetContentHashes()) {
         {
           oprot.writeI32(struct.contentHashes.size());
-          for (java.lang.String _iter84 : struct.contentHashes)
+          for (java.lang.String _iter92 : struct.contentHashes)
           {
-            oprot.writeString(_iter84);
+            oprot.writeString(_iter92);
           }
         }
       }
@@ -398,13 +398,13 @@ public class FetchSourceFilesRequest implements org.apache.thrift.TBase<FetchSou
       java.util.BitSet incoming = iprot.readBitSet(1);
       if (incoming.get(0)) {
         {
-          org.apache.thrift.protocol.TList _list85 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, iprot.readI32());
-          struct.contentHashes = new java.util.ArrayList<java.lang.String>(_list85.size);
-          java.lang.String _elem86;
-          for (int _i87 = 0; _i87 < _list85.size; ++_i87)
+          org.apache.thrift.protocol.TList _list93 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, iprot.readI32());
+          struct.contentHashes = new java.util.ArrayList<java.lang.String>(_list93.size);
+          java.lang.String _elem94;
+          for (int _i95 = 0; _i95 < _list93.size; ++_i95)
           {
-            _elem86 = iprot.readString();
-            struct.contentHashes.add(_elem86);
+            _elem94 = iprot.readString();
+            struct.contentHashes.add(_elem94);
           }
         }
         struct.setContentHashesIsSet(true);

@@ -17,6 +17,7 @@
 package com.facebook.buck.distributed.build_client;
 
 import com.facebook.buck.distributed.thrift.BuildMode;
+import com.facebook.buck.distributed.thrift.MinionRequirements;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.InvocationInfo;
 import com.facebook.buck.rules.ParallelRuleKeyCalculator;
@@ -41,7 +42,7 @@ abstract class AbstractDistBuildControllerInvocationArgs {
 
   abstract BuildMode getBuildMode();
 
-  abstract int getNumberOfMinions();
+  abstract MinionRequirements getMinionRequirements();
 
   abstract String getRepository();
 

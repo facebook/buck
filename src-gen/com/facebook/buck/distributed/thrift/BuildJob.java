@@ -1202,14 +1202,14 @@ public class BuildJob implements org.apache.thrift.TBase<BuildJob, BuildJob._Fie
           case 6: // DOT_FILES
             if (schemeField.type == org.apache.thrift.protocol.TType.LIST) {
               {
-                org.apache.thrift.protocol.TList _list24 = iprot.readListBegin();
-                struct.dotFiles = new java.util.ArrayList<PathInfo>(_list24.size);
-                PathInfo _elem25;
-                for (int _i26 = 0; _i26 < _list24.size; ++_i26)
+                org.apache.thrift.protocol.TList _list32 = iprot.readListBegin();
+                struct.dotFiles = new java.util.ArrayList<PathInfo>(_list32.size);
+                PathInfo _elem33;
+                for (int _i34 = 0; _i34 < _list32.size; ++_i34)
                 {
-                  _elem25 = new PathInfo();
-                  _elem25.read(iprot);
-                  struct.dotFiles.add(_elem25);
+                  _elem33 = new PathInfo();
+                  _elem33.read(iprot);
+                  struct.dotFiles.add(_elem33);
                 }
                 iprot.readListEnd();
               }
@@ -1270,14 +1270,14 @@ public class BuildJob implements org.apache.thrift.TBase<BuildJob, BuildJob._Fie
           case 13: // BUILD_SLAVES
             if (schemeField.type == org.apache.thrift.protocol.TType.LIST) {
               {
-                org.apache.thrift.protocol.TList _list27 = iprot.readListBegin();
-                struct.buildSlaves = new java.util.ArrayList<BuildSlaveInfo>(_list27.size);
-                BuildSlaveInfo _elem28;
-                for (int _i29 = 0; _i29 < _list27.size; ++_i29)
+                org.apache.thrift.protocol.TList _list35 = iprot.readListBegin();
+                struct.buildSlaves = new java.util.ArrayList<BuildSlaveInfo>(_list35.size);
+                BuildSlaveInfo _elem36;
+                for (int _i37 = 0; _i37 < _list35.size; ++_i37)
                 {
-                  _elem28 = new BuildSlaveInfo();
-                  _elem28.read(iprot);
-                  struct.buildSlaves.add(_elem28);
+                  _elem36 = new BuildSlaveInfo();
+                  _elem36.read(iprot);
+                  struct.buildSlaves.add(_elem36);
                 }
                 iprot.readListEnd();
               }
@@ -1327,9 +1327,9 @@ public class BuildJob implements org.apache.thrift.TBase<BuildJob, BuildJob._Fie
           oprot.writeFieldBegin(DOT_FILES_FIELD_DESC);
           {
             oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, struct.dotFiles.size()));
-            for (PathInfo _iter30 : struct.dotFiles)
+            for (PathInfo _iter38 : struct.dotFiles)
             {
-              _iter30.write(oprot);
+              _iter38.write(oprot);
             }
             oprot.writeListEnd();
           }
@@ -1383,9 +1383,9 @@ public class BuildJob implements org.apache.thrift.TBase<BuildJob, BuildJob._Fie
           oprot.writeFieldBegin(BUILD_SLAVES_FIELD_DESC);
           {
             oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, struct.buildSlaves.size()));
-            for (BuildSlaveInfo _iter31 : struct.buildSlaves)
+            for (BuildSlaveInfo _iter39 : struct.buildSlaves)
             {
-              _iter31.write(oprot);
+              _iter39.write(oprot);
             }
             oprot.writeListEnd();
           }
@@ -1456,9 +1456,9 @@ public class BuildJob implements org.apache.thrift.TBase<BuildJob, BuildJob._Fie
       if (struct.isSetDotFiles()) {
         {
           oprot.writeI32(struct.dotFiles.size());
-          for (PathInfo _iter32 : struct.dotFiles)
+          for (PathInfo _iter40 : struct.dotFiles)
           {
-            _iter32.write(oprot);
+            _iter40.write(oprot);
           }
         }
       }
@@ -1483,9 +1483,9 @@ public class BuildJob implements org.apache.thrift.TBase<BuildJob, BuildJob._Fie
       if (struct.isSetBuildSlaves()) {
         {
           oprot.writeI32(struct.buildSlaves.size());
-          for (BuildSlaveInfo _iter33 : struct.buildSlaves)
+          for (BuildSlaveInfo _iter41 : struct.buildSlaves)
           {
-            _iter33.write(oprot);
+            _iter41.write(oprot);
           }
         }
       }
@@ -1511,14 +1511,14 @@ public class BuildJob implements org.apache.thrift.TBase<BuildJob, BuildJob._Fie
       }
       if (incoming.get(3)) {
         {
-          org.apache.thrift.protocol.TList _list34 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
-          struct.dotFiles = new java.util.ArrayList<PathInfo>(_list34.size);
-          PathInfo _elem35;
-          for (int _i36 = 0; _i36 < _list34.size; ++_i36)
+          org.apache.thrift.protocol.TList _list42 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
+          struct.dotFiles = new java.util.ArrayList<PathInfo>(_list42.size);
+          PathInfo _elem43;
+          for (int _i44 = 0; _i44 < _list42.size; ++_i44)
           {
-            _elem35 = new PathInfo();
-            _elem35.read(iprot);
-            struct.dotFiles.add(_elem35);
+            _elem43 = new PathInfo();
+            _elem43.read(iprot);
+            struct.dotFiles.add(_elem43);
           }
         }
         struct.setDotFilesIsSet(true);
@@ -1550,14 +1550,14 @@ public class BuildJob implements org.apache.thrift.TBase<BuildJob, BuildJob._Fie
       }
       if (incoming.get(10)) {
         {
-          org.apache.thrift.protocol.TList _list37 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
-          struct.buildSlaves = new java.util.ArrayList<BuildSlaveInfo>(_list37.size);
-          BuildSlaveInfo _elem38;
-          for (int _i39 = 0; _i39 < _list37.size; ++_i39)
+          org.apache.thrift.protocol.TList _list45 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
+          struct.buildSlaves = new java.util.ArrayList<BuildSlaveInfo>(_list45.size);
+          BuildSlaveInfo _elem46;
+          for (int _i47 = 0; _i47 < _list45.size; ++_i47)
           {
-            _elem38 = new BuildSlaveInfo();
-            _elem38.read(iprot);
-            struct.buildSlaves.add(_elem38);
+            _elem46 = new BuildSlaveInfo();
+            _elem46.read(iprot);
+            struct.buildSlaves.add(_elem46);
           }
         }
         struct.setBuildSlavesIsSet(true);

@@ -411,14 +411,14 @@ public class SetBuckDotFilePathsRequest implements org.apache.thrift.TBase<SetBu
           case 2: // DOT_FILES
             if (schemeField.type == org.apache.thrift.protocol.TType.LIST) {
               {
-                org.apache.thrift.protocol.TList _list96 = iprot.readListBegin();
-                struct.dotFiles = new java.util.ArrayList<PathInfo>(_list96.size);
-                PathInfo _elem97;
-                for (int _i98 = 0; _i98 < _list96.size; ++_i98)
+                org.apache.thrift.protocol.TList _list104 = iprot.readListBegin();
+                struct.dotFiles = new java.util.ArrayList<PathInfo>(_list104.size);
+                PathInfo _elem105;
+                for (int _i106 = 0; _i106 < _list104.size; ++_i106)
                 {
-                  _elem97 = new PathInfo();
-                  _elem97.read(iprot);
-                  struct.dotFiles.add(_elem97);
+                  _elem105 = new PathInfo();
+                  _elem105.read(iprot);
+                  struct.dotFiles.add(_elem105);
                 }
                 iprot.readListEnd();
               }
@@ -454,9 +454,9 @@ public class SetBuckDotFilePathsRequest implements org.apache.thrift.TBase<SetBu
           oprot.writeFieldBegin(DOT_FILES_FIELD_DESC);
           {
             oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, struct.dotFiles.size()));
-            for (PathInfo _iter99 : struct.dotFiles)
+            for (PathInfo _iter107 : struct.dotFiles)
             {
-              _iter99.write(oprot);
+              _iter107.write(oprot);
             }
             oprot.writeListEnd();
           }
@@ -494,9 +494,9 @@ public class SetBuckDotFilePathsRequest implements org.apache.thrift.TBase<SetBu
       if (struct.isSetDotFiles()) {
         {
           oprot.writeI32(struct.dotFiles.size());
-          for (PathInfo _iter100 : struct.dotFiles)
+          for (PathInfo _iter108 : struct.dotFiles)
           {
-            _iter100.write(oprot);
+            _iter108.write(oprot);
           }
         }
       }
@@ -513,14 +513,14 @@ public class SetBuckDotFilePathsRequest implements org.apache.thrift.TBase<SetBu
       }
       if (incoming.get(1)) {
         {
-          org.apache.thrift.protocol.TList _list101 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
-          struct.dotFiles = new java.util.ArrayList<PathInfo>(_list101.size);
-          PathInfo _elem102;
-          for (int _i103 = 0; _i103 < _list101.size; ++_i103)
+          org.apache.thrift.protocol.TList _list109 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
+          struct.dotFiles = new java.util.ArrayList<PathInfo>(_list109.size);
+          PathInfo _elem110;
+          for (int _i111 = 0; _i111 < _list109.size; ++_i111)
           {
-            _elem102 = new PathInfo();
-            _elem102.read(iprot);
-            struct.dotFiles.add(_elem102);
+            _elem110 = new PathInfo();
+            _elem110.read(iprot);
+            struct.dotFiles.add(_elem110);
           }
         }
         struct.setDotFilesIsSet(true);

@@ -21,6 +21,7 @@ import com.facebook.buck.distributed.ExitCode;
 import com.facebook.buck.distributed.thrift.BuildJobState;
 import com.facebook.buck.distributed.thrift.BuildMode;
 import com.facebook.buck.distributed.thrift.BuildStatus;
+import com.facebook.buck.distributed.thrift.MinionRequirements;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
@@ -115,7 +116,7 @@ public class DistBuildController {
       FileHashCache fileHashCache,
       InvocationInfo invocationInfo,
       BuildMode buildMode,
-      int numberOfMinions,
+      MinionRequirements minionRequirements,
       String repository,
       String tenantId,
       ListenableFuture<ParallelRuleKeyCalculator<RuleKey>> ruleKeyCalculatorFuture)
@@ -131,7 +132,7 @@ public class DistBuildController {
                   eventBus,
                   invocationInfo.getBuildId(),
                   buildMode,
-                  numberOfMinions,
+                  minionRequirements,
                   repository,
                   tenantId,
                   ruleKeyCalculatorFuture));

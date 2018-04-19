@@ -257,7 +257,7 @@ public class StampedeBuildClient {
               distBuildControllerInvocationArgs.getFileHashCache(),
               distBuildControllerInvocationArgs.getInvocationInfo(),
               distBuildControllerInvocationArgs.getBuildMode(),
-              distBuildControllerInvocationArgs.getNumberOfMinions(),
+              distBuildControllerInvocationArgs.getMinionRequirements(),
               distBuildControllerInvocationArgs.getRepository(),
               distBuildControllerInvocationArgs.getTenantId(),
               distBuildControllerInvocationArgs.getRuleKeyCalculatorFuture());

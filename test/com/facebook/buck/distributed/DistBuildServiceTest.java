@@ -48,9 +48,12 @@ import com.facebook.buck.distributed.thrift.FileInfo;
 import com.facebook.buck.distributed.thrift.FrontendRequest;
 import com.facebook.buck.distributed.thrift.FrontendRequestType;
 import com.facebook.buck.distributed.thrift.FrontendResponse;
+import com.facebook.buck.distributed.thrift.MinionRequirements;
+import com.facebook.buck.distributed.thrift.MinionType;
 import com.facebook.buck.distributed.thrift.MultiGetBuildSlaveEventsRequest;
 import com.facebook.buck.distributed.thrift.MultiGetBuildSlaveEventsResponse;
 import com.facebook.buck.distributed.thrift.PathWithUnixSeparators;
+import com.facebook.buck.distributed.thrift.SchedulingEnvironmentType;
 import com.facebook.buck.distributed.thrift.SequencedBuildSlaveEvent;
 import com.facebook.buck.distributed.thrift.SetCoordinatorRequest;
 import com.facebook.buck.distributed.thrift.SetCoordinatorResponse;
@@ -103,6 +106,8 @@ public class DistBuildServiceTest {
   private DistBuildService distBuildService;
   private ListeningExecutorService executor;
   private ClientStatsTracker distBuildClientStatsTracker;
+  private static final SchedulingEnvironmentType ENVIRONMENT_TYPE =
+      SchedulingEnvironmentType.IDENTICAL_HARDWARE;
   private static final String REPOSITORY = "repositoryOne";
   private static final String TENANT_ID = "tenantOne";
   private static final String BUILD_LABEL = "unit_test";
@@ -264,7 +269,7 @@ public class DistBuildServiceTest {
         distBuildService.createBuild(
             new BuildId("33-44"),
             BuildMode.REMOTE_BUILD,
-            1,
+            new MinionRequirements(),
             REPOSITORY,
             TENANT_ID,
             BUILD_TARGETS,
@@ -716,7 +721,8 @@ public class DistBuildServiceTest {
     StampedeId stampedeId = createStampedeId("minions, here I come");
     int minionCount = 21;
     String minionQueueName = "a_happy_place_indeed";
-    distBuildService.enqueueMinions(stampedeId, minionCount, minionQueueName);
+    distBuildService.enqueueMinions(
+        stampedeId, minionCount, minionQueueName, MinionType.STANDARD_SPEC);
     Assert.assertEquals(FrontendRequestType.ENQUEUE_MINIONS, request.getValue().getType());
     EnqueueMinionsRequest minionsRequest = request.getValue().getEnqueueMinionsRequest();
     Assert.assertEquals(stampedeId, minionsRequest.getStampedeId());

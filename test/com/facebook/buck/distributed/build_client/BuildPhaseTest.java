@@ -50,6 +50,7 @@ import com.facebook.buck.distributed.thrift.BuildSlaveStatus;
 import com.facebook.buck.distributed.thrift.BuildStatus;
 import com.facebook.buck.distributed.thrift.ConsoleEventSeverity;
 import com.facebook.buck.distributed.thrift.LogLineBatchRequest;
+import com.facebook.buck.distributed.thrift.MinionType;
 import com.facebook.buck.distributed.thrift.MultiGetBuildSlaveRealTimeLogsResponse;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.distributed.thrift.StreamLogs;
@@ -185,7 +186,10 @@ public class BuildPhaseTest {
             scheduler,
             POLL_MILLIS,
             new NoOpRemoteBuildRuleCompletionNotifier(),
-            consoleEventsDispatcher);
+            consoleEventsDispatcher,
+            new DefaultClock(),
+            600,
+            500);
   }
 
   private void createBuildPhase() {
@@ -230,7 +234,10 @@ public class BuildPhaseTest {
         new BuildJob()
             .setStampedeId(stampedeId)
             .setStatus(BuildStatus.BUILDING)
-            .setBuildModeInfo(new BuildModeInfo().setNumberOfMinions(NUM_MINIONS));
+            .setBuildModeInfo(
+                new BuildModeInfo()
+                    .setTotalNumberOfMinions(NUM_MINIONS)
+                    .setMode(BuildMode.DISTRIBUTED_BUILD_WITH_LOCAL_COORDINATOR));
     BuildJob job2 =
         new BuildJob().setStampedeId(stampedeId).setStatus(BuildStatus.FINISHED_SUCCESSFULLY);
     ImmutableList<BuildJob> jobs = ImmutableList.of(job0, job1, job2);
@@ -250,7 +257,8 @@ public class BuildPhaseTest {
             })
         .once();
 
-    mockDistBuildService.enqueueMinions(stampedeId, NUM_MINIONS, MINION_QUEUE_NAME);
+    mockDistBuildService.enqueueMinions(
+        stampedeId, NUM_MINIONS, MINION_QUEUE_NAME, MinionType.STANDARD_SPEC);
     expectLastCall()
         .andAnswer(
             () -> {

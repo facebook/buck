@@ -501,13 +501,13 @@ public class AppendBuildSlaveEventsRequest implements org.apache.thrift.TBase<Ap
           case 3: // EVENTS
             if (schemeField.type == org.apache.thrift.protocol.TType.LIST) {
               {
-                org.apache.thrift.protocol.TList _list144 = iprot.readListBegin();
-                struct.events = new java.util.ArrayList<java.nio.ByteBuffer>(_list144.size);
-                java.nio.ByteBuffer _elem145;
-                for (int _i146 = 0; _i146 < _list144.size; ++_i146)
+                org.apache.thrift.protocol.TList _list152 = iprot.readListBegin();
+                struct.events = new java.util.ArrayList<java.nio.ByteBuffer>(_list152.size);
+                java.nio.ByteBuffer _elem153;
+                for (int _i154 = 0; _i154 < _list152.size; ++_i154)
                 {
-                  _elem145 = iprot.readBinary();
-                  struct.events.add(_elem145);
+                  _elem153 = iprot.readBinary();
+                  struct.events.add(_elem153);
                 }
                 iprot.readListEnd();
               }
@@ -550,9 +550,9 @@ public class AppendBuildSlaveEventsRequest implements org.apache.thrift.TBase<Ap
           oprot.writeFieldBegin(EVENTS_FIELD_DESC);
           {
             oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, struct.events.size()));
-            for (java.nio.ByteBuffer _iter147 : struct.events)
+            for (java.nio.ByteBuffer _iter155 : struct.events)
             {
-              oprot.writeBinary(_iter147);
+              oprot.writeBinary(_iter155);
             }
             oprot.writeListEnd();
           }
@@ -596,9 +596,9 @@ public class AppendBuildSlaveEventsRequest implements org.apache.thrift.TBase<Ap
       if (struct.isSetEvents()) {
         {
           oprot.writeI32(struct.events.size());
-          for (java.nio.ByteBuffer _iter148 : struct.events)
+          for (java.nio.ByteBuffer _iter156 : struct.events)
           {
-            oprot.writeBinary(_iter148);
+            oprot.writeBinary(_iter156);
           }
         }
       }
@@ -620,13 +620,13 @@ public class AppendBuildSlaveEventsRequest implements org.apache.thrift.TBase<Ap
       }
       if (incoming.get(2)) {
         {
-          org.apache.thrift.protocol.TList _list149 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, iprot.readI32());
-          struct.events = new java.util.ArrayList<java.nio.ByteBuffer>(_list149.size);
-          java.nio.ByteBuffer _elem150;
-          for (int _i151 = 0; _i151 < _list149.size; ++_i151)
+          org.apache.thrift.protocol.TList _list157 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, iprot.readI32());
+          struct.events = new java.util.ArrayList<java.nio.ByteBuffer>(_list157.size);
+          java.nio.ByteBuffer _elem158;
+          for (int _i159 = 0; _i159 < _list157.size; ++_i159)
           {
-            _elem150 = iprot.readBinary();
-            struct.events.add(_elem150);
+            _elem158 = iprot.readBinary();
+            struct.events.add(_elem158);
           }
         }
         struct.setEventsIsSet(true);

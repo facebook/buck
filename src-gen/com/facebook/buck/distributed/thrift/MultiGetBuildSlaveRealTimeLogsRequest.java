@@ -411,14 +411,14 @@ public class MultiGetBuildSlaveRealTimeLogsRequest implements org.apache.thrift.
           case 2: // BATCHES
             if (schemeField.type == org.apache.thrift.protocol.TType.LIST) {
               {
-                org.apache.thrift.protocol.TList _list120 = iprot.readListBegin();
-                struct.batches = new java.util.ArrayList<LogLineBatchRequest>(_list120.size);
-                LogLineBatchRequest _elem121;
-                for (int _i122 = 0; _i122 < _list120.size; ++_i122)
+                org.apache.thrift.protocol.TList _list128 = iprot.readListBegin();
+                struct.batches = new java.util.ArrayList<LogLineBatchRequest>(_list128.size);
+                LogLineBatchRequest _elem129;
+                for (int _i130 = 0; _i130 < _list128.size; ++_i130)
                 {
-                  _elem121 = new LogLineBatchRequest();
-                  _elem121.read(iprot);
-                  struct.batches.add(_elem121);
+                  _elem129 = new LogLineBatchRequest();
+                  _elem129.read(iprot);
+                  struct.batches.add(_elem129);
                 }
                 iprot.readListEnd();
               }
@@ -454,9 +454,9 @@ public class MultiGetBuildSlaveRealTimeLogsRequest implements org.apache.thrift.
           oprot.writeFieldBegin(BATCHES_FIELD_DESC);
           {
             oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, struct.batches.size()));
-            for (LogLineBatchRequest _iter123 : struct.batches)
+            for (LogLineBatchRequest _iter131 : struct.batches)
             {
-              _iter123.write(oprot);
+              _iter131.write(oprot);
             }
             oprot.writeListEnd();
           }
@@ -494,9 +494,9 @@ public class MultiGetBuildSlaveRealTimeLogsRequest implements org.apache.thrift.
       if (struct.isSetBatches()) {
         {
           oprot.writeI32(struct.batches.size());
-          for (LogLineBatchRequest _iter124 : struct.batches)
+          for (LogLineBatchRequest _iter132 : struct.batches)
           {
-            _iter124.write(oprot);
+            _iter132.write(oprot);
           }
         }
       }
@@ -513,14 +513,14 @@ public class MultiGetBuildSlaveRealTimeLogsRequest implements org.apache.thrift.
       }
       if (incoming.get(1)) {
         {
-          org.apache.thrift.protocol.TList _list125 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
-          struct.batches = new java.util.ArrayList<LogLineBatchRequest>(_list125.size);
-          LogLineBatchRequest _elem126;
-          for (int _i127 = 0; _i127 < _list125.size; ++_i127)
+          org.apache.thrift.protocol.TList _list133 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
+          struct.batches = new java.util.ArrayList<LogLineBatchRequest>(_list133.size);
+          LogLineBatchRequest _elem134;
+          for (int _i135 = 0; _i135 < _list133.size; ++_i135)
           {
-            _elem126 = new LogLineBatchRequest();
-            _elem126.read(iprot);
-            struct.batches.add(_elem126);
+            _elem134 = new LogLineBatchRequest();
+            _elem134.read(iprot);
+            struct.batches.add(_elem134);
           }
         }
         struct.setBatchesIsSet(true);

@@ -33,6 +33,7 @@ import com.facebook.buck.distributed.thrift.BuckVersion;
 import com.facebook.buck.distributed.thrift.BuildJob;
 import com.facebook.buck.distributed.thrift.BuildJobState;
 import com.facebook.buck.distributed.thrift.BuildMode;
+import com.facebook.buck.distributed.thrift.MinionRequirements;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -99,7 +100,7 @@ public class PreBuildPhase {
       BuckEventBus eventBus,
       BuildId buildId,
       BuildMode buildMode,
-      int numberOfMinions,
+      MinionRequirements minionRequirements,
       String repository,
       String tenantId,
       ListenableFuture<ParallelRuleKeyCalculator<RuleKey>> localRuleKeyCalculatorFuture)
@@ -115,7 +116,7 @@ public class PreBuildPhase {
             .collect(Collectors.toList());
     BuildJob job =
         distBuildService.createBuild(
-            buildId, buildMode, numberOfMinions, repository, tenantId, buildTargets, buildLabel);
+            buildId, buildMode, minionRequirements, repository, tenantId, buildTargets, buildLabel);
     distBuildClientStats.stopTimer(CREATE_DISTRIBUTED_BUILD);
 
     StampedeId stampedeId = job.getStampedeId();

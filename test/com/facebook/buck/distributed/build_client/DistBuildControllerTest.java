@@ -54,6 +54,7 @@ import com.facebook.buck.distributed.thrift.BuildSlaveInfo;
 import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
 import com.facebook.buck.distributed.thrift.BuildSlaveStatus;
 import com.facebook.buck.distributed.thrift.BuildStatus;
+import com.facebook.buck.distributed.thrift.MinionRequirements;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.log.InvocationInfo;
@@ -203,13 +204,14 @@ public class DistBuildControllerTest {
     // Normally LOCAL_PREPARATION get started in BuildCommand, so simulate that here,
     // otherwise when we stop the timer it will fail with an exception about not being started.
     distBuildClientStatsTracker.startTimer(LOCAL_PREPARATION);
+
     return distBuildController.executeAndPrintFailuresToEventBus(
         directExecutor,
         fakeProjectFilesystem,
         fakeFileHashCache,
         invocationInfo,
         BuildMode.REMOTE_BUILD,
-        1,
+        new MinionRequirements(),
         REPOSITORY,
         TENANT_ID,
         SettableFuture.create());
@@ -278,7 +280,7 @@ public class DistBuildControllerTest {
             mockDistBuildService.createBuild(
                 invocationInfo.getBuildId(),
                 BuildMode.REMOTE_BUILD,
-                1,
+                new MinionRequirements(),
                 REPOSITORY,
                 TENANT_ID,
                 BUILD_TARGETS,
@@ -490,7 +492,7 @@ public class DistBuildControllerTest {
             mockDistBuildService.createBuild(
                 invocationInfo.getBuildId(),
                 BuildMode.REMOTE_BUILD,
-                1,
+                new MinionRequirements(),
                 REPOSITORY,
                 TENANT_ID,
                 BUILD_TARGETS,

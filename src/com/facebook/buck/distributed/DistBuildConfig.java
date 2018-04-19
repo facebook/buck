@@ -18,7 +18,9 @@ package com.facebook.buck.distributed;
 
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.distributed.thrift.BuildMode;
+import com.facebook.buck.distributed.thrift.MinionRequirements;
 import com.facebook.buck.distributed.thrift.MinionType;
+import com.facebook.buck.distributed.thrift.SchedulingEnvironmentType;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.slb.SlbBuckConfig;
@@ -59,6 +61,8 @@ public class DistBuildConfig {
   private static final String NUMBER_OF_MINIONS = "number_of_minions";
   private static final Integer NUMBER_OF_MINIONS_DEFAULT_VALUE = 2;
 
+  private static final String NUMBER_OF_LOW_SPEC_MINIONS = "number_of_low_spec_minions";
+
   private static final String REPOSITORY = "repository";
   private static final String DEFAULT_REPOSITORY = "";
   private static final String TENANT_ID = "tenant_id";
@@ -68,6 +72,7 @@ public class DistBuildConfig {
   private static final String DEFAULT_BUILD_LABEL = "";
 
   private static final String MINION_QUEUE = "minion_queue";
+  private static final String LOW_SPEC_MINION_QUEUE = "low_spec_minion_queue";
 
   private static final String SOURCE_FILE_MULTI_FETCH_BUFFER_PERIOD_MS =
       "source_file_multi_fetch_buffer_period_ms";
@@ -133,6 +138,10 @@ public class DistBuildConfig {
 
   private static final String MINION_TYPE = "minion_type";
   private static final String DEFAULT_MINION_TYPE = MinionType.STANDARD_SPEC.name();
+
+  private static final String ENVIRONMENT_TYPE = "environment_type";
+  private static final String DEFAULT_ENVIRONMENT_TYPE =
+      SchedulingEnvironmentType.IDENTICAL_HARDWARE.name();
 
   private static final String ALWAYS_WAIT_FOR_REMOTE_BUILD_BEFORE_PROCEEDING_LOCALLY =
       "always_wait_for_remote_build_before_proceeding_locally";
@@ -254,14 +263,29 @@ public class DistBuildConfig {
         .orElse(BUILD_MODE_DEFAULT_VALUE);
   }
 
+  /** @return Total number of minions to be used in this build */
   public int getNumberOfMinions() {
     return buckConfig
         .getInteger(STAMPEDE_SECTION, NUMBER_OF_MINIONS)
         .orElse(NUMBER_OF_MINIONS_DEFAULT_VALUE);
   }
 
+  /**
+   * @return Number of standard spec minions to be used in mixed environment build. Default is total
+   *     number of minions - 1.
+   */
+  public int getNumberOfLowSpecMinions() {
+    return buckConfig
+        .getInteger(STAMPEDE_SECTION, NUMBER_OF_LOW_SPEC_MINIONS)
+        .orElse(getNumberOfMinions() - 1);
+  }
+
   public Optional<String> getMinionQueue() {
     return buckConfig.getValue(STAMPEDE_SECTION, MINION_QUEUE);
+  }
+
+  public Optional<String> getLowSpecMinionQueue() {
+    return buckConfig.getValue(STAMPEDE_SECTION, LOW_SPEC_MINION_QUEUE);
   }
 
   public String getRepository() {
@@ -444,6 +468,14 @@ public class DistBuildConfig {
     return MinionType.valueOf(minionTypeStr);
   }
 
+  /** @return The hardware scheduling environment to be used for this distributed build */
+  public SchedulingEnvironmentType getSchedulingEnvironmentType() {
+    String environmentTypeStr =
+        buckConfig.getValue(STAMPEDE_SECTION, ENVIRONMENT_TYPE).orElse(DEFAULT_ENVIRONMENT_TYPE);
+
+    return SchedulingEnvironmentType.valueOf(environmentTypeStr);
+  }
+
   public Optional<String> getAutoDistributedBuildMessage() {
     return buckConfig.getValue(STAMPEDE_SECTION, AUTO_STAMPEDE_BUILD_MESSAGE);
   }
@@ -460,5 +492,13 @@ public class DistBuildConfig {
         .readTimeout(getFrontendRequestTimeoutMillis(), TimeUnit.MILLISECONDS)
         .writeTimeout(getFrontendRequestTimeoutMillis(), TimeUnit.MILLISECONDS)
         .build();
+  }
+
+  public MinionRequirements getMinionRequirements() {
+    return DistBuildUtil.createMinionRequirements(
+        getBuildMode(),
+        getSchedulingEnvironmentType(),
+        getNumberOfMinions(),
+        getNumberOfLowSpecMinions());
   }
 }

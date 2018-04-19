@@ -318,14 +318,14 @@ public class MultiGetBuildSlaveRealTimeLogsResponse implements org.apache.thrift
           case 1: // MULTI_STREAM_LOGS
             if (schemeField.type == org.apache.thrift.protocol.TType.LIST) {
               {
-                org.apache.thrift.protocol.TList _list128 = iprot.readListBegin();
-                struct.multiStreamLogs = new java.util.ArrayList<StreamLogs>(_list128.size);
-                StreamLogs _elem129;
-                for (int _i130 = 0; _i130 < _list128.size; ++_i130)
+                org.apache.thrift.protocol.TList _list136 = iprot.readListBegin();
+                struct.multiStreamLogs = new java.util.ArrayList<StreamLogs>(_list136.size);
+                StreamLogs _elem137;
+                for (int _i138 = 0; _i138 < _list136.size; ++_i138)
                 {
-                  _elem129 = new StreamLogs();
-                  _elem129.read(iprot);
-                  struct.multiStreamLogs.add(_elem129);
+                  _elem137 = new StreamLogs();
+                  _elem137.read(iprot);
+                  struct.multiStreamLogs.add(_elem137);
                 }
                 iprot.readListEnd();
               }
@@ -354,9 +354,9 @@ public class MultiGetBuildSlaveRealTimeLogsResponse implements org.apache.thrift
           oprot.writeFieldBegin(MULTI_STREAM_LOGS_FIELD_DESC);
           {
             oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, struct.multiStreamLogs.size()));
-            for (StreamLogs _iter131 : struct.multiStreamLogs)
+            for (StreamLogs _iter139 : struct.multiStreamLogs)
             {
-              _iter131.write(oprot);
+              _iter139.write(oprot);
             }
             oprot.writeListEnd();
           }
@@ -388,9 +388,9 @@ public class MultiGetBuildSlaveRealTimeLogsResponse implements org.apache.thrift
       if (struct.isSetMultiStreamLogs()) {
         {
           oprot.writeI32(struct.multiStreamLogs.size());
-          for (StreamLogs _iter132 : struct.multiStreamLogs)
+          for (StreamLogs _iter140 : struct.multiStreamLogs)
           {
-            _iter132.write(oprot);
+            _iter140.write(oprot);
           }
         }
       }
@@ -402,14 +402,14 @@ public class MultiGetBuildSlaveRealTimeLogsResponse implements org.apache.thrift
       java.util.BitSet incoming = iprot.readBitSet(1);
       if (incoming.get(0)) {
         {
-          org.apache.thrift.protocol.TList _list133 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
-          struct.multiStreamLogs = new java.util.ArrayList<StreamLogs>(_list133.size);
-          StreamLogs _elem134;
-          for (int _i135 = 0; _i135 < _list133.size; ++_i135)
+          org.apache.thrift.protocol.TList _list141 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
+          struct.multiStreamLogs = new java.util.ArrayList<StreamLogs>(_list141.size);
+          StreamLogs _elem142;
+          for (int _i143 = 0; _i143 < _list141.size; ++_i143)
           {
-            _elem134 = new StreamLogs();
-            _elem134.read(iprot);
-            struct.multiStreamLogs.add(_elem134);
+            _elem142 = new StreamLogs();
+            _elem142.read(iprot);
+            struct.multiStreamLogs.add(_elem142);
           }
         }
         struct.setMultiStreamLogsIsSet(true);

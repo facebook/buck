@@ -318,14 +318,14 @@ public class MultiGetBuildSlaveLogDirResponse implements org.apache.thrift.TBase
           case 1: // LOG_DIRS
             if (schemeField.type == org.apache.thrift.protocol.TType.LIST) {
               {
-                org.apache.thrift.protocol.TList _list112 = iprot.readListBegin();
-                struct.logDirs = new java.util.ArrayList<LogDir>(_list112.size);
-                LogDir _elem113;
-                for (int _i114 = 0; _i114 < _list112.size; ++_i114)
+                org.apache.thrift.protocol.TList _list120 = iprot.readListBegin();
+                struct.logDirs = new java.util.ArrayList<LogDir>(_list120.size);
+                LogDir _elem121;
+                for (int _i122 = 0; _i122 < _list120.size; ++_i122)
                 {
-                  _elem113 = new LogDir();
-                  _elem113.read(iprot);
-                  struct.logDirs.add(_elem113);
+                  _elem121 = new LogDir();
+                  _elem121.read(iprot);
+                  struct.logDirs.add(_elem121);
                 }
                 iprot.readListEnd();
               }
@@ -354,9 +354,9 @@ public class MultiGetBuildSlaveLogDirResponse implements org.apache.thrift.TBase
           oprot.writeFieldBegin(LOG_DIRS_FIELD_DESC);
           {
             oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, struct.logDirs.size()));
-            for (LogDir _iter115 : struct.logDirs)
+            for (LogDir _iter123 : struct.logDirs)
             {
-              _iter115.write(oprot);
+              _iter123.write(oprot);
             }
             oprot.writeListEnd();
           }
@@ -388,9 +388,9 @@ public class MultiGetBuildSlaveLogDirResponse implements org.apache.thrift.TBase
       if (struct.isSetLogDirs()) {
         {
           oprot.writeI32(struct.logDirs.size());
-          for (LogDir _iter116 : struct.logDirs)
+          for (LogDir _iter124 : struct.logDirs)
           {
-            _iter116.write(oprot);
+            _iter124.write(oprot);
           }
         }
       }
@@ -402,14 +402,14 @@ public class MultiGetBuildSlaveLogDirResponse implements org.apache.thrift.TBase
       java.util.BitSet incoming = iprot.readBitSet(1);
       if (incoming.get(0)) {
         {
-          org.apache.thrift.protocol.TList _list117 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
-          struct.logDirs = new java.util.ArrayList<LogDir>(_list117.size);
-          LogDir _elem118;
-          for (int _i119 = 0; _i119 < _list117.size; ++_i119)
+          org.apache.thrift.protocol.TList _list125 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
+          struct.logDirs = new java.util.ArrayList<LogDir>(_list125.size);
+          LogDir _elem126;
+          for (int _i127 = 0; _i127 < _list125.size; ++_i127)
           {
-            _elem118 = new LogDir();
-            _elem118.read(iprot);
-            struct.logDirs.add(_elem118);
+            _elem126 = new LogDir();
+            _elem126.read(iprot);
+            struct.logDirs.add(_elem126);
           }
         }
         struct.setLogDirsIsSet(true);

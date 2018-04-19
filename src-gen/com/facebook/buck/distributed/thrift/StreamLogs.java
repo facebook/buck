@@ -492,14 +492,14 @@ public class StreamLogs implements org.apache.thrift.TBase<StreamLogs, StreamLog
           case 2: // LOG_LINE_BATCHES
             if (schemeField.type == org.apache.thrift.protocol.TType.LIST) {
               {
-                org.apache.thrift.protocol.TList _list8 = iprot.readListBegin();
-                struct.logLineBatches = new java.util.ArrayList<LogLineBatch>(_list8.size);
-                LogLineBatch _elem9;
-                for (int _i10 = 0; _i10 < _list8.size; ++_i10)
+                org.apache.thrift.protocol.TList _list16 = iprot.readListBegin();
+                struct.logLineBatches = new java.util.ArrayList<LogLineBatch>(_list16.size);
+                LogLineBatch _elem17;
+                for (int _i18 = 0; _i18 < _list16.size; ++_i18)
                 {
-                  _elem9 = new LogLineBatch();
-                  _elem9.read(iprot);
-                  struct.logLineBatches.add(_elem9);
+                  _elem17 = new LogLineBatch();
+                  _elem17.read(iprot);
+                  struct.logLineBatches.add(_elem17);
                 }
                 iprot.readListEnd();
               }
@@ -543,9 +543,9 @@ public class StreamLogs implements org.apache.thrift.TBase<StreamLogs, StreamLog
           oprot.writeFieldBegin(LOG_LINE_BATCHES_FIELD_DESC);
           {
             oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, struct.logLineBatches.size()));
-            for (LogLineBatch _iter11 : struct.logLineBatches)
+            for (LogLineBatch _iter19 : struct.logLineBatches)
             {
-              _iter11.write(oprot);
+              _iter19.write(oprot);
             }
             oprot.writeListEnd();
           }
@@ -593,9 +593,9 @@ public class StreamLogs implements org.apache.thrift.TBase<StreamLogs, StreamLog
       if (struct.isSetLogLineBatches()) {
         {
           oprot.writeI32(struct.logLineBatches.size());
-          for (LogLineBatch _iter12 : struct.logLineBatches)
+          for (LogLineBatch _iter20 : struct.logLineBatches)
           {
-            _iter12.write(oprot);
+            _iter20.write(oprot);
           }
         }
       }
@@ -615,14 +615,14 @@ public class StreamLogs implements org.apache.thrift.TBase<StreamLogs, StreamLog
       }
       if (incoming.get(1)) {
         {
-          org.apache.thrift.protocol.TList _list13 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
-          struct.logLineBatches = new java.util.ArrayList<LogLineBatch>(_list13.size);
-          LogLineBatch _elem14;
-          for (int _i15 = 0; _i15 < _list13.size; ++_i15)
+          org.apache.thrift.protocol.TList _list21 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
+          struct.logLineBatches = new java.util.ArrayList<LogLineBatch>(_list21.size);
+          LogLineBatch _elem22;
+          for (int _i23 = 0; _i23 < _list21.size; ++_i23)
           {
-            _elem14 = new LogLineBatch();
-            _elem14.read(iprot);
-            struct.logLineBatches.add(_elem14);
+            _elem22 = new LogLineBatch();
+            _elem22.read(iprot);
+            struct.logLineBatches.add(_elem22);
           }
         }
         struct.setLogLineBatchesIsSet(true);

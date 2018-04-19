@@ -18,10 +18,15 @@ package com.facebook.buck.distributed;
 
 import static com.facebook.buck.util.BuckConstant.DIST_BUILD_SLAVE_BUCK_OUT_LOG_DIR_NAME;
 
+import com.facebook.buck.distributed.thrift.BuildMode;
 import com.facebook.buck.distributed.thrift.BuildSlaveConsoleEvent;
 import com.facebook.buck.distributed.thrift.BuildSlaveEvent;
 import com.facebook.buck.distributed.thrift.BuildSlaveEventType;
 import com.facebook.buck.distributed.thrift.ConsoleEventSeverity;
+import com.facebook.buck.distributed.thrift.MinionRequirement;
+import com.facebook.buck.distributed.thrift.MinionRequirements;
+import com.facebook.buck.distributed.thrift.MinionType;
+import com.facebook.buck.distributed.thrift.SchedulingEnvironmentType;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.BuckConstant;
@@ -29,7 +34,9 @@ import com.google.common.base.Preconditions;
 import java.nio.file.Path;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.logging.Level;
 
 public class DistBuildUtil {
@@ -37,6 +44,65 @@ public class DistBuildUtil {
   private static final DateFormat DATE_FORMAT = new SimpleDateFormat("[yyyy-MM-dd HH:mm:ss.SSS]");
 
   private DistBuildUtil() {}
+
+  /** @return MinionRequirements object for the given parameters. */
+  public static MinionRequirements createMinionRequirements(
+      BuildMode buildMode,
+      SchedulingEnvironmentType environmentType,
+      int totalMinionCount,
+      int lowSpecMinionCount) {
+    MinionRequirements minionRequirements = new MinionRequirements();
+
+    if (buildMode != BuildMode.DISTRIBUTED_BUILD_WITH_LOCAL_COORDINATOR
+        && buildMode != BuildMode.DISTRIBUTED_BUILD_WITH_REMOTE_COORDINATOR
+        && buildMode != BuildMode.LOCAL_BUILD_WITH_REMOTE_EXECUTION) {
+      return minionRequirements; // BuildMode does not support minion requirements
+    }
+
+    Preconditions.checkArgument(
+        totalMinionCount > 0,
+        "The number of minions must be greater than zero. Value [%d] found.",
+        totalMinionCount);
+
+    List<MinionRequirement> requirements = new ArrayList<>();
+    int standardSpecMinionCount = totalMinionCount;
+    if (environmentType == SchedulingEnvironmentType.MIXED_HARDWARE && lowSpecMinionCount > 0) {
+      Preconditions.checkArgument(
+          lowSpecMinionCount < totalMinionCount,
+          String.format(
+              "Number of low spec minions [%d] must be less than total number of minions [%d]",
+              lowSpecMinionCount, totalMinionCount));
+
+      standardSpecMinionCount -= lowSpecMinionCount;
+
+      MinionRequirement lowSpecRequirement = new MinionRequirement();
+      lowSpecRequirement.setMinionType(MinionType.LOW_SPEC);
+      lowSpecRequirement.setRequiredCount(lowSpecMinionCount);
+
+      requirements.add(lowSpecRequirement);
+    }
+
+    MinionRequirement standardSpecRequirement = new MinionRequirement();
+    standardSpecRequirement.setMinionType(MinionType.STANDARD_SPEC);
+    standardSpecRequirement.setRequiredCount(standardSpecMinionCount);
+    requirements.add(standardSpecRequirement);
+
+    minionRequirements.setRequirements(requirements);
+    return minionRequirements;
+  }
+
+  /** @return Total number of minions specified in requirements */
+  public static int countMinions(MinionRequirements minionRequirements) {
+    if (!minionRequirements.isSetRequirements()) {
+      return 0;
+    }
+
+    return minionRequirements
+        .getRequirements()
+        .stream()
+        .mapToInt(req -> req.getRequiredCount())
+        .sum();
+  }
 
   public static BuildSlaveEvent createBuildSlaveEvent(
       BuildSlaveEventType eventType, long timeMillis) {

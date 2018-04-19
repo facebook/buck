@@ -52,6 +52,8 @@ import com.facebook.buck.distributed.thrift.FrontendRequest;
 import com.facebook.buck.distributed.thrift.FrontendRequestType;
 import com.facebook.buck.distributed.thrift.FrontendResponse;
 import com.facebook.buck.distributed.thrift.LogLineBatchRequest;
+import com.facebook.buck.distributed.thrift.MinionRequirements;
+import com.facebook.buck.distributed.thrift.MinionType;
 import com.facebook.buck.distributed.thrift.MultiGetBuildSlaveEventsRequest;
 import com.facebook.buck.distributed.thrift.MultiGetBuildSlaveLogDirRequest;
 import com.facebook.buck.distributed.thrift.MultiGetBuildSlaveLogDirResponse;
@@ -327,7 +329,7 @@ public class DistBuildService implements Closeable {
   public BuildJob createBuild(
       BuildId buildId,
       BuildMode buildMode,
-      int numberOfMinions,
+      MinionRequirements minionRequirements,
       String repository,
       String tenantId,
       List<String> buildTargets,
@@ -340,19 +342,18 @@ public class DistBuildService implements Closeable {
         "BuildMode [%s=%d] is currently not supported.",
         buildMode.toString(),
         buildMode.ordinal());
-    Preconditions.checkArgument(
-        numberOfMinions > 0,
-        "The number of minions must be greater than zero. Value [%d] found.",
-        numberOfMinions);
+
     // Tell server to create the build and get the build id.
     CreateBuildRequest createBuildRequest = new CreateBuildRequest();
     createBuildRequest
         .setCreateTimestampMillis(System.currentTimeMillis())
         .setBuckBuildUuid(buildId.toString())
         .setBuildMode(buildMode)
-        .setNumberOfMinions(numberOfMinions)
         .setUsername(username)
         .setBuildTargets(buildTargets)
+        .setMinionRequirements(minionRequirements)
+        // TODO(alisdair): remove in future once minion requirements fully supported.
+        .setTotalNumberOfMinions(DistBuildUtil.countMinions(minionRequirements))
         .setBuildLabel(buildLabel);
 
     if (repository != null && repository.length() > 0) {
@@ -818,12 +819,22 @@ public class DistBuildService implements Closeable {
     Preconditions.checkState(response.isSetSetCoordinatorResponse());
   }
 
-  public void enqueueMinions(StampedeId stampedeId, int numberOfMinions, String minionQueueName)
+  /**
+   * Tells the frontend to schedule given number of minions
+   *
+   * @throws IOException
+   */
+  public void enqueueMinions(
+      StampedeId stampedeId,
+      int totalNumberOfMinions,
+      String minionQueueName,
+      MinionType minionType)
       throws IOException {
     EnqueueMinionsRequest request =
         new EnqueueMinionsRequest()
             .setMinionQueue(minionQueueName)
-            .setNumberOfMinions(numberOfMinions)
+            .setNumberOfMinions(totalNumberOfMinions)
+            .setMinionType(minionType)
             .setStampedeId(stampedeId);
 
     FrontendRequest frontendRequest = new FrontendRequest();

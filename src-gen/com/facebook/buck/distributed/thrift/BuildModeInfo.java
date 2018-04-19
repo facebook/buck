@@ -12,9 +12,10 @@ public class BuildModeInfo implements org.apache.thrift.TBase<BuildModeInfo, Bui
   private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("BuildModeInfo");
 
   private static final org.apache.thrift.protocol.TField MODE_FIELD_DESC = new org.apache.thrift.protocol.TField("mode", org.apache.thrift.protocol.TType.I32, (short)1);
-  private static final org.apache.thrift.protocol.TField NUMBER_OF_MINIONS_FIELD_DESC = new org.apache.thrift.protocol.TField("numberOfMinions", org.apache.thrift.protocol.TType.I32, (short)2);
+  private static final org.apache.thrift.protocol.TField TOTAL_NUMBER_OF_MINIONS_FIELD_DESC = new org.apache.thrift.protocol.TField("totalNumberOfMinions", org.apache.thrift.protocol.TType.I32, (short)2);
   private static final org.apache.thrift.protocol.TField COORDINATOR_ADDRESS_FIELD_DESC = new org.apache.thrift.protocol.TField("coordinatorAddress", org.apache.thrift.protocol.TType.STRING, (short)3);
   private static final org.apache.thrift.protocol.TField COORDINATOR_PORT_FIELD_DESC = new org.apache.thrift.protocol.TField("coordinatorPort", org.apache.thrift.protocol.TType.I32, (short)4);
+  private static final org.apache.thrift.protocol.TField MINION_REQUIREMENTS_FIELD_DESC = new org.apache.thrift.protocol.TField("minionRequirements", org.apache.thrift.protocol.TType.STRUCT, (short)5);
 
   private static final org.apache.thrift.scheme.SchemeFactory STANDARD_SCHEME_FACTORY = new BuildModeInfoStandardSchemeFactory();
   private static final org.apache.thrift.scheme.SchemeFactory TUPLE_SCHEME_FACTORY = new BuildModeInfoTupleSchemeFactory();
@@ -24,9 +25,10 @@ public class BuildModeInfo implements org.apache.thrift.TBase<BuildModeInfo, Bui
    * @see BuildMode
    */
   public BuildMode mode; // optional
-  public int numberOfMinions; // optional
+  public int totalNumberOfMinions; // optional
   public java.lang.String coordinatorAddress; // optional
   public int coordinatorPort; // optional
+  public MinionRequirements minionRequirements; // optional
 
   /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
   public enum _Fields implements org.apache.thrift.TFieldIdEnum {
@@ -35,9 +37,10 @@ public class BuildModeInfo implements org.apache.thrift.TBase<BuildModeInfo, Bui
      * @see BuildMode
      */
     MODE((short)1, "mode"),
-    NUMBER_OF_MINIONS((short)2, "numberOfMinions"),
+    TOTAL_NUMBER_OF_MINIONS((short)2, "totalNumberOfMinions"),
     COORDINATOR_ADDRESS((short)3, "coordinatorAddress"),
-    COORDINATOR_PORT((short)4, "coordinatorPort");
+    COORDINATOR_PORT((short)4, "coordinatorPort"),
+    MINION_REQUIREMENTS((short)5, "minionRequirements");
 
     private static final java.util.Map<java.lang.String, _Fields> byName = new java.util.HashMap<java.lang.String, _Fields>();
 
@@ -54,12 +57,14 @@ public class BuildModeInfo implements org.apache.thrift.TBase<BuildModeInfo, Bui
       switch(fieldId) {
         case 1: // MODE
           return MODE;
-        case 2: // NUMBER_OF_MINIONS
-          return NUMBER_OF_MINIONS;
+        case 2: // TOTAL_NUMBER_OF_MINIONS
+          return TOTAL_NUMBER_OF_MINIONS;
         case 3: // COORDINATOR_ADDRESS
           return COORDINATOR_ADDRESS;
         case 4: // COORDINATOR_PORT
           return COORDINATOR_PORT;
+        case 5: // MINION_REQUIREMENTS
+          return MINION_REQUIREMENTS;
         default:
           return null;
       }
@@ -100,21 +105,23 @@ public class BuildModeInfo implements org.apache.thrift.TBase<BuildModeInfo, Bui
   }
 
   // isset id assignments
-  private static final int __NUMBEROFMINIONS_ISSET_ID = 0;
+  private static final int __TOTALNUMBEROFMINIONS_ISSET_ID = 0;
   private static final int __COORDINATORPORT_ISSET_ID = 1;
   private byte __isset_bitfield = 0;
-  private static final _Fields optionals[] = {_Fields.MODE,_Fields.NUMBER_OF_MINIONS,_Fields.COORDINATOR_ADDRESS,_Fields.COORDINATOR_PORT};
+  private static final _Fields optionals[] = {_Fields.MODE,_Fields.TOTAL_NUMBER_OF_MINIONS,_Fields.COORDINATOR_ADDRESS,_Fields.COORDINATOR_PORT,_Fields.MINION_REQUIREMENTS};
   public static final java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
   static {
     java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new java.util.EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
     tmpMap.put(_Fields.MODE, new org.apache.thrift.meta_data.FieldMetaData("mode", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
         new org.apache.thrift.meta_data.EnumMetaData(org.apache.thrift.protocol.TType.ENUM, BuildMode.class)));
-    tmpMap.put(_Fields.NUMBER_OF_MINIONS, new org.apache.thrift.meta_data.FieldMetaData("numberOfMinions", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
+    tmpMap.put(_Fields.TOTAL_NUMBER_OF_MINIONS, new org.apache.thrift.meta_data.FieldMetaData("totalNumberOfMinions", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I32)));
     tmpMap.put(_Fields.COORDINATOR_ADDRESS, new org.apache.thrift.meta_data.FieldMetaData("coordinatorAddress", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
     tmpMap.put(_Fields.COORDINATOR_PORT, new org.apache.thrift.meta_data.FieldMetaData("coordinatorPort", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I32)));
+    tmpMap.put(_Fields.MINION_REQUIREMENTS, new org.apache.thrift.meta_data.FieldMetaData("minionRequirements", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
+        new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, MinionRequirements.class)));
     metaDataMap = java.util.Collections.unmodifiableMap(tmpMap);
     org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(BuildModeInfo.class, metaDataMap);
   }
@@ -132,11 +139,14 @@ public class BuildModeInfo implements org.apache.thrift.TBase<BuildModeInfo, Bui
     if (other.isSetMode()) {
       this.mode = other.mode;
     }
-    this.numberOfMinions = other.numberOfMinions;
+    this.totalNumberOfMinions = other.totalNumberOfMinions;
     if (other.isSetCoordinatorAddress()) {
       this.coordinatorAddress = other.coordinatorAddress;
     }
     this.coordinatorPort = other.coordinatorPort;
+    if (other.isSetMinionRequirements()) {
+      this.minionRequirements = new MinionRequirements(other.minionRequirements);
+    }
   }
 
   public BuildModeInfo deepCopy() {
@@ -147,11 +157,12 @@ public class BuildModeInfo implements org.apache.thrift.TBase<BuildModeInfo, Bui
   public void clear() {
     this.mode = com.facebook.buck.distributed.thrift.BuildMode.UNKNOWN;
 
-    setNumberOfMinionsIsSet(false);
-    this.numberOfMinions = 0;
+    setTotalNumberOfMinionsIsSet(false);
+    this.totalNumberOfMinions = 0;
     this.coordinatorAddress = null;
     setCoordinatorPortIsSet(false);
     this.coordinatorPort = 0;
+    this.minionRequirements = null;
   }
 
   /**
@@ -186,27 +197,27 @@ public class BuildModeInfo implements org.apache.thrift.TBase<BuildModeInfo, Bui
     }
   }
 
-  public int getNumberOfMinions() {
-    return this.numberOfMinions;
+  public int getTotalNumberOfMinions() {
+    return this.totalNumberOfMinions;
   }
 
-  public BuildModeInfo setNumberOfMinions(int numberOfMinions) {
-    this.numberOfMinions = numberOfMinions;
-    setNumberOfMinionsIsSet(true);
+  public BuildModeInfo setTotalNumberOfMinions(int totalNumberOfMinions) {
+    this.totalNumberOfMinions = totalNumberOfMinions;
+    setTotalNumberOfMinionsIsSet(true);
     return this;
   }
 
-  public void unsetNumberOfMinions() {
-    __isset_bitfield = org.apache.thrift.EncodingUtils.clearBit(__isset_bitfield, __NUMBEROFMINIONS_ISSET_ID);
+  public void unsetTotalNumberOfMinions() {
+    __isset_bitfield = org.apache.thrift.EncodingUtils.clearBit(__isset_bitfield, __TOTALNUMBEROFMINIONS_ISSET_ID);
   }
 
-  /** Returns true if field numberOfMinions is set (has been assigned a value) and false otherwise */
-  public boolean isSetNumberOfMinions() {
-    return org.apache.thrift.EncodingUtils.testBit(__isset_bitfield, __NUMBEROFMINIONS_ISSET_ID);
+  /** Returns true if field totalNumberOfMinions is set (has been assigned a value) and false otherwise */
+  public boolean isSetTotalNumberOfMinions() {
+    return org.apache.thrift.EncodingUtils.testBit(__isset_bitfield, __TOTALNUMBEROFMINIONS_ISSET_ID);
   }
 
-  public void setNumberOfMinionsIsSet(boolean value) {
-    __isset_bitfield = org.apache.thrift.EncodingUtils.setBit(__isset_bitfield, __NUMBEROFMINIONS_ISSET_ID, value);
+  public void setTotalNumberOfMinionsIsSet(boolean value) {
+    __isset_bitfield = org.apache.thrift.EncodingUtils.setBit(__isset_bitfield, __TOTALNUMBEROFMINIONS_ISSET_ID, value);
   }
 
   public java.lang.String getCoordinatorAddress() {
@@ -256,6 +267,30 @@ public class BuildModeInfo implements org.apache.thrift.TBase<BuildModeInfo, Bui
     __isset_bitfield = org.apache.thrift.EncodingUtils.setBit(__isset_bitfield, __COORDINATORPORT_ISSET_ID, value);
   }
 
+  public MinionRequirements getMinionRequirements() {
+    return this.minionRequirements;
+  }
+
+  public BuildModeInfo setMinionRequirements(MinionRequirements minionRequirements) {
+    this.minionRequirements = minionRequirements;
+    return this;
+  }
+
+  public void unsetMinionRequirements() {
+    this.minionRequirements = null;
+  }
+
+  /** Returns true if field minionRequirements is set (has been assigned a value) and false otherwise */
+  public boolean isSetMinionRequirements() {
+    return this.minionRequirements != null;
+  }
+
+  public void setMinionRequirementsIsSet(boolean value) {
+    if (!value) {
+      this.minionRequirements = null;
+    }
+  }
+
   public void setFieldValue(_Fields field, java.lang.Object value) {
     switch (field) {
     case MODE:
@@ -266,11 +301,11 @@ public class BuildModeInfo implements org.apache.thrift.TBase<BuildModeInfo, Bui
       }
       break;
 
-    case NUMBER_OF_MINIONS:
+    case TOTAL_NUMBER_OF_MINIONS:
       if (value == null) {
-        unsetNumberOfMinions();
+        unsetTotalNumberOfMinions();
       } else {
-        setNumberOfMinions((java.lang.Integer)value);
+        setTotalNumberOfMinions((java.lang.Integer)value);
       }
       break;
 
@@ -290,6 +325,14 @@ public class BuildModeInfo implements org.apache.thrift.TBase<BuildModeInfo, Bui
       }
       break;
 
+    case MINION_REQUIREMENTS:
+      if (value == null) {
+        unsetMinionRequirements();
+      } else {
+        setMinionRequirements((MinionRequirements)value);
+      }
+      break;
+
     }
   }
 
@@ -298,14 +341,17 @@ public class BuildModeInfo implements org.apache.thrift.TBase<BuildModeInfo, Bui
     case MODE:
       return getMode();
 
-    case NUMBER_OF_MINIONS:
-      return getNumberOfMinions();
+    case TOTAL_NUMBER_OF_MINIONS:
+      return getTotalNumberOfMinions();
 
     case COORDINATOR_ADDRESS:
       return getCoordinatorAddress();
 
     case COORDINATOR_PORT:
       return getCoordinatorPort();
+
+    case MINION_REQUIREMENTS:
+      return getMinionRequirements();
 
     }
     throw new java.lang.IllegalStateException();
@@ -320,12 +366,14 @@ public class BuildModeInfo implements org.apache.thrift.TBase<BuildModeInfo, Bui
     switch (field) {
     case MODE:
       return isSetMode();
-    case NUMBER_OF_MINIONS:
-      return isSetNumberOfMinions();
+    case TOTAL_NUMBER_OF_MINIONS:
+      return isSetTotalNumberOfMinions();
     case COORDINATOR_ADDRESS:
       return isSetCoordinatorAddress();
     case COORDINATOR_PORT:
       return isSetCoordinatorPort();
+    case MINION_REQUIREMENTS:
+      return isSetMinionRequirements();
     }
     throw new java.lang.IllegalStateException();
   }
@@ -354,12 +402,12 @@ public class BuildModeInfo implements org.apache.thrift.TBase<BuildModeInfo, Bui
         return false;
     }
 
-    boolean this_present_numberOfMinions = true && this.isSetNumberOfMinions();
-    boolean that_present_numberOfMinions = true && that.isSetNumberOfMinions();
-    if (this_present_numberOfMinions || that_present_numberOfMinions) {
-      if (!(this_present_numberOfMinions && that_present_numberOfMinions))
+    boolean this_present_totalNumberOfMinions = true && this.isSetTotalNumberOfMinions();
+    boolean that_present_totalNumberOfMinions = true && that.isSetTotalNumberOfMinions();
+    if (this_present_totalNumberOfMinions || that_present_totalNumberOfMinions) {
+      if (!(this_present_totalNumberOfMinions && that_present_totalNumberOfMinions))
         return false;
-      if (this.numberOfMinions != that.numberOfMinions)
+      if (this.totalNumberOfMinions != that.totalNumberOfMinions)
         return false;
     }
 
@@ -381,6 +429,15 @@ public class BuildModeInfo implements org.apache.thrift.TBase<BuildModeInfo, Bui
         return false;
     }
 
+    boolean this_present_minionRequirements = true && this.isSetMinionRequirements();
+    boolean that_present_minionRequirements = true && that.isSetMinionRequirements();
+    if (this_present_minionRequirements || that_present_minionRequirements) {
+      if (!(this_present_minionRequirements && that_present_minionRequirements))
+        return false;
+      if (!this.minionRequirements.equals(that.minionRequirements))
+        return false;
+    }
+
     return true;
   }
 
@@ -392,9 +449,9 @@ public class BuildModeInfo implements org.apache.thrift.TBase<BuildModeInfo, Bui
     if (isSetMode())
       hashCode = hashCode * 8191 + mode.getValue();
 
-    hashCode = hashCode * 8191 + ((isSetNumberOfMinions()) ? 131071 : 524287);
-    if (isSetNumberOfMinions())
-      hashCode = hashCode * 8191 + numberOfMinions;
+    hashCode = hashCode * 8191 + ((isSetTotalNumberOfMinions()) ? 131071 : 524287);
+    if (isSetTotalNumberOfMinions())
+      hashCode = hashCode * 8191 + totalNumberOfMinions;
 
     hashCode = hashCode * 8191 + ((isSetCoordinatorAddress()) ? 131071 : 524287);
     if (isSetCoordinatorAddress())
@@ -403,6 +460,10 @@ public class BuildModeInfo implements org.apache.thrift.TBase<BuildModeInfo, Bui
     hashCode = hashCode * 8191 + ((isSetCoordinatorPort()) ? 131071 : 524287);
     if (isSetCoordinatorPort())
       hashCode = hashCode * 8191 + coordinatorPort;
+
+    hashCode = hashCode * 8191 + ((isSetMinionRequirements()) ? 131071 : 524287);
+    if (isSetMinionRequirements())
+      hashCode = hashCode * 8191 + minionRequirements.hashCode();
 
     return hashCode;
   }
@@ -425,12 +486,12 @@ public class BuildModeInfo implements org.apache.thrift.TBase<BuildModeInfo, Bui
         return lastComparison;
       }
     }
-    lastComparison = java.lang.Boolean.valueOf(isSetNumberOfMinions()).compareTo(other.isSetNumberOfMinions());
+    lastComparison = java.lang.Boolean.valueOf(isSetTotalNumberOfMinions()).compareTo(other.isSetTotalNumberOfMinions());
     if (lastComparison != 0) {
       return lastComparison;
     }
-    if (isSetNumberOfMinions()) {
-      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.numberOfMinions, other.numberOfMinions);
+    if (isSetTotalNumberOfMinions()) {
+      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.totalNumberOfMinions, other.totalNumberOfMinions);
       if (lastComparison != 0) {
         return lastComparison;
       }
@@ -451,6 +512,16 @@ public class BuildModeInfo implements org.apache.thrift.TBase<BuildModeInfo, Bui
     }
     if (isSetCoordinatorPort()) {
       lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.coordinatorPort, other.coordinatorPort);
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+    }
+    lastComparison = java.lang.Boolean.valueOf(isSetMinionRequirements()).compareTo(other.isSetMinionRequirements());
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    if (isSetMinionRequirements()) {
+      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.minionRequirements, other.minionRequirements);
       if (lastComparison != 0) {
         return lastComparison;
       }
@@ -484,10 +555,10 @@ public class BuildModeInfo implements org.apache.thrift.TBase<BuildModeInfo, Bui
       }
       first = false;
     }
-    if (isSetNumberOfMinions()) {
+    if (isSetTotalNumberOfMinions()) {
       if (!first) sb.append(", ");
-      sb.append("numberOfMinions:");
-      sb.append(this.numberOfMinions);
+      sb.append("totalNumberOfMinions:");
+      sb.append(this.totalNumberOfMinions);
       first = false;
     }
     if (isSetCoordinatorAddress()) {
@@ -506,6 +577,16 @@ public class BuildModeInfo implements org.apache.thrift.TBase<BuildModeInfo, Bui
       sb.append(this.coordinatorPort);
       first = false;
     }
+    if (isSetMinionRequirements()) {
+      if (!first) sb.append(", ");
+      sb.append("minionRequirements:");
+      if (this.minionRequirements == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.minionRequirements);
+      }
+      first = false;
+    }
     sb.append(")");
     return sb.toString();
   }
@@ -513,6 +594,9 @@ public class BuildModeInfo implements org.apache.thrift.TBase<BuildModeInfo, Bui
   public void validate() throws org.apache.thrift.TException {
     // check for required fields
     // check for sub-struct validity
+    if (minionRequirements != null) {
+      minionRequirements.validate();
+    }
   }
 
   private void writeObject(java.io.ObjectOutputStream out) throws java.io.IOException {
@@ -559,10 +643,10 @@ public class BuildModeInfo implements org.apache.thrift.TBase<BuildModeInfo, Bui
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
             break;
-          case 2: // NUMBER_OF_MINIONS
+          case 2: // TOTAL_NUMBER_OF_MINIONS
             if (schemeField.type == org.apache.thrift.protocol.TType.I32) {
-              struct.numberOfMinions = iprot.readI32();
-              struct.setNumberOfMinionsIsSet(true);
+              struct.totalNumberOfMinions = iprot.readI32();
+              struct.setTotalNumberOfMinionsIsSet(true);
             } else { 
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
@@ -579,6 +663,15 @@ public class BuildModeInfo implements org.apache.thrift.TBase<BuildModeInfo, Bui
             if (schemeField.type == org.apache.thrift.protocol.TType.I32) {
               struct.coordinatorPort = iprot.readI32();
               struct.setCoordinatorPortIsSet(true);
+            } else { 
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+            }
+            break;
+          case 5: // MINION_REQUIREMENTS
+            if (schemeField.type == org.apache.thrift.protocol.TType.STRUCT) {
+              struct.minionRequirements = new MinionRequirements();
+              struct.minionRequirements.read(iprot);
+              struct.setMinionRequirementsIsSet(true);
             } else { 
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
@@ -605,9 +698,9 @@ public class BuildModeInfo implements org.apache.thrift.TBase<BuildModeInfo, Bui
           oprot.writeFieldEnd();
         }
       }
-      if (struct.isSetNumberOfMinions()) {
-        oprot.writeFieldBegin(NUMBER_OF_MINIONS_FIELD_DESC);
-        oprot.writeI32(struct.numberOfMinions);
+      if (struct.isSetTotalNumberOfMinions()) {
+        oprot.writeFieldBegin(TOTAL_NUMBER_OF_MINIONS_FIELD_DESC);
+        oprot.writeI32(struct.totalNumberOfMinions);
         oprot.writeFieldEnd();
       }
       if (struct.coordinatorAddress != null) {
@@ -621,6 +714,13 @@ public class BuildModeInfo implements org.apache.thrift.TBase<BuildModeInfo, Bui
         oprot.writeFieldBegin(COORDINATOR_PORT_FIELD_DESC);
         oprot.writeI32(struct.coordinatorPort);
         oprot.writeFieldEnd();
+      }
+      if (struct.minionRequirements != null) {
+        if (struct.isSetMinionRequirements()) {
+          oprot.writeFieldBegin(MINION_REQUIREMENTS_FIELD_DESC);
+          struct.minionRequirements.write(oprot);
+          oprot.writeFieldEnd();
+        }
       }
       oprot.writeFieldStop();
       oprot.writeStructEnd();
@@ -643,7 +743,7 @@ public class BuildModeInfo implements org.apache.thrift.TBase<BuildModeInfo, Bui
       if (struct.isSetMode()) {
         optionals.set(0);
       }
-      if (struct.isSetNumberOfMinions()) {
+      if (struct.isSetTotalNumberOfMinions()) {
         optionals.set(1);
       }
       if (struct.isSetCoordinatorAddress()) {
@@ -652,12 +752,15 @@ public class BuildModeInfo implements org.apache.thrift.TBase<BuildModeInfo, Bui
       if (struct.isSetCoordinatorPort()) {
         optionals.set(3);
       }
-      oprot.writeBitSet(optionals, 4);
+      if (struct.isSetMinionRequirements()) {
+        optionals.set(4);
+      }
+      oprot.writeBitSet(optionals, 5);
       if (struct.isSetMode()) {
         oprot.writeI32(struct.mode.getValue());
       }
-      if (struct.isSetNumberOfMinions()) {
-        oprot.writeI32(struct.numberOfMinions);
+      if (struct.isSetTotalNumberOfMinions()) {
+        oprot.writeI32(struct.totalNumberOfMinions);
       }
       if (struct.isSetCoordinatorAddress()) {
         oprot.writeString(struct.coordinatorAddress);
@@ -665,19 +768,22 @@ public class BuildModeInfo implements org.apache.thrift.TBase<BuildModeInfo, Bui
       if (struct.isSetCoordinatorPort()) {
         oprot.writeI32(struct.coordinatorPort);
       }
+      if (struct.isSetMinionRequirements()) {
+        struct.minionRequirements.write(oprot);
+      }
     }
 
     @Override
     public void read(org.apache.thrift.protocol.TProtocol prot, BuildModeInfo struct) throws org.apache.thrift.TException {
       org.apache.thrift.protocol.TTupleProtocol iprot = (org.apache.thrift.protocol.TTupleProtocol) prot;
-      java.util.BitSet incoming = iprot.readBitSet(4);
+      java.util.BitSet incoming = iprot.readBitSet(5);
       if (incoming.get(0)) {
         struct.mode = com.facebook.buck.distributed.thrift.BuildMode.findByValue(iprot.readI32());
         struct.setModeIsSet(true);
       }
       if (incoming.get(1)) {
-        struct.numberOfMinions = iprot.readI32();
-        struct.setNumberOfMinionsIsSet(true);
+        struct.totalNumberOfMinions = iprot.readI32();
+        struct.setTotalNumberOfMinionsIsSet(true);
       }
       if (incoming.get(2)) {
         struct.coordinatorAddress = iprot.readString();
@@ -686,6 +792,11 @@ public class BuildModeInfo implements org.apache.thrift.TBase<BuildModeInfo, Bui
       if (incoming.get(3)) {
         struct.coordinatorPort = iprot.readI32();
         struct.setCoordinatorPortIsSet(true);
+      }
+      if (incoming.get(4)) {
+        struct.minionRequirements = new MinionRequirements();
+        struct.minionRequirements.read(iprot);
+        struct.setMinionRequirementsIsSet(true);
       }
     }
   }

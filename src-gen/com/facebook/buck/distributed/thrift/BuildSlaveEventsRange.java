@@ -588,14 +588,14 @@ public class BuildSlaveEventsRange implements org.apache.thrift.TBase<BuildSlave
           case 4: // EVENTS
             if (schemeField.type == org.apache.thrift.protocol.TType.LIST) {
               {
-                org.apache.thrift.protocol.TList _list40 = iprot.readListBegin();
-                struct.events = new java.util.ArrayList<SequencedBuildSlaveEvent>(_list40.size);
-                SequencedBuildSlaveEvent _elem41;
-                for (int _i42 = 0; _i42 < _list40.size; ++_i42)
+                org.apache.thrift.protocol.TList _list48 = iprot.readListBegin();
+                struct.events = new java.util.ArrayList<SequencedBuildSlaveEvent>(_list48.size);
+                SequencedBuildSlaveEvent _elem49;
+                for (int _i50 = 0; _i50 < _list48.size; ++_i50)
                 {
-                  _elem41 = new SequencedBuildSlaveEvent();
-                  _elem41.read(iprot);
-                  struct.events.add(_elem41);
+                  _elem49 = new SequencedBuildSlaveEvent();
+                  _elem49.read(iprot);
+                  struct.events.add(_elem49);
                 }
                 iprot.readListEnd();
               }
@@ -643,9 +643,9 @@ public class BuildSlaveEventsRange implements org.apache.thrift.TBase<BuildSlave
           oprot.writeFieldBegin(EVENTS_FIELD_DESC);
           {
             oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, struct.events.size()));
-            for (SequencedBuildSlaveEvent _iter43 : struct.events)
+            for (SequencedBuildSlaveEvent _iter51 : struct.events)
             {
-              _iter43.write(oprot);
+              _iter51.write(oprot);
             }
             oprot.writeListEnd();
           }
@@ -695,9 +695,9 @@ public class BuildSlaveEventsRange implements org.apache.thrift.TBase<BuildSlave
       if (struct.isSetEvents()) {
         {
           oprot.writeI32(struct.events.size());
-          for (SequencedBuildSlaveEvent _iter44 : struct.events)
+          for (SequencedBuildSlaveEvent _iter52 : struct.events)
           {
-            _iter44.write(oprot);
+            _iter52.write(oprot);
           }
         }
       }
@@ -722,14 +722,14 @@ public class BuildSlaveEventsRange implements org.apache.thrift.TBase<BuildSlave
       }
       if (incoming.get(3)) {
         {
-          org.apache.thrift.protocol.TList _list45 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
-          struct.events = new java.util.ArrayList<SequencedBuildSlaveEvent>(_list45.size);
-          SequencedBuildSlaveEvent _elem46;
-          for (int _i47 = 0; _i47 < _list45.size; ++_i47)
+          org.apache.thrift.protocol.TList _list53 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
+          struct.events = new java.util.ArrayList<SequencedBuildSlaveEvent>(_list53.size);
+          SequencedBuildSlaveEvent _elem54;
+          for (int _i55 = 0; _i55 < _list53.size; ++_i55)
           {
-            _elem46 = new SequencedBuildSlaveEvent();
-            _elem46.read(iprot);
-            struct.events.add(_elem46);
+            _elem54 = new SequencedBuildSlaveEvent();
+            _elem54.read(iprot);
+            struct.events.add(_elem54);
           }
         }
         struct.setEventsIsSet(true);
