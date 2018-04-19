@@ -27,6 +27,7 @@ import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -358,14 +359,15 @@ abstract class AbstractOcamlBuildContext implements AddsToRuleKey {
     return addPrefix("-ccopt", getLdFlags());
   }
 
-  public static OcamlBuildContext.Builder builder(OcamlPlatform ocamlPlatform) {
+  public static OcamlBuildContext.Builder builder(
+      OcamlPlatform ocamlPlatform, BuildRuleResolver resolver) {
     return OcamlBuildContext.builder()
-        .setOcamlDepTool(ocamlPlatform.getOcamlDepTool())
-        .setOcamlCompiler(ocamlPlatform.getOcamlCompiler())
-        .setOcamlDebug(ocamlPlatform.getOcamlDebug())
-        .setYaccCompiler(ocamlPlatform.getYaccCompiler())
-        .setLexCompiler(ocamlPlatform.getLexCompiler())
-        .setOcamlBytecodeCompiler(ocamlPlatform.getOcamlBytecodeCompiler())
+        .setOcamlDepTool(ocamlPlatform.getOcamlDepTool().resolve(resolver))
+        .setOcamlCompiler(ocamlPlatform.getOcamlCompiler().resolve(resolver))
+        .setOcamlDebug(ocamlPlatform.getOcamlDebug().resolve(resolver))
+        .setYaccCompiler(ocamlPlatform.getYaccCompiler().resolve(resolver))
+        .setLexCompiler(ocamlPlatform.getLexCompiler().resolve(resolver))
+        .setOcamlBytecodeCompiler(ocamlPlatform.getOcamlBytecodeCompiler().resolve(resolver))
         .setOcamlInteropIncludesDir(ocamlPlatform.getOcamlInteropIncludesDir())
         .setCFlags(ocamlPlatform.getCFlags())
         .setLdFlags(ocamlPlatform.getLdFlags());

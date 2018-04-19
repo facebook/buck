@@ -21,7 +21,7 @@ import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.PreprocessorProvider;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorConvertible;
-import com.facebook.buck.rules.Tool;
+import com.facebook.buck.rules.ToolProvider;
 import com.facebook.buck.toolchain.Toolchain;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableList;
@@ -41,21 +41,21 @@ interface AbstractOcamlPlatform extends Toolchain, FlavorConvertible {
     return getCxxPlatform().getFlavor();
   }
 
-  Optional<Tool> getOcamlCompiler();
+  ToolProvider getOcamlCompiler();
 
-  Optional<Tool> getOcamlDepTool();
+  ToolProvider getOcamlDepTool();
 
-  Optional<Tool> getYaccCompiler();
+  ToolProvider getYaccCompiler();
 
-  Optional<Tool> getLexCompiler();
+  ToolProvider getLexCompiler();
 
   Optional<String> getOcamlInteropIncludesDir();
 
   Optional<String> getWarningsFlags();
 
-  Optional<Tool> getOcamlBytecodeCompiler();
+  ToolProvider getOcamlBytecodeCompiler();
 
-  Optional<Tool> getOcamlDebug();
+  ToolProvider getOcamlDebug();
 
   CompilerProvider getCCompiler();
 

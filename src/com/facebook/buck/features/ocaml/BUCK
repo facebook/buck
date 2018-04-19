@@ -26,6 +26,7 @@ buck_module(
         "//src/com/facebook/buck/rules/keys:keys",
         "//src/com/facebook/buck/rules/macros:macros",
         "//src/com/facebook/buck/rules/macros:types",
+        "//src/com/facebook/buck/rules/tool/config:config",
         "//src/com/facebook/buck/shell:steps",
         "//src/com/facebook/buck/step:step",
         "//src/com/facebook/buck/step/fs:fs",

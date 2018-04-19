@@ -22,6 +22,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeNoException;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.config.BuckConfig;
@@ -41,7 +42,12 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultCellPathResolver;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
+import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
+import com.facebook.buck.rules.TestBuildRuleResolver;
 import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -53,6 +59,7 @@ import com.facebook.buck.toolchain.ToolchainCreationContext;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.util.DefaultProcessExecutor;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.config.Config;
 import com.facebook.buck.util.config.Configs;
@@ -119,11 +126,14 @@ public class OCamlIntegrationTest {
     OcamlPlatform ocamlPlatform =
         toolchain.orElseThrow(AssertionError::new).getDefaultOcamlPlatform();
 
-    assumeTrue(ocamlPlatform.getOcamlCompiler().isPresent());
-    assumeTrue(ocamlPlatform.getOcamlBytecodeCompiler().isPresent());
-    assumeTrue(ocamlPlatform.getOcamlDepTool().isPresent());
-    assumeTrue(ocamlPlatform.getYaccCompiler().isPresent());
-    assumeTrue(ocamlPlatform.getLexCompiler().isPresent());
+    BuildRuleResolver resolver = new TestBuildRuleResolver();
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
+    try {
+      ocamlPlatform.getOcamlCompiler().resolve(resolver).getCommandPrefix(pathResolver);
+    } catch (HumanReadableException e) {
+      assumeNoException(e);
+    }
   }
 
   @Test

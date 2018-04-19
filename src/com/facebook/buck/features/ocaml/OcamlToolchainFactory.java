@@ -21,8 +21,10 @@ import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.DefaultCxxPlatforms;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
+import com.facebook.buck.rules.ConstantToolProvider;
 import com.facebook.buck.rules.HashedFileTool;
-import com.facebook.buck.rules.Tool;
+import com.facebook.buck.rules.ToolProvider;
+import com.facebook.buck.rules.tool.config.ToolConfig;
 import com.facebook.buck.toolchain.ToolchainCreationContext;
 import com.facebook.buck.toolchain.ToolchainFactory;
 import com.facebook.buck.toolchain.ToolchainProvider;
@@ -46,16 +48,28 @@ public class OcamlToolchainFactory implements ToolchainFactory<OcamlToolchain> {
 
   private OcamlPlatform getPlatform(
       ToolchainCreationContext context, CxxPlatform cxxPlatform, String section) {
-    BiFunction<String, Path, Optional<Tool>> getTool =
+    BiFunction<String, Path, ToolProvider> getTool =
         (field, defaultValue) ->
             context
-                .getExecutableFinder()
-                .getOptionalExecutable(
-                    context.getBuckConfig().getPath(section, field).orElse(defaultValue),
-                    context.getBuckConfig().getEnvironment())
-                .map(
-                    path ->
-                        new HashedFileTool(() -> context.getBuckConfig().getPathSourcePath(path)));
+                .getBuckConfig()
+                .getView(ToolConfig.class)
+                .getToolProvider(section, field)
+                .orElseGet(
+                    () ->
+                        new ConstantToolProvider(
+                            new HashedFileTool(
+                                () ->
+                                    context
+                                        .getBuckConfig()
+                                        .getPathSourcePath(
+                                            context
+                                                .getExecutableFinder()
+                                                .getExecutable(
+                                                    context
+                                                        .getBuckConfig()
+                                                        .getPath(section, field)
+                                                        .orElse(defaultValue),
+                                                    context.getEnvironment())))));
     return OcamlPlatform.builder()
         .setOcamlCompiler(getTool.apply("ocaml.compiler", DEFAULT_OCAML_COMPILER))
         .setOcamlDepTool(getTool.apply("dep.tool", DEFAULT_OCAML_DEP_TOOL))

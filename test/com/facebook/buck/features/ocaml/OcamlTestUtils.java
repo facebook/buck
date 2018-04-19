@@ -18,11 +18,19 @@ package com.facebook.buck.features.ocaml;
 
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.model.FlavorDomain;
+import com.facebook.buck.rules.CommandTool;
+import com.facebook.buck.rules.ConstantToolProvider;
 
 public class OcamlTestUtils {
 
   public static final OcamlPlatform DEFAULT_PLATFORM =
       OcamlPlatform.builder()
+          .setOcamlCompiler(new ConstantToolProvider(new CommandTool.Builder().build()))
+          .setOcamlDepTool(new ConstantToolProvider(new CommandTool.Builder().build()))
+          .setYaccCompiler(new ConstantToolProvider(new CommandTool.Builder().build()))
+          .setLexCompiler(new ConstantToolProvider(new CommandTool.Builder().build()))
+          .setOcamlBytecodeCompiler(new ConstantToolProvider(new CommandTool.Builder().build()))
+          .setOcamlDebug(new ConstantToolProvider(new CommandTool.Builder().build()))
           .setCCompiler(CxxPlatformUtils.DEFAULT_PLATFORM.getCc())
           .setCxxCompiler(CxxPlatformUtils.DEFAULT_PLATFORM.getCxx())
           .setCPreprocessor(CxxPlatformUtils.DEFAULT_PLATFORM.getCpp())
