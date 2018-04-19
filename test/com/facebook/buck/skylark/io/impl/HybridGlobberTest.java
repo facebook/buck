@@ -49,7 +49,6 @@ public class HybridGlobberTest {
   @Rule public ExpectedException thrown = ExpectedException.none();
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
   @Rule public TestWithBuckd testWithBuckd = new TestWithBuckd(tmp); // set up Watchman
-  private WatchmanGlobber watchmanGlobber;
   private SimpleGlobber simpleGlobber;
 
   @Before
@@ -66,27 +65,27 @@ public class HybridGlobberTest {
             FakeClock.doNotCare(),
             Optional.empty());
     assumeTrue(watchman.getTransportPath().isPresent());
-    watchmanGlobber = WatchmanGlobber.create(watchman.createClient(), root);
     simpleGlobber = SimpleGlobber.create(root);
   }
 
   @Test
   public void watchmanResultsAreReturnedIfTheyExist() throws Exception {
-    watchmanGlobber =
-        WatchmanGlobber.create(
-            new StubWatchmanClient(
-                Optional.of(ImmutableMap.of("files", ImmutableList.of("bar.txt", "foo.txt")))),
-            root);
+    WatchmanGlobber watchmanGlobber =
+        newGlobber(Optional.of(ImmutableMap.of("files", ImmutableList.of("bar.txt", "foo.txt"))));
     globber = new HybridGlobber(simpleGlobber, watchmanGlobber);
     assertThat(
         globber.run(Collections.singleton("*.txt"), Collections.emptySet(), false),
         equalTo(ImmutableSet.of("bar.txt", "foo.txt")));
   }
 
+  private WatchmanGlobber newGlobber(Optional<ImmutableMap<String, ImmutableList<String>>> result) {
+    return WatchmanGlobber.create(new StubWatchmanClient(result), root.toString());
+  }
+
   @Test
   public void simpleGlobberResultsAreReturnedIfWatchmanDoesNotProduceAnything() throws Exception {
     tmp.newFile("some.txt");
-    watchmanGlobber = WatchmanGlobber.create(new StubWatchmanClient(Optional.empty()), root);
+    WatchmanGlobber watchmanGlobber = newGlobber(Optional.empty());
     globber = new HybridGlobber(simpleGlobber, watchmanGlobber);
     assertEquals(
         ImmutableSet.of("some.txt"),

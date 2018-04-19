@@ -20,7 +20,6 @@ import com.facebook.buck.io.WatchmanClient;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.devtools.build.lib.vfs.Path;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.Collection;
@@ -47,9 +46,9 @@ public class WatchmanGlobber {
   private static final long TIMEOUT_NANOS = TimeUnit.SECONDS.toNanos(5);
   private final WatchmanClient watchmanClient;
   /** Path used as a root when resolving patterns. */
-  private final Path basePath;
+  private final String basePath;
 
-  private WatchmanGlobber(WatchmanClient watchmanClient, Path basePath) {
+  private WatchmanGlobber(WatchmanClient watchmanClient, String basePath) {
     this.watchmanClient = watchmanClient;
     this.basePath = basePath;
   }
@@ -68,7 +67,7 @@ public class WatchmanGlobber {
         createWatchmanQuery(include, exclude, excludeDirectories);
 
     return watchmanClient
-        .queryWithTimeout(TIMEOUT_NANOS, "query", basePath.toString(), watchmanQuery)
+        .queryWithTimeout(TIMEOUT_NANOS, "query", basePath, watchmanQuery)
         .map(
             result -> {
               @SuppressWarnings("unchecked")
@@ -128,7 +127,7 @@ public class WatchmanGlobber {
    *
    * @param basePath The base path relative to which paths matching glob patterns will be resolved.
    */
-  public static WatchmanGlobber create(WatchmanClient watchmanClient, Path basePath) {
+  public static WatchmanGlobber create(WatchmanClient watchmanClient, String basePath) {
     return new WatchmanGlobber(watchmanClient, basePath);
   }
 }

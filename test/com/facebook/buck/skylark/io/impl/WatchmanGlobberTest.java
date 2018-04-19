@@ -66,7 +66,7 @@ public class WatchmanGlobberTest {
             FakeClock.doNotCare(),
             Optional.empty());
     assumeTrue(watchman.getTransportPath().isPresent());
-    globber = WatchmanGlobber.create(watchman.createClient(), root);
+    globber = WatchmanGlobber.create(watchman.createClient(), root.toString());
   }
 
   @Test
@@ -111,7 +111,7 @@ public class WatchmanGlobberTest {
 
   @Test
   public void noResultsAreReturnedIfWatchmanDoesNotProduceAnything() throws Exception {
-    globber = WatchmanGlobber.create(new StubWatchmanClient(Optional.empty()), root);
+    globber = WatchmanGlobber.create(new StubWatchmanClient(Optional.empty()), root.toString());
     assertFalse(globber.run(ImmutableList.of("*.txt"), ImmutableList.of(), false).isPresent());
   }
 }
