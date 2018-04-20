@@ -28,7 +28,6 @@ public class GoTestUtils {
           .setGoOs("linux")
           .setGoArch("amd64")
           .setGoRoot(Paths.get("/root"))
-          .setToolDir(Paths.get("/tools_dir"))
           .setCompiler(new CommandTool.Builder().build())
           .setAssembler(new CommandTool.Builder().build())
           .setLinker(new CommandTool.Builder().build())

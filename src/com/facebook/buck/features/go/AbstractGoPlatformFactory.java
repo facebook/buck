@@ -139,7 +139,6 @@ abstract class AbstractGoPlatformFactory {
   /** @return the {@link GoPlatform} defined in the given {@code section}. */
   public GoPlatform getPlatform(String section, Flavor flavor) {
     Path goRoot = getGoRoot(section);
-    Path toolsDir = getToolDir(section);
     CxxPlatform cxxPlatform =
         getBuckConfig()
             .getValue(section, "cxx_platform")
@@ -151,14 +150,13 @@ abstract class AbstractGoPlatformFactory {
         .setGoOs(getOs(section))
         .setGoArch(getArch(section))
         .setGoRoot(goRoot)
-        .setToolDir(toolsDir)
-        .setCompiler(getGoTool(section, goRoot, toolsDir, "compiler", "compile", "compiler_flags"))
-        .setAssembler(getGoTool(section, goRoot, toolsDir, "assembler", "asm", "asm_flags"))
+        .setCompiler(getGoTool(section, goRoot, "compiler", "compile", "compiler_flags"))
+        .setAssembler(getGoTool(section, goRoot, "assembler", "asm", "asm_flags"))
         .setAssemblerIncludeDirs(ImmutableList.of(goRoot.resolve("pkg").resolve("include")))
-        .setCGo(getGoTool(section, goRoot, toolsDir, "cgo", "cgo", ""))
-        .setPacker(getGoTool(section, goRoot, toolsDir, "packer", "pack", ""))
-        .setLinker(getGoTool(section, goRoot, toolsDir, "linker", "link", "linker_flags"))
-        .setCover(getGoTool(section, goRoot, toolsDir, "cover", "cover", ""))
+        .setCGo(getGoTool(section, goRoot, "cgo", "cgo", ""))
+        .setPacker(getGoTool(section, goRoot, "packer", "pack", ""))
+        .setLinker(getGoTool(section, goRoot, "linker", "link", "linker_flags"))
+        .setCover(getGoTool(section, goRoot, "cover", "cover", ""))
         .setCxxPlatform(cxxPlatform)
         .build();
   }
@@ -189,18 +187,24 @@ abstract class AbstractGoPlatformFactory {
         .orElseGet(this::getDefaultArch);
   }
 
+  private Path getToolDir(String section) {
+    return getBuckConfig()
+        .getPath(section, "tool_dir")
+        .orElseGet(() -> Paths.get(getGoEnvFromTool(section, "GOTOOLDIR")));
+  }
+
   private Tool getGoTool(
-      String section,
-      Path goRoot,
-      Path toolsDir,
-      String configName,
-      String toolName,
-      String extraFlagsConfigKey) {
-    Path toolPath = getBuckConfig().getPath(section, configName).orElse(toolsDir.resolve(toolName));
+      String section, Path goRoot, String configName, String toolName, String extraFlagsConfigKey) {
 
     CommandTool.Builder builder =
         new CommandTool.Builder(
-            new HashedFileTool(() -> getBuckConfig().getPathSourcePath(toolPath)));
+            new HashedFileTool(
+                () ->
+                    getBuckConfig()
+                        .getPathSourcePath(
+                            getBuckConfig()
+                                .getPath(section, configName)
+                                .orElseGet(() -> getToolDir(section).resolve(toolName)))));
     if (!extraFlagsConfigKey.isEmpty()) {
       for (String arg : getFlags(section, extraFlagsConfigKey)) {
         builder.addArg(arg);
@@ -269,11 +273,5 @@ abstract class AbstractGoPlatformFactory {
     }
 
     return getExecutableFinder().getExecutable(DEFAULT_GO_TOOL, getBuckConfig().getEnvironment());
-  }
-
-  private Path getToolDir(String section) {
-    return getBuckConfig()
-        .getPath(section, "tool_dir")
-        .orElseGet(() -> Paths.get(getGoEnvFromTool(section, "GOTOOLDIR")));
   }
 }

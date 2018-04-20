@@ -43,8 +43,6 @@ abstract class AbstractGoPlatform implements FlavorConvertible, AddsToRuleKey {
 
   public abstract Path getGoRoot();
 
-  public abstract Path getToolDir();
-
   public abstract ImmutableList<Path> getAssemblerIncludeDirs();
 
   public abstract Tool getCompiler();
