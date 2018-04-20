@@ -14,11 +14,29 @@
 {call buck.rule}
 {param status: 'UNFROZEN' /}
 {param overview}
-A cxx_library() rule represents a set of C/C++ source files and provides various flags to control
-how they get built. Other than that, C/C++ libraries by themselves are relatively abstract, and it's
-dependent on the various top-level targets (e.g. C/C++ binary, Android APK) that transitively depend
-on this rule how this library actually gets built (e.g. a C/C++ binary will require a static non-PIC
-build of the library, while an Android APK will require a shared PIC-enabled build).
+<p>
+A <code>cxx_library()</code> rule represents a set of C/C++ source files and provides various flags to control
+how those source files are built. Other than that, C/C++ libraries by themselves are
+relatively abstract; how the C++ library represented by this rule is built&mdash;and whether it is
+built&mdash;is determined by the various top-level targets, 
+such as {call buck.ruleLink}{param name : 'cxx_binary' /}{/call} or {call buck.ruleLink}{param name : 'android_binary' /}{/call},
+that transitively depend on this rule. 
+For example, a C/C++ binary (<code>cxx_binary</code>) would require a static non-PIC build of the library, 
+whereas an Android APK (<code>android_binary</code>) would require a shared PIC-enabled build.
+(PIC stands for position-independent code.)
+</p>
+
+<p>
+Also, in order to ensure that Buck builds a target that the <code>cxx_library</code> rule 
+depends on, such as a {call buck.ruleLink}{param name : 'cxx_genrule' /}{/call},
+you should specify to {call buck.cmd_link}{param name : 'build'
+/}{/call} a top-level target rather than the <code>cxx_library</code> itself. 
+For example, you might specify to <code>buck build</code> a <code>cxx_binary</code> that 
+depends on the <code>cxx_library</code>. In other words, if you specify as
+your build target a <code>cxx_library</code>, then build targets that this library 
+depends on <em>might not be built</em>.
+</p>
+
 {/param}
 
 {param args}

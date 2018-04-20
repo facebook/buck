@@ -17,15 +17,15 @@
 
 <p>
 A <code>cxx_genrule()</code> enables you to run shell commands as part
-of the BUCK build process. A <code>cxx_genrule()</code> exposes&mdash;through
+of the Buck build process. A <code>cxx_genrule()</code> exposes&mdash;through
 a set of string parameter macros and variables&mdash;information about the 
 tools and configuration options used by the
-BUCK environment, specifically those related to the C/C++ toolchain. 
+Buck environment, specifically those related to the C/C++ toolchain. 
 </p>
 
 <p>
 The information exposed through these tools and configuration options is a reflection of: 
-BUCK's built-in settings, 
+Buck's built-in settings, 
 the settings in {call buck.concept_link}{param page: 'buckconfig' /}{param name: '.buckconfig and .buckconfig.local' /}{/call},
 and the result of various command-line overrides specified through 
 the {sp}{call buck.cmd_link}{param name: 'common_parameters' /}{param rendered_text: '--config' /}{/call} command-line option.  
@@ -48,7 +48,27 @@ target to <code>buck build</code>, you must include a platform flavor.
 For example:
 </p>
 
-<pre>buck build :cxx_gr_name#iphonesimulator-x86_64</pre>
+<p>
+<pre>
+{literal}
+buck build :cxx_gr_name#iphonesimulator-x86_64
+{/literal}
+</pre>
+</p>
+
+
+<p>
+You could also just specify the default platform flavor explicitly:
+</p>
+
+<p>
+<pre>
+{literal}
+buck build :cxx_gr_name#default
+{/literal}
+</pre>
+</p>
+
 
 {/param}
 
