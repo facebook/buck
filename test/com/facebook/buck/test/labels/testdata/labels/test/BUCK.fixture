@@ -7,7 +7,9 @@ java_test(
         "testy",
         "unscientific",
     ],
-    deps = ["//lib:junit"],
+    deps = [
+        "buck//third-party/java/junit:junit",
+    ],
 )
 
 java_test(
@@ -18,5 +20,7 @@ java_test(
         "scientific",
         "testy",
     ],
-    deps = ["//lib:junit"],
+    deps = [
+        "buck//third-party/java/junit:junit",
+    ],
 )

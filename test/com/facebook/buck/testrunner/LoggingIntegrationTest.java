@@ -36,7 +36,7 @@ public class LoggingIntegrationTest {
   @Test
   public void logOutputIsOnlyReportedForTestWhichFails() throws IOException {
     ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "test_with_logging", temp);
+        TestDataHelper.createProjectWorkspaceForScenario(this, "test_with_logging", temp, true);
     workspace.setUp();
 
     ProcessResult result = workspace.runBuckCommand("test", "//:logging");

@@ -3,8 +3,7 @@ prebuilt_jar(
     binary_jar = "junit-4.11.jar",
     visibility = ["PUBLIC"],
     deps = [
-        ":hamcrest-core",
-        ":hamcrest-library",
+        "buck//third-party/java/hamcrest:hamcrest",
     ],
 )
 
@@ -12,14 +11,4 @@ prebuilt_jar(
     name = "junit-4-8-2",
     binary_jar = "junit-4.8.2.jar",
     visibility = ["PUBLIC"],
-)
-
-prebuilt_jar(
-    name = "hamcrest-core",
-    binary_jar = "hamcrest-core-1.3.jar",
-)
-
-prebuilt_jar(
-    name = "hamcrest-library",
-    binary_jar = "hamcrest-library-1.3.jar",
 )

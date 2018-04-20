@@ -7,6 +7,6 @@ java_library(
         "guava_generated_sources",
     ],
     deps = [
-        "//libs:guava",
+        "buck//third-party/java/guava:guava",
     ],
 )

@@ -41,7 +41,8 @@ public class BuildThenTestIntegrationTest {
   @Test
   public void testBuildThenTest() throws IOException {
     ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "build_then_test", temporaryFolder);
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "build_then_test", temporaryFolder, true);
     workspace.setUp();
 
     ProcessResult buildResult = workspace.runBuckCommand("build", "//:example");
@@ -69,7 +70,8 @@ public class BuildThenTestIntegrationTest {
   @Test
   public void testRunningTestOnClassWithoutTestMethods() throws IOException {
     ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "build_then_test", temporaryFolder);
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "build_then_test", temporaryFolder, true);
     workspace.setUp();
 
     ProcessResult testResult = workspace.runBuckCommand("test", "//:nontestclass");
@@ -83,7 +85,8 @@ public class BuildThenTestIntegrationTest {
   @Test
   public void testRunningTestInAbstractClass() throws IOException {
     ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "build_then_test", temporaryFolder);
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "build_then_test", temporaryFolder, true);
     workspace.setUp();
 
     ProcessResult testResult = workspace.runBuckCommand("test", "//:abstractclass");

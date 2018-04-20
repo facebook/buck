@@ -5,6 +5,6 @@ java_library(
         "//test:broken",
     ],
     deps = [
-        "//lib:junit",
+        "buck//third-party/java/junit:junit",
     ],
 )

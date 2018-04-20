@@ -35,7 +35,8 @@ public class LabelsIntegrationTest {
 
   @Before
   public void setUpWorkspace() throws IOException {
-    workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "labels", temporaryFolder);
+    workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "labels", temporaryFolder, true);
     workspace.setUp();
   }
 

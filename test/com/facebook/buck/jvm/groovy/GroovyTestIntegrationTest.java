@@ -37,7 +37,8 @@ public class GroovyTestIntegrationTest {
     assumeTrue(System.getenv("GROOVY_HOME") != null);
 
     workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "groovy_test_description", tmp);
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "groovy_test_description", tmp, true);
     workspace.setUp();
   }
 

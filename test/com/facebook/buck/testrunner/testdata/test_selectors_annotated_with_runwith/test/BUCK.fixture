@@ -2,7 +2,7 @@ java_test(
     name = "broken",
     srcs = glob(["*.java"]),
     deps = [
-        "//lib:junit",
+        "buck//third-party/java/junit:junit",
         "//src:runner",
     ],
 )

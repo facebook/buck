@@ -41,7 +41,8 @@ public class TestSelectorsIntegrationTest {
   @Before
   public void setupWorkspace() throws IOException {
     workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "test_selectors", temporaryFolder);
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "test_selectors", temporaryFolder, true);
     workspace.setUp();
   }
 
