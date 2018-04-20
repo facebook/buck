@@ -79,25 +79,6 @@ public class GoToolchainFactory implements ToolchainFactory<GoToolchain> {
                 .<Flavor>map(InternalFlavor::of)
                 .orElse(defaultCxxPlatform.getFlavor()));
 
-    // TODO(agallagher): For backwards compatibility with older style Go platform naming
-    // conventions, we also install the default platform under the `<os>_<arch>` flavor.
-    if (platformFactory.getDefaultOs().equals(defaultGoPlatform.getGoOs())
-        && platformFactory.getDefaultArch().equals(defaultGoPlatform.getGoArch())) {
-      goPlatforms =
-          FlavorDomain.from(
-              goPlatforms.getName(),
-              ImmutableList.<GoPlatform>builder()
-                  .addAll(goPlatforms.getValues())
-                  .add(
-                      defaultGoPlatform.withFlavor(
-                          InternalFlavor.of(
-                              String.format(
-                                  "%s_%s",
-                                  platformFactory.getDefaultOs(),
-                                  platformFactory.getDefaultArch()))))
-                  .build());
-    }
-
     return Optional.of(GoToolchain.of(goPlatforms, defaultGoPlatform));
   }
 }
