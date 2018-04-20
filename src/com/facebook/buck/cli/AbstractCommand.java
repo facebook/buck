@@ -52,6 +52,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.Closeable;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.io.PrintStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -62,7 +63,11 @@ import java.util.Optional;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ScheduledExecutorService;
 import javax.annotation.Nullable;
+import org.kohsuke.args4j.CmdLineParser;
+import org.kohsuke.args4j.NamedOptionDef;
 import org.kohsuke.args4j.Option;
+import org.kohsuke.args4j.OptionDef;
+import org.kohsuke.args4j.spi.OptionHandler;
 
 public abstract class AbstractCommand implements Command {
 
@@ -71,6 +76,23 @@ public abstract class AbstractCommand implements Command {
   private static final String OUTPUT_TEST_EVENTS_TO_FILE_LONG_ARG = "--output-test-events-to-file";
   private static final String PROFILE_PARSER_LONG_ARG = "--profile-buck-parser";
   private static final String NUM_THREADS_LONG_ARG = "--num-threads";
+  private static final String CONFIG_LONG_ARG = "--config";
+
+  /**
+   * Contains all options defined in this class. These options are considered global since they are
+   * known to all commands that inherit from this class.
+   *
+   * <p>The main purpose of having this list is to provide more structured help.
+   */
+  private static final ImmutableSet<String> GLOBAL_OPTIONS =
+      ImmutableSet.of(
+          HELP_LONG_ARG,
+          NO_CACHE_LONG_ARG,
+          OUTPUT_TEST_EVENTS_TO_FILE_LONG_ARG,
+          PROFILE_PARSER_LONG_ARG,
+          NUM_THREADS_LONG_ARG,
+          CONFIG_LONG_ARG,
+          VerbosityParser.VERBOSE_LONG_ARG);
 
   /**
    * This value should never be read. {@link VerbosityParser} should be used instead. args4j
@@ -92,7 +114,7 @@ public abstract class AbstractCommand implements Command {
   private Integer numThreads = null;
 
   @Option(
-    name = "--config",
+    name = CONFIG_LONG_ARG,
     aliases = {"-c"},
     usage = ""
   )
@@ -204,9 +226,27 @@ public abstract class AbstractCommand implements Command {
   @Override
   public void printUsage(PrintStream stream) {
     CommandHelper.printShortDescription(this, stream);
-    stream.println("Options:");
-    new AdditionalOptionsCmdLineParser(this).printUsage(stream);
+    CmdLineParser parser = new AdditionalOptionsCmdLineParser(this);
+
+    stream.println("Global options:");
+    parser.printUsage(new OutputStreamWriter(stream), null, AbstractCommand::isGlobalOption);
     stream.println();
+
+    stream.println("Options:");
+    parser.printUsage(
+        new OutputStreamWriter(stream),
+        null,
+        optionHandler -> !AbstractCommand.isGlobalOption(optionHandler));
+    stream.println();
+  }
+
+  private static boolean isGlobalOption(OptionHandler<?> optionHandler) {
+    OptionDef option = optionHandler.option;
+    if (option instanceof NamedOptionDef) {
+      NamedOptionDef namedOption = (NamedOptionDef) option;
+      return GLOBAL_OPTIONS.contains(namedOption.name());
+    }
+    return false;
   }
 
   @Override
