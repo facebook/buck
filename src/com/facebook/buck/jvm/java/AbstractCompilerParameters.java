@@ -69,6 +69,11 @@ abstract class AbstractCompilerParameters {
     return false;
   }
 
+  @Value.Default
+  public boolean shouldTrackJavacPhaseEvents() {
+    return false;
+  }
+
   @Nullable
   public abstract SourceOnlyAbiRuleInfo getSourceOnlyAbiRuleInfo();
 

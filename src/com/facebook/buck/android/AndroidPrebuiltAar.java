@@ -83,6 +83,7 @@ public class AndroidPrebuiltAar extends AndroidLibrary
             /* postprocessClassesCommands */ ImmutableList.of(),
             abiClasspath,
             /* trackClassUsage */ false,
+            /* trackJavacPhaseEvents */ false,
             /* compileTimeClasspathDeps */ ImmutableSortedSet.of(
                 prebuiltJar.getSourcePathToOutput()),
             RemoveClassesPatternsMatcher.EMPTY,

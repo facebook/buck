@@ -136,6 +136,7 @@ public class JavacPipelineState implements RulePipelineState {
                   compilerParameters.getPathToSourcesList(),
                   compilerParameters.getWorkingDirectory(),
                   compilerParameters.shouldTrackClassUsage(),
+                  compilerParameters.shouldTrackJavacPhaseEvents(),
                   abiJarParameters,
                   libraryJarParameters,
                   compilerParameters.getAbiGenerationMode(),
