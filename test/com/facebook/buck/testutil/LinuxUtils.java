@@ -20,7 +20,7 @@ import java.util.Optional;
 
 /** An implementation of {@link UnixUtils} for Linux platforms */
 public class LinuxUtils extends UnixUtils {
-  private static final String OBJCOPY = "/usr/bin/objcopy";
+  private static final String OBJCOPY = "objcopy";
 
   public LinuxUtils() {
     super();
@@ -28,6 +28,6 @@ public class LinuxUtils extends UnixUtils {
 
   @Override
   public Optional<String> getObjcopy() {
-    return Optional.of(OBJCOPY);
+    return Optional.of(findExecutable(OBJCOPY));
   }
 }

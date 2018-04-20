@@ -16,13 +16,18 @@
 
 package com.facebook.buck.testutil;
 
+import static org.junit.Assume.assumeNoException;
 import static org.junit.Assume.assumeTrue;
 
+import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.util.Escaper.Quoter;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Optional;
@@ -34,6 +39,7 @@ import java.util.stream.Collectors;
  */
 public abstract class PlatformUtils {
   private Quoter quoter;
+  private ExecutableFinder executableFinder = new ExecutableFinder();
 
   protected PlatformUtils(Quoter quoter) {
     this.quoter = quoter;
@@ -72,6 +78,17 @@ public abstract class PlatformUtils {
       return quoter.quote(config.get());
     }
     return "";
+  }
+
+  protected String findExecutable(String bin) {
+    try {
+      Path executablePath =
+          executableFinder.getExecutable(Paths.get(bin), ImmutableMap.copyOf(System.getenv()));
+      return executablePath.toAbsolutePath().toString();
+    } catch (HumanReadableException e) {
+      assumeNoException(e);
+      throw new RuntimeException("Assumption in error should not allow access to this path");
+    }
   }
 
   /** Replaces any placeholders in the given workspace with appropriate platform-specific configs */
