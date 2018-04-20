@@ -47,6 +47,7 @@ public interface Javac extends Tool {
       Path pathToSrcsList,
       Path workingDirectory,
       boolean trackClassUsage,
+      boolean trackJavacPhaseEvents,
       @Nullable JarParameters abiJarParameters,
       @Nullable JarParameters libraryJarParameters,
       AbiGenerationMode abiGenerationMode,

@@ -127,6 +127,11 @@ abstract class AbstractJavacOptions implements AddsToRuleKey {
     return false;
   }
 
+  @Value.Default
+  protected boolean trackJavacPhaseEvents() {
+    return false;
+  }
+
   public void validateOptions(Function<String, Boolean> classpathChecker) throws IOException {
     if (getBootclasspath().isPresent()) {
       String bootclasspath = getBootclasspath().get();
