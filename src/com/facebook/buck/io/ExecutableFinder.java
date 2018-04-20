@@ -106,7 +106,7 @@ public class ExecutableFinder {
     return executable;
   }
 
-  private static boolean isExecutable(Path exe) {
+  public static boolean isExecutable(Path exe) {
     if (!Files.exists(exe)) {
       return false;
     }

@@ -141,7 +141,40 @@ public class XcodeToolFinderTest {
   }
 
   @Test
-  public void matchesOverridedToolName() throws Exception {
+  public void matchesReplacementTool() throws Exception {
+    Path searchRoot = tempPath.newFolder("SEARCH_ROOT");
+    Path outsideRoot = tempPath.newFolder("OUTSIDE_ROOT");
+    Files.createFile(
+        searchRoot.resolve("clang"),
+        PosixFilePermissions.asFileAttribute(
+            EnumSet.of(PosixFilePermission.OWNER_EXECUTE, PosixFilePermission.OWNER_READ)));
+    Files.createFile(
+        searchRoot.resolve("my_clang"),
+        PosixFilePermissions.asFileAttribute(
+            EnumSet.of(PosixFilePermission.OWNER_EXECUTE, PosixFilePermission.OWNER_READ)));
+    Files.createFile(
+        outsideRoot.resolve("clang"),
+        PosixFilePermissions.asFileAttribute(
+            EnumSet.of(PosixFilePermission.OWNER_EXECUTE, PosixFilePermission.OWNER_READ)));
+    assertEquals(
+        Optional.of(searchRoot.resolve("clang")),
+        new XcodeToolFinder(FakeBuckConfig.builder().build().getView(AppleConfig.class))
+            .getToolPath(ImmutableList.of(searchRoot), "clang"));
+    assertEquals(
+        Optional.of(outsideRoot.resolve("clang")),
+        new XcodeToolFinder(
+                FakeBuckConfig.builder()
+                    .setSections(
+                        "[apple]",
+                        "clang_xcode_tool_name_override=my_clang",
+                        "clang_replacement=" + outsideRoot.resolve("clang"))
+                    .build()
+                    .getView(AppleConfig.class))
+            .getToolPath(ImmutableList.of(searchRoot), "clang"));
+  }
+
+  @Test
+  public void matchesRenamedToolName() throws Exception {
     Path searchRoot = tempPath.newFolder("SEARCH_ROOT");
     Files.createFile(
         searchRoot.resolve("clang"),
@@ -159,7 +192,7 @@ public class XcodeToolFinderTest {
         Optional.of(searchRoot.resolve("my_clang")),
         new XcodeToolFinder(
                 FakeBuckConfig.builder()
-                    .setSections("[apple]", "clang_xcode_tool_name_override = my_clang")
+                    .setSections("[apple]", "clang_xcode_tool_name_override=my_clang")
                     .build()
                     .getView(AppleConfig.class))
             .getToolPath(ImmutableList.of(searchRoot), "clang"));
