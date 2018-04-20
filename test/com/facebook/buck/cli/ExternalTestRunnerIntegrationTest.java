@@ -40,7 +40,8 @@ public class ExternalTestRunnerIntegrationTest {
 
   @Before
   public void setUp() throws IOException {
-    workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "external_test_runner", tmp);
+    workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "external_test_runner", tmp, true);
     workspace.setUp();
   }
 

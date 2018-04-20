@@ -2,7 +2,7 @@ scala_test(
     name = "test-success",
     srcs = ["TestSuccess.scala"],
     deps = [
-        ":junit",
+        "buck//third-party/java/junit:junit",
         ":scalatest",
     ],
 )
@@ -11,7 +11,7 @@ scala_test(
     name = "test-failure",
     srcs = ["TestFailure.scala"],
     deps = [
-        ":junit",
+        "buck//third-party/java/junit:junit",
         ":scalatest",
     ],
 )
@@ -21,7 +21,7 @@ scala_test(
     srcs = ["TestSpinning.scala"],
     test_rule_timeout_ms = 100,
     deps = [
-        ":junit",
+        "buck//third-party/java/junit:junit",
         ":scalatest",
     ],
 )
@@ -32,23 +32,6 @@ prebuilt_jar(
     name = "scalatest",
     binary_jar = "scalatest_2.11-2.2.4.jar",
     deps = [":scala-xml"],
-)
-
-prebuilt_jar(
-    name = "junit",
-    binary_jar = "junit-4.12.jar",
-    deps = [":hamcrest-junit"],
-)
-
-prebuilt_jar(
-    name = "hamcrest-junit",
-    binary_jar = "hamcrest-junit-2.0.0.0.jar",
-    deps = [":java-hamcrest"],
-)
-
-prebuilt_jar(
-    name = "java-hamcrest",
-    binary_jar = "java-hamcrest-2.0.0.0.jar",
 )
 
 prebuilt_jar(

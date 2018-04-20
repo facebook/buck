@@ -5,7 +5,7 @@ java_test(
         "ClassWithoutTestsA.java",
     ],
     deps = [
-        "//lib:junit",
+        "buck//third-party/java/junit:junit",
     ],
 )
 
