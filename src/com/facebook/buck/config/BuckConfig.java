@@ -357,9 +357,7 @@ public class BuckConfig implements ConfigPathGetter {
     return PathSourcePath.of(
         projectFilesystem,
         checkPathExists(
-            path.toString(),
-            String.format(
-                "Failed to transform Path %s to Source Path because path was not found.", path)));
+            path.toString(), "Failed to transform Path to SourcePath, path not found: "));
   }
 
   /**
