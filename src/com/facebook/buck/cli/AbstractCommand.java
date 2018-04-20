@@ -116,7 +116,8 @@ public abstract class AbstractCommand implements Command {
   @Option(
     name = CONFIG_LONG_ARG,
     aliases = {"-c"},
-    usage = ""
+    usage = "Override .buckconfig option",
+    metaVar = "section.option=value"
   )
   private Map<String, String> configOverrides = new LinkedHashMap<>();
 
