@@ -127,7 +127,7 @@ many additional examples, see the {call buck.cmd_query /} reference page.
     <p><pre class="prettyprint lang-js">
 {literal}
 buck query "deps('//foo:bar')"
-buck query "deps('//foo:bar', 1)"
+buck query "deps('//foo:bar', 1, first_order_deps())"
 buck query "deps(set('//foo:bar' '//foo:lib' '//foo/baz:util'))"
 {/literal}
     </pre></p>

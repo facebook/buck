@@ -16,7 +16,7 @@
     {param navid: 'command_query' /}
     {param prettify: true /}
     {param description}
-      Provide facilities to query information about the target nodes graph.
+      Provide facilities to query information about the target-nodes graph.
     {/param}
     {param content}
 
@@ -24,12 +24,12 @@
 {param overview}
 <p>
 The <code>buck query</code> command provides functionality to query
-information about the <em>target nodes</em> graph and return build 
-targets that satisfy the query expression. 
+the <em>target-nodes</em> graph and return the build targets that 
+satisfy your query expression. 
 </p>
 
 <p>
-Using the query language implemented in <code>buck query</code>, you can
+The query language implemented in <code>buck query</code>, enables you to 
 combine multiple operators in a single command.
 For example, to retrieve a list of all the tests
 for a build target, you can combine the <code>deps()</code> and <code>testsof()</code> operators 
@@ -46,12 +46,14 @@ buck query "testsof(deps('//java/com/example/app:amazing'))"
 
 <h2>Query Language</h2>
 
-<p>The Buck query language was inspired 
-by the <a href="http://bazel.io/docs/query.html"> Bazel Query Language</a>. 
+<p>
+The Buck query language was inspired by 
+the <a href="http://bazel.io/docs/query.html"> Bazel Query Language</a>. 
 The Buck query language uses the same parser, so the lexical syntax is similar. 
-The Buck query language supports a subset of Bazel's query functions with
+The Buck query language supports a subset of Bazel's query functionality with
 a few extensions, such as <code>attrfilter</code>, <code>inputs</code>,
 and <code>owner</code>.
+</p>
 
 <h3>Lexical Syntax</h3>
 
@@ -66,7 +68,7 @@ and <code>owner</code>.
         <li><a href="#allpaths"><code>allpaths</code></a>: All dependency paths</li>
         <li><a href="#attrfilter"><code>attrfilter</code></a>: Rule attribute filtering</li>
         <li><a href="#buildfile"><code>buildfile</code></a>: Build files of targets</li>
-        <li><a href="#deps"><code>deps</code></a>: Transitive closure of dependencies</li>
+        <li><a href="#deps"><code>deps and first-order-deps</code></a>: Transitive closure of dependencies</li>
         <li><a href="#set-operations"><code>except</code></a>: Set difference</li>
         <li><a href="#filter"><code>filter</code></a>: Filter targets by name</li>
         <li><a href="#inputs"><code>inputs</code></a>: Direct input files</li>
@@ -131,7 +133,7 @@ buck query " '//foo:bar=wiz' "
 
   </li>
   <li>
-    <b>Punctuation</b>, such as parens (<code>()</code>), period
+    <b>Punctuation</b>, such as parentheses (<code>()</code>), period
     (<code>.</code>) and comma (<code>,</code>), etc. Words containing
     punctuation&mdash;other than the exceptions listed above under <b>Words</b>&mdash;must be quoted.
   </li>
@@ -164,6 +166,7 @@ expr ::= word
        | deps(expr)
        | deps(expr, depth)
        | deps(expr, depth, expr)
+       | deps(expr, depth, first-order-deps(expr))
        | filter(word, expr)
        | inputs(expr)
        | kind(word, expr)
@@ -607,7 +610,7 @@ those targets.
 
 {call .section}
 {param anchor: 'deps' /}
-{param title: 'Transitive closure of dependencies: deps'/}
+{param title: 'Transitive closure of dependencies: deps and first-order-deps'/}
 {/call}
 
 <p>
@@ -615,6 +618,9 @@ those targets.
 <pre>
 {literal}
 deps(<em>x</em>)
+deps(<em>x</em>, <em>integer</em>)
+deps(<em>x</em>, <em>integer</em>, <em>y</em>)
+deps(<em>x</em>, <em>integer</em>, first_order_deps(<em>y</em>))
 {/literal}
 </pre>
 </p>
@@ -626,6 +632,7 @@ deps(<em>x</em>)
 expr ::= deps(expr)
        | deps(expr, depth)
        | deps(expr, depth, expr)
+       | deps(expr, depth, first_order_deps(expr))
 {/literal}
 </pre>
 </p>
@@ -653,23 +660,49 @@ It also includes <code>//foo:bar</code> itself.
 
 <p>
 The <code>deps</code> operator accepts an optional second argument, which is
-an integer literal specifying an upper bound on the depth of the search.
-So <code>deps('//foo:bar', 1)</code> evaluates to the direct dependencies of
-the target <code>//foo:bar</code>, and <code>deps('//foo:bar', 2)</code> further
-includes the nodes directly reachable from the nodes
+an integer literal specifying an upper bound on the depth of the search.  So,
+</p>
+
+<p>
+<pre>
+{literal}
+deps('//foo:bar', 1) 
+{/literal}
+</pre>
+</p>
+
+<p>
+evaluates to the direct dependencies of the target <code>//foo:bar</code>, and 
+</p>
+
+<p>
+<pre>
+{literal}
+deps('//foo:bar', 2) 
+{/literal}
+</pre>
+</p>
+
+<p>
+further includes the nodes directly reachable from the nodes
 in <code>deps('//foo:bar', 1)</code>, and so on. If the depth parameter is
 omitted, the search is unbounded, that is, it computes the entire transitive 
 closure of dependencies.
 </p>
 
+<h4>Filter expressions and first_order_deps()</h4>
 <p>
 The <code>deps()</code> operator also accepts an optional third argument, which is
-a filter expression that is evaluated for each node and returns the children to
-recurse on when collecting transitive dependencies.
-This filter expression can use the <code>first_order_deps()</code> function
+a filter expression that is evaluated for each node and returns the
+child nodes to recurse on when collecting transitive dependencies.
+</p>
+
+<p>
+This filter expression can use the <code>first_order_deps()</code> operator
 which returns a set that contains the first-order dependencies of the current
-node&mdash;which is equivalent to <code>deps(<node>, 1)</code>).
+node&mdash;which is equivalent to <code>deps(&lt;node&gt;, 1)</code>.
 For example, the query, 
+</p>
 
 <p>
 <pre>
@@ -692,12 +725,15 @@ buck query "deps('//foo:bar', 1)"
 </p>
 
 <p>
+The <code>first_order_deps()</code> operator can be used only
+inside the expression passed as an argument to <code>deps()</code>.
+<p>
+
+<p>
 Note that because <code>deps()</code> uses positional parameters,
 you must specify the second argument in order to specify the third. In
 this scenario, if you want the search to be unbounded, we recommend that
-you use <code>4096</code> (<code>4K</code>) as the value for the second
-argument. In practice, we have found that the dependency graph does not
-exceed this depth.  
+you use <code>2147483647</code> which corresponds to Java's <code>Integer.MAX_VALUE</code>.
 </p>
 
 {call .section}
