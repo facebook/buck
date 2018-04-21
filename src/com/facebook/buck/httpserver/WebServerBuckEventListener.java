@@ -26,8 +26,8 @@ import com.facebook.buck.event.listener.CacheRateStatsKeeper;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.parser.ParseEvent;
 import com.facebook.buck.rules.BuildEvent;
-import com.facebook.buck.rules.IndividualTestEvent;
-import com.facebook.buck.rules.TestRunEvent;
+import com.facebook.buck.support.test.event.IndividualTestEvent;
+import com.facebook.buck.support.test.event.TestRunEvent;
 import com.google.common.eventbus.Subscribe;
 
 /**

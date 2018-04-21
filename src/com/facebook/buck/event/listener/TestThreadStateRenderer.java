@@ -18,8 +18,8 @@ package com.facebook.buck.event.listener;
 
 import com.facebook.buck.event.LeafEvent;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.TestStatusMessageEvent;
-import com.facebook.buck.rules.TestSummaryEvent;
+import com.facebook.buck.support.test.event.TestStatusMessageEvent;
+import com.facebook.buck.support.test.event.TestSummaryEvent;
 import com.facebook.buck.test.TestRuleEvent;
 import com.facebook.buck.util.Ansi;
 import com.google.common.base.Preconditions;

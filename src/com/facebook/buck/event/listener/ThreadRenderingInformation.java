@@ -19,8 +19,8 @@ package com.facebook.buck.event.listener;
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.LeafEvent;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.TestStatusMessageEvent;
-import com.facebook.buck.rules.TestSummaryEvent;
+import com.facebook.buck.support.test.event.TestStatusMessageEvent;
+import com.facebook.buck.support.test.event.TestSummaryEvent;
 import java.util.Optional;
 
 class ThreadRenderingInformation {

@@ -14,25 +14,23 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
+package com.facebook.buck.support.test.event;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.test.selectors.TestSelectorList;
+import com.facebook.buck.test.FakeTestResults;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import org.junit.Test;
 
-public class TestRunEventTest {
-
+public class IndividualTestEventTest {
   @Test
   public void startAndStopShouldRelateProperlyBasedOnHash() {
-    ImmutableSet<String> tests = ImmutableSet.of("//exmaple:other", "//thing/made/of:cheese");
+    ImmutableList<String> tests = ImmutableList.of("//exmaple:other", "//thing/made/of:cheese");
 
-    TestRunEvent.Started started =
-        TestRunEvent.started(false, TestSelectorList.empty(), false, tests);
-    TestRunEvent.Finished finished = TestRunEvent.finished(tests, ImmutableList.of());
+    IndividualTestEvent.Started started = IndividualTestEvent.started(tests);
+    IndividualTestEvent.Finished finished =
+        IndividualTestEvent.finished(tests, FakeTestResults.of(ImmutableList.of()));
 
     assertTrue(started.isRelatedTo(finished));
     assertTrue(finished.isRelatedTo(started));
@@ -40,12 +38,12 @@ public class TestRunEventTest {
 
   @Test
   public void shouldNotBelieveThatEventsThatAreNotRelatedAreRelated() {
-    ImmutableSet<String> tests = ImmutableSet.of("//exmaple:other", "//thing/made/of:cheese");
-    ImmutableSet<String> otherTests = ImmutableSet.of("//example:test");
+    ImmutableList<String> tests = ImmutableList.of("//exmaple:other", "//thing/made/of:cheese");
+    ImmutableList<String> otherTests = ImmutableList.of("//example:test");
 
-    TestRunEvent.Started started =
-        TestRunEvent.started(false, TestSelectorList.empty(), false, tests);
-    TestRunEvent.Finished finished = TestRunEvent.finished(otherTests, ImmutableList.of());
+    IndividualTestEvent.Started started = IndividualTestEvent.started(tests);
+    IndividualTestEvent.Finished finished =
+        IndividualTestEvent.finished(otherTests, FakeTestResults.of(ImmutableList.of()));
 
     assertFalse(started.isRelatedTo(finished));
     assertFalse(finished.isRelatedTo(started));
