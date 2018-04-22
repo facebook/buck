@@ -21,7 +21,7 @@ import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.rules.Tool;
+import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.util.environment.Platform;
 import java.nio.file.Path;
 import java.nio.file.Paths;
