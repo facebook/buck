@@ -18,6 +18,7 @@ package com.facebook.buck.features.go;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.features.go.GoTestCoverStep.Mode;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargets;
@@ -82,6 +83,7 @@ public class GoTest extends NoopBuildRuleWithDeclaredAndExtraDeps
   private final ImmutableSet<String> contacts;
   private final boolean runTestsSeparately;
   private final ImmutableSortedSet<SourcePath> resources;
+  private final Mode coverageMode;
 
   public GoTest(
       BuildTarget buildTarget,
@@ -92,7 +94,8 @@ public class GoTest extends NoopBuildRuleWithDeclaredAndExtraDeps
       ImmutableSet<String> contacts,
       Optional<Long> testRuleTimeoutMs,
       boolean runTestsSeparately,
-      ImmutableSortedSet<SourcePath> resources) {
+      ImmutableSortedSet<SourcePath> resources,
+      Mode coverageMode) {
     super(buildTarget, projectFilesystem, buildRuleParams);
     this.testMain = testMain;
     this.labels = labels;
@@ -100,6 +103,7 @@ public class GoTest extends NoopBuildRuleWithDeclaredAndExtraDeps
     this.testRuleTimeoutMs = testRuleTimeoutMs;
     this.runTestsSeparately = runTestsSeparately;
     this.resources = resources;
+    this.coverageMode = coverageMode;
   }
 
   @Override
@@ -117,6 +121,11 @@ public class GoTest extends NoopBuildRuleWithDeclaredAndExtraDeps
     args.addAll(
         testMain.getExecutableCommand().getCommandPrefix(buildContext.getSourcePathResolver()));
     args.add("-test.v");
+    if (coverageMode != Mode.NONE) {
+      Path coverProfile = getProjectFilesystem().resolve(getPathToTestOutputDirectory())
+          .resolve("coverage");
+      args.add("-test.coverprofile", coverProfile.toString());
+    }
     if (testRuleTimeoutMs.isPresent()) {
       args.add("-test.timeout", testRuleTimeoutMs.get() + "ms");
     }

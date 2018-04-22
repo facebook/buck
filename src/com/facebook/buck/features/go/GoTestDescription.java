@@ -260,7 +260,8 @@ public class GoTestDescription
             .map(Optional::of)
             .orElse(goBuckConfig.getDelegate().getDefaultTestRuleTimeoutMs()),
         args.getRunTestSeparately(),
-        args.getResources());
+        args.getResources(),
+        coverageMode);
   }
 
   private GoBinary createTestMainRule(
