@@ -122,8 +122,8 @@ public class GoTest extends NoopBuildRuleWithDeclaredAndExtraDeps
         testMain.getExecutableCommand().getCommandPrefix(buildContext.getSourcePathResolver()));
     args.add("-test.v");
     if (coverageMode != Mode.NONE) {
-      Path coverProfile = getProjectFilesystem().resolve(getPathToTestOutputDirectory())
-          .resolve("coverage");
+      Path coverProfile =
+          getProjectFilesystem().resolve(getPathToTestOutputDirectory()).resolve("coverage");
       args.add("-test.coverprofile", coverProfile.toString());
     }
     if (testRuleTimeoutMs.isPresent()) {
