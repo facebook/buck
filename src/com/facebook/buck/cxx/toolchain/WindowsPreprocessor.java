@@ -20,6 +20,7 @@ import com.facebook.buck.core.toolchain.tool.DelegatingTool;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
+import com.google.common.io.Files;
 import java.nio.file.Path;
 
 /** Preprocessor implementation for the Windows toolchain. */
@@ -65,7 +66,7 @@ public class WindowsPreprocessor extends DelegatingTool implements Preprocessor 
   @Override
   public Iterable<String> precompiledHeaderArgs(Path pchOutputPath) {
     String hFilename = pchOutputPath.getFileName().toString();
-    String pchFilename = hFilename.substring(0, hFilename.length() - 4) + ".pch";
+    String pchFilename = Files.getNameWithoutExtension(hFilename) + ".pch";
     return ImmutableList.of("/Yu", pchFilename);
   }
 }
