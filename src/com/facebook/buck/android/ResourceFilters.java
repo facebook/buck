@@ -55,7 +55,10 @@ public class ResourceFilters {
           "menu",
           "raw",
           "values",
-          "xml");
+          "xml",
+          // "interpolator" is not officially documented in the above
+          // link, but several support library aar files use it.
+          "interpolator");
 
   /**
    * Represents the names and values of valid densities for resources as defined in
