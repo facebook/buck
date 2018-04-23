@@ -17,66 +17,62 @@
 package com.facebook.buck.testutil.integration;
 
 import com.facebook.buck.util.CapturingPrintStream;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
+import com.martiansoftware.nailgun.NGClientDisconnectReason;
 import com.martiansoftware.nailgun.NGClientListener;
-import com.martiansoftware.nailgun.NGCommunicator;
-import com.martiansoftware.nailgun.NGConstants;
 import com.martiansoftware.nailgun.NGContext;
-import com.martiansoftware.nailgun.NGInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 /** NGContext test double. */
 public class TestContext extends NGContext implements Closeable {
 
   private Properties properties;
   private Set<NGClientListener> listeners;
-  private boolean addListeners;
+  private Optional<ScheduledExecutorService> clientDisconnectService = Optional.empty();
 
   /** Simulates client that never disconnects, with normal system environment. */
   public TestContext() {
-    this(ImmutableMap.copyOf(System.getenv()), createDisconnectionStream(0), 0);
-    addListeners = false; // Only track disconnections when input stream supplied.
+    this(ImmutableMap.copyOf(System.getenv()), createNoOpStream(), 0);
   }
 
   /** Simulates client that never disconnects, with given environment. */
   public TestContext(ImmutableMap<String, String> environment) {
-    this(environment, createDisconnectionStream(0), 0);
-    addListeners = false; // Only track disconnections when input stream supplied.
+    this(environment, createNoOpStream(), 0);
   }
 
-  /**
-   * Simulates client connected to given stream, with given timeout and environment. If stream
-   * blocks for longer than timeout, or throws an exception, a client disconnection is triggered as
-   * normal.
-   */
+  /** Simulates client that disconnects after timeout, with given environment. */
+  public TestContext(ImmutableMap<String, String> environment, long timeoutMillis) {
+    this(environment, createNoOpStream(), timeoutMillis);
+  }
+
+  /** Simulates client connected to given stream, with given environment and disconnect timeout */
   public TestContext(
       ImmutableMap<String, String> environment, InputStream clientStream, long timeoutMillis) {
 
-    NGCommunicator comm =
-        new NGCommunicator(
-            new DataInputStream(Preconditions.checkNotNull(clientStream)),
-            new DataOutputStream(new ByteArrayOutputStream(0)),
-            (int) timeoutMillis);
-    in = new NGInputStream(comm);
+    in = new DataInputStream(clientStream);
     out = new CapturingPrintStream();
     err = new CapturingPrintStream();
-    setExitStream(new CapturingPrintStream());
-    setCommunicator(comm);
     properties = new Properties();
     for (String key : environment.keySet()) {
       properties.setProperty(key, environment.get(key));
     }
     listeners = new HashSet<>();
-    addListeners = true;
+    if (timeoutMillis > 0) {
+      clientDisconnectService = Optional.of(Executors.newSingleThreadScheduledExecutor());
+      clientDisconnectService
+          .get()
+          .schedule(this::notifyListeners, timeoutMillis, TimeUnit.MILLISECONDS);
+    }
   }
 
   @Override
@@ -86,58 +82,42 @@ public class TestContext extends NGContext implements Closeable {
 
   @Override
   public void addClientListener(NGClientListener listener) {
-    if (addListeners) {
-      listeners.add(listener);
-      super.addClientListener(listener);
-    }
+    listeners.add(listener);
   }
 
   @Override
   public void removeClientListener(NGClientListener listener) {
-    if (addListeners) {
-      listeners.remove(listener);
-      super.removeClientListener(listener);
-    }
+    listeners.remove(listener);
   }
 
-  /** Generates heartbeat chunks at a given interval. */
-  public static InputStream createHeartBeatStream(long heartbeatIntervalMillis) {
-    return new InputStream() {
-      private final int bytesPerHeartbeat = 5;
-      private final long byteInterval = heartbeatIntervalMillis / bytesPerHeartbeat;
-
-      @Override
-      public int read() throws IOException {
-        try {
-          Thread.sleep(byteInterval);
-        } catch (InterruptedException e) {
-          throw new IOException(e);
-        }
-        return NGConstants.CHUNKTYPE_HEARTBEAT;
-      }
-    };
+  @Override
+  public void removeAllClientListeners() {
+    listeners.clear();
   }
 
-  /**
-   * @param disconnectMillis duration to wait before generating IOException.
-   * @return an InputStream which will wait and then simulate a client disconnection.
-   */
-  public static InputStream createDisconnectionStream(long disconnectMillis) {
+  private void notifyListeners() {
+    listeners.forEach(listener -> listener.clientDisconnected(NGClientDisconnectReason.HEARTBEAT));
+  }
+
+  @Override
+  public void exit(int exitCode) {}
+
+  /** @return an InputStream which does nothing */
+  public static InputStream createNoOpStream() {
     return new InputStream() {
       @Override
-      public int read() throws IOException {
-        try {
-          Thread.sleep(disconnectMillis);
-        } catch (InterruptedException e) {
-          throw new IOException(e);
-        }
-        throw new IOException("Fake client disconnection.");
+      public int read() {
+        return -1;
       }
     };
   }
 
   @Override
   public void close() throws IOException {
-    getCommunicator().close();
+    in.close();
+    out.close();
+    err.close();
+
+    clientDisconnectService.ifPresent(service -> service.shutdownNow());
   }
 }
