@@ -524,7 +524,7 @@ public class SkylarkProjectBuildFileParserTest {
     Files.write(buildFile, Arrays.asList("load('//src/test:build_rule.bzl', 'guava_jar')"));
 
     thrown.expect(FileNotFoundException.class);
-    thrown.expectMessage(Matchers.endsWith("build_rule.bzl (No such file or directory)"));
+    thrown.expectMessage(containsString("build_rule.bzl"));
 
     parser.getAll(buildFile, new AtomicLong());
   }
