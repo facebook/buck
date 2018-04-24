@@ -199,7 +199,8 @@ public class ProjectGeneratorTest {
             "cxx",
                 ImmutableMap.of(
                     "cflags", "-Wno-deprecated -Wno-conversion",
-                    "cxxflags", "-Wundeclared-selector -Wno-objc-designated-initializers"),
+                    "cxxflags", "-Wundeclared-selector -Wno-objc-designated-initializers",
+                    "ldflags", "-fatal_warnings"),
             "apple", ImmutableMap.of("force_dsym_mode_in_build_with_buck", "false"),
             "swift", ImmutableMap.of("version", "1.23"));
     BuckConfig config = FakeBuckConfig.builder().setSections(sections).build();
@@ -1930,7 +1931,8 @@ public class ProjectGeneratorTest {
         assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:lib");
 
     ImmutableMap<String, String> settings = getBuildSettings(buildTarget, target, "Debug");
-    assertEquals("$(inherited) -ObjC -Xlinker -lhello", settings.get("OTHER_LDFLAGS"));
+    assertEquals(
+        "$(inherited) -fatal_warnings -ObjC -Xlinker -lhello", settings.get("OTHER_LDFLAGS"));
   }
 
   @Test
@@ -1987,7 +1989,8 @@ public class ProjectGeneratorTest {
     ImmutableMap<String, String> settings = getBuildSettings(buildTarget, target, "Debug");
     assertEquals(
         String.format(
-            "$(inherited) -ObjC -force_load %s %s", generatedLibraryPath, exportedLibraryPath),
+            "$(inherited) -fatal_warnings -ObjC -force_load %s %s",
+            generatedLibraryPath, exportedLibraryPath),
         settings.get("OTHER_LDFLAGS"));
   }
 
@@ -2017,7 +2020,7 @@ public class ProjectGeneratorTest {
         assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:bin");
 
     ImmutableMap<String, String> settings = getBuildSettings(buildTarget, target, "Debug");
-    assertEquals("$(inherited) -ObjC", settings.get("OTHER_LDFLAGS"));
+    assertEquals("$(inherited) -fatal_warnings -ObjC", settings.get("OTHER_LDFLAGS"));
   }
 
   @Test
@@ -2041,7 +2044,8 @@ public class ProjectGeneratorTest {
         assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:lib");
 
     ImmutableMap<String, String> settings = getBuildSettings(buildTarget, target, "Debug");
-    assertEquals("$(inherited) -ObjC -Xlinker -lhello", settings.get("OTHER_LDFLAGS"));
+    assertEquals(
+        "$(inherited) -fatal_warnings -ObjC -Xlinker -lhello", settings.get("OTHER_LDFLAGS"));
   }
 
   @Test
@@ -2081,7 +2085,7 @@ public class ProjectGeneratorTest {
         ProjectGeneratorTestUtils.getBuildSettings(projectFilesystem, buildTarget, target, "Debug");
 
     assertEquals(
-        "$(inherited) -ObjC -Xlinker -lhello -lhello2 '-Wl,-force_load,$BUILT_PRODUCTS_DIR/liblib2.a'",
+        "$(inherited) -fatal_warnings -ObjC -Xlinker -lhello -lhello2 '-Wl,-force_load,$BUILT_PRODUCTS_DIR/liblib2.a'",
         settings.get("OTHER_LDFLAGS"));
   }
 
@@ -2122,7 +2126,7 @@ public class ProjectGeneratorTest {
         ProjectGeneratorTestUtils.getBuildSettings(projectFilesystem, buildTarget, target, "Debug");
 
     assertEquals(
-        "$(inherited) -ObjC -Xlinker -lhello -lhello2 '-Wl,-force_load,$BUILT_PRODUCTS_DIR/liblib2.a'",
+        "$(inherited) -fatal_warnings -ObjC -Xlinker -lhello -lhello2 '-Wl,-force_load,$BUILT_PRODUCTS_DIR/liblib2.a'",
         settings.get("OTHER_LDFLAGS"));
   }
 
@@ -2155,7 +2159,8 @@ public class ProjectGeneratorTest {
         assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:bin");
 
     ImmutableMap<String, String> settings = getBuildSettings(buildTarget, target, "Debug");
-    assertEquals("$(inherited) -ObjC -Xlinker -lhello", settings.get("OTHER_LDFLAGS"));
+    assertEquals(
+        "$(inherited) -fatal_warnings -ObjC -Xlinker -lhello", settings.get("OTHER_LDFLAGS"));
   }
 
   @Test
@@ -2187,7 +2192,8 @@ public class ProjectGeneratorTest {
         "-Wundeclared-selector -Wno-objc-designated-initializers -ffoo -fbar "
             + "-Wundeclared-selector -Wno-objc-designated-initializers -ffoo -fbar",
         settings.get("OTHER_CPLUSPLUSFLAGS"));
-    assertEquals("-ObjC -lbaz -ObjC -lbaz", settings.get("OTHER_LDFLAGS"));
+    assertEquals(
+        "-fatal_warnings -ObjC -lbaz -fatal_warnings -ObjC -lbaz", settings.get("OTHER_LDFLAGS"));
   }
 
   @Test
@@ -2243,7 +2249,7 @@ public class ProjectGeneratorTest {
         "-Wundeclared-selector -Wno-objc-designated-initializers "
             + "-Wundeclared-selector -Wno-objc-designated-initializers",
         settings.get("OTHER_CPLUSPLUSFLAGS"));
-    assertEquals("-ObjC -ObjC", settings.get("OTHER_LDFLAGS"));
+    assertEquals("-fatal_warnings -ObjC -fatal_warnings -ObjC", settings.get("OTHER_LDFLAGS"));
 
     assertEquals(
         "-Wno-deprecated -Wno-conversion -ffoo-iphone -fbar-iphone "

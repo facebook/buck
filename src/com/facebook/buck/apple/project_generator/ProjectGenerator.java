@@ -194,6 +194,7 @@ public class ProjectGenerator {
   private static final Logger LOG = Logger.get(ProjectGenerator.class);
   private static final ImmutableList<String> DEFAULT_CFLAGS = ImmutableList.of();
   private static final ImmutableList<String> DEFAULT_CXXFLAGS = ImmutableList.of();
+  private static final ImmutableList<String> DEFAULT_LDFLAGS = ImmutableList.of();
   private static final ImmutableList<String> DEFAULT_SWIFTFLAGS = ImmutableList.of();
   private static final String PRODUCT_NAME = "PRODUCT_NAME";
 
@@ -1491,6 +1492,7 @@ public class ProjectGenerator {
 
         Iterable<String> otherLdFlags =
             ImmutableList.<String>builder()
+                .addAll(cxxBuckConfig.getLdflags().orElse(DEFAULT_LDFLAGS))
                 .addAll(appleConfig.linkAllObjC() ? ImmutableList.of("-ObjC") : ImmutableList.of())
                 .addAll(
                     convertStringWithMacros(
