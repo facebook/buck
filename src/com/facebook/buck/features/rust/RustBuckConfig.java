@@ -23,6 +23,7 @@ import com.facebook.buck.rules.tool.config.ToolConfig;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 public class RustBuckConfig {
 
@@ -68,12 +69,34 @@ public class RustBuckConfig {
     this.delegate = delegate;
   }
 
-  public Optional<ToolProvider> getRustCompiler(String section) {
-    return delegate.getView(ToolConfig.class).getToolProvider(section, "compiler");
+  private <T> Optional<T> firstOf(Supplier<Optional<T>> first, Supplier<Optional<T>> second) {
+    for (Supplier<Optional<T>> optional : ImmutableList.of(first, second)) {
+      Optional<T> val = optional.get();
+      if (val.isPresent()) {
+        return val;
+      }
+    }
+    return Optional.empty();
   }
 
-  private ImmutableList<String> getFlags(String section, String field) {
-    return delegate.getListWithoutComments(section, field, ' ');
+  private ImmutableList<String> getFlags(String platform, String field, char delim) {
+    return delegate.getValue(platform, field).isPresent()
+        ? delegate.getListWithoutComments(SECTION + '#' + platform, field, delim)
+        : delegate.getListWithoutComments(SECTION, field, delim);
+  }
+
+  private ImmutableList<String> getCompilerFlags(String platform, String field) {
+    return getFlags(platform, field, ' ');
+  }
+
+  private Optional<ToolProvider> getRustTool(String platform, String field) {
+    return firstOf(
+        () -> delegate.getView(ToolConfig.class).getToolProvider(SECTION + '#' + platform, field),
+        () -> delegate.getView(ToolConfig.class).getToolProvider(SECTION, field));
+  }
+
+  public Optional<ToolProvider> getRustCompiler(String platform) {
+    return getRustTool(platform, "compiler");
   }
 
   /**
@@ -81,8 +104,8 @@ public class RustBuckConfig {
    *
    * @return List of rustc option flags.
    */
-  private ImmutableList<String> getRustCompilerFlags(String section) {
-    return getFlags(section, RUSTC_FLAGS);
+  private ImmutableList<String> getRustCompilerFlags(String platform) {
+    return getCompilerFlags(platform, RUSTC_FLAGS);
   }
 
   /**
@@ -90,10 +113,10 @@ public class RustBuckConfig {
    *
    * @return List of rustc_library_flags, as well as common rustc_flags.
    */
-  public ImmutableList<String> getRustcLibraryFlags(String section) {
+  public ImmutableList<String> getRustcLibraryFlags(String platform) {
     return ImmutableList.<String>builder()
-        .addAll(getRustCompilerFlags(section))
-        .addAll(getFlags(section, RUSTC_LIBRARY_FLAGS))
+        .addAll(getRustCompilerFlags(platform))
+        .addAll(getCompilerFlags(platform, RUSTC_LIBRARY_FLAGS))
         .build();
   }
 
@@ -102,10 +125,10 @@ public class RustBuckConfig {
    *
    * @return List of rustc_binary_flags, as well as common rustc_flags.
    */
-  public ImmutableList<String> getRustcBinaryFlags(String section) {
+  public ImmutableList<String> getRustcBinaryFlags(String platform) {
     return ImmutableList.<String>builder()
-        .addAll(getRustCompilerFlags(section))
-        .addAll(getFlags(section, RUSTC_BINARY_FLAGS))
+        .addAll(getRustCompilerFlags(platform))
+        .addAll(getCompilerFlags(platform, RUSTC_BINARY_FLAGS))
         .build();
   }
 
@@ -114,10 +137,10 @@ public class RustBuckConfig {
    *
    * @return List of rustc_test_flags, as well as common rustc_flags.
    */
-  public ImmutableList<String> getRustcTestFlags(String section) {
+  public ImmutableList<String> getRustcTestFlags(String platform) {
     return ImmutableList.<String>builder()
-        .addAll(getRustCompilerFlags(section))
-        .addAll(getFlags(section, RUSTC_TEST_FLAGS))
+        .addAll(getRustCompilerFlags(platform))
+        .addAll(getCompilerFlags(platform, RUSTC_TEST_FLAGS))
         .build();
   }
 
@@ -127,23 +150,27 @@ public class RustBuckConfig {
    *
    * @return List of rustc_check_flags.
    */
-  public ImmutableList<String> getRustcCheckFlags(String section) {
+  public ImmutableList<String> getRustcCheckFlags(String platform) {
     return ImmutableList.<String>builder()
-        .addAll(getRustCompilerFlags(section))
-        .addAll(getFlags(section, RUSTC_CHECK_FLAGS))
+        .addAll(getRustCompilerFlags(platform))
+        .addAll(getCompilerFlags(platform, RUSTC_CHECK_FLAGS))
         .build();
   }
 
-  public Optional<ToolProvider> getRustLinker(String section) {
-    return delegate.getView(ToolConfig.class).getToolProvider(section, "linker");
+  public Optional<ToolProvider> getRustLinker(String platform) {
+    return getRustTool(platform, "linker");
   }
 
-  public Optional<LinkerProvider.Type> getLinkerPlatform(String section) {
-    return delegate.getEnum(section, "linker_platform", LinkerProvider.Type.class);
+  public Optional<LinkerProvider.Type> getLinkerPlatform(String platform) {
+    return firstOf(
+        () ->
+            delegate.getEnum(
+                SECTION + '#' + platform, "linker_platform", LinkerProvider.Type.class),
+        () -> delegate.getEnum(SECTION, "linker_platform", LinkerProvider.Type.class));
   }
 
-  public ImmutableList<String> getLinkerFlags(String section) {
-    return delegate.getListWithoutComments(section, "linker_args");
+  public ImmutableList<String> getLinkerFlags(String platform) {
+    return getFlags(platform, "linker_args", ',');
   }
 
   /**

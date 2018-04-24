@@ -28,8 +28,6 @@ import java.util.Optional;
 /** Constructs {@link RustToolchain}s. */
 public class RustToolchainFactory implements ToolchainFactory<RustToolchain> {
 
-  private static final String SECTION = "rust";
-
   @Override
   public Optional<RustToolchain> createToolchain(
       ToolchainProvider toolchainProvider, ToolchainCreationContext context) {
@@ -47,7 +45,9 @@ public class RustToolchainFactory implements ToolchainFactory<RustToolchain> {
             "Rust Platforms",
             RichStream.from(cxxPlatforms.getValues())
                 // TODO: Allow overlaying flavor-specific section configuration.
-                .map(cxxPlatform -> platformFactory.getPlatform(SECTION, cxxPlatform))
+                .map(
+                    cxxPlatform ->
+                        platformFactory.getPlatform(cxxPlatform.getFlavor().getName(), cxxPlatform))
                 .toImmutableList());
     RustPlatform defaultRustPlatform = rustPlatforms.getValue(defaultCxxPlatform.getFlavor());
 
