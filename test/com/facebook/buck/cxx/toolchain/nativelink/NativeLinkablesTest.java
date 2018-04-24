@@ -18,6 +18,7 @@ package com.facebook.buck.cxx.toolchain.nativelink;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 
+import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
@@ -29,7 +30,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeSourcePath;
-import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.TestBuildRuleResolver;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.util.HumanReadableException;

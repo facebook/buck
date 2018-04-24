@@ -16,6 +16,8 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.core.sourcepath.AbstractPathSourcePath;
+import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import java.nio.file.Path;

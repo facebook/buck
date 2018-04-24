@@ -17,11 +17,11 @@
 package com.facebook.buck.rules.modern;
 
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
+import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
+import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
-import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.modern.annotations.CustomClassBehaviorTag;
 import com.facebook.buck.rules.modern.annotations.CustomFieldBehavior;

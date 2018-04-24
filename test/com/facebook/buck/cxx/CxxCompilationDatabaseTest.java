@@ -20,6 +20,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.rulekey.RuleKeyObjectSink;
+import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.GccCompiler;
 import com.facebook.buck.cxx.toolchain.GccPreprocessor;
@@ -36,7 +37,6 @@ import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.HashedFileTool;
-import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TestBuildRuleResolver;

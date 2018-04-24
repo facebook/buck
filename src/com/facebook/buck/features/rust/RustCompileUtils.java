@@ -18,6 +18,7 @@ package com.facebook.buck.features.rust;
 
 import static com.facebook.buck.cxx.CxxDescriptionEnhancer.createSharedLibrarySymlinkTreeTarget;
 
+import com.facebook.buck.core.sourcepath.ForwardingBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxGenruleDescription;
@@ -37,7 +38,6 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
-import com.facebook.buck.rules.ForwardingBuildTargetSourcePath;
 import com.facebook.buck.rules.HasDefaultPlatform;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;

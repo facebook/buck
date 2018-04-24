@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
@@ -24,7 +25,6 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.HasDeclaredDeps;
-import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.FluentIterable;

@@ -17,8 +17,8 @@
 package com.facebook.buck.rules.keys;
 
 import com.facebook.buck.core.rulekey.RuleKeyObjectSink;
+import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.rules.PathSourcePath;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;

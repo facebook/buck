@@ -17,6 +17,9 @@
 package com.facebook.buck.rules.keys;
 
 import com.facebook.buck.core.rulekey.RuleKey;
+import com.facebook.buck.core.sourcepath.AbstractDefaultBuildTargetSourcePath;
+import com.facebook.buck.core.sourcepath.ForwardingBuildTargetSourcePath;
+import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.thrift.ThriftRuleKeyLogger;
@@ -33,10 +36,7 @@ import com.facebook.buck.log.thrift.rulekeys.Wrapper;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.UnflavoredBuildTarget;
-import com.facebook.buck.rules.AbstractDefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.ForwardingBuildTargetSourcePath;
-import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourceRoot;
 import com.facebook.buck.rules.keys.hasher.RuleKeyHasher;
 import com.facebook.buck.rules.keys.hasher.ThriftRuleKeyHasher;

@@ -18,6 +18,8 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
+import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
+import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;

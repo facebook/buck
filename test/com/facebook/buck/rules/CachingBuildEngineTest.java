@@ -46,6 +46,8 @@ import com.facebook.buck.cli.CommandThreadManager;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.BuildRuleKeys;
 import com.facebook.buck.core.rulekey.RuleKey;
+import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
+import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;

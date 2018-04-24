@@ -17,12 +17,12 @@
 package com.facebook.buck.features.rust;
 
 import com.facebook.buck.config.FakeBuckConfig;
+import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.cxx.toolchain.linker.DefaultLinkerProvider;
 import com.facebook.buck.cxx.toolchain.linker.LinkerProvider;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.ConstantToolProvider;
 import com.facebook.buck.rules.HashedFileTool;
-import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.ToolProvider;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;

@@ -17,8 +17,8 @@
 package com.facebook.buck.rules.args;
 
 import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.collect.ImmutableList;

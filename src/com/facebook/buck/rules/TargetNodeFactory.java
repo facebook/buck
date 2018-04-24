@@ -15,6 +15,8 @@
  */
 package com.facebook.buck.rules;
 
+import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
+import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;

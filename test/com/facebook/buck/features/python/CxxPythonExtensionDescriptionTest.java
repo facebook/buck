@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.config.FakeBuckConfig;
+import com.facebook.buck.core.sourcepath.SourceWithFlags;
 import com.facebook.buck.cxx.CxxBinaryBuilder;
 import com.facebook.buck.cxx.CxxCompilationDatabase;
 import com.facebook.buck.cxx.CxxLibrary;
@@ -51,7 +52,6 @@ import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestBuildRuleResolver;
 import com.facebook.buck.rules.args.Arg;

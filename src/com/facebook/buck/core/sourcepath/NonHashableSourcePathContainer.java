@@ -14,14 +14,13 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
+package com.facebook.buck.core.sourcepath;
 
 import com.facebook.buck.core.rulekey.RuleKey;
-import com.facebook.buck.core.sourcepath.SourcePath;
 
 /**
- * * Prevents a {@link SourcePath} being resolved and hashed when used as part of an
- * InputBased-{@link RuleKey}. It is still hashed when added to default rulekeys.
+ * * Prevents a {@link com.facebook.buck.core.sourcepath.SourcePath} being resolved and hashed when
+ * used as part of an InputBased-{@link RuleKey}. It is still hashed when added to default rulekeys.
  */
 public class NonHashableSourcePathContainer {
   private final SourcePath sourcePath;

@@ -22,6 +22,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeThat;
 
+import com.facebook.buck.core.sourcepath.SourceWithFlags;
 import com.facebook.buck.cxx.CxxLink;
 import com.facebook.buck.cxx.CxxStrip;
 import com.facebook.buck.model.BuildTarget;
@@ -32,7 +33,6 @@ import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TestBuildRuleResolver;

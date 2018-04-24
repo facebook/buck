@@ -17,6 +17,7 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.SourceWithFlags;
 import com.facebook.buck.cxx.toolchain.HasSystemFrameworkAndLibraries;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.model.BuildTarget;
@@ -27,7 +28,6 @@ import com.facebook.buck.rules.HasDeclaredDeps;
 import com.facebook.buck.rules.HasDefaultPlatform;
 import com.facebook.buck.rules.HasTests;
 import com.facebook.buck.rules.Hint;
-import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.macros.StringWithMacros;

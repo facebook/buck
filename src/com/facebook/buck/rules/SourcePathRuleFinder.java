@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.util.Optionals;
 import com.facebook.buck.util.RichStream;

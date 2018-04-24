@@ -17,6 +17,9 @@
 package com.facebook.buck.rules.modern.builders;
 
 import com.facebook.buck.config.BuckConfig;
+import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
+import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
+import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.filesystem.EmbeddedCellBuckOutInfo;
@@ -29,10 +32,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.rules.AbstractSourcePathResolver;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildTargetSourcePath;
-import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultCellPathResolver;
-import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.modern.Deserializer;
 import com.facebook.buck.rules.modern.Deserializer.DataProvider;
 import com.facebook.buck.rules.modern.ModernBuildRule;

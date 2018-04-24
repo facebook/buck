@@ -17,6 +17,7 @@
 package com.facebook.buck.cxx.toolchain;
 
 import com.facebook.buck.config.BuckConfig;
+import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.cxx.toolchain.linker.DefaultLinkerProvider;
 import com.facebook.buck.cxx.toolchain.linker.LinkerProvider;
@@ -27,7 +28,6 @@ import com.facebook.buck.model.UserFlavor;
 import com.facebook.buck.rules.BinaryBuildRuleToolProvider;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.HashedFileTool;
-import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleScheduleInfo;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.ToolProvider;

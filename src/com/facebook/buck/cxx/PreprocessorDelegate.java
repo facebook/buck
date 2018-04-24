@@ -18,6 +18,8 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
+import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
+import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.cxx.toolchain.DebugPathSanitizer;
 import com.facebook.buck.cxx.toolchain.HeaderVerification;
@@ -25,8 +27,6 @@ import com.facebook.buck.cxx.toolchain.PathShortener;
 import com.facebook.buck.cxx.toolchain.Preprocessor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildableSupport;
-import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
-import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SymlinkTree;

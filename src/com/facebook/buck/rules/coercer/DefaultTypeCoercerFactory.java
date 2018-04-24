@@ -17,13 +17,13 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.SourceWithFlags;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.rules.CellPathResolver;
-import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.rules.macros.CcFlagsMacro;
 import com.facebook.buck.rules.macros.CcMacro;
 import com.facebook.buck.rules.macros.ClasspathAbiMacro;

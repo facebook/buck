@@ -16,6 +16,7 @@
 
 package com.facebook.buck.features.d;
 
+import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.cxx.Archive;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
@@ -32,7 +33,6 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommonDescriptionArg;
-import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.HasDeclaredDeps;

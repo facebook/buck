@@ -16,7 +16,7 @@
 
 package com.facebook.buck.rules.modern.impl;
 
-import com.facebook.buck.rules.NonHashableSourcePathContainer;
+import com.facebook.buck.core.sourcepath.NonHashableSourcePathContainer;
 import com.facebook.buck.rules.modern.ValueCreator;
 import com.facebook.buck.rules.modern.ValueTypeInfo;
 import com.facebook.buck.rules.modern.ValueVisitor;

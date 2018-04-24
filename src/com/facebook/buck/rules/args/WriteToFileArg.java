@@ -17,10 +17,10 @@
 package com.facebook.buck.rules.args;
 
 import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import java.io.IOException;

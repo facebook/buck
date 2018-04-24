@@ -17,6 +17,7 @@
 package com.facebook.buck.features.go;
 
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.SourceWithFlags;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxLinkAndCompileRules;
 import com.facebook.buck.cxx.CxxLinkOptions;
@@ -33,7 +34,6 @@ import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.macros.StringWithMacros;

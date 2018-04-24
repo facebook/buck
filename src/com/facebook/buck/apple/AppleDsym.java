@@ -16,6 +16,7 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.cxx.CxxStrip;
 import com.facebook.buck.cxx.toolchain.LinkerMapMode;
@@ -30,7 +31,6 @@ import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.HasPostBuildSteps;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;

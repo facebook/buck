@@ -17,7 +17,7 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.rules.SourceWithFlags;
+import com.facebook.buck.core.sourcepath.SourceWithFlags;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;

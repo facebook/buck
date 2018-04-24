@@ -17,10 +17,10 @@
 package com.facebook.buck.jvm.java.autodeps;
 
 import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaFileParser;
-import com.facebook.buck.rules.PathSourcePath;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;

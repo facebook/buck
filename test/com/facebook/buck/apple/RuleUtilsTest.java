@@ -18,11 +18,11 @@ package com.facebook.buck.apple;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.SourceWithFlags;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.rules.TestBuildRuleResolver;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMultimap;

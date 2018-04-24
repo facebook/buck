@@ -14,9 +14,8 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
+package com.facebook.buck.core.sourcepath;
 
-import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.hash.HashCode;
@@ -24,8 +23,8 @@ import java.util.Optional;
 import org.immutables.value.Value;
 
 /**
- * A {@link BuildTargetSourcePath} which resolves to the default output of the {@link BuildRule}
- * referred to by its target.
+ * A {@link BuildTargetSourcePath} which resolves to the default output of the {@link
+ * com.facebook.buck.rules.BuildRule} referred to by its target.
  */
 @BuckStyleTuple
 @Value.Immutable(prehash = true)

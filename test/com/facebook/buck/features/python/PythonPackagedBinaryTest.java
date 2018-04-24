@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 
 import com.facebook.buck.core.rulekey.RuleKey;
+import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.features.python.toolchain.PythonEnvironment;
 import com.facebook.buck.features.python.toolchain.PythonVersion;
 import com.facebook.buck.io.file.MorePaths;
@@ -29,7 +30,6 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.HashedFileTool;
-import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TestBuildRuleResolver;

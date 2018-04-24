@@ -16,6 +16,7 @@
 
 package com.facebook.buck.features.python;
 
+import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
@@ -40,7 +41,6 @@ import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.HasContacts;
 import com.facebook.buck.rules.HasTestTimeout;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;

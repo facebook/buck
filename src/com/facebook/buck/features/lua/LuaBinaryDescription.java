@@ -17,6 +17,7 @@
 package com.facebook.buck.features.lua;
 
 import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.sourcepath.NonHashableSourcePathContainer;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.cxx.Omnibus;
 import com.facebook.buck.cxx.OmnibusLibraries;
@@ -56,7 +57,6 @@ import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.HasDeclaredDeps;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
-import com.facebook.buck.rules.NonHashableSourcePathContainer;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SymlinkTree;

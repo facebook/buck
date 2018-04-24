@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules.query;
 
+import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.jvm.core.HasClasspathDeps;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
@@ -37,7 +38,6 @@ import com.facebook.buck.query.QueryTargetAccessor;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;

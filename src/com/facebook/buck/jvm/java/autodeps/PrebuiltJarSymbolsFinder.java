@@ -17,9 +17,9 @@
 package com.facebook.buck.jvm.java.autodeps;
 
 import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.util.ZipFileTraversal;
 import java.io.IOException;
 import java.nio.file.Path;

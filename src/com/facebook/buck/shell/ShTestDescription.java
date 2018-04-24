@@ -17,6 +17,7 @@
 package com.facebook.buck.shell;
 
 import com.facebook.buck.config.BuckConfig;
+import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
@@ -29,7 +30,6 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.HasContacts;
 import com.facebook.buck.rules.HasDeclaredDeps;
 import com.facebook.buck.rules.HasTestTimeout;
-import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;

@@ -17,12 +17,12 @@
 package com.facebook.buck.features.python;
 
 import com.facebook.buck.config.BuckConfig;
+import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkStrategy;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.tool.config.ToolConfig;
 import java.nio.file.Path;

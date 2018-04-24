@@ -16,6 +16,7 @@
 
 package com.facebook.buck.features.ocaml;
 
+import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.cxx.CxxDeps;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.model.BuildTarget;
@@ -29,7 +30,6 @@ import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.HasDeclaredDeps;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePathResolver;

@@ -26,11 +26,11 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.SourceWithFlags;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.FakeSourcePath;
-import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.rules.TestCellPathResolver;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;

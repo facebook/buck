@@ -26,15 +26,15 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
+import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
+import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.HasCustomDepsLogic;
-import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TestBuildRuleResolver;
 import com.facebook.buck.rules.modern.Buildable;

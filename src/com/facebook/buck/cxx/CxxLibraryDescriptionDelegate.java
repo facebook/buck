@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.HeaderSymlinkTree;
@@ -60,8 +61,8 @@ public interface CxxLibraryDescriptionDelegate {
   /**
    * Defines the paths to object files (i.e., .o files) that will be combined into the final product
    * of {@link com.facebook.buck.cxx.CxxLibraryDescription}. If the paths depend on build rules, you
-   * must use {@link com.facebook.buck.rules.ExplicitBuildTargetSourcePath} to make sure the build
-   * rule deps are correctly set up.
+   * must use {@link ExplicitBuildTargetSourcePath} to make sure the build rule deps are correctly
+   * set up.
    */
   Optional<ImmutableList<SourcePath>> getObjectFilePaths(
       BuildTarget target, BuildRuleResolver resolver, CxxPlatform platform);

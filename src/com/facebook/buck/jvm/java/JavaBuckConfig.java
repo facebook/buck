@@ -18,9 +18,9 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.ConfigView;
+import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
 import com.facebook.buck.rules.CommandTool;
-import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;

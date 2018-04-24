@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright 2017-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -14,31 +14,26 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
+package com.facebook.buck.core.sourcepath;
 
-import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.hash.HashCode;
-import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Optional;
 import org.immutables.value.Value;
 
-/**
- * A {@link BuildTargetSourcePath} which resolves to a specific (possibly non-default) output of the
- * {@link BuildRule} referred to by its target.
- */
+/** A {@link BuildTargetSourcePath} which resolves to the value of another SourcePath. */
 @BuckStyleTuple
 @Value.Immutable(prehash = true)
-public abstract class AbstractExplicitBuildTargetSourcePath implements BuildTargetSourcePath {
+public abstract class AbstractForwardingBuildTargetSourcePath implements BuildTargetSourcePath {
 
   @Override
   public abstract BuildTarget getTarget();
 
-  protected abstract Path getResolvedPath();
+  protected abstract SourcePath getDelegate();
 
   @Override
   @Value.Parameter(value = false)
@@ -49,7 +44,7 @@ public abstract class AbstractExplicitBuildTargetSourcePath implements BuildTarg
 
   @Override
   public int hashCode() {
-    return Objects.hash(getTarget(), getResolvedPath());
+    return Objects.hash(getTarget(), getDelegate());
   }
 
   @Override
@@ -58,17 +53,21 @@ public abstract class AbstractExplicitBuildTargetSourcePath implements BuildTarg
       return true;
     }
 
-    if (!(other instanceof AbstractExplicitBuildTargetSourcePath)) {
+    if (!(other instanceof AbstractForwardingBuildTargetSourcePath)) {
       return false;
     }
 
-    AbstractExplicitBuildTargetSourcePath that = (AbstractExplicitBuildTargetSourcePath) other;
-    return getTarget().equals(that.getTarget()) && getResolvedPath().equals(that.getResolvedPath());
+    AbstractForwardingBuildTargetSourcePath that = (AbstractForwardingBuildTargetSourcePath) other;
+    return getTarget().equals(that.getTarget()) && getDelegate().equals(that.getDelegate());
   }
 
   @Override
   public String toString() {
-    return String.valueOf(new Pair<>(getTarget(), getResolvedPath()));
+    return toString(getDelegate());
+  }
+
+  private String toString(Object delegateRepresentation) {
+    return String.valueOf(new Pair<>(getTarget(), delegateRepresentation));
   }
 
   @Override
@@ -82,11 +81,22 @@ public abstract class AbstractExplicitBuildTargetSourcePath implements BuildTarg
       return classComparison;
     }
 
-    AbstractExplicitBuildTargetSourcePath that = (AbstractExplicitBuildTargetSourcePath) other;
+    AbstractForwardingBuildTargetSourcePath that = (AbstractForwardingBuildTargetSourcePath) other;
 
     return ComparisonChain.start()
         .compare(getTarget(), that.getTarget())
-        .compare(getResolvedPath(), that.getResolvedPath())
+        .compare(getDelegate(), that.getDelegate())
         .result();
+  }
+
+  /**
+   * @return a string that is safe to use for rule key calculations, i.e. does not include absolute
+   *     paths.
+   */
+  @Override
+  public String representationForRuleKey() {
+    return getDelegate() instanceof AbstractPathSourcePath
+        ? toString(((AbstractPathSourcePath) getDelegate()).getRelativePath())
+        : toString();
   }
 }

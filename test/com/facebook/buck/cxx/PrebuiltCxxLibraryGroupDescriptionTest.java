@@ -18,6 +18,8 @@ package com.facebook.buck.cxx;
 
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
+import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
@@ -27,9 +29,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.FakeSourcePath;
-import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.TestBuildRuleResolver;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;

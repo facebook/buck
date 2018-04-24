@@ -23,6 +23,7 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.FakeBuckConfig;
+import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.cxx.toolchain.linker.DefaultLinkerProvider;
 import com.facebook.buck.cxx.toolchain.linker.LinkerProvider;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -30,7 +31,6 @@ import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.ConstantToolProvider;
 import com.facebook.buck.rules.HashedFileTool;
-import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.TestBuildRuleResolver;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;

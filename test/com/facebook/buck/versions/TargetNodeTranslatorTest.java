@@ -19,6 +19,8 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
+import com.facebook.buck.core.sourcepath.SourceWithFlags;
 import com.facebook.buck.cxx.CxxLibraryBuilder;
 import com.facebook.buck.cxx.CxxLibraryDescriptionArg;
 import com.facebook.buck.model.BuildTarget;
@@ -26,8 +28,6 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.rules.CellPathResolver;
-import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
-import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TestCellPathResolver;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
