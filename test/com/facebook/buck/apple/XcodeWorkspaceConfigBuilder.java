@@ -52,6 +52,12 @@ public class XcodeWorkspaceConfigBuilder
     return this;
   }
 
+  public XcodeWorkspaceConfigBuilder setExtraShallowTargets(
+      ImmutableSortedSet<BuildTarget> extraShallowTargets) {
+    getArgForPopulating().setExtraShallowTargets(extraShallowTargets);
+    return this;
+  }
+
   public XcodeWorkspaceConfigBuilder setWorkspaceName(Optional<String> workspaceName) {
     getArgForPopulating().setWorkspaceName(workspaceName);
     return this;

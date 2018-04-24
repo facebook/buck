@@ -85,6 +85,9 @@ public class XcodeWorkspaceConfigDescription
     @Value.NaturalOrder
     ImmutableSortedSet<BuildTarget> getExtraTargets();
 
+    @Value.NaturalOrder
+    ImmutableSortedSet<BuildTarget> getExtraShallowTargets();
+
     Optional<String> getWorkspaceName();
 
     ImmutableMap<SchemeActionType, String> getActionConfigNames();

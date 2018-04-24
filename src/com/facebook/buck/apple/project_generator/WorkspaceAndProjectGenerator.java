@@ -641,6 +641,11 @@ public class WorkspaceAndProjectGenerator {
               Optional::of));
     }
 
+    for (BuildTarget extraShallowTarget : schemeArguments.getExtraShallowTargets()) {
+      schemeNameToSrcTargetNodeBuilder.put(
+          schemeName, Optional.of(projectGraph.get(extraShallowTarget)));
+    }
+
     extraTestNodesBuilder.putAll(
         schemeName, getExtraTestTargetNodes(projectGraph, schemeArguments.getExtraTests()));
   }
