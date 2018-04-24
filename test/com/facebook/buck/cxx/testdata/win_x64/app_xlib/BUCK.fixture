@@ -1,9 +1,7 @@
 cxx_binary(
     name = "app_xlib",
     srcs = ["main.c"],
-    compiler_flags = WINDOWS_COMPILE_FLAGS,
     link_style = "static",
-    linker_flags = WINDOWS_LINK_FLAGS,
     deps = ["x//lib:lib"],
 )
 

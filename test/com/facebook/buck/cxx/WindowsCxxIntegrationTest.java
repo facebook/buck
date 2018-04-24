@@ -24,14 +24,10 @@ import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.WindowsUtils;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Optional;
 import org.hamcrest.Matchers;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -51,7 +47,6 @@ public class WindowsCxxIntegrationTest {
     windowsUtils.checkAssumptions();
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "win_x64", tmp);
     workspace.setUp();
-    windowsUtils.setUpWorkspace(workspace, "xplat");
   }
 
   @Test
@@ -81,35 +76,6 @@ public class WindowsCxxIntegrationTest {
 
 
   @Test
-  public void simpleBinaryInDevConsole() throws IOException, InterruptedException {
-    ProcessResult amd64RunResult =
-        workspace.runBuckCommand(getDevConsoleEnv("amd64"), "run", "d//app:hello#windows-x86_64");
-    amd64RunResult.assertSuccess();
-    assertThat(amd64RunResult.getStdout(), Matchers.containsString("The process is 64bits"));
-    assertThat(
-        amd64RunResult.getStdout(), Matchers.not(Matchers.containsString("The process is WOW64")));
-
-    ProcessResult x86RunResult =
-        workspace.runBuckCommand(getDevConsoleEnv("x86"), "run", "d//app:hello#windows-x86_64");
-    x86RunResult.assertSuccess();
-    assertThat(x86RunResult.getStdout(), Matchers.containsString("The process is 64bits"));
-    assertThat(x86RunResult.getStdout(), Matchers.containsString("The process is WOW64"));
-  }
-
-  @Test
-  public void librariesInDevConsole() throws IOException, InterruptedException {
-    ProcessResult staticLibResult =
-        workspace.runBuckCommand(
-            getDevConsoleEnv("amd64"), "build", "d//lib:lib#windows-x86_64,static");
-    staticLibResult.assertSuccess();
-
-    ProcessResult sharedLibResult =
-        workspace.runBuckCommand(
-            getDevConsoleEnv("amd64"), "build", "d//lib:lib#windows-x86_64,shared");
-    sharedLibResult.assertSuccess();
-  }
-
-  @Test
   public void simpleBinaryWithDll() throws IOException {
     ProcessResult libResult =
         workspace.runBuckCommand("build", "//implib:implib#windows-x86_64,shared");
@@ -126,29 +92,5 @@ public class WindowsCxxIntegrationTest {
     logResult.assertSuccess();
     Path outputPath = workspace.resolve("buck-out/gen/implib_usage/log/log.txt");
     assertThat(workspace.getFileContents(outputPath), Matchers.containsString("a + (a * b)"));
-  }
-
-  private ImmutableMap<String, String> getDevConsoleEnv(String vcvarsallBatArg)
-      throws IOException, InterruptedException {
-    Optional<String> vcvarsallbat = windowsUtils.getVcvarsallbat();
-    Assert.assertTrue(vcvarsallbat.isPresent());
-    workspace.writeContentsToPath(
-        String.format("\"%s\" %s & set", vcvarsallbat.get(), vcvarsallBatArg), "env.bat");
-    ProcessExecutor.Result envResult = workspace.runCommand("cmd", "/Q", "/c", "env.bat");
-    Optional<String> envOut = envResult.getStdout();
-    Assert.assertTrue(envOut.isPresent());
-    String envString = envOut.get();
-    String[] envStrings = envString.split("\\r?\\n");
-    ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
-    for (String s : envStrings) {
-      int sep = s.indexOf('=');
-      String key = s.substring(0, sep);
-      if ("PATH".equalsIgnoreCase(key)) {
-        key = "PATH";
-      }
-      String val = s.substring(sep + 1, s.length());
-      builder.put(key, val);
-    }
-    return builder.build();
   }
 }

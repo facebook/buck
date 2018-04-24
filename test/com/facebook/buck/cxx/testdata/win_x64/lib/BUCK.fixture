@@ -3,13 +3,11 @@ cxx_library(
     srcs = [
         "src/lib.c",
     ],
-    compiler_flags = WINDOWS_COMPILE_FLAGS,
     exported_headers = {
         "lib.h": "include/lib.h",
     },
     include_dirs = ["include"],
     link_style = "static",
-    linker_flags = WINDOWS_LINK_FLAGS,
     preferred_linkage = "static",
     visibility = ["PUBLIC"],
 )

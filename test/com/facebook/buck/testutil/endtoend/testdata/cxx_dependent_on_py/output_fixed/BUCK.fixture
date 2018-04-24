@@ -12,18 +12,6 @@ cxx_library(
     srcs = ["output_fixed.cpp"],
     exported_headers = ["output_fixed.h"],
     link_style = "static",
-    platform_compiler_flags = [
-        [
-            "windows",
-            WINDOWS_COMPILE_FLAGS,
-        ],
-    ],
-    platform_linker_flags = [
-        [
-            "windows",
-            WINDOWS_LINK_FLAGS,
-        ],
-    ],
     visibility = ["PUBLIC"],
     deps = fixed_deps,
 )

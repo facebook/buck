@@ -8,16 +8,39 @@
   sandbox_sources=true
 
 [cxx#windows-x86_64]
-  cc=$CL_EXE$
+  cc=C:/tools/toolchains/vs2017_15.5/BuildTools/VC/Tools/MSVC/14.12.25827/bin/HostX64/x64/cl.exe
   cc_type=windows
-  cpp=$CL_EXE$
+  cpp=C:/tools/toolchains/vs2017_15.5/BuildTools/VC/Tools/MSVC/14.12.25827/bin/HostX64/x64/cl.exe
+  cppflags = \
+    /IC:/tools/toolchains/vs2017_15.5/BuildTools/VC/Tools/MSVC/14.12.25827/include \
+    /IC:/tools/toolchains/vs2017_15.5/BuildTools/VC/Tools/MSVC/14.12.25827/atlmfc/include \
+    /IC:/tools/toolchains/vs2017_15.5/VC/Auxiliary/VS/include \
+    /IC:/tools/toolchains/vs2017_15.5/WindowsSdk/10.0.16299.91/Include/10.0.16299.0/km \
+    /IC:/tools/toolchains/vs2017_15.5/WindowsSdk/10.0.16299.91/Include/10.0.16299.0/shared \
+    /IC:/tools/toolchains/vs2017_15.5/WindowsSdk/10.0.16299.91/Include/10.0.16299.0/ucrt \
+    /IC:/tools/toolchains/vs2017_15.5/WindowsSdk/10.0.16299.91/Include/10.0.16299.0/um \
+    /IC:/tools/toolchains/vs2017_15.5/WindowsSdk/10.0.16299.91/Include/10.0.16299.0/winrt
   cpp_type=windows
-  cxx=$CL_EXE$
+  cxx=C:/tools/toolchains/vs2017_15.5/BuildTools/VC/Tools/MSVC/14.12.25827/bin/HostX64/x64/cl.exe
   cxx_type=windows
-  cxxpp=$CL_EXE$
+  cxxpp=C:/tools/toolchains/vs2017_15.5/BuildTools/VC/Tools/MSVC/14.12.25827/bin/HostX64/x64/cl.exe
+  cxxppflags = \
+    /IC:/tools/toolchains/vs2017_15.5/BuildTools/VC/Tools/MSVC/14.12.25827/include \
+    /IC:/tools/toolchains/vs2017_15.5/BuildTools/VC/Tools/MSVC/14.12.25827/atlmfc/include \
+    /IC:/tools/toolchains/vs2017_15.5/VC/Auxiliary/VS/include \
+    /IC:/tools/toolchains/vs2017_15.5/WindowsSdk/10.0.16299.91/Include/10.0.16299.0/km \
+    /IC:/tools/toolchains/vs2017_15.5/WindowsSdk/10.0.16299.91/Include/10.0.16299.0/shared \
+    /IC:/tools/toolchains/vs2017_15.5/WindowsSdk/10.0.16299.91/Include/10.0.16299.0/ucrt \
+    /IC:/tools/toolchains/vs2017_15.5/WindowsSdk/10.0.16299.91/Include/10.0.16299.0/um \
+    /IC:/tools/toolchains/vs2017_15.5/WindowsSdk/10.0.16299.91/Include/10.0.16299.0/winrt
   cxxpp_type=windows
-  ld=$LINK_EXE$
+  ld=C:/tools/toolchains/vs2017_15.5/BuildTools/VC/Tools/MSVC/14.12.25827/bin/HostX64/x64/link.exe
+  ldflags = \
+    /LIBPATH:C:/tools/toolchains/vs2017_15.5/BuildTools/VC/Tools/MSVC/14.12.25827/lib/x64 \
+    /LIBPATH:C:/tools/toolchains/vs2017_15.5/BuildTools/VC/Tools/MSVC/14.12.25827/atlmfc/lib/x64 \
+    /LIBPATH:C:/tools/toolchains/vs2017_15.5/WindowsSdk/10.0.16299.91/Lib/10.0.16299.0/km/x64 \
+    /LIBPATH:C:/tools/toolchains/vs2017_15.5/WindowsSdk/10.0.16299.91/Lib/10.0.16299.0/ucrt/x64 \
+    /LIBPATH:C:/tools/toolchains/vs2017_15.5/WindowsSdk/10.0.16299.91/Lib/10.0.16299.0/um/x64
   linker_platform=windows
-  ar=$LIB_EXE$
+  ar=C:/tools/toolchains/vs2017_15.5/BuildTools/VC/Tools/MSVC/14.12.25827/bin/HostX64/x64/lib.exe
   archiver_platform=windows
-  ranlib=$LIB_EXE$

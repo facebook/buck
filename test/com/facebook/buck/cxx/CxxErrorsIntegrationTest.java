@@ -46,7 +46,6 @@ public class CxxErrorsIntegrationTest {
   public void setUp() throws IOException {
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "errors", tmp);
     workspace.setUp();
-    windowsUtils.setUpWorkspace(workspace);
 
     if (Platform.detect() == Platform.WINDOWS) {
       windowsUtils.checkAssumptions();

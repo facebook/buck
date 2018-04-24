@@ -3,18 +3,6 @@ cxx_binary(
     srcs = ["main_bin.cpp"],
     headers = [],
     link_style = "static",
-    platform_compiler_flags = [
-        [
-            "windows",
-            WINDOWS_COMPILE_FLAGS,
-        ],
-    ],
-    platform_linker_flags = [
-        [
-            "windows",
-            WINDOWS_LINK_FLAGS,
-        ],
-    ],
     deps = [
         "//output_fixed:output_fixed",
         "//output_generated:output_generated",

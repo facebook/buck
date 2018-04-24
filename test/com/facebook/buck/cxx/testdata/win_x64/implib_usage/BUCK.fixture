@@ -1,9 +1,7 @@
 cxx_binary(
     name = "app",
     srcs = ["MathClient.cpp"],
-    compiler_flags = WINDOWS_COMPILE_FLAGS,
     link_style = "shared",
-    linker_flags = WINDOWS_LINK_FLAGS,
     deps = ["//implib:implib"],
 )
 

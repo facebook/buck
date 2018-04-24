@@ -392,7 +392,6 @@ public class EndToEndWorkspace extends AbstractWorkspace implements TestRule {
   /** Replaces platform-specific placeholders configurations with their appropriate replacements */
   private void postAddPlatformConfiguration() throws IOException {
     platformUtils.checkAssumptions();
-    platformUtils.setUpWorkspace(this);
   }
 
   /**

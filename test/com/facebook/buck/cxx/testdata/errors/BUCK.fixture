@@ -13,7 +13,6 @@ cxx_library(
             LINUX_PLATFORM,
             ["-Wl,--no-undefined"],
         ),
-        (WINDOWS_PLATFORM, WINDOWS_LINK_FLAGS),
     ],
     visibility = ["PUBLIC"],
 )

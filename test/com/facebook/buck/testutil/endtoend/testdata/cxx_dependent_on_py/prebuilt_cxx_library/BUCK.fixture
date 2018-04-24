@@ -7,18 +7,6 @@ cxx_library(
         "exclamation.h",
     ],
     link_style = "static",
-    platform_compiler_flags = [
-        [
-            "windows",
-            WINDOWS_COMPILE_FLAGS,
-        ],
-    ],
-    platform_linker_flags = [
-        [
-            "windows",
-            WINDOWS_LINK_FLAGS,
-        ],
-    ],
     visibility = ["PUBLIC"],
 )
 

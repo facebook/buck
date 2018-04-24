@@ -16,7 +16,6 @@
 
 package com.facebook.buck.testutil;
 
-import com.facebook.buck.util.Escaper.Quoter;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.FileSystems;
 
@@ -29,7 +28,7 @@ public abstract class UnixUtils extends PlatformUtils {
           .toString();
 
   protected UnixUtils() {
-    super(Quoter.DOUBLE);
+    super();
   }
 
   /** Returns a command builder for a unix platform */
