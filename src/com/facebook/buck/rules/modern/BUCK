@@ -45,6 +45,7 @@ java_library(
     tests = ["//test/com/facebook/buck/rules/modern/impl:impl"],
     visibility = ["PUBLIC"],
     deps = [
+        "//src/com/facebook/buck/core/cell/resolver:resolver",
         "//src/com/facebook/buck/core/rulekey:rulekey",
         "//src/com/facebook/buck/event:interfaces",
         "//src/com/facebook/buck/io:io",
@@ -53,7 +54,6 @@ java_library(
         "//src/com/facebook/buck/log:api",
         "//src/com/facebook/buck/model:model",
         "//src/com/facebook/buck/rules:build_rule",
-        "//src/com/facebook/buck/rules:interfaces",
         "//src/com/facebook/buck/rules:rules",
         "//src/com/facebook/buck/rules:source_path",
         "//src/com/facebook/buck/rules/coercer:interface",

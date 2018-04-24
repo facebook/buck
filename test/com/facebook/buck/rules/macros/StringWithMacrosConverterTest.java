@@ -18,10 +18,10 @@ package com.facebook.buck.rules.macros;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 
+import com.facebook.buck.core.cell.resolver.CellPathResolver;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.TestBuildRuleResolver;
 import com.facebook.buck.rules.TestCellPathResolver;
 import com.facebook.buck.rules.args.Arg;

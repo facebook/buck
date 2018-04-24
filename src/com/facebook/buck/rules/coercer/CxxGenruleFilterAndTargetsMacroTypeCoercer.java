@@ -16,9 +16,9 @@
 
 package com.facebook.buck.rules.coercer;
 
+import com.facebook.buck.core.cell.resolver.CellPathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.macros.CxxGenruleFilterAndTargetsMacro;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;

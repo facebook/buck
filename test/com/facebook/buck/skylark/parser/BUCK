@@ -3,6 +3,7 @@ load("//tools/build_rules:java_rules.bzl", "standard_java_test")
 standard_java_test(
     name = "parser",
     deps = [
+        "//src/com/facebook/buck/core/cell/resolver:resolver",
         "//src/com/facebook/buck/core/rulekey:rulekey",
         "//src/com/facebook/buck/event:interfaces",
         "//src/com/facebook/buck/io:io",
@@ -14,7 +15,6 @@ standard_java_test(
         "//src/com/facebook/buck/parser/options:options",
         "//src/com/facebook/buck/plugin/impl:impl",
         "//src/com/facebook/buck/rules:build_rule",
-        "//src/com/facebook/buck/rules:interfaces",
         "//src/com/facebook/buck/rules:relative_cell_name",
         "//src/com/facebook/buck/rules:types",
         "//src/com/facebook/buck/rules/coercer:coercer",

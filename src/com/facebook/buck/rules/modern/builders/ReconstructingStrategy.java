@@ -16,10 +16,10 @@
 
 package com.facebook.buck.rules.modern.builders;
 
+import com.facebook.buck.core.cell.resolver.CellPathResolver;
 import com.facebook.buck.rules.BuildExecutorRunner;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.Cell;
-import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.modern.Buildable;

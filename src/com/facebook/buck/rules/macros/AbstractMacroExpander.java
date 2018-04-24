@@ -15,10 +15,10 @@
  */
 package com.facebook.buck.rules.macros;
 
+import com.facebook.buck.core.cell.resolver.CellPathResolver;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.macros.MacroException;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.args.Arg;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;

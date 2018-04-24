@@ -20,6 +20,7 @@ import static com.facebook.buck.io.WatchmanFactory.NULL_WATCHMAN;
 
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.FakeBuckConfig;
+import com.facebook.buck.core.cell.resolver.CellPathResolver;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.Watchman;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;

@@ -16,7 +16,7 @@
 
 package com.facebook.buck.rules.coercer;
 
-import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.core.cell.resolver.CellPathResolver;
 
 /** Superclass of coercers for non-collection/map types. */
 public abstract class LeafTypeCoercer<T> implements TypeCoercer<T> {

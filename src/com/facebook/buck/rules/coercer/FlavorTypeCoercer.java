@@ -16,10 +16,10 @@
 
 package com.facebook.buck.rules.coercer;
 
+import com.facebook.buck.core.cell.resolver.CellPathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
-import com.facebook.buck.rules.CellPathResolver;
 import java.nio.file.Path;
 
 public class FlavorTypeCoercer extends LeafTypeCoercer<Flavor> {

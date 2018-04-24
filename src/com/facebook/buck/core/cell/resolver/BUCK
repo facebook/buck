@@ -1,0 +1,13 @@
+java_library(
+    name = "resolver",
+    srcs = [
+        "CellPathResolver.java",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/model:model",
+        "//third-party/java/guava:guava",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+)
