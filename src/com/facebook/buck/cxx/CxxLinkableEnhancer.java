@@ -59,7 +59,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -120,15 +119,16 @@ public class CxxLinkableEnhancer {
     ImmutableList<Arg> allArgs = argsBuilder.build();
 
     // Build the C/C++ link step.
-    Supplier<ImmutableSortedSet<BuildRule>> declaredDeps =
-        () ->
+    Function<SourcePathRuleFinder, ImmutableSortedSet<BuildRule>> declaredDeps =
+        (ruleFinderInner) ->
             FluentIterable.from(allArgs)
-                .transformAndConcat(arg -> BuildableSupport.getDepsCollection(arg, ruleFinder))
-                .append(BuildableSupport.getDepsCollection(linker, ruleFinder))
+                .transformAndConcat(arg -> BuildableSupport.getDepsCollection(arg, ruleFinderInner))
+                .append(BuildableSupport.getDepsCollection(linker, ruleFinderInner))
                 .toSortedSet(Ordering.natural());
     return new CxxLink(
         target,
         projectFilesystem,
+        ruleFinder,
         // Construct our link build rule params.  The important part here is combining the build
         // rules that construct our object file inputs and also the deps that build our
         // dependencies.

@@ -96,7 +96,8 @@ public class CxxLinkTest {
                 new CxxLink(
                     target,
                     projectFilesystem,
-                    ImmutableSortedSet::of,
+                    ruleFinder,
+                    (unused) -> ImmutableSortedSet.of(),
                     TestCellPathResolver.get(projectFilesystem),
                     DEFAULT_LINKER,
                     DEFAULT_OUTPUT,
@@ -115,7 +116,8 @@ public class CxxLinkTest {
                 new CxxLink(
                     target,
                     projectFilesystem,
-                    ImmutableSortedSet::of,
+                    ruleFinder,
+                    (unused) -> ImmutableSortedSet.of(),
                     TestCellPathResolver.get(projectFilesystem),
                     new GnuLinker(
                         new HashedFileTool(
@@ -137,7 +139,8 @@ public class CxxLinkTest {
                 new CxxLink(
                     target,
                     projectFilesystem,
-                    ImmutableSortedSet::of,
+                    ruleFinder,
+                    (unused) -> ImmutableSortedSet.of(),
                     TestCellPathResolver.get(projectFilesystem),
                     DEFAULT_LINKER,
                     Paths.get("different"),
@@ -157,7 +160,8 @@ public class CxxLinkTest {
                 new CxxLink(
                     target,
                     projectFilesystem,
-                    ImmutableSortedSet::of,
+                    ruleFinder,
+                    (unused) -> ImmutableSortedSet.of(),
                     TestCellPathResolver.get(projectFilesystem),
                     DEFAULT_LINKER,
                     DEFAULT_OUTPUT,
@@ -213,7 +217,8 @@ public class CxxLinkTest {
             new CxxLink(
                 target,
                 projectFilesystem,
-                ImmutableSortedSet::of,
+                ruleFinder,
+                (unused) -> ImmutableSortedSet.of(),
                 TestCellPathResolver.get(projectFilesystem),
                 DEFAULT_LINKER,
                 DEFAULT_OUTPUT,
@@ -235,7 +240,8 @@ public class CxxLinkTest {
             new CxxLink(
                 target,
                 projectFilesystem,
-                ImmutableSortedSet::of,
+                ruleFinder,
+                (unused) -> ImmutableSortedSet.of(),
                 TestCellPathResolver.get(projectFilesystem),
                 DEFAULT_LINKER,
                 DEFAULT_OUTPUT,

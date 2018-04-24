@@ -34,10 +34,13 @@ import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.HasSupplementaryOutputs;
 import com.facebook.buck.rules.OverrideScheduleRule;
 import com.facebook.buck.rules.RuleScheduleInfo;
+import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.step.Step;
@@ -46,7 +49,7 @@ import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.step.fs.TouchStep;
-import com.facebook.buck.util.MoreSuppliers;
+import com.facebook.buck.util.Memoizer;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
@@ -58,7 +61,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.SortedSet;
-import java.util.function.Supplier;
+import java.util.function.Function;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
@@ -68,7 +71,9 @@ public class CxxLink extends AbstractBuildRule
         OverrideScheduleRule,
         HasSupplementaryOutputs {
 
-  private final Supplier<? extends SortedSet<BuildRule>> buildDeps;
+  private SourcePathRuleFinder ruleFinder;
+  private final Function<SourcePathRuleFinder, ? extends SortedSet<BuildRule>> buildDepsSupplier;
+  private final Memoizer<SortedSet<BuildRule>> buildDeps = new Memoizer<>();
 
   @AddToRuleKey private final Linker linker;
 
@@ -88,7 +93,8 @@ public class CxxLink extends AbstractBuildRule
   public CxxLink(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      Supplier<? extends SortedSet<BuildRule>> buildDepsSupplier,
+      SourcePathRuleFinder ruleFinder,
+      Function<SourcePathRuleFinder, ? extends SortedSet<BuildRule>> buildDepsSupplier,
       CellPathResolver cellPathResolver,
       Linker linker,
       Path output,
@@ -99,7 +105,8 @@ public class CxxLink extends AbstractBuildRule
       boolean cacheable,
       boolean thinLto) {
     super(buildTarget, projectFilesystem);
-    this.buildDeps = MoreSuppliers.memoize(buildDepsSupplier);
+    this.ruleFinder = ruleFinder;
+    this.buildDepsSupplier = buildDepsSupplier;
     this.linker = linker;
     this.output = output;
     this.extraOutputs = ImmutableSortedMap.copyOf(extraOutputs);
@@ -307,6 +314,14 @@ public class CxxLink extends AbstractBuildRule
 
   @Override
   public SortedSet<BuildRule> getBuildDeps() {
-    return buildDeps.get();
+    return buildDeps.get(() -> buildDepsSupplier.apply(ruleFinder));
+  }
+
+  @Override
+  public void updateBuildRuleResolver(
+      BuildRuleResolver ruleResolver,
+      SourcePathRuleFinder ruleFinder,
+      SourcePathResolver pathResolver) {
+    this.ruleFinder = ruleFinder;
   }
 }

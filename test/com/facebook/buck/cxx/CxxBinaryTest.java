@@ -57,7 +57,8 @@ public class CxxBinaryTest {
             new CxxLink(
                 linkTarget,
                 projectFilesystem,
-                ImmutableSortedSet::of,
+                ruleFinder,
+                (unused) -> ImmutableSortedSet.of(),
                 TestCellPathResolver.get(projectFilesystem),
                 CxxPlatformUtils.DEFAULT_PLATFORM.getLd().resolve(ruleResolver),
                 bin,

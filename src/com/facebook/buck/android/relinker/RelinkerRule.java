@@ -33,6 +33,7 @@ import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.OverrideScheduleRule;
@@ -84,6 +85,8 @@ class RelinkerRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final SourcePathResolver pathResolver;
   private final CellPathResolver cellPathResolver;
 
+  private SourcePathRuleFinder ruleFinder;
+
   public RelinkerRule(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
@@ -107,6 +110,7 @@ class RelinkerRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.objdump = objdump;
     this.cxxBuckConfig = cxxBuckConfig;
     this.linkerArgs = linkerArgs;
+    this.ruleFinder = ruleFinder;
     this.buildRuleParams = buildRuleParams;
     this.symbolsNeededPaths = symbolsNeededPaths;
     this.baseLibSourcePath = baseLibSourcePath;
@@ -181,7 +185,8 @@ class RelinkerRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
                       .withAppendedFlavors(InternalFlavor.of("cxx-link"))
                       .withoutFlavors(LinkerMapMode.NO_LINKER_MAP.getFlavor()),
                   getProjectFilesystem(),
-                  buildRuleParams::getBuildDeps,
+                  ruleFinder,
+                  (unused) -> buildRuleParams.getBuildDeps(),
                   cellPathResolver,
                   linker,
                   getLibFilePath(),
@@ -309,5 +314,13 @@ class RelinkerRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
           Files.readAllLines(pathResolver.getAbsolutePath(source), Charsets.UTF_8));
     }
     return symbolsNeeded.build();
+  }
+
+  @Override
+  public void updateBuildRuleResolver(
+      BuildRuleResolver ruleResolver,
+      SourcePathRuleFinder ruleFinder,
+      SourcePathResolver pathResolver) {
+    this.ruleFinder = ruleFinder;
   }
 }
