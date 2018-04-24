@@ -16,7 +16,7 @@
 
 package com.facebook.buck.rules;
 
-import com.facebook.buck.model.UnflavoredBuildTarget;
+import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import java.nio.file.Path;
 
 /**

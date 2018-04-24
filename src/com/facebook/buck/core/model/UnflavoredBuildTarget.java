@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.model;
+package com.facebook.buck.core.model;
 
 import java.nio.file.Path;
 import java.util.Optional;

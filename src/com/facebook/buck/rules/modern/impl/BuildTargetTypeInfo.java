@@ -16,11 +16,11 @@
 
 package com.facebook.buck.rules.modern.impl;
 
+import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableUnflavoredBuildTarget;
 import com.facebook.buck.model.InternalFlavor;
-import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.rules.modern.ValueCreator;
 import com.facebook.buck.rules.modern.ValueTypeInfo;
 import com.facebook.buck.rules.modern.ValueVisitor;

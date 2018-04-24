@@ -17,8 +17,8 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.core.cell.resolver.CellPathResolver;
+import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.util.Optional;

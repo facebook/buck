@@ -16,7 +16,7 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.model.UnflavoredBuildTarget;
+import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.google.common.collect.ImmutableList;
 

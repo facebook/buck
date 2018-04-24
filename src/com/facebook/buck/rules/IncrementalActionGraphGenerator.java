@@ -16,9 +16,9 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.google.common.base.Preconditions;
 import java.util.HashMap;
 import java.util.HashSet;

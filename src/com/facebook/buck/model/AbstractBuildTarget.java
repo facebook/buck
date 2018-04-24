@@ -16,6 +16,7 @@
 
 package com.facebook.buck.model;
 
+import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.log.views.JsonViews;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;

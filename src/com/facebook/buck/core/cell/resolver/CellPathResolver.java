@@ -15,8 +15,8 @@
  */
 package com.facebook.buck.core.cell.resolver;
 
+import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;

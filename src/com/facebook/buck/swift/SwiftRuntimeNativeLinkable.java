@@ -16,7 +16,7 @@
 
 package com.facebook.buck.swift;
 
-import static com.facebook.buck.model.UnflavoredBuildTarget.BUILD_TARGET_PREFIX;
+import static com.facebook.buck.core.model.UnflavoredBuildTarget.BUILD_TARGET_PREFIX;
 
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;

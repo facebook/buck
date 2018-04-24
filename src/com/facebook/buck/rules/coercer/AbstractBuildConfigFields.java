@@ -16,8 +16,8 @@
 
 package com.facebook.buck.rules.coercer;
 
+import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.rulekey.RuleKey;
-import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.rules.coercer.BuildConfigFields.Field;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;

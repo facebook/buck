@@ -17,11 +17,11 @@
 package com.facebook.buck.shell;
 
 import com.facebook.buck.config.BuckConfig;
+import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.rules.BuildRuleCreationContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.CommonDescriptionArg;
