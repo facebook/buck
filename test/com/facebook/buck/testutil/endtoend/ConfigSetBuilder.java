@@ -53,6 +53,16 @@ public class ConfigSetBuilder {
     return this;
   }
 
+  /**
+   * Adds configuration options to run tests with a test runner that never ends, and outputs files
+   * to describe its state (see neverending_test_runner.py in test_runners testdata directory)
+   */
+  public ConfigSetBuilder addNeverendingTestrunner() {
+    ensureSection("test");
+    configSet.get("test").put("external_runner", "python neverending_test_runner.py");
+    return this;
+  }
+
   /** Builds and returns configurationSet, and resets added sets to the builder */
   public Map<String, Map<String, String>> build() {
     Map<String, Map<String, String>> builtConfigSet = configSet;

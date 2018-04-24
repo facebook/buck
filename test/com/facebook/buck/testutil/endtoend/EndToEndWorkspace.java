@@ -24,7 +24,11 @@ import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.util.ProcessExecutor.LaunchedProcess;
+import com.facebook.buck.util.ProcessExecutor.LaunchedProcessImpl;
 import com.facebook.buck.util.ProcessExecutorParams;
+import com.facebook.buck.util.ProcessHelper;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -56,6 +60,7 @@ public class EndToEndWorkspace extends AbstractWorkspace implements TestRule {
   private TemporaryPaths tempPath = new TemporaryPaths();
   private final ProcessExecutor processExecutor = new DefaultProcessExecutor(new TestConsole());
   private Boolean ranWithBuckd = false;
+  private final ProcessHelper processHelper = ProcessHelper.getInstance();
 
   private static final String TESTDATA_DIRECTORY = "testdata";
   private static final Long buildResultTimeoutMS = TimeUnit.SECONDS.toMillis(5);
@@ -150,6 +155,19 @@ public class EndToEndWorkspace extends AbstractWorkspace implements TestRule {
   }
 
   /**
+   * Launches Buck process (non-blocking) with the specified list of command-line arguments, and the
+   * current system environment variables.
+   *
+   * @param args to pass to {@code buck}, so that could be {@code ["build", "//path/to:target"]},
+   *     {@code ["project"]}, etc.
+   * @return the launched buck process
+   */
+  public LaunchedProcess launchBuckCommandProcess(String... args) throws Exception {
+    ImmutableMap<String, String> environment = ImmutableMap.of();
+    return launchBuckCommandProcess(environment, args);
+  }
+
+  /**
    * Runs Buck with the specified list of command-line arguments, and the current system environment
    * variables.
    *
@@ -162,6 +180,22 @@ public class EndToEndWorkspace extends AbstractWorkspace implements TestRule {
     ImmutableMap<String, String> environment = ImmutableMap.of();
     String[] templates = new String[] {};
     return runBuckCommand(buckdEnabled, environment, templates, args);
+  }
+
+  /**
+   * Launches Buck process (non-blocking) with the specified list of command-line arguments, and the
+   * current system environment variables.
+   *
+   * @param buckdEnabled determines whether the command is run with buckdEnabled or not
+   * @param args to pass to {@code buck}, so that could be {@code ["build", "//path/to:target"]},
+   *     {@code ["project"]}, etc.
+   * @return the launched buck process
+   */
+  public LaunchedProcess launchBuckCommandProcess(Boolean buckdEnabled, String... args)
+      throws Exception {
+    ImmutableMap<String, String> environment = ImmutableMap.of();
+    String[] templates = new String[] {};
+    return launchBuckCommandProcess(buckdEnabled, environment, templates, args);
   }
 
   /**
@@ -181,6 +215,21 @@ public class EndToEndWorkspace extends AbstractWorkspace implements TestRule {
   }
 
   /**
+   * Launches Buck process (non-blocking) with the specified list of command-line arguments with the
+   * given map of environment variables as overrides of the current system environment.
+   *
+   * @param environmentOverrides set of environment variables to override
+   * @param args to pass to {@code buck}, so that could be {@code ["build", "//path/to:target"]},
+   *     {@code ["project"]}, etc.
+   * @return the launched buck process
+   */
+  public LaunchedProcess launchBuckCommandProcess(
+      ImmutableMap<String, String> environmentOverrides, String... args) throws Exception {
+    String[] templates = new String[] {};
+    return launchBuckCommandProcess(false, environmentOverrides, templates, args);
+  }
+
+  /**
    * Runs buck given command-line arguments and environment variables as overrides of the current
    * system environment based on a given EndToEndTestDescriptor
    *
@@ -196,8 +245,24 @@ public class EndToEndWorkspace extends AbstractWorkspace implements TestRule {
   }
 
   /**
+   * Launches buck process (non-blocking) given command-line arguments and environment variables as
+   * overrides of the current system environment based on a given EndToEndTestDescriptor
+   *
+   * @param testDescriptor provides buck command arguments/environment variables
+   * @return the launched buck process
+   */
+  public LaunchedProcess launchBuckCommandProcess(EndToEndTestDescriptor testDescriptor)
+      throws Exception {
+    return launchBuckCommandProcess(
+        testDescriptor.getBuckdEnabled(),
+        ImmutableMap.copyOf(testDescriptor.getVariableMap()),
+        testDescriptor.getTemplateSet(),
+        testDescriptor.getFullCommand());
+  }
+
+  /**
    * Runs Buck with the specified list of command-line arguments with the given map of environment
-   * variables as overrides of the current system environment.
+   * variables as overrides of the current system environment. This command is blocking.
    *
    * @param buckdEnabled determines whether the command is run with buckdEnabled or not
    * @param environmentOverrides set of environment variables to override
@@ -221,6 +286,56 @@ public class EndToEndWorkspace extends AbstractWorkspace implements TestRule {
     List<String> command = commandBuilder.addAll(ImmutableList.copyOf(args)).build();
     ranWithBuckd = ranWithBuckd || buckdEnabled;
     return runCommand(buckdEnabled, environmentOverrides, command, Optional.empty());
+  }
+
+  /**
+   * Launches a Buck process (non-blocking) with the specified list of command-line arguments with
+   * the given map of environment variables as overrides of the current system environment.
+   *
+   * @param buckdEnabled determines whether the command is run with buckdEnabled or not
+   * @param environmentOverrides set of environment variables to override
+   * @param templates is an array of premade templates to add to the workspace before running the
+   *     command.
+   * @param args to pass to {@code buck}, so that could be {@code ["build", "//path/to:target"]},
+   *     {@code ["project"]}, etc.
+   * @return the launched buck process
+   */
+  public LaunchedProcess launchBuckCommandProcess(
+      Boolean buckdEnabled,
+      ImmutableMap<String, String> environmentOverrides,
+      String[] templates,
+      String... args)
+      throws Exception {
+    System.out.println("Launching buck command: " + String.join(" ", args));
+    for (String template : templates) {
+      this.addPremadeTemplate(template);
+    }
+    ImmutableList.Builder<String> commandBuilder = platformUtils.getBuckCommandBuilder();
+    List<String> command = commandBuilder.addAll(ImmutableList.copyOf(args)).build();
+    ranWithBuckd = ranWithBuckd || buckdEnabled;
+    return launchCommandProcess(buckdEnabled, environmentOverrides, command);
+  }
+
+  private int getLaunchedPid(LaunchedProcess launchedProcess) {
+    Preconditions.checkState(launchedProcess instanceof LaunchedProcessImpl);
+    Process p = ((LaunchedProcessImpl) launchedProcess).process;
+    return Math.toIntExact(processHelper.getPid(p));
+  }
+
+  /** Sends interrupt signal to the given launched process */
+  public void sendSigInt(LaunchedProcess launchedProcess) throws IOException {
+    Runtime.getRuntime().exec(String.format("kill -SIGINT %d", getLaunchedPid(launchedProcess)));
+  }
+
+  /**
+   * Waits for given launched process to terminate, with 5 second timeout
+   *
+   * @return whether the process has terminated or not
+   */
+  public boolean waitForProcess(LaunchedProcess launchedProcess) throws InterruptedException {
+    return !processExecutor
+        .waitForLaunchedProcessWithTimeout(launchedProcess, 5000, Optional.empty())
+        .isTimedOut();
   }
 
   /**
@@ -254,6 +369,24 @@ public class EndToEndWorkspace extends AbstractWorkspace implements TestRule {
         result.getStdout().orElse(""),
         result.getStderr().orElse(""),
         result.isTimedOut());
+  }
+
+  /**
+   * Launches a given built command with buckdEnabled/environmentOverrides settings, and returns a
+   * {@link com.facebook.buck.util.ProcessExecutor.LaunchedProcess}. This command does not block.
+   */
+  public LaunchedProcess launchCommandProcess(
+      boolean buckdEnabled, ImmutableMap<String, String> environmentOverrides, List<String> command)
+      throws Exception {
+    ImmutableMap<String, String> environment =
+        overrideSystemEnvironment(buckdEnabled, environmentOverrides);
+    ProcessExecutorParams params =
+        ProcessExecutorParams.builder()
+            .setCommand(command)
+            .setEnvironment(environment)
+            .setDirectory(destPath.toAbsolutePath())
+            .build();
+    return processExecutor.launchProcess(params);
   }
 
   /** Replaces platform-specific placeholders configurations with their appropriate replacements */

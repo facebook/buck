@@ -7,3 +7,13 @@ python_library(
         "PUBLIC",
     ],
 )
+
+python_test(
+    name = "test",
+    srcs = [
+        "util_test.py",
+    ],
+    deps = [
+        ":util",
+    ],
+)
