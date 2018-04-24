@@ -485,7 +485,7 @@ public class Genrule extends AbstractBuildRuleWithDeclaredAndExtraDeps
       // strip the base path.
       Path localPath;
       if (absolutePath.equals(canonicalPath)) {
-        if (relativePath.startsWith(basePath) || getBuildTarget().isInCellRoot()) {
+        if (relativePath.startsWith(basePath) || basePath.toString().isEmpty()) {
           localPath = MorePaths.relativize(basePath, relativePath);
         } else {
           localPath = canonicalPath.getFileName();

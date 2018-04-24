@@ -78,11 +78,6 @@ abstract class AbstractBuildTarget implements Comparable<AbstractBuildTarget> {
     return getUnflavoredBuildTarget().getBasePath();
   }
 
-  @JsonIgnore
-  public boolean isInCellRoot() {
-    return getUnflavoredBuildTarget().isInCellRoot();
-  }
-
   @JsonProperty("shortName")
   @JsonView(JsonViews.MachineReadableLog.class)
   public String getShortName() {

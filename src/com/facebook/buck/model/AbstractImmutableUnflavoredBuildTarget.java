@@ -73,11 +73,6 @@ abstract class AbstractImmutableUnflavoredBuildTarget extends AbstractUnflavored
   public abstract String getShortName();
 
   @Override
-  public boolean isInCellRoot() {
-    return getBaseName().equals("//");
-  }
-
-  @Override
   public String toString() {
     return getFullyQualifiedName();
   }

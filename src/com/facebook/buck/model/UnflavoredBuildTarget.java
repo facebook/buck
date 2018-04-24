@@ -58,6 +58,4 @@ public interface UnflavoredBuildTarget extends Comparable<UnflavoredBuildTarget>
    * appended to a file path.
    */
   Path getBasePath();
-
-  boolean isInCellRoot();
 }
