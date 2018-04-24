@@ -17,6 +17,7 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.cxx.toolchain.ArchiveContents;
 import com.facebook.buck.cxx.toolchain.Archiver;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
@@ -32,7 +33,6 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
@@ -53,7 +53,7 @@ import java.util.SortedSet;
 
 /**
  * A {@link com.facebook.buck.rules.BuildRule} which builds an "ar" archive from input files
- * represented as {@link com.facebook.buck.rules.SourcePath}.
+ * represented as {@link SourcePath}.
  */
 public class Archive extends AbstractBuildRule implements SupportsInputBasedRuleKey {
 
@@ -135,8 +135,7 @@ public class Archive extends AbstractBuildRule implements SupportsInputBasedRule
   /**
    * Construct an {@link com.facebook.buck.cxx.Archive} from a {@link
    * com.facebook.buck.rules.BuildRuleParams} object representing a target node. In particular, make
-   * sure to trim dependencies to *only* those that provide the input {@link
-   * com.facebook.buck.rules.SourcePath}.
+   * sure to trim dependencies to *only* those that provide the input {@link SourcePath}.
    */
   public static Archive from(
       BuildTarget target,

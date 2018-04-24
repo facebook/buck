@@ -17,9 +17,9 @@
 package com.facebook.buck.jvm.kotlin;
 
 import com.facebook.buck.config.BuckConfig;
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;

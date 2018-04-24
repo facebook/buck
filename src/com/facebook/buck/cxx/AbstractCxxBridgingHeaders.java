@@ -17,7 +17,7 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.rulekey.AddToRuleKey;
-import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import java.util.Optional;
 import org.immutables.value.Value;

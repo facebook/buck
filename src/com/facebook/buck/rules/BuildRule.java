@@ -21,6 +21,7 @@ import com.facebook.buck.core.rulekey.RuleKeyObjectSink;
 import com.facebook.buck.core.rules.provider.BuildRuleInfoProvider;
 import com.facebook.buck.core.rules.provider.BuildRuleInfoProviderCollection;
 import com.facebook.buck.core.rules.provider.MissingProviderException;
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.views.JsonViews;
 import com.facebook.buck.model.BuildTarget;

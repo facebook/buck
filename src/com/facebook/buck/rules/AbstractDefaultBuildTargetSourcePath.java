@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.hash.HashCode;

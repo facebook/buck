@@ -16,6 +16,7 @@
 
 package com.facebook.buck.features.go;
 
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.cxx.toolchain.CxxPlatforms;
 import com.facebook.buck.features.go.GoListStep.FileType;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -35,7 +36,6 @@ import com.facebook.buck.rules.HasTests;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.MetadataProvidingDescription;
 import com.facebook.buck.rules.NoopBuildRuleWithDeclaredAndExtraDeps;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.Version;

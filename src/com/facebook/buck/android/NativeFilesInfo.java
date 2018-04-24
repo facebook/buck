@@ -19,7 +19,7 @@ package com.facebook.buck.android;
 import com.facebook.buck.android.apkmodule.APKModule;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
-import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.google.common.collect.ImmutableSortedMap;
 import java.util.Optional;
 

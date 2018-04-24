@@ -18,6 +18,7 @@ package com.facebook.buck.features.rust;
 
 import static com.facebook.buck.features.rust.RustCompileUtils.ruleToCrateName;
 
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.cxx.CxxDeps;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
@@ -42,7 +43,6 @@ import com.facebook.buck.rules.HasDefaultPlatform;
 import com.facebook.buck.rules.HasSrcs;
 import com.facebook.buck.rules.HasTests;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.args.Arg;

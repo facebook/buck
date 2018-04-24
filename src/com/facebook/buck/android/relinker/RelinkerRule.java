@@ -17,6 +17,7 @@ package com.facebook.buck.android.relinker;
 
 import com.facebook.buck.android.toolchain.ndk.TargetCpuType;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.cxx.CxxLink;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.LinkerMapMode;
@@ -36,7 +37,6 @@ import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.OverrideScheduleRule;
 import com.facebook.buck.rules.RuleScheduleInfo;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;

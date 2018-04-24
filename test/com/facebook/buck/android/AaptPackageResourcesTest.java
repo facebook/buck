@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import static org.junit.Assert.assertNotEquals;
 
 import com.facebook.buck.core.rulekey.RuleKey;
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.InternalFlavor;
@@ -26,7 +27,6 @@ import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.FakeSourcePath;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;

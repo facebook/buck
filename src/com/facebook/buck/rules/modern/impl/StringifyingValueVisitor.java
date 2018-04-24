@@ -17,8 +17,8 @@
 package com.facebook.buck.rules.modern.impl;
 
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.file.MorePaths;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.modern.ClassInfo;
 import com.facebook.buck.rules.modern.OutputPath;
 import com.facebook.buck.rules.modern.ValueTypeInfo;

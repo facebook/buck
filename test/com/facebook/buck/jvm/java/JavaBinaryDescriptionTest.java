@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.java;
 
 import static org.hamcrest.junit.MatcherAssert.assertThat;
 
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.cxx.PrebuiltCxxLibraryBuilder;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
@@ -28,7 +29,6 @@ import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeSourcePath;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestBuildRuleResolver;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;

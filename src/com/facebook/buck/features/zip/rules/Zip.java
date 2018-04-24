@@ -17,6 +17,7 @@
 package com.facebook.buck.features.zip.rules;
 
 import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.features.filebundler.CopyingFileBundler;
 import com.facebook.buck.features.filebundler.FileBundler;
 import com.facebook.buck.features.filebundler.SrcZipAwareFileBundler;
@@ -24,7 +25,6 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.HasOutputName;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
 import com.facebook.buck.rules.modern.Buildable;

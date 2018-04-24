@@ -16,7 +16,7 @@
 
 package com.facebook.buck.apple;
 
-import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.core.sourcepath.SourcePath;
 import java.util.Optional;
 
 /**

@@ -26,7 +26,7 @@ public interface RuleKeyObjectSink {
 
   /**
    * Do not use this method, instead call {@link #setReflectively(String, Object)} with the
-   * corresponding {@link com.facebook.buck.rules.SourcePath} as a parameter.
+   * corresponding {@link com.facebook.buck.core.sourcepath.SourcePath} as a parameter.
    *
    * @deprecated
    */

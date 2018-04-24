@@ -15,7 +15,7 @@
  */
 package com.facebook.buck.rules.keys;
 
-import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.function.Supplier;

@@ -16,12 +16,12 @@
 
 package com.facebook.buck.js;
 
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.model.UserFlavor;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.types.Either;
 import com.facebook.buck.util.types.Pair;

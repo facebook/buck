@@ -16,10 +16,10 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.query.QueryFileTarget;
 import com.facebook.buck.query.QueryTarget;
 import com.facebook.buck.rules.PathSourcePath;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;

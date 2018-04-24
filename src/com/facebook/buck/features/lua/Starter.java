@@ -16,7 +16,7 @@
 
 package com.facebook.buck.features.lua;
 
-import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.core.sourcepath.SourcePath;
 
 /** An interface which builds a Lua starter executable. */
 public interface Starter {

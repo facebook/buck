@@ -18,6 +18,7 @@ package com.facebook.buck.features.lua;
 
 import com.facebook.buck.android.packageable.AndroidPackageable;
 import com.facebook.buck.android.packageable.AndroidPackageableCollector;
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.cxx.AbstractCxxLibrary;
 import com.facebook.buck.cxx.CxxPreprocessorDep;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
@@ -27,7 +28,6 @@ import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.args.StringArg;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;

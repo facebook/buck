@@ -16,7 +16,7 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.util.immutables.BuckStylePackageVisibleImmutable;
 import com.google.common.collect.ImmutableSet;
 import org.immutables.value.Value;

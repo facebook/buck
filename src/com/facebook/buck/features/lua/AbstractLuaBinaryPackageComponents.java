@@ -16,7 +16,7 @@
 
 package com.facebook.buck.features.lua;
 
-import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import org.immutables.value.Value;
 

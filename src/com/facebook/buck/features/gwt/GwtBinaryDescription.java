@@ -16,6 +16,7 @@
 
 package com.facebook.buck.features.gwt;
 
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.features.gwt.GwtBinary.Style;
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.jvm.core.JavaLibrary;
@@ -28,7 +29,6 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.HasDeclaredDeps;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;

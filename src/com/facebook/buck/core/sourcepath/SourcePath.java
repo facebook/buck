@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
+package com.facebook.buck.core.sourcepath;
 
 import com.google.common.base.Preconditions;
 

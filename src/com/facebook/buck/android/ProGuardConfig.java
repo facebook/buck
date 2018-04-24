@@ -17,7 +17,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.config.BuckConfig;
-import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.core.sourcepath.SourcePath;
 import java.util.Optional;
 
 public class ProGuardConfig {

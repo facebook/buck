@@ -18,6 +18,7 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.RuleKeyObjectSink;
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.cxx.AbstractCxxSource.Type;
 import com.facebook.buck.cxx.CxxBinaryDescription.CommonArg;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
@@ -51,7 +52,6 @@ import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SourceWithFlags;

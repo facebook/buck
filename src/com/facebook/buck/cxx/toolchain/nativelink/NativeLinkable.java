@@ -16,11 +16,11 @@
 
 package com.facebook.buck.cxx.toolchain.nativelink;
 
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.SourcePath;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 

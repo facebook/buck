@@ -16,6 +16,7 @@
 
 package com.facebook.buck.features.rust;
 
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.cxx.CxxDeps;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -37,7 +38,6 @@ import com.facebook.buck.rules.HasDeclaredDeps;
 import com.facebook.buck.rules.HasDefaultPlatform;
 import com.facebook.buck.rules.HasSrcs;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;

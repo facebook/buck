@@ -18,6 +18,7 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuildRule;
@@ -31,7 +32,6 @@ import com.facebook.buck.rules.HasDeclaredDeps;
 import com.facebook.buck.rules.InstallTrigger;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.rules.NoopInstallable;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.shell.ExportFileDescription;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;

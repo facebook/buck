@@ -15,6 +15,7 @@ java_library(
     srcs = INTERFACE_SRCS,
     visibility = ["PUBLIC"],
     deps = [
+        "//src/com/facebook/buck/core/sourcepath:sourcepath",
         "//src/com/facebook/buck/io:io",
         "//src/com/facebook/buck/io/filesystem:filesystem",
         "//src/com/facebook/buck/model:model",

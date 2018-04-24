@@ -16,10 +16,10 @@
 
 package com.facebook.buck.jvm.core;
 
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.SourcePath;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.HashCode;

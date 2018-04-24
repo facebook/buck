@@ -16,9 +16,9 @@
 
 package com.facebook.buck.rules.coercer;
 
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.CellPathResolver;
-import com.facebook.buck.rules.SourcePath;
 import java.nio.file.Path;
 
 /** A type coercer to handle source entries in OCaml rules. */

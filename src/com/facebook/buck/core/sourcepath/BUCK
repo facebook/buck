@@ -1,0 +1,10 @@
+java_library(
+    name = "sourcepath",
+    srcs = glob(["*.java"]),
+    tests = [
+    ],
+    visibility = ["PUBLIC"],
+    deps = [
+        "//third-party/java/guava:guava",
+    ],
+)

@@ -18,8 +18,8 @@ package com.facebook.buck.rules.coercer;
 
 import static com.facebook.buck.rules.TestCellBuilder.createCellRoots;
 
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.HumanReadableException;
 import java.nio.file.Path;

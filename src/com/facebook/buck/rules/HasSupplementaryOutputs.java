@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.core.sourcepath.SourcePath;
 import javax.annotation.Nullable;
 
 /** BuildRules which supports supplementary outputs. */

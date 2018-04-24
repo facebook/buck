@@ -19,6 +19,7 @@ package com.facebook.buck.features.lua;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.config.FakeBuckConfig;
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.cxx.CxxLibraryBuilder;
 import com.facebook.buck.cxx.CxxTestUtils;
 import com.facebook.buck.cxx.PrebuiltCxxLibraryBuilder;
@@ -44,7 +45,6 @@ import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.ConstantToolProvider;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.FakeSourcePath;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SourceWithFlags;

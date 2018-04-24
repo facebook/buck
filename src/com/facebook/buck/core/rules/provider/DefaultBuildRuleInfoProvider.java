@@ -16,9 +16,9 @@
 
 package com.facebook.buck.core.rules.provider;
 
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.SourcePath;
 import com.google.common.base.CaseFormat;
 import javax.annotation.Nullable;
 import org.immutables.value.Value;

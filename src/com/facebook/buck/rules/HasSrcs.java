@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.google.common.collect.ImmutableSortedSet;
 import org.immutables.value.Value;
 

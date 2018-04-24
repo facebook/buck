@@ -20,7 +20,7 @@ import com.facebook.buck.android.apkmodule.APKModule;
 import com.facebook.buck.android.exopackage.ExopackageInfo;
 import com.facebook.buck.android.exopackage.ExopackageInfo.DexInfo;
 import com.facebook.buck.android.exopackage.ExopackageMode;
-import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;

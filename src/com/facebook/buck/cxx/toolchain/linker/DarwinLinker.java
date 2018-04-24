@@ -17,6 +17,7 @@
 package com.facebook.buck.cxx.toolchain.linker;
 
 import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.cxx.toolchain.objectfile.LcUuidContentsScrubber;
 import com.facebook.buck.cxx.toolchain.objectfile.OsoSymbolsContentsScrubber;
 import com.facebook.buck.io.file.FileScrubber;
@@ -25,7 +26,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DelegatingTool;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;

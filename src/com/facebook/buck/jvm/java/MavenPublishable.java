@@ -16,9 +16,9 @@
 
 package com.facebook.buck.jvm.java;
 
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.jvm.core.HasMavenCoordinates;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.SourcePath;
 import java.util.Optional;
 
 /**

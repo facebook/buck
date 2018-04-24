@@ -19,10 +19,10 @@ package com.facebook.buck.swift;
 import static com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable.Linkage.STATIC;
 import static com.facebook.buck.swift.SwiftLibraryDescription.SWIFT_COMPANION_FLAVOR;
 
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourceWithFlags;
 import com.google.common.collect.ImmutableSet;

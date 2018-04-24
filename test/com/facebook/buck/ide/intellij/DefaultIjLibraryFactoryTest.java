@@ -19,6 +19,7 @@ package com.facebook.buck.ide.intellij;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.android.AndroidPrebuiltAarBuilder;
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.ide.intellij.model.IjLibrary;
 import com.facebook.buck.ide.intellij.model.IjLibraryFactory;
 import com.facebook.buck.ide.intellij.model.IjLibraryFactoryResolver;
@@ -28,7 +29,6 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetNode;

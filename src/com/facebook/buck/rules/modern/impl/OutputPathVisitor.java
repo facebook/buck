@@ -16,7 +16,7 @@
 
 package com.facebook.buck.rules.modern.impl;
 
-import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.rules.modern.OutputPath;
 import java.nio.file.Path;
 import java.util.function.Consumer;

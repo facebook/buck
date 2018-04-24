@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.ide.intellij;
 
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.ide.intellij.aggregation.AggregationContext;
 import com.facebook.buck.ide.intellij.model.DependencyType;
 import com.facebook.buck.ide.intellij.model.IjModule;
@@ -34,7 +35,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.PathSourcePath;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetNode;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableListMultimap;

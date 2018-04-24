@@ -16,13 +16,13 @@
 
 package com.facebook.buck.cxx.toolchain.linker;
 
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.file.FileScrubber;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.Arg;

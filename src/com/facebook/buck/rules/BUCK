@@ -27,10 +27,10 @@ java_immutables_library(
         "AbstractSourceWithFlags.java",
         "BuildTargetSourcePath.java",
         "NonHashableSourcePathContainer.java",
-        "SourcePath.java",
         "SourcePathResolver.java",
     ],
     exported_deps = [
+        "//src/com/facebook/buck/core/sourcepath:sourcepath",
         "//src/com/facebook/buck/io/filesystem:filesystem",
     ],
     visibility = ["PUBLIC"],

@@ -16,7 +16,7 @@
 
 package com.facebook.buck.rules.modern;
 
-import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.rules.modern.annotations.CustomFieldBehaviorTag;
 import java.util.function.Consumer;
 

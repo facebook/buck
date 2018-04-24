@@ -16,8 +16,8 @@
 
 package com.facebook.buck.rules.modern;
 
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import java.util.Optional;
 

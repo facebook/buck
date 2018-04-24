@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.apple;
 
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.cxx.HasAppleDebugSymbolDeps;
 import com.facebook.buck.file.WriteFile;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -28,7 +29,6 @@ import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.ForwardingBuildTargetSourcePath;
 import com.facebook.buck.rules.HasDeclaredAndExtraDeps;
 import com.facebook.buck.rules.HasRuntimeDeps;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.step.Step;
 import com.google.common.base.Preconditions;

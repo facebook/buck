@@ -26,6 +26,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.js.JsFile.JsFileDev;
 import com.facebook.buck.js.JsLibrary.Files;
 import com.facebook.buck.model.BuildTarget;
@@ -37,7 +38,6 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.util.RichStream;

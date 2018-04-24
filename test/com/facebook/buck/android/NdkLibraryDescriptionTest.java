@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import static org.hamcrest.junit.MatcherAssert.assertThat;
 
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
@@ -27,7 +28,6 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRule;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TestBuildRuleResolver;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.google.common.collect.FluentIterable;

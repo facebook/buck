@@ -17,6 +17,7 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.core.rulekey.RuleKey;
+import com.facebook.buck.core.sourcepath.SourcePath;
 
 /**
  * * Prevents a {@link SourcePath} being resolved and hashed when used as part of an

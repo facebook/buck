@@ -16,11 +16,11 @@
 
 package com.facebook.buck.core.rules.provider;
 
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.rules.AbstractBuildRuleWithProviders;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
