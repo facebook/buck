@@ -27,6 +27,7 @@ import com.facebook.buck.io.filesystem.PathOrGlobMatcher;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.events.ParseBuckFileEvent;
+import com.facebook.buck.parser.events.ParseBuckProfilerReportEvent;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.options.ProjectBuildFileParserOptions;
 import com.facebook.buck.rules.Description;
