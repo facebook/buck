@@ -160,7 +160,7 @@ public class DefaultParserTargetNodeFactory implements ParserTargetNodeFactory<T
               Joiner.on(',').withKeyValueSeparator("->").join(rawNode)));
     }
 
-    Cell targetCell = cell.getCell(target);
+    Preconditions.checkState(cell.equals(cell.getCell(target)));
     Object constructorArg;
     try {
       ImmutableSet.Builder<BuildTarget> declaredDeps = ImmutableSet.builder();
@@ -170,21 +170,18 @@ public class DefaultParserTargetNodeFactory implements ParserTargetNodeFactory<T
           perfEventScope.apply(PerfEventId.of("MarshalledConstructorArg"))) {
         constructorArg =
             marshaller.populate(
-                targetCell.getCellPathResolver(),
-                targetCell.getFilesystem(),
+                cell.getCellPathResolver(),
+                cell.getFilesystem(),
                 target,
                 description.getConstructorArgType(),
                 declaredDeps,
                 rawNode);
         visibilityPatterns =
             ConstructorArgMarshaller.populateVisibilityPatterns(
-                targetCell.getCellPathResolver(), "visibility", rawNode.get("visibility"), target);
+                cell.getCellPathResolver(), "visibility", rawNode.get("visibility"), target);
         withinViewPatterns =
             ConstructorArgMarshaller.populateVisibilityPatterns(
-                targetCell.getCellPathResolver(),
-                "within_view",
-                rawNode.get("within_view"),
-                target);
+                cell.getCellPathResolver(), "within_view", rawNode.get("within_view"), target);
       }
       try (SimplePerfEvent.Scope scope =
           perfEventScope.apply(PerfEventId.of("CreatedTargetNode"))) {
@@ -196,16 +193,16 @@ public class DefaultParserTargetNodeFactory implements ParserTargetNodeFactory<T
                 hasher.hash(),
                 description,
                 constructorArg,
-                targetCell.getFilesystem(),
+                cell.getFilesystem(),
                 target,
                 declaredDeps.build(),
                 visibilityPatterns,
                 withinViewPatterns,
-                targetCell.getCellPathResolver());
+                cell.getCellPathResolver());
         if (buildFileTrees.isPresent()
             && cell.isEnforcingBuckPackageBoundaries(target.getBasePath())) {
           enforceBuckPackageBoundaries(
-              targetCell, target, buildFileTrees.get().getUnchecked(targetCell), node.getInputs());
+              cell, target, buildFileTrees.get().getUnchecked(cell), node.getInputs());
         }
         nodeListener.onCreate(buildFile, node);
         return node;
