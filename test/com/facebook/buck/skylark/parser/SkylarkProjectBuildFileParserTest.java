@@ -476,6 +476,16 @@ public class SkylarkProjectBuildFileParserTest {
   }
 
   @Test
+  public void canUseUnicodeChars() throws Exception {
+    Path directory = projectFilesystem.resolve("src").resolve("test");
+    Files.createDirectories(directory);
+    Path buildFile = directory.resolve("BUCK");
+    Files.write(buildFile, Arrays.asList("prebuilt_jar(name='β', binary_jar='a.jar')"));
+    Map<String, Object> rule = getSingleRule(buildFile);
+    assertThat(Type.STRING.convert(rule.get("name"), "name"), equalTo("β"));
+  }
+
+  @Test
   public void functionDefinitionsAreNotAllowedInBuildFiles() throws Exception {
     Path directory = projectFilesystem.resolve("src").resolve("test");
     Files.createDirectories(directory);

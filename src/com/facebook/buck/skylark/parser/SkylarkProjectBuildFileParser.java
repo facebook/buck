@@ -54,6 +54,7 @@ import com.google.devtools.build.lib.vfs.FileSystem;
 import com.google.devtools.build.lib.vfs.FileSystemUtils;
 import com.google.devtools.build.lib.vfs.PathFragment;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
@@ -210,7 +211,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
   private ParserInputSource createInputSource(com.google.devtools.build.lib.vfs.Path buildFilePath)
       throws IOException {
     return ParserInputSource.create(
-        FileSystemUtils.readWithKnownFileSize(buildFilePath, buildFilePath.getFileSize()),
+        FileSystemUtils.readContent(buildFilePath, StandardCharsets.UTF_8),
         buildFilePath.asFragment());
   }
 
