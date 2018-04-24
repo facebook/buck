@@ -61,7 +61,7 @@ public class BuildTargetFactoryTest {
     BuildTarget buildTarget = BuildTargetFactory.newInstance(ROOT, "xplat//example/base:one");
     assertEquals(
         BuildTarget.of(
-            UnflavoredBuildTarget.of(ROOT, Optional.of("xplat"), "//example/base", "one")),
+            ImmutableUnflavoredBuildTarget.of(ROOT, Optional.of("xplat"), "//example/base", "one")),
         buildTarget);
   }
 }

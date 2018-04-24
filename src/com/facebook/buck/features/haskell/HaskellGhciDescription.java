@@ -36,7 +36,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
-import com.facebook.buck.model.UnflavoredBuildTarget;
+import com.facebook.buck.model.ImmutableUnflavoredBuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleCreationContext;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -281,7 +281,7 @@ public class HaskellGhciDescription
       ImmutableList<Arg> extraLdFlags) {
     return resolver.computeIfAbsent(
         BuildTarget.of(
-            UnflavoredBuildTarget.of(
+            ImmutableUnflavoredBuildTarget.of(
                 baseTarget.getCellPath(),
                 Optional.empty(),
                 baseTarget.getBaseName(),

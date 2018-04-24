@@ -35,7 +35,7 @@ import com.facebook.buck.log.thrift.rulekeys.Value;
 import com.facebook.buck.log.thrift.rulekeys.Wrapper;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.UnflavoredBuildTarget;
+import com.facebook.buck.model.ImmutableUnflavoredBuildTarget;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.SourceRoot;
 import com.facebook.buck.rules.keys.hasher.RuleKeyHasher;
@@ -170,7 +170,7 @@ public class ThriftRuleKeyHasherTest {
     hasher.putKey(".build_rule_type_value");
     hasher.putBuildTarget(
         BuildTarget.of(
-            UnflavoredBuildTarget.of(
+            ImmutableUnflavoredBuildTarget.of(
                 new File("cell_path").toPath(), Optional.empty(), "//base_name", "rule_name")));
     hasher.putKey(".build_target_value");
     hasher.putBuildTargetSourcePath(
@@ -178,7 +178,7 @@ public class ThriftRuleKeyHasherTest {
           @Override
           public BuildTarget getTarget() {
             return BuildTarget.of(
-                UnflavoredBuildTarget.of(
+                ImmutableUnflavoredBuildTarget.of(
                     new File("cell_path_2").toPath(),
                     Optional.empty(),
                     "//base_name_2",

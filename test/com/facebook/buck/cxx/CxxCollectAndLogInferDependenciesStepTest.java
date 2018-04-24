@@ -31,7 +31,7 @@ import com.facebook.buck.cxx.toolchain.GccPreprocessor;
 import com.facebook.buck.cxx.toolchain.InferBuckConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.UnflavoredBuildTarget;
+import com.facebook.buck.model.ImmutableUnflavoredBuildTarget;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.Tool;
@@ -112,7 +112,7 @@ public class CxxCollectAndLogInferDependenciesStepTest {
 
     BuildTarget testBuildTarget =
         BuildTarget.of(
-            UnflavoredBuildTarget.of(
+            ImmutableUnflavoredBuildTarget.of(
                 filesystem.getRootPath(), Optional.empty(), "//target", "short"),
             ImmutableSet.of(CxxInferEnhancer.InferFlavors.INFER.getFlavor()));
 
@@ -147,7 +147,7 @@ public class CxxCollectAndLogInferDependenciesStepTest {
 
     BuildTarget testBuildTarget =
         BuildTarget.of(
-            UnflavoredBuildTarget.of(
+            ImmutableUnflavoredBuildTarget.of(
                 filesystem.getRootPath(), Optional.of(cellName), "//target", "short"),
             ImmutableSet.of(CxxInferEnhancer.InferFlavors.INFER.getFlavor()));
 
@@ -180,7 +180,7 @@ public class CxxCollectAndLogInferDependenciesStepTest {
     ProjectFilesystem filesystem1 = createFakeFilesystem("/Users/user/cell_one");
     BuildTarget buildTarget1 =
         BuildTarget.of(
-            UnflavoredBuildTarget.of(
+            ImmutableUnflavoredBuildTarget.of(
                 filesystem1.getRootPath(), Optional.of("cell1"), "//target/in_cell_one", "short1"),
             ImmutableSet.of(CxxInferEnhancer.InferFlavors.INFER.getFlavor()));
 
@@ -188,7 +188,7 @@ public class CxxCollectAndLogInferDependenciesStepTest {
     ProjectFilesystem filesystem2 = createFakeFilesystem("/Users/user/cell_two");
     BuildTarget buildTarget2 =
         BuildTarget.of(
-            UnflavoredBuildTarget.of(
+            ImmutableUnflavoredBuildTarget.of(
                 filesystem2.getRootPath(), Optional.of("cell2"), "//target/in_cell_two", "short2"),
             ImmutableSet.of(CxxInferEnhancer.INFER_CAPTURE_FLAVOR));
 
@@ -228,7 +228,7 @@ public class CxxCollectAndLogInferDependenciesStepTest {
     ProjectFilesystem filesystem1 = createFakeFilesystem("/Users/user/default_cell");
     BuildTarget buildTarget1 =
         BuildTarget.of(
-            UnflavoredBuildTarget.of(
+            ImmutableUnflavoredBuildTarget.of(
                 filesystem1.getRootPath(), Optional.empty(), "//target/in_default_cell", "short"),
             ImmutableSet.of(CxxInferEnhancer.InferFlavors.INFER.getFlavor()));
 
@@ -236,7 +236,7 @@ public class CxxCollectAndLogInferDependenciesStepTest {
     ProjectFilesystem filesystem2 = createFakeFilesystem("/Users/user/cell_two");
     BuildTarget buildTarget2 =
         BuildTarget.of(
-            UnflavoredBuildTarget.of(
+            ImmutableUnflavoredBuildTarget.of(
                 filesystem2.getRootPath(), Optional.of("cell2"), "//target/in_cell_two", "short2"),
             ImmutableSet.of(CxxInferEnhancer.INFER_CAPTURE_FLAVOR));
 

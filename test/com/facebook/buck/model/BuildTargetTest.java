@@ -135,7 +135,7 @@ public class BuildTargetTest {
   @Test
   public void testGetUnflavoredTarget() {
     UnflavoredBuildTarget unflavoredTarget =
-        UnflavoredBuildTarget.builder()
+        ImmutableUnflavoredBuildTarget.builder()
             .setBaseName("//foo/bar")
             .setShortName("baz")
             .setCellPath(ROOT)
@@ -168,13 +168,13 @@ public class BuildTargetTest {
   @Test
   public void unflavoredBuildTargetsAreInterned() {
     UnflavoredBuildTarget target1 =
-        UnflavoredBuildTarget.builder()
+        ImmutableUnflavoredBuildTarget.builder()
             .setCellPath(ROOT)
             .setBaseName("//foo")
             .setShortName("bar")
             .build();
     UnflavoredBuildTarget target2 =
-        UnflavoredBuildTarget.builder()
+        ImmutableUnflavoredBuildTarget.builder()
             .setCellPath(ROOT)
             .setBaseName("//foo")
             .setShortName("bar")

@@ -43,6 +43,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.ImmutableUnflavoredBuildTarget;
 import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.rules.BuildContext;
@@ -697,7 +698,7 @@ class NativeLibraryMergeEnhancer {
         // have a chance to share the target.
         UnflavoredBuildTarget baseUnflavored = baseBuildTarget.getUnflavoredBuildTarget();
         UnflavoredBuildTarget unflavored =
-            UnflavoredBuildTarget.builder()
+            ImmutableUnflavoredBuildTarget.builder()
                 .from(baseUnflavored)
                 .setShortName(
                     "merged_lib_" + Flavor.replaceInvalidCharacters(constituents.getSoname().get()))

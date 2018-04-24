@@ -19,6 +19,7 @@ package com.facebook.buck.parser;
 import com.facebook.buck.core.cell.resolver.CellPathResolver;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.FlavorParser;
+import com.facebook.buck.model.ImmutableUnflavoredBuildTarget;
 import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.util.RichStream;
@@ -113,8 +114,8 @@ public class BuildTargetParser {
 
     Path cellPath = cellNames.getCellPathOrThrow(givenCellName);
 
-    UnflavoredBuildTarget.Builder unflavoredBuilder =
-        UnflavoredBuildTarget.builder()
+    ImmutableUnflavoredBuildTarget.Builder unflavoredBuilder =
+        ImmutableUnflavoredBuildTarget.builder()
             .setBaseName(baseName)
             .setShortName(shortName)
             // Set the cell path correctly. Because the cellNames comes from the owning cell we can

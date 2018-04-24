@@ -28,7 +28,7 @@ import com.facebook.buck.log.CommandThreadFactory;
 import com.facebook.buck.log.InvocationInfo;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.UnflavoredBuildTarget;
+import com.facebook.buck.model.ImmutableUnflavoredBuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleDurationTracker;
 import com.facebook.buck.rules.BuildRuleEvent;
@@ -108,7 +108,7 @@ public class RuleKeyLoggerListenerTest {
     BuildRule rule =
         new FakeBuildRule(
             BuildTarget.of(
-                UnflavoredBuildTarget.of(
+                ImmutableUnflavoredBuildTarget.of(
                     projectFilesystem.getRootPath(),
                     Optional.empty(),
                     "//topspin",

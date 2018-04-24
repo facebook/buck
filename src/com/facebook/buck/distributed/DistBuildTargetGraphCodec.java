@@ -25,6 +25,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.ImmutableUnflavoredBuildTarget;
 import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.parser.ParserTargetNodeFactory;
@@ -133,7 +134,7 @@ public class DistBuildTargetGraphCodec {
   public static BuildTarget decodeBuildTarget(BuildJobStateBuildTarget remoteTarget, Cell cell) {
 
     UnflavoredBuildTarget unflavoredBuildTarget =
-        UnflavoredBuildTarget.builder()
+        ImmutableUnflavoredBuildTarget.builder()
             .setShortName(remoteTarget.getShortName())
             .setBaseName(remoteTarget.getBaseName())
             .setCellPath(cell.getRoot())

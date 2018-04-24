@@ -137,7 +137,7 @@ abstract class AbstractBuildTarget implements Comparable<AbstractBuildTarget> {
   /** Helper for creating a build target with no flavors and no cell name. */
   public static BuildTarget of(Path cellPath, String baseName, String shortName) {
     return BuildTarget.of(
-        UnflavoredBuildTarget.of(cellPath, Optional.empty(), baseName, shortName));
+        ImmutableUnflavoredBuildTarget.of(cellPath, Optional.empty(), baseName, shortName));
   }
 
   /** @return {@link #getFullyQualifiedName()} */
@@ -176,7 +176,8 @@ abstract class AbstractBuildTarget implements Comparable<AbstractBuildTarget> {
 
   public BuildTarget withoutCell() {
     return BuildTarget.of(
-        UnflavoredBuildTarget.of(getCellPath(), Optional.empty(), getBaseName(), getShortName()),
+        ImmutableUnflavoredBuildTarget.of(
+            getCellPath(), Optional.empty(), getBaseName(), getShortName()),
         getFlavors());
   }
 }

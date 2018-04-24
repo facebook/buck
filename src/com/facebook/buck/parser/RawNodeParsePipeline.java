@@ -18,6 +18,7 @@ package com.facebook.buck.parser;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.ImmutableUnflavoredBuildTarget;
 import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.parser.PipelineNodeCache.Cache;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
@@ -74,7 +75,7 @@ public class RawNodeParsePipeline extends ParsePipeline<Map<String, Object>> {
               "Raw data claims to come from [%s], but we tried rooting it at [%s].",
               basePath, otherBasePath));
     }
-    return UnflavoredBuildTarget.builder()
+    return ImmutableUnflavoredBuildTarget.builder()
         .setBaseName(UnflavoredBuildTarget.BUILD_TARGET_PREFIX + basePath)
         .setShortName(name)
         .setCellPath(cellRoot)

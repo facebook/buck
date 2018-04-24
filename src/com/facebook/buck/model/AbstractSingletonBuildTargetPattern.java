@@ -34,7 +34,7 @@ abstract class AbstractSingletonBuildTargetPattern implements BuildTargetPattern
     int buildTarget = fullyQualifiedName.indexOf("//");
     int colon = fullyQualifiedName.lastIndexOf(':');
     return SingletonBuildTargetPattern.of(
-        UnflavoredBuildTarget.builder()
+        ImmutableUnflavoredBuildTarget.builder()
             .setBaseName(fullyQualifiedName.substring(buildTarget, colon))
             .setShortName(fullyQualifiedName.substring(colon + 1))
             .setCellPath(cellPath)

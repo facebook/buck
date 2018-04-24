@@ -35,6 +35,7 @@ import com.facebook.buck.graph.AbstractBottomUpTraversal;
 import com.facebook.buck.halide.HalideBuckConfig;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.ImmutableUnflavoredBuildTarget;
 import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.parser.BuildFileSpec;
 import com.facebook.buck.parser.Parser;
@@ -348,7 +349,7 @@ public class XCodeProjectCommandHelper {
                           cellPathToCellName.get(target.getCellPath()).stream().findAny();
                       if (cellName.isPresent()) {
                         return target.withUnflavoredBuildTarget(
-                            UnflavoredBuildTarget.of(
+                            ImmutableUnflavoredBuildTarget.of(
                                 target.getCellPath(),
                                 cellName,
                                 target.getBaseName(),

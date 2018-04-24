@@ -53,25 +53,27 @@ public class BuildTargetFactory {
     Preconditions.checkArgument(parts.length == 2);
     String[] nameAndFlavor = parts[1].split("#");
     if (nameAndFlavor.length != 2) {
-      return BuildTarget.of(UnflavoredBuildTarget.of(root, cellName, parts[0], parts[1]));
+      return BuildTarget.of(ImmutableUnflavoredBuildTarget.of(root, cellName, parts[0], parts[1]));
     }
     String[] flavors = nameAndFlavor[1].split(",");
     return BuildTarget.of(
-        UnflavoredBuildTarget.of(root, cellName, parts[0], nameAndFlavor[0]),
+        ImmutableUnflavoredBuildTarget.of(root, cellName, parts[0], nameAndFlavor[0]),
         RichStream.from(flavors).map(InternalFlavor::of).toOnceIterable());
   }
 
   public static BuildTarget newInstance(Path cellPath, String baseName, String shortName) {
     BuckCellArg arg = BuckCellArg.of(baseName);
     return BuildTarget.of(
-        UnflavoredBuildTarget.of(cellPath, arg.getCellName(), arg.getBasePath(), shortName));
+        ImmutableUnflavoredBuildTarget.of(
+            cellPath, arg.getCellName(), arg.getBasePath(), shortName));
   }
 
   public static BuildTarget newInstance(
       Path cellPath, String baseName, String shortName, Flavor... flavors) {
     BuckCellArg arg = BuckCellArg.of(baseName);
     return BuildTarget.of(
-        UnflavoredBuildTarget.of(cellPath, arg.getCellName(), arg.getBasePath(), shortName),
+        ImmutableUnflavoredBuildTarget.of(
+            cellPath, arg.getCellName(), arg.getBasePath(), shortName),
         ImmutableSet.copyOf(flavors));
   }
 }
