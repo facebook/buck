@@ -286,7 +286,6 @@ java_immutables_library(
         "AbstractBuildEngineBuildContext.java",
         "AbstractBuildResult.java",
         "AbstractBuildRule.java",
-        "AbstractBuildRuleKeys.java",
         "AbstractBuildRuleWithDeclaredAndExtraDeps.java",
         "AbstractBuildRuleWithProviders.java",
         "AbstractBuildRuleWithResolver.java",

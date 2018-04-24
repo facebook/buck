@@ -19,6 +19,7 @@ package com.facebook.buck.event;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 import com.facebook.buck.artifact_cache.CacheResult;
+import com.facebook.buck.core.rulekey.BuildRuleKeys;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -27,7 +28,6 @@ import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleDurationTracker;
 import com.facebook.buck.rules.BuildRuleEvent;
-import com.facebook.buck.rules.BuildRuleKeys;
 import com.facebook.buck.rules.BuildRuleStatus;
 import com.facebook.buck.rules.BuildRuleSuccessType;
 import com.facebook.buck.rules.FakeBuildRule;
