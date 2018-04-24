@@ -128,7 +128,7 @@ public class EndToEndWorkspace extends AbstractWorkspace implements TestRule {
       if (entry.getKey() == "NO_BUCKD" && buckdEnabled) continue;
       environmentBuilder.put(entry.getKey(), entry.getValue());
     }
-    if (buckdEnabled) {
+    if (!buckdEnabled) {
       environmentBuilder.put("NO_BUCKD", "1");
     }
     environmentBuilder.putAll(environmentOverrides);
