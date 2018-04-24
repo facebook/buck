@@ -16,7 +16,7 @@
 
 package com.facebook.buck.rules.args;
 
-import com.facebook.buck.rules.RuleKeyAppendable;
+import com.facebook.buck.core.rulekey.RuleKeyAppendable;
 import java.util.function.Function;
 
 /** A simple shorthand for {@link Function} and {@link RuleKeyAppendable}. */

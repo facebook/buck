@@ -16,6 +16,7 @@
 
 package com.facebook.buck.features.haskell;
 
+import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxToolFlags;
 import com.facebook.buck.cxx.PreprocessorFlags;
@@ -27,7 +28,6 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
-import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;

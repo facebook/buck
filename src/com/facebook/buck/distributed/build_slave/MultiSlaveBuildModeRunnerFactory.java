@@ -21,6 +21,7 @@ import static com.facebook.buck.distributed.build_slave.BuildSlaveTimingStatsTra
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.command.BuildExecutor;
 import com.facebook.buck.config.resources.ResourcesConfig;
+import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.distributed.ArtifactCacheByBuildRule;
 import com.facebook.buck.distributed.BuildStatusUtil;
 import com.facebook.buck.distributed.DistBuildArtifactCacheImpl;
@@ -36,7 +37,6 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.ParallelRuleKeyCalculator;
-import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.util.timing.DefaultClock;
 import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.Futures;

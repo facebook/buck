@@ -17,6 +17,7 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.artifact_cache.CacheResult;
+import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.EventKey;

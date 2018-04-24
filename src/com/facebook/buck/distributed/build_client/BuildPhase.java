@@ -20,6 +20,7 @@ import static com.facebook.buck.distributed.ClientStatsTracker.DistBuildClientSt
 import static com.facebook.buck.distributed.thrift.BuildMode.DISTRIBUTED_BUILD_WITH_LOCAL_COORDINATOR;
 
 import com.facebook.buck.command.BuildExecutorArgs;
+import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.distributed.BuildSlaveEventWrapper;
 import com.facebook.buck.distributed.BuildStatusUtil;
 import com.facebook.buck.distributed.ClientStatsTracker;
@@ -51,7 +52,6 @@ import com.facebook.buck.rules.ActionAndTargetGraphs;
 import com.facebook.buck.rules.CachingBuildEngineDelegate;
 import com.facebook.buck.rules.ParallelRuleKeyCalculator;
 import com.facebook.buck.rules.RemoteBuildRuleCompletionNotifier;
-import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.timing.Clock;
 import com.facebook.buck.util.timing.DefaultClock;

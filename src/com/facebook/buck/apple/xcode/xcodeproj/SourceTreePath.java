@@ -16,8 +16,8 @@
 
 package com.facebook.buck.apple.xcode.xcodeproj;
 
-import com.facebook.buck.rules.AddToRuleKey;
-import com.facebook.buck.rules.AddsToRuleKey;
+import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.util.Optionals;
 import com.google.common.base.Preconditions;
 import java.nio.file.Path;

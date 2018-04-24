@@ -16,14 +16,14 @@
 
 package com.facebook.buck.rules.macros;
 
+import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.macros.MacroException;
 import com.facebook.buck.model.macros.MacroFinder;
 import com.facebook.buck.model.macros.MacroMatchResult;
 import com.facebook.buck.model.macros.MacroReplacer;
 import com.facebook.buck.model.macros.StringMacroCombiner;
-import com.facebook.buck.rules.AddToRuleKey;
-import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildableSupport;

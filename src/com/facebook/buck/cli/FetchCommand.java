@@ -17,6 +17,7 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.command.Build;
+import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.file.HttpArchiveDescription;
 import com.facebook.buck.file.HttpFileDescription;
@@ -37,7 +38,6 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.LocalCachingBuildEngineDelegate;
 import com.facebook.buck.rules.MetadataChecker;
 import com.facebook.buck.rules.NoOpRemoteBuildRuleCompletionWaiter;
-import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraphAndBuildTargets;
 import com.facebook.buck.rules.keys.RuleKeyCacheRecycler;

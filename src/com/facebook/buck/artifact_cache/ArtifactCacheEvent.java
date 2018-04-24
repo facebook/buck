@@ -16,10 +16,10 @@
 
 package com.facebook.buck.artifact_cache;
 
+import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.EventKey;
 import com.facebook.buck.event.LeafEvent;
-import com.facebook.buck.rules.RuleKey;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;

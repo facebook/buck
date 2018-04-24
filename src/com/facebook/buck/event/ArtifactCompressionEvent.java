@@ -16,7 +16,7 @@
 
 package com.facebook.buck.event;
 
-import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.core.rulekey.RuleKey;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Joiner;

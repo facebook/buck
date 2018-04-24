@@ -18,7 +18,7 @@
     </entry_points>
     <list size="12">
       <item index="0" class="java.lang.String" itemvalue="com.facebook.buck.cli.AdditionalOptions" />
-      <item index="1" class="java.lang.String" itemvalue="com.facebook.buck.rules.AddToRuleKey" />
+      <item index="1" class="java.lang.String" itemvalue="com.facebook.buck.core.rules.keys.AddToRuleKey" />
       <item index="2" class="java.lang.String" itemvalue="com.facebook.infer.annotation.SuppressFieldNotInitialized" />
       <item index="3" class="java.lang.String" itemvalue="com.fasterxml.jackson.annotation.JsonCreator" />
       <item index="4" class="java.lang.String" itemvalue="com.fasterxml.jackson.annotation.JsonProperty" />

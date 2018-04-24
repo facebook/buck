@@ -16,8 +16,8 @@
 
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.rules.AddToRuleKey;
-import com.facebook.buck.rules.AddsToRuleKey;
+import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import java.nio.file.Path;
 import java.util.Collections;
 

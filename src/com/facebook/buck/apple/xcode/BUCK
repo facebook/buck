@@ -14,8 +14,8 @@ java_immutables_library(
     ],
     visibility = ["PUBLIC"],
     deps = [
+        "//src/com/facebook/buck/core/rulekey:rulekey",
         "//src/com/facebook/buck/log:api",
-        "//src/com/facebook/buck/rules:rule_key",
         "//src/com/facebook/buck/util:util",
         "//third-party/java/dd-plist:dd-plist",
     ],

@@ -16,8 +16,8 @@
 
 package com.facebook.buck.rules.keys;
 
+import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.util.cache.CacheStats;
 import com.facebook.buck.util.cache.CacheStatsTracker;

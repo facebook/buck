@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules.keys;
 
+import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.rules.BuildRule;
 
 /**
@@ -23,8 +24,7 @@ import com.facebook.buck.rules.BuildRule;
  *
  * <p>{@link com.facebook.buck.rules.BuildRule}s implementing this interface will cause rule key to
  * be computed by enumerating their dependencies implicitly through their inputs, which are
- * described by {@link com.facebook.buck.rules.SourcePath}s added to their {@link
- * com.facebook.buck.rules.RuleKey}.
+ * described by {@link com.facebook.buck.rules.SourcePath}s added to their {@link RuleKey}.
  *
  * <p>Input-based rule keys are generally more accurate than normal rule keys, as they won't
  * necessarily change if the rule key of a dependency changed. Instead, they only change if a the

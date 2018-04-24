@@ -21,9 +21,9 @@ import static com.facebook.buck.event.TestEventConfigurator.configureTestEventAt
 import com.facebook.buck.artifact_cache.ArtifactCacheEvent.StoreType;
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
+import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.model.BuildId;
-import com.facebook.buck.rules.RuleKey;
 import com.google.common.collect.ImmutableSet;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;

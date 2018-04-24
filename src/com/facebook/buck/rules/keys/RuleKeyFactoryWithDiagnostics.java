@@ -16,7 +16,7 @@
 
 package com.facebook.buck.rules.keys;
 
-import com.facebook.buck.rules.AddsToRuleKey;
+import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.keys.hasher.RuleKeyHasher;
 

@@ -16,7 +16,8 @@
 
 package com.facebook.buck.rules.keys;
 
-import com.facebook.buck.rules.AddsToRuleKey;
+import com.facebook.buck.core.rulekey.AddsToRuleKey;
+import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.rules.BuildRule;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
@@ -24,8 +25,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
 
 /**
- * A {@link com.facebook.buck.rules.RuleKey} cache used by a {@link RuleKeyFactory}. As items are
- * add-only, this is intended to be used in a single build.
+ * A {@link RuleKey} cache used by a {@link RuleKeyFactory}. As items are add-only, this is intended
+ * to be used in a single build.
  *
  * @param <V> The rule key type.
  */

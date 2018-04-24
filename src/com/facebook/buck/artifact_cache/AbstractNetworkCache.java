@@ -17,10 +17,10 @@
 package com.facebook.buck.artifact_cache;
 
 import com.facebook.buck.artifact_cache.ArtifactCacheEvent.StoreType;
+import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.EventDispatcher;
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.slb.HttpService;
 import com.facebook.buck.slb.NoHealthyServersException;
 import com.google.common.base.Joiner;

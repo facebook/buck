@@ -16,11 +16,11 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
-import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildableContext;

@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
+package com.facebook.buck.core.rulekey;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -26,7 +26,7 @@ public interface RuleKeyObjectSink {
 
   /**
    * Do not use this method, instead call {@link #setReflectively(String, Object)} with the
-   * corresponding {@link SourcePath} as a parameter.
+   * corresponding {@link com.facebook.buck.rules.SourcePath} as a parameter.
    *
    * @deprecated
    */

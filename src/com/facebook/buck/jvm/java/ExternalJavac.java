@@ -16,12 +16,12 @@
 
 package com.facebook.buck.jvm.java;
 
+import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
 import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
 import com.facebook.buck.jvm.java.abi.source.api.SourceOnlyAbiRuleInfo;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.NonHashableSourcePathContainer;
 import com.facebook.buck.rules.PathSourcePath;

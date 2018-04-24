@@ -16,7 +16,8 @@
 
 package com.facebook.buck.rules.args;
 
-import com.facebook.buck.rules.AddToRuleKey;
+import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Interner;
@@ -26,8 +27,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 /**
- * An {@link Arg} which must be sanitized before contributing to a {@link
- * com.facebook.buck.rules.RuleKey}.
+ * An {@link Arg} which must be sanitized before contributing to a {@link RuleKey}.
  *
  * <p>
  *

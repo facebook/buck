@@ -16,7 +16,7 @@
 
 package com.facebook.buck.rules.args;
 
-import com.facebook.buck.rules.AddToRuleKey;
+import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.rules.SourcePathResolver;
 import java.util.function.Consumer;
 

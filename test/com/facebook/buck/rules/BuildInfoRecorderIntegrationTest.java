@@ -21,6 +21,7 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.DirArtifactCacheTestUtil;
 import com.facebook.buck.artifact_cache.TestArtifactCaches;
+import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.event.DefaultBuckEventBus;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildId;

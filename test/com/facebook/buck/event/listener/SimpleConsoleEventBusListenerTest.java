@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
+import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.distributed.DistBuildCreatedEvent;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.event.ActionGraphEvent;
@@ -37,7 +38,6 @@ import com.facebook.buck.rules.BuildRuleKeys;
 import com.facebook.buck.rules.BuildRuleStatus;
 import com.facebook.buck.rules.BuildRuleSuccessType;
 import com.facebook.buck.rules.FakeBuildRule;
-import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.test.TestResultSummaryVerbosity;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.ExitCode;

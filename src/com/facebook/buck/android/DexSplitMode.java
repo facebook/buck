@@ -17,8 +17,8 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.android.dalvik.ZipSplitter;
-import com.facebook.buck.rules.AddToRuleKey;
-import com.facebook.buck.rules.AddsToRuleKey;
+import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;

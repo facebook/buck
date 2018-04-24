@@ -15,8 +15,8 @@
  */
 package com.facebook.buck.rules.coercer;
 
-import com.facebook.buck.rules.RuleKeyAppendable;
-import com.facebook.buck.rules.RuleKeyObjectSink;
+import com.facebook.buck.core.rulekey.RuleKeyAppendable;
+import com.facebook.buck.core.rulekey.RuleKeyObjectSink;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.common.collect.ImmutableMap;

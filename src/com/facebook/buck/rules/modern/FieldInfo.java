@@ -16,7 +16,7 @@
 
 package com.facebook.buck.rules.modern;
 
-import com.facebook.buck.rules.AddsToRuleKey;
+import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.rules.modern.annotations.CustomFieldBehavior;
 import java.lang.reflect.Field;
 import java.util.Optional;

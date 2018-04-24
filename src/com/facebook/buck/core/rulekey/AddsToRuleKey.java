@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
+package com.facebook.buck.core.rulekey;
 
 /**
  * Identifies a class that uses {@link AddToRuleKey} annotations to indicate fields that should be

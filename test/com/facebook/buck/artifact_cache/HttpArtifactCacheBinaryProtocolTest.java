@@ -18,7 +18,7 @@ package com.facebook.buck.artifact_cache;
 
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.core.rulekey.RuleKey;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.graph.AcyclicDepthFirstPostOrderTraversal;
@@ -47,7 +48,6 @@ import com.facebook.buck.rules.HasTests;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.rules.ParallelRuleKeyCalculator;
 import com.facebook.buck.rules.RuleDepsCache;
-import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;

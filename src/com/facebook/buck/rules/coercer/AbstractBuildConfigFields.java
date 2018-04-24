@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules.coercer;
 
+import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.rules.coercer.BuildConfigFields.Field;
 import com.facebook.buck.util.HumanReadableException;
@@ -188,7 +189,7 @@ abstract class AbstractBuildConfigFields implements Iterable<Field> {
 
   /**
    * @return value that represents the data stored in this object such that it can be used to
-   *     represent this object in a {@link com.facebook.buck.rules.RuleKey}.
+   *     represent this object in a {@link RuleKey}.
    */
   @Override
   public String toString() {

@@ -17,8 +17,8 @@
 package com.facebook.buck.artifact_cache;
 
 import com.facebook.buck.artifact_cache.ArtifactCacheEvent.Operation;
+import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.event.EventKey;
-import com.facebook.buck.rules.RuleKey;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.util.Map;

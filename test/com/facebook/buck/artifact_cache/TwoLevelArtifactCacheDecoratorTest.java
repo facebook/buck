@@ -19,11 +19,11 @@ package com.facebook.buck.artifact_cache;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.file.BorrowablePath;
 import com.facebook.buck.io.file.LazyPath;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
-import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.Futures;

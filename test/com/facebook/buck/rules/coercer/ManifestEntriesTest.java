@@ -21,7 +21,7 @@ import static org.easymock.EasyMock.replay;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.rules.RuleKeyObjectSink;
+import com.facebook.buck.core.rulekey.RuleKeyObjectSink;
 import com.google.common.collect.ImmutableMap;
 import java.util.Optional;
 import org.junit.Test;

@@ -16,7 +16,7 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.rules.AddToRuleKey;
+import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.util.immutables.BuckStylePackageVisibleImmutable;

@@ -17,8 +17,8 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
+import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.jvm.java.ExtraClasspathProvider;
-import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import java.nio.file.Path;
 

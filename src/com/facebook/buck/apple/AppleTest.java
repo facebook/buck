@@ -17,12 +17,12 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.apple.toolchain.AppleDeveloperDirectoryForTestsProvider;
+import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
-import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;

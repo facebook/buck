@@ -21,6 +21,7 @@ import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
@@ -31,7 +32,6 @@ import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.ForwardingBuildTargetSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
-import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourceRoot;
 import com.facebook.buck.rules.keys.hasher.RuleKeyHasher;
 import com.facebook.buck.rules.keys.hasher.RuleKeyHasher.Container;

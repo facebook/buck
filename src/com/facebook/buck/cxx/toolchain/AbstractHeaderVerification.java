@@ -16,8 +16,8 @@
 
 package com.facebook.buck.cxx.toolchain;
 
-import com.facebook.buck.rules.RuleKeyAppendable;
-import com.facebook.buck.rules.RuleKeyObjectSink;
+import com.facebook.buck.core.rulekey.RuleKeyAppendable;
+import com.facebook.buck.core.rulekey.RuleKeyObjectSink;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;

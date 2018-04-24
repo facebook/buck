@@ -16,6 +16,8 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.core.rulekey.RuleKey;
+
 /**
  * * Prevents a {@link SourcePath} being resolved and hashed when used as part of an
  * InputBased-{@link RuleKey}. It is still hashed when added to default rulekeys.

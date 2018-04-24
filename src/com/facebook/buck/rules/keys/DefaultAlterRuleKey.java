@@ -16,7 +16,7 @@
 
 package com.facebook.buck.rules.keys;
 
-import com.facebook.buck.rules.RuleKeyObjectSink;
+import com.facebook.buck.core.rulekey.RuleKeyObjectSink;
 import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 
 class DefaultAlterRuleKey implements AlterRuleKey {

@@ -16,8 +16,8 @@
 
 package com.facebook.buck.rules.modern.impl;
 
+import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.NonHashableSourcePathContainer;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.modern.OutputPath;

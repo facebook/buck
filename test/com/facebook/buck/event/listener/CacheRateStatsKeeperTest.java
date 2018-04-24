@@ -20,6 +20,7 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.artifact_cache.config.ArtifactCacheMode;
+import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.distributed.thrift.CacheRateStats;
 import com.facebook.buck.event.TestEventConfigurator;
 import com.facebook.buck.rules.BuildEvent;
@@ -29,7 +30,6 @@ import com.facebook.buck.rules.BuildRuleEvent;
 import com.facebook.buck.rules.BuildRuleKeys;
 import com.facebook.buck.rules.BuildRuleStatus;
 import com.facebook.buck.rules.FakeBuildRule;
-import com.facebook.buck.rules.RuleKey;
 import com.google.common.collect.ImmutableSet;
 import java.util.Optional;
 import org.hamcrest.Matchers;

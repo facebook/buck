@@ -25,7 +25,7 @@ import static org.junit.Assert.*;
 
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.CacheDeleteResult;
-import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.ExitCode;

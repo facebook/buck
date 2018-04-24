@@ -18,6 +18,7 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.artifact_cache.ArtifactCacheFactory;
 import com.facebook.buck.config.resources.ResourcesConfig;
+import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.distributed.DistBuildConfig;
 import com.facebook.buck.distributed.DistBuildMode;
 import com.facebook.buck.distributed.DistBuildService;
@@ -38,7 +39,6 @@ import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
-import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.keys.RuleKeyCacheScope;
 import com.facebook.buck.rules.keys.config.impl.ConfigRuleKeyConfigurationFactory;
 import com.facebook.buck.slb.ClientSideSlb;

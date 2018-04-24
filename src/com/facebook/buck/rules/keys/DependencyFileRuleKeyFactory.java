@@ -16,8 +16,8 @@
 
 package com.facebook.buck.rules.keys;
 
+import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.collect.ImmutableList;

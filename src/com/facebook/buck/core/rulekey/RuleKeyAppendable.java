@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright 2014-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -14,17 +14,15 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
+package com.facebook.buck.core.rulekey;
 
-import static java.lang.annotation.ElementType.FIELD;
-import static java.lang.annotation.ElementType.METHOD;
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
-
-import java.lang.annotation.Retention;
-import java.lang.annotation.Target;
-
-@Retention(RUNTIME)
-@Target({FIELD, METHOD})
-public @interface AddToRuleKey {
-  boolean stringify() default false;
+/**
+ * Deprecated. Implement {@link AddsToRuleKey} instead, and use {@link AddToRuleKey} annotations on
+ * fields to indicate which ones should be part of the rule key.
+ *
+ * <p>TODO(t6430785): Delete this class once no more usages exist
+ */
+@Deprecated
+public interface RuleKeyAppendable extends AddsToRuleKey {
+  void appendToRuleKey(RuleKeyObjectSink sink);
 }

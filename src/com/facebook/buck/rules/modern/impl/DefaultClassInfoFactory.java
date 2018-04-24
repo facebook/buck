@@ -16,8 +16,8 @@
 
 package com.facebook.buck.rules.modern.impl;
 
+import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.modern.ClassInfo;
 import com.facebook.buck.rules.modern.ModernBuildRule;
 import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;

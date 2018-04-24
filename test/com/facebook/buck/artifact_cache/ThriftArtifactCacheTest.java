@@ -151,7 +151,7 @@ public class ThriftArtifactCacheTest {
       CacheResult result =
           Futures.getUnchecked(
               cache.fetchAsync(
-                  new com.facebook.buck.rules.RuleKey(HashCode.fromInt(42)),
+                  new com.facebook.buck.core.rulekey.RuleKey(HashCode.fromInt(42)),
                   LazyPath.ofInstance(artifactPath)));
       assertEquals(CacheResultType.ERROR, result.getType());
     }
@@ -266,10 +266,14 @@ public class ThriftArtifactCacheTest {
 
     SettableFuture<CacheResult> future = SettableFuture.create();
 
-    com.facebook.buck.rules.RuleKey key0 = new com.facebook.buck.rules.RuleKey(HashCode.fromInt(0));
-    com.facebook.buck.rules.RuleKey key1 = new com.facebook.buck.rules.RuleKey(HashCode.fromInt(1));
-    com.facebook.buck.rules.RuleKey key2 = new com.facebook.buck.rules.RuleKey(HashCode.fromInt(2));
-    com.facebook.buck.rules.RuleKey key3 = new com.facebook.buck.rules.RuleKey(HashCode.fromInt(3));
+    com.facebook.buck.core.rulekey.RuleKey key0 =
+        new com.facebook.buck.core.rulekey.RuleKey(HashCode.fromInt(0));
+    com.facebook.buck.core.rulekey.RuleKey key1 =
+        new com.facebook.buck.core.rulekey.RuleKey(HashCode.fromInt(1));
+    com.facebook.buck.core.rulekey.RuleKey key2 =
+        new com.facebook.buck.core.rulekey.RuleKey(HashCode.fromInt(2));
+    com.facebook.buck.core.rulekey.RuleKey key3 =
+        new com.facebook.buck.core.rulekey.RuleKey(HashCode.fromInt(3));
     ImmutableList<AbstractAsynchronousCache.FetchRequest> requests =
         ImmutableList.of(
             new AbstractAsynchronousCache.FetchRequest(key0, LazyPath.ofInstance(output0), future),
@@ -368,11 +372,15 @@ public class ThriftArtifactCacheTest {
             .setErrorTextLimit(100)
             .build();
 
-    com.facebook.buck.rules.RuleKey key0 = new com.facebook.buck.rules.RuleKey(HashCode.fromInt(0));
-    com.facebook.buck.rules.RuleKey key1 = new com.facebook.buck.rules.RuleKey(HashCode.fromInt(1));
-    com.facebook.buck.rules.RuleKey key2 = new com.facebook.buck.rules.RuleKey(HashCode.fromInt(2));
-    com.facebook.buck.rules.RuleKey key3 = new com.facebook.buck.rules.RuleKey(HashCode.fromInt(3));
-    ImmutableSet<com.facebook.buck.rules.RuleKey> ruleKeys =
+    com.facebook.buck.core.rulekey.RuleKey key0 =
+        new com.facebook.buck.core.rulekey.RuleKey(HashCode.fromInt(0));
+    com.facebook.buck.core.rulekey.RuleKey key1 =
+        new com.facebook.buck.core.rulekey.RuleKey(HashCode.fromInt(1));
+    com.facebook.buck.core.rulekey.RuleKey key2 =
+        new com.facebook.buck.core.rulekey.RuleKey(HashCode.fromInt(2));
+    com.facebook.buck.core.rulekey.RuleKey key3 =
+        new com.facebook.buck.core.rulekey.RuleKey(HashCode.fromInt(3));
+    ImmutableSet<com.facebook.buck.core.rulekey.RuleKey> ruleKeys =
         ImmutableSet.of(key0, key1, key2, key3);
 
     BuckCacheMultiContainsResponse multiContainsResponse = new BuckCacheMultiContainsResponse();
@@ -463,7 +471,7 @@ public class ThriftArtifactCacheTest {
           Futures.getUnchecked(
               cache.deleteAsync(
                   Collections.singletonList(
-                      new com.facebook.buck.rules.RuleKey(HashCode.fromInt(42)))));
+                      new com.facebook.buck.core.rulekey.RuleKey(HashCode.fromInt(42)))));
       assertThat(result.getCacheNames(), Matchers.hasSize(1));
     }
   }

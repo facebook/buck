@@ -20,9 +20,9 @@ java_immutables_library(
         "//src/com/facebook/buck/rules/coercer:coercer",
     ],
     deps = [
+        "//src/com/facebook/buck/core/rulekey:rulekey",
         "//src/com/facebook/buck/io:io",
         "//src/com/facebook/buck/io/filesystem:filesystem",
-        "//src/com/facebook/buck/rules:rule_key",
         "//src/com/facebook/buck/rules:source_path",
         "//third-party/java/guava:guava",
     ],
@@ -45,6 +45,7 @@ java_library(
     tests = ["//test/com/facebook/buck/rules/modern/impl:impl"],
     visibility = ["PUBLIC"],
     deps = [
+        "//src/com/facebook/buck/core/rulekey:rulekey",
         "//src/com/facebook/buck/event:interfaces",
         "//src/com/facebook/buck/io:io",
         "//src/com/facebook/buck/io/file:file",
@@ -53,7 +54,6 @@ java_library(
         "//src/com/facebook/buck/model:model",
         "//src/com/facebook/buck/rules:build_rule",
         "//src/com/facebook/buck/rules:interfaces",
-        "//src/com/facebook/buck/rules:rule_key",
         "//src/com/facebook/buck/rules:rules",
         "//src/com/facebook/buck/rules:source_path",
         "//src/com/facebook/buck/rules/coercer:interface",

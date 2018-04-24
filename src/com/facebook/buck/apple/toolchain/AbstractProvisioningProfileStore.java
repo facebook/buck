@@ -18,9 +18,9 @@ package com.facebook.buck.apple.toolchain;
 
 import com.dd.plist.NSArray;
 import com.dd.plist.NSObject;
+import com.facebook.buck.core.rulekey.RuleKeyAppendable;
+import com.facebook.buck.core.rulekey.RuleKeyObjectSink;
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.rules.RuleKeyAppendable;
-import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.toolchain.Toolchain;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.util.types.Pair;

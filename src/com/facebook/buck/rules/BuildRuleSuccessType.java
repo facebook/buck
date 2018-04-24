@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableSet;
 import java.util.EnumSet;

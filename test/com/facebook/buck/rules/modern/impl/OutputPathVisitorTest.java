@@ -16,7 +16,7 @@
 
 package com.facebook.buck.rules.modern.impl;
 
-import com.facebook.buck.rules.AddToRuleKey;
+import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.rules.modern.Buildable;
 import com.facebook.buck.rules.modern.OutputPath;
 import com.facebook.buck.testutil.MoreAsserts;

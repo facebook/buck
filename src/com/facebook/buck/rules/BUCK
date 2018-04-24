@@ -35,7 +35,7 @@ java_immutables_library(
     ],
     visibility = ["PUBLIC"],
     deps = [
-        ":rule_key",
+        "//src/com/facebook/buck/core/rulekey:rulekey",
         "//src/com/facebook/buck/io:io",
         "//src/com/facebook/buck/model:model",
         "//src/com/facebook/buck/util:util",
@@ -91,28 +91,6 @@ java_immutables_library(
 )
 
 java_library(
-    name = "rule_key",
-    srcs = [
-        "AddToRuleKey.java",
-        "AddsToRuleKey.java",
-        "RuleKey.java",
-        "RuleKeyAppendable.java",
-        "RuleKeyDiagnosticsMode.java",
-        "RuleKeyObjectSink.java",
-    ],
-    required_for_source_only_abi = True,  # TODO(jkeljo): Break out the annotations
-    visibility = [
-        "PUBLIC",
-    ],
-    deps = [
-        "//src/com/facebook/buck/log/views:views",
-        "//third-party/java/guava:guava",
-        "//third-party/java/jackson:jackson-annotations",
-        "//third-party/java/jsr:jsr305",
-    ],
-)
-
-java_library(
     name = "abstract_description_arg",
     srcs = [
         "CommonDescriptionArg.java",
@@ -151,9 +129,9 @@ java_immutables_library(
         "PUBLIC",
     ],
     deps = [
-        ":rule_key",
         ":source_path",
         "//src/com/facebook/buck/config:config",
+        "//src/com/facebook/buck/core/rulekey:rulekey",
         "//src/com/facebook/buck/jvm/core:packagefinder",
         "//src/com/facebook/buck/toolchain:toolchain",
         "//third-party/java/pf4j:pf4j",
@@ -197,8 +175,8 @@ java_immutables_library(
     exported_deps = [
         ":abstract_description_arg",
         ":build_context",
-        ":rule_key",
         ":source_path",
+        "//src/com/facebook/buck/core/rulekey:rulekey",
         "//src/com/facebook/buck/core/rules/provider:provider",
         "//src/com/facebook/buck/graph:graph",
         "//src/com/facebook/buck/rules/visibility:visibility",
@@ -411,9 +389,9 @@ java_immutables_library(
         ":build_rule",
         ":interfaces",
         ":relative_cell_name",
-        ":rule_key",
         ":source_path",
         ":types",
+        "//src/com/facebook/buck/core/rulekey:rulekey",
         "//src/com/facebook/buck/sandbox:sandbox",
         "//third-party/java/pf4j:pf4j",
     ],

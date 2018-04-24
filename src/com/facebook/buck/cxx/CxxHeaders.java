@@ -16,10 +16,10 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.cxx.toolchain.PathShortener;
 import com.facebook.buck.cxx.toolchain.Preprocessor;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.HasCustomDepsLogic;

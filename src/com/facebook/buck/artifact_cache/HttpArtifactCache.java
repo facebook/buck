@@ -16,9 +16,9 @@
 
 package com.facebook.buck.artifact_cache;
 
+import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.io.file.LazyPath;
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.slb.HttpResponse;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.ByteSource;

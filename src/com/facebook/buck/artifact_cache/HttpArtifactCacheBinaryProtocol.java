@@ -16,7 +16,7 @@
 
 package com.facebook.buck.artifact_cache;
 
-import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.util.hash.HasherInputStream;
 import com.facebook.buck.util.hash.HasherOutputStream;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;

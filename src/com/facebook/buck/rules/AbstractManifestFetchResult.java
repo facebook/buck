@@ -17,6 +17,7 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.artifact_cache.CacheResult;
+import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Preconditions;
 import java.util.Optional;

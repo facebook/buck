@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
+package com.facebook.buck.core.rulekey;
 
 /** Whether and when to perform rulekey diagnostics. */
 public enum RuleKeyDiagnosticsMode {

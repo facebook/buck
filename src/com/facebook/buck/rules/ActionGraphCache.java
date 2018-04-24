@@ -19,6 +19,7 @@ package com.facebook.buck.rules;
 import com.facebook.buck.config.ActionGraphParallelizationMode;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.IncrementalActionGraphMode;
+import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.event.ActionGraphEvent;
 import com.facebook.buck.event.ActionGraphPerfStatEvent;
 import com.facebook.buck.event.BuckEventBus;

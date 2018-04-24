@@ -15,7 +15,7 @@
  */
 package com.facebook.buck.artifact_cache;
 
-import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.core.rulekey.RuleKey;
 import com.google.common.base.Preconditions;
 import java.nio.file.Path;
 import java.util.List;
