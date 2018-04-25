@@ -72,6 +72,9 @@ public class IsolatedExecutionStrategy extends AbstractModernBuildRuleStrategy {
   private final Set<Optional<String>> cellNames;
   private final Map<HashCode, Node> nodeMap;
 
+  // TODO(cjhopman): Remove this. This class shouldn't need access to the protocol.
+  private final Protocol protocol = new ThriftProtocol();
+
   IsolatedExecutionStrategy(
       IsolatedExecution executionStrategy,
       SourcePathRuleFinder ruleFinder,
@@ -169,7 +172,8 @@ public class IsolatedExecutionStrategy extends AbstractModernBuildRuleStrategy {
     HashCode hash = serializer.serialize(new BuildableAndTarget(original, rule.getBuildTarget()));
 
     InputsDigestBuilder inputsBuilder =
-        new InputsDigestBuilder(new DefaultDelegate(cellPathPrefix, fileHasher));
+        new InputsDigestBuilder(
+            new DefaultDelegate(cellPathPrefix, fileHasher, protocol), protocol);
     addBuckConfigInputs(inputsBuilder);
     addDeserializationInputs(hash, inputsBuilder);
     addRuleInputs(inputsBuilder, converted, buildRuleBuildContext);
@@ -232,7 +236,6 @@ public class IsolatedExecutionStrategy extends AbstractModernBuildRuleStrategy {
       Path resolved =
           buildContext.getSourcePathResolver().getAbsolutePath(inputSourcePath).normalize();
       if (!resolved.startsWith(cellPathPrefix)) {
-        System.err.println("Skipping absolute path " + resolved);
         // TODO(cjhopman): Should we map absolute paths to platform requirements?
       } else {
         inputsAdder.addInput(cellPathPrefix.relativize(resolved));

@@ -18,13 +18,12 @@ package com.facebook.buck.rules.modern.builders;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.io.file.MostFiles;
-import com.facebook.buck.rules.modern.builders.thrift.ActionResult;
+import com.facebook.buck.rules.modern.builders.RemoteExecutionService.ExecutionResult;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.util.env.BuckClasspath;
-import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -91,10 +90,10 @@ class RemoteExecution implements IsolatedExecution {
     Inputs inputs = inputsBuilder.build();
     storage.addMissing(inputs.getRequiredData());
 
-    ActionResult result =
+    ExecutionResult result =
         executionService.execute(command, commandEnvironment, inputs.getRootDigest(), outputs);
 
-    if (result.exitCode != 0) {
+    if (result.getExitCode() != 0) {
       throw StepFailedException.createForFailingStepWithExitCode(
           new AbstractExecutionStep("remote_execution") {
             @Override
@@ -103,27 +102,15 @@ class RemoteExecution implements IsolatedExecution {
             }
           },
           executionContext,
-          StepExecutionResult.of(result.exitCode, getStdErr(result)),
+          StepExecutionResult.of(result.getExitCode(), result.getStderr()),
           Optional.of(buildTarget));
     }
 
     for (Path path : outputs) {
       MostFiles.deleteRecursivelyIfExists(cellPrefixRoot.resolve(path));
     }
-    storage.materializeOutputs(result.outputDirectories, result.outputFiles, cellPrefixRoot);
-  }
-
-  private Optional<String> getStdErr(ActionResult result) {
-    if (result.isSetStderrRaw()) {
-      return Optional.of(
-          new String(
-              result.stderrRaw.array(),
-              result.stderrRaw.arrayOffset(),
-              result.stderrRaw.limit(),
-              Charsets.UTF_8));
-    }
-    // TODO(cjhopman): Implement this.
-    return Optional.empty();
+    storage.materializeOutputs(
+        result.getOutputDirectories(), result.getOutputFiles(), cellPrefixRoot);
   }
 
   private ImmutableSortedMap<String, String> getBuilderEnvironmentOverrides(

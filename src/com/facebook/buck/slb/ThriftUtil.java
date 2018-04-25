@@ -30,6 +30,7 @@ import org.apache.thrift.protocol.TJSONProtocol;
 import org.apache.thrift.protocol.TProtocol;
 import org.apache.thrift.protocol.TProtocolFactory;
 import org.apache.thrift.protocol.TSimpleJSONProtocol;
+import org.apache.thrift.transport.TByteBuffer;
 import org.apache.thrift.transport.TIOStreamTransport;
 import org.apache.thrift.transport.TTransport;
 
@@ -109,6 +110,17 @@ public final class ThriftUtil {
   public static void deserialize(ThriftProtocol protocol, InputStream source, TBase<?, ?> dest)
       throws ThriftException {
     try (TIOStreamTransport responseTransport = new TIOStreamTransport(source)) {
+      TProtocol responseProtocol = newProtocolInstance(protocol, responseTransport);
+      dest.read(responseProtocol);
+    } catch (TException e) {
+      throw new ThriftException(e);
+    }
+  }
+
+  /** Deserialize a message from a ByteBuffer. */
+  public static void deserialize(ThriftProtocol protocol, ByteBuffer source, TBase<?, ?> dest)
+      throws ThriftException {
+    try (TTransport responseTransport = new TByteBuffer(source)) {
       TProtocol responseProtocol = newProtocolInstance(protocol, responseTransport);
       dest.read(responseProtocol);
     } catch (TException e) {

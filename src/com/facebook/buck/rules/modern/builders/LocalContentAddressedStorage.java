@@ -16,16 +16,14 @@
 
 package com.facebook.buck.rules.modern.builders;
 
-import com.facebook.buck.rules.modern.builders.thrift.Digest;
-import com.facebook.buck.rules.modern.builders.thrift.Directory;
-import com.facebook.buck.rules.modern.builders.thrift.DirectoryNode;
-import com.facebook.buck.rules.modern.builders.thrift.FileNode;
-import com.facebook.buck.rules.modern.builders.thrift.OutputDirectory;
-import com.facebook.buck.rules.modern.builders.thrift.OutputFile;
-import com.facebook.buck.rules.modern.builders.thrift.Tree;
-import com.facebook.buck.slb.ThriftProtocol;
-import com.facebook.buck.slb.ThriftUtil;
-import com.facebook.buck.util.function.ThrowingFunction;
+import com.facebook.buck.rules.modern.builders.Protocol.Digest;
+import com.facebook.buck.rules.modern.builders.Protocol.Directory;
+import com.facebook.buck.rules.modern.builders.Protocol.DirectoryNode;
+import com.facebook.buck.rules.modern.builders.Protocol.FileNode;
+import com.facebook.buck.rules.modern.builders.Protocol.OutputDirectory;
+import com.facebook.buck.rules.modern.builders.Protocol.OutputFile;
+import com.facebook.buck.rules.modern.builders.Protocol.Tree;
+import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.function.ThrowingSupplier;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -34,10 +32,10 @@ import com.google.common.io.ByteStreams;
 import com.google.common.io.MoreFiles;
 import com.google.devtools.build.lib.concurrent.KeyedLocker.AutoUnlocker;
 import com.google.devtools.build.lib.concurrent.StripedKeyedLocker;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -52,12 +50,11 @@ import java.util.stream.Stream;
 public class LocalContentAddressedStorage implements ContentAddressedStorage {
   private final Path cacheDir;
   private final StripedKeyedLocker<String> fileLock = new StripedKeyedLocker<>(8);
-  private final ThrowingFunction<Directory, Digest, IOException> directoryDigester;
+  private final Protocol protocol;
 
-  public LocalContentAddressedStorage(
-      Path cacheDir, ThrowingFunction<Directory, Digest, IOException> directoryDigester) {
+  public LocalContentAddressedStorage(Path cacheDir, Protocol protocol) {
     this.cacheDir = cacheDir;
-    this.directoryDigester = directoryDigester;
+    this.protocol = protocol;
   }
 
   /** For any digests that are missing, adds the corresponding data to the storage. */
@@ -67,7 +64,7 @@ public class LocalContentAddressedStorage implements ContentAddressedStorage {
     Stream<Digest> missing = findMissing(data.keySet());
     for (Entry<Digest, ThrowingSupplier<InputStream, IOException>> entry :
         missing.collect(ImmutableMap.toImmutableMap(digest -> digest, data::get)).entrySet()) {
-      String hash = entry.getKey().hash;
+      String hash = entry.getKey().getHash();
       Path path = ensureParent(getPath(hash));
       try (AutoUnlocker ignored = fileLock.writeLock(hash)) {
         if (Files.exists(path)) {
@@ -90,40 +87,49 @@ public class LocalContentAddressedStorage implements ContentAddressedStorage {
       List<OutputDirectory> outputDirectories, List<OutputFile> outputFiles, Path root)
       throws IOException {
     for (OutputFile file : outputFiles) {
-      Path path = root.resolve(file.path);
+      Path path = root.resolve(file.getPath());
       ensureParent(path);
-      if (file.isSetContent()) {
+      if (file.getContent() != null) {
         try (FileChannel output =
             FileChannel.open(path, StandardOpenOption.WRITE, StandardOpenOption.CREATE)) {
-          output.write(file.content);
+          output.write(file.getContent());
         }
       } else {
-        Files.write(path, getData(file.digest));
+        Files.write(path, getData(file.getDigest()));
       }
-      if (file.isExecutable) {
+      if (file.getIsExecutable()) {
         Preconditions.checkState(path.toFile().setExecutable(true));
       }
     }
 
     for (OutputDirectory directory : outputDirectories) {
-      Path dirRoot = root.resolve(directory.path);
-      Tree tree = readTree(directory.treeDigest);
+      Path dirRoot = root.resolve(directory.getPath());
+      Tree tree = readTree(directory.getTreeDigest());
       Map<Digest, Directory> childMap =
-          tree.children
-              .stream()
-              .collect(ImmutableMap.toImmutableMap(directoryDigester.asFunction(), child -> child));
-      materializeDirectory(childMap, tree.root, dirRoot);
+          RichStream.from(tree.getChildrenList())
+              .collect(
+                  ImmutableMap.toImmutableMap(
+                      child -> {
+                        try {
+                          return protocol.computeDigest(child);
+                        } catch (IOException e) {
+                          throw new RuntimeException(e);
+                        }
+                      },
+                      child -> child));
+      materializeDirectory(childMap, tree.getRoot(), dirRoot);
     }
   }
 
   private void materializeDirectory(Map<Digest, Directory> childMap, Directory dir, Path root)
       throws IOException {
     Files.createDirectories(root);
-    for (DirectoryNode childNode : dir.directories) {
-      materializeDirectory(childMap, childMap.get(childNode.digest), root.resolve(childNode.name));
+    for (DirectoryNode childNode : dir.getDirectoriesList()) {
+      materializeDirectory(
+          childMap, childMap.get(childNode.getDigest()), root.resolve(childNode.getName()));
     }
 
-    for (FileNode file : dir.files) {
+    for (FileNode file : dir.getFilesList()) {
       materializeFile(root, file);
     }
   }
@@ -134,19 +140,23 @@ public class LocalContentAddressedStorage implements ContentAddressedStorage {
     Directory dir = readDirectory(inputsDigest);
 
     Files.createDirectories(root);
-    for (FileNode file : dir.files) {
+    for (FileNode file : dir.getFilesList()) {
       materializeFile(root, file);
     }
-    for (DirectoryNode child : dir.directories) {
-      materializeInputs(root.resolve(child.name), child.digest);
+    for (DirectoryNode child : dir.getDirectoriesList()) {
+      materializeInputs(root.resolve(child.getName()), child.getDigest());
     }
   }
 
   @VisibleForTesting
   byte[] getData(Digest digest) throws IOException {
-    Path path = getPath(digest.hash);
+    Path path = getPath(digest.getHash());
     Preconditions.checkState(Files.exists(path));
     return Files.readAllBytes(path);
+  }
+
+  ByteBuffer getDataBuffer(Digest digest) throws IOException {
+    return ByteBuffer.wrap(getData(digest));
   }
 
   private Path ensureParent(Path path) throws IOException {
@@ -162,27 +172,19 @@ public class LocalContentAddressedStorage implements ContentAddressedStorage {
   }
 
   private Tree readTree(Digest digest) throws IOException {
-    Path path = getPath(digest.hash);
-    Preconditions.checkState(Files.exists(path));
-    Tree tree = new Tree();
-    ThriftUtil.deserialize(ThriftProtocol.COMPACT, new FileInputStream(path.toFile()), tree);
-    return tree;
+    return protocol.parseTree(getDataBuffer(digest));
   }
 
   private Directory readDirectory(Digest digest) throws IOException {
-    Path path = getPath(digest.hash);
-    Preconditions.checkState(Files.exists(path));
-    Directory directory = new Directory();
-    ThriftUtil.deserialize(ThriftProtocol.COMPACT, new FileInputStream(path.toFile()), directory);
-    return directory;
+    return protocol.parseDirectory(getDataBuffer(digest));
   }
 
   private void materializeFile(Path dir, FileNode file) throws IOException {
-    Path path = getPath(file.digest.hash);
+    Path path = getPath(file.getDigest().getHash());
     Preconditions.checkState(Files.exists(path));
     // As this file could potentially be materialized as both executable and non-executable, and
     // links share that, we need two concrete versions of the file.
-    if (file.isExecutable) {
+    if (file.getIsExecutable()) {
       Path exePath = path.getParent().resolve(path.getFileName() + ".x");
       if (!Files.exists(exePath)) {
         try (AutoUnlocker ignored = fileLock.writeLock(exePath.toString())) {
@@ -196,10 +198,10 @@ public class LocalContentAddressedStorage implements ContentAddressedStorage {
       }
       path = exePath;
     }
-    Files.createLink(dir.resolve(file.name), path);
+    Files.createLink(dir.resolve(file.getName()), path);
   }
 
   private Stream<Digest> findMissing(Set<Digest> digests) {
-    return digests.stream().filter(digest -> !Files.exists(getPath(digest.hash)));
+    return digests.stream().filter(digest -> !Files.exists(getPath(digest.getHash())));
   }
 }

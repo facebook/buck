@@ -19,7 +19,7 @@ package com.facebook.buck.rules.modern.builders;
 import static org.junit.Assert.*;
 
 import com.facebook.buck.rules.modern.builders.InputsDigestBuilder.DefaultDelegate;
-import com.facebook.buck.rules.modern.builders.thrift.Digest;
+import com.facebook.buck.rules.modern.builders.Protocol.Digest;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMap;
@@ -33,6 +33,8 @@ import org.junit.Rule;
 import org.junit.Test;
 
 public class LocalContentAddressedStorageTest {
+  private static final Protocol PROTOCOL = new ThriftProtocol();
+
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
   private LocalContentAddressedStorage storage;
   private Path storageDir;
@@ -40,14 +42,13 @@ public class LocalContentAddressedStorageTest {
   @Before
   public void setUp() {
     storageDir = tmp.getRoot().resolve("__storage__");
-    storage =
-        new LocalContentAddressedStorage(storageDir, InputsDigestBuilder::defaultDigestForStruct);
+    storage = new LocalContentAddressedStorage(storageDir, PROTOCOL);
   }
 
   @Test
   public void canAddData() throws IOException {
     byte[] data = "hello world!".getBytes(Charsets.UTF_8);
-    Digest digest = new Digest("myhashcode", data.length);
+    Digest digest = PROTOCOL.newDigest("myhashcode", data.length);
     storage.addMissing(ImmutableMap.of(digest, () -> new ByteArrayInputStream(data)));
     assertDataEquals(data, storage.getData(digest));
   }
@@ -59,7 +60,7 @@ public class LocalContentAddressedStorageTest {
   @Test
   public void presentDataIsNotAdded() throws IOException {
     byte[] data = "hello world!".getBytes(Charsets.UTF_8);
-    Digest digest = new Digest("myhashcode", data.length);
+    Digest digest = PROTOCOL.newDigest("myhashcode", data.length);
     storage.addMissing(ImmutableMap.of(digest, () -> new ByteArrayInputStream(data)));
     storage.addMissing(
         ImmutableMap.of(
@@ -77,7 +78,9 @@ public class LocalContentAddressedStorageTest {
                 tmp.getRoot(),
                 path -> {
                   throw new RuntimeException();
-                }));
+                },
+                PROTOCOL),
+            PROTOCOL);
     Path somePath = Paths.get("dir/some.path");
     byte[] someData = "hello world!".getBytes(Charsets.UTF_8);
     inputsBuilder.addFile(somePath, () -> someData, false);

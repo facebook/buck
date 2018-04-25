@@ -16,22 +16,35 @@
 
 package com.facebook.buck.rules.modern.builders;
 
-import com.facebook.buck.rules.modern.builders.thrift.ActionResult;
-import com.facebook.buck.rules.modern.builders.thrift.Digest;
+import com.facebook.buck.rules.modern.builders.Protocol.Digest;
+import com.facebook.buck.rules.modern.builders.Protocol.OutputDirectory;
+import com.facebook.buck.rules.modern.builders.Protocol.OutputFile;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 /** Interface for a remote execution service. Used by RemoteExecution to build rules. */
 interface RemoteExecutionService {
+  /** Represents the result of remote execution. */
+  interface ExecutionResult {
+    List<OutputDirectory> getOutputDirectories();
+
+    List<OutputFile> getOutputFiles();
+
+    int getExitCode();
+
+    Optional<String> getStderr();
+  }
   /**
    * This should run the command with the provided environment and inputs.
    *
    * <p>Returns an ActionResult with exit code, outputs, stdout/stderr, etc.
    */
-  ActionResult execute(
+  ExecutionResult execute(
       ImmutableList<String> command,
       ImmutableSortedMap<String, String> commandEnvironment,
       Digest inputsRootDigest,

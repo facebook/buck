@@ -19,19 +19,18 @@ package com.facebook.buck.rules.modern.builders;
 import static org.junit.Assert.*;
 
 import com.facebook.buck.rules.modern.builders.InputsDigestBuilder.DefaultDelegate;
-import com.facebook.buck.rules.modern.builders.thrift.Digest;
-import com.facebook.buck.rules.modern.builders.thrift.Directory;
-import com.facebook.buck.rules.modern.builders.thrift.DirectoryNode;
-import com.facebook.buck.rules.modern.builders.thrift.FileNode;
-import com.facebook.buck.slb.ThriftException;
-import com.facebook.buck.slb.ThriftProtocol;
-import com.facebook.buck.slb.ThriftUtil;
+import com.facebook.buck.rules.modern.builders.Protocol.Digest;
+import com.facebook.buck.rules.modern.builders.Protocol.Directory;
+import com.facebook.buck.rules.modern.builders.Protocol.DirectoryNode;
+import com.facebook.buck.rules.modern.builders.Protocol.FileNode;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.google.common.base.Charsets;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.io.ByteStreams;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
@@ -42,13 +41,15 @@ import org.junit.Rule;
 import org.junit.Test;
 
 public class InputsDigestBuilderTest {
+  private static final Protocol PROTOCOL = new ThriftProtocol();
   private static final String DIR_PLACEHOLDER = "__dir__";
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   @Test
   public void testAddFileInDirectoryBytes() throws IOException {
     InputsDigestBuilder digestBuilder =
-        new InputsDigestBuilder(new DefaultDelegate(tmp.getRoot(), path -> null));
+        new InputsDigestBuilder(
+            new DefaultDelegate(tmp.getRoot(), path -> null, PROTOCOL), PROTOCOL);
     digestBuilder.addFile(
         Paths.get("some/sub/dir/some.path"), () -> "hello world!".getBytes(Charsets.UTF_8), false);
     Inputs inputs = digestBuilder.build();
@@ -62,7 +63,8 @@ public class InputsDigestBuilderTest {
   @Test
   public void testAddExecutableFileInDirectoryBytes() throws IOException {
     InputsDigestBuilder digestBuilder =
-        new InputsDigestBuilder(new DefaultDelegate(tmp.getRoot(), path -> null));
+        new InputsDigestBuilder(
+            new DefaultDelegate(tmp.getRoot(), path -> null, PROTOCOL), PROTOCOL);
     digestBuilder.addFile(
         Paths.get("some/sub/dir/some.path"), () -> "hello world!".getBytes(Charsets.UTF_8), true);
     Inputs inputs = digestBuilder.build();
@@ -76,7 +78,8 @@ public class InputsDigestBuilderTest {
   @Test
   public void testMultipleFiles() throws IOException {
     InputsDigestBuilder digestBuilder =
-        new InputsDigestBuilder(new DefaultDelegate(tmp.getRoot(), path -> null));
+        new InputsDigestBuilder(
+            new DefaultDelegate(tmp.getRoot(), path -> null, PROTOCOL), PROTOCOL);
     digestBuilder.addFile(
         Paths.get("some/sub/dir/some.path"), () -> "hello world!".getBytes(Charsets.UTF_8), false);
     digestBuilder.addFile(
@@ -98,7 +101,8 @@ public class InputsDigestBuilderTest {
   @Test
   public void testMultipleDirectories() throws IOException {
     InputsDigestBuilder digestBuilder =
-        new InputsDigestBuilder(new DefaultDelegate(tmp.getRoot(), path -> null));
+        new InputsDigestBuilder(
+            new DefaultDelegate(tmp.getRoot(), path -> null, PROTOCOL), PROTOCOL);
     digestBuilder.addFile(
         Paths.get("some/sub/dir/some.path"), () -> "hello world!".getBytes(Charsets.UTF_8), false);
     digestBuilder.addFile(
@@ -145,7 +149,8 @@ public class InputsDigestBuilderTest {
 
   SortedMap<String, String> toDebugMap(Inputs inputs) throws IOException {
     SortedMap<String, String> debugMap = new TreeMap<>();
-    Directory directory = toDir(getBytes(inputs, inputs.getRootDigest()));
+    Directory directory =
+        PROTOCOL.parseDirectory(ByteBuffer.wrap(getBytes(inputs, inputs.getRootDigest())));
     addDebugData(inputs, "", directory, debugMap);
     return debugMap;
   }
@@ -154,27 +159,25 @@ public class InputsDigestBuilderTest {
       Inputs inputs, String dirName, Directory directory, Map<String, String> debugMap)
       throws IOException {
     debugMap.put(dirName, DIR_PLACEHOLDER);
-    for (DirectoryNode dirNode : directory.directories) {
+    for (DirectoryNode dirNode : directory.getDirectoriesList()) {
       addDebugData(
           inputs,
-          String.format("%s/%s", dirName, dirNode.name),
-          toDir(getBytes(inputs, dirNode.digest)),
+          String.format("%s/%s", dirName, dirNode.getName()),
+          PROTOCOL.parseDirectory(ByteBuffer.wrap(getBytes(inputs, dirNode.getDigest()))),
           debugMap);
     }
-    for (FileNode fileNode : directory.files) {
+    for (FileNode fileNode : directory.getFilesList()) {
       debugMap.put(
-          String.format("%s/%s%s", dirName, fileNode.name, fileNode.isExecutable ? "!" : ""),
-          new String(getBytes(inputs, fileNode.digest), Charsets.UTF_8));
+          String.format(
+              "%s/%s%s", dirName, fileNode.getName(), fileNode.getIsExecutable() ? "!" : ""),
+          new String(getBytes(inputs, fileNode.getDigest()), Charsets.UTF_8));
     }
   }
 
   private byte[] getBytes(Inputs inputs, Digest digest) throws IOException {
+    Preconditions.checkNotNull(inputs);
+    Preconditions.checkNotNull(inputs.getRequiredData());
+    Preconditions.checkNotNull(inputs.getRequiredData().get(digest));
     return ByteStreams.toByteArray(inputs.getRequiredData().get(digest).get());
-  }
-
-  Directory toDir(byte[] data) throws ThriftException {
-    Directory dir = new Directory();
-    ThriftUtil.deserialize(ThriftProtocol.COMPACT, data, dir);
-    return dir;
   }
 }

@@ -16,9 +16,9 @@
 
 package com.facebook.buck.rules.modern.builders;
 
-import com.facebook.buck.rules.modern.builders.thrift.Digest;
-import com.facebook.buck.rules.modern.builders.thrift.OutputDirectory;
-import com.facebook.buck.rules.modern.builders.thrift.OutputFile;
+import com.facebook.buck.rules.modern.builders.Protocol.Digest;
+import com.facebook.buck.rules.modern.builders.Protocol.OutputDirectory;
+import com.facebook.buck.rules.modern.builders.Protocol.OutputFile;
 import com.facebook.buck.util.function.ThrowingSupplier;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;

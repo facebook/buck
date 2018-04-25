@@ -113,7 +113,11 @@ public class ModernBuildRuleBuilderFactory {
       ThrowingFunction<Path, HashCode, IOException> fileHasher)
       throws IOException {
     return IsolatedExecution.createIsolatedExecutionStrategy(
-        OutOfProcessIsolatedExecution.create(), ruleFinder, cellResolver, rootCell, fileHasher);
+        OutOfProcessIsolatedExecution.create(new ThriftProtocol()),
+        ruleFinder,
+        cellResolver,
+        rootCell,
+        fileHasher);
   }
 
   /**

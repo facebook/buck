@@ -17,10 +17,9 @@
 package com.facebook.buck.rules.modern.builders;
 
 import com.facebook.buck.io.file.MostFiles;
-import com.facebook.buck.rules.modern.builders.thrift.ActionResult;
-import com.facebook.buck.rules.modern.builders.thrift.Digest;
-import com.facebook.buck.rules.modern.builders.thrift.OutputDirectory;
-import com.facebook.buck.rules.modern.builders.thrift.OutputFile;
+import com.facebook.buck.rules.modern.builders.Protocol.Digest;
+import com.facebook.buck.rules.modern.builders.Protocol.OutputDirectory;
+import com.facebook.buck.rules.modern.builders.Protocol.OutputFile;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.CapturingPrintStream;
 import com.facebook.buck.util.Console;
@@ -32,7 +31,6 @@ import com.facebook.buck.util.ProcessExecutorParams.Builder;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.function.ThrowingSupplier;
-import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -41,44 +39,45 @@ import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
 import com.google.common.io.MoreFiles;
 import java.io.Closeable;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
 
 /** IsolatedExecution implementation that will run buildrules in a subprocess. */
 public class OutOfProcessIsolatedExecution extends RemoteExecution {
-  private static final long MAX_INLINED_SIZE_BYTES = 1000;
+
   private final NamedTemporaryDirectory workDir;
 
   /**
    * Returns a RemoteExecution implementation that uses a local CAS and a separate local temporary
    * directory for execution.
    */
-  public static OutOfProcessIsolatedExecution create() throws IOException {
+  public static OutOfProcessIsolatedExecution create(Protocol protocol) throws IOException {
     NamedTemporaryDirectory workDir = new NamedTemporaryDirectory("__work__");
     LocalContentAddressedStorage storage =
-        new LocalContentAddressedStorage(
-            workDir.getPath().resolve("__cache__"), InputsDigestBuilder::defaultDigestForStruct);
-    return new OutOfProcessIsolatedExecution(workDir, storage);
+        new LocalContentAddressedStorage(workDir.getPath().resolve("__cache__"), protocol);
+    return new OutOfProcessIsolatedExecution(workDir, storage, protocol);
   }
 
   private OutOfProcessIsolatedExecution(
-      NamedTemporaryDirectory workDir, LocalContentAddressedStorage storage) throws IOException {
+      NamedTemporaryDirectory workDir, LocalContentAddressedStorage storage, Protocol protocol)
+      throws IOException {
     super(
         storage,
         new RemoteExecutionService() {
           @Override
-          public ActionResult execute(
+          public ExecutionResult execute(
               ImmutableList<String> command,
               ImmutableSortedMap<String, String> commandEnvironment,
               Digest inputsRootDigest,
               Set<Path> outputs)
               throws IOException, InterruptedException {
-            Path buildDir = workDir.getPath().resolve(inputsRootDigest.hash);
+            Path buildDir = workDir.getPath().resolve(inputsRootDigest.getHash());
             try (Closeable ignored = () -> MostFiles.deleteRecursively(buildDir)) {
               storage.materializeInputs(buildDir, inputsRootDigest);
 
@@ -105,14 +104,27 @@ public class OutOfProcessIsolatedExecution extends RemoteExecution {
                 storage.addMissing(requiredDataBuilder.build());
               }
 
-              return new ActionResult(
-                  outputFilesBuilder.build(),
-                  outputDirsBuilder.build(),
-                  result.getExitCode(),
-                  null,
-                  null,
-                  ByteBuffer.wrap(result.getStderr().get().getBytes(Charsets.UTF_8)),
-                  null);
+              return new ExecutionResult() {
+                @Override
+                public ImmutableList<OutputDirectory> getOutputDirectories() {
+                  return outputDirsBuilder.build();
+                }
+
+                @Override
+                public ImmutableList<OutputFile> getOutputFiles() {
+                  return outputFilesBuilder.build();
+                }
+
+                @Override
+                public int getExitCode() {
+                  return result.getExitCode();
+                }
+
+                @Override
+                public Optional<String> getStderr() {
+                  return result.getStderr();
+                }
+              };
             }
           }
 
@@ -143,18 +155,16 @@ public class OutOfProcessIsolatedExecution extends RemoteExecution {
 
                 Inputs inputs = builder.build();
                 outputDirsBuilder.add(
-                    new OutputDirectory(output.toString(), inputs.getTreeDigest()));
+                    protocol.newOutputDirectory(
+                        output, inputs.getRootDigest(), inputs.getTreeDigest()));
                 requiredDataBuilder.putAll(inputs.getRequiredData());
               } else {
                 long size = Files.size(path);
-                Digest digest = new Digest(hashFile(path).toString(), size);
+                Digest digest = protocol.newDigest(hashFile(path).toString(), (int) size);
                 boolean isExecutable = Files.isExecutable(path);
-                ByteBuffer content =
-                    size < MAX_INLINED_SIZE_BYTES
-                        ? ByteBuffer.wrap(Files.readAllBytes(path))
-                        : null;
                 outputFilesBuilder.add(
-                    new OutputFile(output.toString(), digest, content, isExecutable));
+                    protocol.newOutputFile(
+                        output, digest, isExecutable, () -> new FileInputStream(path.toFile())));
                 requiredDataBuilder.put(digest, () -> Files.newInputStream(path));
               }
             }

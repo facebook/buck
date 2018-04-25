@@ -9,6 +9,11 @@ struct Digest {
   2: i64 size;
 }
 
+struct Status {
+  1: i32 code;
+  2: string message;
+}
+
 struct Directory {
   1: list<FileNode> files;
   2: list<DirectoryNode> directories;
@@ -54,4 +59,14 @@ struct ActionResult {
   6: Digest stdoutDigest;
   7: binary stderrRaw; # optional inlined stderr.
   8: Digest stderrDigest;
+}
+
+struct EnvironmentVariable {
+  1: string name;
+  2: string value;
+}
+
+struct Command {
+  1: list<string> arguments;
+  2: list<EnvironmentVariable> environmentVariables;
 }
