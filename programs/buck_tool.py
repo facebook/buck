@@ -688,6 +688,10 @@ class BuckTool(object):
                 java_args.append("-agentlib:jdwp=transport=dt_socket,"
                                  "server=y,suspend=" + suspend + ",quiet=y,address=8888")
 
+            if 'BUCK_HTTP_PORT' in os.environ and \
+                    os.environ.get("BUCK_HTTP_PORT").lstrip('+-').isdigit():
+                java_args.append("-Dbuck.httpserver.port=" + os.environ.get("BUCK_HTTP_PORT"))
+
             if os.environ.get("BUCK_DEBUG_SOY"):
                 java_args.append("-Dbuck.soy.debug=true")
 
