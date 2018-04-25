@@ -23,14 +23,15 @@ import com.facebook.buck.features.go.GoTestCoverStep.Mode;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.ExternalTestRunnerRule;
 import com.facebook.buck.rules.ExternalTestRunnerTestSpec;
 import com.facebook.buck.rules.HasRuntimeDeps;
-import com.facebook.buck.rules.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TestRule;
@@ -68,7 +69,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
-public class GoTest extends NoopBuildRuleWithDeclaredAndExtraDeps
+public class GoTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
     implements TestRule, HasRuntimeDeps, ExternalTestRunnerRule, BinaryBuildRule {
   private static final Pattern TEST_START_PATTERN = Pattern.compile("^=== RUN\\s+(?<name>.*)$");
   private static final Pattern TEST_FINISHED_PATTERN =
@@ -271,6 +272,12 @@ public class GoTest extends NoopBuildRuleWithDeclaredAndExtraDeps
   @Override
   public Path getPathToTestOutputDirectory() {
     return BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "__test_%s_output__");
+  }
+
+  @Override
+  public ImmutableList<? extends Step> getBuildSteps(BuildContext context,
+      BuildableContext buildableContext) {
+    return ImmutableList.of();
   }
 
   @Override
