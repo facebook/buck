@@ -60,3 +60,9 @@ prebuilt_jar(
         ":grpc-core",
     ],
 )
+
+export_file(
+    name="protobuf-plugin",
+    src="protoc-gen-grpc-java-1.10.1-osx-x86_64.exe",
+    visibility = ["PUBLIC"],
+)

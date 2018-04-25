@@ -122,5 +122,6 @@
     <orderEntry type="library" name="protobuf-java-3.5.1" level="project" />
     <orderEntry type="library" name="grpc" level="project" />
     <orderEntry type="library" name="opencensus-api-0.12.2" level="project" />
+    <orderEntry type="library" name="googleapis" level="project" />
   </component>
 </module>
