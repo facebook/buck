@@ -17,10 +17,10 @@
 package com.facebook.buck.features.d;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
-import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.toolchain.ToolchainProvider;

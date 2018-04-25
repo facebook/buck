@@ -16,9 +16,9 @@
 
 package com.facebook.buck.features.haskell;
 
+import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
-import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.toolchain.ToolchainCreationContext;
 import com.facebook.buck.toolchain.ToolchainFactory;
 import com.facebook.buck.toolchain.ToolchainProvider;

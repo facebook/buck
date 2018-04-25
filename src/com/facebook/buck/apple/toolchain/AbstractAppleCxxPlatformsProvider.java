@@ -17,9 +17,9 @@
 package com.facebook.buck.apple.toolchain;
 
 import com.facebook.buck.core.model.Flavor;
+import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsSupplier;
-import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableMap;
 import org.immutables.value.Value;

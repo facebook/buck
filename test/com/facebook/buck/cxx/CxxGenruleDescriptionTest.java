@@ -18,11 +18,11 @@ package com.facebook.buck.cxx;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.CxxPlatforms;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.SourcePathResolver;

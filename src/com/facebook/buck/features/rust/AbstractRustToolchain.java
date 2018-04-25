@@ -16,7 +16,7 @@
 
 package com.facebook.buck.features.rust;
 
-import com.facebook.buck.model.FlavorDomain;
+import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.toolchain.Toolchain;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import org.immutables.value.Value;

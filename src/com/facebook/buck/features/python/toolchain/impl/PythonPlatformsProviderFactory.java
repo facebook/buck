@@ -17,10 +17,10 @@
 package com.facebook.buck.features.python.toolchain.impl;
 
 import com.facebook.buck.core.model.Flavor;
+import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.features.python.PythonBuckConfig;
 import com.facebook.buck.features.python.toolchain.PythonPlatform;
 import com.facebook.buck.features.python.toolchain.PythonPlatformsProvider;
-import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.toolchain.ToolchainCreationContext;
 import com.facebook.buck.toolchain.ToolchainFactory;
 import com.facebook.buck.toolchain.ToolchainProvider;

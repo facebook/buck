@@ -14,11 +14,10 @@
  * under the License.
  */
 
-package com.facebook.buck.model;
+package com.facebook.buck.core.model;
 
-import com.facebook.buck.core.model.Flavor;
+/** Interface for BuildRules which generate sources with logical "names" (e.g. Python modules). */
+public interface HasOutputName {
 
-/** Values that has a canonical mapping to flavors. */
-public interface FlavorConvertible {
-  Flavor getFlavor();
+  String getOutputName();
 }

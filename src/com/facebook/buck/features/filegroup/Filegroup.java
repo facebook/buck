@@ -17,12 +17,12 @@
 package com.facebook.buck.features.filegroup;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.HasOutputName;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.features.filebundler.CopyingFileBundler;
 import com.facebook.buck.features.filebundler.FileBundler;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.model.HasOutputName;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;

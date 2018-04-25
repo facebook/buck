@@ -17,9 +17,9 @@ package com.facebook.buck.cxx.toolchain;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
+import com.facebook.buck.core.model.FlavorConvertible;
+import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.InternalFlavor;
-import com.facebook.buck.model.FlavorConvertible;
-import com.facebook.buck.model.FlavorDomain;
 import java.util.Optional;
 
 /** Defines if linker map should be generated or not. */

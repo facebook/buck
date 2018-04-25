@@ -19,9 +19,9 @@ package com.facebook.buck.features.haskell;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
+import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.io.ExecutableFinder;
-import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.ConstantToolProvider;
 import com.google.common.base.Charsets;

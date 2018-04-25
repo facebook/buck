@@ -17,7 +17,7 @@
 package com.facebook.buck.features.ocaml;
 
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.model.FlavorDomain;
+import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;

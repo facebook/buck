@@ -17,8 +17,8 @@
 package com.facebook.buck.apple.toolchain;
 
 import com.facebook.buck.core.model.Flavor;
+import com.facebook.buck.core.model.FlavorConvertible;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
-import com.facebook.buck.model.FlavorConvertible;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.ToolProvider;
 import com.facebook.buck.swift.toolchain.SwiftPlatform;

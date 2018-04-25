@@ -17,10 +17,10 @@
 package com.facebook.buck.features.ocaml;
 
 import com.facebook.buck.core.model.Flavor;
+import com.facebook.buck.core.model.FlavorConvertible;
 import com.facebook.buck.cxx.toolchain.CompilerProvider;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.PreprocessorProvider;
-import com.facebook.buck.model.FlavorConvertible;
 import com.facebook.buck.rules.ToolProvider;
 import com.facebook.buck.toolchain.Toolchain;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;

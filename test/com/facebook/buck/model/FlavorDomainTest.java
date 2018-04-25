@@ -22,6 +22,8 @@ import static org.junit.Assert.fail;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
+import com.facebook.buck.core.model.FlavorDomain;
+import com.facebook.buck.core.model.FlavorDomainException;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.google.common.collect.ImmutableMap;
 import java.util.Optional;

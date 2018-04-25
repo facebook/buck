@@ -20,9 +20,9 @@ import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
+import com.facebook.buck.core.model.FlavorDomain;
+import com.facebook.buck.core.model.FlavorDomainException;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
-import com.facebook.buck.model.FlavorDomain;
-import com.facebook.buck.model.FlavorDomainException;
 import java.util.Optional;
 
 public class ApplePlatforms {

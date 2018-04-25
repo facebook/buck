@@ -17,11 +17,11 @@
 package com.facebook.buck.features.python;
 
 import com.facebook.buck.config.FakeBuckConfig;
+import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.features.python.toolchain.PythonEnvironment;
 import com.facebook.buck.features.python.toolchain.PythonPlatform;
 import com.facebook.buck.features.python.toolchain.PythonVersion;
-import com.facebook.buck.model.FlavorDomain;
 import java.nio.file.Paths;
 import java.util.Optional;
 
