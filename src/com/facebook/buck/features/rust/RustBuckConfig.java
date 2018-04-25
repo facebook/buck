@@ -80,7 +80,7 @@ public class RustBuckConfig {
   }
 
   private ImmutableList<String> getFlags(String platform, String field, char delim) {
-    return delegate.getValue(platform, field).isPresent()
+    return delegate.getValue(SECTION + '#' + platform, field).isPresent()
         ? delegate.getListWithoutComments(SECTION + '#' + platform, field, delim)
         : delegate.getListWithoutComments(SECTION, field, delim);
   }
