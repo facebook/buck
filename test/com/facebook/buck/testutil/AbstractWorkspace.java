@@ -19,7 +19,7 @@ package com.facebook.buck.testutil;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.facebook.buck.io.file.MostFiles;
-import com.facebook.buck.model.BuckVersion;
+import com.facebook.buck.rules.keys.config.impl.BuckVersion;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.environment.Platform;
 import com.fasterxml.jackson.annotation.JsonValue;

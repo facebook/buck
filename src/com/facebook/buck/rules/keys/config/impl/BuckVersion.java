@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.model;
+package com.facebook.buck.rules.keys.config.impl;
 
 public class BuckVersion {
   private static final String BUCK_VERSION_UID_KEY = "buck.version_uid";
