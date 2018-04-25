@@ -125,7 +125,7 @@ public class IncrementalActionGraphGenerator {
   private boolean shouldInvalidateParentChain(TargetNode<?, ?> targetNode) {
     if (lastTargetGraph != null) {
       Optional<TargetNode<?, ?>> previousTargetNode =
-          lastTargetGraph.getOptional(targetNode.getBuildTarget());
+          lastTargetGraph.getExactOptional(targetNode.getBuildTarget());
       if (previousTargetNode.isPresent()) {
         Preconditions.checkState(
             lastRuleResolver.getRuleOptional(targetNode.getBuildTarget()).isPresent());

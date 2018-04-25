@@ -35,6 +35,7 @@ import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
 import com.facebook.buck.cxx.CxxBinaryBuilder;
+import com.facebook.buck.cxx.CxxCompilationDatabase;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxLibraryBuilder;
 import com.facebook.buck.cxx.CxxTestUtils;
@@ -439,6 +440,116 @@ public class IncrementalActionGraphScenarioTest {
 
     assertBuildRulesSame(result, newResult);
     assertEquals(ruleKeys, newRuleKeys);
+  }
+
+  @Test
+  public void testCxxBinaryCompilationDatabaseFollowedByRegularBinaryDepLoadedFromCache() {
+    BuildTarget libraryTarget = BuildTargetFactory.newInstance("//:lib");
+    CxxLibraryBuilder libraryBuilder =
+        new CxxLibraryBuilder(libraryTarget)
+            .setSrcs(
+                ImmutableSortedSet.of(
+                    SourceWithFlags.of(FakeSourcePath.of("lib.cpp"), ImmutableList.of())));
+
+    BuildTarget binaryTarget = BuildTargetFactory.newInstance("//:bin");
+    BuildTarget compilationDatabaseTarget =
+        binaryTarget.withFlavors(CxxCompilationDatabase.COMPILATION_DATABASE);
+    CxxBinaryBuilder compilationDatabaseBuilder =
+        new CxxBinaryBuilder(compilationDatabaseTarget)
+            .setDeps(ImmutableSortedSet.of(libraryTarget))
+            .setSrcs(
+                ImmutableSortedSet.of(
+                    SourceWithFlags.of(FakeSourcePath.of("bin.cpp"), ImmutableList.of())));
+
+    ActionGraphAndResolver result = createActionGraph(compilationDatabaseBuilder, libraryBuilder);
+
+    CxxBinaryBuilder binaryBuilder =
+        new CxxBinaryBuilder(binaryTarget)
+            .setDeps(ImmutableSortedSet.of(libraryTarget))
+            .setSrcs(
+                ImmutableSortedSet.of(
+                    SourceWithFlags.of(FakeSourcePath.of("bin.cpp"), ImmutableList.of())));
+
+    ActionGraphAndResolver newResult = createActionGraph(binaryBuilder, libraryBuilder);
+    queryTransitiveDeps(newResult);
+
+    assertBuildRulesSame(result, newResult, libraryTarget.getUnflavoredBuildTarget());
+  }
+
+  @Test
+  public void testVersionedCxxBinaryCompilationDatabaseFollowedByRegularBinaryDepLoadedFromCache()
+      throws Exception {
+    BuildTarget libraryTarget = BuildTargetFactory.newInstance("//:lib");
+    CxxLibraryBuilder libraryBuilder =
+        new CxxLibraryBuilder(libraryTarget)
+            .setSrcs(
+                ImmutableSortedSet.of(
+                    SourceWithFlags.of(FakeSourcePath.of("lib.cpp"), ImmutableList.of())));
+    BuildTarget versionedAliasTarget = BuildTargetFactory.newInstance("//:dep");
+    VersionedAliasBuilder versionedAliasBuilder =
+        new VersionedAliasBuilder(versionedAliasTarget)
+            .setVersions(
+                ImmutableMap.of(
+                    Version.of("1.0"), libraryTarget,
+                    Version.of("2.0"), libraryTarget));
+    BuildTarget binaryTarget = BuildTargetFactory.newInstance("//:bin");
+    BuildTarget compilationDatabaseTarget =
+        binaryTarget.withFlavors(CxxCompilationDatabase.COMPILATION_DATABASE);
+    CxxBinaryBuilder compilationDatabaseBuilder =
+        new CxxBinaryBuilder(compilationDatabaseTarget)
+            .setDeps(ImmutableSortedSet.of(libraryTarget))
+            .setSrcs(
+                ImmutableSortedSet.of(
+                    SourceWithFlags.of(FakeSourcePath.of("bin.cpp"), ImmutableList.of())));
+
+    VersionUniverse universe1 =
+        VersionUniverse.of(ImmutableMap.of(versionedAliasTarget, Version.of("1.0")));
+    VersionUniverse universe2 =
+        VersionUniverse.of(ImmutableMap.of(versionedAliasTarget, Version.of("2.0")));
+
+    TargetGraph unversionedTargetGraph =
+        TargetGraphFactory.newInstance(
+            compilationDatabaseBuilder.build(filesystem),
+            versionedAliasBuilder.build(filesystem),
+            libraryBuilder.build(filesystem));
+    TargetGraph versionedTargetGraph =
+        VersionedTargetGraphBuilder.transform(
+                new VersionUniverseVersionSelector(
+                    unversionedTargetGraph, ImmutableMap.of("1", universe1, "2", universe2)),
+                TargetGraphAndBuildTargets.of(
+                    unversionedTargetGraph, ImmutableSet.of(compilationDatabaseTarget)),
+                new ForkJoinPool(),
+                new DefaultTypeCoercerFactory())
+            .getTargetGraph();
+
+    ActionGraphAndResolver result = createActionGraph(versionedTargetGraph);
+
+    CxxBinaryBuilder binaryBuilder =
+        new CxxBinaryBuilder(binaryTarget)
+            .setDeps(ImmutableSortedSet.of(libraryTarget))
+            .setSrcs(
+                ImmutableSortedSet.of(
+                    SourceWithFlags.of(FakeSourcePath.of("bin.cpp"), ImmutableList.of())));
+
+    TargetGraph newUnversionedTargetGraph =
+        TargetGraphFactory.newInstance(
+            binaryBuilder.build(filesystem),
+            versionedAliasBuilder.build(filesystem),
+            libraryBuilder.build(filesystem));
+    TargetGraph newVersionedTargetGraph =
+        VersionedTargetGraphBuilder.transform(
+                new VersionUniverseVersionSelector(
+                    newUnversionedTargetGraph, ImmutableMap.of("1", universe1, "2", universe2)),
+                TargetGraphAndBuildTargets.of(
+                    newUnversionedTargetGraph, ImmutableSet.of(binaryTarget)),
+                new ForkJoinPool(),
+                new DefaultTypeCoercerFactory())
+            .getTargetGraph();
+
+    ActionGraphAndResolver newResult = createActionGraph(newVersionedTargetGraph);
+    queryTransitiveDeps(newResult);
+
+    assertBuildRulesSame(result, newResult, libraryTarget.getUnflavoredBuildTarget());
   }
 
   @Test
@@ -848,7 +959,9 @@ public class IncrementalActionGraphScenarioTest {
   }
 
   private ActionGraphAndResolver createActionGraph(TargetNode<?, ?>... nodes) {
-    return createActionGraph(TargetGraphFactory.newInstance(nodes));
+    // Use newInstanceExact for cases where we don't want unflavored versions of nodes to get added
+    // implicitly.
+    return createActionGraph(TargetGraphFactory.newInstanceExact(nodes));
   }
 
   private ActionGraphAndResolver createActionGraph(AbstractNodeBuilder<?, ?, ?, ?>... builders) {

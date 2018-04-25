@@ -86,6 +86,17 @@ public class TargetGraph extends DirectedAcyclicGraph<TargetNode<?, ?>> {
     return node;
   }
 
+  /**
+   * Returns the target node for the exact given target, if it exists in the graph.
+   *
+   * <p>If given a flavored target, and the target graph doesn't contain that flavored target, this
+   * method will always return null, unlike {@code getOptional}, which may return the node for a
+   * differently flavored target ({@see VersionedTargetGraph#getInternal}).
+   */
+  public Optional<TargetNode<?, ?>> getExactOptional(BuildTarget target) {
+    return Optional.ofNullable(targetsToNodes.get(target));
+  }
+
   public Iterable<TargetNode<?, ?>> getAll(Iterable<BuildTarget> targets) {
     return Iterables.transform(targets, this::get);
   }
