@@ -18,22 +18,31 @@ package com.facebook.buck.rules.modern.builders;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.io.file.MostFiles;
+import com.facebook.buck.rules.modern.builders.FileTreeBuilder.InputFile;
+import com.facebook.buck.rules.modern.builders.FileTreeBuilder.ProtocolTreeBuilder;
+import com.facebook.buck.rules.modern.builders.Protocol.Digest;
 import com.facebook.buck.rules.modern.builders.RemoteExecutionService.ExecutionResult;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.util.env.BuckClasspath;
+import com.facebook.buck.util.function.ThrowingSupplier;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.hash.HashCode;
+import com.google.common.hash.Hashing;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashMap;
 import java.util.Optional;
 import java.util.Set;
 
@@ -44,34 +53,30 @@ import java.util.Set;
  * <p>See https://docs.google.com/document/d/1AaGk7fOPByEvpAbqeXIyE8HX_A3_axxNnvroblTZ_6s/preview
  * for a high-level description of the approach to remote execution.
  */
-class RemoteExecution implements IsolatedExecution {
+public abstract class RemoteExecution implements IsolatedExecution {
   private static final Path TRAMPOLINE =
       Paths.get(
           System.getProperty(
               "buck.path_to_isolated_trampoline",
               "src/com/facebook/buck/rules/modern/builders/trampoline.sh"));
 
-  private final ContentAddressedStorage storage;
-  private final RemoteExecutionService executionService;
   private final byte[] trampoline;
 
-  RemoteExecution(ContentAddressedStorage storage, RemoteExecutionService executionService)
-      throws IOException {
-    this.storage = storage;
-    this.executionService = executionService;
+  protected RemoteExecution() throws IOException {
     this.trampoline = Files.readAllBytes(TRAMPOLINE);
   }
 
   @Override
   public void build(
       ExecutionContext executionContext,
-      InputsDigestBuilder inputsBuilder,
+      FileTreeBuilder inputsBuilder,
       Set<Path> outputs,
       Path projectRoot,
       HashCode hash,
       BuildTarget buildTarget,
       Path cellPrefixRoot)
       throws IOException, InterruptedException, StepFailedException {
+
     ImmutableList<Path> classpath = BuckClasspath.getClasspath();
     ImmutableList<Path> bootstrapClasspath = BuckClasspath.getBootstrapClasspath();
 
@@ -85,13 +90,18 @@ class RemoteExecution implements IsolatedExecution {
     ImmutableSortedMap<String, String> commandEnvironment =
         getBuilderEnvironmentOverrides(isolatedBootstrapClasspath, isolatedClasspath);
 
-    inputsBuilder.addFile(trampolinePath, () -> trampoline, true);
+    inputsBuilder.addFile(
+        trampolinePath,
+        () -> trampoline,
+        data -> Hashing.sipHash24().hashBytes(data).toString(),
+        true);
 
-    Inputs inputs = inputsBuilder.build();
-    storage.addMissing(inputs.getRequiredData());
+    for (Path path : outputs) {
+      MostFiles.deleteRecursivelyIfExists(cellPrefixRoot.resolve(path));
+    }
 
     ExecutionResult result =
-        executionService.execute(command, commandEnvironment, inputs.getRootDigest(), outputs);
+        execute(command, commandEnvironment, inputsBuilder, outputs, cellPrefixRoot);
 
     if (result.getExitCode() != 0) {
       throw StepFailedException.createForFailingStepWithExitCode(
@@ -105,13 +115,33 @@ class RemoteExecution implements IsolatedExecution {
           StepExecutionResult.of(result.getExitCode(), result.getStderr()),
           Optional.of(buildTarget));
     }
-
-    for (Path path : outputs) {
-      MostFiles.deleteRecursivelyIfExists(cellPrefixRoot.resolve(path));
-    }
-    storage.materializeOutputs(
-        result.getOutputDirectories(), result.getOutputFiles(), cellPrefixRoot);
   }
+
+  private ExecutionResult execute(
+      ImmutableList<String> command,
+      ImmutableSortedMap<String, String> commandEnvironment,
+      FileTreeBuilder inputsBuilder,
+      Set<Path> outputs,
+      Path outputRoot)
+      throws IOException, InterruptedException {
+    HashMap<Digest, ThrowingSupplier<InputStream, IOException>> requiredDataBuilder =
+        new HashMap<>();
+    ProtocolTreeBuilder grpcTreeBuilder =
+        new ProtocolTreeBuilder(requiredDataBuilder::put, directory -> {}, getProtocol());
+    Protocol.Digest inputsRootDigest = inputsBuilder.buildTree(grpcTreeBuilder);
+    getStorage().addMissing(ImmutableMap.copyOf(requiredDataBuilder));
+    ExecutionResult result =
+        getExecutionService().execute(command, commandEnvironment, inputsRootDigest, outputs);
+    getStorage()
+        .materializeOutputs(result.getOutputDirectories(), result.getOutputFiles(), outputRoot);
+    return result;
+  }
+
+  protected abstract Protocol getProtocol();
+
+  protected abstract ContentAddressedStorage getStorage();
+
+  protected abstract RemoteExecutionService getExecutionService();
 
   private ImmutableSortedMap<String, String> getBuilderEnvironmentOverrides(
       ImmutableList<Path> bootstrapClasspath, Iterable<Path> classpath) {
@@ -133,7 +163,8 @@ class RemoteExecution implements IsolatedExecution {
   }
 
   private ImmutableList<Path> processClasspath(
-      InputsDigestBuilder inputsBuilder, Path cellPrefix, Iterable<Path> classPath) {
+      FileTreeBuilder inputsBuilder, Path cellPrefix, ImmutableList<Path> classPath)
+      throws IOException {
     ImmutableList.Builder<Path> resolvedBuilder = ImmutableList.builder();
     for (Path path : classPath) {
       Preconditions.checkState(path.isAbsolute());
@@ -141,7 +172,14 @@ class RemoteExecution implements IsolatedExecution {
         resolvedBuilder.add(path);
       } else {
         Path relative = cellPrefix.relativize(path);
-        inputsBuilder.addFile(relative, false);
+        inputsBuilder.addFile(
+            relative,
+            () ->
+                new InputFile(
+                    Hashing.sha1().hashBytes(Files.readAllBytes(path)).toString(),
+                    (int) Files.size(path),
+                    false,
+                    () -> new FileInputStream(path.toFile())));
         resolvedBuilder.add(relative);
       }
     }

@@ -38,7 +38,7 @@ import java.util.Set;
 public interface IsolatedExecution extends Closeable {
   void build(
       ExecutionContext executionContext,
-      InputsDigestBuilder inputsBuilder,
+      FileTreeBuilder inputsBuilder,
       Set<Path> outputs,
       Path projectRoot,
       HashCode hash,

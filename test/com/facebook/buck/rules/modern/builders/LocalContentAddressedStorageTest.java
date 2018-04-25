@@ -18,13 +18,18 @@ package com.facebook.buck.rules.modern.builders;
 
 import static org.junit.Assert.*;
 
-import com.facebook.buck.rules.modern.builders.InputsDigestBuilder.DefaultDelegate;
+import com.facebook.buck.rules.modern.builders.FileTreeBuilder.InputFile;
+import com.facebook.buck.rules.modern.builders.FileTreeBuilder.ProtocolTreeBuilder;
 import com.facebook.buck.rules.modern.builders.Protocol.Digest;
 import com.facebook.buck.testutil.TemporaryPaths;
+import com.facebook.buck.util.function.ThrowingSupplier;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.hash.HashFunction;
+import com.google.common.hash.Hashing;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -33,22 +38,22 @@ import org.junit.Rule;
 import org.junit.Test;
 
 public class LocalContentAddressedStorageTest {
-  private static final Protocol PROTOCOL = new ThriftProtocol();
-
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
   private LocalContentAddressedStorage storage;
   private Path storageDir;
+  private final Protocol protocol = new ThriftProtocol();
+  private HashFunction hasher = Hashing.sipHash24();
 
   @Before
   public void setUp() {
     storageDir = tmp.getRoot().resolve("__storage__");
-    storage = new LocalContentAddressedStorage(storageDir, PROTOCOL);
+    storage = new LocalContentAddressedStorage(storageDir, protocol);
   }
 
   @Test
   public void canAddData() throws IOException {
     byte[] data = "hello world!".getBytes(Charsets.UTF_8);
-    Digest digest = PROTOCOL.newDigest("myhashcode", data.length);
+    Digest digest = protocol.newDigest("myhashcode", data.length);
     storage.addMissing(ImmutableMap.of(digest, () -> new ByteArrayInputStream(data)));
     assertDataEquals(data, storage.getData(digest));
   }
@@ -60,7 +65,7 @@ public class LocalContentAddressedStorageTest {
   @Test
   public void presentDataIsNotAdded() throws IOException {
     byte[] data = "hello world!".getBytes(Charsets.UTF_8);
-    Digest digest = PROTOCOL.newDigest("myhashcode", data.length);
+    Digest digest = protocol.newDigest("myhashcode", data.length);
     storage.addMissing(ImmutableMap.of(digest, () -> new ByteArrayInputStream(data)));
     storage.addMissing(
         ImmutableMap.of(
@@ -72,28 +77,33 @@ public class LocalContentAddressedStorageTest {
 
   @Test
   public void addingAndMaterializingFullInputsWorks() throws IOException {
-    InputsDigestBuilder inputsBuilder =
-        new InputsDigestBuilder(
-            new DefaultDelegate(
-                tmp.getRoot(),
-                path -> {
-                  throw new RuntimeException();
-                },
-                PROTOCOL),
-            PROTOCOL);
+    FileTreeBuilder inputsBuilder = new FileTreeBuilder();
     Path somePath = Paths.get("dir/some.path");
     byte[] someData = "hello world!".getBytes(Charsets.UTF_8);
-    inputsBuilder.addFile(somePath, () -> someData, false);
+    inputsBuilder.addFile(somePath, () -> newFileNode(someData, false));
     Path otherPath = Paths.get("dir/other.path");
     byte[] otherData = "goodbye world!".getBytes(Charsets.UTF_8);
-    inputsBuilder.addFile(otherPath, () -> otherData, false);
-    Inputs inputs = inputsBuilder.build();
-    storage.addMissing(inputs.getRequiredData());
+    inputsBuilder.addFile(otherPath, () -> newFileNode(otherData, false));
+
+    ImmutableMap.Builder<Digest, ThrowingSupplier<InputStream, IOException>> requiredData =
+        ImmutableMap.builder();
+    Digest rootDigest =
+        inputsBuilder.buildTree(new ProtocolTreeBuilder(requiredData::put, dir -> {}, protocol));
+
+    storage.addMissing(requiredData.build());
 
     Path inputsDir = tmp.getRoot().resolve("inputs");
-    storage.materializeInputs(inputsDir, inputs.getRootDigest());
+    storage.materializeInputs(inputsDir, rootDigest);
 
     assertDataEquals(someData, Files.readAllBytes(inputsDir.resolve(somePath)));
     assertDataEquals(otherData, Files.readAllBytes(inputsDir.resolve(otherPath)));
+  }
+
+  private InputFile newFileNode(byte[] bytes, boolean isExecutable) {
+    return new InputFile(
+        hasher.hashBytes(bytes).toString(),
+        bytes.length,
+        isExecutable,
+        () -> new ByteArrayInputStream(bytes));
   }
 }

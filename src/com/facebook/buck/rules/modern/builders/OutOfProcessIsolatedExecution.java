@@ -17,9 +17,13 @@
 package com.facebook.buck.rules.modern.builders;
 
 import com.facebook.buck.io.file.MostFiles;
+import com.facebook.buck.rules.modern.builders.FileTreeBuilder.InputFile;
+import com.facebook.buck.rules.modern.builders.FileTreeBuilder.ProtocolTreeBuilder;
 import com.facebook.buck.rules.modern.builders.Protocol.Digest;
+import com.facebook.buck.rules.modern.builders.Protocol.Directory;
 import com.facebook.buck.rules.modern.builders.Protocol.OutputDirectory;
 import com.facebook.buck.rules.modern.builders.Protocol.OutputFile;
+import com.facebook.buck.rules.modern.builders.Protocol.Tree;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.CapturingPrintStream;
 import com.facebook.buck.util.Console;
@@ -38,12 +42,15 @@ import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
 import com.google.common.io.MoreFiles;
+import java.io.ByteArrayInputStream;
 import java.io.Closeable;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
@@ -52,6 +59,9 @@ import java.util.stream.Stream;
 public class OutOfProcessIsolatedExecution extends RemoteExecution {
 
   private final NamedTemporaryDirectory workDir;
+  private final LocalContentAddressedStorage storage;
+  private final RemoteExecutionService executionService;
+  private final Protocol protocol;
 
   /**
    * Returns a RemoteExecution implementation that uses a local CAS and a separate local temporary
@@ -67,8 +77,9 @@ public class OutOfProcessIsolatedExecution extends RemoteExecution {
   private OutOfProcessIsolatedExecution(
       NamedTemporaryDirectory workDir, LocalContentAddressedStorage storage, Protocol protocol)
       throws IOException {
-    super(
-        storage,
+    super();
+    this.storage = storage;
+    this.executionService =
         new RemoteExecutionService() {
           @Override
           public ExecutionResult execute(
@@ -140,32 +151,47 @@ public class OutOfProcessIsolatedExecution extends RemoteExecution {
               Path path = buildDir.resolve(output);
               Preconditions.checkState(Files.exists(path));
               if (Files.isDirectory(path)) {
-                InputsDigestBuilder builder =
-                    InputsDigestBuilder.createDefault(path, this::hashFile);
+                FileTreeBuilder builder = new FileTreeBuilder();
 
                 try (Stream<Path> contents = Files.walk(path)) {
                   RichStream.from(contents)
                       .forEachThrowing(
                           entry -> {
                             if (Files.isRegularFile(entry)) {
-                              builder.addFile(path.relativize(entry), Files.isExecutable(entry));
+                              builder.addFile(
+                                  path.relativize(entry),
+                                  () ->
+                                      new InputFile(
+                                          hashFile(entry).toString(),
+                                          (int) Files.size(entry),
+                                          Files.isExecutable(entry),
+                                          () -> new FileInputStream(entry.toFile())));
                             }
                           });
                 }
 
-                Inputs inputs = builder.build();
-                outputDirsBuilder.add(
-                    protocol.newOutputDirectory(
-                        output, inputs.getRootDigest(), inputs.getTreeDigest()));
-                requiredDataBuilder.putAll(inputs.getRequiredData());
+                List<Directory> directories = new ArrayList<>();
+                Digest digest =
+                    builder.buildTree(
+                        new ProtocolTreeBuilder(
+                            requiredDataBuilder::put, directories::add, protocol));
+                Preconditions.checkState(!directories.isEmpty());
+                Tree tree = protocol.newTree(directories.get(directories.size() - 1), directories);
+                byte[] treeData = protocol.toByteArray(tree);
+                Digest treeDigest = protocol.computeDigest(treeData);
+
+                outputDirsBuilder.add(protocol.newOutputDirectory(output, digest, treeDigest));
+                requiredDataBuilder.put(treeDigest, () -> new ByteArrayInputStream(treeData));
               } else {
                 long size = Files.size(path);
-                Digest digest = protocol.newDigest(hashFile(path).toString(), (int) size);
                 boolean isExecutable = Files.isExecutable(path);
+                Digest digest = protocol.newDigest(hashFile(path).toString(), (int) size);
+
+                ThrowingSupplier<InputStream, IOException> dataSupplier =
+                    () -> new FileInputStream(path.toFile());
                 outputFilesBuilder.add(
-                    protocol.newOutputFile(
-                        output, digest, isExecutable, () -> new FileInputStream(path.toFile())));
-                requiredDataBuilder.put(digest, () -> Files.newInputStream(path));
+                    protocol.newOutputFile(output, digest, isExecutable, dataSupplier));
+                requiredDataBuilder.put(digest, dataSupplier);
               }
             }
           }
@@ -173,8 +199,24 @@ public class OutOfProcessIsolatedExecution extends RemoteExecution {
           public HashCode hashFile(Path file) throws IOException {
             return MoreFiles.asByteSource(file).hash(Hashing.sha1());
           }
-        });
+        };
+    this.protocol = protocol;
     this.workDir = workDir;
+  }
+
+  @Override
+  protected Protocol getProtocol() {
+    return protocol;
+  }
+
+  @Override
+  protected ContentAddressedStorage getStorage() {
+    return storage;
+  }
+
+  @Override
+  protected RemoteExecutionService getExecutionService() {
+    return executionService;
   }
 
   @Override

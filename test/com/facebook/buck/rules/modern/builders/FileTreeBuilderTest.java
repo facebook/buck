@@ -18,19 +18,19 @@ package com.facebook.buck.rules.modern.builders;
 
 import static org.junit.Assert.*;
 
-import com.facebook.buck.rules.modern.builders.InputsDigestBuilder.DefaultDelegate;
-import com.facebook.buck.rules.modern.builders.Protocol.Digest;
-import com.facebook.buck.rules.modern.builders.Protocol.Directory;
-import com.facebook.buck.rules.modern.builders.Protocol.DirectoryNode;
-import com.facebook.buck.rules.modern.builders.Protocol.FileNode;
+import com.facebook.buck.rules.modern.builders.FileTreeBuilder.InputFile;
+import com.facebook.buck.rules.modern.builders.FileTreeBuilder.TreeBuilder;
 import com.facebook.buck.testutil.TemporaryPaths;
+import com.facebook.buck.util.function.ThrowingSupplier;
 import com.google.common.base.Charsets;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
+import com.google.common.hash.HashFunction;
+import com.google.common.hash.Hashing;
 import com.google.common.io.ByteStreams;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.nio.ByteBuffer;
+import java.io.InputStream;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
@@ -40,53 +40,42 @@ import java.util.TreeMap;
 import org.junit.Rule;
 import org.junit.Test;
 
-public class InputsDigestBuilderTest {
-  private static final Protocol PROTOCOL = new ThriftProtocol();
+public class FileTreeBuilderTest {
   private static final String DIR_PLACEHOLDER = "__dir__";
+  private final HashFunction hasher = Hashing.sipHash24();
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   @Test
   public void testAddFileInDirectoryBytes() throws IOException {
-    InputsDigestBuilder digestBuilder =
-        new InputsDigestBuilder(
-            new DefaultDelegate(tmp.getRoot(), path -> null, PROTOCOL), PROTOCOL);
+    FileTreeBuilder digestBuilder = new FileTreeBuilder();
     digestBuilder.addFile(
-        Paths.get("some/sub/dir/some.path"), () -> "hello world!".getBytes(Charsets.UTF_8), false);
-    Inputs inputs = digestBuilder.build();
+        Paths.get("some/sub/dir/some.path"), () -> newFileNode("hello world!", false));
     assertEquals(
         makeExpected(
             directories("", "/some", "/some/sub", "/some/sub/dir"),
             files("/some/sub/dir/some.path", "hello world!")),
-        toDebugMap(inputs));
+        toDebugMap(digestBuilder));
   }
 
   @Test
   public void testAddExecutableFileInDirectoryBytes() throws IOException {
-    InputsDigestBuilder digestBuilder =
-        new InputsDigestBuilder(
-            new DefaultDelegate(tmp.getRoot(), path -> null, PROTOCOL), PROTOCOL);
+    FileTreeBuilder digestBuilder = new FileTreeBuilder();
     digestBuilder.addFile(
-        Paths.get("some/sub/dir/some.path"), () -> "hello world!".getBytes(Charsets.UTF_8), true);
-    Inputs inputs = digestBuilder.build();
+        Paths.get("some/sub/dir/some.path"), () -> newFileNode("hello world!", true));
     assertEquals(
         makeExpected(
             directories("", "/some", "/some/sub", "/some/sub/dir"),
             files("/some/sub/dir/some.path!", "hello world!")),
-        toDebugMap(inputs));
+        toDebugMap(digestBuilder));
   }
 
   @Test
   public void testMultipleFiles() throws IOException {
-    InputsDigestBuilder digestBuilder =
-        new InputsDigestBuilder(
-            new DefaultDelegate(tmp.getRoot(), path -> null, PROTOCOL), PROTOCOL);
+    FileTreeBuilder digestBuilder = new FileTreeBuilder();
     digestBuilder.addFile(
-        Paths.get("some/sub/dir/some.path"), () -> "hello world!".getBytes(Charsets.UTF_8), false);
+        Paths.get("some/sub/dir/some.path"), () -> newFileNode("hello world!", false));
     digestBuilder.addFile(
-        Paths.get("some/sub/dir/other.path"),
-        () -> "goodbye world!".getBytes(Charsets.UTF_8),
-        true);
-    Inputs inputs = digestBuilder.build();
+        Paths.get("some/sub/dir/other.path"), () -> newFileNode("goodbye world!", true));
     assertEquals(
         makeExpected(
             directories("", "/some", "/some/sub", "/some/sub/dir"),
@@ -95,21 +84,16 @@ public class InputsDigestBuilderTest {
                 "hello world!",
                 "/some/sub/dir/other.path!",
                 "goodbye world!")),
-        toDebugMap(inputs));
+        toDebugMap(digestBuilder));
   }
 
   @Test
   public void testMultipleDirectories() throws IOException {
-    InputsDigestBuilder digestBuilder =
-        new InputsDigestBuilder(
-            new DefaultDelegate(tmp.getRoot(), path -> null, PROTOCOL), PROTOCOL);
+    FileTreeBuilder digestBuilder = new FileTreeBuilder();
     digestBuilder.addFile(
-        Paths.get("some/sub/dir/some.path"), () -> "hello world!".getBytes(Charsets.UTF_8), false);
+        Paths.get("some/sub/dir/some.path"), () -> newFileNode("hello world!", false));
     digestBuilder.addFile(
-        Paths.get("some/other/sub/dir/other.path"),
-        () -> "goodbye world!".getBytes(Charsets.UTF_8),
-        true);
-    Inputs inputs = digestBuilder.build();
+        Paths.get("some/other/sub/dir/other.path"), () -> newFileNode("goodbye world!", true));
     assertEquals(
         makeExpected(
             directories(
@@ -125,7 +109,16 @@ public class InputsDigestBuilderTest {
                 "hello world!",
                 "/some/other/sub/dir/other.path!",
                 "goodbye world!")),
-        toDebugMap(inputs));
+        toDebugMap(digestBuilder));
+  }
+
+  private InputFile newFileNode(String content, boolean isExecutable) {
+    byte[] bytes = content.getBytes(Charsets.UTF_8);
+    return new InputFile(
+        hasher.hashBytes(bytes).toString(),
+        bytes.length,
+        isExecutable,
+        () -> new ByteArrayInputStream(bytes));
   }
 
   private SortedMap<String, String> makeExpected(List<String> dirs, Map<String, String> files) {
@@ -147,37 +140,40 @@ public class InputsDigestBuilderTest {
     return builder.build();
   }
 
-  SortedMap<String, String> toDebugMap(Inputs inputs) throws IOException {
+  SortedMap<String, String> toDebugMap(FileTreeBuilder builder) {
     SortedMap<String, String> debugMap = new TreeMap<>();
-    Directory directory =
-        PROTOCOL.parseDirectory(ByteBuffer.wrap(getBytes(inputs, inputs.getRootDigest())));
-    addDebugData(inputs, "", directory, debugMap);
+    builder.buildTree(debugMapBuilder(debugMap, ""));
     return debugMap;
   }
 
-  private void addDebugData(
-      Inputs inputs, String dirName, Directory directory, Map<String, String> debugMap)
-      throws IOException {
-    debugMap.put(dirName, DIR_PLACEHOLDER);
-    for (DirectoryNode dirNode : directory.getDirectoriesList()) {
-      addDebugData(
-          inputs,
-          String.format("%s/%s", dirName, dirNode.getName()),
-          PROTOCOL.parseDirectory(ByteBuffer.wrap(getBytes(inputs, dirNode.getDigest()))),
-          debugMap);
-    }
-    for (FileNode fileNode : directory.getFilesList()) {
-      debugMap.put(
-          String.format(
-              "%s/%s%s", dirName, fileNode.getName(), fileNode.getIsExecutable() ? "!" : ""),
-          new String(getBytes(inputs, fileNode.getDigest()), Charsets.UTF_8));
-    }
-  }
+  private TreeBuilder<Void> debugMapBuilder(SortedMap<String, String> debugMap, String root) {
+    debugMap.put(root, "__dir__");
+    return new TreeBuilder<Void>() {
+      @Override
+      public TreeBuilder<Void> addDirectory(String name) {
+        return debugMapBuilder(debugMap, String.format("%s/%s", root, name));
+      }
 
-  private byte[] getBytes(Inputs inputs, Digest digest) throws IOException {
-    Preconditions.checkNotNull(inputs);
-    Preconditions.checkNotNull(inputs.getRequiredData());
-    Preconditions.checkNotNull(inputs.getRequiredData().get(digest));
-    return ByteStreams.toByteArray(inputs.getRequiredData().get(digest).get());
+      @Override
+      public void addFile(
+          String name,
+          String hash,
+          int size,
+          boolean isExecutable,
+          ThrowingSupplier<InputStream, IOException> dataSupplier) {
+        try (InputStream dataStream = dataSupplier.asSupplier().get()) {
+          debugMap.put(
+              String.format("%s/%s%s", root, name, isExecutable ? "!" : ""),
+              new String(ByteStreams.toByteArray(dataStream), Charsets.UTF_8));
+        } catch (IOException e) {
+          throw new RuntimeException(e);
+        }
+      }
+
+      @Override
+      public Void build() {
+        return null;
+      }
+    };
   }
 }
