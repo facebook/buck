@@ -23,11 +23,14 @@ import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.json.ObjectMappers;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -64,5 +67,31 @@ public class AuditCellCommandIntegrationTest {
     assertEquals(
         ImmutableSet.of(String.format("secondary: %s", secondary.getDestPath())),
         ImmutableSet.copyOf(cells));
+  }
+
+  @Test
+  public void testBuckCellJsonOutput() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "crosscell_file_watching/primary", tmp.newFolder());
+    workspace.setUp();
+    ProjectWorkspace secondary =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "crosscell_file_watching/secondary", tmp.newFolder());
+    secondary.setUp();
+    TestDataHelper.overrideBuckconfig(
+        workspace,
+        ImmutableMap.of(
+            "repositories",
+            ImmutableMap.of("secondary", secondary.getPath(".").normalize().toString())));
+
+    ProcessResult result = workspace.runBuckCommand("audit", "cell", "--json");
+    result.assertSuccess();
+
+    Map<String, String> cellMap =
+        ObjectMappers.readValue(result.getStdout(), new TypeReference<Map<String, String>>() {});
+    assertEquals("Cells that appear in both .buckconfig should appear.", 1, cellMap.size());
+    assertTrue("Expected to find secondary in the map", cellMap.containsKey("secondary"));
+    assertEquals(secondary.getDestPath().toString(), cellMap.get("secondary"));
   }
 }
