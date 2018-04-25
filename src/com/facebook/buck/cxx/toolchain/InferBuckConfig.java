@@ -17,8 +17,8 @@
 package com.facebook.buck.cxx.toolchain;
 
 import com.facebook.buck.config.BuckConfig;
-import com.facebook.buck.core.rulekey.RuleKeyAppendable;
-import com.facebook.buck.core.rulekey.RuleKeyObjectSink;
+import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.VersionedTool;
@@ -36,13 +36,14 @@ import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.function.Supplier;
 
-public class InferBuckConfig implements RuleKeyAppendable {
+/** Infer support for Cxx */
+public class InferBuckConfig implements AddsToRuleKey {
 
   private BuckConfig delegate;
 
-  private Supplier<? extends Tool> clangCompiler;
-  private Supplier<? extends Tool> clangPlugin;
-  private Supplier<VersionedTool> inferVersion;
+  @AddToRuleKey private Supplier<? extends Tool> clangCompiler;
+  @AddToRuleKey private Supplier<? extends Tool> clangPlugin;
+  @AddToRuleKey private Supplier<VersionedTool> inferVersion;
 
   private static final String INFER_SECTION_PREFIX = "infer";
 
@@ -117,12 +118,5 @@ public class InferBuckConfig implements RuleKeyAppendable {
 
   public Path getInferTopLevel() {
     return Paths.get(InferBuckConfig.this.getInferBin().toString(), "infer");
-  }
-
-  @Override
-  public void appendToRuleKey(RuleKeyObjectSink sink) {
-    sink.setReflectively("infer-version", inferVersion.get())
-        .setReflectively("clang-compiler", clangCompiler.get())
-        .setReflectively("clang-plugin", clangPlugin.get());
   }
 }
