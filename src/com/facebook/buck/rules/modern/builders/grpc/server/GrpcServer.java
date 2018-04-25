@@ -1,0 +1,63 @@
+/*
+ * Copyright 2018-present Facebook, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
+
+package com.facebook.buck.rules.modern.builders.grpc.server;
+
+import com.facebook.buck.rules.modern.builders.LocalContentAddressedStorage;
+import com.facebook.buck.rules.modern.builders.grpc.GrpcRemoteExecution;
+import com.facebook.buck.rules.modern.builders.grpc.GrpcRemoteExecutionServiceImpl;
+import com.facebook.buck.util.NamedTemporaryDirectory;
+import com.facebook.buck.util.concurrent.MostExecutors;
+import com.google.common.io.Closer;
+import io.grpc.Server;
+import io.grpc.ServerBuilder;
+import java.io.Closeable;
+import java.io.IOException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
+
+/** A simple remote execution server. */
+public class GrpcServer implements Closeable {
+  private final Server server;
+  private final NamedTemporaryDirectory workDir;
+
+  public GrpcServer(int port) throws IOException {
+    workDir = new NamedTemporaryDirectory("__remote__");
+    GrpcRemoteExecutionServiceImpl remoteExecution =
+        new GrpcRemoteExecutionServiceImpl(
+            new LocalContentAddressedStorage(
+                workDir.getPath().resolve("__cache__"), GrpcRemoteExecution.PROTOCOL),
+            workDir.getPath().resolve("__work__"));
+    ExecutorService serverExecutor = MostExecutors.newMultiThreadExecutor("remote-exec-server", 8);
+    ServerBuilder<?> builder = ServerBuilder.forPort(port);
+    builder.executor(serverExecutor);
+    remoteExecution.getServices().forEach(builder::addService);
+    this.server = builder.build().start();
+  }
+
+  @Override
+  public void close() throws IOException {
+    try (Closer closer = Closer.create()) {
+      closer.register(server::shutdown);
+      closer.register(workDir);
+    }
+    try {
+      server.awaitTermination(3, TimeUnit.SECONDS);
+    } catch (InterruptedException e) {
+      throw new RuntimeException(e);
+    }
+  }
+}

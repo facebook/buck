@@ -22,10 +22,12 @@ import com.facebook.buck.util.NamedTemporaryDirectory;
 import com.facebook.buck.util.concurrent.MostExecutors;
 import com.google.common.io.Closer;
 import io.grpc.ManagedChannel;
+import io.grpc.ManagedChannelBuilder;
 import io.grpc.Server;
 import io.grpc.inprocess.InProcessChannelBuilder;
 import io.grpc.inprocess.InProcessServerBuilder;
 import java.io.IOException;
+import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
@@ -63,6 +65,25 @@ public class GrpcExecutionFactory {
         try {
           channel.awaitTermination(3, TimeUnit.SECONDS);
           server.awaitTermination();
+        } catch (InterruptedException e) {
+          throw new RuntimeException(e);
+        }
+      }
+    };
+  }
+
+  /** The remote strategy connects to a remote grpc remote execution service. */
+  public static IsolatedExecution createRemote(String host, int port) throws IOException {
+    Executor executor = MostExecutors.newMultiThreadExecutor("remote-exec-client", 4);
+    ManagedChannel channel =
+        ManagedChannelBuilder.forAddress(host, port).usePlaintext(true).executor(executor).build();
+
+    return new GrpcRemoteExecution("buck", channel) {
+      @Override
+      public void close() throws IOException {
+        channel.shutdown();
+        try {
+          channel.awaitTermination(3, TimeUnit.SECONDS);
         } catch (InterruptedException e) {
           throw new RuntimeException(e);
         }

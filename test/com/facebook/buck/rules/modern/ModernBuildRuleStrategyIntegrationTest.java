@@ -37,6 +37,7 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.HasDeclaredDeps;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.rules.SourcePathRuleFinder;
+import com.facebook.buck.rules.modern.builders.grpc.server.GrpcServer;
 import com.facebook.buck.rules.modern.config.ModernBuildRuleConfig;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
@@ -57,6 +58,7 @@ import java.util.Collection;
 import java.util.Objects;
 import java.util.Optional;
 import org.immutables.value.Value;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -83,6 +85,7 @@ public class ModernBuildRuleStrategyIntegrationTest {
   @Rule public TemporaryPaths tmpFolder = new TemporaryPaths(true);
 
   private final ModernBuildRuleConfig.Strategy strategy;
+  private Optional<GrpcServer> server = Optional.empty();
   private ProjectWorkspace workspace;
   private ProjectFilesystem filesystem;
 
@@ -229,6 +232,17 @@ public class ModernBuildRuleStrategyIntegrationTest {
     workspace.setUp();
     workspace.addBuckConfigLocalOption("modern_build_rule", "strategy", strategy.toString());
     filesystem = TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
+
+    if (strategy == ModernBuildRuleConfig.Strategy.GRPC_REMOTE) {
+      server = Optional.of(new GrpcServer(ModernBuildRuleConfig.DEFAULT_REMOTE_PORT));
+    }
+  }
+
+  @After
+  public void tearDown() throws Exception {
+    if (server.isPresent()) {
+      server.get().close();
+    }
   }
 
   public ModernBuildRuleStrategyIntegrationTest(ModernBuildRuleConfig.Strategy strategy) {

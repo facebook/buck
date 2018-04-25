@@ -27,8 +27,18 @@ import org.immutables.value.Value;
 abstract class AbstractModernBuildRuleConfig implements ConfigView<BuckConfig> {
   public static final String SECTION = "modern_build_rule";
 
+  public static final int DEFAULT_REMOTE_PORT = 19080;
+
   public Strategy getBuildStrategy() {
     return getDelegate().getEnum(SECTION, "strategy", Strategy.class).orElse(Strategy.DEFAULT);
+  }
+
+  public String getRemoteHost() {
+    return getDelegate().getValue(SECTION, "remote_host").orElse("localhost");
+  }
+
+  public int getRemotePort() {
+    return getDelegate().getInteger(SECTION, "remote_port").orElse(DEFAULT_REMOTE_PORT);
   }
 
   /**
@@ -39,6 +49,8 @@ abstract class AbstractModernBuildRuleConfig implements ConfigView<BuckConfig> {
    */
   public enum Strategy {
     NONE,
+
+    GRPC_REMOTE,
 
     DEBUG_GRPC_SERVICE_IN_PROCESS,
 

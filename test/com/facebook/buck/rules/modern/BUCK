@@ -12,6 +12,7 @@ java_test(
         "//src/com/facebook/buck/rules:rules",
         "//src/com/facebook/buck/rules/keys:keys",
         "//src/com/facebook/buck/rules/modern:modern",
+        "//src/com/facebook/buck/rules/modern/builders/grpc/server:server",
         "//src/com/facebook/buck/rules/modern/config:config",
         "//src/com/facebook/buck/step:step",
         "//src/com/facebook/buck/step/fs:fs",

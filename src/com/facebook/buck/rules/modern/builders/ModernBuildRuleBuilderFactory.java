@@ -55,6 +55,15 @@ public class ModernBuildRuleBuilderFactory {
       switch (config.getBuildStrategy()) {
         case NONE:
           return Optional.empty();
+        case GRPC_REMOTE:
+          return Optional.of(
+              createGrpcRemote(
+                  new SourcePathRuleFinder(resolver),
+                  cellResolver,
+                  rootCell,
+                  hashLoader::get,
+                  config.getRemoteHost(),
+                  config.getRemotePort()));
         case DEBUG_RECONSTRUCT:
           return Optional.of(
               createReconstructing(new SourcePathRuleFinder(resolver), cellResolver, rootCell));
@@ -155,6 +164,22 @@ public class ModernBuildRuleBuilderFactory {
       throws IOException {
     return IsolatedExecution.createIsolatedExecutionStrategy(
         new InProcessIsolatedExecution(eventBus, console),
+        ruleFinder,
+        cellResolver,
+        rootCell,
+        fileHasher);
+  }
+
+  private static BuildRuleStrategy createGrpcRemote(
+      SourcePathRuleFinder ruleFinder,
+      CellPathResolver cellResolver,
+      Cell rootCell,
+      ThrowingFunction<Path, HashCode, IOException> fileHasher,
+      String host,
+      int port)
+      throws IOException {
+    return IsolatedExecution.createIsolatedExecutionStrategy(
+        GrpcExecutionFactory.createRemote(host, port),
         ruleFinder,
         cellResolver,
         rootCell,

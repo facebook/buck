@@ -2,7 +2,10 @@ load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
 
 java_immutables_library(
     name = "builders",
-    srcs = glob(["**/*.java"]),
+    srcs = glob(
+        ["**/*.java"],
+        exclude = ["grpc/server/**"],
+    ),
     visibility = ["PUBLIC"],
     deps = [
         "//src/com/facebook/buck/android:utils_api",

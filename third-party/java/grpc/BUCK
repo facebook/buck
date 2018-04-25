@@ -61,6 +61,18 @@ prebuilt_jar(
     ],
 )
 
+prebuilt_jar(
+    name = "grpc-netty",
+    binary_jar = "grpc-netty-1.10.1.jar",
+    licenses = ["LICENSE"],
+    source_jar = "grpc-netty-1.10.1-sources.jar",
+    visibility = ["PUBLIC"],
+    deps = [
+        ":grpc-core",
+        "//third-party/java/netty:netty",
+    ],
+)
+
 export_file(
     name="protobuf-plugin",
     src="protoc-gen-grpc-java-1.10.1-osx-x86_64.exe",

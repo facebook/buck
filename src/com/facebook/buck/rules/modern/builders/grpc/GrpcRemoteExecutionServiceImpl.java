@@ -79,7 +79,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /** A really simple implementation of remote execution (and CAS). Used for testing/debugging. */
-class GrpcRemoteExecutionServiceImpl {
+public class GrpcRemoteExecutionServiceImpl {
   private final LocalContentAddressedStorage storage;
   private final Path workDir;
 
@@ -89,7 +89,7 @@ class GrpcRemoteExecutionServiceImpl {
   private final OperationsFutureImpl operationsFutureImpl;
   private final ExecutionImpl executionImpl;
 
-  GrpcRemoteExecutionServiceImpl(LocalContentAddressedStorage storage, Path workDir) {
+  public GrpcRemoteExecutionServiceImpl(LocalContentAddressedStorage storage, Path workDir) {
     this.storage = storage;
     this.workDir = workDir;
     this.casImpl = new LocalBackedCasImpl();
