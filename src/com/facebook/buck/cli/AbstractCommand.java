@@ -50,12 +50,20 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.devtools.build.lib.clock.Clock;
+import com.google.devtools.build.lib.clock.JavaClock;
+import com.google.devtools.build.lib.profiler.Profiler;
+import com.google.devtools.build.lib.profiler.Profiler.ProfiledTaskKinds;
+import java.io.BufferedOutputStream;
 import java.io.Closeable;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDate;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -77,6 +85,7 @@ public abstract class AbstractCommand implements Command {
   private static final String PROFILE_PARSER_LONG_ARG = "--profile-buck-parser";
   private static final String NUM_THREADS_LONG_ARG = "--num-threads";
   private static final String CONFIG_LONG_ARG = "--config";
+  private static final String SKYLARK_PROFILE_LONG_ARG = "--skylark-profile-output";
 
   /**
    * Contains all options defined in this class. These options are considered global since they are
@@ -92,7 +101,8 @@ public abstract class AbstractCommand implements Command {
           PROFILE_PARSER_LONG_ARG,
           NUM_THREADS_LONG_ARG,
           CONFIG_LONG_ARG,
-          VerbosityParser.VERBOSE_LONG_ARG);
+          VerbosityParser.VERBOSE_LONG_ARG,
+          SKYLARK_PROFILE_LONG_ARG);
 
   /**
    * This value should never be read. {@link VerbosityParser} should be used instead. args4j
@@ -120,6 +130,17 @@ public abstract class AbstractCommand implements Command {
     metaVar = "section.option=value"
   )
   private Map<String, String> configOverrides = new LinkedHashMap<>();
+
+  @Option(
+    name = SKYLARK_PROFILE_LONG_ARG,
+    usage =
+        "Experimental. Path to a file where Skylark profile information should be written into."
+            + " The output is in a binary format and can be converted into textual form using Bazel's "
+            + "analyze-profile command",
+    metaVar = "PATH"
+  )
+  @Nullable
+  private String skylarkProfile;
 
   @Override
   public CellConfig getConfigOverrides() {
@@ -338,23 +359,44 @@ public abstract class AbstractCommand implements Command {
   }
 
   protected ExecutionContext.Builder getExecutionContextBuilder(CommandRunnerParams params) {
-    return ExecutionContext.builder()
-        .setConsole(params.getConsole())
-        .setBuckEventBus(params.getBuckEventBus())
-        .setPlatform(params.getPlatform())
-        .setEnvironment(params.getEnvironment())
-        .setJavaPackageFinder(params.getJavaPackageFinder())
-        .setExecutors(params.getExecutors())
-        .setCellPathResolver(params.getCell().getCellPathResolver())
-        .setBuildCellRootPath(params.getCell().getRoot())
-        .setProcessExecutor(new DefaultProcessExecutor(params.getConsole()))
-        .setDefaultTestTimeoutMillis(params.getBuckConfig().getDefaultTestTimeoutMillis())
-        .setInclNoLocationClassesEnabled(
-            params.getBuckConfig().getBooleanValue("test", "incl_no_location_classes", false))
-        .setRuleKeyDiagnosticsMode(params.getBuckConfig().getRuleKeyDiagnosticsMode())
-        .setConcurrencyLimit(getConcurrencyLimit(params.getBuckConfig()))
-        .setPersistentWorkerPools(params.getPersistentWorkerPools())
-        .setProjectFilesystemFactory(params.getProjectFilesystemFactory());
+    ExecutionContext.Builder builder =
+        ExecutionContext.builder()
+            .setConsole(params.getConsole())
+            .setBuckEventBus(params.getBuckEventBus())
+            .setPlatform(params.getPlatform())
+            .setEnvironment(params.getEnvironment())
+            .setJavaPackageFinder(params.getJavaPackageFinder())
+            .setExecutors(params.getExecutors())
+            .setCellPathResolver(params.getCell().getCellPathResolver())
+            .setBuildCellRootPath(params.getCell().getRoot())
+            .setProcessExecutor(new DefaultProcessExecutor(params.getConsole()))
+            .setDefaultTestTimeoutMillis(params.getBuckConfig().getDefaultTestTimeoutMillis())
+            .setInclNoLocationClassesEnabled(
+                params.getBuckConfig().getBooleanValue("test", "incl_no_location_classes", false))
+            .setRuleKeyDiagnosticsMode(params.getBuckConfig().getRuleKeyDiagnosticsMode())
+            .setConcurrencyLimit(getConcurrencyLimit(params.getBuckConfig()))
+            .setPersistentWorkerPools(params.getPersistentWorkerPools())
+            .setProjectFilesystemFactory(params.getProjectFilesystemFactory());
+    if (skylarkProfile != null) {
+      Clock clock = new JavaClock();
+      try {
+        OutputStream outputStream =
+            new BufferedOutputStream(Files.newOutputStream(Paths.get(skylarkProfile)));
+        Profiler.instance()
+            .start(
+                ProfiledTaskKinds.ALL,
+                outputStream,
+                "Buck profile for " + skylarkProfile + " at " + LocalDate.now(),
+                false,
+                clock,
+                clock.nanoTime());
+      } catch (IOException e) {
+        throw new HumanReadableException(
+            "Cannot initialize Skylark profiler for " + skylarkProfile, e);
+      }
+      builder.setProfiler(Optional.of(Profiler.instance()));
+    }
+    return builder;
   }
 
   public ConcurrencyLimit getConcurrencyLimit(BuckConfig buckConfig) {

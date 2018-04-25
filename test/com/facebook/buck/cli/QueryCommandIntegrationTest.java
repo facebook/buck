@@ -777,6 +777,22 @@ public class QueryCommandIntegrationTest {
   }
 
   @Test
+  public void testQueryProfileSkylark() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "query_command", tmp);
+    workspace.setUp();
+
+    Path skylarkProfile = tmp.newFile("skylark-profile");
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "query", "deps(//example:one)", "--skylark-profile-output=" + skylarkProfile);
+    result.assertSuccess();
+
+    byte[] content = Files.readAllBytes(skylarkProfile);
+    assertTrue("Profile should not be empty", content.length > 0);
+  }
+
+  @Test
   public void testFilterAttrTests() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "query_command", tmp);

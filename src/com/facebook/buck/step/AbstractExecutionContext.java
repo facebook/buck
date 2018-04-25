@@ -39,6 +39,7 @@ import com.facebook.buck.worker.WorkerProcessPool;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Closer;
 import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.devtools.build.lib.profiler.Profiler;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -176,6 +177,11 @@ abstract class AbstractExecutionContext implements Closeable {
     return getConsole().getAnsi();
   }
 
+  @Value.Default
+  public Optional<Profiler> getProfiler() {
+    return Optional.empty();
+  }
+
   public void logError(Throwable error, String msg, Object... formatArgs) {
     getBuckEventBus().post(ThrowableConsoleEvent.create(error, msg, formatArgs));
   }
@@ -216,6 +222,7 @@ abstract class AbstractExecutionContext implements Closeable {
       for (WorkerProcessPool pool : getWorkerProcessPools().values()) {
         closer.register(pool);
       }
+      getProfiler().ifPresent(profiler -> closer.register(profiler::stop));
     }
   }
 }
