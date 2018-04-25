@@ -18,9 +18,6 @@ package com.facebook.buck.rules.modern.builders;
 
 import com.facebook.buck.rules.modern.builders.MultiThreadedBlobUploader.UploadData;
 import com.facebook.buck.rules.modern.builders.MultiThreadedBlobUploader.UploadResult;
-import com.facebook.buck.rules.modern.builders.Protocol.Command;
-import com.facebook.buck.rules.modern.builders.Protocol.Digest;
-import com.facebook.buck.rules.modern.builders.Protocol.Directory;
 import com.facebook.buck.rules.modern.builders.Protocol.DirectoryNode;
 import com.facebook.buck.rules.modern.builders.Protocol.FileNode;
 import com.facebook.buck.rules.modern.builders.Protocol.OutputDirectory;
@@ -63,6 +60,7 @@ public class LocalContentAddressedStorage implements ContentAddressedStorage {
 
   private final MultiThreadedBlobUploader uploader;
   private final OutputsMaterializer outputsMaterializer;
+  private final InputsMaterializer inputsMaterializer;
   private final Protocol protocol;
 
   public LocalContentAddressedStorage(Path cacheDir, Protocol protocol) {
@@ -105,6 +103,40 @@ public class LocalContentAddressedStorage implements ContentAddressedStorage {
           }
         };
     this.outputsMaterializer = new OutputsMaterializer(fetcher, protocol);
+    this.inputsMaterializer =
+        new InputsMaterializer(
+            protocol,
+            new InputsMaterializer.Delegate() {
+              @Override
+              public void materializeFile(Path root, FileNode file) throws IOException {
+                Path path = getPath(file.getDigest().getHash());
+                Preconditions.checkState(Files.exists(path));
+                // As this file could potentially be materialized as both executable and
+                // non-executable, and
+                // links share that, we need two concrete versions of the file.
+                if (file.getIsExecutable()) {
+                  Path exePath = path.getParent().resolve(path.getFileName() + ".x");
+                  if (!Files.exists(exePath)) {
+                    try (AutoUnlocker ignored = fileLock.writeLock(exePath.toString())) {
+                      if (!Files.exists(exePath)) {
+                        Path tempPath = path.getParent().resolve(path.getFileName() + ".x.tmp");
+                        Files.copy(path, tempPath);
+                        Preconditions.checkState(tempPath.toFile().setExecutable(true));
+                        Files.move(tempPath, exePath);
+                      }
+                    }
+                  }
+                  path = exePath;
+                }
+                Path target = root.resolve(file.getName());
+                Files.createLink(target, path);
+              }
+
+              @Override
+              public InputStream getData(Protocol.Digest digest) throws IOException {
+                return LocalContentAddressedStorage.this.getData(digest);
+              }
+            });
   }
 
   private ImmutableList<UploadResult> batchUpdateBlobs(ImmutableList<UploadData> blobData) {
@@ -149,14 +181,21 @@ public class LocalContentAddressedStorage implements ContentAddressedStorage {
     outputsMaterializer.materialize(outputDirectories, outputFiles, root);
   }
 
-  /** Builds a Tree for a particular directory. */
+  public Optional<Protocol.Command> materializeInputs(
+      Path buildDir, Protocol.Digest rootDigest, Optional<Protocol.Digest> commandDigest)
+      throws IOException {
+    return inputsMaterializer.materializeInputs(buildDir, rootDigest, commandDigest);
+  }
+
+  /** Returns a list of all sub directories. */
   public ImmutableList<Protocol.Directory> getTree(Protocol.Digest rootDigest) throws IOException {
     ImmutableList.Builder<Protocol.Directory> builder = ImmutableList.builder();
     buildTree(builder::add, rootDigest);
     return builder.build();
   }
 
-  private void buildTree(Consumer<Directory> builder, Protocol.Digest digest) throws IOException {
+  private void buildTree(Consumer<Protocol.Directory> builder, Protocol.Digest digest)
+      throws IOException {
     Protocol.Directory directory;
     try (InputStream data = getData(digest)) {
       directory = protocol.parseDirectory(ByteBuffer.wrap(ByteStreams.toByteArray(data)));
@@ -167,55 +206,44 @@ public class LocalContentAddressedStorage implements ContentAddressedStorage {
     }
   }
 
-  /** Materializes all of the inputs into root. All required data must be present. */
-  @Override
-  public Optional<Command> materializeInputs(
-      Path root, Digest inputsDigest, Optional<Digest> commandDigest) throws IOException {
-    Directory dir = readDirectory(inputsDigest);
+  private static class InputsMaterializer {
+    private final Protocol protocol;
+    private final Delegate delegate;
 
-    Files.createDirectories(root);
-    for (FileNode file : dir.getFilesList()) {
-      materializeFile(root, file);
-    }
-    for (DirectoryNode child : dir.getDirectoriesList()) {
-      materializeInputs(root.resolve(child.getName()), child.getDigest(), Optional.empty());
+    private InputsMaterializer(Protocol protocol, Delegate delegate) {
+      this.protocol = protocol;
+      this.delegate = delegate;
     }
 
-    if (commandDigest.isPresent()) {
-      return Optional.of(protocol.parseCommand(getDataBuffer(commandDigest.get())));
+    interface Delegate {
+      void materializeFile(Path root, Protocol.FileNode file) throws IOException;
+
+      InputStream getData(Protocol.Digest digest) throws IOException;
     }
-    return Optional.empty();
-  }
 
-  private Directory readDirectory(Digest digest) throws IOException {
-    return protocol.parseDirectory(getDataBuffer(digest));
-  }
+    /** Materializes all of the inputs into root. All required data must be present. */
+    public Optional<Protocol.Command> materializeInputs(
+        Path root, Protocol.Digest inputsDigest, Optional<Protocol.Digest> commandDigest)
+        throws IOException {
+      Protocol.Directory dir;
+      try (InputStream dataStream = delegate.getData(inputsDigest)) {
+        dir = protocol.parseDirectory(ByteBuffer.wrap(ByteStreams.toByteArray(dataStream)));
+      }
 
-  private void materializeFile(Path dir, FileNode file) throws IOException {
-    Path path = getPath(file.getDigest().getHash());
-    Preconditions.checkState(Files.exists(path));
-    // As this file could potentially be materialized as both executable and non-executable, and
-    // links share that, we need two concrete versions of the file.
-    if (file.getIsExecutable()) {
-      Path exePath = path.getParent().resolve(path.getFileName() + ".x");
-      if (!Files.exists(exePath)) {
-        try (AutoUnlocker ignored = fileLock.writeLock(exePath.toString())) {
-          if (!Files.exists(exePath)) {
-            Path tempPath = path.getParent().resolve(path.getFileName() + ".x.tmp");
-            Files.copy(path, tempPath);
-            Preconditions.checkState(tempPath.toFile().setExecutable(true));
-            Files.move(tempPath, exePath);
-          }
+      Files.createDirectories(root);
+      for (FileNode file : dir.getFilesList()) {
+        delegate.materializeFile(root, file);
+      }
+      for (DirectoryNode child : dir.getDirectoriesList()) {
+        materializeInputs(root.resolve(child.getName()), child.getDigest(), commandDigest);
+      }
+      if (commandDigest.isPresent()) {
+        try (InputStream dataStream = delegate.getData(commandDigest.get())) {
+          return Optional.of(
+              protocol.parseCommand(ByteBuffer.wrap(ByteStreams.toByteArray(dataStream))));
         }
       }
-      path = exePath;
-    }
-    Files.createLink(dir.resolve(file.getName()), path);
-  }
-
-  ByteBuffer getDataBuffer(Digest digest) throws IOException {
-    try (InputStream dataStream = getData(digest)) {
-      return ByteBuffer.wrap(ByteStreams.toByteArray(dataStream));
+      return Optional.empty();
     }
   }
 

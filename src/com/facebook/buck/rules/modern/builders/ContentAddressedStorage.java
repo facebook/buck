@@ -16,7 +16,6 @@
 
 package com.facebook.buck.rules.modern.builders;
 
-import com.facebook.buck.rules.modern.builders.Protocol.Command;
 import com.facebook.buck.rules.modern.builders.Protocol.Digest;
 import com.facebook.buck.rules.modern.builders.Protocol.OutputDirectory;
 import com.facebook.buck.rules.modern.builders.Protocol.OutputFile;
@@ -26,7 +25,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Optional;
 
 /** This is a simple ContentAddressedStorage interface used for remote execution. */
 public interface ContentAddressedStorage {
@@ -37,10 +35,4 @@ public interface ContentAddressedStorage {
   void materializeOutputs(
       List<OutputDirectory> outputDirectories, List<OutputFile> outputFiles, Path root)
       throws IOException;
-
-  /**
-   * Materializes the directory encoded by inputsDigest into root and returns the requested command.
-   */
-  Optional<Command> materializeInputs(
-      Path root, Digest inputsDigest, Optional<Digest> commandDigest) throws IOException;
 }
