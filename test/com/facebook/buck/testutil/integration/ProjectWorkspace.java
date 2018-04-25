@@ -38,6 +38,7 @@ import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.WatchmanFactory;
 import com.facebook.buck.io.WatchmanWatcher;
 import com.facebook.buck.io.file.MorePaths;
+import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
@@ -70,6 +71,7 @@ import com.facebook.buck.util.trace.ChromeTraceParser.ChromeTraceEventMatcher;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Charsets;
+import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
@@ -122,6 +124,10 @@ public class ProjectWorkspace extends AbstractWorkspace {
   public static final String TEST_CELL_LOCATION =
       "test/com/facebook/buck/testutil/integration/testlibs";
 
+  private static final String[] TEST_CELL_DIRECTORIES_TO_LINK = {
+    "third-party",
+  };
+
   private boolean isSetUp = false;
   private final Path templatePath;
   private final boolean addBuckRepoCell;
@@ -168,8 +174,8 @@ public class ProjectWorkspace extends AbstractWorkspace {
     addTemplateToWorkspace(templatePath);
 
     if (addBuckRepoCell) {
-      addBuckConfigLocalOption(
-          "repositories", "buck", Paths.get(TEST_CELL_LOCATION).toAbsolutePath().toString());
+      Path bucklibRoot = setupBuckLib();
+      addBuckConfigLocalOption("repositories", "buck", bucklibRoot.toString());
     }
 
     // Enable the JUL build log.  This log is very verbose but rarely useful,
@@ -178,6 +184,54 @@ public class ProjectWorkspace extends AbstractWorkspace {
 
     isSetUp = true;
     return this;
+  }
+
+  private Path setupBuckLib() throws IOException {
+    Path bucklibRoot = createBucklibRoot();
+    createSymlinkToBuckTestRepository(bucklibRoot);
+    saveBucklibConfig(bucklibRoot);
+    return bucklibRoot;
+  }
+
+  private Path createBucklibRoot() throws IOException {
+    Path root = Files.createTempDirectory("buck-testlib").toRealPath().normalize();
+    Runtime.getRuntime()
+        .addShutdownHook(
+            new Thread(
+                () -> {
+                  try {
+                    MostFiles.deleteRecursivelyIfExists(root);
+                  } catch (IOException e) {
+                    throw new RuntimeException(e);
+                  }
+                }));
+    return root;
+  }
+
+  private void createSymlinkToBuckTestRepository(Path bucklib) throws IOException {
+    for (String directory : TEST_CELL_DIRECTORIES_TO_LINK) {
+      Path directoryPath = bucklib.resolve(directory);
+      Files.createSymbolicLink(
+          directoryPath, Paths.get(TEST_CELL_LOCATION).resolve(directory).toAbsolutePath());
+    }
+  }
+
+  private static void saveBucklibConfig(Path bucklibRoot) throws IOException {
+    Map<String, Map<String, String>> configs = prepareBucklibConfig();
+    String contents = convertToBuckConfig(configs);
+    Files.write(bucklibRoot.resolve(".buckconfig"), contents.getBytes(UTF_8));
+  }
+
+  private static Map<String, Map<String, String>> prepareBucklibConfig() {
+    Map<String, Map<String, String>> configs = new HashMap<>();
+    configs.put(
+        "project",
+        ImmutableMap.of(
+            "allow_symlinks",
+            "ALLOW",
+            "read_only_paths",
+            Joiner.on(", ").join(TEST_CELL_DIRECTORIES_TO_LINK)));
+    return configs;
   }
 
   public BuckPaths getBuckPaths() throws InterruptedException, IOException {
