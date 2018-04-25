@@ -16,6 +16,8 @@
 
 package com.facebook.buck.rules.modern.builders;
 
+import com.facebook.buck.rules.modern.builders.MultiThreadedBlobUploader.UploadData;
+import com.facebook.buck.rules.modern.builders.MultiThreadedBlobUploader.UploadResult;
 import com.facebook.buck.rules.modern.builders.Protocol.Command;
 import com.facebook.buck.rules.modern.builders.Protocol.Digest;
 import com.facebook.buck.rules.modern.builders.Protocol.Directory;
@@ -24,11 +26,13 @@ import com.facebook.buck.rules.modern.builders.Protocol.FileNode;
 import com.facebook.buck.rules.modern.builders.Protocol.OutputDirectory;
 import com.facebook.buck.rules.modern.builders.Protocol.OutputFile;
 import com.facebook.buck.util.RichStream;
+import com.facebook.buck.util.concurrent.MostExecutors;
 import com.facebook.buck.util.function.ThrowingSupplier;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.MoreFiles;
 import com.google.common.util.concurrent.Futures;
@@ -44,8 +48,8 @@ import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.concurrent.ExecutorService;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
@@ -54,12 +58,36 @@ public class LocalContentAddressedStorage implements ContentAddressedStorage {
   private final Path cacheDir;
   private final StripedKeyedLocker<String> fileLock = new StripedKeyedLocker<>(8);
 
+  private static final int MISSING_CHECK_LIMIT = 1000;
+  private static final int UPLOAD_SIZE_LIMIT = 10 * 1024 * 1024;
+
+  private final MultiThreadedBlobUploader uploader;
   private final OutputsMaterializer outputsMaterializer;
   private final Protocol protocol;
 
   public LocalContentAddressedStorage(Path cacheDir, Protocol protocol) {
     this.cacheDir = cacheDir;
     this.protocol = protocol;
+    ExecutorService uploadService = MostExecutors.newMultiThreadExecutor("local-cas-write", 4);
+    this.uploader =
+        new MultiThreadedBlobUploader(
+            MISSING_CHECK_LIMIT,
+            UPLOAD_SIZE_LIMIT,
+            uploadService,
+            new CasBlobUploader() {
+              @Override
+              public ImmutableList<UploadResult> batchUpdateBlobs(
+                  ImmutableList<UploadData> blobData) {
+                return LocalContentAddressedStorage.this.batchUpdateBlobs(blobData);
+              }
+
+              @Override
+              public ImmutableSet<String> getMissingHashes(List<Protocol.Digest> requiredDigests) {
+                return findMissing(requiredDigests)
+                    .map(Protocol.Digest::getHash)
+                    .collect(ImmutableSet.toImmutableSet());
+              }
+            });
     AsyncBlobFetcher fetcher =
         new AsyncBlobFetcher() {
           @Override
@@ -79,26 +107,36 @@ public class LocalContentAddressedStorage implements ContentAddressedStorage {
     this.outputsMaterializer = new OutputsMaterializer(fetcher, protocol);
   }
 
-  /** For any digests that are missing, adds the corresponding data to the storage. */
-  @Override
-  public void addMissing(ImmutableMap<Digest, ThrowingSupplier<InputStream, IOException>> data)
-      throws IOException {
-    Stream<Digest> missing = findMissing(data.keySet());
-    for (Entry<Digest, ThrowingSupplier<InputStream, IOException>> entry :
-        missing.collect(ImmutableMap.toImmutableMap(digest -> digest, data::get)).entrySet()) {
-      String hash = entry.getKey().getHash();
-      Path path = ensureParent(getPath(hash));
-      try (AutoUnlocker ignored = fileLock.writeLock(hash)) {
-        if (Files.exists(path)) {
-          continue;
+  private ImmutableList<UploadResult> batchUpdateBlobs(ImmutableList<UploadData> blobData) {
+    ImmutableList.Builder<UploadResult> responseBuilder = ImmutableList.builder();
+    for (UploadData data : blobData) {
+      String hash = data.digest.getHash();
+      try {
+        Path path = ensureParent(getPath(hash));
+        try (AutoUnlocker ignored = fileLock.writeLock(hash)) {
+          if (Files.exists(path)) {
+            continue;
+          }
+          Path tempPath = path.getParent().resolve(path.getFileName() + ".tmp");
+          try (FileOutputStream outputStream = new FileOutputStream(tempPath.toFile());
+              InputStream dataStream = data.data.get()) {
+            ByteStreams.copy(dataStream, outputStream);
+          }
+          Files.move(tempPath, path);
         }
-        Path tempPath = path.getParent().resolve(path.getFileName() + ".tmp");
-        try (FileOutputStream outputStream = new FileOutputStream(tempPath.toFile())) {
-          ByteStreams.copy(entry.getValue().get(), outputStream);
-        }
-        Files.move(tempPath, path);
+        responseBuilder.add(new UploadResult(data.digest, 0, null));
+      } catch (IOException e) {
+        responseBuilder.add(new UploadResult(data.digest, 1, e.getMessage()));
       }
     }
+    return responseBuilder.build();
+  }
+
+  @Override
+  public void addMissing(
+      ImmutableMap<Protocol.Digest, ThrowingSupplier<InputStream, IOException>> data)
+      throws IOException {
+    uploader.addMissing(data);
   }
 
   /**
