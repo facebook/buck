@@ -185,9 +185,17 @@ public class GoTestDescription
 
     GoTestCoverStep.Mode coverageMode;
     ImmutableSortedSet.Builder<BuildRule> extraDeps = ImmutableSortedSet.naturalOrder();
-    ImmutableSet.Builder<SourcePath> srcs = ImmutableSet.builder();
+    ImmutableSet.Builder<SourcePath> srcs;
     ImmutableMap<String, Path> coverVariables;
 
+    ImmutableSet.Builder<SourcePath> rawSrcs = ImmutableSet.builder();
+    rawSrcs.addAll(args.getSrcs());
+    if (args.getLibrary().isPresent()) {
+      GoLibraryDescriptionArg libraryArg =
+          resolver.requireMetadata(args.getLibrary().get(), GoLibraryDescriptionArg.class).get();
+
+      rawSrcs.addAll(libraryArg.getSrcs());
+    }
     if (args.getCoverageMode().isPresent()) {
       coverageMode = args.getCoverageMode().get();
       GoTestCoverStep.Mode coverage = coverageMode;
@@ -203,15 +211,16 @@ public class GoTestDescription
                           ruleFinder,
                           pathResolver,
                           platform,
-                          args.getSrcs(),
+                          rawSrcs.build(),
                           platform.getCover(),
                           coverage));
 
       coverVariables = coverSource.getVariables();
+      srcs = ImmutableSet.builder();
       srcs.addAll(coverSource.getCoveredSources()).addAll(coverSource.getTestSources());
       extraDeps.add(coverSource);
     } else {
-      srcs.addAll(args.getSrcs());
+      srcs = rawSrcs;
       coverVariables = ImmutableMap.of();
       coverageMode = GoTestCoverStep.Mode.NONE;
     }
@@ -251,7 +260,8 @@ public class GoTestDescription
             .map(Optional::of)
             .orElse(goBuckConfig.getDelegate().getDefaultTestRuleTimeoutMs()),
         args.getRunTestSeparately(),
-        args.getResources());
+        args.getResources(),
+        coverageMode);
   }
 
   private GoBinary createTestMainRule(
@@ -380,7 +390,7 @@ public class GoTestDescription
               resolver,
               goBuckConfig,
               packageName,
-              ImmutableSet.<SourcePath>builder().addAll(libraryArg.getSrcs()).addAll(srcs).build(),
+              ImmutableSet.<SourcePath>builder().addAll(srcs).build(),
               ImmutableList.<String>builder()
                   .addAll(libraryArg.getCompilerFlags())
                   .addAll(args.getCompilerFlags())
