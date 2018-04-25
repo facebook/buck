@@ -10,7 +10,7 @@ import org.easymock.EasyMock;
 import org.hamcrest.junit.ExpectedException;
 import org.junit.Before;
 import org.junit.Rule;
-import org.testng.annotations.Test;
+import org.junit.Test;
 
 public class WindowsPreprocessorTest {
   @Rule public final ExpectedException expectedException = ExpectedException.none();
