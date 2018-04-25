@@ -18,21 +18,14 @@ package com.facebook.buck.cxx;
 
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.android.AndroidBuckConfig;
-import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
-import com.facebook.buck.android.toolchain.ndk.NdkCompilerType;
-import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatform;
-import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatformCompiler;
-import com.facebook.buck.android.toolchain.ndk.TargetCpuType;
-import com.facebook.buck.android.toolchain.ndk.impl.AndroidNdkHelper;
-import com.facebook.buck.android.toolchain.ndk.impl.NdkCxxPlatforms;
+import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.DefaultCxxPlatforms;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.testutil.ParameterizedTests;
@@ -42,9 +35,7 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -59,45 +50,6 @@ import org.junit.runners.Parameterized;
 @RunWith(Parameterized.class)
 public class CxxSharedLibraryInterfaceIntegrationTest {
 
-  private static Optional<ImmutableList<Flavor>> getNdkPlatforms() {
-    ProjectFilesystem filesystem =
-        TestProjectFilesystems.createProjectFilesystem(Paths.get(".").toAbsolutePath());
-
-    Optional<AndroidNdk> androidNdk = AndroidNdkHelper.detectAndroidNdk(filesystem);
-
-    if (!androidNdk.isPresent()) {
-      return Optional.empty();
-    }
-
-    Path ndkDir = androidNdk.get().getNdkRootPath();
-    NdkCompilerType compilerType = NdkCxxPlatforms.DEFAULT_COMPILER_TYPE;
-    String ndkVersion = androidNdk.get().getNdkVersion();
-    String gccVersion = NdkCxxPlatforms.getDefaultGccVersionForNdk(ndkVersion);
-    String clangVersion = NdkCxxPlatforms.getDefaultClangVersionForNdk(ndkVersion);
-    String compilerVersion = compilerType == NdkCompilerType.GCC ? gccVersion : clangVersion;
-    NdkCxxPlatformCompiler compiler =
-        NdkCxxPlatformCompiler.builder()
-            .setType(compilerType)
-            .setVersion(compilerVersion)
-            .setGccVersion(gccVersion)
-            .build();
-    ImmutableMap<TargetCpuType, NdkCxxPlatform> ndkPlatforms =
-        NdkCxxPlatforms.getPlatforms(
-            new CxxBuckConfig(FakeBuckConfig.builder().build()),
-            new AndroidBuckConfig(FakeBuckConfig.builder().build(), Platform.detect()),
-            filesystem,
-            ndkDir,
-            compiler,
-            NdkCxxPlatforms.DEFAULT_CXX_RUNTIME,
-            NdkCxxPlatforms.DEFAULT_TARGET_APP_PLATFORM,
-            NdkCxxPlatforms.DEFAULT_CPU_ABIS,
-            Platform.detect());
-    // Just return one of the NDK platforms, which should be enough to test shared library interface
-    // functionality.
-    return Optional.of(
-        ImmutableList.of(ndkPlatforms.values().iterator().next().getCxxPlatform().getFlavor()));
-  }
-
   @Parameterized.Parameters(name = "type={0},platform={1}")
   public static Collection<Object[]> data() throws InterruptedException {
     List<Flavor> platforms = new ArrayList<>();
@@ -107,9 +59,16 @@ public class CxxSharedLibraryInterfaceIntegrationTest {
       platforms.add(DefaultCxxPlatforms.FLAVOR);
     }
 
-    // If the NDK is present, test it's platforms.
-    Optional<ImmutableList<Flavor>> ndkPlatforms = getNdkPlatforms();
-    ndkPlatforms.ifPresent(platforms::addAll);
+    // If the NDK is present, test its platforms.
+    BuckConfig buckConfig = FakeBuckConfig.builder().build();
+    Optional<CxxPlatform> testPlatform =
+        SharedLibraryInterfacePlatforms.getTestPlatform(
+            TestProjectFilesystems.createProjectFilesystem(Paths.get(".").toAbsolutePath()),
+            buckConfig,
+            new CxxBuckConfig(buckConfig));
+    if (testPlatform.isPresent()) {
+      platforms.add(testPlatform.get().getFlavor());
+    }
 
     return ParameterizedTests.getPermutations(
         ImmutableList.of("cxx_library", "prebuilt_cxx_library"),

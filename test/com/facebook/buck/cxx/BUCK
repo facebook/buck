@@ -318,6 +318,7 @@ java_library(
     visibility = ["PUBLIC"],
     deps = [
         "//src-gen:thrift",
+        "//src/com/facebook/buck/android:config",
         "//src/com/facebook/buck/android:helpers",
         "//src/com/facebook/buck/android:rules",
         "//src/com/facebook/buck/android:split_dex",
@@ -325,6 +326,7 @@ java_library(
         "//src/com/facebook/buck/android:utils",
         "//src/com/facebook/buck/android/aapt:aapt",
         "//src/com/facebook/buck/android/redex:options",
+        "//src/com/facebook/buck/android/toolchain/ndk/impl:impl",
         "//src/com/facebook/buck/apple/project_generator:project_generator",
         "//src/com/facebook/buck/apple/xcode:xcode",
         "//src/com/facebook/buck/artifact_cache:artifact_cache",
@@ -412,6 +414,7 @@ java_library(
         "//src/com/facebook/buck/worker:worker_job_params",
         "//src/com/facebook/buck/worker:worker_pool_factory",
         "//src/com/facebook/buck/worker:worker_process",
+        "//test/com/facebook/buck/android/toolchain/ndk/impl:testutil",
         "//test/com/facebook/buck/config:FakeBuckConfig",
         "//test/com/facebook/buck/cxx/toolchain:testutil",
         "//test/com/facebook/buck/cxx/toolchain:toolchain",

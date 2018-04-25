@@ -19,6 +19,8 @@ package com.facebook.buck.rules;
 import static junit.framework.TestCase.assertSame;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.config.ActionGraphParallelizationMode;
 import com.facebook.buck.config.BuckConfig;
@@ -33,9 +35,14 @@ import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
 import com.facebook.buck.cxx.CxxBinaryBuilder;
+import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxLibraryBuilder;
 import com.facebook.buck.cxx.CxxTestUtils;
+import com.facebook.buck.cxx.SharedLibraryInterfacePlatforms;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.linker.Linker;
+import com.facebook.buck.cxx.toolchain.linker.Linker.LinkableDepType;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.features.python.CxxPythonExtensionBuilder;
@@ -373,6 +380,62 @@ public class IncrementalActionGraphScenarioTest {
     ActionGraphAndResolver newResult = createActionGraph(binaryBuilder, libraryBuilder);
     queryTransitiveDeps(newResult);
     ImmutableMap<BuildRule, RuleKey> newRuleKeys = getRuleKeys(newResult);
+
+    assertBuildRulesSame(result, newResult);
+    assertEquals(ruleKeys, newRuleKeys);
+  }
+
+  @Test
+  public void testElfSharedLibraryLoadedFromCache() {
+    BuckConfig buckConfig =
+        FakeBuckConfig.builder()
+            .setSections(
+                "[cxx]",
+                "shlib_interfaces=enabled",
+                "independent_shlib_interfaces=true",
+                "objcopy=/usr/bin/objcopy")
+            .build();
+    CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(buckConfig);
+
+    Optional<CxxPlatform> testPlatform =
+        SharedLibraryInterfacePlatforms.getTestPlatform(filesystem, buckConfig, cxxBuckConfig);
+    assumeTrue(testPlatform.isPresent());
+    FlavorDomain cxxFlavorDomain = FlavorDomain.of("C/C++ Platform", testPlatform.get());
+
+    BuildTarget sharedLibraryTarget = BuildTargetFactory.newInstance("//:shared_lib");
+    CxxLibraryBuilder sharedLibraryBuilder =
+        new CxxLibraryBuilder(sharedLibraryTarget, cxxBuckConfig, cxxFlavorDomain)
+            .setSrcs(
+                ImmutableSortedSet.of(
+                    SourceWithFlags.of(FakeSourcePath.of("shared_lib.cpp"), ImmutableList.of())));
+
+    BuildTarget binaryTarget = BuildTargetFactory.newInstance("//:bin");
+    CxxBinaryBuilder binaryBuilder =
+        new CxxBinaryBuilder(binaryTarget, testPlatform.get(), cxxFlavorDomain, cxxBuckConfig)
+            .setLinkStyle(LinkableDepType.SHARED)
+            .setDeps(ImmutableSortedSet.of(sharedLibraryTarget))
+            .setSrcs(
+                ImmutableSortedSet.of(
+                    SourceWithFlags.of(FakeSourcePath.of("bin.cpp"), ImmutableList.of())));
+
+    ActionGraphAndResolver result = createActionGraph(binaryBuilder, sharedLibraryBuilder);
+    ImmutableMap<BuildRule, RuleKey> ruleKeys = getRuleKeys(result);
+
+    // Make sure we actually created the shared library interface.
+    BuildTarget sharedLibraryInterfaceTarget =
+        CxxDescriptionEnhancer.createSharedLibraryBuildTarget(
+            sharedLibraryTarget, testPlatform.get().getFlavor(), Linker.LinkType.SHARED);
+    assertTrue(
+        "shared library interface didn't get created",
+        result.getResolver().getRuleOptional(sharedLibraryInterfaceTarget).isPresent());
+
+    ActionGraphAndResolver newResult = createActionGraph(binaryBuilder, sharedLibraryBuilder);
+    ImmutableMap<BuildRule, RuleKey> newRuleKeys = getRuleKeys(newResult);
+
+    // Don't query transitive deps until after the second time, so we stress the cases where build
+    // rules have to generate their deps (which they sometimes cache) using the new build rule
+    // resolver.
+    queryTransitiveDeps(newResult);
 
     assertBuildRulesSame(result, newResult);
     assertEquals(ruleKeys, newRuleKeys);

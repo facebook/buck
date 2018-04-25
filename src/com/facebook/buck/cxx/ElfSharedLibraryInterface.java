@@ -26,12 +26,13 @@ import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTarget;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableSupport;
+import com.facebook.buck.rules.HasDeclaredAndExtraDeps;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
@@ -40,6 +41,7 @@ import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.RmStep;
+import com.facebook.buck.util.Memoizer;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableList;
@@ -49,10 +51,12 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.SortedSet;
+import java.util.function.Function;
 
 /** Build a shared library interface from an ELF shared library. */
-abstract class ElfSharedLibraryInterface extends AbstractBuildRuleWithDeclaredAndExtraDeps
-    implements SupportsInputBasedRuleKey {
+abstract class ElfSharedLibraryInterface extends AbstractBuildRule
+    implements HasDeclaredAndExtraDeps, SupportsInputBasedRuleKey {
 
   @AddToRuleKey private final Tool objcopy;
 
@@ -60,14 +64,22 @@ abstract class ElfSharedLibraryInterface extends AbstractBuildRuleWithDeclaredAn
 
   @AddToRuleKey private final boolean removeUndefinedSymbols;
 
+  private final Function<SourcePathRuleFinder, SortedSet<BuildRule>> computeDeclaredDeps;
+  private final Memoizer<SortedSet<BuildRule>> declaredDeps = new Memoizer<>();
+
+  private SourcePathRuleFinder ruleFinder;
+
   private ElfSharedLibraryInterface(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      BuildRuleParams buildRuleParams,
+      SourcePathRuleFinder ruleFinder,
+      Function<SourcePathRuleFinder, SortedSet<BuildRule>> computeDeclaredDeps,
       Tool objcopy,
       String libName,
       boolean removeUndefinedSymbols) {
-    super(buildTarget, projectFilesystem, buildRuleParams);
+    super(buildTarget, projectFilesystem);
+    this.ruleFinder = ruleFinder;
+    this.computeDeclaredDeps = computeDeclaredDeps;
     this.objcopy = objcopy;
     this.libName = libName;
     this.removeUndefinedSymbols = removeUndefinedSymbols;
@@ -85,14 +97,12 @@ abstract class ElfSharedLibraryInterface extends AbstractBuildRuleWithDeclaredAn
     return new ElfSharedLibraryInterface(
         target,
         projectFilesystem,
-        new BuildRuleParams(
-            () ->
-                ImmutableSortedSet.<BuildRule>naturalOrder()
-                    .addAll(BuildableSupport.getDepsCollection(objcopy, ruleFinder))
-                    .addAll(ruleFinder.filterBuildRuleInputs(input))
-                    .build(),
-            ImmutableSortedSet::of,
-            ImmutableSortedSet.of()),
+        ruleFinder,
+        (ruleFinderInner) ->
+            ImmutableSortedSet.<BuildRule>naturalOrder()
+                .addAll(BuildableSupport.getDepsCollection(objcopy, ruleFinderInner))
+                .addAll(ruleFinderInner.filterBuildRuleInputs(input))
+                .build(),
         objcopy,
         resolver.getRelativePath(input).getFileName().toString(),
         removeUndefinedSymbols) {
@@ -125,15 +135,13 @@ abstract class ElfSharedLibraryInterface extends AbstractBuildRuleWithDeclaredAn
     return new ElfSharedLibraryInterface(
         target,
         projectFilesystem,
-        new BuildRuleParams(
-            () ->
-                RichStream.from(args)
-                    .flatMap(arg -> BuildableSupport.getDepsCollection(arg, ruleFinder).stream())
-                    .concat(BuildableSupport.getDepsCollection(linker, ruleFinder).stream())
-                    .concat(BuildableSupport.getDepsCollection(objcopy, ruleFinder).stream())
-                    .toImmutableSortedSet(Ordering.natural()),
-            ImmutableSortedSet::of,
-            ImmutableSortedSet.of()),
+        ruleFinder,
+        (ruleFinderInner) ->
+            RichStream.from(args)
+                .flatMap(arg -> BuildableSupport.getDepsCollection(arg, ruleFinderInner).stream())
+                .concat(BuildableSupport.getDepsCollection(linker, ruleFinderInner).stream())
+                .concat(BuildableSupport.getDepsCollection(objcopy, ruleFinderInner).stream())
+                .toImmutableSortedSet(Ordering.natural()),
         objcopy,
         libName,
         removeUndefinedSymbols) {
@@ -215,6 +223,26 @@ abstract class ElfSharedLibraryInterface extends AbstractBuildRuleWithDeclaredAn
   }
 
   @Override
+  public SortedSet<BuildRule> getBuildDeps() {
+    return getDeclaredDeps();
+  }
+
+  @Override
+  public SortedSet<BuildRule> getDeclaredDeps() {
+    return declaredDeps.get(() -> computeDeclaredDeps.apply(ruleFinder));
+  }
+
+  @Override
+  public SortedSet<BuildRule> deprecatedGetExtraDeps() {
+    return ImmutableSortedSet.of();
+  }
+
+  @Override
+  public ImmutableSortedSet<BuildRule> getTargetGraphOnlyDeps() {
+    return ImmutableSortedSet.of();
+  }
+
+  @Override
   public ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
     Path output = getOutput();
@@ -284,6 +312,14 @@ abstract class ElfSharedLibraryInterface extends AbstractBuildRuleWithDeclaredAn
   @Override
   public SourcePath getSourcePathToOutput() {
     return ExplicitBuildTargetSourcePath.of(getBuildTarget(), getOutputDir().resolve(libName));
+  }
+
+  @Override
+  public void updateBuildRuleResolver(
+      BuildRuleResolver ruleResolver,
+      SourcePathRuleFinder ruleFinder,
+      SourcePathResolver pathResolver) {
+    this.ruleFinder = ruleFinder;
   }
 
   /**

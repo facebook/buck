@@ -27,6 +27,7 @@ import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.InferBuckConfig;
+import com.facebook.buck.cxx.toolchain.linker.Linker.LinkableDepType;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
@@ -138,6 +139,11 @@ public class CxxBinaryBuilder
   public CxxBinaryBuilder setPlatformLinkerFlags(
       PatternMatchedCollection<ImmutableList<StringWithMacros>> platformLinkerFlags) {
     getArgForPopulating().setPlatformLinkerFlags(platformLinkerFlags);
+    return this;
+  }
+
+  public CxxBinaryBuilder setLinkStyle(LinkableDepType linkStyle) {
+    getArgForPopulating().setLinkStyle(Optional.of(linkStyle));
     return this;
   }
 
