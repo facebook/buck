@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
+package com.facebook.buck.core.cell.name;
 
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.base.Joiner;

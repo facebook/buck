@@ -39,7 +39,7 @@ java_immutables_library(
     ],
     exported_deps = [
         ":build_rule",
-        ":relative_cell_name",
+        "//src/com/facebook/buck/core/cell/name:name",
         "//src/com/facebook/buck/core/cell/resolver:resolver",
     ],
     tests = [
@@ -363,8 +363,8 @@ java_immutables_library(
     exported_deps = [
         ":build_context",
         ":build_rule",
-        ":relative_cell_name",
         ":types",
+        "//src/com/facebook/buck/core/cell/name:name",
         "//src/com/facebook/buck/core/cell/resolver:resolver",
         "//src/com/facebook/buck/core/rulekey:rulekey",
         "//src/com/facebook/buck/core/sourcepath:sourcepath",
@@ -420,15 +420,5 @@ java_immutables_library(
         "//third-party/java/jackson:jackson-databind",
         "//third-party/java/sqlite:sqlite",
         "//third-party/java/stringtemplate:stringtemplate",
-    ],
-)
-
-java_immutables_library(
-    name = "relative_cell_name",
-    srcs = [
-        "AbstractRelativeCellName.java",
-    ],
-    visibility = [
-        "PUBLIC",
     ],
 )

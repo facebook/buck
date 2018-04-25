@@ -44,6 +44,7 @@ java_binary(
     deps = [
         ":lib-api-stubber",
         "//src/com/facebook/buck/config:config",
+        "//src/com/facebook/buck/core/cell/name:name",
         "//src/com/facebook/buck/event:interfaces",
         "//src/com/facebook/buck/event/external:external_lib",
         "//src/com/facebook/buck/io:executable-finder",
@@ -51,7 +52,6 @@ java_binary(
         "//src/com/facebook/buck/io:transport",
         "//src/com/facebook/buck/jvm/java/abi/source/api:api",
         "//src/com/facebook/buck/model:build_id",
-        "//src/com/facebook/buck/rules:relative_cell_name",
         "//src/com/facebook/buck/test/result/type:type",
         "//src/com/facebook/buck/util:process_executor",
         "//src/com/facebook/buck/util:util",
@@ -75,6 +75,7 @@ java_library(
     srcs = ["ApiStubber.java"],
     deps = [
         "//src/com/facebook/buck/config:config",
+        "//src/com/facebook/buck/core/cell/name:name",
         "//src/com/facebook/buck/event:interfaces",
         "//src/com/facebook/buck/event/external:external_lib",
         "//src/com/facebook/buck/io:executable-finder",
@@ -84,7 +85,6 @@ java_library(
         "//src/com/facebook/buck/jvm/java/abi:abi",
         "//src/com/facebook/buck/jvm/java/abi/source/api:api",
         "//src/com/facebook/buck/model:build_id",
-        "//src/com/facebook/buck/rules:relative_cell_name",
         "//src/com/facebook/buck/test/result/type:type",
         "//src/com/facebook/buck/util:process_executor",
         "//src/com/facebook/buck/util:util",

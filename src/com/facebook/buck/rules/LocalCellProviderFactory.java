@@ -17,6 +17,7 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.config.BuckConfig;
+import com.facebook.buck.core.cell.name.RelativeCellName;
 import com.facebook.buck.core.cell.resolver.CellPathResolver;
 import com.facebook.buck.io.Watchman;
 import com.facebook.buck.io.filesystem.EmbeddedCellBuckOutInfo;

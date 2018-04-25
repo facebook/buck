@@ -24,9 +24,9 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.FakeBuckConfig;
+import com.facebook.buck.core.cell.name.RelativeCellName;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.FakeTestRule;
-import com.facebook.buck.rules.RelativeCellName;
 import com.facebook.buck.rules.TestRule;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
