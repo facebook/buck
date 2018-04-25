@@ -250,7 +250,7 @@ An <code>android_binary()</code> rule is used to generate an Android APK.
 
   This is especially useful when combined with
   the <a href="{ROOT}function/flatten_dicts.html"><code>flatten_dicts</code></a> function. This will
-  allow you to share a default config amongst your rules, and override values as necessary.
+  allow you to share a default config across your rules, and override values as necessary.
   {/param}
 {/call}
 
@@ -267,6 +267,33 @@ An <code>android_binary()</code> rule is used to generate an Android APK.
     <strong>Note</strong>: If you set this parameter, you must setup your NDK, otherwise BUCK
     build will fail. You can follow the Android SDK and NDK part of the
     {sp}<a href="{ROOT}setup/install.html">install guide</a> to set it up.
+  </p>
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name : 'use_split_dex' /}
+  {param default : 'False' /}
+  {param desc}
+  <p>
+  If this argument is <code>True</code>, Buck enables <em>multidex</em> support for
+  the output APK. Multidex support enables your app to use multiple
+  Dalvik Executable (DEX) bytecode files and thereby work around the 64K
+  limit on the number of methods that can be referenced in a single DEX
+  file.
+  </p>
+
+<p>
+<pre>
+{literal}
+use_split_dex = True
+{/literal}
+</pre>
+</p>
+
+  <p>
+  For more information on multidex support, go to 
+  the <a href="https://developer.android.com/studio/build/multidex">Android Developer Documentation</a>.
   </p>
   {/param}
 {/call}
@@ -290,8 +317,8 @@ An <code>android_binary()</code> rule is used to generate an Android APK.
   {param name : 'skip_proguard' /}
   {param default : 'False' /}
   {param desc}
-  To produce a release build without running ProGuard set the
-  <code>skip_proguard</code> flag to <code>True</code>. This will still cause ProGuard
+  To produce a release build without running ProGuard set 
+  the <code>skip_proguard</code> flag to <code>True</code>. This will still cause ProGuard
   configuration files to be generated for use by other optimizers like Redex.
   {/param}
 {/call}
