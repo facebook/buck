@@ -22,47 +22,20 @@ java_immutables_library(
 java_immutables_library(
     name = "types",
     srcs = [
-        "AbstractCell.java",
-        "AbstractCellConfig.java",
-        "AbstractCellPathResolver.java",
         "AbstractDefaultKnownBuildRuleTypesFactory.java",
-        "AbstractDistBuildCellParams.java",
         "AbstractKnownBuildRuleTypes.java",
         "AbstractKnownBuildRuleTypesProvider.java",
-        "CellPathResolverView.java",
-        "CellProvider.java",
-        "DefaultCellPathResolver.java",
-        "DistributedCellProviderFactory.java",
         "KnownBuildRuleTypesFactory.java",
-        "LocalCellProviderFactory.java",
-        "RootCellFactory.java",
     ],
     exported_deps = [
         ":build_rule",
-        "//src/com/facebook/buck/core/cell/name:name",
-        "//src/com/facebook/buck/core/cell/resolver:resolver",
+        "//src/com/facebook/buck/core/cell:cell",
     ],
     tests = [
         "//test/com/facebook/buck/rules:rules",
     ],
     visibility = [
         "PUBLIC",
-    ],
-    deps = [
-        "//src/com/facebook/buck/event:interfaces",
-        "//src/com/facebook/buck/io:watchman",
-        "//src/com/facebook/buck/io/file:file",
-        "//src/com/facebook/buck/log:api",
-        "//src/com/facebook/buck/model:model",
-        "//src/com/facebook/buck/parser:config",
-        "//src/com/facebook/buck/parser/exceptions:exceptions",
-        "//src/com/facebook/buck/rules/keys/config/impl:impl",
-        "//src/com/facebook/buck/toolchain:toolchain",
-        "//src/com/facebook/buck/toolchain/impl:impl",
-        "//src/com/facebook/buck/util:util",
-        "//src/com/facebook/buck/util/config:config",
-        "//third-party/java/bazel:skylark-lang",
-        "//third-party/java/pf4j:pf4j",
     ],
 )
 

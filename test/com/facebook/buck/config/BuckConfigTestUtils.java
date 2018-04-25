@@ -16,9 +16,9 @@
 
 package com.facebook.buck.config;
 
+import com.facebook.buck.core.cell.DefaultCellPathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
-import com.facebook.buck.rules.DefaultCellPathResolver;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.config.Config;
 import com.facebook.buck.util.config.ConfigBuilder;

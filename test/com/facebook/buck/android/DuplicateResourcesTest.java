@@ -22,6 +22,7 @@ import static org.junit.Assume.assumeFalse;
 
 import com.facebook.buck.config.ActionGraphParallelizationMode;
 import com.facebook.buck.config.IncrementalActionGraphMode;
+import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.jvm.java.KeystoreBuilder;
 import com.facebook.buck.jvm.java.KeystoreDescription;
@@ -39,7 +40,6 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
-import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;

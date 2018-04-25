@@ -16,6 +16,7 @@
 
 package com.facebook.buck.distributed;
 
+import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.distributed.thrift.BuildJobStateBuildTarget;
 import com.facebook.buck.distributed.thrift.BuildJobStateTargetGraph;
@@ -29,7 +30,6 @@ import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableUnflavoredBuildTarget;
 import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.parser.ParserTargetNodeFactory;
-import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.KnownBuildRuleTypesProvider;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphAndBuildTargets;

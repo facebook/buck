@@ -22,7 +22,7 @@ public interface BuildTargetPattern {
 
   /**
    * Value used in a build file to specify this pattern, devoid of any {@link
-   * com.facebook.buck.rules.Cell} prefix.
+   * com.facebook.buck.core.cell.Cell} prefix.
    */
   String getCellFreeRepresentation();
 }

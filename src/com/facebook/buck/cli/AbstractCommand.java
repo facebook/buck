@@ -18,6 +18,7 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.resources.ResourcesConfig;
+import com.facebook.buck.core.cell.CellConfig;
 import com.facebook.buck.core.cell.name.RelativeCellName;
 import com.facebook.buck.core.cell.resolver.CellPathResolver;
 import com.facebook.buck.core.rulekey.RuleKey;
@@ -29,7 +30,6 @@ import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.parser.BuildTargetPatternTargetNodeParser;
 import com.facebook.buck.parser.TargetNodeSpec;
-import com.facebook.buck.rules.CellConfig;
 import com.facebook.buck.rules.TargetGraphAndBuildTargets;
 import com.facebook.buck.rules.keys.DefaultRuleKeyCache;
 import com.facebook.buck.rules.keys.EventPostingRuleKeyCacheScope;

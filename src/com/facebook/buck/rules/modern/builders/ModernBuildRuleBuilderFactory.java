@@ -16,13 +16,13 @@
 
 package com.facebook.buck.rules.modern.builders;
 
+import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.resolver.CellPathResolver;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.rules.BuildExecutorRunner;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleStrategy;
-import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.modern.config.ModernBuildRuleConfig;
 import com.facebook.buck.util.Console;

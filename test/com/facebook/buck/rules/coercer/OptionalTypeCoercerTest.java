@@ -18,8 +18,8 @@ package com.facebook.buck.rules.coercer;
 
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import java.nio.file.Path;
 import java.nio.file.Paths;

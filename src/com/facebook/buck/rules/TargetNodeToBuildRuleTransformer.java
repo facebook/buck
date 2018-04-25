@@ -16,6 +16,8 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.core.cell.CellProvider;
+
 public interface TargetNodeToBuildRuleTransformer {
 
   <T, U extends Description<T>> BuildRule transform(

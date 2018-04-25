@@ -22,7 +22,7 @@ java_library_with_plugins(
     visibility = [
         "//src/com/facebook/buck/cli:cli",
         "//src/com/facebook/buck/cli:main",
-        "//src/com/facebook/buck/rules:types",
+        "//src/com/facebook/buck/core/cell:cell",
         "//test/com/facebook/buck/file:",
         "//test/com/facebook/buck/maven:maven",
         "//test/com/facebook/buck/rules/keys:keys",

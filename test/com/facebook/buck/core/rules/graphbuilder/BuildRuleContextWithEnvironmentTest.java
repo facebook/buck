@@ -18,6 +18,7 @@ package com.facebook.buck.core.rules.graphbuilder;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.cell.resolver.CellPathResolver;
 import com.facebook.buck.core.graph.transformation.TransformationEnvironment;
 import com.facebook.buck.core.rules.provider.BuildRuleInfoProviderCollection;
@@ -36,7 +37,6 @@ import com.facebook.buck.rules.ImmutableBuildRuleCreationContext;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TestBuildRuleResolver;
-import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.google.common.collect.ImmutableMap;

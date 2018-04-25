@@ -16,9 +16,9 @@
 
 package com.facebook.buck.parser;
 
+import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
-import com.facebook.buck.rules.Cell;
 import com.facebook.buck.util.concurrent.ResourcePool;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;

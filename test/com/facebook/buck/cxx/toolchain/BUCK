@@ -14,12 +14,12 @@ java_library(
     ],
     deps = [
         "//src/com/facebook/buck/config:config",
+        "//src/com/facebook/buck/core/cell:cell",
         "//src/com/facebook/buck/cxx/toolchain/linker:linker",
         "//src/com/facebook/buck/io:io",
         "//src/com/facebook/buck/model:model",
         "//src/com/facebook/buck/rules:cli",
         "//src/com/facebook/buck/rules:rules",
-        "//src/com/facebook/buck/rules:types",
         "//src/com/facebook/buck/util/config:config",
         "//src/com/facebook/buck/util/environment:platform",
         "//test/com/facebook/buck/config:FakeBuckConfig",

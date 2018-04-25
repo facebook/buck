@@ -43,8 +43,7 @@ java_library(
         "//test/...",
     ],
     deps = [
-        "//src/com/facebook/buck/parser/exceptions:exceptions",
-        "//src/com/facebook/buck/rules:types",
+        "//src/com/facebook/buck/core/cell:cell",
         "//src/com/facebook/buck/util/environment:platform",
         "//test/com/facebook/buck/io/filesystem:testutil",
         "//test/com/facebook/buck/testutil:testutil",
@@ -66,7 +65,7 @@ java_library(
         "//test/...",
     ],
     deps = [
-        "//src/com/facebook/buck/rules:types",
+        "//src/com/facebook/buck/core/cell:cell",
         "//src/com/facebook/buck/util/environment:platform",
         "//test/com/facebook/buck/io/filesystem:testutil",
         "//test/com/facebook/buck/testutil:testutil",

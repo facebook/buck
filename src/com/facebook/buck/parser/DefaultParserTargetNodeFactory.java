@@ -18,6 +18,7 @@ package com.facebook.buck.parser;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
+import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
@@ -31,7 +32,6 @@ import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuckPyFunction;
 import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.rules.TargetNode;

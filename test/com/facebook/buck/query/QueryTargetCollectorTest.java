@@ -18,9 +18,9 @@ package com.facebook.buck.query;
 
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.core.cell.DefaultCellPathResolver;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.BuildTargetPatternParser;
-import com.facebook.buck.rules.DefaultCellPathResolver;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.query.GraphEnhancementQueryEnvironment;
 import com.google.common.collect.ImmutableList;

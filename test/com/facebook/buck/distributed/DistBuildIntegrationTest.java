@@ -16,6 +16,7 @@
 
 package com.facebook.buck.distributed;
 
+import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.distributed.thrift.BuildJob;
 import com.facebook.buck.distributed.thrift.BuildStatusResponse;
 import com.facebook.buck.distributed.thrift.FrontendRequest;
@@ -23,7 +24,6 @@ import com.facebook.buck.distributed.thrift.FrontendRequestType;
 import com.facebook.buck.distributed.thrift.FrontendResponse;
 import com.facebook.buck.distributed.thrift.ReportCoordinatorAliveResponse;
 import com.facebook.buck.distributed.thrift.SetFinalBuildStatusResponse;
-import com.facebook.buck.rules.Cell;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.FakeFrontendHttpServer;

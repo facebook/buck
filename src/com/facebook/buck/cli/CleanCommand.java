@@ -18,10 +18,10 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.artifact_cache.config.ArtifactCacheBuckConfig;
 import com.facebook.buck.artifact_cache.config.DirCacheEntry;
+import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.event.listener.JavaUtilsLoggingBuildListener;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.rules.Cell;
 import com.facebook.buck.util.ExitCode;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;

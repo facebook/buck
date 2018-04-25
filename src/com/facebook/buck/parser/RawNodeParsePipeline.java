@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.parser;
 
+import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.file.MorePaths;
@@ -23,7 +24,6 @@ import com.facebook.buck.model.ImmutableUnflavoredBuildTarget;
 import com.facebook.buck.parser.PipelineNodeCache.Cache;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
-import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableSet;

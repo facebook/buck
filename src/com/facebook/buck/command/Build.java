@@ -18,6 +18,7 @@ package com.facebook.buck.command;
 
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.config.BuckConfig;
+import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.ThrowableConsoleEvent;
@@ -35,7 +36,6 @@ import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildResult;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;

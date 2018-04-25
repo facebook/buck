@@ -18,6 +18,7 @@ package com.facebook.buck.cxx.toolchain;
 
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.FakeBuckConfig;
+import com.facebook.buck.core.cell.DefaultCellPathResolver;
 import com.facebook.buck.cxx.toolchain.linker.DefaultLinkerProvider;
 import com.facebook.buck.cxx.toolchain.linker.LinkerProvider;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
@@ -26,7 +27,6 @@ import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.ConstantToolProvider;
-import com.facebook.buck.rules.DefaultCellPathResolver;
 import com.facebook.buck.rules.TestBuildRuleResolver;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.config.Config;

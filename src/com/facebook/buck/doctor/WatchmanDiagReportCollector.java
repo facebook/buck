@@ -16,10 +16,10 @@
 
 package com.facebook.buck.doctor;
 
+import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.WatchmanFactory;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.rules.Cell;
 import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;

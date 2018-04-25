@@ -7,6 +7,7 @@ java_library(
     visibility = ["//test/..."],
     deps = [
         "//src-gen:thrift",
+        "//src/com/facebook/buck/core/cell:cell",
         "//src/com/facebook/buck/distributed:common",
         "//src/com/facebook/buck/distributed:distributed",
         "//src/com/facebook/buck/distributed/build_client:build_client",
@@ -15,7 +16,6 @@ java_library(
         "//src/com/facebook/buck/parser/exceptions:exceptions",
         "//src/com/facebook/buck/rules:cli",
         "//src/com/facebook/buck/rules:rules",
-        "//src/com/facebook/buck/rules:types",
         "//src/com/facebook/buck/util:exceptions",
         "//test/com/facebook/buck/jvm/java:testutil",
         "//test/com/facebook/buck/model:testutil",

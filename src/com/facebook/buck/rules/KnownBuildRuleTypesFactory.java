@@ -16,6 +16,8 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.core.cell.Cell;
+
 /**
  * Contain items used to construct a {@link KnownBuildRuleTypes} that are shared between all {@link
  * Cell} instances.

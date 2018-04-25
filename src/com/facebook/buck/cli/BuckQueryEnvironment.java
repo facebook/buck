@@ -18,6 +18,7 @@ package com.facebook.buck.cli;
 
 import static com.facebook.buck.util.concurrent.MoreFutures.propagateCauseIfInstanceOf;
 
+import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
@@ -42,7 +43,6 @@ import com.facebook.buck.query.QueryExpression;
 import com.facebook.buck.query.QueryFileTarget;
 import com.facebook.buck.query.QueryTarget;
 import com.facebook.buck.query.QueryTargetAccessor;
-import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TargetNodes;

@@ -25,6 +25,8 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeNoException;
 
+import com.facebook.buck.core.cell.CellProvider;
+import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.jvm.java.JavaBinary;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.model.BuildTarget;

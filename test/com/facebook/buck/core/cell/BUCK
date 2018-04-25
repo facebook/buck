@@ -1,0 +1,38 @@
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library", "java_test")
+
+java_test(
+    name = "cell",
+    srcs = glob(["*Test.java"]),
+    has_immutable_types = True,
+    deps = [
+        ":testutil",
+        "//test/com/facebook/buck/io/filesystem:testutil",
+        "//test/com/facebook/buck/model:testutil",
+        "//test/com/facebook/buck/util/config:testutil",
+        "//third-party/java/jimfs:jimfs",
+        "//third-party/java/junit:junit",
+    ],
+)
+
+java_library(
+    name = "testutil",
+    srcs = glob(
+        ["*.java"],
+        exclude = ["*Test.java"],
+    ),
+    exported_deps = [
+        "//src/com/facebook/buck/core/cell:cell",
+        "//src/com/facebook/buck/io/filesystem/impl:impl",
+        "//src/com/facebook/buck/module:module",
+        "//src/com/facebook/buck/plugin/impl:impl",
+        "//src/com/facebook/buck/toolchain/impl:impl",
+        "//test/com/facebook/buck/config:FakeBuckConfig",
+        "//test/com/facebook/buck/module:testutil",
+        "//test/com/facebook/buck/testutil:testutil",
+        "//third-party/java/guava:guava",
+        "//third-party/java/jsr:jsr305",
+    ],
+    visibility = [
+        "//test/...",
+    ],
+)

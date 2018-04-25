@@ -22,7 +22,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import com.facebook.buck.rules.TestCellPathResolver;
+import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.ErrorLogger;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;

@@ -1,0 +1,34 @@
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
+
+java_immutables_library(
+    name = "cell",
+    srcs = glob(["*.java"]),
+    exported_deps = [
+        "//src/com/facebook/buck/config:config",
+        "//src/com/facebook/buck/core/cell/name:name",
+        "//src/com/facebook/buck/core/cell/resolver:resolver",
+        "//src/com/facebook/buck/io:executable-finder",
+        "//src/com/facebook/buck/io:watchman",
+        "//src/com/facebook/buck/io/file:file",
+        "//src/com/facebook/buck/io/filesystem:filesystem",
+        "//src/com/facebook/buck/module:module",
+        "//src/com/facebook/buck/parser/exceptions:exceptions",
+        "//src/com/facebook/buck/rules/keys/config:config",
+        "//src/com/facebook/buck/toolchain:toolchain",
+        "//src/com/facebook/buck/util/config:config",
+        "//third-party/java/pf4j:pf4j",
+    ],
+    tests = [
+        "//test/com/facebook/buck/core/cell:cell",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//src/com/facebook/buck/log:api",
+        "//src/com/facebook/buck/parser:config",
+        "//src/com/facebook/buck/rules/keys/config/impl:impl",
+        "//src/com/facebook/buck/toolchain/impl:impl",
+        "//src/com/facebook/buck/util:util",
+    ],
+)

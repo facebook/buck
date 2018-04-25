@@ -18,10 +18,10 @@ package com.facebook.buck.doctor;
 
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.doctor.config.BuildLogEntry;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildId;
-import com.facebook.buck.rules.Cell;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;

@@ -16,9 +16,9 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.core.cell.CellConfig;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.log.LogConfigSetup;
-import com.facebook.buck.rules.CellConfig;
 import com.facebook.buck.step.ExecutorPool;
 import com.facebook.buck.util.ExitCode;
 import com.google.common.util.concurrent.ListeningExecutorService;

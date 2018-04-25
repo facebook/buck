@@ -18,10 +18,10 @@ package com.facebook.buck.rules.query;
 
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.cell.resolver.CellPathResolver;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.TestCellPathResolver;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import java.util.stream.Collectors;
 import org.hamcrest.Matchers;

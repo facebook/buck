@@ -17,7 +17,7 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.config.BuckConfig;
-import com.facebook.buck.rules.Cell;
+import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.util.BuckCellArg;
 import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.DirtyPrintStreamDecorator;

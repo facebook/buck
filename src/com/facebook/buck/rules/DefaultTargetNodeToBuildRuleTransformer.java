@@ -16,6 +16,8 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.CellProvider;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.query.QueryCache;
 import com.facebook.buck.rules.query.QueryUtils;

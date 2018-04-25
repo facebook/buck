@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
+package com.facebook.buck.core.cell;
 
 import static com.facebook.buck.io.WatchmanFactory.NULL_WATCHMAN;
 

@@ -18,6 +18,8 @@ package com.facebook.buck.parser;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.io.FakeWatchmanClient;
 import com.facebook.buck.io.ProjectWatch;
 import com.facebook.buck.io.Watchman;
@@ -25,8 +27,6 @@ import com.facebook.buck.io.WatchmanClient;
 import com.facebook.buck.io.WatchmanFactory;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
-import com.facebook.buck.rules.Cell;
-import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.config.Config;

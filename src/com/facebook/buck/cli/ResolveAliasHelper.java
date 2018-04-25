@@ -17,10 +17,10 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.config.BuckConfig;
+import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.exceptions.MissingBuildFileException;
-import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableSet;
