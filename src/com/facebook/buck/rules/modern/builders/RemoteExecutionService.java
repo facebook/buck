@@ -26,7 +26,7 @@ import java.util.Optional;
 import java.util.Set;
 
 /** Interface for a remote execution service. Used by RemoteExecution to build rules. */
-interface RemoteExecutionService {
+public interface RemoteExecutionService {
   /** Represents the result of remote execution. */
   interface ExecutionResult {
     List<OutputDirectory> getOutputDirectories();

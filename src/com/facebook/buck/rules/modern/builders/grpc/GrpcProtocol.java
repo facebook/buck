@@ -40,7 +40,8 @@ public class GrpcProtocol implements Protocol {
   private static final int MAX_INLINED_OUTPUT_FILE_SIZE = 64 * 1024;
   private static final HashFunction HASHER = Hashing.sipHash24();
 
-  private static class GrpcDigest implements Digest {
+  /** Wrapped Grpc Digest. */
+  static class GrpcDigest implements Digest {
     private final com.google.devtools.remoteexecution.v1test.Digest digest;
 
     public GrpcDigest(com.google.devtools.remoteexecution.v1test.Digest digest) {
@@ -181,7 +182,8 @@ public class GrpcProtocol implements Protocol {
     }
   }
 
-  private static class GrpcOutputDirectory implements OutputDirectory {
+  /** Wrapped Grpc OutputDirectory. */
+  static class GrpcOutputDirectory implements OutputDirectory {
     private final com.google.devtools.remoteexecution.v1test.OutputDirectory outputDirectory;
 
     GrpcOutputDirectory(
@@ -200,7 +202,8 @@ public class GrpcProtocol implements Protocol {
     }
   }
 
-  private static class GrpcOutputFile implements OutputFile {
+  /** Wrapped Grpc OutputFile. */
+  static class GrpcOutputFile implements OutputFile {
     private final com.google.devtools.remoteexecution.v1test.OutputFile outputFile;
 
     GrpcOutputFile(com.google.devtools.remoteexecution.v1test.OutputFile outputFile) {

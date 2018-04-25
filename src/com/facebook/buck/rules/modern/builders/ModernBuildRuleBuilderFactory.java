@@ -24,6 +24,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleStrategy;
 import com.facebook.buck.rules.SourcePathRuleFinder;
+import com.facebook.buck.rules.modern.builders.grpc.GrpcExecutionFactory;
 import com.facebook.buck.rules.modern.builders.grpc.GrpcProtocol;
 import com.facebook.buck.rules.modern.config.ModernBuildRuleConfig;
 import com.facebook.buck.util.Console;
@@ -84,6 +85,10 @@ public class ModernBuildRuleBuilderFactory {
                   rootCell,
                   hashLoader::get,
                   new GrpcProtocol()));
+        case DEBUG_GRPC_SERVICE_IN_PROCESS:
+          return Optional.of(
+              createGrpcInProcess(
+                  new SourcePathRuleFinder(resolver), cellResolver, rootCell, hashLoader::get));
       }
     } catch (IOException e) {
       throw new BuckUncheckedExecutionException(e, "When creating MBR build strategy.");
@@ -154,5 +159,15 @@ public class ModernBuildRuleBuilderFactory {
         cellResolver,
         rootCell,
         fileHasher);
+  }
+
+  public static BuildRuleStrategy createGrpcInProcess(
+      SourcePathRuleFinder ruleFinder,
+      CellPathResolver cellResolver,
+      Cell rootCell,
+      ThrowingFunction<Path, HashCode, IOException> fileHasher)
+      throws IOException {
+    return IsolatedExecution.createIsolatedExecutionStrategy(
+        GrpcExecutionFactory.createInProcess(), ruleFinder, cellResolver, rootCell, fileHasher);
   }
 }

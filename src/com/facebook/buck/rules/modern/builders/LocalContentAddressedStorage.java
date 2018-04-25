@@ -139,7 +139,8 @@ public class LocalContentAddressedStorage implements ContentAddressedStorage {
             });
   }
 
-  private ImmutableList<UploadResult> batchUpdateBlobs(ImmutableList<UploadData> blobData) {
+  /** Upload blobs. */
+  public ImmutableList<UploadResult> batchUpdateBlobs(ImmutableList<UploadData> blobData) {
     ImmutableList.Builder<UploadResult> responseBuilder = ImmutableList.builder();
     for (UploadData data : blobData) {
       String hash = data.digest.getHash();

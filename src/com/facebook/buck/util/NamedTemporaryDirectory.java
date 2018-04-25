@@ -17,13 +17,14 @@
 package com.facebook.buck.util;
 
 import com.facebook.buck.io.file.MostFiles;
+import java.io.Closeable;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.FileAttribute;
 
 /** Creates a temporary directory that is (recursively) deleted when this object is closed. */
-public class NamedTemporaryDirectory implements AutoCloseable {
+public class NamedTemporaryDirectory implements Closeable {
   private final Path path;
 
   public NamedTemporaryDirectory(String prefix, FileAttribute<?>... attrs) throws IOException {
