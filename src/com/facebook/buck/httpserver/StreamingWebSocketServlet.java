@@ -19,9 +19,13 @@ package com.facebook.buck.httpserver;
 import com.facebook.buck.event.external.events.BuckEventExternalInterface;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import java.io.IOException;
 import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.WebSocketAdapter;
 import org.eclipse.jetty.websocket.servlet.WebSocketCreator;
@@ -54,16 +58,16 @@ public class StreamingWebSocketServlet extends WebSocketServlet {
 
     try {
       String message = ObjectMappers.WRITER.writeValueAsString(event);
-      tellAll(message);
+      tellAll(event.getEventName(), message);
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
   }
 
   /** Sends the message to all WebSockets that are currently connected. */
-  private void tellAll(String message) {
+  private void tellAll(String eventName, String message) {
     for (MyWebSocket webSocket : connections) {
-      if (webSocket.isConnected()) {
+      if (webSocket.isConnected() && webSocket.isSubscribedTo(eventName)) {
         webSocket.getRemote().sendStringByFuture(message);
       }
     }
@@ -77,16 +81,33 @@ public class StreamingWebSocketServlet extends WebSocketServlet {
 
   /** This is the httpserver component of a WebSocket that maintains a session with one client. */
   public class MyWebSocket extends WebSocketAdapter {
+    private volatile Set<String> subscribedEvents;
 
     @Override
     public void onWebSocketConnect(Session session) {
       super.onWebSocketConnect(session);
+      subscribeToEvents(session);
       connections.add(this);
 
       // TODO(mbolin): Record all of the events for the last build that was started. For a fresh
       // connection, replay all of the events to get the client caught up. Though must be careful,
       // as this may not be a *new* connection from the client, but a *reconnection*, in which
       // case we have to be careful about redrawing.
+    }
+
+    private void subscribeToEvents(Session session) {
+      Map<String, List<String>> params = session.getUpgradeRequest().getParameterMap();
+      List<String> events = params.get("event");
+      if (events == null || events.size() == 0) {
+        // Empty set means subscribe to all events.
+        subscribedEvents = Sets.newHashSet();
+        return;
+      }
+
+      // Filter out empty strings.
+      events = events.stream().filter(e -> !e.isEmpty()).collect(Collectors.toList());
+
+      subscribedEvents = Sets.newHashSet(events);
     }
 
     @Override
@@ -99,6 +120,15 @@ public class StreamingWebSocketServlet extends WebSocketServlet {
     public void onWebSocketText(String message) {
       super.onWebSocketText(message);
       // TODO(mbolin): Handle requests from client instead of only pushing data down.
+    }
+
+    /** @return true if client is subscribed to given event */
+    public boolean isSubscribedTo(String eventName) {
+      // If no event names are passed we assume that the client
+      // wants to subscribe to all events.
+      return subscribedEvents == null
+          || subscribedEvents.isEmpty()
+          || subscribedEvents.contains(eventName);
     }
   }
 }
