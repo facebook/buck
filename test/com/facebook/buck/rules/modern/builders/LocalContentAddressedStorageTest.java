@@ -27,6 +27,7 @@ import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
+import com.google.common.io.ByteStreams;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -56,7 +57,15 @@ public class LocalContentAddressedStorageTest {
     byte[] data = "hello world!".getBytes(Charsets.UTF_8);
     Digest digest = protocol.newDigest("myhashcode", data.length);
     storage.addMissing(ImmutableMap.of(digest, () -> new ByteArrayInputStream(data)));
-    assertDataEquals(data, storage.getData(digest));
+    assertDataEquals(data, getBytes(digest));
+  }
+
+  private byte[] getBytes(Digest digest) {
+    try (InputStream dataStream = storage.getData(digest)) {
+      return ByteStreams.toByteArray(dataStream);
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   private void assertDataEquals(byte[] expected, byte[] actual) {

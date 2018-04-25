@@ -23,40 +23,60 @@ import com.facebook.buck.rules.modern.builders.Protocol.DirectoryNode;
 import com.facebook.buck.rules.modern.builders.Protocol.FileNode;
 import com.facebook.buck.rules.modern.builders.Protocol.OutputDirectory;
 import com.facebook.buck.rules.modern.builders.Protocol.OutputFile;
-import com.facebook.buck.rules.modern.builders.Protocol.Tree;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.function.ThrowingSupplier;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.MoreFiles;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
 import com.google.devtools.build.lib.concurrent.KeyedLocker.AutoUnlocker;
 import com.google.devtools.build.lib.concurrent.StripedKeyedLocker;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.ByteBuffer;
-import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
 import java.util.List;
-import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
-import java.util.Set;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 /** A simple, on-disk content addressed storage. */
 public class LocalContentAddressedStorage implements ContentAddressedStorage {
   private final Path cacheDir;
   private final StripedKeyedLocker<String> fileLock = new StripedKeyedLocker<>(8);
+
+  private final OutputsMaterializer outputsMaterializer;
   private final Protocol protocol;
 
   public LocalContentAddressedStorage(Path cacheDir, Protocol protocol) {
     this.cacheDir = cacheDir;
     this.protocol = protocol;
+    AsyncBlobFetcher fetcher =
+        new AsyncBlobFetcher() {
+          @Override
+          public ListenableFuture<ByteBuffer> fetch(Protocol.Digest digest) {
+            try (InputStream stream = getData(digest)) {
+              return Futures.immediateFuture(ByteBuffer.wrap(ByteStreams.toByteArray(stream)));
+            } catch (IOException e) {
+              return Futures.immediateFailedFuture(e);
+            }
+          }
+
+          @Override
+          public void fetchToStream(Protocol.Digest digest, OutputStream outputStream) {
+            throw new UnsupportedOperationException();
+          }
+        };
+    this.outputsMaterializer = new OutputsMaterializer(fetcher, protocol);
   }
 
   /** For any digests that are missing, adds the corresponding data to the storage. */
@@ -88,51 +108,24 @@ public class LocalContentAddressedStorage implements ContentAddressedStorage {
   public void materializeOutputs(
       List<OutputDirectory> outputDirectories, List<OutputFile> outputFiles, Path root)
       throws IOException {
-    for (OutputFile file : outputFiles) {
-      Path path = root.resolve(file.getPath());
-      ensureParent(path);
-      if (file.getContent() != null) {
-        try (FileChannel output =
-            FileChannel.open(path, StandardOpenOption.WRITE, StandardOpenOption.CREATE)) {
-          output.write(file.getContent());
-        }
-      } else {
-        Files.write(path, getData(file.getDigest()));
-      }
-      if (file.getIsExecutable()) {
-        Preconditions.checkState(path.toFile().setExecutable(true));
-      }
-    }
-
-    for (OutputDirectory directory : outputDirectories) {
-      Path dirRoot = root.resolve(directory.getPath());
-      Tree tree = readTree(directory.getTreeDigest());
-      Map<Digest, Directory> childMap =
-          RichStream.from(tree.getChildrenList())
-              .collect(
-                  ImmutableMap.toImmutableMap(
-                      child -> {
-                        try {
-                          return protocol.computeDigest(child);
-                        } catch (IOException e) {
-                          throw new RuntimeException(e);
-                        }
-                      },
-                      child -> child));
-      materializeDirectory(childMap, tree.getRoot(), dirRoot);
-    }
+    outputsMaterializer.materialize(outputDirectories, outputFiles, root);
   }
 
-  private void materializeDirectory(Map<Digest, Directory> childMap, Directory dir, Path root)
-      throws IOException {
-    Files.createDirectories(root);
-    for (DirectoryNode childNode : dir.getDirectoriesList()) {
-      materializeDirectory(
-          childMap, childMap.get(childNode.getDigest()), root.resolve(childNode.getName()));
-    }
+  /** Builds a Tree for a particular directory. */
+  public ImmutableList<Protocol.Directory> getTree(Protocol.Digest rootDigest) throws IOException {
+    ImmutableList.Builder<Protocol.Directory> builder = ImmutableList.builder();
+    buildTree(builder::add, rootDigest);
+    return builder.build();
+  }
 
-    for (FileNode file : dir.getFilesList()) {
-      materializeFile(root, file);
+  private void buildTree(Consumer<Directory> builder, Protocol.Digest digest) throws IOException {
+    Protocol.Directory directory;
+    try (InputStream data = getData(digest)) {
+      directory = protocol.parseDirectory(ByteBuffer.wrap(ByteStreams.toByteArray(data)));
+    }
+    builder.accept(directory);
+    for (Protocol.DirectoryNode directoryNode : directory.getDirectoriesList()) {
+      buildTree(builder, directoryNode.getDigest());
     }
   }
 
@@ -154,33 +147,6 @@ public class LocalContentAddressedStorage implements ContentAddressedStorage {
       return Optional.of(protocol.parseCommand(getDataBuffer(commandDigest.get())));
     }
     return Optional.empty();
-  }
-
-  @VisibleForTesting
-  byte[] getData(Digest digest) throws IOException {
-    Path path = getPath(digest.getHash());
-    Preconditions.checkState(Files.exists(path));
-    return Files.readAllBytes(path);
-  }
-
-  ByteBuffer getDataBuffer(Digest digest) throws IOException {
-    return ByteBuffer.wrap(getData(digest));
-  }
-
-  private Path ensureParent(Path path) throws IOException {
-    MoreFiles.createParentDirectories(path);
-    return path;
-  }
-
-  private Path getPath(String hashString) {
-    return cacheDir
-        .resolve(hashString.substring(0, 2))
-        .resolve(hashString.substring(2, 4))
-        .resolve(hashString);
-  }
-
-  private Tree readTree(Digest digest) throws IOException {
-    return protocol.parseTree(getDataBuffer(digest));
   }
 
   private Directory readDirectory(Digest digest) throws IOException {
@@ -209,7 +175,33 @@ public class LocalContentAddressedStorage implements ContentAddressedStorage {
     Files.createLink(dir.resolve(file.getName()), path);
   }
 
-  private Stream<Digest> findMissing(Set<Digest> digests) {
-    return digests.stream().filter(digest -> !Files.exists(getPath(digest.getHash())));
+  ByteBuffer getDataBuffer(Digest digest) throws IOException {
+    try (InputStream dataStream = getData(digest)) {
+      return ByteBuffer.wrap(ByteStreams.toByteArray(dataStream));
+    }
+  }
+
+  /** Looks up some data. Used internally and in tests. */
+  @VisibleForTesting
+  public InputStream getData(Protocol.Digest digest) throws IOException {
+    Path path = getPath(digest.getHash());
+    Preconditions.checkState(Files.exists(path), "Couldn't find %s.", path);
+    return new FileInputStream(path.toFile());
+  }
+
+  private static Path ensureParent(Path path) throws IOException {
+    MoreFiles.createParentDirectories(path);
+    return path;
+  }
+
+  private Path getPath(String hashString) {
+    return cacheDir
+        .resolve(hashString.substring(0, 2))
+        .resolve(hashString.substring(2, 4))
+        .resolve(hashString);
+  }
+
+  public Stream<Protocol.Digest> findMissing(Iterable<Protocol.Digest> digests) {
+    return RichStream.from(digests).filter(digest -> !Files.exists(getPath(digest.getHash())));
   }
 }
