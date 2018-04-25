@@ -27,7 +27,7 @@ import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.log.CommandThreadFactory;
 import com.facebook.buck.log.InvocationInfo;
 import com.facebook.buck.model.BuildId;
-import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.ImmutableBuildTarget;
 import com.facebook.buck.model.ImmutableUnflavoredBuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleDurationTracker;
@@ -107,7 +107,7 @@ public class RuleKeyLoggerListenerTest {
   private BuildRuleEvent.Finished createBuildEvent() {
     BuildRule rule =
         new FakeBuildRule(
-            BuildTarget.of(
+            ImmutableBuildTarget.of(
                 ImmutableUnflavoredBuildTarget.of(
                     projectFilesystem.getRootPath(),
                     Optional.empty(),

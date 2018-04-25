@@ -23,6 +23,7 @@ import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.ImmutableBuildTarget;
 import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -39,7 +40,7 @@ import org.junit.Test;
 public class BuildableSupportTest {
   @Test
   public void testDeriveDepsFromAddsToRuleKeys() {
-    BuildTarget target = BuildTarget.of(Paths.get("some"), "//some", "name");
+    BuildTarget target = ImmutableBuildTarget.of(Paths.get("some"), "//some", "name");
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildRuleResolver ruleResolver = new TestBuildRuleResolver();
     BuildRule rule1 = makeRule(target, filesystem, "rule1");

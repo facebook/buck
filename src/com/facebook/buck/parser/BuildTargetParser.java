@@ -20,6 +20,7 @@ import com.facebook.buck.core.cell.resolver.CellPathResolver;
 import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.FlavorParser;
+import com.facebook.buck.model.ImmutableBuildTarget;
 import com.facebook.buck.model.ImmutableUnflavoredBuildTarget;
 import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.util.RichStream;
@@ -127,7 +128,7 @@ public class BuildTargetParser {
 
     UnflavoredBuildTarget unflavoredBuildTarget = unflavoredBuilder.build();
     return flavoredTargetCache.intern(
-        BuildTarget.of(
+        ImmutableBuildTarget.of(
             unflavoredBuildTarget,
             RichStream.from(flavorNames).map(InternalFlavor::of).toImmutableSet()));
   }

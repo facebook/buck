@@ -32,6 +32,7 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.HasDefaultFlavors;
+import com.facebook.buck.model.ImmutableBuildTarget;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.facebook.buck.parser.exceptions.MissingBuildFileException;
@@ -330,7 +331,7 @@ public class Parser {
         graph.addNode(targetNode);
         MoreMaps.putCheckEquals(index, target, targetNode);
         if (target.isFlavored()) {
-          BuildTarget unflavoredTarget = BuildTarget.of(target.getUnflavoredBuildTarget());
+          BuildTarget unflavoredTarget = ImmutableBuildTarget.of(target.getUnflavoredBuildTarget());
           MoreMaps.putCheckEquals(index, unflavoredTarget, state.getTargetNode(unflavoredTarget));
         }
         for (BuildTarget dep : targetNode.getParseDeps()) {

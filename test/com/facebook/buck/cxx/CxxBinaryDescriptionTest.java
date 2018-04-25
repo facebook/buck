@@ -36,6 +36,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
+import com.facebook.buck.model.ImmutableBuildTarget;
 import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -116,7 +117,7 @@ public class CxxBinaryDescriptionTest {
       flavors.remove(type.get().getKey());
     }
     BuildTarget target =
-        BuildTarget.of(
+        ImmutableBuildTarget.of(
             libTarget.getUnflavoredBuildTarget(),
             Sets.union(
                 flavors, ImmutableSet.of(CxxLibraryDescription.Type.SANDBOX_TREE.getFlavor())));

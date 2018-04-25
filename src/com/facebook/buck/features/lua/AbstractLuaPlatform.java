@@ -22,6 +22,7 @@ import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkStrategy;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorConvertible;
+import com.facebook.buck.model.ImmutableBuildTarget;
 import com.facebook.buck.model.ImmutableUnflavoredBuildTarget;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.ToolProvider;
@@ -39,7 +40,7 @@ abstract class AbstractLuaPlatform implements FlavorConvertible {
 
   private static final AbstractCxxLibrary SYSTEM_CXX_LIBRARY =
       new SystemLuaCxxLibrary(
-          BuildTarget.of(
+          ImmutableBuildTarget.of(
               ImmutableUnflavoredBuildTarget.of(
                   Paths.get(""), Optional.empty(), "//system", "lua")));
 

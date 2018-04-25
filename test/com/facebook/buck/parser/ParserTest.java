@@ -60,6 +60,7 @@ import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.model.ImmutableBuildTarget;
 import com.facebook.buck.model.ImmutableUnflavoredBuildTarget;
 import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.parser.events.ParseBuckFileEvent;
@@ -2090,7 +2091,7 @@ public class ParserTest {
                 executorService,
                 ImmutableList.of(
                     BuildTargetSpec.of(
-                        BuildTarget.of(
+                        ImmutableBuildTarget.of(
                             ImmutableUnflavoredBuildTarget.of(
                                 cell.getRoot(), cell.getCanonicalName(), "//foo", "lib")),
                         BuildFileSpec.of(Paths.get("foo"), false, cell.getRoot()))),
@@ -2120,7 +2121,7 @@ public class ParserTest {
   public void readConfigReadsConfig() throws Exception {
     Path buckFile = cellRoot.resolve("BUCK");
     BuildTarget buildTarget =
-        BuildTarget.of(
+        ImmutableBuildTarget.of(
             ImmutableUnflavoredBuildTarget.of(
                 filesystem.getRootPath(), Optional.empty(), "//", "cake"));
     Files.write(

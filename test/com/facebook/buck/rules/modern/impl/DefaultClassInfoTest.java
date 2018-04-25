@@ -31,6 +31,7 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.model.ImmutableBuildTarget;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.FakeBuildRule;
@@ -107,9 +108,9 @@ public class DefaultClassInfoTest {
 
   @Test
   public void testDerivedClass() {
-    BuildTarget target1 = BuildTarget.of(Paths.get("some1"), "//some1", "name");
-    BuildTarget target2 = BuildTarget.of(Paths.get("some2"), "//some2", "name");
-    BuildTarget target3 = BuildTarget.of(Paths.get("some3"), "//some3", "name");
+    BuildTarget target1 = ImmutableBuildTarget.of(Paths.get("some1"), "//some1", "name");
+    BuildTarget target2 = ImmutableBuildTarget.of(Paths.get("some2"), "//some2", "name");
+    BuildTarget target3 = ImmutableBuildTarget.of(Paths.get("some3"), "//some3", "name");
 
     BuildRule rule1 = new FakeBuildRule(target1, ImmutableSortedSet.of());
     BuildRule rule2 = new FakeBuildRule(target2, ImmutableSortedSet.of());

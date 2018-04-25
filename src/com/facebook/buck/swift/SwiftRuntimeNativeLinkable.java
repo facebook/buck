@@ -24,6 +24,7 @@ import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.ImmutableBuildTarget;
 import com.facebook.buck.model.ImmutableUnflavoredBuildTarget;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.args.Arg;
@@ -42,7 +43,7 @@ public final class SwiftRuntimeNativeLinkable implements NativeLinkable {
   private static final String SWIFT_RUNTIME = "_swift_runtime";
 
   private static final BuildTarget PSEUDO_BUILD_TARGET =
-      BuildTarget.of(
+      ImmutableBuildTarget.of(
           ImmutableUnflavoredBuildTarget.of(
               Paths.get(SWIFT_RUNTIME),
               Optional.empty(),

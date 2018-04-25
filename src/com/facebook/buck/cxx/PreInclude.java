@@ -27,6 +27,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.ImmutableBuildTarget;
 import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -307,7 +308,7 @@ public abstract class PreInclude extends NoopBuildRuleWithDeclaredAndExtraDeps
       BuildRuleResolver ruleResolver) {
     return (CxxPrecompiledHeader)
         ruleResolver.computeIfAbsent(
-            BuildTarget.of(templateTarget, flavors),
+            ImmutableBuildTarget.of(templateTarget, flavors),
             target -> {
               // Give the PCH a filename that looks like a header file with .gch appended to it,
               // GCC-style.

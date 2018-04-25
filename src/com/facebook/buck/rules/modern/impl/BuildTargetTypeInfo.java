@@ -19,6 +19,7 @@ package com.facebook.buck.rules.modern.impl;
 import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.ImmutableBuildTarget;
 import com.facebook.buck.model.ImmutableUnflavoredBuildTarget;
 import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.modern.ValueCreator;
@@ -73,7 +74,7 @@ public class BuildTargetTypeInfo implements ValueTypeInfo<BuildTarget> {
             .stream()
             .map(InternalFlavor::of)
             .collect(ImmutableList.toImmutableList());
-    return BuildTarget.of(
+    return ImmutableBuildTarget.of(
         ImmutableUnflavoredBuildTarget.of(cellPath, cellName, baseName, shortName), flavors);
   }
 }

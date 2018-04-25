@@ -22,6 +22,7 @@ import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.ImmutableBuildTarget;
 import com.facebook.buck.parser.PipelineNodeCache.Cache;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
@@ -93,7 +94,7 @@ public class TargetNodeParsePipeline
   @Override
   protected BuildTarget getBuildTarget(
       Path root, Optional<String> cellName, Path buildFile, Map<String, Object> from) {
-    return BuildTarget.of(
+    return ImmutableBuildTarget.of(
         RawNodeParsePipeline.parseBuildTargetFromRawRule(root, cellName, from, buildFile));
   }
 
@@ -140,7 +141,7 @@ public class TargetNodeParsePipeline
                     getNodeJob(
                         depCell,
                         depKnownBuildRuleTypes,
-                        BuildTarget.of(depTarget.getUnflavoredBuildTarget()),
+                        ImmutableBuildTarget.of(depTarget.getUnflavoredBuildTarget()),
                         processedBytes);
                   }
                   getNodeJob(depCell, depKnownBuildRuleTypes, depTarget, processedBytes);

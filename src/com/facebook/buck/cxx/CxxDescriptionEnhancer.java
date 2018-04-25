@@ -46,6 +46,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
+import com.facebook.buck.model.ImmutableBuildTarget;
 import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.model.UserFlavor;
 import com.facebook.buck.rules.BuildRule;
@@ -527,7 +528,7 @@ public class CxxDescriptionEnhancer {
 
     // Add the private includes of any rules which this rule depends on, and which list this rule as
     // a test.
-    BuildTarget targetWithoutFlavor = BuildTarget.of(target.getUnflavoredBuildTarget());
+    BuildTarget targetWithoutFlavor = ImmutableBuildTarget.of(target.getUnflavoredBuildTarget());
     ImmutableList.Builder<CxxPreprocessorInput> cxxPreprocessorInputFromTestedRulesBuilder =
         ImmutableList.builder();
     for (BuildRule rule : deps) {

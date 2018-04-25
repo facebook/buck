@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright 2018-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -17,82 +17,49 @@
 package com.facebook.buck.model;
 
 import com.facebook.buck.core.model.UnflavoredBuildTarget;
-import com.facebook.buck.log.views.JsonViews;
-import com.facebook.buck.util.immutables.BuckStyleTuple;
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonView;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ComparisonChain;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
-import com.google.common.collect.Sets;
 import java.nio.file.Path;
 import java.util.Optional;
-import java.util.Set;
-import java.util.SortedSet;
-import org.immutables.value.Value;
 
-@JsonAutoDetect(
-  fieldVisibility = JsonAutoDetect.Visibility.NONE,
-  getterVisibility = JsonAutoDetect.Visibility.NONE,
-  setterVisibility = JsonAutoDetect.Visibility.NONE
-)
-@BuckStyleTuple
-@Value.Immutable(prehash = true, builder = false)
-abstract class AbstractBuildTarget implements Comparable<AbstractBuildTarget> {
+public abstract class AbstractBuildTarget implements BuildTarget {
 
   private static final Ordering<Iterable<Flavor>> LEXICOGRAPHICAL_ORDERING =
       Ordering.<Flavor>natural().lexicographical();
 
-  public abstract UnflavoredBuildTarget getUnflavoredBuildTarget();
-
-  @Value.NaturalOrder
-  public abstract SortedSet<Flavor> getFlavors();
-
-  @Value.Check
-  protected void check() {
-    Preconditions.checkArgument(
-        getFlavors().comparator() == Ordering.natural(),
-        "Flavors must be ordered using natural ordering.");
-  }
-
-  @JsonProperty("cell")
+  @Override
   public Optional<String> getCell() {
     return getUnflavoredBuildTarget().getCell();
   }
 
+  @Override
   public Path getCellPath() {
     return getUnflavoredBuildTarget().getCellPath();
   }
 
-  @JsonProperty("baseName")
-  @JsonView(JsonViews.MachineReadableLog.class)
+  @Override
   public String getBaseName() {
     return getUnflavoredBuildTarget().getBaseName();
   }
 
+  @Override
   public Path getBasePath() {
     return getUnflavoredBuildTarget().getBasePath();
   }
 
-  @JsonProperty("shortName")
-  @JsonView(JsonViews.MachineReadableLog.class)
+  @Override
   public String getShortName() {
     return getUnflavoredBuildTarget().getShortName();
   }
 
-  /**
-   * If this build target were //third_party/java/guava:guava-latest, then this would return
-   * "guava-latest". Note that the flavor of the target is included here.
-   */
+  @Override
   public String getShortNameAndFlavorPostfix() {
     return getShortName() + getFlavorPostfix();
   }
 
+  @Override
   public String getFlavorPostfix() {
     if (getFlavors().isEmpty()) {
       return "";
@@ -100,50 +67,28 @@ abstract class AbstractBuildTarget implements Comparable<AbstractBuildTarget> {
     return "#" + getFlavorsAsString();
   }
 
-  @JsonProperty("flavor")
-  @JsonView(JsonViews.MachineReadableLog.class)
-  private String getFlavorsAsString() {
+  protected String getFlavorsAsString() {
     return Joiner.on(",").join(getFlavors());
   }
 
-  /**
-   * If this build target is //third_party/java/guava:guava-latest, then this would return
-   * "//third_party/java/guava:guava-latest".
-   */
-  @Value.Auxiliary
-  @Value.Lazy
+  @Override
   public String getFullyQualifiedName() {
     return getUnflavoredBuildTarget().getFullyQualifiedName() + getFlavorPostfix();
   }
 
-  @JsonIgnore
+  @Override
   public boolean isFlavored() {
     return !(getFlavors().isEmpty());
   }
 
+  @Override
   public UnflavoredBuildTarget checkUnflavored() {
     Preconditions.checkState(!isFlavored(), "%s is flavored.", this);
     return getUnflavoredBuildTarget();
   }
 
-  public static BuildTarget of(UnflavoredBuildTarget unflavoredBuildTarget) {
-    return BuildTarget.of(unflavoredBuildTarget, ImmutableSortedSet.of());
-  }
-
-  /** Helper for creating a build target with no flavors and no cell name. */
-  public static BuildTarget of(Path cellPath, String baseName, String shortName) {
-    return BuildTarget.of(
-        ImmutableUnflavoredBuildTarget.of(cellPath, Optional.empty(), baseName, shortName));
-  }
-
-  /** @return {@link #getFullyQualifiedName()} */
   @Override
-  public String toString() {
-    return getFullyQualifiedName();
-  }
-
-  @Override
-  public int compareTo(AbstractBuildTarget o) {
+  public int compareTo(BuildTarget o) {
     if (this == o) {
       return 0;
     }
@@ -152,28 +97,5 @@ abstract class AbstractBuildTarget implements Comparable<AbstractBuildTarget> {
         .compare(getUnflavoredBuildTarget(), o.getUnflavoredBuildTarget())
         .compare(getFlavors(), o.getFlavors(), LEXICOGRAPHICAL_ORDERING)
         .result();
-  }
-
-  public BuildTarget withoutFlavors(Set<Flavor> flavors) {
-    return BuildTarget.of(getUnflavoredBuildTarget(), Sets.difference(getFlavors(), flavors));
-  }
-
-  public BuildTarget withoutFlavors(Flavor... flavors) {
-    return withoutFlavors(ImmutableSet.copyOf(flavors));
-  }
-
-  public BuildTarget withAppendedFlavors(Set<Flavor> flavors) {
-    return BuildTarget.of(getUnflavoredBuildTarget(), Sets.union(getFlavors(), flavors));
-  }
-
-  public BuildTarget withAppendedFlavors(Flavor... flavors) {
-    return withAppendedFlavors(ImmutableSet.copyOf(flavors));
-  }
-
-  public BuildTarget withoutCell() {
-    return BuildTarget.of(
-        ImmutableUnflavoredBuildTarget.of(
-            getCellPath(), Optional.empty(), getBaseName(), getShortName()),
-        getFlavors());
   }
 }

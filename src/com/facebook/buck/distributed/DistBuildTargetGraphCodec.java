@@ -27,6 +27,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.ImmutableBuildTarget;
 import com.facebook.buck.model.ImmutableUnflavoredBuildTarget;
 import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.parser.ParserTargetNodeFactory;
@@ -148,7 +149,7 @@ public class DistBuildTargetGraphCodec {
             .map(InternalFlavor::of)
             .collect(ImmutableSet.toImmutableSet());
 
-    return BuildTarget.of(unflavoredBuildTarget, flavors);
+    return ImmutableBuildTarget.of(unflavoredBuildTarget, flavors);
   }
 
   public TargetGraphAndBuildTargets createTargetGraph(
@@ -245,7 +246,8 @@ public class DistBuildTargetGraphCodec {
           MoreMaps.putIfAbsentCheckEquals(graphNodes, target, targetNode);
 
           if (target.isFlavored()) {
-            BuildTarget unflavoredTarget = BuildTarget.of(target.getUnflavoredBuildTarget());
+            BuildTarget unflavoredTarget =
+                ImmutableBuildTarget.of(target.getUnflavoredBuildTarget());
             TargetNode<?, ?> unflavoredTargetNode =
                 parserTargetNodeFactory.createTargetNode(
                     cell,

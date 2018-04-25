@@ -20,6 +20,7 @@ import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.graph.DirectedAcyclicGraph;
 import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.ImmutableBuildTarget;
 import com.facebook.buck.util.ExceptionWithHumanReadableMessage;
 import com.facebook.buck.util.MoreMaps;
 import com.google.common.collect.ImmutableMap;
@@ -64,7 +65,7 @@ public class TargetGraph extends DirectedAcyclicGraph<TargetNode<?, ?>> {
   protected TargetNode<?, ?> getInternal(BuildTarget target) {
     TargetNode<?, ?> node = targetsToNodes.get(target);
     if (node == null) {
-      node = targetsToNodes.get(BuildTarget.of(target.getUnflavoredBuildTarget()));
+      node = targetsToNodes.get(ImmutableBuildTarget.of(target.getUnflavoredBuildTarget()));
       if (node == null) {
         return null;
       }
@@ -132,7 +133,7 @@ public class TargetGraph extends DirectedAcyclicGraph<TargetNode<?, ?>> {
         MoreMaps.putCheckEquals(index, node.getBuildTarget(), node);
         if (node.getBuildTarget().isFlavored()) {
           BuildTarget unflavoredBuildTarget =
-              BuildTarget.of(node.getBuildTarget().getUnflavoredBuildTarget());
+              ImmutableBuildTarget.of(node.getBuildTarget().getUnflavoredBuildTarget());
           MoreMaps.putCheckEquals(
               index, unflavoredBuildTarget, targetsToNodes.get(unflavoredBuildTarget));
         }

@@ -25,7 +25,7 @@ import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.file.MorePathsForTests;
-import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.ImmutableBuildTarget;
 import com.facebook.buck.model.ImmutableUnflavoredBuildTarget;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableMap;
@@ -78,7 +78,7 @@ public class SourcePathTypeCoercerTest {
 
     assertEquals(
         DefaultBuildTargetSourcePath.of(
-            BuildTarget.of(
+            ImmutableBuildTarget.of(
                 ImmutableUnflavoredBuildTarget.of(
                     projectFilesystem.getRootPath(), Optional.empty(), "//", "hello"),
                 ImmutableSortedSet.of())),
@@ -93,7 +93,7 @@ public class SourcePathTypeCoercerTest {
 
     assertEquals(
         DefaultBuildTargetSourcePath.of(
-            BuildTarget.of(
+            ImmutableBuildTarget.of(
                 ImmutableUnflavoredBuildTarget.of(
                     projectFilesystem.getRootPath(), Optional.empty(), "//", "hello"),
                 ImmutableSortedSet.of())),
@@ -116,7 +116,7 @@ public class SourcePathTypeCoercerTest {
     // `@hello` cell. Yeah. My head hurts a little too.
     assertEquals(
         DefaultBuildTargetSourcePath.of(
-            BuildTarget.of(
+            ImmutableBuildTarget.of(
                 ImmutableUnflavoredBuildTarget.of(helloRoot, Optional.of("hello"), "//", "hello"),
                 ImmutableSortedSet.of())),
         sourcePath);

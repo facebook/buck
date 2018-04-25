@@ -27,6 +27,7 @@ import com.facebook.buck.maven.aether.AetherUtil;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Flavored;
+import com.facebook.buck.model.ImmutableBuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleCreationContext;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -98,7 +99,7 @@ public class JavaLibraryDescription
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
 
     if (flavors.contains(Javadoc.DOC_JAR)) {
-      BuildTarget unflavored = BuildTarget.of(buildTarget.getUnflavoredBuildTarget());
+      BuildTarget unflavored = ImmutableBuildTarget.of(buildTarget.getUnflavoredBuildTarget());
       BuildRule baseLibrary = resolver.requireRule(unflavored);
 
       JarShape shape =

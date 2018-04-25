@@ -44,6 +44,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.ImmutableBuildTarget;
 import com.facebook.buck.model.ImmutableUnflavoredBuildTarget;
 import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.BuildContext;
@@ -703,7 +704,7 @@ class NativeLibraryMergeEnhancer {
                 .setShortName(
                     "merged_lib_" + Flavor.replaceInvalidCharacters(constituents.getSoname().get()))
                 .build();
-        initialTarget = BuildTarget.of(unflavored);
+        initialTarget = ImmutableBuildTarget.of(unflavored);
       }
 
       // Two merged libs (for different apps) can have the same constituents,

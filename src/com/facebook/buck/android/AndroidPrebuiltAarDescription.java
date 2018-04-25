@@ -32,6 +32,7 @@ import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Flavored;
+import com.facebook.buck.model.ImmutableBuildTarget;
 import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleCreationContext;
@@ -181,7 +182,7 @@ public class AndroidPrebuiltAarDescription
 
     BuildRule prebuiltJarRule =
         buildRuleResolver.requireRule(
-            BuildTarget.of(
+            ImmutableBuildTarget.of(
                 buildTarget.checkUnflavored(), ImmutableSet.of(AAR_PREBUILT_JAR_FLAVOR)));
     Preconditions.checkState(
         prebuiltJarRule instanceof PrebuiltJar,

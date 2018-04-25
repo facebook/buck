@@ -22,6 +22,7 @@ import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.toolchain.JavaOptionsProvider;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.ImmutableBuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleCreationContext;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -100,7 +101,7 @@ public class GwtBinaryDescription implements Description<GwtBinaryDescriptionArg
           gwtModule =
               Optional.of(
                   resolver.computeIfAbsent(
-                      BuildTarget.of(
+                      ImmutableBuildTarget.of(
                           javaLibrary.getBuildTarget().checkUnflavored(),
                           ImmutableSet.of(JavaLibrary.GWT_MODULE_FLAVOR)),
                       gwtModuleTarget -> {
