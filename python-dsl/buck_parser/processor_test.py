@@ -731,7 +731,7 @@ class BuckTest(unittest.TestCase):
             path='ext.bzl',
             contents=(
                 'def foo():',
-                '  return package_name()',
+                '  return native.package_name()',
             ))
         self.write_file(extension_file)
         build_file = ProjectFile(
