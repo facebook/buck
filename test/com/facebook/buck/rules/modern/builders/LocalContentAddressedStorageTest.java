@@ -33,6 +33,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -93,7 +94,7 @@ public class LocalContentAddressedStorageTest {
     storage.addMissing(requiredData.build());
 
     Path inputsDir = tmp.getRoot().resolve("inputs");
-    storage.materializeInputs(inputsDir, rootDigest);
+    storage.materializeInputs(inputsDir, rootDigest, Optional.empty());
 
     assertDataEquals(someData, Files.readAllBytes(inputsDir.resolve(somePath)));
     assertDataEquals(otherData, Files.readAllBytes(inputsDir.resolve(otherPath)));

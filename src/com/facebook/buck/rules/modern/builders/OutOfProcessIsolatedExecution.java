@@ -19,6 +19,7 @@ package com.facebook.buck.rules.modern.builders;
 import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.rules.modern.builders.FileTreeBuilder.InputFile;
 import com.facebook.buck.rules.modern.builders.FileTreeBuilder.ProtocolTreeBuilder;
+import com.facebook.buck.rules.modern.builders.Protocol.Command;
 import com.facebook.buck.rules.modern.builders.Protocol.Digest;
 import com.facebook.buck.rules.modern.builders.Protocol.Directory;
 import com.facebook.buck.rules.modern.builders.Protocol.OutputDirectory;
@@ -38,7 +39,6 @@ import com.facebook.buck.util.function.ThrowingSupplier;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
 import com.google.common.io.MoreFiles;
@@ -83,18 +83,18 @@ public class OutOfProcessIsolatedExecution extends RemoteExecution {
         new RemoteExecutionService() {
           @Override
           public ExecutionResult execute(
-              ImmutableList<String> command,
-              ImmutableSortedMap<String, String> commandEnvironment,
-              Digest inputsRootDigest,
-              Set<Path> outputs)
+              Digest commandDigest, Digest inputsRootDigest, Set<Path> outputs)
               throws IOException, InterruptedException {
             Path buildDir = workDir.getPath().resolve(inputsRootDigest.getHash());
             try (Closeable ignored = () -> MostFiles.deleteRecursively(buildDir)) {
-              storage.materializeInputs(buildDir, inputsRootDigest);
+              Command command =
+                  storage
+                      .materializeInputs(buildDir, inputsRootDigest, Optional.of(commandDigest))
+                      .get();
 
               Builder paramsBuilder = ProcessExecutorParams.builder();
-              paramsBuilder.setCommand(command);
-              paramsBuilder.setEnvironment(commandEnvironment);
+              paramsBuilder.setCommand(command.getCommand());
+              paramsBuilder.setEnvironment(command.getEnvironment());
               paramsBuilder.setDirectory(buildDir);
               CapturingPrintStream stdOut = new CapturingPrintStream();
               CapturingPrintStream stdErr = new CapturingPrintStream();

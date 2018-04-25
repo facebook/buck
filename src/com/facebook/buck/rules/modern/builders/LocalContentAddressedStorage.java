@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules.modern.builders;
 
+import com.facebook.buck.rules.modern.builders.Protocol.Command;
 import com.facebook.buck.rules.modern.builders.Protocol.Digest;
 import com.facebook.buck.rules.modern.builders.Protocol.Directory;
 import com.facebook.buck.rules.modern.builders.Protocol.DirectoryNode;
@@ -43,6 +44,7 @@ import java.nio.file.StandardOpenOption;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
 
@@ -136,7 +138,8 @@ public class LocalContentAddressedStorage implements ContentAddressedStorage {
 
   /** Materializes all of the inputs into root. All required data must be present. */
   @Override
-  public void materializeInputs(Path root, Digest inputsDigest) throws IOException {
+  public Optional<Command> materializeInputs(
+      Path root, Digest inputsDigest, Optional<Digest> commandDigest) throws IOException {
     Directory dir = readDirectory(inputsDigest);
 
     Files.createDirectories(root);
@@ -144,8 +147,13 @@ public class LocalContentAddressedStorage implements ContentAddressedStorage {
       materializeFile(root, file);
     }
     for (DirectoryNode child : dir.getDirectoriesList()) {
-      materializeInputs(root.resolve(child.getName()), child.getDigest());
+      materializeInputs(root.resolve(child.getName()), child.getDigest(), Optional.empty());
     }
+
+    if (commandDigest.isPresent()) {
+      return Optional.of(protocol.parseCommand(getDataBuffer(commandDigest.get())));
+    }
+    return Optional.empty();
   }
 
   @VisibleForTesting

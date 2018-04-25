@@ -36,6 +36,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -163,14 +164,19 @@ public abstract class RemoteExecution implements IsolatedExecution {
       Set<Path> outputs,
       Path outputRoot)
       throws IOException, InterruptedException {
+    Protocol.Command actionCommand = getProtocol().newCommand(command, commandEnvironment);
+
     HashMap<Digest, ThrowingSupplier<InputStream, IOException>> requiredDataBuilder =
         new HashMap<>();
     ProtocolTreeBuilder grpcTreeBuilder =
         new ProtocolTreeBuilder(requiredDataBuilder::put, directory -> {}, getProtocol());
     Protocol.Digest inputsRootDigest = inputsBuilder.buildTree(grpcTreeBuilder);
+    byte[] commandData = getProtocol().toByteArray(actionCommand);
+    Protocol.Digest commandDigest = getProtocol().computeDigest(commandData);
+    requiredDataBuilder.put(commandDigest, () -> new ByteArrayInputStream(commandData));
     getStorage().addMissing(ImmutableMap.copyOf(requiredDataBuilder));
     ExecutionResult result =
-        getExecutionService().execute(command, commandEnvironment, inputsRootDigest, outputs);
+        getExecutionService().execute(commandDigest, inputsRootDigest, outputs);
     getStorage()
         .materializeOutputs(result.getOutputDirectories(), result.getOutputFiles(), outputRoot);
     return result;

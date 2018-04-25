@@ -36,6 +36,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
+import java.util.Optional;
 import java.util.Set;
 
 /** IsolatedExecution implementation that will run buildrules within the current buck process. */
@@ -82,7 +83,7 @@ class InProcessIsolatedExecution implements IsolatedExecution {
       Digest rootDigest =
           inputsBuilder.buildTree(new ProtocolTreeBuilder(requiredData::put, dir -> {}, protocol));
       storage.addMissing(ImmutableMap.copyOf(requiredData));
-      storage.materializeInputs(buildDir, rootDigest);
+      storage.materializeInputs(buildDir, rootDigest, Optional.empty());
       new IsolatedBuildableBuilder(buildDir, projectRoot) {
         @Override
         protected Console createConsole() {

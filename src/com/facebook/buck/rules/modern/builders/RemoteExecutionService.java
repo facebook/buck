@@ -19,8 +19,6 @@ package com.facebook.buck.rules.modern.builders;
 import com.facebook.buck.rules.modern.builders.Protocol.Digest;
 import com.facebook.buck.rules.modern.builders.Protocol.OutputDirectory;
 import com.facebook.buck.rules.modern.builders.Protocol.OutputFile;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSortedMap;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
@@ -39,15 +37,12 @@ interface RemoteExecutionService {
 
     Optional<String> getStderr();
   }
+
   /**
    * This should run the command with the provided environment and inputs.
    *
    * <p>Returns an ActionResult with exit code, outputs, stdout/stderr, etc.
    */
-  ExecutionResult execute(
-      ImmutableList<String> command,
-      ImmutableSortedMap<String, String> commandEnvironment,
-      Digest inputsRootDigest,
-      Set<Path> outputs)
+  ExecutionResult execute(Digest digest, Digest inputsRootDigest, Set<Path> outputs)
       throws IOException, InterruptedException;
 }
