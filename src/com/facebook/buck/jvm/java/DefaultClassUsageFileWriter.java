@@ -17,8 +17,8 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.cell.resolver.CellPathResolver;
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.google.common.collect.ImmutableSetMultimap;
 import java.io.IOException;

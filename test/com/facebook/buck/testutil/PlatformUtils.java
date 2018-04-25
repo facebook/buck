@@ -19,8 +19,8 @@ package com.facebook.buck.testutil;
 import static org.junit.Assume.assumeNoException;
 import static org.junit.Assume.assumeTrue;
 
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.io.ExecutableFinder;
-import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;

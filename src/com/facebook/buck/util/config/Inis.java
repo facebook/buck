@@ -16,7 +16,7 @@
 
 package com.facebook.buck.util.config;
 
-import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.io.Reader;

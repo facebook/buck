@@ -16,7 +16,7 @@
 
 package com.facebook.buck.query;
 
-import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.google.common.collect.ImmutableSet;
 
 class QueryTargetCollector implements QueryExpression.Visitor {

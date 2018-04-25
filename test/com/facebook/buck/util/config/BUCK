@@ -19,6 +19,7 @@ standard_java_test(
     name = "config",
     deps = [
         ":testutil",
+        "//src/com/facebook/buck/core/exceptions:exceptions",
         "//src/com/facebook/buck/util:exceptions",
         "//src/com/facebook/buck/util/config:config",
         "//third-party/java/guava:guava",

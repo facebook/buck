@@ -16,9 +16,9 @@
 
 package com.facebook.buck.ide.intellij;
 
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.ide.intellij.model.ModuleIndexEntry;
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.xml.XmlDomParser;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSet.Builder;

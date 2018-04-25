@@ -19,8 +19,8 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.android.FakeAndroidBuckConfig;
 import com.facebook.buck.android.toolchain.ndk.impl.AndroidNdkHelper;
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.testutil.TemporaryPaths;
-import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.nio.file.Path;

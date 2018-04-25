@@ -9,6 +9,7 @@ java_immutables_library(
     tests = ["//test/com/facebook/buck/util/cache:cache"],
     visibility = ["PUBLIC"],
     deps = [
+        "//src/com/facebook/buck/core/exceptions:exceptions",
         "//src/com/facebook/buck/event:interfaces",
         "//src/com/facebook/buck/io:io",
         "//src/com/facebook/buck/io/filesystem:filesystem",

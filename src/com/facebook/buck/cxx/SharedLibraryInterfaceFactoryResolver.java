@@ -16,10 +16,10 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.cxx.toolchain.ElfSharedLibraryInterfaceParams;
 import com.facebook.buck.cxx.toolchain.SharedLibraryInterfaceFactory;
 import com.facebook.buck.cxx.toolchain.SharedLibraryInterfaceParams;
-import com.facebook.buck.util.HumanReadableException;
 
 class SharedLibraryInterfaceFactoryResolver {
 

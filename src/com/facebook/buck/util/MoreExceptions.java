@@ -16,6 +16,7 @@
 
 package com.facebook.buck.util;
 
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.google.common.base.Throwables;
 
 public class MoreExceptions {

@@ -16,11 +16,11 @@
 
 package com.facebook.buck.jvm.java.abi;
 
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.jvm.java.abi.source.api.SourceOnlyAbiRuleInfo;
 import com.facebook.buck.jvm.java.plugin.api.BuckJavacTaskListener;
 import com.facebook.buck.jvm.java.plugin.api.BuckJavacTaskProxy;
 import com.facebook.buck.jvm.java.plugin.api.PluginClassLoader;
-import com.facebook.buck.util.HumanReadableException;
 import java.lang.reflect.Constructor;
 import java.util.function.Supplier;
 import javax.tools.Diagnostic;

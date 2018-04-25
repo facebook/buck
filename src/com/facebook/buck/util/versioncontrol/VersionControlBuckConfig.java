@@ -17,7 +17,7 @@
 package com.facebook.buck.util.versioncontrol;
 
 import com.facebook.buck.config.BuckConfig;
-import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.util.Optional;

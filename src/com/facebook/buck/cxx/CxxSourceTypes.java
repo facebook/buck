@@ -16,10 +16,10 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.cxx.toolchain.CompilerProvider;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.PreprocessorProvider;
-import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableList;
 
 /** Utilities for working with C-like source types. */

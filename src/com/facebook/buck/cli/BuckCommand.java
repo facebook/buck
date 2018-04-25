@@ -16,8 +16,8 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.util.ExitCode;
-import com.facebook.buck.util.HumanReadableException;
 import java.io.PrintStream;
 import java.util.Optional;
 import javax.annotation.Nullable;

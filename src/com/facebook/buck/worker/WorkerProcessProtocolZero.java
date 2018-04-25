@@ -15,7 +15,7 @@
  */
 package com.facebook.buck.worker;
 
-import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.gson.stream.JsonReader;

@@ -18,6 +18,7 @@ package com.facebook.buck.util;
 
 import static org.junit.Assert.*;
 
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.util.exceptions.BuckExecutionException;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import java.util.concurrent.ExecutionException;

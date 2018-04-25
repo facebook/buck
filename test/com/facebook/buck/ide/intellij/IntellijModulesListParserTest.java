@@ -18,9 +18,9 @@ package com.facebook.buck.ide.intellij;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.ide.intellij.model.ModuleIndexEntry;
 import com.facebook.buck.testutil.TemporaryPaths;
-import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;

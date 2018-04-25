@@ -30,6 +30,7 @@ java_library(
     deps = [
         ":value_types",
         "//src/com/facebook/buck/config:config",
+        "//src/com/facebook/buck/core/exceptions:exceptions",
         "//src/com/facebook/buck/util:exceptions",
         "//third-party/java/guava:guava",
     ],

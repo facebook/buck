@@ -15,8 +15,8 @@
  */
 package com.facebook.buck.rules;
 
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.concurrent.Parallelizer;
 import com.google.common.collect.ImmutableSortedSet;

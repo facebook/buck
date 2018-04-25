@@ -16,8 +16,8 @@
 
 package com.facebook.buck.toolchain;
 
-import com.facebook.buck.util.ExceptionWithHumanReadableMessage;
-import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.core.exceptions.ExceptionWithHumanReadableMessage;
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import javax.annotation.Nullable;
 
 /** An exception that indicates a problem during toolchain creation. */

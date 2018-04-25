@@ -16,10 +16,10 @@
 
 package com.facebook.buck.jvm.java.abi;
 
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.jvm.java.JavacEventSink;
 import com.facebook.buck.jvm.java.JavacEventSinkScopedSimplePerfEvent;
 import com.facebook.buck.jvm.java.lang.model.ElementsExtended;
-import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.zip.JarBuilder;
 import java.io.IOException;
 import java.util.Set;

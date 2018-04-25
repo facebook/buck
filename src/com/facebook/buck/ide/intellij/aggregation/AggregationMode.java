@@ -16,9 +16,9 @@
 
 package com.facebook.buck.ide.intellij.aggregation;
 
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.ide.intellij.model.IjModule;
 import com.facebook.buck.rules.TargetNode;
-import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Ascii;
 import java.util.Optional;
 

@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.TestCellBuilder;
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.io.FakeWatchmanClient;
 import com.facebook.buck.io.ProjectWatch;
 import com.facebook.buck.io.Watchman;
@@ -28,7 +29,6 @@ import com.facebook.buck.io.WatchmanFactory;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.config.Config;
 import com.facebook.buck.util.config.ConfigBuilder;
 import com.google.common.collect.ImmutableList;

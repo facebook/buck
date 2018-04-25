@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.jvm.java.ConfiguredCompilerFactory;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaConfiguredCompilerFactory;
@@ -23,7 +24,6 @@ import com.facebook.buck.jvm.kotlin.KotlinBuckConfig;
 import com.facebook.buck.jvm.kotlin.KotlinConfiguredCompilerFactory;
 import com.facebook.buck.jvm.scala.ScalaBuckConfig;
 import com.facebook.buck.jvm.scala.ScalaConfiguredCompilerFactory;
-import com.facebook.buck.util.HumanReadableException;
 
 public class DefaultAndroidLibraryCompilerFactory implements AndroidLibraryCompilerFactory {
   private final JavaBuckConfig javaConfig;

@@ -16,8 +16,8 @@
 
 package com.facebook.buck.features.python.toolchain.impl;
 
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.features.python.toolchain.PythonVersion;
-import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.annotations.VisibleForTesting;

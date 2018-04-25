@@ -16,10 +16,10 @@
 
 package com.facebook.buck.parser;
 
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
-import com.facebook.buck.util.HumanReadableException;
 
 public class ParserMessages {
   protected ParserMessages() {}

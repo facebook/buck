@@ -16,6 +16,7 @@
 
 package com.facebook.buck.event.listener;
 
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.distributed.FrontendService;
 import com.facebook.buck.distributed.thrift.Announcement;
 import com.facebook.buck.distributed.thrift.AnnouncementRequest;
@@ -27,7 +28,6 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.slb.ClientSideSlb;
 import com.facebook.buck.slb.LoadBalancedService;
 import com.facebook.buck.slb.ThriftOverHttpServiceConfig;
-import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.network.RemoteLogBuckConfig;
 import com.facebook.buck.util.timing.Clock;
 import com.google.common.annotations.VisibleForTesting;

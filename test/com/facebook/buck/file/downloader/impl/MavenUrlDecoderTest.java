@@ -20,7 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
-import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Optional;
@@ -65,8 +65,7 @@ public class MavenUrlDecoderTest {
             new URI("mvn:org.apache.karaf:apache-karaf:tar.gz:3.0.8"));
 
     URI expected =
-        new URI(
-            "http://foo.bar/org/apache/karaf/apache-karaf/3.0.8/apache-karaf-3.0.8.tar.gz");
+        new URI("http://foo.bar/org/apache/karaf/apache-karaf/3.0.8/apache-karaf-3.0.8.tar.gz");
 
     assertEquals(expected, seen);
   }
@@ -75,12 +74,10 @@ public class MavenUrlDecoderTest {
   public void parseMvnUrlWithDefaultDomainAndZipType() throws URISyntaxException {
     URI seen =
         MavenUrlDecoder.toHttpUrl(
-            Optional.of("http://foo.bar"),
-            new URI("mvn:org.apache.karaf:apache-karaf:zip:3.0.8"));
+            Optional.of("http://foo.bar"), new URI("mvn:org.apache.karaf:apache-karaf:zip:3.0.8"));
 
     URI expected =
-        new URI(
-            "http://foo.bar/org/apache/karaf/apache-karaf/3.0.8/apache-karaf-3.0.8.zip");
+        new URI("http://foo.bar/org/apache/karaf/apache-karaf/3.0.8/apache-karaf-3.0.8.zip");
 
     assertEquals(expected, seen);
   }

@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.java;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -27,7 +28,6 @@ import com.facebook.buck.rules.TestBuildRuleCreationContextFactory;
 import com.facebook.buck.rules.TestBuildRuleParams;
 import com.facebook.buck.rules.TestBuildRuleResolver;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableSet;
 import java.util.Optional;
 import org.junit.Rule;

@@ -18,10 +18,10 @@ package com.facebook.buck.features.rust;
 
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.facebook.buck.util.HumanReadableException;
 import java.io.IOException;
 import org.hamcrest.Matchers;
 import org.junit.Before;

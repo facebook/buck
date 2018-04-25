@@ -7,6 +7,7 @@ java_library(
         "PUBLIC",
     ],
     deps = [
+        "//src/com/facebook/buck/core/exceptions:exceptions",
         "//src/com/facebook/buck/event:interfaces",
         "//src/com/facebook/buck/json:json",
         "//src/com/facebook/buck/parser/api:api",

@@ -11,6 +11,7 @@ java_library(
         "PUBLIC",
     ],
     deps = [
+        "//src/com/facebook/buck/core/exceptions:exceptions",
         "//src/com/facebook/buck/skylark/json:json",
         "//src/com/facebook/buck/util:exceptions",
         "//third-party/java/guava:guava",

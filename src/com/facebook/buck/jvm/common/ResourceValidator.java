@@ -15,10 +15,10 @@
  */
 package com.facebook.buck.jvm.common;
 
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 

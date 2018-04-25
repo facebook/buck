@@ -16,7 +16,7 @@
 
 package com.facebook.buck.query;
 
-import com.facebook.buck.util.ExceptionWithHumanReadableMessage;
+import com.facebook.buck.core.exceptions.ExceptionWithHumanReadableMessage;
 
 public class QueryException extends Exception implements ExceptionWithHumanReadableMessage {
 

@@ -18,8 +18,8 @@ package com.facebook.buck.features.dotnet;
 
 import static java.util.Locale.US;
 
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;

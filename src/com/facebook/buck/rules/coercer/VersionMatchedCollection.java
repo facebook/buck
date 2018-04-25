@@ -16,8 +16,8 @@
 
 package com.facebook.buck.rules.coercer;
 
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.types.Pair;
 import com.facebook.buck.versions.Version;
 import com.google.common.base.MoreObjects;

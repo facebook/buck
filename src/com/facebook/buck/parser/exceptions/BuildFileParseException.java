@@ -16,7 +16,7 @@
 
 package com.facebook.buck.parser.exceptions;
 
-import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import java.io.IOException;
 import java.nio.file.Path;
 

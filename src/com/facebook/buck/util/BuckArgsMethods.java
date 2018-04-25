@@ -17,6 +17,7 @@
 package com.facebook.buck.util;
 
 import com.facebook.buck.core.cell.name.RelativeCellName;
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;

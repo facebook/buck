@@ -32,6 +32,7 @@ import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.apple.toolchain.CodeSignIdentity;
 import com.facebook.buck.apple.toolchain.ProvisioningProfileMetadata;
 import com.facebook.buck.apple.toolchain.impl.ProvisioningProfileStoreFactory;
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
@@ -40,7 +41,6 @@ import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.DefaultProcessExecutor;
-import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Charsets;
 import com.google.common.base.Suppliers;
@@ -366,7 +366,6 @@ public class ProvisioningProfileCopyStepTest {
     NSDictionary xcentPlist =
         (NSDictionary) PropertyListParser.parse(xcentContents.get().getBytes());
     assertEquals(
-        xcentPlist.get("application-identifier"),
-        new NSString("ABCDE12345.com.example.TestApp"));
+        xcentPlist.get("application-identifier"), new NSString("ABCDE12345.com.example.TestApp"));
   }
 }

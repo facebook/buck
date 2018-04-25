@@ -16,7 +16,7 @@
 
 package com.facebook.buck.util.sqlite;
 
-import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import org.sqlite.SQLiteJDBCLoader;
 
 public class SQLiteUtils {

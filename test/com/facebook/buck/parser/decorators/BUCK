@@ -4,6 +4,7 @@ java_test(
     name = "decorators",
     srcs = glob(["*.java"]),
     deps = [
+        "//src/com/facebook/buck/core/exceptions:exceptions",
         "//src/com/facebook/buck/event:interfaces",
         "//src/com/facebook/buck/json:json",
         "//src/com/facebook/buck/parser:rule_pattern",

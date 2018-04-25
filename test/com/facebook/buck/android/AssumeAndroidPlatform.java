@@ -27,9 +27,9 @@ import com.facebook.buck.android.toolchain.impl.AndroidBuildToolsResolver;
 import com.facebook.buck.android.toolchain.impl.AndroidPlatformTargetProducer;
 import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
 import com.facebook.buck.android.toolchain.ndk.impl.AndroidNdkHelper;
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
-import com.facebook.buck.util.HumanReadableException;
 import java.nio.file.Paths;
 import java.util.Optional;
 

@@ -16,10 +16,10 @@
 
 package com.facebook.buck.features.python.toolchain.impl;
 
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.features.python.PythonBuckConfig;
 import com.facebook.buck.features.python.toolchain.PythonInterpreter;
 import com.facebook.buck.io.ExecutableFinder;
-import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;

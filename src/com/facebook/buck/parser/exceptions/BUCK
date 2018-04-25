@@ -6,6 +6,7 @@ java_library(
     exported_deps = ["//src/com/facebook/buck/util:exceptions"],
     visibility = ["PUBLIC"],
     deps = [
+        "//src/com/facebook/buck/core/exceptions:exceptions",
         "//src/com/facebook/buck/model:model",
         "//src/com/facebook/buck/util:exceptions",
     ],

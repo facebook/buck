@@ -18,6 +18,7 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
 import com.facebook.buck.apple.toolchain.AppleSdk;
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -30,7 +31,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -51,8 +51,7 @@ public class MultiarchFileInfos {
    * Inspect the given build target and return information about it if its a fat binary.
    *
    * @return non-empty when the target represents a fat binary.
-   * @throws com.facebook.buck.util.HumanReadableException when the target is a fat binary but has
-   *     incompatible flavors.
+   * @throws HumanReadableException when the target is a fat binary but has incompatible flavors.
    */
   public static Optional<MultiarchFileInfo> create(
       FlavorDomain<AppleCxxPlatform> appleCxxPlatforms, BuildTarget target) {
