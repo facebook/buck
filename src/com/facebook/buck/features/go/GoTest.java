@@ -275,8 +275,8 @@ public class GoTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public ImmutableList<? extends Step> getBuildSteps(BuildContext context,
-      BuildableContext buildableContext) {
+  public ImmutableList<? extends Step> getBuildSteps(
+      BuildContext context, BuildableContext buildableContext) {
     return ImmutableList.of();
   }
 
