@@ -16,7 +16,7 @@
 
 package com.facebook.buck.ide.intellij;
 
-import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.util.ExitCode;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;

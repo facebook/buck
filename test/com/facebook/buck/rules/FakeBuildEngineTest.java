@@ -23,8 +23,8 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.artifact_cache.NoopArtifactCache;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.model.BuildId;
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.util.timing.DefaultClock;

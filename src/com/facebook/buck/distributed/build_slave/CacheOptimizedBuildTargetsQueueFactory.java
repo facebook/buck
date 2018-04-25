@@ -15,11 +15,11 @@
  */
 package com.facebook.buck.distributed.build_slave;
 
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.distributed.ArtifactCacheByBuildRule;
 import com.facebook.buck.distributed.ClientStatsTracker;
 import com.facebook.buck.distributed.build_slave.DistributableBuildGraph.DistributableNode;
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.RuleDepsCache;

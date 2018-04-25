@@ -16,10 +16,10 @@
 
 package com.facebook.buck.test;
 
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.EventKey;
 import com.facebook.buck.event.WorkAdvanceEvent;
-import com.facebook.buck.model.BuildTarget;
 
 /** Base class for events about test rules. */
 public abstract class TestRuleEvent extends AbstractBuckEvent implements WorkAdvanceEvent {

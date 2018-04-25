@@ -16,6 +16,7 @@
 
 package com.facebook.buck.model;
 
+import com.facebook.buck.core.model.BuildTarget;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.util.Collection;

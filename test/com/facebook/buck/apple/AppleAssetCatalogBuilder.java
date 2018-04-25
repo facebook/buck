@@ -16,8 +16,8 @@
 
 package com.facebook.buck.apple;
 
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import java.util.SortedSet;
 

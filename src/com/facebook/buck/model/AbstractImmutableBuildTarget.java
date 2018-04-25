@@ -16,6 +16,8 @@
 
 package com.facebook.buck.model;
 
+import com.facebook.buck.core.model.AbstractBuildTarget;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.log.views.JsonViews;

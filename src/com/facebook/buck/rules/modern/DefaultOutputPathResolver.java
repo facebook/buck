@@ -16,8 +16,8 @@
 
 package com.facebook.buck.rules.modern;
 
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import java.nio.file.Path;
 

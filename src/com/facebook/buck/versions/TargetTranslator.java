@@ -17,14 +17,12 @@
 package com.facebook.buck.versions;
 
 import com.facebook.buck.core.cell.resolver.CellPathResolver;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.parser.BuildTargetPatternParser;
 import java.util.Optional;
 
-/**
- * Interface for translators that rewrite {@link com.facebook.buck.model.BuildTarget}s in objects of
- * type T.
- */
+/** Interface for translators that rewrite {@link BuildTarget}s in objects of type T. */
 interface TargetTranslator<T> {
 
   Class<T> getTranslatableClass();

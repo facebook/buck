@@ -16,14 +16,15 @@
 
 package com.facebook.buck.core.rules.provider;
 
+import com.facebook.buck.core.model.BuildTarget;
 import org.immutables.value.Value;
 
 /**
  * This provider is used to pass a data regarding {@link com.facebook.buck.rules.BuildRule} up to
  * other dependant BuildRules during action graph construction without exposing {@link
- * com.facebook.buck.rules.BuildRule} and {@link com.facebook.buck.model.BuildTarget}. This is the
- * only interface for which {@link com.facebook.buck.rules.BuildRule} can pass information to its
- * dependants as they do not have direct access to its dependents.
+ * com.facebook.buck.rules.BuildRule} and {@link BuildTarget}. This is the only interface for which
+ * {@link com.facebook.buck.rules.BuildRule} can pass information to its dependants as they do not
+ * have direct access to its dependents.
  *
  * <p>The implementations of this interface need to be:
  *

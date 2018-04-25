@@ -16,8 +16,8 @@
 
 package com.facebook.buck.event;
 
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.event.external.events.InstallFinishedEventExternalInterface;
-import com.facebook.buck.model.BuildTarget;
 import com.google.common.base.Objects;
 import java.util.Optional;
 

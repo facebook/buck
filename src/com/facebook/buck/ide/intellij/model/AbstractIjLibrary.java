@@ -16,8 +16,8 @@
 
 package com.facebook.buck.ide.intellij.model;
 
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.ide.intellij.IjDependencyListBuilder;
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;

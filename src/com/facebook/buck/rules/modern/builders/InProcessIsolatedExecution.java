@@ -16,9 +16,9 @@
 
 package com.facebook.buck.rules.modern.builders;
 
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.file.MostFiles;
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.util.Console;

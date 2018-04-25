@@ -16,10 +16,10 @@
 
 package com.facebook.buck.test.external;
 
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.EventKey;
 import com.facebook.buck.event.WorkAdvanceEvent;
-import com.facebook.buck.model.BuildTarget;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 /** Base class for events about external test specs. */

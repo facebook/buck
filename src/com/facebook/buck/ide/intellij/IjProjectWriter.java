@@ -16,6 +16,7 @@
 
 package com.facebook.buck.ide.intellij;
 
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.ide.intellij.model.ContentRoot;
 import com.facebook.buck.ide.intellij.model.IjLibrary;
 import com.facebook.buck.ide.intellij.model.IjModule;
@@ -23,7 +24,6 @@ import com.facebook.buck.ide.intellij.model.IjProjectConfig;
 import com.facebook.buck.ide.intellij.model.ModuleIndexEntry;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.TargetGraphAndTargets;
 import com.facebook.buck.rules.TargetNode;
 import com.google.common.collect.ImmutableList;

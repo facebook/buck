@@ -16,8 +16,8 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableList;
 import java.util.stream.Stream;

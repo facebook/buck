@@ -16,8 +16,8 @@
 
 package com.facebook.buck.cxx.toolchain.nativelink;
 
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;

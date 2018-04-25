@@ -19,6 +19,7 @@ package com.facebook.buck.cli;
 import static com.facebook.buck.util.concurrent.MoreFutures.propagateCauseIfInstanceOf;
 
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
@@ -29,7 +30,6 @@ import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildFileTree;
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.FilesystemBackedBuildFileTree;
 import com.facebook.buck.parser.ParserMessages;
 import com.facebook.buck.parser.PerBuildState;

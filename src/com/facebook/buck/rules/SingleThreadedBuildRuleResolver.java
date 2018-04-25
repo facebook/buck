@@ -17,7 +17,7 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.core.cell.CellProvider;
-import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.util.concurrent.Parallelizer;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;

@@ -16,10 +16,10 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.EventKey;
 import com.facebook.buck.event.WorkAdvanceEvent;
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.ExitCode;
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;

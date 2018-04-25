@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.java.autodeps;
 
 import com.facebook.buck.android.AndroidLibraryDescription;
 import com.facebook.buck.config.BuckConfig;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaFileParser;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
@@ -25,7 +26,6 @@ import com.facebook.buck.jvm.java.JavaTestDescription;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.PrebuiltJarDescription;
 import com.facebook.buck.jvm.java.PrebuiltJarDescriptionArg;
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildEngine;
 import com.facebook.buck.rules.BuildEngineBuildContext;
 import com.facebook.buck.rules.BuildResult;

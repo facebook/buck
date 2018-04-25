@@ -16,7 +16,7 @@
 
 package com.facebook.buck.core.rules.graphbuilder;
 
-import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleCreationContext;
 import com.facebook.buck.rules.TargetNode;
 import org.immutables.value.Value;

@@ -16,7 +16,7 @@
 
 package com.facebook.buck.testutil.integration;
 
-import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.fasterxml.jackson.core.type.TypeReference;

@@ -17,7 +17,7 @@ package com.facebook.buck.rules;
 
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import org.hamcrest.Matchers;

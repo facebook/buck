@@ -16,7 +16,7 @@
 
 package com.facebook.buck.shell;
 
-import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.step.ExecutionContext;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;

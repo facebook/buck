@@ -16,9 +16,9 @@
 
 package com.facebook.buck.versions;
 
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.graph.TraversableGraph;
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;

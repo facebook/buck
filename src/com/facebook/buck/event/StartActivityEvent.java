@@ -16,7 +16,7 @@
 
 package com.facebook.buck.event;
 
-import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.core.model.BuildTarget;
 import com.google.common.base.Objects;
 
 /** Events for timing the starting of android events. */

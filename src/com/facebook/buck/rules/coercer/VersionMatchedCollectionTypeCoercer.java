@@ -17,8 +17,8 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.resolver.CellPathResolver;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.types.Pair;
 import com.facebook.buck.versions.Version;
 import com.google.common.collect.ImmutableMap;

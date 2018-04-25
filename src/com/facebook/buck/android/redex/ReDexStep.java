@@ -18,8 +18,8 @@ package com.facebook.buck.android.redex;
 
 import com.facebook.buck.android.KeystoreProperties;
 import com.facebook.buck.android.toolchain.AndroidSdkLocation;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;

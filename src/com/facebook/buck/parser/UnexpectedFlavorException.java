@@ -17,8 +17,8 @@
 package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.PatternAndMessage;

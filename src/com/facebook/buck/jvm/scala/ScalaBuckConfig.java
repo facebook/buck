@@ -17,8 +17,8 @@
 package com.facebook.buck.jvm.scala;
 
 import com.facebook.buck.config.BuckConfig;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.io.ExecutableFinder;
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.HashedFileTool;

@@ -16,10 +16,10 @@
 
 package com.facebook.buck.features.python;
 
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.features.python.toolchain.PythonEnvironment;
 import com.facebook.buck.features.python.toolchain.PythonPlatform;
-import com.facebook.buck.model.BuildTarget;
 import java.util.Optional;
 
 public class TestPythonPlatform implements PythonPlatform {

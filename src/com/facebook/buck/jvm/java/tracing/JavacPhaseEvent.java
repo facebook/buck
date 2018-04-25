@@ -16,10 +16,10 @@
 
 package com.facebook.buck.jvm.java.tracing;
 
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.EventKey;
 import com.facebook.buck.event.WorkAdvanceEvent;
-import com.facebook.buck.model.BuildTarget;
 import com.google.common.collect.ImmutableMap;
 
 /** Base class for events about the phases of compilation within javac. */

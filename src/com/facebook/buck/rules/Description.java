@@ -16,8 +16,8 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.util.MoreStrings;
 import com.google.common.base.CaseFormat;
@@ -69,8 +69,7 @@ public interface Description<T> {
 
   /**
    * Create a {@link BuildRule} for the given {@link BuildRuleParams}. Note that the {@link
-   * com.facebook.buck.model.BuildTarget} referred to in the {@code params} contains the {@link
-   * Flavor} to create.
+   * BuildTarget} referred to in the {@code params} contains the {@link Flavor} to create.
    *
    * @param buildTarget
    * @param args A constructor argument, of type as returned by {@link #getConstructorArgType()}.

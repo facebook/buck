@@ -16,8 +16,8 @@
 
 package com.facebook.buck.jvm.java.tracing;
 
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.jvm.java.JavacEventSink;
-import com.facebook.buck.model.BuildTarget;
 import com.google.common.collect.ImmutableMap;
 import java.util.List;
 import javax.annotation.Nullable;

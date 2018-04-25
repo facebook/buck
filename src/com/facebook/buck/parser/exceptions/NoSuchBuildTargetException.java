@@ -16,7 +16,7 @@
 
 package com.facebook.buck.parser.exceptions;
 
-import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.core.model.BuildTarget;
 import java.nio.file.Path;
 
 /** Thrown when build target definition is missing in corresponding build file */
@@ -30,7 +30,7 @@ public class NoSuchBuildTargetException extends BuildTargetException {
     super(message);
   }
 
-  /** @param buildTarget the failing {@link com.facebook.buck.model.BuildTarget} */
+  /** @param buildTarget the failing {@link BuildTarget} */
   public static NoSuchBuildTargetException createForMissingBuildRule(
       BuildTarget buildTarget, Path buckFilePath) {
     String message =

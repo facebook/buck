@@ -16,8 +16,8 @@
 
 package com.facebook.buck.ide.intellij.model;
 
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.ide.intellij.IjDependencyListBuilder;
-import com.facebook.buck.model.BuildTarget;
 import com.google.common.collect.ImmutableSet;
 
 /** Common interface shared between {@link IjModule} and {@link IjLibrary}. */

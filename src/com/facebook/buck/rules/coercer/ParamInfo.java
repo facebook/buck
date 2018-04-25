@@ -17,8 +17,8 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.resolver.CellPathResolver;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.Hint;
 import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.Types;

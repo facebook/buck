@@ -16,8 +16,8 @@
 
 package com.facebook.buck.apple.project_generator;
 
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.UnflavoredBuildTarget;
-import com.facebook.buck.model.BuildTarget;
 import com.google.common.collect.ImmutableSet;
 import java.util.function.Function;
 import javax.annotation.Nullable;

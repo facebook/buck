@@ -15,8 +15,8 @@
  */
 package com.facebook.buck.versions;
 
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.google.common.annotations.VisibleForTesting;

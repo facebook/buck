@@ -18,6 +18,7 @@ package com.facebook.buck.model;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.InternalFlavor;
 import java.nio.file.Path;
 import java.nio.file.Paths;

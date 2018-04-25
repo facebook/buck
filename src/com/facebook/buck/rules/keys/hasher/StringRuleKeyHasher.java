@@ -16,10 +16,10 @@
 
 package com.facebook.buck.rules.keys.hasher;
 
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.io.ArchiveMemberPath;
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.SourceRoot;
 import com.facebook.buck.util.Escaper;

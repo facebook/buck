@@ -16,9 +16,9 @@
 
 package com.facebook.buck.rules.keys;
 
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rulekey.RuleKey;
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.keys.hasher.RuleKeyHasher;
 import com.google.common.collect.ImmutableList;

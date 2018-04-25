@@ -16,7 +16,7 @@
 
 package com.facebook.buck.rules;
 
-import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.core.model.BuildTarget;
 import com.google.common.annotations.VisibleForTesting;
 import java.io.IOException;
 import javax.annotation.Nullable;

@@ -16,8 +16,8 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.model.BuildTarget;
 import javax.annotation.Nullable;
 
 /** Indicates that this class may have android resources that should be packaged into an APK. */

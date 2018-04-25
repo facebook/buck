@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.model;
 
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.google.common.collect.ImmutableSet;
 import java.util.Optional;
@@ -26,9 +27,8 @@ import java.util.Optional;
  * <p>This is only required to be implemented by Descriptions where the flavored BuildTarget should
  * be buildable in a top-level {@link com.facebook.buck.command.Build}. i.e. this should be
  * implemented by {@link com.facebook.buck.rules.Description}s where the
- * {@com.facebook.buck.rules.TargetNode} may have a flavored {@link
- * com.facebook.buck.model.BuildTarget} - it is not required where only the {@link
- * com.facebook.buck.rules.BuildRule}s are flavored.
+ * {@com.facebook.buck.rules.TargetNode} may have a flavored {@link BuildTarget} - it is not
+ * required where only the {@link com.facebook.buck.rules.BuildRule}s are flavored.
  */
 public interface Flavored {
 

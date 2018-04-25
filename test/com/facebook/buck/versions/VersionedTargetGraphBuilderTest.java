@@ -18,7 +18,7 @@ package com.facebook.buck.versions;
 
 import static org.hamcrest.junit.MatcherAssert.assertThat;
 
-import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphAndBuildTargets;

@@ -16,9 +16,9 @@
 
 package com.facebook.buck.jvm.java;
 
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
-import com.facebook.buck.model.BuildTarget;
 import java.nio.file.Path;
 
 public class ResourcesRootPackageFinder implements JavaPackageFinder {

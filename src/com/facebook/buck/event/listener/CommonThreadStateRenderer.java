@@ -16,9 +16,9 @@
 
 package com.facebook.buck.event.listener;
 
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.LeafEvent;
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.Ansi;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ComparisonChain;

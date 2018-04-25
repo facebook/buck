@@ -16,8 +16,8 @@
 
 package com.facebook.buck.testutil;
 
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.graph.MutableDirectedGraph;
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.ImmutableBuildTarget;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;

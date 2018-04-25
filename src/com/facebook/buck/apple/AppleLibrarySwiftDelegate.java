@@ -16,10 +16,10 @@
 
 package com.facebook.buck.apple;
 
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.google.common.collect.ImmutableSet;
 

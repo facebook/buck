@@ -16,7 +16,7 @@
 
 package com.facebook.buck.core.sourcepath;
 
-import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.hash.HashCode;
 import java.util.Optional;

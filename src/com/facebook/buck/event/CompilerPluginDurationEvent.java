@@ -16,7 +16,7 @@
 
 package com.facebook.buck.event;
 
-import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.core.model.BuildTarget;
 import com.google.common.collect.ImmutableMap;
 
 /** Base class for events being reported by plugins to in-process compilers such as JSR199 javac. */

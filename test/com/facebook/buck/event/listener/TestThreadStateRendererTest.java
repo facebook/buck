@@ -20,9 +20,9 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.event.LeafEvent;
 import com.facebook.buck.event.TestEventConfigurator;
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.step.StepEvent;
 import com.facebook.buck.support.test.event.TestStatusMessageEvent;

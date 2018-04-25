@@ -16,10 +16,10 @@
 
 package com.facebook.buck.event;
 
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.event.api.BuckTracing;
 import com.facebook.buck.event.api.BuckTracingInterface;
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.model.BuildTarget;
 import com.google.common.collect.ImmutableMap;
 import java.util.ArrayDeque;
 import java.util.Deque;

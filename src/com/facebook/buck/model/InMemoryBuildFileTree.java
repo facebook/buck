@@ -16,6 +16,7 @@
 
 package com.facebook.buck.model;
 
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.io.file.MorePaths;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;

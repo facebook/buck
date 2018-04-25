@@ -16,8 +16,8 @@
 
 package com.facebook.buck.jvm.java;
 
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.jvm.core.HasJavaAbi;
-import com.facebook.buck.model.BuildTarget;
 import java.util.Optional;
 
 /** Tag interface for rules that calculate ABIs for Java code. */

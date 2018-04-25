@@ -16,6 +16,7 @@
 
 package com.facebook.buck.model;
 
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -28,9 +29,7 @@ import java.nio.file.Path;
 import java.util.Optional;
 import javax.annotation.Nullable;
 
-/**
- * Exposes some {@link com.facebook.buck.model.BuildTarget} logic that is only visible for testing.
- */
+/** Exposes some {@link BuildTarget} logic that is only visible for testing. */
 public class BuildTargetFactory {
 
   private BuildTargetFactory() {

@@ -16,8 +16,8 @@
 
 package com.facebook.buck.features.go;
 
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.google.common.collect.ImmutableList;

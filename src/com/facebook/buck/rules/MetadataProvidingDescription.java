@@ -17,7 +17,7 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.core.cell.resolver.CellPathResolver;
-import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.versions.Version;
 import com.google.common.collect.ImmutableMap;
 import java.util.Optional;

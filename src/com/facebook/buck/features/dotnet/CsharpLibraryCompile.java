@@ -16,8 +16,8 @@
 
 package com.facebook.buck.features.dotnet;
 
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.io.ExecutableFinder;
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.Escaper;

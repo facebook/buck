@@ -17,6 +17,7 @@
 package com.facebook.buck.distributed.build_client;
 
 import com.facebook.buck.command.BuildExecutorArgs;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.distributed.ClientStatsTracker;
 import com.facebook.buck.distributed.DistBuildCellIndexer;
 import com.facebook.buck.distributed.DistBuildService;
@@ -24,7 +25,6 @@ import com.facebook.buck.distributed.thrift.BuckVersion;
 import com.facebook.buck.distributed.thrift.BuildJobState;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.ActionAndTargetGraphs;
 import com.facebook.buck.rules.BuildEvent.DistBuildStarted;
 import com.facebook.buck.rules.CachingBuildEngineDelegate;

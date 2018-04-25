@@ -16,9 +16,9 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.keys.RuleKeyFactory;
 import com.facebook.buck.util.Scope;
 import com.facebook.buck.util.collect.SortedSets;

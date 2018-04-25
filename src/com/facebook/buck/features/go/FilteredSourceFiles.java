@@ -16,8 +16,8 @@
 
 package com.facebook.buck.features.go;
 
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.features.go.GoListStep.FileType;
-import com.facebook.buck.model.BuildTarget;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
