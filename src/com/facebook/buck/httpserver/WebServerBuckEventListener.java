@@ -17,6 +17,7 @@
 package com.facebook.buck.httpserver;
 
 import com.facebook.buck.core.model.BuildId;
+import com.facebook.buck.distributed.DistBuildCreatedEvent;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.CompilerErrorEvent;
 import com.facebook.buck.event.ConsoleEvent;
@@ -129,6 +130,11 @@ public class WebServerBuckEventListener implements BuckEventListener {
 
   @Subscribe
   public void projectGenerationFinished(ProjectGenerationEvent.Finished event) {
+    streamingWebSocketServlet.tellClients(event);
+  }
+
+  @Subscribe
+  public void distBuildCreated(DistBuildCreatedEvent event) {
     streamingWebSocketServlet.tellClients(event);
   }
 }
