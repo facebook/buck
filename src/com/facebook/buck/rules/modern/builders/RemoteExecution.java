@@ -26,6 +26,7 @@ import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepFailedException;
+import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.env.BuckClasspath;
 import com.facebook.buck.util.function.ThrowingSupplier;
 import com.google.common.base.Joiner;
@@ -43,8 +44,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Supplier;
 
 /**
  * An implementation of IsolatedExecution that uses a ContentAddressedStorage and
@@ -62,6 +65,45 @@ public abstract class RemoteExecution implements IsolatedExecution {
 
   private final byte[] trampoline;
 
+  private static final ImmutableMap<Path, Supplier<InputFile>> classPath;
+  private static final ImmutableMap<Path, Supplier<InputFile>> bootstrapClassPath;
+
+  static {
+    ImmutableMap<Path, Supplier<InputFile>> classPathValue;
+    ImmutableMap<Path, Supplier<InputFile>> bootstrapClassPathValue;
+    try {
+      classPathValue = prepareClassPath(BuckClasspath.getClasspath());
+      bootstrapClassPathValue = prepareClassPath(BuckClasspath.getBootstrapClasspath());
+    } catch (IOException e) {
+      classPathValue = null;
+      bootstrapClassPathValue = null;
+    }
+    classPath = classPathValue;
+    bootstrapClassPath = bootstrapClassPathValue;
+  }
+
+  private static ImmutableMap<Path, Supplier<InputFile>> prepareClassPath(
+      ImmutableList<Path> classpath) {
+    ImmutableMap.Builder<Path, Supplier<InputFile>> resultBuilder = ImmutableMap.builder();
+    for (Path path : classpath) {
+      resultBuilder.put(
+          path,
+          MoreSuppliers.memoize(
+              () -> {
+                try {
+                  return new InputFile(
+                      Hashing.sha1().hashBytes(Files.readAllBytes(path)).toString(),
+                      (int) Files.size(path),
+                      false,
+                      () -> new FileInputStream(path.toFile()));
+                } catch (IOException e) {
+                  throw new RuntimeException(e);
+                }
+              }));
+    }
+    return resultBuilder.build();
+  }
+
   protected RemoteExecution() throws IOException {
     this.trampoline = Files.readAllBytes(TRAMPOLINE);
   }
@@ -77,13 +119,10 @@ public abstract class RemoteExecution implements IsolatedExecution {
       Path cellPrefixRoot)
       throws IOException, InterruptedException, StepFailedException {
 
-    ImmutableList<Path> classpath = BuckClasspath.getClasspath();
-    ImmutableList<Path> bootstrapClasspath = BuckClasspath.getBootstrapClasspath();
-
     ImmutableList<Path> isolatedClasspath =
-        processClasspath(inputsBuilder, cellPrefixRoot, classpath);
+        processClasspath(inputsBuilder, cellPrefixRoot, classPath);
     ImmutableList<Path> isolatedBootstrapClasspath =
-        processClasspath(inputsBuilder, cellPrefixRoot, bootstrapClasspath);
+        processClasspath(inputsBuilder, cellPrefixRoot, bootstrapClassPath);
 
     Path trampolinePath = Paths.get("./__trampoline__.sh");
     ImmutableList<String> command = getBuilderCommand(trampolinePath, projectRoot, hash.toString());
@@ -163,23 +202,19 @@ public abstract class RemoteExecution implements IsolatedExecution {
   }
 
   private ImmutableList<Path> processClasspath(
-      FileTreeBuilder inputsBuilder, Path cellPrefix, ImmutableList<Path> classPath)
+      FileTreeBuilder inputsBuilder,
+      Path cellPrefix,
+      ImmutableMap<Path, Supplier<InputFile>> classPath)
       throws IOException {
     ImmutableList.Builder<Path> resolvedBuilder = ImmutableList.builder();
-    for (Path path : classPath) {
+    for (Map.Entry<Path, Supplier<InputFile>> entry : classPath.entrySet()) {
+      Path path = entry.getKey();
       Preconditions.checkState(path.isAbsolute());
       if (!path.startsWith(cellPrefix)) {
         resolvedBuilder.add(path);
       } else {
         Path relative = cellPrefix.relativize(path);
-        inputsBuilder.addFile(
-            relative,
-            () ->
-                new InputFile(
-                    Hashing.sha1().hashBytes(Files.readAllBytes(path)).toString(),
-                    (int) Files.size(path),
-                    false,
-                    () -> new FileInputStream(path.toFile())));
+        inputsBuilder.addFile(relative, () -> entry.getValue().get());
         resolvedBuilder.add(relative);
       }
     }
