@@ -16,9 +16,9 @@
 
 package com.facebook.buck.cxx.toolchain;
 
+import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.linker.LinkerProvider;
-import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorConvertible;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.ToolProvider;

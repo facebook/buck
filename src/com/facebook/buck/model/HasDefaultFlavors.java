@@ -16,6 +16,7 @@
 
 package com.facebook.buck.model;
 
+import com.facebook.buck.core.model.Flavor;
 import com.google.common.collect.ImmutableSortedSet;
 import org.immutables.value.Value;
 

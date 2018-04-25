@@ -14,30 +14,28 @@
  * under the License.
  */
 
-package com.facebook.buck.model;
+package com.facebook.buck.core.model;
 
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.google.common.base.Preconditions;
 import org.immutables.value.Value;
 
-/** A {@link Flavor} visible to the user, with which they can modify output of a target. */
+/**
+ * A {@link com.facebook.buck.core.model.Flavor} passing information between targets, which is
+ * irrelevant to the end user. Historically, all flavors were converted to internal, some need to be
+ * moved to UserFlavor.
+ */
 @Value.Immutable
 @BuckStyleImmutable
-abstract class AbstractUserFlavor implements Flavor {
+abstract class AbstractInternalFlavor implements Flavor {
 
   @Override
   @Value.Parameter
   public abstract String getName();
 
-  @Value.Parameter
-  @Value.Auxiliary
-  public abstract String getDescription();
-
   @Override
   @Value.Check
   public void check() {
     Flavor.super.check();
-    Preconditions.checkArgument(!getDescription().isEmpty(), "Empty user flavor description");
   }
 
   @Override

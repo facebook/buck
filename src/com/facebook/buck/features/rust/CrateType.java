@@ -16,10 +16,10 @@
 
 package com.facebook.buck.features.rust;
 
+import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.Flavor;
 
 /** Describe the kinds of crates rustc can generate. */
 public enum CrateType {

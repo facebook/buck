@@ -15,10 +15,10 @@
  */
 package com.facebook.buck.cxx.toolchain;
 
-import com.facebook.buck.model.Flavor;
+import com.facebook.buck.core.model.Flavor;
+import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.model.FlavorConvertible;
 import com.facebook.buck.model.FlavorDomain;
-import com.facebook.buck.model.InternalFlavor;
 import com.google.common.collect.ImmutableList;
 
 /** Defines the level of symbol stripping to be performed on the linked product of the build. */

@@ -16,10 +16,10 @@
 
 package com.facebook.buck.features.go;
 
+import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
-import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorConvertible;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;

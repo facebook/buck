@@ -18,6 +18,7 @@ package com.facebook.buck.model;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.core.model.Flavor;
 import org.junit.Test;
 
 public class FlavorTest {

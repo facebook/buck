@@ -16,7 +16,7 @@
 
 package com.facebook.buck.cxx.toolchain;
 
-import com.facebook.buck.model.Flavor;
+import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.toolchain.ToolchainWithCapability;
 import com.google.common.collect.ImmutableMap;
 

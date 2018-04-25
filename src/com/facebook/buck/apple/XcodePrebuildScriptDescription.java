@@ -16,8 +16,8 @@
 
 package com.facebook.buck.apple;
 
+import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.rules.BuildRuleCreationContext;
 import com.facebook.buck.rules.BuildRuleParams;

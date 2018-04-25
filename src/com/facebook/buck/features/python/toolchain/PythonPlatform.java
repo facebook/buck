@@ -16,8 +16,8 @@
 
 package com.facebook.buck.features.python.toolchain;
 
+import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorConvertible;
 import java.util.Optional;
 

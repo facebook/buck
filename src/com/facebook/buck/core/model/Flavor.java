@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.model;
+package com.facebook.buck.core.model;
 
 import com.google.common.base.Preconditions;
 import java.util.regex.Pattern;

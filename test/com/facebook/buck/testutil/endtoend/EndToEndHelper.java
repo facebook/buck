@@ -16,10 +16,10 @@
 
 package com.facebook.buck.testutil.endtoend;
 
+import com.facebook.buck.core.model.Flavor;
+import com.facebook.buck.core.model.UserFlavor;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.Flavor;
-import com.facebook.buck.model.UserFlavor;
 import com.facebook.buck.testutil.PlatformUtils;
 import java.util.Optional;
 

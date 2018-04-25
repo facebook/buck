@@ -18,10 +18,10 @@ package com.facebook.buck.versions;
 
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.google.common.collect.ImmutableList;

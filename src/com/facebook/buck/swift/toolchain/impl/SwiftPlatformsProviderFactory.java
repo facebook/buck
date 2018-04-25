@@ -18,7 +18,7 @@ package com.facebook.buck.swift.toolchain.impl;
 
 import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
 import com.facebook.buck.apple.toolchain.AppleCxxPlatformsProvider;
-import com.facebook.buck.model.Flavor;
+import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.swift.toolchain.SwiftPlatform;
 import com.facebook.buck.swift.toolchain.SwiftPlatformsProvider;

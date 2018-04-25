@@ -16,7 +16,7 @@
 
 package com.facebook.buck.rules;
 
-import com.facebook.buck.model.Flavor;
+import com.facebook.buck.core.model.Flavor;
 import java.util.Optional;
 
 /** A constructor arg of rules which have a default platform. */

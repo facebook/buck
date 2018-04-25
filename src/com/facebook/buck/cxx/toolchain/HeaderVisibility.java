@@ -16,9 +16,9 @@
 
 package com.facebook.buck.cxx.toolchain;
 
-import com.facebook.buck.model.Flavor;
+import com.facebook.buck.core.model.Flavor;
+import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.model.FlavorConvertible;
-import com.facebook.buck.model.InternalFlavor;
 
 public enum HeaderVisibility implements FlavorConvertible {
   PUBLIC(InternalFlavor.of("public-header-visibility")),

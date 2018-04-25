@@ -16,7 +16,7 @@
 
 package com.facebook.buck.rules;
 
-import com.facebook.buck.model.Flavor;
+import com.facebook.buck.core.model.Flavor;
 import com.google.common.collect.ImmutableSet;
 
 /**

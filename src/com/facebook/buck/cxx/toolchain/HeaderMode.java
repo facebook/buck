@@ -16,9 +16,9 @@
 
 package com.facebook.buck.cxx.toolchain;
 
-import com.facebook.buck.model.Flavor;
+import com.facebook.buck.core.model.Flavor;
+import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.model.FlavorConvertible;
-import com.facebook.buck.model.InternalFlavor;
 import com.google.common.base.CaseFormat;
 
 public enum HeaderMode implements FlavorConvertible {
