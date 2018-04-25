@@ -17,43 +17,16 @@
 package com.facebook.buck.rules.modern.builders;
 
 import com.facebook.buck.io.file.MostFiles;
-import com.facebook.buck.rules.modern.builders.FileTreeBuilder.InputFile;
-import com.facebook.buck.rules.modern.builders.FileTreeBuilder.ProtocolTreeBuilder;
 import com.facebook.buck.rules.modern.builders.Protocol.Command;
-import com.facebook.buck.rules.modern.builders.Protocol.Digest;
-import com.facebook.buck.rules.modern.builders.Protocol.Directory;
 import com.facebook.buck.rules.modern.builders.Protocol.OutputDirectory;
 import com.facebook.buck.rules.modern.builders.Protocol.OutputFile;
-import com.facebook.buck.rules.modern.builders.Protocol.Tree;
-import com.facebook.buck.util.Ansi;
-import com.facebook.buck.util.CapturingPrintStream;
-import com.facebook.buck.util.Console;
-import com.facebook.buck.util.DefaultProcessExecutor;
+import com.facebook.buck.rules.modern.builders.RemoteExecutionService.ExecutionResult;
 import com.facebook.buck.util.NamedTemporaryDirectory;
-import com.facebook.buck.util.ProcessExecutor.Result;
-import com.facebook.buck.util.ProcessExecutorParams;
-import com.facebook.buck.util.ProcessExecutorParams.Builder;
-import com.facebook.buck.util.RichStream;
-import com.facebook.buck.util.Verbosity;
-import com.facebook.buck.util.function.ThrowingSupplier;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.hash.HashCode;
-import com.google.common.hash.Hashing;
-import com.google.common.io.MoreFiles;
-import java.io.ByteArrayInputStream;
 import java.io.Closeable;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Stream;
 
 /** IsolatedExecution implementation that will run buildrules in a subprocess. */
 public class OutOfProcessIsolatedExecution extends RemoteExecution {
@@ -75,132 +48,50 @@ public class OutOfProcessIsolatedExecution extends RemoteExecution {
   }
 
   private OutOfProcessIsolatedExecution(
-      NamedTemporaryDirectory workDir, LocalContentAddressedStorage storage, Protocol protocol)
+      NamedTemporaryDirectory workDir,
+      LocalContentAddressedStorage storage,
+      final Protocol protocol)
       throws IOException {
     super();
     this.storage = storage;
+    this.protocol = protocol;
     this.executionService =
-        new RemoteExecutionService() {
-          @Override
-          public ExecutionResult execute(
-              Digest commandDigest, Digest inputsRootDigest, Set<Path> outputs)
-              throws IOException, InterruptedException {
-            Path buildDir = workDir.getPath().resolve(inputsRootDigest.getHash());
-            try (Closeable ignored = () -> MostFiles.deleteRecursively(buildDir)) {
-              Command command =
-                  storage
-                      .materializeInputs(buildDir, inputsRootDigest, Optional.of(commandDigest))
-                      .get();
-
-              Builder paramsBuilder = ProcessExecutorParams.builder();
-              paramsBuilder.setCommand(command.getCommand());
-              paramsBuilder.setEnvironment(command.getEnvironment());
-              paramsBuilder.setDirectory(buildDir);
-              CapturingPrintStream stdOut = new CapturingPrintStream();
-              CapturingPrintStream stdErr = new CapturingPrintStream();
-              Console console =
-                  new Console(Verbosity.STANDARD_INFORMATION, stdOut, stdErr, Ansi.withoutTty());
-              Result result =
-                  new DefaultProcessExecutor(console).launchAndExecute(paramsBuilder.build());
-
-              // TODO(cjhopman): Should outputs be returned on failure?
-              ImmutableList.Builder<OutputFile> outputFilesBuilder = ImmutableList.builder();
-              ImmutableList.Builder<OutputDirectory> outputDirsBuilder = ImmutableList.builder();
-              if (result.getExitCode() == 0) {
-                ImmutableMap.Builder<Digest, ThrowingSupplier<InputStream, IOException>>
-                    requiredDataBuilder = ImmutableMap.builder();
-
-                collectOutputs(
-                    outputs, buildDir, outputFilesBuilder, outputDirsBuilder, requiredDataBuilder);
-                storage.addMissing(requiredDataBuilder.build());
+        (digest, inputsRootDigest, outputs) -> {
+          Path buildDir = workDir.getPath().resolve(inputsRootDigest.getHash());
+          try (Closeable ignored = () -> MostFiles.deleteRecursively(buildDir)) {
+            Optional<Command> command =
+                storage.materializeInputs(buildDir, inputsRootDigest, Optional.of(digest));
+            ActionRunner.ActionResult actionResult =
+                new ActionRunner(protocol)
+                    .runAction(
+                        command.get().getCommand(),
+                        command.get().getEnvironment(),
+                        outputs,
+                        buildDir);
+            storage.addMissing(actionResult.requiredData);
+            return new ExecutionResult() {
+              @Override
+              public ImmutableList<OutputDirectory> getOutputDirectories() {
+                return actionResult.outputDirectories;
               }
 
-              return new ExecutionResult() {
-                @Override
-                public ImmutableList<OutputDirectory> getOutputDirectories() {
-                  return outputDirsBuilder.build();
-                }
-
-                @Override
-                public ImmutableList<OutputFile> getOutputFiles() {
-                  return outputFilesBuilder.build();
-                }
-
-                @Override
-                public int getExitCode() {
-                  return result.getExitCode();
-                }
-
-                @Override
-                public Optional<String> getStderr() {
-                  return result.getStderr();
-                }
-              };
-            }
-          }
-
-          public void collectOutputs(
-              Set<Path> outputs,
-              Path buildDir,
-              ImmutableList.Builder<OutputFile> outputFilesBuilder,
-              ImmutableList.Builder<OutputDirectory> outputDirsBuilder,
-              ImmutableMap.Builder<Digest, ThrowingSupplier<InputStream, IOException>>
-                  requiredDataBuilder)
-              throws IOException {
-            for (Path output : outputs) {
-              Path path = buildDir.resolve(output);
-              Preconditions.checkState(Files.exists(path));
-              if (Files.isDirectory(path)) {
-                FileTreeBuilder builder = new FileTreeBuilder();
-
-                try (Stream<Path> contents = Files.walk(path)) {
-                  RichStream.from(contents)
-                      .forEachThrowing(
-                          entry -> {
-                            if (Files.isRegularFile(entry)) {
-                              builder.addFile(
-                                  path.relativize(entry),
-                                  () ->
-                                      new InputFile(
-                                          hashFile(entry).toString(),
-                                          (int) Files.size(entry),
-                                          Files.isExecutable(entry),
-                                          () -> new FileInputStream(entry.toFile())));
-                            }
-                          });
-                }
-
-                List<Directory> directories = new ArrayList<>();
-                Digest digest =
-                    builder.buildTree(
-                        new ProtocolTreeBuilder(
-                            requiredDataBuilder::put, directories::add, protocol));
-                Preconditions.checkState(!directories.isEmpty());
-                Tree tree = protocol.newTree(directories.get(directories.size() - 1), directories);
-                byte[] treeData = protocol.toByteArray(tree);
-                Digest treeDigest = protocol.computeDigest(treeData);
-
-                outputDirsBuilder.add(protocol.newOutputDirectory(output, digest, treeDigest));
-                requiredDataBuilder.put(treeDigest, () -> new ByteArrayInputStream(treeData));
-              } else {
-                long size = Files.size(path);
-                boolean isExecutable = Files.isExecutable(path);
-                Digest digest = protocol.newDigest(hashFile(path).toString(), (int) size);
-
-                ThrowingSupplier<InputStream, IOException> dataSupplier =
-                    () -> new FileInputStream(path.toFile());
-                outputFilesBuilder.add(
-                    protocol.newOutputFile(output, digest, isExecutable, dataSupplier));
-                requiredDataBuilder.put(digest, dataSupplier);
+              @Override
+              public ImmutableList<OutputFile> getOutputFiles() {
+                return actionResult.outputFiles;
               }
-            }
-          }
 
-          public HashCode hashFile(Path file) throws IOException {
-            return MoreFiles.asByteSource(file).hash(Hashing.sha1());
+              @Override
+              public int getExitCode() {
+                return actionResult.exitCode;
+              }
+
+              @Override
+              public Optional<String> getStderr() {
+                return Optional.of(actionResult.stderr);
+              }
+            };
           }
         };
-    this.protocol = protocol;
     this.workDir = workDir;
   }
 
