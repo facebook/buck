@@ -46,7 +46,7 @@ public class TestSelectorsTestlessClassesTest {
   public void setupWorkspace() throws IOException {
     workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
-            this, "test_selectors_testless_classes", temporaryFolder, true);
+            this, "test_selectors_testless_classes", temporaryFolder);
     workspace.setUp();
   }
 

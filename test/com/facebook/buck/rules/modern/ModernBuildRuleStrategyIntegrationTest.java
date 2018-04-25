@@ -223,7 +223,9 @@ public class ModernBuildRuleStrategyIntegrationTest {
   public void setUp() throws InterruptedException, IOException {
     // MBR strategies use a ContentAddressedStorage that doesn't work correctly on Windows.
     assumeFalse(Platform.detect().equals(Platform.WINDOWS));
-    workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "strategies", tmpFolder);
+    workspace =
+        TestDataHelper.createProjectWorkspaceForScenarioWithoutDefaultCell(
+            this, "strategies", tmpFolder);
     workspace.setKnownBuildRuleTypesFactoryFactory(
         (processExecutor, pluginManager, sandboxExecutionStrategyFactory) ->
             cell ->
