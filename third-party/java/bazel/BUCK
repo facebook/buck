@@ -8,5 +8,6 @@ prebuilt_jar(
         "//third-party/java/objenesis:objenesis",
         "//third-party/java/errorprone:error-prone-annotations",
         "//third-party/java/guava:guava",
+        "//third-party/java/protobuf:protobuf",
     ]
 )

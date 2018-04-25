@@ -3,3 +3,4 @@ zap org.objectweb.asm.**
 zap javax.annotation.**
 zap org.objenesis.**
 zap com.google.errorprone.**
+zap com.google.protobuf.**

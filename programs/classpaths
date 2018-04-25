@@ -38,6 +38,11 @@ third-party/java/guava/guava-23.3-jre.jar
 third-party/java/guice/guice-3.0.jar
 third-party/java/guice/guice-assistedinject-3.0.jar
 third-party/java/guice/guice-multibindings-3.0.jar
+third-party/java/grpc/grpc-context-1.11.0.jar
+third-party/java/grpc/grpc-core-1.10.1.jar
+third-party/java/grpc/grpc-protobuf-1.10.1.jar
+third-party/java/grpc/grpc-protobuf-lite-1.11.0.jar
+third-party/java/grpc/grpc-stub-1.10.1.jar
 third-party/java/httpcomponents/httpclient-4.4.1.jar
 third-party/java/httpcomponents/httpcore-4.4.1.jar
 third-party/java/icu4j/icu4j-54.1.1.jar
@@ -64,7 +69,12 @@ third-party/java/objenesis/objenesis-1.2.jar
 third-party/java/okhttp/okhttp-3.9.0.jar
 third-party/java/okio/okio-1.13.0.jar
 third-party/java/oshi/oshi-core-3.3-SNAPSHOT.jar
+third-party/java/opencensus/opencensus-api-0.12.2.jar
+third-party/java/opencensus/opencensus-contrib-grpc-metrics-0.12.2.jar
 third-party/java/pf4j/pf4j-2.0.0-SNAPSHOT.jar
+third-party/java/protobuf/protobuf-java-3.5.1.jar
+third-party/java/protobuf/protobuf-java-util-3.5.1.jar
+third-party/java/protobuf/protobuf-lite-3.0.1.jar
 third-party/java/slf4j/slf4j-jdk14-1.7.5.jar
 third-party/java/sqlite/sqlite-jdbc-3.20.0.jar
 third-party/java/stringtemplate/ST-4.0.8.jar

@@ -12,6 +12,7 @@ prebuilt_jar(
     visibility = [
         "//tools/ideabuck:",  # Not inside buck
         "//src/com/facebook/buck/worker:worker_process",  # Legacy caller which should probably use Jackson
+        "//third-party/java/grpc:grpc-core",  # Legacy caller which should probably use Jackson
         "//test/com/facebook/buck/worker:worker",  # Legacy caller
         "//third-party/java/aosp:aosp",  # Sad transitive deps are sad
     ],
