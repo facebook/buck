@@ -125,6 +125,7 @@
     <include name="jna/jna-platform-4.4.0.jar" />
     <include name="sqlite/sqlite-jdbc-3.20.0.jar" />
     <include name="bazel/skylark-lang_deploy.jar" />
+    <include name="googleapis/googleapis.jar" />
   </fileset>
 
   <fileset dir="${third-party.dir}/java" id="third-party.jars">

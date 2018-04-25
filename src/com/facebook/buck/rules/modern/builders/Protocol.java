@@ -25,6 +25,7 @@ import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.file.Path;
 import java.util.List;
+import javax.annotation.Nullable;
 
 /**
  * The Protocol interface is used by many parts of isolated/remote execution and abstracts away the
@@ -94,6 +95,7 @@ public interface Protocol {
 
     Digest getDigest();
 
+    @Nullable
     ByteBuffer getContent();
 
     boolean getIsExecutable();

@@ -28,6 +28,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -63,10 +64,11 @@ public class OutputsMaterializer {
     for (Protocol.OutputFile file : outputFiles) {
       Path path = root.resolve(file.getPath());
       ensureParent(path);
-      if (file.getContent() != null) {
+      ByteBuffer content = file.getContent();
+      if (content != null) {
         try (FileChannel output =
             FileChannel.open(path, StandardOpenOption.WRITE, StandardOpenOption.CREATE)) {
-          output.write(file.getContent());
+          output.write(content);
         }
         setExecutable(file.getIsExecutable(), path);
       } else {

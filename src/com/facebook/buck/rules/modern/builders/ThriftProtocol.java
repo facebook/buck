@@ -31,6 +31,7 @@ import java.nio.ByteBuffer;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.stream.Collectors;
+import javax.annotation.Nullable;
 import org.apache.thrift.TBase;
 
 /** A Thrift-based Protocol implementation. */
@@ -283,6 +284,7 @@ public class ThriftProtocol implements Protocol {
     }
 
     @Override
+    @Nullable
     public ByteBuffer getContent() {
       return outputFile.content;
     }

@@ -41,6 +41,7 @@ abstract class AbstractModernBuildRuleConfig implements ConfigView<BuckConfig> {
     NONE,
 
     DEBUG_ISOLATED_OUT_OF_PROCESS,
+    DEBUG_ISOLATED_OUT_OF_PROCESS_GRPC,
     DEBUG_ISOLATED_IN_PROCESS,
     // Creates a strategy that serializes and deserializes ModernBuildRules in memory and then
     // builds the deserialized version.

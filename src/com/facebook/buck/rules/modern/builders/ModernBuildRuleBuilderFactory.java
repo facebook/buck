@@ -24,6 +24,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleStrategy;
 import com.facebook.buck.rules.SourcePathRuleFinder;
+import com.facebook.buck.rules.modern.builders.grpc.GrpcProtocol;
 import com.facebook.buck.rules.modern.config.ModernBuildRuleConfig;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
@@ -70,7 +71,19 @@ public class ModernBuildRuleBuilderFactory {
         case DEBUG_ISOLATED_OUT_OF_PROCESS:
           return Optional.of(
               createIsolatedOutOfProcess(
-                  new SourcePathRuleFinder(resolver), cellResolver, rootCell, hashLoader::get));
+                  new SourcePathRuleFinder(resolver),
+                  cellResolver,
+                  rootCell,
+                  hashLoader::get,
+                  new ThriftProtocol()));
+        case DEBUG_ISOLATED_OUT_OF_PROCESS_GRPC:
+          return Optional.of(
+              createIsolatedOutOfProcess(
+                  new SourcePathRuleFinder(resolver),
+                  cellResolver,
+                  rootCell,
+                  hashLoader::get,
+                  new GrpcProtocol()));
       }
     } catch (IOException e) {
       throw new BuckUncheckedExecutionException(e, "When creating MBR build strategy.");
@@ -110,10 +123,11 @@ public class ModernBuildRuleBuilderFactory {
       SourcePathRuleFinder ruleFinder,
       CellPathResolver cellResolver,
       Cell rootCell,
-      ThrowingFunction<Path, HashCode, IOException> fileHasher)
+      ThrowingFunction<Path, HashCode, IOException> fileHasher,
+      Protocol protocol)
       throws IOException {
     return IsolatedExecution.createIsolatedExecutionStrategy(
-        OutOfProcessIsolatedExecution.create(new ThriftProtocol()),
+        OutOfProcessIsolatedExecution.create(protocol),
         ruleFinder,
         cellResolver,
         rootCell,
