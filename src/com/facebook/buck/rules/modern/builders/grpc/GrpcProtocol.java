@@ -38,7 +38,7 @@ import javax.annotation.Nullable;
 public class GrpcProtocol implements Protocol {
 
   private static final int MAX_INLINED_OUTPUT_FILE_SIZE = 64 * 1024;
-  private static final HashFunction HASHER = Hashing.sipHash24();
+  private static final HashFunction HASHER = Hashing.sha1();
 
   /** Wrapped Grpc Digest. */
   static class GrpcDigest implements Digest {

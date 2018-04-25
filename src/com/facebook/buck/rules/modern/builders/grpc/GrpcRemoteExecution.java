@@ -105,16 +105,18 @@ public class GrpcRemoteExecution extends RemoteExecution {
 
   GrpcRemoteExecution(String instanceName, ManagedChannel channel) throws IOException {
     super();
+    ByteStreamStub byteStreamStub = ByteStreamGrpc.newStub(channel);
     this.storage =
         createStorage(
             ContentAddressableStorageGrpc.newFutureStub(channel),
-            ByteStreamGrpc.newStub(channel),
+            byteStreamStub,
             instanceName,
             PROTOCOL);
     this.executionService =
         new GrpcRemoteExecutionService(
             ExecutionGrpc.newFutureStub(channel),
             OperationsGrpc.newFutureStub(channel),
+            byteStreamStub,
             instanceName);
   }
 
@@ -206,37 +208,9 @@ public class GrpcRemoteExecution extends RemoteExecution {
             new AsyncBlobFetcher() {
               @Override
               public ListenableFuture<ByteBuffer> fetch(Protocol.Digest digest) {
-                String name = getReadResourceName(instanceName, digest);
-                SettableFuture<ByteBuffer> future = SettableFuture.create();
-                byteStreamStub.read(
-                    ReadRequest.newBuilder()
-                        .setResourceName(name)
-                        .setReadLimit(0)
-                        .setReadOffset(0)
-                        .build(),
-                    new StreamObserver<ReadResponse>() {
-                      ByteString data = null;
-
-                      @Override
-                      public void onNext(ReadResponse value) {
-                        if (data == null) {
-                          data = value.getData();
-                        } else {
-                          data = data.concat(value.getData());
-                        }
-                      }
-
-                      @Override
-                      public void onError(Throwable t) {
-                        future.setException(t);
-                      }
-
-                      @Override
-                      public void onCompleted() {
-                        future.set(data.asReadOnlyByteBuffer());
-                      }
-                    });
-                return future;
+                return Futures.transform(
+                    readByteStream(instanceName, digest, byteStreamStub),
+                    string -> string.asReadOnlyByteBuffer());
               }
 
               @Override
@@ -262,17 +236,47 @@ public class GrpcRemoteExecution extends RemoteExecution {
     };
   }
 
+  private static ListenableFuture<ByteString> readByteStream(
+      String instanceName, Protocol.Digest digest, ByteStreamStub byteStreamStub) {
+    String name = getReadResourceName(instanceName, digest);
+    SettableFuture<ByteString> future = SettableFuture.create();
+    byteStreamStub.read(
+        ReadRequest.newBuilder().setResourceName(name).setReadLimit(0).setReadOffset(0).build(),
+        new StreamObserver<ReadResponse>() {
+          ByteString data = ByteString.EMPTY;
+
+          @Override
+          public void onNext(ReadResponse value) {
+            data = data.concat(value.getData());
+          }
+
+          @Override
+          public void onError(Throwable t) {
+            future.setException(t);
+          }
+
+          @Override
+          public void onCompleted() {
+            future.set(data);
+          }
+        });
+    return future;
+  }
+
   private static class GrpcRemoteExecutionService implements RemoteExecutionService {
     private final ExecutionFutureStub executionStub;
     private final OperationsFutureStub operationsStub;
+    private final ByteStreamStub byteStreamStub;
     private final String instanceName;
 
     private GrpcRemoteExecutionService(
         ExecutionFutureStub executionStub,
         OperationsFutureStub operationsStub,
+        ByteStreamStub byteStreamStub,
         String instanceName) {
       this.executionStub = executionStub;
       this.operationsStub = operationsStub;
+      this.byteStreamStub = byteStreamStub;
       this.instanceName = instanceName;
     }
 
@@ -336,10 +340,25 @@ public class GrpcRemoteExecution extends RemoteExecution {
 
           @Override
           public Optional<String> getStderr() {
-            if (actionResult.getStderrRaw() != null) {
-              return Optional.of(actionResult.getStderrRaw().toStringUtf8());
+            ByteString stderrRaw = actionResult.getStderrRaw();
+            if (stderrRaw == null
+                || (stderrRaw.isEmpty() && actionResult.getStderrDigest().getSizeBytes() > 0)) {
+              System.err.println("Got stderr digest.");
+              try {
+                return Optional.of(
+                    readByteStream(
+                            instanceName,
+                            new GrpcDigest(actionResult.getStderrDigest()),
+                            byteStreamStub)
+                        .get()
+                        .toStringUtf8());
+              } catch (InterruptedException | ExecutionException e) {
+                throw new RuntimeException(e);
+              }
+            } else {
+              System.err.println("Got raw stderr: " + stderrRaw.toStringUtf8());
+              return Optional.of(stderrRaw.toStringUtf8());
             }
-            return Optional.empty();
           }
         };
       } catch (ExecutionException e) {

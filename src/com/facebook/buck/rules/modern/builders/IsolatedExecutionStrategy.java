@@ -43,7 +43,6 @@ import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.Ordering;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.HashFunction;
-import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.ByteArrayInputStream;
@@ -90,12 +89,7 @@ public class IsolatedExecutionStrategy extends AbstractModernBuildRuleStrategy {
 
     Delegate delegate =
         (instance, data, children) -> {
-          Hasher hasher = Hashing.murmur3_128().newHasher();
-          hasher.putBytes(data);
-          for (HashCode child : children) {
-            hasher.putBytes(child.asBytes());
-          }
-          HashCode hash = hasher.hash();
+          HashCode hash = Hashing.sha1().hashBytes(data);
           Node node =
               new Node(
                   data,
@@ -131,7 +125,7 @@ public class IsolatedExecutionStrategy extends AbstractModernBuildRuleStrategy {
                                 .getCellByPath(cellResolver.getCellPath(name).get())
                                 .getBuckConfig())));
 
-    HashFunction hasher = Hashing.sipHash24();
+    HashFunction hasher = Hashing.sha1();
     this.configHashes =
         cellToConfig
             .entrySet()

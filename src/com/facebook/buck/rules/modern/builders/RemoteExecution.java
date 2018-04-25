@@ -134,10 +134,7 @@ public abstract class RemoteExecution implements IsolatedExecution {
         getBuilderEnvironmentOverrides(isolatedBootstrapClasspath, isolatedClasspath);
 
     inputsBuilder.addFile(
-        trampolinePath,
-        () -> trampoline,
-        data -> Hashing.sipHash24().hashBytes(data).toString(),
-        true);
+        trampolinePath, () -> trampoline, data -> Hashing.sha1().hashBytes(data).toString(), true);
 
     for (Path path : outputs) {
       MostFiles.deleteRecursivelyIfExists(cellPrefixRoot.resolve(path));
