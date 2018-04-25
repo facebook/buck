@@ -19,10 +19,10 @@ package com.facebook.buck.distributed;
 import static com.facebook.buck.log.MachineReadableLogConfig.PREFIX_BUILD_RULE_FINISHED;
 
 import com.facebook.buck.artifact_cache.CacheResultType;
+import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
 import com.facebook.buck.distributed.thrift.StampedeId;
-import com.facebook.buck.model.BuildId;
 import com.facebook.buck.rules.BuildRuleStatus;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;

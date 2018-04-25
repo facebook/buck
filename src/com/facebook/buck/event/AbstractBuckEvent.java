@@ -16,8 +16,8 @@
 
 package com.facebook.buck.event;
 
+import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.log.views.JsonViews;
-import com.facebook.buck.model.BuildId;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.google.common.annotations.VisibleForTesting;

@@ -13,7 +13,6 @@ standard_java_test(
         "//src/com/facebook/buck/event:interfaces",
         "//src/com/facebook/buck/graph:graph",
         "//src/com/facebook/buck/log:log",
-        "//src/com/facebook/buck/model:build_id",
         "//src/com/facebook/buck/parser/exceptions:exceptions",
         "//src/com/facebook/buck/plugin/impl:impl",
         "//src/com/facebook/buck/rules:cli",

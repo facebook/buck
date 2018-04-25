@@ -16,8 +16,8 @@
 
 package com.facebook.buck.log;
 
+import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.log.views.JsonViews;
-import com.facebook.buck.model.BuildId;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.fasterxml.jackson.annotation.JsonView;

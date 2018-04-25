@@ -16,11 +16,11 @@
 
 package com.facebook.buck.io;
 
+import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.ConsoleEvent;
-import com.facebook.buck.model.BuildId;
 import com.facebook.buck.testutil.PredicateMatcher;
 import com.google.common.collect.ImmutableList;
 import com.google.common.eventbus.Subscribe;

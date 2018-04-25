@@ -16,7 +16,7 @@
 
 package com.facebook.buck.log;
 
-import com.facebook.buck.model.BuildId;
+import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.util.DirectoryCleaner;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.environment.Platform;

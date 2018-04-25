@@ -16,9 +16,9 @@
 
 package com.facebook.buck.jvm.java;
 
+import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.runner.FileClassPathRunner;
-import com.facebook.buck.model.BuildId;
 import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.env.BuckClasspath;

@@ -16,8 +16,8 @@
 
 package com.facebook.buck.util;
 
+import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.log.InvocationInfo;
-import com.facebook.buck.model.BuildId;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Paths;
 

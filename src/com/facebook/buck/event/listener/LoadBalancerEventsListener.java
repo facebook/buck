@@ -16,11 +16,11 @@
 
 package com.facebook.buck.event.listener;
 
+import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.counters.CounterRegistry;
 import com.facebook.buck.counters.IntegerCounter;
 import com.facebook.buck.counters.SamplingCounter;
 import com.facebook.buck.event.BuckEventListener;
-import com.facebook.buck.model.BuildId;
 import com.facebook.buck.slb.LoadBalancedServiceEvent;
 import com.facebook.buck.slb.LoadBalancedServiceEventData;
 import com.facebook.buck.slb.LoadBalancerPingEvent;

@@ -18,7 +18,7 @@ package com.facebook.buck.util.randomizedtrial;
 
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.model.BuildId;
+import com.facebook.buck.core.model.BuildId;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 

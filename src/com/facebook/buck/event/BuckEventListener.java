@@ -16,7 +16,7 @@
 
 package com.facebook.buck.event;
 
-import com.facebook.buck.model.BuildId;
+import com.facebook.buck.core.model.BuildId;
 import java.io.IOException;
 
 public interface BuckEventListener {

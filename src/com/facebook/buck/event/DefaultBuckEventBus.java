@@ -15,9 +15,9 @@
  */
 package com.facebook.buck.event;
 
+import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.log.CommandThreadFactory;
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.model.BuildId;
 import com.facebook.buck.util.Threads;
 import com.facebook.buck.util.concurrent.MostExecutors;
 import com.facebook.buck.util.timing.Clock;

@@ -3,7 +3,7 @@ load("//tools/build_rules:java_rules.bzl", "standard_java_test")
 standard_java_test(
     name = "randomizedtrial",
     deps = [
-        "//src/com/facebook/buck/model:build_id",
+        "//src/com/facebook/buck/core/model:model",
         "//src/com/facebook/buck/util/randomizedtrial:randomizedtrial",
         "//third-party/java/guava:guava",
         "//third-party/java/hamcrest:java-hamcrest",

@@ -16,9 +16,9 @@
 
 package com.facebook.buck.rules.modern.builders;
 
+import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.DefaultBuckEventBus;
-import com.facebook.buck.model.BuildId;
 import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.timing.DefaultClock;

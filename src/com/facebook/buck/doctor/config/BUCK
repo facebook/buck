@@ -11,7 +11,7 @@ java_immutables_library(
     ],
     deps = [
         "//src/com/facebook/buck/config:config",
-        "//src/com/facebook/buck/model:build_id",
+        "//src/com/facebook/buck/core/model:model",
         "//src/com/facebook/buck/slb:slb",
         "//src/com/facebook/buck/util/unit:unit",
         "//third-party/java/jackson:jackson-annotations",

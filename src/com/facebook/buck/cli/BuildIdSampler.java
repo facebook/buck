@@ -16,7 +16,7 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.model.BuildId;
+import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.util.SampleRate;
 import com.google.common.base.Preconditions;
 import java.util.function.Function;

@@ -5,12 +5,12 @@ java_immutables_library(
     srcs = glob(["*.java"]),
     visibility = ["PUBLIC"],
     deps = [
+        "//src/com/facebook/buck/core/model:model",
         "//src/com/facebook/buck/counters:counters",
         "//src/com/facebook/buck/event:interfaces",
         "//src/com/facebook/buck/io:io",
         "//src/com/facebook/buck/io/filesystem:filesystem",
         "//src/com/facebook/buck/log:api",
-        "//src/com/facebook/buck/model:build_id",
         "//src/com/facebook/buck/util:util",
         "//src/com/facebook/buck/util/json:json",
         "//src/com/facebook/buck/util/network:network",

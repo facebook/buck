@@ -16,7 +16,7 @@
 
 package com.facebook.buck.doctor.config;
 
-import com.facebook.buck.model.BuildId;
+import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import java.util.Optional;
 import org.immutables.value.Value;

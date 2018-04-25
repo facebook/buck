@@ -16,10 +16,10 @@
 
 package com.facebook.buck.event.listener;
 
+import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.CommandEvent;
 import com.facebook.buck.event.chrome_trace.ChromeTraceBuckConfig;
-import com.facebook.buck.model.BuildId;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.trace.uploader.launcher.UploaderLauncher;
 import com.facebook.buck.util.trace.uploader.types.CompressionType;

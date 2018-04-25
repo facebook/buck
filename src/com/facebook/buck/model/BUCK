@@ -1,22 +1,9 @@
 load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
 
-BUILD_ID_SRCS = ["BuildId.java"]
-
-java_library(
-    name = "build_id",
-    srcs = BUILD_ID_SRCS,
-    visibility = ["PUBLIC"],
-    deps = [
-        "//third-party/java/jackson:jackson-annotations",
-        "//third-party/java/jackson:jackson-databind",
-    ],
-)
-
 java_immutables_library(
     name = "model",
     srcs = glob(
         ["*.java"],
-        exclude = BUILD_ID_SRCS,
     ),
     exported_deps = [
         "//src/com/facebook/buck/core/model:model",

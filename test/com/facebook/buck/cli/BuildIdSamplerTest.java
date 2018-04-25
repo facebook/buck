@@ -18,7 +18,7 @@ package com.facebook.buck.cli;
 
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.model.BuildId;
+import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.util.SampleRate;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableMap;

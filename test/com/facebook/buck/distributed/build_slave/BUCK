@@ -12,7 +12,6 @@ standard_java_test(
         "//src/com/facebook/buck/event:interfaces",
         "//src/com/facebook/buck/event/listener:listener",
         "//src/com/facebook/buck/io/file:file",
-        "//src/com/facebook/buck/model:build_id",
         "//src/com/facebook/buck/module/impl:impl",
         "//src/com/facebook/buck/parser/exceptions:exceptions",
         "//src/com/facebook/buck/rules:build_rule",

@@ -16,8 +16,8 @@
 
 package com.facebook.buck.util.trace.uploader.launcher;
 
+import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.model.BuildId;
 import com.facebook.buck.util.env.BuckClasspath;
 import com.facebook.buck.util.trace.uploader.types.CompressionType;
 import com.google.common.base.Strings;
