@@ -13,3 +13,11 @@ java_immutables_library(
         "//third-party/java/grpc:grpc-netty",
     ],
 )
+
+java_binary(
+    name = "main",
+    main_class = "com.facebook.buck.rules.modern.builders.grpc.server.GrpcServerMain",
+    deps = [
+        ":server",
+    ],
+)

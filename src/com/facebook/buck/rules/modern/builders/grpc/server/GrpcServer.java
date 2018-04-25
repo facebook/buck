@@ -48,6 +48,10 @@ public class GrpcServer implements Closeable {
     this.server = builder.build().start();
   }
 
+  public void awaitTermination() throws InterruptedException {
+    server.awaitTermination();
+  }
+
   @Override
   public void close() throws IOException {
     try (Closer closer = Closer.create()) {

@@ -67,6 +67,10 @@ import org.junit.runners.Parameterized;
 
 @RunWith(Parameterized.class)
 public class ModernBuildRuleStrategyIntegrationTest {
+  // By default, the tests will start up a remote execution service and connect to that. This value
+  // can be changed to connect to a different service.
+  private static final int REMOTE_PORT = ModernBuildRuleConfig.DEFAULT_REMOTE_PORT;
+
   private String simpleTarget = "//:simple";
   private String failingTarget = "//:failing";
   private String failingStepTarget = "//:failing_step";
@@ -231,6 +235,9 @@ public class ModernBuildRuleStrategyIntegrationTest {
                     .build());
     workspace.setUp();
     workspace.addBuckConfigLocalOption("modern_build_rule", "strategy", strategy.toString());
+    workspace.addBuckConfigLocalOption(
+        "modern_build_rule", "remote_port", Integer.toString(REMOTE_PORT));
+
     filesystem = TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
 
     if (strategy == ModernBuildRuleConfig.Strategy.GRPC_REMOTE) {

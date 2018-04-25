@@ -38,7 +38,7 @@ abstract class AbstractModernBuildRuleConfig implements ConfigView<BuckConfig> {
   }
 
   public int getRemotePort() {
-    return getDelegate().getInteger(SECTION, "remote_port").orElse(DEFAULT_REMOTE_PORT);
+    return getDelegate().getInteger(SECTION, "remote_port").orElse(19030);
   }
 
   /**

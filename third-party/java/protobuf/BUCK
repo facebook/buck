@@ -13,6 +13,7 @@ prebuilt_jar(
     licenses = ["LICENSE"],
     source_jar = "protobuf-lite-3.0.1-sources.jar",
     visibility = ["PUBLIC"],
+    provided = True,
     deps = [],
 )
 

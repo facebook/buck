@@ -6,10 +6,10 @@ genrule(
     )
 
 DEPS = [
-  "//third-party/java/protobuf:protobuf",
-  "//third-party/java/grpc:grpc-core",
-  "//third-party/java/grpc:grpc-stub",
-  "//third-party/java/grpc:grpc-protobuf",
+    "//third-party/java/protobuf:protobuf",
+    "//third-party/java/grpc:grpc-core",
+    "//third-party/java/grpc:grpc-stub",
+    "//third-party/java/grpc:grpc-protobuf",
 ]
 
 java_library(

@@ -45,7 +45,6 @@ prebuilt_jar(
     visibility = ["PUBLIC"],
     deps = [
         ":grpc-core",
-        "//third-party/java/protobuf:protobuf-lite",
         "//third-party/java/guava:guava",
     ],
 )

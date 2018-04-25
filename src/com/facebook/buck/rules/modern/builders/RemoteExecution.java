@@ -66,43 +66,46 @@ public abstract class RemoteExecution implements IsolatedExecution {
 
   private final byte[] trampoline;
 
-  private static final ImmutableMap<Path, Supplier<InputFile>> classPath;
-  private static final ImmutableMap<Path, Supplier<InputFile>> bootstrapClassPath;
+  private static class Holder {
 
-  static {
-    ImmutableMap<Path, Supplier<InputFile>> classPathValue;
-    ImmutableMap<Path, Supplier<InputFile>> bootstrapClassPathValue;
-    try {
-      classPathValue = prepareClassPath(BuckClasspath.getClasspath());
-      bootstrapClassPathValue = prepareClassPath(BuckClasspath.getBootstrapClasspath());
-    } catch (IOException e) {
-      classPathValue = null;
-      bootstrapClassPathValue = null;
-    }
-    classPath = classPathValue;
-    bootstrapClassPath = bootstrapClassPathValue;
-  }
+    private static final ImmutableMap<Path, Supplier<InputFile>> classPath;
+    private static final ImmutableMap<Path, Supplier<InputFile>> bootstrapClassPath;
 
-  private static ImmutableMap<Path, Supplier<InputFile>> prepareClassPath(
-      ImmutableList<Path> classpath) {
-    ImmutableMap.Builder<Path, Supplier<InputFile>> resultBuilder = ImmutableMap.builder();
-    for (Path path : classpath) {
-      resultBuilder.put(
-          path,
-          MoreSuppliers.memoize(
-              () -> {
-                try {
-                  return new InputFile(
-                      Hashing.sha1().hashBytes(Files.readAllBytes(path)).toString(),
-                      (int) Files.size(path),
-                      false,
-                      () -> new FileInputStream(path.toFile()));
-                } catch (IOException e) {
-                  throw new RuntimeException(e);
-                }
-              }));
+    static {
+      ImmutableMap<Path, Supplier<InputFile>> classPathValue;
+      ImmutableMap<Path, Supplier<InputFile>> bootstrapClassPathValue;
+      try {
+        classPathValue = prepareClassPath(BuckClasspath.getClasspath());
+        bootstrapClassPathValue = prepareClassPath(BuckClasspath.getBootstrapClasspath());
+      } catch (IOException e) {
+        classPathValue = null;
+        bootstrapClassPathValue = null;
+      }
+      classPath = classPathValue;
+      bootstrapClassPath = bootstrapClassPathValue;
     }
-    return resultBuilder.build();
+
+    private static ImmutableMap<Path, Supplier<InputFile>> prepareClassPath(
+        ImmutableList<Path> classpath) {
+      ImmutableMap.Builder<Path, Supplier<InputFile>> resultBuilder = ImmutableMap.builder();
+      for (Path path : classpath) {
+        resultBuilder.put(
+            path,
+            MoreSuppliers.memoize(
+                () -> {
+                  try {
+                    return new InputFile(
+                        Hashing.sha1().hashBytes(Files.readAllBytes(path)).toString(),
+                        (int) Files.size(path),
+                        false,
+                        () -> new FileInputStream(path.toFile()));
+                  } catch (IOException e) {
+                    throw new RuntimeException(e);
+                  }
+                }));
+      }
+      return resultBuilder.build();
+    }
   }
 
   protected RemoteExecution() throws IOException {
@@ -121,9 +124,9 @@ public abstract class RemoteExecution implements IsolatedExecution {
       throws IOException, InterruptedException, StepFailedException {
 
     ImmutableList<Path> isolatedClasspath =
-        processClasspath(inputsBuilder, cellPrefixRoot, classPath);
+        processClasspath(inputsBuilder, cellPrefixRoot, Holder.classPath);
     ImmutableList<Path> isolatedBootstrapClasspath =
-        processClasspath(inputsBuilder, cellPrefixRoot, bootstrapClassPath);
+        processClasspath(inputsBuilder, cellPrefixRoot, Holder.bootstrapClassPath);
 
     Path trampolinePath = Paths.get("./__trampoline__.sh");
     ImmutableList<String> command = getBuilderCommand(trampolinePath, projectRoot, hash.toString());
