@@ -233,6 +233,7 @@ public class OcamlRuleBuilder {
     for (OcamlLibrary library : ocamlInput) {
       allDepsBuilder.addAll(library.getNativeCompileDeps(ocamlPlatform));
       allDepsBuilder.addAll(library.getBytecodeCompileDeps(ocamlPlatform));
+      allDepsBuilder.addAll(library.getBytecodeLinkDeps(ocamlPlatform));
     }
     allDepsBuilder.addAll(
         BuildableSupport.getDepsCollection(
