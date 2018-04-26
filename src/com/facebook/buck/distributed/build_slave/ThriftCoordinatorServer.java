@@ -32,12 +32,14 @@ import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.log.TimedLogger;
 import com.facebook.buck.slb.ThriftException;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.io.Closeable;
 import java.io.IOException;
 import java.net.InetAddress;
+import java.nio.file.Path;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.concurrent.CompletableFuture;
@@ -52,6 +54,7 @@ import org.apache.thrift.transport.TNonblockingServerSocket;
 import org.apache.thrift.transport.TTransportException;
 
 public class ThriftCoordinatorServer implements Closeable {
+
   /** Information about the exit state of the Coordinator. */
   public static class ExitState {
 
@@ -258,13 +261,6 @@ public class ThriftCoordinatorServer implements Closeable {
     }
   }
 
-  /** Create a {@link DistBuildTrace} based on timestamps of rules processed by the minions. */
-  public DistBuildTrace generateTrace() {
-    synchronized (lock) {
-      return chromeTraceTracker.generateTrace();
-    }
-  }
-
   public Future<ExitState> getExitState() {
     return exitCodeFuture;
   }
@@ -279,6 +275,28 @@ public class ThriftCoordinatorServer implements Closeable {
       LOG.error(e);
       throw new RuntimeException("The distributed build Coordinator was interrupted.", e);
     }
+  }
+
+  /** Exports the stampede distbuild chrome trace to argument file. */
+  public boolean exportChromeTraceIfSuccess(Path traceFilePath) {
+    return exportChromeTraceIfSuccessInternal(traceFilePath, getExitState(), chromeTraceTracker);
+  }
+
+  @VisibleForTesting
+  static boolean exportChromeTraceIfSuccessInternal(
+      Path traceFilePath, Future<ExitState> exitState, DistBuildTraceTracker chromeTraceTracker) {
+    try {
+      if (exitState.isDone() && exitState.get().exitCode == 0) {
+        DistBuildTrace trace = chromeTraceTracker.generateTrace();
+        trace.dumpToChromeTrace(traceFilePath);
+        return true;
+      }
+    } catch (InterruptedException | ExecutionException | IOException e) {
+      LOG.error(
+          e, String.format("Failed to export the stampede trace to file [%s].", traceFilePath));
+    }
+
+    return false;
   }
 
   private void switchToActiveModeOrFail(Future<BuildTargetsQueue> queueFuture) {

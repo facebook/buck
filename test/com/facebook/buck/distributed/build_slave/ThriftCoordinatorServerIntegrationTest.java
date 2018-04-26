@@ -32,12 +32,18 @@ import com.facebook.buck.event.listener.NoOpCoordinatorBuildRuleEventsPublisher;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.SettableFuture;
+import java.io.File;
 import java.io.IOException;
 import java.util.OptionalInt;
+import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Future;
 import org.easymock.Capture;
 import org.easymock.EasyMock;
 import org.junit.Assert;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 public class ThriftCoordinatorServerIntegrationTest {
   public static final StampedeId STAMPEDE_ID = new StampedeId().setId("down the line");
@@ -46,6 +52,8 @@ public class ThriftCoordinatorServerIntegrationTest {
   private static final MinionType MINION_TYPE = MinionType.STANDARD_SPEC;
   private static final int MAX_WORK_UNITS_TO_FETCH = 10;
   private static final int CONNECTION_TIMEOUT_MILLIS = 1000;
+
+  @Rule public TemporaryFolder tempDirectory = new TemporaryFolder();
 
   @Test
   public void testMakingSimpleRequest() throws IOException {
@@ -305,5 +313,34 @@ public class ThriftCoordinatorServerIntegrationTest {
           ExitCode.BUILD_FAILED_EXTERNALLY_EXIT_CODE.getCode(),
           server.waitUntilBuildCompletesAndReturnExitCode());
     }
+  }
+
+  @Test
+  public void testFailedBuildDoesNotGenerateTrace() throws IOException {
+    testChromeTraceHelper(1, false);
+  }
+
+  @Test
+  public void testSuccessfullBuildGeneratesTrace() throws IOException {
+    testChromeTraceHelper(0, true);
+  }
+
+  private void testChromeTraceHelper(int exitCode, boolean chromeExpectedToBeCreated)
+      throws IOException {
+    File traceFile = newNonExistentTmpFile();
+
+    Future<ExitState> exitState =
+        CompletableFuture.completedFuture(ExitState.setLocally(exitCode, ""));
+    DistBuildTraceTracker chromeTraceTracker = new DistBuildTraceTracker(new StampedeId());
+    boolean result =
+        ThriftCoordinatorServer.exportChromeTraceIfSuccessInternal(
+            traceFile.toPath(), exitState, chromeTraceTracker);
+    Assert.assertEquals(chromeExpectedToBeCreated, result);
+    Assert.assertEquals(chromeExpectedToBeCreated, traceFile.exists());
+  }
+
+  private File newNonExistentTmpFile() throws IOException {
+    return new File(
+        tempDirectory.getRoot().toPath().resolve(UUID.randomUUID().toString()).toString());
   }
 }

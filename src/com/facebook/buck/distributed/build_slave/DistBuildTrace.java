@@ -138,7 +138,7 @@ public class DistBuildTrace {
       for (String ancestor : ancestors) {
         RuleTrace dependentTrace = allRuleTracesByName.get(ancestor);
         if (dependentTrace == null) {
-          LOG.error("Couldn't find trace for rule: [%s].", ancestor);
+          LOG.debug("Couldn't find trace for rule: [%s].", ancestor);
           continue;
         }
 
