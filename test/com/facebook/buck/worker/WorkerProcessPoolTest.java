@@ -189,15 +189,17 @@ public class WorkerProcessPoolTest {
     // transfer an incomplete future to thread 1. Thread 1 is blocked on @{link Future#get}.
     workers.put(new CompletableFuture<>());
 
+    // transfer a completable future to thread 2
+    FakeWorkerProcess worker = new FakeWorkerProcess(ImmutableMap.of());
+    // .put will block until thread 1 takes the un-completable future added first
+    workers.put(CompletableFuture.completedFuture(worker));
+
     // thread 2, attempting to borrow a worker
     Set<WorkerProcess> createdWorkers = concurrentSet();
     Thread secondThread =
         testThreads.startThread(borrowWorkerProcessWithoutReturning(pool, createdWorkers));
 
-    // transfer a fake worker process to thread 2
-    FakeWorkerProcess worker = new FakeWorkerProcess(ImmutableMap.of());
-    workers.put(CompletableFuture.completedFuture(worker));
-
+    // wait until thread 2 ends
     secondThread.join();
 
     // here, the second thread has finished running, and has thus added the worker it borrowed to
