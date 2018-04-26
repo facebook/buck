@@ -416,6 +416,7 @@ class TestBuck(unittest.TestCase):
             {
                 'relative_root': '/path/to/glob',
                 'glob': ['**/*.java'],
+                'glob_includedotfiles': False,
                 'fields': ['name'],
                 'expression': [
                     'allof',

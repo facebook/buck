@@ -38,6 +38,7 @@ def format_watchman_query_params(includes, excludes, include_dotfiles, relative_
 
     if watchman_use_glob_generator:
         query["glob"] = includes
+        query["glob_includedotfiles"] = include_dotfiles
         # We don't have to check for existence; the glob generator only matches
         # files which exist.
     else:
