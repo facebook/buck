@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.cxx.toolchain;
 
+import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
@@ -27,7 +28,7 @@ import java.util.function.Function;
 import java.util.stream.StreamSupport;
 
 /** Encapsulates all the logic to sanitize debug paths in native code. */
-public abstract class DebugPathSanitizer {
+public abstract class DebugPathSanitizer implements AddsToRuleKey {
 
   /**
    * @return the given path as a string, expanded using {@code separator} to fulfill the required

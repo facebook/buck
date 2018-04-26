@@ -39,12 +39,8 @@ import java.util.stream.Stream;
 class CompilerDelegate implements AddsToRuleKey {
   // Fields that are added to rule key as is.
   @AddToRuleKey private final Compiler compiler;
-
-  // Fields that added to the rule key with some processing.
   @AddToRuleKey private final CxxToolFlags compilerFlags;
-
-  // Fields that are not added to the rule key.
-  private final DebugPathSanitizer sanitizer;
+  @AddToRuleKey private final DebugPathSanitizer sanitizer;
 
   public CompilerDelegate(DebugPathSanitizer sanitizer, Compiler compiler, CxxToolFlags flags) {
     this.sanitizer = sanitizer;

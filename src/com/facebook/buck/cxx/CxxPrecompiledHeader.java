@@ -20,7 +20,6 @@ import com.facebook.buck.core.cell.resolver.CellPathResolver;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
-import com.facebook.buck.core.rulekey.RuleKeyObjectSink;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.cxx.toolchain.DebugPathSanitizer;
@@ -92,12 +91,10 @@ class CxxPrecompiledHeader extends AbstractBuildRule
   @AddToRuleKey private final SourcePath input;
   @AddToRuleKey private final CxxSource.Type inputType;
   @AddToRuleKey private final boolean canPrecompileFlag;
-
-  // Fields that added to the rule key with some processing.
   @AddToRuleKey private final CxxToolFlags compilerFlags;
+  @AddToRuleKey private final DebugPathSanitizer compilerSanitizer;
 
   // Fields that are not added to the rule key.
-  private final DebugPathSanitizer compilerSanitizer;
   private final Path output;
 
   /**
@@ -149,11 +146,6 @@ class CxxPrecompiledHeader extends AbstractBuildRule
 
   private SourcePath getIncludeFileSourcePath() {
     return canPrecompile() ? getSourcePathToOutput() : input;
-  }
-
-  @Override
-  public void appendToRuleKey(RuleKeyObjectSink sink) {
-    sink.setReflectively("compilationDirectory", compilerSanitizer.getCompilationDirectory());
   }
 
   @Override

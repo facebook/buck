@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.cxx.toolchain;
 
+import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.util.RichStream;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
@@ -32,8 +33,8 @@ import java.util.stream.Stream;
  * that the output only contains references to the mapped-to paths (i.e. the fake paths).
  */
 public class PrefixMapDebugPathSanitizer extends DebugPathSanitizer {
+  @AddToRuleKey private final String fakeCompilationDirectory;
 
-  private final String fakeCompilationDirectory;
   private final ImmutableBiMap<Path, String> other;
 
   public PrefixMapDebugPathSanitizer(

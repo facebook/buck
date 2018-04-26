@@ -63,13 +63,12 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule
   @AddToRuleKey private final Optional<PreprocessorDelegate> preprocessDelegate;
 
   @AddToRuleKey private final CompilerDelegate compilerDelegate;
-
   @AddToRuleKey private final String outputName;
-
   @AddToRuleKey private final SourcePath input;
+  @AddToRuleKey private final DebugPathSanitizer sanitizer;
+
   private final Optional<CxxPrecompiledHeader> precompiledHeaderRule;
   private final CxxSource.Type inputType;
-  private final DebugPathSanitizer sanitizer;
   private final Optional<SymlinkTree> sandboxTree;
 
   private CxxPreprocessAndCompile(
@@ -166,11 +165,6 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule
 
   @Override
   public void appendToRuleKey(RuleKeyObjectSink sink) {
-    // If a sanitizer is being used for compilation, we need to record the working directory in
-    // the rule key, as changing this changes the generated object file.
-    if (preprocessDelegate.isPresent()) {
-      sink.setReflectively("compilationDirectory", sanitizer.getCompilationDirectory());
-    }
     if (sandboxTree.isPresent()) {
       ImmutableMap<Path, SourcePath> links = sandboxTree.get().getLinks();
       for (Path path : ImmutableSortedSet.copyOf(links.keySet())) {
