@@ -33,6 +33,7 @@ import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -256,7 +257,7 @@ abstract class GoDescriptors {
 
     LOG.verbose("Symlink tree for linking of %s: %s", buildTarget, symlinkTree);
 
-    Optional<Linker> cxxLinker = Optional.of(platform.getCxxPlatform().getLd().resolve(resolver));
+    Linker cxxLinker = platform.getCxxPlatform().getLd().resolve(resolver);
     return new GoBinary(
         buildTarget,
         projectFilesystem,
@@ -266,9 +267,10 @@ abstract class GoDescriptors {
                     .addAll(ruleFinder.filterBuildRuleInputs(symlinkTree.getLinks().values()))
                     .add(symlinkTree)
                     .add(library)
+                    .addAll(BuildableSupport.getDepsCollection(cxxLinker, ruleFinder))
                     .build())
             .withoutExtraDeps(),
-        cxxLinker,
+        Optional.of(cxxLinker),
         symlinkTree,
         library,
         platform.getLinker(),
