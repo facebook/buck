@@ -65,18 +65,6 @@ public class HeaderVerificationTest {
   }
 
   @Test
-  public void whitelistDoesNotAffectRuleKeyInIgnoredMode() {
-    assertThat(
-        getRuleKey(HeaderVerification.of(HeaderVerification.Mode.IGNORE)),
-        equalTo(
-            getRuleKey(
-                HeaderVerification.of(
-                    HeaderVerification.Mode.IGNORE,
-                    ImmutableSortedSet.of(".*"),
-                    ImmutableSortedSet.of()))));
-  }
-
-  @Test
   public void whitelistAffectsRuleKeyInErrorMode() {
     assertThat(
         getRuleKey(HeaderVerification.of(HeaderVerification.Mode.ERROR)),
