@@ -119,7 +119,7 @@ def main(argv, reporter):
     install_signal_handlers()
     try:
         tracing_dir = None
-        build_id = str(uuid.uuid4())
+        build_id = os.environ.get('BUCK_BUILD_ID', str(uuid.uuid4()))
         reporter.build_id = build_id
         with Tracing("main"):
             with BuckProject.from_current_dir() as project:
