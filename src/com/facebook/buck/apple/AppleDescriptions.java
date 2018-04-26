@@ -60,6 +60,7 @@ import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
+import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.shell.AbstractGenruleDescription;
 import com.facebook.buck.util.Optionals;
 import com.facebook.buck.util.RichStream;
@@ -311,6 +312,14 @@ public class AppleDescriptions {
         SourceList.ofNamedSources(
             convertAppleHeadersToPublicCxxHeaders(
                 buildTarget, resolver::getRelativePath, headerPathPrefix, arg)));
+    if (arg.isModular()) {
+      output.addCompilerFlags(
+          StringWithMacros.of(
+              ImmutableList.of(
+                  Either.ofLeft(
+                      "-fmodule-name="
+                          + arg.getHeaderPathPrefix().orElse(buildTarget.getShortName())))));
+    }
   }
 
   public static Optional<AppleAssetCatalog> createBuildRuleForTransitiveAssetCatalogDependencies(

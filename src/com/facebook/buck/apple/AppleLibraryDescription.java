@@ -250,7 +250,7 @@ public class AppleLibraryDescription
       BuildRuleResolver resolver,
       SourcePathRuleFinder ruleFinder,
       CellPathResolver cellRoots,
-      CxxLibraryDescription.CommonArg args,
+      AppleNativeTargetDescriptionArg args,
       Optional<AppleLibrarySwiftDelegate> swiftDelegate) {
     Optional<Map.Entry<Flavor, Type>> maybeType = LIBRARY_TYPE.getFlavorAndValue(buildTarget);
     return maybeType.flatMap(
@@ -819,11 +819,6 @@ public class AppleLibraryDescription
     Optional<SourcePath> getInfoPlist();
 
     ImmutableMap<String, String> getInfoPlistSubstitutions();
-
-    @Value.Default
-    default boolean isModular() {
-      return false;
-    }
   }
 
   // CxxLibraryDescriptionDelegate

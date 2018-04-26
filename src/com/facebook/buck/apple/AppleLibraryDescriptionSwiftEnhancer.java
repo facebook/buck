@@ -21,7 +21,6 @@ import com.facebook.buck.core.cell.resolver.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.cxx.CxxLibrary;
-import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
 import com.facebook.buck.cxx.HeaderSymlinkTreeWithHeaderMap;
 import com.facebook.buck.cxx.PreprocessorFlags;
@@ -57,7 +56,7 @@ public class AppleLibraryDescriptionSwiftEnhancer {
       BuildRuleResolver resolver,
       SourcePathRuleFinder ruleFinder,
       BuildRuleParams params,
-      CxxLibraryDescription.CommonArg args,
+      AppleNativeTargetDescriptionArg args,
       ProjectFilesystem filesystem,
       CxxPlatform platform,
       AppleCxxPlatform applePlatform,
