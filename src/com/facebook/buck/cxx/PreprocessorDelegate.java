@@ -28,6 +28,7 @@ import com.facebook.buck.cxx.toolchain.PathShortener;
 import com.facebook.buck.cxx.toolchain.Preprocessor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildableSupport;
+import com.facebook.buck.rules.HasCustomDepsLogic;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SymlinkTree;
@@ -46,7 +47,7 @@ import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 /** Helper class for handling preprocessing related tasks of a cxx compilation rule. */
-final class PreprocessorDelegate implements RuleKeyAppendable {
+final class PreprocessorDelegate implements RuleKeyAppendable, HasCustomDepsLogic {
 
   // Fields that are added to rule key as is.
   @AddToRuleKey private final Preprocessor preprocessor;
@@ -72,6 +73,8 @@ final class PreprocessorDelegate implements RuleKeyAppendable {
 
   private final PathShortener minLengthPathRepresentation;
 
+  private final Optional<BuildRule> aggregatedDeps;
+
   private WeakMemoizer<HeaderPathNormalizer> headerPathNormalizer = new WeakMemoizer<>();
 
   public PreprocessorDelegate(
@@ -81,7 +84,8 @@ final class PreprocessorDelegate implements RuleKeyAppendable {
       PreprocessorFlags preprocessorFlags,
       RuleKeyAppendableFunction<FrameworkPath, Path> frameworkPathSearchPathFunction,
       Optional<SymlinkTree> sandbox,
-      Optional<CxxIncludePaths> leadingIncludePaths) {
+      Optional<CxxIncludePaths> leadingIncludePaths,
+      Optional<BuildRule> aggregatedDeps) {
     this.preprocessor = preprocessor;
     this.preprocessorFlags = preprocessorFlags;
     this.headerVerification = headerVerification;
@@ -90,6 +94,7 @@ final class PreprocessorDelegate implements RuleKeyAppendable {
     this.frameworkPathSearchPathFunction = frameworkPathSearchPathFunction;
     this.sandbox = sandbox;
     this.leadingIncludePaths = leadingIncludePaths;
+    this.aggregatedDeps = aggregatedDeps;
   }
 
   public PreprocessorDelegate withLeadingIncludePaths(CxxIncludePaths leadingIncludePaths) {
@@ -100,7 +105,8 @@ final class PreprocessorDelegate implements RuleKeyAppendable {
         this.preprocessorFlags,
         this.frameworkPathSearchPathFunction,
         this.sandbox,
-        Optional.of(leadingIncludePaths));
+        Optional.of(leadingIncludePaths),
+        this.aggregatedDeps);
   }
 
   public Preprocessor getPreprocessor() {
@@ -290,13 +296,6 @@ final class PreprocessorDelegate implements RuleKeyAppendable {
     return preprocessorFlags;
   }
 
-  public Iterable<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
-    return ImmutableList.<BuildRule>builder()
-        .addAll(BuildableSupport.getDepsCollection(getPreprocessor(), ruleFinder))
-        .addAll(getPreprocessorFlags().getDeps(ruleFinder))
-        .build();
-  }
-
   @Override
   public void appendToRuleKey(RuleKeyObjectSink sink) {
     if (sandbox.isPresent()) {
@@ -306,5 +305,11 @@ final class PreprocessorDelegate implements RuleKeyAppendable {
         sink.setReflectively("sandbox(" + path + ")", source);
       }
     }
+  }
+
+  @Override
+  public Stream<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
+    Preconditions.checkState(aggregatedDeps.isPresent());
+    return new DepsBuilder(ruleFinder).add(aggregatedDeps.get()).add(this).build().stream();
   }
 }

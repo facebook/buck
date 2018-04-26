@@ -25,6 +25,7 @@ import static org.junit.Assume.assumeThat;
 
 import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.rulekey.RuleKeyObjectSink;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
@@ -34,6 +35,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.ImmutableBuildTarget;
 import com.facebook.buck.model.ImmutableUnflavoredBuildTarget;
 import com.facebook.buck.rules.CommandTool;
+import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.RuleKeyAppendableFunction;
@@ -88,7 +90,8 @@ public class CxxCollectAndLogInferDependenciesStepTest {
             PreprocessorFlags.builder().build(),
             defaultFrameworkPathSearchPathFunction,
             Optional.empty(),
-            /* leadingIncludePaths */ Optional.empty());
+            /* leadingIncludePaths */ Optional.empty(),
+            Optional.of(new FakeBuildRule(buildTarget.withFlavors(InternalFlavor.of("deps")))));
 
     return new CxxInferCapture(
         buildTarget,

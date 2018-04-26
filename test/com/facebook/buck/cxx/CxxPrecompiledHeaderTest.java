@@ -20,6 +20,7 @@ import static org.hamcrest.Matchers.hasItem;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.cxx.toolchain.Compiler;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.GccPreprocessor;
@@ -29,6 +30,7 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.FakeBuildContext;
+import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -57,8 +59,8 @@ public class CxxPrecompiledHeaderTest {
           }
         };
     Compiler compiler = CxxPlatformUtils.DEFAULT_PLATFORM.getCxx().resolve(resolver);
-    SourcePathResolver sourcePathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(ruleFinder);
     CxxPrecompiledHeader precompiledHeader =
         new CxxPrecompiledHeader(
             /* canPrecompile */ true,
@@ -74,7 +76,8 @@ public class CxxPrecompiledHeaderTest {
                 CxxDescriptionEnhancer.frameworkPathToSearchPath(
                     CxxPlatformUtils.DEFAULT_PLATFORM, sourcePathResolver),
                 Optional.empty(),
-                /* leadingIncludePaths */ Optional.empty()),
+                /* leadingIncludePaths */ Optional.empty(),
+                Optional.of(new FakeBuildRule(target.withFlavors(InternalFlavor.of("deps"))))),
             new CompilerDelegate(
                 CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
                 compiler,

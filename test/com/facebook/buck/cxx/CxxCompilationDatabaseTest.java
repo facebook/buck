@@ -33,6 +33,7 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
+import com.facebook.buck.rules.DependencyAggregation;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeSourcePath;
@@ -120,12 +121,13 @@ public class CxxCompilationDatabaseTest {
         throw new UnsupportedOperationException("should not be called");
       }
     }
+    BuildTarget aggregatedDeps = compileTarget.withFlavors(InternalFlavor.of("deps"));
     rules.add(
         testBuildRuleResolver.addToIndex(
             CxxPreprocessAndCompile.preprocessAndCompile(
                 compileTarget,
                 filesystem,
-                ImmutableSortedSet.of(privateSymlinkTree, exportedSymlinkTree),
+                ruleFinder,
                 new PreprocessorDelegate(
                     CxxPlatformUtils.DEFAULT_PLATFORM.getHeaderVerification(),
                     filesystem.getRootPath(),
@@ -135,7 +137,12 @@ public class CxxCompilationDatabaseTest {
                     preprocessorFlags,
                     new FrameworkPathAppendableFunction(),
                     Optional.empty(),
-                    /* leadingIncludePaths */ Optional.empty()),
+                    /* leadingIncludePaths */ Optional.empty(),
+                    Optional.of(
+                        new DependencyAggregation(
+                            aggregatedDeps,
+                            filesystem,
+                            ImmutableSortedSet.of(privateSymlinkTree, exportedSymlinkTree)))),
                 new CompilerDelegate(
                     CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
                     new GccCompiler(
@@ -154,8 +161,7 @@ public class CxxCompilationDatabaseTest {
 
     assertThat(
         compilationDatabase.getRuntimeDeps(ruleFinder).collect(ImmutableSet.toImmutableSet()),
-        Matchers.contains(
-            exportedSymlinkTree.getBuildTarget(), privateSymlinkTree.getBuildTarget()));
+        Matchers.contains(aggregatedDeps));
 
     assertEquals(
         "getPathToOutput() should be a function of the build target.",

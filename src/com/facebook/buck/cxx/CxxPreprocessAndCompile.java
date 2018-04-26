@@ -32,8 +32,11 @@ import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.keys.SupportsDependencyFileRuleKey;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
@@ -43,7 +46,6 @@ import com.facebook.buck.step.fs.MkdirStep;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -53,9 +55,6 @@ import java.util.function.Predicate;
 /** A build rule which preprocesses and/or compiles a C/C++ source in a single step. */
 public class CxxPreprocessAndCompile extends AbstractBuildRule
     implements SupportsInputBasedRuleKey, SupportsDependencyFileRuleKey {
-
-  private final ImmutableSortedSet<BuildRule> buildDeps;
-
   /** The presence or absence of this field denotes whether the input needs to be preprocessed. */
   @AddToRuleKey private final Optional<PreprocessorDelegate> preprocessDelegate;
 
@@ -65,13 +64,15 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule
   @AddToRuleKey private final DebugPathSanitizer sanitizer;
   @AddToRuleKey private final Optional<PrecompiledHeaderData> precompiledHeaderData;
 
+  private final BuildableSupport.DepsSupplier buildDepsSupplier;
+
   private final Optional<CxxPrecompiledHeader> precompiledHeaderRule;
   private final CxxSource.Type inputType;
 
   private CxxPreprocessAndCompile(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      ImmutableSortedSet<BuildRule> buildDeps,
+      SourcePathRuleFinder ruleFinder,
       Optional<PreprocessorDelegate> preprocessDelegate,
       CompilerDelegate compilerDelegate,
       String outputName,
@@ -80,12 +81,12 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule
       Optional<CxxPrecompiledHeader> precompiledHeaderRule,
       DebugPathSanitizer sanitizer) {
     super(buildTarget, projectFilesystem);
-    this.buildDeps = buildDeps;
     if (precompiledHeaderRule.isPresent()) {
       Preconditions.checkState(
           preprocessDelegate.isPresent(),
           "Precompiled headers are only used when compilation includes preprocessing.");
     }
+    this.buildDepsSupplier = BuildableSupport.buildDepsSupplier(this, ruleFinder);
     this.preprocessDelegate = preprocessDelegate;
     this.compilerDelegate = compilerDelegate;
     this.outputName = outputName;
@@ -109,7 +110,7 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule
   public static CxxPreprocessAndCompile compile(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      ImmutableSortedSet<BuildRule> buildDeps,
+      SourcePathRuleFinder ruleFinder,
       CompilerDelegate compilerDelegate,
       String outputName,
       SourcePath input,
@@ -118,7 +119,7 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule
     return new CxxPreprocessAndCompile(
         buildTarget,
         projectFilesystem,
-        buildDeps,
+        ruleFinder,
         Optional.empty(),
         compilerDelegate,
         outputName,
@@ -134,7 +135,7 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule
   public static CxxPreprocessAndCompile preprocessAndCompile(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      ImmutableSortedSet<BuildRule> buildDeps,
+      SourcePathRuleFinder ruleFinder,
       PreprocessorDelegate preprocessorDelegate,
       CompilerDelegate compilerDelegate,
       String outputName,
@@ -145,7 +146,7 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule
     return new CxxPreprocessAndCompile(
         buildTarget,
         projectFilesystem,
-        buildDeps,
+        ruleFinder,
         Optional.of(preprocessorDelegate),
         compilerDelegate,
         outputName,
@@ -378,6 +379,14 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule
 
   @Override
   public SortedSet<BuildRule> getBuildDeps() {
-    return buildDeps;
+    return buildDepsSupplier.get();
+  }
+
+  @Override
+  public void updateBuildRuleResolver(
+      BuildRuleResolver ruleResolver,
+      SourcePathRuleFinder ruleFinder,
+      SourcePathResolver pathResolver) {
+    buildDepsSupplier.updateRuleFinder(ruleFinder);
   }
 }

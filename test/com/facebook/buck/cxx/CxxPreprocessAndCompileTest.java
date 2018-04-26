@@ -25,6 +25,7 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.cell.resolver.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rulekey.RuleKeyObjectSink;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
@@ -41,6 +42,7 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.FakeBuildContext;
+import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -56,7 +58,6 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
@@ -156,7 +157,7 @@ public class CxxPreprocessAndCompileTest {
                 CxxPreprocessAndCompile.compile(
                     target,
                     projectFilesystem,
-                    ImmutableSortedSet.of(),
+                    ruleFinder,
                     new CompilerDelegate(
                         CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
                         DEFAULT_COMPILER,
@@ -174,7 +175,7 @@ public class CxxPreprocessAndCompileTest {
                 CxxPreprocessAndCompile.compile(
                     target,
                     projectFilesystem,
-                    ImmutableSortedSet.of(),
+                    ruleFinder,
                     new CompilerDelegate(
                         CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
                         new GccCompiler(
@@ -196,7 +197,7 @@ public class CxxPreprocessAndCompileTest {
                 CxxPreprocessAndCompile.preprocessAndCompile(
                     target,
                     projectFilesystem,
-                    ImmutableSortedSet.of(),
+                    ruleFinder,
                     new PreprocessorDelegate(
                         CxxPlatformUtils.DEFAULT_PLATFORM.getHeaderVerification(),
                         DEFAULT_WORKING_DIR,
@@ -204,7 +205,9 @@ public class CxxPreprocessAndCompileTest {
                         PreprocessorFlags.builder().build(),
                         DEFAULT_FRAMEWORK_PATH_SEARCH_PATH_FUNCTION,
                         Optional.empty(),
-                        /* leadingIncludePaths */ Optional.empty()),
+                        /* leadingIncludePaths */ Optional.empty(),
+                        Optional.of(
+                            new FakeBuildRule(target.withFlavors(InternalFlavor.of("deps"))))),
                     new CompilerDelegate(
                         CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
                         DEFAULT_COMPILER,
@@ -224,7 +227,7 @@ public class CxxPreprocessAndCompileTest {
                 CxxPreprocessAndCompile.compile(
                     target,
                     projectFilesystem,
-                    ImmutableSortedSet.of(),
+                    ruleFinder,
                     new CompilerDelegate(
                         CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
                         DEFAULT_COMPILER,
@@ -246,7 +249,7 @@ public class CxxPreprocessAndCompileTest {
                 CxxPreprocessAndCompile.compile(
                     target,
                     projectFilesystem,
-                    ImmutableSortedSet.of(),
+                    ruleFinder,
                     new CompilerDelegate(
                         CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
                         DEFAULT_COMPILER,
@@ -268,7 +271,7 @@ public class CxxPreprocessAndCompileTest {
                 CxxPreprocessAndCompile.compile(
                     target,
                     projectFilesystem,
-                    ImmutableSortedSet.of(),
+                    ruleFinder,
                     new CompilerDelegate(
                         CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
                         DEFAULT_COMPILER,
@@ -306,7 +309,7 @@ public class CxxPreprocessAndCompileTest {
                 CxxPreprocessAndCompile.preprocessAndCompile(
                     target,
                     projectFilesystem,
-                    ImmutableSortedSet.of(),
+                    ruleFinder,
                     new PreprocessorDelegate(
                         CxxPlatformUtils.DEFAULT_PLATFORM.getHeaderVerification(),
                         DEFAULT_WORKING_DIR,
@@ -314,7 +317,9 @@ public class CxxPreprocessAndCompileTest {
                         flags,
                         DEFAULT_FRAMEWORK_PATH_SEARCH_PATH_FUNCTION,
                         Optional.empty(),
-                        /* leadingIncludePaths */ Optional.empty()),
+                        /* leadingIncludePaths */ Optional.empty(),
+                        Optional.of(
+                            new FakeBuildRule(target.withFlavors(InternalFlavor.of("deps"))))),
                     new CompilerDelegate(
                         CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
                         DEFAULT_COMPILER,
@@ -338,8 +343,8 @@ public class CxxPreprocessAndCompileTest {
   @Test
   public void usesCorrectCommandForCompile() {
     // Setup some dummy values for inputs to the CxxPreprocessAndCompile.
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(new TestBuildRuleResolver()));
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestBuildRuleResolver());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     CxxToolFlags flags =
         CxxToolFlags.explicitBuilder()
@@ -353,7 +358,7 @@ public class CxxPreprocessAndCompileTest {
         CxxPreprocessAndCompile.compile(
             target,
             projectFilesystem,
-            ImmutableSortedSet.of(),
+            ruleFinder,
             new CompilerDelegate(
                 CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER, DEFAULT_COMPILER, flags),
             outputName,
@@ -386,8 +391,8 @@ public class CxxPreprocessAndCompileTest {
     SourcePath compiler = FakeSourcePath.of(projectFilesystem, "compiler");
     Tool compilerTool = new CommandTool.Builder().addInput(compiler).build();
 
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(new TestBuildRuleResolver()));
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestBuildRuleResolver());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     BuildContext context = FakeBuildContext.withSourcePathResolver(pathResolver);
 
@@ -400,7 +405,7 @@ public class CxxPreprocessAndCompileTest {
         CxxPreprocessAndCompile.preprocessAndCompile(
             target,
             projectFilesystem,
-            ImmutableSortedSet.of(),
+            ruleFinder,
             new PreprocessorDelegate(
                 CxxPlatformUtils.DEFAULT_PLATFORM.getHeaderVerification(),
                 DEFAULT_WORKING_DIR,
@@ -408,7 +413,8 @@ public class CxxPreprocessAndCompileTest {
                 PreprocessorFlags.builder().build(),
                 DEFAULT_FRAMEWORK_PATH_SEARCH_PATH_FUNCTION,
                 Optional.empty(),
-                /* leadingIncludePaths */ Optional.empty()),
+                /* leadingIncludePaths */ Optional.empty(),
+                Optional.of(new FakeBuildRule(target.withFlavors(InternalFlavor.of("deps"))))),
             new CompilerDelegate(
                 CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
                 DEFAULT_COMPILER,
@@ -426,7 +432,7 @@ public class CxxPreprocessAndCompileTest {
         CxxPreprocessAndCompile.compile(
             target,
             projectFilesystem,
-            ImmutableSortedSet.of(),
+            ruleFinder,
             new CompilerDelegate(
                 CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
                 new GccCompiler(compilerTool),
@@ -441,8 +447,8 @@ public class CxxPreprocessAndCompileTest {
 
   @Test
   public void usesColorFlagForCompilationWhenRequested() {
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(new TestBuildRuleResolver()));
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestBuildRuleResolver());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     String output = "test.o";
     Path input = Paths.get("test.ii");
@@ -457,7 +463,7 @@ public class CxxPreprocessAndCompileTest {
         CxxPreprocessAndCompile.compile(
             target,
             projectFilesystem,
-            ImmutableSortedSet.of(),
+            ruleFinder,
             compilerDelegate,
             output,
             FakeSourcePath.of(input.toString()),
@@ -479,8 +485,8 @@ public class CxxPreprocessAndCompileTest {
 
   @Test
   public void usesColorFlagForPreprocessingWhenRequested() {
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(new TestBuildRuleResolver()));
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestBuildRuleResolver());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     String output = "test.ii";
     Path input = Paths.get("test.cpp");
@@ -489,7 +495,7 @@ public class CxxPreprocessAndCompileTest {
         CxxPreprocessAndCompile.preprocessAndCompile(
             target,
             projectFilesystem,
-            ImmutableSortedSet.of(),
+            ruleFinder,
             new PreprocessorDelegate(
                 CxxPlatformUtils.DEFAULT_PLATFORM.getHeaderVerification(),
                 DEFAULT_WORKING_DIR,
@@ -497,7 +503,8 @@ public class CxxPreprocessAndCompileTest {
                 PreprocessorFlags.builder().build(),
                 DEFAULT_FRAMEWORK_PATH_SEARCH_PATH_FUNCTION,
                 Optional.empty(),
-                /* leadingIncludePaths */ Optional.empty()),
+                /* leadingIncludePaths */ Optional.empty(),
+                Optional.of(new FakeBuildRule(target.withFlavors(InternalFlavor.of("deps"))))),
             new CompilerDelegate(
                 CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
                 COMPILER_WITH_COLOR_SUPPORT,

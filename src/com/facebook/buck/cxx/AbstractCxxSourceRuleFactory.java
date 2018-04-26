@@ -222,6 +222,9 @@ abstract class AbstractCxxSourceRuleFactory {
                 Preprocessor preprocessor =
                     CxxSourceTypes.getPreprocessor(getCxxPlatform(), key.getSourceType())
                         .resolve(getResolver());
+                // TODO(cjhopman): The aggregated deps logic should move into PreprocessorDelegate
+                // itself.
+                BuildRule aggregatedDeps = requireAggregatedPreprocessDepsRule();
                 PreprocessorDelegate delegate =
                     new PreprocessorDelegate(
                         getCxxPlatform().getHeaderVerification(),
@@ -235,7 +238,8 @@ abstract class AbstractCxxSourceRuleFactory {
                         CxxDescriptionEnhancer.frameworkPathToSearchPath(
                             getCxxPlatform(), getPathResolver()),
                         getSandboxTree(),
-                        /* leadingIncludePaths */ Optional.empty());
+                        /* leadingIncludePaths */ Optional.empty(),
+                        Optional.of(aggregatedDeps));
                 return new PreprocessorDelegateCacheValue(
                     delegate, getSanitizerForSourceType(key.getSourceType()));
               });
@@ -368,7 +372,6 @@ abstract class AbstractCxxSourceRuleFactory {
     Preconditions.checkArgument(CxxSourceTypes.isCompilableType(source.getType()));
 
     BuildTarget target = createCompileBuildTarget(name);
-    DepsBuilder depsBuilder = new DepsBuilder(getRuleFinder());
 
     Compiler compiler =
         CxxSourceTypes.getCompiler(getCxxPlatform(), source.getType()).resolve(getResolver());
@@ -388,9 +391,6 @@ abstract class AbstractCxxSourceRuleFactory {
 
     CompilerDelegate compilerDelegate =
         new CompilerDelegate(getCxxPlatform().getCompilerDebugPathSanitizer(), compiler, flags);
-    depsBuilder.add(compilerDelegate);
-
-    depsBuilder.add(source);
 
     // TODO(steveo): this does not account for `precompiledHeaderRule`.
 
@@ -398,7 +398,7 @@ abstract class AbstractCxxSourceRuleFactory {
     return CxxPreprocessAndCompile.compile(
         target,
         getProjectFilesystem(),
-        depsBuilder.build(),
+        getRuleFinder(),
         compilerDelegate,
         getCompileOutputName(name),
         source.getPath(),
@@ -508,9 +508,6 @@ abstract class AbstractCxxSourceRuleFactory {
     LOG.verbose("Creating preprocess and compile %s for %s", target, source);
     Preconditions.checkArgument(CxxSourceTypes.isPreprocessableType(source.getType()));
 
-    DepsBuilder depsBuilder = new DepsBuilder(getRuleFinder());
-    depsBuilder.add(requireAggregatedPreprocessDepsRule());
-
     CompilerDelegate compilerDelegate =
         new CompilerDelegate(
             getCxxPlatform().getCompilerDebugPathSanitizer(),
@@ -518,35 +515,28 @@ abstract class AbstractCxxSourceRuleFactory {
                     getCxxPlatform(), CxxSourceTypes.getPreprocessorOutputType(source.getType()))
                 .resolve(getResolver()),
             computeCompilerFlags(source.getType(), source.getFlags()));
-    depsBuilder.add(compilerDelegate);
 
     PreprocessorDelegateCacheValue preprocessorDelegateValue =
         preprocessorDelegates.apply(
             PreprocessorDelegateCacheKey.of(source.getType(), source.getFlags()));
     PreprocessorDelegate preprocessorDelegate = preprocessorDelegateValue.getPreprocessorDelegate();
-    depsBuilder.add(preprocessorDelegate);
-
-    depsBuilder.add(source);
 
     Optional<CxxPrecompiledHeader> precompiledHeaderRule =
         getOptionalPrecompiledHeader(preprocessorDelegateValue, source);
-    if (precompiledHeaderRule.isPresent()) {
-      depsBuilder.add(precompiledHeaderRule.get());
-      if (getPrecompiledHeader().isPresent()) {
-        // For a precompiled header (and not a prefix header), we may need extra include paths.
-        // The PCH build might have involved some deps that this rule does not have, so we
-        // would need to pull in its include paths to ensure any includes that happen during this
-        // build play out the same way as they did for the PCH.
-        preprocessorDelegate =
-            preprocessorDelegate.withLeadingIncludePaths(
-                precompiledHeaderRule.get().getCxxIncludePaths());
-      }
+    if (precompiledHeaderRule.isPresent() && getPrecompiledHeader().isPresent()) {
+      // For a precompiled header (and not a prefix header), we may need extra include paths.
+      // The PCH build might have involved some deps that this rule does not have, so we
+      // would need to pull in its include paths to ensure any includes that happen during this
+      // build play out the same way as they did for the PCH.
+      preprocessorDelegate =
+          preprocessorDelegate.withLeadingIncludePaths(
+              precompiledHeaderRule.get().getCxxIncludePaths());
     }
 
     return CxxPreprocessAndCompile.preprocessAndCompile(
         target,
         getProjectFilesystem(),
-        depsBuilder.build(),
+        getRuleFinder(),
         preprocessorDelegate,
         compilerDelegate,
         getCompileOutputName(name),
