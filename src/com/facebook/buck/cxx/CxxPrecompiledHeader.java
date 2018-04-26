@@ -21,6 +21,7 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
+import com.facebook.buck.core.sourcepath.NonHashableSourcePathContainer;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.cxx.toolchain.DebugPathSanitizer;
 import com.facebook.buck.io.BuildCellRelativePath;
@@ -317,6 +318,9 @@ class CxxPrecompiledHeader extends AbstractBuildRule
   }
 
   public PrecompiledHeaderData getData() {
-    return PrecompiledHeaderData.of(getIncludeFileSourcePath(), canPrecompileFlag);
+    return PrecompiledHeaderData.of(
+        new NonHashableSourcePathContainer(getIncludeFileSourcePath()),
+        getInput(),
+        canPrecompileFlag);
   }
 }

@@ -20,7 +20,6 @@ import com.facebook.buck.core.cell.resolver.CellPathResolver;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
-import com.facebook.buck.core.rulekey.RuleKeyObjectSink;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.cxx.toolchain.DebugPathSanitizer;
@@ -64,6 +63,7 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule
   @AddToRuleKey private final String outputName;
   @AddToRuleKey private final SourcePath input;
   @AddToRuleKey private final DebugPathSanitizer sanitizer;
+  @AddToRuleKey private final Optional<PrecompiledHeaderData> precompiledHeaderData;
 
   private final Optional<CxxPrecompiledHeader> precompiledHeaderRule;
   private final CxxSource.Type inputType;
@@ -92,6 +92,7 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule
     this.input = input;
     this.inputType = inputType;
     this.precompiledHeaderRule = precompiledHeaderRule;
+    this.precompiledHeaderData = precompiledHeaderRule.map(CxxPrecompiledHeader::getData);
     this.sanitizer = sanitizer;
     Preconditions.checkArgument(
         !buildTarget.getFlavors().contains(CxxStrip.RULE_FLAVOR)
@@ -154,13 +155,6 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule
         sanitizer);
   }
 
-  @Override
-  public void appendToRuleKey(RuleKeyObjectSink sink) {
-    precompiledHeaderRule.ifPresent(
-        cxxPrecompiledHeader ->
-            sink.setReflectively("precompiledHeaderRuleInput", cxxPrecompiledHeader.getInput()));
-  }
-
   private Path getDepFilePath() {
     return getOutputRoot().resolve(outputName + ".dep");
   }
@@ -185,10 +179,7 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule
     ImmutableList<Arg> arguments =
         compilerDelegate.getArguments(
             preprocessDelegate
-                .map(
-                    delegate ->
-                        delegate.getFlagsWithSearchPaths(
-                            precompiledHeaderRule.map(CxxPrecompiledHeader::getData), resolver))
+                .map(delegate -> delegate.getFlagsWithSearchPaths(precompiledHeaderData, resolver))
                 .orElseGet(CxxToolFlags::of),
             getBuildTarget().getCellPath());
 

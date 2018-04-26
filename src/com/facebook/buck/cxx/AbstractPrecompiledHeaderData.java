@@ -16,6 +16,9 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rulekey.AddsToRuleKey;
+import com.facebook.buck.core.sourcepath.NonHashableSourcePathContainer;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import org.immutables.value.Value;
@@ -23,8 +26,17 @@ import org.immutables.value.Value;
 /** Contains information needed to consume a possibly precompiled header. */
 @Value.Immutable
 @BuckStyleTuple
-interface AbstractPrecompiledHeaderData {
-  SourcePath getHeader();
+interface AbstractPrecompiledHeaderData extends AddsToRuleKey {
+  @AddToRuleKey
+  NonHashableSourcePathContainer getHeaderContainer();
 
+  default SourcePath getHeader() {
+    return getHeaderContainer().getSourcePath();
+  }
+
+  @AddToRuleKey
+  SourcePath getInput();
+
+  @AddToRuleKey
   boolean isPrecompiled();
 }
