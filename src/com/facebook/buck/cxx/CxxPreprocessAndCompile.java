@@ -35,7 +35,6 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.keys.SupportsDependencyFileRuleKey;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
@@ -45,7 +44,6 @@ import com.facebook.buck.step.fs.MkdirStep;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -69,7 +67,6 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule
 
   private final Optional<CxxPrecompiledHeader> precompiledHeaderRule;
   private final CxxSource.Type inputType;
-  private final Optional<SymlinkTree> sandboxTree;
 
   private CxxPreprocessAndCompile(
       BuildTarget buildTarget,
@@ -81,11 +78,9 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule
       SourcePath input,
       CxxSource.Type inputType,
       Optional<CxxPrecompiledHeader> precompiledHeaderRule,
-      DebugPathSanitizer sanitizer,
-      Optional<SymlinkTree> sandboxTree) {
+      DebugPathSanitizer sanitizer) {
     super(buildTarget, projectFilesystem);
     this.buildDeps = buildDeps;
-    this.sandboxTree = sandboxTree;
     if (precompiledHeaderRule.isPresent()) {
       Preconditions.checkState(
           preprocessDelegate.isPresent(),
@@ -118,8 +113,7 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule
       String outputName,
       SourcePath input,
       CxxSource.Type inputType,
-      DebugPathSanitizer sanitizer,
-      Optional<SymlinkTree> sandboxTree) {
+      DebugPathSanitizer sanitizer) {
     return new CxxPreprocessAndCompile(
         buildTarget,
         projectFilesystem,
@@ -130,8 +124,7 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule
         input,
         inputType,
         Optional.empty(),
-        sanitizer,
-        sandboxTree);
+        sanitizer);
   }
 
   /**
@@ -147,8 +140,7 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule
       SourcePath input,
       CxxSource.Type inputType,
       Optional<CxxPrecompiledHeader> precompiledHeaderRule,
-      DebugPathSanitizer sanitizer,
-      Optional<SymlinkTree> sandboxTree) {
+      DebugPathSanitizer sanitizer) {
     return new CxxPreprocessAndCompile(
         buildTarget,
         projectFilesystem,
@@ -159,19 +151,11 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule
         input,
         inputType,
         precompiledHeaderRule,
-        sanitizer,
-        sandboxTree);
+        sanitizer);
   }
 
   @Override
   public void appendToRuleKey(RuleKeyObjectSink sink) {
-    if (sandboxTree.isPresent()) {
-      ImmutableMap<Path, SourcePath> links = sandboxTree.get().getLinks();
-      for (Path path : ImmutableSortedSet.copyOf(links.keySet())) {
-        SourcePath source = links.get(path);
-        sink.setReflectively("sandbox(" + path + ")", source);
-      }
-    }
     precompiledHeaderRule.ifPresent(
         cxxPrecompiledHeader ->
             sink.setReflectively("precompiledHeaderRuleInput", cxxPrecompiledHeader.getInput()));

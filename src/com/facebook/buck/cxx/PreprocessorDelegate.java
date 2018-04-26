@@ -17,7 +17,8 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.rulekey.AddToRuleKey;
-import com.facebook.buck.core.rulekey.AddsToRuleKey;
+import com.facebook.buck.core.rulekey.RuleKeyAppendable;
+import com.facebook.buck.core.rulekey.RuleKeyObjectSink;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -38,13 +39,14 @@ import com.facebook.buck.util.WeakMemoizer;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 /** Helper class for handling preprocessing related tasks of a cxx compilation rule. */
-final class PreprocessorDelegate implements AddsToRuleKey {
+final class PreprocessorDelegate implements RuleKeyAppendable {
 
   // Fields that are added to rule key as is.
   @AddToRuleKey private final Preprocessor preprocessor;
@@ -293,5 +295,16 @@ final class PreprocessorDelegate implements AddsToRuleKey {
         .addAll(BuildableSupport.getDepsCollection(getPreprocessor(), ruleFinder))
         .addAll(getPreprocessorFlags().getDeps(ruleFinder))
         .build();
+  }
+
+  @Override
+  public void appendToRuleKey(RuleKeyObjectSink sink) {
+    if (sandbox.isPresent()) {
+      ImmutableMap<Path, SourcePath> links = sandbox.get().getLinks();
+      for (Path path : ImmutableSortedSet.copyOf(links.keySet())) {
+        SourcePath source = links.get(path);
+        sink.setReflectively("sandbox(" + path + ")", source);
+      }
+    }
   }
 }

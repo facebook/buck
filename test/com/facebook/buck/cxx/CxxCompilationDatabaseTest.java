@@ -145,8 +145,7 @@ public class CxxCompilationDatabaseTest {
                 FakeSourcePath.of(filesystem, "test.cpp"),
                 CxxSource.Type.CXX,
                 Optional.empty(),
-                CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
-                Optional.empty())));
+                CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER)));
 
     CxxCompilationDatabase compilationDatabase =
         CxxCompilationDatabase.createCompilationDatabase(

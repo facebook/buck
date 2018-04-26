@@ -403,8 +403,7 @@ abstract class AbstractCxxSourceRuleFactory {
         getCompileOutputName(name),
         source.getPath(),
         source.getType(),
-        getSanitizerForSourceType(source.getType()),
-        getSandboxTree());
+        getSanitizerForSourceType(source.getType()));
   }
 
   @VisibleForTesting
@@ -554,8 +553,7 @@ abstract class AbstractCxxSourceRuleFactory {
         source.getPath(),
         source.getType(),
         precompiledHeaderRule,
-        getSanitizerForSourceType(source.getType()),
-        getSandboxTree());
+        getSanitizerForSourceType(source.getType()));
   }
 
   Optional<CxxPrecompiledHeader> getOptionalPrecompiledHeader(
