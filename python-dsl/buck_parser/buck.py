@@ -526,6 +526,32 @@ def subdir_glob(glob_specs, excludes=None, prefix=None, build_env=None, search_b
     return merge_maps(*results)
 
 
+def _get_package_name(func_name, build_env=None):
+    """The name of the package being evaluated.
+
+    For example, in the BUCK file "some/package/BUCK", its value will be
+    "some/package".
+    If the BUCK file calls a function defined in a *.bzl file, package_name()
+    will return the package of the calling BUCK file. For example, if there is
+    a BUCK file at "some/package/BUCK" and "some/other/package/ext.bzl"
+    extension file, when BUCK file calls a function inside of ext.bzl file
+    it will still return "some/package" and not "some/other/package".
+
+    This function is intended to be used from within a build defs file that
+    likely contains macros that could be called from any build file.
+    Such macros may need to know the base path of the file in which they
+    are defining new build rules.
+
+    :return: a string, such as "java/com/facebook". Note there is no
+             trailing slash. The return value will be "" if called from
+             the build file in the root of the project.
+    :rtype: str
+    """
+    assert isinstance(build_env, BuildFileContext), (
+        "Cannot use `%s()` at the top-level of an included file." % func_name)
+    return build_env.base_path
+
+
 @provide_for_build
 def get_base_path(build_env=None):
     """Get the base path to the build file that was initially evaluated.
@@ -540,9 +566,7 @@ def get_base_path(build_env=None):
              the build file in the root of the project.
     :rtype: str
     """
-    assert isinstance(build_env, BuildFileContext), (
-        "Cannot use `get_base_path()` at the top-level of an included file.")
-    return build_env.base_path
+    return _get_package_name("get_base_path", build_env=build_env)
 
 
 @provide_for_build
@@ -567,7 +591,7 @@ def package_name(build_env=None):
              the build file in the root of the project.
     :rtype: str
     """
-    return get_base_path(build_env=build_env)
+    return _get_package_name("package_name", build_env=build_env)
 
 
 @provide_for_build
