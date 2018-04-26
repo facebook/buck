@@ -62,5 +62,6 @@ standard_java_test(
         "//third-party/java/guava:guava",
         "//third-party/java/hamcrest:hamcrest-junit",
         "//third-party/java/junit:junit",
+        "//third-party/java/easymock:easymock",
     ],
 )

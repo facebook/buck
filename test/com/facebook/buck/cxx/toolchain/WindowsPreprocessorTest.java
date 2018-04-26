@@ -46,15 +46,15 @@ public class WindowsPreprocessorTest {
     String pchPathStr = "stdafx.pch";
     Path headerPath = Paths.get(headerPathStr);
 
-    assertThat(windowsPreprocessor.prefixHeaderArgs(headerPath), contains("/Yu", pchPathStr));
+    assertThat(windowsPreprocessor.precompiledHeaderArgs(headerPath), contains("/Yu", pchPathStr));
   }
 
   @Test
   public void testPrecompiledHeaderArgsHandlesNestedHeaderFilePaths() {
     String headerPathStr = "include/subdir/stdafx.h";
-    String pchPathStr = "include/subdir/stdafx.pch";
+    String pchPathStr = "stdafx.pch";
     Path headerPath = Paths.get(headerPathStr);
 
-    assertThat(windowsPreprocessor.prefixHeaderArgs(headerPath), contains("/Yu", pchPathStr));
+    assertThat(windowsPreprocessor.precompiledHeaderArgs(headerPath), contains("/Yu", pchPathStr));
   }
 }
