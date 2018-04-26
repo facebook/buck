@@ -90,8 +90,6 @@ import javax.annotation.Nullable;
 /** An injectable service for interacting with the filesystem relative to the project root. */
 public class DefaultProjectFilesystem implements ProjectFilesystem {
 
-  private final boolean windowsSymlinks;
-
   private static final Path EDEN_MAGIC_PATH_ELEMENT = Paths.get(".eden");
 
   private final Path projectRoot;
@@ -124,8 +122,7 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
         root,
         ImmutableSet.of(),
         BuckPaths.createDefaultBuckPaths(root),
-        projectFilesystemDelegate,
-        false);
+        projectFilesystemDelegate);
   }
 
   public DefaultProjectFilesystem(
@@ -133,8 +130,7 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
       Path root,
       ImmutableSet<PathOrGlobMatcher> blackListedPaths,
       BuckPaths buckPaths,
-      ProjectFilesystemDelegate delegate,
-      boolean windowsSymlinks) {
+      ProjectFilesystemDelegate delegate) {
     if (shouldVerifyConstructorArguments()) {
       Preconditions.checkArgument(Files.isDirectory(root), "%s must be a directory", root);
       Preconditions.checkState(vfs.equals(root.getFileSystem()));
@@ -189,7 +185,6 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
               }
               return relativeTmpDir;
             });
-    this.windowsSymlinks = windowsSymlinks;
   }
 
   public static Path getCacheDir(Path root, Optional<String> value, BuckPaths buckPaths) {
@@ -817,21 +812,8 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
       MostFiles.deleteRecursivelyIfExists(symLink);
     }
     if (Platform.detect() == Platform.WINDOWS) {
-      if (windowsSymlinks) {
-        // Windows symlinks are not enabled by default, so symlinks on windows are created
-        // only when they are explicitly enabled
-        realFile = MorePaths.normalize(symLink.getParent().resolve(realFile));
-        WindowsFS.createSymbolicLink(symLink, realFile, isDirectory(realFile));
-      } else {
-        // otherwise, creating hardlinks
-        if (isDirectory(realFile)) {
-          // Hardlinks are only for files - so, copying folders
-          MostFiles.copyRecursively(realFile, symLink);
-        } else {
-          realFile = MorePaths.normalize(symLink.getParent().resolve(realFile));
-          Files.createLink(symLink, realFile);
-        }
-      }
+      realFile = MorePaths.normalize(symLink.getParent().resolve(realFile));
+      WindowsFS.createSymbolicLink(symLink, realFile, isDirectory(realFile));
     } else {
       Files.createSymbolicLink(symLink, realFile);
     }

@@ -21,7 +21,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
@@ -65,7 +64,6 @@ import java.nio.file.Paths;
 import java.util.stream.Stream;
 import org.hamcrest.Matchers;
 import org.hamcrest.junit.ExpectedException;
-import org.hamcrest.text.MatchesPattern;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -642,13 +640,7 @@ public class SymlinkTreeTest {
 
   @Test
   public void failsOnMergeConflicts() throws IOException {
-    exception.expect(HumanReadableException.class);
-    if (Platform.detect() != Platform.WINDOWS) {
-      exception.expectMessage(MatchesPattern.matchesPattern("Tried to link.*already links to.*"));
-    } else {
-      // Windows doesn't return true from 'isSymlink', so error is slightly different
-      exception.expectMessage(MatchesPattern.matchesPattern("Tried to link.*already exists.*"));
-    }
+    exception.expectMessage("Tried to link");
 
     BuildTarget exportFileTarget1 = BuildTargetFactory.newInstance("//test:dir1");
     Path dir1 = Paths.get("test", "dir1");
@@ -713,13 +705,7 @@ public class SymlinkTreeTest {
 
   @Test
   public void failsOnMergeConflictsFromExplicitlyListedFiles() throws IOException {
-    exception.expect(HumanReadableException.class);
-    if (Platform.detect() != Platform.WINDOWS) {
-      exception.expectMessage(MatchesPattern.matchesPattern("Tried to link.*already links to.*"));
-    } else {
-      // Windows doesn't return true from 'isSymlink', so error is slightly different
-      exception.expectMessage(MatchesPattern.matchesPattern("Tried to link.*already exists.*"));
-    }
+    exception.expectMessage("Tried to link");
 
     BuildTarget exportFileTarget1 = BuildTargetFactory.newInstance("//test:dir1");
     Path dir1 = Paths.get("test", "dir1");

@@ -42,14 +42,13 @@ public class WindowsFS {
     int lastError = WindowsFSLibrary.INSTANCE.GetLastError();
     if (!created || lastError != 0) {
       throw new IOException(
-          "Failed to create a symlink (dir: "
-              + dirLink
-              + ")"
+          "Tried to link "
               + symlinkPathString
               + " to "
               + targetPathString
-              + " winapi error: "
-              + lastError);
+              + " (winapi error: "
+              + lastError
+              + ")");
     }
   }
 }

@@ -168,13 +168,10 @@ public class SymlinkTreeMergeStepTest {
   public void throwsIfDestinationAlreadyExists() throws IOException, InterruptedException {
     Path examplePyDest = linkPath.resolve("example_py.py");
     Path examplePySource = filesystem.resolve("example_py").resolve("example_py.py");
-    String expectedMessage =
-        String.format(
-            "Tried to link %s to %s, but %s already exists",
-            examplePyDest, examplePySource, examplePyDest);
 
-    thrown.expect(HumanReadableException.class);
-    thrown.expectMessage(expectedMessage);
+    thrown.expectMessage("Tried to link");
+    thrown.expectMessage(examplePySource.toString());
+    thrown.expectMessage(examplePyDest.toString());
 
     filesystem.writeContentsToPath("", examplePyDest);
 
