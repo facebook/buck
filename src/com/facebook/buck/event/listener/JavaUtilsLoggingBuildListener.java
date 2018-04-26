@@ -40,7 +40,11 @@ public class JavaUtilsLoggingBuildListener implements BuckEventListener {
   private static final Logger LOG = Logger.getLogger(JavaUtilsLoggingBuildListener.class.getName());
   private static final Level LEVEL = Level.INFO;
 
-  public static void ensureLogFileIsWritten(ProjectFilesystem filesystem) {
+  public JavaUtilsLoggingBuildListener(ProjectFilesystem filesystem) {
+    ensureLogFileIsWritten(filesystem);
+  }
+
+  private static void ensureLogFileIsWritten(ProjectFilesystem filesystem) {
     if (!filesystem.exists(filesystem.getBuckPaths().getScratchDir())) {
       try {
         filesystem.mkdirs(filesystem.getBuckPaths().getScratchDir());

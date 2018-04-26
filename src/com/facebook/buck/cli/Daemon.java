@@ -24,7 +24,6 @@ import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.FileHashCacheEvent;
-import com.facebook.buck.event.listener.JavaUtilsLoggingBuildListener;
 import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.WatchmanCursor;
@@ -142,7 +141,6 @@ final class Daemon implements Closeable {
     }
     LOG.debug("Using Watchman Cursor: %s", cursor);
     persistentWorkerPools = new ConcurrentHashMap<>();
-    JavaUtilsLoggingBuildListener.ensureLogFileIsWritten(rootCell.getFilesystem());
   }
 
   Cell getRootCell() {

@@ -1110,8 +1110,6 @@ public final class Main {
           // The counters will be unregistered once the counter registry is closed.
           counterRegistry.registerCounters(parserAndCaches.getParser().getCounters());
 
-          JavaUtilsLoggingBuildListener.ensureLogFileIsWritten(rootCell.getFilesystem());
-
           Optional<ProcessManager> processManager;
           if (platform == Platform.WINDOWS) {
             processManager = Optional.empty();
@@ -1642,7 +1640,7 @@ public final class Main {
             .add(new LoggingBuildListener());
 
     if (buckConfig.getBooleanValue("log", "jul_build_log", false)) {
-      eventListenersBuilder.add(new JavaUtilsLoggingBuildListener());
+      eventListenersBuilder.add(new JavaUtilsLoggingBuildListener(projectFilesystem));
     }
 
     ChromeTraceBuckConfig chromeTraceConfig = buckConfig.getView(ChromeTraceBuckConfig.class);
