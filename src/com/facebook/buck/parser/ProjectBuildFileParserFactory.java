@@ -17,6 +17,7 @@
 package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.WatchmanFactory;
@@ -37,6 +38,7 @@ import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.google.common.collect.ImmutableMap;
 import com.google.devtools.build.lib.events.EventKind;
+import java.util.Arrays;
 import java.util.Optional;
 
 public class ProjectBuildFileParserFactory {
@@ -122,33 +124,60 @@ public class ProjectBuildFileParserFactory {
       BuckEventBus eventBus,
       ParserConfig parserConfig,
       ProjectBuildFileParserOptions buildFileParserOptions) {
-    PythonDslProjectBuildFileParser pythonDslProjectBuildFileParser =
-        new PythonDslProjectBuildFileParser(
-            buildFileParserOptions,
-            typeCoercerFactory,
-            cell.getBuckConfig().getEnvironment(),
-            eventBus,
-            new DefaultProcessExecutor(console));
+    Syntax defaultBuildFileSyntax = parserConfig.getDefaultBuildFileSyntax();
     if (parserConfig.isPolyglotParsingEnabled()) {
-      RuleFunctionFactory ruleFunctionFactory = new RuleFunctionFactory(typeCoercerFactory);
       return HybridProjectBuildFileParser.using(
           ImmutableMap.of(
               Syntax.PYTHON_DSL,
-              pythonDslProjectBuildFileParser,
+              newPythonParser(cell, typeCoercerFactory, console, eventBus, buildFileParserOptions),
               Syntax.SKYLARK,
-              SkylarkProjectBuildFileParser.using(
-                  buildFileParserOptions,
-                  eventBus,
-                  SkylarkFilesystem.using(cell.getFilesystem()),
-                  BuckGlobals.builder()
-                      .setDisableImplicitNativeRules(
-                          buildFileParserOptions.getDisableImplicitNativeRules())
-                      .setDescriptions(buildFileParserOptions.getDescriptions())
-                      .setRuleFunctionFactory(ruleFunctionFactory)
-                      .build(),
-                  new ConsoleEventHandler(eventBus, EventKind.ALL_EVENTS))),
-          parserConfig.getDefaultBuildFileSyntax());
+              newSkylarkParser(cell, typeCoercerFactory, eventBus, buildFileParserOptions)),
+          defaultBuildFileSyntax);
+    } else {
+      switch (defaultBuildFileSyntax) {
+        case SKYLARK:
+          return newSkylarkParser(cell, typeCoercerFactory, eventBus, buildFileParserOptions);
+        case PYTHON_DSL:
+          return newPythonParser(
+              cell, typeCoercerFactory, console, eventBus, buildFileParserOptions);
+        default:
+          throw new HumanReadableException(
+              defaultBuildFileSyntax
+                  + " is not supported by this version of Buck. Please update your Buck version or "
+                  + "change parser.default_build_file_syntax configuration to one of "
+                  + Arrays.toString(Syntax.values()));
+      }
     }
-    return pythonDslProjectBuildFileParser;
+  }
+
+  private static PythonDslProjectBuildFileParser newPythonParser(
+      Cell cell,
+      TypeCoercerFactory typeCoercerFactory,
+      Console console,
+      BuckEventBus eventBus,
+      ProjectBuildFileParserOptions buildFileParserOptions) {
+    return new PythonDslProjectBuildFileParser(
+        buildFileParserOptions,
+        typeCoercerFactory,
+        cell.getBuckConfig().getEnvironment(),
+        eventBus,
+        new DefaultProcessExecutor(console));
+  }
+
+  private static SkylarkProjectBuildFileParser newSkylarkParser(
+      Cell cell,
+      TypeCoercerFactory typeCoercerFactory,
+      BuckEventBus eventBus,
+      ProjectBuildFileParserOptions buildFileParserOptions) {
+    return SkylarkProjectBuildFileParser.using(
+        buildFileParserOptions,
+        eventBus,
+        SkylarkFilesystem.using(cell.getFilesystem()),
+        BuckGlobals.builder()
+            .setDisableImplicitNativeRules(buildFileParserOptions.getDisableImplicitNativeRules())
+            .setDescriptions(buildFileParserOptions.getDescriptions())
+            .setRuleFunctionFactory(new RuleFunctionFactory(typeCoercerFactory))
+            .build(),
+        new ConsoleEventHandler(eventBus, EventKind.ALL_EVENTS));
   }
 }

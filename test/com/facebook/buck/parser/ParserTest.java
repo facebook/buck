@@ -2679,6 +2679,31 @@ public class ParserTest {
     parser.getAllTargetNodes(eventBus, cell, false, executorService, buckFile);
   }
 
+  @Test
+  public void testSkylarkIsUsedWithoutPolyglotParsingEnabled() throws Exception {
+    Path buckFile = cellRoot.resolve("BUCK");
+    Files.write(
+        buckFile,
+        Joiner.on("\n")
+            .join(
+                ImmutableList.of("genrule(name = type(''), out = 'file.txt', cmd = 'touch $OUT')"))
+            .getBytes(UTF_8));
+
+    BuckConfig config =
+        FakeBuckConfig.builder()
+            .setFilesystem(filesystem)
+            .setSections("[parser]", "default_build_file_syntax=skylark")
+            .build();
+
+    Cell cell = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();
+
+    ImmutableSet<TargetNode<?, ?>> targetNodes =
+        parser.getAllTargetNodes(eventBus, cell, false, executorService, buckFile);
+    assertEquals(1, targetNodes.size());
+    // in Skylark the type of str is "string" and in Python DSL it's "<type 'str'>"
+    assertEquals(targetNodes.iterator().next().getBuildTarget().getShortName(), "string");
+  }
+
   private BuildRuleResolver buildActionGraph(
       BuckEventBus eventBus, TargetGraph targetGraph, Cell cell) {
     return Preconditions.checkNotNull(
