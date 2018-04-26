@@ -17,7 +17,7 @@
 package com.facebook.buck.features.haskell;
 
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableSet;
 import org.immutables.value.Value;
 

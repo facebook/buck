@@ -16,8 +16,8 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.jvm.java.runner.FileClassPathRunner;
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.nio.file.Path;

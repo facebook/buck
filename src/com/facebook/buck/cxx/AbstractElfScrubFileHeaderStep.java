@@ -18,6 +18,7 @@ package com.facebook.buck.cxx;
 
 import static java.nio.channels.FileChannel.MapMode.READ_WRITE;
 
+import com.facebook.buck.core.util.immutables.BuckStylePackageVisibleTuple;
 import com.facebook.buck.cxx.toolchain.elf.Elf;
 import com.facebook.buck.cxx.toolchain.elf.ElfHeader;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -25,7 +26,6 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
-import com.facebook.buck.util.immutables.BuckStylePackageVisibleTuple;
 import java.io.IOException;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;

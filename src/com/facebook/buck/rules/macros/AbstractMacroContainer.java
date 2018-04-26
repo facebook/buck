@@ -16,7 +16,7 @@
 
 package com.facebook.buck.rules.macros;
 
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import org.immutables.value.Value;
 
 /** Packages up a {@link Macro} along some configuration. */

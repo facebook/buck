@@ -15,7 +15,7 @@
  */
 package com.facebook.buck.util;
 
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import javax.annotation.Nullable;
 import org.immutables.value.Value;
 

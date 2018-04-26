@@ -18,11 +18,11 @@ package com.facebook.buck.cxx.toolchain;
 
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorConvertible;
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.linker.LinkerProvider;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.ToolProvider;
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Multimap;
 import java.util.List;

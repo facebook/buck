@@ -18,8 +18,8 @@ package com.facebook.buck.sandbox;
 
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.ConfigView;
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.util.environment.Platform;
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import org.immutables.value.Value;
 
 /** Config section responsible for sandbox features. */

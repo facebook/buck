@@ -16,9 +16,9 @@
 
 package com.facebook.buck.slb;
 
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.EventKey;
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableList;
 import java.net.URI;
 import java.util.Optional;

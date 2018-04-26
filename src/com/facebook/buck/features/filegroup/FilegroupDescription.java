@@ -17,6 +17,7 @@
 package com.facebook.buck.features.filegroup;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleCreationContext;
@@ -25,7 +26,6 @@ import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.HasSrcs;
 import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import org.immutables.value.Value;
 
 public class FilegroupDescription implements Description<FileGroupDescriptionArg> {

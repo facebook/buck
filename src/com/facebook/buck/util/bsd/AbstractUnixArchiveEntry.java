@@ -15,7 +15,7 @@
  */
 package com.facebook.buck.util.bsd;
 
-import com.facebook.buck.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import org.immutables.value.Value;
 
 @Value.Immutable

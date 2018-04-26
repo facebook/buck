@@ -16,9 +16,9 @@
 
 package com.facebook.buck.apple;
 
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.HasSrcs;
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableSortedSet;
 import org.immutables.value.Value;
 

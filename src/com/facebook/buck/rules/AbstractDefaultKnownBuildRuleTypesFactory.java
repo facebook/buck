@@ -17,9 +17,9 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.facebook.buck.sandbox.SandboxExecutionStrategyFactory;
 import com.facebook.buck.util.ProcessExecutor;
-import com.facebook.buck.util.immutables.BuckStyleTuple;
 import org.immutables.value.Value;
 import org.pf4j.PluginManager;
 

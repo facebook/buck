@@ -16,7 +16,7 @@
 
 package com.facebook.buck.doctor.config;
 
-import com.facebook.buck.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.collect.ImmutableSet;
 import java.util.Optional;

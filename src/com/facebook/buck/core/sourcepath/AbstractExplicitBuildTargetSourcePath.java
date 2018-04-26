@@ -17,7 +17,7 @@
 package com.facebook.buck.core.sourcepath;
 
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.hash.HashCode;

@@ -16,7 +16,7 @@
 
 package com.facebook.buck.doctor;
 
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.nio.file.Path;

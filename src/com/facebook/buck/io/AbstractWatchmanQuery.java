@@ -16,7 +16,7 @@
 
 package com.facebook.buck.io;
 
-import com.facebook.buck.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import org.immutables.value.Value;

@@ -18,9 +18,9 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.facebook.buck.rules.args.Arg;
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import org.immutables.value.Value;

@@ -16,9 +16,9 @@
 
 package com.facebook.buck.cxx.toolchain.nativelink;
 
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.util.List;

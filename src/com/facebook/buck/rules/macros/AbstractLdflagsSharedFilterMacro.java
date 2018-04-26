@@ -16,7 +16,7 @@
 
 package com.facebook.buck.rules.macros;
 
-import com.facebook.buck.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import org.immutables.value.Value;
 
 /** <code>$(ldflags-shared-filter ...)</code> macro type. */

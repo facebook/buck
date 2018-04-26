@@ -16,7 +16,7 @@
 
 package com.facebook.buck.artifact_cache;
 
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import java.util.List;
 import org.immutables.value.Value;
 

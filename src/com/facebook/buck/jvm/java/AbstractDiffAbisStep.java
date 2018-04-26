@@ -16,12 +16,12 @@
 
 package com.facebook.buck.jvm.java;
 
+import com.facebook.buck.core.util.immutables.BuckStyleStep;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
-import com.facebook.buck.util.immutables.BuckStyleStep;
 import com.google.common.base.Joiner;
 import java.io.IOException;
 import java.nio.file.Path;

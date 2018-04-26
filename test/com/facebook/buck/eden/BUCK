@@ -3,13 +3,13 @@ load("//tools/build_rules:java_rules.bzl", "standard_java_test")
 standard_java_test(
     name = "eden",
     deps = [
+        "//src/com/facebook/buck/core/util/immutables:immutables",
         "//src/com/facebook/buck/eden:eden",
         "//src/com/facebook/buck/event:interfaces",
         "//src/com/facebook/buck/event/external:external_lib",
         "//src/com/facebook/buck/io:transport",
         "//src/com/facebook/buck/io/filesystem/impl:impl",
         "//src/com/facebook/buck/test/result/type:type",
-        "//src/com/facebook/buck/util/immutables:immutables",
         "//src/com/facebook/buck/util/sha1:sha1",
         "//test/com/facebook/buck/util/timing:testutil",
         "//third-party/java/easymock:easymock",

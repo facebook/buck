@@ -17,8 +17,8 @@
 package com.facebook.buck.artifact_cache;
 
 import com.facebook.buck.artifact_cache.config.ArtifactCacheMode;
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.log.views.JsonViews;
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.google.common.base.Preconditions;

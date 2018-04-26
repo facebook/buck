@@ -18,7 +18,7 @@ package com.facebook.buck.rules;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.ConfigView;
 import com.facebook.buck.config.resources.ResourcesConfig;
-import com.facebook.buck.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import java.util.Optional;
 import org.immutables.value.Value;
 

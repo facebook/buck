@@ -16,7 +16,7 @@
 
 package com.facebook.buck.rules;
 
-import com.facebook.buck.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.google.common.base.Preconditions;
 import java.util.Optional;
 import org.immutables.value.Value;

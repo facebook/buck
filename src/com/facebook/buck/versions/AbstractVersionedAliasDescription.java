@@ -17,13 +17,13 @@
 package com.facebook.buck.versions;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleCreationContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.collect.ImmutableMap;
 import org.immutables.value.Value;
 

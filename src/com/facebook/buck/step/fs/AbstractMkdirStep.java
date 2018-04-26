@@ -16,13 +16,13 @@
 
 package com.facebook.buck.step.fs;
 
+import com.facebook.buck.core.util.immutables.BuckStyleStep;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.util.Escaper;
-import com.facebook.buck.util.immutables.BuckStyleStep;
 import java.io.IOException;
 import java.nio.file.Files;
 import org.immutables.value.Value;

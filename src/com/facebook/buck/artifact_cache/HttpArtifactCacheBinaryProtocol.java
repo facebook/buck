@@ -17,9 +17,9 @@
 package com.facebook.buck.artifact_cache;
 
 import com.facebook.buck.core.rulekey.RuleKey;
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.util.hash.HasherInputStream;
 import com.facebook.buck.util.hash.HasherOutputStream;
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMap;

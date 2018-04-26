@@ -16,11 +16,11 @@
 
 package com.facebook.buck.zip;
 
+import com.facebook.buck.core.util.immutables.BuckStyleStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
-import com.facebook.buck.util.immutables.BuckStyleStep;
 import com.facebook.buck.util.zip.ZipScrubber;
 import com.google.common.base.Preconditions;
 import java.io.IOException;

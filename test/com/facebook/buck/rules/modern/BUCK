@@ -6,6 +6,7 @@ java_test(
     has_immutable_types = True,
     deps = [
         "//src/com/facebook/buck/cli:cli",
+        "//src/com/facebook/buck/core/util/immutables:immutables",
         "//src/com/facebook/buck/io:io",
         "//src/com/facebook/buck/io/file:file",
         "//src/com/facebook/buck/model:model",
@@ -17,7 +18,6 @@ java_test(
         "//src/com/facebook/buck/step:step",
         "//src/com/facebook/buck/step/fs:fs",
         "//src/com/facebook/buck/util/env:env",
-        "//src/com/facebook/buck/util/immutables:immutables",
         "//test/com/facebook/buck/io/file:testutil",
         "//test/com/facebook/buck/io/filesystem:testutil",
         "//test/com/facebook/buck/model:testutil",

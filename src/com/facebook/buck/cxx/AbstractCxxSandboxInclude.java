@@ -18,8 +18,8 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.util.immutables.BuckStylePackageVisibleImmutable;
 import com.facebook.buck.rules.SymlinkTree;
-import com.facebook.buck.util.immutables.BuckStylePackageVisibleImmutable;
 import java.util.Optional;
 import org.immutables.value.Value;
 

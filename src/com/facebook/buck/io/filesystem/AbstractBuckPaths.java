@@ -16,8 +16,8 @@
 
 package com.facebook.buck.io.filesystem;
 
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.util.BuckConstant;
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import java.nio.file.Path;
 import org.immutables.value.Value;
 

@@ -16,10 +16,10 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.rules.TestRule;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.test.TestResults;
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import java.util.List;
 import java.util.concurrent.Callable;
 import org.immutables.value.Value;

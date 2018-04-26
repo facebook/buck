@@ -19,7 +19,7 @@ package com.facebook.buck.android.exopackage;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import org.immutables.value.Value;
 
 /** Holds a path to a file and a path to a file containing the hash of the first. */

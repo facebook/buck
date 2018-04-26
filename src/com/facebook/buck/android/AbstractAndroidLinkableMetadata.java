@@ -18,7 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.android.apkmodule.APKModule;
 import com.facebook.buck.android.toolchain.ndk.TargetCpuType;
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import org.immutables.value.Value;
 
 /** Information needed to determine the correct placement of native linkables in an android apk */

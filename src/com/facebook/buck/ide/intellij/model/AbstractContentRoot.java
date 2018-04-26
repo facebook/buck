@@ -16,8 +16,8 @@
 
 package com.facebook.buck.ide.intellij.model;
 
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.ide.intellij.model.folders.IjSourceFolder;
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableList;
 import org.immutables.value.Value;
 

@@ -16,7 +16,7 @@
 
 package com.facebook.buck.util.i18n;
 
-import com.facebook.buck.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import java.util.Locale;
 import org.immutables.value.Value;
 

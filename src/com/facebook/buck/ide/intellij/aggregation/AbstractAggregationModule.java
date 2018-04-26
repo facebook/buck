@@ -16,10 +16,10 @@
 
 package com.facebook.buck.ide.intellij.aggregation;
 
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.ide.intellij.model.IjModule;
 import com.facebook.buck.ide.intellij.model.IjModuleType;
 import com.facebook.buck.rules.TargetNode;
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import org.immutables.value.Value;
@@ -35,7 +35,8 @@ import org.immutables.value.Value;
 abstract class AbstractAggregationModule {
 
   @SuppressWarnings(
-      "rawtypes") // https://github.com/immutables/immutables/issues/548 requires us to use TargetNode not TargetNode<?, ?>
+      "rawtypes") // https://github.com/immutables/immutables/issues/548 requires us to use
+  // TargetNode not TargetNode<?, ?>
   public abstract ImmutableSet<TargetNode> getTargets();
 
   /**

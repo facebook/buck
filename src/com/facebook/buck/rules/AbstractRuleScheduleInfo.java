@@ -16,7 +16,7 @@
 
 package com.facebook.buck.rules;
 
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import org.immutables.value.Value;
 
 /** Used to override how the build engine schedules a build rule. */

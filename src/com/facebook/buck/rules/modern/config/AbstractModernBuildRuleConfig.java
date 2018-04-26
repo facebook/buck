@@ -18,7 +18,7 @@ package com.facebook.buck.rules.modern.config;
 
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.ConfigView;
-import com.facebook.buck.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import org.immutables.value.Value;
 
 /** Various configuration for ModernBuildRule behavior. */

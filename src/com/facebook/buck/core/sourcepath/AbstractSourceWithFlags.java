@@ -18,7 +18,7 @@ package com.facebook.buck.core.sourcepath;
 
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.Ordering;
 import java.util.List;

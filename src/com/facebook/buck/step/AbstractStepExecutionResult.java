@@ -16,8 +16,8 @@
 
 package com.facebook.buck.step;
 
+import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.facebook.buck.util.ProcessExecutor;
-import com.facebook.buck.util.immutables.BuckStyleTuple;
 import java.util.Optional;
 import org.immutables.value.Value;
 

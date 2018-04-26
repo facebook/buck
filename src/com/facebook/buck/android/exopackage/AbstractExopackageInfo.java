@@ -17,7 +17,7 @@
 package com.facebook.buck.android.exopackage;
 
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import java.util.List;

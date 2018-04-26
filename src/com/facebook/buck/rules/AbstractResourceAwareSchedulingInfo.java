@@ -15,10 +15,10 @@
  */
 package com.facebook.buck.rules;
 
+import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.facebook.buck.util.concurrent.ResourceAmounts;
 import com.facebook.buck.util.concurrent.ResourceAmountsEstimator;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
-import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import org.immutables.value.Value;

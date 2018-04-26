@@ -15,7 +15,7 @@
  */
 package com.facebook.buck.util.concurrent;
 
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import org.immutables.value.Value;
 
 @Value.Immutable(copy = true, singleton = true)

@@ -16,8 +16,8 @@
 
 package com.facebook.buck.skylark.packages;
 
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.skylark.io.Globber;
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableMap;
 import com.google.devtools.build.lib.cmdline.PackageIdentifier;
 import org.immutables.value.Value;

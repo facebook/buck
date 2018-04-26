@@ -17,7 +17,7 @@
 package com.facebook.buck.query;
 
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import org.immutables.value.Value;
 
 @BuckStyleImmutable

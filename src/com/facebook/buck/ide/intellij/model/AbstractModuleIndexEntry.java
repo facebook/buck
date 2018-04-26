@@ -16,7 +16,7 @@
 
 package com.facebook.buck.ide.intellij.model;
 
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import java.io.File;
 import java.nio.file.Path;
 import javax.annotation.Nullable;

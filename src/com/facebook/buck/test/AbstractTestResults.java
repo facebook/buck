@@ -17,8 +17,8 @@
 package com.facebook.buck.test;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.event.external.elements.TestResultsExternalInterface;
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;

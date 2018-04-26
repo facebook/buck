@@ -15,6 +15,7 @@ java_library_with_plugins(
     deps = [
         "//src/com/facebook/buck/config:config",
         "//src/com/facebook/buck/core/cell/resolver:resolver",
+        "//src/com/facebook/buck/core/util/immutables:immutables",
         "//src/com/facebook/buck/cxx:rules",
         "//src/com/facebook/buck/cxx/toolchain:toolchain",
         "//src/com/facebook/buck/cxx/toolchain/linker:linker",
@@ -34,7 +35,6 @@ java_library_with_plugins(
         "//src/com/facebook/buck/step/fs:fs",
         "//src/com/facebook/buck/toolchain:toolchain",
         "//src/com/facebook/buck/util:exceptions",
-        "//src/com/facebook/buck/util/immutables:immutables",
         "//src/com/facebook/buck/versions:translator",
         "//src/com/facebook/buck/versions:versions",
         "//third-party/java/guava:guava",

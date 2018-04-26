@@ -15,12 +15,12 @@
  */
 package com.facebook.buck.macho;
 
-import com.facebook.buck.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.google.common.primitives.UnsignedInteger;
 import com.google.common.primitives.UnsignedLong;
 import org.immutables.value.Value;
 
-//CHECKSTYLE.OFF: MethodNameCheck
+// CHECKSTYLE.OFF: MethodNameCheck
 @Value.Immutable
 @BuckStyleTuple
 interface AbstractNlist {
@@ -39,4 +39,4 @@ interface AbstractNlist {
 
   UnsignedLong getN_value(); // 32 bit for 32 bit arch;  64 bit for 64 bit arch
 }
-//CHECKSTYLE.ON: MethodNameCheck
+// CHECKSTYLE.ON: MethodNameCheck

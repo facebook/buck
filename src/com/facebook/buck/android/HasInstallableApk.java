@@ -19,8 +19,8 @@ package com.facebook.buck.android;
 import com.facebook.buck.android.exopackage.ExopackageInfo;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import java.util.Optional;
 import org.immutables.value.Value;
 

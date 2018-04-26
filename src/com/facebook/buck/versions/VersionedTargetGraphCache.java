@@ -17,13 +17,13 @@
 package com.facebook.buck.versions;
 
 import com.facebook.buck.config.BuckConfig;
+import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.TargetGraphAndBuildTargets;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.cache.CacheStatsTracker;
-import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.collect.ImmutableMap;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.TimeoutException;

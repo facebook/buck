@@ -18,10 +18,10 @@ package com.facebook.buck.artifact_cache;
 
 import com.facebook.buck.artifact_cache.config.ArtifactCacheMode;
 import com.facebook.buck.artifact_cache.config.CacheReadMode;
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.slb.HttpService;
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import java.util.Optional;
 import org.immutables.value.Value;

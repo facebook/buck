@@ -17,7 +17,7 @@
 package com.facebook.buck.rules.query;
 
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
 import javax.annotation.Nullable;

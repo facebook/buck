@@ -16,7 +16,7 @@
 
 package com.facebook.buck.counters;
 
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableMap;
 import java.util.Optional;
 import org.immutables.value.Value;

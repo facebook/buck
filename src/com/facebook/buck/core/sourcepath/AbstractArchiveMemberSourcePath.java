@@ -16,7 +16,7 @@
 
 package com.facebook.buck.core.sourcepath;
 
-import com.facebook.buck.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ComparisonChain;
 import java.nio.file.Path;

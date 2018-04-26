@@ -16,7 +16,7 @@
 
 package com.facebook.buck.apple.toolchain;
 
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import java.nio.file.Path;
 import java.util.Optional;
 import org.immutables.value.Value;

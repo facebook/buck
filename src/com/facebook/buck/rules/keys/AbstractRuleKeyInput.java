@@ -16,8 +16,8 @@
 
 package com.facebook.buck.rules.keys;
 
+import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.util.immutables.BuckStyleTuple;
 import java.nio.file.Path;
 import org.immutables.value.Value;
 

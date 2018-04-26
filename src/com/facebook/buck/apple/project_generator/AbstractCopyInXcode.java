@@ -15,7 +15,7 @@
  */
 package com.facebook.buck.apple.project_generator;
 
-import com.facebook.buck.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import java.nio.file.Path;
 import org.immutables.value.Value;
 

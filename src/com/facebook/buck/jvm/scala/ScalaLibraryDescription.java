@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.scala;
 
 import com.facebook.buck.core.cell.resolver.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.jvm.core.HasJavaAbi;
 import com.facebook.buck.jvm.java.DefaultJavaLibraryRules;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
@@ -32,7 +33,6 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.Optionals;
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import org.immutables.value.Value;

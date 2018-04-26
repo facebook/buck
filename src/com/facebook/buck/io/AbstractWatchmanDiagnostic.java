@@ -16,7 +16,7 @@
 
 package com.facebook.buck.io;
 
-import com.facebook.buck.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import org.immutables.value.Value;
 
 @Value.Immutable(builder = false, copy = false)

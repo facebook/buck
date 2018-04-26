@@ -17,10 +17,10 @@
 package com.facebook.buck.rules.macros;
 
 import com.facebook.buck.core.cell.resolver.CellPathResolver;
+import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.util.RichStream;
-import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.facebook.buck.util.types.Either;
 import com.facebook.buck.versions.TargetNodeTranslator;
 import com.facebook.buck.versions.TargetTranslatable;

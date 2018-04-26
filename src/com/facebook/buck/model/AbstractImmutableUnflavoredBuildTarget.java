@@ -18,7 +18,7 @@ package com.facebook.buck.model;
 
 import com.facebook.buck.core.model.AbstractUnflavoredBuildTarget;
 import com.facebook.buck.core.model.UnflavoredBuildTarget;
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.util.string.StringsUtils;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Interner;

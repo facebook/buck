@@ -17,13 +17,13 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.cell.resolver.CellPathResolver;
+import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.util.ClassLoaderCache;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.Verbosity;
-import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.collect.ImmutableMap;
 import java.io.PrintStream;
 import org.immutables.value.Value;

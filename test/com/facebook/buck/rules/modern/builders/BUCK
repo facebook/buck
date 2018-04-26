@@ -9,6 +9,7 @@ java_test(
     deps = [
         "//src-gen:thrift",
         "//src/com/facebook/buck/cli:cli",
+        "//src/com/facebook/buck/core/util/immutables:immutables",
         "//src/com/facebook/buck/io:io",
         "//src/com/facebook/buck/io/file:file",
         "//src/com/facebook/buck/model:model",
@@ -19,7 +20,6 @@ java_test(
         "//src/com/facebook/buck/step:step",
         "//src/com/facebook/buck/step/fs:fs",
         "//src/com/facebook/buck/util/function:function",
-        "//src/com/facebook/buck/util/immutables:immutables",
         "//test/com/facebook/buck/io/file:testutil",
         "//test/com/facebook/buck/io/filesystem:testutil",
         "//test/com/facebook/buck/testutil:testutil",

@@ -15,12 +15,12 @@
  */
 package com.facebook.buck.distributed;
 
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.distributed.thrift.BuildSlaveStatus;
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.EventKey;
 import com.facebook.buck.event.LeafEvent;
 import com.facebook.buck.event.WorkAdvanceEvent;
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableList;
 import java.util.Optional;
 import org.immutables.value.Value;

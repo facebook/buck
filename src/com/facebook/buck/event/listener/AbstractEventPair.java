@@ -15,8 +15,8 @@
  */
 package com.facebook.buck.event.listener;
 
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.event.external.events.BuckEventExternalInterface;
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import java.util.Optional;
 import org.immutables.value.Value;
 

@@ -16,9 +16,9 @@
 
 package com.facebook.buck.ide.intellij.model;
 
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.ide.intellij.lang.android.AndroidManifestParser;
 import com.facebook.buck.ide.intellij.lang.android.AndroidProjectType;
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Ordering;

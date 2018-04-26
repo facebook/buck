@@ -18,6 +18,7 @@ package com.facebook.buck.file;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.file.downloader.Downloader;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.BuildRule;
@@ -26,7 +27,6 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.toolchain.ToolchainProvider;
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.hash.HashCode;
 import java.net.URI;
 import java.util.Optional;

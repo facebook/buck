@@ -17,8 +17,8 @@
 package com.facebook.buck.features.ocaml;
 
 import com.facebook.buck.core.model.FlavorDomain;
+import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.facebook.buck.toolchain.Toolchain;
-import com.facebook.buck.util.immutables.BuckStyleTuple;
 import org.immutables.value.Value;
 
 /** Container for {@link OcamlPlatform}s. */

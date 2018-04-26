@@ -20,9 +20,9 @@ java_library(
 standard_java_test(
     name = "concurrent",
     deps = [
+        "//src/com/facebook/buck/core/util/immutables:immutables",
         "//src/com/facebook/buck/util:util",
         "//src/com/facebook/buck/util/concurrent:concurrent",
-        "//src/com/facebook/buck/util/immutables:immutables",
         "//test/com/facebook/buck/util/concurrent:testutil",
         "//third-party/java/guava:guava",
         "//third-party/java/hamcrest:hamcrest-junit",

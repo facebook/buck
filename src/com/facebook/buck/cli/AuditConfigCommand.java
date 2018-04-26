@@ -18,11 +18,11 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.util.BuckCellArg;
 import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.DirtyPrintStreamDecorator;
 import com.facebook.buck.util.ExitCode;
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableListMultimap;

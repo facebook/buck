@@ -17,9 +17,9 @@ package com.facebook.buck.rules.keys;
 
 import com.facebook.buck.core.sourcepath.ArchiveMemberSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.common.base.Preconditions;
 import java.nio.file.Path;

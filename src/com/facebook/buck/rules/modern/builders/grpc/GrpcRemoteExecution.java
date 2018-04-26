@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules.modern.builders.grpc;
 
+import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.facebook.buck.rules.modern.builders.AsyncBlobFetcher;
 import com.facebook.buck.rules.modern.builders.CasBlobUploader;
 import com.facebook.buck.rules.modern.builders.ContentAddressedStorage;
@@ -35,7 +36,6 @@ import com.facebook.buck.util.MoreThrowables;
 import com.facebook.buck.util.concurrent.MostExecutors;
 import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.util.function.ThrowingSupplier;
-import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.bytestream.ByteStreamGrpc;
 import com.google.bytestream.ByteStreamGrpc.ByteStreamStub;
 import com.google.bytestream.ByteStreamProto.ReadRequest;

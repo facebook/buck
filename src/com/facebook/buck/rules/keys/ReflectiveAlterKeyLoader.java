@@ -18,10 +18,10 @@ package com.facebook.buck.rules.keys;
 
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.facebook.buck.util.immutables.BuckStylePackageVisibleImmutable;
-import com.facebook.buck.util.immutables.BuckStylePackageVisibleTuple;
-import com.facebook.buck.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStylePackageVisibleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStylePackageVisibleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.google.common.base.Preconditions;
 import com.google.common.cache.CacheLoader;
 import com.google.common.collect.ImmutableCollection;

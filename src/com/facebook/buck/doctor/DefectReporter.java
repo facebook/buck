@@ -17,11 +17,11 @@
 package com.facebook.buck.doctor;
 
 import com.facebook.buck.core.model.BuildId;
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.doctor.config.DoctorProtocolVersion;
 import com.facebook.buck.doctor.config.SourceControlInfo;
 import com.facebook.buck.doctor.config.UserLocalConfiguration;
 import com.facebook.buck.util.environment.BuildEnvironmentDescription;
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.nio.file.Path;

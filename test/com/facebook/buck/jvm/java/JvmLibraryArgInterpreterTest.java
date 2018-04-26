@@ -23,12 +23,12 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.TestBuildRuleResolver;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.util.types.Either;
 import java.util.Optional;
 import org.immutables.value.Value;

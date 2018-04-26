@@ -16,7 +16,7 @@
 
 package com.facebook.buck.apple.xcode.xcodeproj;
 
-import com.facebook.buck.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import org.immutables.value.Value;
 
 @Value.Immutable

@@ -17,7 +17,7 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.util.immutables.BuckStylePackageVisibleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStylePackageVisibleImmutable;
 import java.nio.file.Path;
 import java.util.Optional;
 import org.immutables.value.Value;

@@ -5,7 +5,7 @@ load("//tools/build_rules:module_rules_for_tests.bzl", "convert_module_deps_to_t
 
 def _add_immutables(deps_arg, **kwargs):
     kwargs[deps_arg] = sets.union(kwargs.get(deps_arg, []), [
-        '//src/com/facebook/buck/util/immutables:immutables',
+        '//src/com/facebook/buck/core/util/immutables:immutables',
         '//third-party/java/errorprone:error-prone-annotations',
         '//third-party/java/immutables:immutables',
         '//third-party/java/guava:guava',

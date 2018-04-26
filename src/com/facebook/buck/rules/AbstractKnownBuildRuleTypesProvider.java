@@ -17,7 +17,7 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.core.cell.Cell;
-import com.facebook.buck.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.google.common.base.Throwables;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;

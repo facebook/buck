@@ -16,9 +16,9 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import java.nio.file.Path;
 import org.immutables.value.Value;
 

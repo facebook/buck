@@ -18,11 +18,11 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.sandbox.SandboxExecutionStrategy;
 import com.facebook.buck.sandbox.SandboxExecutionStrategyFactory;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.ProcessExecutor;
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.util.HashSet;

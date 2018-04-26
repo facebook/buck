@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.kotlin;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.HasJavaAbi;
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
@@ -36,7 +37,6 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.macros.StringWithMacrosConverter;
 import com.facebook.buck.toolchain.ToolchainProvider;
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.util.types.Either;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;

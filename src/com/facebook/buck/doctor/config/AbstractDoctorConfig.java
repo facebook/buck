@@ -18,8 +18,8 @@ package com.facebook.buck.doctor.config;
 
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.ConfigView;
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.slb.SlbBuckConfig;
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.util.unit.SizeUnit;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;

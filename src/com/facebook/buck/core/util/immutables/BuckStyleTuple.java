@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.util.immutables;
+package com.facebook.buck.core.util.immutables;
 
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import java.lang.annotation.ElementType;

@@ -19,7 +19,7 @@ package com.facebook.buck.apple.toolchain;
 import com.facebook.buck.apple.platform_type.ApplePlatformType;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableList;
 import java.util.Optional;
 import org.immutables.value.Value;

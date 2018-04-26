@@ -30,10 +30,10 @@
 
 package com.facebook.buck.query;
 
+import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.facebook.buck.query.QueryEnvironment.Argument;
 import com.facebook.buck.query.QueryEnvironment.ArgumentType;
 import com.facebook.buck.query.QueryEnvironment.QueryFunction;
-import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;

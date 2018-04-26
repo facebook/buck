@@ -15,12 +15,12 @@
  */
 package com.facebook.buck.macho;
 
-import com.facebook.buck.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.google.common.base.Preconditions;
 import com.google.common.primitives.UnsignedInteger;
 import org.immutables.value.Value;
 
-//CHECKSTYLE.OFF: MethodNameCheck
+// CHECKSTYLE.OFF: MethodNameCheck
 @Value.Immutable
 @BuckStyleTuple
 abstract class AbstractFatHeader {
@@ -36,4 +36,4 @@ abstract class AbstractFatHeader {
     Preconditions.checkArgument(getMagic().equals(FAT_MAGIC));
   }
 }
-//CHECKSTYLE.ON: MethodNameCheck
+// CHECKSTYLE.ON: MethodNameCheck

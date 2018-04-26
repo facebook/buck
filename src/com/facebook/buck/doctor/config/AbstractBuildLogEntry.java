@@ -16,7 +16,7 @@
 package com.facebook.buck.doctor.config;
 
 import com.facebook.buck.core.model.BuildId;
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Preconditions;
 import java.nio.file.Path;
 import java.util.Date;

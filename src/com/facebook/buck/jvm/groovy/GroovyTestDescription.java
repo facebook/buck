@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.groovy;
 
 import com.facebook.buck.core.cell.resolver.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.HasJavaAbi;
 import com.facebook.buck.jvm.core.JavaLibrary;
@@ -37,7 +38,6 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.macros.StringWithMacrosConverter;
 import com.facebook.buck.toolchain.ToolchainProvider;
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;

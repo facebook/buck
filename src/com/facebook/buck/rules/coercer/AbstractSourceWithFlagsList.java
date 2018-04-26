@@ -17,7 +17,7 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;

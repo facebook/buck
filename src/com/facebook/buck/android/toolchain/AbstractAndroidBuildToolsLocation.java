@@ -16,8 +16,8 @@
 
 package com.facebook.buck.android.toolchain;
 
+import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.facebook.buck.toolchain.Toolchain;
-import com.facebook.buck.util.immutables.BuckStyleTuple;
 import java.nio.file.Path;
 import org.immutables.value.Value;
 

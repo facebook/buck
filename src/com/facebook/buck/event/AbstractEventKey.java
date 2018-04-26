@@ -16,7 +16,7 @@
 
 package com.facebook.buck.event;
 
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Objects;
 import java.util.concurrent.atomic.AtomicLong;

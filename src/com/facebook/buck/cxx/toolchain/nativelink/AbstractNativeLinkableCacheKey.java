@@ -17,9 +17,9 @@
 package com.facebook.buck.cxx.toolchain.nativelink;
 
 import com.facebook.buck.core.model.Flavor;
+import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
-import com.facebook.buck.util.immutables.BuckStyleTuple;
 import org.immutables.value.Value;
 
 @Value.Immutable

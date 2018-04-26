@@ -16,7 +16,7 @@
 
 package com.facebook.buck.apple.simulator;
 
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import java.util.Set;
 import org.immutables.value.Value;
 

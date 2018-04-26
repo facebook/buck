@@ -16,8 +16,8 @@
 
 package com.facebook.buck.core.rulekey;
 
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.log.views.JsonViews;
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.fasterxml.jackson.annotation.JsonView;
 import java.util.Optional;
 import org.immutables.value.Value;

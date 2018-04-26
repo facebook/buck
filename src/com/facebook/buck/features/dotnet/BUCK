@@ -4,6 +4,7 @@ buck_module(
     name = "dotnet",
     srcs = glob(["*.java"]),
     provided_deps = [
+        "//src/com/facebook/buck/core/util/immutables:immutables",
         "//src/com/facebook/buck/io:executable-finder",
         "//src/com/facebook/buck/io:io",
         "//src/com/facebook/buck/log:api",
@@ -15,7 +16,6 @@ buck_module(
         "//src/com/facebook/buck/step/fs:fs",
         "//src/com/facebook/buck/util:exceptions",
         "//src/com/facebook/buck/util:util",
-        "//src/com/facebook/buck/util/immutables:immutables",
         "//third-party/java/guava:guava",
         "//third-party/java/infer-annotations:infer-annotations",
     ],

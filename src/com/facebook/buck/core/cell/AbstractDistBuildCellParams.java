@@ -17,11 +17,11 @@
 package com.facebook.buck.core.cell;
 
 import com.facebook.buck.config.BuckConfig;
+import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.module.BuckModuleManager;
 import com.facebook.buck.util.ProcessExecutor;
-import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.collect.ImmutableMap;
 import java.util.Optional;
 import org.immutables.value.Value;

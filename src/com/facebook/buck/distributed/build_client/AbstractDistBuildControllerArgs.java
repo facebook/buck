@@ -18,6 +18,7 @@ package com.facebook.buck.distributed.build_client;
 
 import com.facebook.buck.command.BuildExecutorArgs;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.distributed.ClientStatsTracker;
 import com.facebook.buck.distributed.DistBuildCellIndexer;
 import com.facebook.buck.distributed.DistBuildService;
@@ -29,7 +30,6 @@ import com.facebook.buck.rules.ActionAndTargetGraphs;
 import com.facebook.buck.rules.BuildEvent.DistBuildStarted;
 import com.facebook.buck.rules.CachingBuildEngineDelegate;
 import com.facebook.buck.rules.RemoteBuildRuleCompletionNotifier;
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListenableFuture;
 import java.util.Optional;

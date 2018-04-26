@@ -12,7 +12,7 @@ java_immutables_library(
         "//test/...",
     ],
     deps = [
-        "//src/com/facebook/buck/util/immutables:immutables",
+        "//src/com/facebook/buck/core/util/immutables:immutables",
         "//third-party/java/immutables:immutables",
     ],
 )
@@ -21,7 +21,7 @@ java_test(
     name = "test",
     srcs = glob(["*Test.java"]),
     deps = [
-        "//src/com/facebook/buck/util/immutables:immutables",
+        "//src/com/facebook/buck/core/util/immutables:immutables",
         "//test/com/facebook/buck/immutables:testutil",
         "//third-party/java/guava:guava",
         "//third-party/java/immutables:immutables",

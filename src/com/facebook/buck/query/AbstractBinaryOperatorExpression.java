@@ -31,7 +31,7 @@ package com.facebook.buck.query;
 
 import static com.facebook.buck.query.Lexer.TokenKind;
 
-import com.facebook.buck.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -82,7 +82,7 @@ abstract class AbstractBinaryOperatorExpression extends QueryExpression {
         case EXCEPT:
         case MINUS:
           return EXCEPT;
-          //$CASES-OMITTED$
+          // $CASES-OMITTED$
         default:
           throw new IllegalArgumentException("operator=" + operator);
       }

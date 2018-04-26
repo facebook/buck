@@ -16,7 +16,7 @@
 
 package com.facebook.buck.cxx.toolchain.elf;
 
-import com.facebook.buck.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.google.common.base.Preconditions;
 import java.io.IOException;
 import java.nio.ByteBuffer;

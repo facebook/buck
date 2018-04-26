@@ -10,12 +10,12 @@ java_test(
     ],
     required_for_source_only_abi = True,
     deps = [
+        "//src/com/facebook/buck/core/util/immutables:immutables",
         "//src/com/facebook/buck/jvm/java/abi/source:source",
         "//src/com/facebook/buck/jvm/java/abi/source/api:api",
         "//src/com/facebook/buck/jvm/java/lang/model:model",
         "//src/com/facebook/buck/jvm/java/plugin/adapter:adapter",
         "//src/com/facebook/buck/util:util",
-        "//src/com/facebook/buck/util/immutables:immutables",
         "//test/com/facebook/buck/jvm/java/abi/source:testutil",
         "//test/com/facebook/buck/jvm/java/plugin/adapter:testutil",
         "//test/com/facebook/buck/jvm/java/testutil/compiler:compiler",

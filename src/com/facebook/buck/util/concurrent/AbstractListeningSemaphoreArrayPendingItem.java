@@ -15,7 +15,7 @@
  */
 package com.facebook.buck.util.concurrent;
 
-import com.facebook.buck.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.google.common.util.concurrent.SettableFuture;
 import org.immutables.value.Value;
 

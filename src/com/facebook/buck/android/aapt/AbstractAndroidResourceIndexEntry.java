@@ -31,7 +31,7 @@ package com.facebook.buck.android.aapt;
  * under the License.
  */
 
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ComparisonChain;
 import java.nio.file.Path;

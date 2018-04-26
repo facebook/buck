@@ -16,8 +16,8 @@
 
 package com.facebook.buck.core.sourcepath;
 
+import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ComparisonChain;
 import java.nio.file.Path;

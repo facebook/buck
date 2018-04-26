@@ -16,6 +16,7 @@
 
 package com.facebook.buck.skylark.parser;
 
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.log.Logger;
@@ -29,7 +30,6 @@ import com.facebook.buck.skylark.io.impl.SimpleGlobber;
 import com.facebook.buck.skylark.packages.PackageContext;
 import com.facebook.buck.skylark.packages.PackageFactory;
 import com.facebook.buck.skylark.parser.context.ParseContext;
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Throwables;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;

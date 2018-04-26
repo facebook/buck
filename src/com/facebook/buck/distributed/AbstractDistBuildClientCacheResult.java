@@ -16,8 +16,8 @@
 package com.facebook.buck.distributed;
 
 import com.facebook.buck.artifact_cache.RuleKeyCacheResult;
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.distributed.thrift.RuleKeyLogEntry;
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import java.util.Optional;
 import org.immutables.value.Value;
 
