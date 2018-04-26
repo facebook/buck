@@ -18,6 +18,7 @@ package com.facebook.buck.httpserver;
 
 import com.facebook.buck.event.external.events.BuckEventExternalInterface;
 import com.facebook.buck.util.json.ObjectMappers;
+import com.google.common.base.Splitter;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import java.io.IOException;
@@ -25,7 +26,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.WebSocketAdapter;
 import org.eclipse.jetty.websocket.servlet.WebSocketCreator;
@@ -96,18 +96,22 @@ public class StreamingWebSocketServlet extends WebSocketServlet {
     }
 
     private void subscribeToEvents(Session session) {
+      subscribedEvents = Sets.newHashSet();
+
       Map<String, List<String>> params = session.getUpgradeRequest().getParameterMap();
       List<String> events = params.get("event");
       if (events == null || events.size() == 0) {
-        // Empty set means subscribe to all events.
-        subscribedEvents = Sets.newHashSet();
+        // Return empty set meaning subscribe to all events.
         return;
       }
 
-      // Filter out empty strings.
-      events = events.stream().filter(e -> !e.isEmpty()).collect(Collectors.toList());
-
-      subscribedEvents = Sets.newHashSet(events);
+      // Filter out empty strings and split comma separated parameters.
+      events
+          .stream()
+          .forEach(
+              e ->
+                  subscribedEvents.addAll(
+                      Splitter.on(',').trimResults().omitEmptyStrings().splitToList(e)));
     }
 
     @Override
