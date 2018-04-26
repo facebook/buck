@@ -747,8 +747,7 @@ abstract class AbstractCxxSourceRuleFactory {
 
                         @AddToRuleKey
                         CxxToolFlags nonIncludePathFlags =
-                            preprocessorDelegate.getNonIncludePathFlags(
-                                Optional.empty(), getPathResolver());
+                            preprocessorDelegate.getNonIncludePathFlags(getPathResolver());
                       }));
       this.preprocessorFullHash =
           MoreSuppliers.memoize(

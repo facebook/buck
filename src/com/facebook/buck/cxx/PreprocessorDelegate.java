@@ -137,9 +137,12 @@ final class PreprocessorDelegate implements AddsToRuleKey {
    * Get the command for standalone preprocessor calls.
    *
    * @param compilerFlags flags to append.
+   * @param pch
    */
   public ImmutableList<Arg> getCommand(
-      CxxToolFlags compilerFlags, Optional<CxxPrecompiledHeader> pch, SourcePathResolver resolver) {
+      CxxToolFlags compilerFlags,
+      Optional<PrecompiledHeaderData> pch,
+      SourcePathResolver resolver) {
     return ImmutableList.<Arg>builder()
         .addAll(StringArg.from(getCommandPrefix(resolver)))
         .addAll(getArguments(compilerFlags, pch, resolver))
@@ -151,7 +154,9 @@ final class PreprocessorDelegate implements AddsToRuleKey {
   }
 
   public ImmutableList<Arg> getArguments(
-      CxxToolFlags compilerFlags, Optional<CxxPrecompiledHeader> pch, SourcePathResolver resolver) {
+      CxxToolFlags compilerFlags,
+      Optional<PrecompiledHeaderData> pch,
+      SourcePathResolver resolver) {
     return ImmutableList.copyOf(
         CxxToolFlags.concat(getFlagsWithSearchPaths(pch, resolver), compilerFlags).getAllFlags());
   }
@@ -161,7 +166,7 @@ final class PreprocessorDelegate implements AddsToRuleKey {
   }
 
   public CxxToolFlags getFlagsWithSearchPaths(
-      Optional<CxxPrecompiledHeader> pch, SourcePathResolver resolver) {
+      Optional<PrecompiledHeaderData> pch, SourcePathResolver resolver) {
     CxxToolFlags leadingFlags;
     if (leadingIncludePaths.isPresent()) {
       leadingFlags =
@@ -195,9 +200,8 @@ final class PreprocessorDelegate implements AddsToRuleKey {
     return preprocessorFlags.getCxxIncludePaths();
   }
 
-  public CxxToolFlags getNonIncludePathFlags(
-      Optional<CxxPrecompiledHeader> pch, SourcePathResolver resolver) {
-    return preprocessorFlags.getNonIncludePathFlags(resolver, pch, preprocessor);
+  public CxxToolFlags getNonIncludePathFlags(SourcePathResolver resolver) {
+    return preprocessorFlags.getNonIncludePathFlags(resolver, Optional.empty(), preprocessor);
   }
 
   /**

@@ -118,14 +118,14 @@ abstract class AbstractPreprocessorFlags implements AddsToRuleKey {
   }
 
   public CxxToolFlags getNonIncludePathFlags(
-      SourcePathResolver resolver, Optional<CxxPrecompiledHeader> pch, Preprocessor preprocessor) {
+      SourcePathResolver resolver, Optional<PrecompiledHeaderData> pch, Preprocessor preprocessor) {
     ExplicitCxxToolFlags.Builder builder = CxxToolFlags.explicitBuilder();
     ExplicitCxxToolFlags.addCxxToolFlags(builder, getOtherFlags());
     if (pch.isPresent()) {
-      boolean precompiled = pch.get().canPrecompile();
       builder.addAllRuleFlags(
           StringArg.from(
-              preprocessor.prefixOrPCHArgs(precompiled, pch.get().getIncludeFilePath(resolver))));
+              preprocessor.prefixOrPCHArgs(
+                  pch.get().isPrecompiled(), resolver.getAbsolutePath(pch.get().getHeader()))));
     }
     return builder.build();
   }
@@ -135,9 +135,9 @@ abstract class AbstractPreprocessorFlags implements AddsToRuleKey {
       PathShortener pathShortener,
       Function<FrameworkPath, Path> frameworkPathTransformer,
       Preprocessor preprocessor,
-      Optional<CxxPrecompiledHeader> pch) {
+      Optional<PrecompiledHeaderData> precompiledHeader) {
     return CxxToolFlags.concat(
-        getNonIncludePathFlags(resolver, pch, preprocessor),
+        getNonIncludePathFlags(resolver, precompiledHeader, preprocessor),
         getIncludePathFlags(resolver, pathShortener, frameworkPathTransformer, preprocessor));
   }
 }

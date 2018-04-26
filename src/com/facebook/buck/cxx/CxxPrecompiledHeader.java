@@ -144,7 +144,11 @@ class CxxPrecompiledHeader extends AbstractBuildRule
    *     #getSourcePathToOutput()}, otherwise it'll be the input header file.
    */
   public Path getIncludeFilePath(SourcePathResolver pathResolver) {
-    return pathResolver.getAbsolutePath(canPrecompile() ? getSourcePathToOutput() : input);
+    return pathResolver.getAbsolutePath(getIncludeFileSourcePath());
+  }
+
+  private SourcePath getIncludeFileSourcePath() {
+    return canPrecompile() ? getSourcePathToOutput() : input;
   }
 
   @Override
@@ -318,5 +322,9 @@ class CxxPrecompiledHeader extends AbstractBuildRule
         /* useArgFile*/ true,
         compilerDelegate.getCompiler(),
         Optional.empty());
+  }
+
+  public PrecompiledHeaderData getData() {
+    return PrecompiledHeaderData.of(getIncludeFileSourcePath(), canPrecompileFlag);
   }
 }

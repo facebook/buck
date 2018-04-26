@@ -207,7 +207,10 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule
     ImmutableList<Arg> arguments =
         compilerDelegate.getArguments(
             preprocessDelegate
-                .map(delegate -> delegate.getFlagsWithSearchPaths(precompiledHeaderRule, resolver))
+                .map(
+                    delegate ->
+                        delegate.getFlagsWithSearchPaths(
+                            precompiledHeaderRule.map(CxxPrecompiledHeader::getData), resolver))
                 .orElseGet(CxxToolFlags::of),
             getBuildTarget().getCellPath());
 
