@@ -59,8 +59,8 @@ import org.immutables.value.Value;
  * Description for a {@link BuildRule} that wraps an {@code .aar} file as an Android dependency.
  *
  * <p>This represents an Android Library Project packaged as an {@code .aar} bundle as specified by:
- * http://tools.android.com/tech-docs/new-build-system/aar-format. When it is in the packageable
- * deps of an {@link AndroidBinary}, its contents will be included in the generated APK.
+ * https://developer.android.com/studio/projects/android-library#aar-contents. When it is in the
+ * packageable deps of an {@link AndroidBinary}, its contents will be included in the generated APK.
  *
  * <p>Note that the {@code aar} may be specified as a {@link SourcePath}, so it could be either a
  * binary {@code .aar} file checked into version control, or a zip file that conforms to the {@code

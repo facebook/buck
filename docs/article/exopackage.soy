@@ -177,7 +177,7 @@ This ensures that builds are <em>reproducible</em> and <em>hermetic</em>.
 For AntennaPod, we ran <code>./gradlew --debug assembleDebug</code> and inspected the
 output to figure out which third party JAR files Gradle was using to build the app.
 As a result, we ended up adding the following files to the <code>libs</code> directory,
-which also includes an <a href="http://tools.android.com/tech-docs/new-build-system/aar-format">AAR</a>{sp}
+which also includes an <a href="https://developer.android.com/studio/projects/android-library#aar-contents">AAR</a>{sp}
 file for the Android support library for v7 compatibility.
 
 <pre>{literal}
