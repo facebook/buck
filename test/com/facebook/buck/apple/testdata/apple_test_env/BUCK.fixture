@@ -1,3 +1,7 @@
+kwargs = {}
+if read_config("testcase", "set_targetspecific_env", False):
+	kwargs['env'] = {"FOO": "bar"}
+
 apple_test(
     name = "foo",
     srcs = ["FooXCTest.m"],
@@ -6,4 +10,5 @@ apple_test(
         "$SDKROOT/System/Library/Frameworks/Foundation.framework",
     ],
     info_plist = "Test.plist",
+    **kwargs
 )

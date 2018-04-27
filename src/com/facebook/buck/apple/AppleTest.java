@@ -111,6 +111,7 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final String testLogDirectoryEnvironmentVariable;
   private final String testLogLevelEnvironmentVariable;
   private final String testLogLevel;
+  private final Optional<ImmutableMap<String, String>> testSpecificEnvironmentVariables;
 
   /**
    * Absolute path to xcode developer dir.
@@ -188,7 +189,8 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
       String testLogLevel,
       Optional<Long> testRuleTimeoutMs,
       boolean isUiTest,
-      Optional<Either<SourcePath, String>> snapshotReferenceImagesPath) {
+      Optional<Either<SourcePath, String>> snapshotReferenceImagesPath,
+      Optional<ImmutableMap<String, String>> testSpecificEnvironmentVariables) {
     super(buildTarget, projectFilesystem, params);
     this.xctool = xctool;
     this.xctoolStutterTimeout = xctoolStutterTimeout;
@@ -214,6 +216,7 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.testLogLevel = testLogLevel;
     this.isUiTest = isUiTest;
     this.snapshotReferenceImagesPath = snapshotReferenceImagesPath;
+    this.testSpecificEnvironmentVariables = testSpecificEnvironmentVariables;
   }
 
   @Override
@@ -264,6 +267,12 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
     Optional<Path> testHostAppPath = extractBundlePathForBundle(testHostApp, buildContext);
     Optional<Path> uiTestTargetAppPath = extractBundlePathForBundle(uiTestTargetApp, buildContext);
+
+    ImmutableMap<String, String> testEnvironmentOverrides =
+        ImmutableMap.<String, String>builder()
+            .putAll(options.getEnvironmentOverrides())
+            .putAll(this.testSpecificEnvironmentVariables.orElse(ImmutableMap.of()))
+            .build();
 
     if (!useXctest) {
       if (!xctool.isPresent()) {
@@ -325,7 +334,7 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
           new XctoolRunTestsStep(
               getProjectFilesystem(),
               buildContext.getSourcePathResolver().getAbsolutePath(xctool.get()),
-              options.getEnvironmentOverrides(),
+              testEnvironmentOverrides,
               xctoolStutterTimeout,
               platformName,
               destinationSpecifierArg,
@@ -360,7 +369,7 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
       HashMap<String, String> environment = new HashMap<>();
       environment.putAll(xctest.getEnvironment(buildContext.getSourcePathResolver()));
-      environment.putAll(options.getEnvironmentOverrides());
+      environment.putAll(testEnvironmentOverrides);
       if (testHostAppPath.isPresent()) {
         environment.put("XCInjectBundleInto", testHostAppPath.get().toString());
       }
