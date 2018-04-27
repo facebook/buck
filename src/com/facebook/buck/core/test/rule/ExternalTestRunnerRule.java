@@ -14,8 +14,9 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
+package com.facebook.buck.core.test.rule;
 
+import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.test.TestRunningOptions;
 import java.io.IOException;

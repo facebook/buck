@@ -16,8 +16,8 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.core.test.rule.TestRule;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import com.facebook.buck.rules.TestRule;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.test.TestResults;
 import java.util.List;

@@ -35,8 +35,8 @@ import javax.annotation.Nullable;
  *       NoopBuildRuleWithDeclaredAndExtraDeps to keep to that constraint, even though the actual
  *       work is done by the flavored versions.
  *   <li>When a target has no output artifacts, but its exit code may be interesting. e.g. {@link
- *       TestRule}s may not have any build steps to perform, but have runTests Steps to run to
- *       determine their exit code.
+ *       com.facebook.buck.core.test.rule.TestRule}s may not have any build steps to perform, but
+ *       have runTests Steps to run to determine their exit code.
  *   <li>When a target just forwards an existing file, e.g. for prebuilt library rules, or if all
  *       the work is actually done on a depending rule (e.g. Lua).
  * </ol>

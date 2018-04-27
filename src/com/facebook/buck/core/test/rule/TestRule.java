@@ -14,8 +14,11 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
+package com.facebook.buck.core.test.rule;
 
+import com.facebook.buck.rules.BuildContext;
+import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.test.TestCaseSummary;
@@ -75,9 +78,9 @@ public interface TestRule extends BuildRule {
    * Returns the commands required to run the tests.
    *
    * <p><strong>Note:</strong> This method may be run without {@link
-   * BuildEngine#build(BuildEngineBuildContext, ExecutionContext, BuildRule)} having been run. This
-   * happens if the user has built [and ran] the test previously and then re-runs it using the
-   * {@code --debug} flag.
+   * com.facebook.buck.rules.BuildEngine#build(com.facebook.buck.rules.BuildEngineBuildContext,
+   * ExecutionContext, BuildRule)} having been run. This happens if the user has built [and ran] the
+   * test previously and then re-runs it using the {@code --debug} flag.
    *
    * @param executionContext Provides context for creating {@link Step}s.
    * @param options The runtime testing options.
