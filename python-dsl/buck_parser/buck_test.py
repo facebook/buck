@@ -342,6 +342,87 @@ class TestBuck(unittest.TestCase):
         finally:
             shutil.rmtree(d)
 
+    def test_glob_star_does_not_zero_match_dotfile(self):
+        # Verify the behavior of the "*." pattern. Note that in the shell,
+        # "*." does not match dotfiles by default:
+        #
+        # $ ls ~/*.gitconfig
+        # ls: /Users/mbolin/*.gitconfig: No such file or directory
+        #
+        # By comparison, glob() from the pathlib code in Python 3 will:
+        #
+        # >>> list(pathlib.Path(os.getenv('HOME')).glob('*.gitconfig'))
+        # [PosixPath('/Users/mbolin/.gitconfig')]
+        #
+        # Buck should follow what the shell does here. Note this must also
+        # hold true when Watchman is used to implement glob().
+        d = tempfile.mkdtemp()
+        try:
+            a_subdir = os.path.join(d, 'a')
+            os.makedirs(a_subdir)
+            f = open(os.path.join(a_subdir, '.project.toml'), 'w')
+            f.close()
+            f = open(os.path.join(a_subdir, '..project.toml'), 'w')
+            f.close()
+            f = open(os.path.join(a_subdir, '.foo.project.toml'), 'w')
+            f.close()
+            f = open(os.path.join(a_subdir, 'Buck.project.toml'), 'w')
+            f.close()
+
+            b_subdir = os.path.join(d, 'b')
+            os.makedirs(b_subdir)
+            f = open(os.path.join(b_subdir, 'B.project.toml'), 'w')
+            f.close()
+            f = open(os.path.join(b_subdir, 'B..project.toml'), 'w')
+            f.close()
+            f = open(os.path.join(b_subdir, 'Buck.project.toml'), 'w')
+            f.close()
+
+            def do_glob(pattern, include_dotfiles):
+                return glob_internal(
+                    includes=[pattern],
+                    excludes=[],
+                    project_root_relative_excludes=[],
+                    include_dotfiles=include_dotfiles,
+                    search_base=Path(d),
+                    project_root=Path(d))
+
+            # Note that if include_dotfiles=False, the "*" in "*." will never
+            # do a zero-length match or match a sequence that starts with "."
+            # because "*." appears at the start of a path component boundary.
+            self.assertEquals(
+                [
+                    os.path.join('a', 'Buck.project.toml'),
+                ],
+                do_glob('a/*.project.toml', include_dotfiles=False))
+            self.assertEquals(
+                [
+                    os.path.join('a', '..project.toml'),
+                    os.path.join('a', '.foo.project.toml'),
+                    os.path.join('a', '.project.toml'),
+                    os.path.join('a', 'Buck.project.toml'),
+                ],
+                do_glob('a/*.project.toml', include_dotfiles=True))
+
+            # Note that "*." behaves differently if it is not at the start of a
+            # path component boundary.
+            self.assertEquals(
+                [
+                    os.path.join('b', 'B..project.toml'),
+                    os.path.join('b', 'B.project.toml'),
+                    os.path.join('b', 'Buck.project.toml'),
+                ],
+                do_glob('b/B*.project.toml', include_dotfiles=False))
+            self.assertEquals(
+                [
+                    os.path.join('b', 'B..project.toml'),
+                    os.path.join('b', 'B.project.toml'),
+                    os.path.join('b', 'Buck.project.toml'),
+                ],
+                do_glob('b/B*.project.toml', include_dotfiles=True))
+        finally:
+            shutil.rmtree(d)
+
     def test_case_preserved(self):
         d = tempfile.mkdtemp()
         try:
