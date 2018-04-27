@@ -57,7 +57,7 @@ public class TargetNodeParsePipeline
 
   private static final Logger LOG = Logger.get(TargetNodeParsePipeline.class);
 
-  private final ParserTargetNodeFactory<TargetNode<?, ?>> delegate;
+  private final ParserTargetNodeFactory<Map<String, Object>> delegate;
   private final boolean speculativeDepsTraversal;
   private final RawNodeParsePipeline rawNodeParsePipeline;
   private final SimplePerfEvent.Scope targetNodePipelineLifetimeEventScope;
@@ -75,7 +75,7 @@ public class TargetNodeParsePipeline
    */
   public TargetNodeParsePipeline(
       Cache<BuildTarget, TargetNode<?, ?>> cache,
-      ParserTargetNodeFactory<TargetNode<?, ?>> targetNodeDelegate,
+      ParserTargetNodeFactory<Map<String, Object>> targetNodeDelegate,
       ListeningExecutorService executorService,
       BuckEventBus eventBus,
       boolean speculativeDepsTraversal,

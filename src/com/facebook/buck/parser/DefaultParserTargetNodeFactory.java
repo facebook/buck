@@ -57,7 +57,8 @@ import java.util.function.Function;
  * Creates {@link TargetNode} instances from raw data coming in form the {@link
  * ProjectBuildFileParser}.
  */
-public class DefaultParserTargetNodeFactory implements ParserTargetNodeFactory<TargetNode<?, ?>> {
+public class DefaultParserTargetNodeFactory
+    implements ParserTargetNodeFactory<Map<String, Object>> {
 
   private static final Logger LOG = Logger.get(DefaultParserTargetNodeFactory.class);
 
@@ -80,7 +81,7 @@ public class DefaultParserTargetNodeFactory implements ParserTargetNodeFactory<T
     this.ruleKeyConfiguration = ruleKeyConfiguration;
   }
 
-  public static ParserTargetNodeFactory<TargetNode<?, ?>> createForParser(
+  public static ParserTargetNodeFactory<Map<String, Object>> createForParser(
       ConstructorArgMarshaller marshaller,
       LoadingCache<Cell, BuildFileTree> buildFileTrees,
       TargetNodeListener<TargetNode<?, ?>> nodeListener,
@@ -94,7 +95,7 @@ public class DefaultParserTargetNodeFactory implements ParserTargetNodeFactory<T
         ruleKeyConfiguration);
   }
 
-  public static ParserTargetNodeFactory<TargetNode<?, ?>> createForDistributedBuild(
+  public static ParserTargetNodeFactory<Map<String, Object>> createForDistributedBuild(
       ConstructorArgMarshaller marshaller,
       TargetNodeFactory targetNodeFactory,
       RuleKeyConfiguration ruleKeyConfiguration) {

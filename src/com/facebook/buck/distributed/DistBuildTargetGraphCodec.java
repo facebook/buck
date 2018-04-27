@@ -63,13 +63,13 @@ public class DistBuildTargetGraphCodec {
   private static final Logger LOG = Logger.get(DistBuildTargetGraphCodec.class);
 
   private ListeningExecutorService cpuExecutor;
-  private final ParserTargetNodeFactory<TargetNode<?, ?>> parserTargetNodeFactory;
+  private final ParserTargetNodeFactory<Map<String, Object>> parserTargetNodeFactory;
   private final Function<? super TargetNode<?, ?>, ? extends Map<String, Object>> nodeToRawNode;
   private Set<String> topLevelTargets;
 
   public DistBuildTargetGraphCodec(
       ListeningExecutorService cpuExecutor,
-      ParserTargetNodeFactory<TargetNode<?, ?>> parserTargetNodeFactory,
+      ParserTargetNodeFactory<Map<String, Object>> parserTargetNodeFactory,
       Function<? super TargetNode<?, ?>, ? extends Map<String, Object>> nodeToRawNode,
       Set<String> topLevelTargets) {
     this.cpuExecutor = cpuExecutor;

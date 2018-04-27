@@ -23,16 +23,15 @@ import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.rules.TargetNode;
 import java.nio.file.Path;
-import java.util.Map;
 import java.util.function.Function;
 
 /** Creates {@link TargetNode} instances for the parser. */
 public interface ParserTargetNodeFactory<T> {
-  T createTargetNode(
+  TargetNode<?, ?> createTargetNode(
       Cell cell,
       KnownBuildRuleTypes knownBuildRuleTypes,
       Path buildFile,
       BuildTarget target,
-      Map<String, Object> rawNode,
+      T rawNode,
       Function<PerfEventId, SimplePerfEvent.Scope> perfEventScope);
 }
