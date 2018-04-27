@@ -1,0 +1,9 @@
+java_library(
+    name = "rule",
+    srcs = glob(["*.java"]),
+    exported_deps = [
+        "//src/com/facebook/buck/core/toolchain/tool:tool",
+        "//src/com/facebook/buck/rules:build_rule",
+    ],
+    visibility = ["PUBLIC"],
+)

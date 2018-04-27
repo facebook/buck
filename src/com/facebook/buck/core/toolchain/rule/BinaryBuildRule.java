@@ -14,9 +14,10 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
+package com.facebook.buck.core.toolchain.rule;
 
 import com.facebook.buck.core.toolchain.tool.Tool;
+import com.facebook.buck.rules.BuildRule;
 
 /** Build rules that can be executed on the command line. */
 public interface BinaryBuildRule extends BuildRule {
