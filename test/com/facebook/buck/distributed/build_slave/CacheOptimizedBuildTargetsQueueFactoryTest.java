@@ -16,7 +16,10 @@
 
 package com.facebook.buck.distributed.build_slave;
 
+import static com.facebook.buck.distributed.testutil.CustomBuildRuleResolverFactory.CACHABLE_A;
+import static com.facebook.buck.distributed.testutil.CustomBuildRuleResolverFactory.CACHABLE_B;
 import static com.facebook.buck.distributed.testutil.CustomBuildRuleResolverFactory.CACHABLE_C;
+import static com.facebook.buck.distributed.testutil.CustomBuildRuleResolverFactory.CACHABLE_D;
 import static com.facebook.buck.distributed.testutil.CustomBuildRuleResolverFactory.CHAIN_TOP_TARGET;
 import static com.facebook.buck.distributed.testutil.CustomBuildRuleResolverFactory.LEAF_TARGET;
 import static com.facebook.buck.distributed.testutil.CustomBuildRuleResolverFactory.LEFT_TARGET;
@@ -72,7 +75,7 @@ public class CacheOptimizedBuildTargetsQueueFactoryTest {
             localCacheHitTargets.stream().map(resolver::getRule).collect(Collectors.toList()));
 
     return new CacheOptimizedBuildTargetsQueueFactory(
-            resolver, artifactCache, false, new RuleDepsCache(resolver))
+            resolver, artifactCache, false, new RuleDepsCache(resolver), false)
         .createBuildTargetsQueue(
             topLevelTargets, ruleFinishedPublisher, MOST_BUILD_RULES_FINISHED_PERCENTAGE);
   }
@@ -80,7 +83,8 @@ public class CacheOptimizedBuildTargetsQueueFactoryTest {
   private BuildTargetsQueue createQueueWithRemoteCacheHits(
       BuildRuleResolver resolver,
       Iterable<BuildTarget> topLevelTargets,
-      List<BuildTarget> remoteCacheHitTargets) {
+      List<BuildTarget> remoteCacheHitTargets,
+      boolean shouldBuildSelectedTargetsLocally) {
 
     artifactCache =
         new DummyArtifactCacheByBuildRule(
@@ -88,7 +92,11 @@ public class CacheOptimizedBuildTargetsQueueFactoryTest {
             ImmutableList.of());
 
     return new CacheOptimizedBuildTargetsQueueFactory(
-            resolver, artifactCache, false, new RuleDepsCache(resolver))
+            resolver,
+            artifactCache,
+            false,
+            new RuleDepsCache(resolver),
+            shouldBuildSelectedTargetsLocally)
         .createBuildTargetsQueue(
             topLevelTargets, ruleFinishedPublisher, MOST_BUILD_RULES_FINISHED_PERCENTAGE);
   }
@@ -126,7 +134,7 @@ public class CacheOptimizedBuildTargetsQueueFactoryTest {
             BuildTargetFactory.newInstance(RIGHT_TARGET),
             BuildTargetFactory.newInstance(LEAF_TARGET));
     BuildTargetsQueue queue =
-        createQueueWithRemoteCacheHits(resolver, ImmutableList.of(rootTarget), hitTargets);
+        createQueueWithRemoteCacheHits(resolver, ImmutableList.of(rootTarget), hitTargets, false);
 
     List<WorkUnit> zeroDepTargets = BuildTargetsQueueTest.dequeueNoFinishedTargets(queue);
     Assert.assertEquals(1, zeroDepTargets.size());
@@ -164,7 +172,7 @@ public class CacheOptimizedBuildTargetsQueueFactoryTest {
         BuildTargetFactory.newInstance(CustomBuildRuleResolverFactory.HAS_RUNTIME_DEP_RULE);
     BuildTargetsQueue queue =
         createQueueWithRemoteCacheHits(
-            resolver, ImmutableList.of(target), ImmutableList.of(target));
+            resolver, ImmutableList.of(target), ImmutableList.of(target), false);
     List<WorkUnit> zeroDepTargets = BuildTargetsQueueTest.dequeueNoFinishedTargets(queue);
     Assert.assertEquals(1, zeroDepTargets.size());
     Assert.assertEquals(2, zeroDepTargets.get(0).getBuildTargets().size());
@@ -193,7 +201,10 @@ public class CacheOptimizedBuildTargetsQueueFactoryTest {
 
     BuildTargetsQueue queue =
         createQueueWithRemoteCacheHits(
-            resolver, ImmutableList.of(rootTarget), ImmutableList.of(rightTarget, leafTarget));
+            resolver,
+            ImmutableList.of(rootTarget),
+            ImmutableList.of(rightTarget, leafTarget),
+            false);
 
     List<WorkUnit> zeroDepWorkUnits = BuildTargetsQueueTest.dequeueNoFinishedTargets(queue);
     Assert.assertEquals(1, zeroDepWorkUnits.size());
@@ -215,7 +226,7 @@ public class CacheOptimizedBuildTargetsQueueFactoryTest {
     BuildTarget target = BuildTargetFactory.newInstance(ROOT_TARGET);
     BuildTargetsQueue queue =
         createQueueWithRemoteCacheHits(
-            resolver, ImmutableList.of(target), ImmutableList.of(target));
+            resolver, ImmutableList.of(target), ImmutableList.of(target), false);
     List<WorkUnit> zeroDepTargets = BuildTargetsQueueTest.dequeueNoFinishedTargets(queue);
     Assert.assertEquals(0, zeroDepTargets.size());
   }
@@ -358,5 +369,44 @@ public class CacheOptimizedBuildTargetsQueueFactoryTest {
             .map(Futures::getUnchecked)
             .map(BuildRule::getBuildTarget)
             .collect(ImmutableSet.toImmutableSet()));
+  }
+
+  @Test
+  public void testGraphWithBuildLocallyDep() throws NoSuchBuildTargetException {
+    // Graph structure:
+    // cacheable_a - - - - - - - - - build_locally_a - cacheable_d
+    //             \               /
+    //              uncachaeable_a
+    //             /
+    // cacheable_b - cacheable_c
+    BuildRuleResolver resolver = CustomBuildRuleResolverFactory.createResolverWithBuildLocallyDep();
+
+    BuildTarget cacheableA = BuildTargetFactory.newInstance(CACHABLE_A);
+    BuildTarget cacheableB = BuildTargetFactory.newInstance(CACHABLE_B);
+
+    // Make sure count of cacheable/uncacheable with building locally disabled is as expected.
+    BuildTargetsQueue queue =
+        createQueueWithRemoteCacheHits(
+            resolver, ImmutableList.of(cacheableA, cacheableB), ImmutableList.of(), false);
+    Assert.assertEquals(5, queue.getDistributableBuildGraph().getNumCachableNodes());
+
+    // Check enabling of building locally marks correct rules as uncacheable.
+    queue =
+        createQueueWithRemoteCacheHits(
+            resolver, ImmutableList.of(cacheableA, cacheableB), ImmutableList.of(), true);
+    Assert.assertEquals(2, queue.getDistributableBuildGraph().getNumCachableNodes());
+    Assert.assertFalse(queue.getDistributableBuildGraph().getNode(CACHABLE_C).isUncachable());
+    Assert.assertFalse(queue.getDistributableBuildGraph().getNode(CACHABLE_D).isUncachable());
+
+    // Make sure it does not interfere with checking caches for artifacts (marking the (transitive)
+    // "buildLocally" rules as uncacheable should happen only after visiting the graph and checking
+    // caches).
+    queue =
+        createQueueWithRemoteCacheHits(
+            resolver,
+            ImmutableList.of(cacheableA, cacheableB),
+            ImmutableList.of(cacheableA, cacheableB),
+            true);
+    Assert.assertEquals(0, queue.getDistributableBuildGraph().size());
   }
 }

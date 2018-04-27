@@ -48,7 +48,11 @@ public class MinionWorkloadAllocatorTest {
     BuildTarget target = BuildTargetFactory.newInstance(CustomBuildRuleResolverFactory.ROOT_TARGET);
     BuildTargetsQueue queue =
         new CacheOptimizedBuildTargetsQueueFactory(
-                resolver, new NoopArtifactCacheByBuildRule(), false, new RuleDepsCache(resolver))
+                resolver,
+                new NoopArtifactCacheByBuildRule(),
+                false,
+                new RuleDepsCache(resolver),
+                false)
             .createBuildTargetsQueue(
                 ImmutableList.of(target),
                 new NoOpCoordinatorBuildRuleEventsPublisher(),

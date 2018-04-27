@@ -186,6 +186,9 @@ public class DistBuildConfig {
       "cache_synchronization_safety_margin_millis";
   private static final int DEFAULT_CACHE_SYNCHRONIZATION_SAFETY_MARGIN_MILLIS = 5000;
 
+  private static final String BUILD_SELECTED_TARGETS_LOCALLY = "build_selected_targets_locally";
+  private static final boolean DEFAULT_BUILD_SELECTED_TARGETS_LOCALLY = true;
+
   private final SlbBuckConfig frontendConfig;
   private final BuckConfig buckConfig;
 
@@ -484,6 +487,11 @@ public class DistBuildConfig {
     return buckConfig
         .getInteger(STAMPEDE_SECTION, CACHE_SYNCHRONIZATION_SAFETY_MARGIN_MILLIS)
         .orElse(DEFAULT_CACHE_SYNCHRONIZATION_SAFETY_MARGIN_MILLIS);
+  }
+
+  public boolean shouldBuildSelectedTargetsLocally() {
+    return buckConfig.getBooleanValue(
+        STAMPEDE_SECTION, BUILD_SELECTED_TARGETS_LOCALLY, DEFAULT_BUILD_SELECTED_TARGETS_LOCALLY);
   }
 
   public OkHttpClient createOkHttpClient() {

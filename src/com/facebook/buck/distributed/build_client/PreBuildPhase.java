@@ -199,7 +199,8 @@ public class PreBuildPhase {
                           actionAndTargetGraphs.getActionGraphAndResolver().getResolver(),
                           artifactCache,
                           /* isDeepRemoteBuild */ false,
-                          localRuleKeyCalculator.getRuleDepsCache())
+                          localRuleKeyCalculator.getRuleDepsCache(),
+                          /* shouldBuildSelectedTargetsLocally */ false)
                       .uploadCriticalNodesFromLocalCache(topLevelTargets, distBuildClientStats);
 
                 } catch (Exception e) {

@@ -99,7 +99,8 @@ public class MultiSlaveBuildModeRunnerFactory {
                                     graphs.getActionGraphAndResolver().getResolver(),
                                     artifactCache,
                                     distBuildConfig.isDeepRemoteBuildEnabled(),
-                                    ruleKeyCalculator.getRuleDepsCache())
+                                    ruleKeyCalculator.getRuleDepsCache(),
+                                    distBuildConfig.shouldBuildSelectedTargetsLocally())
                                 .createBuildTargetsQueue(
                                     topLevelTargetsToBuild,
                                     coordinatorBuildRuleEventsPublisher,

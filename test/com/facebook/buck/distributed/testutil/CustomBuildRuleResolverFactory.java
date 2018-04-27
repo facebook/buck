@@ -39,6 +39,7 @@ import java.util.stream.Stream;
 public class CustomBuildRuleResolverFactory {
 
   public static final String ROOT_TARGET = "//foo:one";
+  public static final String CACHABLE_D = ROOT_TARGET + "cacheable_d";
   public static final String CACHABLE_C = ROOT_TARGET + "cacheable_c";
   public static final String CACHABLE_B = ROOT_TARGET + "cacheable_b";
   public static final String CACHABLE_A = ROOT_TARGET + "cacheable_a";
@@ -47,6 +48,7 @@ public class CustomBuildRuleResolverFactory {
   public static final String UNCACHABLE_C = ROOT_TARGET + "uncacheable_c";
   public static final String UNCACHABLE_B = ROOT_TARGET + "uncacheable_b";
   public static final String UNCACHABLE_A = ROOT_TARGET + "uncacheable_a";
+  public static final String CACHABLE_BUILD_LOCALLY_A = ROOT_TARGET + "cachable_build_locally_a";
   public static final String CHAIN_TOP_TARGET = ROOT_TARGET + "_chain_top";
   public static final String LEFT_TARGET = ROOT_TARGET + "_left";
   public static final String RIGHT_TARGET = ROOT_TARGET + "_right";
@@ -241,6 +243,45 @@ public class CustomBuildRuleResolverFactory {
     return resolver;
   }
 
+  // Graph structure:
+  // cacheable_a - - - - - - - - - build_locally_a - cacheable_d
+  //             \               /
+  //              uncachaeable_a
+  //             /
+  // cacheable_b - cacheable_c
+  public static BuildRuleResolver createResolverWithBuildLocallyDep() {
+    BuildRuleResolver resolver = new TestBuildRuleResolver();
+
+    // build_locally_a - cacheable_d
+    BuildRule cacheableD = newCacheableRule(resolver, CustomBuildRuleResolverFactory.CACHABLE_D);
+    BuildRule cacheableBuildLocallyA =
+        newCacheableBuildLocallyRule(
+            resolver, CustomBuildRuleResolverFactory.CACHABLE_BUILD_LOCALLY_A, cacheableD);
+
+    // uncachaeable_a /
+    BuildRule uncacheableA =
+        newUncacheableRule(
+            resolver, CustomBuildRuleResolverFactory.UNCACHABLE_A, cacheableBuildLocallyA);
+    // cacheable_c
+    BuildRule cacheableC = newCacheableRule(resolver, CustomBuildRuleResolverFactory.CACHABLE_C);
+
+    // cacheable_a, cacheable_b
+    newCacheableRule(
+        resolver, CustomBuildRuleResolverFactory.CACHABLE_A, uncacheableA, cacheableBuildLocallyA);
+    newCacheableRule(resolver, CustomBuildRuleResolverFactory.CACHABLE_B, uncacheableA, cacheableC);
+
+    return resolver;
+  }
+
+  private static BuildRule newCacheableBuildLocallyRule(
+      BuildRuleResolver resolver, String targetString, BuildRule... deps) {
+    FakeBuildLocallyBuildRule rule =
+        new FakeBuildLocallyBuildRule(
+            BuildTargetFactory.newInstance(targetString), new FakeProjectFilesystem(), deps);
+    resolver.addToIndex(rule);
+    return rule;
+  }
+
   public static class FakeUncacheableBuildRule extends FakeBuildRule {
     public FakeUncacheableBuildRule(
         BuildTarget target, ProjectFilesystem filesystem, BuildRule... deps) {
@@ -273,6 +314,18 @@ public class CustomBuildRuleResolverFactory {
     @Override
     public Stream<BuildTarget> getRuntimeDeps(SourcePathRuleFinder ruleFinder) {
       return runtimeDeps.stream().map(BuildRule::getBuildTarget);
+    }
+  }
+
+  public static class FakeBuildLocallyBuildRule extends FakeBuildRule {
+    public FakeBuildLocallyBuildRule(
+        BuildTarget target, ProjectFilesystem filesystem, BuildRule... deps) {
+      super(target, filesystem, deps);
+    }
+
+    @Override
+    public boolean shouldBuildLocally() {
+      return true;
     }
   }
 }

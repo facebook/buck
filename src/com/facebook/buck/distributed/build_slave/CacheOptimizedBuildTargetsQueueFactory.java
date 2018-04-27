@@ -28,6 +28,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Queues;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -55,6 +56,7 @@ public class CacheOptimizedBuildTargetsQueueFactory {
   private final ArtifactCacheByBuildRule artifactCache;
   private final RuleDepsCache ruleDepsCache;
   private final boolean isDeepBuild;
+  private final boolean shouldBuildSelectedTargetsLocally;
 
   private class GraphTraversalData {
     Map<String, Set<String>> allReverseDeps = new HashMap<>();
@@ -62,17 +64,20 @@ public class CacheOptimizedBuildTargetsQueueFactory {
     Set<BuildRule> visitedRules = new HashSet<>();
     Set<BuildRule> prunedRules = new HashSet<>();
     Set<String> uncachableTargets = new HashSet<>();
+    Set<String> buildLocallyTargets = new HashSet<>();
   }
 
   public CacheOptimizedBuildTargetsQueueFactory(
       BuildRuleResolver resolver,
       ArtifactCacheByBuildRule artifactCache,
       boolean isDeepRemoteBuild,
-      RuleDepsCache ruleDepsCache) {
+      RuleDepsCache ruleDepsCache,
+      boolean shouldBuildSelectedTargetsLocally) {
     this.resolver = resolver;
     this.artifactCache = artifactCache;
     this.isDeepBuild = isDeepRemoteBuild;
     this.ruleDepsCache = ruleDepsCache;
+    this.shouldBuildSelectedTargetsLocally = shouldBuildSelectedTargetsLocally;
 
     if (isDeepBuild) {
       LOG.info("Deep build requested. Will not prune BuildTargetsQueue using the remote cache.");
@@ -168,6 +173,10 @@ public class CacheOptimizedBuildTargetsQueueFactory {
         results.uncachableTargets.add(target);
       }
 
+      if (shouldBuildSelectedTargetsLocally && rule.shouldBuildLocally()) {
+        results.buildLocallyTargets.add(target);
+      }
+
       results.allForwardDeps.put(target, new HashSet<>());
 
       // Get all build dependencies (regular and runtime)
@@ -255,6 +264,23 @@ public class CacheOptimizedBuildTargetsQueueFactory {
     return allRules;
   }
 
+  private Set<String> findTransitiveBuildLocallyTargets(GraphTraversalData graphData) {
+    Set<String> transitiveBuildLocallyTargets = new HashSet<>(graphData.buildLocallyTargets);
+    Queue<String> targetsToProcess = Queues.newArrayDeque(graphData.buildLocallyTargets);
+    while (!targetsToProcess.isEmpty()) {
+      String target = targetsToProcess.remove();
+      if (graphData.allReverseDeps.containsKey(target)) {
+        for (String revDep : graphData.allReverseDeps.get(target)) {
+          if (transitiveBuildLocallyTargets.add(revDep)) {
+            targetsToProcess.add(revDep);
+          }
+        }
+      }
+    }
+
+    return transitiveBuildLocallyTargets;
+  }
+
   /**
    * Upload the smallest set of cachable {@link BuildRule}s from the dir-cache, which can help the
    * remote servers in finishing the build faster.
@@ -312,6 +338,16 @@ public class CacheOptimizedBuildTargetsQueueFactory {
             prunedTargets.size(), numTotalCachableRules));
     coordinatorBuildRuleEventsPublisher.createBuildRuleStartedEvents(prunedTargets);
     coordinatorBuildRuleEventsPublisher.createBuildRuleCompletionEvents(prunedTargets);
+
+    if (shouldBuildSelectedTargetsLocally) {
+      // Consider all (transitively) 'buildLocally' rules as uncachable for DistBuild purposes - we
+      // cannot build them remotely and, hence, we cannot put them in cache for local client to
+      // consume.
+      // NOTE: this needs to be after uncacheability property is used for graph nodes visiting (and,
+      // hence, pruning and scheduling) - we want caches to be checked for these rules while doing
+      // the visiting (local build could have uploaded artifacts for these rules).
+      results.uncachableTargets.addAll(findTransitiveBuildLocallyTargets(results));
+    }
 
     // Do the reference counting and create the EnqueuedTargets.
     ImmutableSet.Builder<DistributableNode> zeroDependencyNodes = ImmutableSet.builder();

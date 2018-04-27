@@ -58,7 +58,7 @@ public class BuildTargetsQueueTest {
   private static BuildTargetsQueue createQueueWithoutRemoteCache(
       BuildRuleResolver resolver, Iterable<BuildTarget> topLevelTargets) {
     return new CacheOptimizedBuildTargetsQueueFactory(
-            resolver, new NoopArtifactCacheByBuildRule(), false, new RuleDepsCache(resolver))
+            resolver, new NoopArtifactCacheByBuildRule(), false, new RuleDepsCache(resolver), false)
         .createBuildTargetsQueue(
             topLevelTargets,
             new NoOpCoordinatorBuildRuleEventsPublisher(),
@@ -373,7 +373,7 @@ public class BuildTargetsQueueTest {
 
     CacheOptimizedBuildTargetsQueueFactory factory =
         new CacheOptimizedBuildTargetsQueueFactory(
-            resolver, artifactCache, true, new RuleDepsCache(resolver));
+            resolver, artifactCache, true, new RuleDepsCache(resolver), false);
 
     EasyMock.replay(artifactCache);
     factory.createBuildTargetsQueue(

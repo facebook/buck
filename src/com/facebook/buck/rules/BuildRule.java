@@ -156,4 +156,13 @@ public interface BuildRule extends Comparable<BuildRule> {
    *     BuildRule
    */
   BuildRuleInfoProviderCollection getProviderCollection();
+
+  /**
+   * @return true if this rule, and all rules which that depend on it, should be built locally i.e.
+   *     on the machine that initiated a build instead of one of the remote workers taking part in
+   *     the distributed build.
+   */
+  default boolean shouldBuildLocally() {
+    return false;
+  }
 }
