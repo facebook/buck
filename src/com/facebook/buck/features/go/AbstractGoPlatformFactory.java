@@ -32,7 +32,6 @@ import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.CharMatcher;
-import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
@@ -215,10 +214,7 @@ abstract class AbstractGoPlatformFactory {
   }
 
   private ImmutableList<String> getFlags(String section, String key) {
-    return ImmutableList.copyOf(
-        Splitter.on(" ")
-            .omitEmptyStrings()
-            .split(getBuckConfig().getValue(section, key).orElse("")));
+    return getBuckConfig().getListWithoutComments(section, key, ' ');
   }
 
   private Optional<Path> getConfiguredGoRoot(String section) {
