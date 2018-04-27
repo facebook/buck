@@ -463,8 +463,15 @@ public class RustLibraryDescription
       AbstractRustLibraryDescriptionArg constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
-    targetGraphOnlyDepsBuilder.addAll(
-        RustCompileUtils.getPlatformParseTimeDeps(getRustToolchain(), buildTarget, constructorArg));
+    // Add parse-time deps for *all* platforms, as we don't know which platform will be
+    // selected by a top-level binary rule (e.g. a Python binary transitively depending on
+    // this library may choose platform "foo").
+    getRustToolchain()
+        .getRustPlatforms()
+        .getValues()
+        .stream()
+        .flatMap(p -> RichStream.from(RustCompileUtils.getPlatformParseTimeDeps(p)))
+        .forEach(targetGraphOnlyDepsBuilder::add);
   }
 
   @Override

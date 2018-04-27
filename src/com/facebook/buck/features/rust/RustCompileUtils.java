@@ -315,7 +315,7 @@ public class RustCompileUtils {
                 .orElseGet(rustToolchain::getDefaultRustPlatform));
   }
 
-  private static Iterable<BuildTarget> getPlatformParseTimeDeps(RustPlatform rustPlatform) {
+  static Iterable<BuildTarget> getPlatformParseTimeDeps(RustPlatform rustPlatform) {
     ImmutableSet.Builder<BuildTarget> deps = ImmutableSet.builder();
     deps.addAll(rustPlatform.getRustCompiler().getParseTimeDeps());
     rustPlatform.getLinker().ifPresent(l -> deps.addAll(l.getParseTimeDeps()));
