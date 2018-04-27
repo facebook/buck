@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.support.test.event;
+package com.facebook.buck.core.test.event;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;

@@ -11,7 +11,7 @@ java_library(
         "//src/com/facebook/buck/test/selectors:selectors",
     ],
     tests = [
-        "//test/com/facebook/buck/support/test/event:event",
+        "//test/com/facebook/buck/core/test/event:event",
     ],
     visibility = ["PUBLIC"],
     deps = [
