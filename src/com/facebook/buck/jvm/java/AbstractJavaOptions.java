@@ -18,8 +18,8 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
+import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
-import com.facebook.buck.rules.Tool;
 import org.immutables.value.Value;
 
 @Value.Immutable

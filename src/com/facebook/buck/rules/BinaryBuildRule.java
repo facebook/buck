@@ -16,6 +16,8 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.core.toolchain.tool.Tool;
+
 /** Build rules that can be executed on the command line. */
 public interface BinaryBuildRule extends BuildRule {
   /** Command to execute the output of this rule. */

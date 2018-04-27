@@ -13,6 +13,7 @@
   "//src/com/facebook/buck/core/model:model",
   "//src/com/facebook/buck/core/rules/provider:provider",
   "//src/com/facebook/buck/core/sourcepath:sourcepath",
+  "//src/com/facebook/buck/core/toolchain/tool:tool",
   "//src/com/facebook/buck/core/util/immutables:immutables",
   "//src/com/facebook/buck/counters:counters",
   "//src/com/facebook/buck/event/api:api",

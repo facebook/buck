@@ -15,8 +15,8 @@
  */
 package com.facebook.buck.android.relinker;
 
+import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.collect.ImmutableList;

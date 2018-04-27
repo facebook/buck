@@ -16,7 +16,7 @@
 
 package com.facebook.buck.shell;
 
-import com.facebook.buck.rules.Tool;
+import com.facebook.buck.core.toolchain.tool.Tool;
 import com.google.common.hash.HashCode;
 import java.nio.file.Path;
 

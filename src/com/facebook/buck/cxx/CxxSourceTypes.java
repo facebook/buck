@@ -17,6 +17,7 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.cxx.toolchain.CompilerProvider;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.PreprocessorProvider;
@@ -51,7 +52,7 @@ public class CxxSourceTypes {
         || sourceType == CxxSource.Type.ASM;
   }
 
-  /** @return the appropriate {@link com.facebook.buck.rules.Tool} representing the preprocessor. */
+  /** @return the appropriate {@link Tool} representing the preprocessor. */
   public static PreprocessorProvider getPreprocessor(CxxPlatform cxxPlatform, CxxSource.Type type) {
     PreprocessorProvider preprocessor;
 

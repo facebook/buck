@@ -17,6 +17,7 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.toolchain.tool.Tool;
 
 public interface ToolProvider {
 

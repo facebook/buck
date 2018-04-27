@@ -16,9 +16,9 @@
 
 package com.facebook.buck.android.toolchain.ndk;
 
+import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
-import com.facebook.buck.rules.Tool;
 import java.nio.file.Path;
 import java.util.Optional;
 import org.immutables.value.Value;

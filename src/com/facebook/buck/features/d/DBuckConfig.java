@@ -18,11 +18,11 @@ package com.facebook.buck.features.d;
 
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.file.FileFinder;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.HashedFileTool;
-import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.environment.Architecture;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;

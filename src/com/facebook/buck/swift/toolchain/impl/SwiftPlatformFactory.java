@@ -17,7 +17,7 @@
 package com.facebook.buck.swift.toolchain.impl;
 
 import com.facebook.buck.apple.platform_type.ApplePlatformType;
-import com.facebook.buck.rules.Tool;
+import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.swift.toolchain.SwiftPlatform;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Files;

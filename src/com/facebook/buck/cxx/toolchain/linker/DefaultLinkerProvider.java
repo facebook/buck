@@ -17,8 +17,8 @@
 package com.facebook.buck.cxx.toolchain.linker;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.ToolProvider;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;

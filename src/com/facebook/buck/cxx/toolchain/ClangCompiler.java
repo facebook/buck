@@ -16,7 +16,7 @@
 
 package com.facebook.buck.cxx.toolchain;
 
-import com.facebook.buck.rules.Tool;
+import com.facebook.buck.core.toolchain.tool.Tool;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 import java.util.Optional;

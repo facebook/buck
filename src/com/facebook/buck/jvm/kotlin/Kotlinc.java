@@ -20,9 +20,9 @@ import static com.facebook.buck.jvm.java.Javac.SRC_JAR;
 import static com.facebook.buck.jvm.java.Javac.SRC_ZIP;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
-import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.unarchive.ArchiveFormat;
 import com.facebook.buck.util.unarchive.ExistingFileMode;
