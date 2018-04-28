@@ -17,9 +17,9 @@
 package com.facebook.buck.features.haskell;
 
 import com.facebook.buck.config.BuckConfig;
+import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
-import com.facebook.buck.rules.ToolProvider;
 import com.facebook.buck.rules.tool.config.ToolConfig;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;

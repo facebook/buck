@@ -1,0 +1,11 @@
+java_library(
+    name = "toolprovider",
+    srcs = glob(["*.java"]),
+    visibility = ["PUBLIC"],
+    deps = [
+        "//src/com/facebook/buck/core/toolchain/tool:tool",
+        "//src/com/facebook/buck/model:model",
+        "//src/com/facebook/buck/rules:build_rule",
+        "//third-party/java/guava:guava",
+    ],
+)

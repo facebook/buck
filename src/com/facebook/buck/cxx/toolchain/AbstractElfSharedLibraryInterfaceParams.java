@@ -17,8 +17,8 @@
 package com.facebook.buck.cxx.toolchain;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
-import com.facebook.buck.rules.ToolProvider;
 import com.google.common.collect.ImmutableList;
 import org.immutables.value.Value;
 

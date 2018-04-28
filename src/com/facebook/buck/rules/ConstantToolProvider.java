@@ -18,6 +18,7 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.toolchain.tool.Tool;
+import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
 import com.google.common.collect.ImmutableList;
 
 public class ConstantToolProvider implements ToolProvider {

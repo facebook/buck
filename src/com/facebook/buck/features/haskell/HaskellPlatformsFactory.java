@@ -17,11 +17,11 @@
 package com.facebook.buck.features.haskell;
 
 import com.facebook.buck.config.BuckConfig;
+import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.DefaultCxxPlatforms;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.rules.SystemToolProvider;
-import com.facebook.buck.rules.ToolProvider;
 import com.facebook.buck.util.RichStream;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Paths;
