@@ -15,6 +15,7 @@ java_library(
     deps = [
         "//src/com/facebook/buck/config:config",
         "//src/com/facebook/buck/core/cell:cell",
+        "//src/com/facebook/buck/core/toolchain/tool/impl:impl",
         "//src/com/facebook/buck/cxx/toolchain/linker:linker",
         "//src/com/facebook/buck/io:io",
         "//src/com/facebook/buck/model:model",

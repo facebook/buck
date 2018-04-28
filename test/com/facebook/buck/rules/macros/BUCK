@@ -72,6 +72,7 @@ standard_java_test(
         "//src/com/facebook/buck/artifact_cache:artifact_cache",
         "//src/com/facebook/buck/config:config",
         "//src/com/facebook/buck/core/cell:cell",
+        "//src/com/facebook/buck/core/toolchain/tool/impl:impl",
         "//src/com/facebook/buck/core/util/immutables:immutables",
         "//src/com/facebook/buck/counters:counters",
         "//src/com/facebook/buck/cxx:rules",

@@ -7,6 +7,7 @@ java_library(
         exclude = ["*Test.java"],
     ),
     deps = [
+        "//src/com/facebook/buck/core/toolchain/tool/impl:impl",
         "//src/com/facebook/buck/features/ocaml:ocaml",
         "//src/com/facebook/buck/model:model",
         "//src/com/facebook/buck/rules/coercer:coercer",

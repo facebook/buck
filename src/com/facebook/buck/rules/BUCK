@@ -274,7 +274,6 @@ java_immutables_library(
         "CachingBuildEngine.java",
         "CachingBuildEngineDelegate.java",
         "CachingBuildRuleBuilder.java",
-        "CommandTool.java",
         "ConstantToolProvider.java",
         "DefaultBuildableContext.java",
         "DefaultOnDiskBuildInfo.java",

@@ -17,7 +17,7 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.config.FakeBuckConfig;
-import com.facebook.buck.rules.CommandTool;
+import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
 import com.google.common.collect.ImmutableList;
 
 public class JavaCompilationConstants {

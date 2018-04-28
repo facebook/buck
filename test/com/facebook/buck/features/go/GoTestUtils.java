@@ -16,8 +16,8 @@
 
 package com.facebook.buck.features.go;
 
+import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
-import com.facebook.buck.rules.CommandTool;
 import java.nio.file.Paths;
 
 public class GoTestUtils {

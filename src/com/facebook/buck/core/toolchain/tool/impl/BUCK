@@ -1,0 +1,12 @@
+java_library(
+    name = "impl",
+    srcs = glob(["*.java"]),
+    visibility = ["PUBLIC"],
+    deps = [
+        "//src/com/facebook/buck/core/rulekey:rulekey",
+        "//src/com/facebook/buck/core/toolchain/tool:tool",
+        "//src/com/facebook/buck/rules:source_path",
+        "//src/com/facebook/buck/rules/args:args",
+        "//third-party/java/guava:guava",
+    ],
+)
