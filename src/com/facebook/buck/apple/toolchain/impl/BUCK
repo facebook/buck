@@ -12,6 +12,7 @@ java_library_with_plugins(
     deps = [
         "//src/com/facebook/buck/apple:apple",
         "//src/com/facebook/buck/config:config",
+        "//src/com/facebook/buck/core/toolchain/tool/impl:impl",
         "//src/com/facebook/buck/cxx/toolchain/linker:linker",
         "//src/com/facebook/buck/io:io",
         "//src/com/facebook/buck/io/file:file",

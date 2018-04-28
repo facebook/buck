@@ -14,6 +14,7 @@ java_library_with_plugins(
         "//src/com/facebook/buck/android:config",
         "//src/com/facebook/buck/android:helpers",
         "//src/com/facebook/buck/android:utils",
+        "//src/com/facebook/buck/core/toolchain/tool/impl:impl",
         "//src/com/facebook/buck/cxx/toolchain/linker:linker",
         "//src/com/facebook/buck/log:api",
         "//src/com/facebook/buck/util:util",
