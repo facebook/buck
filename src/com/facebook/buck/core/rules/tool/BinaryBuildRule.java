@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.core.toolchain.rule;
+package com.facebook.buck.core.rules.tool;
 
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.rules.BuildRule;

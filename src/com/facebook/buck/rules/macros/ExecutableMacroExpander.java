@@ -18,7 +18,7 @@ package com.facebook.buck.rules.macros;
 
 import com.facebook.buck.core.cell.resolver.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.toolchain.rule.BinaryBuildRule;
+import com.facebook.buck.core.rules.tool.BinaryBuildRule;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.model.macros.MacroException;
 import com.facebook.buck.rules.BuildRule;

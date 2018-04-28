@@ -1,5 +1,5 @@
 java_library(
-    name = "rule",
+    name = "tool",
     srcs = glob(["*.java"]),
     exported_deps = [
         "//src/com/facebook/buck/core/toolchain/tool:tool",

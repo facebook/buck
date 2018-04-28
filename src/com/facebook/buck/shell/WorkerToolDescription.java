@@ -19,7 +19,7 @@ package com.facebook.buck.shell;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.toolchain.rule.BinaryBuildRule;
+import com.facebook.buck.core.rules.tool.BinaryBuildRule;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleCreationContext;

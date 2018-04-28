@@ -18,7 +18,7 @@ package com.facebook.buck.shell;
 
 import com.facebook.buck.core.cell.resolver.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.toolchain.rule.BinaryBuildRule;
+import com.facebook.buck.core.rules.tool.BinaryBuildRule;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;

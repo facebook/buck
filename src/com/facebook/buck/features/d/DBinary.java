@@ -17,9 +17,9 @@
 package com.facebook.buck.features.d;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rules.tool.BinaryBuildRule;
 import com.facebook.buck.core.sourcepath.ForwardingBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.toolchain.rule.BinaryBuildRule;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
