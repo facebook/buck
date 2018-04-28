@@ -16,14 +16,18 @@
 
 package com.facebook.buck.cxx.toolchain;
 
+import static com.facebook.buck.util.environment.Platform.WINDOWS;
 import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.rules.Tool;
+import com.facebook.buck.util.environment.Platform;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import org.easymock.EasyMock;
 import org.hamcrest.junit.ExpectedException;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -42,6 +46,8 @@ public class WindowsPreprocessorTest {
 
   @Test
   public void testPrefixHeaderArgsHandlesSimpleHeaderFilePaths() {
+    Assume.assumeThat(Platform.detect(), is(WINDOWS));
+
     String headerPathStr = "stdafx.h";
     Path headerPath = Paths.get(headerPathStr);
 
@@ -50,7 +56,9 @@ public class WindowsPreprocessorTest {
 
   @Test
   public void testPrefixHeaderArgsHandlesNestedHeaderFilePaths() {
-    String headerPathStr = "include/subdir/stdafx.h";
+    Assume.assumeThat(Platform.detect(), is(WINDOWS));
+
+    String headerPathStr = "include\\subdir\\stdafx.h";
     Path headerPath = Paths.get(headerPathStr);
 
     assertThat(windowsPreprocessor.prefixHeaderArgs(headerPath), contains("/Yc", headerPathStr));
@@ -58,6 +66,8 @@ public class WindowsPreprocessorTest {
 
   @Test
   public void testPrecompiledHeaderArgsHandlesSimpleHeaderFilePaths() {
+    Assume.assumeThat(Platform.detect(), is(WINDOWS));
+
     String headerPathStr = "stdafx.h";
     String pchPathStr = "stdafx.pch";
     Path headerPath = Paths.get(headerPathStr);
@@ -67,7 +77,9 @@ public class WindowsPreprocessorTest {
 
   @Test
   public void testPrecompiledHeaderArgsHandlesNestedHeaderFilePaths() {
-    String headerPathStr = "include/subdir/stdafx.h";
+    Assume.assumeThat(Platform.detect(), is(WINDOWS));
+
+    String headerPathStr = "include\\subdir\\stdafx.h";
     String pchPathStr = "stdafx.pch";
     Path headerPath = Paths.get(headerPathStr);
 
