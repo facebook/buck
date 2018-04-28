@@ -9,6 +9,7 @@ java_library_with_plugins(
     visibility = ["PUBLIC"],
     deps = [
         "//src/com/facebook/buck/config:config",
+        "//src/com/facebook/buck/core/toolchain/tool/impl:impl",
         "//src/com/facebook/buck/io:executable-finder",
         "//src/com/facebook/buck/io:io",
         "//src/com/facebook/buck/jvm/core:core",
