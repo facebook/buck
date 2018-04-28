@@ -16,8 +16,8 @@
 
 package com.facebook.buck.cxx.toolchain;
 
+import com.facebook.buck.core.toolchain.tool.DelegatingTool;
 import com.facebook.buck.core.toolchain.tool.Tool;
-import com.facebook.buck.rules.DelegatingTool;
 import com.facebook.buck.util.MoreIterables;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;

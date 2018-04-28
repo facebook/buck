@@ -3,6 +3,9 @@ load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
 java_immutables_library(
     name = "impl",
     srcs = glob(["*.java"]),
+    tests = [
+        "//test/com/facebook/buck/core/toolchain/tool/impl:impl",
+    ],
     visibility = ["PUBLIC"],
     deps = [
         "//src/com/facebook/buck/core/rulekey:rulekey",
