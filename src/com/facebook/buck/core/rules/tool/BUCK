@@ -2,8 +2,11 @@ java_library(
     name = "tool",
     srcs = glob(["*.java"]),
     exported_deps = [
+        "//src/com/facebook/buck/core/model:model",
         "//src/com/facebook/buck/core/toolchain/tool:tool",
         "//src/com/facebook/buck/rules:build_rule",
+        "//src/com/facebook/buck/rules:rules",
+        "//src/com/facebook/buck/step:step",
     ],
     visibility = ["PUBLIC"],
 )
