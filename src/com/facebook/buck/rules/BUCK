@@ -244,7 +244,6 @@ java_immutables_library(
         "AbstractManifestStoreResult.java",
         "AbstractResourceAwareSchedulingInfo.java",
         "AbstractRuleScheduleInfo.java",
-        "AbstractSystemToolProvider.java",
         "BinaryBuildRuleToolProvider.java",
         "BinaryWrapperRule.java",
         "BuckPyFunction.java",
