@@ -17,12 +17,12 @@
 package com.facebook.buck.features.lua;
 
 import com.facebook.buck.config.BuckConfig;
+import com.facebook.buck.core.toolchain.toolprovider.impl.ErrorToolProvider;
 import com.facebook.buck.core.toolchain.toolprovider.impl.SystemToolProvider;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.DefaultCxxPlatforms;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkStrategy;
 import com.facebook.buck.io.ExecutableFinder;
-import com.facebook.buck.rules.ErrorToolProvider;
 import com.facebook.buck.rules.tool.config.ToolConfig;
 import com.facebook.buck.util.RichStream;
 import com.google.common.collect.ImmutableList;

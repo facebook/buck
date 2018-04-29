@@ -275,7 +275,6 @@ java_immutables_library(
         "DefaultBuildableContext.java",
         "DefaultOnDiskBuildInfo.java",
         "DependencyFileRuleKeyManager.java",
-        "ErrorToolProvider.java",
         "ExportDependencies.java",
         "FilesystemBuildInfoStore.java",
         "HasCustomDepsLogic.java",
