@@ -10,6 +10,7 @@ buck_module(
         "//src/com/facebook/buck/config:config",
         "//src/com/facebook/buck/core/cell/resolver:resolver",
         "//src/com/facebook/buck/core/toolchain/tool/impl:impl",
+        "//src/com/facebook/buck/core/toolchain/toolprovider/impl:impl",
         "//src/com/facebook/buck/cxx:rules",
         "//src/com/facebook/buck/cxx/toolchain:toolchain",
         "//src/com/facebook/buck/cxx/toolchain/linker:linker",

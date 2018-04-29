@@ -21,9 +21,9 @@ import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
+import com.facebook.buck.core.toolchain.toolprovider.impl.ConstantToolProvider;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.io.ExecutableFinder;
-import com.facebook.buck.rules.ConstantToolProvider;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
