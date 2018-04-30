@@ -18,8 +18,8 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypesProvider;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.WatchmanFactory;
 import com.facebook.buck.io.filesystem.skylark.SkylarkFilesystem;
 import com.facebook.buck.json.HybridProjectBuildFileParser;
@@ -28,7 +28,6 @@ import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.api.Syntax;
 import com.facebook.buck.parser.decorators.EventReportingProjectBuildFileParser;
 import com.facebook.buck.parser.options.ProjectBuildFileParserOptions;
-import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.skylark.parser.BuckGlobals;
 import com.facebook.buck.skylark.parser.ConsoleEventHandler;
@@ -42,24 +41,40 @@ import java.util.Arrays;
 import java.util.Optional;
 
 public class ProjectBuildFileParserFactory {
-  /**
-   * Callers are responsible for managing the life-cycle of the created {@link
-   * ProjectBuildFileParser}.
-   */
-  public ProjectBuildFileParser createBuildFileParser(
-      Cell cell,
+  private final TypeCoercerFactory typeCoercerFactory;
+  private final Console console;
+  private final BuckEventBus eventBus;
+  private final ParserPythonInterpreterProvider pythonInterpreterProvider;
+  private final KnownBuildRuleTypesProvider knownBuildRuleTypesProvider;
+  private final boolean enableProfiling;
+
+  public ProjectBuildFileParserFactory(
       TypeCoercerFactory typeCoercerFactory,
       Console console,
       BuckEventBus eventBus,
-      ExecutableFinder executableFinder,
-      Iterable<Description<?>> descriptions) {
-    return createBuildFileParser(
-        cell,
+      ParserPythonInterpreterProvider pythonInterpreterProvider,
+      KnownBuildRuleTypesProvider knownBuildRuleTypesProvider,
+      boolean enableProfiling) {
+    this.typeCoercerFactory = typeCoercerFactory;
+    this.console = console;
+    this.eventBus = eventBus;
+    this.pythonInterpreterProvider = pythonInterpreterProvider;
+    this.knownBuildRuleTypesProvider = knownBuildRuleTypesProvider;
+    this.enableProfiling = enableProfiling;
+  }
+
+  public ProjectBuildFileParserFactory(
+      TypeCoercerFactory typeCoercerFactory,
+      Console console,
+      BuckEventBus eventBus,
+      ParserPythonInterpreterProvider pythonInterpreterProvider,
+      KnownBuildRuleTypesProvider knownBuildRuleTypesProvider) {
+    this(
         typeCoercerFactory,
         console,
         eventBus,
-        new ParserPythonInterpreterProvider(cell.getBuckConfig(), executableFinder),
-        descriptions, /* enableProfiling */
+        pythonInterpreterProvider,
+        knownBuildRuleTypesProvider,
         false);
   }
 
@@ -67,14 +82,7 @@ public class ProjectBuildFileParserFactory {
    * Callers are responsible for managing the life-cycle of the created {@link
    * ProjectBuildFileParser}.
    */
-  ProjectBuildFileParser createBuildFileParser(
-      Cell cell,
-      TypeCoercerFactory typeCoercerFactory,
-      Console console,
-      BuckEventBus eventBus,
-      ParserPythonInterpreterProvider pythonInterpreterProvider,
-      Iterable<Description<?>> descriptions,
-      boolean enableProfiling) {
+  public ProjectBuildFileParser createBuildFileParser(Cell cell) {
 
     ParserConfig parserConfig = cell.getBuckConfig().getView(ParserConfig.class);
 
@@ -99,7 +107,7 @@ public class ProjectBuildFileParserFactory {
             .setIgnorePaths(cell.getFilesystem().getIgnorePaths())
             .setBuildFileName(cell.getBuildFileName())
             .setDefaultIncludes(parserConfig.getDefaultIncludes())
-            .setDescriptions(descriptions)
+            .setDescriptions(knownBuildRuleTypesProvider.get(cell).getDescriptions())
             .setUseWatchmanGlob(useWatchmanGlob)
             .setWatchmanGlobStatResults(watchmanGlobStatResults)
             .setWatchmanUseGlobGenerator(watchmanUseGlobGenerator)

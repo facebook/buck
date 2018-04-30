@@ -17,6 +17,7 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.parser.ParserPythonInterpreterProvider;
 import com.facebook.buck.parser.ProjectBuildFileParserFactory;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
@@ -61,14 +62,14 @@ public class AuditIncludesCommand extends AbstractCommand {
       throws IOException, InterruptedException {
     ProjectFilesystem projectFilesystem = params.getCell().getFilesystem();
     try (ProjectBuildFileParser parser =
-        new ProjectBuildFileParserFactory()
-            .createBuildFileParser(
-                params.getCell(),
+        new ProjectBuildFileParserFactory(
                 new DefaultTypeCoercerFactory(),
                 params.getConsole(),
                 params.getBuckEventBus(),
-                params.getExecutableFinder(),
-                params.getKnownBuildRuleTypesProvider().get(params.getCell()).getDescriptions())) {
+                new ParserPythonInterpreterProvider(
+                    params.getCell().getBuckConfig(), params.getExecutableFinder()),
+                params.getKnownBuildRuleTypesProvider())
+            .createBuildFileParser(params.getCell())) {
       PrintStream out = params.getConsole().getStdOut();
       for (String pathToBuildFile : getArguments()) {
         if (!json) {

@@ -25,7 +25,6 @@ import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
-import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TargetNodeFactory;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
@@ -118,9 +117,7 @@ public class PerBuildState implements AutoCloseable {
     this.projectBuildFileParserPool =
         new ProjectBuildFileParserPool(
             numParsingThreads, // Max parsers to create per cell.
-            cell ->
-                createBuildFileParser(
-                    cell, knownBuildRuleTypesProvider.get(cell).getDescriptions()),
+            this::createBuildFileParser,
             enableProfiling);
 
     this.rawNodeParsePipeline =
@@ -192,17 +189,15 @@ public class PerBuildState implements AutoCloseable {
         cell, knownBuildRuleTypesProvider.get(cell), buildFile, parseProcessedBytes);
   }
 
-  private ProjectBuildFileParser createBuildFileParser(
-      Cell cell, Iterable<Description<?>> descriptions) {
-    return new ProjectBuildFileParserFactory()
-        .createBuildFileParser(
-            cell,
+  private ProjectBuildFileParser createBuildFileParser(Cell cell) {
+    return new ProjectBuildFileParserFactory(
             typeCoercerFactory,
             console,
             eventBus,
             parserPythonInterpreterProvider,
-            descriptions,
-            enableProfiling);
+            knownBuildRuleTypesProvider,
+            enableProfiling)
+        .createBuildFileParser(cell);
   }
 
   private void register(Cell cell) {
