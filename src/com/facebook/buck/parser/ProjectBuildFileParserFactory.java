@@ -65,6 +65,21 @@ public class ProjectBuildFileParserFactory {
 
   public ProjectBuildFileParserFactory(
       TypeCoercerFactory typeCoercerFactory,
+      BuckEventBus eventBus,
+      ParserPythonInterpreterProvider pythonInterpreterProvider,
+      KnownBuildRuleTypesProvider knownBuildRuleTypesProvider,
+      boolean enableProfiling) {
+    this(
+        typeCoercerFactory,
+        Console.createNullConsole(),
+        eventBus,
+        pythonInterpreterProvider,
+        knownBuildRuleTypesProvider,
+        enableProfiling);
+  }
+
+  public ProjectBuildFileParserFactory(
+      TypeCoercerFactory typeCoercerFactory,
       Console console,
       BuckEventBus eventBus,
       ParserPythonInterpreterProvider pythonInterpreterProvider,

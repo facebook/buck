@@ -29,7 +29,6 @@ import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TargetNodeFactory;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
-import com.facebook.buck.util.Console;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -49,8 +48,6 @@ public class PerBuildState implements AutoCloseable {
   private final BuckEventBus eventBus;
   private final ParserPythonInterpreterProvider parserPythonInterpreterProvider;
   private final boolean enableProfiling;
-
-  private final Console console;
 
   private final Map<Path, Cell> cells;
 
@@ -108,8 +105,6 @@ public class PerBuildState implements AutoCloseable {
     this.knownBuildRuleTypesProvider = knownBuildRuleTypesProvider;
 
     this.cells = new ConcurrentHashMap<>();
-
-    this.console = Console.createNullConsole();
 
     TargetNodeListener<TargetNode<?, ?>> symlinkCheckers = this::registerInputsUnderSymlinks;
     ParserConfig parserConfig = rootCell.getBuckConfig().getView(ParserConfig.class);
@@ -192,7 +187,6 @@ public class PerBuildState implements AutoCloseable {
   private ProjectBuildFileParser createBuildFileParser(Cell cell) {
     return new ProjectBuildFileParserFactory(
             typeCoercerFactory,
-            console,
             eventBus,
             parserPythonInterpreterProvider,
             knownBuildRuleTypesProvider,
