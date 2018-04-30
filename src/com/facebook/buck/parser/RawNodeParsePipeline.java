@@ -131,4 +131,10 @@ public class RawNodeParsePipeline extends ParsePipeline<Map<String, Object>> {
         },
         executorService);
   }
+
+  @Override
+  public void close() {
+    super.close();
+    projectBuildFileParserPool.close();
+  }
 }

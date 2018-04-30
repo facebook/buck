@@ -41,7 +41,6 @@ public class PerBuildState implements AutoCloseable {
 
   private final CellManager cellManager;
 
-  private final ProjectBuildFileParserPool projectBuildFileParserPool;
   private final RawNodeParsePipeline rawNodeParsePipeline;
   private final TargetNodeParsePipeline targetNodeParsePipeline;
   private final KnownBuildRuleTypesProvider knownBuildRuleTypesProvider;
@@ -76,7 +75,7 @@ public class PerBuildState implements AutoCloseable {
             parserPythonInterpreterProvider,
             knownBuildRuleTypesProvider,
             enableProfiling);
-    this.projectBuildFileParserPool =
+    ProjectBuildFileParserPool projectBuildFileParserPool =
         new ProjectBuildFileParserPool(
             numParsingThreads, // Max parsers to create per cell.
             projectBuildFileParserFactory,
@@ -157,7 +156,6 @@ public class PerBuildState implements AutoCloseable {
   public void close() throws BuildFileParseException {
     targetNodeParsePipeline.close();
     rawNodeParsePipeline.close();
-    projectBuildFileParserPool.close();
     cellManager.close();
   }
 }
