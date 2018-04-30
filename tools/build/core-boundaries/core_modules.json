@@ -56,7 +56,6 @@
   "//src/com/facebook/buck/rules:build_rule",
   "//src/com/facebook/buck/rules:rules",
   "//src/com/facebook/buck/rules:source_path",
-  "//src/com/facebook/buck/rules:types",
   "//src/com/facebook/buck/rules/visibility:visibility",
   "//src/com/facebook/buck/sandbox:sandbox",
   "//src/com/facebook/buck/shell:worker_tool",

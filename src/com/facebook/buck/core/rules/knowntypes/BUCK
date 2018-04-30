@@ -1,0 +1,21 @@
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
+
+java_immutables_library(
+    name = "knowntypes",
+    srcs = [
+        "AbstractDefaultKnownBuildRuleTypesFactory.java",
+        "AbstractKnownBuildRuleTypes.java",
+        "AbstractKnownBuildRuleTypesProvider.java",
+        "KnownBuildRuleTypesFactory.java",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/core/cell:cell",
+        "//src/com/facebook/buck/rules:build_rule",
+    ],
+    tests = [
+        "//test/com/facebook/buck/core/rules/knowntypes:knowntypes",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+)

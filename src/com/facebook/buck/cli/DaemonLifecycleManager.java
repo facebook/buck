@@ -18,10 +18,10 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypesProvider;
 import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.rules.KnownBuildRuleTypesProvider;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
