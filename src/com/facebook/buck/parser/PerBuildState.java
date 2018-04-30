@@ -17,7 +17,6 @@
 package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
-import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypesProvider;
 import com.facebook.buck.event.BuckEventBus;
@@ -32,18 +31,15 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Map;
-import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class PerBuildState implements AutoCloseable {
 
   private final AtomicLong parseProcessedBytes = new AtomicLong();
 
-  private final Map<Path, Cell> cells;
+  private final CellManager cellManager;
 
   private final SymlinkCache symlinkCache;
   private final ProjectBuildFileParserPool projectBuildFileParserPool;
@@ -69,10 +65,10 @@ public class PerBuildState implements AutoCloseable {
       SpeculativeParsing speculativeParsing) {
 
     this.knownBuildRuleTypesProvider = knownBuildRuleTypesProvider;
+    this.symlinkCache = new SymlinkCache(eventBus, daemonicParserState);
+    this.cellManager = new CellManager(symlinkCache);
 
-    this.cells = new ConcurrentHashMap<>();
-
-    TargetNodeListener<TargetNode<?, ?>> symlinkCheckers = this::registerInputsUnderSymlinks;
+    TargetNodeListener<TargetNode<?, ?>> symlinkCheckers = cellManager::registerInputsUnderSymlinks;
     ParserConfig parserConfig = rootCell.getBuckConfig().getView(ParserConfig.class);
     int numParsingThreads = parserConfig.getNumParsingThreads();
     DefaultProjectBuildFileParserFactory projectBuildFileParserFactory =
@@ -111,13 +107,11 @@ public class PerBuildState implements AutoCloseable {
             rawNodeParsePipeline,
             knownBuildRuleTypesProvider);
 
-    symlinkCache = new SymlinkCache(eventBus, daemonicParserState);
-
-    register(rootCell);
+    cellManager.register(rootCell);
   }
 
   public TargetNode<?, ?> getTargetNode(BuildTarget target) throws BuildFileParseException {
-    Cell owningCell = getCell(target);
+    Cell owningCell = cellManager.getCell(target);
 
     return targetNodeParsePipeline.getNode(
         owningCell, knownBuildRuleTypesProvider.get(owningCell), target, parseProcessedBytes);
@@ -125,7 +119,7 @@ public class PerBuildState implements AutoCloseable {
 
   public ListenableFuture<TargetNode<?, ?>> getTargetNodeJob(BuildTarget target)
       throws BuildTargetException {
-    Cell owningCell = getCell(target);
+    Cell owningCell = cellManager.getCell(target);
 
     return targetNodeParsePipeline.getNodeJob(
         owningCell, knownBuildRuleTypesProvider.get(owningCell), target, parseProcessedBytes);
@@ -154,38 +148,6 @@ public class PerBuildState implements AutoCloseable {
     // The raw nodes are just plain JSON blobs, and so we don't need to check for symlinks
     return rawNodeParsePipeline.getAllNodes(
         cell, knownBuildRuleTypesProvider.get(cell), buildFile, parseProcessedBytes);
-  }
-
-  private void register(Cell cell) {
-    Path root = cell.getFilesystem().getRootPath();
-    if (!cells.containsKey(root)) {
-      cells.put(root, cell);
-      symlinkCache.registerCell(root, cell);
-    }
-  }
-
-  private Cell getCell(BuildTarget target) {
-    Cell cell = cells.get(target.getCellPath());
-    if (cell != null) {
-      return cell;
-    }
-
-    for (Cell possibleOwner : cells.values()) {
-      Optional<Cell> maybe = possibleOwner.getCellIfKnown(target);
-      if (maybe.isPresent()) {
-        register(maybe.get());
-        return maybe.get();
-      }
-    }
-    throw new HumanReadableException(
-        "From %s, unable to find cell rooted at: %s", target, target.getCellPath());
-  }
-
-  private void registerInputsUnderSymlinks(Path buildFile, TargetNode<?, ?> node)
-      throws IOException {
-    Cell currentCell = getCell(node.getBuildTarget());
-    symlinkCache.registerInputsUnderSymlinks(
-        currentCell, getCell(node.getBuildTarget()), buildFile, node);
   }
 
   public long getParseProcessedBytes() {
