@@ -428,11 +428,10 @@ public class ParsePipelineTest {
                         new ProjectBuildFileParserFactory(
                                 coercerFactory,
                                 console,
-                                eventBus,
                                 new ParserPythonInterpreterProvider(
                                     input.getBuckConfig(), new ExecutableFinder()),
                                 KnownBuildRuleTypesProvider.of(knownBuildRuleTypesFactory))
-                            .createBuildFileParser(input));
+                            .createBuildFileParser(eventBus, input));
                 synchronized (projectBuildFileParsers) {
                   projectBuildFileParsers.add(buildFileParser);
                 }

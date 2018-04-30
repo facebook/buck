@@ -43,7 +43,6 @@ import java.util.Optional;
 public class ProjectBuildFileParserFactory {
   private final TypeCoercerFactory typeCoercerFactory;
   private final Console console;
-  private final BuckEventBus eventBus;
   private final ParserPythonInterpreterProvider pythonInterpreterProvider;
   private final KnownBuildRuleTypesProvider knownBuildRuleTypesProvider;
   private final boolean enableProfiling;
@@ -51,13 +50,11 @@ public class ProjectBuildFileParserFactory {
   public ProjectBuildFileParserFactory(
       TypeCoercerFactory typeCoercerFactory,
       Console console,
-      BuckEventBus eventBus,
       ParserPythonInterpreterProvider pythonInterpreterProvider,
       KnownBuildRuleTypesProvider knownBuildRuleTypesProvider,
       boolean enableProfiling) {
     this.typeCoercerFactory = typeCoercerFactory;
     this.console = console;
-    this.eventBus = eventBus;
     this.pythonInterpreterProvider = pythonInterpreterProvider;
     this.knownBuildRuleTypesProvider = knownBuildRuleTypesProvider;
     this.enableProfiling = enableProfiling;
@@ -65,14 +62,12 @@ public class ProjectBuildFileParserFactory {
 
   public ProjectBuildFileParserFactory(
       TypeCoercerFactory typeCoercerFactory,
-      BuckEventBus eventBus,
       ParserPythonInterpreterProvider pythonInterpreterProvider,
       KnownBuildRuleTypesProvider knownBuildRuleTypesProvider,
       boolean enableProfiling) {
     this(
         typeCoercerFactory,
         Console.createNullConsole(),
-        eventBus,
         pythonInterpreterProvider,
         knownBuildRuleTypesProvider,
         enableProfiling);
@@ -81,23 +76,17 @@ public class ProjectBuildFileParserFactory {
   public ProjectBuildFileParserFactory(
       TypeCoercerFactory typeCoercerFactory,
       Console console,
-      BuckEventBus eventBus,
       ParserPythonInterpreterProvider pythonInterpreterProvider,
       KnownBuildRuleTypesProvider knownBuildRuleTypesProvider) {
     this(
-        typeCoercerFactory,
-        console,
-        eventBus,
-        pythonInterpreterProvider,
-        knownBuildRuleTypesProvider,
-        false);
+        typeCoercerFactory, console, pythonInterpreterProvider, knownBuildRuleTypesProvider, false);
   }
 
   /**
    * Callers are responsible for managing the life-cycle of the created {@link
    * ProjectBuildFileParser}.
    */
-  public ProjectBuildFileParser createBuildFileParser(Cell cell) {
+  public ProjectBuildFileParser createBuildFileParser(BuckEventBus eventBus, Cell cell) {
 
     ParserConfig parserConfig = cell.getBuckConfig().getView(ParserConfig.class);
 

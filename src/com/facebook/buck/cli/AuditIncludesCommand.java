@@ -65,11 +65,10 @@ public class AuditIncludesCommand extends AbstractCommand {
         new ProjectBuildFileParserFactory(
                 new DefaultTypeCoercerFactory(),
                 params.getConsole(),
-                params.getBuckEventBus(),
                 new ParserPythonInterpreterProvider(
                     params.getCell().getBuckConfig(), params.getExecutableFinder()),
                 params.getKnownBuildRuleTypesProvider())
-            .createBuildFileParser(params.getCell())) {
+            .createBuildFileParser(params.getBuckEventBus(), params.getCell())) {
       PrintStream out = params.getConsole().getStdOut();
       for (String pathToBuildFile : getArguments()) {
         if (!json) {

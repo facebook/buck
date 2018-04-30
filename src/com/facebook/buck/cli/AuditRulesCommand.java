@@ -103,11 +103,10 @@ public class AuditRulesCommand extends AbstractCommand {
         new ProjectBuildFileParserFactory(
                 new DefaultTypeCoercerFactory(),
                 params.getConsole(),
-                params.getBuckEventBus(),
                 new ParserPythonInterpreterProvider(
                     params.getCell().getBuckConfig(), params.getExecutableFinder()),
                 params.getKnownBuildRuleTypesProvider())
-            .createBuildFileParser(params.getCell())) {
+            .createBuildFileParser(params.getBuckEventBus(), params.getCell())) {
       /*
        * The super console does a bunch of rewriting over the top of the console such that
        * simultaneously writing to stdout and stderr in an interactive session is problematic.
