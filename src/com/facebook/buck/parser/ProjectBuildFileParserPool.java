@@ -17,6 +17,7 @@
 package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.util.concurrent.ResourcePool;
@@ -30,7 +31,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.function.Function;
 import javax.annotation.concurrent.GuardedBy;
 
 /**
@@ -48,23 +48,20 @@ class ProjectBuildFileParserPool implements AutoCloseable {
   @GuardedBy("this")
   private final Map<Cell, ResourcePool<ProjectBuildFileParser>> parserResourcePools;
 
-  private final Function<Cell, ProjectBuildFileParser> parserFactory;
+  private final ProjectBuildFileParserFactory projectBuildFileParserFactory;
   private final AtomicBoolean closing;
   private final boolean enableProfiler;
 
-  /**
-   * @param maxParsersPerCell maximum number of parsers to create for a single cell.
-   * @param parserFactory function used to create a new parser.
-   */
+  /** @param maxParsersPerCell maximum number of parsers to create for a single cell. */
   public ProjectBuildFileParserPool(
       int maxParsersPerCell,
-      Function<Cell, ProjectBuildFileParser> parserFactory,
+      ProjectBuildFileParserFactory projectBuildFileParserFactory,
       boolean enableProfiler) {
     Preconditions.checkArgument(maxParsersPerCell > 0);
 
     this.maxParsersPerCell = maxParsersPerCell;
     this.parserResourcePools = new HashMap<>();
-    this.parserFactory = parserFactory;
+    this.projectBuildFileParserFactory = projectBuildFileParserFactory;
     this.closing = new AtomicBoolean(false);
     this.enableProfiler = enableProfiler;
   }
@@ -77,20 +74,22 @@ class ProjectBuildFileParserPool implements AutoCloseable {
    *     cancelled if the {@link ProjectBuildFileParserPool#close()} method is called.
    */
   public ListenableFuture<ImmutableSet<Map<String, Object>>> getAllRulesAndMetaRules(
+      BuckEventBus buckEventBus,
       Cell cell,
       Path buildFile,
       AtomicLong processedBytes,
       ListeningExecutorService executorService) {
     Preconditions.checkState(!closing.get());
 
-    return getResourcePoolForCell(cell)
+    return getResourcePoolForCell(buckEventBus, cell)
         .scheduleOperationWithResource(
             parser ->
                 ImmutableSet.copyOf(parser.getAllRulesAndMetaRules(buildFile, processedBytes)),
             executorService);
   }
 
-  private synchronized ResourcePool<ProjectBuildFileParser> getResourcePoolForCell(Cell cell) {
+  private synchronized ResourcePool<ProjectBuildFileParser> getResourcePoolForCell(
+      BuckEventBus buckEventBus, Cell cell) {
     ResourcePool<ProjectBuildFileParser> pool = parserResourcePools.get(cell);
     if (pool == null) {
       pool =
@@ -99,7 +98,7 @@ class ProjectBuildFileParserPool implements AutoCloseable {
               // If the Python process garbles the output stream then the bser codec doesn't always
               // recover and subsequent attempts at invoking the parser will fail.
               ResourcePool.ResourceUsageErrorPolicy.RETIRE,
-              () -> parserFactory.apply(cell));
+              () -> projectBuildFileParserFactory.createBuildFileParser(buckEventBus, cell));
       parserResourcePools.put(cell, pool);
     }
     return pool;

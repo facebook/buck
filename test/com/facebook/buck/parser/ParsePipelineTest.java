@@ -422,7 +422,7 @@ public class ParsePipelineTest {
       projectBuildFileParserPool =
           new ProjectBuildFileParserPool(
               4, // max parsers
-              input -> {
+              (buckEventBus, input) -> {
                 CloseRecordingProjectBuildFileParserDecorator buildFileParser =
                     new CloseRecordingProjectBuildFileParserDecorator(
                         new DefaultProjectBuildFileParserFactory(

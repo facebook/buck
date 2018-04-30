@@ -101,7 +101,7 @@ public class RawNodeParsePipeline extends ParsePipeline<Map<String, Object>> {
           }
 
           return projectBuildFileParserPool.getAllRulesAndMetaRules(
-              cell, buildFile, processedBytes, executorService);
+              eventBus, cell, buildFile, processedBytes, executorService);
         },
         eventBus);
   }

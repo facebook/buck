@@ -84,7 +84,7 @@ public class PerBuildState implements AutoCloseable {
     this.projectBuildFileParserPool =
         new ProjectBuildFileParserPool(
             numParsingThreads, // Max parsers to create per cell.
-            cell -> projectBuildFileParserFactory.createBuildFileParser(eventBus, cell),
+            projectBuildFileParserFactory,
             enableProfiling);
 
     this.rawNodeParsePipeline =
