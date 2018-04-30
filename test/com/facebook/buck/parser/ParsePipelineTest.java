@@ -366,16 +366,14 @@ public class ParsePipelineTest {
         scenario,
         MoreExecutors.listeningDecorator(
             MostExecutors.newMultiThreadExecutor("ParsePipelineTest", 4)),
-        PerBuildState.SpeculativeParsing.ENABLED);
+        SpeculativeParsing.ENABLED);
   }
 
   // Use this method to make sure the Pipeline doesn't execute stuff on another thread, useful
   // if you're poking at the cache state directly.
   private Fixture createSynchronousExecutionFixture(String scenario) throws Exception {
     return new Fixture(
-        scenario,
-        MoreExecutors.newDirectExecutorService(),
-        PerBuildState.SpeculativeParsing.DISABLED);
+        scenario, MoreExecutors.newDirectExecutorService(), SpeculativeParsing.DISABLED);
   }
 
   private class Fixture implements AutoCloseable {
@@ -397,7 +395,7 @@ public class ParsePipelineTest {
     public Fixture(
         String scenario,
         ListeningExecutorService executorService,
-        PerBuildState.SpeculativeParsing speculativeParsing)
+        SpeculativeParsing speculativeParsing)
         throws Exception {
       this.workspace = TestDataHelper.createProjectWorkspaceForScenario(this, scenario, tmp);
       this.eventBus = BuckEventBusForTests.newInstance();
@@ -466,7 +464,7 @@ public class ParsePipelineTest {
                   TestRuleKeyConfigurationFactory.create()),
               this.executorService,
               this.eventBus,
-              speculativeParsing == PerBuildState.SpeculativeParsing.ENABLED,
+              speculativeParsing == SpeculativeParsing.ENABLED,
               this.rawNodeParsePipeline,
               KnownBuildRuleTypesProvider.of(knownBuildRuleTypesFactory));
     }

@@ -25,7 +25,7 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.parser.BuildTargetPatternTargetNodeParser;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
-import com.facebook.buck.parser.PerBuildState;
+import com.facebook.buck.parser.SpeculativeParsing;
 import com.facebook.buck.parser.TargetNodeSpec;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.query.QueryBuildTarget;
@@ -154,7 +154,7 @@ public class TargetPatternEvaluator {
             enableProfiling,
             executor,
             specs,
-            PerBuildState.SpeculativeParsing.DISABLED,
+            SpeculativeParsing.DISABLED,
             // We disable mapping //path/to:lib to //path/to:lib#default,static
             // because the query engine doesn't handle flavors very well.
             ParserConfig.ApplyDefaultFlavorsMode.DISABLED);

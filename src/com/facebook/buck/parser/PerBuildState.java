@@ -38,11 +38,6 @@ public class PerBuildState implements AutoCloseable {
   private final RawNodeParsePipeline rawNodeParsePipeline;
   private final TargetNodeParsePipeline targetNodeParsePipeline;
 
-  public enum SpeculativeParsing {
-    ENABLED,
-    DISABLED,
-  }
-
   PerBuildState(
       KnownBuildRuleTypesProvider knownBuildRuleTypesProvider,
       CellManager cellManager,

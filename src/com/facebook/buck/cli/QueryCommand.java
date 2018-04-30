@@ -25,6 +25,7 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.parser.ParserPythonInterpreterProvider;
 import com.facebook.buck.parser.PerBuildState;
 import com.facebook.buck.parser.PerBuildStateFactory;
+import com.facebook.buck.parser.SpeculativeParsing;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.query.QueryBuildTarget;
 import com.facebook.buck.query.QueryException;
@@ -175,7 +176,7 @@ public class QueryCommand extends AbstractCommand {
                     params.getCell(),
                     params.getKnownBuildRuleTypesProvider(),
                     getEnableParserProfiling(),
-                    PerBuildState.SpeculativeParsing.ENABLED)) {
+                    SpeculativeParsing.ENABLED)) {
       ListeningExecutorService executor = pool.getListeningExecutorService();
       BuckQueryEnvironment env =
           BuckQueryEnvironment.from(params, parserState, executor, getEnableParserProfiling());

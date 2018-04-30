@@ -150,7 +150,7 @@ public class Parser {
             cell,
             knownBuildRuleTypesProvider,
             enableProfiling,
-            PerBuildState.SpeculativeParsing.ENABLED)) {
+            SpeculativeParsing.ENABLED)) {
       return state.getAllTargetNodes(cell, buildFile);
     }
   }
@@ -173,7 +173,7 @@ public class Parser {
             cell,
             knownBuildRuleTypesProvider,
             enableProfiling,
-            PerBuildState.SpeculativeParsing.DISABLED)) {
+            SpeculativeParsing.DISABLED)) {
       return state.getTargetNode(target);
     }
   }
@@ -234,7 +234,7 @@ public class Parser {
             cell,
             knownBuildRuleTypesProvider,
             enableProfiling,
-            PerBuildState.SpeculativeParsing.DISABLED)) {
+            SpeculativeParsing.DISABLED)) {
       return getRawTargetNode(state, cell, targetNode);
     }
   }
@@ -275,7 +275,7 @@ public class Parser {
             rootCell,
             knownBuildRuleTypesProvider,
             enableProfiling,
-            PerBuildState.SpeculativeParsing.ENABLED)) {
+            SpeculativeParsing.ENABLED)) {
       return buildTargetGraph(state, eventBus, toExplore);
     }
   }
@@ -400,7 +400,7 @@ public class Parser {
             rootCell,
             knownBuildRuleTypesProvider,
             enableProfiling,
-            PerBuildState.SpeculativeParsing.ENABLED)) {
+            SpeculativeParsing.ENABLED)) {
 
       ImmutableSet<BuildTarget> buildTargets =
           ImmutableSet.copyOf(
@@ -427,7 +427,7 @@ public class Parser {
       boolean enableProfiling,
       ListeningExecutorService executor,
       Iterable<? extends TargetNodeSpec> specs,
-      PerBuildState.SpeculativeParsing speculativeParsing,
+      SpeculativeParsing speculativeParsing,
       ParserConfig.ApplyDefaultFlavorsMode applyDefaultFlavorsMode)
       throws BuildFileParseException, InterruptedException, IOException {
 

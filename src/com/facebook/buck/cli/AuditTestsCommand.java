@@ -21,6 +21,7 @@ import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.parser.ParserPythonInterpreterProvider;
 import com.facebook.buck.parser.PerBuildState;
 import com.facebook.buck.parser.PerBuildStateFactory;
+import com.facebook.buck.parser.SpeculativeParsing;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.ExitCode;
@@ -88,7 +89,7 @@ public class AuditTestsCommand extends AbstractCommand {
                     params.getCell(),
                     params.getKnownBuildRuleTypesProvider(),
                     getEnableParserProfiling(),
-                    PerBuildState.SpeculativeParsing.ENABLED)) {
+                    SpeculativeParsing.ENABLED)) {
       BuckQueryEnvironment env =
           BuckQueryEnvironment.from(
               params, parserState, pool.getListeningExecutorService(), getEnableParserProfiling());

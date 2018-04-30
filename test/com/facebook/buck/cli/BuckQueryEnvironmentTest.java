@@ -35,6 +35,7 @@ import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.ParserPythonInterpreterProvider;
 import com.facebook.buck.parser.PerBuildState;
 import com.facebook.buck.parser.PerBuildStateFactory;
+import com.facebook.buck.parser.SpeculativeParsing;
 import com.facebook.buck.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.query.QueryBuildTarget;
 import com.facebook.buck.query.QueryException;
@@ -114,7 +115,7 @@ public class BuckQueryEnvironmentTest {
                 cell,
                 knownBuildRuleTypesProvider,
                 /* enableProfiling */ false,
-                PerBuildState.SpeculativeParsing.ENABLED);
+                SpeculativeParsing.ENABLED);
 
     TargetPatternEvaluator targetPatternEvaluator =
         new TargetPatternEvaluator(

@@ -199,7 +199,7 @@ public class ParserTest {
                 cell,
                 knownBuildRuleTypesProvider,
                 enableProfiling,
-                PerBuildState.SpeculativeParsing.DISABLED)) {
+                SpeculativeParsing.DISABLED)) {
       return Parser.getRawTargetNodes(state, cell, buildFile);
     }
   }
@@ -2203,7 +2203,7 @@ public class ParserTest {
                 BuildFileSpec.fromRecursivePath(Paths.get("bar"), cell.getRoot())),
             TargetNodePredicateSpec.of(
                 BuildFileSpec.fromRecursivePath(Paths.get("foo"), cell.getRoot()))),
-        PerBuildState.SpeculativeParsing.ENABLED,
+        SpeculativeParsing.ENABLED,
         ParserConfig.ApplyDefaultFlavorsMode.ENABLED);
   }
 
@@ -2230,7 +2230,7 @@ public class ParserTest {
                     BuildFileSpec.fromRecursivePath(Paths.get("bar"), cell.getRoot())),
                 TargetNodePredicateSpec.of(
                     BuildFileSpec.fromRecursivePath(Paths.get("foo"), cell.getRoot()))),
-            PerBuildState.SpeculativeParsing.ENABLED,
+            SpeculativeParsing.ENABLED,
             ParserConfig.ApplyDefaultFlavorsMode.ENABLED);
     assertThat(targets, equalTo(ImmutableList.of(ImmutableSet.of(bar), ImmutableSet.of(foo))));
 
@@ -2245,7 +2245,7 @@ public class ParserTest {
                     BuildFileSpec.fromRecursivePath(Paths.get("foo"), cell.getRoot())),
                 TargetNodePredicateSpec.of(
                     BuildFileSpec.fromRecursivePath(Paths.get("bar"), cell.getRoot()))),
-            PerBuildState.SpeculativeParsing.ENABLED,
+            SpeculativeParsing.ENABLED,
             ParserConfig.ApplyDefaultFlavorsMode.ENABLED);
     assertThat(targets, equalTo(ImmutableList.of(ImmutableSet.of(foo), ImmutableSet.of(bar))));
   }

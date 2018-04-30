@@ -36,7 +36,7 @@ import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.parser.BuildFileSpec;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
-import com.facebook.buck.parser.PerBuildState;
+import com.facebook.buck.parser.SpeculativeParsing;
 import com.facebook.buck.parser.TargetNodePredicateSpec;
 import com.facebook.buck.parser.TargetNodeSpec;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
@@ -147,7 +147,7 @@ public class IjProjectCommandHelper {
                       enableParserProfiling,
                       executor,
                       argsParser.apply(targets),
-                      PerBuildState.SpeculativeParsing.ENABLED,
+                      SpeculativeParsing.ENABLED,
                       parserConfig.getDefaultFlavorsMode())));
       projectGraph = getProjectGraphForIde(executor, passedInTargetsSet);
     } catch (BuildFileParseException e) {

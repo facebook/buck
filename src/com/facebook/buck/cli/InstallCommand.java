@@ -46,7 +46,7 @@ import com.facebook.buck.event.InstallEvent;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.parser.ParserConfig;
-import com.facebook.buck.parser.PerBuildState;
+import com.facebook.buck.parser.SpeculativeParsing;
 import com.facebook.buck.parser.TargetNodeSpec;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
@@ -363,7 +363,7 @@ public class InstallCommand extends BuildCommand {
                           getEnableParserProfiling(),
                           executor,
                           ImmutableList.of(spec),
-                          PerBuildState.SpeculativeParsing.DISABLED,
+                          SpeculativeParsing.DISABLED,
                           parserConfig.getDefaultFlavorsMode()))
               .transformAndConcat(Functions.identity())
               .first()
