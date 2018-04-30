@@ -124,7 +124,7 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
             clock.currentTimeMillis(),
             0L,
             buckFilesParsingEvents.values(),
-            Optional.empty(),
+            getEstimatedProgressOfParsingBuckFiles(),
             Optional.empty(),
             lines));
     printLines(lines);
@@ -176,7 +176,7 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
         offsetMs,
         buildStarted,
         buildFinished,
-        Optional.empty(),
+        getApproximateBuildProgress(),
         Optional.empty(),
         lines);
 
@@ -350,5 +350,10 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
       return;
     }
     console.getStdErr().println(Joiner.on("\n").join(stringList));
+  }
+
+  @Override
+  public boolean displaysEstimatedProgress() {
+    return true;
   }
 }
