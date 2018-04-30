@@ -34,6 +34,7 @@ import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.ParserPythonInterpreterProvider;
 import com.facebook.buck.parser.PerBuildState;
+import com.facebook.buck.parser.PerBuildStateFactory;
 import com.facebook.buck.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.query.QueryBuildTarget;
 import com.facebook.buck.query.QueryException;
@@ -102,17 +103,18 @@ public class BuckQueryEnvironmentTest {
             executableFinder);
     BuckEventBus eventBus = BuckEventBusForTests.newInstance();
     parserState =
-        new PerBuildState(
-            typeCoercerFactory,
-            parser.getPermState(),
-            new ConstructorArgMarshaller(typeCoercerFactory),
-            eventBus,
-            new ParserPythonInterpreterProvider(cell.getBuckConfig(), executableFinder),
-            executor,
-            cell,
-            knownBuildRuleTypesProvider,
-            /* enableProfiling */ false,
-            PerBuildState.SpeculativeParsing.ENABLED);
+        new PerBuildStateFactory()
+            .create(
+                typeCoercerFactory,
+                parser.getPermState(),
+                new ConstructorArgMarshaller(typeCoercerFactory),
+                eventBus,
+                new ParserPythonInterpreterProvider(cell.getBuckConfig(), executableFinder),
+                executor,
+                cell,
+                knownBuildRuleTypesProvider,
+                /* enableProfiling */ false,
+                PerBuildState.SpeculativeParsing.ENABLED);
 
     TargetPatternEvaluator targetPatternEvaluator =
         new TargetPatternEvaluator(

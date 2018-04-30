@@ -188,17 +188,18 @@ public class ParserTest {
       Path buildFile)
       throws BuildFileParseException {
     try (PerBuildState state =
-        new PerBuildState(
-            typeCoercerFactory,
-            parser.getPermState(),
-            new ConstructorArgMarshaller(typeCoercerFactory),
-            eventBus,
-            new ParserPythonInterpreterProvider(cell.getBuckConfig(), executableFinder),
-            executor,
-            cell,
-            knownBuildRuleTypesProvider,
-            enableProfiling,
-            PerBuildState.SpeculativeParsing.DISABLED)) {
+        new PerBuildStateFactory()
+            .create(
+                typeCoercerFactory,
+                parser.getPermState(),
+                new ConstructorArgMarshaller(typeCoercerFactory),
+                eventBus,
+                new ParserPythonInterpreterProvider(cell.getBuckConfig(), executableFinder),
+                executor,
+                cell,
+                knownBuildRuleTypesProvider,
+                enableProfiling,
+                PerBuildState.SpeculativeParsing.DISABLED)) {
       return Parser.getRawTargetNodes(state, cell, buildFile);
     }
   }

@@ -84,6 +84,7 @@ public class Parser {
 
   private static final Logger LOG = Logger.get(Parser.class);
 
+  private final PerBuildStateFactory perBuildStateFactory;
   private final DaemonicParserState permState;
   private final ConstructorArgMarshaller marshaller;
   private final TypeCoercerFactory typeCoercerFactory;
@@ -96,6 +97,7 @@ public class Parser {
       ConstructorArgMarshaller marshaller,
       KnownBuildRuleTypesProvider knownBuildRuleTypesProvider,
       ExecutableFinder executableFinder) {
+    this.perBuildStateFactory = new PerBuildStateFactory();
     this.typeCoercerFactory = typeCoercerFactory;
     this.permState =
         new DaemonicParserState(
@@ -138,7 +140,7 @@ public class Parser {
         buildFile);
 
     try (PerBuildState state =
-        new PerBuildState(
+        perBuildStateFactory.create(
             typeCoercerFactory,
             permState,
             marshaller,
@@ -161,7 +163,7 @@ public class Parser {
       BuildTarget target)
       throws BuildFileParseException {
     try (PerBuildState state =
-        new PerBuildState(
+        perBuildStateFactory.create(
             typeCoercerFactory,
             permState,
             marshaller,
@@ -222,7 +224,7 @@ public class Parser {
       throws BuildFileParseException {
 
     try (PerBuildState state =
-        new PerBuildState(
+        perBuildStateFactory.create(
             typeCoercerFactory,
             permState,
             marshaller,
@@ -263,7 +265,7 @@ public class Parser {
     }
 
     try (PerBuildState state =
-        new PerBuildState(
+        perBuildStateFactory.create(
             typeCoercerFactory,
             permState,
             marshaller,
@@ -388,7 +390,7 @@ public class Parser {
       throws BuildFileParseException, IOException, InterruptedException {
 
     try (PerBuildState state =
-        new PerBuildState(
+        perBuildStateFactory.create(
             typeCoercerFactory,
             permState,
             marshaller,
@@ -430,7 +432,7 @@ public class Parser {
       throws BuildFileParseException, InterruptedException, IOException {
 
     try (PerBuildState state =
-        new PerBuildState(
+        perBuildStateFactory.create(
             typeCoercerFactory,
             permState,
             marshaller,

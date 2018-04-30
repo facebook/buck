@@ -40,6 +40,7 @@ import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.ParserPythonInterpreterProvider;
 import com.facebook.buck.parser.PerBuildState;
 import com.facebook.buck.parser.PerBuildState.SpeculativeParsing;
+import com.facebook.buck.parser.PerBuildStateFactory;
 import com.facebook.buck.parser.TargetNodePredicateSpec;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.rules.ActionGraph;
@@ -768,18 +769,19 @@ public class TargetsCommand extends AbstractCommand {
     Iterator<TargetNode<?, ?>> targetNodeIterator = targetNodes.iterator();
 
     try (PerBuildState state =
-        new PerBuildState(
-            params.getTypeCoercerFactory(),
-            params.getParser().getPermState(),
-            new ConstructorArgMarshaller(params.getTypeCoercerFactory()),
-            params.getBuckEventBus(),
-            new ParserPythonInterpreterProvider(
-                params.getCell().getBuckConfig(), params.getExecutableFinder()),
-            executor,
-            params.getCell(),
-            params.getKnownBuildRuleTypesProvider(),
-            getEnableParserProfiling(),
-            SpeculativeParsing.DISABLED)) {
+        new PerBuildStateFactory()
+            .create(
+                params.getTypeCoercerFactory(),
+                params.getParser().getPermState(),
+                new ConstructorArgMarshaller(params.getTypeCoercerFactory()),
+                params.getBuckEventBus(),
+                new ParserPythonInterpreterProvider(
+                    params.getCell().getBuckConfig(), params.getExecutableFinder()),
+                executor,
+                params.getCell(),
+                params.getKnownBuildRuleTypesProvider(),
+                getEnableParserProfiling(),
+                SpeculativeParsing.DISABLED)) {
 
       while (targetNodeIterator.hasNext()) {
         TargetNode<?, ?> targetNode = targetNodeIterator.next();

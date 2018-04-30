@@ -19,18 +19,12 @@ package com.facebook.buck.parser;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypesProvider;
-import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.facebook.buck.rules.TargetNode;
-import com.facebook.buck.rules.TargetNodeFactory;
-import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
-import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.ListeningExecutorService;
-import com.google.common.util.concurrent.MoreExecutors;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
@@ -39,73 +33,25 @@ public class PerBuildState implements AutoCloseable {
 
   private final AtomicLong parseProcessedBytes = new AtomicLong();
 
+  private final KnownBuildRuleTypesProvider knownBuildRuleTypesProvider;
   private final CellManager cellManager;
-
   private final RawNodeParsePipeline rawNodeParsePipeline;
   private final TargetNodeParsePipeline targetNodeParsePipeline;
-  private final KnownBuildRuleTypesProvider knownBuildRuleTypesProvider;
 
   public enum SpeculativeParsing {
     ENABLED,
     DISABLED,
   }
 
-  public PerBuildState(
-      TypeCoercerFactory typeCoercerFactory,
-      DaemonicParserState daemonicParserState,
-      ConstructorArgMarshaller marshaller,
-      BuckEventBus eventBus,
-      ParserPythonInterpreterProvider parserPythonInterpreterProvider,
-      ListeningExecutorService executorService,
-      Cell rootCell,
+  PerBuildState(
       KnownBuildRuleTypesProvider knownBuildRuleTypesProvider,
-      boolean enableProfiling,
-      SpeculativeParsing speculativeParsing) {
-
+      CellManager cellManager,
+      RawNodeParsePipeline rawNodeParsePipeline,
+      TargetNodeParsePipeline targetNodeParsePipeline) {
     this.knownBuildRuleTypesProvider = knownBuildRuleTypesProvider;
-    SymlinkCache symlinkCache = new SymlinkCache(eventBus, daemonicParserState);
-    this.cellManager = new CellManager(symlinkCache);
-
-    TargetNodeListener<TargetNode<?, ?>> symlinkCheckers = cellManager::registerInputsUnderSymlinks;
-    ParserConfig parserConfig = rootCell.getBuckConfig().getView(ParserConfig.class);
-    int numParsingThreads = parserConfig.getNumParsingThreads();
-    DefaultProjectBuildFileParserFactory projectBuildFileParserFactory =
-        new DefaultProjectBuildFileParserFactory(
-            typeCoercerFactory,
-            parserPythonInterpreterProvider,
-            knownBuildRuleTypesProvider,
-            enableProfiling);
-    ProjectBuildFileParserPool projectBuildFileParserPool =
-        new ProjectBuildFileParserPool(
-            numParsingThreads, // Max parsers to create per cell.
-            projectBuildFileParserFactory,
-            enableProfiling);
-
-    this.rawNodeParsePipeline =
-        new RawNodeParsePipeline(
-            daemonicParserState.getRawNodeCache(),
-            projectBuildFileParserPool,
-            executorService,
-            eventBus);
-    this.targetNodeParsePipeline =
-        new TargetNodeParsePipeline(
-            daemonicParserState.getOrCreateNodeCache(TargetNode.class),
-            DefaultParserTargetNodeFactory.createForParser(
-                marshaller,
-                daemonicParserState.getBuildFileTrees(),
-                symlinkCheckers,
-                new TargetNodeFactory(typeCoercerFactory),
-                rootCell.getRuleKeyConfiguration()),
-            parserConfig.getEnableParallelParsing()
-                ? executorService
-                : MoreExecutors.newDirectExecutorService(),
-            eventBus,
-            parserConfig.getEnableParallelParsing()
-                && speculativeParsing == SpeculativeParsing.ENABLED,
-            rawNodeParsePipeline,
-            knownBuildRuleTypesProvider);
-
-    cellManager.register(rootCell);
+    this.cellManager = cellManager;
+    this.rawNodeParsePipeline = rawNodeParsePipeline;
+    this.targetNodeParsePipeline = targetNodeParsePipeline;
   }
 
   public TargetNode<?, ?> getTargetNode(BuildTarget target) throws BuildFileParseException {

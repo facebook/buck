@@ -24,6 +24,7 @@ import com.facebook.buck.graph.Dot.Builder;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.parser.ParserPythonInterpreterProvider;
 import com.facebook.buck.parser.PerBuildState;
+import com.facebook.buck.parser.PerBuildStateFactory;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.query.QueryBuildTarget;
 import com.facebook.buck.query.QueryException;
@@ -162,18 +163,19 @@ public class QueryCommand extends AbstractCommand {
     try (CommandThreadManager pool =
             new CommandThreadManager("Query", getConcurrencyLimit(params.getBuckConfig()));
         PerBuildState parserState =
-            new PerBuildState(
-                params.getTypeCoercerFactory(),
-                params.getParser().getPermState(),
-                new ConstructorArgMarshaller(params.getTypeCoercerFactory()),
-                params.getBuckEventBus(),
-                new ParserPythonInterpreterProvider(
-                    params.getCell().getBuckConfig(), params.getExecutableFinder()),
-                pool.getListeningExecutorService(),
-                params.getCell(),
-                params.getKnownBuildRuleTypesProvider(),
-                getEnableParserProfiling(),
-                PerBuildState.SpeculativeParsing.ENABLED)) {
+            new PerBuildStateFactory()
+                .create(
+                    params.getTypeCoercerFactory(),
+                    params.getParser().getPermState(),
+                    new ConstructorArgMarshaller(params.getTypeCoercerFactory()),
+                    params.getBuckEventBus(),
+                    new ParserPythonInterpreterProvider(
+                        params.getCell().getBuckConfig(), params.getExecutableFinder()),
+                    pool.getListeningExecutorService(),
+                    params.getCell(),
+                    params.getKnownBuildRuleTypesProvider(),
+                    getEnableParserProfiling(),
+                    PerBuildState.SpeculativeParsing.ENABLED)) {
       ListeningExecutorService executor = pool.getListeningExecutorService();
       BuckQueryEnvironment env =
           BuckQueryEnvironment.from(params, parserState, executor, getEnableParserProfiling());
