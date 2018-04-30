@@ -32,7 +32,6 @@ import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.util.Optionals;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.function.Function;
@@ -58,12 +57,12 @@ abstract class AbstractPreprocessorFlags implements AddsToRuleKey {
   /** Directories set via {@code -I}. */
   @AddToRuleKey
   @Value.Parameter
-  public abstract ImmutableSet<CxxHeaders> getIncludes();
+  public abstract ImmutableList<CxxHeaders> getIncludes();
 
   /** Directories set via {@code -F}. */
   @AddToRuleKey
   @Value.Parameter
-  public abstract ImmutableSet<FrameworkPath> getFrameworkPaths();
+  public abstract ImmutableList<FrameworkPath> getFrameworkPaths();
 
   @Value.Lazy
   public CxxIncludePaths getCxxIncludePaths() {
