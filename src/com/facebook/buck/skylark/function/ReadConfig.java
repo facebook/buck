@@ -50,7 +50,10 @@ public class ReadConfig {
     name = FUNCTION_NAME,
     objectType = Object.class,
     returnType = Object.class,
-    doc = "Returns a list of files that match glob search pattern.",
+    doc =
+        "Returns a configuration value of <code>.buckconfig</code> or <code>--config</code> flag."
+            + " For example, <code>read_config('foo', 'bar', 'baz')</code> returns"
+            + " <code>bazz</code> if Buck is invoked with <code>--config foo.bar=bazz</code> flag.",
     parameters = {
       @Param(
         name = "section",

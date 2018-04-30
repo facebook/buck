@@ -7,13 +7,13 @@
     {param navid: 'skylark/generated_read_config' /}
     {param prettify: true /}
     {param description}
-      Returns a list of files that match glob search pattern.
+      Returns a configuration value of <code>.buckconfig</code> or <code>--config</code> flag. For example, <code>read_config('foo', 'bar', 'baz')</code> returns <code>bazz</code> if Buck is invoked with <code>--config foo.bar=bazz</code> flag.
     {/param}
     {param content}
       {call buck.function}
         {param status: 'UNFROZEN' /}
         {param overview}
-          Returns a list of files that match glob search pattern.
+          Returns a configuration value of <code>.buckconfig</code> or <code>--config</code> flag. For example, <code>read_config('foo', 'bar', 'baz')</code> returns <code>bazz</code> if Buck is invoked with <code>--config foo.bar=bazz</code> flag.
         {/param}
           {param args}
                           {call buck.functionArg}
