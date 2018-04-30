@@ -9,7 +9,7 @@ java_library_with_plugins(
         "//src/com/facebook/buck/toolchain:toolchain",
     ],
     provided_deps = [
-        "//src/com/facebook/buck/rules:source_path",
+        "//src/com/facebook/buck/core/sourcepath/resolver:resolver",
     ],
     visibility = ["PUBLIC"],
 )

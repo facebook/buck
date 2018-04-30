@@ -21,9 +21,9 @@ java_immutables_library(
     ],
     deps = [
         "//src/com/facebook/buck/core/rulekey:rulekey",
+        "//src/com/facebook/buck/core/sourcepath/resolver:resolver",
         "//src/com/facebook/buck/io:io",
         "//src/com/facebook/buck/io/filesystem:filesystem",
-        "//src/com/facebook/buck/rules:source_path",
         "//third-party/java/guava:guava",
     ],
 )
@@ -47,6 +47,7 @@ java_library(
     deps = [
         "//src/com/facebook/buck/core/cell/resolver:resolver",
         "//src/com/facebook/buck/core/rulekey:rulekey",
+        "//src/com/facebook/buck/core/sourcepath/resolver:resolver",
         "//src/com/facebook/buck/core/util/immutables:immutables",
         "//src/com/facebook/buck/event:interfaces",
         "//src/com/facebook/buck/io:io",
@@ -56,7 +57,6 @@ java_library(
         "//src/com/facebook/buck/model:model",
         "//src/com/facebook/buck/rules:build_rule",
         "//src/com/facebook/buck/rules:rules",
-        "//src/com/facebook/buck/rules:source_path",
         "//src/com/facebook/buck/rules/coercer:interface",
         "//src/com/facebook/buck/step:step",
         "//src/com/facebook/buck/step/fs:fs",

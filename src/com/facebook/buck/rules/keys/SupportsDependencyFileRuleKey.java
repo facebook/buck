@@ -18,9 +18,9 @@ package com.facebook.buck.rules.keys;
 
 import com.facebook.buck.core.cell.resolver.CellPathResolver;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.util.function.Predicate;

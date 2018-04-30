@@ -16,7 +16,7 @@
 
 package com.facebook.buck.rules.modern;
 
-import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 
 /**
  * Uses ValueCreator.createSpecial() to create a SourcePathResolver. Ideally, build rules don't hold

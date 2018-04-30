@@ -1,24 +1,5 @@
 load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
 
-java_immutables_library(
-    name = "source_path",
-    srcs = [
-        "SourcePathResolver.java",
-    ],
-    exported_deps = [
-        "//src/com/facebook/buck/core/sourcepath:sourcepath",
-        "//src/com/facebook/buck/io/filesystem:filesystem",
-    ],
-    visibility = ["PUBLIC"],
-    deps = [
-        "//src/com/facebook/buck/core/rulekey:rulekey",
-        "//src/com/facebook/buck/io:io",
-        "//src/com/facebook/buck/model:model",
-        "//src/com/facebook/buck/util:util",
-        "//third-party/java/guava:guava",
-    ],
-)
-
 java_library(
     name = "abstract_description_arg",
     srcs = [
@@ -52,7 +33,7 @@ java_immutables_library(
         "AbstractBuildContext.java",
     ],
     exported_deps = [
-        ":source_path",
+        "//src/com/facebook/buck/core/sourcepath/resolver:resolver",
         "//src/com/facebook/buck/event:interfaces",
     ],
     visibility = [
@@ -103,10 +84,10 @@ java_immutables_library(
     exported_deps = [
         ":abstract_description_arg",
         ":build_context",
-        ":source_path",
         "//src/com/facebook/buck/core/rulekey:rulekey",
         "//src/com/facebook/buck/core/rules/provider:provider",
         "//src/com/facebook/buck/core/sourcepath:sourcepath",
+        "//src/com/facebook/buck/core/sourcepath/resolver:resolver",
         "//src/com/facebook/buck/core/toolchain/tool:tool",
         "//src/com/facebook/buck/graph:graph",
         "//src/com/facebook/buck/rules/visibility:visibility",

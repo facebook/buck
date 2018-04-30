@@ -4,12 +4,12 @@ standard_java_test(
     name = "rules",
     with_test_data = True,
     deps = [
+        "//src/com/facebook/buck/core/sourcepath/resolver:resolver",
         "//src/com/facebook/buck/features/filebundler:filebundler",
         "//src/com/facebook/buck/features/zip/rules:rules",
         "//src/com/facebook/buck/io:io",
         "//src/com/facebook/buck/rules:build_rule",
         "//src/com/facebook/buck/rules:rules",
-        "//src/com/facebook/buck/rules:source_path",
         "//src/com/facebook/buck/rules/modern:modern",
         "//src/com/facebook/buck/step:step",
         "//src/com/facebook/buck/util:exceptions",

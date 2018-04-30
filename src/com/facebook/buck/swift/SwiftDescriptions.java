@@ -22,9 +22,9 @@ import static com.facebook.buck.swift.SwiftLibraryDescription.SWIFT_COMPANION_FL
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.io.file.MorePaths;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;

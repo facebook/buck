@@ -17,7 +17,7 @@
 package com.facebook.buck.features.ocaml;
 
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;

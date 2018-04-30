@@ -17,8 +17,8 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.jvm.java.javax.SynchronizedToolProvider;
-import com.facebook.buck.rules.SourcePathResolver;
 import javax.tools.JavaCompiler;
 
 public class JdkProvidedInMemoryJavac extends Jsr199Javac {

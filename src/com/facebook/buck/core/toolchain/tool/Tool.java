@@ -17,7 +17,7 @@
 package com.facebook.buck.core.toolchain.tool;
 
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
-import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
