@@ -150,12 +150,10 @@ final class Daemon implements Closeable {
   private static Optional<WebServer> createWebServer(
       BuckConfig config, ProjectFilesystem filesystem) {
     Optional<Integer> port = getValidWebServerPort(config);
-    if (port.isPresent()) {
-      WebServer webServer = new WebServer(port.get(), filesystem);
-      return Optional.of(webServer);
-    } else {
+    if (!port.isPresent()) {
       return Optional.empty();
     }
+    return Optional.of(new WebServer(port.get(), filesystem));
   }
 
   /**
@@ -178,7 +176,6 @@ final class Daemon implements Closeable {
     int port;
     try {
       port = Integer.parseInt(rawPort, 10);
-      LOG.debug("Starting up web server on port %d.", port);
     } catch (NumberFormatException e) {
       LOG.error("Could not parse port for httpserver: %s.", rawPort);
       return Optional.empty();

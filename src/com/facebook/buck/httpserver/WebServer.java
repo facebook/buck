@@ -18,9 +18,15 @@ package com.facebook.buck.httpserver;
 
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.trace.BuildTraces;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -46,12 +52,15 @@ import org.eclipse.jetty.servlet.ServletHolder;
  */
 public class WebServer {
 
+  private static final Logger LOG = Logger.get(WebServer.class);
+
   private static final String INDEX_CONTEXT_PATH = "/";
   private static final String ARTIFACTS_CONTEXT_PATH = "/artifacts";
   private static final String STATIC_CONTEXT_PATH = "/static";
   private static final String TRACE_CONTEXT_PATH = "/trace";
   private static final String TRACES_CONTEXT_PATH = "/traces";
   private static final String TRACE_DATA_CONTEXT_PATH = "/tracedata";
+  private static final Path HTTP_PORT_FILE = Paths.get(".httpport");
 
   private Optional<Integer> port;
   private final ProjectFilesystem projectFilesystem;
@@ -122,6 +131,19 @@ public class WebServer {
       server.start();
     } catch (Exception e) {
       throw new WebServerException("Cannot start Websocket server.", e);
+    }
+
+    Optional<Integer> port = getPort();
+    if (port.isPresent()) {
+      LOG.debug("Web server is started on port %d.", port.get());
+      // announce web server by creating a file in buck-out
+      Path filePath =
+          this.projectFilesystem.getBuckPaths().getConfiguredBuckOut().resolve(HTTP_PORT_FILE);
+      try {
+        Files.write(filePath, String.valueOf(port.get()).getBytes(StandardCharsets.UTF_8));
+      } catch (IOException e) {
+        throw new WebServerException("Unable to write to " + HTTP_PORT_FILE.toString(), e);
+      }
     }
   }
 
