@@ -100,7 +100,6 @@ public class CxxGtestTestTest {
                 linkTarget,
                 filesystem,
                 ruleFinder,
-                (unused) -> ImmutableSortedSet.of(),
                 TestCellPathResolver.get(filesystem),
                 CxxPlatformUtils.DEFAULT_PLATFORM.getLd().resolve(ruleResolver),
                 Paths.get("output"),

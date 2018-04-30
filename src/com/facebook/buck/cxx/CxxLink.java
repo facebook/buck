@@ -37,6 +37,7 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.HasSupplementaryOutputs;
 import com.facebook.buck.rules.OverrideScheduleRule;
 import com.facebook.buck.rules.RuleScheduleInfo;
@@ -61,7 +62,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.SortedSet;
-import java.util.function.Function;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
@@ -72,7 +72,6 @@ public class CxxLink extends AbstractBuildRule
         HasSupplementaryOutputs {
 
   private SourcePathRuleFinder ruleFinder;
-  private final Function<SourcePathRuleFinder, ? extends SortedSet<BuildRule>> buildDepsSupplier;
   private final Memoizer<SortedSet<BuildRule>> buildDeps = new Memoizer<>();
 
   @AddToRuleKey private final Linker linker;
@@ -94,7 +93,6 @@ public class CxxLink extends AbstractBuildRule
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       SourcePathRuleFinder ruleFinder,
-      Function<SourcePathRuleFinder, ? extends SortedSet<BuildRule>> buildDepsSupplier,
       CellPathResolver cellPathResolver,
       Linker linker,
       Path output,
@@ -106,7 +104,6 @@ public class CxxLink extends AbstractBuildRule
       boolean thinLto) {
     super(buildTarget, projectFilesystem);
     this.ruleFinder = ruleFinder;
-    this.buildDepsSupplier = buildDepsSupplier;
     this.linker = linker;
     this.output = output;
     this.extraOutputs = ImmutableSortedMap.copyOf(extraOutputs);
@@ -314,7 +311,7 @@ public class CxxLink extends AbstractBuildRule
 
   @Override
   public SortedSet<BuildRule> getBuildDeps() {
-    return buildDeps.get(() -> buildDepsSupplier.apply(ruleFinder));
+    return buildDeps.get(BuildableSupport.buildDepsSupplier(this, ruleFinder));
   }
 
   @Override

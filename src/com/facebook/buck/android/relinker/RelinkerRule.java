@@ -80,7 +80,6 @@ class RelinkerRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @AddToRuleKey(stringify = true)
   private final ImmutableList<Pattern> symbolWhitelist;
 
-  private final BuildRuleParams buildRuleParams;
   private final CxxBuckConfig cxxBuckConfig;
   private final SourcePathResolver pathResolver;
   private final CellPathResolver cellPathResolver;
@@ -111,7 +110,6 @@ class RelinkerRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.cxxBuckConfig = cxxBuckConfig;
     this.linkerArgs = linkerArgs;
     this.ruleFinder = ruleFinder;
-    this.buildRuleParams = buildRuleParams;
     this.symbolsNeededPaths = symbolsNeededPaths;
     this.baseLibSourcePath = baseLibSourcePath;
     this.linker = linker;
@@ -186,7 +184,6 @@ class RelinkerRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
                       .withoutFlavors(LinkerMapMode.NO_LINKER_MAP.getFlavor()),
                   getProjectFilesystem(),
                   ruleFinder,
-                  (unused) -> buildRuleParams.getBuildDeps(),
                   cellPathResolver,
                   linker,
                   getLibFilePath(),

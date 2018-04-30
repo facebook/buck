@@ -47,7 +47,6 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSortedSet;
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -97,7 +96,6 @@ public class CxxLinkTest {
                     target,
                     projectFilesystem,
                     ruleFinder,
-                    (unused) -> ImmutableSortedSet.of(),
                     TestCellPathResolver.get(projectFilesystem),
                     DEFAULT_LINKER,
                     DEFAULT_OUTPUT,
@@ -117,7 +115,6 @@ public class CxxLinkTest {
                     target,
                     projectFilesystem,
                     ruleFinder,
-                    (unused) -> ImmutableSortedSet.of(),
                     TestCellPathResolver.get(projectFilesystem),
                     new GnuLinker(
                         new HashedFileTool(
@@ -140,7 +137,6 @@ public class CxxLinkTest {
                     target,
                     projectFilesystem,
                     ruleFinder,
-                    (unused) -> ImmutableSortedSet.of(),
                     TestCellPathResolver.get(projectFilesystem),
                     DEFAULT_LINKER,
                     Paths.get("different"),
@@ -161,7 +157,6 @@ public class CxxLinkTest {
                     target,
                     projectFilesystem,
                     ruleFinder,
-                    (unused) -> ImmutableSortedSet.of(),
                     TestCellPathResolver.get(projectFilesystem),
                     DEFAULT_LINKER,
                     DEFAULT_OUTPUT,
@@ -218,7 +213,6 @@ public class CxxLinkTest {
                 target,
                 projectFilesystem,
                 ruleFinder,
-                (unused) -> ImmutableSortedSet.of(),
                 TestCellPathResolver.get(projectFilesystem),
                 DEFAULT_LINKER,
                 DEFAULT_OUTPUT,
@@ -241,7 +235,6 @@ public class CxxLinkTest {
                 target,
                 projectFilesystem,
                 ruleFinder,
-                (unused) -> ImmutableSortedSet.of(),
                 TestCellPathResolver.get(projectFilesystem),
                 DEFAULT_LINKER,
                 DEFAULT_OUTPUT,

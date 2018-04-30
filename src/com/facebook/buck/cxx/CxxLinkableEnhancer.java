@@ -35,9 +35,7 @@ import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SanitizedArg;
@@ -46,7 +44,6 @@ import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -116,28 +113,15 @@ public class CxxLinkableEnhancer {
     // Add all arguments needed to link in the C/C++ platform runtime.
     argsBuilder.addAll(StringArg.from(cxxPlatform.getRuntimeLdflags().get(runtimeDepType)));
 
-    ImmutableList<Arg> allArgs = argsBuilder.build();
-
-    // Build the C/C++ link step.
-    Function<SourcePathRuleFinder, ImmutableSortedSet<BuildRule>> declaredDeps =
-        (ruleFinderInner) ->
-            FluentIterable.from(allArgs)
-                .transformAndConcat(arg -> BuildableSupport.getDepsCollection(arg, ruleFinderInner))
-                .append(BuildableSupport.getDepsCollection(linker, ruleFinderInner))
-                .toSortedSet(Ordering.natural());
     return new CxxLink(
         target,
         projectFilesystem,
         ruleFinder,
-        // Construct our link build rule params.  The important part here is combining the build
-        // rules that construct our object file inputs and also the deps that build our
-        // dependencies.
-        declaredDeps,
         cellPathResolver,
         linker,
         output,
         extraOutputs,
-        allArgs,
+        argsBuilder.build(),
         postprocessor,
         cxxBuckConfig.getLinkScheduleInfo(),
         cxxBuckConfig.shouldCacheLinks(),
