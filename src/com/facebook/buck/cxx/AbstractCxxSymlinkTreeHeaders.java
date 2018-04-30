@@ -19,6 +19,7 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.RuleKeyAppendable;
 import com.facebook.buck.core.rulekey.RuleKeyObjectSink;
+import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
@@ -54,12 +55,14 @@ abstract class AbstractCxxSymlinkTreeHeaders extends CxxHeaders implements RuleK
    * @return the path to add to the preprocessor search path to find the includes. This defaults to
    *     the root, but can be overridden to use an alternate path.
    */
-  public abstract Either<Path, SourcePath> getIncludeRoot();
+  public abstract Either<PathSourcePath, SourcePath> getIncludeRoot();
 
   @Override
   public Optional<Path> getResolvedIncludeRoot(SourcePathResolver resolver) {
     return Optional.of(
-        getIncludeRoot().transform(left -> left, right -> resolver.getAbsolutePath(right)));
+        getIncludeRoot()
+            .transform(
+                left -> resolver.getAbsolutePath(left), right -> resolver.getAbsolutePath(right)));
   }
 
   @Override
@@ -129,7 +132,7 @@ abstract class AbstractCxxSymlinkTreeHeaders extends CxxHeaders implements RuleK
     builder.setNameToPathMap(symlinkTree.getLinks());
 
     if (includeType == CxxPreprocessables.IncludeType.LOCAL) {
-      builder.setIncludeRoot(Either.ofLeft(symlinkTree.getIncludePath()));
+      builder.setIncludeRoot(Either.ofLeft(symlinkTree.getIncludeSourcePath()));
       symlinkTree.getHeaderMapSourcePath().ifPresent(builder::setHeaderMap);
     } else {
       builder.setIncludeRoot(Either.ofRight(symlinkTree.getRootSourcePath()));
