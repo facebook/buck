@@ -94,7 +94,7 @@ public class PerBuildState implements AutoCloseable {
   }
 
   @Override
-  public void close() throws BuildFileParseException {
+  public void close() {
     targetNodeParsePipeline.close();
     rawNodeParsePipeline.close();
     cellManager.close();
