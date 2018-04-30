@@ -425,13 +425,14 @@ public class ParsePipelineTest {
               input -> {
                 CloseRecordingProjectBuildFileParserDecorator buildFileParser =
                     new CloseRecordingProjectBuildFileParserDecorator(
-                        ProjectBuildFileParserFactory.createBuildFileParser(
-                            input,
-                            coercerFactory,
-                            console,
-                            eventBus,
-                            new ExecutableFinder(),
-                            knownBuildRuleTypes.getDescriptions()));
+                        new ProjectBuildFileParserFactory()
+                            .createBuildFileParser(
+                                input,
+                                coercerFactory,
+                                console,
+                                eventBus,
+                                new ExecutableFinder(),
+                                knownBuildRuleTypes.getDescriptions()));
                 synchronized (projectBuildFileParsers) {
                   projectBuildFileParsers.add(buildFileParser);
                 }

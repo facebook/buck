@@ -99,13 +99,14 @@ public class AuditRulesCommand extends AbstractCommand {
       throws IOException, InterruptedException {
     ProjectFilesystem projectFilesystem = params.getCell().getFilesystem();
     try (ProjectBuildFileParser parser =
-        ProjectBuildFileParserFactory.createBuildFileParser(
-            params.getCell(),
-            new DefaultTypeCoercerFactory(),
-            params.getConsole(),
-            params.getBuckEventBus(),
-            params.getExecutableFinder(),
-            params.getKnownBuildRuleTypesProvider().get(params.getCell()).getDescriptions())) {
+        new ProjectBuildFileParserFactory()
+            .createBuildFileParser(
+                params.getCell(),
+                new DefaultTypeCoercerFactory(),
+                params.getConsole(),
+                params.getBuckEventBus(),
+                params.getExecutableFinder(),
+                params.getKnownBuildRuleTypesProvider().get(params.getCell()).getDescriptions())) {
       /*
        * The super console does a bunch of rewriting over the top of the console such that
        * simultaneously writing to stdout and stderr in an interactive session is problematic.

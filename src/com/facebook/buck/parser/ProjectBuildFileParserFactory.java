@@ -46,7 +46,7 @@ public class ProjectBuildFileParserFactory {
    * Callers are responsible for managing the life-cycle of the created {@link
    * ProjectBuildFileParser}.
    */
-  public static ProjectBuildFileParser createBuildFileParser(
+  public ProjectBuildFileParser createBuildFileParser(
       Cell cell,
       TypeCoercerFactory typeCoercerFactory,
       Console console,
@@ -67,7 +67,7 @@ public class ProjectBuildFileParserFactory {
    * Callers are responsible for managing the life-cycle of the created {@link
    * ProjectBuildFileParser}.
    */
-  static ProjectBuildFileParser createBuildFileParser(
+  ProjectBuildFileParser createBuildFileParser(
       Cell cell,
       TypeCoercerFactory typeCoercerFactory,
       Console console,

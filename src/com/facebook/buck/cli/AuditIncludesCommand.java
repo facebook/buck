@@ -61,13 +61,14 @@ public class AuditIncludesCommand extends AbstractCommand {
       throws IOException, InterruptedException {
     ProjectFilesystem projectFilesystem = params.getCell().getFilesystem();
     try (ProjectBuildFileParser parser =
-        ProjectBuildFileParserFactory.createBuildFileParser(
-            params.getCell(),
-            new DefaultTypeCoercerFactory(),
-            params.getConsole(),
-            params.getBuckEventBus(),
-            params.getExecutableFinder(),
-            params.getKnownBuildRuleTypesProvider().get(params.getCell()).getDescriptions())) {
+        new ProjectBuildFileParserFactory()
+            .createBuildFileParser(
+                params.getCell(),
+                new DefaultTypeCoercerFactory(),
+                params.getConsole(),
+                params.getBuckEventBus(),
+                params.getExecutableFinder(),
+                params.getKnownBuildRuleTypesProvider().get(params.getCell()).getDescriptions())) {
       PrintStream out = params.getConsole().getStdOut();
       for (String pathToBuildFile : getArguments()) {
         if (!json) {
