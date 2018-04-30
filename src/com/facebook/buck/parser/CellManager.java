@@ -65,4 +65,8 @@ class CellManager {
     symlinkCache.registerInputsUnderSymlinks(
         currentCell, getCell(node.getBuildTarget()), buildFile, node);
   }
+
+  void close() {
+    symlinkCache.close();
+  }
 }

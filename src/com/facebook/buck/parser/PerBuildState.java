@@ -41,7 +41,6 @@ public class PerBuildState implements AutoCloseable {
 
   private final CellManager cellManager;
 
-  private final SymlinkCache symlinkCache;
   private final ProjectBuildFileParserPool projectBuildFileParserPool;
   private final RawNodeParsePipeline rawNodeParsePipeline;
   private final TargetNodeParsePipeline targetNodeParsePipeline;
@@ -65,7 +64,7 @@ public class PerBuildState implements AutoCloseable {
       SpeculativeParsing speculativeParsing) {
 
     this.knownBuildRuleTypesProvider = knownBuildRuleTypesProvider;
-    this.symlinkCache = new SymlinkCache(eventBus, daemonicParserState);
+    SymlinkCache symlinkCache = new SymlinkCache(eventBus, daemonicParserState);
     this.cellManager = new CellManager(symlinkCache);
 
     TargetNodeListener<TargetNode<?, ?>> symlinkCheckers = cellManager::registerInputsUnderSymlinks;
@@ -159,6 +158,6 @@ public class PerBuildState implements AutoCloseable {
     targetNodeParsePipeline.close();
     rawNodeParsePipeline.close();
     projectBuildFileParserPool.close();
-    symlinkCache.close();
+    cellManager.close();
   }
 }
