@@ -22,6 +22,7 @@ import com.facebook.buck.graph.DirectedAcyclicGraph;
 import com.facebook.buck.graph.Dot;
 import com.facebook.buck.graph.Dot.Builder;
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.parser.ParserPythonInterpreterProvider;
 import com.facebook.buck.parser.PerBuildState;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.query.QueryBuildTarget;
@@ -163,10 +164,11 @@ public class QueryCommand extends AbstractCommand {
         PerBuildState parserState =
             new PerBuildState(
                 params.getTypeCoercerFactory(),
-                new ConstructorArgMarshaller(params.getTypeCoercerFactory()),
                 params.getParser().getPermState(),
+                new ConstructorArgMarshaller(params.getTypeCoercerFactory()),
                 params.getBuckEventBus(),
-                params.getExecutableFinder(),
+                new ParserPythonInterpreterProvider(
+                    params.getCell().getBuckConfig(), params.getExecutableFinder()),
                 pool.getListeningExecutorService(),
                 params.getCell(),
                 params.getKnownBuildRuleTypesProvider(),

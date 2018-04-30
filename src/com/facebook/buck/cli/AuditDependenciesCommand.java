@@ -18,6 +18,7 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.parser.ParserPythonInterpreterProvider;
 import com.facebook.buck.parser.PerBuildState;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.util.CommandLineException;
@@ -103,10 +104,11 @@ public class AuditDependenciesCommand extends AbstractCommand {
         PerBuildState parserState =
             new PerBuildState(
                 params.getTypeCoercerFactory(),
-                new ConstructorArgMarshaller(params.getTypeCoercerFactory()),
                 params.getParser().getPermState(),
+                new ConstructorArgMarshaller(params.getTypeCoercerFactory()),
                 params.getBuckEventBus(),
-                params.getExecutableFinder(),
+                new ParserPythonInterpreterProvider(
+                    params.getCell().getBuckConfig(), params.getExecutableFinder()),
                 pool.getListeningExecutorService(),
                 params.getCell(),
                 params.getKnownBuildRuleTypesProvider(),

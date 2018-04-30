@@ -37,6 +37,7 @@ import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.InMemoryBuildFileTree;
 import com.facebook.buck.parser.BuildFileSpec;
 import com.facebook.buck.parser.ParserConfig;
+import com.facebook.buck.parser.ParserPythonInterpreterProvider;
 import com.facebook.buck.parser.PerBuildState;
 import com.facebook.buck.parser.PerBuildState.SpeculativeParsing;
 import com.facebook.buck.parser.TargetNodePredicateSpec;
@@ -769,10 +770,11 @@ public class TargetsCommand extends AbstractCommand {
     try (PerBuildState state =
         new PerBuildState(
             params.getTypeCoercerFactory(),
-            new ConstructorArgMarshaller(params.getTypeCoercerFactory()),
             params.getParser().getPermState(),
+            new ConstructorArgMarshaller(params.getTypeCoercerFactory()),
             params.getBuckEventBus(),
-            params.getExecutableFinder(),
+            new ParserPythonInterpreterProvider(
+                params.getCell().getBuckConfig(), params.getExecutableFinder()),
             executor,
             params.getCell(),
             params.getKnownBuildRuleTypesProvider(),

@@ -190,10 +190,10 @@ public class ParserTest {
     try (PerBuildState state =
         new PerBuildState(
             typeCoercerFactory,
-            new ConstructorArgMarshaller(typeCoercerFactory),
             parser.getPermState(),
+            new ConstructorArgMarshaller(typeCoercerFactory),
             eventBus,
-            executableFinder,
+            new ParserPythonInterpreterProvider(cell.getBuckConfig(), executableFinder),
             executor,
             cell,
             knownBuildRuleTypesProvider,

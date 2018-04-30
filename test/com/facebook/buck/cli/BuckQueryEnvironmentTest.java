@@ -32,6 +32,7 @@ import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
+import com.facebook.buck.parser.ParserPythonInterpreterProvider;
 import com.facebook.buck.parser.PerBuildState;
 import com.facebook.buck.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.query.QueryBuildTarget;
@@ -103,10 +104,10 @@ public class BuckQueryEnvironmentTest {
     parserState =
         new PerBuildState(
             typeCoercerFactory,
-            new ConstructorArgMarshaller(typeCoercerFactory),
             parser.getPermState(),
+            new ConstructorArgMarshaller(typeCoercerFactory),
             eventBus,
-            executableFinder,
+            new ParserPythonInterpreterProvider(cell.getBuckConfig(), executableFinder),
             executor,
             cell,
             knownBuildRuleTypesProvider,

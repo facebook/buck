@@ -21,7 +21,6 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypesProvider;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.facebook.buck.rules.TargetNode;
@@ -58,30 +57,6 @@ public class PerBuildState implements AutoCloseable {
   }
 
   public PerBuildState(
-      TypeCoercerFactory typeCoercerFactory,
-      ConstructorArgMarshaller marshaller,
-      DaemonicParserState daemonicParserState,
-      BuckEventBus eventBus,
-      ExecutableFinder executableFinder,
-      ListeningExecutorService executorService,
-      Cell rootCell,
-      KnownBuildRuleTypesProvider knownBuildRuleTypesProvider,
-      boolean enableProfiling,
-      SpeculativeParsing speculativeParsing) {
-    this(
-        typeCoercerFactory,
-        daemonicParserState,
-        marshaller,
-        eventBus,
-        new ParserPythonInterpreterProvider(rootCell.getBuckConfig(), executableFinder),
-        executorService,
-        rootCell,
-        knownBuildRuleTypesProvider,
-        enableProfiling,
-        speculativeParsing);
-  }
-
-  PerBuildState(
       TypeCoercerFactory typeCoercerFactory,
       DaemonicParserState daemonicParserState,
       ConstructorArgMarshaller marshaller,
