@@ -425,7 +425,7 @@ public class ParsePipelineTest {
               input -> {
                 CloseRecordingProjectBuildFileParserDecorator buildFileParser =
                     new CloseRecordingProjectBuildFileParserDecorator(
-                        new ProjectBuildFileParserFactory(
+                        new DefaultProjectBuildFileParserFactory(
                                 coercerFactory,
                                 console,
                                 new ParserPythonInterpreterProvider(

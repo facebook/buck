@@ -75,8 +75,8 @@ public class PerBuildState implements AutoCloseable {
     TargetNodeListener<TargetNode<?, ?>> symlinkCheckers = this::registerInputsUnderSymlinks;
     ParserConfig parserConfig = rootCell.getBuckConfig().getView(ParserConfig.class);
     int numParsingThreads = parserConfig.getNumParsingThreads();
-    ProjectBuildFileParserFactory projectBuildFileParserFactory =
-        new ProjectBuildFileParserFactory(
+    DefaultProjectBuildFileParserFactory projectBuildFileParserFactory =
+        new DefaultProjectBuildFileParserFactory(
             typeCoercerFactory,
             parserPythonInterpreterProvider,
             knownBuildRuleTypesProvider,
