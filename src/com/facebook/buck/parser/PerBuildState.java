@@ -22,7 +22,6 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypesProvider;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.ExecutableFinder;
-import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.facebook.buck.rules.TargetNode;
@@ -43,11 +42,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 public class PerBuildState implements AutoCloseable {
 
-  private final TypeCoercerFactory typeCoercerFactory;
   private final AtomicLong parseProcessedBytes = new AtomicLong();
-  private final BuckEventBus eventBus;
-  private final ParserPythonInterpreterProvider parserPythonInterpreterProvider;
-  private final boolean enableProfiling;
 
   private final Map<Path, Cell> cells;
 
@@ -98,10 +93,6 @@ public class PerBuildState implements AutoCloseable {
       boolean enableProfiling,
       SpeculativeParsing speculativeParsing) {
 
-    this.typeCoercerFactory = typeCoercerFactory;
-    this.eventBus = eventBus;
-    this.parserPythonInterpreterProvider = parserPythonInterpreterProvider;
-    this.enableProfiling = enableProfiling;
     this.knownBuildRuleTypesProvider = knownBuildRuleTypesProvider;
 
     this.cells = new ConcurrentHashMap<>();
@@ -109,10 +100,17 @@ public class PerBuildState implements AutoCloseable {
     TargetNodeListener<TargetNode<?, ?>> symlinkCheckers = this::registerInputsUnderSymlinks;
     ParserConfig parserConfig = rootCell.getBuckConfig().getView(ParserConfig.class);
     int numParsingThreads = parserConfig.getNumParsingThreads();
+    ProjectBuildFileParserFactory projectBuildFileParserFactory =
+        new ProjectBuildFileParserFactory(
+            typeCoercerFactory,
+            eventBus,
+            parserPythonInterpreterProvider,
+            knownBuildRuleTypesProvider,
+            enableProfiling);
     this.projectBuildFileParserPool =
         new ProjectBuildFileParserPool(
             numParsingThreads, // Max parsers to create per cell.
-            this::createBuildFileParser,
+            projectBuildFileParserFactory::createBuildFileParser,
             enableProfiling);
 
     this.rawNodeParsePipeline =
@@ -182,16 +180,6 @@ public class PerBuildState implements AutoCloseable {
     // The raw nodes are just plain JSON blobs, and so we don't need to check for symlinks
     return rawNodeParsePipeline.getAllNodes(
         cell, knownBuildRuleTypesProvider.get(cell), buildFile, parseProcessedBytes);
-  }
-
-  private ProjectBuildFileParser createBuildFileParser(Cell cell) {
-    return new ProjectBuildFileParserFactory(
-            typeCoercerFactory,
-            eventBus,
-            parserPythonInterpreterProvider,
-            knownBuildRuleTypesProvider,
-            enableProfiling)
-        .createBuildFileParser(cell);
   }
 
   private void register(Cell cell) {
