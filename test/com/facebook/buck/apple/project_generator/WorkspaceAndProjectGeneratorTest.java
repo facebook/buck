@@ -27,6 +27,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.apple.AppleBinaryBuilder;
 import com.facebook.buck.apple.AppleBundleBuilder;
@@ -72,6 +73,7 @@ import com.facebook.buck.shell.GenruleDescriptionArg;
 import com.facebook.buck.swift.SwiftBuckConfig;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.util.CloseableMemoizedSupplier;
+import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.timing.IncrementingFakeClock;
 import com.facebook.buck.util.types.Either;
 import com.google.common.collect.ImmutableList;
@@ -119,6 +121,7 @@ public class WorkspaceAndProjectGeneratorTest {
 
   @Before
   public void setUp() throws InterruptedException, IOException {
+    assumeTrue(Platform.detect() == Platform.MACOS);
     rootCell = (new TestCellBuilder()).build();
     ProjectFilesystem projectFilesystem = rootCell.getFilesystem();
     BuckConfig fakeBuckConfig = FakeBuckConfig.builder().build();
@@ -957,9 +960,11 @@ public class WorkspaceAndProjectGeneratorTest {
         schemeActions =
             ImmutableMap.of(
                 SchemeActionType.BUILD,
-                ImmutableMap.of(AdditionalActions.PRE_SCHEME_ACTIONS, ImmutableList.of("echo yeha")),
+                ImmutableMap.of(
+                    AdditionalActions.PRE_SCHEME_ACTIONS, ImmutableList.of("echo yeha")),
                 SchemeActionType.LAUNCH,
-                ImmutableMap.of(AdditionalActions.POST_SCHEME_ACTIONS, ImmutableList.of("echo takeoff")));
+                ImmutableMap.of(
+                    AdditionalActions.POST_SCHEME_ACTIONS, ImmutableList.of("echo takeoff")));
     TargetNode<XcodeWorkspaceConfigDescriptionArg, ?> workspaceNode =
         XcodeWorkspaceConfigBuilder.createBuilder(
                 BuildTargetFactory.newInstance(rootCell.getRoot(), "//foo", "workspace"))
