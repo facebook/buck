@@ -1,0 +1,15 @@
+apple_library(
+    name = "Foo",
+    srcs = ["foo.swift"],
+    frameworks = [
+        "$SDKROOT/System/Library/Frameworks/Foundation.framework",
+    ],
+    swift_version = "4",
+    deps = [':Dummy'],
+)
+
+prebuilt_apple_framework(
+    name = "Dummy",
+    framework = "Dummy.framework",
+    preferred_linkage = "static",
+)
