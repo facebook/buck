@@ -129,6 +129,7 @@ import com.google.common.util.concurrent.SettableFuture;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -704,7 +705,7 @@ public class BuildCommand extends AbstractCommand {
       Path destPath = lastOutputDirPath.relativize(absolutePath);
       Path linkPath = lastOutputDirPath.resolve(absolutePath.getFileName());
       // Don't overwrite existing symlink in case there are duplicate names.
-      if (!Files.exists(linkPath)) {
+      if (!Files.exists(linkPath, LinkOption.NOFOLLOW_LINKS)) {
         ProjectFilesystem projectFilesystem = rule.getProjectFilesystem();
         projectFilesystem.createSymLink(linkPath, destPath, false);
       }
