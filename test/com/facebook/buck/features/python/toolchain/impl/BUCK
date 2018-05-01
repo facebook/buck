@@ -25,6 +25,7 @@ java_test(
     srcs = glob(["*Test.java"]),
     deps = [
         ":testutil",
+        "//src/com/facebook/buck/core/sourcepath/resolver/impl:impl",
         "//src/com/facebook/buck/features/python/toolchain/impl:impl",
         "//src/com/facebook/buck/io:io",
         "//src/com/facebook/buck/rules:cli",

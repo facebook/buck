@@ -36,6 +36,7 @@ java_immutables_library(
         "//src/com/facebook/buck/io/filesystem/impl:impl",
         "//src/com/facebook/buck/android/aapt:aapt",
         "//src/com/facebook/buck/core/rules/knowntypes:knowntypes",
+        "//src/com/facebook/buck/core/sourcepath/resolver/impl:impl",
         "//src/com/facebook/buck/android:config",
         "//src/com/facebook/buck/android/redex:options",
         "//src/com/facebook/buck/android:helpers",

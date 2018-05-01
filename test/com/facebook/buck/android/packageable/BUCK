@@ -4,7 +4,7 @@ standard_java_test(
     name = "packageable",
     deps = [
         "//src/com/facebook/buck/android:rules",
-        "//src/com/facebook/buck/core/sourcepath/resolver:resolver",
+        "//src/com/facebook/buck/core/sourcepath/resolver/impl:impl",
         "//src/com/facebook/buck/io:io",
         "//src/com/facebook/buck/jvm/java/toolchain:toolchain",
         "//src/com/facebook/buck/model:model",

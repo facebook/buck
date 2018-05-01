@@ -6,6 +6,7 @@ java_test(
     has_immutable_types = True,
     deps = [
         ":testutil",
+        "//src/com/facebook/buck/core/sourcepath/resolver/impl:impl",
         "//src/com/facebook/buck/cxx/toolchain:toolchain",
         "//src/com/facebook/buck/cxx/toolchain/impl:impl",
         "//src/com/facebook/buck/jvm/java:rules",

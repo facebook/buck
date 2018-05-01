@@ -15,6 +15,7 @@ java_test(
         "//src/com/facebook/buck/android:utils",
         "//src/com/facebook/buck/android/toolchain/impl:impl",
         "//src/com/facebook/buck/android/toolchain/ndk/impl:impl",
+        "//src/com/facebook/buck/core/sourcepath/resolver/impl:impl",
         "//src/com/facebook/buck/cxx:rules",
         "//src/com/facebook/buck/cxx/toolchain/impl:impl",
         "//src/com/facebook/buck/io:executable-finder",

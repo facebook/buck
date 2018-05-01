@@ -19,6 +19,7 @@ package com.facebook.buck.rules;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.log.Logger;
 import com.google.common.base.Preconditions;
 import java.util.HashMap;

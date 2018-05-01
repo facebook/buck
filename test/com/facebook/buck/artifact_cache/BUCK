@@ -76,6 +76,7 @@ standard_java_test(
         "//src/com/facebook/buck/artifact_cache:impl",
         "//src/com/facebook/buck/cli:cli",
         "//src/com/facebook/buck/config:config",
+        "//src/com/facebook/buck/core/sourcepath/resolver/impl:impl",
         "//src/com/facebook/buck/core/util/immutables:immutables",
         "//src/com/facebook/buck/counters:counters",
         "//src/com/facebook/buck/cxx:rules",
