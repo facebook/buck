@@ -39,6 +39,7 @@ import com.facebook.buck.parser.options.ProjectBuildFileParserOptions;
 import com.facebook.buck.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.sandbox.TestSandboxExecutionStrategyFactory;
+import com.facebook.buck.skylark.io.impl.SimpleGlobber;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.DefaultProcessExecutor;
@@ -111,7 +112,8 @@ public class SkylarkProjectBuildFileParserTest {
             .setDescriptions(options.getDescriptions())
             .setDisableImplicitNativeRules(options.getDisableImplicitNativeRules())
             .build(),
-        eventHandler);
+        eventHandler,
+        SimpleGlobber::create);
   }
 
   private SkylarkProjectBuildFileParser createParser(EventHandler eventHandler) {
@@ -626,7 +628,8 @@ public class SkylarkProjectBuildFileParserTest {
                 .setDescriptions(options.getDescriptions())
                 .setRuleFunctionFactory(new RuleFunctionFactory(new DefaultTypeCoercerFactory()))
                 .build(),
-            new PrintingEventHandler(EnumSet.allOf(EventKind.class)));
+            new PrintingEventHandler(EnumSet.allOf(EventKind.class)),
+            SimpleGlobber::create);
 
     Files.write(
         buildFile,

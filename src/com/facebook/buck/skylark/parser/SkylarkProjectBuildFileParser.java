@@ -26,7 +26,7 @@ import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.options.ProjectBuildFileParserOptions;
 import com.facebook.buck.skylark.function.Glob;
 import com.facebook.buck.skylark.function.SkylarkNativeModule;
-import com.facebook.buck.skylark.io.impl.SimpleGlobber;
+import com.facebook.buck.skylark.io.GlobberFactory;
 import com.facebook.buck.skylark.packages.PackageContext;
 import com.facebook.buck.skylark.packages.PackageFactory;
 import com.facebook.buck.skylark.parser.context.ParseContext;
@@ -84,18 +84,21 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
   private final EventHandler eventHandler;
   private final LoadingCache<LoadImport, ExtensionData> extensionDataCache;
   private final BuckGlobals buckGlobals;
+  private final GlobberFactory globberFactory;
 
   private SkylarkProjectBuildFileParser(
       ProjectBuildFileParserOptions options,
       BuckEventBus buckEventBus,
       FileSystem fileSystem,
       BuckGlobals buckGlobals,
-      EventHandler eventHandler) {
+      EventHandler eventHandler,
+      GlobberFactory globberFactory) {
     this.options = options;
     this.buckEventBus = buckEventBus;
     this.fileSystem = fileSystem;
     this.eventHandler = eventHandler;
     this.buckGlobals = buckGlobals;
+    this.globberFactory = globberFactory;
 
     this.extensionDataCache =
         CacheBuilder.newBuilder()
@@ -114,9 +117,10 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
       BuckEventBus buckEventBus,
       FileSystem fileSystem,
       BuckGlobals buckGlobals,
-      EventHandler eventHandler) {
+      EventHandler eventHandler,
+      GlobberFactory globberFactory) {
     return new SkylarkProjectBuildFileParser(
-        options, buckEventBus, fileSystem, buckGlobals, eventHandler);
+        options, buckEventBus, fileSystem, buckGlobals, eventHandler, globberFactory);
   }
 
   @Override
@@ -241,7 +245,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
     env.setup("repository_name", SkylarkNativeModule.repositoryName);
     PackageContext packageContext =
         PackageContext.builder()
-            .setGlobber(SimpleGlobber.create(fileSystem.getPath(buildFile.getParent().toString())))
+            .setGlobber(globberFactory.create(fileSystem.getPath(buildFile.getParent().toString())))
             .setRawConfig(options.getRawConfig())
             .setPackageIdentifier(
                 PackageIdentifier.create(

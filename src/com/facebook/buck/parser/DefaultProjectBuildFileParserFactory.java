@@ -24,11 +24,15 @@ import com.facebook.buck.io.WatchmanFactory;
 import com.facebook.buck.io.filesystem.skylark.SkylarkFilesystem;
 import com.facebook.buck.json.HybridProjectBuildFileParser;
 import com.facebook.buck.json.PythonDslProjectBuildFileParser;
+import com.facebook.buck.parser.AbstractParserConfig.SkylarkGlobHandler;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.api.Syntax;
 import com.facebook.buck.parser.decorators.EventReportingProjectBuildFileParser;
 import com.facebook.buck.parser.options.ProjectBuildFileParserOptions;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
+import com.facebook.buck.skylark.io.GlobberFactory;
+import com.facebook.buck.skylark.io.impl.HybridGlobberFactory;
+import com.facebook.buck.skylark.io.impl.SimpleGlobber;
 import com.facebook.buck.skylark.parser.BuckGlobals;
 import com.facebook.buck.skylark.parser.ConsoleEventHandler;
 import com.facebook.buck.skylark.parser.RuleFunctionFactory;
@@ -37,6 +41,7 @@ import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.google.common.collect.ImmutableMap;
 import com.google.devtools.build.lib.events.EventKind;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Optional;
 
@@ -144,12 +149,22 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
               Syntax.PYTHON_DSL,
               newPythonParser(cell, typeCoercerFactory, console, eventBus, buildFileParserOptions),
               Syntax.SKYLARK,
-              newSkylarkParser(cell, typeCoercerFactory, eventBus, buildFileParserOptions)),
+              newSkylarkParser(
+                  cell,
+                  typeCoercerFactory,
+                  eventBus,
+                  buildFileParserOptions,
+                  parserConfig.getSkylarkGlobHandler())),
           defaultBuildFileSyntax);
     } else {
       switch (defaultBuildFileSyntax) {
         case SKYLARK:
-          return newSkylarkParser(cell, typeCoercerFactory, eventBus, buildFileParserOptions);
+          return newSkylarkParser(
+              cell,
+              typeCoercerFactory,
+              eventBus,
+              buildFileParserOptions,
+              parserConfig.getSkylarkGlobHandler());
         case PYTHON_DSL:
           return newPythonParser(
               cell, typeCoercerFactory, console, eventBus, buildFileParserOptions);
@@ -181,7 +196,15 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
       Cell cell,
       TypeCoercerFactory typeCoercerFactory,
       BuckEventBus eventBus,
-      ProjectBuildFileParserOptions buildFileParserOptions) {
+      ProjectBuildFileParserOptions buildFileParserOptions,
+      SkylarkGlobHandler skylarkGlobHandler) {
+    GlobberFactory globberFactory;
+    try {
+      globberFactory = getSkylarkGlobberFactory(cell, buildFileParserOptions, skylarkGlobHandler);
+    } catch (IOException e) {
+      throw new RuntimeException(
+          "Watchman glob handler was requested, but Watchman client cannot be created", e);
+    }
     return SkylarkProjectBuildFileParser.using(
         buildFileParserOptions,
         eventBus,
@@ -191,6 +214,21 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
             .setDescriptions(buildFileParserOptions.getDescriptions())
             .setRuleFunctionFactory(new RuleFunctionFactory(typeCoercerFactory))
             .build(),
-        new ConsoleEventHandler(eventBus, EventKind.ALL_EVENTS));
+        new ConsoleEventHandler(eventBus, EventKind.ALL_EVENTS),
+        globberFactory);
+  }
+
+  private static GlobberFactory getSkylarkGlobberFactory(
+      Cell cell,
+      ProjectBuildFileParserOptions buildFileParserOptions,
+      SkylarkGlobHandler skylarkGlobHandler)
+      throws IOException {
+    return skylarkGlobHandler == SkylarkGlobHandler.JAVA
+            || cell.getWatchman() == WatchmanFactory.NULL_WATCHMAN
+        ? SimpleGlobber::create
+        : HybridGlobberFactory.using(
+            buildFileParserOptions.getWatchman().createClient(),
+            buildFileParserOptions.getProjectRoot(),
+            buildFileParserOptions.getWatchman().getProjectWatches());
   }
 }

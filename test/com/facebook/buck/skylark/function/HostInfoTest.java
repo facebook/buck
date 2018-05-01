@@ -24,6 +24,7 @@ import com.facebook.buck.io.filesystem.skylark.SkylarkFilesystem;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.options.ProjectBuildFileParserOptions;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
+import com.facebook.buck.skylark.io.impl.SimpleGlobber;
 import com.facebook.buck.skylark.parser.BuckGlobals;
 import com.facebook.buck.skylark.parser.RuleFunctionFactory;
 import com.facebook.buck.skylark.parser.SkylarkProjectBuildFileParser;
@@ -282,6 +283,7 @@ public class HostInfoTest {
             .setDisableImplicitNativeRules(options.getDisableImplicitNativeRules())
             .setRuleFunctionFactory(ruleFunctionFactory)
             .build(),
-        eventHandler);
+        eventHandler,
+        SimpleGlobber::create);
   }
 }

@@ -45,6 +45,13 @@ abstract class AbstractParserConfig implements ConfigView<BuckConfig> {
     ;
   }
 
+  /** Glob handler supported by Skylark parser. */
+  public enum SkylarkGlobHandler {
+    JAVA,
+    WATCHMAN,
+    ;
+  }
+
   public enum WatchmanGlobSanityCheck {
     NONE,
     STAT,
@@ -258,5 +265,13 @@ abstract class AbstractParserConfig implements ConfigView<BuckConfig> {
   @Value.Lazy
   public boolean shouldIgnoreEnvironmentVariablesChanges() {
     return getDelegate().getBooleanValue("parser", "ignore_environment_variables_changes", false);
+  }
+
+  /** @return the type of the glob handler used by the Skylark parser. */
+  @Value.Lazy
+  public SkylarkGlobHandler getSkylarkGlobHandler() {
+    return getDelegate()
+        .getEnum("parser", "skylark_glob_handler", SkylarkGlobHandler.class)
+        .orElse(SkylarkGlobHandler.JAVA);
   }
 }

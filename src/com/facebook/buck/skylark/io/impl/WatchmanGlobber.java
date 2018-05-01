@@ -43,14 +43,18 @@ import java.util.stream.Collectors;
  */
 public class WatchmanGlobber {
 
-  private static final long TIMEOUT_NANOS = TimeUnit.SECONDS.toNanos(5);
+  private static final long TIMEOUT_NANOS = TimeUnit.SECONDS.toNanos(10);
   private final WatchmanClient watchmanClient;
   /** Path used as a root when resolving patterns. */
   private final String basePath;
 
-  private WatchmanGlobber(WatchmanClient watchmanClient, String basePath) {
+  private final String watchmanWatchRoot;
+
+  private WatchmanGlobber(
+      WatchmanClient watchmanClient, String basePath, String watchmanWatchRoot) {
     this.watchmanClient = watchmanClient;
     this.basePath = basePath;
+    this.watchmanWatchRoot = watchmanWatchRoot;
   }
 
   /**
@@ -67,7 +71,7 @@ public class WatchmanGlobber {
         createWatchmanQuery(include, exclude, excludeDirectories);
 
     return watchmanClient
-        .queryWithTimeout(TIMEOUT_NANOS, "query", basePath, watchmanQuery)
+        .queryWithTimeout(TIMEOUT_NANOS, "query", watchmanWatchRoot, watchmanQuery)
         .map(
             result -> {
               @SuppressWarnings("unchecked")
@@ -89,6 +93,8 @@ public class WatchmanGlobber {
       matchExpressions.add(toExcludeExpression(exclude));
     }
     return ImmutableMap.of(
+        "relative_root",
+        basePath,
         "expression",
         matchExpressions.build(),
         "glob",
@@ -127,7 +133,8 @@ public class WatchmanGlobber {
    *
    * @param basePath The base path relative to which paths matching glob patterns will be resolved.
    */
-  public static WatchmanGlobber create(WatchmanClient watchmanClient, String basePath) {
-    return new WatchmanGlobber(watchmanClient, basePath);
+  public static WatchmanGlobber create(
+      WatchmanClient watchmanClient, String basePath, String watchmanWatchRoot) {
+    return new WatchmanGlobber(watchmanClient, basePath, watchmanWatchRoot);
   }
 }
