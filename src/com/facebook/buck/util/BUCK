@@ -126,7 +126,7 @@ java_library(
 java_immutables_library(
     name = "util",
     srcs = glob(
-        include = ["*.java"],
+        ["*.java"],
         exclude = CONSTANT_SRCS + EXCEPTION_SRCS + IO_SRCS +
                   PACKAGED_RESOURCE_SRCS + PROCESS_EXECUTOR_SRCS,
     ),
