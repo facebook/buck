@@ -21,6 +21,7 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.HeaderMode;
 import com.facebook.buck.cxx.toolchain.HeaderSymlinkTree;
+import com.facebook.buck.cxx.toolchain.HeaderSymlinkTreeWithModuleMap;
 import com.facebook.buck.cxx.toolchain.HeaderVisibility;
 import com.facebook.buck.cxx.toolchain.Preprocessor;
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
@@ -159,6 +160,8 @@ public class CxxPreprocessables {
     switch (headerMode) {
       case SYMLINK_TREE_WITH_HEADER_MAP:
         return HeaderSymlinkTreeWithHeaderMap.create(target, filesystem, root, links, ruleFinder);
+      case SYMLINK_TREE_WITH_MODULEMAP:
+        return HeaderSymlinkTreeWithModuleMap.create(target, filesystem, root, links, ruleFinder);
       case HEADER_MAP_ONLY:
         return new DirectHeaderMap(target, filesystem, root, links, ruleFinder);
       default:

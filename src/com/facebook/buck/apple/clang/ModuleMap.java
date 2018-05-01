@@ -16,6 +16,7 @@
 
 package com.facebook.buck.apple.clang;
 
+import com.google.common.base.Objects;
 import org.stringtemplate.v4.ST;
 
 /**
@@ -83,5 +84,20 @@ public class ModuleMap {
       this.generatedModule = st.render();
     }
     return this.generatedModule;
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (!(obj instanceof ModuleMap)) {
+      return false;
+    }
+    ModuleMap that = (ModuleMap) obj;
+    return Objects.equal(this.swiftMode, that.swiftMode)
+        && Objects.equal(this.moduleName, that.moduleName);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hashCode(swiftMode, moduleName);
   }
 }
