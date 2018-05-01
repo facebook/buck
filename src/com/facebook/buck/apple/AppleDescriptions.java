@@ -979,6 +979,10 @@ public class AppleDescriptions {
           extensionBundlePaths.put(sourcePath, destinations.getFrameworksPath().toString());
         } else if (AppleBundleExtension.XPC.toFileExtension().equals(appleBundle.getExtension())) {
           extensionBundlePaths.put(sourcePath, destinations.getXPCServicesPath().toString());
+        } else if (AppleBundleExtension.QLGENERATOR
+            .toFileExtension()
+            .equals(appleBundle.getExtension())) {
+          extensionBundlePaths.put(sourcePath, destinations.getQuickLookPath().toString());
         } else if (AppleBundleExtension.PLUGIN
             .toFileExtension()
             .equals(appleBundle.getExtension())) {

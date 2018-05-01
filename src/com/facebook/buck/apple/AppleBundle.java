@@ -722,7 +722,8 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   private boolean needsPkgInfoFile() {
-    return !extension.equals(AppleBundleExtension.XPC.toFileExtension());
+    return !(extension.equals(AppleBundleExtension.XPC.toFileExtension())
+        || extension.equals(AppleBundleExtension.QLGENERATOR.toFileExtension()));
   }
 
   private void appendCopyBinarySteps(

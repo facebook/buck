@@ -1318,6 +1318,35 @@ public class AppleBundleIntegrationTest {
   }
 
   @Test
+  public void macAppWithQuickLook() throws IOException {
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "apple_osx_app_with_quicklook", tmp);
+    workspace.setUp();
+
+    BuildTarget target = BuildTargetFactory.newInstance("//:App#no-debug");
+    ProcessResult buildResult =
+        workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
+    buildResult.assertSuccess();
+
+    Path appPath =
+        workspace.getPath(
+            BuildTargets.getGenPath(
+                    filesystem,
+                    target.withAppendedFlavors(
+                        AppleDebugFormat.NONE.getFlavor(),
+                        AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
+                    "%s")
+                .resolve(target.getShortName() + ".app"));
+    Path quicklookPath = appPath.resolve("Contents/Library/QuickLook/QuickLook.qlgenerator");
+    Path quicklookBinaryPath = quicklookPath.resolve("Contents/MacOS/QuickLook");
+    Path quicklookInfoPlistPath = quicklookPath.resolve("Contents/Info.plist");
+    assertTrue(Files.exists(quicklookBinaryPath));
+    assertTrue(Files.exists(quicklookInfoPlistPath));
+  }
+
+  @Test
   public void resourcesFromOtherCellsCanBeProperlyIncluded() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(

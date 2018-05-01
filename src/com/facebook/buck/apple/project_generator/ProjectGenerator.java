@@ -1686,6 +1686,7 @@ public class ProjectGenerator {
                             case XCTEST:
                             case PREFPANE:
                             case XPC:
+                            case QLGENERATOR:
                               // All of the above bundles can have loaders which do not contain
                               // a Swift runtime, so it must get bundled to ensure they run.
                               return true;
@@ -2535,6 +2536,12 @@ public class ProjectGenerator {
             return Optional.of(
                 CopyFilePhaseDestinationSpec.of(PBXCopyFilesBuildPhase.Destination.EXECUTABLES));
           }
+        case QLGENERATOR:
+          return Optional.of(
+              CopyFilePhaseDestinationSpec.builder()
+                  .setDestination(PBXCopyFilesBuildPhase.Destination.QLGENERATOR)
+                  .setPath("$(CONTENTS_FOLDER_PATH)/Library/QuickLook")
+                  .build());
         case BUNDLE:
           return Optional.of(
               CopyFilePhaseDestinationSpec.of(PBXCopyFilesBuildPhase.Destination.PLUGINS));
