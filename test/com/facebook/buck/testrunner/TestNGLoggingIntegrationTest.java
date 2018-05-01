@@ -37,8 +37,7 @@ public class TestNGLoggingIntegrationTest {
 
   @Before
   public void setupWorkspace() throws IOException {
-    workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "testng_logging", temp, true);
+    workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "testng_logging", temp);
     workspace.setUp();
   }
 

@@ -35,7 +35,7 @@ public class RobolectricTestRuleIntegrationTest {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
 
     workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "android_project", tmpFolder, true);
+        TestDataHelper.createProjectWorkspaceForScenario(this, "android_project", tmpFolder);
     workspace.setUp();
     workspace.addBuckConfigLocalOption(
         "test",
@@ -50,7 +50,7 @@ public class RobolectricTestRuleIntegrationTest {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
 
     workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "android_project", tmpFolder, true);
+        TestDataHelper.createProjectWorkspaceForScenario(this, "android_project", tmpFolder);
     workspace.setUp();
     workspace.addBuckConfigLocalOption(
         "test",
@@ -65,7 +65,7 @@ public class RobolectricTestRuleIntegrationTest {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
 
     workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "android_project", tmpFolder, true);
+        TestDataHelper.createProjectWorkspaceForScenario(this, "android_project", tmpFolder);
     workspace.setUp();
     workspace.addBuckConfigLocalOption(
         "test",

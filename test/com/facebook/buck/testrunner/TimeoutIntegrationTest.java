@@ -43,7 +43,6 @@ import org.junit.Test;
  * <p>That said, this behavior of JUnit interacts badly with a default test timeout in {@code
  * .buckconfig} because it requires adding {@link org.junit.rules.Timeout} to the handful of tests
  * that exploit this behavior.
- *
  */
 public class TimeoutIntegrationTest {
 
@@ -54,7 +53,7 @@ public class TimeoutIntegrationTest {
   @Test
   public void testThatTimeoutsInTestsWorkAsExpected() throws IOException {
     ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "timeouts", temporaryFolder, true);
+        TestDataHelper.createProjectWorkspaceForScenario(this, "timeouts", temporaryFolder);
     workspace.setUp();
 
     // ExceedsAnnotationTimeoutTest should fail.
@@ -99,7 +98,7 @@ public class TimeoutIntegrationTest {
   public void individualTestCanOverrideTheDefaultTestTimeout() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
-            this, "overridden_timeouts", temporaryFolder, true);
+            this, "overridden_timeouts", temporaryFolder);
     workspace.setUp();
 
     // The .buckconfig in that workspace sets the default timeout to 1000ms.
@@ -111,7 +110,7 @@ public class TimeoutIntegrationTest {
   @Test
   public void testThatTimeoutsDumpsThreadStacks() throws IOException {
     ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "timeouts", temporaryFolder, true);
+        TestDataHelper.createProjectWorkspaceForScenario(this, "timeouts", temporaryFolder);
     workspace.setUp();
 
     ProcessResult testResult = workspace.runBuckCommand("test", "//:SleepTest");

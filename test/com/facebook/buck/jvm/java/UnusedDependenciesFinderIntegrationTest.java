@@ -38,7 +38,7 @@ public class UnusedDependenciesFinderIntegrationTest {
   public void setUp() throws InterruptedException, IOException {
     workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
-            this, "unused_dependencies", temporaryFolder, true);
+            this, "unused_dependencies", temporaryFolder);
     workspace.setUp();
   }
 

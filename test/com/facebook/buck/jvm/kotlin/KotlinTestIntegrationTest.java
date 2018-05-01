@@ -36,8 +36,7 @@ public class KotlinTestIntegrationTest {
   @Before
   public void setUp() throws Exception {
     workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(
-            this, "kotlin_test_description", tmp, true);
+        TestDataHelper.createProjectWorkspaceForScenario(this, "kotlin_test_description", tmp);
     workspace.setUp();
 
     Path kotlincPath = TestDataHelper.getTestDataScenario(this, "kotlinc");

@@ -173,7 +173,7 @@ public class DistBuildIntegrationTest {
       throws IOException {
     Path cellPath = outputDir.resolve(cellSubDir);
     ProjectWorkspace sourceWorkspace =
-        TestDataHelper.createProjectWorkspaceForScenario(
+        TestDataHelper.createProjectWorkspaceForScenarioWithoutDefaultCell(
             this, scenario + "/" + cellSubDir, cellPath);
     sourceWorkspace.setUp();
     return sourceWorkspace;

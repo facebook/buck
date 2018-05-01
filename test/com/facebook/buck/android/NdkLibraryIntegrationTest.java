@@ -39,12 +39,12 @@ public class NdkLibraryIntegrationTest {
     AssumeAndroidPlatform.assumeNdkIsAvailable();
 
     ProjectWorkspace workspace1 =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "cxx_deps", tmp1);
+        TestDataHelper.createProjectWorkspaceForScenarioWithoutDefaultCell(this, "cxx_deps", tmp1);
     workspace1.setUp();
     workspace1.runBuckBuild("//jni:foo").assertSuccess();
 
     ProjectWorkspace workspace2 =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "cxx_deps", tmp2);
+        TestDataHelper.createProjectWorkspaceForScenarioWithoutDefaultCell(this, "cxx_deps", tmp2);
     workspace2.setUp();
     workspace2.runBuckBuild("//jni:foo").assertSuccess();
 
