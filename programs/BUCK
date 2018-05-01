@@ -4,6 +4,8 @@ load(
     "convert_modules_to_resources",
     "get_module_binary",
 )
+load("@bazel_skylib//lib:dicts.bzl", "dicts")
+load("//tools/build_rules:python_rules.bzl", "interpreter_override_args")
 
 python_library(
     name = "subprocutils",
@@ -135,17 +137,21 @@ python_library(
         "timing.py",
         "tracing.py",
     ],
-    resources = dict(RESOURCES_NOT_AFFECTING_BUILD_ARTIFACTS.items() + RESOURCES_AFFECTING_BUILD_ARTIFACTS.items() + convert_modules_to_resources(BUCK_MODULES).items() + {
-        "buck_binary_hash": ":calculate-buck-binary-hash",
-    }.items()) + convert_modules_to_external_resources(BUCK_MODULES, BUCK_MODULES_WITH_RESOURCES),
+    resources = dicts.add(
+        RESOURCES_NOT_AFFECTING_BUILD_ARTIFACTS,
+        RESOURCES_AFFECTING_BUILD_ARTIFACTS,
+        convert_modules_to_resources(BUCK_MODULES),
+        {
+            "buck_binary_hash": ":calculate-buck-binary-hash",
+        },
+        convert_modules_to_external_resources(BUCK_MODULES, BUCK_MODULES_WITH_RESOURCES),
+    ),
     deps = [
         ":buck_version",
         ":subprocutils",
         "//third-party/nailgun:ng",
     ],
 )
-
-load("//tools/build_rules:python_rules.bzl", "interpreter_override_args")
 
 python_binary(
     name = "buck",

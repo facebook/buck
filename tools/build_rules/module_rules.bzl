@@ -1,6 +1,6 @@
 """Contains build rules for Buck modules"""
 
-load("@bazel_skylib//lib:sets.bzl", "sets")
+load("@bazel_skylib//lib:collections.bzl", "collections")
 load("//tools/build_rules:java_rules.bzl", "java_library_with_plugins")
 load("//tools/build_rules:module_rules_for_tests.bzl", "convert_module_deps_to_test")
 
@@ -19,9 +19,9 @@ def buck_module(
       **kwargs: kwargs
     """
 
-    kwargs["provided_deps"] = sets.union(kwargs.get("provided_deps", []), [
+    kwargs["provided_deps"] = collections.uniq(kwargs.get("provided_deps", []) + [
         "//src/com/facebook/buck/module:module",
-    ], module_deps)
+    ] + module_deps)
 
     java_library_with_plugins(
         name = name,
