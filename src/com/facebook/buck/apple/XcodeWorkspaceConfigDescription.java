@@ -26,6 +26,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.NoopBuildRuleWithDeclaredAndExtraDeps;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -103,5 +104,10 @@ public class XcodeWorkspaceConfigDescription
     Optional<String> getExplicitRunnablePath();
 
     Optional<XCScheme.LaunchAction.LaunchStyle> getLaunchStyle();
+
+    Optional<
+            ImmutableMap<
+                SchemeActionType, ImmutableMap<XCScheme.AdditionalActions, ImmutableList<String>>>>
+        getAdditionalSchemeActions();
   }
 }
