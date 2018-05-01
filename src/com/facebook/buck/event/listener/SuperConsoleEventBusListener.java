@@ -515,9 +515,9 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
             Optional.empty(),
             lines);
 
+    getTotalTimeLine(lines);
     // If the Daemon is running and serving web traffic, print the URL to the Chrome Trace.
     getBuildTraceURLLine(lines);
-    getTotalTimeLine(lines);
     showTopSlowBuildRules(lines);
 
     if (totalBuildMs == UNFINISHED_EVENT_PAIR) {
@@ -574,13 +574,16 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     return lines.build();
   }
 
-  @SuppressWarnings("unused")
   private void getBuildTraceURLLine(ImmutableList.Builder<String> lines) {
     if (buildFinished != null && webServer.isPresent()) {
       Optional<Integer> port = webServer.get().getPort();
       if (port.isPresent()) {
-        LOG.debug(
-            "Build logs: http://localhost:%s/trace/%s", port.get(), buildFinished.getBuildId());
+        lines.add(
+            String.format(
+                locale,
+                "  Build trace: http://localhost:%s/trace/%s",
+                port.get(),
+                buildFinished.getBuildId()));
       }
     }
   }
