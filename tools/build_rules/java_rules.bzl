@@ -137,7 +137,7 @@ def standard_java_test(
         java_test(
           name = name,
           srcs = test_srcs,
-          resources = native.glob(['testdata/**'], exclude_directories=True) if with_test_data else [],
+          resources = native.glob(['testdata/**']) if with_test_data else [],
           vm_args = vm_args,
           run_test_separately = run_test_separately,
           fork_mode = fork_mode,
