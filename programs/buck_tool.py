@@ -527,35 +527,36 @@ class BuckTool(object):
 
             buckd_transport_file_path = self._buck_project.get_buckd_transport_file_path()
             if os.name == 'nt':
-                preexec_fn = None
                 # https://msdn.microsoft.com/en-us/library/windows/desktop/ms684863.aspx#DETACHED_PROCESS
                 DETACHED_PROCESS = 0x00000008
                 creationflags = DETACHED_PROCESS
+                # do not redirect output for Windows as it deadlocks
+                stdin = None
+                stdout = None
+                stderr = None
+                close_fds = True
             else:
                 """
                 Change the process group of the child buckd process so that when this
                 script is interrupted, it does not kill buckd.
                 """
-
-                def preexec_fn():
-                    # Close any open file descriptors to further separate buckd from its
-                    # invoking context (e.g. otherwise we'd hang when running things like
-                    # `ssh localhost buck clean`).
-                    dev_null_fd = os.open("/dev/null", os.O_RDWR)
-                    os.dup2(dev_null_fd, 0)
-                    os.dup2(dev_null_fd, 1)
-                    os.dup2(dev_null_fd, 2)
-                    os.close(dev_null_fd)
-
                 creationflags = 0
+                stdin = open(os.devnull, mode='r')
+                stdout = open(self._buck_project.get_buckd_stdout(), mode='w+b', buffering=0)
+                stderr = open(self._buck_project.get_buckd_stderr(), mode='w+b', buffering=0)
+                close_fds = False
+
             process = subprocess.Popen(
                 command,
                 executable=which("java"),
                 cwd=self._buck_project.root,
-                close_fds=True,
-                preexec_fn=preexec_fn,
                 env=self._environ_for_buck(),
-                creationflags=creationflags)
+                creationflags=creationflags,
+                close_fds=close_fds,
+                stdin=stdin,
+                stdout=stdout,
+                stderr=stderr,
+                )
 
             self._buck_project.save_buckd_version(buck_version_uid)
 

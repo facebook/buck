@@ -55,6 +55,8 @@ class BuckProject:
 
         self.buckd_dir = os.path.join(root, ".buckd")
         self.buckd_version_file = os.path.join(self.buckd_dir, "buckd.version")
+        self.buckd_stdout = os.path.join(self.buckd_dir, "stdout")
+        self.buckd_stderr = os.path.join(self.buckd_dir, "stderr")
 
         buck_javaargs_path = os.path.join(self.root, ".buckjavaargs")
         self.buck_javaargs = get_file_contents_if_exists(buck_javaargs_path)
@@ -81,6 +83,12 @@ class BuckProject:
 
     def get_running_buckd_version(self):
         return get_file_contents_if_exists(self.buckd_version_file)
+
+    def get_buckd_stdout(self):
+        return self.buckd_stdout
+
+    def get_buckd_stderr(self):
+        return self.buckd_stderr
 
     def get_buck_out_log_dir(self):
         return self._buck_out_log
