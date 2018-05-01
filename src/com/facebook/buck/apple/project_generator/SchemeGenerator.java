@@ -25,6 +25,7 @@ import com.facebook.buck.log.Logger;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -77,10 +78,15 @@ class SchemeGenerator {
   private final Optional<String> remoteRunnablePath;
   private final ImmutableMap<SchemeActionType, String> actionConfigNames;
   private final ImmutableMap<PBXTarget, Path> targetToProjectPathMap;
+
   private Optional<XCScheme> outputScheme = Optional.empty();
   private final XCScheme.LaunchAction.LaunchStyle launchStyle;
   private final Optional<ImmutableMap<SchemeActionType, ImmutableMap<String, String>>>
       environmentVariables;
+  private Optional<
+          ImmutableMap<
+              SchemeActionType, ImmutableMap<XCScheme.AdditionalActions, ImmutableList<String>>>>
+      additionalSchemeActions;
 
   public SchemeGenerator(
       ProjectFilesystem projectFilesystem,
@@ -96,6 +102,11 @@ class SchemeGenerator {
       ImmutableMap<SchemeActionType, String> actionConfigNames,
       ImmutableMap<PBXTarget, Path> targetToProjectPathMap,
       Optional<ImmutableMap<SchemeActionType, ImmutableMap<String, String>>> environmentVariables,
+      Optional<
+              ImmutableMap<
+                  SchemeActionType,
+                  ImmutableMap<XCScheme.AdditionalActions, ImmutableList<String>>>>
+          additionalSchemeActions,
       XCScheme.LaunchAction.LaunchStyle launchStyle) {
     this.projectFilesystem = projectFilesystem;
     this.primaryTarget = primaryTarget;
@@ -111,10 +122,36 @@ class SchemeGenerator {
     this.actionConfigNames = actionConfigNames;
     this.targetToProjectPathMap = targetToProjectPathMap;
     this.environmentVariables = environmentVariables;
+    this.additionalSchemeActions = additionalSchemeActions;
 
     LOG.debug(
         "Generating scheme with build targets %s, test build targets %s, test bundle targets %s",
         orderedBuildTargets, orderedBuildTestTargets, orderedRunTestTargets);
+  }
+
+  @VisibleForTesting
+  private Optional<ImmutableList<XCScheme.SchemePrePostAction>> additionalCommandsForSchemeAction(
+      SchemeActionType schemeActionType,
+      XCScheme.AdditionalActions actionType,
+      Optional<XCScheme.BuildableReference> primaryTarget) {
+
+    Optional<ImmutableList<String>> commands =
+        this.additionalSchemeActions
+            .map(input -> Optional.ofNullable(input.get(schemeActionType)))
+            .filter(Optional::isPresent)
+            .map(input -> Optional.ofNullable(input.get().get(actionType)))
+            .orElse(Optional.empty());
+    if (commands.isPresent()) {
+      ImmutableList<XCScheme.SchemePrePostAction> actions =
+          commands
+              .get()
+              .stream()
+              .map(command -> new XCScheme.SchemePrePostAction(primaryTarget, command))
+              .collect(ImmutableList.toImmutableList());
+      return Optional.of(actions);
+    } else {
+      return Optional.empty();
+    }
   }
 
   @VisibleForTesting
@@ -152,7 +189,23 @@ class SchemeGenerator {
       buildTargetToBuildableReferenceMap.put(target, buildableReference);
     }
 
-    XCScheme.BuildAction buildAction = new XCScheme.BuildAction(parallelizeBuild);
+    Optional<XCScheme.BuildableReference> primaryBuildReference = Optional.empty();
+    if (primaryTarget.isPresent()) {
+      primaryBuildReference =
+          Optional.ofNullable(buildTargetToBuildableReferenceMap.get(primaryTarget.get()));
+    }
+
+    XCScheme.BuildAction buildAction =
+        new XCScheme.BuildAction(
+            parallelizeBuild,
+            additionalCommandsForSchemeAction(
+                SchemeActionType.BUILD,
+                XCScheme.AdditionalActions.PRE_SCHEME_ACTIONS,
+                primaryBuildReference),
+            additionalCommandsForSchemeAction(
+                SchemeActionType.BUILD,
+                XCScheme.AdditionalActions.POST_SCHEME_ACTIONS,
+                primaryBuildReference));
 
     // For aesthetic reasons put all non-test build actions before all test build actions.
     for (PBXTarget target : orderedBuildTargets) {
@@ -177,7 +230,15 @@ class SchemeGenerator {
     XCScheme.TestAction testAction =
         new XCScheme.TestAction(
             Preconditions.checkNotNull(actionConfigNames.get(SchemeActionType.TEST)),
-            Optional.ofNullable(envVariables.get(SchemeActionType.TEST)));
+            Optional.ofNullable(envVariables.get(SchemeActionType.TEST)),
+            additionalCommandsForSchemeAction(
+                SchemeActionType.TEST,
+                XCScheme.AdditionalActions.PRE_SCHEME_ACTIONS,
+                primaryBuildReference),
+            additionalCommandsForSchemeAction(
+                SchemeActionType.TEST,
+                XCScheme.AdditionalActions.POST_SCHEME_ACTIONS,
+                primaryBuildReference));
 
     for (PBXTarget target : orderedRunTestTargets) {
       XCScheme.BuildableReference buildableReference =
@@ -202,21 +263,55 @@ class SchemeGenerator {
                     runnablePath,
                     remoteRunnablePath,
                     launchStyle,
-                    Optional.ofNullable(envVariables.get(SchemeActionType.LAUNCH))));
+                    Optional.ofNullable(envVariables.get(SchemeActionType.LAUNCH)),
+                    additionalCommandsForSchemeAction(
+                        SchemeActionType.LAUNCH,
+                        XCScheme.AdditionalActions.PRE_SCHEME_ACTIONS,
+                        primaryBuildReference),
+                    additionalCommandsForSchemeAction(
+                        SchemeActionType.LAUNCH,
+                        XCScheme.AdditionalActions.POST_SCHEME_ACTIONS,
+                        primaryBuildReference)));
+
         profileAction =
             Optional.of(
                 new XCScheme.ProfileAction(
                     primaryBuildableReference,
                     Preconditions.checkNotNull(actionConfigNames.get(SchemeActionType.PROFILE)),
-                    Optional.ofNullable(envVariables.get(SchemeActionType.PROFILE))));
+                    Optional.ofNullable(envVariables.get(SchemeActionType.PROFILE)),
+                    additionalCommandsForSchemeAction(
+                        SchemeActionType.PROFILE,
+                        XCScheme.AdditionalActions.PRE_SCHEME_ACTIONS,
+                        primaryBuildReference),
+                    additionalCommandsForSchemeAction(
+                        SchemeActionType.PROFILE,
+                        XCScheme.AdditionalActions.POST_SCHEME_ACTIONS,
+                        primaryBuildReference)));
       }
     }
     XCScheme.AnalyzeAction analyzeAction =
         new XCScheme.AnalyzeAction(
-            Preconditions.checkNotNull(actionConfigNames.get(SchemeActionType.ANALYZE)));
+            Preconditions.checkNotNull(actionConfigNames.get(SchemeActionType.ANALYZE)),
+            additionalCommandsForSchemeAction(
+                SchemeActionType.ANALYZE,
+                XCScheme.AdditionalActions.PRE_SCHEME_ACTIONS,
+                primaryBuildReference),
+            additionalCommandsForSchemeAction(
+                SchemeActionType.ANALYZE,
+                XCScheme.AdditionalActions.POST_SCHEME_ACTIONS,
+                primaryBuildReference));
+
     XCScheme.ArchiveAction archiveAction =
         new XCScheme.ArchiveAction(
-            Preconditions.checkNotNull(actionConfigNames.get(SchemeActionType.ARCHIVE)));
+            Preconditions.checkNotNull(actionConfigNames.get(SchemeActionType.ARCHIVE)),
+            additionalCommandsForSchemeAction(
+                SchemeActionType.ARCHIVE,
+                XCScheme.AdditionalActions.PRE_SCHEME_ACTIONS,
+                primaryBuildReference),
+            additionalCommandsForSchemeAction(
+                SchemeActionType.ARCHIVE,
+                XCScheme.AdditionalActions.POST_SCHEME_ACTIONS,
+                primaryBuildReference));
 
     XCScheme scheme =
         new XCScheme(
@@ -280,6 +375,8 @@ class SchemeGenerator {
 
   public static Element serializeBuildAction(Document doc, XCScheme.BuildAction buildAction) {
     Element buildActionElem = doc.createElement("BuildAction");
+    serializePrePostActions(doc, buildAction, buildActionElem);
+
     buildActionElem.setAttribute(
         "parallelizeBuildables", buildAction.getParallelizeBuild() ? "YES" : "NO");
     buildActionElem.setAttribute(
@@ -313,6 +410,8 @@ class SchemeGenerator {
 
   public static Element serializeTestAction(Document doc, XCScheme.TestAction testAction) {
     Element testActionElem = doc.createElement("TestAction");
+    serializePrePostActions(doc, testAction, testActionElem);
+
     // unless otherwise specified, use the Launch scheme's env variables like the xcode default
     testActionElem.setAttribute("shouldUseLaunchSchemeArgsEnv", "YES");
 
@@ -341,6 +440,7 @@ class SchemeGenerator {
 
   public static Element serializeLaunchAction(Document doc, XCScheme.LaunchAction launchAction) {
     Element launchActionElem = doc.createElement("LaunchAction");
+    serializePrePostActions(doc, launchAction, launchActionElem);
 
     Optional<String> runnablePath = launchAction.getRunnablePath();
     Optional<String> remoteRunnablePath = launchAction.getRemoteRunnablePath();
@@ -382,6 +482,8 @@ class SchemeGenerator {
 
   public static Element serializeProfileAction(Document doc, XCScheme.ProfileAction profileAction) {
     Element profileActionElem = doc.createElement("ProfileAction");
+    serializePrePostActions(doc, profileAction, profileActionElem);
+
     // unless otherwise specified, use the Launch scheme's env variables like the xcode default
     profileActionElem.setAttribute("shouldUseLaunchSchemeArgsEnv", "YES");
 
@@ -400,6 +502,50 @@ class SchemeGenerator {
     }
 
     return profileActionElem;
+  }
+
+  private static void serializePrePostActions(
+      Document doc, XCScheme.SchemeAction action, Element actionElem) {
+    if (action.getPreActions().isPresent()) {
+      actionElem.appendChild(
+          serializePrePostAction(doc, "PreActions", action.getPreActions().get()));
+    }
+    if (action.getPostActions().isPresent()) {
+      actionElem.appendChild(
+          serializePrePostAction(doc, "PostActions", action.getPostActions().get()));
+    }
+  }
+
+  private static Element serializePrePostAction(
+      Document doc, String tagName, ImmutableList<XCScheme.SchemePrePostAction> actions) {
+    Element executionActions = doc.createElement(tagName);
+    for (XCScheme.SchemePrePostAction action : actions) {
+      executionActions.appendChild(serializeExecutionAction(doc, action));
+    }
+    return executionActions;
+  }
+
+  public static Element serializeExecutionAction(
+      Document doc, XCScheme.SchemePrePostAction action) {
+    Element executionAction = doc.createElement("ExecutionAction");
+    executionAction.setAttribute(
+        "ActionType",
+        "Xcode.IDEStandardExecutionActionsCore.ExecutionActionType.ShellScriptAction");
+
+    Element actionContent = doc.createElement("ActionContent");
+    actionContent.setAttribute("title", "Run Script");
+    actionContent.setAttribute("scriptText", action.getCommand());
+    actionContent.setAttribute("shellToInvoke", "/bin/bash");
+
+    Optional<XCScheme.BuildableReference> buildableReference = action.getBuildableReference();
+    if (buildableReference.isPresent()) {
+      Element environmentBuildable = doc.createElement("EnvironmentBuildable");
+      environmentBuildable.appendChild(serializeBuildableReference(doc, buildableReference.get()));
+      actionContent.appendChild(environmentBuildable);
+    }
+
+    executionAction.appendChild(actionContent);
+    return executionAction;
   }
 
   private static void serializeScheme(XCScheme scheme, OutputStream stream) {
@@ -461,6 +607,7 @@ class SchemeGenerator {
     Optional<XCScheme.AnalyzeAction> analyzeAction = scheme.getAnalyzeAction();
     if (analyzeAction.isPresent()) {
       Element analyzeActionElem = doc.createElement("AnalyzeAction");
+      serializePrePostActions(doc, analyzeAction.get(), analyzeActionElem);
       analyzeActionElem.setAttribute(
           "buildConfiguration", analyzeAction.get().getBuildConfiguration());
       rootElem.appendChild(analyzeActionElem);
@@ -473,6 +620,7 @@ class SchemeGenerator {
     Optional<XCScheme.ArchiveAction> archiveAction = scheme.getArchiveAction();
     if (archiveAction.isPresent()) {
       Element archiveActionElem = doc.createElement("ArchiveAction");
+      serializePrePostActions(doc, archiveAction.get(), archiveActionElem);
       archiveActionElem.setAttribute(
           "buildConfiguration", archiveAction.get().getBuildConfiguration());
       archiveActionElem.setAttribute("revealArchiveInOrganizer", "YES");

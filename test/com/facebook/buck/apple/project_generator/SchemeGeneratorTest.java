@@ -120,6 +120,7 @@ public class SchemeGeneratorTest {
             SchemeActionType.DEFAULT_CONFIG_NAMES,
             targetToProjectPathMapBuilder.build(),
             Optional.empty(),
+            Optional.empty(),
             XCScheme.LaunchAction.LaunchStyle.AUTO);
 
     Path schemePath = schemeGenerator.writeScheme();
@@ -199,6 +200,7 @@ public class SchemeGeneratorTest {
             Optional.empty() /* remoteRunnablePath */,
             SchemeActionType.DEFAULT_CONFIG_NAMES,
             targetToProjectPathMapBuilder.build(),
+            Optional.empty(),
             Optional.empty(),
             XCScheme.LaunchAction.LaunchStyle.AUTO);
 
@@ -288,6 +290,7 @@ public class SchemeGeneratorTest {
             SchemeActionType.DEFAULT_CONFIG_NAMES,
             targetToProjectPathMapBuilder.build(),
             Optional.empty(),
+            Optional.empty(),
             XCScheme.LaunchAction.LaunchStyle.AUTO);
 
     Path schemePath = schemeGenerator.writeScheme();
@@ -364,6 +367,7 @@ public class SchemeGeneratorTest {
             SchemeActionType.DEFAULT_CONFIG_NAMES,
             targetToProjectPathMapBuilder.build(),
             Optional.empty(),
+            Optional.empty(),
             XCScheme.LaunchAction.LaunchStyle.AUTO);
 
     Path schemePath = schemeGenerator.writeScheme();
@@ -421,6 +425,7 @@ public class SchemeGeneratorTest {
             Optional.empty() /* remoteRunnablePath */,
             SchemeActionType.DEFAULT_CONFIG_NAMES,
             targetToProjectPathMapBuilder.build(),
+            Optional.empty(),
             Optional.empty(),
             XCScheme.LaunchAction.LaunchStyle.AUTO);
 
@@ -504,6 +509,7 @@ public class SchemeGeneratorTest {
               SchemeActionType.DEFAULT_CONFIG_NAMES,
               targetToProjectPathMapBuilder.build(),
               Optional.empty(),
+              Optional.empty(),
               XCScheme.LaunchAction.LaunchStyle.AUTO);
 
       Path schemePath = schemeGenerator.writeScheme();
@@ -536,6 +542,7 @@ public class SchemeGeneratorTest {
               Optional.empty() /* remoteRunnablePath */,
               SchemeActionType.DEFAULT_CONFIG_NAMES,
               ImmutableMap.of(rootTarget, pbxprojectPath),
+              Optional.empty(),
               Optional.empty(),
               XCScheme.LaunchAction.LaunchStyle.AUTO);
 
@@ -573,7 +580,9 @@ public class SchemeGeneratorTest {
               SchemeActionType.DEFAULT_CONFIG_NAMES,
               ImmutableMap.of(rootTarget, pbxprojectPath),
               Optional.empty(),
+              Optional.empty(),
               XCScheme.LaunchAction.LaunchStyle.AUTO);
+
       Path schemePath = schemeGenerator.writeScheme();
       assertThat(
           projectFilesystem.getLastModifiedTime(schemePath), equalTo(FileTime.fromMillis(49152L)));
@@ -604,6 +613,7 @@ public class SchemeGeneratorTest {
               Optional.empty() /* remoteRunnablePath */,
               SchemeActionType.DEFAULT_CONFIG_NAMES,
               ImmutableMap.of(rootTarget, pbxprojectPath),
+              Optional.empty(),
               Optional.empty(),
               XCScheme.LaunchAction.LaunchStyle.AUTO);
       Path schemePath = schemeGenerator.writeScheme();
@@ -659,6 +669,7 @@ public class SchemeGeneratorTest {
             Optional.empty() /* remoteRunnablePath */,
             SchemeActionType.DEFAULT_CONFIG_NAMES,
             targetToProjectPathMapBuilder.build(),
+            Optional.empty(),
             Optional.empty(),
             XCScheme.LaunchAction.LaunchStyle.AUTO);
 
@@ -764,6 +775,7 @@ public class SchemeGeneratorTest {
             SchemeActionType.DEFAULT_CONFIG_NAMES,
             targetToProjectPathMapBuilder.build(),
             Optional.empty(),
+            Optional.empty(),
             XCScheme.LaunchAction.LaunchStyle.AUTO);
 
     Path schemePath = schemeGenerator.writeScheme();
@@ -812,6 +824,7 @@ public class SchemeGeneratorTest {
             SchemeActionType.DEFAULT_CONFIG_NAMES,
             targetToProjectPathMapBuilder.build(),
             Optional.empty(),
+            Optional.empty(),
             XCScheme.LaunchAction.LaunchStyle.AUTO);
 
     Path schemePath = schemeGenerator.writeScheme();
@@ -853,6 +866,84 @@ public class SchemeGeneratorTest {
   }
 
   @Test
+  public void prePostActionsSerializedWithRootBuildable() throws Exception {
+    ImmutableMap.Builder<PBXTarget, Path> targetToProjectPathMapBuilder = ImmutableMap.builder();
+
+    PBXTarget rootTarget = new PBXNativeTarget("rootRule");
+    rootTarget.setGlobalID("rootGID");
+    rootTarget.setProductReference(
+        new PBXFileReference(
+            "root.a", "root.a", PBXReference.SourceTree.BUILT_PRODUCTS_DIR, Optional.empty()));
+    rootTarget.setProductType(ProductTypes.STATIC_LIBRARY);
+
+    Path pbxprojectPath = Paths.get("foo/Foo.xcodeproj/project.pbxproj");
+    targetToProjectPathMapBuilder.put(rootTarget, pbxprojectPath);
+
+    ImmutableMap<SchemeActionType, ImmutableMap<XCScheme.AdditionalActions, ImmutableList<String>>>
+        schemeActions =
+            ImmutableMap.of(
+                SchemeActionType.LAUNCH,
+                ImmutableMap.of(XCScheme.AdditionalActions.PRE_SCHEME_ACTIONS, ImmutableList.of("echo takeoff")));
+
+    SchemeGenerator schemeGenerator =
+        new SchemeGenerator(
+            projectFilesystem,
+            Optional.of(rootTarget),
+            ImmutableSet.of(rootTarget),
+            ImmutableSet.of(),
+            ImmutableSet.of(),
+            "TestScheme",
+            Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
+            false /* parallelizeBuild */,
+            Optional.empty() /* runnablePath */,
+            Optional.empty() /* remoteRunnablePath */,
+            SchemeActionType.DEFAULT_CONFIG_NAMES,
+            targetToProjectPathMapBuilder.build(),
+            Optional.empty(),
+            Optional.of(schemeActions),
+            XCScheme.LaunchAction.LaunchStyle.AUTO);
+
+    Path schemePath = schemeGenerator.writeScheme();
+
+    DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+    DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
+    Document scheme = dBuilder.parse(projectFilesystem.newFileInputStream(schemePath));
+
+    XPathFactory xpathFactory = XPathFactory.newInstance();
+
+    XPath preLaunchActionXPath = xpathFactory.newXPath();
+    XPathExpression preLaunchActionExpr = preLaunchActionXPath.compile("//LaunchAction/PreActions");
+    NodeList preActions = (NodeList) preLaunchActionExpr.evaluate(scheme, XPathConstants.NODESET);
+
+    assertThat(preActions.getLength(), equalTo(1));
+
+    Node executionAction = preActions.item(0).getFirstChild();
+    assertThat(
+        executionAction.getAttributes().getNamedItem("ActionType").getNodeValue(),
+        equalTo("Xcode.IDEStandardExecutionActionsCore.ExecutionActionType.ShellScriptAction"));
+
+    Node actionContent = executionAction.getFirstChild();
+    assertThat(
+        actionContent.getAttributes().getNamedItem("title").getNodeValue(), equalTo("Run Script"));
+    assertThat(
+        actionContent.getAttributes().getNamedItem("scriptText").getNodeValue(),
+        equalTo("echo takeoff"));
+    assertThat(
+        actionContent.getAttributes().getNamedItem("shellToInvoke").getNodeValue(),
+        equalTo("/bin/bash"));
+
+    XPath buildXpath = xpathFactory.newXPath();
+    XPathExpression buildableExpr =
+        buildXpath.compile(
+            "//LaunchAction//PreActions//ExecutionAction//EnvironmentBuildable//BuildableReference/@BlueprintIdentifier");
+    NodeList buildableNodes = (NodeList) buildableExpr.evaluate(scheme, XPathConstants.NODESET);
+
+    // Make sure both copies of the BuildableReference are present.
+    assertThat(buildableNodes.getLength(), equalTo(1));
+    assertThat(buildableNodes.item(0).getNodeValue(), equalTo("rootGID"));
+  }
+
+  @Test
   public void enablingParallelizeBuild() throws Exception {
     ImmutableMap.Builder<PBXTarget, Path> targetToProjectPathMapBuilder = ImmutableMap.builder();
 
@@ -880,6 +971,7 @@ public class SchemeGeneratorTest {
             Optional.empty() /* remoteRunnablePath */,
             SchemeActionType.DEFAULT_CONFIG_NAMES,
             targetToProjectPathMapBuilder.build(),
+            Optional.empty(),
             Optional.empty(),
             XCScheme.LaunchAction.LaunchStyle.AUTO);
 
@@ -939,6 +1031,7 @@ public class SchemeGeneratorTest {
             SchemeActionType.DEFAULT_CONFIG_NAMES,
             targetToProjectPathMapBuilder.build(),
             Optional.of(environmentVariables),
+            Optional.empty(),
             XCScheme.LaunchAction.LaunchStyle.AUTO);
 
     Path schemePath = schemeGenerator.writeScheme();
