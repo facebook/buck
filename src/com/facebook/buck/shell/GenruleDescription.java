@@ -91,7 +91,8 @@ public class GenruleDescription extends AbstractGenruleDescription<GenruleDescri
           args.getEnvironmentExpansionSeparator(),
           androidPlatformTarget,
           androidNdk,
-          androidSdkLocation);
+          androidSdkLocation,
+          args.getNoRemote().orElse(false));
     } else {
       return new GenruleBinary(
           buildTarget,
@@ -109,7 +110,8 @@ public class GenruleDescription extends AbstractGenruleDescription<GenruleDescri
           args.getEnvironmentExpansionSeparator(),
           androidPlatformTarget,
           androidNdk,
-          androidSdkLocation);
+          androidSdkLocation,
+          args.getNoRemote().orElse(false));
     }
   }
 
@@ -132,5 +134,11 @@ public class GenruleDescription extends AbstractGenruleDescription<GenruleDescri
      * attribute
      */
     Optional<Boolean> getCacheable();
+
+    /**
+     * This functionality only exists to facilitate migration of projects to distributed building.
+     * It will likely go away in the future.
+     */
+    Optional<Boolean> getNoRemote();
   }
 }

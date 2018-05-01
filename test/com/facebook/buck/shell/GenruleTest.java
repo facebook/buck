@@ -1085,4 +1085,46 @@ public class GenruleTest {
     assertTrue(genrule2.isCacheable());
     assertFalse(genrule3.isCacheable());
   }
+
+  @Test
+  public void testChangingNoRemoteChangesRuleKey() {
+    StandaloneGenruleBuilder builder1 = new StandaloneGenruleBuilder("//:genrule1");
+    StandaloneGenruleBuilder builder2 = new StandaloneGenruleBuilder("//:genrule1");
+
+    builder1.genruleBuilder.setOut("foo").setNoRemote(true);
+    RuleKey key1 = builder1.getRuleKey();
+
+    builder2.genruleBuilder.setOut("foo").setNoRemote(false);
+    RuleKey key2 = builder2.getRuleKey();
+
+    assertNotEquals(key1, key2);
+  }
+
+  @Test
+  public void testNoRemoteIsRespected() {
+    BuildRuleResolver ruleResolver = new TestBuildRuleResolver();
+    BuildTarget buildTarget1 = BuildTargetFactory.newInstance("//:genrule1");
+    BuildTarget buildTarget2 = BuildTargetFactory.newInstance("//:genrule2");
+    BuildTarget buildTarget3 = BuildTargetFactory.newInstance("//:genrule3");
+
+    Genrule genrule1 =
+        GenruleBuilder.newGenruleBuilder(buildTarget1)
+            .setOut("foo")
+            .setNoRemote(null)
+            .build(ruleResolver);
+    Genrule genrule2 =
+        GenruleBuilder.newGenruleBuilder(buildTarget2)
+            .setOut("foo")
+            .setNoRemote(false)
+            .build(ruleResolver);
+    Genrule genrule3 =
+        GenruleBuilder.newGenruleBuilder(buildTarget3)
+            .setOut("foo")
+            .setNoRemote(true)
+            .build(ruleResolver);
+
+    assertFalse(genrule1.shouldBuildLocally());
+    assertFalse(genrule2.shouldBuildLocally());
+    assertTrue(genrule3.shouldBuildLocally());
+  }
 }

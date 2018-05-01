@@ -72,7 +72,8 @@ public class ExternallyBuiltApplePackage extends Genrule {
         environmentExpansionSeparator,
         androidPlatformTarget,
         androidNdk,
-        androidSdkLocation);
+        androidSdkLocation,
+        false);
     this.packageConfigAndPlatformInfo = packageConfigAndPlatformInfo;
   }
 

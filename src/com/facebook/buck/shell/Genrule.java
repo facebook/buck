@@ -146,6 +146,7 @@ public class Genrule extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @AddToRuleKey private final boolean enableSandboxingInGenrule;
   @AddToRuleKey private final boolean isCacheable;
   @AddToRuleKey private final String environmentExpansionSeparator;
+  @AddToRuleKey private final boolean noRemote;
 
   private BuildRuleResolver buildRuleResolver;
   private final SandboxExecutionStrategy sandboxExecutionStrategy;
@@ -175,7 +176,8 @@ public class Genrule extends AbstractBuildRuleWithDeclaredAndExtraDeps
       Optional<String> environmentExpansionSeparator,
       Optional<AndroidPlatformTarget> androidPlatformTarget,
       Optional<AndroidNdk> androidNdk,
-      Optional<AndroidSdkLocation> androidSdkLocation) {
+      Optional<AndroidSdkLocation> androidSdkLocation,
+      boolean noRemote) {
     super(buildTarget, projectFilesystem, params);
     this.androidPlatformTarget = androidPlatformTarget;
     this.androidNdk = androidNdk;
@@ -206,6 +208,8 @@ public class Genrule extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.type = super.getType() + (type.isPresent() ? "_" + type.get() : "");
     this.isWorkerGenrule = this.isWorkerGenrule();
     this.enableSandboxingInGenrule = enableSandboxingInGenrule;
+
+    this.noRemote = noRemote;
   }
 
   /** @return the absolute path to the output file */
@@ -522,6 +526,11 @@ public class Genrule extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @Override
   public final boolean isCacheable() {
     return isCacheable;
+  }
+
+  @Override
+  public final boolean shouldBuildLocally() {
+    return noRemote;
   }
 
   @Override

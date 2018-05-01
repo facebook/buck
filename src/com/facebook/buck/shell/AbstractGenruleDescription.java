@@ -117,7 +117,8 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
             AndroidPlatformTarget.DEFAULT_NAME, AndroidPlatformTarget.class),
         toolchainProvider.getByNameIfPresent(AndroidNdk.DEFAULT_NAME, AndroidNdk.class),
         toolchainProvider.getByNameIfPresent(
-            AndroidSdkLocation.DEFAULT_NAME, AndroidSdkLocation.class));
+            AndroidSdkLocation.DEFAULT_NAME, AndroidSdkLocation.class),
+        false);
   }
 
   /**

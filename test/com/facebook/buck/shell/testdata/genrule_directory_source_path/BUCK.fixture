@@ -11,3 +11,11 @@ genrule(
     bash = "cp -r $(location :mkdir) $OUT",
     cmd_exe = "powershell -Command cp -r $(location :mkdir) $env:OUT",
 )
+
+genrule(
+    name = "cpdir_no_remote",
+    out = "copy",
+    bash = "cp -r $(location :mkdir) $OUT",
+    cmd_exe = "powershell -Command cp -r $(location :mkdir) $env:OUT",
+    no_remote = True,
+)

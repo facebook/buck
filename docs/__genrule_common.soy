@@ -143,3 +143,16 @@
   {/param}
 {/call}
 {/template}
+
+/***/
+{template .no_remote_arg}
+{call buck.arg}
+  {param name: 'no_remote' /}
+  {param default: 'False' /}
+  {param desc}
+   Whether this rule (and all rules that depend on it) can be executed remotely.
+   This does not change whether this rule (or any rule that depends on it) can
+   be cached (locally or remotely). This feature may be removed in the future.
+  {/param}
+{/call}
+{/template}

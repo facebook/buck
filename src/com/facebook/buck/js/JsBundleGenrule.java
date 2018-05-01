@@ -88,7 +88,8 @@ public class JsBundleGenrule extends Genrule
         environmentExpansionSeparator,
         androidPlatformTarget,
         androidNdk,
-        androidSdkLocation);
+        androidSdkLocation,
+        false);
     this.jsBundle = jsBundle;
     this.jsBundleSourcePath = jsBundle.getSourcePathToOutput();
     this.rewriteSourcemap = args.getRewriteSourcemap();

@@ -87,7 +87,8 @@ public class JarGenrule extends Genrule implements BinaryBuildRule {
         environmentExpansionSeparator,
         Optional.empty(),
         Optional.empty(),
-        Optional.empty());
+        Optional.empty(),
+        false);
     this.javaRuntimeLauncher = javaRuntimeLauncher;
     this.pathToOutput = BuildTargets.getGenPath(getProjectFilesystem(), buildTarget, "%s.jar");
   }

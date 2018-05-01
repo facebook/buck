@@ -42,6 +42,8 @@
 
 {call genrule_common.environment_expansion_separator /}
 
+{call genrule_common.no_remote_arg /}
+
 {call buck.arg}
   {param name: 'enable_sandbox' /}
   {param default : 'False' /}

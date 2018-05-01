@@ -125,6 +125,11 @@ public class GenruleBuilder
     return this;
   }
 
+  public GenruleBuilder setNoRemote(@Nullable Boolean noRemote) {
+    getArgForPopulating().setNoRemote(Optional.ofNullable(noRemote));
+    return this;
+  }
+
   public GenruleBuilder setEnvironmentExpansionSeparator(
       @Nullable String environmentExpansionSeparator) {
     getArgForPopulating()

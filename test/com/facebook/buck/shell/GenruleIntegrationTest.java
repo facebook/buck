@@ -278,6 +278,23 @@ public class GenruleIntegrationTest {
   }
 
   @Test
+  public void genruleNoRemoteParsedAndDoesNotImpactBuild() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "genrule_directory_source_path", temporaryFolder);
+    workspace.setUp();
+
+    ProcessResult buildResult = workspace.runBuckCommand("build", "//:cpdir_no_remote");
+    buildResult.assertSuccess();
+
+    assertThat(
+        Files.isDirectory(workspace.resolve("buck-out/gen/cpdir_no_remote/copy")), equalTo(true));
+    assertThat(
+        Files.isRegularFile(workspace.resolve("buck-out/gen/cpdir_no_remote/copy/hello")),
+        equalTo(true));
+  }
+
+  @Test
   public void twoGenrulesWithTheSameOutputFileShouldNotOverwriteOneAnother() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(

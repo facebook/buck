@@ -51,7 +51,8 @@ public class GenruleBinary extends Genrule implements BinaryBuildRule {
       Optional<String> environmentExpansionSeparator,
       Optional<AndroidPlatformTarget> androidPlatformTarget,
       Optional<AndroidNdk> androidNdk,
-      Optional<AndroidSdkLocation> androidSdkLocation) {
+      Optional<AndroidSdkLocation> androidSdkLocation,
+      boolean noRemote) {
     super(
         buildTarget,
         projectFilesystem,
@@ -69,7 +70,8 @@ public class GenruleBinary extends Genrule implements BinaryBuildRule {
         environmentExpansionSeparator,
         androidPlatformTarget,
         androidNdk,
-        androidSdkLocation);
+        androidSdkLocation,
+        noRemote);
   }
 
   @Override
