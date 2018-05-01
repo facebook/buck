@@ -43,7 +43,7 @@ public class TestSelectorsJUnitVersionsIntegrationTest {
   public void setupWorkspace() throws IOException {
     workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
-            this, "test_selectors_junit_versions", temporaryFolder, true);
+            this, "test_selectors_junit_versions", temporaryFolder);
     workspace.setUp();
   }
 

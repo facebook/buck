@@ -420,7 +420,8 @@ public class InterCellIntegrationTest {
   @Test
   public void circularCellReferencesAreAllowed() throws IOException {
     ProjectWorkspace mainRepo =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "inter-cell/circular", tmp);
+        TestDataHelper.createProjectWorkspaceForScenarioWithoutDefaultCell(
+            this, "inter-cell/circular", tmp);
     mainRepo.setUp();
     Path primary = mainRepo.getPath("primary");
 
@@ -910,7 +911,8 @@ public class InterCellIntegrationTest {
   private ProjectWorkspace createWorkspace(String scenarioName) throws IOException {
     Path tmpSubfolder = tmp.newFolder();
     ProjectWorkspace projectWorkspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, scenarioName, tmpSubfolder);
+        TestDataHelper.createProjectWorkspaceForScenarioWithoutDefaultCell(
+            this, scenarioName, tmpSubfolder);
     projectWorkspace.setUp();
     return projectWorkspace;
   }

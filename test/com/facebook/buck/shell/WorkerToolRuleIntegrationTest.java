@@ -45,7 +45,8 @@ public class WorkerToolRuleIntegrationTest {
   public void setUp() throws IOException {
     assumeTrue(Platform.detect() == Platform.MACOS || Platform.detect() == Platform.LINUX);
     workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "worker_tool_test", tmpFolder);
+        TestDataHelper.createProjectWorkspaceForScenarioWithoutDefaultCell(
+            this, "worker_tool_test", tmpFolder);
     workspace.setUp();
   }
 

@@ -40,7 +40,7 @@ public class AssumptionViolationsTest {
   public void setupWorkspace() throws IOException {
     workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
-            this, "assumption_violations", temporaryFolder, true);
+            this, "assumption_violations", temporaryFolder);
     workspace.setUp();
   }
 

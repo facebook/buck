@@ -90,7 +90,7 @@ public class DaemonIntegrationTest {
       throws IOException, InterruptedException, ExecutionException {
 
     ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "exclusive_execution", tmp, true);
+        TestDataHelper.createProjectWorkspaceForScenario(this, "exclusive_execution", tmp);
     workspace.setUp();
     Future<?> firstThread =
         executorService.schedule(
@@ -111,7 +111,7 @@ public class DaemonIntegrationTest {
       throws InterruptedException, IOException {
     long timeoutMillis = 100;
     ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "exclusive_execution", tmp, true);
+        TestDataHelper.createProjectWorkspaceForScenario(this, "exclusive_execution", tmp);
     workspace.setUp();
 
     // Build an NGContext connected to an NGInputStream reading from a stream that will timeout.
@@ -132,7 +132,7 @@ public class DaemonIntegrationTest {
   public void whenConcurrentReadOnlyCommandExecutedThenReadOnlyCommandSucceeds()
       throws IOException, InterruptedException, ExecutionException {
     ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "exclusive_execution", tmp, true);
+        TestDataHelper.createProjectWorkspaceForScenario(this, "exclusive_execution", tmp);
     workspace.setUp();
     Future<?> firstThread =
         executorService.schedule(
@@ -150,7 +150,7 @@ public class DaemonIntegrationTest {
       throws IOException, InterruptedException {
 
     ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "exclusive_execution", tmp, true);
+        TestDataHelper.createProjectWorkspaceForScenario(this, "exclusive_execution", tmp);
     workspace.setUp();
     executorService.invokeAll(
         ImmutableList.of(
@@ -197,7 +197,7 @@ public class DaemonIntegrationTest {
   @Test
   public void whenAppBuckFileRemovedThenRebuildFails() throws IOException {
     ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "file_watching", tmp, true);
+        TestDataHelper.createProjectWorkspaceForScenario(this, "file_watching", tmp);
     workspace.setUp();
     ProcessResult result = workspace.runBuckdCommand("build", "app");
     result.assertSuccess();
@@ -211,7 +211,7 @@ public class DaemonIntegrationTest {
   @Test
   public void whenActivityBuckFileRemovedThenRebuildFails() throws IOException {
     ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "file_watching", tmp, true);
+        TestDataHelper.createProjectWorkspaceForScenario(this, "file_watching", tmp);
     workspace.setUp();
     workspace.runBuckdCommand("build", "//java/com/example/activity:activity").assertSuccess();
 
@@ -226,7 +226,7 @@ public class DaemonIntegrationTest {
   @Test
   public void whenSourceInputRemovedThenRebuildFails() throws IOException {
     ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "file_watching", tmp, true);
+        TestDataHelper.createProjectWorkspaceForScenario(this, "file_watching", tmp);
     workspace.setUp();
     workspace.runBuckdCommand("build", "//java/com/example/activity:activity").assertSuccess();
 
@@ -247,7 +247,7 @@ public class DaemonIntegrationTest {
   @Test
   public void whenSourceInputInvalidatedThenRebuildFails() throws IOException {
     ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "file_watching", tmp, true);
+        TestDataHelper.createProjectWorkspaceForScenario(this, "file_watching", tmp);
     workspace.setUp();
     workspace.runBuckdCommand("build", "//java/com/example/activity:activity").assertSuccess();
 
@@ -263,7 +263,7 @@ public class DaemonIntegrationTest {
   @Test
   public void whenAppBuckFileInvalidatedThenRebuildFails() throws IOException {
     ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "file_watching", tmp, true);
+        TestDataHelper.createProjectWorkspaceForScenario(this, "file_watching", tmp);
     workspace.setUp();
     workspace.runBuckdCommand("build", "app").assertSuccess();
 
@@ -281,7 +281,7 @@ public class DaemonIntegrationTest {
   @Test
   public void whenNativeBuckTargetInvalidatedThenRebuildFails() throws IOException {
     ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "file_watching", tmp, true);
+        TestDataHelper.createProjectWorkspaceForScenario(this, "file_watching", tmp);
     workspace.setUp();
     ProcessResult result = workspace.runBuckdCommand("run", "//native/main:main");
     result.assertSuccess();
@@ -303,7 +303,7 @@ public class DaemonIntegrationTest {
   @Test
   public void whenNativeSourceInputInvalidatedThenRebuildFails() throws IOException {
     ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "file_watching", tmp, true);
+        TestDataHelper.createProjectWorkspaceForScenario(this, "file_watching", tmp);
     workspace.setUp();
     ProcessResult result = workspace.runBuckdCommand("run", "//native/main:main");
     result.assertSuccess();
@@ -326,11 +326,11 @@ public class DaemonIntegrationTest {
   @Test
   public void whenCrossCellSourceInvalidatedThenRebuildFails() throws IOException {
     ProjectWorkspace primary =
-        TestDataHelper.createProjectWorkspaceForScenario(
+        TestDataHelper.createProjectWorkspaceForScenarioWithoutDefaultCell(
             this, "crosscell_file_watching/primary", tmp.newFolder());
     primary.setUp();
     ProjectWorkspace secondary =
-        TestDataHelper.createProjectWorkspaceForScenario(
+        TestDataHelper.createProjectWorkspaceForScenarioWithoutDefaultCell(
             this, "crosscell_file_watching/secondary", tmp.newFolder());
     secondary.setUp();
     TestDataHelper.overrideBuckconfig(
@@ -365,11 +365,11 @@ public class DaemonIntegrationTest {
   @Test
   public void whenCrossCellBuckFileInvalidatedThenRebuildFails() throws IOException {
     ProjectWorkspace primary =
-        TestDataHelper.createProjectWorkspaceForScenario(
+        TestDataHelper.createProjectWorkspaceForScenarioWithoutDefaultCell(
             this, "crosscell_file_watching/primary", tmp.newFolder());
     primary.setUp();
     ProjectWorkspace secondary =
-        TestDataHelper.createProjectWorkspaceForScenario(
+        TestDataHelper.createProjectWorkspaceForScenarioWithoutDefaultCell(
             this, "crosscell_file_watching/secondary", tmp.newFolder());
     secondary.setUp();
     TestDataHelper.overrideBuckconfig(
@@ -397,7 +397,7 @@ public class DaemonIntegrationTest {
   @Test
   public void whenBuckBuiltTwiceLogIsPresent() throws IOException {
     ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "file_watching", tmp, true);
+        TestDataHelper.createProjectWorkspaceForScenario(this, "file_watching", tmp);
     workspace.setUp();
 
     workspace.runBuckdCommand("build", "//java/com/example/activity:activity").assertSuccess();
@@ -420,12 +420,12 @@ public class DaemonIntegrationTest {
   @Test
   public void whenNativeTargetBuiltTwiceCacheHits() throws IOException {
     ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(
+        TestDataHelper.createProjectWorkspaceForScenarioWithoutDefaultCell(
             this, "crosscell_file_watching/primary", tmp);
     workspace.setUp();
 
     ProjectWorkspace secondary =
-        TestDataHelper.createProjectWorkspaceForScenario(
+        TestDataHelper.createProjectWorkspaceForScenarioWithoutDefaultCell(
             this, "crosscell_file_watching/secondary", tmp.newFolder());
     secondary.setUp();
     TestDataHelper.overrideBuckconfig(
@@ -450,12 +450,12 @@ public class DaemonIntegrationTest {
   @Test
   public void crossCellIncludeDefChangesInvalidateBuckTargets() throws Exception {
     ProjectWorkspace primary =
-        TestDataHelper.createProjectWorkspaceForScenario(
+        TestDataHelper.createProjectWorkspaceForScenarioWithoutDefaultCell(
             this, "crosscell_include_defs/primary", tmp.newFolder("primary"));
     primary.setUp();
 
     ProjectWorkspace secondary =
-        TestDataHelper.createProjectWorkspaceForScenario(
+        TestDataHelper.createProjectWorkspaceForScenarioWithoutDefaultCell(
             this, "crosscell_include_defs/secondary", tmp.newFolder("secondary"));
     secondary.setUp();
     TestDataHelper.overrideBuckconfig(

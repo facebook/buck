@@ -42,7 +42,9 @@ public class ActionGraphCacheIntegrationTest {
 
   @Before
   public void setUp() throws IOException {
-    workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "action_graph_cache", tmp);
+    workspace =
+        TestDataHelper.createProjectWorkspaceForScenarioWithoutDefaultCell(
+            this, "action_graph_cache", tmp);
     workspace.setUp();
   }
 

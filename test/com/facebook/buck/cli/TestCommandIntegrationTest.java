@@ -68,7 +68,7 @@ public class TestCommandIntegrationTest {
   @Test
   public void testCsvCodeCoverage() throws Exception {
     ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "test_coverage", tmp, true);
+        TestDataHelper.createProjectWorkspaceForScenario(this, "test_coverage", tmp);
     workspace.setUp();
 
     try (PropertySaver saver = new PropertySaver(getCodeCoverageProperties())) {
@@ -84,7 +84,7 @@ public class TestCommandIntegrationTest {
   @Test
   public void testHtmlCodeCoverage() throws Exception {
     ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "test_coverage", tmp, true);
+        TestDataHelper.createProjectWorkspaceForScenario(this, "test_coverage", tmp);
     workspace.setUp();
 
     try (PropertySaver saver = new PropertySaver(getCodeCoverageProperties())) {
@@ -103,7 +103,7 @@ public class TestCommandIntegrationTest {
   @Test
   public void testXmlCodeCoverage() throws Exception {
     ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "test_coverage", tmp, true);
+        TestDataHelper.createProjectWorkspaceForScenario(this, "test_coverage", tmp);
     workspace.setUp();
 
     try (PropertySaver saver = new PropertySaver(getCodeCoverageProperties())) {

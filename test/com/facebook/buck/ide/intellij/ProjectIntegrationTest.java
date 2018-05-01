@@ -110,7 +110,7 @@ public class ProjectIntegrationTest {
   public void testVersion2BuckProjectWithUnusedLibraries() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
-            this, "project_with_unused_libraries", temporaryFolder, true);
+            this, "project_with_unused_libraries", temporaryFolder);
     workspace.setUp();
 
     ProcessResult result = workspace.runBuckCommand("project");
@@ -403,12 +403,12 @@ public class ProjectIntegrationTest {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
 
     ProjectWorkspace primary =
-        TestDataHelper.createProjectWorkspaceForScenario(
+        TestDataHelper.createProjectWorkspaceForScenarioWithoutDefaultCell(
             this, "inter-cell/primary", temporaryFolder.newFolder());
     primary.setUp();
 
     ProjectWorkspace secondary =
-        TestDataHelper.createProjectWorkspaceForScenario(
+        TestDataHelper.createProjectWorkspaceForScenarioWithoutDefaultCell(
             this, "inter-cell/secondary", temporaryFolder.newFolder());
     secondary.setUp();
 
@@ -459,8 +459,7 @@ public class ProjectIntegrationTest {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
 
     ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(
-            this, folderWithTestData, temporaryFolder, true);
+        TestDataHelper.createProjectWorkspaceForScenario(this, folderWithTestData, temporaryFolder);
     workspace.setUp();
 
     ProcessResult result =

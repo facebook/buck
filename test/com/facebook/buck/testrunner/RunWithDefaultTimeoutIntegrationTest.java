@@ -59,8 +59,7 @@ public class RunWithDefaultTimeoutIntegrationTest {
   public void testRunWithHonorsDefaultTimeoutOnTestThatRunsLong() throws IOException {
     assumeThat(Platform.detect(), not(Platform.WINDOWS));
     ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(
-            this, "run_with_timeout", temporaryFolder, true);
+        TestDataHelper.createProjectWorkspaceForScenario(this, "run_with_timeout", temporaryFolder);
     workspace.setUp();
 
     ProcessResult testResult = workspace.runBuckCommand("test", "//:TestThatTakesTooLong");
@@ -72,8 +71,7 @@ public class RunWithDefaultTimeoutIntegrationTest {
   public void testRunWithHonorsDefaultTimeoutOnTestThatRunsForever() throws IOException {
     assumeThat(Platform.detect(), not(Platform.WINDOWS));
     ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(
-            this, "run_with_timeout", temporaryFolder, true);
+        TestDataHelper.createProjectWorkspaceForScenario(this, "run_with_timeout", temporaryFolder);
     workspace.setUp();
 
     ProcessResult testResult = workspace.runBuckCommand("test", "//:TestThatRunsForever");
@@ -85,8 +83,7 @@ public class RunWithDefaultTimeoutIntegrationTest {
   public void testRunWithLetsTimeoutAnnotationOverrideDefaultTimeout() throws IOException {
     assumeThat(Platform.detect(), not(Platform.WINDOWS));
     ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(
-            this, "run_with_timeout", temporaryFolder, true);
+        TestDataHelper.createProjectWorkspaceForScenario(this, "run_with_timeout", temporaryFolder);
     workspace.setUp();
 
     ProcessResult testResult =
@@ -99,8 +96,7 @@ public class RunWithDefaultTimeoutIntegrationTest {
   public void testRunWithLetsTimeoutRuleOverrideDefaultTimeout() throws IOException {
     assumeThat(Platform.detect(), not(Platform.WINDOWS));
     ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(
-            this, "run_with_timeout", temporaryFolder, true);
+        TestDataHelper.createProjectWorkspaceForScenario(this, "run_with_timeout", temporaryFolder);
     workspace.setUp();
 
     ProcessResult testResult =
@@ -113,8 +109,7 @@ public class RunWithDefaultTimeoutIntegrationTest {
   public void testAllTestsForRunWithAreRunOnTheSameThread() throws IOException {
     assumeThat(Platform.detect(), not(Platform.WINDOWS));
     ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(
-            this, "run_with_timeout", temporaryFolder, true);
+        TestDataHelper.createProjectWorkspaceForScenario(this, "run_with_timeout", temporaryFolder);
     workspace.setUp();
 
     ProcessResult testResult =

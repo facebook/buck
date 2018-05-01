@@ -1444,11 +1444,11 @@ public class AppleBundleIntegrationTest {
   @Test
   public void crossCellApplicationBundle() throws IOException, InterruptedException {
     ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(
+        TestDataHelper.createProjectWorkspaceForScenarioWithoutDefaultCell(
             this, "simple_cross_cell_application_bundle/primary", tmp.newFolder());
     workspace.setUp();
     ProjectWorkspace secondary =
-        TestDataHelper.createProjectWorkspaceForScenario(
+        TestDataHelper.createProjectWorkspaceForScenarioWithoutDefaultCell(
             this, "simple_cross_cell_application_bundle/secondary", tmp.newFolder());
     secondary.setUp();
 

@@ -156,7 +156,7 @@ public class ProjectWorkspace extends AbstractWorkspace {
 
   @VisibleForTesting
   ProjectWorkspace(Path templateDir, Path targetFolder) {
-    this(templateDir, targetFolder, false);
+    this(templateDir, targetFolder, true);
   }
 
   private ProjectFilesystemAndConfig getProjectFilesystemAndConfig()

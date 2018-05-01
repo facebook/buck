@@ -43,8 +43,7 @@ public class AndroidPrebuiltAarIntegrationTest extends AbiCompilationModeTest {
   @Before
   public void setUp() throws InterruptedException, IOException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
-    workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "android_prebuilt_aar", tmp, true);
+    workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "android_prebuilt_aar", tmp);
     workspace.setUp();
     setWorkspaceCompilationMode(workspace);
   }

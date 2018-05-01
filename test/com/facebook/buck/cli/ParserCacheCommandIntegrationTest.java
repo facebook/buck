@@ -54,7 +54,8 @@ public class ParserCacheCommandIntegrationTest {
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "parser_with_cell", tmp);
+        TestDataHelper.createProjectWorkspaceForScenarioWithoutDefaultCell(
+            this, "parser_with_cell", tmp);
     workspace.setUp();
 
     // Warm the parser cache.

@@ -40,7 +40,7 @@ public class TestSelectorsDifferentRunnerIntegrationTest {
   public void shouldSelectOneTest() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
-            this, "test_selectors_annotated_with_runwith", temporaryFolder, true);
+            this, "test_selectors_annotated_with_runwith", temporaryFolder);
     workspace.setUp();
 
     Path file = workspace.getPath("AnotherRunnerLogger.log");

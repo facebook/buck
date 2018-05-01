@@ -41,8 +41,7 @@ public class ClassStatementsTest {
   @Test
   public void shouldFailWhenBeforeClassThrows() throws IOException {
     ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(
-            this, "class_statements", temporaryFolder, true);
+        TestDataHelper.createProjectWorkspaceForScenario(this, "class_statements", temporaryFolder);
     workspace.setUp();
 
     ProcessResult result = workspace.runBuckCommand("test", "--all");
