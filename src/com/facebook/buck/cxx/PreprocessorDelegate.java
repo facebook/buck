@@ -61,8 +61,7 @@ final class PreprocessorDelegate implements RuleKeyAppendable, HasCustomDepsLogi
   @AddToRuleKey private final PreprocessorFlags preprocessorFlags;
 
   // Fields that are not added to the rule key.
-  private final PathSourcePath workingDir;
-
+  private final Path workingDir;
   private final Optional<SymlinkTree> sandbox;
 
   /**
@@ -80,7 +79,7 @@ final class PreprocessorDelegate implements RuleKeyAppendable, HasCustomDepsLogi
 
   public PreprocessorDelegate(
       HeaderVerification headerVerification,
-      PathSourcePath workingDir,
+      Path workingDir,
       Preprocessor preprocessor,
       PreprocessorFlags preprocessorFlags,
       RuleKeyAppendableFunction<FrameworkPath, Path> frameworkPathSearchPathFunction,

@@ -24,7 +24,6 @@ import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rulekey.RuleKeyObjectSink;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
-import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
@@ -229,7 +228,7 @@ abstract class AbstractCxxSourceRuleFactory {
                 PreprocessorDelegate delegate =
                     new PreprocessorDelegate(
                         getCxxPlatform().getHeaderVerification(),
-                        PathSourcePath.of(getProjectFilesystem(), Paths.get("")),
+                        getProjectFilesystem().getRootPath(),
                         preprocessor,
                         PreprocessorFlags.of(
                             getPreInclude().map(PreInclude::getHeaderSourcePath),

@@ -11,7 +11,6 @@ java_library_with_plugins(
         "//src/com/facebook/buck/cxx/toolchain/nativelink:nativelink",
         "//src/com/facebook/buck/rules/coercer:coercer",
         "//src/com/facebook/buck/rules/macros:types",
-        "//src/com/facebook/buck/rules/modern:modern",
         "//src/com/facebook/buck/rules/query:types",
         "//src/com/facebook/buck/shell:rules",
         "//src/com/facebook/buck/versions:translator",

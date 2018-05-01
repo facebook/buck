@@ -19,7 +19,6 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
-import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.cxx.toolchain.HeaderSymlinkTree;
 import com.facebook.buck.io.BuildCellRelativePath;
@@ -91,9 +90,8 @@ class DirectHeaderMap extends HeaderSymlinkTree {
   }
 
   @Override
-  public PathSourcePath getIncludeSourcePath() {
-    return PathSourcePath.of(
-        getProjectFilesystem(), getProjectFilesystem().getBuckPaths().getBuckOut());
+  public Path getIncludePath() {
+    return getProjectFilesystem().resolve(getProjectFilesystem().getBuckPaths().getBuckOut());
   }
 
   @Override

@@ -17,8 +17,8 @@
 package com.facebook.buck.rules.modern.impl;
 
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
-import com.facebook.buck.core.rules.modern.HasCustomInputsLogic;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.rules.HasCustomInputsLogic;
 import com.facebook.buck.rules.modern.ClassInfo;
 import com.facebook.buck.rules.modern.CustomBehaviorUtils;
 import com.facebook.buck.rules.modern.CustomFieldInputs;

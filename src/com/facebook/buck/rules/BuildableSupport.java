@@ -18,7 +18,6 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rulekey.RuleKeyObjectSink;
-import com.facebook.buck.core.rules.modern.HasCustomInputsLogic;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.rules.keys.AbstractRuleKeyBuilder;
 import com.facebook.buck.rules.keys.AlterRuleKeys;

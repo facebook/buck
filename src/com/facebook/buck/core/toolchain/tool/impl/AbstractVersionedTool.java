@@ -17,13 +17,10 @@
 package com.facebook.buck.core.toolchain.tool.impl;
 
 import com.facebook.buck.core.rulekey.AddToRuleKey;
-import com.facebook.buck.core.rules.modern.HasCustomInputsLogic;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
-import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import com.facebook.buck.util.function.ThrowingConsumer;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
@@ -40,7 +37,7 @@ import org.immutables.value.Value;
  */
 @Value.Immutable
 @BuckStyleImmutable
-abstract class AbstractVersionedTool implements Tool, HasCustomInputsLogic {
+abstract class AbstractVersionedTool implements Tool {
 
   /** The path to the tool. The contents or path to the tool do not contribute to the rule key. */
   @Value.Parameter
@@ -65,11 +62,5 @@ abstract class AbstractVersionedTool implements Tool, HasCustomInputsLogic {
   @Override
   public ImmutableMap<String, String> getEnvironment(SourcePathResolver resolver) {
     return ImmutableMap.of();
-  }
-
-  @Override
-  public <E extends Exception> void computeInputs(ThrowingConsumer<SourcePath, E> consumer)
-      throws E {
-    consumer.accept(getPath());
   }
 }

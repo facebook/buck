@@ -16,7 +16,6 @@
 
 package com.facebook.buck.cxx.toolchain;
 
-import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.io.file.MorePaths;
 import com.google.common.base.Preconditions;
 import java.nio.file.Path;
@@ -36,11 +35,6 @@ public interface PathShortener {
           ? relativePath
           : absolutePath;
     };
-  }
-
-  static PathShortener byRelativizingToWorkingDir(PathSourcePath workingDir) {
-    return byRelativizingToWorkingDir(
-        workingDir.getFilesystem().resolve(workingDir.getRelativePath()));
   }
 
   static PathShortener identity() {

@@ -130,7 +130,7 @@ public class CxxCompilationDatabaseTest {
                 ruleFinder,
                 new PreprocessorDelegate(
                     CxxPlatformUtils.DEFAULT_PLATFORM.getHeaderVerification(),
-                    FakeSourcePath.of(filesystem.getRootPath()),
+                    filesystem.getRootPath(),
                     new GccPreprocessor(
                         new HashedFileTool(
                             PathSourcePath.of(filesystem, Paths.get("preprocessor")))),

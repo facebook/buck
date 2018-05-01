@@ -70,7 +70,7 @@ public class CxxPrecompiledHeaderTest {
             Paths.get("dir/foo.hash1.hash2.gch"),
             new PreprocessorDelegate(
                 CxxPlatformUtils.DEFAULT_PLATFORM.getHeaderVerification(),
-                FakeSourcePath.of("./"),
+                Paths.get("./"),
                 preprocessorSupportingPch,
                 PreprocessorFlags.builder().build(),
                 CxxDescriptionEnhancer.frameworkPathToSearchPath(
