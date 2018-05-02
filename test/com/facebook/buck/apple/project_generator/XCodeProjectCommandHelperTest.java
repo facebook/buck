@@ -437,16 +437,18 @@ public class XCodeProjectCommandHelperTest {
         MoreExecutors.newDirectExecutorService(),
         targetGraphAndTargets,
         passedInTargetsSet,
-        XCodeProjectCommandHelper.buildWorkspaceGeneratorOptions(
-            false,
-            isWithTests,
-            isWithDependenciesTests,
-            false,
-            true /* shouldUseHeaderMaps */,
-            false /* shouldMergeHeaderMaps */,
-            false /* shouldGenerateHeaderSymlinkTreeOnly */,
-            false,
-            false),
+        ProjectGeneratorOptions.builder()
+            .setShouldGenerateReadOnlyFiles(false)
+            .setShouldIncludeTests(isWithTests)
+            .setShouldIncludeDependenciesTests(isWithDependenciesTests)
+            .setShouldUseHeaderMaps(true)
+            .setShouldMergeHeaderMaps(false)
+            .setShouldForceLoadLinkWholeLibraries(false)
+            .setShouldGenerateHeaderSymlinkTreesOnly(false)
+            .setShouldGenerateMissingUmbrellaHeader(false)
+            .setShouldUseShortNamesForTargets(true)
+            .setShouldCreateDirectoryStructure(false)
+            .build(),
         ImmutableSet.of(),
         FocusedModuleTargetMatcher.noFocus(),
         projectGenerators,

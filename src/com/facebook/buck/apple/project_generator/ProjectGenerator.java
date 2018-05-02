@@ -208,49 +208,6 @@ public class ProjectGenerator {
   private static final ImmutableSet<AppleBundleExtension> APPLE_NATIVE_BUNDLE_EXTENSIONS =
       ImmutableSet.of(AppleBundleExtension.APP, AppleBundleExtension.FRAMEWORK);
 
-  public enum Option {
-    /** Use short BuildTarget name instead of full name for targets */
-    USE_SHORT_NAMES_FOR_TARGETS,
-
-    /** Put targets into groups reflecting directory structure of their BUCK files */
-    CREATE_DIRECTORY_STRUCTURE,
-
-    /** Generate read-only project files */
-    GENERATE_READ_ONLY_FILES,
-
-    /** Include tests that test root targets in the scheme */
-    INCLUDE_TESTS,
-
-    /** Include dependencies tests in the scheme */
-    INCLUDE_DEPENDENCIES_TESTS,
-
-    /** Don't use header maps as header search paths */
-    DISABLE_HEADER_MAPS,
-
-    /**
-     * Generate one header map containing all the headers it's using and reference only this header
-     * map in the header search paths.
-     */
-    MERGE_HEADER_MAPS,
-
-    /** Generates only headers symlink trees. */
-    GENERATE_HEADERS_SYMLINK_TREES_ONLY,
-
-    /** Generate an umbrella header for modular targets without one for use in a modulemap */
-    GENERATE_MISSING_UMBRELLA_HEADER,
-
-    /** Add linker flags to OTHER_LDFLAGS to force load of libraries with link_whole = true */
-    FORCE_LOAD_LINK_WHOLE_LIBRARIES,
-  }
-
-  /** Standard options for generating a separated project */
-  public static final ImmutableSet<Option> SEPARATED_PROJECT_OPTIONS =
-      ImmutableSet.of(Option.USE_SHORT_NAMES_FOR_TARGETS);
-
-  /** Standard options for generating a combined project */
-  public static final ImmutableSet<Option> COMBINED_PROJECT_OPTIONS =
-      ImmutableSet.of(Option.CREATE_DIRECTORY_STRUCTURE, Option.USE_SHORT_NAMES_FOR_TARGETS);
-
   private static final FileAttribute<?> READ_ONLY_FILE_ATTRIBUTE =
       PosixFilePermissions.asFileAttribute(
           ImmutableSet.of(
@@ -270,7 +227,7 @@ public class ProjectGenerator {
   private final PathRelativizer pathRelativizer;
 
   private final String buildFileName;
-  private final ImmutableSet<Option> options;
+  private final ProjectGeneratorOptions options;
   private final CxxPlatform defaultCxxPlatform;
 
   // These fields are created/filled when creating the projects.
@@ -316,7 +273,7 @@ public class ProjectGenerator {
       Path outputDirectory,
       String projectName,
       String buildFileName,
-      Set<Option> options,
+      ProjectGeneratorOptions options,
       RuleKeyConfiguration ruleKeyConfiguration,
       boolean isMainProject,
       Optional<BuildTarget> workspaceTarget,
@@ -339,7 +296,7 @@ public class ProjectGenerator {
     this.outputDirectory = outputDirectory;
     this.projectName = projectName;
     this.buildFileName = buildFileName;
-    this.options = ImmutableSet.copyOf(options);
+    this.options = options;
     this.ruleKeyConfiguration = ruleKeyConfiguration;
     this.isMainProject = isMainProject;
     this.workspaceTarget = workspaceTarget;
@@ -403,26 +360,10 @@ public class ProjectGenerator {
     return projectPath;
   }
 
-  private boolean isHeaderMapDisabled() {
-    return options.contains(Option.DISABLE_HEADER_MAPS);
-  }
-
   private boolean shouldMergeHeaderMaps() {
-    return options.contains(Option.MERGE_HEADER_MAPS)
+    return options.shouldMergeHeaderMaps()
         && workspaceTarget.isPresent()
-        && !isHeaderMapDisabled();
-  }
-
-  private boolean shouldGenerateHeaderSymlinkTreesOnly() {
-    return options.contains(Option.GENERATE_HEADERS_SYMLINK_TREES_ONLY);
-  }
-
-  private boolean shouldGenerateMissingUmbrellaHeaders() {
-    return options.contains(Option.GENERATE_MISSING_UMBRELLA_HEADER);
-  }
-
-  private boolean shouldAddLinkerFlagsForLinkWholeLibraries() {
-    return options.contains(Option.FORCE_LOAD_LINK_WHOLE_LIBRARIES);
+        && options.shouldUseHeaderMaps();
   }
 
   public ImmutableMap<BuildTarget, PBXTarget> getBuildTargetToGeneratedTargetMap() {
@@ -495,7 +436,7 @@ public class ProjectGenerator {
         outputConfig.setBuildSettings(new NSDictionary());
       }
 
-      if (!shouldGenerateHeaderSymlinkTreesOnly()) {
+      if (!options.shouldGenerateHeaderSymlinkTreesOnly()) {
         writeProjectFile(project);
       }
 
@@ -1056,7 +997,7 @@ public class ProjectGenerator {
     ImmutableMap.Builder<String, String> swiftDepsSettingsBuilder = ImmutableMap.builder();
     ImmutableList.Builder<String> swiftDebugLinkerFlagsBuilder = ImmutableList.builder();
 
-    if (!shouldGenerateHeaderSymlinkTreesOnly()) {
+    if (!options.shouldGenerateHeaderSymlinkTreesOnly()) {
       if (isFocusedOnTarget) {
         mutator
             .setLangPreprocessorFlags(
@@ -1081,7 +1022,7 @@ public class ProjectGenerator {
 
       mutator.setBridgingHeader(arg.getBridgingHeader());
 
-      if (options.contains(Option.CREATE_DIRECTORY_STRUCTURE) && isFocusedOnTarget) {
+      if (options.shouldCreateDirectoryStructure() && isFocusedOnTarget) {
         mutator.setTargetGroupPath(
             RichStream.from(buildTarget.getBasePath()).map(Object::toString).toImmutableList());
       }
@@ -1232,7 +1173,7 @@ public class ProjectGenerator {
       publicCxxHeaders = ImmutableSortedMap.of();
     }
 
-    if (!shouldGenerateHeaderSymlinkTreesOnly()) {
+    if (!options.shouldGenerateHeaderSymlinkTreesOnly()) {
       if (isFocusedOnTarget) {
         SourceTreePath buckFilePath =
             new SourceTreePath(
@@ -1593,9 +1534,9 @@ public class ProjectGenerator {
         moduleName,
         getPathToHeaderSymlinkTree(targetNode, HeaderVisibility.PUBLIC),
         arg.getXcodePublicHeadersSymlinks().orElse(cxxBuckConfig.getPublicHeadersSymlinksEnabled())
-            || isHeaderMapDisabled(),
+            || !options.shouldUseHeaderMaps(),
         !shouldMergeHeaderMaps(),
-        shouldGenerateMissingUmbrellaHeaders());
+        options.shouldGenerateMissingUmbrellaHeader());
     if (isFocusedOnTarget) {
       createHeaderSymlinkTree(
           getPrivateCxxHeaders(targetNode),
@@ -1604,9 +1545,9 @@ public class ProjectGenerator {
           getPathToHeaderSymlinkTree(targetNode, HeaderVisibility.PRIVATE),
           arg.getXcodePrivateHeadersSymlinks()
                   .orElse(cxxBuckConfig.getPrivateHeadersSymlinksEnabled())
-              || isHeaderMapDisabled(),
-          !isHeaderMapDisabled(),
-          shouldGenerateMissingUmbrellaHeaders());
+              || !options.shouldUseHeaderMaps(),
+          options.shouldUseHeaderMaps(),
+          options.shouldGenerateMissingUmbrellaHeader());
     }
     if (shouldMergeHeaderMaps() && isMainProject) {
       createMergedHeaderMap();
@@ -1616,13 +1557,15 @@ public class ProjectGenerator {
         targetNode.castArg(AppleNativeTargetDescriptionArg.class);
     if (appleTargetNode.isPresent()
         && isFocusedOnTarget
-        && !shouldGenerateHeaderSymlinkTreesOnly()) {
+        && !options.shouldGenerateHeaderSymlinkTreesOnly()) {
       // Use Core Data models from immediate dependencies only.
       addCoreDataModelsIntoTarget(appleTargetNode.get(), targetGroup.get());
       addSceneKitAssetsIntoTarget(appleTargetNode.get(), targetGroup.get());
     }
 
-    if (bundle.isPresent() && isFocusedOnTarget && !shouldGenerateHeaderSymlinkTreesOnly()) {
+    if (bundle.isPresent()
+        && isFocusedOnTarget
+        && !options.shouldGenerateHeaderSymlinkTreesOnly()) {
       addEntitlementsPlistIntoTarget(bundle.get(), targetGroup.get());
     }
 
@@ -2060,7 +2003,7 @@ public class ProjectGenerator {
       ImmutableMap<String, String> defaultBuildSettings,
       ImmutableMap<String, String> appendBuildSettings)
       throws IOException {
-    if (shouldGenerateHeaderSymlinkTreesOnly()) {
+    if (options.shouldGenerateHeaderSymlinkTreesOnly()) {
       return;
     }
 
@@ -2108,7 +2051,7 @@ public class ProjectGenerator {
           new ByteArrayInputStream(xcconfigContents.getBytes(Charsets.UTF_8)),
           xcconfigPath,
           projectFilesystem)) {
-        if (shouldGenerateReadOnlyFiles()) {
+        if (options.shouldGenerateReadOnlyFiles()) {
           projectFilesystem.writeContentsToPath(
               xcconfigContents, xcconfigPath, READ_ONLY_FILE_ATTRIBUTE);
         } else {
@@ -2658,7 +2601,7 @@ public class ProjectGenerator {
         serializedProject,
         projectFilesystem)) {
       LOG.debug("Regenerating project at %s", serializedProject);
-      if (shouldGenerateReadOnlyFiles()) {
+      if (options.shouldGenerateReadOnlyFiles()) {
         projectFilesystem.writeContentsToPath(
             contentsToWrite, serializedProject, READ_ONLY_FILE_ATTRIBUTE);
       } else {
@@ -2788,7 +2731,7 @@ public class ProjectGenerator {
   }
 
   private Path getHeaderSearchPathFromSymlinkTreeRoot(Path headerSymlinkTreeRoot) {
-    if (isHeaderMapDisabled()) {
+    if (!options.shouldUseHeaderMaps()) {
       return headerSymlinkTreeRoot;
     } else {
       return getHeaderMapLocationFromSymlinkTreeRoot(headerSymlinkTreeRoot);
@@ -3138,7 +3081,7 @@ public class ProjectGenerator {
       TargetNode<?, ?> targetNode,
       Optional<TargetNode<AppleBundleDescriptionArg, ?>> bundleLoaderNode) {
 
-    if (shouldAddLinkerFlagsForLinkWholeLibraries()) {
+    if (options.shouldForceLoadLinkWholeLibraries()) {
       FluentIterable<TargetNode<?, ?>> allDeps =
           collectRecursiveLibraryDepTargetsWithOptions(targetNode, false);
 
@@ -3335,7 +3278,7 @@ public class ProjectGenerator {
   }
 
   private String getXcodeTargetName(BuildTarget target) {
-    return options.contains(Option.USE_SHORT_NAMES_FOR_TARGETS)
+    return options.shouldUseShortNamesForTargets()
         ? target.getShortName()
         : target.getFullyQualifiedName();
   }
@@ -3379,10 +3322,6 @@ public class ProjectGenerator {
     }
 
     return ProductTypes.BUNDLE;
-  }
-
-  private boolean shouldGenerateReadOnlyFiles() {
-    return options.contains(Option.GENERATE_READ_ONLY_FILES);
   }
 
   private static String getExtensionString(Either<AppleBundleExtension, String> extension) {

@@ -22,7 +22,6 @@ import com.facebook.buck.apple.AppleConfig;
 import com.facebook.buck.apple.AppleLibraryDescription;
 import com.facebook.buck.apple.XcodeWorkspaceConfigDescription;
 import com.facebook.buck.apple.XcodeWorkspaceConfigDescriptionArg;
-import com.facebook.buck.apple.project_generator.ProjectGenerator.Option;
 import com.facebook.buck.cli.output.PathOutputPresenter;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.ProjectTestsMode;
@@ -308,17 +307,22 @@ public class XCodeProjectCommandHelper {
       throws IOException, InterruptedException {
     ExitCode exitCode = ExitCode.SUCCESS;
     AppleConfig appleConfig = buckConfig.getView(AppleConfig.class);
-    ImmutableSet<ProjectGenerator.Option> options =
-        buildWorkspaceGeneratorOptions(
-            readOnly,
-            isWithTests(buckConfig),
-            isWithDependenciesTests(buckConfig),
-            combinedProject,
-            appleConfig.shouldUseHeaderMapsInXcodeProject(),
-            appleConfig.shouldMergeHeaderMapsInXcodeProject(),
-            appleConfig.shouldGenerateHeaderSymlinkTreesOnly(),
-            appleConfig.shouldGenerateMissingUmbrellaHeaders(),
-            appleConfig.shouldAddLinkerFlagsForLinkWholeLibraries());
+    ProjectGeneratorOptions options =
+        ProjectGeneratorOptions.builder()
+            .setShouldGenerateReadOnlyFiles(readOnly)
+            .setShouldIncludeTests(isWithTests(buckConfig))
+            .setShouldIncludeDependenciesTests(isWithDependenciesTests(buckConfig))
+            .setShouldUseHeaderMaps(appleConfig.shouldUseHeaderMapsInXcodeProject())
+            .setShouldMergeHeaderMaps(appleConfig.shouldMergeHeaderMapsInXcodeProject())
+            .setShouldForceLoadLinkWholeLibraries(
+                appleConfig.shouldAddLinkerFlagsForLinkWholeLibraries())
+            .setShouldGenerateHeaderSymlinkTreesOnly(
+                appleConfig.shouldGenerateHeaderSymlinkTreesOnly())
+            .setShouldGenerateMissingUmbrellaHeader(
+                appleConfig.shouldGenerateMissingUmbrellaHeaders())
+            .setShouldUseShortNamesForTargets(true)
+            .setShouldCreateDirectoryStructure(combinedProject)
+            .build();
 
     LOG.debug("Xcode project generation: Generates workspaces for targets");
 
@@ -383,7 +387,7 @@ public class XCodeProjectCommandHelper {
       ListeningExecutorService executorService,
       TargetGraphAndTargets targetGraphAndTargets,
       ImmutableSet<BuildTarget> passedInTargetsSet,
-      ImmutableSet<ProjectGenerator.Option> options,
+      ProjectGeneratorOptions options,
       ImmutableSet<String> appleCxxFlavors,
       FocusedModuleTargetMatcher focusModules,
       Map<Path, ProjectGenerator> projectGenerators,
@@ -510,50 +514,6 @@ public class XCodeProjectCommandHelper {
             .toImmutableSet();
     LOG.debug("Selected unflavored targets: %s", passedInUnflavoredTargetsSet.toString());
     return FocusedModuleTargetMatcher.focusedOn(passedInUnflavoredTargetsSet);
-  }
-
-  @VisibleForTesting
-  static ImmutableSet<ProjectGenerator.Option> buildWorkspaceGeneratorOptions(
-      boolean isReadonly,
-      boolean isWithTests,
-      boolean isWithDependenciesTests,
-      boolean isProjectsCombined,
-      boolean shouldUseHeaderMaps,
-      boolean shouldMergeHeaderMaps,
-      boolean shouldGenerateHeaderSymlinkTreesOnly,
-      boolean shouldGenerateMissingUmbrellaHeaders,
-      boolean shouldAddLinkerFlagsForLinkWholeLibraries) {
-    ImmutableSet.Builder<ProjectGenerator.Option> optionsBuilder = ImmutableSet.builder();
-    if (isReadonly) {
-      optionsBuilder.add(ProjectGenerator.Option.GENERATE_READ_ONLY_FILES);
-    }
-    if (isWithTests) {
-      optionsBuilder.add(ProjectGenerator.Option.INCLUDE_TESTS);
-    }
-    if (isWithDependenciesTests) {
-      optionsBuilder.add(ProjectGenerator.Option.INCLUDE_DEPENDENCIES_TESTS);
-    }
-    if (isProjectsCombined) {
-      optionsBuilder.addAll(ProjectGenerator.COMBINED_PROJECT_OPTIONS);
-    } else {
-      optionsBuilder.addAll(ProjectGenerator.SEPARATED_PROJECT_OPTIONS);
-    }
-    if (!shouldUseHeaderMaps) {
-      optionsBuilder.add(ProjectGenerator.Option.DISABLE_HEADER_MAPS);
-    }
-    if (shouldMergeHeaderMaps) {
-      optionsBuilder.add(ProjectGenerator.Option.MERGE_HEADER_MAPS);
-    }
-    if (shouldAddLinkerFlagsForLinkWholeLibraries) {
-      optionsBuilder.add(Option.FORCE_LOAD_LINK_WHOLE_LIBRARIES);
-    }
-    if (shouldGenerateHeaderSymlinkTreesOnly) {
-      optionsBuilder.add(ProjectGenerator.Option.GENERATE_HEADERS_SYMLINK_TREES_ONLY);
-    }
-    if (shouldGenerateMissingUmbrellaHeaders) {
-      optionsBuilder.add(ProjectGenerator.Option.GENERATE_MISSING_UMBRELLA_HEADER);
-    }
-    return optionsBuilder.build();
   }
 
   @SuppressWarnings(value = "unchecked")

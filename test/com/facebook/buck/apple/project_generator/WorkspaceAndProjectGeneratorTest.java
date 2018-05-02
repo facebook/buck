@@ -249,9 +249,10 @@ public class WorkspaceAndProjectGeneratorTest {
             targetGraph,
             workspaceNode.getConstructorArg(),
             workspaceNode.getBuildTarget(),
-            ImmutableSet.of(
-                ProjectGenerator.Option.INCLUDE_TESTS,
-                ProjectGenerator.Option.INCLUDE_DEPENDENCIES_TESTS),
+            ProjectGeneratorOptions.builder()
+                .setShouldIncludeTests(true)
+                .setShouldIncludeDependenciesTests(true)
+                .build(),
             false /* combinedProject */,
             FocusedModuleTargetMatcher.noFocus(),
             false /* parallelizeBuild */,
@@ -305,9 +306,10 @@ public class WorkspaceAndProjectGeneratorTest {
             targetGraph,
             workspaceNode.getConstructorArg(),
             workspaceNode.getBuildTarget(),
-            ImmutableSet.of(
-                ProjectGenerator.Option.INCLUDE_TESTS,
-                ProjectGenerator.Option.INCLUDE_DEPENDENCIES_TESTS),
+            ProjectGeneratorOptions.builder()
+                .setShouldIncludeTests(true)
+                .setShouldIncludeDependenciesTests(true)
+                .build(),
             true /* combinedProject */,
             FocusedModuleTargetMatcher.noFocus(),
             false /* parallelizeBuild */,
@@ -356,7 +358,7 @@ public class WorkspaceAndProjectGeneratorTest {
             targetGraph,
             workspaceNode.getConstructorArg(),
             workspaceNode.getBuildTarget(),
-            ImmutableSet.of(),
+            ProjectGeneratorOptions.builder().build(),
             false /* combinedProject */,
             FocusedModuleTargetMatcher.noFocus(),
             false /* parallelizeBuild */,
@@ -404,7 +406,7 @@ public class WorkspaceAndProjectGeneratorTest {
             targetGraph,
             workspaceNode.getConstructorArg(),
             workspaceNode.getBuildTarget(),
-            ImmutableSet.of(ProjectGenerator.Option.INCLUDE_TESTS),
+            ProjectGeneratorOptions.builder().setShouldIncludeTests(true).build(),
             false /* combinedProject */,
             FocusedModuleTargetMatcher.noFocus(),
             false /* parallelizeBuild */,
@@ -472,7 +474,7 @@ public class WorkspaceAndProjectGeneratorTest {
             targetGraph,
             workspaceNode.getConstructorArg(),
             workspaceNode.getBuildTarget(),
-            ImmutableSet.of(),
+            ProjectGeneratorOptions.builder().build(),
             false /* combinedProject */,
             FocusedModuleTargetMatcher.noFocus(),
             false /* parallelizeBuild */,
@@ -521,7 +523,7 @@ public class WorkspaceAndProjectGeneratorTest {
             targetGraph,
             workspaceNode.getConstructorArg(),
             workspaceNode.getBuildTarget(),
-            ImmutableSet.of(),
+            ProjectGeneratorOptions.builder().build(),
             true /* combinedProject */,
             FocusedModuleTargetMatcher.noFocus(),
             false /* parallelizeBuild */,
@@ -671,9 +673,10 @@ public class WorkspaceAndProjectGeneratorTest {
             targetGraph,
             workspaceWithExtraSchemeNode.getConstructorArg(),
             workspaceWithExtraSchemeNode.getBuildTarget(),
-            ImmutableSet.of(
-                ProjectGenerator.Option.INCLUDE_TESTS,
-                ProjectGenerator.Option.INCLUDE_DEPENDENCIES_TESTS),
+            ProjectGeneratorOptions.builder()
+                .setShouldIncludeTests(true)
+                .setShouldIncludeDependenciesTests(true)
+                .build(),
             false /* combinedProject */,
             FocusedModuleTargetMatcher.noFocus(),
             false /* parallelizeBuild */,
@@ -792,9 +795,10 @@ public class WorkspaceAndProjectGeneratorTest {
             targetGraph,
             workspaceNode.getConstructorArg(),
             workspaceNode.getBuildTarget(),
-            ImmutableSet.of(
-                ProjectGenerator.Option.INCLUDE_TESTS,
-                ProjectGenerator.Option.INCLUDE_DEPENDENCIES_TESTS),
+            ProjectGeneratorOptions.builder()
+                .setShouldIncludeTests(true)
+                .setShouldIncludeDependenciesTests(true)
+                .build(),
             false /* combinedProject */,
             FocusedModuleTargetMatcher.noFocus(),
             false /* parallelizeBuild */,
@@ -867,9 +871,10 @@ public class WorkspaceAndProjectGeneratorTest {
             targetGraph,
             workspaceNode.getConstructorArg(),
             workspaceNode.getBuildTarget(),
-            ImmutableSet.of(
-                ProjectGenerator.Option.INCLUDE_TESTS,
-                ProjectGenerator.Option.INCLUDE_DEPENDENCIES_TESTS),
+            ProjectGeneratorOptions.builder()
+                .setShouldIncludeTests(true)
+                .setShouldIncludeDependenciesTests(true)
+                .build(),
             false /* combinedProject */,
             FocusedModuleTargetMatcher.noFocus(),
             true /* parallelizeBuild */,
@@ -922,9 +927,10 @@ public class WorkspaceAndProjectGeneratorTest {
             targetGraph,
             workspaceNode.getConstructorArg(),
             workspaceNode.getBuildTarget(),
-            ImmutableSet.of(
-                ProjectGenerator.Option.INCLUDE_TESTS,
-                ProjectGenerator.Option.INCLUDE_DEPENDENCIES_TESTS),
+            ProjectGeneratorOptions.builder()
+                .setShouldIncludeTests(true)
+                .setShouldIncludeDependenciesTests(true)
+                .build(),
             false /* combinedProject */,
             FocusedModuleTargetMatcher.noFocus(),
             true /* parallelizeBuild */,
@@ -981,9 +987,10 @@ public class WorkspaceAndProjectGeneratorTest {
             targetGraph,
             workspaceNode.getConstructorArg(),
             workspaceNode.getBuildTarget(),
-            ImmutableSet.of(
-                ProjectGenerator.Option.INCLUDE_TESTS,
-                ProjectGenerator.Option.INCLUDE_DEPENDENCIES_TESTS),
+            ProjectGeneratorOptions.builder()
+                .setShouldIncludeTests(true)
+                .setShouldIncludeDependenciesTests(true)
+                .build(),
             false /* combinedProject */,
             FocusedModuleTargetMatcher.noFocus(),
             true /* parallelizeBuild */,

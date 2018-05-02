@@ -25,7 +25,6 @@ import com.facebook.buck.apple.AppleDependenciesCache;
 import com.facebook.buck.apple.AppleTestDescriptionArg;
 import com.facebook.buck.apple.XcodeWorkspaceConfigDescription;
 import com.facebook.buck.apple.XcodeWorkspaceConfigDescriptionArg;
-import com.facebook.buck.apple.project_generator.ProjectGenerator.Option;
 import com.facebook.buck.apple.xcode.XCScheme;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
 import com.facebook.buck.core.cell.Cell;
@@ -73,7 +72,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -88,7 +86,7 @@ public class WorkspaceAndProjectGenerator {
   private final XcodeWorkspaceConfigDescriptionArg workspaceArguments;
   private final BuildTarget workspaceBuildTarget;
   private final FocusedModuleTargetMatcher focusModules;
-  private final ImmutableSet<ProjectGenerator.Option> projectGeneratorOptions;
+  private final ProjectGeneratorOptions projectGeneratorOptions;
   private final boolean combinedProject;
   private final boolean parallelizeBuild;
   private final CxxPlatform defaultCxxPlatform;
@@ -117,7 +115,7 @@ public class WorkspaceAndProjectGenerator {
       TargetGraph projectGraph,
       XcodeWorkspaceConfigDescriptionArg workspaceArguments,
       BuildTarget workspaceBuildTarget,
-      Set<Option> projectGeneratorOptions,
+      ProjectGeneratorOptions projectGeneratorOptions,
       boolean combinedProject,
       FocusedModuleTargetMatcher focusModules,
       boolean parallelizeBuild,
@@ -138,7 +136,7 @@ public class WorkspaceAndProjectGenerator {
     this.projGenerationStateCache = new ProjectGenerationStateCache();
     this.workspaceArguments = workspaceArguments;
     this.workspaceBuildTarget = workspaceBuildTarget;
-    this.projectGeneratorOptions = ImmutableSet.copyOf(projectGeneratorOptions);
+    this.projectGeneratorOptions = projectGeneratorOptions;
     this.combinedProject = combinedProject;
     this.parallelizeBuild = parallelizeBuild;
     this.defaultCxxPlatform = defaultCxxPlatform;
@@ -223,8 +221,8 @@ public class WorkspaceAndProjectGenerator {
 
     buildWorkspaceSchemes(
         projectGraph,
-        projectGeneratorOptions.contains(ProjectGenerator.Option.INCLUDE_TESTS),
-        projectGeneratorOptions.contains(ProjectGenerator.Option.INCLUDE_DEPENDENCIES_TESTS),
+        projectGeneratorOptions.shouldIncludeTests(),
+        projectGeneratorOptions.shouldIncludeDependenciesTests(),
         workspaceName,
         workspaceArguments,
         schemeConfigsBuilder,
@@ -262,8 +260,7 @@ public class WorkspaceAndProjectGenerator {
 
     writeWorkspaceMetaData(outputDirectory, workspaceName);
 
-    if (projectGeneratorOptions.contains(
-        ProjectGenerator.Option.GENERATE_HEADERS_SYMLINK_TREES_ONLY)) {
+    if (projectGeneratorOptions.shouldGenerateHeaderSymlinkTreesOnly()) {
       return workspaceGenerator.getWorkspaceDir();
     } else {
       ImmutableMap<BuildTarget, PBXTarget> buildTargetToTarget =
