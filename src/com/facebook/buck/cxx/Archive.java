@@ -150,16 +150,17 @@ public class Archive extends AbstractBuildRule implements SupportsInputBasedRule
       ImmutableList<SourcePath> inputs,
       boolean cacheable) {
 
-    ImmutableSortedSet<BuildRule> deps =
-        ImmutableSortedSet.<BuildRule>naturalOrder()
-            .addAll(ruleFinder.filterBuildRuleInputs(inputs))
-            .addAll(BuildableSupport.getDepsCollection(archiver, ruleFinder))
-            .build();
+    ImmutableSortedSet.Builder<BuildRule> deps = ImmutableSortedSet.naturalOrder();
+
+    deps.addAll(ruleFinder.filterBuildRuleInputs(inputs))
+        .addAll(BuildableSupport.getDepsCollection(archiver, ruleFinder));
+
+    ranlib.ifPresent(r -> deps.addAll(BuildableSupport.getDepsCollection(r, ruleFinder)));
 
     return new Archive(
         target,
         projectFilesystem,
-        deps,
+        deps.build(),
         archiver,
         arFlags,
         ranlib,
