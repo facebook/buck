@@ -20,7 +20,6 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.concurrent.Parallelizer;
 import com.google.common.collect.ImmutableSortedSet;
-import java.util.Comparator;
 import java.util.Optional;
 import java.util.function.Function;
 
@@ -83,29 +82,14 @@ public interface BuildRuleResolver {
    *
    * @throws HumanReadableException if the {@code BuildRule} is not an instance of the given class.
    */
-  default <T> Optional<T> getRuleOptionalWithType(BuildTarget buildTarget, Class<T> cls) {
-    return getRuleOptional(buildTarget)
-        .map(
-            rule -> {
-              if (cls.isInstance(rule)) {
-                return cls.cast(rule);
-              } else {
-                throw new HumanReadableException(
-                    "Rule for target '%s' is present but not of expected type %s (got %s)",
-                    buildTarget, cls, rule.getClass());
-              }
-            });
-  }
+  <T> Optional<T> getRuleOptionalWithType(BuildTarget buildTarget, Class<T> cls);
 
   /**
    * Returns the {@code BuildRule} associated with the {@code buildTarget}.
    *
    * @throws HumanReadableException if no BuildRule is associated with the {@code BuildTarget}.
    */
-  default BuildRule getRule(BuildTarget buildTarget) {
-    return getRuleOptional(buildTarget)
-        .orElseThrow(() -> BuildRuleResolvers.unresolvableRuleException(buildTarget));
-  }
+  BuildRule getRule(BuildTarget buildTarget);
 
   /**
    * Returns the {@code BuildRule} associated with the {@code buildTarget}, casting it to an
@@ -114,29 +98,11 @@ public interface BuildRuleResolver {
    * @throws HumanReadableException if no rule is associated with the {@code BuildTarget}, or if the
    *     rule is not an instance of the given class.
    */
-  default <T> T getRuleWithType(BuildTarget buildTarget, Class<T> cls) {
-    return getRuleOptionalWithType(buildTarget, cls)
-        .orElseThrow(() -> BuildRuleResolvers.unresolvableRuleException(buildTarget));
-  }
+  <T> T getRuleWithType(BuildTarget buildTarget, Class<T> cls);
 
-  default ImmutableSortedSet<BuildRule> requireAllRules(Iterable<BuildTarget> buildTargets) {
-    return RichStream.from(buildTargets)
-        .map(this::requireRule)
-        .toImmutableSortedSet(Comparator.naturalOrder());
-  }
+  ImmutableSortedSet<BuildRule> requireAllRules(Iterable<BuildTarget> buildTargets);
 
-  default ImmutableSortedSet<BuildRule> getAllRules(Iterable<BuildTarget> targets) {
-    return getAllRulesStream(targets).toImmutableSortedSet(Comparator.naturalOrder());
-  }
+  ImmutableSortedSet<BuildRule> getAllRules(Iterable<BuildTarget> targets);
 
-  default RichStream<BuildRule> getAllRulesStream(Iterable<BuildTarget> targets) {
-    return RichStream.from(targets).map(this::getRule);
-  }
-}
-
-/** Helpers for implementing BuildRuleResolver that doesn't belong in the public interface. */
-class BuildRuleResolvers {
-  static HumanReadableException unresolvableRuleException(BuildTarget target) {
-    return new HumanReadableException("Rule for target '%s' could not be resolved.", target);
-  }
+  RichStream<BuildRule> getAllRulesStream(Iterable<BuildTarget> targets);
 }

@@ -44,7 +44,7 @@ import javax.annotation.Nullable;
  *       Accessing incomplete rules from other threads waits for the rule future to complete.
  * </ul>
  */
-public class MultiThreadedBuildRuleResolver implements BuildRuleResolver {
+public class MultiThreadedBuildRuleResolver extends AbstractBuildRuleResolver {
   private boolean isValid = true;
   private final ForkJoinPool forkJoinPool;
 

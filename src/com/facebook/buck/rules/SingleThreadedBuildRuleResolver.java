@@ -30,7 +30,7 @@ import java.util.function.Function;
  * Provides a mechanism for mapping between a {@link BuildTarget} and the {@link BuildRule} it
  * represents. Once parsing is complete, instances of this class can be considered immutable.
  */
-public class SingleThreadedBuildRuleResolver implements BuildRuleResolver {
+public class SingleThreadedBuildRuleResolver extends AbstractBuildRuleResolver {
 
   private boolean isValid = true;
   private final TargetGraph targetGraph;

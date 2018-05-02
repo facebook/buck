@@ -56,6 +56,7 @@ java_immutables_library(
     name = "build_rule",
     srcs = [
         "AbstractBuildRule.java",
+        "AbstractBuildRuleResolver.java",
         "AbstractBuildRuleType.java",
         "AbstractBuildRuleWithProviders.java",
         "AbstractDescriptionCreationContext.java",
