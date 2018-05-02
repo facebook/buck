@@ -62,7 +62,6 @@ import com.facebook.buck.distributed.thrift.BuildJobStateFileHashEntry;
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashes;
 import com.facebook.buck.distributed.thrift.BuildMode;
 import com.facebook.buck.distributed.thrift.RuleKeyLogEntry;
-import com.facebook.buck.distributed.thrift.SchedulingEnvironmentType;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.ConsoleEvent;
@@ -887,12 +886,6 @@ public class BuildCommand extends AbstractCommand {
         && !distBuildConfig.getMinionQueue().isPresent()) {
       throw new HumanReadableException(
           "Stampede Minion Queue name must be specified to use Local Coordinator Mode.");
-    }
-
-    if (distBuildConfig.getSchedulingEnvironmentType() == SchedulingEnvironmentType.MIXED_HARDWARE
-        && !distBuildConfig.getLowSpecMinionQueue().isPresent()) {
-      throw new HumanReadableException(
-          "Stampede Low Spec Minion Queue name must be specified to used mixed hardware environment");
     }
 
     BuildEvent.DistBuildStarted started = BuildEvent.distBuildStarted();

@@ -28,6 +28,7 @@ import com.facebook.buck.distributed.DistBuildMode;
 import com.facebook.buck.distributed.build_slave.RemoteBuildModeRunner.FinalBuildStatusSetter;
 import com.facebook.buck.distributed.thrift.BuildJob;
 import com.facebook.buck.distributed.thrift.BuildStatus;
+import com.facebook.buck.distributed.thrift.SchedulingEnvironmentType;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.rules.NoOpRemoteBuildRuleCompletionWaiter;
@@ -88,6 +89,15 @@ public class DistBuildSlaveExecutor {
 
     DistBuildModeRunner runner = null;
     if (DistBuildMode.COORDINATOR == args.getDistBuildMode()) {
+      if (args.getDistBuildConfig().getSchedulingEnvironmentType()
+              == SchedulingEnvironmentType.MIXED_HARDWARE
+          && !args.getDistBuildConfig().getLowSpecMinionQueue().isPresent()) {
+        args.getConsole()
+            .printErrorText(
+                "Stampede Low Spec Minion Queue name must be specified to used mixed hardware environment");
+        return ExitCode.COMMANDLINE_ERROR;
+      }
+
       runner =
           MultiSlaveBuildModeRunnerFactory.createCoordinator(
               initializer.getDelegateAndGraphs(),
