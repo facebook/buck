@@ -162,7 +162,7 @@ public abstract class AbstractNodeBuilder<
       TArg populatedArg = getPopulatedArg();
       TargetNode<TArg, TDescription> node =
           factory
-              .create(
+              .createFromObject(
                   // This hash will do in a pinch.
                   hash,
                   description,

@@ -186,7 +186,7 @@ public class TargetNodeTest {
     ExampleDescription description = new ExampleDescription();
 
     return new TargetNodeFactory(new DefaultTypeCoercerFactory())
-        .create(
+        .createFromObject(
             Hashing.sha1().hashString(buildTarget.getFullyQualifiedName(), UTF_8),
             description,
             createPopulatedConstructorArg(buildTarget, rawNode),

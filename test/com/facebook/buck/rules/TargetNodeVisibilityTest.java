@@ -236,7 +236,7 @@ public class TargetNodeVisibilityTest {
     FakeRuleDescriptionArg arg =
         FakeRuleDescriptionArg.builder().setName(buildTarget.getShortName()).build();
     return new TargetNodeFactory(new DefaultTypeCoercerFactory())
-        .create(
+        .createFromObject(
             Hashing.sha1().hashString(buildTarget.getFullyQualifiedName(), UTF_8),
             description,
             arg,

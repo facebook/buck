@@ -86,7 +86,7 @@ public class GenruleDescriptionTest {
             instance);
     TargetNode<GenruleDescriptionArg, GenruleDescription> targetNode =
         new TargetNodeFactory(new DefaultTypeCoercerFactory())
-            .create(
+            .createFromObject(
                 Hashing.sha1().hashString(buildTarget.getFullyQualifiedName(), UTF_8),
                 genruleDescription,
                 constructorArg,

@@ -102,7 +102,7 @@ public class OwnersReportTest {
             .build();
     try {
       return new TargetNodeFactory(new DefaultTypeCoercerFactory())
-          .create(
+          .createFromObject(
               Hashing.sha1().hashString(buildTarget.getFullyQualifiedName(), UTF_8),
               description,
               arg,

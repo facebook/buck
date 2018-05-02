@@ -75,7 +75,7 @@ public class TargetNodeFactory implements NodeCopier {
   }
 
   @SuppressWarnings("unchecked")
-  public <T, U extends Description<T>> TargetNode<T, U> create(
+  private <T, U extends Description<T>> TargetNode<T, U> create(
       HashCode rawInputsHashCode,
       U description,
       T constructorArg,
