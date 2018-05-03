@@ -143,12 +143,7 @@ public class CacheCommand extends AbstractCommand {
 
       fakeOutParseEvents(params.getBuckEventBus());
 
-      // Post the build started event, setting it to the Parser recorded start time if appropriate.
-      if (params.getParser().getParseStartTime().isPresent()) {
-        params.getBuckEventBus().post(started, params.getParser().getParseStartTime().get());
-      } else {
-        params.getBuckEventBus().post(started);
-      }
+      params.getBuckEventBus().post(started);
 
       // Fetch all artifacts
       List<ListenableFuture<ArtifactRunner>> futures = new ArrayList<>();

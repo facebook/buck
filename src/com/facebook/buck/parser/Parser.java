@@ -23,7 +23,6 @@ import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.HasDefaultFlavors;
 import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypesProvider;
 import com.facebook.buck.counters.Counter;
-import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
@@ -639,10 +638,6 @@ public class Parser {
   public void recordParseStartTime(BuckEventBus eventBus) {
     LOG.debug(eventBus.toString());
     // Does nothing
-  }
-
-  public Optional<BuckEvent> getParseStartTime() {
-    return Optional.empty();
   }
 
   public ImmutableList<Counter> getCounters() {

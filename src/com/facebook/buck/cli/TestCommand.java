@@ -458,13 +458,8 @@ public class TestCommand extends BuildCommand {
             new CommandThreadManager("Test", getConcurrencyLimit(params.getBuckConfig()));
         CloseableMemoizedSupplier<ForkJoinPool> poolSupplier =
             getForkJoinPoolSupplier(params.getBuckConfig())) {
-      // Post the build started event, setting it to the Parser recorded start time if appropriate.
       BuildEvent.Started started = BuildEvent.started(getArguments());
-      if (params.getParser().getParseStartTime().isPresent()) {
-        params.getBuckEventBus().post(started, params.getParser().getParseStartTime().get());
-      } else {
-        params.getBuckEventBus().post(started);
-      }
+      params.getBuckEventBus().post(started);
 
       // The first step is to parse all of the build files. This will populate the parser and find
       // all of the test rules.
