@@ -176,9 +176,24 @@ public class RDotTxtEntry implements Comparable<RDotTxtEntry> {
     this.idType = idType;
     this.type = type;
     this.name = name;
-    this.idValue = idValue;
+    this.idValue = hexDecimalStringValue(idType, type, idValue);
     this.customType = customType;
     this.parent = parent != null ? parent : name;
+  }
+
+  /*
+   * Convert integer string values to hex decimal string for
+   * non integer arrays and non styleable entries.
+   */
+  private static String hexDecimalStringValue(IdType idType, RType type, String idValue) {
+    if (idType == IdType.INT_ARRAY || type == RType.STYLEABLE) {
+      return idValue;
+    }
+    if (idValue.length() == 0 || idValue.startsWith("0x")) {
+      return idValue;
+    } else {
+      return String.format("0x%08x", Integer.parseInt(idValue));
+    }
   }
 
   public int getNumArrayValues() {

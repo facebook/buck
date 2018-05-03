@@ -474,38 +474,49 @@ public class MergeAndroidResourcesStep implements Step {
           }
           resource = resource.copyWithNewIdValue(finalIds.get(resource));
 
-        } else if (useOldStyleableFormat && resource.idValue.startsWith("0x7f")) {
-          Preconditions.checkNotNull(enumerator);
-          resource = resource.copyWithNewIdValue(String.format("0x%08x", enumerator.next()));
+        } else if (useOldStyleableFormat) {
+          if (resource.idValue.startsWith("0x7f")) {
+            Preconditions.checkNotNull(enumerator);
+            resource = resource.copyWithNewIdValue(String.format("0x%08x", enumerator.next()));
+          }
+        } else {
+          if (resourceToIdValuesMap.containsKey(resource)) {
+            resource = resourceToIdValuesMap.get(resource);
 
-        } else if (useOldStyleableFormat) { // NOPMD  more readable this way, IMO.
-          // Nothing extra to do in this case.
+          } else if (resource.idType == IdType.INT_ARRAY && resource.type == RType.STYLEABLE) {
+            Map<RDotTxtEntry, String> styleableResourcesMap =
+                getStyleableResources(
+                    resourceToIdValuesMap, linesInSymbolsFile, resource, index + 1);
 
-        } else if (resourceToIdValuesMap.containsKey(resource)) {
-          resource = resourceToIdValuesMap.get(resource);
+            for (RDotTxtEntry styleableResource : styleableResourcesMap.keySet()) {
+              resourceToIdValuesMap.put(styleableResource, styleableResource);
+            }
 
-        } else if (resource.idType == IdType.INT_ARRAY && resource.type == RType.STYLEABLE) {
-          Map<RDotTxtEntry, String> styleableResourcesMap =
-              getStyleableResources(resourceToIdValuesMap, linesInSymbolsFile, resource, index + 1);
+            // int[] styleable entry is not added to the cache as
+            // the number of child can differ in dependent libraries
+            resource =
+                resource.copyWithNewIdValue(
+                    String.format(
+                        "{ %s }",
+                        Joiner.on(RDotTxtEntry.INT_ARRAY_SEPARATOR)
+                            .join(styleableResourcesMap.values())));
+          } else {
+            // Framework resources starts with 0x01 and are constants
+            // which should not be assigned a custom R value.
+            if (!resource.idValue.startsWith("0x01")) {
+              Preconditions.checkNotNull(enumerator);
+              resource = resource.copyWithNewIdValue(String.format("0x%08x", enumerator.next()));
+            }
 
-          for (RDotTxtEntry styleableResource : styleableResourcesMap.keySet()) {
-            resourceToIdValuesMap.put(styleableResource, styleableResource);
+            // Add resource to cache so that the id value is consistent across all R.txt
+            resourceToIdValuesMap.put(resource, resource);
           }
 
-          // int[] styleable entry is not added to the cache as
-          // the number of child can differ in dependent libraries
-          resource =
-              resource.copyWithNewIdValue(
-                  String.format(
-                      "{ %s }",
-                      Joiner.on(RDotTxtEntry.INT_ARRAY_SEPARATOR)
-                          .join(styleableResourcesMap.values())));
-        } else {
-          Preconditions.checkNotNull(enumerator);
-          resource = resource.copyWithNewIdValue(String.format("0x%08x", enumerator.next()));
-
-          // Add resource to cache so that the id value is consistent across all R.txt
-          resourceToIdValuesMap.put(resource, resource);
+          // Framework resources starts with 0x01 which should not be
+          // included in the R.txt as they come from android package.
+          if (resource.idValue.startsWith("0x01")) {
+            continue;
+          }
         }
 
         if (bannedDuplicateResourceTypes.contains(resource.type)) {
