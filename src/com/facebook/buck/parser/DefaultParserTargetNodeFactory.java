@@ -45,6 +45,7 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.hash.HashCode;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
 import java.io.IOException;
@@ -122,6 +123,59 @@ public class DefaultParserTargetNodeFactory
     // Because of the way that the parser works, we know this can never return null.
     Description<?> description = knownBuildRuleTypes.getDescription(buildRuleType);
 
+    verifyUnflavoredBuildTarget(cell, buildRuleType, buildFile, target, description, rawNode);
+
+    Preconditions.checkState(cell.equals(cell.getCell(target)));
+    Object constructorArg;
+    try {
+      ImmutableSet.Builder<BuildTarget> declaredDeps = ImmutableSet.builder();
+      ImmutableSet<VisibilityPattern> visibilityPatterns;
+      ImmutableSet<VisibilityPattern> withinViewPatterns;
+      try (SimplePerfEvent.Scope scope =
+          perfEventScope.apply(PerfEventId.of("MarshalledConstructorArg"))) {
+        constructorArg =
+            marshaller.populate(
+                cell.getCellPathResolver(),
+                cell.getFilesystem(),
+                target,
+                description.getConstructorArgType(),
+                declaredDeps,
+                rawNode);
+        visibilityPatterns =
+            ConstructorArgMarshaller.populateVisibilityPatterns(
+                cell.getCellPathResolver(), "visibility", rawNode.get("visibility"), target);
+        withinViewPatterns =
+            ConstructorArgMarshaller.populateVisibilityPatterns(
+                cell.getCellPathResolver(), "within_view", rawNode.get("within_view"), target);
+      }
+
+      return createTargetNodeFromObject(
+          cell,
+          buildFile,
+          target,
+          description,
+          constructorArg,
+          rawNode,
+          declaredDeps.build(),
+          visibilityPatterns,
+          withinViewPatterns,
+          perfEventScope);
+    } catch (NoSuchBuildTargetException e) {
+      throw new HumanReadableException(e);
+    } catch (ParamInfoException e) {
+      throw new HumanReadableException(e, "%s: %s", target, e.getMessage());
+    } catch (IOException e) {
+      throw new HumanReadableException(e.getMessage(), e);
+    }
+  }
+
+  private static void verifyUnflavoredBuildTarget(
+      Cell cell,
+      BuildRuleType buildRuleType,
+      Path buildFile,
+      BuildTarget target,
+      Description<?> description,
+      Map<String, Object> rawNode) {
     UnflavoredBuildTarget unflavoredBuildTarget = target.getUnflavoredBuildTarget();
     if (target.isFlavored()) {
       if (description instanceof Flavored) {
@@ -160,61 +214,47 @@ public class DefaultParserTargetNodeFactory
               unflavoredBuildTarget,
               Joiner.on(',').withKeyValueSeparator("->").join(rawNode)));
     }
+  }
 
-    Preconditions.checkState(cell.equals(cell.getCell(target)));
-    Object constructorArg;
-    try {
-      ImmutableSet.Builder<BuildTarget> declaredDeps = ImmutableSet.builder();
-      ImmutableSet<VisibilityPattern> visibilityPatterns;
-      ImmutableSet<VisibilityPattern> withinViewPatterns;
-      try (SimplePerfEvent.Scope scope =
-          perfEventScope.apply(PerfEventId.of("MarshalledConstructorArg"))) {
-        constructorArg =
-            marshaller.populate(
-                cell.getCellPathResolver(),
-                cell.getFilesystem(),
-                target,
-                description.getConstructorArgType(),
-                declaredDeps,
-                rawNode);
-        visibilityPatterns =
-            ConstructorArgMarshaller.populateVisibilityPatterns(
-                cell.getCellPathResolver(), "visibility", rawNode.get("visibility"), target);
-        withinViewPatterns =
-            ConstructorArgMarshaller.populateVisibilityPatterns(
-                cell.getCellPathResolver(), "within_view", rawNode.get("within_view"), target);
+  private TargetNode<?, ?> createTargetNodeFromObject(
+      Cell cell,
+      Path buildFile,
+      BuildTarget target,
+      Description<?> description,
+      Object constructorArg,
+      Map<String, Object> rawNode,
+      ImmutableSet<BuildTarget> declaredDeps,
+      ImmutableSet<VisibilityPattern> visibilityPatterns,
+      ImmutableSet<VisibilityPattern> withinViewPatterns,
+      Function<PerfEventId, SimplePerfEvent.Scope> perfEventScope)
+      throws IOException {
+    try (SimplePerfEvent.Scope scope = perfEventScope.apply(PerfEventId.of("CreatedTargetNode"))) {
+      TargetNode<?, ?> node =
+          targetNodeFactory.createFromObject(
+              hashRawNode(rawNode),
+              description,
+              constructorArg,
+              cell.getFilesystem(),
+              target,
+              declaredDeps,
+              visibilityPatterns,
+              withinViewPatterns,
+              cell.getCellPathResolver());
+      if (buildFileTrees.isPresent()
+          && cell.isEnforcingBuckPackageBoundaries(target.getBasePath())) {
+        enforceBuckPackageBoundaries(
+            cell, target, buildFileTrees.get().getUnchecked(cell), node.getInputs());
       }
-      try (SimplePerfEvent.Scope scope =
-          perfEventScope.apply(PerfEventId.of("CreatedTargetNode"))) {
-        Hasher hasher = Hashing.sha1().newHasher();
-        hasher.putString(ruleKeyConfiguration.getCoreKey(), UTF_8);
-        JsonObjectHashing.hashJsonObject(hasher, rawNode);
-        TargetNode<?, ?> node =
-            targetNodeFactory.createFromObject(
-                hasher.hash(),
-                description,
-                constructorArg,
-                cell.getFilesystem(),
-                target,
-                declaredDeps.build(),
-                visibilityPatterns,
-                withinViewPatterns,
-                cell.getCellPathResolver());
-        if (buildFileTrees.isPresent()
-            && cell.isEnforcingBuckPackageBoundaries(target.getBasePath())) {
-          enforceBuckPackageBoundaries(
-              cell, target, buildFileTrees.get().getUnchecked(cell), node.getInputs());
-        }
-        nodeListener.onCreate(buildFile, node);
-        return node;
-      }
-    } catch (NoSuchBuildTargetException e) {
-      throw new HumanReadableException(e);
-    } catch (ParamInfoException e) {
-      throw new HumanReadableException(e, "%s: %s", target, e.getMessage());
-    } catch (IOException e) {
-      throw new HumanReadableException(e.getMessage(), e);
+      nodeListener.onCreate(buildFile, node);
+      return node;
     }
+  }
+
+  private HashCode hashRawNode(Map<String, Object> rawNode) {
+    Hasher hasher = Hashing.sha1().newHasher();
+    hasher.putString(ruleKeyConfiguration.getCoreKey(), UTF_8);
+    JsonObjectHashing.hashJsonObject(hasher, rawNode);
+    return hasher.hash();
   }
 
   protected void enforceBuckPackageBoundaries(
