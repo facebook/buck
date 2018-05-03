@@ -2741,7 +2741,7 @@ public class CachingBuildEngineTest {
       // The manifest should only contain the inputs that were in the dep file. The non-eligible
       // dependency went toward computing the manifest key and thus doesn't need to be in the value.
       assertThat(
-          manifest.toMap(),
+          ManifestUtil.toMap(manifest),
           equalTo(
               ImmutableMap.of(
                   depFileRuleKey,
@@ -2822,7 +2822,7 @@ public class CachingBuildEngineTest {
 
       // Seed the cache with an existing manifest with a dummy entry.
       Manifest manifest =
-          Manifest.fromMap(
+          ManifestUtil.fromMap(
               depFilefactory.buildManifestKey(rule).getRuleKey(),
               ImmutableMap.of(
                   new RuleKey("abcd"), ImmutableMap.of("some/path.h", HashCode.fromInt(12))));
@@ -2864,7 +2864,7 @@ public class CachingBuildEngineTest {
       assertThat(cacheResult.getType(), equalTo(CacheResultType.HIT));
       manifest = loadManifest(fetchedManifest);
       assertThat(
-          manifest.toMap(),
+          ManifestUtil.toMap(manifest),
           equalTo(
               ImmutableMap.of(
                   depFileRuleKey,
@@ -2948,7 +2948,7 @@ public class CachingBuildEngineTest {
       // Seed the cache with an existing manifest with a dummy entry so that it's already at the max
       // size.
       Manifest manifest =
-          Manifest.fromMap(
+          ManifestUtil.fromMap(
               depFilefactory.buildManifestKey(rule).getRuleKey(),
               ImmutableMap.of(
                   new RuleKey("abcd"), ImmutableMap.of("some/path.h", HashCode.fromInt(12))));
@@ -2990,7 +2990,7 @@ public class CachingBuildEngineTest {
       assertThat(cacheResult.getType(), equalTo(CacheResultType.HIT));
       manifest = loadManifest(fetchedManifest);
       assertThat(
-          manifest.toMap(),
+          ManifestUtil.toMap(manifest),
           equalTo(
               ImmutableMap.of(
                   depFileRuleKey,
@@ -3239,7 +3239,8 @@ public class CachingBuildEngineTest {
                   depFilefactory.buildManifestKey(rule).getRuleKey(), fetchedManifest));
       assertTrue(cacheResult.getType().isSuccess());
       Manifest cachedManifest = loadManifest(fetchedManifest.get());
-      assertThat(cachedManifest.toMap().keySet(), Matchers.not(hasItem(staleDepFileRuleKey)));
+      assertThat(
+          ManifestUtil.toMap(cachedManifest).keySet(), Matchers.not(hasItem(staleDepFileRuleKey)));
     }
   }
 

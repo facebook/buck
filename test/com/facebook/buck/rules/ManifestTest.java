@@ -52,12 +52,14 @@ public class ManifestTest {
   public void toMap() {
     ImmutableMap<RuleKey, ImmutableMap<String, HashCode>> entries =
         ImmutableMap.of(new RuleKey("aa"), ImmutableMap.of("foo/bar.h", HashCode.fromInt(20)));
-    assertThat(Manifest.fromMap(new RuleKey("cc"), entries).toMap(), Matchers.equalTo(entries));
+    assertThat(
+        ManifestUtil.toMap(ManifestUtil.fromMap(new RuleKey("cc"), entries)),
+        Matchers.equalTo(entries));
   }
 
   @Test
   public void emptyManifest() {
-    assertThat(new Manifest(new RuleKey("cc")).toMap().entrySet(), Matchers.empty());
+    assertThat(ManifestUtil.toMap(new Manifest(new RuleKey("cc"))).entrySet(), Matchers.empty());
   }
 
   @Test
@@ -65,10 +67,10 @@ public class ManifestTest {
     ImmutableMap<RuleKey, ImmutableMap<String, HashCode>> entries =
         ImmutableMap.of(new RuleKey("aa"), ImmutableMap.of("foo/bar.h", HashCode.fromInt(20)));
     ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-    Manifest.fromMap(new RuleKey("cc"), entries).serialize(byteArrayOutputStream);
+    ManifestUtil.fromMap(new RuleKey("cc"), entries).serialize(byteArrayOutputStream);
     Manifest deserialized =
         new Manifest(new ByteArrayInputStream(byteArrayOutputStream.toByteArray()));
-    assertThat(deserialized.toMap(), Matchers.equalTo(entries));
+    assertThat(ManifestUtil.toMap(deserialized), Matchers.equalTo(entries));
   }
 
   @Test
@@ -81,7 +83,7 @@ public class ManifestTest {
         new FakeFileHashCache(ImmutableMap.of(RESOLVER.getAbsolutePath(input), hashCode));
     manifest.addEntry(fileHashCache, key, RESOLVER, ImmutableSet.of(input), ImmutableSet.of(input));
     assertThat(
-        manifest.toMap(),
+        ManifestUtil.toMap(manifest),
         Matchers.equalTo(
             ImmutableMap.of(
                 key, ImmutableMap.of(RESOLVER.getRelativePath(input).toString(), hashCode))));
@@ -101,7 +103,7 @@ public class ManifestTest {
             new HashMap<>());
     manifest.addEntry(fileHashCache, key, RESOLVER, ImmutableSet.of(input), ImmutableSet.of(input));
     assertThat(
-        manifest.toMap(),
+        ManifestUtil.toMap(manifest),
         Matchers.equalTo(
             ImmutableMap.of(
                 key,
@@ -135,7 +137,7 @@ public class ManifestTest {
     manifest1.addEntry(
         fileHashCache, key, RESOLVER, ImmutableSet.of(input1, input2), ImmutableSet.of(input1));
     assertThat(
-        manifest1.toMap(),
+        ManifestUtil.toMap(manifest1),
         Matchers.equalTo(
             ImmutableMap.of(
                 key,
@@ -148,7 +150,7 @@ public class ManifestTest {
     manifest2.addEntry(
         fileHashCache, key, RESOLVER, ImmutableSet.of(input1, input2), ImmutableSet.of(input2));
     assertThat(
-        manifest2.toMap(),
+        ManifestUtil.toMap(manifest2),
         Matchers.equalTo(
             ImmutableMap.of(
                 key,
@@ -164,7 +166,7 @@ public class ManifestTest {
     SourcePath input = FakeSourcePath.of("input.h");
     HashCode hashCode = HashCode.fromInt(20);
     Manifest manifest =
-        Manifest.fromMap(
+        ManifestUtil.fromMap(
             new RuleKey("cc"),
             ImmutableMap.of(
                 key, ImmutableMap.of(RESOLVER.getRelativePath(input).toString(), hashCode)));
@@ -198,7 +200,7 @@ public class ManifestTest {
                 hashCode2));
 
     Manifest manifest1 =
-        Manifest.fromMap(
+        ManifestUtil.fromMap(
             new RuleKey("cc"),
             ImmutableMap.of(
                 key,
@@ -211,7 +213,7 @@ public class ManifestTest {
         Matchers.equalTo(Optional.of(key)));
 
     Manifest manifest2 =
-        Manifest.fromMap(
+        ManifestUtil.fromMap(
             new RuleKey("cc"),
             ImmutableMap.of(
                 key,
@@ -229,7 +231,7 @@ public class ManifestTest {
     RuleKey key = new RuleKey("aa");
     SourcePath input = FakeSourcePath.of("input.h");
     Manifest manifest =
-        Manifest.fromMap(
+        ManifestUtil.fromMap(
             new RuleKey("cc"),
             ImmutableMap.of(
                 key,
@@ -247,7 +249,7 @@ public class ManifestTest {
     RuleKey key = new RuleKey("aa");
     SourcePath input = FakeSourcePath.of("input.h");
     Manifest manifest =
-        Manifest.fromMap(
+        ManifestUtil.fromMap(
             new RuleKey("cc"),
             ImmutableMap.of(
                 key,
@@ -264,7 +266,7 @@ public class ManifestTest {
     RuleKey key2 = new RuleKey("bb");
     SourcePath input = FakeSourcePath.of("input.h");
     Manifest manifest =
-        Manifest.fromMap(
+        ManifestUtil.fromMap(
             new RuleKey("cc"),
             ImmutableMap.of(
                 key1,
@@ -283,13 +285,13 @@ public class ManifestTest {
   public void size() {
     assertThat(new Manifest(new RuleKey("cc")).size(), Matchers.equalTo(0));
     assertThat(
-        Manifest.fromMap(
+        ManifestUtil.fromMap(
                 new RuleKey("cc"),
                 ImmutableMap.of(new RuleKey("aa"), ImmutableMap.of("foo.h", HashCode.fromInt(0))))
             .size(),
         Matchers.equalTo(1));
     assertThat(
-        Manifest.fromMap(
+        ManifestUtil.fromMap(
                 new RuleKey("cc"),
                 ImmutableMap.of(
                     new RuleKey("aa"),
@@ -303,7 +305,7 @@ public class ManifestTest {
   @Test
   public void stats() {
     assertThat(
-        Manifest.fromMap(
+        ManifestUtil.fromMap(
                 new RuleKey("cc"),
                 ImmutableMap.of(
                     new RuleKey("aa"),

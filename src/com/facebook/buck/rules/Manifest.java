@@ -28,7 +28,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hasher;
@@ -55,13 +54,13 @@ public class Manifest {
 
   private final RuleKey key;
 
-  private final List<String> inputs;
+  @VisibleForTesting final List<String> inputs;
   private final Map<String, Integer> inputIndices;
 
-  private final List<Pair<Integer, HashCode>> hashes;
+  @VisibleForTesting final List<Pair<Integer, HashCode>> hashes;
   private final Map<HashCode, Integer> hashIndices;
 
-  private final List<Pair<RuleKey, int[]>> entries;
+  @VisibleForTesting final List<Pair<RuleKey, int[]>> entries;
 
   /** Create an empty manifest. */
   public Manifest(RuleKey key) {
@@ -123,7 +122,8 @@ public class Manifest {
     return key;
   }
 
-  private Integer addHash(String input, HashCode hash) {
+  @VisibleForTesting
+  Integer addHash(String input, HashCode hash) {
     Integer inputIndex = inputIndices.get(input);
     if (inputIndex == null) {
       inputs.add(input);
@@ -296,37 +296,6 @@ public class Manifest {
 
   public int size() {
     return entries.size();
-  }
-
-  @VisibleForTesting
-  ImmutableMap<RuleKey, ImmutableMap<String, HashCode>> toMap() {
-    ImmutableMap.Builder<RuleKey, ImmutableMap<String, HashCode>> builder = ImmutableMap.builder();
-    for (Pair<RuleKey, int[]> entry : entries) {
-      ImmutableMap.Builder<String, HashCode> entryBuilder = ImmutableMap.builder();
-      for (int hashIndex : entry.getSecond()) {
-        Pair<Integer, HashCode> hashEntry = hashes.get(hashIndex);
-        String input = inputs.get(hashEntry.getFirst());
-        HashCode inputHash = hashEntry.getSecond();
-        entryBuilder.put(input, inputHash);
-      }
-      builder.put(entry.getFirst(), entryBuilder.build());
-    }
-    return builder.build();
-  }
-
-  @VisibleForTesting
-  static Manifest fromMap(RuleKey key, ImmutableMap<RuleKey, ImmutableMap<String, HashCode>> map) {
-    Manifest manifest = new Manifest(key);
-    for (Map.Entry<RuleKey, ImmutableMap<String, HashCode>> entry : map.entrySet()) {
-      int entryHashIndex = 0;
-      int[] entryHashIndices = new int[entry.getValue().size()];
-      for (Map.Entry<String, HashCode> innerEntry : entry.getValue().entrySet()) {
-        entryHashIndices[entryHashIndex++] =
-            manifest.addHash(innerEntry.getKey(), innerEntry.getValue());
-      }
-      manifest.entries.add(new Pair<>(entry.getKey(), entryHashIndices));
-    }
-    return manifest;
   }
 
   /**
