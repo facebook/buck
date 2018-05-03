@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
+package com.facebook.buck.core.build.engine.buildinfo;
 
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.util.cache.FileHashCache;
@@ -28,7 +28,7 @@ import java.util.Optional;
 import java.util.zip.ZipFile;
 
 /** Provides access to the on-disk rule metadata (both "artifact" and "build"). */
-interface OnDiskBuildInfo {
+public interface OnDiskBuildInfo {
 
   /** @return the rule "artifact" metadata value associated with the specified key, if it exists. */
   Optional<String> getValue(String key);

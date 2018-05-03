@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
+package com.facebook.buck.core.build.engine.buildinfo;
 
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.ArtifactUploader;
@@ -67,7 +67,7 @@ import javax.annotation.Nullable;
  */
 public class BuildInfoRecorder {
   @SuppressWarnings("unused")
-  private static final Logger LOG = Logger.get(BuildRuleResolver.class);
+  private static final Logger LOG = Logger.get(BuildInfoRecorder.class);
 
   @VisibleForTesting
   static final String ABSOLUTE_PATH_ERROR_FORMAT =
@@ -88,7 +88,7 @@ public class BuildInfoRecorder {
   /** Every value in this set is a path relative to the project root. */
   private final Set<Path> pathsToOutputs;
 
-  BuildInfoRecorder(
+  public BuildInfoRecorder(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildInfoStore buildInfoStore,
@@ -304,7 +304,7 @@ public class BuildInfoRecorder {
     return metadataToWrite.get(key);
   }
 
-  Optional<String> getBuildMetadataFor(String key) {
+  public Optional<String> getBuildMetadataFor(String key) {
     return Optional.ofNullable(buildMetadata.get(key));
   }
 

@@ -22,6 +22,7 @@ java_test(
         "//src/com/facebook/buck/artifact_cache:artifact_cache",
         "//src/com/facebook/buck/cli:cli",
         "//src/com/facebook/buck/config:config",
+        "//src/com/facebook/buck/core/build/engine/buildinfo:buildinfo",
         "//src/com/facebook/buck/core/cell:cell",
         "//src/com/facebook/buck/core/sourcepath/resolver/impl:impl",
         "//src/com/facebook/buck/core/toolchain/tool/impl:impl",

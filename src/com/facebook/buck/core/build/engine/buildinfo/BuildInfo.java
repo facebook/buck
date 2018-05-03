@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
+package com.facebook.buck.core.build.engine.buildinfo;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.RuleKey;
@@ -33,46 +33,46 @@ public class BuildInfo {
     private MetadataKey() {}
 
     /** Key for {@link OnDiskBuildInfo} which lists the recorded items. */
-    static final String RECORDED_PATHS = "RECORDED_PATHS";
+    public static final String RECORDED_PATHS = "RECORDED_PATHS";
 
     /** Key for {@link OnDiskBuildInfo} with a map of outputs to hashes. */
-    static final String RECORDED_PATH_HASHES = "RECORDED_PATH_HASHES";
+    public static final String RECORDED_PATH_HASHES = "RECORDED_PATH_HASHES";
 
     /** Key for {@link OnDiskBuildInfo} to identify additional info describing a build. */
-    static final String ADDITIONAL_INFO = "ADDITIONAL_INFO";
+    public static final String ADDITIONAL_INFO = "ADDITIONAL_INFO";
 
     /** Key for {@link OnDiskBuildInfo} to identify the RuleKey for a build rule. */
     public static final String RULE_KEY = "RULE_KEY";
 
     /** Key for {@link OnDiskBuildInfo} to identify the input RuleKey for a build rule. */
-    static final String INPUT_BASED_RULE_KEY = "INPUT_BASED_RULE_KEY";
+    public static final String INPUT_BASED_RULE_KEY = "INPUT_BASED_RULE_KEY";
 
     /**
      * Key for {@link OnDiskBuildInfo} to identify the dependency-file {@link RuleKey} for a build
      * rule.
      */
-    static final String DEP_FILE_RULE_KEY = "DEP_FILE_RULE_KEY";
+    public static final String DEP_FILE_RULE_KEY = "DEP_FILE_RULE_KEY";
 
     /** Key for {@link OnDiskBuildInfo} to identify the dependency-file for a build rule. */
-    static final String DEP_FILE = "DEP_FILE";
+    public static final String DEP_FILE = "DEP_FILE";
 
     /** Key for {@link OnDiskBuildInfo} to store the build target of the owning build rule. */
     public static final String TARGET = "TARGET";
 
     /** Key for {@link OnDiskBuildInfo} to store the cache key of the manifest. */
-    static final String MANIFEST_KEY = "MANIFEST_KEY";
+    public static final String MANIFEST_KEY = "MANIFEST_KEY";
 
     /** Key containing the ID of the current build. */
-    static final String BUILD_ID = "BUILD_ID";
+    public static final String BUILD_ID = "BUILD_ID";
 
     /** Key containing the ID of the build that previously built/cached this rule's outputs. */
-    static final String ORIGIN_BUILD_ID = "ORIGIN_BUILD_ID";
+    public static final String ORIGIN_BUILD_ID = "ORIGIN_BUILD_ID";
 
     /** Key for {@link OnDiskBuildInfo} to store the size of the output. */
-    static final String OUTPUT_SIZE = "OUTPUT_SIZE";
+    public static final String OUTPUT_SIZE = "OUTPUT_SIZE";
 
     /** Key for {@link OnDiskBuildInfo} to store the hash of the output. */
-    static final String OUTPUT_HASH = "OUTPUT_HASH";
+    public static final String OUTPUT_HASH = "OUTPUT_HASH";
   }
 
   public static final ImmutableSet<String> METADATA_KEYS =
@@ -90,7 +90,7 @@ public class BuildInfo {
           MetadataKey.ORIGIN_BUILD_ID);
 
   /** All keys corresponding to rule keys. */
-  static final ImmutableSet<String> RULE_KEY_NAMES =
+  public static final ImmutableSet<String> RULE_KEY_NAMES =
       ImmutableSet.of(
           MetadataKey.RULE_KEY, MetadataKey.INPUT_BASED_RULE_KEY, MetadataKey.DEP_FILE_RULE_KEY);
 
@@ -98,7 +98,7 @@ public class BuildInfo {
    * Key for {@link OnDiskBuildInfo} to store the manifest for build rules supporting manifest-based
    * caching.
    */
-  static final String MANIFEST = "MANIFEST";
+  public static final String MANIFEST = "MANIFEST";
 
   /** Utility class: do not instantiate. */
   private BuildInfo() {}

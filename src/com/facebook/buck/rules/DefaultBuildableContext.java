@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.core.build.engine.buildinfo.BuildInfoRecorder;
 import java.nio.file.Path;
 
 public class DefaultBuildableContext implements BuildableContext {

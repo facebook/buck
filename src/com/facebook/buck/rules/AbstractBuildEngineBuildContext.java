@@ -16,6 +16,10 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.artifact_cache.ArtifactCache;
+import com.facebook.buck.core.build.engine.buildinfo.BuildInfoRecorder;
+import com.facebook.buck.core.build.engine.buildinfo.BuildInfoStore;
+import com.facebook.buck.core.build.engine.buildinfo.DefaultOnDiskBuildInfo;
+import com.facebook.buck.core.build.engine.buildinfo.OnDiskBuildInfo;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;

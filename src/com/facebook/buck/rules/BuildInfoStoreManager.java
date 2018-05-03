@@ -16,7 +16,11 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.core.build.engine.buildinfo.BuildInfoStore;
+import com.facebook.buck.core.build.engine.buildinfo.FilesystemBuildInfoStore;
+import com.facebook.buck.core.build.engine.buildinfo.SQLiteBuildInfoStore;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.rules.CachingBuildEngine.MetadataStorage;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -33,8 +37,7 @@ public class BuildInfoStoreManager implements AutoCloseable {
     }
   }
 
-  public BuildInfoStore get(
-      ProjectFilesystem filesystem, CachingBuildEngine.MetadataStorage metadataStorage) {
+  public BuildInfoStore get(ProjectFilesystem filesystem, MetadataStorage metadataStorage) {
     return buildInfoStores.computeIfAbsent(
         filesystem.getRootPath(),
         path -> {
@@ -53,8 +56,8 @@ public class BuildInfoStoreManager implements AutoCloseable {
         });
   }
 
-  private static CachingBuildEngine.MetadataStorage getMetadataStorage(
-      ProjectFilesystem filesystem, CachingBuildEngine.MetadataStorage metadataStorage) {
+  private static MetadataStorage getMetadataStorage(
+      ProjectFilesystem filesystem, MetadataStorage metadataStorage) {
     Path metadataPath = BuildInfoStore.getMetadataTypePath(filesystem);
     Optional<String> metadataString = filesystem.readFileIfItExists(metadataPath);
     // If we haven't written metadata.type at this point, we must be in a fresh directory.  Use the

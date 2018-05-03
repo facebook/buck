@@ -25,6 +25,6 @@ import java.nio.file.Path;
  * BuildRule#getBuildSteps(BuildContext, BuildableContext)}.
  */
 public interface BuildableContext {
-  /** @see BuildInfoRecorder#recordArtifact(Path) */
+  /** @see com.facebook.buck.core.build.engine.buildinfo.BuildInfoRecorder#recordArtifact(Path) */
   void recordArtifact(Path pathToArtifact);
 }
