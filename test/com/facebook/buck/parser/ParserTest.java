@@ -2055,7 +2055,7 @@ public class ParserTest {
         parser.buildTargetGraph(eventBus, cell, false, executorService, buildTargets);
 
     // Serialize target graph information.
-    RemoteDaemonicParserState remote = parser.storeParserState(cell);
+    RemoteDaemonicParserState remote = parser.getPermState().serializeDaemonicParserState(cell);
 
     assertTrue(remote.isSetCachedIncludes());
     assertEquals(remote.cachedIncludes.size(), 1);
@@ -2081,7 +2081,7 @@ public class ParserTest {
             knownBuildRuleTypesProvider,
             executableFinder);
     // Restore state.
-    parser.restoreParserState(remote, cell);
+    parser.getPermState().restoreState(remote, cell);
     // Try to use the restored target graph.
     TargetGraph newGraph =
         parser

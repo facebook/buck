@@ -76,7 +76,8 @@ public class ParserCacheCommand extends AbstractCommand {
 
     if (saveFilename != null) {
       invalidateChanges(params);
-      RemoteDaemonicParserState state = params.getParser().storeParserState(params.getCell());
+      RemoteDaemonicParserState state =
+          params.getParser().getPermState().serializeDaemonicParserState(params.getCell());
       try (FileOutputStream fos = new FileOutputStream(saveFilename);
           ZipOutputStream zipos = new ZipOutputStream(fos)) {
         zipos.putNextEntry(new ZipEntry("parser_data"));
@@ -97,7 +98,7 @@ public class ParserCacheCommand extends AbstractCommand {
             params.getConsole().printErrorText("Invalid file format");
             return ExitCode.COMMANDLINE_ERROR;
           }
-          params.getParser().restoreParserState(state, params.getCell());
+          params.getParser().getPermState().restoreState(state, params.getCell());
         }
       }
       invalidateChanges(params);
@@ -138,7 +139,7 @@ public class ParserCacheCommand extends AbstractCommand {
           isRemoved = true;
         }
         Path fullPath = params.getCell().getRoot().resolve(path).normalize();
-        params.getParser().invalidateBasedOnPath(fullPath, isAdded || isRemoved);
+        params.getParser().getPermState().invalidateBasedOnPath(fullPath, isAdded || isRemoved);
       }
     }
   }

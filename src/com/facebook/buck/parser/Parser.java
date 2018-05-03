@@ -36,7 +36,6 @@ import com.facebook.buck.model.ImmutableBuildTarget;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.facebook.buck.parser.exceptions.MissingBuildFileException;
-import com.facebook.buck.parser.thrift.RemoteDaemonicParserState;
 import com.facebook.buck.rules.ImplicitFlavorsInferringDescription;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphAndBuildTargets;
@@ -608,14 +607,6 @@ public class Parser {
     return target.withFlavors(defaultFlavors);
   }
 
-  public RemoteDaemonicParserState storeParserState(Cell rootCell) throws IOException {
-    return getPermState().serializeDaemonicParserState(rootCell);
-  }
-
-  public void restoreParserState(RemoteDaemonicParserState state, Cell rootCell) {
-    getPermState().restoreState(state, rootCell);
-  }
-
   @Subscribe
   public void onFileSystemChange(WatchmanOverflowEvent event) {
     LOG.verbose("Parser watched event OVERFLOW %s", event.getReason());
@@ -627,9 +618,5 @@ public class Parser {
     LOG.verbose("Parser watched event %s %s", event.getKind(), event.getPath());
 
     permState.invalidateBasedOn(event);
-  }
-
-  public void invalidateBasedOnPath(Path fullPath, boolean isCreatedOrDeleted) {
-    permState.invalidateBasedOnPath(fullPath, isCreatedOrDeleted);
   }
 }
