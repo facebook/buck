@@ -18,18 +18,23 @@ package com.facebook.buck.skylark.parser;
 
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
+import com.google.common.collect.ImmutableSet;
 import com.google.devtools.build.lib.events.Event;
 import com.google.devtools.build.lib.events.EventHandler;
 import com.google.devtools.build.lib.events.EventKind;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * A simple class that posts log events from skylark as {@link ConsoleEvent} the provided event bus
  */
 public class ConsoleEventHandler implements EventHandler {
-
+  private static final Pattern UNDEFINED_VARIABLE_PATTERN =
+      Pattern.compile("^name '(\\w+)' is not defined$", Pattern.MULTILINE);
   private final BuckEventBus eventBus;
   private final Set<EventKind> supportedEvents;
+  private final ImmutableSet<String> nativeModuleFunctionNames;
 
   /**
    * Create an instance of {@link ConsoleEventHandler} that posts to {@code eventBus}
@@ -37,9 +42,13 @@ public class ConsoleEventHandler implements EventHandler {
    * @param eventBus The event bus to post {@link ConsoleEvent} to
    * @param supportedEvents The events that should post to the event bus
    */
-  public ConsoleEventHandler(BuckEventBus eventBus, Set<EventKind> supportedEvents) {
+  public ConsoleEventHandler(
+      BuckEventBus eventBus,
+      Set<EventKind> supportedEvents,
+      ImmutableSet<String> nativeModuleFunctionNames) {
     this.eventBus = eventBus;
     this.supportedEvents = supportedEvents;
+    this.nativeModuleFunctionNames = nativeModuleFunctionNames;
   }
 
   private static String getConsoleMessage(Event event) {
@@ -78,8 +87,10 @@ public class ConsoleEventHandler implements EventHandler {
       case FAIL:
       case TIMEOUT:
       case DEPCHECKER:
-      case ERROR:
         eventBus.post(ConsoleEvent.severe(getConsoleMessage(event)));
+        break;
+      case ERROR:
+        eventBus.post(ConsoleEvent.severe(checkNativeRules(getConsoleMessage(event))));
         break;
       case DEBUG:
       case PASS:
@@ -87,6 +98,15 @@ public class ConsoleEventHandler implements EventHandler {
       default:
         eventBus.post(ConsoleEvent.info(getConsoleMessage(event)));
         break;
+    }
+  }
+
+  private String checkNativeRules(String consoleMessage) {
+    Matcher matcher = UNDEFINED_VARIABLE_PATTERN.matcher(consoleMessage);
+    if (matcher.find() && nativeModuleFunctionNames.contains(matcher.group(1))) {
+      return matcher.replaceAll("$0. Did you mean native.$1?");
+    } else {
+      return consoleMessage;
     }
   }
 }

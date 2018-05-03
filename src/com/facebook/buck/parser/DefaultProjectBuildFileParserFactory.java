@@ -40,7 +40,9 @@ import com.facebook.buck.skylark.parser.SkylarkProjectBuildFileParser;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.devtools.build.lib.events.EventKind;
+import com.google.devtools.build.lib.syntax.EvalException;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Optional;
@@ -205,17 +207,26 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
       throw new RuntimeException(
           "Watchman glob handler was requested, but Watchman client cannot be created", e);
     }
-    return SkylarkProjectBuildFileParser.using(
-        buildFileParserOptions,
-        eventBus,
-        SkylarkFilesystem.using(cell.getFilesystem()),
+    BuckGlobals buckGlobals =
         BuckGlobals.builder()
             .setDisableImplicitNativeRules(buildFileParserOptions.getDisableImplicitNativeRules())
             .setDescriptions(buildFileParserOptions.getDescriptions())
             .setRuleFunctionFactory(new RuleFunctionFactory(typeCoercerFactory))
-            .build(),
-        new ConsoleEventHandler(eventBus, EventKind.ALL_EVENTS),
-        globberFactory);
+            .build();
+    try {
+      return SkylarkProjectBuildFileParser.using(
+          buildFileParserOptions,
+          eventBus,
+          SkylarkFilesystem.using(cell.getFilesystem()),
+          buckGlobals,
+          new ConsoleEventHandler(
+              eventBus,
+              EventKind.ALL_EVENTS,
+              ImmutableSet.copyOf(buckGlobals.getNativeModule().getFieldNames())),
+          globberFactory);
+    } catch (EvalException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   private static GlobberFactory getSkylarkGlobberFactory(

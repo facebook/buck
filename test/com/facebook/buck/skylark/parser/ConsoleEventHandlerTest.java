@@ -21,6 +21,7 @@ import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.FakeBuckEventListener;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.devtools.build.lib.events.Event;
 import com.google.devtools.build.lib.events.EventKind;
 import com.google.devtools.build.lib.events.Location;
@@ -56,7 +57,21 @@ public class ConsoleEventHandlerTest {
         ConsoleEvent.info("DEBUG: foo/bar:12:1: Message at level DEBUG"),
         ConsoleEvent.info("PASS: foo/bar:13:1: Message at level PASS"),
         ConsoleEvent.info("STDOUT: foo/bar:14:1: Message at level STDOUT"),
-        ConsoleEvent.severe("ERROR: No location given"));
+        ConsoleEvent.severe("ERROR: No location given"),
+        ConsoleEvent.severe(
+            "ERROR: foo/bar:15:1: Traceback (most recent call last):\n"
+                + "\tFile \"/Users/pjameson/local/buck/BUCK\", line 2\n"
+                + "\t\tfoo()\n"
+                + "\tFile \"/Users/pjameson/local/buck/defs.bzl\", line 3, in foo\n"
+                + "\t\tcxx_binary\n"
+                + "name 'unknown_function' is not defined"),
+        ConsoleEvent.severe(
+            "ERROR: foo/bar:16:1: Traceback (most recent call last):\n"
+                + "\tFile \"/Users/pjameson/local/buck/BUCK\", line 2\n"
+                + "\t\tfoo()\n"
+                + "\tFile \"/Users/pjameson/local/buck/defs.bzl\", line 3, in foo\n"
+                + "\t\tcxx_binary\n"
+                + "name 'cxx_binary' is not defined. Did you mean native.cxx_binary?"));
 
     toSendBuilder.add(
         Event.of(
@@ -129,12 +144,33 @@ public class ConsoleEventHandlerTest {
             Location.fromPathAndStartColumn(
                 PathFragment.create("foo/bar"), 0, 100, new Location.LineAndColumn(14, 1)),
             "Message at level STDOUT"),
-        Event.of(EventKind.ERROR, null, "No location given"));
+        Event.of(EventKind.ERROR, null, "No location given"),
+        Event.of(
+            EventKind.ERROR,
+            Location.fromPathAndStartColumn(
+                PathFragment.create("foo/bar"), 0, 100, new Location.LineAndColumn(15, 1)),
+            "Traceback (most recent call last):\n"
+                + "\tFile \"/Users/pjameson/local/buck/BUCK\", line 2\n"
+                + "\t\tfoo()\n"
+                + "\tFile \"/Users/pjameson/local/buck/defs.bzl\", line 3, in foo\n"
+                + "\t\tcxx_binary\n"
+                + "name 'unknown_function' is not defined"),
+        Event.of(
+            EventKind.ERROR,
+            Location.fromPathAndStartColumn(
+                PathFragment.create("foo/bar"), 0, 100, new Location.LineAndColumn(16, 1)),
+            "Traceback (most recent call last):\n"
+                + "\tFile \"/Users/pjameson/local/buck/BUCK\", line 2\n"
+                + "\t\tfoo()\n"
+                + "\tFile \"/Users/pjameson/local/buck/defs.bzl\", line 3, in foo\n"
+                + "\t\tcxx_binary\n"
+                + "name 'cxx_binary' is not defined"));
 
     ImmutableList<Event> toSend = toSendBuilder.build();
     ImmutableList<ConsoleEvent> expectedEvents = expectedEventsBuilder.build();
 
-    ConsoleEventHandler eventHandler = new ConsoleEventHandler(eventBus, EventKind.ALL_EVENTS);
+    ConsoleEventHandler eventHandler =
+        new ConsoleEventHandler(eventBus, EventKind.ALL_EVENTS, ImmutableSet.of("cxx_binary"));
     for (Event event : toSend) {
       eventHandler.handle(event);
     }
@@ -170,7 +206,8 @@ public class ConsoleEventHandlerTest {
       HashSet<EventKind> handledEvents = new HashSet<>();
       handledEvents.addAll(EventKind.ALL_EVENTS);
       handledEvents.remove(EventKind.WARNING);
-      ConsoleEventHandler eventHandler = new ConsoleEventHandler(eventBus, handledEvents);
+      ConsoleEventHandler eventHandler =
+          new ConsoleEventHandler(eventBus, handledEvents, ImmutableSet.of());
       eventHandler.handle(
           Event.of(
               EventKind.WARNING,
