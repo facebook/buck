@@ -43,6 +43,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Map;
 import java.util.Optional;
 import org.immutables.value.Value;
 
@@ -189,13 +190,42 @@ public abstract class AbstractReport {
 
   private ImmutableMap<Path, String> getLocalConfigs() {
     Path rootPath = filesystem.getRootPath();
+    // Grab all local configs that have values set
+    ImmutableList<Path> overrideFiles;
+    try {
+      overrideFiles =
+          Configs.getDefaultConfigurationFiles(rootPath)
+              .stream()
+              .filter(f -> !f.equals(Configs.getMainConfigurationFile(rootPath)))
+              .filter(
+                  config -> {
+                    try {
+                      return Configs.parseConfigFile(rootPath.resolve(config))
+                              .values()
+                              .stream()
+                              .mapToLong(Map::size)
+                              .sum()
+                          != 0;
+                    } catch (IOException e) {
+                      return true;
+                    }
+                  })
+              .map(p -> p.startsWith(rootPath) ? rootPath.relativize(p) : p)
+              .collect(ImmutableList.toImmutableList());
+    } catch (IOException e) {
+      LOG.warn("Failed to read override configuration files: %s", e.getMessage());
+      overrideFiles = ImmutableList.of();
+    }
+
     ImmutableSet<Path> knownUserLocalConfigs =
-        ImmutableSet.of(
-            Paths.get(Configs.DEFAULT_BUCK_CONFIG_OVERRIDE_FILE_NAME),
-            LogConfigPaths.LOCAL_PATH,
-            Paths.get(".watchman.local"),
-            Paths.get(".buckjavaargs.local"),
-            Paths.get(".bucklogging.local.properties"));
+        ImmutableSet.<Path>builder()
+            .addAll(overrideFiles)
+            .add(
+                LogConfigPaths.LOCAL_PATH,
+                Paths.get(".watchman.local"),
+                Paths.get(".buckjavaargs.local"),
+                Paths.get(".bucklogging.local.properties"))
+            .build();
 
     ImmutableMap.Builder<Path, String> localConfigs = ImmutableMap.builder();
     for (Path localConfig : knownUserLocalConfigs) {

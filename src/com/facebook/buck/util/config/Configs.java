@@ -68,31 +68,8 @@ public final class Configs {
   public static Config createDefaultConfig(Path root, RawConfig configOverrides)
       throws IOException {
     LOG.debug("Loading configuration for %s", root);
-    ImmutableList.Builder<Path> configFileBuilder = ImmutableList.builder();
-
-    configFileBuilder.addAll(listFiles(GLOBAL_BUCK_CONFIG_DIRECTORY_PATH));
-    if (Files.isRegularFile(GLOBAL_BUCK_CONFIG_FILE_PATH)) {
-      configFileBuilder.add(GLOBAL_BUCK_CONFIG_FILE_PATH);
-    }
-
-    Path homeDirectory = Paths.get(System.getProperty("user.home"));
-    Path userConfigDir = homeDirectory.resolve(DEFAULT_BUCK_CONFIG_DIRECTORY_NAME);
-    configFileBuilder.addAll(listFiles(userConfigDir));
-    Path userConfigFile = homeDirectory.resolve(DEFAULT_BUCK_CONFIG_FILE_NAME);
-    if (Files.isRegularFile(userConfigFile)) {
-      configFileBuilder.add(userConfigFile);
-    }
-
-    Path configFile = root.resolve(DEFAULT_BUCK_CONFIG_FILE_NAME);
-    if (Files.isRegularFile(configFile)) {
-      configFileBuilder.add(configFile);
-    }
-    Path overrideConfigFile = root.resolve(DEFAULT_BUCK_CONFIG_OVERRIDE_FILE_NAME);
-    if (Files.isRegularFile(overrideConfigFile)) {
-      configFileBuilder.add(overrideConfigFile);
-    }
-
-    ImmutableList<Path> configFiles = configFileBuilder.build();
+    ImmutableList<Path> configFiles = getDefaultConfigurationFiles(root);
+    Path configFile = getMainConfigurationFile(root);
 
     RawConfig.Builder builder = RawConfig.builder();
     for (Path file : configFiles) {
@@ -120,6 +97,45 @@ public final class Configs {
     try (DirectoryStream<Path> directory = Files.newDirectoryStream(root)) {
       return ImmutableSortedSet.<Path>naturalOrder().addAll(directory.iterator()).build();
     }
+  }
+
+  public static Path getMainConfigurationFile(Path root) {
+    return root.resolve(DEFAULT_BUCK_CONFIG_FILE_NAME);
+  }
+
+  /**
+   * Gets all configuration files that should be used for parsing the project configuration
+   *
+   * @param root The root of the project to search
+   * @return Files that exist that conform to buck's configuration file precedence. Settings from
+   *     files at the end of this list should override ones that come before.
+   */
+  public static ImmutableList<Path> getDefaultConfigurationFiles(Path root) throws IOException {
+    ImmutableList.Builder<Path> configFileBuilder = ImmutableList.builder();
+
+    configFileBuilder.addAll(listFiles(GLOBAL_BUCK_CONFIG_DIRECTORY_PATH));
+    if (Files.isRegularFile(GLOBAL_BUCK_CONFIG_FILE_PATH)) {
+      configFileBuilder.add(GLOBAL_BUCK_CONFIG_FILE_PATH);
+    }
+
+    Path homeDirectory = Paths.get(System.getProperty("user.home"));
+    Path userConfigDir = homeDirectory.resolve(DEFAULT_BUCK_CONFIG_DIRECTORY_NAME);
+    configFileBuilder.addAll(listFiles(userConfigDir));
+    Path userConfigFile = homeDirectory.resolve(DEFAULT_BUCK_CONFIG_FILE_NAME);
+    if (Files.isRegularFile(userConfigFile)) {
+      configFileBuilder.add(userConfigFile);
+    }
+
+    Path configFile = getMainConfigurationFile(root);
+    if (Files.isRegularFile(configFile)) {
+      configFileBuilder.add(configFile);
+    }
+    Path overrideConfigFile = root.resolve(DEFAULT_BUCK_CONFIG_OVERRIDE_FILE_NAME);
+    if (Files.isRegularFile(overrideConfigFile)) {
+      configFileBuilder.add(overrideConfigFile);
+    }
+
+    return configFileBuilder.build();
   }
 
   public static ImmutableMap<String, ImmutableMap<String, String>> parseConfigFile(Path file)

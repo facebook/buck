@@ -86,15 +86,21 @@ public class DefaultDefectReporter implements DefectReporter {
   private void addFilesToArchive(CustomZipOutputStream out, ImmutableSet<Path> paths)
       throws IOException {
     for (Path logFile : paths) {
-      Preconditions.checkArgument(!logFile.isAbsolute(), "Should be a relative Path.", logFile);
-
-      // If the file is hidden(UNIX terms) save it as normal file.
-      if (logFile.getFileName().toString().startsWith(".")) {
-        out.putNextEntry(
-            new CustomZipEntry(Paths.get(logFile.getFileName().toString().substring(1))));
-      } else {
-        out.putNextEntry(new CustomZipEntry(logFile));
+      Path destPath = logFile;
+      if (destPath.isAbsolute()) {
+        // If it's an absolute path, make it relative instead
+        destPath = destPath.subpath(0, logFile.getNameCount());
+        Preconditions.checkArgument(!destPath.isAbsolute(), "Should be a relative path", destPath);
       }
+      if (destPath.getFileName().toString().startsWith(".")) {
+        // If the file is hidden(UNIX terms) save it as normal file.
+        destPath =
+            Optional.ofNullable(destPath.getParent())
+                .orElse(Paths.get(""))
+                .resolve(destPath.getFileName().toString().replaceAll("^\\.*", ""));
+      }
+
+      out.putNextEntry(new CustomZipEntry(destPath));
 
       try (InputStream input = filesystem.newFileInputStream(logFile)) {
         ByteStreams.copy(input, out);
