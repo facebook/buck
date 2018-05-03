@@ -346,6 +346,9 @@ public class DoctorCommandIntegrationTest {
             .map(Object::toString)
             .collect(Collectors.toList()),
         Matchers.hasItem(Matchers.endsWith("extra.txt")));
+    assertThat(
+        reporter.getDefectReport().getUserLocalConfiguration().getConfigOverrides().get("foo.bar"),
+        Matchers.equalTo("baz"));
   }
 
   @Test

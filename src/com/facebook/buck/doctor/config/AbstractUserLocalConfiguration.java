@@ -30,4 +30,7 @@ abstract class AbstractUserLocalConfiguration {
 
   @Value.Parameter
   abstract ImmutableMap<Path, String> getLocalConfigsContents();
+
+  @Value.Parameter
+  abstract ImmutableMap<String, String> getConfigOverrides();
 }

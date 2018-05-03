@@ -67,7 +67,8 @@ public class DefectReporterTest {
                 Paths.get(".buckconfig.local"),
                 "data",
                 temporaryFolder.newFile("experiments"),
-                "[foo]\nbar = baz"));
+                "[foo]\nbar = baz"),
+            ImmutableMap.of("config_key", "config_value"));
 
     ProjectFilesystem filesystem =
         TestProjectFilesystems.createProjectFilesystem(temporaryFolder.getRoot());
@@ -104,7 +105,8 @@ public class DefectReporterTest {
                 Paths.get(".buckconfig.local"),
                 "data",
                 temporaryFolder.newFile("experiments"),
-                "[foo]\nbar = baz\n"));
+                "[foo]\nbar = baz\n"),
+            ImmutableMap.of("config_key", "config_value"));
 
     ProjectFilesystem filesystem =
         TestProjectFilesystems.createProjectFilesystem(temporaryFolder.getRoot());
@@ -145,6 +147,13 @@ public class DefectReporterTest {
               .get(".buckconfig.local")
               .textValue(),
           Matchers.equalTo("data"));
+      assertThat(
+          reportNode
+              .get("userLocalConfiguration")
+              .get("configOverrides")
+              .get("config_key")
+              .textValue(),
+          Matchers.equalTo("config_value"));
     }
   }
 }

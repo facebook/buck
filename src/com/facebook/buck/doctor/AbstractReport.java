@@ -43,6 +43,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import org.immutables.value.Value;
@@ -133,7 +134,8 @@ public abstract class AbstractReport {
     Optional<FileChangesIgnoredReport> fileChangesIgnoredReport = getFileChangesIgnoredReport();
 
     UserLocalConfiguration userLocalConfiguration =
-        UserLocalConfiguration.of(isNoBuckCheckPresent(), getLocalConfigs());
+        UserLocalConfiguration.of(
+            isNoBuckCheckPresent(), getLocalConfigs(), getConfigOverrides(selectedBuilds));
 
     ImmutableSet<Path> includedPaths =
         FluentIterable.from(selectedBuilds)
@@ -186,6 +188,29 @@ public abstract class AbstractReport {
 
     @Value.Parameter
     String getIssueCategory();
+  }
+
+  private ImmutableMap<String, String> getConfigOverrides(ImmutableSet<BuildLogEntry> entries) {
+    if (entries.size() != 1) {
+      return ImmutableMap.of();
+    }
+    BuildLogEntry entry = entries.asList().get(0);
+    if (!entry.getCommandArgs().isPresent()) {
+      return ImmutableMap.of();
+    }
+    List<String> args = entry.getCommandArgs().get();
+    ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
+    for (int i = 0; i < args.size(); i++) {
+      if (args.get(i).equals("--config") || args.get(i).equals("-c")) {
+        i++;
+        if (i >= args.size()) {
+          break;
+        }
+        String[] pieces = args.get(i).split("=", 2);
+        builder.put(pieces[0], pieces.length == 2 ? pieces[1] : "");
+      }
+    }
+    return builder.build();
   }
 
   private ImmutableMap<Path, String> getLocalConfigs() {

@@ -62,7 +62,8 @@ public class BuildLogHelper {
     for (Path logFile : getAllBuckLogFiles()) {
       BuildLogEntry entry = newBuildLogEntry(logFile);
       if (entry.getCommandArgs().isPresent()
-          && !entry.getCommandArgs().get().matches("^(rage|doctor|server|launch)\\b.*")) {
+          && entry.getCommandArgs().get().size() > 0
+          && !entry.getCommandArgs().get().get(0).matches("^(rage|doctor|server|launch)$")) {
         logEntries.add(newBuildLogEntry(logFile));
       }
     }
@@ -95,13 +96,11 @@ public class BuildLogHelper {
       // a proper ObjectMapper deserialization of InvocationInfo.
       Map<String, Object> invocationInfo =
           ObjectMappers.readValue(invocationInfoLine, new TypeReference<Map<String, Object>>() {});
-      Optional<String> commandArgs = Optional.empty();
+      Optional<List<String>> commandArgs = Optional.empty();
       if (invocationInfo.containsKey(INFO_FIELD_UNEXPANDED_CMD_ARGS)
           && invocationInfo.get(INFO_FIELD_UNEXPANDED_CMD_ARGS) instanceof List) {
         commandArgs =
-            Optional.of(
-                String.join(
-                    " ", (List<String>) invocationInfo.get(INFO_FIELD_UNEXPANDED_CMD_ARGS)));
+            Optional.of((List<String>) invocationInfo.get(INFO_FIELD_UNEXPANDED_CMD_ARGS));
       }
 
       String buildId = (String) invocationInfo.get("buildId");
