@@ -16,6 +16,7 @@
 package com.facebook.buck.core.build.engine;
 
 import com.facebook.buck.artifact_cache.ArtifactCache;
+import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.engine.buildinfo.BuildInfoRecorder;
 import com.facebook.buck.core.build.engine.buildinfo.BuildInfoStore;
 import com.facebook.buck.core.build.engine.buildinfo.DefaultOnDiskBuildInfo;
@@ -26,7 +27,6 @@ import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.AbstractBuildRule;
-import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.util.timing.Clock;
 import com.google.common.collect.ImmutableMap;

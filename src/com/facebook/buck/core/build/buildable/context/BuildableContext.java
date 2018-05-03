@@ -20,11 +20,11 @@ import java.nio.file.Path;
 
 /**
  * Context object that is specific to an individual {@link com.facebook.buck.rules.BuildRule}. This
- * differs from {@link com.facebook.buck.rules.BuildContext} in that a {@link
- * com.facebook.buck.rules.BuildContext} is a context that is shared by all {@link
+ * differs from {@link com.facebook.buck.core.build.context.BuildContext} in that a {@link
+ * com.facebook.buck.core.build.context.BuildContext} is a context that is shared by all {@link
  * com.facebook.buck.rules.BuildRule}s whereas a new {@link BuildableContext} is created for each
  * call to {@link
- * com.facebook.buck.rules.BuildRule#getBuildSteps(com.facebook.buck.rules.BuildContext,
+ * com.facebook.buck.rules.BuildRule#getBuildSteps(com.facebook.buck.core.build.context.BuildContext,
  * BuildableContext)}.
  */
 public interface BuildableContext {

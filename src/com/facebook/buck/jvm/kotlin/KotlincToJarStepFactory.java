@@ -20,6 +20,7 @@ import static com.facebook.buck.jvm.java.Javac.SRC_ZIP;
 import static javax.xml.bind.DatatypeConverter.printBase64Binary;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
+import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
@@ -37,7 +38,6 @@ import com.facebook.buck.jvm.java.JavacPluginJsr199Fields;
 import com.facebook.buck.jvm.java.JavacToJarStepFactory;
 import com.facebook.buck.jvm.java.ResolvedJavacPluginProperties;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;

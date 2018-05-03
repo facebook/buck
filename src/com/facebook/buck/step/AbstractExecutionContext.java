@@ -26,7 +26,6 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ThrowableConsoleEvent;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
-import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.ClassLoaderCache;
 import com.facebook.buck.util.Console;
@@ -89,7 +88,7 @@ abstract class AbstractExecutionContext implements Closeable {
   @Value.Parameter
   abstract CellPathResolver getCellPathResolver();
 
-  /** See {@link BuildContext#getBuildCellRootPath}. */
+  /** See {@link com.facebook.buck.core.build.context.BuildContext#getBuildCellRootPath}. */
   @Value.Parameter
   abstract Path getBuildCellRootPath();
 

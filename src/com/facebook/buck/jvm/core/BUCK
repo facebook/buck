@@ -23,7 +23,7 @@ java_library(
         "JavaPackageFinder.java",
     ],
     visibility = [
-        "//src/com/facebook/buck/rules:build_context",
+        "//src/com/facebook/buck/core/build/context:context",
         "//src/com/facebook/buck/rules/modern/builders/...",
         "//src/com/facebook/buck/step:step",
     ],

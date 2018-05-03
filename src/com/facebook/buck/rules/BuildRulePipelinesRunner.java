@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.engine.BuildResult;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;

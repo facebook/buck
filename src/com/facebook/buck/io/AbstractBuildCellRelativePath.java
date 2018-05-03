@@ -25,7 +25,7 @@ import org.immutables.value.Value;
  * A path which is relative to the build cell root, i.e. the top-level cell in which the build was
  * invoked.
  *
- * <p>See {@link com.facebook.buck.rules.BuildContext#getBuildCellRootPath}.
+ * <p>See {@link com.facebook.buck.core.build.context.BuildContext#getBuildCellRootPath}.
  */
 @BuckStyleTuple
 @Value.Immutable

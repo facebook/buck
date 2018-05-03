@@ -16,10 +16,10 @@
 
 package com.facebook.buck.rules.keys;
 
+import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.cell.resolver.CellPathResolver;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;

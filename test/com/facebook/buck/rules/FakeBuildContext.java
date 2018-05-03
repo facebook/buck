@@ -18,6 +18,7 @@ package com.facebook.buck.rules;
 
 import static org.easymock.EasyMock.createMock;
 
+import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;

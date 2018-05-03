@@ -16,6 +16,7 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
+import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
@@ -25,7 +26,6 @@ import com.facebook.buck.cxx.HasAppleDebugSymbolDeps;
 import com.facebook.buck.file.WriteFile;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.AbstractBuildRule;
-import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.HasDeclaredAndExtraDeps;
 import com.facebook.buck.rules.HasRuntimeDeps;

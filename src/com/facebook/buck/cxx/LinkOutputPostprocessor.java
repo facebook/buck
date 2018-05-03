@@ -16,8 +16,8 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
-import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
