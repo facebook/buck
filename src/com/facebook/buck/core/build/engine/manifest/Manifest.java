@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
+package com.facebook.buck.core.build.engine.manifest;
 
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.sourcepath.ArchiveMemberSourcePath;
@@ -317,7 +317,7 @@ public class Manifest {
     return builder.build();
   }
 
-  ManifestStats getStats() {
+  public ManifestStats getStats() {
     return ManifestStats.builder()
         .setNumDepFiles(entries.size())
         .setNumInputs(inputs.size())

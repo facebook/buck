@@ -1,0 +1,33 @@
+load("//tools/build_rules:java_rules.bzl", "standard_java_test")
+
+java_test(
+    name = "manifest",
+    srcs = glob(
+        ["*Test.java"],
+    ),
+    deps = [
+        ":testutil",
+        "//src/com/facebook/buck/core/sourcepath/resolver/impl:impl",
+        "//src/com/facebook/buck/rules:rules",
+        "//src/com/facebook/buck/util/timing:timing",
+        "//test/com/facebook/buck/rules:testutil",
+        "//test/com/facebook/buck/testutil:testutil",
+        "//third-party/java/junit:junit",
+    ],
+)
+
+java_library(
+    name = "testutil",
+    srcs = glob(
+        ["*.java"],
+        exclude = ["*Test.java"],
+    ),
+    exported_deps = [
+        "//src/com/facebook/buck/core/build/engine/manifest:manifest",
+        "//src/com/facebook/buck/core/rulekey:rulekey",
+    ],
+    visibility = ["//test/..."],
+    deps = [
+        "//src/com/facebook/buck/util/types:types",
+    ],
+)

@@ -119,6 +119,7 @@ java_test(
         "//test/com/facebook/buck/artifact_cache:testutil",
         "//test/com/facebook/buck/cli:testutil",
         "//test/com/facebook/buck/config:FakeBuckConfig",
+        "//test/com/facebook/buck/core/build/engine/manifest:testutil",
         "//test/com/facebook/buck/core/cell:testutil",
         "//test/com/facebook/buck/cxx:testutil",
         "//test/com/facebook/buck/cxx/toolchain:testutil",

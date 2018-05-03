@@ -12,6 +12,9 @@ java_immutables_library(
         "//src/com/facebook/buck/step:step",
         "//src/com/facebook/buck/util/timing:timing",
     ],
+    tests = [
+        "//test/com/facebook/buck/core/build/engine/manifest:manifest",
+    ],
     visibility = [
         "PUBLIC",
     ],
