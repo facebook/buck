@@ -43,6 +43,7 @@ import com.facebook.buck.artifact_cache.NoopArtifactCache;
 import com.facebook.buck.artifact_cache.config.ArtifactCacheMode;
 import com.facebook.buck.artifact_cache.config.CacheReadMode;
 import com.facebook.buck.cli.CommandThreadManager;
+import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.engine.BuildEngineBuildContext;
 import com.facebook.buck.core.build.engine.BuildEngineResult;
 import com.facebook.buck.core.build.engine.BuildResult;

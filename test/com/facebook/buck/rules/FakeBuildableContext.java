@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.util.HashMap;

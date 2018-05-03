@@ -18,6 +18,7 @@ package com.facebook.buck.cli;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypes;
@@ -29,7 +30,6 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleCreationContext;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.step.AbstractExecutionStep;

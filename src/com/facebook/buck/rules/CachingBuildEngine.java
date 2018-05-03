@@ -18,6 +18,7 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.CacheResult;
+import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.engine.BuildEngine;
 import com.facebook.buck.core.build.engine.BuildEngineBuildContext;
 import com.facebook.buck.core.build.engine.BuildEngineResult;

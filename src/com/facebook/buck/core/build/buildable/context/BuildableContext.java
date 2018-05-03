@@ -14,15 +14,18 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
+package com.facebook.buck.core.build.buildable.context;
 
 import java.nio.file.Path;
 
 /**
- * Context object that is specific to an individual {@link BuildRule}. This differs from {@link
- * BuildContext} in that a {@link BuildContext} is a context that is shared by all {@link
- * BuildRule}s whereas a new {@link BuildableContext} is created for each call to {@link
- * BuildRule#getBuildSteps(BuildContext, BuildableContext)}.
+ * Context object that is specific to an individual {@link com.facebook.buck.rules.BuildRule}. This
+ * differs from {@link com.facebook.buck.rules.BuildContext} in that a {@link
+ * com.facebook.buck.rules.BuildContext} is a context that is shared by all {@link
+ * com.facebook.buck.rules.BuildRule}s whereas a new {@link BuildableContext} is created for each
+ * call to {@link
+ * com.facebook.buck.rules.BuildRule#getBuildSteps(com.facebook.buck.rules.BuildContext,
+ * BuildableContext)}.
  */
 public interface BuildableContext {
   /** @see com.facebook.buck.core.build.engine.buildinfo.BuildInfoRecorder#recordArtifact(Path) */

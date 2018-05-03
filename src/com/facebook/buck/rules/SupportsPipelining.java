@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableList;
 import javax.annotation.Nullable;

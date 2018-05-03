@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.groovy;
 
+import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
@@ -27,7 +28,6 @@ import com.facebook.buck.jvm.java.CompilerParameters;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableList;

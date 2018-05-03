@@ -68,7 +68,6 @@ java_immutables_library(
         "BuildRuleCreationContext.java",
         "BuildRuleParams.java",
         "BuildRuleResolver.java",
-        "BuildableContext.java",
         "DependencyAggregation.java",
         "Description.java",
         "DescriptionProvider.java",
@@ -83,6 +82,7 @@ java_immutables_library(
     exported_deps = [
         ":abstract_description_arg",
         ":build_context",
+        "//src/com/facebook/buck/core/build/buildable/context:context",
         "//src/com/facebook/buck/core/rulekey:rulekey",
         "//src/com/facebook/buck/core/rules/provider:provider",
         "//src/com/facebook/buck/core/sourcepath:sourcepath",

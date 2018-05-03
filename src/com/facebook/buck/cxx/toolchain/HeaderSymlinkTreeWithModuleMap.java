@@ -18,6 +18,7 @@ package com.facebook.buck.cxx.toolchain;
 
 import com.facebook.buck.apple.clang.ModuleMap;
 import com.facebook.buck.apple.clang.UmbrellaHeader;
+import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
@@ -25,7 +26,6 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.WriteFileStep;

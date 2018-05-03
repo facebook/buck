@@ -16,6 +16,7 @@
 package com.facebook.buck.android.relinker;
 
 import com.facebook.buck.android.toolchain.ndk.TargetCpuType;
+import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.cell.resolver.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.InternalFlavor;
@@ -36,7 +37,6 @@ import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.OverrideScheduleRule;
 import com.facebook.buck.rules.RuleScheduleInfo;
