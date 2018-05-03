@@ -427,6 +427,10 @@ public class ProjectGenerator {
         return;
       }
 
+      if (shouldMergeHeaderMaps() && isMainProject) {
+        createMergedHeaderMap();
+      }
+
       for (String configName : targetConfigNamesBuilder.build()) {
         XCBuildConfiguration outputConfig =
             project
@@ -1548,9 +1552,6 @@ public class ProjectGenerator {
               || !options.shouldUseHeaderMaps(),
           options.shouldUseHeaderMaps(),
           options.shouldGenerateMissingUmbrellaHeader());
-    }
-    if (shouldMergeHeaderMaps() && isMainProject) {
-      createMergedHeaderMap();
     }
 
     Optional<TargetNode<AppleNativeTargetDescriptionArg, ?>> appleTargetNode =
