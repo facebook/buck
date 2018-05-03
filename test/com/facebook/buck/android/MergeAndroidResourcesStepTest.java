@@ -139,6 +139,7 @@ public class MergeAndroidResourcesStepTest {
             sharedPackageName,
             "a-R.txt",
             ImmutableList.of(
+                "int attr android_layout 0x010100f2",
                 "int attr buttonPanelSideLayout 0x7f01003a",
                 "int attr listLayout 0x7f01003b",
                 "int[] styleable AlertDialog { 0x7f01003a, 0x7f01003b, 0x010100f2 }",
@@ -214,7 +215,7 @@ public class MergeAndroidResourcesStepTest {
             new FakeRDotTxtEntryWithID(INT, STYLEABLE, "AlertDialog_buttonPanelSideLayout", "1"),
             new FakeRDotTxtEntryWithID(INT, STYLEABLE, "AlertDialog_multiChoiceItemLayout", "2"),
             new FakeRDotTxtEntryWithID(
-                INT_ARRAY, STYLEABLE, "PercentLayout_Layout", "{ 0,0x07f01009 }"),
+                INT_ARRAY, STYLEABLE, "PercentLayout_Layout", "{ 0x00000000,0x07f01009 }"),
             new FakeRDotTxtEntryWithID(
                 INT, STYLEABLE, "PercentLayout_Layout_layout_aspectRatio", "0"),
             new FakeRDotTxtEntryWithID(
