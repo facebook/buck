@@ -16,6 +16,7 @@
 
 package com.facebook.buck.io.file;
 
+import com.facebook.buck.cli.bootstrapper.filesystem.BuckUnixPath;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.RichStream;
@@ -296,6 +297,11 @@ public class MorePaths {
    * value.
    */
   public static Path dropInternalCaches(Path p) {
+    // This optimization does nothing for BuckUnixPath, and in fact wastes time.
+    // Just bail without pessimizing in that case.
+    if (p instanceof BuckUnixPath) {
+      return p;
+    }
     return p.getFileSystem().getPath(p.toString());
   }
 

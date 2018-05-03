@@ -3,6 +3,7 @@
   "//src/com/facebook/buck/artifact_cache/config:config",
   "//src/com/facebook/buck/artifact_cache:artifact_cache",
   "//src/com/facebook/buck/build_type:build_type",
+  "//src/com/facebook/buck/cli/bootstrapper/filesystem:filesystem_lib",
   "//src/com/facebook/buck/config/resources:resources",
   "//src/com/facebook/buck/config:config",
   "//src/com/facebook/buck/core/build/buildable/context:context",

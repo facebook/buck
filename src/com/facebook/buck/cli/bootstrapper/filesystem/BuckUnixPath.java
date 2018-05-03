@@ -40,7 +40,7 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 /** Buck-specific implementation of java.nio.file.Path optimized for memory footprint */
-class BuckUnixPath implements Path {
+public class BuckUnixPath implements Path {
   private final String[] segments;
   private final BuckFileSystem fs;
 
