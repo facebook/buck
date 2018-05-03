@@ -49,6 +49,31 @@ import org.immutables.value.Value;
 @Value.Immutable(prehash = true)
 @BuckStyleTuple
 abstract class AbstractCell {
+  /** Whether or not the cell has changed significantly enough to invalidate caches */
+  public enum IsCompatibleForCaching {
+    IS_COMPATIBLE,
+    FILESYSTEM_CHANGED,
+    BUCK_CONFIG_CHANGED,
+    TOOLCHAINS_INCOMPATIBLE;
+
+    /**
+     * Returns a human readable reason for why the cache needs invalidated (or "" if the cache does
+     * not need invalidated)
+     */
+    public String toHumanReasonableError() {
+      switch (this) {
+        case IS_COMPATIBLE:
+          return "";
+        case FILESYSTEM_CHANGED:
+          return "The project directory changed between invocations";
+        case BUCK_CONFIG_CHANGED:
+          return "Buck configuration options changed between invocations";
+        case TOOLCHAINS_INCOMPATIBLE:
+          return "Available / configured toolchains changed between invocations";
+      }
+      return "";
+    }
+  }
 
   @Value.Auxiliary
   abstract ImmutableSet<Path> getKnownRoots();
@@ -76,10 +101,17 @@ abstract class AbstractCell {
   @Value.Auxiliary
   abstract RuleKeyConfiguration getRuleKeyConfiguration();
 
-  public boolean isCompatibleForCaching(Cell other) {
-    return (getFilesystem().equals(other.getFilesystem())
-        && getBuckConfig().equalsForDaemonRestart(other.getBuckConfig())
-        && areToolchainsCompatibleForCaching(other));
+  public IsCompatibleForCaching isCompatibleForCaching(Cell other) {
+    if (!getFilesystem().equals(other.getFilesystem())) {
+      return IsCompatibleForCaching.FILESYSTEM_CHANGED;
+    }
+    if (!getBuckConfig().equalsForDaemonRestart(other.getBuckConfig())) {
+      return IsCompatibleForCaching.BUCK_CONFIG_CHANGED;
+    }
+    if (!areToolchainsCompatibleForCaching(other)) {
+      return IsCompatibleForCaching.TOOLCHAINS_INCOMPATIBLE;
+    }
+    return IsCompatibleForCaching.IS_COMPATIBLE;
   }
 
   private boolean areToolchainsCompatibleForCaching(Cell other) {

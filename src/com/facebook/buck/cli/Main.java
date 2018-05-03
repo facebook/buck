@@ -731,7 +731,7 @@ public final class Main {
           context.isPresent() && (watchman != WatchmanFactory.NULL_WATCHMAN)
               ? Optional.of(
                   daemonLifecycleManager.getDaemon(
-                      rootCell, knownBuildRuleTypesProvider, executableFinder))
+                      rootCell, knownBuildRuleTypesProvider, executableFinder, console))
               : Optional.empty();
 
       // Used the cached provider, if present.

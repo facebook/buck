@@ -22,6 +22,7 @@ import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypesProvider;
 import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.util.Console;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -46,7 +47,8 @@ class DaemonLifecycleManager {
   synchronized Daemon getDaemon(
       Cell rootCell,
       KnownBuildRuleTypesProvider knownBuildRuleTypesProvider,
-      ExecutableFinder executableFinder)
+      ExecutableFinder executableFinder,
+      Console console)
       throws IOException {
     Path rootPath = rootCell.getFilesystem().getRootPath();
     if (daemon == null) {
@@ -67,10 +69,24 @@ class DaemonLifecycleManager {
 
       // If Buck config has changed or SDKs have changed, invalidate the cache and
       // create a new daemon.
-      if (!daemon.getRootCell().isCompatibleForCaching(rootCell)) {
+      Cell.IsCompatibleForCaching cacheCompat =
+          daemon.getRootCell().isCompatibleForCaching(rootCell);
+      if (cacheCompat != Cell.IsCompatibleForCaching.IS_COMPATIBLE) {
         LOG.warn(
             "Shutting down and restarting daemon on config or directory resolver change (%s != %s)",
             daemon.getRootCell(), rootCell);
+        // Use the raw stream because otherwise this will stop superconsole from ever printing again
+        console
+            .getStdErr()
+            .getRawStream()
+            .println(
+                console
+                    .getAnsi()
+                    .asWarningText(
+                        String.format(
+                            "Shutting down and restarting buck daemon: %s",
+                            cacheCompat.toHumanReasonableError())));
+
         Optional<WebServer> webServer;
         if (shouldReuseWebServer(rootCell)) {
           webServer = daemon.getWebServer();
