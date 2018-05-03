@@ -1,0 +1,23 @@
+android_library(
+    name = "android-lib",
+    srcs = [
+        ":AService",
+    ],
+)
+
+gen_aidl(
+    name = "AService",
+    aidl = "java/com/facebook/buck/example/AService.aidl",
+    aidl_srcs = ["java/com/facebook/buck/example/MyDependency.aidl"],
+    import_path = "java/",
+)
+
+gen_aidl(
+    name = "AServiceWithMissingDependency",
+    aidl = "java/com/facebook/buck/example/AService.aidl",
+    aidl_srcs = [
+        "java/com/facebook/buck/example/MyDependency.aidl",
+        "java/com/facebook/buck/example/MyMissingDependency.aidl",
+    ],
+    import_path = "java/",
+)

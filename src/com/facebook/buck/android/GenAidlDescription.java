@@ -24,6 +24,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.HasDeclaredDeps;
+import com.google.common.collect.ImmutableSortedSet;
 import org.immutables.value.Value;
 
 public class GenAidlDescription implements Description<GenAidlDescriptionArg> {
@@ -45,16 +46,24 @@ public class GenAidlDescription implements Description<GenAidlDescriptionArg> {
         context.getToolchainProvider(),
         params,
         args.getAidl(),
-        args.getImportPath());
+        args.getImportPath(),
+        args.getAidlSrcs());
   }
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractGenAidlDescriptionArg extends CommonDescriptionArg, HasDeclaredDeps {
-    SourcePath getAidl();
+  abstract static class AbstractGenAidlDescriptionArg
+      implements CommonDescriptionArg, HasDeclaredDeps {
+    abstract SourcePath getAidl();
 
     // import_path is an anomaly: it is a path that is relative to the project root rather than
     // relative to the build file directory.
-    String getImportPath();
+    abstract String getImportPath();
+
+    // Imported *.aidl files.
+    @Value.Default
+    ImmutableSortedSet<SourcePath> getAidlSrcs() {
+      return ImmutableSortedSet.of();
+    }
   }
 }

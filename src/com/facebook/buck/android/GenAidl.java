@@ -68,6 +68,7 @@ public class GenAidl extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   // should incorporate which version of aidl is used.
   @AddToRuleKey private final SourcePath aidlFilePath;
   @AddToRuleKey private final String importPath;
+  @AddToRuleKey private final ImmutableSortedSet<SourcePath> aidlSrcs;
   private final Path output;
   private final Path genPath;
 
@@ -77,7 +78,8 @@ public class GenAidl extends AbstractBuildRuleWithDeclaredAndExtraDeps {
       ToolchainProvider toolchainProvider,
       BuildRuleParams params,
       SourcePath aidlFilePath,
-      String importPath) {
+      String importPath,
+      ImmutableSortedSet<SourcePath> aidlSrcs) {
     super(buildTarget, projectFilesystem, params);
     this.toolchainProvider = toolchainProvider;
     this.aidlFilePath = aidlFilePath;
@@ -86,6 +88,7 @@ public class GenAidl extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     this.output =
         genPath.resolve(
             String.format("lib%s%s", buildTarget.getShortNameAndFlavorPostfix(), SRC_ZIP));
+    this.aidlSrcs = aidlSrcs;
   }
 
   @Override

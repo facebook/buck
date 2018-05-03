@@ -19,6 +19,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -31,6 +32,7 @@ import java.nio.file.Path;
 import java.util.Enumeration;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
+import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -39,6 +41,26 @@ public class GenAidlIntegrationTest {
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   @Rule public TemporaryPaths tmp2 = new TemporaryPaths();
+
+  @Test
+  public void buildingWithAidlSrcsDeclared() throws InterruptedException, IOException {
+    AssumeAndroidPlatform.assumeSdkIsAvailable();
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "gen_aidl_missing_src", tmp);
+    workspace.setUp();
+    workspace.enableDirCache();
+
+    ProcessResult result = workspace.runBuckBuild("//:android-lib");
+    result.assertSuccess();
+
+    try {
+      workspace.runBuckBuild("//:AServiceWithMissingDependency");
+      Assert.fail("An exception should've been thrown.");
+    } catch (HumanReadableException e) {
+      String msg = e.toString();
+      assertTrue("Received: " + msg, msg.contains("MyMissingDependency.aidl"));
+    }
+  }
 
   @Test
   public void buildingCleaningAndThenRebuildingFromCacheShouldWorkAsExpected()
