@@ -15,9 +15,10 @@
  */
 package com.facebook.buck.event.listener;
 
-import static com.facebook.buck.rules.BuildRuleSuccessType.BUILT_LOCALLY;
+import static com.facebook.buck.core.build.engine.BuildRuleSuccessType.BUILT_LOCALLY;
 
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
+import com.facebook.buck.core.build.engine.BuildRuleStatus;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.test.event.IndividualTestEvent;
 import com.facebook.buck.core.test.event.TestRunEvent;
@@ -31,7 +32,6 @@ import com.facebook.buck.event.InstallEvent;
 import com.facebook.buck.parser.ParseEvent;
 import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildRuleEvent;
-import com.facebook.buck.rules.BuildRuleStatus;
 import com.facebook.buck.test.TestResultSummaryVerbosity;
 import com.facebook.buck.test.TestStatusMessage;
 import com.facebook.buck.util.Console;

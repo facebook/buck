@@ -78,7 +78,7 @@ public interface TestRule extends BuildRule {
    * Returns the commands required to run the tests.
    *
    * <p><strong>Note:</strong> This method may be run without {@link
-   * com.facebook.buck.rules.BuildEngine#build(com.facebook.buck.rules.BuildEngineBuildContext,
+   * com.facebook.buck.core.build.engine.BuildEngine#build(com.facebook.buck.core.build.engine.BuildEngineBuildContext,
    * ExecutionContext, BuildRule)} having been run. This happens if the user has built [and ran] the
    * test previously and then re-runs it using the {@code --debug} flag.
    *

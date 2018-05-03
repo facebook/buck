@@ -5,6 +5,7 @@
   "//src/com/facebook/buck/build_type:build_type",
   "//src/com/facebook/buck/config/resources:resources",
   "//src/com/facebook/buck/config:config",
+  "//src/com/facebook/buck/core/build/engine:engine",
   "//src/com/facebook/buck/core/build/engine/buildinfo:buildinfo",
   "//src/com/facebook/buck/core/exceptions:exceptions",
   "//src/com/facebook/buck/core/rulekey:rulekey",

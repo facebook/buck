@@ -23,10 +23,10 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.artifact_cache.CacheResult;
+import com.facebook.buck.core.build.engine.BuildRuleStatus;
+import com.facebook.buck.core.build.engine.BuildRuleSuccessType;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.BuildRuleStatus;
-import com.facebook.buck.rules.BuildRuleSuccessType;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;

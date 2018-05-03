@@ -13,7 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.facebook.buck.rules;
+package com.facebook.buck.core.build.engine;
 
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.core.build.engine.buildinfo.BuildInfoRecorder;
@@ -25,6 +25,9 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.BuildContext;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.util.timing.Clock;
 import com.google.common.collect.ImmutableMap;
 import org.immutables.value.Value;
@@ -57,7 +60,7 @@ abstract class AbstractBuildEngineBuildContext {
    * <p>This method should be visible to {@link AbstractBuildRule}, but not {@link BuildRule}s in
    * general.
    */
-  OnDiskBuildInfo createOnDiskBuildInfoFor(
+  public OnDiskBuildInfo createOnDiskBuildInfoFor(
       BuildTarget target, ProjectFilesystem filesystem, BuildInfoStore buildInfoStore) {
     return new DefaultOnDiskBuildInfo(target, filesystem, buildInfoStore);
   }
@@ -68,7 +71,7 @@ abstract class AbstractBuildEngineBuildContext {
    * <p>This method should be visible to {@link AbstractBuildRule}, but not {@link BuildRule}s in
    * general.
    */
-  BuildInfoRecorder createBuildInfoRecorder(
+  public BuildInfoRecorder createBuildInfoRecorder(
       BuildTarget buildTarget, ProjectFilesystem filesystem, BuildInfoStore buildInfoStore) {
     return new BuildInfoRecorder(
         buildTarget,

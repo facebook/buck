@@ -16,13 +16,15 @@
 
 package com.facebook.buck.rules;
 
-import static com.facebook.buck.rules.BuildRuleSuccessType.BUILT_LOCALLY;
+import static com.facebook.buck.core.build.engine.BuildRuleSuccessType.BUILT_LOCALLY;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.artifact_cache.NoopArtifactCache;
+import com.facebook.buck.core.build.engine.BuildEngineBuildContext;
+import com.facebook.buck.core.build.engine.BuildResult;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;

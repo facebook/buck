@@ -16,6 +16,10 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.core.build.engine.BuildEngine;
+import com.facebook.buck.core.build.engine.BuildEngineBuildContext;
+import com.facebook.buck.core.build.engine.BuildEngineResult;
+import com.facebook.buck.core.build.engine.BuildResult;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.step.ExecutionContext;
 import com.google.common.collect.ImmutableMap;

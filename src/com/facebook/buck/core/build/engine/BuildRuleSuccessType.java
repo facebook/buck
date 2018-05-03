@@ -14,21 +14,19 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
+package com.facebook.buck.core.build.engine;
 
-import com.facebook.buck.core.rulekey.RuleKey;
-import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableSet;
 import java.util.EnumSet;
 
 /**
  * Token provided by the result of {@link BuildEngine#build(BuildEngineBuildContext,
- * com.facebook.buck.step.ExecutionContext, BuildRule)}, demonstrating that the associated {@link
- * BuildRule} was built successfully.
+ * com.facebook.buck.step.ExecutionContext, com.facebook.buck.rules.BuildRule)}, demonstrating that
+ * the associated {@link com.facebook.buck.rules.BuildRule} was built successfully.
  */
 public enum BuildRuleSuccessType {
 
-  /** Built by executing the {@link Step}s for the rule. */
+  /** Built by executing the {@link com.facebook.buck.step.Step}s for the rule. */
   BUILT_LOCALLY(
       "BUILT",
       Property.SHOULD_UPLOAD_RESULTING_ARTIFACT,
@@ -58,15 +56,17 @@ public enum BuildRuleSuccessType {
       Property.SHOULD_UPDATE_METADATA_ON_DISK,
       Property.OUTPUTS_HAVE_CHANGED),
 
-  /** Computed {@link RuleKey} matches the one on disk. */
+  /** Computed {@link com.facebook.buck.core.rulekey.RuleKey} matches the one on disk. */
   MATCHING_RULE_KEY("FOUND", Property.MATCHING_KEY),
 
-  /** Computed input-based {@link RuleKey} matches the one on disk. */
+  /**
+   * Computed input-based {@link com.facebook.buck.core.rulekey.RuleKey} matches the one on disk.
+   */
   // TODO(#8364892): We should re-upload to the cache under the main rule key once local
   // caching performance is better and we don't hurt the incremental workflow as much.
   MATCHING_INPUT_BASED_RULE_KEY("FOUND", Property.MATCHING_KEY),
 
-  /** Computed dep-file {@link RuleKey} matches the one on disk */
+  /** Computed dep-file {@link com.facebook.buck.core.rulekey.RuleKey} matches the one on disk */
   MATCHING_DEP_FILE_RULE_KEY("FOUND", Property.MATCHING_KEY),
   ;
 

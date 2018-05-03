@@ -18,13 +18,13 @@ package com.facebook.buck.event.listener;
 
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.artifact_cache.CacheResultType;
+import com.facebook.buck.core.build.engine.BuildRuleStatus;
 import com.facebook.buck.distributed.thrift.CacheRateStats;
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.EventKey;
 import com.facebook.buck.event.external.events.CacheRateStatsUpdateExternalEventInterface;
 import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildRuleEvent;
-import com.facebook.buck.rules.BuildRuleStatus;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableCollection;
 import java.util.concurrent.atomic.AtomicInteger;
