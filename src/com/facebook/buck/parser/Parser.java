@@ -278,8 +278,7 @@ public class Parser {
     }
   }
 
-  @SuppressWarnings("PMD.PrematureDeclaration")
-  protected TargetGraph buildTargetGraph(
+  private TargetGraph buildTargetGraph(
       PerBuildState state, BuckEventBus eventBus, Iterable<BuildTarget> toExplore)
       throws IOException, InterruptedException, BuildFileParseException {
 
