@@ -632,9 +632,4 @@ public class Parser {
   public void invalidateBasedOnPath(Path fullPath, boolean isCreatedOrDeleted) {
     permState.invalidateBasedOnPath(fullPath, isCreatedOrDeleted);
   }
-
-  public void recordParseStartTime(BuckEventBus eventBus) {
-    LOG.debug(eventBus.toString());
-    // Does nothing
-  }
 }

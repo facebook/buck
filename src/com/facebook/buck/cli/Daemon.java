@@ -243,7 +243,6 @@ final class Daemon implements Closeable {
     // invalidations triggered by requests to parse build files or interrupted by client
     // disconnections.
     synchronized (parser) {
-      parser.recordParseStartTime(eventBus);
       // Track the file hash cache invalidation run time.
       FileHashCacheEvent.InvalidationStarted started = FileHashCacheEvent.invalidationStarted();
       eventBus.post(started);
