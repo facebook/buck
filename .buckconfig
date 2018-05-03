@@ -63,6 +63,7 @@
     allow_symlinks = forbid
     watchman_cursor = clock_id
     glob_handler = watchman
+    embedded_cell_buck_out_enabled = true
 [test]
     ; Maximum timeout of 1 minute per test.
     timeout = 90000
