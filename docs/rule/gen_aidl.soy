@@ -14,7 +14,7 @@
 {call buck.rule}
 {param status: 'FROZEN' /}
 {param overview}
-A <code>gen_aidl()</code> rule is used to generate <code>.java</code> files 
+A <code>gen_aidl()</code> rule is used to generate <code>.java</code> files
 from <code>.aidl</code> files.
 {/param}
 
@@ -30,8 +30,8 @@ from <code>.aidl</code> files.
 {call buck.arg}
   {param name: 'aidl' /}
   {param desc}
-  The path to an <code>.aidl</code> file to convert to a 
-  {sp}<code>.java</code> file.  
+  The path to an <code>.aidl</code> file to convert to a
+  {sp}<code>.java</code> file.
   {/param}
 {/call}
 
@@ -49,10 +49,17 @@ from <code>.aidl</code> files.
 {/call}
 
 {call buck.arg}
+  {param name: 'aidl_srcs' /}
+  {param default : '[]' /}
+  {param desc}
+  Path to <code>.aidl</code> files the target <code>aidl</code> file imports.
+  {/param}
+{/call}
+{call buck.arg}
   {param name: 'deps' /}
   {param default : '[]' /}
   {param desc}
-  A list of rules that must be built before this rule.  
+  A list of rules that must be built before this rule.
   {/param}
 {/call}
 
