@@ -1108,7 +1108,8 @@ public final class Main {
           // we need to manually register its counters after it's created.
           //
           // The counters will be unregistered once the counter registry is closed.
-          counterRegistry.registerCounters(parserAndCaches.getParser().getCounters());
+          counterRegistry.registerCounters(
+              parserAndCaches.getParser().getPermState().getCounters());
 
           Optional<ProcessManager> processManager;
           if (platform == Platform.WINDOWS) {
