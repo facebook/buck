@@ -114,7 +114,7 @@ final class Daemon implements Closeable {
             new ConstructorArgMarshaller(typeCoercerFactory),
             knownBuildRuleTypesProvider,
             executableFinder);
-    fileEventBus.register(parser);
+    parser.register(fileEventBus);
 
     // Build the the rule key cache recycler.
     this.defaultRuleKeyFactoryCacheRecycler =

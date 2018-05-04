@@ -49,6 +49,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.MapDifference;
 import com.google.common.collect.Maps;
+import com.google.common.eventbus.Subscribe;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -400,6 +401,7 @@ public class DaemonicParserState {
     }
   }
 
+  @Subscribe
   public void invalidateBasedOn(WatchmanOverflowEvent event) {
     // Non-path change event, likely an overflow due to many change events: invalidate everything.
     LOG.debug("Received non-path change event %s, assuming overflow and checking caches.", event);
@@ -410,7 +412,10 @@ public class DaemonicParserState {
     }
   }
 
+  @Subscribe
   public void invalidateBasedOn(WatchmanPathEvent event) {
+    LOG.verbose("Parser watched event %s %s", event.getKind(), event.getPath());
+
     filesChangedCounter.inc();
 
     Path path = event.getPath();

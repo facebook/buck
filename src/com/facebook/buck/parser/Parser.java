@@ -29,8 +29,6 @@ import com.facebook.buck.graph.AcyclicDepthFirstPostOrderTraversal;
 import com.facebook.buck.graph.GraphTraversable;
 import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.io.ExecutableFinder;
-import com.facebook.buck.io.WatchmanOverflowEvent;
-import com.facebook.buck.io.WatchmanPathEvent;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.ImmutableBuildTarget;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
@@ -54,7 +52,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
-import com.google.common.eventbus.Subscribe;
+import com.google.common.eventbus.EventBus;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -607,16 +605,7 @@ public class Parser {
     return target.withFlavors(defaultFlavors);
   }
 
-  @Subscribe
-  public void onFileSystemChange(WatchmanOverflowEvent event) {
-    LOG.verbose("Parser watched event OVERFLOW %s", event.getReason());
-    permState.invalidateBasedOn(event);
-  }
-
-  @Subscribe
-  public void onFileSystemChange(WatchmanPathEvent event) {
-    LOG.verbose("Parser watched event %s %s", event.getKind(), event.getPath());
-
-    permState.invalidateBasedOn(event);
+  public void register(EventBus eventBus) {
+    eventBus.register(permState);
   }
 }

@@ -595,7 +595,7 @@ public class ParserTest {
     filterAllTargetsInProject(parser, cell, eventBus, executorService);
 
     // Process event.
-    parser.onFileSystemChange(WatchmanOverflowEvent.of(filesystem.getRootPath(), ""));
+    parser.getPermState().invalidateBasedOn(WatchmanOverflowEvent.of(filesystem.getRootPath(), ""));
 
     // Call filterAllTargetsInProject to request cached rules.
     filterAllTargetsInProject(parser, cell, eventBus, executorService);
@@ -610,7 +610,7 @@ public class ParserTest {
     filterAllTargetsInProject(parser, cell, eventBus, executorService);
 
     // Send overflow event.
-    parser.onFileSystemChange(WatchmanOverflowEvent.of(filesystem.getRootPath(), ""));
+    parser.getPermState().invalidateBasedOn(WatchmanOverflowEvent.of(filesystem.getRootPath(), ""));
 
     // Call filterAllTargetsInProject to request cached rules.
     filterAllTargetsInProject(parser, cell, eventBus, executorService);
@@ -619,11 +619,13 @@ public class ParserTest {
     assertEquals("Should have invalidated cache.", 2, counter.calls);
 
     // Send a "file added" event.
-    parser.onFileSystemChange(
-        WatchmanPathEvent.of(
-            filesystem.getRootPath(),
-            WatchmanPathEvent.Kind.CREATE,
-            Paths.get("java/com/facebook/Something.java")));
+    parser
+        .getPermState()
+        .invalidateBasedOn(
+            WatchmanPathEvent.of(
+                filesystem.getRootPath(),
+                WatchmanPathEvent.Kind.CREATE,
+                Paths.get("java/com/facebook/Something.java")));
 
     // Call filterAllTargetsInProject to request cached rules.
     filterAllTargetsInProject(parser, cell, eventBus, executorService);
@@ -670,11 +672,13 @@ public class ParserTest {
         testBuildFile);
 
     // Process event.
-    parser.onFileSystemChange(
-        WatchmanPathEvent.of(
-            filesystem.getRootPath(),
-            WatchmanPathEvent.Kind.CREATE,
-            MorePaths.relativize(tempDir.getRoot().toRealPath(), testBuildFile)));
+    parser
+        .getPermState()
+        .invalidateBasedOn(
+            WatchmanPathEvent.of(
+                filesystem.getRootPath(),
+                WatchmanPathEvent.Kind.CREATE,
+                MorePaths.relativize(tempDir.getRoot().toRealPath(), testBuildFile)));
 
     // Call parseBuildFile to request cached rules.
     getRawTargetNodes(
@@ -713,7 +717,7 @@ public class ParserTest {
             filesystem.getRootPath(),
             WatchmanPathEvent.Kind.MODIFY,
             MorePaths.relativize(tempDir.getRoot().toRealPath(), testBuildFile));
-    parser.onFileSystemChange(event);
+    parser.getPermState().invalidateBasedOn(event);
 
     // Call parseBuildFile to request cached rules.
     getRawTargetNodes(
@@ -752,7 +756,7 @@ public class ParserTest {
             filesystem.getRootPath(),
             WatchmanPathEvent.Kind.DELETE,
             MorePaths.relativize(tempDir.getRoot().toRealPath(), testBuildFile));
-    parser.onFileSystemChange(event);
+    parser.getPermState().invalidateBasedOn(event);
 
     // Call parseBuildFile to request cached rules.
     getRawTargetNodes(
@@ -791,7 +795,7 @@ public class ParserTest {
             filesystem.getRootPath(),
             WatchmanPathEvent.Kind.CREATE,
             MorePaths.relativize(tempDir.getRoot().toRealPath(), includedByBuildFile));
-    parser.onFileSystemChange(event);
+    parser.getPermState().invalidateBasedOn(event);
 
     // Call parseBuildFile to request cached rules.
     getRawTargetNodes(
@@ -832,7 +836,7 @@ public class ParserTest {
             filesystem.getRootPath(),
             WatchmanPathEvent.Kind.MODIFY,
             MorePaths.relativize(tempDir.getRoot().toRealPath(), includedByBuildFile));
-    parser.onFileSystemChange(event);
+    parser.getPermState().invalidateBasedOn(event);
 
     // Call parseBuildFile to request cached rules.
     getRawTargetNodes(
@@ -871,7 +875,7 @@ public class ParserTest {
             filesystem.getRootPath(),
             WatchmanPathEvent.Kind.DELETE,
             MorePaths.relativize(tempDir.getRoot().toRealPath(), includedByBuildFile));
-    parser.onFileSystemChange(event);
+    parser.getPermState().invalidateBasedOn(event);
 
     // Call parseBuildFile to request cached rules.
     getRawTargetNodes(
@@ -910,7 +914,7 @@ public class ParserTest {
             filesystem.getRootPath(),
             WatchmanPathEvent.Kind.CREATE,
             MorePaths.relativize(tempDir.getRoot().toRealPath(), includedByIncludeFile));
-    parser.onFileSystemChange(event);
+    parser.getPermState().invalidateBasedOn(event);
 
     // Call parseBuildFile to request cached rules.
     getRawTargetNodes(
@@ -949,7 +953,7 @@ public class ParserTest {
             filesystem.getRootPath(),
             WatchmanPathEvent.Kind.MODIFY,
             MorePaths.relativize(tempDir.getRoot().toRealPath(), includedByIncludeFile));
-    parser.onFileSystemChange(event);
+    parser.getPermState().invalidateBasedOn(event);
 
     // Call parseBuildFile to request cached rules.
     getRawTargetNodes(
@@ -988,7 +992,7 @@ public class ParserTest {
             filesystem.getRootPath(),
             WatchmanPathEvent.Kind.DELETE,
             MorePaths.relativize(tempDir.getRoot().toRealPath(), includedByIncludeFile));
-    parser.onFileSystemChange(event);
+    parser.getPermState().invalidateBasedOn(event);
 
     // Call parseBuildFile to request cached rules.
     getRawTargetNodes(
@@ -1027,7 +1031,7 @@ public class ParserTest {
             filesystem.getRootPath(),
             WatchmanPathEvent.Kind.CREATE,
             MorePaths.relativize(tempDir.getRoot().toRealPath(), defaultIncludeFile));
-    parser.onFileSystemChange(event);
+    parser.getPermState().invalidateBasedOn(event);
 
     // Call parseBuildFile to request cached rules.
     getRawTargetNodes(
@@ -1066,7 +1070,7 @@ public class ParserTest {
             filesystem.getRootPath(),
             WatchmanPathEvent.Kind.MODIFY,
             MorePaths.relativize(tempDir.getRoot().toRealPath(), defaultIncludeFile));
-    parser.onFileSystemChange(event);
+    parser.getPermState().invalidateBasedOn(event);
 
     // Call parseBuildFile to request cached rules.
     getRawTargetNodes(
@@ -1105,7 +1109,7 @@ public class ParserTest {
             filesystem.getRootPath(),
             WatchmanPathEvent.Kind.DELETE,
             MorePaths.relativize(tempDir.getRoot().toRealPath(), defaultIncludeFile));
-    parser.onFileSystemChange(event);
+    parser.getPermState().invalidateBasedOn(event);
 
     // Call parseBuildFile to request cached rules.
     getRawTargetNodes(
@@ -1145,7 +1149,7 @@ public class ParserTest {
             filesystem.getRootPath(),
             WatchmanPathEvent.Kind.CREATE,
             Paths.get("java/com/facebook/SomeClass.java"));
-    parser.onFileSystemChange(event);
+    parser.getPermState().invalidateBasedOn(event);
 
     // Call parseBuildFile to request cached rules.
     getRawTargetNodes(
@@ -1198,7 +1202,7 @@ public class ParserTest {
             filesystem.getRootPath(),
             WatchmanPathEvent.Kind.CREATE,
             Paths.get("java/com/facebook/SomeClass.java"));
-    parser.onFileSystemChange(event);
+    parser.getPermState().invalidateBasedOn(event);
 
     // Call parseBuildFile to request cached rules.
     getRawTargetNodes(
@@ -1237,7 +1241,7 @@ public class ParserTest {
             filesystem.getRootPath(),
             WatchmanPathEvent.Kind.MODIFY,
             Paths.get("java/com/facebook/SomeClass.java"));
-    parser.onFileSystemChange(event);
+    parser.getPermState().invalidateBasedOn(event);
 
     // Call parseBuildFile to request cached rules.
     getRawTargetNodes(
@@ -1277,7 +1281,7 @@ public class ParserTest {
             filesystem.getRootPath(),
             WatchmanPathEvent.Kind.DELETE,
             Paths.get("java/com/facebook/SomeClass.java"));
-    parser.onFileSystemChange(event);
+    parser.getPermState().invalidateBasedOn(event);
 
     // Call parseBuildFile to request cached rules.
     getRawTargetNodes(
@@ -1316,7 +1320,7 @@ public class ParserTest {
             filesystem.getRootPath(),
             WatchmanPathEvent.Kind.CREATE,
             Paths.get("java/com/facebook/MumbleSwp.Java.swp"));
-    parser.onFileSystemChange(event);
+    parser.getPermState().invalidateBasedOn(event);
 
     // Call parseBuildFile to request cached rules.
     getRawTargetNodes(
@@ -1355,7 +1359,7 @@ public class ParserTest {
             filesystem.getRootPath(),
             WatchmanPathEvent.Kind.MODIFY,
             Paths.get("java/com/facebook/MumbleSwp.Java.swp"));
-    parser.onFileSystemChange(event);
+    parser.getPermState().invalidateBasedOn(event);
 
     // Call parseBuildFile to request cached rules.
     getRawTargetNodes(
@@ -1394,7 +1398,7 @@ public class ParserTest {
             filesystem.getRootPath(),
             WatchmanPathEvent.Kind.DELETE,
             Paths.get("java/com/facebook/MumbleSwp.Java.swp"));
-    parser.onFileSystemChange(event);
+    parser.getPermState().invalidateBasedOn(event);
 
     // Call parseBuildFile to request cached rules.
     getRawTargetNodes(
@@ -1433,7 +1437,7 @@ public class ParserTest {
             filesystem.getRootPath(),
             WatchmanPathEvent.Kind.CREATE,
             Paths.get("SomeClass.java__backup"));
-    parser.onFileSystemChange(event);
+    parser.getPermState().invalidateBasedOn(event);
 
     // Call parseBuildFile to request cached rules.
     getRawTargetNodes(
@@ -1472,7 +1476,7 @@ public class ParserTest {
             filesystem.getRootPath(),
             WatchmanPathEvent.Kind.MODIFY,
             Paths.get("SomeClass.java__backup"));
-    parser.onFileSystemChange(event);
+    parser.getPermState().invalidateBasedOn(event);
 
     // Call parseBuildFile to request cached rules.
     getRawTargetNodes(
@@ -1511,7 +1515,7 @@ public class ParserTest {
             filesystem.getRootPath(),
             WatchmanPathEvent.Kind.DELETE,
             Paths.get("SomeClass.java__backup"));
-    parser.onFileSystemChange(event);
+    parser.getPermState().invalidateBasedOn(event);
 
     // Call parseBuildFile to request cached rules.
     getRawTargetNodes(
@@ -1625,13 +1629,13 @@ public class ParserTest {
             filesystem.getRootPath(),
             WatchmanPathEvent.Kind.DELETE,
             Paths.get("foo").resolve("BUCK"));
-    parser.onFileSystemChange(deleteEvent);
+    parser.getPermState().invalidateBasedOn(deleteEvent);
     WatchmanPathEvent modifyEvent =
         WatchmanPathEvent.of(
             filesystem.getRootPath(),
             WatchmanPathEvent.Kind.MODIFY,
             Paths.get("bar").resolve("BUCK"));
-    parser.onFileSystemChange(modifyEvent);
+    parser.getPermState().invalidateBasedOn(modifyEvent);
 
     parser.buildTargetGraph(eventBus, cell, false, executorService, buildTargets);
   }
@@ -1708,7 +1712,7 @@ public class ParserTest {
     WatchmanPathEvent deleteEvent =
         WatchmanPathEvent.of(
             filesystem.getRootPath(), WatchmanPathEvent.Kind.DELETE, Paths.get("foo/Bar.java"));
-    parser.onFileSystemChange(deleteEvent);
+    parser.getPermState().invalidateBasedOn(deleteEvent);
 
     HashCode updatedHash = buildTargetGraphAndGetHashCodes(parser, fooLibTarget).get(fooLibTarget);
 
@@ -1739,8 +1743,8 @@ public class ParserTest {
     WatchmanPathEvent createEvent =
         WatchmanPathEvent.of(
             filesystem.getRootPath(), WatchmanPathEvent.Kind.CREATE, Paths.get("foo/Bar.java"));
-    parser.onFileSystemChange(deleteEvent);
-    parser.onFileSystemChange(createEvent);
+    parser.getPermState().invalidateBasedOn(deleteEvent);
+    parser.getPermState().invalidateBasedOn(createEvent);
 
     HashCode updatedHash = buildTargetGraphAndGetHashCodes(parser, fooLibTarget).get(fooLibTarget);
 
@@ -1891,7 +1895,7 @@ public class ParserTest {
     WatchmanPathEvent createEvent =
         WatchmanPathEvent.of(
             filesystem.getRootPath(), WatchmanPathEvent.Kind.CREATE, Paths.get("bar/Baz.java"));
-    parser.onFileSystemChange(createEvent);
+    parser.getPermState().invalidateBasedOn(createEvent);
 
     {
       TargetGraph targetGraph =
@@ -1946,7 +1950,7 @@ public class ParserTest {
     WatchmanPathEvent deleteEvent =
         WatchmanPathEvent.of(
             filesystem.getRootPath(), WatchmanPathEvent.Kind.DELETE, Paths.get("bar/Baz.java"));
-    parser.onFileSystemChange(deleteEvent);
+    parser.getPermState().invalidateBasedOn(deleteEvent);
 
     {
       TargetGraph targetGraph =
