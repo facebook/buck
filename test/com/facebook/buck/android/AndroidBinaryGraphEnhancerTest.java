@@ -19,9 +19,6 @@ package com.facebook.buck.android;
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.ANDROID_JAVAC_OPTIONS;
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVAC;
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVA_CONFIG;
-import static org.easymock.EasyMock.createStrictMock;
-import static org.easymock.EasyMock.replay;
-import static org.easymock.EasyMock.verify;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
@@ -40,7 +37,7 @@ import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
-import com.facebook.buck.core.sourcepath.AbstractPathSourcePath;
+import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
@@ -49,7 +46,6 @@ import com.facebook.buck.jvm.core.HasJavaClassHashes;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.FakeJavac;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
-import com.facebook.buck.jvm.java.Keystore;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.BuildRule;
@@ -147,7 +143,7 @@ public class AndroidBinaryGraphEnhancerTest {
             Optional.empty(),
             /* locales */ ImmutableSet.of(),
             /* localizedStringFileName */ null,
-            Optional.of(createStrictMock(AbstractPathSourcePath.class)),
+            Optional.of(PathSourcePath.of(filesystem, Paths.get("AndroidManifest.xml"))),
             Optional.empty(),
             Optional.empty(),
             AndroidBinary.PackageType.DEBUG,
@@ -289,7 +285,6 @@ public class AndroidBinaryGraphEnhancerTest {
             .withDeclaredDeps(ImmutableSortedSet.of(buildConfigJavaLibrary));
 
     // set it up.
-    Keystore keystore = createStrictMock(Keystore.class);
     AndroidBinaryGraphEnhancer graphEnhancer =
         new AndroidBinaryGraphEnhancer(
             new ToolchainProviderBuilder()
@@ -350,7 +345,6 @@ public class AndroidBinaryGraphEnhancerTest {
             Optional.empty(),
             defaultNonPredexedArgs(),
             ImmutableSortedSet.of());
-    replay(keystore);
     AndroidGraphEnhancementResult result = graphEnhancer.createAdditionalBuildables();
 
     // Verify that android_build_config() was processed correctly.
@@ -401,8 +395,6 @@ public class AndroidBinaryGraphEnhancerTest {
 
     assertFalse(result.getPreDexMerge().isPresent());
     assertTrue(result.getPackageStringAssets().isPresent());
-
-    verify(keystore);
   }
 
   @Test
