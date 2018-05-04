@@ -126,7 +126,7 @@ public class ParserBenchmark {
     TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
     ConstructorArgMarshaller marshaller = new ConstructorArgMarshaller(typeCoercerFactory);
     parser =
-        new Parser(
+        new DefaultParser(
             config.getView(ParserConfig.class),
             typeCoercerFactory,
             marshaller,

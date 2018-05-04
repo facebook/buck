@@ -31,6 +31,7 @@ import com.facebook.buck.io.WatchmanCursor;
 import com.facebook.buck.io.WatchmanWatcher;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.parser.DefaultParser;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.rules.ActionGraphCache;
@@ -108,7 +109,7 @@ final class Daemon implements Closeable {
 
     typeCoercerFactory = new DefaultTypeCoercerFactory();
     this.parser =
-        new Parser(
+        new DefaultParser(
             rootCell.getBuckConfig().getView(ParserConfig.class),
             typeCoercerFactory,
             new ConstructorArgMarshaller(typeCoercerFactory),

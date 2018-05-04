@@ -39,6 +39,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.parser.DefaultParser;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.plugin.impl.BuckPluginManagerFactory;
@@ -111,7 +112,7 @@ public class DistBuildFileHashesIntegrationTest {
     ConstructorArgMarshaller constructorArgMarshaller =
         new ConstructorArgMarshaller(typeCoercerFactory);
     Parser parser =
-        new Parser(
+        new DefaultParser(
             rootCellConfig.getView(ParserConfig.class),
             typeCoercerFactory,
             constructorArgMarshaller,
@@ -186,7 +187,7 @@ public class DistBuildFileHashesIntegrationTest {
     ConstructorArgMarshaller constructorArgMarshaller =
         new ConstructorArgMarshaller(typeCoercerFactory);
     Parser parser =
-        new Parser(
+        new DefaultParser(
             rootCellConfig.getView(ParserConfig.class),
             typeCoercerFactory,
             constructorArgMarshaller,

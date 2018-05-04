@@ -46,6 +46,7 @@ import com.facebook.buck.jvm.java.JavaLibraryDescriptionArg;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.module.BuckModuleManager;
 import com.facebook.buck.module.TestBuckModuleManagerFactory;
+import com.facebook.buck.parser.DefaultParser;
 import com.facebook.buck.parser.DefaultParserTargetNodeFactory;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
@@ -255,7 +256,7 @@ public class DistBuildStateTest {
     ConstructorArgMarshaller constructorArgMarshaller =
         new ConstructorArgMarshaller(typeCoercerFactory);
     Parser parser =
-        new Parser(
+        new DefaultParser(
             buckConfig.getView(ParserConfig.class),
             typeCoercerFactory,
             constructorArgMarshaller,

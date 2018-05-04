@@ -47,6 +47,7 @@ import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.parser.DefaultParser;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
@@ -392,7 +393,7 @@ public class InterCellIntegrationTest {
                 new TestSandboxExecutionStrategyFactory()));
     TypeCoercerFactory coercerFactory = new DefaultTypeCoercerFactory();
     Parser parser =
-        new Parser(
+        new DefaultParser(
             primary.asCell().getBuckConfig().getView(ParserConfig.class),
             coercerFactory,
             new ConstructorArgMarshaller(coercerFactory),

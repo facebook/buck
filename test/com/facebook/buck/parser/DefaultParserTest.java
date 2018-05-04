@@ -131,7 +131,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 @RunWith(Parameterized.class)
-public class ParserTest {
+public class DefaultParserTest {
 
   @Rule public TemporaryPaths tempDir = new TemporaryPaths();
   @Rule public ExpectedException thrown = ExpectedException.none();
@@ -153,7 +153,7 @@ public class ParserTest {
   private ListeningExecutorService executorService;
   private ExecutableFinder executableFinder;
 
-  public ParserTest(int threads, boolean parallelParsing) {
+  public DefaultParserTest(int threads, boolean parallelParsing) {
     this.threads = threads;
     this.parallelParsing = parallelParsing;
   }
@@ -200,7 +200,7 @@ public class ParserTest {
                 knownBuildRuleTypesProvider,
                 enableProfiling,
                 SpeculativeParsing.DISABLED)) {
-      return Parser.getRawTargetNodes(state, cell, buildFile);
+      return DefaultParser.getRawTargetNodes(state, cell, buildFile);
     }
   }
 
@@ -311,7 +311,7 @@ public class ParserTest {
 
     typeCoercerFactory = new DefaultTypeCoercerFactory();
     parser =
-        new Parser(
+        new DefaultParser(
             cell.getBuckConfig().getView(ParserConfig.class),
             typeCoercerFactory,
             new ConstructorArgMarshaller(typeCoercerFactory),
@@ -1676,7 +1676,7 @@ public class ParserTest {
 
     DefaultTypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
     parser =
-        new Parser(
+        new DefaultParser(
             cell.getBuckConfig().getView(ParserConfig.class),
             typeCoercerFactory,
             new ConstructorArgMarshaller(typeCoercerFactory),
@@ -1794,7 +1794,7 @@ public class ParserTest {
 
     DefaultTypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
     parser =
-        new Parser(
+        new DefaultParser(
             cell.getBuckConfig().getView(ParserConfig.class),
             typeCoercerFactory,
             new ConstructorArgMarshaller(typeCoercerFactory),
@@ -2078,7 +2078,7 @@ public class ParserTest {
     TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
     // Reset parser to square one.
     parser =
-        new Parser(
+        new DefaultParser(
             cell.getBuckConfig().getView(ParserConfig.class),
             typeCoercerFactory,
             new ConstructorArgMarshaller(typeCoercerFactory),

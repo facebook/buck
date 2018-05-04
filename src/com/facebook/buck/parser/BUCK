@@ -30,6 +30,7 @@ java_immutables_library(
         "ConvertingPipeline.java",
         "DaemonicCellState.java",
         "DaemonicParserState.java",
+        "DefaultParser.java",
         "DefaultParserTargetNodeFactory.java",
         "DefaultProjectBuildFileParserFactory.java",
         "ParseEvent.java",

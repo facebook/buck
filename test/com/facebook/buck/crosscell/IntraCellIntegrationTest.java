@@ -26,6 +26,7 @@ import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypesProvider;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.parser.DefaultParser;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
@@ -74,7 +75,7 @@ public class IntraCellIntegrationTest {
 
     TypeCoercerFactory coercerFactory = new DefaultTypeCoercerFactory();
     Parser parser =
-        new Parser(
+        new DefaultParser(
             cell.getBuckConfig().getView(ParserConfig.class),
             coercerFactory,
             new ConstructorArgMarshaller(coercerFactory),

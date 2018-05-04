@@ -33,7 +33,7 @@ import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
 import com.facebook.buck.module.TestBuckModuleManagerFactory;
-import com.facebook.buck.parser.Parser;
+import com.facebook.buck.parser.DefaultParser;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.rules.ActionGraphCache;
@@ -113,7 +113,7 @@ public class CommandRunnerParamsForTesting {
             new VersionedTargetGraphCache(), new NoOpCacheStatsTracker()),
         new SingletonArtifactCacheFactory(artifactCache),
         typeCoercerFactory,
-        new Parser(
+        new DefaultParser(
             cell.getBuckConfig().getView(ParserConfig.class),
             typeCoercerFactory,
             new ConstructorArgMarshaller(typeCoercerFactory),
