@@ -162,7 +162,7 @@ public class PublicAnnouncementManagerIntegrationTest {
           "**-------------------------------**\n"
               + "**- Sticky Public Announcements -**\n"
               + "**-------------------------------**\n"
-              + "** This is the error message. This is the solution message.");
+              + "** This is the error message. Remediation: This is the solution message.");
     }
   }
 }

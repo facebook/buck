@@ -50,7 +50,7 @@ public class PublicAnnouncementManager {
           + "**- Sticky Public Announcements -**\n"
           + "**-------------------------------**";
 
-  @VisibleForTesting static final String ANNOUNCEMENT_TEMPLATE = "\n** %s %s";
+  @VisibleForTesting static final String ANNOUNCEMENT_TEMPLATE = "\n** %s Remediation: %s";
 
   private Clock clock;
   private BuckEventBus eventBus;
@@ -118,8 +118,9 @@ public class PublicAnnouncementManager {
                     announcement.concat(
                         String.format(
                             ANNOUNCEMENT_TEMPLATE,
-                            entry.getErrorMessage(),
-                            entry.getSolutionMessage()));
+                            consoleEventBusListener.ansi.asErrorText(entry.getErrorMessage()),
+                            consoleEventBusListener.ansi.asInformationText(
+                                entry.getSolutionMessage())));
               }
               consoleEventBusListener.setPublicAnnouncements(eventBus, Optional.of(announcement));
             }
