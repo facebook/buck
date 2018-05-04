@@ -24,6 +24,7 @@ import com.facebook.buck.io.WatchmanFactory;
 import com.facebook.buck.io.filesystem.skylark.SkylarkFilesystem;
 import com.facebook.buck.json.HybridProjectBuildFileParser;
 import com.facebook.buck.json.PythonDslProjectBuildFileParser;
+import com.facebook.buck.json.TargetCountVerificationParserDelegate;
 import com.facebook.buck.parser.AbstractParserConfig.SkylarkGlobHandler;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.api.Syntax;
@@ -136,6 +137,12 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
         eventBus);
   }
 
+  /** Creates a delegate wrapper that counts the number of targets declared in a parsed file */
+  private static ProjectBuildFileParser createTargetCountingWrapper(
+      ProjectBuildFileParser aggregate, int targetCountThreshold, BuckEventBus eventBus) {
+    return new TargetCountVerificationParserDelegate(aggregate, targetCountThreshold, eventBus);
+  }
+
   /** Creates a project build file parser based on Buck configuration settings. */
   private static ProjectBuildFileParser createProjectBuildFileParser(
       Cell cell,
@@ -144,32 +151,38 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
       BuckEventBus eventBus,
       ParserConfig parserConfig,
       ProjectBuildFileParserOptions buildFileParserOptions) {
+    ProjectBuildFileParser parser;
     Syntax defaultBuildFileSyntax = parserConfig.getDefaultBuildFileSyntax();
     if (parserConfig.isPolyglotParsingEnabled()) {
-      return HybridProjectBuildFileParser.using(
-          ImmutableMap.of(
-              Syntax.PYTHON_DSL,
-              newPythonParser(cell, typeCoercerFactory, console, eventBus, buildFileParserOptions),
-              Syntax.SKYLARK,
+      parser =
+          HybridProjectBuildFileParser.using(
+              ImmutableMap.of(
+                  Syntax.PYTHON_DSL,
+                  newPythonParser(
+                      cell, typeCoercerFactory, console, eventBus, buildFileParserOptions),
+                  Syntax.SKYLARK,
+                  newSkylarkParser(
+                      cell,
+                      typeCoercerFactory,
+                      eventBus,
+                      buildFileParserOptions,
+                      parserConfig.getSkylarkGlobHandler())),
+              defaultBuildFileSyntax);
+    } else {
+      switch (defaultBuildFileSyntax) {
+        case SKYLARK:
+          parser =
               newSkylarkParser(
                   cell,
                   typeCoercerFactory,
                   eventBus,
                   buildFileParserOptions,
-                  parserConfig.getSkylarkGlobHandler())),
-          defaultBuildFileSyntax);
-    } else {
-      switch (defaultBuildFileSyntax) {
-        case SKYLARK:
-          return newSkylarkParser(
-              cell,
-              typeCoercerFactory,
-              eventBus,
-              buildFileParserOptions,
-              parserConfig.getSkylarkGlobHandler());
+                  parserConfig.getSkylarkGlobHandler());
+          break;
         case PYTHON_DSL:
-          return newPythonParser(
-              cell, typeCoercerFactory, console, eventBus, buildFileParserOptions);
+          parser =
+              newPythonParser(cell, typeCoercerFactory, console, eventBus, buildFileParserOptions);
+          break;
         default:
           throw new HumanReadableException(
               defaultBuildFileSyntax
@@ -178,6 +191,10 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
                   + Arrays.toString(Syntax.values()));
       }
     }
+
+    parser = createTargetCountingWrapper(parser, parserConfig.getParserTargetThreshold(), eventBus);
+
+    return parser;
   }
 
   private static PythonDslProjectBuildFileParser newPythonParser(

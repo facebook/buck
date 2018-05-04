@@ -38,6 +38,7 @@ abstract class AbstractParserConfig implements ConfigView<BuckConfig> {
   public static final String INCLUDES_PROPERTY_NAME = "includes";
 
   private static final long NUM_PARSING_THREADS_DEFAULT = 1L;
+  private static final int TARGET_PARSER_THRESHOLD = 100000;
 
   public enum GlobHandler {
     PYTHON,
@@ -273,5 +274,14 @@ abstract class AbstractParserConfig implements ConfigView<BuckConfig> {
     return getDelegate()
         .getEnum("parser", "skylark_glob_handler", SkylarkGlobHandler.class)
         .orElse(SkylarkGlobHandler.JAVA);
+  }
+
+  /**
+   * @return the parser target threshold. When the current targets produced exceed this value, a
+   *     warning is emitted.
+   */
+  @Value.Lazy
+  public int getParserTargetThreshold() {
+    return getDelegate().getInteger("parser", "target_threshold").orElse(TARGET_PARSER_THRESHOLD);
   }
 }
