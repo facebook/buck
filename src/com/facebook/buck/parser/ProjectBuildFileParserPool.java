@@ -90,18 +90,16 @@ class ProjectBuildFileParserPool implements AutoCloseable {
 
   private synchronized ResourcePool<ProjectBuildFileParser> getResourcePoolForCell(
       BuckEventBus buckEventBus, Cell cell) {
-    ResourcePool<ProjectBuildFileParser> pool = parserResourcePools.get(cell);
-    if (pool == null) {
-      pool =
-          new ResourcePool<>(
-              maxParsersPerCell,
-              // If the Python process garbles the output stream then the bser codec doesn't always
-              // recover and subsequent attempts at invoking the parser will fail.
-              ResourcePool.ResourceUsageErrorPolicy.RETIRE,
-              () -> projectBuildFileParserFactory.createBuildFileParser(buckEventBus, cell));
-      parserResourcePools.put(cell, pool);
-    }
-    return pool;
+    return parserResourcePools.computeIfAbsent(
+        cell,
+        c ->
+            new ResourcePool<>(
+                maxParsersPerCell,
+                // If the Python process garbles the output stream then the bser codec doesn't
+                // always
+                // recover and subsequent attempts at invoking the parser will fail.
+                ResourcePool.ResourceUsageErrorPolicy.RETIRE,
+                () -> projectBuildFileParserFactory.createBuildFileParser(buckEventBus, c)));
   }
 
   private void reportProfile() {
