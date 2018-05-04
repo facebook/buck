@@ -49,14 +49,14 @@ public class PerBuildState implements AutoCloseable {
     this.targetNodeParsePipeline = targetNodeParsePipeline;
   }
 
-  public TargetNode<?, ?> getTargetNode(BuildTarget target) throws BuildFileParseException {
+  TargetNode<?, ?> getTargetNode(BuildTarget target) throws BuildFileParseException {
     Cell owningCell = cellManager.getCell(target);
 
     return targetNodeParsePipeline.getNode(
         owningCell, knownBuildRuleTypesProvider.get(owningCell), target, parseProcessedBytes);
   }
 
-  public ListenableFuture<TargetNode<?, ?>> getTargetNodeJob(BuildTarget target)
+  ListenableFuture<TargetNode<?, ?>> getTargetNodeJob(BuildTarget target)
       throws BuildTargetException {
     Cell owningCell = cellManager.getCell(target);
 
@@ -64,7 +64,7 @@ public class PerBuildState implements AutoCloseable {
         owningCell, knownBuildRuleTypesProvider.get(owningCell), target, parseProcessedBytes);
   }
 
-  public ImmutableSet<TargetNode<?, ?>> getAllTargetNodes(Cell cell, Path buildFile)
+  ImmutableSet<TargetNode<?, ?>> getAllTargetNodes(Cell cell, Path buildFile)
       throws BuildFileParseException {
     Preconditions.checkState(buildFile.startsWith(cell.getRoot()));
 
@@ -72,15 +72,15 @@ public class PerBuildState implements AutoCloseable {
         cell, knownBuildRuleTypesProvider.get(cell), buildFile, parseProcessedBytes);
   }
 
-  public ListenableFuture<ImmutableSet<TargetNode<?, ?>>> getAllTargetNodesJob(
-      Cell cell, Path buildFile) throws BuildTargetException {
+  ListenableFuture<ImmutableSet<TargetNode<?, ?>>> getAllTargetNodesJob(Cell cell, Path buildFile)
+      throws BuildTargetException {
     Preconditions.checkState(buildFile.startsWith(cell.getRoot()));
 
     return targetNodeParsePipeline.getAllNodesJob(
         cell, knownBuildRuleTypesProvider.get(cell), buildFile, parseProcessedBytes);
   }
 
-  public ImmutableSet<Map<String, Object>> getAllRawNodes(Cell cell, Path buildFile)
+  ImmutableSet<Map<String, Object>> getAllRawNodes(Cell cell, Path buildFile)
       throws BuildFileParseException {
     Preconditions.checkState(buildFile.startsWith(cell.getRoot()));
 
@@ -89,7 +89,7 @@ public class PerBuildState implements AutoCloseable {
         cell, knownBuildRuleTypesProvider.get(cell), buildFile, parseProcessedBytes);
   }
 
-  public long getParseProcessedBytes() {
+  long getParseProcessedBytes() {
     return parseProcessedBytes.get();
   }
 

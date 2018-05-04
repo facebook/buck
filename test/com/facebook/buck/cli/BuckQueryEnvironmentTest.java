@@ -127,6 +127,7 @@ public class BuckQueryEnvironmentTest {
         BuckQueryEnvironment.from(
             cell,
             ownersReportBuilder,
+            parser,
             parserState,
             executor,
             targetPatternEvaluator,

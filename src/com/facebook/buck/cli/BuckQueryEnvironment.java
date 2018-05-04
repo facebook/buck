@@ -18,6 +18,7 @@ package com.facebook.buck.cli;
 
 import static com.facebook.buck.util.concurrent.MoreFutures.propagateCauseIfInstanceOf;
 
+import com.facebook.buck.cli.OwnersReport.Builder;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
@@ -31,6 +32,7 @@ import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.FilesystemBackedBuildFileTree;
+import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserMessages;
 import com.facebook.buck.parser.PerBuildState;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
@@ -83,6 +85,7 @@ import java.util.function.Predicate;
  */
 public class BuckQueryEnvironment implements QueryEnvironment {
 
+  private final Parser parser;
   private final PerBuildState parserState;
   private final Cell rootCell;
   private final OwnersReport.Builder ownersReportBuilder;
@@ -102,12 +105,14 @@ public class BuckQueryEnvironment implements QueryEnvironment {
 
   private BuckQueryEnvironment(
       Cell rootCell,
-      OwnersReport.Builder ownersReportBuilder,
+      Builder ownersReportBuilder,
+      Parser parser,
       PerBuildState parserState,
       ListeningExecutorService executor,
       TargetPatternEvaluator targetPatternEvaluator,
       Console console,
       TypeCoercerFactory typeCoercerFactory) {
+    this.parser = parser;
     this.parserState = parserState;
     this.rootCell = rootCell;
     this.ownersReportBuilder = ownersReportBuilder;
@@ -131,6 +136,7 @@ public class BuckQueryEnvironment implements QueryEnvironment {
   public static BuckQueryEnvironment from(
       Cell rootCell,
       OwnersReport.Builder ownersReportBuilder,
+      Parser parser,
       PerBuildState parserState,
       ListeningExecutorService executor,
       TargetPatternEvaluator targetPatternEvaluator,
@@ -139,6 +145,7 @@ public class BuckQueryEnvironment implements QueryEnvironment {
     return new BuckQueryEnvironment(
         rootCell,
         ownersReportBuilder,
+        parser,
         parserState,
         executor,
         targetPatternEvaluator,
@@ -154,6 +161,7 @@ public class BuckQueryEnvironment implements QueryEnvironment {
     return from(
         params.getCell(),
         OwnersReport.builder(params.getCell(), params.getParser(), params.getBuckEventBus()),
+        params.getParser(),
         parserState,
         executor,
         new TargetPatternEvaluator(
@@ -213,7 +221,7 @@ public class BuckQueryEnvironment implements QueryEnvironment {
               target, target.getClass().getName()));
     }
     try {
-      return parserState.getTargetNode(((QueryBuildTarget) target).getBuildTarget());
+      return parser.getTargetNode(parserState, ((QueryBuildTarget) target).getBuildTarget());
     } catch (BuildFileParseException e) {
       throw new QueryException(e, "Error getting target node for %s\n%s", target, e.getMessage());
     }
@@ -402,7 +410,7 @@ public class BuckQueryEnvironment implements QueryEnvironment {
 
     ListenableFuture<Void> future =
         Futures.transformAsync(
-            parserState.getTargetNodeJob(buildTarget),
+            parser.getTargetNodeJob(parserState, buildTarget),
             targetNode -> {
               targetsToNodes.put(buildTarget, targetNode);
               List<ListenableFuture<Void>> depsFuture = new ArrayList<>();

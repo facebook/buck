@@ -176,6 +176,18 @@ public class DefaultParser implements Parser {
     }
   }
 
+  @Override
+  public TargetNode<?, ?> getTargetNode(PerBuildState perBuildState, BuildTarget target)
+      throws BuildFileParseException {
+    return perBuildState.getTargetNode(target);
+  }
+
+  @Override
+  public ListenableFuture<TargetNode<?, ?>> getTargetNodeJob(
+      PerBuildState perBuildState, BuildTarget target) throws BuildTargetException {
+    return perBuildState.getTargetNodeJob(target);
+  }
+
   @Nullable
   @Override
   public SortedMap<String, Object> getRawTargetNode(
