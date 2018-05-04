@@ -97,10 +97,21 @@ def _warn_about_wrong_java_version(required_version, actual_version):
         actual_version, required_version)
 
 
+def _try_to_verify_java_version():
+    """
+    Best effort check to make sure users have required Java version installed.
+    """
+    try:
+        java_version = _get_java_version()
+        if java_version and java_version != REQUIRED_JAVA_VERSION:
+            _warn_about_wrong_java_version(REQUIRED_JAVA_VERSION, java_version)
+    except:
+        # checking Java version is brittle and as such is best effort
+        logging.warning("Cannot verify that installed Java version is correct.")
+
+
 def main(argv, reporter):
-    java_version = _get_java_version()
-    if java_version and java_version != REQUIRED_JAVA_VERSION:
-        _warn_about_wrong_java_version(REQUIRED_JAVA_VERSION, java_version)
+    _try_to_verify_java_version()
 
     def get_repo(p):
         # Try to detect if we're running a PEX by checking if we were invoked
