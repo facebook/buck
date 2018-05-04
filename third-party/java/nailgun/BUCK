@@ -7,6 +7,7 @@ prebuilt_jar(
     source_jar = "nailgun-server-0.9.3-SNAPSHOT-sources.jar",
     visibility = [
         "//src/com/facebook/buck/cli:cli",
+        "//src/com/facebook/buck/cli/exceptions/handlers:handlers",
         "//test/...",
     ],
     deps = [

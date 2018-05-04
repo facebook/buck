@@ -1,0 +1,8 @@
+java_library(
+    name = "handler",
+    srcs = glob(["*.java"]),
+    visibility = ["PUBLIC"],
+    deps = [
+        "//third-party/java/guava:guava",
+    ],
+)

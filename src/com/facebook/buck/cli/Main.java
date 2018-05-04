@@ -24,12 +24,14 @@ import static com.google.common.util.concurrent.MoreExecutors.newDirectExecutorS
 
 import com.facebook.buck.artifact_cache.ArtifactCaches;
 import com.facebook.buck.artifact_cache.config.ArtifactCacheBuckConfig;
+import com.facebook.buck.cli.exceptions.handlers.ExceptionHandlerRegistryFactory;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.DefaultCellPathResolver;
 import com.facebook.buck.core.cell.LocalCellProviderFactory;
 import com.facebook.buck.core.cell.name.RelativeCellName;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.exceptions.handler.ExceptionHandlerRegistry;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.knowntypes.DefaultKnownBuildRuleTypesFactory;
@@ -93,7 +95,6 @@ import com.facebook.buck.module.impl.DefaultBuckModuleManager;
 import com.facebook.buck.parser.DefaultParser;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
-import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.rules.ActionGraphCache;
 import com.facebook.buck.rules.BuildInfoStoreManager;
@@ -114,13 +115,11 @@ import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.AnsiEnvironmentChecking;
 import com.facebook.buck.util.BgProcessKiller;
 import com.facebook.buck.util.BuckArgsMethods;
-import com.facebook.buck.util.BuckIsDyingException;
 import com.facebook.buck.util.CloseableWrapper;
 import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ExitCode;
-import com.facebook.buck.util.InterruptionFailedException;
 import com.facebook.buck.util.Libc;
 import com.facebook.buck.util.PkillProcessManager;
 import com.facebook.buck.util.PrintStreamProcessExecutorFactory;
@@ -318,6 +317,8 @@ public final class Main {
 
   private static final Logger LOG = Logger.get(Main.class);
 
+  private ExceptionHandlerRegistry<ExitCode> exceptionHandlerRegistry;
+
   private static boolean isSessionLeader;
   private static PluginManager pluginManager;
   private static BuckModuleManager moduleManager;
@@ -418,41 +419,9 @@ public final class Main {
               watchmanFreshInstanceAction,
               initTimestamp,
               ImmutableList.copyOf(args));
-    } catch (InterruptedException | ClosedByInterruptException e) {
-      exitCode = ExitCode.SIGNAL_INTERRUPT;
-      // Interrupts are usually triggered by user, so do not display anything to the console -
-      // this behavior is expected
-      LOG.info(e, "Execution of the command was interrupted (SIGINT)");
-    } catch (IOException e) {
-      if (e.getMessage().startsWith("No space left on device")) {
-        exitCode = ExitCode.FATAL_DISK_FULL;
-        console.printBuildFailure(e.getMessage());
-      } else {
-        exitCode = ExitCode.FATAL_IO;
-        console.printFailureWithStacktrace(e, e.getMessage());
-      }
-    } catch (OutOfMemoryError e) {
-      exitCode = ExitCode.FATAL_OOM;
-      console.printFailureWithStacktrace(
-          e, "Buck ran out of memory, you may consider increasing heap size with java args");
-    } catch (BuildFileParseException e) {
-      exitCode = ExitCode.PARSE_ERROR;
-      console.printBuildFailure(e.getHumanReadableErrorMessage());
-    } catch (CommandLineException e) {
-      exitCode = ExitCode.COMMANDLINE_ERROR;
-      console.printFailure(e, "BAD ARGUMENTS: " + e.getHumanReadableErrorMessage());
-    } catch (HumanReadableException e) {
-      exitCode = ExitCode.BUILD_ERROR;
-      console.printBuildFailure(e.getHumanReadableErrorMessage());
-    } catch (InterruptionFailedException e) { // Command could not be interrupted.
-      exitCode = ExitCode.SIGNAL_INTERRUPT;
-      context.ifPresent(ngContext -> ngContext.getNGServer().shutdown(false));
-    } catch (BuckIsDyingException e) {
-      exitCode = ExitCode.FATAL_GENERIC;
-      LOG.warn(e, "Fallout because buck was already dying");
     } catch (Throwable t) {
-      exitCode = ExitCode.FATAL_GENERIC;
-      console.printFailureWithStacktrace(t, "UNKNOWN ERROR: " + t.getMessage());
+      exceptionHandlerRegistry = ExceptionHandlerRegistryFactory.create(console, context);
+      exitCode = exceptionHandlerRegistry.handleException(t);
     } finally {
       LOG.debug("Done.");
       LogConfig.flushLogs();
