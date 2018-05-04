@@ -24,6 +24,7 @@ import com.facebook.buck.android.apkmodule.APKModule;
 import com.facebook.buck.android.dalvik.ZipSplitter;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.FakeSourcePath;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -46,7 +47,6 @@ import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
-import org.easymock.EasyMock;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -147,10 +147,8 @@ public class SplitZipStepTest {
             "com/google/common/collect/ImmutableSortedSet",
             "  com/google/common/collect/ImmutableSet",
             "# com/google/common/collect/ImmutableMap");
-    ProjectFilesystem projectFilesystem = EasyMock.createMock(ProjectFilesystem.class);
-    EasyMock.expect(projectFilesystem.readLines(primaryDexClassesFile))
-        .andReturn(linesInManifestFile);
-    EasyMock.replay(projectFilesystem);
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
+    projectFilesystem.writeLinesToPath(linesInManifestFile, primaryDexClassesFile);
 
     SplitZipStep splitZipStep =
         new SplitZipStep(
@@ -211,8 +209,6 @@ public class SplitZipStepTest {
     assertFalse(
         "Substring matching is case-sensitive.",
         requiredInPrimaryZipPredicate.test("shiny/Glistener.class"));
-
-    EasyMock.verify(projectFilesystem);
   }
 
   @Test
@@ -239,12 +235,10 @@ public class SplitZipStepTest {
     Path proguardMappingFile = Paths.get("the/mapping.txt");
     Path primaryDexClassesFile = Paths.get("the/manifest.txt");
 
-    ProjectFilesystem projectFilesystem = EasyMock.createMock(ProjectFilesystem.class);
-    EasyMock.expect(projectFilesystem.readLines(primaryDexClassesFile))
-        .andReturn(linesInManifestFile);
-    EasyMock.expect(projectFilesystem.readLines(proguardConfigFile)).andReturn(ImmutableList.of());
-    EasyMock.expect(projectFilesystem.readLines(proguardMappingFile)).andReturn(linesInMappingFile);
-    EasyMock.replay(projectFilesystem);
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
+    projectFilesystem.writeLinesToPath(linesInManifestFile, primaryDexClassesFile);
+    projectFilesystem.writeLinesToPath(ImmutableList.of(), proguardConfigFile);
+    projectFilesystem.writeLinesToPath(linesInMappingFile, proguardMappingFile);
 
     SplitZipStep splitZipStep =
         new SplitZipStep(
@@ -311,8 +305,6 @@ public class SplitZipStepTest {
     assertFalse(
         "Map class with obfuscated name substring should not be in primary.",
         requiredInPrimaryZipPredicate.test("x/b.class"));
-
-    EasyMock.verify(projectFilesystem);
   }
 
   @Test
@@ -320,10 +312,8 @@ public class SplitZipStepTest {
     Path proguardConfigFile = Paths.get("the/configuration.txt");
     Path proguardMappingFile = Paths.get("the/mapping.txt");
 
-    ProjectFilesystem projectFilesystem = EasyMock.createMock(ProjectFilesystem.class);
-    EasyMock.expect(projectFilesystem.readLines(proguardConfigFile))
-        .andReturn(ImmutableList.of("-dontobfuscate"));
-    EasyMock.replay(projectFilesystem);
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
+    projectFilesystem.writeLinesToPath(ImmutableList.of("-dontobfuscate"), proguardConfigFile);
 
     SplitZipStep splitZipStep =
         new SplitZipStep(
@@ -374,8 +364,6 @@ public class SplitZipStepTest {
     assertFalse(
         "Secondary class should be in secondary.",
         requiredInPrimaryZipPredicate.test("secondary.class"));
-
-    EasyMock.verify(projectFilesystem);
   }
 
   @Test
@@ -398,10 +386,8 @@ public class SplitZipStepTest {
             "com/google/common/collect/ImmutableSortedSet",
             "  com/google/common/collect/ImmutableSet",
             "# com/google/common/collect/ImmutableMap");
-    ProjectFilesystem projectFilesystem = EasyMock.createMock(ProjectFilesystem.class);
-    EasyMock.expect(projectFilesystem.readLines(primaryDexScenarioFile))
-        .andReturn(linesInManifestFile);
-    EasyMock.replay(projectFilesystem);
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
+    projectFilesystem.writeLinesToPath(linesInManifestFile, primaryDexScenarioFile);
 
     SplitZipStep splitZipStep =
         new SplitZipStep(
@@ -456,8 +442,6 @@ public class SplitZipStepTest {
     assertFalse(
         "com/google/common/collect/Iterables.class is not even mentioned.",
         requiredInPrimaryZipPredicate.test("com/google/common/collect/Iterables.class"));
-
-    EasyMock.verify(projectFilesystem);
   }
 
   @Test
@@ -483,12 +467,10 @@ public class SplitZipStepTest {
     Path proguardMappingFile = Paths.get("the/mapping.txt");
     Path primaryDexScenarioFile = Paths.get("the/primary_dex_scenario.txt");
 
-    ProjectFilesystem projectFilesystem = EasyMock.createMock(ProjectFilesystem.class);
-    EasyMock.expect(projectFilesystem.readLines(primaryDexScenarioFile))
-        .andReturn(linesInScenarioFile);
-    EasyMock.expect(projectFilesystem.readLines(proguardConfigFile)).andReturn(ImmutableList.of());
-    EasyMock.expect(projectFilesystem.readLines(proguardMappingFile)).andReturn(linesInMappingFile);
-    EasyMock.replay(projectFilesystem);
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
+    projectFilesystem.writeLinesToPath(linesInScenarioFile, primaryDexScenarioFile);
+    projectFilesystem.writeLinesToPath(ImmutableList.of(), proguardConfigFile);
+    projectFilesystem.writeLinesToPath(linesInMappingFile, proguardMappingFile);
 
     SplitZipStep splitZipStep =
         new SplitZipStep(
@@ -550,7 +532,5 @@ public class SplitZipStepTest {
     assertFalse(
         "Not in primary scenario list should not be in primary.",
         requiredInPrimaryZipPredicate.test("foo/secondary/Unknown.class"));
-
-    EasyMock.verify(projectFilesystem);
   }
 }
