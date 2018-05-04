@@ -16,6 +16,7 @@
 
 package com.facebook.buck.skylark.parser.context;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.devtools.build.lib.syntax.Environment;
@@ -35,7 +36,7 @@ import javax.annotation.Nullable;
  * rules.
  */
 public class ParseContext {
-  private final ImmutableList.Builder<ImmutableMap<String, Object>> rawRuleBuilder;
+  private final ImmutableMap.Builder<String, ImmutableMap<String, Object>> rawRuleBuilder;
   // stores every accessed configuration option while parsing the build file.
   // the schema is: section->key->value
   private final Map<String, Map<String, Optional<String>>> readConfigOptions;
@@ -44,13 +45,15 @@ public class ParseContext {
   private static final String PARSE_CONTEXT = "$parse_context";
 
   public ParseContext() {
-    rawRuleBuilder = ImmutableList.builder();
+    rawRuleBuilder = ImmutableMap.builder();
     readConfigOptions = new ConcurrentHashMap<>();
   }
 
   /** Records the parsed {@code rawRule}. */
   public void recordRule(ImmutableMap<String, Object> rawRule) {
-    rawRuleBuilder.add(rawRule);
+    String name =
+        Preconditions.checkNotNull((String) rawRule.get("name"), "Every target must have a name.");
+    rawRuleBuilder.put(name, rawRule);
   }
 
   /**
@@ -70,7 +73,7 @@ public class ParseContext {
    *     map with attributes as keys and parameters as values.
    */
   public ImmutableList<ImmutableMap<String, Object>> getRecordedRules() {
-    return rawRuleBuilder.build();
+    return rawRuleBuilder.build().values().stream().collect(ImmutableList.toImmutableList());
   }
 
   public ImmutableMap<String, ImmutableMap<String, Optional<String>>>

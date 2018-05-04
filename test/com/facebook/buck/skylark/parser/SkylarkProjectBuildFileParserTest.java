@@ -149,6 +149,24 @@ public class SkylarkProjectBuildFileParserTest {
   }
 
   @Test
+  public void detectsDuplicateRuleDefinition() throws Exception {
+    Path buildFile = projectFilesystem.resolve("src").resolve("BUCK");
+    Files.createDirectories(buildFile.getParent());
+    Files.write(
+        buildFile,
+        Arrays.asList(
+            "prebuilt_jar(name='guava', binary_jar='guava.jar')",
+            "prebuilt_jar(name='guava', binary_jar='guava.jar')"));
+
+    thrown.expectMessage(
+        "Multiple entries with same key: "
+            + "guava={buck.base_path=src, buck.type=prebuilt_jar, name=guava, binaryJar=guava.jar}"
+            + " and "
+            + "guava={buck.base_path=src, buck.type=prebuilt_jar, name=guava, binaryJar=guava.jar}");
+    parser.getAll(buildFile, new AtomicLong());
+  }
+
+  @Test
   public void detectsInvalidAttribute() throws Exception {
     Path buildFile = projectFilesystem.resolve("src").resolve("test").resolve("BUCK");
     Files.createDirectories(buildFile.getParent());
