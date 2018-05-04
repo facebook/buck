@@ -73,7 +73,6 @@ standard_java_test(
         "//third-party/java/aosp:aosp",
         "//third-party/java/asm:asm",
         "//third-party/java/dd-plist:dd-plist",
-        "//third-party/java/easymock:easymock",
         "//third-party/java/guava:guava",
         "//third-party/java/hamcrest:java-hamcrest",
         "//third-party/java/immutables:immutables",
