@@ -31,8 +31,6 @@ import com.facebook.buck.jvm.java.Keystore;
 import com.facebook.buck.jvm.java.KeystoreBuilder;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.parser.BuildTargetParser;
-import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -68,7 +66,6 @@ import java.nio.file.FileSystem;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
-import org.easymock.EasyMock;
 import org.junit.Test;
 
 public class ApkGenruleTest {
@@ -111,17 +108,9 @@ public class ApkGenruleTest {
 
     // From the Python object, create a ApkGenruleBuildRuleFactory to create a ApkGenrule.Builder
     // that builds a ApkGenrule from the Python object.
-    BuildTargetParser parser = EasyMock.createNiceMock(BuildTargetParser.class);
     BuildTarget apkTarget =
         BuildTargetFactory.newInstance(projectFilesystem.getRootPath(), "//:fb4a");
 
-    EasyMock.expect(
-            parser.parse(
-                EasyMock.eq(":fb4a"),
-                EasyMock.anyObject(BuildTargetPatternParser.class),
-                EasyMock.anyObject()))
-        .andStubReturn(apkTarget);
-    EasyMock.replay(parser);
     BuildTarget buildTarget =
         BuildTargetFactory.newInstance(
             projectFilesystem.getRootPath(), "//src/com/facebook:sign_fb4a");
@@ -284,8 +273,6 @@ public class ApkGenruleTest {
         ImmutableList.of("/bin/bash", "-e", scriptFilePath.toString()),
         genruleCommand.getShellCommand(executionContext));
     assertEquals("python signer.py $APK key.properties > $OUT", scriptFileContents);
-
-    EasyMock.verify(parser);
   }
 
   private ExecutionContext newEmptyExecutionContext() {
