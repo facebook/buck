@@ -134,7 +134,7 @@ public class GoTestCoverSource extends AbstractBuildRule {
   }
 
   static String getVarName(Path path) {
-    return "Var_" + path.getFileName().toString().replace(".go", "").replace("-", "_");
+    return "Var_" + path.getFileName().toString().replace(".go", "").replace('-', '_');
   }
 
   public ImmutableSet<SourcePath> getCoveredSources() {
