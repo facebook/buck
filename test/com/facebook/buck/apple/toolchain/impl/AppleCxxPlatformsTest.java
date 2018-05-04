@@ -66,9 +66,12 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeSourcePath;
+import com.facebook.buck.rules.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.SourcePathRuleFinder;
+import com.facebook.buck.rules.TestBuildRuleParams;
 import com.facebook.buck.rules.TestBuildRuleResolver;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
@@ -93,7 +96,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-import org.easymock.EasyMock;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
@@ -918,7 +920,7 @@ public class AppleCxxPlatformsTest {
   @Test
   public void byDefaultCodesignToolIsConstant() {
     AppleCxxPlatform appleCxxPlatform = buildAppleCxxPlatform();
-    BuildRuleResolver buildRuleResolver = EasyMock.createMock(BuildRuleResolver.class);
+    BuildRuleResolver buildRuleResolver = new TestBuildRuleResolver();
     SourcePathResolver sourcePathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(buildRuleResolver));
     assertThat(
@@ -929,6 +931,28 @@ public class AppleCxxPlatformsTest {
         is(Arrays.asList("/usr/bin/codesign")));
   }
 
+  private abstract static class NoopBinaryBuildRule extends NoopBuildRuleWithDeclaredAndExtraDeps
+      implements BinaryBuildRule {
+    public NoopBinaryBuildRule(
+        BuildTarget buildTarget, ProjectFilesystem projectFilesystem, BuildRuleParams params) {
+      super(buildTarget, projectFilesystem, params);
+    }
+  }
+
+  private static Tool fakeTool() {
+    return new Tool() {
+      @Override
+      public ImmutableList<String> getCommandPrefix(SourcePathResolver resolver) {
+        return ImmutableList.of();
+      }
+
+      @Override
+      public ImmutableMap<String, String> getEnvironment(SourcePathResolver resolver) {
+        return ImmutableMap.of();
+      }
+    };
+  }
+
   @Test
   public void buckTargetIsUsedWhenBuildTargetIsSpecified() {
     AppleCxxPlatform appleCxxPlatform =
@@ -936,13 +960,17 @@ public class AppleCxxPlatformsTest {
             developerDir,
             FakeBuckConfig.builder().setSections("[apple]", "codesign = //foo:bar").build());
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar");
-    BinaryBuildRule buildRule = EasyMock.createMock(BinaryBuildRule.class);
-    Tool codesign = EasyMock.createMock(Tool.class);
-    EasyMock.expect(buildRule.getExecutableCommand()).andReturn(codesign);
-    BuildRuleResolver buildRuleResolver = EasyMock.createMock(BuildRuleResolver.class);
-    EasyMock.expect(buildRuleResolver.getRuleOptional(buildTarget))
-        .andReturn(Optional.of(buildRule));
-    EasyMock.replay(buildRule, buildRuleResolver);
+    Tool codesign = fakeTool();
+    BinaryBuildRule buildRule =
+        new NoopBinaryBuildRule(
+            buildTarget, new FakeProjectFilesystem(), TestBuildRuleParams.create()) {
+          @Override
+          public Tool getExecutableCommand() {
+            return codesign;
+          }
+        };
+    BuildRuleResolver buildRuleResolver = new TestBuildRuleResolver();
+    buildRuleResolver.computeIfAbsent(buildTarget, target -> buildRule);
     assertThat(appleCxxPlatform.getCodesignProvider().resolve(buildRuleResolver), is(codesign));
   }
 
@@ -957,7 +985,7 @@ public class AppleCxxPlatformsTest {
                 .setFilesystem(projectFilesystem)
                 .setSections("[apple]", "codesign = " + codesignPath)
                 .build());
-    BuildRuleResolver buildRuleResolver = EasyMock.createMock(BuildRuleResolver.class);
+    BuildRuleResolver buildRuleResolver = new TestBuildRuleResolver();
     SourcePathResolver sourcePathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(buildRuleResolver));
     assertThat(

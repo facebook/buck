@@ -34,7 +34,6 @@ java_test(
         "//test/com/facebook/buck/toolchain/impl:testutil",
         "//test/com/facebook/buck/util:testutil",
         "//third-party/java/dd-plist:dd-plist",
-        "//third-party/java/easymock:easymock",
         "//third-party/java/junit:junit",
     ],
 )
