@@ -40,7 +40,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
-import org.easymock.EasyMock;
 import org.junit.Test;
 
 /** Unit test for {@link AndroidBuildConfig}. */
@@ -89,10 +88,9 @@ public class AndroidBuildConfigTest {
   public void testReadValuesStep() throws Exception {
     Path pathToValues = Paths.get("src/values.txt");
 
-    ProjectFilesystem projectFilesystem = EasyMock.createMock(ProjectFilesystem.class);
-    EasyMock.expect(projectFilesystem.readLines(pathToValues))
-        .andReturn(ImmutableList.of("boolean DEBUG = false", "String FOO = \"BAR\""));
-    EasyMock.replay(projectFilesystem);
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
+    projectFilesystem.writeLinesToPath(
+        ImmutableList.of("boolean DEBUG = false", "String FOO = \"BAR\""), pathToValues);
 
     ReadValuesStep step = new ReadValuesStep(projectFilesystem, pathToValues);
     ExecutionContext context = TestExecutionContext.newBuilder().build();
@@ -104,8 +102,6 @@ public class AndroidBuildConfigTest {
                 BuildConfigFields.Field.of("boolean", "DEBUG", "false"),
                 BuildConfigFields.Field.of("String", "FOO", "\"BAR\""))),
         step.get());
-
-    EasyMock.verify(projectFilesystem);
   }
 
   private static AndroidBuildConfig createSimpleBuildConfigRule() {
