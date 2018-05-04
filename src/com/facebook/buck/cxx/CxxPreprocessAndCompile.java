@@ -230,14 +230,9 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule
   @Override
   public ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
-    preprocessDelegate.ifPresent(
-        delegate -> {
-          try {
-            CxxHeaders.checkConflictingHeaders(delegate.getCxxIncludePaths().getIPaths());
-          } catch (CxxHeaders.ConflictingHeadersException e) {
-            throw e.getHumanReadableExceptionForBuildTarget(getBuildTarget());
-          }
-        });
+    preprocessDelegate
+        .flatMap(PreprocessorDelegate::checkConflictingHeaders)
+        .ifPresent(result -> result.throwHumanReadableExceptionWithContext(getBuildTarget()));
 
     Path output = getOutputPath();
     buildableContext.recordArtifact(output);

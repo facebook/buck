@@ -16,6 +16,8 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.RuleKeyAppendable;
 import com.facebook.buck.core.rulekey.RuleKeyObjectSink;
@@ -36,14 +38,19 @@ import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.RuleKeyAppendableFunction;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
+import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.WeakMemoizer;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 /** Helper class for handling preprocessing related tasks of a cxx compilation rule. */
@@ -76,6 +83,8 @@ final class PreprocessorDelegate implements RuleKeyAppendable, HasCustomDepsLogi
   private final Optional<BuildRule> aggregatedDeps;
 
   private WeakMemoizer<HeaderPathNormalizer> headerPathNormalizer = new WeakMemoizer<>();
+  private final Supplier<Optional<ConflictingHeadersResult>> lazyConflictingHeadersCheckResult =
+      Suppliers.memoize(this::checkConflictingHeadersUncached);
 
   public PreprocessorDelegate(
       HeaderVerification headerVerification,
@@ -296,6 +305,22 @@ final class PreprocessorDelegate implements RuleKeyAppendable, HasCustomDepsLogi
     return preprocessorFlags;
   }
 
+  /**
+   * Returns whether there are conflicting headers in the includes given to this object.
+   *
+   * <p>Conflicting headers are different header files that can be accessed by the same include
+   * directive. In a C++ compiler, the header that appears in the first header search path is used,
+   * but in buck, we mandate that there are no conflicts at all.
+   *
+   * <p>Since buck manages the header search paths of a library based on its transitive
+   * dependencies, this constraint prevents spooky behavior where a dependency change may affect
+   * header resolution of far-away libraries. It also enables buck to perform various optimizations
+   * that would be impossible if it has to respect header search path ordering.
+   */
+  public Optional<ConflictingHeadersResult> checkConflictingHeaders() {
+    return lazyConflictingHeadersCheckResult.get();
+  }
+
   @Override
   public void appendToRuleKey(RuleKeyObjectSink sink) {
     if (sandbox.isPresent()) {
@@ -311,5 +336,57 @@ final class PreprocessorDelegate implements RuleKeyAppendable, HasCustomDepsLogi
   public Stream<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
     Preconditions.checkState(aggregatedDeps.isPresent());
     return new DepsBuilder(ruleFinder).add(aggregatedDeps.get()).add(this).build().stream();
+  }
+
+  private Optional<ConflictingHeadersResult> checkConflictingHeadersUncached() {
+    Iterable<CxxHeaders> allHeaders = preprocessorFlags.getIncludes();
+    int estimatedSize =
+        RichStream.from(allHeaders)
+            .filter(CxxSymlinkTreeHeaders.class)
+            .mapToInt(cxxHeaders -> cxxHeaders.getNameToPathMap().size())
+            .sum();
+    Map<Path, SourcePath> headers = new HashMap<>(estimatedSize);
+    for (CxxHeaders cxxHeaders : allHeaders) {
+      if (cxxHeaders instanceof CxxSymlinkTreeHeaders) {
+        CxxSymlinkTreeHeaders symlinkTreeHeaders = (CxxSymlinkTreeHeaders) cxxHeaders;
+        for (Map.Entry<Path, SourcePath> entry : symlinkTreeHeaders.getNameToPathMap().entrySet()) {
+          SourcePath original = headers.put(entry.getKey(), entry.getValue());
+          if (original != null && !original.equals(entry.getValue())) {
+            return Optional.of(
+                new ConflictingHeadersResult(entry.getKey(), original, entry.getValue()));
+          }
+        }
+      }
+    }
+    return Optional.empty();
+  }
+
+  /**
+   * Result of a conflicting headers check.
+   *
+   * @see #checkConflictingHeaders()
+   */
+  public static class ConflictingHeadersResult {
+    private final Path includeFilePath;
+    private final SourcePath headerPath1;
+    private final SourcePath headerPath2;
+
+    private ConflictingHeadersResult(
+        Path includeFilePath, SourcePath headerPath1, SourcePath headerPath2) {
+      this.includeFilePath = includeFilePath;
+      this.headerPath1 = headerPath1;
+      this.headerPath2 = headerPath2;
+    }
+
+    /** Throw an exception with a user friendly message detailing the conflict. */
+    public HumanReadableException throwHumanReadableExceptionWithContext(BuildTarget buildTarget) {
+      throw new HumanReadableException(
+          "Target '%s' has dependencies using headers that can be included using the same path.\n\n"
+              + "'%s' maps to the following header files:\n"
+              + "- %s\n"
+              + "- and %s\n\n"
+              + "Please rename one of them or export one of them to a different path.",
+          buildTarget, includeFilePath, headerPath1, headerPath2);
+    }
   }
 }

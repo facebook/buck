@@ -16,8 +16,6 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
@@ -27,15 +25,12 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.HasCustomDepsLogic;
 import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.facebook.buck.util.RichStream;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
 import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
@@ -132,47 +127,5 @@ public abstract class CxxHeaders implements AddsToRuleKey, HasCustomDepsLogic {
     }
 
     return args.build();
-  }
-
-  static void checkConflictingHeaders(Iterable<CxxHeaders> allHeaders)
-      throws ConflictingHeadersException {
-    int estimatedSize =
-        RichStream.from(allHeaders)
-            .filter(CxxSymlinkTreeHeaders.class)
-            .mapToInt(cxxHeaders -> cxxHeaders.getNameToPathMap().size())
-            .sum();
-    Map<Path, SourcePath> headers = new HashMap<>(estimatedSize);
-    for (CxxHeaders cxxHeaders : allHeaders) {
-      if (cxxHeaders instanceof CxxSymlinkTreeHeaders) {
-        CxxSymlinkTreeHeaders symlinkTreeHeaders = (CxxSymlinkTreeHeaders) cxxHeaders;
-        for (Map.Entry<Path, SourcePath> entry : symlinkTreeHeaders.getNameToPathMap().entrySet()) {
-          SourcePath original = headers.put(entry.getKey(), entry.getValue());
-          if (original != null && !original.equals(entry.getValue())) {
-            throw new ConflictingHeadersException(entry.getKey(), original, entry.getValue());
-          }
-        }
-      }
-    }
-  }
-
-  public static class ConflictingHeadersException extends Exception {
-    public ConflictingHeadersException(Path key, SourcePath value1, SourcePath value2) {
-      super(
-          String.format(
-              "'%s' maps to the following header files:\n"
-                  + "- %s\n"
-                  + "- and %s\n\n"
-                  + "Please rename one of them or export one of them to a different path.",
-              key, value1, value2));
-    }
-
-    public HumanReadableException getHumanReadableExceptionForBuildTarget(BuildTarget buildTarget) {
-      return new HumanReadableException(
-          this,
-          "Target '%s' has dependencies using headers that can be included using the same path.\n\n"
-              + "%s",
-          buildTarget,
-          getMessage());
-    }
   }
 }
