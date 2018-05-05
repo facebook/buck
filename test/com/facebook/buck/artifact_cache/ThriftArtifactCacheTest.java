@@ -38,7 +38,7 @@ import com.facebook.buck.artifact_cache.thrift.FetchResultType;
 import com.facebook.buck.artifact_cache.thrift.PayloadInfo;
 import com.facebook.buck.artifact_cache.thrift.RuleKey;
 import com.facebook.buck.core.model.BuildId;
-import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.file.LazyPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
@@ -65,11 +65,9 @@ import java.nio.ByteOrder;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.concurrent.atomic.AtomicReference;
 import javax.annotation.Nullable;
-import okhttp3.Request;
 import org.apache.thrift.TBase;
-import org.easymock.Capture;
-import org.easymock.EasyMock;
 import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
@@ -115,9 +113,10 @@ public class ThriftArtifactCacheTest {
 
   private void testWithMetadataAndPayloadInfo(
       @Nullable ArtifactMetadata artifactMetadata, boolean setPayloadInfo) throws IOException {
-    HttpService storeClient = EasyMock.createNiceMock(HttpService.class);
-    HttpService fetchClient = EasyMock.createMock(HttpService.class);
-    BuckEventBus eventBus = EasyMock.createNiceMock(BuckEventBus.class);
+    HttpService storeClient = new TestHttpService();
+    TestHttpService fetchClient =
+        new TestHttpService(
+            () -> makeResponseWithCorruptedRuleKeys(artifactMetadata, setPayloadInfo));
     ProjectFilesystem filesystem =
         TestProjectFilesystems.createProjectFilesystem(tempPaths.getRoot());
     ListeningExecutorService service = MoreExecutors.newDirectExecutorService();
@@ -131,19 +130,12 @@ public class ThriftArtifactCacheTest {
             .setProjectFilesystem(filesystem)
             .setFetchClient(fetchClient)
             .setStoreClient(storeClient)
-            .setBuckEventBus(eventBus)
+            .setBuckEventBus(BuckEventBusForTests.newInstance())
             .setHttpWriteExecutorService(service)
             .setHttpFetchExecutorService(service)
             .setErrorTextTemplate("my super error msg")
             .setErrorTextLimit(100)
             .build();
-
-    EasyMock.expect(fetchClient.makeRequest(EasyMock.anyString(), EasyMock.anyObject()))
-        .andReturn(makeResponseWithCorruptedRuleKeys(artifactMetadata, setPayloadInfo))
-        .once();
-    fetchClient.close();
-    EasyMock.expectLastCall().once();
-    EasyMock.replay(fetchClient);
 
     try (ThriftArtifactCache cache =
         new ThriftArtifactCache(networkArgs, "/nice_as_well", false, new BuildId("aabb"), 0, 0)) {
@@ -156,7 +148,7 @@ public class ThriftArtifactCacheTest {
       assertEquals(CacheResultType.ERROR, result.getType());
     }
 
-    EasyMock.verify(fetchClient);
+    assertEquals(1, fetchClient.getCallsCount());
   }
 
   private HttpResponse makeResponseWithCorruptedRuleKeys(
@@ -235,9 +227,15 @@ public class ThriftArtifactCacheTest {
 
   @Test
   public void testMultiFetch() throws IOException {
-    HttpService storeClient = EasyMock.createNiceMock(HttpService.class);
-    HttpService fetchClient = EasyMock.createMock(HttpService.class);
-    BuckEventBus eventBus = EasyMock.createNiceMock(BuckEventBus.class);
+    AtomicReference<BuckCacheResponse> responseRef = new AtomicReference<>();
+    AtomicReference<byte[]> payload1Ref = new AtomicReference<>();
+    AtomicReference<byte[]> payload3Ref = new AtomicReference<>();
+    HttpService storeClient = new TestHttpService();
+    TestHttpService fetchClient =
+        new TestHttpService(
+            () ->
+                new InMemoryThriftResponse(
+                    responseRef.get(), payload1Ref.get(), payload3Ref.get()));
     ProjectFilesystem filesystem =
         TestProjectFilesystems.createProjectFilesystem(tempPaths.getRoot());
     ListeningExecutorService service = MoreExecutors.newDirectExecutorService();
@@ -251,7 +249,7 @@ public class ThriftArtifactCacheTest {
             .setProjectFilesystem(filesystem)
             .setFetchClient(fetchClient)
             .setStoreClient(storeClient)
-            .setBuckEventBus(eventBus)
+            .setBuckEventBus(BuckEventBusForTests.newInstance())
             .setHttpWriteExecutorService(service)
             .setHttpFetchExecutorService(service)
             .setErrorTextTemplate("my super error msg")
@@ -284,7 +282,9 @@ public class ThriftArtifactCacheTest {
     String payload1 = "payload1";
     String payload3 = "bigger payload3";
     byte[] payloadBytes1 = payload1.getBytes(Charsets.UTF_8);
+    payload1Ref.set(payloadBytes1);
     byte[] payloadBytes3 = payload3.getBytes(Charsets.UTF_8);
+    payload3Ref.set(payloadBytes3);
 
     ArtifactMetadata metadata1 = new ArtifactMetadata();
     metadata1.addToRuleKeys(new RuleKey().setHashString(key1.getHashCode().toString()));
@@ -317,14 +317,7 @@ public class ThriftArtifactCacheTest {
             .setType(BuckCacheRequestType.MULTI_FETCH)
             .setMultiFetchResponse(multiFetchResponse)
             .setPayloads(ImmutableList.of(payloadInfo1, payloadInfo3));
-
-    Capture<Request.Builder> requestCapture = EasyMock.newCapture();
-    EasyMock.expect(fetchClient.makeRequest(EasyMock.anyString(), EasyMock.capture(requestCapture)))
-        .andReturn(new InMemoryThriftResponse(response, payloadBytes1, payloadBytes3))
-        .once();
-    fetchClient.close();
-    EasyMock.expectLastCall().once();
-    EasyMock.replay(fetchClient);
+    responseRef.set(response);
 
     try (ThriftArtifactCache cache =
         new ThriftArtifactCache(networkArgs, "/nice_as_well", false, new BuildId("aabb"), 0, 0)) {
@@ -344,14 +337,15 @@ public class ThriftArtifactCacheTest {
       assertEquals(payload3, filesystem.readFileIfItExists(output3).get());
     }
 
-    EasyMock.verify(fetchClient);
+    assertEquals(1, fetchClient.getCallsCount());
   }
 
   @Test
   public void testMultiContains() throws IOException {
-    HttpService storeClient = EasyMock.createNiceMock(HttpService.class);
-    HttpService fetchClient = EasyMock.createMock(HttpService.class);
-    BuckEventBus eventBus = EasyMock.createNiceMock(BuckEventBus.class);
+    AtomicReference<BuckCacheResponse> responseRef = new AtomicReference<>();
+    HttpService storeClient = new TestHttpService();
+    TestHttpService fetchClient =
+        new TestHttpService(() -> new InMemoryThriftResponse(responseRef.get()));
     ProjectFilesystem filesystem =
         TestProjectFilesystems.createProjectFilesystem(tempPaths.getRoot());
     ListeningExecutorService service = MoreExecutors.newDirectExecutorService();
@@ -365,7 +359,7 @@ public class ThriftArtifactCacheTest {
             .setProjectFilesystem(filesystem)
             .setFetchClient(fetchClient)
             .setStoreClient(storeClient)
-            .setBuckEventBus(eventBus)
+            .setBuckEventBus(BuckEventBusForTests.newInstance())
             .setHttpWriteExecutorService(service)
             .setHttpFetchExecutorService(service)
             .setErrorTextTemplate("my super error msg")
@@ -399,14 +393,7 @@ public class ThriftArtifactCacheTest {
             .setWasSuccessful(true)
             .setType(BuckCacheRequestType.CONTAINS)
             .setMultiContainsResponse(multiContainsResponse);
-
-    Capture<Request.Builder> requestCapture = EasyMock.newCapture();
-    EasyMock.expect(fetchClient.makeRequest(EasyMock.anyString(), EasyMock.capture(requestCapture)))
-        .andReturn(new InMemoryThriftResponse(response))
-        .once();
-    fetchClient.close();
-    EasyMock.expectLastCall().once();
-    EasyMock.replay(fetchClient);
+    responseRef.set(response);
 
     try (ThriftArtifactCache cache =
         new ThriftArtifactCache(networkArgs, "/nice_as_well", false, new BuildId("aabb"), 1, 1)) {
@@ -418,7 +405,7 @@ public class ThriftArtifactCacheTest {
       assertEquals(CacheResultType.CONTAINS, result.getCacheResults().get(key3).getType());
     }
 
-    EasyMock.verify(fetchClient);
+    assertEquals(1, fetchClient.getCallsCount());
   }
 
   private HttpResponse makeSuccessfulDeleteResponse() {
@@ -435,9 +422,8 @@ public class ThriftArtifactCacheTest {
 
   @Test
   public void testDelete() throws Exception {
-    HttpService storeClient = EasyMock.createNiceMock(HttpService.class);
-    HttpService fetchClient = EasyMock.createMock(HttpService.class);
-    BuckEventBus eventBus = EasyMock.createNiceMock(BuckEventBus.class);
+    HttpService storeClient = new TestHttpService(this::makeSuccessfulDeleteResponse);
+    TestHttpService fetchClient = new TestHttpService();
     ProjectFilesystem filesystem =
         TestProjectFilesystems.createProjectFilesystem(tempPaths.getRoot());
     ListeningExecutorService service = MoreExecutors.newDirectExecutorService();
@@ -451,19 +437,12 @@ public class ThriftArtifactCacheTest {
             .setProjectFilesystem(filesystem)
             .setFetchClient(fetchClient)
             .setStoreClient(storeClient)
-            .setBuckEventBus(eventBus)
+            .setBuckEventBus(BuckEventBusForTests.newInstance())
             .setHttpWriteExecutorService(service)
             .setHttpFetchExecutorService(service)
             .setErrorTextTemplate("unused test error message")
             .setErrorTextLimit(100)
             .build();
-
-    EasyMock.expect(storeClient.makeRequest(EasyMock.anyString(), EasyMock.anyObject()))
-        .andReturn(makeSuccessfulDeleteResponse())
-        .once();
-    storeClient.close();
-    EasyMock.expectLastCall().once();
-    EasyMock.replay(storeClient);
 
     try (ThriftArtifactCache cache =
         new ThriftArtifactCache(networkArgs, "/nice_as_well", false, new BuildId("aabb"), 0, 0)) {
