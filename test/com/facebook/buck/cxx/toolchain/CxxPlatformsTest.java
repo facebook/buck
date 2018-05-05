@@ -23,6 +23,7 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.FakeBuckConfig;
+import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.toolchain.tool.impl.HashedFileTool;
@@ -195,5 +196,22 @@ public class CxxPlatformsTest {
         "WINDOWS archiver was not a GnuArchiver instance",
         getPlatformArchiver(Platform.WINDOWS),
         instanceOf(WindowsArchiver.class));
+  }
+
+  @Test
+  public void sharedLibraryExtensionOverride() {
+    Flavor flavor = InternalFlavor.of("custom");
+    String extension = ".foo";
+    ImmutableMap<String, ImmutableMap<String, String>> sections =
+        ImmutableMap.of("cxx#" + flavor, ImmutableMap.of("shared_library_extension", extension));
+    BuckConfig buckConfig = FakeBuckConfig.builder().setSections(sections).build();
+    assertThat(
+        CxxPlatforms.copyPlatformWithFlavorAndConfig(
+                CxxPlatformUtils.DEFAULT_PLATFORM,
+                Platform.UNKNOWN,
+                new CxxBuckConfig(buckConfig, flavor),
+                InternalFlavor.of("custom"))
+            .getSharedLibraryExtension(),
+        equalTo(extension));
   }
 }

@@ -122,7 +122,8 @@ public class CxxPlatforms {
         .setAr(config.getArchiverProvider(platform).orElse(ar))
         .setRanlib(config.getRanlib().isPresent() ? config.getRanlib() : ranlib)
         .setStrip(config.getStrip().orElse(strip))
-        .setSharedLibraryExtension(sharedLibraryExtension)
+        .setSharedLibraryExtension(
+            config.getSharedLibraryExtension().orElse(sharedLibraryExtension))
         .setSharedLibraryVersionedExtensionFormat(sharedLibraryVersionedExtensionFormat)
         .setStaticLibraryExtension(staticLibraryExtension)
         .setObjectFileExtension(objectFileExtension)

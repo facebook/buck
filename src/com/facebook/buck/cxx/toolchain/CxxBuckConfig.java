@@ -83,6 +83,7 @@ public class CxxBuckConfig {
   private static final String ENABLE_DEPRECATED_PREBUILT_CXX_LIBRARY_API =
       "enable_deprecated_prebuilt_cxx_library_api";
   private static final String DECLARED_PLATFORMS = "declared_platforms";
+  private static final String SHARED_LIBRARY_EXT = "shared_library_extension";
 
   private static final String ASFLAGS = "asflags";
   private static final String ASPPFLAGS = "asppflags";
@@ -507,6 +508,11 @@ public class CxxBuckConfig {
         .stream()
         .map(s -> UserFlavor.of(s, String.format("Declared platform: %s", s)))
         .collect(ImmutableSet.toImmutableSet());
+  }
+
+  /** @return the extension to use for shared libraries (e.g. ".so"). */
+  public Optional<String> getSharedLibraryExtension() {
+    return delegate.getValue(cxxSection, SHARED_LIBRARY_EXT);
   }
 
   public BuckConfig getDelegate() {
