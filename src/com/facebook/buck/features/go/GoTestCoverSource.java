@@ -25,6 +25,7 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.BuildCellRelativePath;
+import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
@@ -33,10 +34,12 @@ import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
+import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.hash.Hashing;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.SortedSet;
@@ -134,7 +137,11 @@ public class GoTestCoverSource extends AbstractBuildRule {
   }
 
   static String getVarName(Path path) {
-    return "Var_" + path.getFileName().toString().replace(".go", "").replace('-', '_');
+    return "Var_"
+        + Hashing.sha256()
+            .hashString(MorePaths.pathWithUnixSeparators(path.getFileName()), Charsets.UTF_8)
+            .toString()
+            .substring(0, 10);
   }
 
   public ImmutableSet<SourcePath> getCoveredSources() {
