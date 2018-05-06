@@ -197,7 +197,6 @@ public class CacheCommandTest {
             silentSummaryVerbosity,
             new DefaultExecutionEnvironment(
                 ImmutableMap.copyOf(System.getenv()), System.getProperties()),
-            Optional.empty(),
             Locale.US,
             logPath,
             timeZone,

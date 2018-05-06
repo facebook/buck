@@ -137,7 +137,6 @@ public class PublicAnnouncementManagerIntegrationTest {
               clock,
               /* verbosity */ TestResultSummaryVerbosity.of(false, false),
               executionEnvironment,
-              Optional.empty(),
               Locale.US,
               logPath,
               TimeZone.getTimeZone("UTC"),

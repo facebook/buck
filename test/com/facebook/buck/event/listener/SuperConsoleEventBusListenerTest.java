@@ -1960,7 +1960,6 @@ public class SuperConsoleEventBusListenerTest {
             noisySummaryVerbosity,
             new DefaultExecutionEnvironment(
                 ImmutableMap.copyOf(System.getenv()), System.getProperties()),
-            Optional.empty(),
             Locale.US,
             logPath,
             timeZone,
@@ -2782,7 +2781,6 @@ public class SuperConsoleEventBusListenerTest {
             silentSummaryVerbosity,
             new DefaultExecutionEnvironment(
                 ImmutableMap.copyOf(System.getenv()), System.getProperties()),
-            Optional.empty(),
             Locale.US,
             logPath,
             timeZone,

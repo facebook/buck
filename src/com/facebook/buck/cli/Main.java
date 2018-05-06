@@ -872,7 +872,6 @@ public final class Main {
                     console,
                     testConfig.getResultSummaryVerbosity(),
                     executionEnvironment,
-                    webServer,
                     locale,
                     filesystem.getBuckPaths().getLogDir().resolve("test.log"),
                     buckConfig.isLogBuildIdToConsoleEnabled()
@@ -1702,7 +1701,6 @@ public final class Main {
       Console console,
       TestResultSummaryVerbosity testResultSummaryVerbosity,
       ExecutionEnvironment executionEnvironment,
-      Optional<WebServer> webServer,
       Locale locale,
       Path testLogPath,
       Optional<BuildId> buildId) {
@@ -1714,7 +1712,6 @@ public final class Main {
               clock,
               testResultSummaryVerbosity,
               executionEnvironment,
-              webServer,
               locale,
               testLogPath,
               TimeZone.getDefault(),
