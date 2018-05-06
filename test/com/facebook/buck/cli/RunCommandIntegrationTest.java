@@ -27,12 +27,11 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ExitCode;
 import java.io.IOException;
-import org.easymock.EasyMockSupport;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-public class RunCommandIntegrationTest extends EasyMockSupport {
+public class RunCommandIntegrationTest {
 
   @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
   @Rule public ExpectedException thrown = ExpectedException.none();
