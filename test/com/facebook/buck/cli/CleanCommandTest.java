@@ -37,10 +37,13 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
 import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
 import com.facebook.buck.module.TestBuckModuleManagerFactory;
-import com.facebook.buck.parser.Parser;
+import com.facebook.buck.parser.DefaultParser;
+import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.rules.ActionGraphCache;
 import com.facebook.buck.rules.BuildInfoStoreManager;
+import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
+import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
 import com.facebook.buck.sandbox.TestSandboxExecutionStrategyFactory;
@@ -65,14 +68,13 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
-import org.easymock.EasyMockSupport;
 import org.junit.Before;
 import org.junit.Test;
 import org.kohsuke.args4j.CmdLineException;
 import org.pf4j.PluginManager;
 
 /** Unit test for {@link CleanCommand}. */
-public class CleanCommandTest extends EasyMockSupport {
+public class CleanCommandTest {
 
   private ProjectFilesystem projectFilesystem;
 
@@ -282,6 +284,12 @@ public class CleanCommandTest extends EasyMockSupport {
     ProcessExecutor processExecutor = new FakeProcessExecutor();
 
     PluginManager pluginManager = BuckPluginManagerFactory.createPluginManager();
+    TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
+    KnownBuildRuleTypesProvider knownBuildRuleTypesProvider =
+        KnownBuildRuleTypesProvider.of(
+            DefaultKnownBuildRuleTypesFactory.of(
+                processExecutor, pluginManager, new TestSandboxExecutionStrategyFactory()));
+    ExecutableFinder executableFinder = new ExecutableFinder();
 
     return CommandRunnerParams.of(
         new TestConsole(),
@@ -290,8 +298,13 @@ public class CleanCommandTest extends EasyMockSupport {
         new InstrumentedVersionedTargetGraphCache(
             new VersionedTargetGraphCache(), new NoOpCacheStatsTracker()),
         new SingletonArtifactCacheFactory(new NoopArtifactCache()),
-        createMock(TypeCoercerFactory.class),
-        createMock(Parser.class),
+        typeCoercerFactory,
+        new DefaultParser(
+            buckConfig.getView(ParserConfig.class),
+            typeCoercerFactory,
+            new ConstructorArgMarshaller(typeCoercerFactory),
+            knownBuildRuleTypesProvider,
+            executableFinder),
         BuckEventBusForTests.newInstance(),
         Platform.detect(),
         ImmutableMap.copyOf(System.getenv()),
@@ -307,16 +320,14 @@ public class CleanCommandTest extends EasyMockSupport {
         new FakeExecutor(),
         CommandRunnerParamsForTesting.BUILD_ENVIRONMENT_DESCRIPTION,
         new ActionGraphCache(buckConfig.getMaxActionGraphCacheEntries()),
-        KnownBuildRuleTypesProvider.of(
-            DefaultKnownBuildRuleTypesFactory.of(
-                processExecutor, pluginManager, new TestSandboxExecutionStrategyFactory())),
+        knownBuildRuleTypesProvider,
         new BuildInfoStoreManager(),
         Optional.empty(),
         Optional.empty(),
         new DefaultProjectFilesystemFactory(),
         TestRuleKeyConfigurationFactory.create(),
         processExecutor,
-        new ExecutableFinder(),
+        executableFinder,
         pluginManager,
         TestBuckModuleManagerFactory.create(pluginManager));
   }
