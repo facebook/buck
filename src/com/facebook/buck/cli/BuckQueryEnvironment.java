@@ -52,6 +52,7 @@ import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TargetNodes;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.MoreExceptions;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -104,7 +105,8 @@ public class BuckQueryEnvironment implements QueryEnvironment {
   private MutableDirectedGraph<TargetNode<?, ?>> graph = MutableDirectedGraph.createConcurrent();
   private Map<BuildTarget, TargetNode<?, ?>> targetsToNodes = new ConcurrentHashMap<>();
 
-  private BuckQueryEnvironment(
+  @VisibleForTesting
+  protected BuckQueryEnvironment(
       Cell rootCell,
       Builder ownersReportBuilder,
       Parser parser,

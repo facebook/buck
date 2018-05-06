@@ -441,6 +441,7 @@ java_test(
         "//test/com/facebook/buck/testutil/integration:util",
         "//test/com/facebook/buck/toolchain/impl:testutil",
         "//test/com/facebook/buck/util:testutil",
+        "//test/com/facebook/buck/util/concurrent:testutil",
         "//test/com/facebook/buck/util/timing:testutil",
         "//test/com/facebook/buck/versions:testutil",
         "//third-party/java/aether:aether-api",
