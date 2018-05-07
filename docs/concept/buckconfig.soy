@@ -780,8 +780,16 @@ $ buck targets --resolve-alias app#src_jar
   {param name: 'includes' /}
   {param example_value: '//core/DEFS' /}
   {param description}
-    This sets a list of paths to files that will be automatically included by every build file.
-    This is equivalent to calling {call buck.fn_include_defs /} in every build file.
+  <p>
+  This sets a list of paths to files that will be automatically included by every build file.
+  This is equivalent to calling {call buck.fn_include_defs /} in every build file.
+  </p>
+
+  <p>
+  <strong>NOTE:</strong> We recommend that you do not use this property.
+  This property can make your builds difficult to maintain and debug,
+  and it will be deprecated in a future release of Buck.
+  </p>
   {/param}
 {/call}
 

@@ -1,5 +1,29 @@
 {namespace buck.macros}
 
+/**
+ * @param title
+ * @param navid
+ */
+{template .section}
+<h3 id="{$navid}">{$title}</h3>
+{/template}
+
+/**
+ * @param title
+ */
+{template .code_title}
+    <!-- background: #E0FFFF; -->
+    <!-- background: #F0FFFF; -->
+    <code style="
+      font-weight: bold;
+      background: #F0F8FF;
+      border: 1px solid #ccc;
+      border-radius: 2px;
+      padding: 0.5em 0.5em"
+    >{$title}</code>
+{/template}
+
+
 /***/
 {template .soyweb}
   {call buck.page}
@@ -7,8 +31,8 @@
     {param navid: 'extending_macros' /}
     {param prettify: true /}
     {param description}
-      Macros let you define custom rules that map to Buck's built-in build
-      rules.
+      Macros let you define custom rules that map to Buck's built-in
+      build rules.
     {/param}
     {param content}
 
@@ -16,29 +40,63 @@
 
 Because build files accept valid Python code, it is possible to define
 Python functions that have the side-effect of creating build rules.
-Such functions are called <strong>macros</strong>.
+Such functions are called <em>macros</em>.
 
-<h3>Defining A Macro</h3>
-
-<p>
-
-Macros can be written in build files or in separate files referenced in
-build files using {call buck.fn_load /}, {call buck.fn_include_defs /} or{sp}
-{call buckconfig.buildfile_includes /}.
+</p>
 
 <p>
 
 <strong>Warning:</strong> Although build files are evaluated as Python
-and can therefore do anything (write files, access the network, etc.),
-doing so may cause Buck to fail in peculiar ways and is therefore neither
-supported nor encouraged.
+and can therefore perform arbitrary computation&mdash;such as writing
+files and accessing the network&mdash;doing so may cause Buck to fail in 
+peculiar ways. Therefore, we recommend that you be conservative when using 
+Python functionality within Buck macros.
+
+</p>
+
+
+{call .section }
+{param title: 'On this page' /}
+{param navid: 'toc' /}
+{/call}
+
+<ul>
+<li><a href="#defining">How to define a macro</a></li>
+<li><a href="#compound-rules">Compound build rules: macros that expand to multiple rules</a></li>
+<li><a href="#viewing">How to view expanded macros</a></li>
+<li><a href="#naming">Use naming conventions to distinguish macros</a></li>
+</ul>
+
+
+{call .section }
+{param title: 'How to define a macro' /}
+{param navid: 'defining' /}
+{/call}
 
 <p>
 
-For example, here is a macro named <code>java_library_using_guava</code> to
-create a build rule that creates a <code>java_library</code> rule that depends
-on Guava:
+We recommend that you define and maintain your macros in files that are external 
+to your build files. These files must have an extension; we recommend that you 
+use the extension, <code>.bzl</code> (Build <a href="https://en.wikipedia.org/wiki/Sable#Etymology">Zebeline</a> Language).
 
+</p>
+
+<p>
+To make your macros accessible to a build file, import them 
+using the {call buck.fn_load /} function. 
+</p>
+
+<p>
+
+In the following example, the macro <code>java_library_using_guava</code>, defined in the 
+file <code>java_macros.bzl</code>, creates a build rule named <code>java_library</code> that 
+depends on the Google Guava libraries.
+
+</p>
+
+{call .code_title}
+{param title: 'java_macros.bzl' /}
+{/call}
 {literal}<pre class="prettyprint lang-py">
 def java_library_using_guava(
     name,
@@ -58,11 +116,22 @@ def java_library_using_guava(
   )
 </pre>{/literal}
 
-Calling this function looks the same as defining a built-in build rule:
+<p>
+Instantiating this macro looks the same as defining a built-in build
+rule. In the following code, we assume that <code>java_macros.bzl</code> is 
+stored in the subdirectory <code>libs/java_libs/team_macros</code>.
+</p>
 
 {literal}<pre class="prettyprint lang-py">
+#
+# load the macro from the external file
+#
+load("//libs/java_libs/team_macros:java_macros.bzl", "java_library_using_guava")
+
+#
 # Calling this function has the side-effect of creating
 # a java_library() rule named 'util' that depends on Guava.
+#
 java_library_using_guava(
   name = 'util',
   # Source code that depends on Guava.
@@ -70,36 +139,30 @@ java_library_using_guava(
 )
 </pre>{/literal}
 
-<h3>Sharing Macros Within Your Project</h3>
+<p>
 
-If you wish to include your macros in multiple BUCK files, you can 
-use <a href="/function/include_defs.html"><code>include_defs()</code></a>:
-{literal}<pre class="prettyprint lang-py">
-include_defs("//MACROS")
+<p>
 
-# This will call the `java_library_using_guava` macro defined in //MACROS.
-java_library_using_guava(...)
-</pre>{/literal} or <a href="/function/load.html"><code>load()</code></a>:
-{literal}<pre class="prettyprint lang-py">
-load("//:MACROS", "java_library_using_guava")
+<strong>Note:</strong> Although, macros can be written in the build file itself, 
+or imported from separate files using {call buck.fn_include_defs /} or
+{sp}{call buckconfig.buildfile_includes /}, we do not recommend any of 
+these approaches. These approaches make macros more difficult to
+maintain and debug&mdash;<em>and they will be deprecated in future versions of
+Buck</em>.
 
-# This will call the `java_library_using_guava` macro defined in //MACROS.
-java_library_using_guava(...)
-</pre>{/literal}
-
-To include shared macros project-wide, edit your <code>.buckconfig</code> to
-include a <a href="/concept/buckconfig.html#buildfile.includes">buildfile.includes property</a>:
-{literal}<pre class="prettyprint lang-ini">
-[buildfile]
-  includes = //MACROS
-</pre>{/literal}
+</p>
 
 
-<h3>Compound Build Rules</h3>
+{call .section }
+{param title: 'Compound build rules: macros that expand to multiple rules' /}
+{param navid: 'compound-rules' /}
+{/call}
 
-You can also create more sophisticated macros that create multiple build
-rules. For example, you might want to create a single build rule that
-produces both debug and release versions of an APK:
+<p>
+You can also create more sophisticated macros that expand into multiple
+build rules. For example, you could create a macro that produces rules
+for both debug and release versions of an APK:
+</p>
 
 {literal}<pre class="prettyprint lang-py">
 def create_apks(
@@ -124,7 +187,6 @@ def create_apks(
       # rules with the same name.
       name = '%s_%s' % (name, type),
       manifest = manifest,
-      target = 'Google Inc.:Google APIs:16',
       keystore = keystore,
       package_type = type,
       proguard_config = proguard_config,
@@ -133,10 +195,12 @@ def create_apks(
         'PUBLIC',
       ],
     )
-)
 </pre>{/literal}
 
-Again, using this looks the same as defining a built-in build rule:
+<p>
+As in the previous example, instantiating this macro <em>looks</em> the 
+same as specifying a single built-in build rule:
+</p>
 
 {literal}<pre class="prettyprint lang-py">
 create_apks(
@@ -151,31 +215,78 @@ create_apks(
 )
 {/literal}</pre>
 
-Note that if this were defined in <code>apps/messenger/BUCK</code>,
-then this would create the following build rules:
+<p>
+However, instantiating this macro actually creates <em>two</em> build
+rules. For example, if you instantiated this macro in the build 
+file, <code>apps/messenger/BUCK</code>, it would create the following 
+rules:
+</p>
 
 {literal}<pre>
 //apps/messenger:messenger_debug
 //apps/messenger:messenger_release
 </pre>{/literal}
 
-However, the following build rule would <strong>NOT</strong> exist:
+<p>
+Note, though, that in this scenario, the following is <strong>NOT</strong> a 
+build rule:
+</p>
 
-<pre>//apps/messenger:messenger</pre>
+<p>
+<pre>
+{literal}
+//apps/messenger:messenger              # MACRO, NOT A RULE
+{/literal}
+</pre>
+</p>
 
-This may be confusing to developers who expect the following commands
-to work:
+
+<p>
+Therefore, the following commands do not not work, which could be
+confusing for developers who don't realize that <code>messenger</code> is 
+a macro rather than a rule.
+</p>
 
 {literal}<pre>
-buck build //apps/messenger:messenger
-buck targets --type create_apks
+buck build //apps/messenger:messenger    # FAILS
+buck targets --type create_apks          # FAILS
 </pre>{/literal}
 
-Including your company name as a prefix to the name of your macro
-may help enforce the idea that your macro is not a built-in rule. On the
-other hand, part of the beauty of macros is that they are as familiar
-to use as built-in rules. How you communicate this to your team is up
-to you.
+
+{call .section }
+{param title: 'How to view expanded macros' /}
+{param navid: 'viewing' /}
+{/call}
+
+<p>
+To view a build file with all macros expanded, use {call buck.cmd_link}{param name: 'audit' /}{/call}.
+The following invocation of <code>buck audit</code> would show the debug and release rules from the 
+preceding example, but not the macro that created them.
+</p>
+
+<p>
+<pre>
+{literal}
+buck audit rules //apps/messenger
+{/literal}
+</pre>
+</p>
+
+
+{call .section }
+{param title: 'Use naming conventions to distinguish macros' /}
+{param navid: 'naming' /}
+{/call}
+
+<p>
+
+You can create naming conventions for your macros to help your
+developers distinguish them from built-in rules.  For example, you could
+prefix your macros with the name of your company.  On the other hand,
+part of the beauty of macros is that they are as familiar to use as
+built-in rules.  How you communicate macros to your team is up to you.
+
+</p>
 
     {/param}
   {/call}
