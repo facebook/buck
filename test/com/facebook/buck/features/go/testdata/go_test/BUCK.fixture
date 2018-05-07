@@ -66,3 +66,13 @@ go_test(
     name = "subtests",
     srcs = ["subtests.go"],
 )
+
+go_test(
+    name = "test-hyphen",
+    package_name = "lib",
+    srcs = [
+        "power-driven.go",
+        "power-driven_test.go",
+    ],
+    coverage_mode = "set",
+)

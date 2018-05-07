@@ -139,4 +139,11 @@ public class GoTestIntegrationTest {
     ProcessResult result = workspace.runBuckCommand("test", "//genrule_wtih_lib_as_src:test");
     result.assertSuccess();
   }
+
+  @Test
+  public void testHyphen() throws IOException {
+    // This test should pass.
+    ProcessResult result = workspace.runBuckCommand("test", "//:test-hyphen");
+    result.assertSuccess();
+  }
 }
