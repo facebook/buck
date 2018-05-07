@@ -33,7 +33,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-public class SimpleGlobberTest {
+public class NativeGlobberTest {
   private Path root;
   private Globber globber;
 
@@ -44,7 +44,7 @@ public class SimpleGlobberTest {
     ProjectFilesystem projectFilesystem = FakeProjectFilesystem.createRealTempFilesystem();
     SkylarkFilesystem fileSystem = SkylarkFilesystem.using(projectFilesystem);
     root = fileSystem.getPath(projectFilesystem.getRootPath().toString());
-    globber = SimpleGlobber.create(root);
+    globber = NativeGlobber.create(root);
   }
 
   @Test

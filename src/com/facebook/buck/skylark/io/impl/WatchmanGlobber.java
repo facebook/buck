@@ -34,7 +34,7 @@ import java.util.stream.Collectors;
  * should be excluded from the resulting set) using Watchman tool for improved performance.
  *
  * <p>The implementation is mostly compatible with glob_watchman.py and as such differs from the
- * {@link SimpleGlobber} in certain ways:
+ * {@link NativeGlobber} in certain ways:
  *
  * <ul>
  *   <li>does not fail for patterns that cannot possibly match

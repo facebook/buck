@@ -26,18 +26,18 @@ import java.util.Collection;
 import java.util.Set;
 
 /**
- * A simple implementation of globbing functionality that allows resolving file paths based on
- * include patterns (file patterns that should be returned) minus exclude patterns (file patterns
- * that should be excluded from the resulting set).
+ * A Java native glob function implementation that allows resolving file paths based on include
+ * patterns (file patterns that should be returned) minus exclude patterns (file patterns that
+ * should be excluded from the resulting set).
  *
  * <p>Since this is a simple implementation it does not support caching and other smarts.
  */
-public class SimpleGlobber implements Globber {
+public class NativeGlobber implements Globber {
 
   /** Path used as a root when resolving patterns. */
   private final Path basePath;
 
-  private SimpleGlobber(Path basePath) {
+  private NativeGlobber(Path basePath) {
     this.basePath = basePath;
   }
 
@@ -79,11 +79,11 @@ public class SimpleGlobber implements Globber {
   }
 
   /**
-   * Factory method for creating {@link SimpleGlobber} instances.
+   * Factory method for creating {@link NativeGlobber} instances.
    *
    * @param basePath The base path relative to which paths matching glob patterns will be resolved.
    */
-  public static SimpleGlobber create(Path basePath) {
-    return new SimpleGlobber(basePath);
+  public static NativeGlobber create(Path basePath) {
+    return new NativeGlobber(basePath);
   }
 }

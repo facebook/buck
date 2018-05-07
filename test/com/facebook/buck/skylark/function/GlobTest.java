@@ -21,7 +21,7 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.skylark.SkylarkFilesystem;
-import com.facebook.buck.skylark.io.impl.SimpleGlobber;
+import com.facebook.buck.skylark.io.impl.NativeGlobber;
 import com.facebook.buck.skylark.packages.PackageContext;
 import com.facebook.buck.skylark.packages.PackageFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -159,7 +159,7 @@ public class GlobTest {
     env.setupDynamic(
         PackageFactory.PACKAGE_CONTEXT,
         PackageContext.builder()
-            .setGlobber(SimpleGlobber.create(root))
+            .setGlobber(NativeGlobber.create(root))
             .setPackageIdentifier(
                 PackageIdentifier.create(RepositoryName.DEFAULT, PathFragment.create("pkg")))
             .build());

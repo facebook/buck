@@ -33,7 +33,7 @@ import com.facebook.buck.parser.options.ProjectBuildFileParserOptions;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.skylark.io.GlobberFactory;
 import com.facebook.buck.skylark.io.impl.HybridGlobberFactory;
-import com.facebook.buck.skylark.io.impl.SimpleGlobber;
+import com.facebook.buck.skylark.io.impl.NativeGlobber;
 import com.facebook.buck.skylark.parser.BuckGlobals;
 import com.facebook.buck.skylark.parser.ConsoleEventHandler;
 import com.facebook.buck.skylark.parser.RuleFunctionFactory;
@@ -253,7 +253,7 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
       throws IOException {
     return skylarkGlobHandler == SkylarkGlobHandler.JAVA
             || cell.getWatchman() == WatchmanFactory.NULL_WATCHMAN
-        ? SimpleGlobber::create
+        ? NativeGlobber::create
         : HybridGlobberFactory.using(
             buildFileParserOptions.getWatchman().createClient(),
             buildFileParserOptions.getProjectRoot(),
