@@ -74,5 +74,5 @@ go_test(
         "power-driven.go",
         "power-driven_test.go",
     ],
-    coverage_mode='set',
+    coverage_mode = "set",
 )
