@@ -25,7 +25,6 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.BuildCellRelativePath;
-import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
@@ -137,11 +136,7 @@ public class GoTestCoverSource extends AbstractBuildRule {
   }
 
   static String getVarName(Path path) {
-    return "Var_"
-        + Hashing.sha256()
-            .hashString(MorePaths.pathWithUnixSeparators(path.getFileName()), Charsets.UTF_8)
-            .toString()
-            .substring(0, 10);
+    return "Var_" + Hashing.sha256().hashString(path.getFileName().toString(), Charsets.UTF_8);
   }
 
   public ImmutableSet<SourcePath> getCoveredSources() {
