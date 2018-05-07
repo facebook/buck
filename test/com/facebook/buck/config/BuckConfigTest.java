@@ -46,7 +46,6 @@ import java.io.StringReader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
-import org.easymock.EasyMock;
 import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
@@ -104,20 +103,14 @@ public class BuckConfigTest {
   }
 
   @Test
-  public void testConstructorThrowsForMalformedBuildTarget()
-      throws InterruptedException, IOException {
+  public void testConstructorThrowsForMalformedBuildTarget() throws IOException {
     Reader reader = new StringReader(Joiner.on('\n').join("[alias]", "fb4a   = :fb4a"));
-    ProjectFilesystem projectFilesystem = EasyMock.createMock(ProjectFilesystem.class);
-    EasyMock.replay(projectFilesystem);
-
     try {
       BuckConfigTestUtils.createWithDefaultFilesystem(temporaryFolder, reader);
       fail("Should have thrown HumanReadableException.");
     } catch (HumanReadableException e) {
       assertEquals("Path in :fb4a must start with //", e.getHumanReadableErrorMessage());
     }
-
-    EasyMock.verify(projectFilesystem);
   }
 
   @Test
