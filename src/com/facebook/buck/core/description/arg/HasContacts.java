@@ -14,10 +14,12 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
+package com.facebook.buck.core.description.arg;
 
-import java.util.Optional;
+import com.google.common.collect.ImmutableSortedSet;
+import org.immutables.value.Value;
 
-public interface HasTestTimeout {
-  Optional<Long> getTestRuleTimeoutMs();
+public interface HasContacts {
+  @Value.NaturalOrder
+  ImmutableSortedSet<String> getContacts();
 }

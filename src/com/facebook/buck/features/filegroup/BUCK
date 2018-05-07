@@ -7,6 +7,7 @@ buck_module(
         "//src/com/facebook/buck/features/filebundler:filebundler",
     ],
     provided_deps = [
+        "//src/com/facebook/buck/core/description/arg:arg",
         "//src/com/facebook/buck/model:model",
         "//src/com/facebook/buck/rules:rules",
         "//src/com/facebook/buck/rules/modern:modern",

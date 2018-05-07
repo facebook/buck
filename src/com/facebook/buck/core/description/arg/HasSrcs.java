@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
+package com.facebook.buck.core.description.arg;
 
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.google.common.collect.ImmutableSortedSet;

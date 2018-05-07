@@ -14,13 +14,25 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
+package com.facebook.buck.core.description.arg;
 
-import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.sourcepath.SourcePath;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Sets;
+import java.util.Set;
 import org.immutables.value.Value;
 
-public interface HasDeclaredDeps {
+public interface CommonDescriptionArg {
+  String getName();
+
+  ImmutableSet<SourcePath> getLicenses();
+
   @Value.NaturalOrder
-  ImmutableSortedSet<BuildTarget> getDeps();
+  ImmutableSortedSet<String> getLabels();
+
+  @Value.Derived
+  default boolean labelsContainsAnyOf(Set<String> labels) {
+    return !Sets.intersection(this.getLabels(), labels).isEmpty();
+  }
 }

@@ -1,0 +1,26 @@
+java_library(
+    name = "arg",
+    srcs = [
+        "CommonDescriptionArg.java",
+        "HasContacts.java",
+        "HasDeclaredDeps.java",
+        "HasDefaultPlatform.java",
+        "HasDepsQuery.java",
+        "HasProvidedDeps.java",
+        "HasProvidedDepsQuery.java",
+        "HasSrcs.java",
+        "HasTestTimeout.java",
+        "HasTests.java",
+        "Hint.java",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/core/sourcepath:sourcepath",
+        "//src/com/facebook/buck/model:model",
+        "//src/com/facebook/buck/rules/query:types",
+        "//third-party/java/guava:guava",
+        "//third-party/java/immutables:immutables",
+        "//third-party/java/infer-annotations:infer-annotations",
+    ],
+    required_for_source_only_abi = True,
+    visibility = ["PUBLIC"],
+)

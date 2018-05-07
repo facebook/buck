@@ -44,6 +44,9 @@ java_library_with_plugins(
         ["*.java"],
         exclude = TYPES_SRCS + TRANSLATOR_SRCS,
     ),
+    exported_deps = [
+        "//src/com/facebook/buck/core/description/arg:arg",
+    ],
     tests = [
         "//test/com/facebook/buck/versions:versions",
     ],

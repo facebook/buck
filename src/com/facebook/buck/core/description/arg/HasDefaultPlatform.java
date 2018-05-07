@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright 2017-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -14,16 +14,16 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
+package com.facebook.buck.core.description.arg;
 
-import com.facebook.buck.core.model.BuildTarget;
-import com.google.common.collect.ImmutableSortedSet;
-import org.immutables.value.Value;
+import com.facebook.buck.core.model.Flavor;
+import java.util.Optional;
 
-/** A constructor arg of source rules with a list of their tests. */
-public interface HasTests {
-  /** @return A list of tests of this target. */
-  @Hint(isDep = false)
-  @Value.NaturalOrder
-  ImmutableSortedSet<BuildTarget> getTests();
+/** A constructor arg of rules which have a default platform. */
+public interface HasDefaultPlatform {
+  /**
+   * @return If present, the default platform with which to build this target if none are provided
+   *     on the command line.
+   */
+  Optional<Flavor> getDefaultPlatform();
 }

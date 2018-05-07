@@ -14,16 +14,13 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
+package com.facebook.buck.core.description.arg;
 
-import com.facebook.buck.rules.query.Query;
-import java.util.Optional;
+import com.facebook.buck.core.model.BuildTarget;
+import com.google.common.collect.ImmutableSortedSet;
+import org.immutables.value.Value;
 
-public interface HasDepsQuery extends HasDeclaredDeps {
-
-  // TODO: Remove this and fix descriptions to work with implicit deps.
-  @Hint(isDep = false)
-  Optional<Query> getDepsQuery();
-
-  HasDepsQuery withDepsQuery(Query query);
+public interface HasDeclaredDeps {
+  @Value.NaturalOrder
+  ImmutableSortedSet<BuildTarget> getDeps();
 }

@@ -14,16 +14,16 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
+package com.facebook.buck.core.description.arg;
 
-import com.facebook.buck.core.model.Flavor;
+import com.facebook.buck.rules.query.Query;
 import java.util.Optional;
 
-/** A constructor arg of rules which have a default platform. */
-public interface HasDefaultPlatform {
-  /**
-   * @return If present, the default platform with which to build this target if none are provided
-   *     on the command line.
-   */
-  Optional<Flavor> getDefaultPlatform();
+public interface HasDepsQuery extends HasDeclaredDeps {
+
+  // TODO: Remove this and fix descriptions to work with implicit deps.
+  @Hint(isDep = false)
+  Optional<Query> getDepsQuery();
+
+  HasDepsQuery withDepsQuery(Query query);
 }

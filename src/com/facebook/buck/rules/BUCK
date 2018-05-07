@@ -1,32 +1,5 @@
 load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
 
-java_library(
-    name = "abstract_description_arg",
-    srcs = [
-        "CommonDescriptionArg.java",
-        "HasContacts.java",
-        "HasDeclaredDeps.java",
-        "HasDefaultPlatform.java",
-        "HasDepsQuery.java",
-        "HasProvidedDeps.java",
-        "HasProvidedDepsQuery.java",
-        "HasSrcs.java",
-        "HasTestTimeout.java",
-        "HasTests.java",
-        "Hint.java",
-    ],
-    required_for_source_only_abi = True,
-    visibility = ["PUBLIC"],
-    deps = [
-        "//src/com/facebook/buck/core/sourcepath:sourcepath",
-        "//src/com/facebook/buck/model:model",
-        "//src/com/facebook/buck/rules/query:types",
-        "//third-party/java/guava:guava",
-        "//third-party/java/immutables:immutables",
-        "//third-party/java/infer-annotations:infer-annotations",
-    ],
-)
-
 # Ideally, BuildRule.java would require only a handful of other source files
 # in order to compile it. Because BuildContext is referenced in the BuildRule
 # interface, its dependencies are much broader than desired.
@@ -58,7 +31,6 @@ java_immutables_library(
         "TargetGraph.java",
     ],
     exported_deps = [
-        ":abstract_description_arg",
         "//src/com/facebook/buck/core/build/buildable/context:context",
         "//src/com/facebook/buck/core/build/context:context",
         "//src/com/facebook/buck/core/rulekey:rulekey",
@@ -259,6 +231,7 @@ java_immutables_library(
         "//src/com/facebook/buck/artifact_cache:artifact_cache",
         "//src/com/facebook/buck/config:config",
         "//src/com/facebook/buck/config/resources:resources",
+        "//src/com/facebook/buck/core/description/arg:arg",
         "//src/com/facebook/buck/core/sourcepath/resolver/impl:impl",
         "//src/com/facebook/buck/event:event",
         "//src/com/facebook/buck/event:interfaces",

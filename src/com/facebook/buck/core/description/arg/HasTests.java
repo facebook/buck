@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright 2014-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -14,16 +14,16 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
+package com.facebook.buck.core.description.arg;
 
-import com.facebook.buck.rules.query.Query;
-import java.util.Optional;
+import com.facebook.buck.core.model.BuildTarget;
+import com.google.common.collect.ImmutableSortedSet;
+import org.immutables.value.Value;
 
-public interface HasProvidedDepsQuery extends HasProvidedDeps {
-
-  // TODO: Remove this and fix descriptions to work with implicit deps.
+/** A constructor arg of source rules with a list of their tests. */
+public interface HasTests {
+  /** @return A list of tests of this target. */
   @Hint(isDep = false)
-  Optional<Query> getProvidedDepsQuery();
-
-  HasProvidedDepsQuery withProvidedDepsQuery(Query query);
+  @Value.NaturalOrder
+  ImmutableSortedSet<BuildTarget> getTests();
 }
