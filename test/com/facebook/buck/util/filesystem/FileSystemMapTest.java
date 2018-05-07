@@ -23,6 +23,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.filesystem.FileSystemMap.Entry;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -31,17 +32,20 @@ import org.junit.Test;
 public class FileSystemMapTest {
 
   private FileSystemMap.ValueLoader<Boolean> loader = path -> true;
+  private FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
 
   @Test
   public void testPutLeafNodeWithEmptyTrie() {
+    Path fooPath = Paths.get("foo");
+    Path barPath = Paths.get("foo/bar");
     Path path = Paths.get("foo/bar/HelloWorld.java");
-    FileSystemMap<Boolean> fsMap = new FileSystemMap<>(loader);
+    FileSystemMap<Boolean> fsMap = new FileSystemMap<>(loader, filesystem);
     fsMap.put(path, true);
-    FileSystemMap.Entry<Boolean> foo = fsMap.root.subLevels.get("foo");
+    FileSystemMap.Entry<Boolean> foo = fsMap.root.subLevels.get(fooPath);
     assertNotNull(foo);
-    FileSystemMap.Entry<Boolean> bar = foo.subLevels.get("bar");
+    FileSystemMap.Entry<Boolean> bar = foo.subLevels.get(barPath);
     assertNotNull(bar);
-    FileSystemMap.Entry<Boolean> file = bar.subLevels.get("HelloWorld.java");
+    FileSystemMap.Entry<Boolean> file = bar.subLevels.get(path);
     assertNotNull(file);
     assertTrue(file.getWithoutLoading());
     assertEquals(1, fsMap.map.size());
@@ -50,18 +54,21 @@ public class FileSystemMapTest {
 
   @Test
   public void testPutLeafNodeWithNonEmptyTrie() {
+    Path fooPath = Paths.get("foo");
+    Path barPath = Paths.get("foo/bar");
+    Path usrPath = Paths.get("usr");
     Path path = Paths.get("foo/bar/HelloWorld.java");
-    FileSystemMap<Boolean> fsMap = new FileSystemMap<>(loader);
+    FileSystemMap<Boolean> fsMap = new FileSystemMap<>(loader, filesystem);
 
     // Set up the trie with one child and ensure the trie is in the state we want.
     fsMap.put(Paths.get("usr"), true);
-    assertNotNull(fsMap.root.subLevels.get("usr"));
+    assertNotNull(fsMap.root.subLevels.get(usrPath));
 
     // Write the new entry and check data structure state.
     fsMap.put(path, true);
-    assertEquals(0, fsMap.root.subLevels.get("usr").size());
+    assertEquals(0, fsMap.root.subLevels.get(usrPath).size());
     Entry<Boolean> file =
-        fsMap.root.subLevels.get("foo").subLevels.get("bar").subLevels.get("HelloWorld.java");
+        fsMap.root.subLevels.get(fooPath).subLevels.get(barPath).subLevels.get(path);
     assertTrue(file.getWithoutLoading());
     assertEquals(2, fsMap.map.size());
     assertTrue(fsMap.map.get(path).getWithoutLoading());
@@ -69,23 +76,25 @@ public class FileSystemMapTest {
 
   @Test
   public void testPutLeafNodeAlreadyInserted() {
+
+    Path parent = Paths.get("usr");
     Path path = Paths.get("usr/HelloWorld.java");
-    FileSystemMap<Boolean> fsMap = new FileSystemMap<>(loader);
+    FileSystemMap<Boolean> fsMap = new FileSystemMap<>(loader, filesystem);
 
     // Insert the entry into the map, verify resulting state.
     fsMap.put(path, true);
-    FileSystemMap.Entry<Boolean> usr = fsMap.root.subLevels.get("usr");
+    FileSystemMap.Entry<Boolean> usr = fsMap.root.subLevels.get(parent);
     Entry<Boolean> helloWorld = fsMap.map.get(path);
     assertTrue(helloWorld.getWithoutLoading());
-    assertSame(helloWorld, fsMap.root.subLevels.get("usr").subLevels.get("HelloWorld.java"));
+    assertSame(helloWorld, fsMap.root.subLevels.get(parent).subLevels.get(path));
 
     // Insert the entry again with a different value.
     fsMap.put(path, false);
 
     // We check that the object hasn't been reinstantiated => reference is the same.
-    assertSame(fsMap.root.subLevels.get("usr"), usr);
-    assertSame(usr.subLevels.get("HelloWorld.java"), helloWorld);
-    Entry<Boolean> helloWorldEntry = usr.subLevels.get("HelloWorld.java");
+    assertSame(fsMap.root.subLevels.get(parent), usr);
+    assertSame(usr.subLevels.get(path), helloWorld);
+    Entry<Boolean> helloWorldEntry = usr.subLevels.get(path);
     assertNotNull(helloWorldEntry);
     assertFalse(helloWorldEntry.getWithoutLoading());
     assertEquals(fsMap.map.size(), 1);
@@ -94,19 +103,20 @@ public class FileSystemMapTest {
 
   @Test
   public void testPutLeafNodePathPartiallyInserted() {
+    Path parent = Paths.get("usr");
     Path path = Paths.get("usr/HelloWorld.java");
-    FileSystemMap<Boolean> fsMap = new FileSystemMap<>(loader);
+    FileSystemMap<Boolean> fsMap = new FileSystemMap<>(loader, filesystem);
 
     // Insert another entry with the same initial path.
     fsMap.put(Paths.get("usr/OtherPath"), false);
-    FileSystemMap.Entry<Boolean> usr = fsMap.root.subLevels.get("usr");
+    FileSystemMap.Entry<Boolean> usr = fsMap.root.subLevels.get(parent);
 
     // Now insert the entry.
     fsMap.put(path, true);
 
     // We check that the object hasn't been reinstantiated => reference is the same.
-    assertSame(fsMap.root.subLevels.get("usr"), usr);
-    Entry<Boolean> file = usr.subLevels.get("HelloWorld.java");
+    assertSame(fsMap.root.subLevels.get(parent), usr);
+    Entry<Boolean> file = usr.subLevels.get(path);
     assertNotNull(file);
     assertTrue(file.getWithoutLoading());
     assertEquals(2, fsMap.map.size());
@@ -115,66 +125,71 @@ public class FileSystemMapTest {
 
   @Test
   public void testRemovePathThatExistsAndIntermediateNodesAreRemovedToo() {
+    Path parent = Paths.get("usr");
     Path path = Paths.get("usr/HelloWorld.java");
-    FileSystemMap<Boolean> fsMap = new FileSystemMap<>(loader);
+    FileSystemMap<Boolean> fsMap = new FileSystemMap<>(loader, filesystem);
 
     // Insert the item and ensure data structure is correct.
     fsMap.put(path, true);
-    assertTrue(
-        fsMap.root.subLevels.get("usr").subLevels.get("HelloWorld.java").getWithoutLoading());
+    assertTrue(fsMap.root.subLevels.get(parent).subLevels.get(path).getWithoutLoading());
 
     // Remove the item and check intermediate nodes are deleted.
     fsMap.remove(path);
-    assertFalse(fsMap.root.subLevels != null && fsMap.root.subLevels.containsKey("usr"));
+    assertFalse(fsMap.root.subLevels != null && fsMap.root.subLevels.containsKey(parent));
     assertEquals(0, fsMap.map.size());
   }
 
   @Test
   public void testRemovePathThatExistsAndIntermediateIsNotRemovedButValueIsRemoved() {
-    Path path = Paths.get("usr/HelloWorld.java");
-    FileSystemMap<Boolean> fsMap = new FileSystemMap<>(loader);
-    fsMap.put(Paths.get("usr"), true);
-    fsMap.put(path, true);
-    fsMap.put(Paths.get("usr/Yo.java"), true);
+    Path parent = Paths.get("usr");
+    Path path1 = Paths.get("usr/HelloWorld.java");
+    Path path2 = Paths.get("usr/Yo.java");
+    FileSystemMap<Boolean> fsMap = new FileSystemMap<>(loader, filesystem);
+    fsMap.put(parent, true);
+    fsMap.put(path1, true);
+    fsMap.put(path2, true);
 
-    fsMap.remove(path);
-    assertNull(fsMap.root.subLevels.get("usr").getWithoutLoading());
-    assertFalse(fsMap.root.subLevels.get("usr").subLevels.containsKey("HelloWorld.java"));
-    assertTrue(fsMap.root.subLevels.get("usr").subLevels.containsKey("Yo.java"));
-    assertEquals(1, fsMap.map.size());
-    assertTrue(fsMap.map.get(Paths.get("usr/Yo.java")).getWithoutLoading());
+    fsMap.remove(path1);
+    assertNull(fsMap.root.subLevels.get(parent).getWithoutLoading());
+    assertFalse(fsMap.root.subLevels.get(parent).subLevels.containsKey(path1));
+    assertTrue(fsMap.root.subLevels.get(parent).subLevels.containsKey(path2));
+    assertEquals(2, fsMap.map.size());
+    assertTrue(fsMap.map.get(path2).getWithoutLoading());
   }
 
   @Test
   public void testRemovePathThatDoesntExist() {
+    Path parent = Paths.get("usr");
     Path path = Paths.get("usr/HelloWorld.java");
-    FileSystemMap<Boolean> fsMap = new FileSystemMap<>(loader);
-    fsMap.put(Paths.get("usr"), true);
+    FileSystemMap<Boolean> fsMap = new FileSystemMap<>(loader, filesystem);
+    fsMap.put(parent, true);
     fsMap.remove(path);
-    assertFalse(fsMap.root.subLevels != null && fsMap.root.subLevels.containsKey("usr"));
+    assertFalse(fsMap.root.subLevels != null && fsMap.root.subLevels.containsKey(parent));
     assertEquals(0, fsMap.map.size());
     assertFalse(fsMap.map.containsKey(path));
   }
 
   @Test
   public void testRemoveIntermediateNode() {
-    Path path = Paths.get("usr");
-    FileSystemMap<Boolean> fsMap = new FileSystemMap<>(loader);
-    fsMap.put(path, true);
-    fsMap.put(Paths.get("usr/HelloWorld.java"), true);
-    fsMap.put(Paths.get("usr/Yo.java"), true);
+    Path parent = Paths.get("usr");
+    Path path1 = Paths.get("usr/HelloWorld.java");
+    Path path2 = Paths.get("usr/Yo.java");
+    FileSystemMap<Boolean> fsMap = new FileSystemMap<>(loader, filesystem);
+    fsMap.put(parent, true);
+    fsMap.put(path1, true);
+    fsMap.put(path2, true);
     assertEquals(3, fsMap.map.size());
 
-    fsMap.remove(path);
-    assertFalse(fsMap.root.subLevels != null && fsMap.root.subLevels.containsKey("usr"));
-    assertFalse(fsMap.map.containsKey(path));
-    assertFalse(fsMap.map.containsKey(Paths.get("usr/HelloWorld.java")));
-    assertFalse(fsMap.map.containsKey(Paths.get("usr/Yo.java")));
+    fsMap.remove(parent);
+    assertFalse(fsMap.root.subLevels != null && fsMap.root.subLevels.containsKey(parent));
+    assertFalse(fsMap.map.containsKey(parent));
+    assertFalse(fsMap.map.containsKey(path1));
+    assertFalse(fsMap.map.containsKey(path2));
   }
 
   @Test
   public void testRemoveAll() {
-    FileSystemMap<Boolean> fsMap = new FileSystemMap<>(loader);
+    FileSystemMap<Boolean> fsMap = new FileSystemMap<>(loader, filesystem);
     fsMap.put(Paths.get("usr/HelloWorld.java"), true);
     fsMap.put(Paths.get("usr/Yo.java"), true);
     assertEquals(1, fsMap.root.size());
@@ -187,7 +202,7 @@ public class FileSystemMapTest {
 
   @Test
   public void testRemoveAllWithEmptyTrie() {
-    FileSystemMap<Boolean> fsMap = new FileSystemMap<>(loader);
+    FileSystemMap<Boolean> fsMap = new FileSystemMap<>(loader, filesystem);
     fsMap.removeAll();
     assertEquals(fsMap.root.size(), 0);
     assertEquals(fsMap.map.size(), 0);
@@ -196,7 +211,7 @@ public class FileSystemMapTest {
   @Test
   public void testGetWithPathThatExists() {
     Path path = Paths.get("usr/HelloWorld.java");
-    FileSystemMap<Boolean> fsMap = new FileSystemMap<>(loader);
+    FileSystemMap<Boolean> fsMap = new FileSystemMap<>(loader, filesystem);
     fsMap.put(path, true);
     assertTrue(fsMap.get(path));
     assertEquals(fsMap.root.size(), 1);
@@ -206,7 +221,7 @@ public class FileSystemMapTest {
   @Test
   public void testGetAtRootLevelWithPathThatExists() {
     Path path = Paths.get("HelloWorld.java");
-    FileSystemMap<Boolean> fsMap = new FileSystemMap<>(loader);
+    FileSystemMap<Boolean> fsMap = new FileSystemMap<>(loader, filesystem);
     fsMap.put(path, true);
     assertTrue(fsMap.get(path));
     assertEquals(fsMap.root.size(), 1);
@@ -216,7 +231,7 @@ public class FileSystemMapTest {
   @Test
   public void testGetWithPathDoesntExist() {
     Path path = Paths.get("usr/GoodbyeCruelWorld.java");
-    FileSystemMap<Boolean> fsMap = new FileSystemMap<>(loader);
+    FileSystemMap<Boolean> fsMap = new FileSystemMap<>(loader, filesystem);
 
     // Put a path that does exist.
     fsMap.put(Paths.get("usr/HelloWorld.java"), true);

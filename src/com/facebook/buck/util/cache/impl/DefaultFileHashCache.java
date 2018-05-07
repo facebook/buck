@@ -98,13 +98,14 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
         };
     switch (fileHashCacheMode) {
       case PARALLEL_COMPARISON:
-        fileHashCacheEngine = new ComboFileHashCache(hashLoader, sizeLoader);
+        fileHashCacheEngine = new ComboFileHashCache(hashLoader, sizeLoader, projectFilesystem);
         break;
       case LOADING_CACHE:
         fileHashCacheEngine = LoadingCacheFileHashCache.createWithStats(hashLoader, sizeLoader);
         break;
       case PREFIX_TREE:
-        fileHashCacheEngine = FileSystemMapFileHashCache.createWithStats(hashLoader, sizeLoader);
+        fileHashCacheEngine =
+            FileSystemMapFileHashCache.createWithStats(hashLoader, sizeLoader, projectFilesystem);
         break;
       case LIMITED_PREFIX_TREE:
         fileHashCacheEngine =
