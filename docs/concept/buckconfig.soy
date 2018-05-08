@@ -3578,6 +3578,16 @@ your <code>.buckjavaargs</code> file</a>:
     dynamically link with C/C++ shared objects.
   {/param}
 {/call}
+{call buckconfig.entry}
+  {param section: 'rust' /}
+  {param name: 'prefer_static_libs' /}
+  {param example_value: 'false' /}
+  {param description}
+    When <code>prefer_static_libs</code> is true, then buck will always prefer to link with static
+    versions of a library when building a shared target. In practice, this only affects linking
+    with the standard library crates.
+  {/param}
+{/call}
 
 {call buckconfig.section}
   {param name: 'sandbox' /}

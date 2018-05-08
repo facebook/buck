@@ -132,6 +132,7 @@ public class RustLibraryDescription
         rootModuleAndSources.getSecond(),
         rootModuleAndSources.getFirst(),
         rustBuckConfig.getForceRlib(),
+        rustBuckConfig.getPreferStaticLibs(),
         deps);
   }
 
