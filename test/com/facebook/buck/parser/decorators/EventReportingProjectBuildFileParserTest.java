@@ -21,8 +21,11 @@ import static org.junit.Assert.*;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.json.ProjectBuildFileParseEvents;
+import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.eventbus.Subscribe;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -41,7 +44,7 @@ public class EventReportingProjectBuildFileParserTest {
   private ProjectBuildFileParseEventListener listener;
   private AtomicLong processedBytes;
   private ImmutableList<Map<String, Object>> allRules;
-  private ImmutableList<Map<String, Object>> allRulesAndMetadata;
+  private BuildFileManifest allRulesAndMetadata;
 
   private static class ProjectBuildFileParseEventListener {
     private int startedCount;
@@ -83,8 +86,7 @@ public class EventReportingProjectBuildFileParserTest {
     }
 
     @Override
-    public ImmutableList<Map<String, Object>> getAllRulesAndMetaRules(
-        Path buildFile, AtomicLong processedBytes) {
+    public BuildFileManifest getAllRulesAndMetaRules(Path buildFile, AtomicLong processedBytes) {
       return allRulesAndMetadata;
     }
 
@@ -145,7 +147,12 @@ public class EventReportingProjectBuildFileParserTest {
 
   @Test
   public void getAllRulesAndMetaRulesReturnsUnderlyingRules() throws Exception {
-    allRulesAndMetadata = ImmutableList.of();
+    allRulesAndMetadata =
+        BuildFileManifest.builder()
+            .setTargets(ImmutableList.of())
+            .setIncludes(ImmutableSortedSet.of())
+            .setConfigs(ImmutableMap.of())
+            .build();
     assertSame(allRulesAndMetadata, parser.getAllRulesAndMetaRules(SOME_PATH, processedBytes));
   }
 

@@ -18,6 +18,7 @@ package com.facebook.buck.parser.decorators;
 
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.json.ProjectBuildFileParseEvents;
+import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.google.common.base.Preconditions;
@@ -71,8 +72,7 @@ public class EventReportingProjectBuildFileParser implements ProjectBuildFilePar
   }
 
   @Override
-  public ImmutableList<Map<String, Object>> getAllRulesAndMetaRules(
-      Path buildFile, AtomicLong processedBytes)
+  public BuildFileManifest getAllRulesAndMetaRules(Path buildFile, AtomicLong processedBytes)
       throws BuildFileParseException, InterruptedException, IOException {
     maybePostStartEvent();
     return delegate.getAllRulesAndMetaRules(buildFile, processedBytes);

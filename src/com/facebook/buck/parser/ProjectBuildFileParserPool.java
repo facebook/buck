@@ -83,8 +83,7 @@ class ProjectBuildFileParserPool implements AutoCloseable {
 
     return getResourcePoolForCell(buckEventBus, cell)
         .scheduleOperationWithResource(
-            parser ->
-                ImmutableSet.copyOf(parser.getAllRulesAndMetaRules(buildFile, processedBytes)),
+            parser -> parser.getAllRulesAndMetaRules(buildFile, processedBytes).toRawNodes(),
             executorService);
   }
 

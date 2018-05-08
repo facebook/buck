@@ -23,8 +23,11 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.event.BuckEventBusForTests.CapturingConsoleEventListener;
+import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -110,13 +113,22 @@ public class TargetCountVerificationParserDelegateTest {
   @Test
   public void givenTargetCountExceedingLimitWhenGetAllRulesAndMetaRulesIsInvokedAWarningIsEmitted()
       throws Exception {
-    EasyMock.expect(parserMock.getAllRulesAndMetaRules(path, processedBytes)).andReturn(rawTargets);
+    EasyMock.expect(parserMock.getAllRulesAndMetaRules(path, processedBytes))
+        .andReturn(toBuildFileManifest(this.rawTargets));
 
     TargetCountVerificationParserDelegate parserDelegate = newParserDelegate(3);
     EasyMock.replay(parserMock);
     parserDelegate.getAllRulesAndMetaRules(path, processedBytes);
 
     assertWarningIsEmitted();
+  }
+
+  private BuildFileManifest toBuildFileManifest(ImmutableList<Map<String, Object>> rawTargets) {
+    return BuildFileManifest.builder()
+        .addAllTargets(rawTargets)
+        .setIncludes(ImmutableSortedSet.of())
+        .setConfigs(ImmutableMap.of())
+        .build();
   }
 
   @Test
@@ -135,7 +147,8 @@ public class TargetCountVerificationParserDelegateTest {
   public void
       givenTargetCountNotExceedingLimitWhenGetAllRulesAndMetaRulesIsInvokedAWarningIsNotEmitted()
           throws Exception {
-    EasyMock.expect(parserMock.getAllRulesAndMetaRules(path, processedBytes)).andReturn(rawTargets);
+    EasyMock.expect(parserMock.getAllRulesAndMetaRules(path, processedBytes))
+        .andReturn(toBuildFileManifest(rawTargets));
 
     TargetCountVerificationParserDelegate parserDelegate = newParserDelegate(6);
     EasyMock.replay(parserMock);

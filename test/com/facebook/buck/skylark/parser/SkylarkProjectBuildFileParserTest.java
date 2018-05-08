@@ -22,6 +22,7 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.startsWith;
 import static org.hamcrest.Matchers.stringContainsInOrder;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -34,6 +35,7 @@ import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.skylark.SkylarkFilesystem;
 import com.facebook.buck.parser.ParserConfig;
+import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.options.ProjectBuildFileParserOptions;
 import com.facebook.buck.plugin.impl.BuckPluginManagerFactory;
@@ -237,13 +239,10 @@ public class SkylarkProjectBuildFileParserTest {
   public void accessedUnsetConfigOptionIsRecorded() throws Exception {
     Path buildFile = projectFilesystem.resolve("BUCK");
     Files.write(buildFile, ImmutableList.of("val = read_config('app', 'name', 'guava')"));
-    ImmutableList<Map<String, Object>> allRules =
+    BuildFileManifest buildFileManifest =
         parser.getAllRulesAndMetaRules(buildFile, new AtomicLong());
-    assertEquals(3, allRules.size());
-    Map<String, Object> configs = allRules.get(1);
-    assertEquals(
-        ImmutableMap.of("app", ImmutableMap.of("name", Optional.empty())),
-        configs.get("__configs"));
+    Map<String, Object> configs = buildFileManifest.getConfigs();
+    assertEquals(ImmutableMap.of("app", ImmutableMap.of("name", Optional.empty())), configs);
   }
 
   @Test
@@ -252,13 +251,12 @@ public class SkylarkProjectBuildFileParserTest {
     Files.write(
         buildFile,
         ImmutableList.of("val = read_config('dummy_section', 'dummy_key', 'dummy_value')"));
-    ImmutableList<Map<String, Object>> allRules =
+    BuildFileManifest buildFileManifest =
         parser.getAllRulesAndMetaRules(buildFile, new AtomicLong());
-    assertEquals(3, allRules.size());
-    Map<String, Object> configs = allRules.get(1);
+    Map<String, Object> configs = buildFileManifest.getConfigs();
     assertEquals(
         ImmutableMap.of("dummy_section", ImmutableMap.of("dummy_key", Optional.of("dummy_value"))),
-        configs.get("__configs"));
+        configs);
   }
 
   @Test
@@ -693,14 +691,12 @@ public class SkylarkProjectBuildFileParserTest {
             "load('//src/test:build_rules.bzl', 'get_name')",
             "prebuilt_jar(name='foo', binary_jar=get_name())"));
     Files.write(extensionFile, Arrays.asList("def get_name():", "  return 'jar'"));
-    ImmutableList<Map<String, Object>> allRulesAndMetaRules =
+    BuildFileManifest buildFileManifest =
         parser.getAllRulesAndMetaRules(buildFile, new AtomicLong());
-    assertThat(allRulesAndMetaRules, Matchers.hasSize(4));
-    Map<String, Object> prebuiltJarRule = allRulesAndMetaRules.get(0);
+    assertThat(buildFileManifest.getTargets(), Matchers.hasSize(1));
+    Map<String, Object> prebuiltJarRule = buildFileManifest.getTargets().get(0);
     assertThat(prebuiltJarRule.get("name"), equalTo("foo"));
-    Map<String, Object> includesMetadataRule = allRulesAndMetaRules.get(1);
-    @SuppressWarnings("unchecked")
-    ImmutableSet<String> includes = (ImmutableSet<String>) includesMetadataRule.get("__includes");
+    ImmutableSet<String> includes = buildFileManifest.getIncludes();
     assertThat(
         includes
             .stream()
@@ -709,10 +705,10 @@ public class SkylarkProjectBuildFileParserTest {
             .map(Object::toString)
             .collect(ImmutableList.toImmutableList()),
         equalTo(ImmutableList.of("BUCK", "build_rules.bzl")));
-    Map<String, Object> configsMetadataRule = allRulesAndMetaRules.get(2);
-    assertThat(configsMetadataRule.get("__configs"), equalTo(ImmutableMap.of()));
-    Map<String, Object> envsMetadataRule = allRulesAndMetaRules.get(3);
-    assertThat(envsMetadataRule.get("__env"), equalTo(ImmutableMap.of()));
+    Map<String, Object> configs = buildFileManifest.getConfigs();
+    assertThat(configs, equalTo(ImmutableMap.of()));
+    Optional<ImmutableMap<String, Optional<String>>> env = buildFileManifest.getEnv();
+    assertFalse(env.isPresent());
   }
 
   @Test

@@ -34,6 +34,7 @@ import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.FilesystemBackedBuildFileTree;
+import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
@@ -539,10 +540,9 @@ public class ParsePipelineTest {
     }
 
     @Override
-    public ImmutableList<Map<String, Object>> getAllRulesAndMetaRules(
-        Path buildFile, AtomicLong processedBytes)
+    public BuildFileManifest getAllRulesAndMetaRules(Path buildFile, AtomicLong processedBytes)
         throws BuildFileParseException, InterruptedException, IOException {
-      return delegate.getAll(buildFile, processedBytes);
+      return delegate.getAllRulesAndMetaRules(buildFile, processedBytes);
     }
 
     @Override

@@ -476,7 +476,10 @@ public class PythonDslProjectBuildFileParserTest {
           new FakeProcessExecutor(
               params ->
                   fakeProcessWithJsonOutput(
-                      0, ImmutableList.of(), Optional.empty(), Optional.empty()),
+                      0,
+                      ImmutableList.of("__includes", "__configs", "__env"),
+                      Optional.empty(),
+                      Optional.empty()),
               new TestConsole()),
           BuckEventBusForTests.newInstance());
     }

@@ -40,8 +40,7 @@ public interface ProjectBuildFileParser extends AutoCloseable {
    *
    * @param buildFile should be an absolute path to a build file. Must have rootPath as its prefix.
    */
-  ImmutableList<Map<String, Object>> getAllRulesAndMetaRules(
-      Path buildFile, AtomicLong processedBytes)
+  BuildFileManifest getAllRulesAndMetaRules(Path buildFile, AtomicLong processedBytes)
       throws BuildFileParseException, InterruptedException, IOException;
 
   /** Reports profile information captured while parsing build files. */
