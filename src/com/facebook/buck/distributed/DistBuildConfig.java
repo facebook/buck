@@ -155,16 +155,6 @@ public class DistBuildConfig {
   private static final String ENABLE_UPLOADS_FROM_LOCAL_CACHE = "enable_uploads_from_local_cache";
   private static final boolean DEFAULT_ENABLE_UPLOADS_FROM_LOCAL_CACHE = false;
 
-  // Percentage of available CPU cores to use for the coordinator build.
-  // Default this to 75% to ensure coordinator is always responsive to requests from minions
-  private static final String COORDINATOR_BUILD_CAPACITY_RATIO = "coordinator_build_capacity_ratio";
-  private static final Double DEFAULT_COORDINATOR_BUILD_CAPACITY_RATIO = 0.75;
-
-  // Percentage of available CPU cores to use for the minion builds.
-  // Default this to 90% to ensure we never timeout requests to the coordinator.
-  private static final String MINION_BUILD_CAPACITY_RATIO = "minion_build_capacity_ratio";
-  private static final Double DEFAULT_MINION_BUILD_CAPACITY_RATIO = 0.9;
-
   /**
    * While the experiments.stampede_beta_test flag is set to true, this flag can be used to
    * configure whether we want auto-stampede conversion for all builds, no builds, or some builds.
@@ -402,24 +392,6 @@ public class DistBuildConfig {
     return buckConfig
         .getInteger(STAMPEDE_SECTION, MOST_BUILD_RULES_FINISHED_PERCENTAGE_THRESHOLD)
         .orElse(DEFAULT_MOST_BUILD_RULES_FINISHED_PERCENTAGE_THRESHOLD);
-  }
-
-  /** @return Ratio of available build capacity that should be used by coordinator */
-  public double getCoordinatorBuildCapacityRatio() {
-    Optional<String> configValue =
-        buckConfig.getValue(STAMPEDE_SECTION, COORDINATOR_BUILD_CAPACITY_RATIO);
-    return configValue.isPresent()
-        ? Double.valueOf(configValue.get())
-        : DEFAULT_COORDINATOR_BUILD_CAPACITY_RATIO;
-  }
-
-  /** @return Ratio of available build capacity that should be used by minions */
-  public double getMinionBuildCapacityRatio() {
-    Optional<String> configValue =
-        buckConfig.getValue(STAMPEDE_SECTION, MINION_BUILD_CAPACITY_RATIO);
-    return configValue.isPresent()
-        ? Double.valueOf(configValue.get())
-        : DEFAULT_MINION_BUILD_CAPACITY_RATIO;
   }
 
   /**

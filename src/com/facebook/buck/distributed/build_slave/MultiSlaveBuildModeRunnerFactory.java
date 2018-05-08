@@ -169,33 +169,12 @@ public class MultiSlaveBuildModeRunnerFactory {
       OptionalInt coordinatorPort,
       DistBuildConfig distBuildConfig,
       MinionBuildProgressTracker minionBuildProgressTracker,
-      double availableBuildCapacityRatio,
       BuckEventBus eventBus) {
-    Preconditions.checkArgument(
-        availableBuildCapacityRatio > 0, availableBuildCapacityRatio + " is not > 0");
-    Preconditions.checkArgument(
-        availableBuildCapacityRatio <= 1, availableBuildCapacityRatio + " is not <= 1");
-
     MinionModeRunner.BuildCompletionChecker checker =
         () -> {
           BuildJob job = distBuildService.getCurrentBuildJobState(stampedeId);
           return BuildStatusUtil.isTerminalBuildStatus(job.getStatus());
         };
-
-    int availableBuildCapacity =
-        distBuildConfig
-            .getBuckConfig()
-            .getView(ResourcesConfig.class)
-            .getConcurrencyLimit()
-            .threadLimit;
-
-    // Adjust by ratio. E.g. if ratio is 0.5 and we have 8 cores, minion will use 4 cores.
-    Double availableCapacityDouble =
-        Double.valueOf(availableBuildCapacityRatio * availableBuildCapacity);
-    availableBuildCapacity = availableCapacityDouble.intValue();
-
-    // Ensure value wasn't rounded down to 0. We always need more than 1 core to make progress.
-    availableBuildCapacity = Math.max(1, availableBuildCapacity);
 
     return new MinionModeRunner(
         coordinatorAddress,
@@ -238,8 +217,7 @@ public class MultiSlaveBuildModeRunnerFactory {
       ListeningExecutorService executorService,
       ArtifactCache remoteCache,
       BuildSlaveTimingStatsTracker timingStatsTracker,
-      HealthCheckStatsTracker healthCheckStatsTracker,
-      double coordinatorBuildCapacityRatio) {
+      HealthCheckStatsTracker healthCheckStatsTracker) {
     return new CoordinatorAndMinionModeRunner(
         createCoordinator(
             delegateAndGraphsFuture,
@@ -270,7 +248,6 @@ public class MultiSlaveBuildModeRunnerFactory {
             OptionalInt.empty(),
             distBuildConfig,
             minionBuildProgressTracker,
-            coordinatorBuildCapacityRatio,
             eventBus));
   }
 
