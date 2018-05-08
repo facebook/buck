@@ -241,4 +241,21 @@ public class BuildCommandIntegrationTest {
     assertTrue(ruleKeys.size() >= 3);
     assertTrue(ruleKeys.stream().anyMatch(ruleKey -> ruleKey.name.equals("//:bar")));
   }
+
+  @Test
+  public void enableEmbeddedCellHasOnlyOneBuckOut() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "multiple_cell_build", tmp);
+    workspace.setUp();
+    ProcessResult runBuckResult =
+        workspace.runBuckBuild(
+            "//main/...", "-c", "project.embedded_cell_buck_out_enabled=true", "//main/...");
+    runBuckResult.assertSuccess();
+
+    assertTrue(Files.exists(workspace.getPath("buck-out/cells/cxx")));
+    assertTrue(Files.exists(workspace.getPath("buck-out/cells/java")));
+
+    assertFalse(Files.exists(workspace.getPath("cxx/buck-out")));
+    assertFalse(Files.exists(workspace.getPath("java/buck-out")));
+  }
 }
