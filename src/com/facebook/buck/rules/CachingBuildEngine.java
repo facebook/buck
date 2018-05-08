@@ -28,6 +28,7 @@ import com.facebook.buck.core.build.engine.buildinfo.BuildInfo;
 import com.facebook.buck.core.build.engine.buildinfo.BuildInfoRecorder;
 import com.facebook.buck.core.build.engine.buildinfo.BuildInfoStore;
 import com.facebook.buck.core.build.engine.buildinfo.OnDiskBuildInfo;
+import com.facebook.buck.core.build.engine.type.BuildType;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
@@ -92,23 +93,6 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     ;
   }
 
-  /** The mode in which to build rules. */
-  public enum BuildMode {
-
-    // Perform a shallow build, only locally materializing the bare minimum needed to build the
-    // top-level build targets.
-    SHALLOW,
-
-    // Perform a deep build, locally materializing all the transitive dependencies of the top-level
-    // build targets.
-    DEEP,
-
-    // Perform local cache population by only loading all the transitive dependencies of
-    // the top-level build targets from the remote cache, without building missing or changed
-    // dependencies locally.
-    POPULATE_FROM_REMOTE_CACHE,
-  }
-
   /** Whether to use dependency files or not. */
   public enum DepFiles {
     ENABLED,
@@ -135,7 +119,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
 
   private final WeightedListeningExecutorService service;
   private final StepRunner stepRunner;
-  private final BuildMode buildMode;
+  private final BuildType buildMode;
   private final MetadataStorage metadataStorage;
   private final DepFiles depFiles;
   private final long maxDepFileCacheEntries;
@@ -167,7 +151,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
       Optional<BuildRuleStrategy> customBuildRuleStrategy,
       WeightedListeningExecutorService service,
       StepRunner stepRunner,
-      BuildMode buildMode,
+      BuildType buildMode,
       MetadataStorage metadataStorage,
       DepFiles depFiles,
       long maxDepFileCacheEntries,
@@ -216,7 +200,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
       Optional<BuildRuleStrategy> customBuildRuleStrategy,
       WeightedListeningExecutorService service,
       StepRunner stepRunner,
-      BuildMode buildMode,
+      BuildType buildMode,
       MetadataStorage metadataStorage,
       DepFiles depFiles,
       long maxDepFileCacheEntries,
@@ -298,8 +282,8 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
   }
 
   private static Optional<UnskippedRulesTracker> createUnskippedRulesTracker(
-      BuildMode buildMode, RuleDepsCache ruleDeps, BuildRuleResolver resolver) {
-    if (buildMode == BuildMode.DEEP || buildMode == BuildMode.POPULATE_FROM_REMOTE_CACHE) {
+      BuildType buildMode, RuleDepsCache ruleDeps, BuildRuleResolver resolver) {
+    if (buildMode == BuildType.DEEP || buildMode == BuildType.POPULATE_FROM_REMOTE_CACHE) {
       // Those modes never skip rules, there is no need to track unskipped rules.
       return Optional.empty();
     }
@@ -473,7 +457,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
   private boolean shouldKeepGoing(BuildEngineBuildContext buildContext) {
     boolean keepGoing =
         firstFailure == null
-            || buildMode == BuildMode.POPULATE_FROM_REMOTE_CACHE
+            || buildMode == BuildType.POPULATE_FROM_REMOTE_CACHE
             || buildContext.isKeepGoing();
 
     if (!keepGoing) {

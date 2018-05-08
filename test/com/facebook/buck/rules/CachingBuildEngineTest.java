@@ -56,6 +56,7 @@ import com.facebook.buck.core.build.engine.buildinfo.BuildInfoStore;
 import com.facebook.buck.core.build.engine.buildinfo.OnDiskBuildInfo;
 import com.facebook.buck.core.build.engine.manifest.Manifest;
 import com.facebook.buck.core.build.engine.manifest.ManifestUtil;
+import com.facebook.buck.core.build.engine.type.BuildType;
 import com.facebook.buck.core.cell.resolver.CellPathResolver;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildId;
@@ -730,7 +731,7 @@ public class CachingBuildEngineTest {
 
       // Create the build engine.
       try (CachingBuildEngine cachingBuildEngine =
-          cachingBuildEngineFactory().setBuildMode(CachingBuildEngine.BuildMode.DEEP).build()) {
+          cachingBuildEngineFactory().setBuildMode(BuildType.DEEP).build()) {
 
         // Run the build.
         BuildResult result =
@@ -1312,7 +1313,7 @@ public class CachingBuildEngineTest {
 
       // Create the build engine.
       try (CachingBuildEngine cachingBuildEngine =
-          cachingBuildEngineFactory().setBuildMode(CachingBuildEngine.BuildMode.DEEP).build()) {
+          cachingBuildEngineFactory().setBuildMode(BuildType.DEEP).build()) {
 
         // Run the build.
         BuildResult result =

@@ -18,6 +18,7 @@ package com.facebook.buck.rules;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.ConfigView;
 import com.facebook.buck.config.resources.ResourcesConfig;
+import com.facebook.buck.core.build.engine.type.BuildType;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import java.util.Optional;
 import org.immutables.value.Value;
@@ -26,10 +27,8 @@ import org.immutables.value.Value;
 @BuckStyleTuple
 abstract class AbstractCachingBuildEngineBuckConfig implements ConfigView<BuckConfig> {
   /** @return the mode with which to run the build engine. */
-  public CachingBuildEngine.BuildMode getBuildEngineMode() {
-    return getDelegate()
-        .getEnum("build", "engine", CachingBuildEngine.BuildMode.class)
-        .orElse(CachingBuildEngine.BuildMode.SHALLOW);
+  public BuildType getBuildEngineMode() {
+    return getDelegate().getEnum("build", "engine", BuildType.class).orElse(BuildType.SHALLOW);
   }
 
   public CachingBuildEngine.MetadataStorage getBuildMetadataStorage() {

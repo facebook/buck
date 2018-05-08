@@ -18,6 +18,7 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.engine.BuildEngineBuildContext;
+import com.facebook.buck.core.build.engine.type.BuildType;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
@@ -141,7 +142,7 @@ final class JavaBuildGraphProcessor {
                   Optional.empty(),
                   pool.getWeightedListeningExecutorService(),
                   new DefaultStepRunner(),
-                  CachingBuildEngine.BuildMode.SHALLOW,
+                  BuildType.SHALLOW,
                   cachingBuildEngineBuckConfig.getBuildMetadataStorage(),
                   cachingBuildEngineBuckConfig.getBuildDepFiles(),
                   cachingBuildEngineBuckConfig.getBuildMaxDepFileCacheEntries(),

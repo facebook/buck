@@ -33,6 +33,7 @@ import com.facebook.buck.core.build.engine.buildinfo.BuildInfoRecorder;
 import com.facebook.buck.core.build.engine.buildinfo.OnDiskBuildInfo;
 import com.facebook.buck.core.build.engine.manifest.ManifestFetchResult;
 import com.facebook.buck.core.build.engine.manifest.ManifestStoreResult;
+import com.facebook.buck.core.build.engine.type.BuildType;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.model.BuildTarget;
@@ -101,7 +102,7 @@ import javax.annotation.Nullable;
 class CachingBuildRuleBuilder {
   private static final Logger LOG = Logger.get(CachingBuildRuleBuilder.class);
   private final BuildRuleBuilderDelegate buildRuleBuilderDelegate;
-  private final CachingBuildEngine.BuildMode buildMode;
+  private final BuildType buildMode;
   private final BuildRuleDurationTracker buildRuleDurationTracker;
   private final boolean consoleLogBuildFailuresInline;
   private final RuleKeyDiagnostics<RuleKey, String> defaultRuleKeyDiagnostics;
@@ -159,7 +160,7 @@ class CachingBuildRuleBuilder {
       BuildRuleBuilderDelegate buildRuleBuilderDelegate,
       Optional<Long> artifactCacheSizeLimit,
       BuildInfoStoreManager buildInfoStoreManager,
-      CachingBuildEngine.BuildMode buildMode,
+      BuildType buildMode,
       BuildRuleDurationTracker buildRuleDurationTracker,
       boolean consoleLogBuildFailuresInline,
       RuleKeyDiagnostics<RuleKey, String> defaultRuleKeyDiagnostics,
@@ -309,8 +310,7 @@ class CachingBuildRuleBuilder {
 
     // If we're performing a deep build, guarantee that all dependencies will *always* get
     // materialized locally
-    if (buildMode == CachingBuildEngine.BuildMode.DEEP
-        || buildMode == CachingBuildEngine.BuildMode.POPULATE_FROM_REMOTE_CACHE) {
+    if (buildMode == BuildType.DEEP || buildMode == BuildType.POPULATE_FROM_REMOTE_CACHE) {
       depResults = buildRuleBuilderDelegate.getDepResults(rule, executionContext);
     }
 
@@ -912,7 +912,7 @@ class CachingBuildRuleBuilder {
     }
 
     // 9. Fail if populating the cache and cache lookups failed.
-    if (buildMode == CachingBuildEngine.BuildMode.POPULATE_FROM_REMOTE_CACHE) {
+    if (buildMode == BuildType.POPULATE_FROM_REMOTE_CACHE) {
       buildResultFuture =
           transformBuildResultIfNotPresent(
               buildResultFuture,
@@ -1031,8 +1031,7 @@ class CachingBuildRuleBuilder {
 
   private ListenableFuture<Optional<BuildResult>> handleDepsResults(List<BuildResult> depResults) {
     for (BuildResult depResult : depResults) {
-      if (buildMode != CachingBuildEngine.BuildMode.POPULATE_FROM_REMOTE_CACHE
-          && !depResult.isSuccess()) {
+      if (buildMode != BuildType.POPULATE_FROM_REMOTE_CACHE && !depResult.isSuccess()) {
         return Futures.immediateFuture(Optional.of(canceled(depResult.getFailure())));
       }
 

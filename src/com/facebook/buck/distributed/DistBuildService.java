@@ -339,7 +339,7 @@ public class DistBuildService implements Closeable {
         buildMode == BuildMode.REMOTE_BUILD
             || buildMode == BuildMode.DISTRIBUTED_BUILD_WITH_REMOTE_COORDINATOR
             || buildMode == BuildMode.DISTRIBUTED_BUILD_WITH_LOCAL_COORDINATOR,
-        "BuildMode [%s=%d] is currently not supported.",
+        "BuildType [%s=%d] is currently not supported.",
         buildMode.toString(),
         buildMode.ordinal());
 

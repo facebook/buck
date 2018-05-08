@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.core.build.engine.type.BuildType;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.rules.keys.DefaultRuleKeyCache;
@@ -35,7 +36,7 @@ import java.util.Optional;
 /** Handy way to create new {@link CachingBuildEngine} instances for test purposes. */
 public class CachingBuildEngineFactory {
 
-  private CachingBuildEngine.BuildMode buildMode = CachingBuildEngine.BuildMode.SHALLOW;
+  private BuildType buildMode = BuildType.SHALLOW;
   private CachingBuildEngine.MetadataStorage metadataStorage =
       CachingBuildEngine.MetadataStorage.FILESYSTEM;
   private CachingBuildEngine.DepFiles depFiles = CachingBuildEngine.DepFiles.ENABLED;
@@ -64,7 +65,7 @@ public class CachingBuildEngineFactory {
     this.buildInfoStoreManager = buildInfoStoreManager;
   }
 
-  public CachingBuildEngineFactory setBuildMode(CachingBuildEngine.BuildMode buildMode) {
+  public CachingBuildEngineFactory setBuildMode(BuildType buildMode) {
     this.buildMode = buildMode;
     return this;
   }
