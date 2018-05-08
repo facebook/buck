@@ -2646,6 +2646,15 @@ public class CachingBuildEngineTest {
       super(metadataStorage);
     }
 
+    private static Optional<RuleKey> getManifestRuleKeyForTest(
+        CachingBuildEngine engine, SupportsDependencyFileRuleKey rule, BuckEventBus eventBus)
+        throws IOException {
+      return engine
+          .ruleKeyFactories
+          .calculateManifestKey(rule, eventBus)
+          .map(RuleKeyAndInputs::getRuleKey);
+    }
+
     @Test
     public void manifestIsWrittenWhenBuiltLocally() throws Exception {
       DefaultDependencyFileRuleKeyFactory depFilefactory =
@@ -2735,8 +2744,7 @@ public class CachingBuildEngineTest {
       CacheResult cacheResult =
           Futures.getUnchecked(
               cache.fetchAsync(
-                  cachingBuildEngine
-                      .getManifestRuleKeyForTest(rule, buildContext.getEventBus())
+                  getManifestRuleKeyForTest(cachingBuildEngine, rule, buildContext.getEventBus())
                       .get(),
                   LazyPath.ofInstance(fetchedManifest)));
       assertThat(cacheResult.getType(), equalTo(CacheResultType.HIT));
@@ -2836,8 +2844,7 @@ public class CachingBuildEngineTest {
       cache.store(
           ArtifactInfo.builder()
               .addRuleKeys(
-                  cachingBuildEngine
-                      .getManifestRuleKeyForTest(rule, buildContext.getEventBus())
+                  getManifestRuleKeyForTest(cachingBuildEngine, rule, buildContext.getEventBus())
                       .get())
               .build(),
           byteArrayOutputStream.toByteArray());
@@ -2860,8 +2867,7 @@ public class CachingBuildEngineTest {
       CacheResult cacheResult =
           Futures.getUnchecked(
               cache.fetchAsync(
-                  cachingBuildEngine
-                      .getManifestRuleKeyForTest(rule, buildContext.getEventBus())
+                  getManifestRuleKeyForTest(cachingBuildEngine, rule, buildContext.getEventBus())
                       .get(),
                   LazyPath.ofInstance(fetchedManifest)));
       assertThat(cacheResult.getType(), equalTo(CacheResultType.HIT));
@@ -2962,8 +2968,7 @@ public class CachingBuildEngineTest {
       cache.store(
           ArtifactInfo.builder()
               .addRuleKeys(
-                  cachingBuildEngine
-                      .getManifestRuleKeyForTest(rule, buildContext.getEventBus())
+                  getManifestRuleKeyForTest(cachingBuildEngine, rule, buildContext.getEventBus())
                       .get())
               .build(),
           byteArrayOutputStream.toByteArray());
@@ -2986,8 +2991,7 @@ public class CachingBuildEngineTest {
       CacheResult cacheResult =
           Futures.getUnchecked(
               cache.fetchAsync(
-                  cachingBuildEngine
-                      .getManifestRuleKeyForTest(rule, buildContext.getEventBus())
+                  getManifestRuleKeyForTest(cachingBuildEngine, rule, buildContext.getEventBus())
                       .get(),
                   LazyPath.ofInstance(fetchedManifest)));
       assertThat(cacheResult.getType(), equalTo(CacheResultType.HIT));
@@ -3080,8 +3084,7 @@ public class CachingBuildEngineTest {
       cache.store(
           ArtifactInfo.builder()
               .addRuleKeys(
-                  cachingBuildEngine
-                      .getManifestRuleKeyForTest(rule, buildContext.getEventBus())
+                  getManifestRuleKeyForTest(cachingBuildEngine, rule, buildContext.getEventBus())
                       .get())
               .build(),
           byteArrayOutputStream.toByteArray());

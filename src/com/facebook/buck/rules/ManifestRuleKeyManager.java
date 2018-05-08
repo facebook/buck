@@ -191,8 +191,7 @@ public class ManifestRuleKeyManager {
   }
 
   public Optional<RuleKeyAndInputs> calculateManifestKey(BuckEventBus eventBus) throws IOException {
-    return CachingBuildEngine.calculateManifestKey(
-        (SupportsDependencyFileRuleKey) rule, eventBus, ruleKeyFactories);
+    return ruleKeyFactories.calculateManifestKey((SupportsDependencyFileRuleKey) rule, eventBus);
   }
 
   public ListenableFuture<CacheResult> fetchManifest(RuleKey key) {

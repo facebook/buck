@@ -35,16 +35,11 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.RuleKeyCalculationEvent;
-import com.facebook.buck.rules.keys.RuleKeyAndInputs;
 import com.facebook.buck.rules.keys.RuleKeyDiagnostics;
 import com.facebook.buck.rules.keys.RuleKeyFactories;
-import com.facebook.buck.rules.keys.SizeLimiter;
-import com.facebook.buck.rules.keys.SupportsDependencyFileRuleKey;
 import com.facebook.buck.rules.keys.hasher.StringRuleKeyHasher;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.StepRunner;
-import com.facebook.buck.util.Scope;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.collect.SortedSets;
 import com.facebook.buck.util.concurrent.MoreFutures;
@@ -118,7 +113,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
   private final SourcePathResolver pathResolver;
   private final Optional<Long> artifactCacheSizeLimit;
   private final FileHashCache fileHashCache;
-  private final RuleKeyFactories ruleKeyFactories;
+  @VisibleForTesting final RuleKeyFactories ruleKeyFactories;
   private final ResourceAwareSchedulingInfo resourceAwareSchedulingInfo;
 
   private final RuleDepsCache ruleDeps;
@@ -457,24 +452,6 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     }
 
     return keepGoing;
-  }
-
-  @VisibleForTesting
-  public Optional<RuleKey> getManifestRuleKeyForTest(
-      SupportsDependencyFileRuleKey rule, BuckEventBus eventBus) throws IOException {
-    return calculateManifestKey(rule, eventBus, ruleKeyFactories).map(RuleKeyAndInputs::getRuleKey);
-  }
-
-  static Optional<RuleKeyAndInputs> calculateManifestKey(
-      SupportsDependencyFileRuleKey rule, BuckEventBus eventBus, RuleKeyFactories ruleKeyFactories)
-      throws IOException {
-    try (Scope scope =
-        RuleKeyCalculationEvent.scope(
-            eventBus, RuleKeyCalculationEvent.Type.MANIFEST, rule.getBuildTarget())) {
-      return Optional.of(ruleKeyFactories.getDepFileRuleKeyFactory().buildManifestKey(rule));
-    } catch (SizeLimiter.SizeLimitException ex) {
-      return Optional.empty();
-    }
   }
 
   private ListenableFuture<BuildResult> processBuildRule(
