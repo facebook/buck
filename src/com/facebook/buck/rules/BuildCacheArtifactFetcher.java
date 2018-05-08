@@ -245,6 +245,7 @@ public class BuildCacheArtifactFetcher {
     return cacheResult;
   }
 
+  @FunctionalInterface
   interface OnOutputsWillChange {
     void call() throws IOException;
   }
