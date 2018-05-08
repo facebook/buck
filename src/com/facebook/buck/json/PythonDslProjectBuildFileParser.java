@@ -341,24 +341,13 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
   }
 
   /**
-   * Collect all rules from a particular build file.
-   *
-   * @param buildFile should be an absolute path to a build file. Must have rootPath as its prefix.
-   */
-  @Override
-  public ImmutableList<Map<String, Object>> getAll(Path buildFile, AtomicLong processedBytes)
-      throws BuildFileParseException, InterruptedException {
-    return getAllRulesAndMetaRules(buildFile, processedBytes).getTargets();
-  }
-
-  /**
    * Collect all rules from a particular build file, along with meta rules about the rules, for
    * example which build files the rules depend on.
    *
    * @param buildFile should be an absolute path to a build file. Must have rootPath as its prefix.
    */
   @Override
-  public BuildFileManifest getAllRulesAndMetaRules(Path buildFile, AtomicLong processedBytes)
+  public BuildFileManifest getBuildFileManifest(Path buildFile, AtomicLong processedBytes)
       throws BuildFileParseException, InterruptedException {
     try {
       return getAllRulesInternal(buildFile, processedBytes);

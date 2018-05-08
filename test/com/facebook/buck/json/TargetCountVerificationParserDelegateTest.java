@@ -99,26 +99,14 @@ public class TargetCountVerificationParserDelegateTest {
   }
 
   @Test
-  public void givenTargetCountExceedingLimitWhenGetAllIsInvokedAWarningIsEmitted()
-      throws Exception {
-    EasyMock.expect(parserMock.getAll(path, processedBytes)).andReturn(rawTargets);
-
-    TargetCountVerificationParserDelegate parserDelegate = newParserDelegate(3);
-    EasyMock.replay(parserMock);
-    parserDelegate.getAll(path, processedBytes);
-
-    assertWarningIsEmitted();
-  }
-
-  @Test
   public void givenTargetCountExceedingLimitWhenGetAllRulesAndMetaRulesIsInvokedAWarningIsEmitted()
       throws Exception {
-    EasyMock.expect(parserMock.getAllRulesAndMetaRules(path, processedBytes))
+    EasyMock.expect(parserMock.getBuildFileManifest(path, processedBytes))
         .andReturn(toBuildFileManifest(this.rawTargets));
 
     TargetCountVerificationParserDelegate parserDelegate = newParserDelegate(3);
     EasyMock.replay(parserMock);
-    parserDelegate.getAllRulesAndMetaRules(path, processedBytes);
+    parserDelegate.getBuildFileManifest(path, processedBytes);
 
     assertWarningIsEmitted();
   }
@@ -132,27 +120,15 @@ public class TargetCountVerificationParserDelegateTest {
   }
 
   @Test
-  public void givenTargetCountNotExceedingLimitWhenGetAllIsInvokedAWarningIsNotEmitted()
-      throws Exception {
-    EasyMock.expect(parserMock.getAll(path, processedBytes)).andReturn(rawTargets);
-
-    TargetCountVerificationParserDelegate parserDelegate = newParserDelegate(6);
-    EasyMock.replay(parserMock);
-    parserDelegate.getAll(path, processedBytes);
-
-    assertWarningIsNotEmitted();
-  }
-
-  @Test
   public void
       givenTargetCountNotExceedingLimitWhenGetAllRulesAndMetaRulesIsInvokedAWarningIsNotEmitted()
           throws Exception {
-    EasyMock.expect(parserMock.getAllRulesAndMetaRules(path, processedBytes))
+    EasyMock.expect(parserMock.getBuildFileManifest(path, processedBytes))
         .andReturn(toBuildFileManifest(rawTargets));
 
     TargetCountVerificationParserDelegate parserDelegate = newParserDelegate(6);
     EasyMock.replay(parserMock);
-    parserDelegate.getAllRulesAndMetaRules(path, processedBytes);
+    parserDelegate.getBuildFileManifest(path, processedBytes);
 
     assertWarningIsNotEmitted();
   }

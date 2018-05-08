@@ -22,10 +22,8 @@ import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -72,17 +70,9 @@ public class TargetCountVerificationParserDelegate implements ProjectBuildFilePa
   }
 
   @Override
-  public ImmutableList<Map<String, Object>> getAll(Path buildFile, AtomicLong processedBytes)
+  public BuildFileManifest getBuildFileManifest(Path buildFile, AtomicLong processedBytes)
       throws BuildFileParseException, InterruptedException, IOException {
-    ImmutableList<Map<String, Object>> allTargets = aggregate.getAll(buildFile, processedBytes);
-    maybePostWarningAboutTooManyTargets(buildFile, allTargets.size());
-    return allTargets;
-  }
-
-  @Override
-  public BuildFileManifest getAllRulesAndMetaRules(Path buildFile, AtomicLong processedBytes)
-      throws BuildFileParseException, InterruptedException, IOException {
-    BuildFileManifest targetManifest = aggregate.getAllRulesAndMetaRules(buildFile, processedBytes);
+    BuildFileManifest targetManifest = aggregate.getBuildFileManifest(buildFile, processedBytes);
     maybePostWarningAboutTooManyTargets(buildFile, targetManifest.getTargets().size());
     return targetManifest;
   }

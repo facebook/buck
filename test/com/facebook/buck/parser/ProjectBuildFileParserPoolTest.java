@@ -142,7 +142,7 @@ public class ProjectBuildFileParserPoolTest {
               ProjectBuildFileParser parser = EasyMock.createMock(ProjectBuildFileParser.class);
               try {
                 EasyMock.expect(
-                        parser.getAllRulesAndMetaRules(
+                        parser.getBuildFileManifest(
                             EasyMock.anyObject(Path.class), EasyMock.anyObject(AtomicLong.class)))
                     .andAnswer(
                         () -> {
@@ -363,7 +363,7 @@ public class ProjectBuildFileParserPoolTest {
     ProjectBuildFileParser mock = EasyMock.createMock(ProjectBuildFileParser.class);
     try {
       EasyMock.expect(
-              mock.getAllRulesAndMetaRules(
+              mock.getBuildFileManifest(
                   EasyMock.anyObject(Path.class), EasyMock.anyObject(AtomicLong.class)))
           .andAnswer(parseFn)
           .anyTimes();

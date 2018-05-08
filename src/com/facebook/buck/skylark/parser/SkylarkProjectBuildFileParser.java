@@ -125,13 +125,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
   }
 
   @Override
-  public ImmutableList<Map<String, Object>> getAll(Path buildFile, AtomicLong processedBytes)
-      throws BuildFileParseException, InterruptedException, IOException {
-    return parseBuildFile(buildFile).getRawRules();
-  }
-
-  @Override
-  public BuildFileManifest getAllRulesAndMetaRules(Path buildFile, AtomicLong processedBytes)
+  public BuildFileManifest getBuildFileManifest(Path buildFile, AtomicLong processedBytes)
       throws BuildFileParseException, InterruptedException, IOException {
     ParseResult parseResult = parseBuildFile(buildFile);
     return BuildFileManifest.builder()

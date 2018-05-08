@@ -82,7 +82,7 @@ public class AuditIncludesCommand extends AbstractCommand {
         }
 
         Iterable<String> includes =
-            parser.getAllRulesAndMetaRules(path, new AtomicLong()).getIncludes();
+            parser.getBuildFileManifest(path, new AtomicLong()).getIncludes();
         printIncludesToStdout(
             params, Preconditions.checkNotNull(includes, "__includes metadata entry is missing"));
       }

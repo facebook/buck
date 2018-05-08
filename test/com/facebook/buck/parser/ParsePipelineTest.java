@@ -56,7 +56,6 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.FluentIterable;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -534,15 +533,9 @@ public class ParsePipelineTest {
     }
 
     @Override
-    public ImmutableList<Map<String, Object>> getAll(Path buildFile, AtomicLong processedBytes)
+    public BuildFileManifest getBuildFileManifest(Path buildFile, AtomicLong processedBytes)
         throws BuildFileParseException, InterruptedException, IOException {
-      return delegate.getAll(buildFile, processedBytes);
-    }
-
-    @Override
-    public BuildFileManifest getAllRulesAndMetaRules(Path buildFile, AtomicLong processedBytes)
-        throws BuildFileParseException, InterruptedException, IOException {
-      return delegate.getAllRulesAndMetaRules(buildFile, processedBytes);
+      return delegate.getBuildFileManifest(buildFile, processedBytes);
     }
 
     @Override

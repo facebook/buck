@@ -202,7 +202,9 @@ public class ResolverIntegrationTest {
     assertEquals(expected, seen);
 
     List<Map<String, Object>> rules =
-        buildFileParser.getAll(groupDir.resolve("BUCK"), new AtomicLong());
+        buildFileParser
+            .getBuildFileManifest(groupDir.resolve("BUCK"), new AtomicLong())
+            .getTargets();
 
     assertEquals(1, rules.size());
     Map<String, Object> rule = rules.get(0);
@@ -228,7 +230,9 @@ public class ResolverIntegrationTest {
 
     Path groupDir = thirdParty.resolve("example");
     List<Map<String, Object>> rules =
-        buildFileParser.getAll(groupDir.resolve("BUCK"), new AtomicLong());
+        buildFileParser
+            .getBuildFileManifest(groupDir.resolve("BUCK"), new AtomicLong())
+            .getTargets();
 
     Map<String, Object> rule = rules.get(0);
     assertEquals("with-sources-1.0-sources.jar", rule.get("sourceJar"));
@@ -241,12 +245,15 @@ public class ResolverIntegrationTest {
     Path exampleDir = thirdPartyRelative.resolve("example");
     Map<String, Object> withDeps =
         buildFileParser
-            .getAll(buckRepoRoot.resolve(exampleDir).resolve("BUCK"), new AtomicLong())
+            .getBuildFileManifest(
+                buckRepoRoot.resolve(exampleDir).resolve("BUCK"), new AtomicLong())
+            .getTargets()
             .get(0);
     Path otherDir = thirdPartyRelative.resolve("othercorp");
     Map<String, Object> noDeps =
         buildFileParser
-            .getAll(buckRepoRoot.resolve(otherDir).resolve("BUCK"), new AtomicLong())
+            .getBuildFileManifest(buckRepoRoot.resolve(otherDir).resolve("BUCK"), new AtomicLong())
+            .getTargets()
             .get(0);
 
     @SuppressWarnings("unchecked")
@@ -273,7 +280,10 @@ public class ResolverIntegrationTest {
 
     Path exampleDir = thirdPartyRelative.resolve("example");
     List<Map<String, Object>> allTargets =
-        buildFileParser.getAll(buckRepoRoot.resolve(exampleDir).resolve("BUCK"), new AtomicLong());
+        buildFileParser
+            .getBuildFileManifest(
+                buckRepoRoot.resolve(exampleDir).resolve("BUCK"), new AtomicLong())
+            .getTargets();
 
     assertEquals(2, allTargets.size());
 

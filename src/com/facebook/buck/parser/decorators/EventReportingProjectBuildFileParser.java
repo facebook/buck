@@ -22,10 +22,8 @@ import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.GuardedBy;
@@ -54,13 +52,6 @@ public class EventReportingProjectBuildFileParser implements ProjectBuildFilePar
     this.eventLock = new Object();
   }
 
-  @Override
-  public ImmutableList<Map<String, Object>> getAll(Path buildFile, AtomicLong processedBytes)
-      throws BuildFileParseException, InterruptedException, IOException {
-    maybePostStartEvent();
-    return delegate.getAll(buildFile, processedBytes);
-  }
-
   /** Possibly post a start event making sure it's done only once. */
   private void maybePostStartEvent() {
     synchronized (eventLock) {
@@ -72,10 +63,10 @@ public class EventReportingProjectBuildFileParser implements ProjectBuildFilePar
   }
 
   @Override
-  public BuildFileManifest getAllRulesAndMetaRules(Path buildFile, AtomicLong processedBytes)
+  public BuildFileManifest getBuildFileManifest(Path buildFile, AtomicLong processedBytes)
       throws BuildFileParseException, InterruptedException, IOException {
     maybePostStartEvent();
-    return delegate.getAllRulesAndMetaRules(buildFile, processedBytes);
+    return delegate.getBuildFileManifest(buildFile, processedBytes);
   }
 
   @Override
