@@ -28,7 +28,8 @@ import javax.annotation.concurrent.ThreadSafe;
  * Tracks the total duration of work spent on each build rule.
  *
  * <p>Computation associated with build rules are broken into several phases. Those phases are
- * invoked from various places in {@link CachingBuildEngine} at various times and on various
+ * invoked from various places in {@link
+ * com.facebook.buck.core.build.engine.impl.CachingBuildEngine} at various times and on various
  * threads. In order to track the total duration of all of those phases combined we need some
  * central store, i.e. this class.
  */

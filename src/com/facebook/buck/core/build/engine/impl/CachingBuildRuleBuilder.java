@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
+package com.facebook.buck.core.build.engine.impl;
 
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.CacheResult;
@@ -31,6 +31,7 @@ import com.facebook.buck.core.build.engine.buildinfo.BuildInfo;
 import com.facebook.buck.core.build.engine.buildinfo.BuildInfo.MetadataKey;
 import com.facebook.buck.core.build.engine.buildinfo.BuildInfoRecorder;
 import com.facebook.buck.core.build.engine.buildinfo.OnDiskBuildInfo;
+import com.facebook.buck.core.build.engine.impl.CachingBuildEngine.StepType;
 import com.facebook.buck.core.build.engine.manifest.ManifestFetchResult;
 import com.facebook.buck.core.build.engine.manifest.ManifestStoreResult;
 import com.facebook.buck.core.build.engine.type.BuildType;
@@ -47,7 +48,31 @@ import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.LeafEvents;
 import com.facebook.buck.event.ThrowableConsoleEvent;
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.rules.CachingBuildEngine.StepType;
+import com.facebook.buck.rules.BuildCacheArtifactFetcher;
+import com.facebook.buck.rules.BuildCacheArtifactUploader;
+import com.facebook.buck.rules.BuildExecutor;
+import com.facebook.buck.rules.BuildExecutorRunner;
+import com.facebook.buck.rules.BuildInfoStoreManager;
+import com.facebook.buck.rules.BuildOutputInitializer;
+import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleDurationTracker;
+import com.facebook.buck.rules.BuildRuleEvent;
+import com.facebook.buck.rules.BuildRulePipelinesRunner;
+import com.facebook.buck.rules.BuildRuleScopeManager;
+import com.facebook.buck.rules.BuildRuleStrategy;
+import com.facebook.buck.rules.DependencyFileRuleKeyManager;
+import com.facebook.buck.rules.HasPostBuildSteps;
+import com.facebook.buck.rules.InitializableFromDisk;
+import com.facebook.buck.rules.InputBasedRuleKeyManager;
+import com.facebook.buck.rules.ManifestRuleKeyManager;
+import com.facebook.buck.rules.OverrideScheduleRule;
+import com.facebook.buck.rules.RemoteBuildRuleCompletionWaiter;
+import com.facebook.buck.rules.ResourceAwareSchedulingInfo;
+import com.facebook.buck.rules.RuleDepsCache;
+import com.facebook.buck.rules.RulePipelineState;
+import com.facebook.buck.rules.RuleScheduleInfo;
+import com.facebook.buck.rules.RunnableWithFuture;
+import com.facebook.buck.rules.SupportsPipelining;
 import com.facebook.buck.rules.keys.DependencyFileEntry;
 import com.facebook.buck.rules.keys.RuleKeyAndInputs;
 import com.facebook.buck.rules.keys.RuleKeyDiagnostics;

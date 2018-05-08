@@ -29,8 +29,9 @@ import java.util.concurrent.atomic.AtomicInteger;
  * in the future. This class assumes that a rule that was not yet executed might be executed in the
  * future if either there is a dependency path from a top level rule to this rule such that no rule
  * on the path was yet executed or the rule is a runtime dependency of a rule fulfilling the
- * previous condition. This model is consistent with {@link CachingBuildEngine}'s shallow build
- * mode. The class uses reference counting to efficiently keep track of those rules.
+ * previous condition. This model is consistent with {@link
+ * com.facebook.buck.core.build.engine.impl.CachingBuildEngine}'s shallow build mode. The class uses
+ * reference counting to efficiently keep track of those rules.
  */
 public class UnskippedRulesTracker {
 

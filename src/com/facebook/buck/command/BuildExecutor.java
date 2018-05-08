@@ -17,7 +17,7 @@
 package com.facebook.buck.command;
 
 import com.facebook.buck.core.build.engine.BuildEngineResult;
-import com.facebook.buck.rules.CachingBuildEngine;
+import com.facebook.buck.core.build.engine.impl.CachingBuildEngine;
 import com.facebook.buck.util.ExitCode;
 import java.io.IOException;
 import java.nio.file.Path;

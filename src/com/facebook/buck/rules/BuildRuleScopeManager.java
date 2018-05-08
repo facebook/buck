@@ -46,7 +46,7 @@ import javax.annotation.Nullable;
  *
  * <p>Once the rule has been marked as finished, any further scope() calls will fail.
  */
-class BuildRuleScopeManager {
+public class BuildRuleScopeManager {
 
   private static final Logger LOG = Logger.get(BuildRuleScopeManager.class);
   private final RuleKeyFactories ruleKeyFactories;
@@ -87,7 +87,7 @@ class BuildRuleScopeManager {
     this.eventBus = eventBus;
   }
 
-  Scope scope() {
+  public Scope scope() {
     synchronized (this) {
       Preconditions.checkState(
           finishedData == null, "RuleScope started after rule marked as finished.");

@@ -36,7 +36,7 @@
 !com.facebook.buck.io.filesystem.skylark.SkylarkFilesystemTest
 !com.facebook.buck.jvm.java.JavacStepTest
 !com.facebook.buck.cli.QueryCommandIntegrationTest
-!com.facebook.buck.rules.CachingBuildEngineTest
-!com.facebook.buck.rules.CachingBuildEngineTest.*
+!com.facebook.buck.core.build.engine.impl.CachingBuildEngineTest
+!com.facebook.buck.core.build.engine.impl.CachingBuildEngineTest.*
 !com.facebook.buck.rules.ActionGraphCacheIntegrationTest
 !com.facebook.buck.swift.SwiftNativeLinkableTest

@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
+package com.facebook.buck.core.build.engine.impl;
 
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.CacheResult;
@@ -35,6 +35,22 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.rules.BuildInfoStoreManager;
+import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleDurationTracker;
+import com.facebook.buck.rules.BuildRuleEvent;
+import com.facebook.buck.rules.BuildRulePipelinesRunner;
+import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.BuildRuleStrategy;
+import com.facebook.buck.rules.CachingBuildEngineDelegate;
+import com.facebook.buck.rules.DefaultBuildableContext;
+import com.facebook.buck.rules.HasRuntimeDeps;
+import com.facebook.buck.rules.ParallelRuleKeyCalculator;
+import com.facebook.buck.rules.RemoteBuildRuleCompletionWaiter;
+import com.facebook.buck.rules.ResourceAwareSchedulingInfo;
+import com.facebook.buck.rules.RuleDepsCache;
+import com.facebook.buck.rules.SourcePathRuleFinder;
+import com.facebook.buck.rules.UnskippedRulesTracker;
 import com.facebook.buck.rules.keys.RuleKeyDiagnostics;
 import com.facebook.buck.rules.keys.RuleKeyFactories;
 import com.facebook.buck.rules.keys.hasher.StringRuleKeyHasher;

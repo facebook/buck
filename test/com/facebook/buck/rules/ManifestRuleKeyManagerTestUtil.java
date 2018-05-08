@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright 2018-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -16,8 +16,15 @@
 
 package com.facebook.buck.rules;
 
-import com.google.common.util.concurrent.ListenableFuture;
+import java.nio.file.Path;
 
-/* package */ public interface RunnableWithFuture<T> extends Runnable {
-  ListenableFuture<T> getFuture();
+/**
+ * Test utility class that exposes a test visible method from {@link ManifestRuleKeyManager} to
+ * tests belonging to other packages.
+ */
+public class ManifestRuleKeyManagerTestUtil {
+
+  public static Path getManifestPath(BuildRule rule) {
+    return ManifestRuleKeyManager.getManifestPath(rule);
+  }
 }

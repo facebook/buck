@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
+package com.facebook.buck.core.build.engine.impl;
 
 import static com.google.common.util.concurrent.MoreExecutors.listeningDecorator;
 import static org.easymock.EasyMock.anyObject;
@@ -86,6 +86,36 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
+import com.facebook.buck.rules.BuildExecutorRunner;
+import com.facebook.buck.rules.BuildInfoStoreManager;
+import com.facebook.buck.rules.BuildOutputInitializer;
+import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleDurationTracker;
+import com.facebook.buck.rules.BuildRuleEvent;
+import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.BuildRuleStrategy;
+import com.facebook.buck.rules.CachingBuildEngineDelegate;
+import com.facebook.buck.rules.FakeBuildContext;
+import com.facebook.buck.rules.FakeBuildRule;
+import com.facebook.buck.rules.FakeSourcePath;
+import com.facebook.buck.rules.HasPostBuildSteps;
+import com.facebook.buck.rules.HasRuntimeDeps;
+import com.facebook.buck.rules.InitializableFromDisk;
+import com.facebook.buck.rules.LocalCachingBuildEngineDelegate;
+import com.facebook.buck.rules.ManifestRuleKeyManagerTestUtil;
+import com.facebook.buck.rules.NoOpRemoteBuildRuleCompletionWaiter;
+import com.facebook.buck.rules.NoopBuildRule;
+import com.facebook.buck.rules.OverrideScheduleRule;
+import com.facebook.buck.rules.RemoteBuildRuleCompletionWaiter;
+import com.facebook.buck.rules.RemoteBuildRuleSynchronizer;
+import com.facebook.buck.rules.RemoteBuildRuleSynchronizerTestUtil;
+import com.facebook.buck.rules.RuleScheduleInfo;
+import com.facebook.buck.rules.SourcePathRuleFinder;
+import com.facebook.buck.rules.TestBuildRuleParams;
+import com.facebook.buck.rules.TestBuildRuleResolver;
 import com.facebook.buck.rules.keys.DefaultDependencyFileRuleKeyFactory;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.DependencyFileEntry;
@@ -3223,7 +3253,7 @@ public class CachingBuildEngineTest {
           pathResolver,
           ImmutableSet.of(input),
           ImmutableSet.of(input));
-      Path manifestPath = ManifestRuleKeyManager.getManifestPath(rule);
+      Path manifestPath = ManifestRuleKeyManagerTestUtil.getManifestPath(rule);
       filesystem.mkdirs(manifestPath.getParent());
       try (OutputStream outputStream = filesystem.newFileOutputStream(manifestPath)) {
         manifest.serialize(outputStream);

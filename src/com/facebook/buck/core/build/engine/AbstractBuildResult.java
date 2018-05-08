@@ -28,8 +28,8 @@ import org.immutables.value.Value;
 
 /**
  * This is a union type that represents either a success or a failure. This exists so that {@code
- * com.facebook.buck.rules.CachingBuildEngine#buildOnceDepsAreBuilt()} can return a strongly typed
- * value.
+ * com.facebook.buck.core.build.engine.impl.CachingBuildEngine#buildOnceDepsAreBuilt()} can return a
+ * strongly typed value.
  */
 @Value.Immutable
 @BuckStyleImmutable

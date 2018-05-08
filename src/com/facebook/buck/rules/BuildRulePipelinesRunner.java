@@ -37,7 +37,7 @@ import java.util.function.Function;
 import javax.annotation.Nullable;
 
 /** Constructs build rule pipelines for a single build. */
-class BuildRulePipelinesRunner {
+public class BuildRulePipelinesRunner {
   private final ConcurrentHashMap<
           SupportsPipelining<? extends RulePipelineState>,
           BuildRulePipelineStage<? extends RulePipelineState>>
