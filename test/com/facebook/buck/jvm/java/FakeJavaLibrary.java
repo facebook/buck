@@ -20,7 +20,6 @@ import com.facebook.buck.android.packageable.AndroidPackageable;
 import com.facebook.buck.android.packageable.AndroidPackageableCollector;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
-import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaLibrary;
@@ -28,13 +27,10 @@ import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRule;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Ordering;
 import com.google.common.hash.HashCode;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -43,6 +39,7 @@ import java.util.Set;
 public class FakeJavaLibrary extends FakeBuildRule implements JavaLibrary, AndroidPackageable {
 
   private ImmutableSortedSet<SourcePath> srcs = ImmutableSortedSet.of();
+  private Optional<String> mavenCoords = Optional.empty();
 
   public FakeJavaLibrary(
       BuildTarget target, ProjectFilesystem filesystem, ImmutableSortedSet<BuildRule> deps) {
@@ -115,12 +112,9 @@ public class FakeJavaLibrary extends FakeBuildRule implements JavaLibrary, Andro
     return ImmutableSortedSet.of();
   }
 
-  public FakeJavaLibrary setJavaSrcs(ImmutableSortedSet<Path> srcs) {
+  public FakeJavaLibrary setJavaSrcs(ImmutableSortedSet<SourcePath> srcs) {
     Preconditions.checkNotNull(srcs);
-    this.srcs =
-        FluentIterable.from(srcs)
-            .transform(p -> (SourcePath) PathSourcePath.of(new FakeProjectFilesystem(), p))
-            .toSortedSet(Ordering.natural());
+    this.srcs = srcs;
     return this;
   }
 
@@ -151,6 +145,11 @@ public class FakeJavaLibrary extends FakeBuildRule implements JavaLibrary, Andro
 
   @Override
   public Optional<String> getMavenCoords() {
-    return Optional.empty();
+    return mavenCoords;
+  }
+
+  public FakeJavaLibrary setMavenCoords(String mavenCoords) {
+    this.mavenCoords = Optional.of(mavenCoords);
+    return this;
   }
 }
