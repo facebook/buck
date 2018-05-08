@@ -47,7 +47,7 @@ public class InputBasedRuleKeyManager {
   private final ArtifactCache artifactCache;
   private final OnDiskBuildInfo onDiskBuildInfo;
   private final BuildRule rule;
-  private final CachingBuildRuleBuilder.BuildRuleScopeManager buildRuleScopeManager;
+  private final BuildRuleScopeManager buildRuleScopeManager;
   private final Supplier<Optional<RuleKey>> inputBasedKey;
 
   public InputBasedRuleKeyManager(
@@ -58,7 +58,7 @@ public class InputBasedRuleKeyManager {
       ArtifactCache artifactCache,
       OnDiskBuildInfo onDiskBuildInfo,
       BuildRule rule,
-      CachingBuildRuleBuilder.BuildRuleScopeManager buildRuleScopeManager,
+      BuildRuleScopeManager buildRuleScopeManager,
       Supplier<Optional<RuleKey>> inputBasedKey) {
     this.eventBus = eventBus;
     this.ruleKeyFactories = ruleKeyFactories;

@@ -51,7 +51,7 @@ public class BuildCacheArtifactFetcher {
   private static final Logger LOG = Logger.get(BuildCacheArtifactFetcher.class);
 
   private final BuildRule rule;
-  private final CachingBuildRuleBuilder.BuildRuleScopeManager buildRuleScopeManager;
+  private final BuildRuleScopeManager buildRuleScopeManager;
   private final WeightedListeningExecutorService executorService;
   private final OnOutputsWillChange onOutputsWillChange;
   private final BuckEventBus eventBus;
@@ -61,7 +61,7 @@ public class BuildCacheArtifactFetcher {
 
   public BuildCacheArtifactFetcher(
       BuildRule rule,
-      CachingBuildRuleBuilder.BuildRuleScopeManager buildRuleScopeManager,
+      BuildRuleScopeManager buildRuleScopeManager,
       WeightedListeningExecutorService executorService,
       OnOutputsWillChange onOutputsWillChange,
       BuckEventBus eventBus,

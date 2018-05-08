@@ -39,9 +39,7 @@ import com.facebook.buck.core.build.engine.type.MetadataStorage;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.rulekey.BuildRuleKeys;
 import com.facebook.buck.core.rulekey.RuleKey;
-import com.facebook.buck.core.rulekey.RuleKeyDiagnosticsMode;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.event.BuckEventBus;
@@ -54,7 +52,6 @@ import com.facebook.buck.rules.keys.DependencyFileEntry;
 import com.facebook.buck.rules.keys.RuleKeyAndInputs;
 import com.facebook.buck.rules.keys.RuleKeyDiagnostics;
 import com.facebook.buck.rules.keys.RuleKeyFactories;
-import com.facebook.buck.rules.keys.RuleKeyFactoryWithDiagnostics;
 import com.facebook.buck.rules.keys.RuleKeyType;
 import com.facebook.buck.rules.keys.SupportsDependencyFileRuleKey;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
@@ -104,16 +101,13 @@ class CachingBuildRuleBuilder {
   private static final Logger LOG = Logger.get(CachingBuildRuleBuilder.class);
   private final BuildRuleBuilderDelegate buildRuleBuilderDelegate;
   private final BuildType buildMode;
-  private final BuildRuleDurationTracker buildRuleDurationTracker;
   private final boolean consoleLogBuildFailuresInline;
-  private final RuleKeyDiagnostics<RuleKey, String> defaultRuleKeyDiagnostics;
   private final FileHashCache fileHashCache;
   private final SourcePathResolver pathResolver;
   private final ResourceAwareSchedulingInfo resourceAwareSchedulingInfo;
   private final RuleKeyFactories ruleKeyFactories;
   private final WeightedListeningExecutorService service;
   private final StepRunner stepRunner;
-  private final RuleDepsCache ruleDeps;
   private final BuildRule rule;
   private final ExecutionContext executionContext;
   private final OnDiskBuildInfo onDiskBuildInfo;
@@ -153,8 +147,6 @@ class CachingBuildRuleBuilder {
 
   private volatile ListenableFuture<Void> uploadCompleteFuture = Futures.immediateFuture(null);
   private volatile boolean depsAreAvailable;
-  @Nullable private volatile ManifestFetchResult manifestFetchResult = null;
-  @Nullable private volatile ManifestStoreResult manifestStoreResult = null;
   private final Optional<BuildRuleStrategy> customBuildRuleStrategy;
 
   public CachingBuildRuleBuilder(
@@ -186,16 +178,13 @@ class CachingBuildRuleBuilder {
       Optional<BuildRuleStrategy> customBuildRuleStrategy) {
     this.buildRuleBuilderDelegate = buildRuleBuilderDelegate;
     this.buildMode = buildMode;
-    this.buildRuleDurationTracker = buildRuleDurationTracker;
     this.consoleLogBuildFailuresInline = consoleLogBuildFailuresInline;
-    this.defaultRuleKeyDiagnostics = defaultRuleKeyDiagnostics;
     this.fileHashCache = fileHashCache;
     this.pathResolver = pathResolver;
     this.resourceAwareSchedulingInfo = resourceAwareSchedulingInfo;
     this.ruleKeyFactories = ruleKeyFactories;
     this.service = service;
     this.stepRunner = stepRunner;
-    this.ruleDeps = ruleDeps;
     this.rule = rule;
     this.executionContext = executionContext;
     this.onDiskBuildInfo = onDiskBuildInfo;
@@ -207,9 +196,9 @@ class CachingBuildRuleBuilder {
     this.artifactCache = buildContext.getArtifactCache();
     this.buildId = buildContext.getBuildId();
     this.remoteBuildRuleCompletionWaiter = remoteBuildRuleCompletionWaiter;
-    this.buildRuleScopeManager = new BuildRuleScopeManager();
 
     this.defaultKey = ruleKeyFactories.getDefaultRuleKeyFactory().build(rule);
+
     this.inputBasedKey = MoreSuppliers.memoize(this::calculateInputBasedRuleKey);
     this.manifestBasedKeySupplier =
         MoreSuppliers.weakMemoize(
@@ -220,6 +209,17 @@ class CachingBuildRuleBuilder {
                 throw new RuntimeException(e);
               }
             });
+    this.buildRuleScopeManager =
+        new BuildRuleScopeManager(
+            ruleKeyFactories,
+            onDiskBuildInfo,
+            buildRuleDurationTracker,
+            defaultRuleKeyDiagnostics,
+            executionContext.getRuleKeyDiagnosticsMode(),
+            rule,
+            ruleDeps,
+            defaultKey,
+            eventBus);
     this.dependencyFileRuleKeyManager =
         new DependencyFileRuleKeyManager(
             depFiles, rule, this.buildInfoRecorder, onDiskBuildInfo, ruleKeyFactories, eventBus);
@@ -652,7 +652,7 @@ class CachingBuildRuleBuilder {
                     depFileRuleKeyAndInputs.get().getInputs(),
                     manifestKey.get(),
                     artifactCache);
-            this.manifestStoreResult = manifestStoreResult;
+            this.buildRuleScopeManager.setManifestStoreResult(manifestStoreResult);
             if (manifestStoreResult.getStoreFuture().isPresent()) {
               uploadCompleteFuture = manifestStoreResult.getStoreFuture().get();
             }
@@ -794,7 +794,7 @@ class CachingBuildRuleBuilder {
       return Futures.transform(
           manifestRuleKeyManager.performManifestBasedCacheFetch(manifestKeyAndInputs.get()),
           (@Nonnull ManifestFetchResult result) -> {
-            this.manifestFetchResult = result;
+            this.buildRuleScopeManager.setManifestFetchResult(result);
             if (!result.getRuleCacheResult().isPresent()) {
               return Optional.empty();
             }
@@ -1060,34 +1060,6 @@ class CachingBuildRuleBuilder {
     } catch (Throwable t) {
       eventBus.post(ThrowableConsoleEvent.create(t, "Error when deleting metadata for %s.", rule));
     }
-  }
-
-  private BuildRuleKeys getBuildRuleKeys() {
-    Optional<RuleKey> inputKey =
-        onDiskBuildInfo.getRuleKey(BuildInfo.MetadataKey.INPUT_BASED_RULE_KEY);
-    Optional<RuleKey> depFileKey =
-        onDiskBuildInfo.getRuleKey(BuildInfo.MetadataKey.DEP_FILE_RULE_KEY);
-    Optional<RuleKey> manifestKey = onDiskBuildInfo.getRuleKey(BuildInfo.MetadataKey.MANIFEST_KEY);
-    return BuildRuleKeys.builder()
-        .setRuleKey(defaultKey)
-        .setInputRuleKey(inputKey)
-        .setDepFileRuleKey(depFileKey)
-        .setManifestRuleKey(manifestKey)
-        .build();
-  }
-
-  private Optional<BuildRuleDiagnosticData> getBuildRuleDiagnosticData(
-      boolean failureOrBuiltLocally) {
-    RuleKeyDiagnosticsMode mode = executionContext.getRuleKeyDiagnosticsMode();
-    if (mode == RuleKeyDiagnosticsMode.NEVER
-        || (mode == RuleKeyDiagnosticsMode.BUILT_LOCALLY && !failureOrBuiltLocally)) {
-      return Optional.empty();
-    }
-    ImmutableList.Builder<RuleKeyDiagnostics.Result<?, ?>> diagnosticKeysBuilder =
-        ImmutableList.builder();
-    defaultRuleKeyDiagnostics.processRule(rule, diagnosticKeysBuilder::add);
-    return Optional.of(
-        new BuildRuleDiagnosticData(ruleDeps.get(rule), diagnosticKeysBuilder.build()));
   }
 
   private Throwable addBuildRuleContextToException(@Nonnull Throwable thrown) {
@@ -1359,128 +1331,5 @@ class CachingBuildRuleBuilder {
     Throwable getFirstFailure();
 
     void onRuleAboutToBeBuilt(BuildRule rule);
-  }
-
-  /**
-   * Handles BuildRule resumed/suspended/finished scopes. Only one scope can be active at a time.
-   * Scopes nested on the same thread are allowed.
-   *
-   * <p>Once the rule has been marked as finished, any further scope() calls will fail.
-   */
-  class BuildRuleScopeManager {
-    private final RuleKeyFactoryWithDiagnostics<RuleKey> ruleKeyFactory;
-
-    private volatile @Nullable Thread currentBuildRuleScopeThread = null;
-    private @Nullable FinishedData finishedData = null;
-
-    public BuildRuleScopeManager() {
-      ruleKeyFactory = ruleKeyFactories.getDefaultRuleKeyFactory();
-    }
-
-    Scope scope() {
-      synchronized (this) {
-        Preconditions.checkState(
-            finishedData == null, "RuleScope started after rule marked as finished.");
-        if (currentBuildRuleScopeThread != null) {
-          Preconditions.checkState(Thread.currentThread() == currentBuildRuleScopeThread);
-          return () -> {};
-        }
-        BuildRuleEvent.Resumed resumed = postResumed();
-        currentBuildRuleScopeThread = Thread.currentThread();
-        return () -> {
-          synchronized (this) {
-            currentBuildRuleScopeThread = null;
-            if (finishedData != null) {
-              postFinished(resumed);
-            } else {
-              postSuspended(resumed);
-            }
-          }
-        };
-      }
-    }
-
-    public synchronized void finished(
-        BuildResult input,
-        Optional<Long> outputSize,
-        Optional<HashCode> outputHash,
-        Optional<BuildRuleSuccessType> successType,
-        boolean shouldUploadToCache) {
-      Preconditions.checkState(finishedData == null, "Build rule already marked finished.");
-      Preconditions.checkState(
-          currentBuildRuleScopeThread != null,
-          "finished() can only be called within a buildrule scope.");
-      Preconditions.checkState(
-          currentBuildRuleScopeThread == Thread.currentThread(),
-          "finished() should be called from the same thread as the current buildrule scope.");
-      finishedData =
-          new FinishedData(input, outputSize, outputHash, successType, shouldUploadToCache);
-    }
-
-    private void post(BuildRuleEvent event) {
-      LOG.verbose(event.toString());
-      eventBus.post(event);
-    }
-
-    private BuildRuleEvent.Resumed postResumed() {
-      BuildRuleEvent.Resumed resumedEvent =
-          BuildRuleEvent.resumed(rule, buildRuleDurationTracker, ruleKeyFactory);
-      post(resumedEvent);
-      return resumedEvent;
-    }
-
-    private void postSuspended(BuildRuleEvent.Resumed resumed) {
-      post(BuildRuleEvent.suspended(resumed, ruleKeyFactories.getDefaultRuleKeyFactory()));
-    }
-
-    private void postFinished(BuildRuleEvent.Resumed resumed) {
-      Preconditions.checkNotNull(finishedData);
-      post(finishedData.getEvent(resumed));
-    }
-  }
-
-  private class FinishedData {
-    private final BuildResult input;
-    private final Optional<Long> outputSize;
-    private final Optional<HashCode> outputHash;
-    private final Optional<BuildRuleSuccessType> successType;
-    private final boolean shouldUploadToCache;
-
-    public FinishedData(
-        BuildResult input,
-        Optional<Long> outputSize,
-        Optional<HashCode> outputHash,
-        Optional<BuildRuleSuccessType> successType,
-        boolean shouldUploadToCache) {
-      this.input = input;
-      this.outputSize = outputSize;
-      this.outputHash = outputHash;
-      this.successType = successType;
-      this.shouldUploadToCache = shouldUploadToCache;
-    }
-
-    private BuildRuleEvent.Finished getEvent(BuildRuleEvent.Resumed resumedEvent) {
-      boolean failureOrBuiltLocally =
-          input.getStatus() == BuildRuleStatus.FAIL
-              || (input.isSuccess() && input.getSuccess() == BuildRuleSuccessType.BUILT_LOCALLY);
-      // Log the result to the event bus.
-      BuildRuleEvent.Finished finished =
-          BuildRuleEvent.finished(
-              resumedEvent,
-              getBuildRuleKeys(),
-              input.getStatus(),
-              input.getCacheResult().orElse(CacheResult.miss()),
-              onDiskBuildInfo
-                  .getBuildValue(BuildInfo.MetadataKey.ORIGIN_BUILD_ID)
-                  .map(BuildId::new),
-              successType,
-              shouldUploadToCache,
-              outputHash,
-              outputSize,
-              getBuildRuleDiagnosticData(failureOrBuiltLocally),
-              Optional.ofNullable(manifestFetchResult),
-              Optional.ofNullable(manifestStoreResult));
-      return finished;
-    }
   }
 }
