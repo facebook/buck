@@ -88,6 +88,8 @@ abstract class AbstractDistBuildSlaveExecutorArgs {
 
   public abstract StampedeId getStampedeId();
 
+  public abstract CapacityService getCapacityService();
+
   public abstract BuildSlaveRunId getBuildSlaveRunId();
 
   public abstract String getRemoteCoordinatorAddress();

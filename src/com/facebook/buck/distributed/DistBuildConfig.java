@@ -107,6 +107,13 @@ public class DistBuildConfig {
       "frontend_request_retry_interval_millis";
   private static final long DEFAULT_FRONTEND_REQUEST_RETRY_INTERVAL_MILLIS = 1000;
 
+  private static final String BUILD_SLAVE_REQUEST_MAX_RETRIES = "build_slave_request_max_retries";
+  private static final int DEFAULT_BUILD_SLAVE_REQUEST_MAX_RETRIES = 3;
+
+  private static final String BUILD_SLAVE_REQUEST_RETRY_INTERVAL_MILLIS =
+      "build_slave_request_retry_interval_millis";
+  private static final long DEFAULT_BUILD_SLAVE_REQUEST_RETRY_INTERVAL_MILLIS = 500;
+
   private static final String MINION_POLL_LOOP_INTERVAL_MILLIS = "minion_poll_loop_interval_millis";
   private static final long DEFAULT_MINION_POLL_LOOP_INTERVAL_MILLIS = 10;
 
@@ -178,6 +185,13 @@ public class DistBuildConfig {
 
   private static final String BUILD_SELECTED_TARGETS_LOCALLY = "build_selected_targets_locally";
   private static final boolean DEFAULT_BUILD_SELECTED_TARGETS_LOCALLY = true;
+
+  // Stacking BuckConfig keys.
+  private static final String STACK_SIZE = "stacking_stack_size";
+  private static final Integer STACK_SIZE_DEFAULT_VALUE = 1;
+
+  private static final String SLAVE_SERVER_HTTP_PORT = "slave_server_http_port";
+  private static final Integer SLAVE_SERVER_HTTP_PORT_DEFAULT_VALUE = 8080;
 
   private final SlbBuckConfig frontendConfig;
   private final BuckConfig buckConfig;
@@ -382,6 +396,18 @@ public class DistBuildConfig {
         .orElse(DEFAULT_FRONTEND_REQUEST_RETRY_INTERVAL_MILLIS);
   }
 
+  public int getBuildSlaveRequestMaxRetries() {
+    return buckConfig
+        .getInteger(STAMPEDE_SECTION, BUILD_SLAVE_REQUEST_MAX_RETRIES)
+        .orElse(DEFAULT_BUILD_SLAVE_REQUEST_MAX_RETRIES);
+  }
+
+  public long getBuildSlaveRequestRetryIntervalMillis() {
+    return buckConfig
+        .getLong(STAMPEDE_SECTION, BUILD_SLAVE_REQUEST_RETRY_INTERVAL_MILLIS)
+        .orElse(DEFAULT_BUILD_SLAVE_REQUEST_RETRY_INTERVAL_MILLIS);
+  }
+
   public int getControllerMaxThreadCount() {
     return buckConfig
         .getInteger(STAMPEDE_SECTION, CONTROLLER_MAX_THREAD_COUNT)
@@ -464,6 +490,18 @@ public class DistBuildConfig {
   public boolean shouldBuildSelectedTargetsLocally() {
     return buckConfig.getBooleanValue(
         STAMPEDE_SECTION, BUILD_SELECTED_TARGETS_LOCALLY, DEFAULT_BUILD_SELECTED_TARGETS_LOCALLY);
+  }
+
+  /** @return Size of maximum builds running on the same build slave */
+  public int getStackSize() {
+    return buckConfig.getInteger(STAMPEDE_SECTION, STACK_SIZE).orElse(STACK_SIZE_DEFAULT_VALUE);
+  }
+
+  /** @return Http server port the build slave is listening to on localhost */
+  public int getBuildSlaveHttpPort() {
+    return buckConfig
+        .getInteger(STAMPEDE_SECTION, SLAVE_SERVER_HTTP_PORT)
+        .orElse(SLAVE_SERVER_HTTP_PORT_DEFAULT_VALUE);
   }
 
   public OkHttpClient createOkHttpClient() {

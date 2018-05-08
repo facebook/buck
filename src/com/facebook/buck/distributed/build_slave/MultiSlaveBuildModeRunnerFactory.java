@@ -42,7 +42,9 @@ import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
+import java.net.InetAddress;
 import java.net.URI;
+import java.net.UnknownHostException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
@@ -164,6 +166,7 @@ public class MultiSlaveBuildModeRunnerFactory {
       DistBuildService distBuildService,
       StampedeId stampedeId,
       MinionType minionType,
+      CapacityService capacityService,
       BuildSlaveRunId buildSlaveRunId,
       String coordinatorAddress,
       OptionalInt coordinatorPort,
@@ -176,6 +179,16 @@ public class MultiSlaveBuildModeRunnerFactory {
           return BuildStatusUtil.isTerminalBuildStatus(job.getStatus());
         };
 
+    // Check if coordinator and minion are stacked in the same host and
+    // update coordinator address to localhost if that's the case.
+    try {
+      if (coordinatorAddress.equals(InetAddress.getLocalHost().getHostName())) {
+        coordinatorAddress = LOCALHOST_ADDRESS;
+      }
+    } catch (UnknownHostException e) {
+      LOG.error("Hostname can not be resolved");
+    }
+
     return new MinionModeRunner(
         coordinatorAddress,
         coordinatorPort,
@@ -183,11 +196,7 @@ public class MultiSlaveBuildModeRunnerFactory {
         stampedeId,
         minionType,
         buildSlaveRunId,
-        distBuildConfig
-            .getBuckConfig()
-            .getView(ResourcesConfig.class)
-            .getConcurrencyLimit()
-            .threadLimit,
+        createCapacityTracker(capacityService, distBuildConfig),
         checker,
         distBuildConfig.getMinionPollLoopIntervalMillis(),
         minionBuildProgressTracker,
@@ -208,6 +217,7 @@ public class MultiSlaveBuildModeRunnerFactory {
       DistBuildService distBuildService,
       StampedeId stampedeId,
       Optional<BuildId> clientBuildId,
+      CapacityService capacityService,
       BuildSlaveRunId buildSlaveRunId,
       ListenableFuture<BuildExecutor> localBuildExecutor,
       Path logDirectoryPath,
@@ -243,6 +253,7 @@ public class MultiSlaveBuildModeRunnerFactory {
             distBuildService,
             stampedeId,
             MinionType.STANDARD_SPEC, // Coordinator should always run on standard spec machine.
+            capacityService,
             buildSlaveRunId,
             LOCALHOST_ADDRESS,
             OptionalInt.empty(),
@@ -263,5 +274,31 @@ public class MultiSlaveBuildModeRunnerFactory {
     queueProvider.registerMinionQueue(MinionType.STANDARD_SPEC, standardSpecMinionQueue);
 
     return queueProvider;
+  }
+
+  private static CapacityTracker createCapacityTracker(
+      CapacityService service, DistBuildConfig distBuildConfig) {
+    int availableBuildCapacity =
+        distBuildConfig
+            .getBuckConfig()
+            .getView(ResourcesConfig.class)
+            .getConcurrencyLimit()
+            .threadLimit;
+
+    // We always need more than 1 core to make progress.
+    availableBuildCapacity = Math.max(1, availableBuildCapacity);
+
+    // For stacked builds (size > 1) we want to communicate with the build slave which
+    // coordinates multiple minion processes and keeps track of available cores.
+    if (distBuildConfig.getStackSize() > 1) {
+      LOG.info("Creating DefaultMultiBuildCapacityTracker");
+      // TODO(selim): choose greedy/naive implementation based on configuration
+      return new DefaultMultiBuildCapacityTracker(service, availableBuildCapacity);
+    }
+
+    // Otherwise we use have a single minion running on the host
+    // which can use all the available threads.
+    LOG.info("Creating SingleBuildCapacityTracker");
+    return new SingleBuildCapacityTracker(availableBuildCapacity);
   }
 }

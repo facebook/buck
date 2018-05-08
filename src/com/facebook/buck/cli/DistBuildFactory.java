@@ -29,7 +29,9 @@ import com.facebook.buck.distributed.FrontendService;
 import com.facebook.buck.distributed.MultiSourceContentsProvider;
 import com.facebook.buck.distributed.ServerContentsProvider;
 import com.facebook.buck.distributed.build_client.LogStateTracker;
+import com.facebook.buck.distributed.build_slave.BuildSlaveService;
 import com.facebook.buck.distributed.build_slave.BuildSlaveTimingStatsTracker;
+import com.facebook.buck.distributed.build_slave.CapacityService;
 import com.facebook.buck.distributed.build_slave.CoordinatorBuildRuleEventsPublisher;
 import com.facebook.buck.distributed.build_slave.DistBuildSlaveExecutor;
 import com.facebook.buck.distributed.build_slave.DistBuildSlaveExecutorArgs;
@@ -42,13 +44,17 @@ import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
 import com.facebook.buck.rules.keys.RuleKeyCacheScope;
 import com.facebook.buck.rules.keys.config.impl.ConfigRuleKeyConfigurationFactory;
 import com.facebook.buck.slb.ClientSideSlb;
+import com.facebook.buck.slb.HttpService;
 import com.facebook.buck.slb.LoadBalancedService;
 import com.facebook.buck.slb.RetryingHttpService;
+import com.facebook.buck.slb.SingleUriService;
 import com.facebook.buck.slb.ThriftOverHttpServiceConfig;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.concurrent.ScheduledExecutorService;
@@ -88,6 +94,37 @@ public abstract class DistBuildFactory {
     return new FrontendService(ThriftOverHttpServiceConfig.of(httpService));
   }
 
+  public static CapacityService newCapacityService(
+      BuildSlaveService buildSlaveService, BuildSlaveRunId buildSlaveRunId) {
+    return new CapacityService(buildSlaveService, buildSlaveRunId);
+  }
+
+  public static BuildSlaveService newBuildSlaveService(CommandRunnerParams params) {
+    DistBuildConfig config = new DistBuildConfig(params.getBuckConfig());
+
+    RetryingHttpService retryingHttpService = null;
+    try {
+      HttpService httpService =
+          new SingleUriService(
+              new URI(String.format("http://localhost:%d", config.getBuildSlaveHttpPort())),
+              new OkHttpClient.Builder().build());
+
+      retryingHttpService =
+          new RetryingHttpService(
+              params.getBuckEventBus(),
+              httpService,
+              "build_slave_http_retries",
+              config.getBuildSlaveRequestMaxRetries(),
+              config.getBuildSlaveRequestRetryIntervalMillis());
+
+    } catch (URISyntaxException e) {
+      throw new RuntimeException(
+          String.format("Could not create BuildSlaveService: %s", e.getMessage()));
+    }
+
+    return new BuildSlaveService(ThriftOverHttpServiceConfig.of(retryingHttpService));
+  }
+
   public static FileContentsProvider createMultiSourceContentsProvider(
       DistBuildService service,
       DistBuildConfig distBuildConfig,
@@ -120,6 +157,7 @@ public abstract class DistBuildFactory {
       int coordinatorPort,
       String coordinatorAddress,
       Optional<StampedeId> stampedeId,
+      CapacityService capacityService,
       BuildSlaveRunId buildSlaveRunId,
       FileContentsProvider fileContentsProvider,
       HealthCheckStatsTracker healthCheckStatsTracker,
@@ -159,6 +197,7 @@ public abstract class DistBuildFactory {
                 .setRemoteCoordinatorPort(coordinatorPort)
                 .setRemoteCoordinatorAddress(coordinatorAddress)
                 .setStampedeId(stampedeId.orElse(new StampedeId().setId("LOCAL_FILE")))
+                .setCapacityService(capacityService)
                 .setBuildSlaveRunId(buildSlaveRunId)
                 .setVersionedTargetGraphCache(params.getVersionedTargetGraphCache())
                 .setBuildInfoStoreManager(params.getBuildInfoStoreManager())
