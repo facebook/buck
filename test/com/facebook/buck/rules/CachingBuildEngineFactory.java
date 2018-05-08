@@ -18,6 +18,7 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.core.build.engine.type.BuildType;
 import com.facebook.buck.core.build.engine.type.DepFiles;
+import com.facebook.buck.core.build.engine.type.MetadataStorage;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.rules.keys.DefaultRuleKeyCache;
@@ -38,8 +39,7 @@ import java.util.Optional;
 public class CachingBuildEngineFactory {
 
   private BuildType buildMode = BuildType.SHALLOW;
-  private CachingBuildEngine.MetadataStorage metadataStorage =
-      CachingBuildEngine.MetadataStorage.FILESYSTEM;
+  private MetadataStorage metadataStorage = MetadataStorage.FILESYSTEM;
   private DepFiles depFiles = DepFiles.ENABLED;
   private long maxDepFileCacheEntries = 256L;
   private Optional<Long> artifactCacheSizeLimit = Optional.empty();

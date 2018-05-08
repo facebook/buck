@@ -30,6 +30,7 @@ import com.facebook.buck.core.build.engine.buildinfo.BuildInfoStore;
 import com.facebook.buck.core.build.engine.buildinfo.OnDiskBuildInfo;
 import com.facebook.buck.core.build.engine.type.BuildType;
 import com.facebook.buck.core.build.engine.type.DepFiles;
+import com.facebook.buck.core.build.engine.type.MetadataStorage;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
@@ -92,11 +93,6 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     BUILD_STEP,
     POST_BUILD_STEP,
     ;
-  }
-
-  public enum MetadataStorage {
-    FILESYSTEM,
-    SQLITE,
   }
 
   /**

@@ -17,6 +17,7 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.core.build.engine.buildinfo.BuildInfoStore;
+import com.facebook.buck.core.build.engine.type.MetadataStorage;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
@@ -38,9 +39,7 @@ public class MetadataChecker {
   private MetadataChecker() {}
 
   private static void writeMetadataStorage(
-      ProjectFilesystem filesystem,
-      Path metadataTypePath,
-      CachingBuildEngine.MetadataStorage metadataStorage)
+      ProjectFilesystem filesystem, Path metadataTypePath, MetadataStorage metadataStorage)
       throws IOException {
     filesystem.createParentDirs(metadataTypePath);
 
@@ -92,16 +91,16 @@ public class MetadataChecker {
 
       CachingBuildEngineBuckConfig config =
           cell.getBuckConfig().getView(CachingBuildEngineBuckConfig.class);
-      CachingBuildEngine.MetadataStorage fromConfig = config.getBuildMetadataStorage();
+      MetadataStorage fromConfig = config.getBuildMetadataStorage();
 
       ProjectFilesystem filesystem = cell.getFilesystem();
       Path metadataPath = BuildInfoStore.getMetadataTypePath(filesystem);
       Optional<String> metadataString = filesystem.readFileIfItExists(metadataPath);
       if (metadataString.isPresent()) {
         // Only need consistency check if type file exists, otherwise it's a clean build.
-        Optional<CachingBuildEngine.MetadataStorage> fromFile;
+        Optional<MetadataStorage> fromFile;
         try {
-          fromFile = Optional.of(CachingBuildEngine.MetadataStorage.valueOf(metadataString.get()));
+          fromFile = Optional.of(MetadataStorage.valueOf(metadataString.get()));
         } catch (IllegalArgumentException e) {
           fromFile = Optional.empty();
         }

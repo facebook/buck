@@ -19,8 +19,8 @@ package com.facebook.buck.rules;
 import com.facebook.buck.core.build.engine.buildinfo.BuildInfoStore;
 import com.facebook.buck.core.build.engine.buildinfo.FilesystemBuildInfoStore;
 import com.facebook.buck.core.build.engine.buildinfo.SQLiteBuildInfoStore;
+import com.facebook.buck.core.build.engine.type.MetadataStorage;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.rules.CachingBuildEngine.MetadataStorage;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -63,7 +63,7 @@ public class BuildInfoStoreManager implements AutoCloseable {
     // If we haven't written metadata.type at this point, we must be in a fresh directory.  Use the
     // default for this build engine.
     return metadataString.isPresent()
-        ? CachingBuildEngine.MetadataStorage.valueOf(metadataString.get())
+        ? MetadataStorage.valueOf(metadataString.get())
         : metadataStorage;
   }
 }

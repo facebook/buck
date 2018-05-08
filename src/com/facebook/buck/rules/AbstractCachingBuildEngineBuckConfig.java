@@ -20,6 +20,7 @@ import com.facebook.buck.config.ConfigView;
 import com.facebook.buck.config.resources.ResourcesConfig;
 import com.facebook.buck.core.build.engine.type.BuildType;
 import com.facebook.buck.core.build.engine.type.DepFiles;
+import com.facebook.buck.core.build.engine.type.MetadataStorage;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import java.util.Optional;
 import org.immutables.value.Value;
@@ -32,10 +33,10 @@ abstract class AbstractCachingBuildEngineBuckConfig implements ConfigView<BuckCo
     return getDelegate().getEnum("build", "engine", BuildType.class).orElse(BuildType.SHALLOW);
   }
 
-  public CachingBuildEngine.MetadataStorage getBuildMetadataStorage() {
+  public MetadataStorage getBuildMetadataStorage() {
     return getDelegate()
-        .getEnum("build", "metadata_storage", CachingBuildEngine.MetadataStorage.class)
-        .orElse(CachingBuildEngine.MetadataStorage.FILESYSTEM);
+        .getEnum("build", "metadata_storage", MetadataStorage.class)
+        .orElse(MetadataStorage.FILESYSTEM);
   }
 
   /** @return the mode with which to run the build engine. */

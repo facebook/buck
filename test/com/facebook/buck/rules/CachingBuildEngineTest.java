@@ -58,6 +58,7 @@ import com.facebook.buck.core.build.engine.manifest.Manifest;
 import com.facebook.buck.core.build.engine.manifest.ManifestUtil;
 import com.facebook.buck.core.build.engine.type.BuildType;
 import com.facebook.buck.core.build.engine.type.DepFiles;
+import com.facebook.buck.core.build.engine.type.MetadataStorage;
 import com.facebook.buck.core.cell.resolver.CellPathResolver;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildId;
@@ -249,16 +250,16 @@ public class CachingBuildEngineTest {
     protected DefaultRuleKeyFactory defaultRuleKeyFactory;
     protected InputBasedRuleKeyFactory inputBasedRuleKeyFactory;
     protected BuildRuleDurationTracker durationTracker;
-    protected CachingBuildEngine.MetadataStorage metadataStorage;
+    protected MetadataStorage metadataStorage;
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> data() {
-      return Arrays.stream(CachingBuildEngine.MetadataStorage.values())
+      return Arrays.stream(MetadataStorage.values())
           .map(v -> new Object[] {v})
           .collect(ImmutableList.toImmutableList());
     }
 
-    public CommonFixture(CachingBuildEngine.MetadataStorage metadataStorage) {
+    public CommonFixture(MetadataStorage metadataStorage) {
       this.metadataStorage = metadataStorage;
     }
 
@@ -313,7 +314,7 @@ public class CachingBuildEngineTest {
   }
 
   public static class OtherTests extends CommonFixture {
-    public OtherTests(CachingBuildEngine.MetadataStorage metadataStorage) throws IOException {
+    public OtherTests(MetadataStorage metadataStorage) throws IOException {
       super(metadataStorage);
     }
 
@@ -1520,8 +1521,7 @@ public class CachingBuildEngineTest {
   }
 
   public static class InputBasedRuleKeyTests extends CommonFixture {
-    public InputBasedRuleKeyTests(CachingBuildEngine.MetadataStorage metadataStorage)
-        throws IOException {
+    public InputBasedRuleKeyTests(MetadataStorage metadataStorage) throws IOException {
       super(metadataStorage);
     }
 
@@ -1879,8 +1879,7 @@ public class CachingBuildEngineTest {
       private BuildRule rule;
       private FakeStrategy strategy;
 
-      public CustomStrategyTests(CachingBuildEngine.MetadataStorage metadataStorage)
-          throws IOException {
+      public CustomStrategyTests(MetadataStorage metadataStorage) throws IOException {
         super(metadataStorage);
       }
 
@@ -2102,7 +2101,7 @@ public class CachingBuildEngineTest {
 
     private DefaultDependencyFileRuleKeyFactory depFileFactory;
 
-    public DepFileTests(CachingBuildEngine.MetadataStorage metadataStorage) throws IOException {
+    public DepFileTests(MetadataStorage metadataStorage) throws IOException {
       super(metadataStorage);
     }
 
@@ -2643,7 +2642,7 @@ public class CachingBuildEngineTest {
   }
 
   public static class ManifestTests extends CommonFixture {
-    public ManifestTests(CachingBuildEngine.MetadataStorage metadataStorage) throws IOException {
+    public ManifestTests(MetadataStorage metadataStorage) throws IOException {
       super(metadataStorage);
     }
 
@@ -3249,8 +3248,7 @@ public class CachingBuildEngineTest {
   }
 
   public static class UncachableRuleTests extends CommonFixture {
-    public UncachableRuleTests(CachingBuildEngine.MetadataStorage metadataStorage)
-        throws IOException {
+    public UncachableRuleTests(MetadataStorage metadataStorage) throws IOException {
       super(metadataStorage);
     }
 
@@ -3322,8 +3320,7 @@ public class CachingBuildEngineTest {
   }
 
   public static class ScheduleOverrideTests extends CommonFixture {
-    public ScheduleOverrideTests(CachingBuildEngine.MetadataStorage metadataStorage)
-        throws IOException {
+    public ScheduleOverrideTests(MetadataStorage metadataStorage) throws IOException {
       super(metadataStorage);
     }
 
@@ -3439,8 +3436,7 @@ public class CachingBuildEngineTest {
     // the build engine issues begin and end rule events on different threads.
     private static final ListeningExecutorService SERVICE = new NewThreadExecutorService();
 
-    public BuildRuleEventTests(CachingBuildEngine.MetadataStorage metadataStorage)
-        throws IOException {
+    public BuildRuleEventTests(MetadataStorage metadataStorage) throws IOException {
       super(metadataStorage);
     }
 
@@ -3797,8 +3793,7 @@ public class CachingBuildEngineTest {
       }
     }
 
-    public InitializableFromDiskTests(CachingBuildEngine.MetadataStorage storageType)
-        throws IOException {
+    public InitializableFromDiskTests(MetadataStorage storageType) throws IOException {
       super(storageType);
     }
 

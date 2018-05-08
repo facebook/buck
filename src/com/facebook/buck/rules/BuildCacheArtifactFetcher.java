@@ -22,6 +22,7 @@ import com.facebook.buck.artifact_cache.CacheResultType;
 import com.facebook.buck.core.build.engine.buildinfo.BuildInfo;
 import com.facebook.buck.core.build.engine.buildinfo.BuildInfoStore;
 import com.facebook.buck.core.build.engine.buildinfo.OnDiskBuildInfo;
+import com.facebook.buck.core.build.engine.type.MetadataStorage;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.event.ArtifactCompressionEvent;
 import com.facebook.buck.event.BuckEventBus;
@@ -55,7 +56,7 @@ public class BuildCacheArtifactFetcher {
   private final OnOutputsWillChange onOutputsWillChange;
   private final BuckEventBus eventBus;
   private final BuildInfoStoreManager buildInfoStoreManager;
-  private final CachingBuildEngine.MetadataStorage metadataStorage;
+  private final MetadataStorage metadataStorage;
   private final OnDiskBuildInfo onDiskBuildInfo;
 
   public BuildCacheArtifactFetcher(
@@ -65,7 +66,7 @@ public class BuildCacheArtifactFetcher {
       OnOutputsWillChange onOutputsWillChange,
       BuckEventBus eventBus,
       BuildInfoStoreManager buildInfoStoreManager,
-      CachingBuildEngine.MetadataStorage metadataStorage,
+      MetadataStorage metadataStorage,
       OnDiskBuildInfo onDiskBuildInfo) {
     this.rule = rule;
     this.buildRuleScopeManager = buildRuleScopeManager;
