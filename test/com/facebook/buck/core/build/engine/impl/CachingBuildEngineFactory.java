@@ -17,6 +17,7 @@
 package com.facebook.buck.core.build.engine.impl;
 
 import com.facebook.buck.core.build.engine.cache.manager.BuildInfoStoreManager;
+import com.facebook.buck.core.build.engine.config.ResourceAwareSchedulingInfo;
 import com.facebook.buck.core.build.engine.delegate.CachingBuildEngineDelegate;
 import com.facebook.buck.core.build.engine.delegate.LocalCachingBuildEngineDelegate;
 import com.facebook.buck.core.build.engine.type.BuildType;
@@ -27,7 +28,6 @@ import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleStrategy;
 import com.facebook.buck.rules.RemoteBuildRuleCompletionWaiter;
-import com.facebook.buck.rules.ResourceAwareSchedulingInfo;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.keys.DefaultRuleKeyCache;
 import com.facebook.buck.rules.keys.RuleKeyDiagnostics;

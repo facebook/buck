@@ -17,6 +17,7 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.core.build.engine.buildinfo.BuildInfoStore;
+import com.facebook.buck.core.build.engine.config.CachingBuildEngineBuckConfig;
 import com.facebook.buck.core.build.engine.type.MetadataStorage;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;

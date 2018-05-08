@@ -145,8 +145,6 @@ java_immutables_library(
         "AbstractBuildRuleWithDeclaredAndExtraDeps.java",
         "AbstractBuildRuleWithProviders.java",
         "AbstractBuildRuleWithResolver.java",
-        "AbstractCachingBuildEngineBuckConfig.java",
-        "AbstractResourceAwareSchedulingInfo.java",
         "AbstractRuleScheduleInfo.java",
         "BuckPyFunction.java",
         "BuildEvent.java",
@@ -220,8 +218,8 @@ java_immutables_library(
     visibility = ["PUBLIC"],
     deps = [
         "//src/com/facebook/buck/artifact_cache:artifact_cache",
-        "//src/com/facebook/buck/config:config",
         "//src/com/facebook/buck/config/resources:resources",
+        "//src/com/facebook/buck/core/build/engine/config:config",
         "//src/com/facebook/buck/core/description/arg:arg",
         "//src/com/facebook/buck/core/sourcepath/resolver/impl:impl",
         "//src/com/facebook/buck/event:event",
