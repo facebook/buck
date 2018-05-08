@@ -139,6 +139,22 @@ class MaterializerDummyFileHashCache implements ProjectFileHashCache {
           e,
           "Preload materialization timed out after [%d] seconds.",
           DEFAULT_PRELOAD_FILE_MATERIALIZATION_TIMEOUT_SECONDS);
+
+      printMissingFiles();
+    }
+  }
+
+  private void printMissingFiles() {
+    for (BuildJobStateFileHashEntry fileEntry :
+        fileMaterializationFuturesByFileHashEntry.keySet()) {
+      ListenableFuture<?> materializationFuture =
+          Preconditions.checkNotNull(fileMaterializationFuturesByFileHashEntry.get(fileEntry));
+      if (!materializationFuture.isDone()) {
+        LOG.warn(
+            String.format(
+                "Materialization missing for: [%s] [sha1: %s]",
+                fileEntry.getPath().getPath(), fileEntry.getSha1()));
+      }
     }
   }
 
