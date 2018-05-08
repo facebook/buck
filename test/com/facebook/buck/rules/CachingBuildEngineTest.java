@@ -4006,8 +4006,8 @@ public class CachingBuildEngineTest {
 
       // Check that the build engine waited for the remote build of rule to finish.
       assertTrue(
-          synchronizer.buildCompletionWaitingFutureCreatedForTarget(
-              BUILD_TARGET.getFullyQualifiedName()));
+          RemoteBuildRuleSynchronizerTestUtil.buildCompletionWaitingFutureCreatedForTarget(
+              synchronizer, BUILD_TARGET.getFullyQualifiedName()));
     }
 
     @Test(timeout = 10000)
@@ -4048,8 +4048,8 @@ public class CachingBuildEngineTest {
 
       // Check that the build engine waited for the remote build of rule to finish.
       assertTrue(
-          synchronizer.buildCompletionWaitingFutureCreatedForTarget(
-              BUILD_TARGET.getFullyQualifiedName()));
+          RemoteBuildRuleSynchronizerTestUtil.buildCompletionWaitingFutureCreatedForTarget(
+              synchronizer, BUILD_TARGET.getFullyQualifiedName()));
     }
 
     @Test(timeout = 10000)
@@ -4073,8 +4073,8 @@ public class CachingBuildEngineTest {
 
       // Check that the build engine did not wait for the remote build of rule to finish
       assertFalse(
-          synchronizer.buildCompletionWaitingFutureCreatedForTarget(
-              BUILD_TARGET.getFullyQualifiedName()));
+          RemoteBuildRuleSynchronizerTestUtil.buildCompletionWaitingFutureCreatedForTarget(
+              synchronizer, BUILD_TARGET.getFullyQualifiedName()));
     }
 
     @Test(timeout = 10000)
@@ -4117,8 +4117,8 @@ public class CachingBuildEngineTest {
 
       // Check that the build engine waited for the remote build of rule to finish.
       assertTrue(
-          synchronizer.buildCompletionWaitingFutureCreatedForTarget(
-              BUILD_TARGET.getFullyQualifiedName()));
+          RemoteBuildRuleSynchronizerTestUtil.buildCompletionWaitingFutureCreatedForTarget(
+              synchronizer, BUILD_TARGET.getFullyQualifiedName()));
     }
 
     private BuildEngineBuildContext createBuildContext(BuildId buildId) {
