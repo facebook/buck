@@ -369,7 +369,7 @@
   Status: <strong>experimental/unstable</strong>.
   The set of header files that can be used for inclusion to the source files in the target and all
   targets that transitively depend on it. Buck doesn't add raw headers to the search path of a
-  compiler/preprocessor automatically. <code>compiler_flags</code> or <code>exported_compiler_flags</code> can be
+  compiler/preprocessor automatically. <code>preprocessor_flags</code> or <code>exported_preprocessor_flags</code> can be
   used to add such raw headers to the search path. <code>raw_headers</code> are considered to be
   experimental for now and cannot be used together
   with <code>headers</code> or <code>exported_headers</code> in the same target.
