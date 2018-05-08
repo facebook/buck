@@ -121,6 +121,11 @@ public abstract class AbstractBuildRuleWithProviders implements BuildRule {
   }
 
   @Override
+  public boolean hasBuildSteps() {
+    return true;
+  }
+
+  @Override
   public final String toString() {
     return getFullyQualifiedName();
   }

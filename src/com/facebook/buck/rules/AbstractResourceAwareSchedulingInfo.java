@@ -55,7 +55,7 @@ abstract class AbstractResourceAwareSchedulingInfo {
   }
 
   private boolean isRuleResourceFree(BuildRule rule) {
-    return rule instanceof NoopBuildRuleWithDeclaredAndExtraDeps || rule instanceof NoopBuildRule;
+    return rule.hasBuildSteps();
   }
 
   private ResourceAmounts getResourceAmountsForRuleOrDefaultAmounts(BuildRule rule) {

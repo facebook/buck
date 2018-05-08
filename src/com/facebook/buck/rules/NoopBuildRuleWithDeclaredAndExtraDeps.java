@@ -41,6 +41,11 @@ public class NoopBuildRuleWithDeclaredAndExtraDeps extends AbstractBuildRuleWith
     return ImmutableList.of();
   }
 
+  @Override
+  public final boolean hasBuildSteps() {
+    return false;
+  }
+
   @Nullable
   @Override
   public SourcePath getSourcePathToOutput() {
