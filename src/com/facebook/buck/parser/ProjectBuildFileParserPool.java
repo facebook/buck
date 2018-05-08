@@ -19,6 +19,7 @@ package com.facebook.buck.parser;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.util.concurrent.ResourcePool;
 import com.google.common.base.Preconditions;
@@ -73,7 +74,7 @@ class ProjectBuildFileParserPool implements AutoCloseable {
    * @return a {@link ListenableFuture} containing the result of the parsing. The future will be
    *     cancelled if the {@link ProjectBuildFileParserPool#close()} method is called.
    */
-  public ListenableFuture<ImmutableSet<Map<String, Object>>> getAllRulesAndMetaRules(
+  public ListenableFuture<BuildFileManifest> getAllRulesAndMetaRules(
       BuckEventBus buckEventBus,
       Cell cell,
       Path buildFile,
@@ -83,8 +84,7 @@ class ProjectBuildFileParserPool implements AutoCloseable {
 
     return getResourcePoolForCell(buckEventBus, cell)
         .scheduleOperationWithResource(
-            parser -> parser.getBuildFileManifest(buildFile, processedBytes).toRawNodes(),
-            executorService);
+            parser -> parser.getBuildFileManifest(buildFile, processedBytes), executorService);
   }
 
   private synchronized ResourcePool<ProjectBuildFileParser> getResourcePoolForCell(

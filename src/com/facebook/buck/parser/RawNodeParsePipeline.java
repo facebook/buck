@@ -100,8 +100,11 @@ public class RawNodeParsePipeline extends ParsePipeline<Map<String, Object>> {
             return Futures.immediateCancelledFuture();
           }
 
-          return projectBuildFileParserPool.getAllRulesAndMetaRules(
-              eventBus, cell, buildFile, processedBytes, executorService);
+          return Futures.transform(
+              projectBuildFileParserPool.getAllRulesAndMetaRules(
+                  eventBus, cell, buildFile, processedBytes, executorService),
+              buildFileManifest -> buildFileManifest.toRawNodes(),
+              executorService);
         },
         eventBus);
   }
