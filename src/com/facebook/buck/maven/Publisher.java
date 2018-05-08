@@ -57,7 +57,7 @@ import org.eclipse.aether.util.artifact.SubArtifact;
 public class Publisher {
 
   public static final String MAVEN_CENTRAL_URL = "https://repo1.maven.org/maven2";
-  private static final URL MAVEN_CENTRAL;
+  public static final URL MAVEN_CENTRAL;
 
   static {
     try {
@@ -74,15 +74,6 @@ public class Publisher {
   private final RemoteRepository remoteRepo;
   private final boolean dryRun;
 
-  public Publisher(
-      ProjectFilesystem repositoryFilesystem,
-      Optional<URL> remoteRepoUrl,
-      Optional<String> username,
-      Optional<String> password,
-      boolean dryRun) {
-    this(repositoryFilesystem.getRootPath(), remoteRepoUrl, username, password, dryRun);
-  }
-
   /**
    * @param localRepoPath Typically obtained as {@link ProjectFilesystem#getRootPath}
    * @param remoteRepoUrl Canonically {@link #MAVEN_CENTRAL_URL}
@@ -91,13 +82,12 @@ public class Publisher {
    */
   public Publisher(
       Path localRepoPath,
-      Optional<URL> remoteRepoUrl,
+      URL remoteRepoUrl,
       Optional<String> username,
       Optional<String> password,
       boolean dryRun) {
     this.localRepo = new LocalRepository(localRepoPath.toFile());
-    this.remoteRepo =
-        AetherUtil.toRemoteRepository(remoteRepoUrl.orElse(MAVEN_CENTRAL), username, password);
+    this.remoteRepo = AetherUtil.toRemoteRepository(remoteRepoUrl, username, password);
     this.locator = AetherUtil.initServiceLocator();
     this.dryRun = dryRun;
   }
