@@ -94,7 +94,8 @@ public class CxxPreprocessAndCompileTest {
   private static final String DEFAULT_OUTPUT = "test.o";
   private static final SourcePath DEFAULT_INPUT = FakeSourcePath.of("test.cpp");
   private static final CxxSource.Type DEFAULT_INPUT_TYPE = CxxSource.Type.CXX;
-  private static final Path DEFAULT_WORKING_DIR = Paths.get(System.getProperty("user.dir"));
+  private static final PathSourcePath DEFAULT_WORKING_DIR =
+      FakeSourcePath.of(System.getProperty("user.dir"));
   private static final RuleKeyAppendableFunction<FrameworkPath, Path>
       DEFAULT_FRAMEWORK_PATH_SEARCH_PATH_FUNCTION =
           new DefaultFramworkPathSearchPathAppendableFunction();

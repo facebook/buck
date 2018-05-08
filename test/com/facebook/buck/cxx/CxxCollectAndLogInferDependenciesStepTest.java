@@ -85,7 +85,7 @@ public class CxxCollectAndLogInferDependenciesStepTest {
     PreprocessorDelegate preprocessorDelegate =
         new PreprocessorDelegate(
             CxxPlatformUtils.DEFAULT_PLATFORM.getHeaderVerification(),
-            Paths.get("whatever"),
+            FakeSourcePath.of("whatever"),
             new GccPreprocessor(preprocessorTool),
             PreprocessorFlags.builder().build(),
             defaultFrameworkPathSearchPathFunction,

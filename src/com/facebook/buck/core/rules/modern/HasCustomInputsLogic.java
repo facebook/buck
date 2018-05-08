@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
+package com.facebook.buck.core.rules.modern;
 
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -23,7 +23,7 @@ import com.facebook.buck.util.function.ThrowingConsumer;
 /**
  * Deriving inputs directly from the @{@link AddToRuleKey} annotated fields of some objects doesn't
  * work correctly or is too slow. When deriving inputs from an object that implements
- * HasCustomInputsLogic, the framework ({@link BuildableSupport}/{@link
+ * HasCustomInputsLogic, the framework ({@link com.facebook.buck.rules.BuildableSupport}/{@link
  * com.facebook.buck.rules.modern.ModernBuildRule}) will call computeInputs() instead of deriving
  * from @AddToRuleKey fields.
  */
