@@ -14,13 +14,15 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
+package com.facebook.buck.core.build.engine.cache.manager;
 
+import com.facebook.buck.rules.BuildRule;
 import java.nio.file.Path;
 
 /**
- * Test utility class that exposes a test visible method from {@link ManifestRuleKeyManager} to
- * tests belonging to other packages.
+ * Test utility class that exposes a test visible method from {@link
+ * com.facebook.buck.core.build.engine.cache.manager.ManifestRuleKeyManager} to tests belonging to
+ * other packages.
  */
 public class ManifestRuleKeyManagerTestUtil {
 

@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
+package com.facebook.buck.core.build.engine.cache.manager;
 
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.core.build.engine.BuildResult;
@@ -30,6 +30,12 @@ import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rulekey.RuleKeyDiagnosticsMode;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleDiagnosticData;
+import com.facebook.buck.rules.BuildRuleDurationTracker;
+import com.facebook.buck.rules.BuildRuleEvent;
+import com.facebook.buck.rules.BuildRuleEvent.Resumed;
+import com.facebook.buck.rules.RuleDepsCache;
 import com.facebook.buck.rules.keys.RuleKeyDiagnostics;
 import com.facebook.buck.rules.keys.RuleKeyFactories;
 import com.facebook.buck.rules.keys.RuleKeyFactoryWithDiagnostics;
@@ -95,7 +101,7 @@ public class BuildRuleScopeManager {
         Preconditions.checkState(Thread.currentThread() == currentBuildRuleScopeThread);
         return () -> {};
       }
-      BuildRuleEvent.Resumed resumed = postResumed();
+      Resumed resumed = postResumed();
       currentBuildRuleScopeThread = Thread.currentThread();
       return () -> {
         synchronized (this) {

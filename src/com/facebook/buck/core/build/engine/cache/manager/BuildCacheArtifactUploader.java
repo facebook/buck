@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
+package com.facebook.buck.core.build.engine.cache.manager;
 
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.ArtifactUploader;
@@ -23,6 +23,7 @@ import com.facebook.buck.core.build.engine.buildinfo.BuildInfo;
 import com.facebook.buck.core.build.engine.buildinfo.OnDiskBuildInfo;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
