@@ -19,6 +19,7 @@ import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.ConfigView;
 import com.facebook.buck.config.resources.ResourcesConfig;
 import com.facebook.buck.core.build.engine.type.BuildType;
+import com.facebook.buck.core.build.engine.type.DepFiles;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import java.util.Optional;
 import org.immutables.value.Value;
@@ -38,10 +39,8 @@ abstract class AbstractCachingBuildEngineBuckConfig implements ConfigView<BuckCo
   }
 
   /** @return the mode with which to run the build engine. */
-  public CachingBuildEngine.DepFiles getBuildDepFiles() {
-    return getDelegate()
-        .getEnum("build", "depfiles", CachingBuildEngine.DepFiles.class)
-        .orElse(CachingBuildEngine.DepFiles.CACHE);
+  public DepFiles getBuildDepFiles() {
+    return getDelegate().getEnum("build", "depfiles", DepFiles.class).orElse(DepFiles.CACHE);
   }
 
   /**

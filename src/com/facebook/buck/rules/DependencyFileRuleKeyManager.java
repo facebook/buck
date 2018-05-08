@@ -19,6 +19,7 @@ package com.facebook.buck.rules;
 import com.facebook.buck.core.build.engine.buildinfo.BuildInfo;
 import com.facebook.buck.core.build.engine.buildinfo.BuildInfoRecorder;
 import com.facebook.buck.core.build.engine.buildinfo.OnDiskBuildInfo;
+import com.facebook.buck.core.build.engine.type.DepFiles;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.RuleKeyCalculationEvent;
@@ -38,7 +39,7 @@ import java.nio.file.NoSuchFileException;
 import java.util.Optional;
 
 public class DependencyFileRuleKeyManager {
-  private final CachingBuildEngine.DepFiles depFiles;
+  private final DepFiles depFiles;
   private final BuildRule rule;
   private final Discardable<BuildInfoRecorder> buildInfoRecorder;
   private final OnDiskBuildInfo onDiskBuildInfo;
@@ -46,7 +47,7 @@ public class DependencyFileRuleKeyManager {
   private final BuckEventBus eventBus;
 
   public DependencyFileRuleKeyManager(
-      CachingBuildEngine.DepFiles depFiles,
+      DepFiles depFiles,
       BuildRule rule,
       Discardable<BuildInfoRecorder> buildInfoRecorder,
       OnDiskBuildInfo onDiskBuildInfo,
@@ -61,7 +62,7 @@ public class DependencyFileRuleKeyManager {
   }
 
   public boolean useDependencyFileRuleKey() {
-    return depFiles != CachingBuildEngine.DepFiles.DISABLED
+    return depFiles != DepFiles.DISABLED
         && rule instanceof SupportsDependencyFileRuleKey
         && ((SupportsDependencyFileRuleKey) rule).useDependencyFileRuleKeys();
   }

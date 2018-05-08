@@ -24,6 +24,7 @@ import com.facebook.buck.core.build.engine.manifest.Manifest;
 import com.facebook.buck.core.build.engine.manifest.ManifestFetchResult;
 import com.facebook.buck.core.build.engine.manifest.ManifestLoadResult;
 import com.facebook.buck.core.build.engine.manifest.ManifestStoreResult;
+import com.facebook.buck.core.build.engine.type.DepFiles;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
@@ -59,7 +60,7 @@ public class ManifestRuleKeyManager {
 
   private static final Logger LOG = Logger.get(ManifestRuleKeyManager.class);
 
-  private final CachingBuildEngine.DepFiles depFiles;
+  private final DepFiles depFiles;
   private final BuildRule rule;
   private final FileHashCache fileHashCache;
   private final long maxDepFileCacheEntries;
@@ -70,7 +71,7 @@ public class ManifestRuleKeyManager {
   private final Supplier<Optional<RuleKeyAndInputs>> manifestBasedKeySupplier;
 
   public ManifestRuleKeyManager(
-      CachingBuildEngine.DepFiles depFiles,
+      DepFiles depFiles,
       BuildRule rule,
       FileHashCache fileHashCache,
       long maxDepFileCacheEntries,
@@ -91,7 +92,7 @@ public class ManifestRuleKeyManager {
   }
 
   public boolean useManifestCaching() {
-    return depFiles == CachingBuildEngine.DepFiles.CACHE
+    return depFiles == DepFiles.CACHE
         && rule instanceof SupportsDependencyFileRuleKey
         && rule.isCacheable()
         && ((SupportsDependencyFileRuleKey) rule).useDependencyFileRuleKeys();

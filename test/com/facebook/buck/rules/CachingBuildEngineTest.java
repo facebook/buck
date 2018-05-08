@@ -57,6 +57,7 @@ import com.facebook.buck.core.build.engine.buildinfo.OnDiskBuildInfo;
 import com.facebook.buck.core.build.engine.manifest.Manifest;
 import com.facebook.buck.core.build.engine.manifest.ManifestUtil;
 import com.facebook.buck.core.build.engine.type.BuildType;
+import com.facebook.buck.core.build.engine.type.DepFiles;
 import com.facebook.buck.core.cell.resolver.CellPathResolver;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildId;
@@ -2711,7 +2712,7 @@ public class CachingBuildEngineTest {
       // Create the build engine.
       CachingBuildEngine cachingBuildEngine =
           cachingBuildEngineFactory()
-              .setDepFiles(CachingBuildEngine.DepFiles.CACHE)
+              .setDepFiles(DepFiles.CACHE)
               .setRuleKeyFactories(
                   RuleKeyFactories.of(
                       defaultRuleKeyFactory, inputBasedRuleKeyFactory, depFilefactory))
@@ -2817,7 +2818,7 @@ public class CachingBuildEngineTest {
       // Create the build engine.
       CachingBuildEngine cachingBuildEngine =
           cachingBuildEngineFactory()
-              .setDepFiles(CachingBuildEngine.DepFiles.CACHE)
+              .setDepFiles(DepFiles.CACHE)
               .setRuleKeyFactories(
                   RuleKeyFactories.of(
                       defaultRuleKeyFactory, inputBasedRuleKeyFactory, depFilefactory))
@@ -2941,7 +2942,7 @@ public class CachingBuildEngineTest {
       // Create the build engine.
       CachingBuildEngine cachingBuildEngine =
           cachingBuildEngineFactory()
-              .setDepFiles(CachingBuildEngine.DepFiles.CACHE)
+              .setDepFiles(DepFiles.CACHE)
               .setMaxDepFileCacheEntries(1L)
               .setRuleKeyFactories(
                   RuleKeyFactories.of(
@@ -3053,7 +3054,7 @@ public class CachingBuildEngineTest {
       // Create the build engine.
       CachingBuildEngine cachingBuildEngine =
           cachingBuildEngineFactory()
-              .setDepFiles(CachingBuildEngine.DepFiles.CACHE)
+              .setDepFiles(DepFiles.CACHE)
               .setRuleKeyFactories(
                   RuleKeyFactories.of(
                       defaultRuleKeyFactory, inputBasedRuleKeyFactory, depFilefactory))
@@ -3205,7 +3206,7 @@ public class CachingBuildEngineTest {
       // Create the build engine.
       CachingBuildEngine cachingBuildEngine =
           cachingBuildEngineFactory()
-              .setDepFiles(CachingBuildEngine.DepFiles.CACHE)
+              .setDepFiles(DepFiles.CACHE)
               .setRuleKeyFactories(
                   RuleKeyFactories.of(
                       defaultRuleKeyFactory, inputBasedRuleKeyFactory, depFilefactory))
@@ -4179,7 +4180,7 @@ public class CachingBuildEngineTest {
       fileHashCache.invalidateAll();
       try (CachingBuildEngine cachingBuildEngine =
           cachingBuildEngineFactory(synchronizer)
-              .setDepFiles(CachingBuildEngine.DepFiles.CACHE)
+              .setDepFiles(DepFiles.CACHE)
               .setRuleKeyFactories(
                   RuleKeyFactories.of(
                       new DefaultRuleKeyFactory(

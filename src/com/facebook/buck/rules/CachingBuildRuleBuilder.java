@@ -34,6 +34,7 @@ import com.facebook.buck.core.build.engine.buildinfo.OnDiskBuildInfo;
 import com.facebook.buck.core.build.engine.manifest.ManifestFetchResult;
 import com.facebook.buck.core.build.engine.manifest.ManifestStoreResult;
 import com.facebook.buck.core.build.engine.type.BuildType;
+import com.facebook.buck.core.build.engine.type.DepFiles;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.model.BuildTarget;
@@ -164,7 +165,7 @@ class CachingBuildRuleBuilder {
       BuildRuleDurationTracker buildRuleDurationTracker,
       boolean consoleLogBuildFailuresInline,
       RuleKeyDiagnostics<RuleKey, String> defaultRuleKeyDiagnostics,
-      CachingBuildEngine.DepFiles depFiles,
+      DepFiles depFiles,
       FileHashCache fileHashCache,
       long maxDepFileCacheEntries,
       MetadataStorage metadataStorage,
