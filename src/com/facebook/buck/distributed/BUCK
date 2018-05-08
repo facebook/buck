@@ -84,6 +84,7 @@ java_immutables_library(
         "//src-gen:thrift",
         "//src/com/facebook/buck/artifact_cache:artifact_cache",
         "//src/com/facebook/buck/config:config",
+        "//src/com/facebook/buck/core/build/engine/delegate:delegate",
         "//src/com/facebook/buck/core/cell:cell",
         "//src/com/facebook/buck/core/rules/knowntypes:knowntypes",
         "//src/com/facebook/buck/event:event",

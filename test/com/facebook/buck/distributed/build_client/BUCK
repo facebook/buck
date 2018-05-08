@@ -8,6 +8,7 @@ standard_java_test(
         "//src/com/facebook/buck/artifact_cache:artifact_cache",
         "//src/com/facebook/buck/command:command",
         "//src/com/facebook/buck/core/build/engine/cache/manager:manager",
+        "//src/com/facebook/buck/core/build/engine/delegate:delegate",
         "//src/com/facebook/buck/core/sourcepath/resolver/impl:impl",
         "//src/com/facebook/buck/distributed:common",
         "//src/com/facebook/buck/distributed/build_client:build_client",

@@ -1,0 +1,11 @@
+java_library(
+    name = "delegate",
+    srcs = glob(["*.java"]),
+    exported_deps = [
+        "//src/com/facebook/buck/rules:build_rule",
+        "//src/com/facebook/buck/util/cache:cache",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+)

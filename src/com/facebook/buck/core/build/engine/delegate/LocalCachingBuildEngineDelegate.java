@@ -14,8 +14,9 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
+package com.facebook.buck.core.build.engine.delegate;
 
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.util.cache.FileHashCache;
 
 /** */
