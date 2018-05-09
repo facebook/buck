@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
+package com.facebook.buck.core.build.engine.impl;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
@@ -27,6 +27,13 @@ import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.engine.BuildResult;
 import com.facebook.buck.core.build.engine.BuildRuleSuccessType;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.FakeBuildContext;
+import com.facebook.buck.rules.FakeBuildRule;
+import com.facebook.buck.rules.RulePipelineState;
+import com.facebook.buck.rules.RulePipelineStateFactory;
+import com.facebook.buck.rules.RunnableWithFuture;
+import com.facebook.buck.rules.SupportsPipelining;
 import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.ListenableFuture;

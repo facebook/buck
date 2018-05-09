@@ -63,7 +63,6 @@ import com.facebook.buck.rules.BuildOutputInitializer;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleDurationTracker;
 import com.facebook.buck.rules.BuildRuleEvent;
-import com.facebook.buck.rules.BuildRulePipelinesRunner;
 import com.facebook.buck.rules.BuildRuleStrategy;
 import com.facebook.buck.rules.HasPostBuildSteps;
 import com.facebook.buck.rules.InitializableFromDisk;

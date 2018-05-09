@@ -42,7 +42,6 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleDurationTracker;
 import com.facebook.buck.rules.BuildRuleEvent;
-import com.facebook.buck.rules.BuildRulePipelinesRunner;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleStrategy;
 import com.facebook.buck.rules.DefaultBuildableContext;
