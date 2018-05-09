@@ -99,7 +99,7 @@ public class TargetCountVerificationParserDelegateTest {
   }
 
   @Test
-  public void givenTargetCountExceedingLimitWhenGetAllRulesAndMetaRulesIsInvokedAWarningIsEmitted()
+  public void givenTargetCountExceedingLimitWhenGetBuildFileManifestIsInvokedAWarningIsEmitted()
       throws Exception {
     EasyMock.expect(parserMock.getBuildFileManifest(path, processedBytes))
         .andReturn(toBuildFileManifest(this.rawTargets));
@@ -121,7 +121,7 @@ public class TargetCountVerificationParserDelegateTest {
 
   @Test
   public void
-      givenTargetCountNotExceedingLimitWhenGetAllRulesAndMetaRulesIsInvokedAWarningIsNotEmitted()
+      givenTargetCountNotExceedingLimitWhenGetBuildFileManifestIsInvokedAWarningIsNotEmitted()
           throws Exception {
     EasyMock.expect(parserMock.getBuildFileManifest(path, processedBytes))
         .andReturn(toBuildFileManifest(rawTargets));

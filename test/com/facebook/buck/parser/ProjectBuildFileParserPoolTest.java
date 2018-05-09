@@ -349,7 +349,7 @@ public class ProjectBuildFileParserPoolTest {
     ImmutableSet.Builder<ListenableFuture<?>> futures = ImmutableSet.builder();
     for (int i = 0; i < count; i++) {
       futures.add(
-          pool.getAllRulesAndMetaRules(
+          pool.getBuildFileManifest(
               BuckEventBusForTests.newInstance(),
               cell,
               Paths.get("BUCK"),

@@ -118,14 +118,14 @@ public class EventReportingProjectBuildFileParserTest {
   }
 
   @Test
-  public void getAllRulesAndMetaRulesFiresStartEvent() throws Exception {
+  public void getBuildFileManifestFiresStartEvent() throws Exception {
     assertFalse(listener.isStarted());
     parser.getBuildFileManifest(SOME_PATH, processedBytes);
     assertTrue(listener.isStarted());
   }
 
   @Test
-  public void getAllRulesAndMetaRulesReturnsUnderlyingRules() throws Exception {
+  public void getBuildFileManifestReturnsUnderlyingRules() throws Exception {
     allRulesAndMetadata =
         BuildFileManifest.builder()
             .setTargets(ImmutableList.of())

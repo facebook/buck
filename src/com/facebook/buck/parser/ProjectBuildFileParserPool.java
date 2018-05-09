@@ -74,7 +74,7 @@ class ProjectBuildFileParserPool implements AutoCloseable {
    * @return a {@link ListenableFuture} containing the result of the parsing. The future will be
    *     cancelled if the {@link ProjectBuildFileParserPool#close()} method is called.
    */
-  public ListenableFuture<BuildFileManifest> getAllRulesAndMetaRules(
+  public ListenableFuture<BuildFileManifest> getBuildFileManifest(
       BuckEventBus buckEventBus,
       Cell cell,
       Path buildFile,

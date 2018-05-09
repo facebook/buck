@@ -101,7 +101,7 @@ public class RawNodeParsePipeline extends ParsePipeline<Map<String, Object>> {
           }
 
           return Futures.transform(
-              projectBuildFileParserPool.getAllRulesAndMetaRules(
+              projectBuildFileParserPool.getBuildFileManifest(
                   eventBus, cell, buildFile, processedBytes, executorService),
               buildFileManifest -> buildFileManifest.toRawNodes(),
               executorService);
