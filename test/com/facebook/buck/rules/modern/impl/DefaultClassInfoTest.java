@@ -51,10 +51,12 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.ErrorLogger;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.function.Consumer;
 import org.hamcrest.Matchers;
+import org.junit.Ignore;
 import org.junit.Test;
 
 @SuppressWarnings("unused")
@@ -232,6 +234,7 @@ public class DefaultClassInfoTest {
     int value = 0;
   }
 
+  @Ignore("We should enforce final fields, but to ease transition to MBR we don't.")
   @Test(expected = Exception.class)
   public void testNonFinalField() {
     try {
@@ -248,6 +251,7 @@ public class DefaultClassInfoTest {
     static int value = 0;
   }
 
+  @Ignore("We should enforce final fields, but to ease transition to MBR we don't.")
   @Test(expected = Exception.class)
   public void testNonFinalStaticField() {
     try {
@@ -262,7 +266,7 @@ public class DefaultClassInfoTest {
   }
 
   static class BadBase extends NoOpBuildable {
-    int value = 0;
+    @AddToRuleKey Path value = null;
   }
 
   static class DerivedFromBadBased extends BadBase {}
@@ -272,9 +276,14 @@ public class DefaultClassInfoTest {
     try {
       DefaultClassInfoFactory.forInstance(new DerivedFromBadBased());
     } catch (Exception e) {
-      assertThat(e.getMessage(), Matchers.containsString("must be final (BadBase.value)"));
       assertThat(
-          ErrorLogger.getUserFriendlyMessage(e), Matchers.containsString("DerivedFromBadBased"));
+          e.getMessage(), Matchers.containsString("Buildables should not have Path references"));
+      assertThat(
+          ErrorLogger.getUserFriendlyMessage(e),
+          Matchers.containsString("DefaultClassInfoTest$BadBase"));
+      assertThat(
+          ErrorLogger.getUserFriendlyMessage(e),
+          Matchers.containsString("DefaultClassInfoTest$DerivedFromBadBased"));
       throw e;
     }
   }

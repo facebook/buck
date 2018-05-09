@@ -22,6 +22,7 @@ import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.core.util.immutables.BuckStylePackageVisibleImmutable;
 import com.facebook.buck.core.util.immutables.BuckStylePackageVisibleTuple;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.modern.ClassInfo;
 import com.facebook.buck.rules.modern.FieldInfo;
 import com.facebook.buck.rules.modern.ValueTypeInfo;
@@ -59,6 +60,8 @@ import javax.annotation.Nullable;
  * Default implementation of ClassInfo. Computes values simply by visiting all referenced fields.
  */
 public class DefaultClassInfo<T extends AddsToRuleKey> implements ClassInfo<T> {
+  private static final Logger LOG = Logger.get(DefaultClassInfo.class);
+
   private final String type;
   private final Optional<ClassInfo<? super T>> superInfo;
   private final ImmutableList<FieldInfo<?>> fields;
@@ -99,11 +102,12 @@ public class DefaultClassInfo<T extends AddsToRuleKey> implements ClassInfo<T> {
           });
     } else {
       for (final Field field : clazz.getDeclaredFields()) {
-        Preconditions.checkArgument(
-            Modifier.isFinal(field.getModifiers()),
-            "All fields of a Buildable must be final (%s.%s)",
-            clazz.getSimpleName(),
-            field.getName());
+        // TODO(cjhopman): Make this a Precondition.
+        if (!Modifier.isFinal(field.getModifiers())) {
+          LOG.warn(
+              "All fields of a Buildable must be final (%s.%s)",
+              clazz.getSimpleName(), field.getName());
+        }
 
         if (Modifier.isStatic(field.getModifiers())) {
           continue;
@@ -139,11 +143,12 @@ public class DefaultClassInfo<T extends AddsToRuleKey> implements ClassInfo<T> {
         if (!Modifier.isStatic(field.getModifiers())) {
           continue;
         }
-        Preconditions.checkArgument(
-            Modifier.isFinal(field.getModifiers()),
-            "All static fields of a Buildable's outer class must be final (%s.%s)",
-            outerClazz.getSimpleName(),
-            field.getName());
+        // TODO(cjhopman): Make this a Precondition.
+        if (!Modifier.isFinal(field.getModifiers())) {
+          LOG.warn(
+              "All static fields of a Buildable's outer class must be final (%s.%s)",
+              outerClazz.getSimpleName(), field.getName());
+        }
       }
     }
     this.fields = fieldsBuilder.build();
