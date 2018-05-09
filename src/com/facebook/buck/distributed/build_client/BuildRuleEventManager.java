@@ -15,8 +15,8 @@
  */
 package com.facebook.buck.distributed.build_client;
 
+import com.facebook.buck.core.build.distributed.synchronization.RemoteBuildRuleCompletionNotifier;
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.rules.RemoteBuildRuleCompletionNotifier;
 import com.facebook.buck.util.timing.Clock;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;

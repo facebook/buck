@@ -15,6 +15,8 @@
  */
 package com.facebook.buck.rules;
 
+import com.facebook.buck.core.build.distributed.synchronization.RemoteBuildRuleCompletionNotifier;
+import com.facebook.buck.core.build.distributed.synchronization.RemoteBuildRuleCompletionWaiter;
 import com.facebook.buck.log.Logger;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;

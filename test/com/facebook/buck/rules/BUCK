@@ -196,6 +196,7 @@ java_immutables_library(
         "//src/com/facebook/buck/apple/xcode:xcode",
         "//src/com/facebook/buck/artifact_cache:artifact_cache",
         "//src/com/facebook/buck/config:config",
+        "//src/com/facebook/buck/core/build/distributed/synchronization:synchronization",
         "//src/com/facebook/buck/core/cell:cell",
         "//src/com/facebook/buck/core/description/arg:arg",
         "//src/com/facebook/buck/core/sourcepath/resolver/impl:impl",

@@ -182,8 +182,6 @@ java_immutables_library(
         "NoopInstallable.java",
         "OverrideScheduleRule.java",
         "ParallelRuleKeyCalculator.java",
-        "RemoteBuildRuleCompletionNotifier.java",
-        "RemoteBuildRuleCompletionWaiter.java",
         "RemoteBuildRuleSynchronizer.java",
         "RuleDepsCache.java",
         "RulePipelineStateFactory.java",
@@ -218,6 +216,7 @@ java_immutables_library(
     deps = [
         "//src/com/facebook/buck/artifact_cache:artifact_cache",
         "//src/com/facebook/buck/config/resources:resources",
+        "//src/com/facebook/buck/core/build/distributed/synchronization:synchronization",
         "//src/com/facebook/buck/core/build/engine/config:config",
         "//src/com/facebook/buck/core/description/arg:arg",
         "//src/com/facebook/buck/core/rules/modern:modern",

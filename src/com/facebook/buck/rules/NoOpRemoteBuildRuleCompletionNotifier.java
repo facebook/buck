@@ -15,6 +15,8 @@
  */
 package com.facebook.buck.rules;
 
+import com.facebook.buck.core.build.distributed.synchronization.RemoteBuildRuleCompletionNotifier;
+
 /** No-op implementation of RemoteBuildRuleCompletionNotifier interface */
 public class NoOpRemoteBuildRuleCompletionNotifier implements RemoteBuildRuleCompletionNotifier {
 

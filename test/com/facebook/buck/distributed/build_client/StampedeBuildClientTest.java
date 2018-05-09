@@ -40,6 +40,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.command.Build;
 import com.facebook.buck.command.LocalBuildExecutorInvoker;
+import com.facebook.buck.core.build.distributed.synchronization.RemoteBuildRuleCompletionWaiter;
 import com.facebook.buck.distributed.ClientStatsTracker;
 import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.ExitCode;
@@ -47,7 +48,6 @@ import com.facebook.buck.distributed.thrift.BuildStatus;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.rules.BuildEvent;
-import com.facebook.buck.rules.RemoteBuildRuleCompletionWaiter;
 import com.facebook.buck.rules.RemoteBuildRuleSynchronizer;
 import java.io.IOException;
 import java.util.Optional;

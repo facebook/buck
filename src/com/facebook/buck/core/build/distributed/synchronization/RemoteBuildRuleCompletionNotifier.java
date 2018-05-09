@@ -13,7 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.facebook.buck.rules;
+package com.facebook.buck.core.build.distributed.synchronization;
 
 /**
  * Used to notify the client of a remote build that a particular rule (or the entire build) has

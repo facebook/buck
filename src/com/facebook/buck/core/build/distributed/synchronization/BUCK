@@ -1,0 +1,10 @@
+java_library(
+    name = "synchronization",
+    srcs = glob(["*.java"]),
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//src/com/facebook/buck/rules:build_rule",
+    ],
+)

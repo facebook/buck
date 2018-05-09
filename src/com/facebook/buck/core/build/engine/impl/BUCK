@@ -17,6 +17,7 @@ java_library(
         "PUBLIC",
     ],
     deps = [
+        "//src/com/facebook/buck/core/build/distributed/synchronization:synchronization",
         "//src/com/facebook/buck/core/build/engine/cache/manager:manager",
         "//src/com/facebook/buck/core/build/engine/delegate:delegate",
         "//src/com/facebook/buck/event:event",
