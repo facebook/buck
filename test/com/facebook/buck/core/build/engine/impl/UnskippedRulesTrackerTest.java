@@ -23,6 +23,7 @@ import static org.hamcrest.Matchers.sameInstance;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.build.engine.RuleDepsCache;
+import com.facebook.buck.core.build.event.BuildEvent;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.event.AbstractBuckEvent;
@@ -31,7 +32,6 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.DefaultBuckEventBus;
 import com.facebook.buck.event.EventKey;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.BuildEvent.UnskippedRuleCountUpdated;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRule;
@@ -190,8 +190,8 @@ public class UnskippedRulesTrackerTest {
 
   private void assertReceivedEvent(int numRules) throws InterruptedException {
     BuckEvent event = events.take();
-    assertThat(event, is(instanceOf(UnskippedRuleCountUpdated.class)));
-    UnskippedRuleCountUpdated countEvent = (UnskippedRuleCountUpdated) event;
+    assertThat(event, is(instanceOf(BuildEvent.UnskippedRuleCountUpdated.class)));
+    BuildEvent.UnskippedRuleCountUpdated countEvent = (BuildEvent.UnskippedRuleCountUpdated) event;
     assertThat(countEvent.getNumRules(), is(equalTo(numRules)));
   }
 

@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
+package com.facebook.buck.core.build.event;
 
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.core.build.engine.BuildRuleStatus;
@@ -31,6 +31,11 @@ import com.facebook.buck.event.EventKey;
 import com.facebook.buck.event.RuleKeyCalculationEvent;
 import com.facebook.buck.event.WorkAdvanceEvent;
 import com.facebook.buck.log.views.JsonViews;
+import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleDiagnosticData;
+import com.facebook.buck.rules.BuildRuleDurationTracker;
+import com.facebook.buck.rules.NoopBuildRule;
+import com.facebook.buck.rules.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.keys.RuleKeyFactory;
 import com.facebook.buck.util.Scope;
 import com.facebook.buck.util.timing.ClockDuration;

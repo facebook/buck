@@ -17,9 +17,9 @@
 package com.facebook.buck.core.build.engine.impl;
 
 import com.facebook.buck.core.build.engine.RuleDepsCache;
+import com.facebook.buck.core.build.event.BuildEvent;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.HasRuntimeDeps;

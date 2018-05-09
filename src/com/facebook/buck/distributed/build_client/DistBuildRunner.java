@@ -16,6 +16,7 @@
 package com.facebook.buck.distributed.build_client;
 
 import com.facebook.buck.core.build.distributed.synchronization.impl.RemoteBuildRuleSynchronizer;
+import com.facebook.buck.core.build.event.BuildEvent;
 import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.ExitCode;
 import com.facebook.buck.distributed.StampedeLocalBuildStatusEvent;
@@ -23,7 +24,6 @@ import com.facebook.buck.distributed.thrift.BuildStatus;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.rules.BuildEvent;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;

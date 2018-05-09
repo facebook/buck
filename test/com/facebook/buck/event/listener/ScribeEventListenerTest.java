@@ -20,11 +20,11 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.config.FakeBuckConfig;
+import com.facebook.buck.core.build.event.BuildEvent;
+import com.facebook.buck.core.build.event.BuildEvent.Started;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.DefaultBuckEventBus;
-import com.facebook.buck.rules.BuildEvent;
-import com.facebook.buck.rules.BuildEvent.Started;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.network.FakeScribeLogger;
 import com.facebook.buck.util.timing.FakeClock;

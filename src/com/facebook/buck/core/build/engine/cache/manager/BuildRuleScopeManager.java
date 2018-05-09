@@ -25,6 +25,7 @@ import com.facebook.buck.core.build.engine.buildinfo.BuildInfo;
 import com.facebook.buck.core.build.engine.buildinfo.OnDiskBuildInfo;
 import com.facebook.buck.core.build.engine.manifest.ManifestFetchResult;
 import com.facebook.buck.core.build.engine.manifest.ManifestStoreResult;
+import com.facebook.buck.core.build.event.BuildRuleEvent;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.rulekey.BuildRuleKeys;
 import com.facebook.buck.core.rulekey.RuleKey;
@@ -34,8 +35,6 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleDiagnosticData;
 import com.facebook.buck.rules.BuildRuleDurationTracker;
-import com.facebook.buck.rules.BuildRuleEvent;
-import com.facebook.buck.rules.BuildRuleEvent.Resumed;
 import com.facebook.buck.rules.keys.RuleKeyDiagnostics;
 import com.facebook.buck.rules.keys.RuleKeyFactories;
 import com.facebook.buck.rules.keys.RuleKeyFactoryWithDiagnostics;
@@ -101,7 +100,7 @@ public class BuildRuleScopeManager {
         Preconditions.checkState(Thread.currentThread() == currentBuildRuleScopeThread);
         return () -> {};
       }
-      Resumed resumed = postResumed();
+      BuildRuleEvent.Resumed resumed = postResumed();
       currentBuildRuleScopeThread = Thread.currentThread();
       return () -> {
         synchronized (this) {

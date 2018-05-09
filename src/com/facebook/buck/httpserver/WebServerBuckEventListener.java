@@ -16,6 +16,7 @@
 
 package com.facebook.buck.httpserver;
 
+import com.facebook.buck.core.build.event.BuildEvent;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.test.event.IndividualTestEvent;
 import com.facebook.buck.core.test.event.TestRunEvent;
@@ -28,7 +29,6 @@ import com.facebook.buck.event.ProgressEvent;
 import com.facebook.buck.event.ProjectGenerationEvent;
 import com.facebook.buck.event.listener.CacheRateStatsKeeper;
 import com.facebook.buck.parser.ParseEvent;
-import com.facebook.buck.rules.BuildEvent;
 import com.google.common.eventbus.Subscribe;
 
 /**

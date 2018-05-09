@@ -16,6 +16,8 @@
 
 package com.facebook.buck.distributed.build_client;
 
+import com.facebook.buck.core.build.event.BuildEvent;
+import com.facebook.buck.core.build.event.BuildEvent.DistBuildStarted;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rulekey.calculator.ParallelRuleKeyCalculator;
 import com.facebook.buck.distributed.DistBuildService;
@@ -30,8 +32,6 @@ import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.InvocationInfo;
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.rules.BuildEvent;
-import com.facebook.buck.rules.BuildEvent.DistBuildStarted;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.types.Pair;

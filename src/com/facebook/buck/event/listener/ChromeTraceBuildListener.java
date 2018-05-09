@@ -18,6 +18,8 @@ package com.facebook.buck.event.listener;
 
 import com.facebook.buck.artifact_cache.ArtifactCacheConnectEvent;
 import com.facebook.buck.artifact_cache.ArtifactCacheEvent;
+import com.facebook.buck.core.build.event.BuildEvent;
+import com.facebook.buck.core.build.event.BuildRuleEvent;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.test.event.TestSummaryEvent;
@@ -47,9 +49,7 @@ import com.facebook.buck.log.InvocationInfo;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.parser.ParseEvent;
 import com.facebook.buck.parser.events.ParseBuckFileEvent;
-import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleEvent;
 import com.facebook.buck.step.StepEvent;
 import com.facebook.buck.test.external.ExternalTestRunEvent;
 import com.facebook.buck.test.external.ExternalTestSpecCalculationEvent;
