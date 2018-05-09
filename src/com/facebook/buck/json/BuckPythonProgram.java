@@ -22,6 +22,7 @@ import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.BuckPyFunction;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.DescriptionCache;
 import com.facebook.buck.rules.coercer.CoercedTypeCache;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.Escaper;
@@ -129,7 +130,8 @@ class BuckPythonProgram implements AutoCloseable {
         try {
           out.write(
               function.toPythonFunction(
-                  Description.getBuildRuleType(description), description.getConstructorArgType()));
+                  DescriptionCache.getBuildRuleType(description),
+                  description.getConstructorArgType()));
           out.write('\n');
         } catch (RuntimeException e) {
           throw new BuckUncheckedExecutionException(

@@ -55,6 +55,7 @@ import com.facebook.buck.rules.BuildRuleCreationContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.DescriptionCache;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.args.Arg;
@@ -144,7 +145,7 @@ public class PrebuiltCxxLibraryDescription
             "%s(%s) uses the deprecated API, but `cxx.enable_deprecated_prebuilt_cxx_library_api` "
                 + "isn't set.  Please see the `prebuilt_cxx_library` documentation for details and "
                 + "examples on how to port to the new API.",
-            Description.getBuildRuleType(this).toString(), target);
+            DescriptionCache.getBuildRuleType(this).toString(), target);
       }
       return DeprecatedPrebuiltCxxLibraryPaths.builder()
           .setTarget(target)

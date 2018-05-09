@@ -38,6 +38,7 @@ import com.facebook.buck.rules.BuildRuleCreationContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.DescriptionCache;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
@@ -317,7 +318,7 @@ public class JsLibraryDescription
                 + "dependencies, '%s', is of type %s.",
             baseTarget,
             target,
-            Description.getBuildRuleType(targetGraph.get(target).getDescription()).getName());
+            DescriptionCache.getBuildRuleType(targetGraph.get(target).getDescription()).getName());
       }
 
       return (JsLibrary) rule;

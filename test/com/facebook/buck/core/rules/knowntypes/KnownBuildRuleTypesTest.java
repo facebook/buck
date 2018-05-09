@@ -45,6 +45,7 @@ import com.facebook.buck.rules.BuildRuleCreationContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.DescriptionCache;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TestBuildRuleCreationContextFactory;
 import com.facebook.buck.rules.TestBuildRuleParams;
@@ -135,7 +136,7 @@ public class KnownBuildRuleTypesTest {
     JavaLibraryDescription description =
         (JavaLibraryDescription)
             buildRuleTypes.getDescription(
-                Description.getBuildRuleType(JavaLibraryDescription.class));
+                DescriptionCache.getBuildRuleType(JavaLibraryDescription.class));
 
     JavaLibraryDescriptionArg arg = JavaLibraryDescriptionArg.builder().setName("foo").build();
     BuildRuleResolver resolver = new TestBuildRuleResolver();

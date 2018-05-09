@@ -53,7 +53,7 @@ import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.DescriptionCache;
 import com.facebook.buck.rules.HasInstallHelpers;
 import com.facebook.buck.rules.InstallTrigger;
 import com.facebook.buck.rules.NoopInstallable;
@@ -380,8 +380,8 @@ public class InstallCommand extends BuildCommand {
                   target);
 
       if (node != null
-          && Description.getBuildRuleType(node.getDescription())
-              .equals(Description.getBuildRuleType(AppleBundleDescription.class))) {
+          && DescriptionCache.getBuildRuleType(node.getDescription())
+              .equals(DescriptionCache.getBuildRuleType(AppleBundleDescription.class))) {
         for (Flavor flavor : node.getBuildTarget().getFlavors()) {
           if (ApplePlatform.needsInstallHelper(flavor.getName())) {
             AppleConfig appleConfig = params.getBuckConfig().getView(AppleConfig.class);

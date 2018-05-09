@@ -62,6 +62,7 @@ import com.facebook.buck.rules.BuildRuleCreationContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.DescriptionCache;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.MetadataProvidingDescription;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -513,7 +514,7 @@ public class AppleTestDescription
           buildTarget,
           testHostKeyName,
           testHostBuildTarget,
-          Description.getBuildRuleType(AppleBundleDescription.class));
+          DescriptionCache.getBuildRuleType(AppleBundleDescription.class));
     }
     return (AppleBundle) rule;
   }

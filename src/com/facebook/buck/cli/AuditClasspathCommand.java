@@ -30,7 +30,7 @@ import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.rules.ActionGraphCache;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.DescriptionCache;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphAndBuildTargets;
@@ -156,7 +156,8 @@ public class AuditClasspathCommand extends AbstractCommand {
           .setNodeToName(
               targetNode -> "\"" + targetNode.getBuildTarget().getFullyQualifiedName() + "\"")
           .setNodeToTypeName(
-              targetNode -> Description.getBuildRuleType(targetNode.getDescription()).getName())
+              targetNode ->
+                  DescriptionCache.getBuildRuleType(targetNode.getDescription()).getName())
           .build()
           .writeOutput(params.getConsole().getStdOut());
     } catch (IOException e) {

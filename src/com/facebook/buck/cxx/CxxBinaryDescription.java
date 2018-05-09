@@ -30,6 +30,7 @@ import com.facebook.buck.rules.BuildRuleCreationContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.DescriptionCache;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.ImplicitFlavorsInferringDescription;
 import com.facebook.buck.rules.MetadataProvidingDescription;
@@ -136,7 +137,7 @@ public class CxxBinaryDescription
   public ImmutableSortedSet<Flavor> addImplicitFlavors(
       ImmutableSortedSet<Flavor> argDefaultFlavors) {
     return cxxBinaryImplicitFlavors.addImplicitFlavorsForRuleTypes(
-        argDefaultFlavors, Description.getBuildRuleType(this));
+        argDefaultFlavors, DescriptionCache.getBuildRuleType(this));
   }
 
   @Override

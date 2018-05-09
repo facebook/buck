@@ -47,7 +47,7 @@ import com.facebook.buck.query.QueryExpression;
 import com.facebook.buck.query.QueryFileTarget;
 import com.facebook.buck.query.QueryTarget;
 import com.facebook.buck.query.QueryTargetAccessor;
-import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.DescriptionCache;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TargetNodes;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
@@ -500,7 +500,7 @@ public class BuckQueryEnvironment implements QueryEnvironment {
 
   @Override
   public String getTargetKind(QueryTarget target) throws QueryException {
-    return Description.getBuildRuleType(getNode(target).getDescription()).getName();
+    return DescriptionCache.getBuildRuleType(getNode(target).getDescription()).getName();
   }
 
   @Override

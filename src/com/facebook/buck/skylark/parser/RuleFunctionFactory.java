@@ -17,6 +17,7 @@
 package com.facebook.buck.skylark.parser;
 
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.DescriptionCache;
 import com.facebook.buck.rules.coercer.CoercedTypeCache;
 import com.facebook.buck.rules.coercer.ParamInfo;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
@@ -68,7 +69,7 @@ public class RuleFunctionFactory {
    * @return Skylark function to handle the Buck rule.
    */
   BuiltinFunction create(Description<?> ruleClass) {
-    String name = Description.getBuildRuleType(ruleClass).getName();
+    String name = DescriptionCache.getBuildRuleType(ruleClass).getName();
     return new BuiltinFunction(
         name, FunctionSignature.KWARGS, BuiltinFunction.USE_AST_ENV, /*isRule=*/ true) {
 

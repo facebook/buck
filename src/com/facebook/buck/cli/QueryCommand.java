@@ -31,7 +31,7 @@ import com.facebook.buck.query.QueryBuildTarget;
 import com.facebook.buck.query.QueryException;
 import com.facebook.buck.query.QueryExpression;
 import com.facebook.buck.query.QueryTarget;
-import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.DescriptionCache;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.util.CommandLineException;
@@ -315,7 +315,8 @@ public class QueryCommand extends AbstractCommand {
             .setNodesToFilter(env.getNodesFromQueryTargets(queryResult)::contains)
             .setNodeToName(targetNode -> targetNode.getBuildTarget().getFullyQualifiedName())
             .setNodeToTypeName(
-                targetNode -> Description.getBuildRuleType(targetNode.getDescription()).getName())
+                targetNode ->
+                    DescriptionCache.getBuildRuleType(targetNode.getDescription()).getName())
             .setBfsSorted(shouldGenerateBFSOutput());
     if (shouldOutputAttributes()) {
       PatternsMatcher patternsMatcher = new PatternsMatcher(outputAttributes.get());

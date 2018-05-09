@@ -21,6 +21,7 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.rules.BuildRuleType;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.DescriptionCache;
 import com.facebook.buck.rules.DescriptionCreationContext;
 import com.facebook.buck.rules.DescriptionProvider;
 import com.facebook.buck.sandbox.SandboxExecutionStrategy;
@@ -49,8 +50,8 @@ abstract class AbstractKnownBuildRuleTypes {
   protected void check() {
     Set<BuildRuleType> types = new HashSet<>();
     for (Description<?> description : getDescriptions()) {
-      BuildRuleType type = Description.getBuildRuleType(description);
-      if (!types.add(Description.getBuildRuleType(description))) {
+      BuildRuleType type = DescriptionCache.getBuildRuleType(description);
+      if (!types.add(DescriptionCache.getBuildRuleType(description))) {
         throw new IllegalStateException(String.format("multiple descriptions with type %s", type));
       }
     }
@@ -60,14 +61,14 @@ abstract class AbstractKnownBuildRuleTypes {
   protected ImmutableMap<BuildRuleType, Description<?>> getDescriptionsByType() {
     return getDescriptions()
         .stream()
-        .collect(ImmutableMap.toImmutableMap(Description::getBuildRuleType, d -> d));
+        .collect(ImmutableMap.toImmutableMap(DescriptionCache::getBuildRuleType, d -> d));
   }
 
   @Value.Lazy
   protected ImmutableMap<String, BuildRuleType> getTypesByName() {
     return getDescriptions()
         .stream()
-        .map(Description::getBuildRuleType)
+        .map(DescriptionCache::getBuildRuleType)
         .collect(ImmutableMap.toImmutableMap(BuildRuleType::getName, t -> t));
   }
 
