@@ -226,7 +226,8 @@ public class CacheCommand extends AbstractCommand {
           params
               .getConsole()
               .printErrorText(
-                  String.format("Failed to retrieve an artifact with id %s.", r.ruleKey));
+                  String.format(
+                      "Failed to retrieve an artifact with id %s (%s).", r.ruleKey, r.cacheResult));
         }
       }
     }
@@ -266,7 +267,7 @@ public class CacheCommand extends AbstractCommand {
 
   private String cacheResultToString(CacheResult cacheResult) {
     CacheResultType type = cacheResult.getType();
-    String typeString = type.toString();
+    String typeString = type.toString().toLowerCase();
     switch (type) {
       case ERROR:
         return String.format("%s %s", typeString, cacheResult.getCacheError());

@@ -147,7 +147,7 @@ public class CacheCommandTest {
     assertEquals(ExitCode.BUILD_ERROR, exitCode);
     assertThat(
         console.getTextWrittenToStdErr(),
-        containsString("Failed to retrieve an artifact with id " + ruleKeyHash + "."));
+        containsString("Failed to retrieve an artifact with id " + ruleKeyHash + " (miss)."));
   }
 
   @Test
