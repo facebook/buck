@@ -20,6 +20,7 @@ import com.facebook.buck.command.BuildExecutor;
 import com.facebook.buck.command.BuildExecutorArgs;
 import com.facebook.buck.command.LocalBuildExecutor;
 import com.facebook.buck.core.build.distributed.synchronization.impl.NoOpRemoteBuildRuleCompletionWaiter;
+import com.facebook.buck.core.build.engine.impl.DefaultRuleDepsCache;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.RuleKey;
@@ -33,7 +34,6 @@ import com.facebook.buck.distributed.thrift.SchedulingEnvironmentType;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.rules.ParallelRuleKeyCalculator;
-import com.facebook.buck.rules.RuleDepsCache;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.RuleKeyFieldLoader;
@@ -126,7 +126,7 @@ public class DistBuildSlaveExecutor {
                             ruleFinder,
                             args.getRuleKeyCacheScope().getCache(),
                             Optional.empty()),
-                        new RuleDepsCache(graphs.getActionGraphAndResolver().getResolver()),
+                        new DefaultRuleDepsCache(graphs.getActionGraphAndResolver().getResolver()),
                         (buckEventBus, rule) -> () -> {});
                   },
                   MoreExecutors.directExecutor()),

@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
+package com.facebook.buck.core.build.engine.impl;
 
 import com.google.common.util.concurrent.ListenableFuture;
 

@@ -16,8 +16,8 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.core.build.engine.impl.MetadataChecker;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.rules.MetadataChecker;
 import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ExitCode;

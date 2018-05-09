@@ -14,10 +14,16 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
+package com.facebook.buck.core.build.engine.impl;
 
+import com.facebook.buck.core.build.engine.RuleDepsCache;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.rules.BuildEvent;
+import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.HasRuntimeDeps;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;

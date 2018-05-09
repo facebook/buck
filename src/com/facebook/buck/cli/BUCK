@@ -127,7 +127,7 @@ java_immutables_library(
         "//src/com/facebook/buck/rules/modern/config:config",
         "//src/com/facebook/buck/rules/query:types",
         "//src/com/facebook/buck/rules:cli",
-        #"//src/com/facebook/buck/rules:rules",
+        "//src/com/facebook/buck/rules:rules",
         "//src/com/facebook/buck/core/cell:cell",
         "//src/com/facebook/buck/shell:rules",
         "//src/com/facebook/buck/shell:steps",

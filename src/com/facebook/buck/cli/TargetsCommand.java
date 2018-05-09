@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.core.build.engine.impl.DefaultRuleDepsCache;
 import com.facebook.buck.core.description.arg.HasTests;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
@@ -52,7 +53,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ParallelRuleKeyCalculator;
-import com.facebook.buck.rules.RuleDepsCache;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphAndBuildTargets;
@@ -922,7 +922,7 @@ public class TargetsCommand extends AbstractCommand {
                             ruleFinder,
                             ruleKeyCacheScope.getCache(),
                             Optional.ofNullable(ruleKeyLogger)),
-                        new RuleDepsCache(buildRuleResolver.get()),
+                        new DefaultRuleDepsCache(buildRuleResolver.get()),
                         (eventBus, rule) -> () -> {}));
           }
         }

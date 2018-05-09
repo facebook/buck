@@ -14,8 +14,13 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
+package com.facebook.buck.core.build.engine.impl;
 
+import com.facebook.buck.core.build.engine.RuleDepsCache;
+import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.HasRuntimeDeps;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.collect.SortedSets;
 import com.google.common.collect.ImmutableSortedSet;
@@ -24,19 +29,20 @@ import java.util.SortedSet;
 import java.util.concurrent.ConcurrentHashMap;
 
 /** A cache of rule deps. */
-public class RuleDepsCache {
+public class DefaultRuleDepsCache implements RuleDepsCache {
   private final Map<BuildRule, SortedSet<BuildRule>> allDepsCache;
   private final Map<BuildRule, SortedSet<BuildRule>> runtimeDepsCache;
   private final BuildRuleResolver resolver;
   private final SourcePathRuleFinder ruleFinder;
 
-  public RuleDepsCache(BuildRuleResolver resolver) {
+  public DefaultRuleDepsCache(BuildRuleResolver resolver) {
     this.resolver = resolver;
     this.ruleFinder = new SourcePathRuleFinder(resolver);
     this.allDepsCache = new ConcurrentHashMap<>();
     this.runtimeDepsCache = new ConcurrentHashMap<>();
   }
 
+  @Override
   public SortedSet<BuildRule> get(BuildRule rule) {
     return allDepsCache.computeIfAbsent(rule, this::computeDeps);
   }
@@ -45,6 +51,7 @@ public class RuleDepsCache {
     return SortedSets.union(rule.getBuildDeps(), getRuntimeDeps(rule));
   }
 
+  @Override
   public SortedSet<BuildRule> getRuntimeDeps(BuildRule rule) {
     return runtimeDepsCache.computeIfAbsent(rule, this::computeRuntimeDeps);
   }

@@ -34,6 +34,7 @@ import com.facebook.buck.core.build.distributed.synchronization.impl.NoOpRemoteB
 import com.facebook.buck.core.build.engine.cache.manager.BuildInfoStoreManager;
 import com.facebook.buck.core.build.engine.delegate.CachingBuildEngineDelegate;
 import com.facebook.buck.core.build.engine.delegate.LocalCachingBuildEngineDelegate;
+import com.facebook.buck.core.build.engine.impl.DefaultRuleDepsCache;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.RuleKey;
@@ -72,7 +73,6 @@ import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.ActionGraphAndResolver;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.ParallelRuleKeyCalculator;
-import com.facebook.buck.rules.RuleDepsCache;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphAndBuildTargets;
@@ -292,7 +292,7 @@ public class BuildPhaseTest {
                     new TrackedRuleKeyCache<RuleKey>(
                         new DefaultRuleKeyCache<>(), new NoOpCacheStatsTracker()),
                     Optional.empty()),
-                new RuleDepsCache(graphs.getActionGraphAndResolver().getResolver()),
+                new DefaultRuleDepsCache(graphs.getActionGraphAndResolver().getResolver()),
                 (buckEventBus, rule) -> () -> {})));
 
     verify(mockDistBuildService);
