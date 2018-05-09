@@ -16,11 +16,13 @@
 
 package com.facebook.buck.cxx;
 
-import static org.easymock.EasyMock.createMock;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.rules.SourcePathRuleFinder;
+import com.facebook.buck.rules.TestBuildRuleResolver;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.step.ExecutionContext;
@@ -84,10 +86,11 @@ public class CxxWriteArgsToFileStepTest {
       throws IOException, InterruptedException {
     ExecutionContext context = TestExecutionContext.newInstance();
 
-    // Create our CxxWriteArgsToFileStep to test.
+    SourcePathResolver sourcePathResolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(new TestBuildRuleResolver()));
     CxxWriteArgsToFileStep step =
         CxxWriteArgsToFileStep.create(
-            argFilePath, inputArgs, escaper, currentCellPath, createMock(SourcePathResolver.class));
+            argFilePath, inputArgs, escaper, currentCellPath, sourcePathResolver);
 
     step.execute(context);
 
