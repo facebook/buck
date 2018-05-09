@@ -18,10 +18,10 @@ package com.facebook.buck.core.build.engine.impl;
 
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.engine.BuildResult;
+import com.facebook.buck.core.rules.pipeline.RulePipelineState;
+import com.facebook.buck.core.rules.pipeline.SupportsPipelining;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.RulePipelineState;
 import com.facebook.buck.rules.RunnableWithFuture;
-import com.facebook.buck.rules.SupportsPipelining;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;

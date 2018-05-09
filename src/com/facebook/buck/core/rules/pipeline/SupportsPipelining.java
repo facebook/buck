@@ -14,10 +14,11 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
+package com.facebook.buck.core.rules.pipeline;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableList;
 import javax.annotation.Nullable;

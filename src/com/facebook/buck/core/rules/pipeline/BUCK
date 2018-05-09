@@ -1,0 +1,16 @@
+java_library(
+    name = "pipeline",
+    srcs = glob(["*.java"]),
+    exported_deps = [
+        "//src/com/facebook/buck/core/build/engine:engine",
+        "//src/com/facebook/buck/core/model:model",
+        "//src/com/facebook/buck/rules:build_rule",
+        "//src/com/facebook/buck/step:step",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//third-party/java/jsr:jsr305",
+    ],
+)

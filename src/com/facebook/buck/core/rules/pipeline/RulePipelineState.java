@@ -14,11 +14,18 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
+package com.facebook.buck.core.rules.pipeline;
 
-import com.facebook.buck.core.build.context.BuildContext;
-import com.facebook.buck.core.model.BuildTarget;
-
-public interface RulePipelineStateFactory<T extends RulePipelineState> {
-  T newInstance(BuildContext context, BuildTarget firstTarget);
+/**
+ * When {@link com.facebook.buck.core.rules.pipeline.SupportsPipelining} rules are built locally,
+ * each is given an instance of a class that implements this interface. The rules in the pipeline
+ * share build state through that object.
+ */
+public interface RulePipelineState extends AutoCloseable {
+  /**
+   * Called after the pipeline is done (either through success or failure partway through) to
+   * release resources.
+   */
+  @Override
+  void close();
 }
