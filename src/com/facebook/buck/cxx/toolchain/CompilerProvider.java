@@ -46,6 +46,8 @@ public class CompilerProvider extends CxxToolProvider<Compiler> {
         return new GccCompiler(tool);
       case WINDOWS:
         return new WindowsCompiler(tool);
+      case WINDOWS_ML64:
+        return new WindowsMl64Compiler(tool);
     }
     throw new IllegalStateException();
   }

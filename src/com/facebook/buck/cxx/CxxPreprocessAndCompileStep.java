@@ -160,13 +160,13 @@ class CxxPreprocessAndCompileStep implements Step {
         .addAll(
             sanitizer.getCompilationFlags(
                 compiler, filesystem.getRootPath(), headerPathNormalizer.getPrefixMap()))
+        .addAll(compiler.outputArgs(output.toString()))
         .add("-c")
         .addAll(
             depFile
                 .map(depFile -> compiler.outputDependenciesArgs(depFile.toString()))
                 .orElseGet(ImmutableList::of))
         .add(input.toString())
-        .addAll(compiler.outputArgs(output.toString()))
         .build();
   }
 

@@ -373,9 +373,9 @@ public class CxxPreprocessAndCompileTest {
             .add("-x", "c++")
             .add("-ffunction-sections")
             .add("-O3")
+            .add("-o", "buck-out/gen/foo/bar__/test.o")
             .add("-c")
             .add(input.toString())
-            .add("-o", "buck-out/gen/foo/bar__/test.o")
             .build();
     ImmutableList<String> actualCompileCommand =
         buildRule.makeMainStep(pathResolver, false).getCommand();
