@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
+package com.facebook.buck.core.build.engine;
 
 /**
  * Used for running a BuildExecutor within the context of the build engine such that the engine's

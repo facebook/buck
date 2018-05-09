@@ -24,10 +24,10 @@ import com.facebook.buck.core.build.engine.delegate.LocalCachingBuildEngineDeleg
 import com.facebook.buck.core.build.engine.type.BuildType;
 import com.facebook.buck.core.build.engine.type.DepFiles;
 import com.facebook.buck.core.build.engine.type.MetadataStorage;
+import com.facebook.buck.core.rules.build.strategy.BuildRuleStrategy;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleStrategy;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.keys.DefaultRuleKeyCache;
 import com.facebook.buck.rules.keys.RuleKeyDiagnostics;
