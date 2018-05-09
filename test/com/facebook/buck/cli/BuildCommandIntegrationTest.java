@@ -248,8 +248,7 @@ public class BuildCommandIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "multiple_cell_build", tmp);
     workspace.setUp();
     ProcessResult runBuckResult =
-        workspace.runBuckBuild(
-            "//main/...", "-c", "project.embedded_cell_buck_out_enabled=true", "//main/...");
+        workspace.runBuckBuild("-c", "project.embedded_cell_buck_out_enabled=true", "//main/...");
     runBuckResult.assertSuccess();
 
     assertTrue(Files.exists(workspace.getPath("buck-out/cells/cxx")));
