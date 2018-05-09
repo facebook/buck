@@ -1,0 +1,16 @@
+java_library(
+    name = "impl",
+    srcs = glob(["*.java"]),
+    exported_deps = [
+        "//src/com/facebook/buck/core/build/distributed/synchronization:synchronization",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//src/com/facebook/buck/log:api",
+        "//src/com/facebook/buck/rules:build_rule",
+        "//third-party/java/guava:guava",
+        "//third-party/java/jsr:jsr305",
+    ],
+)

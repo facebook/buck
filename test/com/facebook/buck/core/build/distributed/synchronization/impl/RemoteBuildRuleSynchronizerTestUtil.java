@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
+package com.facebook.buck.core.build.distributed.synchronization.impl;
 
 /** Exposes test specific utility methods */
 public class RemoteBuildRuleSynchronizerTestUtil {
