@@ -17,8 +17,7 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.core.rules.BuildRuleType;
-import com.facebook.buck.util.MoreStrings;
-import com.google.common.base.CaseFormat;
+import com.facebook.buck.core.rules.impl.BuildRuleTypeFactory;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -32,7 +31,7 @@ public class DescriptionCache {
                   new CacheLoader<Class<? extends Description<?>>, BuildRuleType>() {
                     @Override
                     public BuildRuleType load(Class<? extends Description<?>> key) {
-                      return getBuildRuleType(key.getSimpleName());
+                      return BuildRuleTypeFactory.fromClassName(key);
                     }
                   });
 
@@ -44,14 +43,5 @@ public class DescriptionCache {
   @SuppressWarnings("unchecked")
   public static BuildRuleType getBuildRuleType(Description<?> description) {
     return getBuildRuleType((Class<? extends Description<?>>) description.getClass());
-  }
-
-  private static BuildRuleType getBuildRuleType(String descriptionClassName) {
-    descriptionClassName =
-        MoreStrings.stripPrefix(descriptionClassName, "Abstract").orElse(descriptionClassName);
-    descriptionClassName =
-        MoreStrings.stripSuffix(descriptionClassName, "Description").orElse(descriptionClassName);
-    return BuildRuleType.of(
-        CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, descriptionClassName));
   }
 }
