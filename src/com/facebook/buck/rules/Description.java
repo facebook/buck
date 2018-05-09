@@ -18,6 +18,7 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
+import com.facebook.buck.core.rules.BuildRuleType;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.util.MoreStrings;
 import com.google.common.base.CaseFormat;

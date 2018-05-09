@@ -17,9 +17,9 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.model.Flavor;
+import com.facebook.buck.core.rules.BuildRuleType;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
