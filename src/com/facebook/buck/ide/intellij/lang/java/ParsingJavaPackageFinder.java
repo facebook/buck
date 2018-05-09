@@ -59,25 +59,76 @@ public abstract class ParsingJavaPackageFinder {
       ImmutableSet<Path> filesToParse,
       JavaPackageFinder fallbackPackageFinder) {
     JavaPackagePathCache packagePathCache = new JavaPackagePathCache();
+    PackagePathResolver packagePathResolver =
+        new PackagePathResolver(javaFileParser, projectFilesystem);
     for (Path path : ImmutableSortedSet.copyOf(new PathComponentCountOrder(), filesToParse)) {
+      packagePathResolver
+          .getPackagePathFromSource(path)
+          .ifPresent(javaPackagePath -> packagePathCache.insert(path, javaPackagePath));
+    }
+    return new CacheBasedPackageFinder(fallbackPackageFinder, packagePathCache);
+  }
+
+  /**
+   * Convenience class containing logic for dealing with Java package directory structures and
+   * package paths.
+   */
+  public static class PackagePathResolver {
+    private final JavaFileParser javaFileParser;
+    private final ProjectFilesystem projectFilesystem;
+
+    /**
+     * @param javaFileParser parser to read Java sources with.
+     * @param projectFilesystem filesystem.
+     */
+    public PackagePathResolver(JavaFileParser javaFileParser, ProjectFilesystem projectFilesystem) {
+      this.javaFileParser = javaFileParser;
+      this.projectFilesystem = projectFilesystem;
+    }
+
+    /**
+     * Tries to return the package path from a Java source file. Returns empty if the file could not
+     * be parsed.
+     *
+     * @param sourcePath path to the java source file.
+     * @return the parsed path.
+     */
+    public Optional<Path> getPackagePathFromSource(Path sourcePath) {
       // Try to read a small subset of the file to extract just the package line
       Optional<String> packageNameFromSource =
           Optionals.bind(
-              getPackageSourceLineIfFileExists(path, projectFilesystem),
+              getPackageSourceLineIfFileExists(sourcePath, projectFilesystem),
               javaFileParser::getPackageNameFromSource);
       // Fall back to parsing the whole file
       if (!packageNameFromSource.isPresent()) {
         packageNameFromSource =
             Optionals.bind(
-                projectFilesystem.readFileIfItExists(path),
+                projectFilesystem.readFileIfItExists(sourcePath),
                 javaFileParser::getPackageNameFromSource);
       }
-      if (packageNameFromSource.isPresent()) {
-        Path javaPackagePath = findPackageFolderWithJavaPackage(packageNameFromSource.get());
-        packagePathCache.insert(path, javaPackagePath);
-      }
+      return packageNameFromSource.map(ParsingJavaPackageFinder::findPackageFolderWithJavaPackage);
     }
-    return new CacheBasedPackageFinder(fallbackPackageFinder, packagePathCache);
+
+    /**
+     * Given a file at `a/b/c/D.java`, and full name of the class is `b.c.D`, the source root for
+     * that file is `a`. Returns empty if either the file could not be parsed or the directory
+     * structure does not match the package.
+     *
+     * @param sourcePath path to the java source file.
+     * @return the path to source root.
+     */
+    public Optional<Path> getSourceRootFromSource(Path sourcePath) {
+      Path normalizedSourcePath = sourcePath.normalize();
+      Path sourceDirectoryPath = normalizedSourcePath.getParent();
+      return getPackagePathFromSource(normalizedSourcePath)
+          .flatMap(
+              packagePath ->
+                  sourceDirectoryPath.endsWith(packagePath)
+                      ? Optional.of(
+                          sourceDirectoryPath.subpath(
+                              0, sourceDirectoryPath.getNameCount() - packagePath.getNameCount()))
+                      : Optional.empty());
+    }
   }
 
   private static Optional<String> getPackageSourceLineIfFileExists(
