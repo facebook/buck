@@ -14,10 +14,12 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
+package com.facebook.buck.core.build.stats;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.util.timing.ClockDuration;
 import org.junit.Test;
 

@@ -1,0 +1,16 @@
+java_library(
+    name = "stats",
+    srcs = glob(["*.java"]),
+    exported_deps = [
+        "//src/com/facebook/buck/core/model:model",
+        "//src/com/facebook/buck/rules:build_rule",
+        "//src/com/facebook/buck/rules/keys:keys",
+        "//src/com/facebook/buck/util/timing:timing",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//third-party/java/guava:guava",
+    ],
+)
