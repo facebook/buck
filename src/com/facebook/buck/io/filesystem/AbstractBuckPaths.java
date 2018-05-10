@@ -121,4 +121,8 @@ abstract class AbstractBuckPaths {
   public Path getEmbeddedCellsBuckOutBaseDir() {
     return getBuckOut().resolve("cells");
   }
+
+  public Path getSymlinkPathForDir(Path unconfiguredDirInBuckOut) {
+    return getConfiguredBuckOut().resolve(getBuckOut().relativize(unconfiguredDirInBuckOut));
+  }
 }

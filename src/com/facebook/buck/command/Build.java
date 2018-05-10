@@ -181,8 +181,10 @@ public class Build implements Closeable {
             configuredPaths.withConfiguredBuckOut(configuredPaths.getBuckOut());
         ImmutableMap<Path, Path> paths =
             ImmutableMap.of(
-                unconfiguredPaths.getGenDir(), configuredPaths.getGenDir(),
-                unconfiguredPaths.getScratchDir(), configuredPaths.getScratchDir());
+                unconfiguredPaths.getGenDir(),
+                    configuredPaths.getSymlinkPathForDir(unconfiguredPaths.getGenDir()),
+                unconfiguredPaths.getScratchDir(),
+                    configuredPaths.getSymlinkPathForDir(unconfiguredPaths.getScratchDir()));
         for (Map.Entry<Path, Path> entry : paths.entrySet()) {
           filesystem.deleteRecursivelyIfExists(entry.getKey());
           filesystem.createSymLink(
