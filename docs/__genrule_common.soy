@@ -114,8 +114,9 @@
 {call buck.arg}
   {param name: 'out' /}
   {param desc}
-   The name of the output file or directory. Must be unique within the build file
-   in which the <code>genrule()</code> is declared.
+   The name of the output file or directory. The complete path to this
+   argument is provided to the shell command through 
+   the <code>OUT</code> environment variable.
   {/param}
 {/call}
 {/template}
