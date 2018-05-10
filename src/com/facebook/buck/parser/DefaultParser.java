@@ -471,17 +471,8 @@ public class DefaultParser implements Parser {
       throws BuildFileParseException, InterruptedException, IOException {
 
     ParserConfig parserConfig = rootCell.getBuckConfig().getView(ParserConfig.class);
-
-    ParserConfig.BuildFileSearchMethod buildFileSearchMethod;
-    if (parserConfig.getBuildFileSearchMethod().isPresent()) {
-      buildFileSearchMethod = parserConfig.getBuildFileSearchMethod().get();
-    } else if (parserConfig.getAllowSymlinks() == ParserConfig.AllowSymlinks.FORBID) {
-      // If unspecified, only use Watchman in repositories which enforce a "no symlinks" rule
-      // (Watchman doesn't follow symlinks).
-      buildFileSearchMethod = ParserConfig.BuildFileSearchMethod.WATCHMAN;
-    } else {
-      buildFileSearchMethod = ParserConfig.BuildFileSearchMethod.FILESYSTEM_CRAWL;
-    }
+    ParserConfig.BuildFileSearchMethod buildFileSearchMethod =
+        parserConfig.getBuildFileSearchMethod();
 
     // Convert the input spec iterable into a list so we have a fixed ordering, which we'll rely on
     // when returning results.
