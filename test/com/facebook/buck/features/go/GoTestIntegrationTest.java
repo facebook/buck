@@ -56,10 +56,16 @@ public class GoTestIntegrationTest {
     // This test should fail.
     ProcessResult result2 = workspace.runBuckCommand("test", "//:test-failure");
     result2.assertTestFailure();
+
     assertThat(
         "`buck test` should fail because TestAdd2() failed.",
         result2.getStderr(),
         containsString("TestAdd2"));
+    assertThat(
+        "`buck test` should print out error message",
+        result2.getStderr(),
+        containsString("1 + 2 != 3")
+    );
   }
 
   @Test
@@ -106,6 +112,11 @@ public class GoTestIntegrationTest {
         "`buck test` should fail because TestPanic() failed.",
         result2.getStderr(),
         containsString("TestPanic"));
+    assertThat(
+        "`buck test` should print out the error message",
+        result2.getStderr(),
+        containsString("I can't take it anymore")
+    );
   }
 
   @Test
