@@ -22,17 +22,18 @@ import com.facebook.buck.model.BuildTargets;
 import java.nio.file.Path;
 
 class DefaultOutputPathResolver implements OutputPathResolver {
-  private final ProjectFilesystem filesystem;
-  private final BuildTarget buildTarget;
+  private final Path scratchRoot;
+  private final Path genRoot;
 
   DefaultOutputPathResolver(ProjectFilesystem projectFilesystem, BuildTarget buildTarget) {
-    this.filesystem = projectFilesystem;
-    this.buildTarget = buildTarget;
+    String format = buildTarget.isFlavored() ? "%s" : "%s__";
+    this.scratchRoot = BuildTargets.getScratchPath(projectFilesystem, buildTarget, format);
+    this.genRoot = BuildTargets.getGenPath(projectFilesystem, buildTarget, format);
   }
 
   @Override
   public Path getTempPath() {
-    return BuildTargets.getScratchPath(filesystem, buildTarget, "%s");
+    return scratchRoot;
   }
 
   @Override
@@ -45,6 +46,6 @@ class DefaultOutputPathResolver implements OutputPathResolver {
 
   @Override
   public Path getRootPath() {
-    return BuildTargets.getGenPath(filesystem, buildTarget, "%s");
+    return genRoot;
   }
 }
