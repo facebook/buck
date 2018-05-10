@@ -22,6 +22,7 @@ import static com.facebook.buck.distributed.ClientStatsTracker.DistBuildClientSt
 import com.facebook.buck.command.BuildExecutorArgs;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.graph.ActionAndTargetGraphs;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rulekey.calculator.ParallelRuleKeyCalculator;
 import com.facebook.buck.distributed.ArtifactCacheByBuildRule;
@@ -42,7 +43,6 @@ import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.rules.ActionAndTargetGraphs;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableList;

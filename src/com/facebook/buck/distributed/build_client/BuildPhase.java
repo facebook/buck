@@ -24,6 +24,7 @@ import com.facebook.buck.core.build.distributed.synchronization.RemoteBuildRuleC
 import com.facebook.buck.core.build.engine.delegate.CachingBuildEngineDelegate;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.graph.ActionAndTargetGraphs;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rulekey.calculator.ParallelRuleKeyCalculator;
 import com.facebook.buck.distributed.BuildSlaveEventWrapper;
@@ -52,7 +53,6 @@ import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.log.InvocationInfo;
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.rules.ActionAndTargetGraphs;
 import com.facebook.buck.util.timing.Clock;
 import com.facebook.buck.util.timing.DefaultClock;
 import com.google.common.annotations.VisibleForTesting;
