@@ -785,9 +785,9 @@ public class TargetsCommand extends AbstractCommand {
 
       while (targetNodeIterator.hasNext()) {
         TargetNode<?, ?> targetNode = targetNodeIterator.next();
-        Map<String, Object> rawTargetNode =
-            params.getParser().getRawTargetNode(state, params.getCell(), targetNode);
-        if (rawTargetNode == null) {
+        Map<String, Object> targetNodeAttributes =
+            params.getParser().getTargetNodeRawAttributes(state, params.getCell(), targetNode);
+        if (targetNodeAttributes == null) {
           params
               .getConsole()
               .printErrorText(
@@ -802,13 +802,13 @@ public class TargetsCommand extends AbstractCommand {
             field
                 .getter
                 .apply(targetResult)
-                .ifPresent(value -> rawTargetNode.put(field.name, value));
+                .ifPresent(value -> targetNodeAttributes.put(field.name, value));
           }
         }
-        rawTargetNode.put(
+        targetNodeAttributes.put(
             "fully_qualified_name", targetNode.getBuildTarget().getFullyQualifiedName());
         if (isShowCellPath) {
-          rawTargetNode.put("buck.cell_path", targetNode.getBuildTarget().getCellPath());
+          targetNodeAttributes.put("buck.cell_path", targetNode.getBuildTarget().getCellPath());
         }
 
         // Print the build rule information as JSON.
@@ -817,7 +817,8 @@ public class TargetsCommand extends AbstractCommand {
           ObjectMappers.WRITER
               .withDefaultPrettyPrinter()
               .writeValue(
-                  stringWriter, attributesPatternsMatcher.filterMatchingMapKeys(rawTargetNode));
+                  stringWriter,
+                  attributesPatternsMatcher.filterMatchingMapKeys(targetNodeAttributes));
         } catch (IOException e) {
           // Shouldn't be possible while writing to a StringWriter...
           throw new RuntimeException(e);

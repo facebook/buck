@@ -66,16 +66,16 @@ public interface Parser {
       PerBuildState perBuildState, BuildTarget target) throws BuildTargetException;
 
   @Nullable
-  SortedMap<String, Object> getRawTargetNode(
+  SortedMap<String, Object> getTargetNodeRawAttributes(
       PerBuildState state, Cell cell, TargetNode<?, ?> targetNode) throws BuildFileParseException;
 
   /**
-   * @deprecated Prefer {@link #getRawTargetNode(PerBuildState, Cell, TargetNode)} and reusing a
-   *     PerBuildState instance, especially when calling in a loop.
+   * @deprecated Prefer {@link #getTargetNodeRawAttributes(PerBuildState, Cell, TargetNode)} and
+   *     reusing a PerBuildState instance, especially when calling in a loop.
    */
   @Nullable
   @Deprecated
-  SortedMap<String, Object> getRawTargetNode(
+  SortedMap<String, Object> getTargetNodeRawAttributes(
       BuckEventBus eventBus,
       Cell cell,
       boolean enableProfiling,

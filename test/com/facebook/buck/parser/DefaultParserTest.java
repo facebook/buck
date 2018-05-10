@@ -200,7 +200,7 @@ public class DefaultParserTest {
                 knownBuildRuleTypesProvider,
                 enableProfiling,
                 SpeculativeParsing.DISABLED)) {
-      return DefaultParser.getRawTargetNodes(state, cell, buildFile);
+      return DefaultParser.getTargetNodeRawAttributes(state, cell, buildFile);
     }
   }
 
@@ -1854,10 +1854,11 @@ public class DefaultParserTest {
         parser.getTargetNode(eventBus, cell, false, executorService, fooLibTarget);
     assertThat(targetNode.getBuildTarget(), equalTo(fooLibTarget));
 
-    SortedMap<String, Object> rules =
-        parser.getRawTargetNode(eventBus, cell, false, executorService, targetNode);
-    assertThat(rules, Matchers.hasKey("name"));
-    assertThat(rules.get("name"), equalTo(targetNode.getBuildTarget().getShortName()));
+    SortedMap<String, Object> targetNodeAttributes =
+        parser.getTargetNodeRawAttributes(eventBus, cell, false, executorService, targetNode);
+    assertThat(targetNodeAttributes, Matchers.hasKey("name"));
+    assertThat(
+        targetNodeAttributes.get("name"), equalTo(targetNode.getBuildTarget().getShortName()));
   }
 
   @Test

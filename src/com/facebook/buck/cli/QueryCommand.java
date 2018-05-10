@@ -521,9 +521,9 @@ public class QueryCommand extends AbstractCommand {
       BuckQueryEnvironment env,
       PatternsMatcher patternsMatcher,
       TargetNode<?, ?> node) {
-    SortedMap<String, Object> sortedTargetRule =
-        params.getParser().getRawTargetNode(env.getParserState(), params.getCell(), node);
-    if (sortedTargetRule == null) {
+    SortedMap<String, Object> targetNodeAttributes =
+        params.getParser().getTargetNodeRawAttributes(env.getParserState(), params.getCell(), node);
+    if (targetNodeAttributes == null) {
       params
           .getConsole()
           .printErrorText(
@@ -532,10 +532,10 @@ public class QueryCommand extends AbstractCommand {
     }
     SortedMap<String, Object> attributes = new TreeMap<>();
     if (patternsMatcher.hasPatterns()) {
-      for (String key : sortedTargetRule.keySet()) {
+      for (String key : targetNodeAttributes.keySet()) {
         String snakeCaseKey = CaseFormat.LOWER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, key);
         if (patternsMatcher.matches(snakeCaseKey)) {
-          attributes.put(snakeCaseKey, sortedTargetRule.get(key));
+          attributes.put(snakeCaseKey, targetNodeAttributes.get(key));
         }
       }
     }

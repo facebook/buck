@@ -786,7 +786,7 @@ public class BuildCommand extends AbstractCommand {
             input -> {
               return params
                   .getParser()
-                  .getRawTargetNode(
+                  .getTargetNodeRawAttributes(
                       params.getBuckEventBus(),
                       params.getCell().getCell(input.getBuildTarget()),
                       false /* enableProfiling */,

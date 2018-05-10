@@ -251,7 +251,7 @@ public class DelegateAndGraphsInitializer {
         input -> {
           try {
             return args.getParser()
-                .getRawTargetNode(
+                .getTargetNodeRawAttributes(
                     args.getBuckEventBus(),
                     args.getState().getRootCell().getCell(input.getBuildTarget()),
                     /* enableProfiling */ false,
