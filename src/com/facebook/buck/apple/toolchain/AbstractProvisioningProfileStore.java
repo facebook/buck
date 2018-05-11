@@ -24,6 +24,7 @@ import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.toolchain.Toolchain;
 import com.facebook.buck.util.types.Pair;
+import com.google.common.base.Joiner;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -101,8 +102,10 @@ public abstract class AbstractProvisioningProfileStore implements RuleKeyAppenda
       String bundleID,
       ApplePlatform platform,
       Optional<ImmutableMap<String, NSObject>> entitlements,
-      Optional<? extends Iterable<CodeSignIdentity>> identities) {
+      Optional<? extends Iterable<CodeSignIdentity>> identities,
+      StringBuffer diagnosticsBuffer) {
     Optional<String> prefix;
+    ImmutableList.Builder<String> lines = ImmutableList.builder();
     if (entitlements.isPresent()) {
       prefix = ProvisioningProfileMetadata.prefixFromEntitlements(entitlements.get());
     } else {
@@ -112,103 +115,127 @@ public abstract class AbstractProvisioningProfileStore implements RuleKeyAppenda
     int bestMatchLength = -1;
     Optional<ProvisioningProfileMetadata> bestMatch = Optional.empty();
 
+    lines.add(String.format("Looking for a provisioning profile for bundle ID %s", bundleID));
+
+    boolean atLeastOneMatch = false;
     for (ProvisioningProfileMetadata profile : getProvisioningProfiles()) {
-      if (profile.getExpirationDate().after(new Date())) {
-        Pair<String, String> appID = profile.getAppID();
+      Pair<String, String> appID = profile.getAppID();
 
-        LOG.debug("Looking at provisioning profile " + profile.getUUID() + "," + appID);
+      LOG.debug("Looking at provisioning profile " + profile.getUUID() + "," + appID);
 
-        if (!prefix.isPresent() || prefix.get().equals(appID.getFirst())) {
-          String profileBundleID = appID.getSecond();
-          boolean match;
-          if (profileBundleID.endsWith("*")) {
-            // Chop the ending * if wildcard.
-            profileBundleID = profileBundleID.substring(0, profileBundleID.length() - 1);
-            match = bundleID.startsWith(profileBundleID);
-          } else {
-            match = (bundleID.equals(profileBundleID));
+      if (!prefix.isPresent() || prefix.get().equals(appID.getFirst())) {
+        String profileBundleID = appID.getSecond();
+        boolean match;
+        if (profileBundleID.endsWith("*")) {
+          // Chop the ending * if wildcard.
+          profileBundleID = profileBundleID.substring(0, profileBundleID.length() - 1);
+          match = bundleID.startsWith(profileBundleID);
+        } else {
+          match = (bundleID.equals(profileBundleID));
+        }
+
+        if (!match) {
+          LOG.debug(
+              "Ignoring non-matching ID for profile "
+                  + profile.getUUID()
+                  + ".  Expected: "
+                  + profileBundleID
+                  + ", actual: "
+                  + bundleID);
+          continue;
+        }
+
+        atLeastOneMatch = true;
+        if (!profile.getExpirationDate().after(new Date())) {
+          String message =
+              "Ignoring expired profile "
+                  + profile.getUUID()
+                  + ": "
+                  + profile.getExpirationDate().toString();
+          LOG.debug(message);
+          lines.add(message);
+          continue;
+        }
+
+        Optional<String> platformName = platform.getProvisioningProfileName();
+        if (platformName.isPresent() && !profile.getPlatforms().contains(platformName.get())) {
+          String message =
+              "Ignoring incompatible platform "
+                  + platformName.get()
+                  + " for profile "
+                  + profile.getUUID();
+          LOG.debug(message);
+          lines.add(message);
+          continue;
+        }
+
+        // Match against other keys of the entitlements.  Otherwise, we could potentially select
+        // a profile that doesn't have all the needed entitlements, causing a error when
+        // installing to device.
+        //
+        // For example: get-task-allow, aps-environment, etc.
+        if (entitlements.isPresent()) {
+          ImmutableMap<String, NSObject> entitlementsDict = entitlements.get();
+          ImmutableMap<String, NSObject> profileEntitlements = profile.getEntitlements();
+          for (Entry<String, NSObject> entry : entitlementsDict.entrySet()) {
+            NSObject profileEntitlement = profileEntitlements.get(entry.getKey());
+            if (!(FORCE_INCLUDE_ENTITLEMENTS.contains(entry.getKey())
+                || matchesOrArrayIsSubsetOf(entry.getValue(), profileEntitlement))) {
+              match = false;
+              String message =
+                  "Ignoring profile "
+                      + profile.getUUID()
+                      + " with mismatched entitlement "
+                      + entry.getKey()
+                      + "; value is "
+                      + profileEntitlement
+                      + " but expected "
+                      + entry.getValue();
+              LOG.debug(message);
+              lines.add(message);
+              break;
+            }
+          }
+        }
+
+        // Reject any certificate which we know we can't sign with the supplied identities.
+        ImmutableSet<HashCode> validFingerprints = profile.getDeveloperCertificateFingerprints();
+        if (match && identities.isPresent() && !validFingerprints.isEmpty()) {
+          match = false;
+          for (CodeSignIdentity identity : identities.get()) {
+            Optional<HashCode> fingerprint = identity.getFingerprint();
+            if (fingerprint.isPresent() && validFingerprints.contains(fingerprint.get())) {
+              match = true;
+              break;
+            }
           }
 
           if (!match) {
-            LOG.debug(
-                "Ignoring non-matching ID for profile "
+            String message =
+                "Ignoring profile "
                     + profile.getUUID()
-                    + ".  Expected: "
-                    + profileBundleID
-                    + ", actual: "
-                    + bundleID);
+                    + " because it can't be signed with any valid identity in the current keychain.";
+            LOG.debug(message);
+            lines.add(message);
             continue;
-          }
-
-          Optional<String> platformName = platform.getProvisioningProfileName();
-          if (platformName.isPresent() && !profile.getPlatforms().contains(platformName.get())) {
-            LOG.debug(
-                "Ignoring incompatible platform "
-                    + platformName.get()
-                    + " for profile "
-                    + profile.getUUID());
-            continue;
-          }
-
-          // Match against other keys of the entitlements.  Otherwise, we could potentially select
-          // a profile that doesn't have all the needed entitlements, causing a error when
-          // installing to device.
-          //
-          // For example: get-task-allow, aps-environment, etc.
-          if (entitlements.isPresent()) {
-            ImmutableMap<String, NSObject> entitlementsDict = entitlements.get();
-            ImmutableMap<String, NSObject> profileEntitlements = profile.getEntitlements();
-            for (Entry<String, NSObject> entry : entitlementsDict.entrySet()) {
-              NSObject profileEntitlement = profileEntitlements.get(entry.getKey());
-              if (!(FORCE_INCLUDE_ENTITLEMENTS.contains(entry.getKey())
-                  || matchesOrArrayIsSubsetOf(entry.getValue(), profileEntitlement))) {
-                match = false;
-                LOG.debug(
-                    "Ignoring profile "
-                        + profile.getUUID()
-                        + " with mismatched entitlement "
-                        + entry.getKey()
-                        + "; value is "
-                        + profileEntitlement
-                        + " but expected "
-                        + entry.getValue());
-                break;
-              }
-            }
-          }
-
-          // Reject any certificate which we know we can't sign with the supplied identities.
-          ImmutableSet<HashCode> validFingerprints = profile.getDeveloperCertificateFingerprints();
-          if (match && identities.isPresent() && !validFingerprints.isEmpty()) {
-            match = false;
-            for (CodeSignIdentity identity : identities.get()) {
-              Optional<HashCode> fingerprint = identity.getFingerprint();
-              if (fingerprint.isPresent() && validFingerprints.contains(fingerprint.get())) {
-                match = true;
-                break;
-              }
-            }
-
-            if (!match) {
-              LOG.debug(
-                  "Ignoring profile "
-                      + profile.getUUID()
-                      + " because it can't be signed with any valid identity in the current keychain.");
-              continue;
-            }
-          }
-
-          if (match && profileBundleID.length() > bestMatchLength) {
-            bestMatchLength = profileBundleID.length();
-            bestMatch = Optional.of(profile);
           }
         }
-      } else {
-        LOG.debug("Ignoring expired profile " + profile.getUUID());
+
+        if (match && profileBundleID.length() > bestMatchLength) {
+          bestMatchLength = profileBundleID.length();
+          bestMatch = Optional.of(profile);
+        }
       }
     }
 
+    if (!atLeastOneMatch) {
+      lines.add(
+          String.format("No provisioning profile matching the bundle ID %s was found", bundleID));
+    }
+
     LOG.debug("Found provisioning profile " + bestMatch);
+    ImmutableList<String> diagnostics = lines.build();
+    diagnosticsBuffer.append(Joiner.on("\n").join(diagnostics));
     return bestMatch;
   }
 

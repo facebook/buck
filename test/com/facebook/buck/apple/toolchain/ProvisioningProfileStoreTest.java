@@ -80,7 +80,8 @@ public class ProvisioningProfileStoreTest {
             "com.facebook.test",
             ApplePlatform.IPHONEOS,
             ProvisioningProfileStore.MATCH_ANY_ENTITLEMENT,
-            ProvisioningProfileStore.MATCH_ANY_IDENTITY);
+            ProvisioningProfileStore.MATCH_ANY_IDENTITY,
+            new StringBuffer());
 
     assertThat(actual, is(equalTo(Optional.empty())));
   }
@@ -109,7 +110,8 @@ public class ProvisioningProfileStoreTest {
             "com.facebook.test",
             ApplePlatform.IPHONEOS,
             Optional.of(fakeEntitlements),
-            ProvisioningProfileStore.MATCH_ANY_IDENTITY);
+            ProvisioningProfileStore.MATCH_ANY_IDENTITY,
+            new StringBuffer());
 
     assertThat(actual.get(), is(equalTo(expected)));
   }
@@ -166,7 +168,8 @@ public class ProvisioningProfileStoreTest {
                     new NSString("production"),
                     "com.apple.security.application-groups",
                     new NSArray(new NSString("foo"), new NSString("bar")))),
-            ProvisioningProfileStore.MATCH_ANY_IDENTITY);
+            ProvisioningProfileStore.MATCH_ANY_IDENTITY,
+            new StringBuffer());
 
     assertThat(actual.get(), is(equalTo(expected)));
 
@@ -182,7 +185,8 @@ public class ProvisioningProfileStoreTest {
                     new NSString("production"),
                     "com.apple.security.application-groups",
                     new NSArray(new NSString("foo"), new NSString("xxx")))),
-            ProvisioningProfileStore.MATCH_ANY_IDENTITY);
+            ProvisioningProfileStore.MATCH_ANY_IDENTITY,
+            new StringBuffer());
     assertFalse(actual.isPresent());
 
     // Test without keychain access groups.
@@ -196,7 +200,8 @@ public class ProvisioningProfileStoreTest {
                     new NSString("production"),
                     "com.apple.security.application-groups",
                     new NSArray(new NSString("foo"), new NSString("bar")))),
-            ProvisioningProfileStore.MATCH_ANY_IDENTITY);
+            ProvisioningProfileStore.MATCH_ANY_IDENTITY,
+            new StringBuffer());
 
     assertThat(actual.get(), is(equalTo(expected)));
 
@@ -210,7 +215,8 @@ public class ProvisioningProfileStoreTest {
                     new NSString("production"),
                     "com.apple.security.application-groups",
                     new NSArray(new NSString("foo"), new NSString("xxx")))),
-            ProvisioningProfileStore.MATCH_ANY_IDENTITY);
+            ProvisioningProfileStore.MATCH_ANY_IDENTITY,
+            new StringBuffer());
     assertFalse(actual.isPresent());
   }
 
@@ -255,7 +261,8 @@ public class ProvisioningProfileStoreTest {
             "com.facebook.test",
             ApplePlatform.IPHONEOS,
             ProvisioningProfileStore.MATCH_ANY_ENTITLEMENT,
-            Optional.of(ImmutableList.of(validIdentity)));
+            Optional.of(ImmutableList.of(validIdentity)),
+            new StringBuffer());
 
     assertThat(actual.get(), is(equalTo(expected)));
   }
@@ -303,7 +310,8 @@ public class ProvisioningProfileStoreTest {
             "com.facebook.test",
             ApplePlatform.IPHONEOS,
             ProvisioningProfileStore.MATCH_ANY_ENTITLEMENT,
-            ProvisioningProfileStore.MATCH_ANY_IDENTITY);
+            ProvisioningProfileStore.MATCH_ANY_IDENTITY,
+            new StringBuffer());
 
     assertThat(actual.get(), is(equalTo(expected)));
   }
@@ -322,7 +330,8 @@ public class ProvisioningProfileStoreTest {
             "com.facebook.test",
             ApplePlatform.IPHONEOS,
             ProvisioningProfileStore.MATCH_ANY_ENTITLEMENT,
-            ProvisioningProfileStore.MATCH_ANY_IDENTITY);
+            ProvisioningProfileStore.MATCH_ANY_IDENTITY,
+            new StringBuffer());
 
     assertThat(actual.get(), is(equalTo(expected)));
   }

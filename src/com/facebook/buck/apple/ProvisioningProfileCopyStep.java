@@ -25,6 +25,7 @@ import com.facebook.buck.apple.toolchain.CodeSignIdentity;
 import com.facebook.buck.apple.toolchain.ProvisioningProfileMetadata;
 import com.facebook.buck.apple.toolchain.ProvisioningProfileStore;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.filesystem.CopySourceMode;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
@@ -152,11 +153,24 @@ class ProvisioningProfileCopyStep implements Step {
         AppleInfoPlistParsing.getBundleIdFromPlistStream(
                 infoPlist, filesystem.getInputStreamForRelativePath(infoPlist))
             .get();
-    Optional<ProvisioningProfileMetadata> bestProfile =
-        provisioningProfileUUID.isPresent()
-            ? provisioningProfileStore.getProvisioningProfileByUUID(provisioningProfileUUID.get())
-            : provisioningProfileStore.getBestProvisioningProfile(
-                bundleID, platform, entitlements, identities);
+    Optional<ProvisioningProfileMetadata> bestProfile;
+    String diagnostics = "";
+    if (provisioningProfileUUID.isPresent()) {
+      bestProfile =
+          provisioningProfileStore.getProvisioningProfileByUUID(provisioningProfileUUID.get());
+      if (!bestProfile.isPresent()) {
+        diagnostics =
+            String.format(
+                "A provisioning profile matching UUID %s was not found",
+                provisioningProfileUUID.get());
+      }
+    } else {
+      StringBuffer diagnosticsBuffer = new StringBuffer();
+      bestProfile =
+          provisioningProfileStore.getBestProvisioningProfile(
+              bundleID, platform, entitlements, identities, diagnosticsBuffer);
+      diagnostics = diagnosticsBuffer.toString();
+    }
 
     if (dryRunResultsPath.isPresent()) {
       NSDictionary dryRunResult = new NSDictionary();
@@ -177,13 +191,15 @@ class ProvisioningProfileCopyStep implements Step {
     selectedProvisioningProfileFuture.set(bestProfile);
 
     if (!bestProfile.isPresent()) {
+      context.getBuckEventBus().post(ConsoleEvent.warning(diagnostics));
+
       String message =
           "No valid non-expired provisioning profiles match for " + prefix + "." + bundleID;
       if (dryRunResultsPath.isPresent()) {
-        LOG.warn(message);
+        LOG.warn(message + "\n" + diagnostics);
         return StepExecutionResults.SUCCESS;
       } else {
-        throw new HumanReadableException(message);
+        throw new HumanReadableException(message + "\n" + diagnostics);
       }
     }
 

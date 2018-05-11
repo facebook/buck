@@ -66,7 +66,8 @@ public class FakeAppleDeveloperEnvironment {
                         "*",
                         ApplePlatform.IPHONEOS,
                         ProvisioningProfileStore.MATCH_ANY_ENTITLEMENT,
-                        ProvisioningProfileStore.MATCH_ANY_IDENTITY);
+                        ProvisioningProfileStore.MATCH_ANY_IDENTITY,
+                        new StringBuffer());
                 return profile.isPresent();
               })
           .get();
