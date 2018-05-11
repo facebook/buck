@@ -18,14 +18,13 @@ package com.facebook.buck.core.build.engine.buildinfo;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.core.build.engine.type.MetadataStorage;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.CachingBuildEngine;
-import com.facebook.buck.rules.CachingBuildEngine.MetadataStorage;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.timing.Clock;
 import com.facebook.buck.util.timing.FakeClock;
@@ -48,14 +47,14 @@ public class DefaultOnDiskBuildInfoIntegrationTest {
 
   @Parameterized.Parameters(name = "{0}")
   public static Collection<Object[]> data() {
-    return Arrays.stream(CachingBuildEngine.MetadataStorage.values())
+    return Arrays.stream(MetadataStorage.values())
         .map(v -> new Object[] {v})
         .collect(ImmutableList.toImmutableList());
   }
 
   private final MetadataStorage metadataStorage;
 
-  public DefaultOnDiskBuildInfoIntegrationTest(CachingBuildEngine.MetadataStorage metadataStorage) {
+  public DefaultOnDiskBuildInfoIntegrationTest(MetadataStorage metadataStorage) {
     this.metadataStorage = metadataStorage;
   }
 

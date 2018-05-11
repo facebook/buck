@@ -93,7 +93,7 @@ public class CoordinatorAndMinionModeRunnerIntegrationTest {
             STAMPEDE_ID,
             MINION_TYPE,
             new BuildSlaveRunId().setId("sl7"),
-            MAX_PARALLEL_WORK_UNITS,
+            new SingleBuildCapacityTracker(MAX_PARALLEL_WORK_UNITS),
             EasyMock.createNiceMock(MinionModeRunner.BuildCompletionChecker.class),
             POLL_LOOP_INTERVAL_MILLIS,
             new NoOpMinionBuildProgressTracker(),

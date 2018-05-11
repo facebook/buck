@@ -16,11 +16,11 @@
 
 package com.facebook.buck.jvm.java;
 
+import com.facebook.buck.core.description.arg.HasDepsQuery;
+import com.facebook.buck.core.description.arg.HasProvidedDepsQuery;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.HasDepsQuery;
-import com.facebook.buck.rules.HasProvidedDepsQuery;
 import com.facebook.buck.rules.query.Query;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;

@@ -20,11 +20,15 @@ import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.RuleKeyCalculationEvent;
 import com.facebook.buck.log.thrift.ThriftRuleKeyLogger;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
+import com.facebook.buck.util.Scope;
 import com.facebook.buck.util.cache.FileHashCache;
+import java.io.IOException;
 import java.util.Optional;
 import org.immutables.value.Value;
 
@@ -86,5 +90,16 @@ abstract class AbstractRuleKeyFactories {
             ruleKeyLogger),
         new DefaultDependencyFileRuleKeyFactory(
             fieldLoader, fileHashCache, pathResolver, ruleFinder, ruleKeyLogger));
+  }
+
+  public Optional<RuleKeyAndInputs> calculateManifestKey(
+      SupportsDependencyFileRuleKey rule, BuckEventBus eventBus) throws IOException {
+    try (Scope scope =
+        RuleKeyCalculationEvent.scope(
+            eventBus, RuleKeyCalculationEvent.Type.MANIFEST, rule.getBuildTarget())) {
+      return Optional.of(getDepFileRuleKeyFactory().buildManifestKey(rule));
+    } catch (SizeLimiter.SizeLimitException ex) {
+      return Optional.empty();
+    }
   }
 }

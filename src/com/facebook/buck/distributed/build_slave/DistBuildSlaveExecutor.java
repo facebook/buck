@@ -19,9 +19,12 @@ package com.facebook.buck.distributed.build_slave;
 import com.facebook.buck.command.BuildExecutor;
 import com.facebook.buck.command.BuildExecutorArgs;
 import com.facebook.buck.command.LocalBuildExecutor;
+import com.facebook.buck.core.build.distributed.synchronization.impl.NoOpRemoteBuildRuleCompletionWaiter;
+import com.facebook.buck.core.build.engine.impl.DefaultRuleDepsCache;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.RuleKey;
+import com.facebook.buck.core.rulekey.calculator.ParallelRuleKeyCalculator;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.distributed.BuildStatusUtil;
 import com.facebook.buck.distributed.DistBuildMode;
@@ -31,9 +34,6 @@ import com.facebook.buck.distributed.thrift.BuildStatus;
 import com.facebook.buck.distributed.thrift.SchedulingEnvironmentType;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.parser.BuildTargetParser;
-import com.facebook.buck.rules.NoOpRemoteBuildRuleCompletionWaiter;
-import com.facebook.buck.rules.ParallelRuleKeyCalculator;
-import com.facebook.buck.rules.RuleDepsCache;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.RuleKeyFieldLoader;
@@ -126,7 +126,7 @@ public class DistBuildSlaveExecutor {
                             ruleFinder,
                             args.getRuleKeyCacheScope().getCache(),
                             Optional.empty()),
-                        new RuleDepsCache(graphs.getActionGraphAndResolver().getResolver()),
+                        new DefaultRuleDepsCache(graphs.getActionGraphAndResolver().getResolver()),
                         (buckEventBus, rule) -> () -> {});
                   },
                   MoreExecutors.directExecutor()),
@@ -159,12 +159,12 @@ public class DistBuildSlaveExecutor {
                   args.getDistBuildService(),
                   args.getStampedeId(),
                   args.getDistBuildConfig().getMinionType(),
+                  args.getCapacityService(),
                   args.getBuildSlaveRunId(),
                   args.getRemoteCoordinatorAddress(),
                   OptionalInt.of(args.getRemoteCoordinatorPort()),
                   args.getDistBuildConfig(),
                   args.getMinionBuildProgressTracker(),
-                  args.getDistBuildConfig().getMinionBuildCapacityRatio(),
                   args.getBuckEventBus());
           break;
 
@@ -177,6 +177,7 @@ public class DistBuildSlaveExecutor {
                   args.getDistBuildService(),
                   args.getStampedeId(),
                   clientBuildId,
+                  args.getCapacityService(),
                   args.getBuildSlaveRunId(),
                   localBuildExecutor,
                   args.getLogDirectoryPath(),
@@ -186,8 +187,7 @@ public class DistBuildSlaveExecutor {
                   args.getExecutorService(),
                   args.getArtifactCacheFactory().remoteOnlyInstance(true, false),
                   args.getTimingStatsTracker(),
-                  args.getHealthCheckStatsTracker(),
-                  args.getDistBuildConfig().getCoordinatorBuildCapacityRatio());
+                  args.getHealthCheckStatsTracker());
           break;
 
         case COORDINATOR:

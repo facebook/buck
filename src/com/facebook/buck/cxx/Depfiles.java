@@ -35,6 +35,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.CharBuffer;
 import java.nio.file.Path;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -206,6 +207,8 @@ class Depfiles {
         List<String> srcAndIncludes = filesystem.readLines(sourceDepFile);
         List<String> includes = srcAndIncludes.subList(1, srcAndIncludes.size());
         return includes;
+      case NONE:
+        return Collections.emptyList();
       default:
         // never happens
         throw new IllegalStateException();

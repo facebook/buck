@@ -30,6 +30,7 @@ import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinWorkerThread;
 import java.util.concurrent.RecursiveTask;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
 /**
@@ -177,14 +178,7 @@ public class MultiThreadedBuildRuleResolver extends AbstractBuildRuleResolver {
    * ForkJoinTask that runs the function.
    */
   private <K, V> Function<K, Task<V>> wrap(Function<K, V> function) {
-    return arg ->
-        forkOrSubmit(
-            new Task<V>() {
-              @Override
-              protected V doCompute() {
-                return function.apply(arg);
-              }
-            });
+    return arg -> forkOrSubmit(new Task<>(() -> function.apply(arg)));
   }
 
   private <T> Task<T> forkOrSubmit(Task<T> task) {
@@ -196,21 +190,34 @@ public class MultiThreadedBuildRuleResolver extends AbstractBuildRuleResolver {
     return task;
   }
 
-  private abstract static class Task<V> extends RecursiveTask<V>
+  private static final class Task<V> extends RecursiveTask<V>
       implements WorkThreadTrackingFuture<V> {
     @Nullable private Thread workThread;
 
-    protected abstract V doCompute() throws Exception;
+    // The work to be performed. This field should be set to null when the work no longer need to
+    // be performed in order to avoid any lambda captures from being retained.
+    //
+    // Synchronization is not required, the ForkJoin framework should prevent any races, and the
+    // timing of the value being set to null is unimportant.
+    @Nullable private Supplier<V> work;
+
+    public Task(Supplier<V> work) {
+      this.work = work;
+    }
 
     @Override
     protected final V compute() {
       try (Scope ignored = () -> workThread = null) {
         workThread = Thread.currentThread();
-        return doCompute();
+        // The work function should only be invoked while the task is not complete.
+        // This condition should be guaranteed by the ForkJoin framework.
+        return Preconditions.checkNotNull(work).get();
       } catch (RuntimeException e) {
         throw e;
       } catch (Exception e) {
         throw new RuntimeException(e);
+      } finally {
+        work = null;
       }
     }
 
@@ -223,16 +230,15 @@ public class MultiThreadedBuildRuleResolver extends AbstractBuildRuleResolver {
     public void complete(V value) {
       super.complete(value);
       workThread = null;
+      work = null;
     }
 
     static <V> Task<V> completed(V value) {
       Task<V> task =
-          new Task<V>() {
-            @Override
-            protected V doCompute() {
-              throw new AssertionError("This task should be directly completed.");
-            }
-          };
+          new Task<>(
+              () -> {
+                throw new AssertionError("This task should be directly completed.");
+              });
       task.complete(value);
       return task;
     }

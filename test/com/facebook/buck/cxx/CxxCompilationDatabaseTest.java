@@ -130,7 +130,7 @@ public class CxxCompilationDatabaseTest {
                 ruleFinder,
                 new PreprocessorDelegate(
                     CxxPlatformUtils.DEFAULT_PLATFORM.getHeaderVerification(),
-                    filesystem.getRootPath(),
+                    FakeSourcePath.of(filesystem.getRootPath()),
                     new GccPreprocessor(
                         new HashedFileTool(
                             PathSourcePath.of(filesystem, Paths.get("preprocessor")))),
@@ -193,13 +193,13 @@ public class CxxCompilationDatabaseTest {
                     "/foo/bar",
                     "-isystem",
                     "/test",
+                    "-o",
+                    "buck-out/gen/foo/baz#compile-test.cpp/test.o",
                     "-c",
                     "-MD",
                     "-MF",
-                    "buck-out/gen/foo/baz#compile-test.cpp__/test.o.dep",
-                    "test.cpp",
-                    "-o",
-                    "buck-out/gen/foo/baz#compile-test.cpp__/test.o")));
+                    "buck-out/gen/foo/baz#compile-test.cpp/test.o.dep",
+                    "test.cpp")));
     MoreAsserts.assertIterablesEquals(expectedEntries, observedEntries);
   }
 }

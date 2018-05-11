@@ -23,8 +23,11 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.event.BuckEventBusForTests.CapturingConsoleEventListener;
+import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -96,50 +99,36 @@ public class TargetCountVerificationParserDelegateTest {
   }
 
   @Test
-  public void givenTargetCountExceedingLimitWhenGetAllIsInvokedAWarningIsEmitted()
+  public void givenTargetCountExceedingLimitWhenGetBuildFileManifestIsInvokedAWarningIsEmitted()
       throws Exception {
-    EasyMock.expect(parserMock.getAll(path, processedBytes)).andReturn(rawTargets);
+    EasyMock.expect(parserMock.getBuildFileManifest(path, processedBytes))
+        .andReturn(toBuildFileManifest(this.rawTargets));
 
     TargetCountVerificationParserDelegate parserDelegate = newParserDelegate(3);
     EasyMock.replay(parserMock);
-    parserDelegate.getAll(path, processedBytes);
+    parserDelegate.getBuildFileManifest(path, processedBytes);
 
     assertWarningIsEmitted();
   }
 
-  @Test
-  public void givenTargetCountExceedingLimitWhenGetAllRulesAndMetaRulesIsInvokedAWarningIsEmitted()
-      throws Exception {
-    EasyMock.expect(parserMock.getAllRulesAndMetaRules(path, processedBytes)).andReturn(rawTargets);
-
-    TargetCountVerificationParserDelegate parserDelegate = newParserDelegate(3);
-    EasyMock.replay(parserMock);
-    parserDelegate.getAllRulesAndMetaRules(path, processedBytes);
-
-    assertWarningIsEmitted();
-  }
-
-  @Test
-  public void givenTargetCountNotExceedingLimitWhenGetAllIsInvokedAWarningIsNotEmitted()
-      throws Exception {
-    EasyMock.expect(parserMock.getAll(path, processedBytes)).andReturn(rawTargets);
-
-    TargetCountVerificationParserDelegate parserDelegate = newParserDelegate(6);
-    EasyMock.replay(parserMock);
-    parserDelegate.getAll(path, processedBytes);
-
-    assertWarningIsNotEmitted();
+  private BuildFileManifest toBuildFileManifest(ImmutableList<Map<String, Object>> rawTargets) {
+    return BuildFileManifest.builder()
+        .addAllTargets(rawTargets)
+        .setIncludes(ImmutableSortedSet.of())
+        .setConfigs(ImmutableMap.of())
+        .build();
   }
 
   @Test
   public void
-      givenTargetCountNotExceedingLimitWhenGetAllRulesAndMetaRulesIsInvokedAWarningIsNotEmitted()
+      givenTargetCountNotExceedingLimitWhenGetBuildFileManifestIsInvokedAWarningIsNotEmitted()
           throws Exception {
-    EasyMock.expect(parserMock.getAllRulesAndMetaRules(path, processedBytes)).andReturn(rawTargets);
+    EasyMock.expect(parserMock.getBuildFileManifest(path, processedBytes))
+        .andReturn(toBuildFileManifest(rawTargets));
 
     TargetCountVerificationParserDelegate parserDelegate = newParserDelegate(6);
     EasyMock.replay(parserMock);
-    parserDelegate.getAllRulesAndMetaRules(path, processedBytes);
+    parserDelegate.getBuildFileManifest(path, processedBytes);
 
     assertWarningIsNotEmitted();
   }

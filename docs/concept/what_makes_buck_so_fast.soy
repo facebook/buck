@@ -10,80 +10,151 @@
     {/param}
     {param content}
 
-<p>Buck exploits a number of strategies to reduce build times:</p>
+<p>Buck exploits a number of strategies to reduce build times.</p>
 
-<h2>A build rule knows all of the inputs that can affect its output</h2>
-
-<p>
-
-Buck is designed so that anything that can affect the output of a build rule must be specified
-as an input to the build rule: hidden state is not allowed. (This is also important for ensuring that
-results are consistent and reproducible for all developers.) Therefore, we can be sure that once a
-rule's <code>deps</code> are satisfied, the rule itself can be built. This gives us confidence that
-the <a href="http://en.wikipedia.org/wiki/Directed_acyclic_graph">DAG</a> that results from build
-rules and their <code>deps</code> is true: all dependencies are captured in the graph.
+<h2>Buck builds dependencies in parallel</h2>
 
 <p>
 
-Having a DAG makes it straightforward for rules to be built in parallel, which can dramatically reduce
-build times. The execution model for Buck is very simple: starting with the leaf nodes
-of the graph, add them to a queue of rules to be built. When a thread is available, a rule is removed
-from the queue, and built. Assuming it is built successfully, it notifies all of the rules that depend
-on it that it is done. When a rule gets such a notification, it checks whether all its dependencies have
-been satisfied, and if so, it gets added to the queue. Computation proceeds in this manner until all of
-the nodes in the graph have gone through the queue.
-Therefore, breaking modules into finer dependencies creates opportunities for increased
-parallelism, improving throughput.
-
-<h2>Buck can store the outputs it generates in a cache</h2>
+Buck is designed so that any input files required by 
+a {call buck.build_target /} must be specified in 
+the {call buck.build_rule /} for that target.  Therefore, 
+we know that the directed acyclic 
+graph <a href="http://en.wikipedia.org/wiki/Directed_acyclic_graph">(DAG)</a> that 
+Buck constructs from the build rule is an accurate reflection of
+the build's dependencies, and that once a rule's dependencies are 
+satisfied, the target for that rule can be built. 
 
 <p>
 
-A build rule knows all of the inputs that can affect its output, and therefore it can combine that
-information into a hash that represents the total input. This hash is used as
+Having a DAG makes it straightforward for rules to be built in parallel,
+which can dramatically reduce build times.  Buck starts with the leaf
+nodes of the graph, that is, targets that have no dependencies.  Buck
+adds these to a queue of targets to build. When a thread is available,
+Buck removes a target from the front of the queue and builds it.
+Assuming the target builds successfully, Buck notifies all of the rules
+that depend on that target. When all of a rules dependencies have been
+satisfied, Buck adds that rule's target to the build queue.  Computation
+proceeds in this manner until all of the nodes in the graph have been
+built. This execution model means that breaking modules into finer
+dependencies creates opportunities for increased parallelism, which
+improves throughput.
+
+<h2>Graph enhancement increases rule granularity</h2>
+
+<p>
+
+Frequently, the granularity at which users declare build rules is
+different from the granularity at which we want the build system to
+model them.  Users want coarse-grained rules, such 
+as <code>android_binary</code>, for simplicity. However, the build system 
+wants fine-grained rules, such as <code>aapt package</code> and <code>dex merge</code>, that 
+allow for parallelism and more granular caching (see <em>caching</em> below).
+
+<p>
+
+Internally, Buck uses a mechanism called <em>graph enhancement</em> which 
+transforms the <em>target graph</em>, specified by the build rules, into 
+an <em>action graph</em>, which is the DAG that Buck actually uses for building.
+Graph enhancement can add new synthetic rules
+to break a monolithic task, such as {call buck.android_binary /} into 
+independent subtasks, each of which might have only a subset of the
+original task's dependencies. So, for example, dex merging would not depend 
+on running a full <code>aapt package</code>. Graph enhancement can also move
+dependency edges, so that compiling Android libraries does not depend on
+dexing their dependencies.
+
+</p>
+
+<p>
+
+<strong>Note:</strong> Adding or removing dependencies from your build
+causes Buck to rebuild the action graph, which can significantly
+increase the time required for your next build. However, changing the
+{sp}<em>contents</em> of a dependency, such as a source file, does not cause
+Buck to rebuild the action graph.
+
+</p>
+
+<h2>Buck caches build artifacts</h2>
+
+<p>
+
+A build rule&mdash;together with other aspects of the build
+environment&mdash;specify all of the inputs that can affect the rule's output.
+Therefore, we can combine that information into a hash that represents
+the totality of those inputs. This hash is used as
 a <em>cache key</em> where the associated value in the cache is the output produced by the rule.
 (See {call buck.concept_buckconfig /} for information on how to set up a cache.)
-The following information contributes to the cache key for a build rule:
+All of the following information contribute to the cache key for a build rule:
 
 <ul>
-  <li>The values of the arguments used to define the build rule in the build file.
-  <li>The contents of any file arguments for the build rule.
-  <li>The version of Buck being used to build the rule. (This means that upgrading Buck to a new
-      version invalidates all of the cache keys generated by the old version.)
-  <li>The cache key for each of the rule's <code>deps</code>.
+  <li>The values of the arguments used to define the build rule in the
+      build file.</li>
+  <li>The contents of any file arguments for the build rule.</li>
+  <li>The cache key for each of the rule's <code>deps</code>.</li>
+  <li>The version of Buck being used to build the rule. (This means that 
+      upgrading Buck to a new version invalidates all of the cache keys 
+      generated by the old version.)</li>
+  <li>The components of the toolchain that are used to build the rule, 
+      including their configurations, such as compiler or linker flags.</li>
 </ul>
 
 <p>
 
-When Buck begins to build a build rule, the first thing it does is compute the <em>cache key</em> for
-the rule. If there is a hit in any of the caches specified in <code>.buckconfig</code>, then it will
-fetch the rule's output from the cache instead of building the rule locally. For outputs that are
-expensive to compute, this is a substantial savings. It also makes it fast to rebuild when switching
-between branches in a <a href="http://en.wikipedia.org/wiki/Distributed_version_control_system">DVCS</a> such as Git or Mercurial.
+When Buck determines whether to build the target for a rule, the first thing it does is
+compute the <em>cache key</em> for the rule. If there is a hit in any of
+the caches specified in <code>.buckconfig</code>, Buck fetches the
+rule's output from the cache instead of building the rule locally. For
+outputs that are expensive to compute, this is a substantial savings.
+This caching can also make it fast to rebuild when switching between branches in 
+a <a href="http://en.wikipedia.org/wiki/Distributed_version_control_system">DVCS</a> such 
+as Git or Mercurial&mdash;assuming that relatively few files differ between branches.
 
 <p>
 
-Because Buck uses the cache key to determine whether to rebuild a rule, you should never have to run {call buck.cmd_clean /}.
-If anything that could affect the output of the rule changes, then the cache key should change, as well.
-Because the change in input will cause a cache miss, Buck will rebuild the rule, overwriting its old outputs.
-Since out-of-date outputs are guaranteed to be overwritten, there is no reason to clean the build.
+If you are using a <a href="http://en.wikipedia.org/wiki/Continuous_integration">continuous integration (CI)</a> system, 
+such as <a href="https://en.wikipedia.org/wiki/Jenkins_(software)">Jenkins</a>, 
+you should configure your CI builds to populate a cache that can be read
+by local builds.  That way, when a developer syncs to a revision that has already been
+built on your CI system, a local build with {sp}{call buck.cmd_build /} can 
+pull build artifacts from the cache. In order for this strategy to
+work, the cache key computed by Buck on the CI system must match the key 
+computed by Buck on the developer's local computer.
+
+<h2>The importance of deterministic builds</h2>
+
+<p> 
+
+In order to take full advantage of caching, all the factors that affect
+the output of the build should be kept safe from unintended changes. The
+build should be <em>deterministic</em> in the sense that it should
+reliably produce identical output across different build servers or
+different developers' computers.  For this reason, we recommend that you
+put the Buck configuration file, <code>.buckconfig</code>, under source
+control. In addition, we recommend that you also put the components of
+the toolchains used to build the outputs, such as compilers and linkers,
+under source control; this way, you can ensure that all developers on
+the project are using the same versions of these tools.  
+
+</p>
 
 <p>
+Note that Buck reparses the build files in a project if it detects
+certain changes in the build's  configuration. Such a configuration change could be a
+change in the <code>.buckconfig</code> file itself or the result of specifying 
+the {call buck.cmd_link}{param name: 'common_parameters' /}{param rendered_text: '--config'/}{/call} command-line option.  
+</p>
 
-If you are using some sort of <a href="http://en.wikipedia.org/wiki/Continuous_integration">continuous
-integration (CI)</a> system, you will likely want your CI builds to populate a cache that can be read by your local builds.
-That way, when a developer syncs to a revision that has already been built on your CI system, running
-{sp}{call buck.cmd_build /} should not build anything locally, as all outputs should be able to be pulled from the cache.
-This works because the cache key computed by Buck when run on the CI system should match the key computed by Buck
-on your local machine.
 
 <h2>If a Java library's API doesn't change, code that uses the library doesn't need to be rebuilt</h2>
 
 <p>
 
-Oftentimes, a developer will modify Java code in a way that does not affect its externally-visible
-API. For example, adding or removing private methods, as well as modifying the implementation of
-existing methods (regardless of their visibility), does not change the API of a Java file.
+Developers often modify Java code in ways that do not affect the code's externally-visible
+API. For example, adding or removing private methods, or modifying the implementation of
+existing methods&mdash;regardless of their visibility&mdash;does not
+change the API exposed by the Java file.
 
 <p>
 
@@ -157,7 +228,7 @@ that will force your library to be rebuilt.
 Other build tools use also Android's DX merge support
 to merge your main program's dex file with third-party libraries.
 However, Buck's support for fine-grained libraries
-allows dex merging to work at a much higher granularity.
+allows dex merging to work at a much finer granularity.
 
 <p>
 
@@ -165,75 +236,54 @@ Buck also includes a customized version of DX
 that includes significant performance improvements.
 It uses a faster algorithm for merging many dex files.
 It also has support for running multiple copies of DX
-concurrently within a single long-lived buckd process,
+concurrently within a single long-lived <code>buckd</code> process,
 which eliminates most of DX's start-up time.
 
 <p>
 
 As a result, when editing a small module and performing an incremental build,
-we frequently see less than 1 second spent generating classes.dex.
-
-<h2>Graph enhancement for increased rule granularity</h2>
-
-<p>
-
-Frequently, the granularity at which we expect users to declare build rules
-is very different from the granularity at which
-we want the build system to model them.
-Users want coarse-grained rules for simplicity (like "android_binary"),
-but the build system wants fine-grained rules
-(like "aapt package" and "dex merge")
-to allow for parallelism and fine-grained caching.
-
-<p>
-
-Internally, Buck uses a mechanism called "graph enhancement"
-that allows its internal "action graph" (the DAG used for building)
-to be different from what the user declared (internally called the "target graph").
-Graph enhancement can add new synthetic rules
-to break a monolithic task (like {call buck.android_binary /})
-into independent subtasks
-that might only have a subset of the original dependencies,
-so dex merging does not depend on running a full <code>aapt package</code>.
-It can also move dependency edges,
-so compiling Android libraries does not depend on dexing their dependencies.
+we frequently see less than 1 second spent generating <code>classes.dex</code>.
 
 <h2>Dependency files to trim overspecified inputs</h2>
 
 <p>
 
-Buck's low-level build rules specify all inputs (e.g. sources, or outputs from other rules)
-that may be used when the build rule is executed, so that changes to any of these inputs
-will trigger rebuilds and use a new cache key.
-However, in practice, it's not uncommon for these build rules to over-specify their inputs.
-A good example of this is the C/C++ compilation rules Buck generates.
-C/C++ compilation rules specify all headers found from the transitive closure of C/C++ library dependencies
-as inputs, even though in almost all cases only a small subset of these headers are actually
-used (e.g. a C/C++ source may only use one of many headers exported by a C/C++ library dependency).
+Buck's low-level build rules specify all inputs&mdash;such as source
+files or outputs from other build rules&mdash;that may be used when the build rule is executed, so that changes to any of these inputs
+result in a new cache key and therefore trigger rebuilds. 
+However, in practice, it's not uncommon for these build rules to <em>over-specify</em> their inputs.
+A good example is the C/C++ compilation rules Buck that generates.
+C/C++ compilation rules specify as inputs all headers found from the transitive closure of C/C++ library dependencies, 
+even though in many cases only a small subset of these headers are
+actually used. For example, a C/C++ source might use only one of many headers exported by a C/C++ library dependency.
 However, there's not enough information available before running the step to know if any given
-input is used, and so all inputs must be considered, which can lead to substantial unnecessary
-rebuilding.
+input is used, and so all inputs must be considered, which can lead to unnecessary rebuilding.
 
 <p>
 
 In some cases, we can figure out the exact subset of the listed inputs which were actually used after
 the build.
-In C/C++, compilers like <code>gcc</code> provide a <code>-M</code> option which produces a
-dependency file which contains the exact headers that were actually used by during compilation.
+In C/C++, compilers such as <code>gcc</code> provide a <code>-M</code> option which produces a
+dependency file which identifies the exact headers that were actually used during compilation.
 For supported rules, Buck uses this dependency file before the build, to try avoid an unnecessary rebuild:
   <ul>
     <li>
-      If no dependency file is initially available before the build, the rule is run as normal and also produces
-      a dependency file for next time, which lists the inputs that were used.
+      If no dependency file is initially available before the build,
+      Buck runs the rule as normal and produces a dependency file for, 
+      which lists the inputs that were used. The dependency file is then
+      available for subsequent builds.
     </li>
     <li>
-      If the dependency file is available before the build, Buck will read this in and use this to filter out unused
-      inputs when constructing it's rule key.
+      If the dependency file <em>is</em> available before the build,
+      Buck reads the file and uses it to filter out unused inputs when 
+      constructing it's rule key.
     </li>
   </ul>
 
-It should be noted that dependency files are only used if the standard rule key (which considers all inputs) doesn't
-match.
+<p>
+Note that dependency files are used only if the standard rule
+key&mdash;which considers all inputs&mdash;doesn't match.
+</p>
 
     {/param}
   {/call}

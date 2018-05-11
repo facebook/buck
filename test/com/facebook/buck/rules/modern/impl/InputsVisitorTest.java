@@ -25,15 +25,15 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
+import com.facebook.buck.core.rules.modern.HasCustomInputsLogic;
+import com.facebook.buck.core.rules.modern.annotations.CustomFieldBehavior;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.FakeSourcePath;
-import com.facebook.buck.rules.HasCustomInputsLogic;
 import com.facebook.buck.rules.modern.Buildable;
 import com.facebook.buck.rules.modern.CustomFieldInputs;
-import com.facebook.buck.rules.modern.annotations.CustomFieldBehavior;
 import com.facebook.buck.util.function.ThrowingConsumer;
 import com.google.common.collect.ImmutableList;
 import java.util.function.BiConsumer;

@@ -33,10 +33,12 @@ import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
+import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.hash.Hashing;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.SortedSet;
@@ -133,8 +135,8 @@ public class GoTestCoverSource extends AbstractBuildRule {
     return resolver.getSourcePathName(buildTarget, path).endsWith("_test.go");
   }
 
-  private String getVarName(Path path) {
-    return "Var_" + path.getFileName().toString().replace(".go", "");
+  static String getVarName(Path path) {
+    return "Var_" + Hashing.sha256().hashString(path.getFileName().toString(), Charsets.UTF_8);
   }
 
   public ImmutableSet<SourcePath> getCoveredSources() {

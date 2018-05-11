@@ -22,4 +22,6 @@ public enum DependencyTrackingMode {
   MAKEFILE,
   /** SHOW_INCLUDES corresponds to `cl.exe /showIncludes ...` on windows */
   SHOW_INCLUDES,
+  /** Some compilers - like ml64 - do not produce information about included files */
+  NONE,
 }

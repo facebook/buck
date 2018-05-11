@@ -30,7 +30,7 @@ import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import java.util.function.Consumer;
 import org.hamcrest.Matchers;
 import org.junit.Test;
@@ -39,7 +39,7 @@ public class FrameworkPathArgTest {
 
   private static class TestFrameworkPathArg extends FrameworkPathArg {
     public TestFrameworkPathArg(FrameworkPath frameworkPath) {
-      super(ImmutableSet.of(frameworkPath));
+      super(ImmutableSortedSet.of(frameworkPath));
     }
 
     @Override

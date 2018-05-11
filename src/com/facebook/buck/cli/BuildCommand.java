@@ -32,9 +32,16 @@ import com.facebook.buck.command.Build;
 import com.facebook.buck.command.LocalBuildExecutor;
 import com.facebook.buck.command.LocalBuildExecutorInvoker;
 import com.facebook.buck.config.BuckConfig;
+import com.facebook.buck.core.build.distributed.synchronization.RemoteBuildRuleCompletionWaiter;
+import com.facebook.buck.core.build.distributed.synchronization.impl.NoOpRemoteBuildRuleCompletionWaiter;
+import com.facebook.buck.core.build.engine.delegate.LocalCachingBuildEngineDelegate;
+import com.facebook.buck.core.build.engine.type.BuildType;
+import com.facebook.buck.core.build.event.BuildEvent;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.graph.ActionAndTargetGraphs;
 import com.facebook.buck.core.rulekey.RuleKey;
+import com.facebook.buck.core.rulekey.calculator.ParallelRuleKeyCalculator;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
@@ -78,16 +85,9 @@ import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.ParserTargetNodeFactory;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
-import com.facebook.buck.rules.ActionAndTargetGraphs;
 import com.facebook.buck.rules.ActionGraphAndResolver;
-import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.CachingBuildEngine;
-import com.facebook.buck.rules.LocalCachingBuildEngineDelegate;
-import com.facebook.buck.rules.NoOpRemoteBuildRuleCompletionWaiter;
-import com.facebook.buck.rules.ParallelRuleKeyCalculator;
-import com.facebook.buck.rules.RemoteBuildRuleCompletionWaiter;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraphAndBuildTargets;
 import com.facebook.buck.rules.TargetNodeFactory;
@@ -323,16 +323,16 @@ public class BuildCommand extends AbstractCommand {
     this.arguments.addAll(arguments);
   }
 
-  public Optional<CachingBuildEngine.BuildMode> getBuildEngineMode() {
-    Optional<CachingBuildEngine.BuildMode> mode = Optional.empty();
+  public Optional<BuildType> getBuildEngineMode() {
+    Optional<BuildType> mode = Optional.empty();
     if (deepBuild) {
-      mode = Optional.of(CachingBuildEngine.BuildMode.DEEP);
+      mode = Optional.of(BuildType.DEEP);
     }
     if (populateCacheOnly) {
-      mode = Optional.of(CachingBuildEngine.BuildMode.POPULATE_FROM_REMOTE_CACHE);
+      mode = Optional.of(BuildType.POPULATE_FROM_REMOTE_CACHE);
     }
     if (shallowBuild) {
-      mode = Optional.of(CachingBuildEngine.BuildMode.SHALLOW);
+      mode = Optional.of(BuildType.SHALLOW);
     }
     return mode;
   }
@@ -786,7 +786,7 @@ public class BuildCommand extends AbstractCommand {
             input -> {
               return params
                   .getParser()
-                  .getRawTargetNode(
+                  .getTargetNodeRawAttributes(
                       params.getBuckEventBus(),
                       params.getCell().getCell(input.getBuildTarget()),
                       false /* enableProfiling */,

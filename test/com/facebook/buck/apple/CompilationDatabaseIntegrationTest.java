@@ -265,18 +265,18 @@ public class CompilationDatabaseIntegrationTest {
     }
 
     String output =
-        BuildTargets.getGenPath(filesystem, outputTarget, "%s__").resolve(outputPath).toString();
+        BuildTargets.getGenPath(filesystem, outputTarget, "%s").resolve(outputPath).toString();
     commandArgs.add("-Xclang");
     commandArgs.add("-fdebug-compilation-dir");
     commandArgs.add("-Xclang");
     commandArgs.add("." + Strings.repeat("/", 399));
+    commandArgs.add("-o");
+    commandArgs.add(output);
     commandArgs.add("-c");
     commandArgs.add("-MD");
     commandArgs.add("-MF");
     commandArgs.add(output + ".dep");
     commandArgs.add(source);
-    commandArgs.add("-o");
-    commandArgs.add(output);
     assertThat(
         RichStream.from(entry.getArguments())
             .filter(c -> !c.contains("-fdebug-prefix-map"))

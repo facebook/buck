@@ -18,45 +18,55 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.NoopArtifactCache;
+import com.facebook.buck.cli.OwnersReport.Builder;
 import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
+import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
-import com.facebook.buck.query.QueryEnvironment;
+import com.facebook.buck.parser.Parser;
+import com.facebook.buck.parser.ParserPythonInterpreterProvider;
+import com.facebook.buck.parser.PerBuildState;
+import com.facebook.buck.parser.PerBuildStateFactory;
+import com.facebook.buck.parser.SpeculativeParsing;
+import com.facebook.buck.query.QueryTarget;
+import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
+import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
+import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.concurrent.FakeListeningExecutorService;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.Optional;
-import org.easymock.EasyMock;
-import org.easymock.EasyMockRule;
-import org.easymock.EasyMockRunner;
-import org.easymock.Mock;
+import java.util.Set;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
-@RunWith(EasyMockRunner.class)
 public class QueryCommandTest {
 
   private QueryCommand queryCommand;
   private CommandRunnerParams params;
 
-  @Mock private BuckQueryEnvironment env;
+  private int callsCount = 0;
+  private Set<String> expectedExpressions = new HashSet<>();
 
-  @Rule public EasyMockRule rule = new EasyMockRule(this);
+  private BuckQueryEnvironment env;
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
@@ -87,29 +97,85 @@ public class QueryCommandTest {
             ImmutableMap.copyOf(System.getenv()),
             new FakeJavaPackageFinder(),
             Optional.empty());
+
+    ListeningExecutorService executorService = new FakeListeningExecutorService();
+    TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
+    PerBuildState perBuildState =
+        new PerBuildStateFactory()
+            .create(
+                typeCoercerFactory,
+                params.getParser().getPermState(),
+                new ConstructorArgMarshaller(typeCoercerFactory),
+                eventBus,
+                new ParserPythonInterpreterProvider(cell.getBuckConfig(), new ExecutableFinder()),
+                executorService,
+                cell,
+                params.getKnownBuildRuleTypesProvider(),
+                false,
+                SpeculativeParsing.ENABLED);
+    env =
+        new FakeBuckQueryEnvironment(
+            cell,
+            OwnersReport.builder(params.getCell(), params.getParser(), params.getBuckEventBus()),
+            params.getParser(),
+            perBuildState,
+            executorService,
+            new TargetPatternEvaluator(
+                params.getCell(),
+                params.getBuckConfig(),
+                params.getParser(),
+                params.getBuckEventBus(),
+                false),
+            eventBus,
+            typeCoercerFactory);
+  }
+
+  private class FakeBuckQueryEnvironment extends BuckQueryEnvironment {
+    protected FakeBuckQueryEnvironment(
+        Cell rootCell,
+        Builder ownersReportBuilder,
+        Parser parser,
+        PerBuildState parserState,
+        ListeningExecutorService executor,
+        TargetPatternEvaluator targetPatternEvaluator,
+        BuckEventBus eventBus,
+        TypeCoercerFactory typeCoercerFactory) {
+      super(
+          rootCell,
+          ownersReportBuilder,
+          parser,
+          parserState,
+          executor,
+          targetPatternEvaluator,
+          eventBus,
+          typeCoercerFactory);
+    }
+
+    @Override
+    public ImmutableSet<QueryTarget> evaluateQuery(String query) {
+      Assert.assertTrue(expectedExpressions.contains(query));
+      ++callsCount;
+      return ImmutableSet.of();
+    }
+
+    @Override
+    public void preloadTargetPatterns(Iterable<String> patterns) {}
   }
 
   @Test
   public void testRunMultiQueryWithSet() throws Exception {
     queryCommand.setArguments(ImmutableList.of("deps(%Ss)", "//foo:bar", "//foo:baz"));
-    EasyMock.expect(env.evaluateQuery("deps(set('//foo:bar' '//foo:baz'))"))
-        .andReturn(ImmutableSet.of());
-    EasyMock.replay(env);
+    expectedExpressions.add("deps(set('//foo:bar' '//foo:baz'))");
     queryCommand.formatAndRunQuery(params, env);
-    EasyMock.verify(env);
   }
 
   @Test
   public void testRunMultiQueryWithSingleSetUsedMultipleTimes() throws Exception {
     queryCommand.setArguments(
         ImmutableList.of("deps(%Ss) union testsof(%Ss)", "//foo:libfoo", "//foo:libfootoo"));
-    EasyMock.expect(
-            env.evaluateQuery(
-                "deps(set('//foo:libfoo' '//foo:libfootoo')) union testsof(set('//foo:libfoo' '//foo:libfootoo'))"))
-        .andReturn(ImmutableSet.of());
-    EasyMock.replay(env);
+    expectedExpressions.add(
+        "deps(set('//foo:libfoo' '//foo:libfootoo')) union testsof(set('//foo:libfoo' '//foo:libfootoo'))");
     queryCommand.formatAndRunQuery(params, env);
-    EasyMock.verify(env);
   }
 
   @Test
@@ -118,13 +184,9 @@ public class QueryCommandTest {
         ImmutableList.of(
             "deps(%Ss) union testsof(%Ss)",
             "//foo:libfoo", "//foo:libfootoo", "--", "//bar:libbar", "//bar:libbaz"));
-    EasyMock.expect(
-            env.evaluateQuery(
-                "deps(set('//foo:libfoo' '//foo:libfootoo')) union testsof(set('//bar:libbar' '//bar:libbaz'))"))
-        .andReturn(ImmutableSet.of());
-    EasyMock.replay(env);
+    expectedExpressions.add(
+        "deps(set('//foo:libfoo' '//foo:libfootoo')) union testsof(set('//bar:libbar' '//bar:libbaz'))");
     queryCommand.formatAndRunQuery(params, env);
-    EasyMock.verify(env);
   }
 
   @Test(expected = HumanReadableException.class)
@@ -139,22 +201,9 @@ public class QueryCommandTest {
   @Test
   public void testRunMultiQuery() throws Exception {
     queryCommand.setArguments(ImmutableList.of("deps(%s)", "//foo:bar", "//foo:baz"));
-    QueryEnvironment.TargetEvaluator evaluator =
-        EasyMock.createNiceMock(QueryEnvironment.TargetEvaluator.class);
-    EasyMock.expect(evaluator.getType())
-        .andReturn(QueryEnvironment.TargetEvaluator.Type.LAZY)
-        .times(2);
-    EasyMock.expect(env.getFunctions())
-        .andReturn(BuckQueryEnvironment.DEFAULT_QUERY_FUNCTIONS)
-        .anyTimes();
-    EasyMock.expect(env.getTargetEvaluator()).andReturn(evaluator).times(2);
-    env.preloadTargetPatterns(ImmutableSet.of("//foo:bar", "//foo:baz"));
-    EasyMock.expect(env.evaluateQuery("deps(//foo:bar)")).andReturn(ImmutableSet.of());
-    EasyMock.expect(env.evaluateQuery("deps(//foo:baz)")).andReturn(ImmutableSet.of());
-    EasyMock.replay(env);
-    EasyMock.replay(evaluator);
+    expectedExpressions.add("deps(//foo:bar)");
+    expectedExpressions.add("deps(//foo:baz)");
     queryCommand.formatAndRunQuery(params, env);
-    EasyMock.verify(env);
-    EasyMock.verify(evaluator);
+    Assert.assertEquals(2, callsCount);
   }
 }

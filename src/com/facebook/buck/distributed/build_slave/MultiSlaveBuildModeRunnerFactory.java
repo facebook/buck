@@ -24,6 +24,7 @@ import com.facebook.buck.config.resources.ResourcesConfig;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.RuleKey;
+import com.facebook.buck.core.rulekey.calculator.ParallelRuleKeyCalculator;
 import com.facebook.buck.distributed.ArtifactCacheByBuildRule;
 import com.facebook.buck.distributed.BuildStatusUtil;
 import com.facebook.buck.distributed.DistBuildArtifactCacheImpl;
@@ -36,13 +37,14 @@ import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.chrome_trace.ChromeTraceBuckConfig;
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.rules.ParallelRuleKeyCalculator;
 import com.facebook.buck.util.timing.DefaultClock;
 import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
+import java.net.InetAddress;
 import java.net.URI;
+import java.net.UnknownHostException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
@@ -164,38 +166,28 @@ public class MultiSlaveBuildModeRunnerFactory {
       DistBuildService distBuildService,
       StampedeId stampedeId,
       MinionType minionType,
+      CapacityService capacityService,
       BuildSlaveRunId buildSlaveRunId,
       String coordinatorAddress,
       OptionalInt coordinatorPort,
       DistBuildConfig distBuildConfig,
       MinionBuildProgressTracker minionBuildProgressTracker,
-      double availableBuildCapacityRatio,
       BuckEventBus eventBus) {
-    Preconditions.checkArgument(
-        availableBuildCapacityRatio > 0, availableBuildCapacityRatio + " is not > 0");
-    Preconditions.checkArgument(
-        availableBuildCapacityRatio <= 1, availableBuildCapacityRatio + " is not <= 1");
-
     MinionModeRunner.BuildCompletionChecker checker =
         () -> {
           BuildJob job = distBuildService.getCurrentBuildJobState(stampedeId);
           return BuildStatusUtil.isTerminalBuildStatus(job.getStatus());
         };
 
-    int availableBuildCapacity =
-        distBuildConfig
-            .getBuckConfig()
-            .getView(ResourcesConfig.class)
-            .getConcurrencyLimit()
-            .threadLimit;
-
-    // Adjust by ratio. E.g. if ratio is 0.5 and we have 8 cores, minion will use 4 cores.
-    Double availableCapacityDouble =
-        Double.valueOf(availableBuildCapacityRatio * availableBuildCapacity);
-    availableBuildCapacity = availableCapacityDouble.intValue();
-
-    // Ensure value wasn't rounded down to 0. We always need more than 1 core to make progress.
-    availableBuildCapacity = Math.max(1, availableBuildCapacity);
+    // Check if coordinator and minion are stacked in the same host and
+    // update coordinator address to localhost if that's the case.
+    try {
+      if (coordinatorAddress.equals(InetAddress.getLocalHost().getHostName())) {
+        coordinatorAddress = LOCALHOST_ADDRESS;
+      }
+    } catch (UnknownHostException e) {
+      LOG.error("Hostname can not be resolved");
+    }
 
     return new MinionModeRunner(
         coordinatorAddress,
@@ -204,11 +196,7 @@ public class MultiSlaveBuildModeRunnerFactory {
         stampedeId,
         minionType,
         buildSlaveRunId,
-        distBuildConfig
-            .getBuckConfig()
-            .getView(ResourcesConfig.class)
-            .getConcurrencyLimit()
-            .threadLimit,
+        createCapacityTracker(capacityService, distBuildConfig),
         checker,
         distBuildConfig.getMinionPollLoopIntervalMillis(),
         minionBuildProgressTracker,
@@ -229,6 +217,7 @@ public class MultiSlaveBuildModeRunnerFactory {
       DistBuildService distBuildService,
       StampedeId stampedeId,
       Optional<BuildId> clientBuildId,
+      CapacityService capacityService,
       BuildSlaveRunId buildSlaveRunId,
       ListenableFuture<BuildExecutor> localBuildExecutor,
       Path logDirectoryPath,
@@ -238,8 +227,7 @@ public class MultiSlaveBuildModeRunnerFactory {
       ListeningExecutorService executorService,
       ArtifactCache remoteCache,
       BuildSlaveTimingStatsTracker timingStatsTracker,
-      HealthCheckStatsTracker healthCheckStatsTracker,
-      double coordinatorBuildCapacityRatio) {
+      HealthCheckStatsTracker healthCheckStatsTracker) {
     return new CoordinatorAndMinionModeRunner(
         createCoordinator(
             delegateAndGraphsFuture,
@@ -265,12 +253,12 @@ public class MultiSlaveBuildModeRunnerFactory {
             distBuildService,
             stampedeId,
             MinionType.STANDARD_SPEC, // Coordinator should always run on standard spec machine.
+            capacityService,
             buildSlaveRunId,
             LOCALHOST_ADDRESS,
             OptionalInt.empty(),
             distBuildConfig,
             minionBuildProgressTracker,
-            coordinatorBuildCapacityRatio,
             eventBus));
   }
 
@@ -286,5 +274,31 @@ public class MultiSlaveBuildModeRunnerFactory {
     queueProvider.registerMinionQueue(MinionType.STANDARD_SPEC, standardSpecMinionQueue);
 
     return queueProvider;
+  }
+
+  private static CapacityTracker createCapacityTracker(
+      CapacityService service, DistBuildConfig distBuildConfig) {
+    int availableBuildCapacity =
+        distBuildConfig
+            .getBuckConfig()
+            .getView(ResourcesConfig.class)
+            .getConcurrencyLimit()
+            .threadLimit;
+
+    // We always need more than 1 core to make progress.
+    availableBuildCapacity = Math.max(1, availableBuildCapacity);
+
+    // For stacked builds (size > 1) we want to communicate with the build slave which
+    // coordinates multiple minion processes and keeps track of available cores.
+    if (distBuildConfig.getStackSize() > 1) {
+      LOG.info("Creating DefaultMultiBuildCapacityTracker");
+      // TODO(selim): choose greedy/naive implementation based on configuration
+      return new DefaultMultiBuildCapacityTracker(service, availableBuildCapacity);
+    }
+
+    // Otherwise we use have a single minion running on the host
+    // which can use all the available threads.
+    LOG.info("Creating SingleBuildCapacityTracker");
+    return new SingleBuildCapacityTracker(availableBuildCapacity);
   }
 }

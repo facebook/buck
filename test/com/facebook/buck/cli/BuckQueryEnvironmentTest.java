@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cli;
 
+import static java.util.Collections.singletonList;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
@@ -27,6 +28,7 @@ import com.facebook.buck.core.rules.knowntypes.DefaultKnownBuildRuleTypesFactory
 import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypesProvider;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
+import com.facebook.buck.event.BuckEventBusForTests.CapturingConsoleEventListener;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -50,6 +52,7 @@ import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.DefaultProcessExecutor;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -57,6 +60,7 @@ import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.concurrent.Executors;
+import org.hamcrest.CoreMatchers;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -72,6 +76,8 @@ public class BuckQueryEnvironmentTest {
   private Path cellRoot;
   private ListeningExecutorService executor;
   private PerBuildState parserState;
+  private BuckEventBus eventBus;
+  private CapturingConsoleEventListener capturingConsoleEventListener;
 
   private QueryTarget createQueryBuildTarget(String baseName, String shortName) {
     return QueryBuildTarget.of(BuildTargetFactory.newInstance(cellRoot, baseName, shortName));
@@ -79,6 +85,9 @@ public class BuckQueryEnvironmentTest {
 
   @Before
   public void setUp() throws IOException, InterruptedException {
+    eventBus = BuckEventBusForTests.newInstance();
+    capturingConsoleEventListener = new CapturingConsoleEventListener();
+    eventBus.register(capturingConsoleEventListener);
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "query_command", tmp);
     workspace.setUp();
@@ -103,7 +112,6 @@ public class BuckQueryEnvironmentTest {
             new ConstructorArgMarshaller(typeCoercerFactory),
             knownBuildRuleTypesProvider,
             executableFinder);
-    BuckEventBus eventBus = BuckEventBusForTests.newInstance();
     parserState =
         new PerBuildStateFactory()
             .create(
@@ -131,7 +139,7 @@ public class BuckQueryEnvironmentTest {
             parserState,
             executor,
             targetPatternEvaluator,
-            null /* TODO */,
+            eventBus,
             TYPE_COERCER_FACTORY);
     cellRoot = workspace.getDestPath();
   }
@@ -174,5 +182,15 @@ public class BuckQueryEnvironmentTest {
             createQueryBuildTarget("//example", "six-tests"));
     assertThat(
         buckQueryEnvironment.getTargetsMatchingPattern("//example:"), is(equalTo(expectedTargets)));
+  }
+
+  @Test
+  public void whenNonExistentFileIsQueriedAWarningIsIssued() throws QueryException {
+    ImmutableList<String> expectedTargets = ImmutableList.of("/foo/bar");
+    buckQueryEnvironment.getFileOwners(expectedTargets);
+    String expectedWarning = "File /foo/bar does not exist";
+    assertThat(
+        capturingConsoleEventListener.getLogMessages(),
+        CoreMatchers.equalTo(singletonList(expectedWarning)));
   }
 }

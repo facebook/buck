@@ -17,6 +17,10 @@
 package com.facebook.buck.js;
 
 import com.facebook.buck.core.cell.resolver.CellPathResolver;
+import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.HasDepsQuery;
+import com.facebook.buck.core.description.arg.HasTests;
+import com.facebook.buck.core.description.arg.Hint;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
@@ -33,11 +37,8 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleCreationContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.HasDepsQuery;
-import com.facebook.buck.rules.HasTests;
-import com.facebook.buck.rules.Hint;
+import com.facebook.buck.rules.DescriptionCache;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
@@ -317,7 +318,7 @@ public class JsLibraryDescription
                 + "dependencies, '%s', is of type %s.",
             baseTarget,
             target,
-            Description.getBuildRuleType(targetGraph.get(target).getDescription()).getName());
+            DescriptionCache.getBuildRuleType(targetGraph.get(target).getDescription()).getName());
       }
 
       return (JsLibrary) rule;

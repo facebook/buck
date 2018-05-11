@@ -21,6 +21,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.RuleKeyAppendable;
 import com.facebook.buck.core.rulekey.RuleKeyObjectSink;
+import com.facebook.buck.core.rules.modern.annotations.CustomClassBehavior;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -38,6 +39,11 @@ import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.RuleKeyAppendableFunction;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
+import com.facebook.buck.rules.modern.CustomClassSerialization;
+import com.facebook.buck.rules.modern.ValueCreator;
+import com.facebook.buck.rules.modern.ValueTypeInfo;
+import com.facebook.buck.rules.modern.ValueVisitor;
+import com.facebook.buck.rules.modern.impl.ValueTypeInfoFactory;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.WeakMemoizer;
 import com.google.common.base.Preconditions;
@@ -45,6 +51,8 @@ import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.reflect.TypeToken;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
@@ -54,6 +62,7 @@ import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 /** Helper class for handling preprocessing related tasks of a cxx compilation rule. */
+@CustomClassBehavior(PreprocessorDelegate.SerializationBehavior.class)
 final class PreprocessorDelegate implements RuleKeyAppendable, HasCustomDepsLogic {
 
   // Fields that are added to rule key as is.
@@ -68,7 +77,8 @@ final class PreprocessorDelegate implements RuleKeyAppendable, HasCustomDepsLogi
   @AddToRuleKey private final PreprocessorFlags preprocessorFlags;
 
   // Fields that are not added to the rule key.
-  private final Path workingDir;
+  private final PathSourcePath workingDir;
+
   private final Optional<SymlinkTree> sandbox;
 
   /**
@@ -82,13 +92,14 @@ final class PreprocessorDelegate implements RuleKeyAppendable, HasCustomDepsLogi
 
   private final Optional<BuildRule> aggregatedDeps;
 
-  private WeakMemoizer<HeaderPathNormalizer> headerPathNormalizer = new WeakMemoizer<>();
+  private final WeakMemoizer<HeaderPathNormalizer> headerPathNormalizer = new WeakMemoizer<>();
+
   private final Supplier<Optional<ConflictingHeadersResult>> lazyConflictingHeadersCheckResult =
       Suppliers.memoize(this::checkConflictingHeadersUncached);
 
   public PreprocessorDelegate(
       HeaderVerification headerVerification,
-      Path workingDir,
+      PathSourcePath workingDir,
       Preprocessor preprocessor,
       PreprocessorFlags preprocessorFlags,
       RuleKeyAppendableFunction<FrameworkPath, Path> frameworkPathSearchPathFunction,
@@ -387,6 +398,56 @@ final class PreprocessorDelegate implements RuleKeyAppendable, HasCustomDepsLogi
               + "- and %s\n\n"
               + "Please rename one of them or export one of them to a different path.",
           buildTarget, includeFilePath, headerPath1, headerPath2);
+    }
+  }
+
+  /** Custom serialization. */
+  static class SerializationBehavior implements CustomClassSerialization<PreprocessorDelegate> {
+    static final ValueTypeInfo<Preprocessor> PREPROCESSOR_TYPE_INFO =
+        ValueTypeInfoFactory.forTypeToken(new TypeToken<Preprocessor>() {});
+    static final ValueTypeInfo<RuleKeyAppendableFunction<FrameworkPath, Path>>
+        FRAMEWORK_PATH_FUNCTION_TYPE_INFO =
+            ValueTypeInfoFactory.forTypeToken(
+                new TypeToken<RuleKeyAppendableFunction<FrameworkPath, Path>>() {});
+    static final ValueTypeInfo<HeaderVerification> HEADER_VERIFICATION_TYPE_INFO =
+        ValueTypeInfoFactory.forTypeToken(new TypeToken<HeaderVerification>() {});
+    static final ValueTypeInfo<PreprocessorFlags> PREPROCESSOR_FLAGS_TYPE_INFO =
+        ValueTypeInfoFactory.forTypeToken(new TypeToken<PreprocessorFlags>() {});
+
+    @Override
+    public void serialize(PreprocessorDelegate instance, ValueVisitor<IOException> serializer)
+        throws IOException {
+      PREPROCESSOR_TYPE_INFO.visit(instance.preprocessor, serializer);
+      FRAMEWORK_PATH_FUNCTION_TYPE_INFO.visit(instance.frameworkPathSearchPathFunction, serializer);
+      HEADER_VERIFICATION_TYPE_INFO.visit(instance.headerVerification, serializer);
+      PREPROCESSOR_FLAGS_TYPE_INFO.visit(instance.preprocessorFlags, serializer);
+      serializer.visitSourcePath(instance.workingDir);
+      Preconditions.checkState(!instance.leadingIncludePaths.isPresent());
+      Preconditions.checkState(!instance.sandbox.isPresent());
+    }
+
+    @Override
+    public PreprocessorDelegate deserialize(ValueCreator<IOException> deserializer)
+        throws IOException {
+      Preprocessor preprocessor = PREPROCESSOR_TYPE_INFO.createNotNull(deserializer);
+      RuleKeyAppendableFunction<FrameworkPath, Path> frameworkPathSearchPathFunction =
+          FRAMEWORK_PATH_FUNCTION_TYPE_INFO.createNotNull(deserializer);
+      HeaderVerification headerVerification =
+          HEADER_VERIFICATION_TYPE_INFO.createNotNull(deserializer);
+      PreprocessorFlags preprocessorFlags =
+          PREPROCESSOR_FLAGS_TYPE_INFO.createNotNull(deserializer);
+      SourcePath workingDirSourcePath = deserializer.createSourcePath();
+      Preconditions.checkState(workingDirSourcePath instanceof PathSourcePath);
+      PathSourcePath workingDir = (PathSourcePath) workingDirSourcePath;
+      return new PreprocessorDelegate(
+          headerVerification,
+          workingDir,
+          preprocessor,
+          preprocessorFlags,
+          frameworkPathSearchPathFunction,
+          Optional.empty(),
+          Optional.empty(),
+          Optional.empty());
     }
   }
 }

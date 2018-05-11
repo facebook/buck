@@ -20,7 +20,7 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.graph.TraversableGraph;
-import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.DescriptionCache;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.google.common.base.Preconditions;
@@ -106,7 +106,7 @@ public class VersionedTargetGraph extends TargetGraph {
               .map(
                   n ->
                       String.format(
-                          "    %s (%s)", n, Description.getBuildRuleType(n.getDescription())))
+                          "    %s (%s)", n, DescriptionCache.getBuildRuleType(n.getDescription())))
               .collect(Collectors.joining(" depended on by" + System.lineSeparator()));
       return new HumanReadableException(msg);
     }

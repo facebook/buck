@@ -29,6 +29,7 @@ import static org.easymock.EasyMock.capture;
 import static org.easymock.EasyMock.expectLastCall;
 import static org.easymock.EasyMock.replay;
 
+import com.facebook.buck.core.build.engine.impl.DefaultRuleDepsCache;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.distributed.ArtifactCacheByBuildRule;
 import com.facebook.buck.distributed.testutil.CustomBuildRuleResolverFactory;
@@ -38,7 +39,6 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.RuleDepsCache;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
@@ -75,7 +75,7 @@ public class CacheOptimizedBuildTargetsQueueFactoryTest {
             localCacheHitTargets.stream().map(resolver::getRule).collect(Collectors.toList()));
 
     return new CacheOptimizedBuildTargetsQueueFactory(
-            resolver, artifactCache, false, new RuleDepsCache(resolver), false)
+            resolver, artifactCache, false, new DefaultRuleDepsCache(resolver), false)
         .createBuildTargetsQueue(
             topLevelTargets, ruleFinishedPublisher, MOST_BUILD_RULES_FINISHED_PERCENTAGE);
   }
@@ -95,7 +95,7 @@ public class CacheOptimizedBuildTargetsQueueFactoryTest {
             resolver,
             artifactCache,
             false,
-            new RuleDepsCache(resolver),
+            new DefaultRuleDepsCache(resolver),
             shouldBuildSelectedTargetsLocally)
         .createBuildTargetsQueue(
             topLevelTargets, ruleFinishedPublisher, MOST_BUILD_RULES_FINISHED_PERCENTAGE);

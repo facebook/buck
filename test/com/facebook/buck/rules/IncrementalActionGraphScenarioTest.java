@@ -26,6 +26,8 @@ import com.facebook.buck.config.ActionGraphParallelizationMode;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.config.IncrementalActionGraphMode;
+import com.facebook.buck.core.build.engine.RuleDepsCache;
+import com.facebook.buck.core.build.engine.impl.DefaultRuleDepsCache;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.FlavorDomain;
@@ -901,7 +903,7 @@ public class IncrementalActionGraphScenarioTest {
 
   private void queryTransitiveDeps(ActionGraphAndResolver result) {
     Set<BuildRule> visited = new HashSet<>();
-    RuleDepsCache depsCache = new RuleDepsCache(result.getResolver());
+    RuleDepsCache depsCache = new DefaultRuleDepsCache(result.getResolver());
     for (BuildRule buildRule : result.getActionGraph().getNodes()) {
       queryTransitiveDeps(buildRule, depsCache, visited);
     }

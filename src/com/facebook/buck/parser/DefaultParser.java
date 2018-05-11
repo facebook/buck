@@ -111,7 +111,7 @@ public class DefaultParser implements Parser {
   }
 
   @VisibleForTesting
-  static ImmutableSet<Map<String, Object>> getRawTargetNodes(
+  static ImmutableSet<Map<String, Object>> getTargetNodeRawAttributes(
       PerBuildState state, Cell cell, Path buildFile) throws BuildFileParseException {
     Preconditions.checkState(buildFile.isAbsolute());
     Preconditions.checkState(buildFile.startsWith(cell.getRoot()));
@@ -190,13 +190,13 @@ public class DefaultParser implements Parser {
 
   @Nullable
   @Override
-  public SortedMap<String, Object> getRawTargetNode(
+  public SortedMap<String, Object> getTargetNodeRawAttributes(
       PerBuildState state, Cell cell, TargetNode<?, ?> targetNode) throws BuildFileParseException {
     try {
 
       Cell owningCell = cell.getCell(targetNode.getBuildTarget());
       ImmutableSet<Map<String, Object>> allRawNodes =
-          getRawTargetNodes(
+          getTargetNodeRawAttributes(
               state, owningCell, cell.getAbsolutePathToBuildFile(targetNode.getBuildTarget()));
 
       String shortName = targetNode.getBuildTarget().getShortName();
@@ -221,13 +221,13 @@ public class DefaultParser implements Parser {
   }
 
   /**
-   * @deprecated Prefer {@link #getRawTargetNode(PerBuildState, Cell, TargetNode)} and reusing a
-   *     PerBuildState instance, especially when calling in a loop.
+   * @deprecated Prefer {@link #getTargetNodeRawAttributes(PerBuildState, Cell, TargetNode)} and
+   *     reusing a PerBuildState instance, especially when calling in a loop.
    */
   @Nullable
   @Deprecated
   @Override
-  public SortedMap<String, Object> getRawTargetNode(
+  public SortedMap<String, Object> getTargetNodeRawAttributes(
       BuckEventBus eventBus,
       Cell cell,
       boolean enableProfiling,
@@ -247,7 +247,7 @@ public class DefaultParser implements Parser {
             knownBuildRuleTypesProvider,
             enableProfiling,
             SpeculativeParsing.DISABLED)) {
-      return getRawTargetNode(state, cell, targetNode);
+      return getTargetNodeRawAttributes(state, cell, targetNode);
     }
   }
 
@@ -471,17 +471,8 @@ public class DefaultParser implements Parser {
       throws BuildFileParseException, InterruptedException, IOException {
 
     ParserConfig parserConfig = rootCell.getBuckConfig().getView(ParserConfig.class);
-
-    ParserConfig.BuildFileSearchMethod buildFileSearchMethod;
-    if (parserConfig.getBuildFileSearchMethod().isPresent()) {
-      buildFileSearchMethod = parserConfig.getBuildFileSearchMethod().get();
-    } else if (parserConfig.getAllowSymlinks() == ParserConfig.AllowSymlinks.FORBID) {
-      // If unspecified, only use Watchman in repositories which enforce a "no symlinks" rule
-      // (Watchman doesn't follow symlinks).
-      buildFileSearchMethod = ParserConfig.BuildFileSearchMethod.WATCHMAN;
-    } else {
-      buildFileSearchMethod = ParserConfig.BuildFileSearchMethod.FILESYSTEM_CRAWL;
-    }
+    ParserConfig.BuildFileSearchMethod buildFileSearchMethod =
+        parserConfig.getBuildFileSearchMethod();
 
     // Convert the input spec iterable into a list so we have a fixed ordering, which we'll rely on
     // when returning results.

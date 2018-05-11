@@ -15,12 +15,12 @@
  */
 package com.facebook.buck.ide.intellij.lang.android;
 
+import com.facebook.buck.core.description.arg.CommonDescriptionArg;
 import com.facebook.buck.ide.intellij.BaseIjModuleRule;
 import com.facebook.buck.ide.intellij.ModuleBuildContext;
 import com.facebook.buck.ide.intellij.model.IjModuleFactoryResolver;
 import com.facebook.buck.ide.intellij.model.IjProjectConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.TargetNode;
 
 public abstract class AndroidModuleRule<T extends CommonDescriptionArg>

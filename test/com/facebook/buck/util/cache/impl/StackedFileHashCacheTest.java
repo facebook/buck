@@ -72,7 +72,7 @@ public class StackedFileHashCacheTest {
   public void usesFirstCacheAbsolutePath() throws IOException {
     ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
 
-    Path path = Paths.get("world.txt");
+    Path path = filesystem.getPath("world.txt");
     filesystem.touch(path);
 
     Path fullPath = filesystem.resolve(path);
@@ -87,7 +87,7 @@ public class StackedFileHashCacheTest {
   public void usesFirstCache() throws IOException {
     ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
 
-    Path path = Paths.get("world.txt");
+    Path path = filesystem.getPath("world.txt");
     filesystem.touch(path);
 
     ProjectFileHashCache innerCache =
@@ -101,7 +101,7 @@ public class StackedFileHashCacheTest {
   public void usesFirstCacheForArchivePathAbsolutePath() throws IOException {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
 
-    Path path = Paths.get("world.jar");
+    Path path = filesystem.getPath("world.jar");
     writeJarWithHashes(filesystem, path);
 
     ArchiveMemberPath archiveMemberPath =

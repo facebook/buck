@@ -122,7 +122,10 @@ public class DefaultProjectFilesystemFactory implements ProjectFilesystemFactory
               .get()
               .getEmbeddedCellsBuckOutBaseDir()
               .resolve(embeddedCellBuckOutInfo.get().getCellName());
-      buckPaths = buckPaths.withConfiguredBuckOut(rootPath.relativize(cellBuckOut));
+      buckPaths =
+          buckPaths
+              .withConfiguredBuckOut(rootPath.relativize(cellBuckOut))
+              .withBuckOut(rootPath.relativize(cellBuckOut));
     } else if (configuredBuckOut.isPresent()) {
       buckPaths =
           buckPaths.withConfiguredBuckOut(

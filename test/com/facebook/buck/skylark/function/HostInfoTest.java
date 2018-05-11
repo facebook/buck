@@ -24,7 +24,7 @@ import com.facebook.buck.io.filesystem.skylark.SkylarkFilesystem;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.options.ProjectBuildFileParserOptions;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
-import com.facebook.buck.skylark.io.impl.SimpleGlobber;
+import com.facebook.buck.skylark.io.impl.NativeGlobber;
 import com.facebook.buck.skylark.parser.BuckGlobals;
 import com.facebook.buck.skylark.parser.RuleFunctionFactory;
 import com.facebook.buck.skylark.parser.SkylarkProjectBuildFileParser;
@@ -258,7 +258,7 @@ public class HostInfoTest {
     Files.write(fs.resolve("file.bzl"), macroFile.getBytes(Charsets.UTF_8));
 
     SkylarkProjectBuildFileParser parser = createParser(cell.getFilesystem(), eventHandler);
-    parser.getAll(fs.resolve("BUCK"), new AtomicLong());
+    parser.getBuildFileManifest(fs.resolve("BUCK"), new AtomicLong());
   }
 
   private SkylarkProjectBuildFileParser createParser(
@@ -284,6 +284,6 @@ public class HostInfoTest {
             .setRuleFunctionFactory(ruleFunctionFactory)
             .build(),
         eventHandler,
-        SimpleGlobber::create);
+        NativeGlobber::create);
   }
 }

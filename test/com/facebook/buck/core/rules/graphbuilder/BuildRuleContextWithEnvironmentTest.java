@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.cell.resolver.CellPathResolver;
+import com.facebook.buck.core.graph.transformation.TestTransformationEnvironment;
 import com.facebook.buck.core.graph.transformation.TransformationEnvironment;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.provider.BuildRuleInfoProviderCollection;
@@ -39,13 +40,14 @@ import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TestBuildRuleResolver;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.toolchain.ToolchainProvider;
+import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.Futures;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
 import java.util.function.Function;
-import org.easymock.Capture;
-import org.easymock.EasyMock;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -69,7 +71,7 @@ public class BuildRuleContextWithEnvironmentTest {
     ruleResolver = new TestBuildRuleResolver();
     projectFilesystem = new FakeProjectFilesystem();
     cellPathResolver = new TestCellBuilder().build().getCellPathResolver();
-    toolchainProvider = EasyMock.createMock(ToolchainProvider.class);
+    toolchainProvider = new ToolchainProviderBuilder().build();
 
     providerCollectionBuilder =
         BuildRuleInfoProviderCollection.builder()
@@ -87,9 +89,6 @@ public class BuildRuleContextWithEnvironmentTest {
 
   @Test
   public void canRetrieveSingleDependency() {
-    TransformationEnvironment<BuildRuleKey, BuildRule> environment =
-        EasyMock.createMock(TransformationEnvironment.class);
-
     BuildTarget fakeKeyTarget = BuildTargetFactory.newInstance("//fake:key");
     TargetNode fakeTargetNode = FakeTargetNodeBuilder.build(new FakeBuildRule(fakeKeyTarget));
     mutableTargetGraph.addNode(fakeTargetNode);
@@ -109,12 +108,15 @@ public class BuildRuleContextWithEnvironmentTest {
 
     BuildRule returnedRule = new FakeBuildRuleWithProviders(providerCollectionBuilder.build());
 
-    Capture<Function<BuildRule, BuildRule>> functionCapture = EasyMock.newCapture();
-    EasyMock.expect(environment.evaluate(EasyMock.eq(key), EasyMock.capture(functionCapture)))
-        .andAnswer(
-            () ->
-                CompletableFuture.completedFuture(functionCapture.getValue().apply(returnedRule)));
-    EasyMock.replay(environment);
+    TransformationEnvironment<BuildRuleKey, BuildRule> environment =
+        new TestTransformationEnvironment<BuildRuleKey, BuildRule>() {
+          @Override
+          public CompletionStage<BuildRule> evaluate(
+              BuildRuleKey buildRuleKey, Function<BuildRule, BuildRule> asyncTransformation) {
+            Preconditions.checkArgument(key.equals(buildRuleKey));
+            return CompletableFuture.completedFuture(asyncTransformation.apply(returnedRule));
+          }
+        };
 
     BuildRuleContextWithEnvironment context =
         ImmutableBuildRuleContextWithEnvironment.of(key, environment);
@@ -133,9 +135,6 @@ public class BuildRuleContextWithEnvironmentTest {
 
   @Test
   public void canRetrieveMultipleDependencies() {
-    TransformationEnvironment<BuildRuleKey, BuildRule> environment =
-        EasyMock.createMock(TransformationEnvironment.class);
-
     BuildTarget fakeKeyTarget1 = BuildTargetFactory.newInstance("//fake:key1");
     BuildTarget fakeKeyTarget2 = BuildTargetFactory.newInstance("//fake:key2");
 
@@ -169,19 +168,18 @@ public class BuildRuleContextWithEnvironmentTest {
         new FakeBuildRuleWithProviders(
             providerCollectionBuilder.put(new FakeBuildRuleInfoProvider(1)).build());
 
-    Capture<Function<ImmutableMap<BuildRuleKey, BuildRule>, BuildRule>> functionCapture =
-        EasyMock.newCapture();
-    EasyMock.expect(
-            environment.evaluateAll(
-                EasyMock.eq(ImmutableSet.of(key1, key2)), EasyMock.capture(functionCapture)))
-        .andAnswer(
-            () ->
-                CompletableFuture.completedFuture(
-                    functionCapture
-                        .getValue()
-                        .apply(ImmutableMap.of(key1, returnedRule1, key2, returnedRule2))));
-
-    EasyMock.replay(environment);
+    TransformationEnvironment<BuildRuleKey, BuildRule> environment =
+        new TestTransformationEnvironment<BuildRuleKey, BuildRule>() {
+          @Override
+          public CompletionStage<BuildRule> evaluateAll(
+              Iterable<BuildRuleKey> buildRuleKeys,
+              Function<ImmutableMap<BuildRuleKey, BuildRule>, BuildRule> asyncTransformation) {
+            Preconditions.checkArgument(ImmutableSet.of(key1, key2).equals(buildRuleKeys));
+            return CompletableFuture.completedFuture(
+                asyncTransformation.apply(
+                    ImmutableMap.of(key1, returnedRule1, key2, returnedRule2)));
+          }
+        };
 
     BuildRuleContextWithEnvironment context =
         ImmutableBuildRuleContextWithEnvironment.of(key1, environment);

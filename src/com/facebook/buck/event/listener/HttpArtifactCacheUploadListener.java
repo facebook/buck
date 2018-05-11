@@ -18,12 +18,12 @@ package com.facebook.buck.event.listener;
 
 import com.facebook.buck.artifact_cache.ArtifactCacheEvent;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
+import com.facebook.buck.core.build.event.BuildEvent;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.counters.CounterSnapshot;
 import com.facebook.buck.counters.CountersSnapshotEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventListener;
-import com.facebook.buck.rules.BuildEvent;
 import com.google.common.collect.Lists;
 import com.google.common.eventbus.Subscribe;
 

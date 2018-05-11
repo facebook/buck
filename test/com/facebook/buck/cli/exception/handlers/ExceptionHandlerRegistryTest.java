@@ -159,8 +159,25 @@ public class ExceptionHandlerRegistryTest {
 
   @Test
   public void testWithThrowable() {
-    assertThat(registry.handleException(new Throwable()), is(ExitCode.FATAL_GENERIC));
+    String throwableMessage = "this is a throwable";
+    assertThat(
+        registry.handleException(new Throwable(throwableMessage)), is(ExitCode.FATAL_GENERIC));
     String consoleText = console.getTextWrittenToStdErr();
     assertThat(consoleText, containsString("UNKNOWN ERROR"));
+    assertThat(consoleText, containsString(throwableMessage));
+  }
+
+  @Test
+  public void testWithThrowableWithLoopInCauses() {
+    String throwableMessage = "this is a throwable with a loop in its causes";
+    Exception t4 = new Exception("t4");
+    Exception t0 =
+        new Exception(
+            throwableMessage, new Exception("t1", new Exception("t2", new Exception("t3", t4))));
+    t4.initCause(t0.getCause());
+    assertThat(registry.handleException(t0), is(ExitCode.FATAL_GENERIC));
+    String consoleText = console.getTextWrittenToStdErr();
+    assertThat(consoleText, containsString("UNKNOWN ERROR"));
+    assertThat(consoleText, containsString(throwableMessage));
   }
 }

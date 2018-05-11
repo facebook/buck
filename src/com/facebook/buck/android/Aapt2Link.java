@@ -54,6 +54,7 @@ import javax.annotation.Nullable;
 /** Perform the "aapt2 link" step of building an Android app. */
 public class Aapt2Link extends AbstractBuildRule {
   @AddToRuleKey private final boolean noAutoVersion;
+  @AddToRuleKey private final boolean includesVectorDrawables;
   @AddToRuleKey private final ImmutableList<Aapt2Compile> compileRules;
   @AddToRuleKey private final SourcePath manifest;
   @AddToRuleKey private final ManifestEntries manifestEntries;
@@ -72,6 +73,7 @@ public class Aapt2Link extends AbstractBuildRule {
       ManifestEntries manifestEntries,
       ImmutableList<SourcePath> dependencyResourceApks,
       boolean noAutoVersion,
+      boolean includesVectorDrawables,
       AndroidPlatformTarget androidPlatformTarget) {
     super(buildTarget, projectFilesystem);
     this.androidPlatformTarget = androidPlatformTarget;
@@ -80,6 +82,7 @@ public class Aapt2Link extends AbstractBuildRule {
     this.manifestEntries = manifestEntries;
     this.dependencyResourceApks = dependencyResourceApks;
     this.noAutoVersion = noAutoVersion;
+    this.includesVectorDrawables = includesVectorDrawables;
     this.buildDepsSupplier =
         MoreSuppliers.memoize(
             () ->
@@ -244,6 +247,11 @@ public class Aapt2Link extends AbstractBuildRule {
       if (noAutoVersion) {
         builder.add("--no-auto-version");
       }
+
+      if (includesVectorDrawables) {
+        builder.add("--no-version-vectors");
+      }
+
       builder.add("--auto-add-overlay");
 
       ProjectFilesystem pf = getProjectFilesystem();

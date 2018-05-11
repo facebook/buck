@@ -30,9 +30,16 @@ import com.facebook.buck.artifact_cache.NoopArtifactCache;
 import com.facebook.buck.command.BuildExecutorArgs;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.FakeBuckConfig;
+import com.facebook.buck.core.build.distributed.synchronization.impl.NoOpRemoteBuildRuleCompletionNotifier;
+import com.facebook.buck.core.build.engine.cache.manager.BuildInfoStoreManager;
+import com.facebook.buck.core.build.engine.delegate.CachingBuildEngineDelegate;
+import com.facebook.buck.core.build.engine.delegate.LocalCachingBuildEngineDelegate;
+import com.facebook.buck.core.build.engine.impl.DefaultRuleDepsCache;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.graph.ActionAndTargetGraphs;
 import com.facebook.buck.core.rulekey.RuleKey;
+import com.facebook.buck.core.rulekey.calculator.ParallelRuleKeyCalculator;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.distributed.BuildSlaveEventWrapper;
 import com.facebook.buck.distributed.ClientStatsTracker;
@@ -63,16 +70,9 @@ import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.module.TestBuckModuleManagerFactory;
 import com.facebook.buck.plugin.impl.BuckPluginManagerFactory;
-import com.facebook.buck.rules.ActionAndTargetGraphs;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.ActionGraphAndResolver;
-import com.facebook.buck.rules.BuildInfoStoreManager;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.CachingBuildEngineDelegate;
-import com.facebook.buck.rules.LocalCachingBuildEngineDelegate;
-import com.facebook.buck.rules.NoOpRemoteBuildRuleCompletionNotifier;
-import com.facebook.buck.rules.ParallelRuleKeyCalculator;
-import com.facebook.buck.rules.RuleDepsCache;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphAndBuildTargets;
@@ -292,7 +292,7 @@ public class BuildPhaseTest {
                     new TrackedRuleKeyCache<RuleKey>(
                         new DefaultRuleKeyCache<>(), new NoOpCacheStatsTracker()),
                     Optional.empty()),
-                new RuleDepsCache(graphs.getActionGraphAndResolver().getResolver()),
+                new DefaultRuleDepsCache(graphs.getActionGraphAndResolver().getResolver()),
                 (buckEventBus, rule) -> () -> {})));
 
     verify(mockDistBuildService);

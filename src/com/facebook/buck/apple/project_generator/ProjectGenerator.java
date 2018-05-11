@@ -75,6 +75,7 @@ import com.facebook.buck.apple.xcode.xcodeproj.XCBuildConfiguration;
 import com.facebook.buck.apple.xcode.xcodeproj.XCVersionGroup;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.resolver.CellPathResolver;
+import com.facebook.buck.core.description.arg.HasTests;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.UnflavoredBuildTarget;
@@ -114,7 +115,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.HasTests;
 import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
@@ -263,6 +263,8 @@ public class ProjectGenerator {
   private final ImmutableSet.Builder<Path> xcconfigPathsBuilder = ImmutableSet.builder();
   private final ImmutableList.Builder<CopyInXcode> filesToCopyInXcodeBuilder =
       ImmutableList.builder();
+  private final ImmutableList.Builder<SourcePath> genruleFiles = ImmutableList.builder();
+  private final ImmutableSet.Builder<SourcePath> filesAddedBuilder = ImmutableSet.builder();
 
   public ProjectGenerator(
       TargetGraph targetGraph,
@@ -423,6 +425,8 @@ public class ProjectGenerator {
         }
       }
 
+      addGenruleFiles();
+
       if (!hasAtLeastOneTarget && focusModules.hasFocus()) {
         return;
       }
@@ -456,6 +460,32 @@ public class ProjectGenerator {
         throw (HumanReadableException) e.getCause();
       } else {
         throw originalException;
+      }
+    }
+  }
+
+  /** Add all source files of genrules in a group "Other". */
+  private void addGenruleFiles() {
+    ImmutableSet<SourcePath> filesAdded = filesAddedBuilder.build();
+    PBXGroup group = project.getMainGroup();
+    ImmutableList<SourcePath> files = genruleFiles.build();
+    if (files.size() > 0) {
+      PBXGroup otherGroup = group.getOrCreateChildGroupByName("Other");
+      for (SourcePath sourcePath : files) {
+        // Make sure we don't add duplicates of existing files in this section.
+        if (filesAdded.contains(sourcePath)) {
+          continue;
+        }
+        Path path = pathRelativizer.outputPathToSourcePath(sourcePath);
+        ImmutableList<String> targetGroupPath = null;
+        PBXGroup sourceGroup = otherGroup;
+        if (path.getParent() != null) {
+          targetGroupPath =
+              RichStream.from(path.getParent()).map(Object::toString).toImmutableList();
+          sourceGroup = otherGroup.getOrCreateDescendantGroupByPath(targetGroupPath);
+        }
+        sourceGroup.getOrCreateFileReferenceBySourceTreePath(
+            new SourceTreePath(PBXReference.SourceTree.SOURCE_ROOT, path, Optional.empty()));
       }
     }
   }
@@ -535,7 +565,9 @@ public class ProjectGenerator {
                 HalideLibraryDescription.HALIDE_COMPILE_FLAVOR, defaultCxxPlatform.getFlavor()));
       }
     } else if (targetNode.getDescription() instanceof AbstractGenruleDescription) {
-      addGenruleFiles(project, (TargetNode<AbstractGenruleDescription.CommonArg, ?>) targetNode);
+      TargetNode<AbstractGenruleDescription.CommonArg, ?> genruleNode =
+          (TargetNode<AbstractGenruleDescription.CommonArg, ?>) targetNode;
+      genruleFiles.addAll(genruleNode.getConstructorArg().getSrcs());
     }
     buckEventBus.post(ProjectGenerationEvent.processed());
     return result;
@@ -1003,6 +1035,11 @@ public class ProjectGenerator {
 
     if (!options.shouldGenerateHeaderSymlinkTreesOnly()) {
       if (isFocusedOnTarget) {
+        filesAddedBuilder.addAll(
+            arg.getSrcs()
+                .stream()
+                .map(s -> s.getSourcePath())
+                .collect(ImmutableList.toImmutableList()));
         mutator
             .setLangPreprocessorFlags(
                 ImmutableMap.copyOf(
@@ -1813,22 +1850,6 @@ public class ProjectGenerator {
           "LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]", Joiner.on(' ').join(macOSLdRunpathSearchPaths));
     }
     return results.build();
-  }
-
-  private void addGenruleFiles(
-      PBXProject project, TargetNode<AbstractGenruleDescription.CommonArg, ?> targetNode) {
-    PBXGroup group = project.getMainGroup();
-    for (SourcePath sourcePath : targetNode.getConstructorArg().getSrcs()) {
-      Path path = pathRelativizer.outputPathToSourcePath(sourcePath);
-      ImmutableList<String> targetGroupPath = null;
-      PBXGroup sourceGroup = group.getOrCreateChildGroupByName("Other");
-      if (path.getParent() != null) {
-        targetGroupPath = RichStream.from(path.getParent()).map(Object::toString).toImmutableList();
-        sourceGroup = sourceGroup.getOrCreateDescendantGroupByPath(targetGroupPath);
-      }
-      sourceGroup.getOrCreateFileReferenceBySourceTreePath(
-          new SourceTreePath(PBXReference.SourceTree.SOURCE_ROOT, path, Optional.empty()));
-    }
   }
 
   private ImmutableSortedMap<Path, SourcePath> getPublicCxxHeaders(

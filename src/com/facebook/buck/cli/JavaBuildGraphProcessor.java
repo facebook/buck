@@ -17,7 +17,12 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.build.distributed.synchronization.impl.NoOpRemoteBuildRuleCompletionWaiter;
 import com.facebook.buck.core.build.engine.BuildEngineBuildContext;
+import com.facebook.buck.core.build.engine.config.CachingBuildEngineBuckConfig;
+import com.facebook.buck.core.build.engine.delegate.LocalCachingBuildEngineDelegate;
+import com.facebook.buck.core.build.engine.impl.CachingBuildEngine;
+import com.facebook.buck.core.build.engine.type.BuildType;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
@@ -29,11 +34,7 @@ import com.facebook.buck.parser.BuildFileSpec;
 import com.facebook.buck.parser.TargetNodePredicateSpec;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.CachingBuildEngine;
-import com.facebook.buck.rules.CachingBuildEngineBuckConfig;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.rules.LocalCachingBuildEngineDelegate;
-import com.facebook.buck.rules.NoOpRemoteBuildRuleCompletionWaiter;
 import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
@@ -141,7 +142,7 @@ final class JavaBuildGraphProcessor {
                   Optional.empty(),
                   pool.getWeightedListeningExecutorService(),
                   new DefaultStepRunner(),
-                  CachingBuildEngine.BuildMode.SHALLOW,
+                  BuildType.SHALLOW,
                   cachingBuildEngineBuckConfig.getBuildMetadataStorage(),
                   cachingBuildEngineBuckConfig.getBuildDepFiles(),
                   cachingBuildEngineBuckConfig.getBuildMaxDepFileCacheEntries(),

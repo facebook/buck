@@ -38,6 +38,7 @@ import com.facebook.buck.rules.modern.impl.InputsVisitor;
 import com.facebook.buck.rules.modern.impl.OutputPathVisitor;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
+import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.types.Either;
 import com.google.common.base.Preconditions;
@@ -175,6 +176,14 @@ public class ModernBuildRule<T extends Buildable> extends AbstractBuildRule
     return null;
   }
 
+  /**
+   * This field could be used unsafely, most ModernBuildRule should never need this directly and it
+   * should only be used within the getBuildSteps() call.
+   */
+  public OutputPathResolver getOutputPathResolver() {
+    return outputPathResolver;
+  }
+
   @Override
   public void updateBuildRuleResolver(
       BuildRuleResolver ruleResolver,
@@ -219,8 +228,11 @@ public class ModernBuildRule<T extends Buildable> extends AbstractBuildRule
   @Override
   public final ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
-    recordOutputs(buildableContext);
-    return stepsForBuildable(context, buildable, getProjectFilesystem(), getBuildTarget());
+    ImmutableList.Builder<Path> outputsBuilder = ImmutableList.builder();
+    recordOutputs(outputsBuilder::add);
+    ImmutableList<Path> outputs = outputsBuilder.build();
+    outputs.forEach(buildableContext::recordArtifact);
+    return stepsForBuildable(context, buildable, getProjectFilesystem(), getBuildTarget(), outputs);
   }
 
   /**
@@ -228,9 +240,23 @@ public class ModernBuildRule<T extends Buildable> extends AbstractBuildRule
    * (callers should call recordOutputs() themselves).
    */
   public static <T extends Buildable> ImmutableList<Step> stepsForBuildable(
-      BuildContext context, T buildable, ProjectFilesystem filesystem, BuildTarget buildTarget) {
+      BuildContext context,
+      T buildable,
+      ProjectFilesystem filesystem,
+      BuildTarget buildTarget,
+      Iterable<Path> outputs) {
     ImmutableList.Builder<Step> stepBuilder = ImmutableList.builder();
     OutputPathResolver outputPathResolver = new DefaultOutputPathResolver(filesystem, buildTarget);
+
+    // TODO(cjhopman): This should probably actually be handled by the build engine.
+    for (Path output : outputs) {
+      stepBuilder.add(
+          RmStep.of(
+                  BuildCellRelativePath.fromCellRelativePath(
+                      context.getBuildCellRootPath(), filesystem, output))
+              .withRecursive(true));
+    }
+
     stepBuilder.addAll(
         MakeCleanDirectoryStep.of(
             BuildCellRelativePath.fromCellRelativePath(
@@ -239,6 +265,7 @@ public class ModernBuildRule<T extends Buildable> extends AbstractBuildRule
         MakeCleanDirectoryStep.of(
             BuildCellRelativePath.fromCellRelativePath(
                 context.getBuildCellRootPath(), filesystem, outputPathResolver.getTempPath())));
+
     stepBuilder.addAll(
         buildable.getBuildSteps(
             context,
@@ -257,11 +284,35 @@ public class ModernBuildRule<T extends Buildable> extends AbstractBuildRule
     return stepBuilder.build();
   }
 
+  /** Return the steps for a buildable. */
+  public static <T extends Buildable> ImmutableList<Step> stepsForBuildable(
+      BuildContext context, T buildable, ProjectFilesystem filesystem, BuildTarget buildTarget) {
+    ImmutableList.Builder<Path> outputs = ImmutableList.builder();
+    recordOutputs(
+        outputs::add,
+        new DefaultOutputPathResolver(filesystem, buildTarget),
+        DefaultClassInfoFactory.forInstance(buildable),
+        buildable);
+    return stepsForBuildable(context, buildable, filesystem, buildTarget, outputs.build());
+  }
+
   /**
    * Records the outputs of this buildrule. An output will only be recorded once (i.e. no duplicates
    * and if a directory is recorded, none of its contents will be).
    */
   public void recordOutputs(BuildableContext buildableContext) {
+    recordOutputs(buildableContext, outputPathResolver, classInfo, buildable);
+  }
+
+  /**
+   * Records the outputs of this buildrule. An output will only be recorded once (i.e. no duplicates
+   * and if a directory is recorded, none of its contents will be).
+   */
+  public static <T extends Buildable> void recordOutputs(
+      BuildableContext buildableContext,
+      OutputPathResolver outputPathResolver,
+      ClassInfo<T> classInfo,
+      T buildable) {
     Stream.Builder<Path> collector = Stream.builder();
     collector.add(outputPathResolver.getRootPath());
     classInfo.visit(
@@ -277,7 +328,7 @@ public class ModernBuildRule<T extends Buildable> extends AbstractBuildRule
     }
   }
 
-  private boolean shouldRecord(Set<Path> outputs, Path path) {
+  private static boolean shouldRecord(Set<Path> outputs, Path path) {
     Path parent = path.getParent();
     while (parent != null) {
       if (outputs.contains(parent)) {

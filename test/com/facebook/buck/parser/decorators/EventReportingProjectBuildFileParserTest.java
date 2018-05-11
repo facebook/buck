@@ -21,12 +21,14 @@ import static org.junit.Assert.*;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.json.ProjectBuildFileParseEvents;
+import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.eventbus.Subscribe;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 import org.hamcrest.Matchers;
 import org.junit.Before;
@@ -40,8 +42,7 @@ public class EventReportingProjectBuildFileParserTest {
   private EventReportingProjectBuildFileParser parser;
   private ProjectBuildFileParseEventListener listener;
   private AtomicLong processedBytes;
-  private ImmutableList<Map<String, Object>> allRules;
-  private ImmutableList<Map<String, Object>> allRulesAndMetadata;
+  private BuildFileManifest allRulesAndMetadata;
 
   private static class ProjectBuildFileParseEventListener {
     private int startedCount;
@@ -78,13 +79,7 @@ public class EventReportingProjectBuildFileParserTest {
     private boolean isClosed;
 
     @Override
-    public ImmutableList<Map<String, Object>> getAll(Path buildFile, AtomicLong processedBytes) {
-      return allRules;
-    }
-
-    @Override
-    public ImmutableList<Map<String, Object>> getAllRulesAndMetaRules(
-        Path buildFile, AtomicLong processedBytes) {
+    public BuildFileManifest getBuildFileManifest(Path buildFile, AtomicLong processedBytes) {
       return allRulesAndMetadata;
     }
 
@@ -114,39 +109,30 @@ public class EventReportingProjectBuildFileParserTest {
   }
 
   @Test
-  public void getAllRecordsStartEvent() throws Exception {
-    assertFalse(listener.isStarted());
-    parser.getAll(SOME_PATH, processedBytes);
-    assertTrue(listener.isStarted());
-  }
-
-  @Test
-  public void getAllReturnsUnderlyingRules() throws Exception {
-    allRules = ImmutableList.of();
-    assertSame(allRules, parser.getAll(SOME_PATH, processedBytes));
-  }
-
-  @Test
   public void startEventIsRecordedOnlyOnce() throws Exception {
     assertFalse(listener.isStarted());
-    parser.getAll(SOME_PATH, processedBytes);
-    parser.getAllRulesAndMetaRules(SOME_PATH, processedBytes);
-    parser.getAll(SOME_PATH, processedBytes);
+    parser.getBuildFileManifest(SOME_PATH, processedBytes);
+    parser.getBuildFileManifest(SOME_PATH, processedBytes);
     assertTrue(listener.isStarted());
     assertThat(listener.getStartedCount(), Matchers.is(1));
   }
 
   @Test
-  public void getAllRulesAndMetaRulesFiresStartEvent() throws Exception {
+  public void getBuildFileManifestFiresStartEvent() throws Exception {
     assertFalse(listener.isStarted());
-    parser.getAllRulesAndMetaRules(SOME_PATH, processedBytes);
+    parser.getBuildFileManifest(SOME_PATH, processedBytes);
     assertTrue(listener.isStarted());
   }
 
   @Test
-  public void getAllRulesAndMetaRulesReturnsUnderlyingRules() throws Exception {
-    allRulesAndMetadata = ImmutableList.of();
-    assertSame(allRulesAndMetadata, parser.getAllRulesAndMetaRules(SOME_PATH, processedBytes));
+  public void getBuildFileManifestReturnsUnderlyingRules() throws Exception {
+    allRulesAndMetadata =
+        BuildFileManifest.builder()
+            .setTargets(ImmutableList.of())
+            .setIncludes(ImmutableSortedSet.of())
+            .setConfigs(ImmutableMap.of())
+            .build();
+    assertSame(allRulesAndMetadata, parser.getBuildFileManifest(SOME_PATH, processedBytes));
   }
 
   @Test
@@ -158,7 +144,7 @@ public class EventReportingProjectBuildFileParserTest {
 
   @Test
   public void closeReportsFinishedEvent() throws Exception {
-    parser.getAll(SOME_PATH, processedBytes);
+    parser.getBuildFileManifest(SOME_PATH, processedBytes);
     assertFalse(listener.isFinished());
     parser.close();
     assertTrue(listener.isFinished());

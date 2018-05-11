@@ -129,9 +129,18 @@ abstract class AbstractParserConfig implements ConfigView<BuckConfig> {
   }
 
   @Value.Lazy
-  public Optional<BuildFileSearchMethod> getBuildFileSearchMethod() {
-    return getDelegate()
-        .getEnum("project", "build_file_search_method", BuildFileSearchMethod.class);
+  public BuildFileSearchMethod getBuildFileSearchMethod() {
+    Optional<BuildFileSearchMethod> buildFileSearchMethod =
+        getDelegate().getEnum("project", "build_file_search_method", BuildFileSearchMethod.class);
+    if (buildFileSearchMethod.isPresent()) {
+      return buildFileSearchMethod.get();
+    } else if (getAllowSymlinks() == ParserConfig.AllowSymlinks.FORBID) {
+      // If unspecified, only use Watchman in repositories which enforce a "no symlinks" rule
+      // (Watchman doesn't follow symlinks).
+      return BuildFileSearchMethod.WATCHMAN;
+    } else {
+      return BuildFileSearchMethod.FILESYSTEM_CRAWL;
+    }
   }
 
   @Value.Lazy

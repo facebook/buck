@@ -1,0 +1,11 @@
+java_library(
+    name = "testutil",
+    srcs = glob(
+        ["*.java"],
+        exclude = ["*Test.java"],
+    ),
+    exported_deps = [
+        "//src/com/facebook/buck/core/build/distributed/synchronization/impl:impl",
+    ],
+    visibility = ["//test/..."],
+)

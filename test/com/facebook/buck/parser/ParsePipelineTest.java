@@ -34,6 +34,7 @@ import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.FilesystemBackedBuildFileTree;
+import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
@@ -55,7 +56,6 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.FluentIterable;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -533,16 +533,9 @@ public class ParsePipelineTest {
     }
 
     @Override
-    public ImmutableList<Map<String, Object>> getAll(Path buildFile, AtomicLong processedBytes)
+    public BuildFileManifest getBuildFileManifest(Path buildFile, AtomicLong processedBytes)
         throws BuildFileParseException, InterruptedException, IOException {
-      return delegate.getAll(buildFile, processedBytes);
-    }
-
-    @Override
-    public ImmutableList<Map<String, Object>> getAllRulesAndMetaRules(
-        Path buildFile, AtomicLong processedBytes)
-        throws BuildFileParseException, InterruptedException, IOException {
-      return delegate.getAll(buildFile, processedBytes);
+      return delegate.getBuildFileManifest(buildFile, processedBytes);
     }
 
     @Override

@@ -27,6 +27,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.Optional;
+import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
 /** Current process classpath. Set by buckd or by launcher script. */
@@ -47,10 +49,9 @@ public class BuckClasspath {
     return envVarValue;
   }
 
-  private static ImmutableList<Path> getBuckTestClasspath() throws IOException {
+  private static Optional<String> getBuckTestClasspath() {
     String envVarValue = System.getenv(TEST_ENV_VAR_NAME);
-    Preconditions.checkNotNull(envVarValue);
-    return readClasspaths(Paths.get(envVarValue));
+    return Optional.ofNullable(envVarValue);
   }
 
   @Nullable
@@ -78,10 +79,15 @@ public class BuckClasspath {
   public static ImmutableList<Path> getClasspath() throws IOException {
     String classpathFromEnv = getBuckClasspathFromEnvVarOrNull();
     if (classpathFromEnv != null) {
-      return Streams.concat(
-              Arrays.stream(classpathFromEnv.split(File.pathSeparator)).map(Paths::get),
-              getBuckTestClasspath().stream())
-          .collect(ImmutableList.toImmutableList());
+      Optional<String> buckTestClasspath = getBuckTestClasspath();
+      Stream<Path> classpathStream =
+          Arrays.stream(classpathFromEnv.split(File.pathSeparator)).map(Paths::get);
+      if (buckTestClasspath.isPresent()) {
+        classpathStream =
+            Streams.concat(
+                classpathStream, readClasspaths(Paths.get(buckTestClasspath.get())).stream());
+      }
+      return classpathStream.collect(ImmutableList.toImmutableList());
     }
     return getBuckClasspathForIntellij();
   }

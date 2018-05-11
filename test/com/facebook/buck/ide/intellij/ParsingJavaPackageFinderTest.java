@@ -30,6 +30,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -91,6 +92,26 @@ public class ParsingJavaPackageFinderTest {
             dummyPackageFinder);
 
     assertEquals("org.test.package1", parsingJavaPackageFinder.findJavaPackage(matchPath));
+  }
+
+  @Test
+  public void testSuccessfullyGetSourceRootFromSource() {
+    Path somePath = Paths.get("a/b/c/com/foo/bar/Baz.java");
+    fakeProjectFilesystem.writeContentsToPath("package com.foo.bar;\nclass Baz {}", somePath);
+    assertEquals(
+        new ParsingJavaPackageFinder.PackagePathResolver(javaFileParser, fakeProjectFilesystem)
+            .getSourceRootFromSource(somePath),
+        Optional.of(Paths.get("a", "b", "c")));
+  }
+
+  @Test
+  public void testGetSourceRootFromSourceWithMismatchedDirectories() {
+    Path somePath = Paths.get("a/b/c/com/foo/boink/Baz.java");
+    fakeProjectFilesystem.writeContentsToPath("package com.foo.bar;\nclass Baz {}", somePath);
+    assertEquals(
+        new ParsingJavaPackageFinder.PackagePathResolver(javaFileParser, fakeProjectFilesystem)
+            .getSourceRootFromSource(somePath),
+        Optional.empty());
   }
 
   @Test

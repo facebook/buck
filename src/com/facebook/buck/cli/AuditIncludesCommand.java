@@ -31,9 +31,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
-import javax.annotation.Nullable;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
 
@@ -83,17 +81,8 @@ public class AuditIncludesCommand extends AbstractCommand {
           path = root.resolve(path);
         }
 
-        List<Map<String, Object>> rawRules = parser.getAllRulesAndMetaRules(path, new AtomicLong());
-
-        int includesMetadataEntryIndex = 3;
-        Preconditions.checkState(
-            includesMetadataEntryIndex <= rawRules.size(), "__includes metadata entry is missing.");
-        // __includes meta rule is the 3rd one from the end
-        Map<String, Object> includesMetaRule =
-            rawRules.get(rawRules.size() - includesMetadataEntryIndex);
-        @SuppressWarnings("unchecked")
-        @Nullable
-        Iterable<String> includes = (Iterable<String>) includesMetaRule.get("__includes");
+        Iterable<String> includes =
+            parser.getBuildFileManifest(path, new AtomicLong()).getIncludes();
         printIncludesToStdout(
             params, Preconditions.checkNotNull(includes, "__includes metadata entry is missing"));
       }

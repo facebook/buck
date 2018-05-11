@@ -18,7 +18,14 @@ package com.facebook.buck.command;
 import com.facebook.buck.artifact_cache.ArtifactCacheFactory;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.resources.ResourcesConfig;
+import com.facebook.buck.core.build.distributed.synchronization.RemoteBuildRuleCompletionWaiter;
 import com.facebook.buck.core.build.engine.BuildEngineResult;
+import com.facebook.buck.core.build.engine.cache.manager.BuildInfoStoreManager;
+import com.facebook.buck.core.build.engine.config.CachingBuildEngineBuckConfig;
+import com.facebook.buck.core.build.engine.delegate.CachingBuildEngineDelegate;
+import com.facebook.buck.core.build.engine.impl.CachingBuildEngine;
+import com.facebook.buck.core.build.engine.impl.MetadataChecker;
+import com.facebook.buck.core.build.engine.type.BuildType;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.rulekey.RuleKey;
@@ -31,14 +38,7 @@ import com.facebook.buck.log.thrift.ThriftRuleKeyLogger;
 import com.facebook.buck.parser.BuildTargetParseException;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.rules.ActionGraphAndResolver;
-import com.facebook.buck.rules.BuildInfoStoreManager;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.CachingBuildEngine;
-import com.facebook.buck.rules.CachingBuildEngine.BuildMode;
-import com.facebook.buck.rules.CachingBuildEngineBuckConfig;
-import com.facebook.buck.rules.CachingBuildEngineDelegate;
-import com.facebook.buck.rules.MetadataChecker;
-import com.facebook.buck.rules.RemoteBuildRuleCompletionWaiter;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.keys.RuleKeyCacheScope;
 import com.facebook.buck.rules.keys.RuleKeyFactories;
@@ -74,7 +74,7 @@ public class LocalBuildExecutor implements BuildExecutor {
   private final BuildExecutorArgs args;
   private final RuleKeyCacheScope<RuleKey> ruleKeyCacheScope;
   private final RemoteBuildRuleCompletionWaiter remoteBuildRuleCompletionWaiter;
-  private final Optional<CachingBuildEngine.BuildMode> buildEngineMode;
+  private final Optional<BuildType> buildEngineMode;
   private final Optional<ThriftRuleKeyLogger> ruleKeyLogger;
 
   private final CachingBuildEngine cachingBuildEngine;
@@ -92,7 +92,7 @@ public class LocalBuildExecutor implements BuildExecutor {
       boolean useDistributedBuildCache,
       boolean isDownloadHeavyBuild,
       RuleKeyCacheScope<RuleKey> ruleKeyRuleKeyCacheScope,
-      Optional<BuildMode> buildEngineMode,
+      Optional<BuildType> buildEngineMode,
       Optional<ThriftRuleKeyLogger> ruleKeyLogger,
       RemoteBuildRuleCompletionWaiter remoteBuildRuleCompletionWaiter) {
     this.actionGraphAndResolver = actionGraphAndResolver;

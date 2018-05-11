@@ -36,6 +36,7 @@ public class RustBuckConfig {
   private static final String UNFLAVORED_BINARIES = "unflavored_binaries";
   private static final String REMAP_SRC_PATHS = "remap_src_paths";
   private static final String FORCE_RLIB = "force_rlib";
+  private static final String PREFER_STATIC_LIBS = "prefer_static_libs";
 
   enum RemapSrcPaths {
     NO, // no path remapping
@@ -195,12 +196,23 @@ public class RustBuckConfig {
   }
 
   /**
-   * Get "force_rlib" config. When set, always use rlib (static) libraries, even for otherwise
+   * Get "force_rlib" config. When set, always generate rlib (static) libraries, even for otherwise
    * shared targets.
    *
    * @return force_rlib flag
    */
   boolean getForceRlib() {
     return delegate.getBooleanValue(SECTION, FORCE_RLIB, false);
+  }
+
+  /**
+   * Get "prefer_static_libs" config. When set, always use rlib (static) libraries, even for
+   * otherwise shared targets. This primarily affects whether to use static or shared standard
+   * libraries.
+   *
+   * @return prefer_static_libs flag
+   */
+  boolean getPreferStaticLibs() {
+    return delegate.getBooleanValue(SECTION, PREFER_STATIC_LIBS, false);
   }
 }

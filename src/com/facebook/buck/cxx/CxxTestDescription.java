@@ -17,6 +17,8 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.cell.resolver.CellPathResolver;
+import com.facebook.buck.core.description.arg.HasContacts;
+import com.facebook.buck.core.description.arg.HasTestTimeout;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorDomain;
@@ -37,8 +39,6 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.HasContacts;
-import com.facebook.buck.rules.HasTestTimeout;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.MetadataProvidingDescription;
 import com.facebook.buck.rules.SourcePathRuleFinder;

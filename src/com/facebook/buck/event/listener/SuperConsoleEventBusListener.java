@@ -38,7 +38,6 @@ import com.facebook.buck.event.LeafEvents;
 import com.facebook.buck.event.ParsingEvent;
 import com.facebook.buck.event.RuleKeyCalculationEvent;
 import com.facebook.buck.event.WatchmanStatusEvent;
-import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.step.StepEvent;
 import com.facebook.buck.test.TestResultSummary;
@@ -103,7 +102,6 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
 
   private final Locale locale;
   private final Function<Long, String> formatTimeFunction;
-  private final Optional<WebServer> webServer;
   private final ConcurrentMap<Long, Optional<? extends TestSummaryEvent>>
       threadsToRunningTestSummaryEvent;
   private final ConcurrentMap<Long, Optional<? extends TestStatusMessageEvent>>
@@ -176,7 +174,6 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
       Clock clock,
       TestResultSummaryVerbosity summaryVerbosity,
       ExecutionEnvironment executionEnvironment,
-      Optional<WebServer> webServer,
       Locale locale,
       Path testLogPath,
       TimeZone timeZone,
@@ -187,7 +184,6 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
         clock,
         summaryVerbosity,
         executionEnvironment,
-        webServer,
         locale,
         testLogPath,
         timeZone,
@@ -205,7 +201,6 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
       Clock clock,
       TestResultSummaryVerbosity summaryVerbosity,
       ExecutionEnvironment executionEnvironment,
-      Optional<WebServer> webServer,
       Locale locale,
       Path testLogPath,
       TimeZone timeZone,
@@ -224,7 +219,6 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
         config.shouldShowSlowRulesInConsole());
     this.locale = locale;
     this.formatTimeFunction = this::formatElapsedTime;
-    this.webServer = webServer;
     this.threadsToRunningTestSummaryEvent =
         new ConcurrentHashMap<>(executionEnvironment.getAvailableCores());
     this.threadsToRunningTestStatusMessageEvent =
@@ -516,8 +510,6 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
             lines);
 
     getTotalTimeLine(lines);
-    // If the Daemon is running and serving web traffic, print the URL to the Chrome Trace.
-    getBuildTraceURLLine(lines);
     showTopSlowBuildRules(lines);
 
     if (totalBuildMs == UNFINISHED_EVENT_PAIR) {
@@ -572,20 +564,6 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
 
     logHttpCacheUploads(lines);
     return lines.build();
-  }
-
-  private void getBuildTraceURLLine(ImmutableList.Builder<String> lines) {
-    if (buildFinished != null && webServer.isPresent()) {
-      Optional<Integer> port = webServer.get().getPort();
-      if (port.isPresent()) {
-        lines.add(
-            String.format(
-                locale,
-                "  Build trace: http://localhost:%s/trace/%s",
-                port.get(),
-                buildFinished.getBuildId()));
-      }
-    }
   }
 
   private void getTotalTimeLine(ImmutableList.Builder<String> lines) {

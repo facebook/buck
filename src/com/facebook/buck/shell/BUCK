@@ -19,6 +19,7 @@ java_library_with_plugins(
         "ShellDescriptionsProvider.java",
     ],
     exported_deps = [
+        "//src/com/facebook/buck/core/description/arg:arg",
         "//src/com/facebook/buck/core/rules/tool:tool",
     ],
     tests = [
@@ -127,6 +128,7 @@ java_immutables_library(
         ":worker_tool",
         "//src/com/facebook/buck/config:config",
         "//src/com/facebook/buck/core/cell/resolver:resolver",
+        "//src/com/facebook/buck/core/description/arg:arg",
         "//src/com/facebook/buck/core/rulekey:rulekey",
         "//src/com/facebook/buck/core/rules/tool:tool",
         "//src/com/facebook/buck/core/sourcepath/resolver:resolver",

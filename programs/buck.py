@@ -27,7 +27,7 @@ import errno
 
 from buck_logging import setup_logging
 from buck_tool import ExecuteTarget, install_signal_handlers, \
-    BuckStatusReporter, BuckDaemonErrorException
+    get_java_path, BuckStatusReporter, BuckDaemonErrorException
 from buck_project import BuckProject, NoBuckConfigFoundException
 from tracing import Tracing
 from subprocutils import propagate_failure
@@ -65,14 +65,14 @@ def killall_buck(reporter):
     return 0
 
 
-def _get_java_version():
+def _get_java_version(java_path):
     """
     Returns a Java version string (e.g. "7", "8").
 
     Information is provided by java tool and parsing is based on
     http://www.oracle.com/technetwork/java/javase/versioning-naming-139433.html
     """
-    java_version = check_output(["java", "-version"], stderr=subprocess.STDOUT)
+    java_version = check_output([java_path, "-version"], stderr=subprocess.STDOUT)
     # extract java version from a string like 'java version "1.8.0_144"'
     match = re.search("java version \"(?P<version>.+)\"", java_version)
     if not match:
@@ -101,13 +101,15 @@ def _try_to_verify_java_version():
     """
     Best effort check to make sure users have required Java version installed.
     """
+    java_path = get_java_path()
     try:
-        java_version = _get_java_version()
+        java_version = _get_java_version(java_path)
         if java_version and java_version != REQUIRED_JAVA_VERSION:
             _warn_about_wrong_java_version(REQUIRED_JAVA_VERSION, java_version)
     except:
         # checking Java version is brittle and as such is best effort
-        logging.warning("Cannot verify that installed Java version is correct.")
+        logging.warning("Cannot verify that installed Java version at '{}' \
+is correct.".format(java_path))
 
 
 def main(argv, reporter):

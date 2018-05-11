@@ -38,6 +38,7 @@ standard_java_test(
         "//src/com/facebook/buck/util/versioncontrol:versioncontrol",
         "//src/com/facebook/buck/versions:types",
         "//src/com/facebook/buck/worker:worker_process",
+        "//test/com/facebook/buck/event:testutil",
         "//test/com/facebook/buck/testutil:testutil",
         "//test/com/facebook/buck/util/timing:testutil",
         "//third-party/java/easymock:easymock",

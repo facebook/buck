@@ -433,7 +433,7 @@ public class DistBuildStateTest {
             try {
               return parser
                   .get()
-                  .getRawTargetNode(
+                  .getTargetNodeRawAttributes(
                       eventBus,
                       cell.getCell(input.getBuildTarget()),
                       /* enableProfiling */ false,

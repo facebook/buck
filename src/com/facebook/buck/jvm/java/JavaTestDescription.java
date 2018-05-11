@@ -17,6 +17,8 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.cell.resolver.CellPathResolver;
+import com.facebook.buck.core.description.arg.HasContacts;
+import com.facebook.buck.core.description.arg.HasTestTimeout;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
@@ -37,8 +39,6 @@ import com.facebook.buck.rules.BuildRuleCreationContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.HasContacts;
-import com.facebook.buck.rules.HasTestTimeout;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SymlinkTree;

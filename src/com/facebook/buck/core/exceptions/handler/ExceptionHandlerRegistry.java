@@ -16,7 +16,9 @@
 
 package com.facebook.buck.core.exceptions.handler;
 
+import com.facebook.buck.util.ThrowableCauseIterable;
 import com.google.common.collect.ImmutableList;
+import java.util.Iterator;
 
 /**
  * Central registry to manage different kinds of exceptions thrown to Buck Main class level, which
@@ -38,23 +40,21 @@ public class ExceptionHandlerRegistry<R> {
    * @return the exit code Buck should return to user
    *     <p>This method tries to find a registered {@link ExceptionHandler} that can process the
    *     input Exception, and calls that handler to process the exception. If it cannot find one, it
-   *     will try to unwrap the exception by calling getCause() to get underlying exceptions until
-   *     it succeeds or when there is no more cause to look into.
-   *     <p>NOTE: This method does not detect loop in the exception chain.
+   *     will try to unwrap the exception by calling getCause() to get underlying exceptions. If all
+   *     the underlying causes are exhausted, or any loop is detected in the exception chain before
+   *     an exception is handled, the top level Throwable will be processed by the genericHandler.
    */
   @SuppressWarnings({"rawtypes", "unchecked"})
   public R handleException(Throwable t) {
-    Throwable e = t;
-    while (e != null) {
+    Iterator<Throwable> causeIterator = ThrowableCauseIterable.of(t).iterator();
+
+    while (causeIterator.hasNext()) {
+      Throwable cur = causeIterator.next();
       for (ExceptionHandler eh : handlers) {
-        if (eh.canHandleException(e)) {
-          return (R) (eh.handleException(e));
+        if (eh.canHandleException(cur)) {
+          return (R) (eh.handleException(cur));
         }
       }
-      if (e == e.getCause()) {
-        break;
-      }
-      e = e.getCause();
     }
     // none of the registered handlers could handle this Throwable
     return genericHandler.handleException(t);

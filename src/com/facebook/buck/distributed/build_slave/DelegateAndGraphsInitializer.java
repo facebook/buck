@@ -16,6 +16,8 @@
 
 package com.facebook.buck.distributed.build_slave;
 
+import com.facebook.buck.core.build.engine.delegate.CachingBuildEngineDelegate;
+import com.facebook.buck.core.build.engine.delegate.LocalCachingBuildEngineDelegate;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.distributed.DistBuildCachingEngineDelegate;
@@ -27,8 +29,6 @@ import com.facebook.buck.parser.DefaultParserTargetNodeFactory;
 import com.facebook.buck.parser.ParserTargetNodeFactory;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.rules.ActionGraphAndResolver;
-import com.facebook.buck.rules.CachingBuildEngineDelegate;
-import com.facebook.buck.rules.LocalCachingBuildEngineDelegate;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphAndBuildTargets;
@@ -251,7 +251,7 @@ public class DelegateAndGraphsInitializer {
         input -> {
           try {
             return args.getParser()
-                .getRawTargetNode(
+                .getTargetNodeRawAttributes(
                     args.getBuckEventBus(),
                     args.getState().getRootCell().getCell(input.getBuildTarget()),
                     /* enableProfiling */ false,

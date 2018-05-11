@@ -20,8 +20,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.core.description.arg.Hint;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import com.facebook.buck.rules.Hint;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 import java.util.Optional;

@@ -18,6 +18,7 @@ package com.facebook.buck.features.rust;
 
 import static com.facebook.buck.cxx.CxxDescriptionEnhancer.createSharedLibrarySymlinkTreeTarget;
 
+import com.facebook.buck.core.description.arg.HasDefaultPlatform;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.tool.BinaryWrapperRule;
@@ -41,7 +42,6 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.HasDefaultPlatform;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.args.Arg;
@@ -101,6 +101,7 @@ public class RustCompileUtils {
       ImmutableSortedSet<SourcePath> sources,
       SourcePath rootModule,
       boolean forceRlib,
+      boolean preferStatic,
       Iterable<BuildRule> ruledeps) {
     CxxPlatform cxxPlatform = rustPlatform.getCxxPlatform();
     ImmutableList.Builder<Arg> linkerArgs = ImmutableList.builder();
@@ -213,7 +214,8 @@ public class RustCompileUtils {
 
     // If we want shared deps or are building a dynamic rlib, make sure we prefer
     // dynamic dependencies (esp to get dynamic dependency on standard libs)
-    if (depType == Linker.LinkableDepType.SHARED || crateType == CrateType.DYLIB) {
+    if ((!preferStatic && depType == Linker.LinkableDepType.SHARED)
+        || crateType == CrateType.DYLIB) {
       args.add(StringArg.of("-Cprefer-dynamic"));
     }
 
@@ -253,6 +255,7 @@ public class RustCompileUtils {
       ImmutableSortedSet<SourcePath> sources,
       SourcePath rootModule,
       boolean forceRlib,
+      boolean preferStatic,
       Iterable<BuildRule> deps) {
     return (RustCompileRule)
         resolver.computeIfAbsent(
@@ -276,6 +279,7 @@ public class RustCompileUtils {
                     sources,
                     rootModule,
                     forceRlib,
+                    preferStatic,
                     deps));
   }
 
@@ -385,6 +389,7 @@ public class RustCompileUtils {
     }
 
     boolean forceRlib = rustBuckConfig.getForceRlib();
+    boolean preferStatic = rustBuckConfig.getPreferStaticLibs();
 
     CommandTool.Builder executableBuilder = new CommandTool.Builder();
 
@@ -462,6 +467,7 @@ public class RustCompileUtils {
                         rootModuleAndSources.getSecond(),
                         rootModuleAndSources.getFirst(),
                         forceRlib,
+                        preferStatic,
                         deps));
 
     // Add the binary as the first argument.

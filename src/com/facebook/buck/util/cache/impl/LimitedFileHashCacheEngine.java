@@ -168,7 +168,7 @@ class LimitedFileHashCacheEngine implements FileHashCacheEngine {
     this.fileHashLoader = fileHashLoader;
     this.dirHashLoader = dirHashLoader;
     this.sizeLoader = sizeLoader;
-    this.fileSystemMap = new FileSystemMap<>(Data::new);
+    this.fileSystemMap = new FileSystemMap<>(Data::new, filesystem);
   }
 
   private byte loadType(Path path) {

@@ -16,9 +16,13 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.core.build.engine.impl.DefaultRuleDepsCache;
+import com.facebook.buck.core.description.arg.HasTests;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.RuleKey;
+import com.facebook.buck.core.rulekey.calculator.ParallelRuleKeyCalculator;
+import com.facebook.buck.core.rules.BuildRuleType;
 import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypes;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
@@ -48,11 +52,7 @@ import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.ActionGraphAndResolver;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.HasTests;
-import com.facebook.buck.rules.ParallelRuleKeyCalculator;
-import com.facebook.buck.rules.RuleDepsCache;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphAndBuildTargets;
@@ -785,9 +785,9 @@ public class TargetsCommand extends AbstractCommand {
 
       while (targetNodeIterator.hasNext()) {
         TargetNode<?, ?> targetNode = targetNodeIterator.next();
-        Map<String, Object> rawTargetNode =
-            params.getParser().getRawTargetNode(state, params.getCell(), targetNode);
-        if (rawTargetNode == null) {
+        Map<String, Object> targetNodeAttributes =
+            params.getParser().getTargetNodeRawAttributes(state, params.getCell(), targetNode);
+        if (targetNodeAttributes == null) {
           params
               .getConsole()
               .printErrorText(
@@ -802,13 +802,13 @@ public class TargetsCommand extends AbstractCommand {
             field
                 .getter
                 .apply(targetResult)
-                .ifPresent(value -> rawTargetNode.put(field.name, value));
+                .ifPresent(value -> targetNodeAttributes.put(field.name, value));
           }
         }
-        rawTargetNode.put(
+        targetNodeAttributes.put(
             "fully_qualified_name", targetNode.getBuildTarget().getFullyQualifiedName());
         if (isShowCellPath) {
-          rawTargetNode.put("buck.cell_path", targetNode.getBuildTarget().getCellPath());
+          targetNodeAttributes.put("buck.cell_path", targetNode.getBuildTarget().getCellPath());
         }
 
         // Print the build rule information as JSON.
@@ -817,7 +817,8 @@ public class TargetsCommand extends AbstractCommand {
           ObjectMappers.WRITER
               .withDefaultPrettyPrinter()
               .writeValue(
-                  stringWriter, attributesPatternsMatcher.filterMatchingMapKeys(rawTargetNode));
+                  stringWriter,
+                  attributesPatternsMatcher.filterMatchingMapKeys(targetNodeAttributes));
         } catch (IOException e) {
           // Shouldn't be possible while writing to a StringWriter...
           throw new RuntimeException(e);
@@ -922,7 +923,7 @@ public class TargetsCommand extends AbstractCommand {
                             ruleFinder,
                             ruleKeyCacheScope.getCache(),
                             Optional.ofNullable(ruleKeyLogger)),
-                        new RuleDepsCache(buildRuleResolver.get()),
+                        new DefaultRuleDepsCache(buildRuleResolver.get()),
                         (eventBus, rule) -> () -> {}));
           }
         }

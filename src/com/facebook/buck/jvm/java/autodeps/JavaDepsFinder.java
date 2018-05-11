@@ -22,6 +22,7 @@ import com.facebook.buck.core.build.engine.BuildEngine;
 import com.facebook.buck.core.build.engine.BuildEngineBuildContext;
 import com.facebook.buck.core.build.engine.BuildResult;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rules.BuildRuleType;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaFileParser;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
@@ -29,8 +30,7 @@ import com.facebook.buck.jvm.java.JavaTestDescription;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.PrebuiltJarDescription;
 import com.facebook.buck.jvm.java.PrebuiltJarDescriptionArg;
-import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.DescriptionCache;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.step.ExecutionContext;
@@ -77,10 +77,10 @@ public class JavaDepsFinder {
 
   private static final Set<BuildRuleType> RULES_TO_VISIT =
       ImmutableSet.of(
-          Description.getBuildRuleType(AndroidLibraryDescription.class),
-          Description.getBuildRuleType(JavaLibraryDescription.class),
-          Description.getBuildRuleType(JavaTestDescription.class),
-          Description.getBuildRuleType(PrebuiltJarDescription.class));
+          DescriptionCache.getBuildRuleType(AndroidLibraryDescription.class),
+          DescriptionCache.getBuildRuleType(JavaLibraryDescription.class),
+          DescriptionCache.getBuildRuleType(JavaTestDescription.class),
+          DescriptionCache.getBuildRuleType(PrebuiltJarDescription.class));
 
   /** Java dependency information that is extracted from a {@link TargetGraph}. */
   public static class DependencyInfo {
@@ -96,7 +96,7 @@ public class JavaDepsFinder {
     // visit each node could be done in parallel, so long as the updates to the above collections
     // were thread-safe.
     for (TargetNode<?, ?> node : graph.getNodes()) {
-      if (!RULES_TO_VISIT.contains(Description.getBuildRuleType(node.getDescription()))) {
+      if (!RULES_TO_VISIT.contains(DescriptionCache.getBuildRuleType(node.getDescription()))) {
         continue;
       }
 

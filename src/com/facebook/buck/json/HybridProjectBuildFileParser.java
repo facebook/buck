@@ -16,17 +16,16 @@
 
 package com.facebook.buck.json;
 
+import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.api.Syntax;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Files;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 import javax.annotation.Nullable;
 
@@ -56,16 +55,9 @@ public class HybridProjectBuildFileParser implements ProjectBuildFileParser {
   }
 
   @Override
-  public ImmutableList<Map<String, Object>> getAll(Path buildFile, AtomicLong processedBytes)
+  public BuildFileManifest getBuildFileManifest(Path buildFile, AtomicLong processedBytes)
       throws BuildFileParseException, InterruptedException, IOException {
-    return getParserForBuildFile(buildFile).getAll(buildFile, processedBytes);
-  }
-
-  @Override
-  public ImmutableList<Map<String, Object>> getAllRulesAndMetaRules(
-      Path buildFile, AtomicLong processedBytes)
-      throws BuildFileParseException, InterruptedException, IOException {
-    return getParserForBuildFile(buildFile).getAllRulesAndMetaRules(buildFile, processedBytes);
+    return getParserForBuildFile(buildFile).getBuildFileManifest(buildFile, processedBytes);
   }
 
   @Override

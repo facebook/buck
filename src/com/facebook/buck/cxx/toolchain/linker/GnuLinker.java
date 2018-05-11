@@ -104,6 +104,7 @@ public class GnuLinker extends DelegatingTool implements Linker {
    * `EXTERN` commands.
    *
    * @param target the name given to the {@link BuildRule} which creates the linker script.
+   * @param symbolFiles
    * @return the list of arguments which pass the linker script containing the undefined symbols to
    *     link.
    */
@@ -114,7 +115,7 @@ public class GnuLinker extends DelegatingTool implements Linker {
       BuildRuleResolver ruleResolver,
       SourcePathRuleFinder ruleFinder,
       BuildTarget target,
-      Iterable<? extends SourcePath> symbolFiles) {
+      ImmutableList<? extends SourcePath> symbolFiles) {
     UndefinedSymbolsLinkerScript rule =
         ruleResolver.addToIndex(
             new UndefinedSymbolsLinkerScript(

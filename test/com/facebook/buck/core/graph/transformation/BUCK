@@ -1,7 +1,7 @@
 load("//tools/build_rules:java_rules.bzl", "standard_java_test")
 
 java_library(
-    name = "childrenadder",
+    name = "testutil",
     srcs = glob(
         ["*.java"],
         exclude = ["*Test.java"],
@@ -11,6 +11,7 @@ java_library(
         "//src/com/facebook/buck/util/types:types",
         "//third-party/java/guava:guava",
     ],
+    visibility = ["//test/..."],
 )
 
 java_test(
@@ -20,7 +21,7 @@ java_test(
         exclude = ["DefaultAsyncTransformationEngineStackUseTest.java"],
     ),
     deps = [
-        ":childrenadder",
+        ":testutil",
         "//third-party/java/junit:junit",
     ],
 )
@@ -30,7 +31,7 @@ java_test(
     srcs = ["DefaultAsyncTransformationEngineStackUseTest.java"],
     vm_args = ["-Xss500k"],  #explicitly set a small stack for testing stack use
     deps = [
-        ":childrenadder",
+        ":testutil",
         "//third-party/java/junit:junit",
     ],
 )

@@ -16,7 +16,6 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.cell.resolver.CellPathResolver;
 import com.facebook.buck.core.exceptions.HumanReadableException;
@@ -25,6 +24,7 @@ import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.cxx.AbstractCxxSource.Type;
 import com.facebook.buck.cxx.toolchain.DebugPathSanitizer;
 import com.facebook.buck.cxx.toolchain.LinkerMapMode;
 import com.facebook.buck.cxx.toolchain.StripStyle;
@@ -32,16 +32,16 @@ import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRule;
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.keys.SupportsDependencyFileRuleKey;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
+import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
+import com.facebook.buck.rules.modern.Buildable;
+import com.facebook.buck.rules.modern.ModernBuildRule;
+import com.facebook.buck.rules.modern.OutputPath;
+import com.facebook.buck.rules.modern.OutputPathResolver;
 import com.facebook.buck.step.Step;
-import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -49,25 +49,13 @@ import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
-import java.util.SortedSet;
 import java.util.function.Predicate;
 
 /** A build rule which preprocesses and/or compiles a C/C++ source in a single step. */
-public class CxxPreprocessAndCompile extends AbstractBuildRule
+public class CxxPreprocessAndCompile extends ModernBuildRule<CxxPreprocessAndCompile.Impl>
     implements SupportsInputBasedRuleKey, SupportsDependencyFileRuleKey {
-  /** The presence or absence of this field denotes whether the input needs to be preprocessed. */
-  @AddToRuleKey private final Optional<PreprocessorDelegate> preprocessDelegate;
-
-  @AddToRuleKey private final CompilerDelegate compilerDelegate;
-  @AddToRuleKey private final String outputName;
-  @AddToRuleKey private final SourcePath input;
-  @AddToRuleKey private final DebugPathSanitizer sanitizer;
-  @AddToRuleKey private final Optional<PrecompiledHeaderData> precompiledHeaderData;
-
-  private final BuildableSupport.DepsSupplier buildDepsSupplier;
-
+  private final Path output;
   private final Optional<CxxPrecompiledHeader> precompiledHeaderRule;
-  private final CxxSource.Type inputType;
 
   private CxxPreprocessAndCompile(
       BuildTarget buildTarget,
@@ -77,24 +65,30 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule
       CompilerDelegate compilerDelegate,
       String outputName,
       SourcePath input,
-      CxxSource.Type inputType,
+      Type inputType,
       Optional<CxxPrecompiledHeader> precompiledHeaderRule,
       DebugPathSanitizer sanitizer) {
-    super(buildTarget, projectFilesystem);
+    super(
+        buildTarget,
+        projectFilesystem,
+        ruleFinder,
+        new Impl(
+            buildTarget,
+            preprocessDelegate,
+            compilerDelegate,
+            outputName,
+            input,
+            precompiledHeaderRule,
+            inputType,
+            sanitizer));
+    this.output =
+        BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s/" + outputName);
     if (precompiledHeaderRule.isPresent()) {
       Preconditions.checkState(
           preprocessDelegate.isPresent(),
           "Precompiled headers are only used when compilation includes preprocessing.");
     }
-    this.buildDepsSupplier = BuildableSupport.buildDepsSupplier(this, ruleFinder);
-    this.preprocessDelegate = preprocessDelegate;
-    this.compilerDelegate = compilerDelegate;
-    this.outputName = outputName;
-    this.input = input;
-    this.inputType = inputType;
     this.precompiledHeaderRule = precompiledHeaderRule;
-    this.precompiledHeaderData = precompiledHeaderRule.map(CxxPrecompiledHeader::getData);
-    this.sanitizer = sanitizer;
     Preconditions.checkArgument(
         !buildTarget.getFlavors().contains(CxxStrip.RULE_FLAVOR)
             || !StripStyle.FLAVOR_DOMAIN.containsAnyOf(buildTarget.getFlavors()),
@@ -114,7 +108,7 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule
       CompilerDelegate compilerDelegate,
       String outputName,
       SourcePath input,
-      CxxSource.Type inputType,
+      Type inputType,
       DebugPathSanitizer sanitizer) {
     return new CxxPreprocessAndCompile(
         buildTarget,
@@ -140,7 +134,7 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule
       CompilerDelegate compilerDelegate,
       String outputName,
       SourcePath input,
-      CxxSource.Type inputType,
+      Type inputType,
       Optional<CxxPrecompiledHeader> precompiledHeaderRule,
       DebugPathSanitizer sanitizer) {
     return new CxxPreprocessAndCompile(
@@ -157,110 +151,14 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule
   }
 
   private Path getDepFilePath() {
-    return getOutputRoot().resolve(outputName + ".dep");
-  }
-
-  private Path getOutputPath() {
-    return getOutputRoot().resolve(outputName);
-  }
-
-  private Path getOutputRoot() {
-    return BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s__/");
-  }
-
-  @VisibleForTesting
-  CxxPreprocessAndCompileStep makeMainStep(SourcePathResolver resolver, boolean useArgfile) {
-
-    // If we're compiling, this will just be empty.
-    HeaderPathNormalizer headerPathNormalizer =
-        preprocessDelegate
-            .map(x -> x.getHeaderPathNormalizer(resolver))
-            .orElseGet(() -> HeaderPathNormalizer.empty(resolver));
-
-    ImmutableList<Arg> arguments =
-        compilerDelegate.getArguments(
-            preprocessDelegate
-                .map(delegate -> delegate.getFlagsWithSearchPaths(precompiledHeaderData, resolver))
-                .orElseGet(CxxToolFlags::of),
-            getBuildTarget().getCellPath());
-
-    Path relativeInputPath = getRelativeInputPath(resolver);
-
-    Path output = getOutputPath();
-    return new CxxPreprocessAndCompileStep(
-        getProjectFilesystem(),
-        preprocessDelegate.isPresent()
-            ? CxxPreprocessAndCompileStep.Operation.PREPROCESS_AND_COMPILE
-            : CxxPreprocessAndCompileStep.Operation.COMPILE,
-        output,
-        // Use a depfile if there's a preprocessing stage, this logic should be kept in sync with
-        // getInputsAfterBuildingLocally.
-        preprocessDelegate.isPresent() ? Optional.of(getDepFilePath()) : Optional.empty(),
-        relativeInputPath,
-        inputType,
-        new CxxPreprocessAndCompileStep.ToolCommand(
-            compilerDelegate.getCommandPrefix(resolver),
-            Arg.stringify(arguments, resolver),
-            compilerDelegate.getEnvironment(resolver)),
-        headerPathNormalizer,
-        sanitizer,
-        getScratchPath(),
-        useArgfile,
-        compilerDelegate.getCompiler(),
-        Optional.of(
-            CxxLogInfo.builder()
-                .setTarget(getBuildTarget())
-                .setSourcePath(relativeInputPath)
-                .setOutputPath(output)
-                .build()));
+    return Impl.getDepFilePath(getOutputPathResolver().resolvePath(getBuildable().output));
   }
 
   public Path getRelativeInputPath(SourcePathResolver resolver) {
     // For caching purposes, the path passed to the compiler is relativized by the absolute path by
     // the current cell root, so that file references emitted by the compiler would not change if
     // the repo is checked out into different places on disk.
-    return getProjectFilesystem().getRootPath().relativize(resolver.getAbsolutePath(input));
-  }
-
-  @Override
-  public String getType() {
-    return "cxx_preprocess_compile";
-  }
-
-  @Override
-  public ImmutableList<Step> getBuildSteps(
-      BuildContext context, BuildableContext buildableContext) {
-    preprocessDelegate
-        .flatMap(PreprocessorDelegate::checkConflictingHeaders)
-        .ifPresent(result -> result.throwHumanReadableExceptionWithContext(getBuildTarget()));
-
-    Path output = getOutputPath();
-    buildableContext.recordArtifact(output);
-
-    for (String flag :
-        Arg.stringify(
-            compilerDelegate.getCompilerFlags().getAllFlags(), context.getSourcePathResolver())) {
-      if (flag.equals("-ftest-coverage") && hasGcno(output)) {
-        buildableContext.recordArtifact(getGcnoPath(output));
-        break;
-      }
-    }
-
-    return new ImmutableList.Builder<Step>()
-        .add(
-            MkdirStep.of(
-                BuildCellRelativePath.fromCellRelativePath(
-                    context.getBuildCellRootPath(), getProjectFilesystem(), output.getParent())))
-        .addAll(
-            MakeCleanDirectoryStep.of(
-                BuildCellRelativePath.fromCellRelativePath(
-                    context.getBuildCellRootPath(), getProjectFilesystem(), getScratchPath())))
-        .add(makeMainStep(context.getSourcePathResolver(), compilerDelegate.isArgFileSupported()))
-        .build();
-  }
-
-  private static boolean hasGcno(Path output) {
-    return !MorePaths.getNameWithoutExtension(output).endsWith(".S");
+    return getProjectFilesystem().getRootPath().relativize(resolver.getAbsolutePath(getInput()));
   }
 
   @VisibleForTesting
@@ -269,27 +167,25 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule
     return output.getParent().resolve(basename + ".gcno");
   }
 
-  private Path getScratchPath() {
-    return BuildTargets.getScratchPath(getProjectFilesystem(), getBuildTarget(), "%s-tmp");
-  }
-
   @VisibleForTesting
   Optional<PreprocessorDelegate> getPreprocessorDelegate() {
-    return preprocessDelegate;
+    return getBuildable().preprocessDelegate;
   }
 
-  // Used for compdb
-  public ImmutableList<String> getCommand(SourcePathResolver pathResolver) {
-    return makeMainStep(pathResolver, false).getCommand();
+  /** Returns the compilation command (used for compdb). */
+  public ImmutableList<String> getCommand(SourcePathResolver resolver) {
+    return getBuildable()
+        .makeMainStep(resolver, getProjectFilesystem(), getOutputPathResolver(), false)
+        .getCommand();
   }
 
   @Override
   public SourcePath getSourcePathToOutput() {
-    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), getOutputPath());
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), output);
   }
 
   public SourcePath getInput() {
-    return input;
+    return getBuildable().input;
   }
 
   @Override
@@ -299,8 +195,8 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule
 
   @Override
   public Predicate<SourcePath> getCoveredByDepFilePredicate(SourcePathResolver pathResolver) {
-    if (preprocessDelegate.isPresent()) {
-      return preprocessDelegate.get().getCoveredByDepFilePredicate();
+    if (getPreprocessorDelegate().isPresent()) {
+      return getPreprocessorDelegate().get().getCoveredByDepFilePredicate();
     }
     return (SourcePath path) -> true;
   }
@@ -317,45 +213,46 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule
     // It already happens in Depfiles.parseAndOutputBuckCompatibleDepfile via header normalizer.
     // This special case is for applying the same logic for an input cxx file in the case
     // when cxx.sandbox_sources=true.
-    if (preprocessDelegate.isPresent()) {
-      Path absPath = sourcePathResolver.getAbsolutePath(input);
+    if (getPreprocessorDelegate().isPresent()) {
+      Path absPath = sourcePathResolver.getAbsolutePath(getInput());
       HeaderPathNormalizer headerPathNormalizer =
-          preprocessDelegate.get().getHeaderPathNormalizer(sourcePathResolver);
+          getPreprocessorDelegate().get().getHeaderPathNormalizer(sourcePathResolver);
       Optional<Path> original = headerPathNormalizer.getAbsolutePathForUnnormalizedPath(absPath);
       if (original.isPresent()) {
         return headerPathNormalizer.getSourcePathForAbsolutePath(original.get());
       }
     }
-    return input;
+    return getInput();
   }
 
   @Override
   public ImmutableList<SourcePath> getInputsAfterBuildingLocally(
       BuildContext context, CellPathResolver cellPathResolver) throws IOException {
     ImmutableList.Builder<SourcePath> inputs = ImmutableList.builder();
+    CompilerDelegate compilerDelegate = getBuildable().compilerDelegate;
 
     // If present, include all inputs coming from the preprocessor tool.
-    if (preprocessDelegate.isPresent()) {
+    if (getPreprocessorDelegate().isPresent()) {
+      PreprocessorDelegate preprocessorDelegate = getPreprocessorDelegate().get();
       Iterable<Path> dependencies;
       try {
         dependencies =
             Depfiles.parseAndVerifyDependencies(
                 context.getEventBus(),
                 getProjectFilesystem(),
-                preprocessDelegate.get().getHeaderPathNormalizer(context.getSourcePathResolver()),
-                preprocessDelegate.get().getHeaderVerification(),
+                preprocessorDelegate.getHeaderPathNormalizer(context.getSourcePathResolver()),
+                preprocessorDelegate.getHeaderVerification(),
                 getDepFilePath(),
                 getRelativeInputPath(context.getSourcePathResolver()),
-                getOutputPath(),
+                output,
                 compilerDelegate.getDependencyTrackingMode());
       } catch (Depfiles.HeaderVerificationException e) {
         throw new HumanReadableException(e);
       }
 
       inputs.addAll(
-          preprocessDelegate
-              .get()
-              .getInputsAfterBuildingLocally(dependencies, context.getSourcePathResolver()));
+          preprocessorDelegate.getInputsAfterBuildingLocally(
+              dependencies, context.getSourcePathResolver()));
     }
 
     // If present, include all inputs coming from the compiler tool.
@@ -372,16 +269,120 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule
     return inputs.build();
   }
 
-  @Override
-  public SortedSet<BuildRule> getBuildDeps() {
-    return buildDepsSupplier.get();
+  public CxxPreprocessAndCompileStep makeMainStep(SourcePathResolver resolver, boolean useArgFile) {
+    return getBuildable()
+        .makeMainStep(resolver, getProjectFilesystem(), getOutputPathResolver(), useArgFile);
   }
 
-  @Override
-  public void updateBuildRuleResolver(
-      BuildRuleResolver ruleResolver,
-      SourcePathRuleFinder ruleFinder,
-      SourcePathResolver pathResolver) {
-    buildDepsSupplier.updateRuleFinder(ruleFinder);
+  /** Buildable implementation for CxxPreprocessAndCompile. */
+  static class Impl implements Buildable {
+    @AddToRuleKey private final BuildTarget targetName;
+    /** The presence or absence of this field denotes whether the input needs to be preprocessed. */
+    @AddToRuleKey private final Optional<PreprocessorDelegate> preprocessDelegate;
+
+    @AddToRuleKey private final CompilerDelegate compilerDelegate;
+    @AddToRuleKey private final DebugPathSanitizer sanitizer;
+    @AddToRuleKey private final OutputPath output;
+    @AddToRuleKey private final SourcePath input;
+    @AddToRuleKey private final CxxSource.Type inputType;
+
+    @AddToRuleKey private final Optional<PrecompiledHeaderData> precompiledHeaderData;
+
+    public Impl(
+        BuildTarget targetName,
+        Optional<PreprocessorDelegate> preprocessDelegate,
+        CompilerDelegate compilerDelegate,
+        String outputName,
+        SourcePath input,
+        Optional<CxxPrecompiledHeader> precompiledHeaderRule,
+        Type inputType,
+        DebugPathSanitizer sanitizer) {
+      this.targetName = targetName;
+      this.preprocessDelegate = preprocessDelegate;
+      this.compilerDelegate = compilerDelegate;
+      this.sanitizer = sanitizer;
+      this.output = new OutputPath(outputName);
+      this.input = input;
+      this.inputType = inputType;
+      this.precompiledHeaderData = precompiledHeaderRule.map(CxxPrecompiledHeader::getData);
+    }
+
+    CxxPreprocessAndCompileStep makeMainStep(
+        SourcePathResolver resolver,
+        ProjectFilesystem filesystem,
+        OutputPathResolver outputPathResolver,
+        boolean useArgfile) {
+      // If we're compiling, this will just be empty.
+      HeaderPathNormalizer headerPathNormalizer =
+          preprocessDelegate
+              .map(x -> x.getHeaderPathNormalizer(resolver))
+              .orElseGet(() -> HeaderPathNormalizer.empty(resolver));
+
+      CxxToolFlags preprocessorDelegateFlags =
+          preprocessDelegate
+              .map(delegate -> delegate.getFlagsWithSearchPaths(precompiledHeaderData, resolver))
+              .orElseGet(CxxToolFlags::of);
+
+      ImmutableList<Arg> arguments =
+          compilerDelegate.getArguments(preprocessorDelegateFlags, filesystem.getRootPath());
+
+      Path relativeInputPath = filesystem.relativize(resolver.getAbsolutePath(input));
+      Path resolvedOutput = outputPathResolver.resolvePath(output);
+
+      return new CxxPreprocessAndCompileStep(
+          filesystem,
+          preprocessDelegate.isPresent()
+              ? CxxPreprocessAndCompileStep.Operation.PREPROCESS_AND_COMPILE
+              : CxxPreprocessAndCompileStep.Operation.COMPILE,
+          resolvedOutput,
+          // Use a depfile if there's a preprocessing stage, this logic should be kept in sync with
+          // getInputsAfterBuildingLocally.
+          preprocessDelegate.map(ignored -> getDepFilePath(resolvedOutput)),
+          relativeInputPath,
+          inputType,
+          new CxxPreprocessAndCompileStep.ToolCommand(
+              compilerDelegate.getCommandPrefix(resolver),
+              Arg.stringify(arguments, resolver),
+              compilerDelegate.getEnvironment(resolver)),
+          headerPathNormalizer,
+          sanitizer,
+          outputPathResolver.getTempPath(),
+          useArgfile,
+          compilerDelegate.getCompiler(),
+          Optional.of(
+              CxxLogInfo.builder()
+                  .setTarget(targetName)
+                  .setSourcePath(relativeInputPath)
+                  .setOutputPath(resolvedOutput)
+                  .build()));
+    }
+
+    static Path getDepFilePath(Path outputPath) {
+      return outputPath.getParent().resolve(outputPath.getFileName().toString() + ".dep");
+    }
+
+    @Override
+    public ImmutableList<Step> getBuildSteps(
+        BuildContext context,
+        ProjectFilesystem filesystem,
+        OutputPathResolver outputPathResolver,
+        BuildCellRelativePathFactory buildCellPathFactory) {
+      Path resolvedOutput = outputPathResolver.resolvePath(output);
+      preprocessDelegate
+          .flatMap(PreprocessorDelegate::checkConflictingHeaders)
+          .ifPresent(result -> result.throwHumanReadableExceptionWithContext(targetName));
+      return new ImmutableList.Builder<Step>()
+          .add(
+              MkdirStep.of(
+                  BuildCellRelativePath.fromCellRelativePath(
+                      context.getBuildCellRootPath(), filesystem, resolvedOutput.getParent())))
+          .add(
+              makeMainStep(
+                  context.getSourcePathResolver(),
+                  filesystem,
+                  outputPathResolver,
+                  compilerDelegate.isArgFileSupported()))
+          .build();
+    }
   }
 }

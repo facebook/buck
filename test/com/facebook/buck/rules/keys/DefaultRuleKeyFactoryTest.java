@@ -26,6 +26,7 @@ import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rulekey.RuleKeyAppendable;
 import com.facebook.buck.core.rulekey.RuleKeyObjectSink;
+import com.facebook.buck.core.rules.BuildRuleType;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
@@ -33,7 +34,6 @@ import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.SourcePathRuleFinder;

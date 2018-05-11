@@ -22,6 +22,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.DescriptionCache;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TargetNodeToBuildRuleTransformer;
@@ -57,8 +58,8 @@ class FetchTargetNodeToBuildRuleTransformer implements TargetNodeToBuildRuleTran
 
   private TargetNode<?, ?> substituteTargetNodeIfNecessary(TargetNode<?, ?> node) {
     for (Description<?> description : descriptions) {
-      if (Description.getBuildRuleType(node.getDescription())
-          .equals(Description.getBuildRuleType(description))) {
+      if (DescriptionCache.getBuildRuleType(node.getDescription())
+          .equals(DescriptionCache.getBuildRuleType(description))) {
         downloadableTargets.add(node.getBuildTarget());
         return node.copyWithDescription(description);
       }

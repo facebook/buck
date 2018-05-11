@@ -109,7 +109,7 @@ public interface Linker extends Tool {
       BuildRuleResolver ruleResolver,
       SourcePathRuleFinder ruleFinder,
       BuildTarget target,
-      Iterable<? extends SourcePath> symbolFiles);
+      ImmutableList<? extends SourcePath> symbolFiles);
 
   Iterable<Arg> getSharedLibFlag();
 

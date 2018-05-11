@@ -306,6 +306,7 @@ class AndroidBinaryResourcesGraphEnhancer {
                       ManifestEntries.empty(),
                       ImmutableList.of(aaptOutputInfo.getPrimaryResourcesApkPath()),
                       noAutoVersionResources,
+                      includesVectorDrawables,
                       androidPlatformTarget);
               ruleResolver.addToIndex(aapt2ModuleLink);
               resultBuilder.putModuleResourceApkPaths(
@@ -499,6 +500,7 @@ class AndroidBinaryResourcesGraphEnhancer {
         manifestEntries,
         ImmutableList.of(),
         noAutoVersionResources,
+        includesVectorDrawables,
         androidPlatformTarget);
   }
 

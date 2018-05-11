@@ -74,6 +74,14 @@ public class WindowsCxxIntegrationTest {
         workspace.getFileContents(outputPath), Matchers.containsString("The process is 64bits"));
   }
 
+  @Test
+  public void simpleBinaryWithAsm64IsExecutableByCmd() throws IOException {
+    ProcessResult runResult = workspace.runBuckCommand("build", "//app_asm:log");
+    runResult.assertSuccess();
+    Path outputPath = workspace.resolve("buck-out/gen/app_asm/log/log.txt");
+    assertThat(workspace.getFileContents(outputPath), Matchers.equalToIgnoringCase("42"));
+  }
+
 
   @Test
   public void simpleBinaryWithDll() throws IOException {

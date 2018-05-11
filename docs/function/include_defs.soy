@@ -15,22 +15,34 @@
 {call buck.function}
 {param status: 'FROZEN' /}
 {param overview}
+  <p>
+  <strong>NOTE:</strong> We recommend that you do not use this function.
+  This function can make your builds difficult to maintain and debug,
+  and it will be deprecated in a future release of Buck.
+  We recommend that you use the <a href="{ROOT}function/load.html"><code>load()</code></a> function instead.
+  </p>
+
+<p>
 The <code>include_defs()</code> function is used to include
 {sp}<a href="{ROOT}extending/macros.html"><code>macros</code></a> and constants
 from another file.
+</p>
+
 <p>
 The <code>include_defs()</code> function executes a file of build-file-style
 code in the context of the current build file. Therefore, code in the
 included file may reference Buck functions, such as
 {sp}<code>java_library()</code>, <code>java_test()</code>, etc., as well
 as <code>include_defs()</code> itself!
+</p>
+
 <p>
 The motivation behind <code>include_defs()</code> is to avoid
 copy-and-pasting code across multiple build files. Often, included files will
 contain data declarations (as shown in the example below) or definitions of
 macros for creating more complex build rules.
-<p>
-See also <a href="{ROOT}function/load.html"><code>load()</code></a> function.
+</p>
+
 {/param}
 
 {param args}

@@ -16,6 +16,11 @@
 
 package com.facebook.buck.jvm.java;
 
+import com.facebook.buck.core.description.arg.HasDeclaredDeps;
+import com.facebook.buck.core.description.arg.HasProvidedDeps;
+import com.facebook.buck.core.description.arg.HasSrcs;
+import com.facebook.buck.core.description.arg.HasTests;
+import com.facebook.buck.core.description.arg.Hint;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.Flavored;
@@ -34,11 +39,6 @@ import com.facebook.buck.rules.BuildRuleCreationContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.HasDeclaredDeps;
-import com.facebook.buck.rules.HasProvidedDeps;
-import com.facebook.buck.rules.HasSrcs;
-import com.facebook.buck.rules.HasTests;
-import com.facebook.buck.rules.Hint;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.versions.VersionPropagator;

@@ -18,14 +18,14 @@ package com.facebook.buck.rules.modern;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
+import com.facebook.buck.core.rules.modern.annotations.CustomClassBehaviorTag;
+import com.facebook.buck.core.rules.modern.annotations.CustomFieldBehavior;
+import com.facebook.buck.core.rules.modern.annotations.DefaultFieldSerialization;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.rules.modern.annotations.CustomClassBehaviorTag;
-import com.facebook.buck.rules.modern.annotations.CustomFieldBehavior;
-import com.facebook.buck.rules.modern.annotations.DefaultFieldSerialization;
 import com.facebook.buck.rules.modern.impl.DefaultClassInfoFactory;
 import com.facebook.buck.rules.modern.impl.ValueTypeInfoFactory;
 import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
@@ -45,11 +45,14 @@ import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
 import org.objenesis.ObjenesisStd;
+import org.objenesis.instantiator.ObjectInstantiator;
 
 /**
  * Implements deserialization of Buildables.
@@ -58,6 +61,9 @@ import org.objenesis.ObjenesisStd;
  * Objenesis to create objects and then injects the field values via reflection.
  */
 public class Deserializer {
+  private ObjenesisStd objenesis = new ObjenesisStd();
+  private Map<Class<?>, ObjectInstantiator> instantiators = new ConcurrentHashMap<>();
+  private Map<HashCode, AddsToRuleKey> childCache = new ConcurrentHashMap<>();
 
   /**
    * DataProviders are used for deserializing "dynamic" objects. These are serialized as hashcodes
@@ -93,15 +99,17 @@ public class Deserializer {
 
   public <T extends AddsToRuleKey> T deserialize(DataProvider provider, Class<T> clazz)
       throws IOException {
-    return new Creator(provider).create(clazz);
+    try (DataInputStream stream = new DataInputStream(provider.getData())) {
+      return new Creator(provider, stream).create(clazz);
+    }
   }
 
   private class Creator implements ValueCreator<IOException> {
     private final DataInputStream stream;
     private final DataProvider provider;
 
-    private Creator(DataProvider provider) {
-      this.stream = new DataInputStream(provider.getData());
+    private Creator(DataProvider provider, DataInputStream stream) {
+      this.stream = stream;
       this.provider = provider;
     }
 
@@ -120,10 +128,16 @@ public class Deserializer {
     public AddsToRuleKey createDynamic() throws IOException {
       DataProvider childProvider;
       if (stream.readBoolean()) {
-        childProvider = provider.getChild(HashCode.fromBytes(readBytes()));
+        HashCode hash = HashCode.fromBytes(readBytes());
+        if (childCache.containsKey(hash)) {
+          return childCache.get(hash);
+        }
+        childProvider = provider.getChild(hash);
+        AddsToRuleKey child = deserialize(childProvider, AddsToRuleKey.class);
+        return childCache.computeIfAbsent(hash, ignored -> child);
       } else {
         byte[] data = readBytes();
-        childProvider =
+        return deserialize(
             new DataProvider() {
               @Override
               public InputStream getData() {
@@ -134,9 +148,9 @@ public class Deserializer {
               public DataProvider getChild(HashCode hash) {
                 throw new IllegalStateException();
               }
-            };
+            },
+            AddsToRuleKey.class);
       }
-      return deserialize(childProvider, AddsToRuleKey.class);
     }
 
     @Override
@@ -284,8 +298,10 @@ public class Deserializer {
         return customSerializer.deserialize(this);
       }
 
+      ObjectInstantiator instantiator =
+          instantiators.computeIfAbsent(instanceClass, objenesis::getInstantiatorOf);
       @SuppressWarnings("unchecked")
-      T instance = (T) new ObjenesisStd().newInstance(instanceClass);
+      T instance = (T) instantiator.newInstance();
       ClassInfo<? super T> classInfo = DefaultClassInfoFactory.forInstance(instance);
 
       initialize(instance, classInfo);

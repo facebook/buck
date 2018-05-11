@@ -25,6 +25,7 @@ import com.facebook.buck.io.WatchmanDiagnostic;
 import com.facebook.buck.io.WatchmanDiagnosticEvent;
 import com.facebook.buck.io.filesystem.PathOrGlobMatcher;
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.events.ParseBuckFileEvent;
 import com.facebook.buck.parser.events.ParseBuckProfilerReportEvent;
@@ -48,6 +49,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Maps;
 import com.google.common.io.CountingInputStream;
 import java.io.BufferedOutputStream;
@@ -339,28 +341,13 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
   }
 
   /**
-   * Collect all rules from a particular build file.
-   *
-   * @param buildFile should be an absolute path to a build file. Must have rootPath as its prefix.
-   */
-  @Override
-  public ImmutableList<Map<String, Object>> getAll(Path buildFile, AtomicLong processedBytes)
-      throws BuildFileParseException, InterruptedException {
-    ImmutableList<Map<String, Object>> result = getAllRulesAndMetaRules(buildFile, processedBytes);
-
-    // Strip out the __includes, __configs, and __env meta rules, which are the last rules.
-    return result.subList(0, result.size() - 3);
-  }
-
-  /**
    * Collect all rules from a particular build file, along with meta rules about the rules, for
    * example which build files the rules depend on.
    *
    * @param buildFile should be an absolute path to a build file. Must have rootPath as its prefix.
    */
   @Override
-  public ImmutableList<Map<String, Object>> getAllRulesAndMetaRules(
-      Path buildFile, AtomicLong processedBytes)
+  public BuildFileManifest getBuildFileManifest(Path buildFile, AtomicLong processedBytes)
       throws BuildFileParseException, InterruptedException {
     try {
       return getAllRulesInternal(buildFile, processedBytes);
@@ -372,8 +359,8 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
   }
 
   @VisibleForTesting
-  protected ImmutableList<Map<String, Object>> getAllRulesInternal(
-      Path buildFile, AtomicLong processedBytes) throws IOException, BuildFileParseException {
+  protected BuildFileManifest getAllRulesInternal(Path buildFile, AtomicLong processedBytes)
+      throws IOException, BuildFileParseException {
     ensureNotClosed();
     initIfNeeded();
 
@@ -416,13 +403,42 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
       if (profile.isPresent()) {
         LOG.debug("Profile result:\n%s", profile.get());
       }
-      return values;
+      if (values.isEmpty()) {
+        // in case Python process cannot send values due to serialization issues, it will send an
+        // empty list
+        return BuildFileManifest.builder()
+            .setTargets(ImmutableList.of())
+            .setIncludes(ImmutableSortedSet.of())
+            .setConfigs(ImmutableMap.of())
+            .build();
+      }
+      return toBuildFileManifest(values);
     } finally {
       long parsedBytes = buckPyProcessInput.getCount() - alreadyReadBytes;
       processedBytes.addAndGet(parsedBytes);
       buckEventBus.post(
           ParseBuckFileEvent.finished(parseBuckFileStarted, values, parsedBytes, profile));
     }
+  }
+
+  @SuppressWarnings("unchecked")
+  private BuildFileManifest toBuildFileManifest(ImmutableList<Map<String, Object>> values) {
+    return BuildFileManifest.builder()
+        .setTargets(values.subList(0, values.size() - 3))
+        .setIncludes(
+            ImmutableSortedSet.copyOf(
+                Preconditions.checkNotNull(
+                    (List<String>) values.get(values.size() - 3).get("__includes"))))
+        .setConfigs(
+            Preconditions.checkNotNull(
+                (Map<String, Object>) values.get(values.size() - 2).get("__configs")))
+        .setEnv(
+            ImmutableMap.copyOf(
+                Maps.transformValues(
+                    Preconditions.checkNotNull(
+                        (Map<String, String>) values.get(values.size() - 1).get("__env")),
+                    Optional::ofNullable)))
+        .build();
   }
 
   private BuildFilePythonResult performJsonRequest(ImmutableMap<String, String> request)

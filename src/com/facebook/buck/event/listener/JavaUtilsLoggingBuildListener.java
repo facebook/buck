@@ -16,12 +16,12 @@
 
 package com.facebook.buck.event.listener;
 
+import com.facebook.buck.core.build.event.BuildEvent;
+import com.facebook.buck.core.build.event.BuildRuleEvent;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.rules.BuildEvent;
-import com.facebook.buck.rules.BuildRuleEvent;
 import com.google.common.eventbus.Subscribe;
 import java.io.IOException;
 import java.text.SimpleDateFormat;

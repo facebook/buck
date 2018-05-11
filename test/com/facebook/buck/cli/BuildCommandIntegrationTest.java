@@ -19,9 +19,11 @@ package com.facebook.buck.cli;
 import static com.facebook.buck.util.environment.Platform.WINDOWS;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeFalse;
 import static org.junit.Assume.assumeThat;
 import static org.junit.Assume.assumeTrue;
 
@@ -240,5 +242,51 @@ public class BuildCommandIntegrationTest {
     // Three rules, they could have any number of sub-rule keys and contributors
     assertTrue(ruleKeys.size() >= 3);
     assertTrue(ruleKeys.stream().anyMatch(ruleKey -> ruleKey.name.equals("//:bar")));
+  }
+
+  @Test
+  public void configuredBuckoutSymlinkinSubdirWorksWithoutCells() throws IOException {
+    assumeFalse(Platform.detect() == WINDOWS);
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "just_build", tmp);
+    workspace.setUp();
+    ProcessResult runBuckResult =
+        workspace.runBuckBuild(
+            "-c",
+            "project.buck_out_compat_link=true",
+            "-c",
+            "project.buck_out=buck-out/mydir",
+            "//:foo",
+            "//:bar",
+            "//:ex ample");
+    runBuckResult.assertSuccess();
+
+    assertTrue(Files.exists(workspace.getPath("buck-out/mydir/bin")));
+    assertTrue(Files.exists(workspace.getPath("buck-out/mydir/gen")));
+
+    Path buckOut = workspace.resolve("buck-out");
+    assertEquals(
+        buckOut.resolve("mydir/bin"),
+        buckOut.resolve(Files.readSymbolicLink(buckOut.resolve("bin"))));
+    assertEquals(
+        buckOut.resolve("mydir/gen"),
+        buckOut.resolve(Files.readSymbolicLink(buckOut.resolve("gen"))));
+  }
+
+  @Test
+  public void enableEmbeddedCellHasOnlyOneBuckOut() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "multiple_cell_build", tmp);
+    workspace.setUp();
+    ProcessResult runBuckResult =
+        workspace.runBuckBuild("-c", "project.embedded_cell_buck_out_enabled=true", "//main/...");
+    runBuckResult.assertSuccess();
+
+    assertTrue(Files.exists(workspace.getPath("buck-out/cells/cxx")));
+    assertTrue(Files.exists(workspace.getPath("buck-out/cells/java")));
+
+    assertFalse(Files.exists(workspace.getPath("cxx/buck-out")));
+    assertFalse(Files.exists(workspace.getPath("java/buck-out")));
   }
 }

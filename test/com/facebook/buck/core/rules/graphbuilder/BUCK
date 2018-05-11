@@ -8,11 +8,12 @@ java_test(
         "//src/com/facebook/buck/core/graph/transformation:transformation",
         "//src/com/facebook/buck/core/rules/graphbuilder:graphbuilder",
         "//test/com/facebook/buck/core/cell:testutil",
+        "//test/com/facebook/buck/core/graph/transformation:testutil",
         "//test/com/facebook/buck/core/rules/provider:testutil",
         "//test/com/facebook/buck/model:testutil",
         "//test/com/facebook/buck/rules:testutil",
         "//test/com/facebook/buck/testutil:testutil",
-        "//third-party/java/easymock:easymock",
+        "//test/com/facebook/buck/toolchain/impl:testutil",
         "//third-party/java/junit:junit",
     ],
 )

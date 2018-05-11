@@ -102,6 +102,9 @@ public interface BuildRule extends Comparable<BuildRule> {
   @JsonIgnore
   boolean isCacheable();
 
+  /** Whether this {@link BuildRule} may have any steps to build. */
+  boolean hasBuildSteps();
+
   /**
    * Add additional details when calculating this rule's {@link RuleKey} which isn't available via
    * reflection.

@@ -51,7 +51,7 @@ public class HybridGlobberFactory implements GlobberFactory {
     String relativeRoot =
         basePath.relativeTo(basePath.getFileSystem().getPath(watchRoot)).toString();
     return new HybridGlobber(
-        SimpleGlobber.create(basePath),
+        NativeGlobber.create(basePath),
         WatchmanGlobber.create(watchmanClient, relativeRoot, watchRoot));
   }
 

@@ -16,10 +16,6 @@
 
 package com.facebook.buck.cli;
 
-import static org.easymock.EasyMock.eq;
-import static org.easymock.EasyMock.expect;
-import static org.easymock.EasyMock.expectLastCall;
-import static org.easymock.EasyMock.isA;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
@@ -27,6 +23,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.CacheResult;
+import com.facebook.buck.artifact_cache.NoopArtifactCache;
 import com.facebook.buck.artifact_cache.config.ArtifactCacheMode;
 import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.core.rulekey.RuleKey;
@@ -47,6 +44,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
 import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
 import java.io.IOException;
 import java.nio.file.FileSystem;
 import java.nio.file.Path;
@@ -54,10 +52,10 @@ import java.util.Collections;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.TimeZone;
-import org.easymock.EasyMockSupport;
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.junit.Test;
 
-public class CacheCommandTest extends EasyMockSupport {
+public class CacheCommandTest {
 
   private void testRunCommandWithNoArgumentsImpl(boolean fetchPrefix) throws Exception {
     TestConsole console = new TestConsole();
@@ -91,11 +89,9 @@ public class CacheCommandTest extends EasyMockSupport {
       throws Exception {
     final String ruleKeyHash = "b64009ae3762a42a1651c139ec452f0d18f48e21";
 
-    ArtifactCache cache = createMock(ArtifactCache.class);
-    expect(cache.fetchAsync(eq(new RuleKey(ruleKeyHash)), isA(LazyPath.class)))
-        .andReturn(Futures.immediateFuture(CacheResult.hit("http", ArtifactCacheMode.http)));
-    cache.close();
-    expectLastCall();
+    ArtifactCache cache =
+        new FakeArtifactCache(
+            new RuleKey(ruleKeyHash), CacheResult.hit("http", ArtifactCacheMode.http));
 
     TestConsole console = new TestConsole();
 
@@ -107,8 +103,6 @@ public class CacheCommandTest extends EasyMockSupport {
       arguments.add("fetch");
     }
     arguments.add(ruleKeyHash);
-
-    replayAll();
 
     CacheCommand cacheCommand = new CacheCommand();
     cacheCommand.setArguments(arguments.build());
@@ -140,18 +134,12 @@ public class CacheCommandTest extends EasyMockSupport {
       throws IOException, InterruptedException {
     final String ruleKeyHash = "b64009ae3762a42a1651c139ec452f0d18f48e21";
 
-    ArtifactCache cache = createMock(ArtifactCache.class);
-    expect(cache.fetchAsync(eq(new RuleKey(ruleKeyHash)), isA(LazyPath.class)))
-        .andReturn(Futures.immediateFuture(CacheResult.miss()));
-    cache.close();
-    expectLastCall();
+    ArtifactCache cache = new FakeArtifactCache(new RuleKey(ruleKeyHash), CacheResult.miss());
 
     TestConsole console = new TestConsole();
 
     CommandRunnerParams commandRunnerParams =
         CommandRunnerParamsForTesting.builder().setConsole(console).setArtifactCache(cache).build();
-
-    replayAll();
 
     CacheCommand cacheCommand = new CacheCommand();
     cacheCommand.setArguments(ImmutableList.of(ruleKeyHash));
@@ -159,7 +147,7 @@ public class CacheCommandTest extends EasyMockSupport {
     assertEquals(ExitCode.BUILD_ERROR, exitCode);
     assertThat(
         console.getTextWrittenToStdErr(),
-        containsString("Failed to retrieve an artifact with id " + ruleKeyHash + "."));
+        containsString("Failed to retrieve an artifact with id " + ruleKeyHash + " (miss)."));
   }
 
   @Test
@@ -167,11 +155,9 @@ public class CacheCommandTest extends EasyMockSupport {
       throws IOException, InterruptedException {
     final String ruleKeyHash = "b64009ae3762a42a1651c139ec452f0d18f48e21";
 
-    ArtifactCache cache = createMock(ArtifactCache.class);
-    expect(cache.fetchAsync(eq(new RuleKey(ruleKeyHash)), isA(LazyPath.class)))
-        .andReturn(Futures.immediateFuture(CacheResult.hit("http", ArtifactCacheMode.http)));
-    cache.close();
-    expectLastCall();
+    ArtifactCache cache =
+        new FakeArtifactCache(
+            new RuleKey(ruleKeyHash), CacheResult.hit("http", ArtifactCacheMode.http));
 
     TestConsole console = new TestConsole();
 
@@ -180,8 +166,6 @@ public class CacheCommandTest extends EasyMockSupport {
     SuperConsoleEventBusListener listener =
         createSuperConsole(
             console, commandRunnerParams.getClock(), commandRunnerParams.getBuckEventBus());
-
-    replayAll();
 
     CacheCommand cacheCommand = new CacheCommand();
     cacheCommand.setArguments(ImmutableList.of(ruleKeyHash));
@@ -213,7 +197,6 @@ public class CacheCommandTest extends EasyMockSupport {
             silentSummaryVerbosity,
             new DefaultExecutionEnvironment(
                 ImmutableMap.copyOf(System.getenv()), System.getProperties()),
-            Optional.empty(),
             Locale.US,
             logPath,
             timeZone,
@@ -224,5 +207,32 @@ public class CacheCommandTest extends EasyMockSupport {
             Optional.empty());
     eventBus.register(listener);
     return listener;
+  }
+
+  private static class FakeArtifactCache extends NoopArtifactCache {
+
+    private final RuleKey ruleKey;
+    private final CacheResult cacheResult;
+    private final AtomicBoolean closed = new AtomicBoolean(false);
+
+    private FakeArtifactCache(RuleKey ruleKey, CacheResult cacheResult) {
+      this.ruleKey = ruleKey;
+      this.cacheResult = cacheResult;
+    }
+
+    @Override
+    public ListenableFuture<CacheResult> fetchAsync(RuleKey ruleKey, LazyPath output) {
+      if (ruleKey.equals(this.ruleKey)) {
+        return Futures.immediateFuture(cacheResult);
+      }
+      throw new IllegalArgumentException();
+    }
+
+    @Override
+    public void close() {
+      if (!closed.compareAndSet(false, true)) {
+        throw new IllegalStateException("Already closed");
+      }
+    }
   }
 }

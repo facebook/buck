@@ -15,10 +15,10 @@
  */
 package com.facebook.buck.distributed.build_client;
 
+import com.facebook.buck.core.build.distributed.synchronization.RemoteBuildRuleCompletionWaiter;
 import com.facebook.buck.distributed.StampedeLocalBuildStatusEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.rules.RemoteBuildRuleCompletionWaiter;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;

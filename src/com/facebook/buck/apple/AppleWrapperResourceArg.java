@@ -16,8 +16,8 @@
 
 package com.facebook.buck.apple;
 
+import com.facebook.buck.core.description.arg.CommonDescriptionArg;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import com.facebook.buck.rules.CommonDescriptionArg;
 import java.nio.file.Path;
 import org.immutables.value.Value;
 

@@ -55,6 +55,11 @@ public abstract class NoopBuildRule extends AbstractBuildRule implements Support
     return ImmutableList.of();
   }
 
+  @Override
+  public final boolean hasBuildSteps() {
+    return false;
+  }
+
   @Nullable
   @Override
   public final SourcePath getSourcePathToOutput() {

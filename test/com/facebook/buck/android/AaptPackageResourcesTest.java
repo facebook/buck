@@ -115,14 +115,12 @@ public class AaptPackageResourcesTest {
     SourcePath manifest;
     FilteredResourcesProvider filteredResourcesProvider;
     ImmutableList<HasAndroidResourceDeps> hasAndroidResourceDeps;
-    AndroidBinary.PackageType packageType;
     ManifestEntries manifestEntries;
 
     AaptConstructorArgs() {
       manifest = createPathSourcePath("AndroidManifest.xml", "content");
       filteredResourcesProvider = new IdentityResourcesProvider(ImmutableList.of());
       hasAndroidResourceDeps = ImmutableList.of();
-      packageType = AndroidBinary.PackageType.DEBUG;
       manifestEntries = ManifestEntries.empty();
     }
   }

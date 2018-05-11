@@ -26,6 +26,7 @@ import com.facebook.buck.artifact_cache.ArtifactCaches;
 import com.facebook.buck.artifact_cache.config.ArtifactCacheBuckConfig;
 import com.facebook.buck.cli.exceptions.handlers.ExceptionHandlerRegistryFactory;
 import com.facebook.buck.config.BuckConfig;
+import com.facebook.buck.core.build.engine.cache.manager.BuildInfoStoreManager;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.DefaultCellPathResolver;
 import com.facebook.buck.core.cell.LocalCellProviderFactory;
@@ -97,7 +98,6 @@ import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.rules.ActionGraphCache;
-import com.facebook.buck.rules.BuildInfoStoreManager;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
@@ -872,7 +872,6 @@ public final class Main {
                     console,
                     testConfig.getResultSummaryVerbosity(),
                     executionEnvironment,
-                    webServer,
                     locale,
                     filesystem.getBuckPaths().getLogDir().resolve("test.log"),
                     buckConfig.isLogBuildIdToConsoleEnabled()
@@ -1702,7 +1701,6 @@ public final class Main {
       Console console,
       TestResultSummaryVerbosity testResultSummaryVerbosity,
       ExecutionEnvironment executionEnvironment,
-      Optional<WebServer> webServer,
       Locale locale,
       Path testLogPath,
       Optional<BuildId> buildId) {
@@ -1714,7 +1712,6 @@ public final class Main {
               clock,
               testResultSummaryVerbosity,
               executionEnvironment,
-              webServer,
               locale,
               testLogPath,
               TimeZone.getDefault(),
@@ -1780,13 +1777,12 @@ public final class Main {
           }
 
           // Do not log anything in case we do not have space on the disk
-          if (exitCode == ExitCode.FATAL_DISK_FULL) {
+          if (exitCode != ExitCode.FATAL_DISK_FULL) {
             LOG.error(e, "Uncaught exception from thread %s", t);
           }
 
           if (context.isPresent()) {
             // Shut down the Nailgun server and make sure it stops trapping System.exit().
-            //
             // We pass false for exitVM because otherwise Nailgun exits with code 0.
             context.get().getNGServer().shutdown(/* exitVM */ false);
           }

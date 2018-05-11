@@ -23,6 +23,7 @@ import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.artifact_cache.CacheResultType;
 import com.facebook.buck.artifact_cache.config.ArtifactCacheMode;
 import com.facebook.buck.core.build.engine.buildinfo.BuildInfo;
+import com.facebook.buck.core.build.event.BuildEvent;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.event.ActionGraphEvent;
 import com.facebook.buck.event.BuckEventBus;
@@ -30,7 +31,6 @@ import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.file.LazyPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
 import com.facebook.buck.parser.ParseEvent;
-import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
@@ -226,7 +226,8 @@ public class CacheCommand extends AbstractCommand {
           params
               .getConsole()
               .printErrorText(
-                  String.format("Failed to retrieve an artifact with id %s.", r.ruleKey));
+                  String.format(
+                      "Failed to retrieve an artifact with id %s (%s).", r.ruleKey, r.cacheResult));
         }
       }
     }
@@ -266,7 +267,7 @@ public class CacheCommand extends AbstractCommand {
 
   private String cacheResultToString(CacheResult cacheResult) {
     CacheResultType type = cacheResult.getType();
-    String typeString = type.toString();
+    String typeString = type.toString().toLowerCase();
     switch (type) {
       case ERROR:
         return String.format("%s %s", typeString, cacheResult.getCacheError());

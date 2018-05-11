@@ -17,22 +17,12 @@
 package com.facebook.buck.parser.api;
 
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
-import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
 /** Parses buck build files (usually BUCK files) and retrieve rule information from them. */
 public interface ProjectBuildFileParser extends AutoCloseable {
-
-  /**
-   * Collect all rules from a particular build file.
-   *
-   * @param buildFile should be an absolute path to a build file. Must have rootPath as its prefix.
-   */
-  ImmutableList<Map<String, Object>> getAll(Path buildFile, AtomicLong processedBytes)
-      throws BuildFileParseException, InterruptedException, IOException;
 
   /**
    * Collect all rules from a particular build file, along with meta rules about the rules, for
@@ -40,8 +30,7 @@ public interface ProjectBuildFileParser extends AutoCloseable {
    *
    * @param buildFile should be an absolute path to a build file. Must have rootPath as its prefix.
    */
-  ImmutableList<Map<String, Object>> getAllRulesAndMetaRules(
-      Path buildFile, AtomicLong processedBytes)
+  BuildFileManifest getBuildFileManifest(Path buildFile, AtomicLong processedBytes)
       throws BuildFileParseException, InterruptedException, IOException;
 
   /** Reports profile information captured while parsing build files. */

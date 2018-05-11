@@ -16,30 +16,29 @@
 
 package com.facebook.buck.cli;
 
-import static org.easymock.EasyMock.eq;
-import static org.easymock.EasyMock.expect;
-import static org.easymock.EasyMock.expectLastCall;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.startsWith;
 import static org.junit.Assert.*;
 
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.CacheDeleteResult;
+import com.facebook.buck.artifact_cache.NoopArtifactCache;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.ExitCode;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
-import org.easymock.EasyMockSupport;
 import org.junit.Test;
 
-public class CacheDeleteCommandTest extends EasyMockSupport {
+public class CacheDeleteCommandTest {
   @Test(expected = CommandLineException.class)
   public void testRunCommandWithNoArguments() throws IOException, InterruptedException {
     TestConsole console = new TestConsole();
@@ -60,19 +59,15 @@ public class CacheDeleteCommandTest extends EasyMockSupport {
     List<RuleKey> ruleKeys =
         Arrays.stream(ruleKeyHashes).map(RuleKey::new).collect(Collectors.toList());
 
-    ArtifactCache cache = createMock(ArtifactCache.class);
     CacheDeleteResult cacheDeleteResult =
         CacheDeleteResult.builder().setCacheNames(ImmutableList.of("test")).build();
-    expect(cache.deleteAsync(eq(ruleKeys))).andReturn(Futures.immediateFuture(cacheDeleteResult));
-    cache.close();
-    expectLastCall();
+    ArtifactCache cache =
+        new FakeArtifactCache(ruleKeys, Futures.immediateFuture(cacheDeleteResult));
 
     TestConsole console = new TestConsole();
 
     CommandRunnerParams commandRunnerParams =
         CommandRunnerParamsForTesting.builder().setConsole(console).setArtifactCache(cache).build();
-
-    replayAll();
 
     CacheDeleteCommand cacheDeleteCommand = new CacheDeleteCommand();
     cacheDeleteCommand.setArguments(ImmutableList.copyOf(ruleKeyHashes));
@@ -86,23 +81,48 @@ public class CacheDeleteCommandTest extends EasyMockSupport {
       throws IOException, InterruptedException {
     final String ruleKeyHash = "b64009ae3762a42a1651c139ec452f0d18f48e21";
 
-    ArtifactCache cache = createMock(ArtifactCache.class);
-    expect(cache.deleteAsync(eq(Collections.singletonList(new RuleKey(ruleKeyHash)))))
-        .andReturn(Futures.immediateFailedFuture(new RuntimeException("test failure")));
-    cache.close();
-    expectLastCall();
+    ArtifactCache cache =
+        new FakeArtifactCache(
+            Collections.singletonList(new RuleKey(ruleKeyHash)),
+            Futures.immediateFailedFuture(new RuntimeException("test failure")));
 
     TestConsole console = new TestConsole();
 
     CommandRunnerParams commandRunnerParams =
         CommandRunnerParamsForTesting.builder().setConsole(console).setArtifactCache(cache).build();
 
-    replayAll();
-
     CacheDeleteCommand cacheDeleteCommand = new CacheDeleteCommand();
     cacheDeleteCommand.setArguments(ImmutableList.of(ruleKeyHash));
     ExitCode exitCode = cacheDeleteCommand.run(commandRunnerParams);
     assertEquals(ExitCode.FATAL_GENERIC, exitCode);
     assertThat(console.getTextWrittenToStdErr(), startsWith("Failed to delete artifacts."));
+  }
+
+  private static class FakeArtifactCache extends NoopArtifactCache {
+
+    private final List<RuleKey> ruleKeys;
+    private final ListenableFuture<CacheDeleteResult> cacheResult;
+    private final AtomicBoolean closed = new AtomicBoolean(false);
+
+    private FakeArtifactCache(
+        List<RuleKey> ruleKeys, ListenableFuture<CacheDeleteResult> cacheResult) {
+      this.ruleKeys = ruleKeys;
+      this.cacheResult = cacheResult;
+    }
+
+    @Override
+    public ListenableFuture<CacheDeleteResult> deleteAsync(List<RuleKey> ruleKeys) {
+      if (ruleKeys.equals(this.ruleKeys)) {
+        return cacheResult;
+      }
+      throw new IllegalArgumentException();
+    }
+
+    @Override
+    public void close() {
+      if (!closed.compareAndSet(false, true)) {
+        throw new IllegalStateException("Already closed");
+      }
+    }
   }
 }

@@ -67,6 +67,7 @@ import com.facebook.buck.rules.BuildRuleCreationContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.DescriptionCache;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.ImplicitFlavorsInferringDescription;
 import com.facebook.buck.rules.MetadataProvidingDescription;
@@ -786,8 +787,8 @@ public class AppleLibraryDescription
     // Use defaults.apple_library if present, but fall back to defaults.cxx_library otherwise.
     return cxxLibraryImplicitFlavors.addImplicitFlavorsForRuleTypes(
         argDefaultFlavors,
-        Description.getBuildRuleType(this),
-        Description.getBuildRuleType(CxxLibraryDescription.class));
+        DescriptionCache.getBuildRuleType(this),
+        DescriptionCache.getBuildRuleType(CxxLibraryDescription.class));
   }
 
   @Override

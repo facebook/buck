@@ -135,3 +135,66 @@ struct BuildSlaveFinishedStats {
     6: optional string distBuildMode;
     7: optional HealthCheckStats healthCheckStats;
 }
+
+##############################################################################
+## HTTP body thrift Request/Response structs
+##############################################################################
+
+struct GetAllAvailableCapacityRequest {
+}
+
+struct GetAllAvailableCapacityResponse {
+  1 : optional i32 availableCapacity;
+}
+
+struct ObtainCapacityRequest {
+  1 : optional stampede.BuildSlaveRunId buildSlaveRunId;
+  2 : optional i32 capacity;
+}
+
+struct ObtainCapacityResponse {
+  1 : optional i32 obtainedCapacity;
+}
+
+struct ObtainAllAvailableCapacityRequest {
+  1 : optional stampede.BuildSlaveRunId buildSlaveRunId;
+}
+
+struct ObtainAllAvailableCapacityResponse {
+  1 : optional i32 obtainedCapacity;
+}
+
+struct ReturnCapacityRequest {
+  1 : optional stampede.BuildSlaveRunId buildSlaveRunId;
+  2 : optional i32 capacity;
+}
+
+struct ReturnCapacityResponse {
+}
+
+enum BuildSlaveRequestType {
+  UNKNOWN = 0,
+  GET_ALL_AVAILABLE_CAPACITY = 1,
+  OBTAIN_CAPACITY = 2,
+  OBTAIN_ALL_AVAILABLE_CAPACITY = 3,
+  RETURN_CAPACITY = 4,
+}
+
+struct BuildSlaveRequest {
+  1 : optional BuildSlaveRequestType type = BuildSlaveRequestType.UNKNOWN;
+  2 : optional GetAllAvailableCapacityRequest getAllAvailableCapacityRequest;
+  3 : optional ObtainCapacityRequest obtainCapacityRequest;
+  4 : optional ObtainAllAvailableCapacityRequest obtainAllAvailableCapacityRequest;
+  5 : optional ReturnCapacityRequest returnCapacityRequest;
+}
+
+struct BuildSlaveResponse {
+  1 : optional bool wasSuccessful;
+  2 : optional string errorMessage;
+
+  10 : optional BuildSlaveRequestType type = BuildSlaveRequestType.UNKNOWN;
+  11 : optional GetAllAvailableCapacityResponse getAllAvailableCapacityResponse;
+  12 : optional ObtainAllAvailableCapacityResponse obtainAllAvailableCapacityResponse;
+  13 : optional ObtainCapacityResponse obtainCapacityResponse;
+  14 : optional ReturnCapacityResponse returnCapacityResponse;
+}

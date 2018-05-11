@@ -135,7 +135,7 @@ public class AuditRulesCommand extends AbstractCommand {
 
           // Parse the rules from the build file.
           List<Map<String, Object>> rawRules;
-          rawRules = parser.getAll(path, new AtomicLong());
+          rawRules = parser.getBuildFileManifest(path, new AtomicLong()).getTargets();
 
           // Format and print the rules from the raw data, filtered by type.
           ImmutableSet<String> types = getTypes();
@@ -239,7 +239,7 @@ public class AuditRulesCommand extends AbstractCommand {
   }
 
   /**
-   * @param value in a Map returned by {@link ProjectBuildFileParser#getAll(Path, AtomicLong)}.
+   * @param value a map representing a raw build target.
    * @return a string that represents the Python equivalent of the value.
    */
   @VisibleForTesting

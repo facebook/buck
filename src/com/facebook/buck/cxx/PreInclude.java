@@ -20,6 +20,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.UnflavoredBuildTarget;
+import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
@@ -44,6 +45,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
@@ -262,7 +264,7 @@ public abstract class PreInclude extends NoopBuildRuleWithDeclaredAndExtraDeps
       SourcePathResolver pathResolver) {
     return new PreprocessorDelegate(
         cxxPlatform.getHeaderVerification(),
-        getProjectFilesystem().getRootPath(),
+        PathSourcePath.of(getProjectFilesystem(), Paths.get("")),
         preprocessor,
         PreprocessorFlags.of(
             Optional.of(getHeaderSourcePath()),

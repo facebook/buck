@@ -6,6 +6,7 @@ standard_java_test(
         "//src-gen:thrift",
         "//src/com/facebook/buck/artifact_cache:artifact_cache",
         "//src/com/facebook/buck/command:command",
+        "//src/com/facebook/buck/core/build/engine/impl:impl",
         "//src/com/facebook/buck/distributed:common",
         "//src/com/facebook/buck/distributed/build_slave:build_slave",
         "//src/com/facebook/buck/event:event",
@@ -39,5 +40,6 @@ standard_java_test(
         "//test/com/facebook/buck/util/timing:testutil",
         "//third-party/java/easymock:easymock",
         "//third-party/java/junit:junit",
+        "//third-party/java/okhttp:okhttp",
     ],
 )

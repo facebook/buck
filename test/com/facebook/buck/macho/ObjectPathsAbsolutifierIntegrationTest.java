@@ -128,7 +128,7 @@ public class ObjectPathsAbsolutifierIntegrationTest {
                 filesystem,
                 target.withFlavors(
                     platformFlavor, InternalFlavor.of("compile-" + sanitize("main.c.o"))),
-                "%s__")
+                "%s")
             .resolve("main.c.o");
 
     Path relativeSourceFilePath = Paths.get("Apps/TestApp/main.c");

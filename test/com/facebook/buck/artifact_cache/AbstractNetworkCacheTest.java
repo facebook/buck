@@ -19,7 +19,7 @@ package com.facebook.buck.artifact_cache;
 import com.facebook.buck.artifact_cache.config.ArtifactCacheMode;
 import com.facebook.buck.artifact_cache.config.CacheReadMode;
 import com.facebook.buck.core.rulekey.RuleKey;
-import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.file.BorrowablePath;
 import com.facebook.buck.io.file.LazyPath;
 import com.facebook.buck.slb.HttpService;
@@ -34,7 +34,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
-import org.easymock.EasyMock;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -71,6 +70,8 @@ public class AbstractNetworkCacheTest {
           }
         };
 
+    HttpService httpService = new TestHttpService();
+
     AbstractNetworkCache cache =
         new AbstractNetworkCache(
             NetworkCacheArgs.builder()
@@ -78,11 +79,11 @@ public class AbstractNetworkCacheTest {
                 .setCacheMode(ArtifactCacheMode.http)
                 .setRepository("some_repository")
                 .setScheduleType("some_schedule_type")
-                .setFetchClient(EasyMock.createMock(HttpService.class))
-                .setStoreClient(EasyMock.createMock(HttpService.class))
+                .setFetchClient(httpService)
+                .setStoreClient(httpService)
                 .setCacheReadMode(CacheReadMode.READWRITE)
                 .setProjectFilesystem(filesystem)
-                .setBuckEventBus(EasyMock.createMock(BuckEventBus.class))
+                .setBuckEventBus(BuckEventBusForTests.newInstance())
                 .setHttpWriteExecutorService(service)
                 .setHttpFetchExecutorService(service)
                 .setErrorTextTemplate("super error message")

@@ -21,6 +21,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.UserFlavor;
+import com.facebook.buck.core.rules.BuildRuleType;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.tool.Tool;
@@ -30,7 +31,6 @@ import com.facebook.buck.core.toolchain.toolprovider.impl.BinaryBuildRuleToolPro
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.toolchain.linker.DefaultLinkerProvider;
 import com.facebook.buck.cxx.toolchain.linker.LinkerProvider;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.RuleScheduleInfo;
 import com.facebook.buck.rules.tool.config.ToolConfig;
 import com.facebook.buck.util.environment.Platform;
@@ -83,6 +83,7 @@ public class CxxBuckConfig {
   private static final String ENABLE_DEPRECATED_PREBUILT_CXX_LIBRARY_API =
       "enable_deprecated_prebuilt_cxx_library_api";
   private static final String DECLARED_PLATFORMS = "declared_platforms";
+  private static final String SHARED_LIBRARY_EXT = "shared_library_extension";
 
   private static final String ASFLAGS = "asflags";
   private static final String ASPPFLAGS = "asppflags";
@@ -507,6 +508,11 @@ public class CxxBuckConfig {
         .stream()
         .map(s -> UserFlavor.of(s, String.format("Declared platform: %s", s)))
         .collect(ImmutableSet.toImmutableSet());
+  }
+
+  /** @return the extension to use for shared libraries (e.g. ".so"). */
+  public Optional<String> getSharedLibraryExtension() {
+    return delegate.getValue(cxxSection, SHARED_LIBRARY_EXT);
   }
 
   public BuckConfig getDelegate() {

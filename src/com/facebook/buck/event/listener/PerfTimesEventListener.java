@@ -17,6 +17,8 @@
 package com.facebook.buck.event.listener;
 
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
+import com.facebook.buck.core.build.event.BuildEvent;
+import com.facebook.buck.core.build.event.BuildRuleEvent;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.ActionGraphEvent;
@@ -28,9 +30,7 @@ import com.facebook.buck.event.InstallEvent;
 import com.facebook.buck.log.PerfTimesStats;
 import com.facebook.buck.log.views.JsonViews;
 import com.facebook.buck.parser.ParseEvent;
-import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleEvent;
 import com.facebook.buck.util.environment.ExecutionEnvironment;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.google.common.eventbus.Subscribe;

@@ -16,6 +16,8 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
@@ -24,9 +26,7 @@ import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.rules.BuildRuleCreationContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.HasDeclaredDeps;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.versions.VersionPropagator;
 import org.immutables.value.Value;

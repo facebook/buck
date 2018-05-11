@@ -48,7 +48,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.MapDifference;
-import com.google.common.collect.Maps;
 import com.google.common.eventbus.Subscribe;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import java.io.IOException;
@@ -227,10 +226,7 @@ public class DaemonicParserState {
         } else if (rawNode.containsKey(CONFIGS_META_RULE)) {
         } else if (rawNode.containsKey(ENV_META_RULE)) {
           env =
-              ImmutableMap.copyOf(
-                  Maps.transformValues(
-                      Preconditions.checkNotNull((Map<String, String>) rawNode.get(ENV_META_RULE)),
-                      Optional::ofNullable));
+              ((Optional<ImmutableMap<String, Optional<String>>>) rawNode.get(ENV_META_RULE)).get();
         } else {
           withoutMetaIncludesBuilder.add(rawNode);
         }

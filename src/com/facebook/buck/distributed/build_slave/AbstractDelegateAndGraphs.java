@@ -16,9 +16,9 @@
 
 package com.facebook.buck.distributed.build_slave;
 
+import com.facebook.buck.core.build.engine.delegate.CachingBuildEngineDelegate;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.rules.ActionGraphAndResolver;
-import com.facebook.buck.rules.CachingBuildEngineDelegate;
 import com.facebook.buck.rules.TargetGraph;
 import org.immutables.value.Value;
 

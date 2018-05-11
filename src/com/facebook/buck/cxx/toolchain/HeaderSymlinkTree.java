@@ -17,6 +17,7 @@
 package com.facebook.buck.cxx.toolchain;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -46,8 +47,8 @@ public class HeaderSymlinkTree extends SymlinkTree {
    * <p>This path should not be added to rulekeys as a SourcePath (in some cases it points to the
    * entire buck-out).
    */
-  public Path getIncludePath() {
-    return getRoot();
+  public PathSourcePath getIncludeSourcePath() {
+    return PathSourcePath.of(getProjectFilesystem(), getProjectFilesystem().relativize(getRoot()));
   }
 
   /** Get path of the header map indexing this tree if one exists. */

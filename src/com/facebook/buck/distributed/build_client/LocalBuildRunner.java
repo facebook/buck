@@ -17,9 +17,9 @@ package com.facebook.buck.distributed.build_client;
 
 import com.facebook.buck.command.Build;
 import com.facebook.buck.command.LocalBuildExecutorInvoker;
+import com.facebook.buck.core.build.distributed.synchronization.RemoteBuildRuleCompletionWaiter;
 import com.facebook.buck.distributed.ExitCode;
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.rules.RemoteBuildRuleCompletionWaiter;
 import com.facebook.buck.util.CleanBuildShutdownException;
 import com.google.common.base.Preconditions;
 import java.io.IOException;

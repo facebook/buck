@@ -73,6 +73,11 @@ public abstract class AbstractBuildRule implements BuildRule {
   }
 
   @Override
+  public boolean hasBuildSteps() {
+    return true;
+  }
+
+  @Override
   public void updateBuildRuleResolver(
       BuildRuleResolver ruleResolver,
       SourcePathRuleFinder ruleFinder,
