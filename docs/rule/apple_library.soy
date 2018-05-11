@@ -14,14 +14,20 @@
 {call buck.rule}
 {param status: 'UNFROZEN' /}
 {param overview}
-An <code>apple_library()</code> rule represents a set of Objective-C/C++ source files and is very
-similar to a <a href="{ROOT}rule/cxx_library.html"><code>cxx_library()</code> rule</a> with which it
-shares most of its attributes. In addition to those common
-attributes, <code>apple_library()</code> has a few more that are specific to libraries intended to
-be built using the Apple toolchain. Please also note that the way the libraries' header files are
-imported differs between <code>apple_library()</code> and <code>cxx_library()</code> to better
-accommodate existing conventions (see the documentation
-of the <code>headers</code> and <code>exported_headers</code> attributes for more details).
+An <code>apple_library()</code> rule represents a set of Objective-C/C++
+source files and is similar to a <a href="{ROOT}rule/cxx_library.html"><code>cxx_library()</code> rule</a> with which it shares many
+attributes. In addition to those common attributes, <code>apple_library()</code> has a some additional attributes 
+that are specific to binaries intended to be built using the Apple toolchain. 
+Note, however, that <code>apple_Libra()</code> and <code>cxx_Libra()</code> differ 
+in the way that they import header files, in order to better accommodate existing conventions. 
+See the sections for the <code>headers</code> and <code>exported_headers</code> attributes for more details.
+</p>
+
+<p>
+Buck enables you to override components of the Apple toolchain with
+alternate tools, either from the Xcode search paths or from directories
+that you specify.
+See {call buckconfig.apple_replacement /} and {call buckconfig.apple_xcode_tool_name_override /} for more information.
 {/param}
 
 {param args}

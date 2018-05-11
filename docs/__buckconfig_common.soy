@@ -120,6 +120,22 @@
 {/template}
 
 /***/
+{template .apple_replacement}
+{call .entry_link}
+  {param section: 'apple' /}
+  {param entry: '*_replacement' /}
+{/call}
+{/template}
+
+/***/
+{template .apple_xcode_tool_name_override}
+{call .entry_link}
+  {param section: 'apple' /}
+  {param entry: '*_xcode_tool_name_override' /}
+{/call}
+{/template}
+
+/***/
 {template .build_depfiles}
 {call .entry_link}
   {param section: 'build' /}

@@ -7,24 +7,32 @@
     {param navid: 'rule_apple_binary' /}
     {param prettify: true /}
     {param description}
-      An apple_binary() rule builds a native Mac OSX or iOS executable.
+      An apple_binary() rule builds a native iOS or Mac OSX executable.
     {/param}
     {param content}
 
 {call buck.rule}
 {param status: 'UNFROZEN' /}
 {param overview}
-An <code>apple_binary()</code> rule builds a native executable from the supplied set of
-Objective-C/C++ source files and dependencies and is similar to
+<p>
+An <code>apple_binary()</code> rule builds a native executable&mdash;such as an iOS or OSX app&mdash;from 
+the supplied set of Objective-C/C++ source files and dependencies. It is similar to
 a <a href="{ROOT}rule/cxx_binary.html"><code>cxx_binary()</code> rule</a> with which it shares many
-attributes. In addition to those common
-attributes, <code>apple_binary()</code> has a few more that are specific to binaries intended to
-be built using the Apple toolchain. Please also note that the way header files are
-imported differs between <code>apple_binary()</code> and <code>cxx_binary()</code> to better
-accommodate existing conventions (see the documentation
-of the <code>headers</code> and <code>exported_headers</code> attributes for more details).
-{/param}
+attributes. In addition to those common attributes, <code>apple_binary()</code> has a some additional attributes 
+that are specific to binaries intended to be built using the Apple toolchain. 
+Note, however, that <code>apple_binary()</code> and <code>cxx_binary()</code> differ 
+in the way that they import header files, in order to better accommodate existing conventions. 
+See the sections for the <code>headers</code> and <code>exported_headers</code> attributes for more details.
+</p>
 
+<p>
+Buck enables you to override components of the Apple toolchain with
+alternate tools, either from the Xcode search paths or from directories
+that you specify.
+See {call buckconfig.apple_replacement /} and {call buckconfig.apple_xcode_tool_name_override /} for more information.
+</p>
+
+{/param}
 {param args}
 
 {call buck.arg}
