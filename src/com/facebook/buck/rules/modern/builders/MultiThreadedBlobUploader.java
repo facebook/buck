@@ -205,31 +205,37 @@ public class MultiThreadedBlobUploader {
     }
     ImmutableMap<String, PendingUpload> data = dataBuilder.build();
 
-    try {
-      ImmutableList.Builder<UploadData> blobsBuilder = ImmutableList.builder();
-      for (PendingUpload entry : data.values()) {
-        blobsBuilder.add(entry.uploadData);
+    if (!data.isEmpty()) {
+      try {
+        ImmutableList.Builder<UploadData> blobsBuilder = ImmutableList.builder();
+        for (PendingUpload entry : data.values()) {
+          blobsBuilder.add(entry.uploadData);
+        }
+
+        ImmutableList<UploadData> blobs =
+            data.values().stream().map(e -> e.uploadData).collect(ImmutableList.toImmutableList());
+
+        ImmutableList<UploadResult> results = asyncBlobUploader.batchUpdateBlobs(blobs);
+        Preconditions.checkState(results.size() == blobs.size());
+        results.forEach(
+            result -> {
+              PendingUpload pendingUpload =
+                  Preconditions.checkNotNull(data.get(result.digest.getHash()));
+              if (result.status == 0) {
+                pendingUpload.future.set(null);
+              } else {
+                pendingUpload.future.setException(
+                    new IOException(
+                        String.format("Failed uploading with message: %s", result.message)));
+              }
+            });
+        data.forEach((k, pending) -> pending.future.setException(new RuntimeException("idk")));
+      } catch (Exception e) {
+        data.forEach((k, pending) -> pending.future.setException(e));
       }
-
-      ImmutableList<UploadData> blobs =
-          data.values().stream().map(e -> e.uploadData).collect(ImmutableList.toImmutableList());
-
-      ImmutableList<UploadResult> results = asyncBlobUploader.batchUpdateBlobs(blobs);
-      Preconditions.checkState(results.size() == blobs.size());
-      results.forEach(
-          result -> {
-            PendingUpload pendingUpload =
-                Preconditions.checkNotNull(data.get(result.digest.getHash()));
-            if (result.status == 0) {
-              pendingUpload.future.set(null);
-            } else {
-              pendingUpload.future.setException(
-                  new IOException(
-                      String.format("Failed uploading with message: %s", result.message)));
-            }
-          });
-    } catch (Exception e) {
-      data.forEach((k, pending) -> pending.future.setException(e));
+    }
+    if (!waitingMissingCheck.isEmpty() || !waitingUploads.isEmpty()) {
+      uploadService.submit(this::processUploads);
     }
   }
 
