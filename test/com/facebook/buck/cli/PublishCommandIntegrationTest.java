@@ -100,6 +100,20 @@ public class PublishCommandIntegrationTest {
   }
 
   @Test
+  public void testErrorOnMultiplePublishDest() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "publish", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "publish", "//:foo", "--remote-repo=http://foo.bar", "--to-maven-central");
+    result.assertExitCode("please specify only a single remote", ExitCode.COMMANDLINE_ERROR);
+    assertTrue(result.getStderr().contains(PublishCommand.REMOTE_REPO_LONG_ARG));
+    assertTrue(result.getStderr().contains(PublishCommand.TO_MAVEN_CENTRAL_LONG_ARG));
+  }
+
+  @Test
   public void testDryDun() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "publish", tmp);

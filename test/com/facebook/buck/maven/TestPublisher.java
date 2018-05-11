@@ -54,7 +54,7 @@ public class TestPublisher extends Publisher implements AutoCloseable {
       throws Exception {
     super(
         pseudoLocalRepo,
-        Optional.of(httpd.getRootUri().toURL()),
+        httpd.getRootUri().toURL(),
         /* username */ Optional.empty(),
         /* password */ Optional.empty(),
         /* dryRun */ false);
