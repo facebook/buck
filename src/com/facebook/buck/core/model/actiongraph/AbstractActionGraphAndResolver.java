@@ -14,9 +14,10 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
+package com.facebook.buck.core.model.actiongraph;
 
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.rules.BuildRuleResolver;
 import org.immutables.value.Value;
 
 /** Holds an ActionGraph with the BuildRuleResolver that created it. */

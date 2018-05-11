@@ -63,8 +63,8 @@ import java.util.function.Function;
  * whole graph computation will be tail recursive, eliminating stack use.
  *
  * <p>Currently, we only use the engine for {@link com.facebook.buck.rules.TargetGraph} to {@link
- * com.facebook.buck.rules.ActionGraph}, but theoretically this can be extended to work with any
- * computation.
+ * com.facebook.buck.core.model.actiongraph.ActionGraph}, but theoretically this can be extended to
+ * work with any computation.
  */
 public final class DefaultAsyncTransformationEngine<ComputeKey, ComputeResult>
     implements AsyncTransformationEngine<ComputeKey, ComputeResult> {
