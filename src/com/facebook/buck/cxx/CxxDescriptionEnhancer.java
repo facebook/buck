@@ -25,6 +25,7 @@ import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.UserFlavor;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.RuleKeyObjectSink;
+import com.facebook.buck.core.rules.modern.annotations.CustomFieldBehavior;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
@@ -71,6 +72,7 @@ import com.facebook.buck.rules.macros.Macro;
 import com.facebook.buck.rules.macros.OutputMacroExpander;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosConverter;
+import com.facebook.buck.rules.modern.SourcePathResolverSerialization;
 import com.facebook.buck.shell.ExportFile;
 import com.facebook.buck.shell.ExportFileDescription.Mode;
 import com.facebook.buck.shell.ExportFileDirectoryAction;
@@ -745,8 +747,10 @@ public class CxxDescriptionEnhancer {
 
   private static class FrameworkPathToSearchPathFunction
       implements RuleKeyAppendableFunction<FrameworkPath, Path> {
-    private final SourcePathResolver resolver;
     @AddToRuleKey private final RuleKeyAppendableFunction<String, String> translateMacrosFn;
+    // TODO(cjhopman): This should be refactored to accept the resolver as an argument.
+    @CustomFieldBehavior(SourcePathResolverSerialization.class)
+    private final SourcePathResolver resolver;
 
     public FrameworkPathToSearchPathFunction(CxxPlatform cxxPlatform, SourcePathResolver resolver) {
       this.resolver = resolver;

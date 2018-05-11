@@ -16,12 +16,17 @@
 package com.facebook.buck.cxx.toolchain;
 
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
+import com.facebook.buck.rules.modern.CustomFieldSerialization;
+import com.facebook.buck.rules.modern.ValueCreator;
+import com.facebook.buck.rules.modern.ValueVisitor;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
@@ -29,6 +34,36 @@ import java.util.stream.StreamSupport;
 
 /** Encapsulates all the logic to sanitize debug paths in native code. */
 public abstract class DebugPathSanitizer implements AddsToRuleKey {
+  /** Custom serialization for the other field. */
+  static class OtherSerialization
+      implements CustomFieldSerialization<ImmutableBiMap<Path, String>> {
+    @Override
+    public <E extends Exception> void serialize(
+        ImmutableBiMap<Path, String> value, ValueVisitor<E> serializer) throws E {
+      serializer.visitInteger(value.size());
+      for (Path path : value.keySet()) {
+        serializer.visitString(path.toString());
+      }
+      for (String name : value.values()) {
+        serializer.visitString(name);
+      }
+    }
+
+    @Override
+    public <E extends Exception> ImmutableBiMap<Path, String> deserialize(
+        ValueCreator<E> deserializer) throws E {
+      int size = deserializer.createInteger();
+      ImmutableBiMap.Builder<Path, String> builder = ImmutableBiMap.builderWithExpectedSize(size);
+      Path[] keys = new Path[size];
+      for (int i = 0; i < size; i++) {
+        keys[i] = Paths.get(deserializer.createString());
+      }
+      for (Path k : keys) {
+        builder.put(k, deserializer.createString());
+      }
+      return builder.build();
+    }
+  }
 
   /**
    * @return the given path as a string, expanded using {@code separator} to fulfill the required

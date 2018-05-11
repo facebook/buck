@@ -16,7 +16,7 @@
 
 package com.facebook.buck.rules.modern;
 
-import com.facebook.buck.rules.modern.annotations.CustomFieldBehaviorTag;
+import com.facebook.buck.core.rules.modern.annotations.CustomFieldBehaviorTag;
 
 /**
  * Allows the serialization/deserialization of a specific field to be specified in terms of calls to

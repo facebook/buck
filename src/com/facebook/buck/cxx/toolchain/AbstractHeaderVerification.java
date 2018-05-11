@@ -18,6 +18,8 @@ package com.facebook.buck.cxx.toolchain;
 
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
+import com.facebook.buck.core.rules.modern.annotations.CustomFieldBehavior;
+import com.facebook.buck.core.rules.modern.annotations.DefaultFieldSerialization;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
@@ -50,6 +52,7 @@ abstract class AbstractHeaderVerification implements AddsToRuleKey {
    */
   @Value.Parameter
   @Value.NaturalOrder
+  @CustomFieldBehavior(DefaultFieldSerialization.class)
   protected abstract ImmutableSortedSet<String> getPlatformWhitelist();
 
   @Value.Derived

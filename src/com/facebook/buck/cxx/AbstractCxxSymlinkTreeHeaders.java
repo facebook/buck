@@ -19,19 +19,32 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.RuleKeyAppendable;
 import com.facebook.buck.core.rulekey.RuleKeyObjectSink;
+import com.facebook.buck.core.rules.modern.annotations.CustomClassBehavior;
+import com.facebook.buck.core.rules.modern.annotations.CustomFieldBehavior;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.cxx.CxxPreprocessables.IncludeType;
+import com.facebook.buck.cxx.CxxSymlinkTreeHeaders.Builder;
 import com.facebook.buck.cxx.toolchain.HeaderSymlinkTree;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.SourcePathRuleFinder;
+import com.facebook.buck.rules.modern.CustomClassSerialization;
 import com.facebook.buck.rules.modern.CustomFieldInputs;
-import com.facebook.buck.rules.modern.annotations.CustomFieldBehavior;
+import com.facebook.buck.rules.modern.ValueCreator;
+import com.facebook.buck.rules.modern.ValueTypeInfo;
+import com.facebook.buck.rules.modern.ValueVisitor;
+import com.facebook.buck.rules.modern.impl.ValueTypeInfoFactory;
+import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.types.Either;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
+import com.google.common.reflect.TypeToken;
+import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
@@ -42,6 +55,7 @@ import org.immutables.value.Value;
 /** Encapsulates headers modeled using a {@link HeaderSymlinkTree}. */
 @Value.Immutable(prehash = true)
 @BuckStyleImmutable
+@CustomClassBehavior(AbstractCxxSymlinkTreeHeaders.SerializationBehavior.class)
 abstract class AbstractCxxSymlinkTreeHeaders extends CxxHeaders implements RuleKeyAppendable {
 
   @SuppressWarnings("immutables")
@@ -146,6 +160,54 @@ abstract class AbstractCxxSymlinkTreeHeaders extends CxxHeaders implements RuleK
       builder.setIncludeRoot(Either.ofRight(symlinkTree.getRootSourcePath()));
     }
     return builder.build();
+  }
+
+  /** Custom serialization. */
+  static class SerializationBehavior implements CustomClassSerialization<CxxSymlinkTreeHeaders> {
+    static final ValueTypeInfo<IncludeType> INCLUDE_TYPE_TYPE_INFO =
+        ValueTypeInfoFactory.forTypeToken(new TypeToken<IncludeType>() {});
+    static final ValueTypeInfo<Optional<SourcePath>> HEADER_MAP_TYPE_INFO =
+        ValueTypeInfoFactory.forTypeToken(new TypeToken<Optional<SourcePath>>() {});
+    static final ValueTypeInfo<Either<PathSourcePath, SourcePath>> INCLUDE_ROOT_TYPE_INFO =
+        ValueTypeInfoFactory.forTypeToken(new TypeToken<Either<PathSourcePath, SourcePath>>() {});
+
+    @Override
+    public void serialize(CxxSymlinkTreeHeaders instance, ValueVisitor<IOException> serializer)
+        throws IOException {
+      INCLUDE_TYPE_TYPE_INFO.visit(instance.getIncludeType(), serializer);
+      HEADER_MAP_TYPE_INFO.visit(instance.getHeaderMap(), serializer);
+      serializer.visitSourcePath(instance.getRoot());
+      INCLUDE_ROOT_TYPE_INFO.visit(instance.getIncludeRoot(), serializer);
+      ImmutableSortedMap<Path, SourcePath> nameToPathMap = instance.getNameToPathMap();
+      serializer.visitInteger(nameToPathMap.size());
+      RichStream.from(nameToPathMap.entrySet())
+          .forEachThrowing(
+              entry -> {
+                Preconditions.checkState(!entry.getKey().isAbsolute());
+                serializer.visitString(entry.getKey().toString());
+                serializer.visitSourcePath(entry.getValue());
+              });
+    }
+
+    @Override
+    public CxxSymlinkTreeHeaders deserialize(ValueCreator<IOException> deserializer)
+        throws IOException {
+      Builder builder = CxxSymlinkTreeHeaders.builder();
+      builder.setIncludeType(INCLUDE_TYPE_TYPE_INFO.createNotNull(deserializer));
+      builder.setHeaderMap(HEADER_MAP_TYPE_INFO.createNotNull(deserializer));
+      builder.setRoot(deserializer.createSourcePath());
+      builder.setIncludeRoot(INCLUDE_ROOT_TYPE_INFO.createNotNull(deserializer));
+      int nameToPathMapSize = deserializer.createInteger();
+
+      ImmutableSortedMap.Builder<Path, SourcePath> nameToPathMapBuilder =
+          ImmutableSortedMap.naturalOrder();
+      for (int i = 0; i < nameToPathMapSize; i++) {
+        nameToPathMapBuilder.put(
+            Paths.get(deserializer.createString()), deserializer.createSourcePath());
+      }
+      builder.setNameToPathMap(nameToPathMapBuilder.build());
+      return builder.build();
+    }
   }
 
   private static class NameToPathMapInputsBehavior

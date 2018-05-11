@@ -23,6 +23,7 @@ import static java.nio.file.StandardOpenOption.READ;
 import static java.nio.file.StandardOpenOption.WRITE;
 
 import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rules.modern.annotations.CustomFieldBehavior;
 import com.facebook.buck.util.ByteBufferReplacer;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
@@ -54,6 +55,7 @@ public class MungingDebugPathSanitizer extends DebugPathSanitizer {
   @AddToRuleKey private final int pathSize;
   @AddToRuleKey private final char separator;
 
+  @CustomFieldBehavior(OtherSerialization.class)
   private final ImmutableBiMap<Path, String> other;
 
   /**

@@ -16,6 +16,7 @@
 package com.facebook.buck.cxx.toolchain;
 
 import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rules.modern.annotations.CustomFieldBehavior;
 import com.facebook.buck.util.RichStream;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
@@ -35,6 +36,7 @@ import java.util.stream.Stream;
 public class PrefixMapDebugPathSanitizer extends DebugPathSanitizer {
   @AddToRuleKey private final String fakeCompilationDirectory;
 
+  @CustomFieldBehavior(OtherSerialization.class)
   private final ImmutableBiMap<Path, String> other;
 
   public PrefixMapDebugPathSanitizer(

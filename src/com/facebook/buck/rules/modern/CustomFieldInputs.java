@@ -16,8 +16,8 @@
 
 package com.facebook.buck.rules.modern;
 
+import com.facebook.buck.core.rules.modern.annotations.CustomFieldBehaviorTag;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.rules.modern.annotations.CustomFieldBehaviorTag;
 import java.util.function.Consumer;
 
 /** Allows custom derivation of the inputs corresponding to a field. */

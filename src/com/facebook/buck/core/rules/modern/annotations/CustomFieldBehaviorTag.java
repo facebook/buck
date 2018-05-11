@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.rules.modern.annotations;
+package com.facebook.buck.core.rules.modern.annotations;
 
 /** Root interface for any CustomFieldBehavior values. */
 public interface CustomFieldBehaviorTag {}
