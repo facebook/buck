@@ -180,7 +180,7 @@
     <include name="json-simple/json-simple-1.1.1.jar" />
     <include name="jsr/javax.inject-1.jar" />
     <include name="jsr/jsr305.jar" />
-    <include name="nuprocess/nuprocess-1.2.2.jar" />
+    <include name="nuprocess/nuprocess-1.2.3.jar" />
     <include name="objenesis/objenesis-1.2.jar" />
     <include name="okhttp/okhttp-3.9.0.jar" />
     <include name="okio/okio-1.13.0.jar" />
