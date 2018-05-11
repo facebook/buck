@@ -45,11 +45,14 @@ import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
 import org.objenesis.ObjenesisStd;
+import org.objenesis.instantiator.ObjectInstantiator;
 
 /**
  * Implements deserialization of Buildables.
@@ -58,6 +61,8 @@ import org.objenesis.ObjenesisStd;
  * Objenesis to create objects and then injects the field values via reflection.
  */
 public class Deserializer {
+  private ObjenesisStd objenesis = new ObjenesisStd();
+  private Map<Class<?>, ObjectInstantiator> instantiators = new ConcurrentHashMap<>();
 
   /**
    * DataProviders are used for deserializing "dynamic" objects. These are serialized as hashcodes
@@ -284,8 +289,10 @@ public class Deserializer {
         return customSerializer.deserialize(this);
       }
 
+      ObjectInstantiator instantiator =
+          instantiators.computeIfAbsent(instanceClass, objenesis::getInstantiatorOf);
       @SuppressWarnings("unchecked")
-      T instance = (T) new ObjenesisStd().newInstance(instanceClass);
+      T instance = (T) instantiator.newInstance();
       ClassInfo<? super T> classInfo = DefaultClassInfoFactory.forInstance(instance);
 
       initialize(instance, classInfo);
