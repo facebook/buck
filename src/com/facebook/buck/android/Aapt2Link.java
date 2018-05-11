@@ -53,8 +53,10 @@ import javax.annotation.Nullable;
 
 /** Perform the "aapt2 link" step of building an Android app. */
 public class Aapt2Link extends AbstractBuildRule {
-  @AddToRuleKey private final boolean noAutoVersion;
   @AddToRuleKey private final boolean includesVectorDrawables;
+  @AddToRuleKey private final boolean noAutoVersion;
+  @AddToRuleKey private final boolean noVersionTransitions;
+  @AddToRuleKey private final boolean noAutoAddOverlay;
   @AddToRuleKey private final ImmutableList<Aapt2Compile> compileRules;
   @AddToRuleKey private final SourcePath manifest;
   @AddToRuleKey private final ManifestEntries manifestEntries;
@@ -72,8 +74,10 @@ public class Aapt2Link extends AbstractBuildRule {
       SourcePath manifest,
       ManifestEntries manifestEntries,
       ImmutableList<SourcePath> dependencyResourceApks,
-      boolean noAutoVersion,
       boolean includesVectorDrawables,
+      boolean noAutoVersion,
+      boolean noVersionTransitions,
+      boolean noAutoAddOverlay,
       AndroidPlatformTarget androidPlatformTarget) {
     super(buildTarget, projectFilesystem);
     this.androidPlatformTarget = androidPlatformTarget;
@@ -81,8 +85,10 @@ public class Aapt2Link extends AbstractBuildRule {
     this.manifest = manifest;
     this.manifestEntries = manifestEntries;
     this.dependencyResourceApks = dependencyResourceApks;
-    this.noAutoVersion = noAutoVersion;
     this.includesVectorDrawables = includesVectorDrawables;
+    this.noAutoVersion = noAutoVersion;
+    this.noVersionTransitions = noVersionTransitions;
+    this.noAutoAddOverlay = noAutoAddOverlay;
     this.buildDepsSupplier =
         MoreSuppliers.memoize(
             () ->
@@ -244,15 +250,21 @@ public class Aapt2Link extends AbstractBuildRule {
         builder.add("-v");
       }
 
-      if (noAutoVersion) {
-        builder.add("--no-auto-version");
-      }
-
       if (includesVectorDrawables) {
         builder.add("--no-version-vectors");
       }
 
-      builder.add("--auto-add-overlay");
+      if (noAutoVersion) {
+        builder.add("--no-auto-version");
+      }
+
+      if (noVersionTransitions) {
+        builder.add("--no-version-transitions");
+      }
+
+      if (!noAutoAddOverlay) {
+        builder.add("--auto-add-overlay");
+      }
 
       ProjectFilesystem pf = getProjectFilesystem();
       builder.add("-o", pf.resolve(getResourceApkPath()).toString());

@@ -163,6 +163,8 @@ public class AndroidBinaryGraphEnhancer {
       boolean skipCrunchPngs,
       boolean includesVectorDrawables,
       boolean noAutoVersionResources,
+      boolean noVersionTransitionsResources,
+      boolean noAutoAddOverlayResources,
       JavaBuckConfig javaBuckConfig,
       Javac javac,
       JavacOptions javacOptions,
@@ -259,6 +261,8 @@ public class AndroidBinaryGraphEnhancer {
             manifestEntries,
             postFilterResourcesCmd,
             noAutoVersionResources,
+            noVersionTransitionsResources,
+            noAutoAddOverlayResources,
             apkModuleGraph);
     this.apkModuleGraph = apkModuleGraph;
     this.dxConfig = dxConfig;
