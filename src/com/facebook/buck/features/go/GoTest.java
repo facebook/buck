@@ -182,11 +182,13 @@ public class GoTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
             getProjectFilesystem().resolve(getPathToTestResults()), Charsets.UTF_8)) {
       Set<String> currentTests = new HashSet<>();
       List<String> stdout = new ArrayList<>();
-      String line;
-      while ((line = reader.readLine()) != null) {
+      List<String> stackTrace = new ArrayList<>();
+      String line = reader.readLine();
+      while (line != null) {
         Matcher matcher;
         if ((matcher = TEST_START_PATTERN.matcher(line)).matches()) {
           currentTests.add(matcher.group("name"));
+          line = reader.readLine();
         } else if ((matcher = TEST_FINISHED_PATTERN.matcher(line)).matches()) {
           if (!currentTests.contains(matcher.group("name"))) {
             throw new RuntimeException(
@@ -208,7 +210,16 @@ public class GoTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
           } catch (NumberFormatException ex) {
             Throwables.throwIfUnchecked(ex);
           }
-
+          line = reader.readLine();
+          // Looking ahead to capture error messages
+          while (line != null
+              && !TEST_START_PATTERN.matcher(line).matches()
+              && !TEST_FINISHED_PATTERN.matcher(line).matches()
+              && !line.equals("PASS")
+              && !line.equals("FAIL")) {
+            stackTrace.add(line);
+            line = reader.readLine();
+          }
           summariesBuilder.add(
               new TestResultSummary(
                   "go_test",
@@ -216,14 +227,16 @@ public class GoTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
                   result,
                   (long) (timeTaken * 1000),
                   "",
-                  "",
+                  Joiner.on(System.lineSeparator()).join(stackTrace),
                   Joiner.on(System.lineSeparator()).join(stdout),
                   ""));
 
           currentTests.remove(matcher.group("name"));
           stdout.clear();
+          stackTrace.clear();
         } else {
           stdout.add(line);
+          line = reader.readLine();
         }
       }
 
