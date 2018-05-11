@@ -215,7 +215,7 @@ public abstract class AbstractNodeBuilder<
     return this;
   }
 
-  protected TArgBuilder getArgForPopulating() {
+  public TArgBuilder getArgForPopulating() {
     return argBuilder;
   }
 

@@ -14,6 +14,6 @@
  * under the License.
  */
 
-package com.example;
+package com.facebook.buck.core.model.actiongraph.computation.testdata.action_graph_cache;
 
 public class Thing1 {}

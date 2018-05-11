@@ -46,7 +46,8 @@ public interface Description<T> {
 
   /**
    * Whether or not the build rule subgraph produced by this {@code Description} is safe to cache in
-   * {@link IncrementalActionGraphGenerator} for incremental action graph generation.
+   * {@link com.facebook.buck.core.model.actiongraph.computation.IncrementalActionGraphGenerator}
+   * for incremental action graph generation.
    */
   default boolean producesCacheableSubgraph() {
     return false;

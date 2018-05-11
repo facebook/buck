@@ -128,6 +128,7 @@ standard_java_test(
         "//src/com/facebook/buck/cli/output:output",
         "//src/com/facebook/buck/config:config",
         "//src/com/facebook/buck/core/cell:cell",
+        "//src/com/facebook/buck/core/model/actiongraph/computation:computation",
         "//src/com/facebook/buck/core/sourcepath/resolver/impl:impl",
         "//src/com/facebook/buck/core/util/immutables:immutables",
         "//src/com/facebook/buck/counters:counters",

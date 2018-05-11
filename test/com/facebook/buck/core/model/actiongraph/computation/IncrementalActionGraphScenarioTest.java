@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
+package com.facebook.buck.core.model.actiongraph.computation;
 
 import static junit.framework.TestCase.assertSame;
 import static org.junit.Assert.assertEquals;
@@ -62,6 +62,13 @@ import com.facebook.buck.features.python.toolchain.PythonPlatform;
 import com.facebook.buck.features.python.toolchain.PythonVersion;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.rules.AbstractNodeBuilder;
+import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.FakeSourcePath;
+import com.facebook.buck.rules.SourcePathRuleFinder;
+import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TargetGraphAndBuildTargets;
+import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.keys.ContentAgnosticRuleKeyFactory;
