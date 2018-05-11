@@ -98,15 +98,17 @@ public class Deserializer {
 
   public <T extends AddsToRuleKey> T deserialize(DataProvider provider, Class<T> clazz)
       throws IOException {
-    return new Creator(provider).create(clazz);
+    try (DataInputStream stream = new DataInputStream(provider.getData())) {
+      return new Creator(provider, stream).create(clazz);
+    }
   }
 
   private class Creator implements ValueCreator<IOException> {
     private final DataInputStream stream;
     private final DataProvider provider;
 
-    private Creator(DataProvider provider) {
-      this.stream = new DataInputStream(provider.getData());
+    private Creator(DataProvider provider, DataInputStream stream) {
+      this.stream = stream;
       this.provider = provider;
     }
 
