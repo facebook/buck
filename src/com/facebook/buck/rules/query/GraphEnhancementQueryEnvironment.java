@@ -37,7 +37,6 @@ import com.facebook.buck.query.QueryFileTarget;
 import com.facebook.buck.query.QueryTarget;
 import com.facebook.buck.query.QueryTargetAccessor;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.DescriptionCache;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
@@ -142,7 +141,7 @@ public class GraphEnhancementQueryEnvironment implements QueryEnvironment {
 
   @Override
   public String getTargetKind(QueryTarget target) {
-    return DescriptionCache.getBuildRuleType(getNode(target).getDescription()).getName();
+    return getNode(target).getBuildRuleType().getName();
   }
 
   @Override

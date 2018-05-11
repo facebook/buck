@@ -38,7 +38,6 @@ import com.facebook.buck.rules.BuildRuleCreationContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.DescriptionCache;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
@@ -316,9 +315,7 @@ public class JsLibraryDescription
         throw new HumanReadableException(
             "js_library target '%s' can only depend on other js_library targets, but one of its "
                 + "dependencies, '%s', is of type %s.",
-            baseTarget,
-            target,
-            DescriptionCache.getBuildRuleType(targetGraph.get(target).getDescription()).getName());
+            baseTarget, target, targetGraph.get(target).getBuildRuleType().getName());
       }
 
       return (JsLibrary) rule;
