@@ -27,7 +27,6 @@ GC_MAX_PAUSE_TARGET = 15000
 
 JAVA_MAX_HEAP_SIZE_MB = 1000
 
-
 class Resource(object):
     """Describes a resource used by this driver.
 
@@ -351,9 +350,7 @@ class BuckTool(object):
         command.extend(self._add_args_from_env(argv))
         now = int(round(time.time() * 1000))
         env['BUCK_PYTHON_SPACE_INIT_TIME'] = str(now - self._init_timestamp)
-        java = which('java')
-        if java is None:
-            raise BuckToolException('Could not find java on $PATH')
+        java = get_java_path()
         with Tracing('buck', args={'command': command}):
             return subprocess.call(command,
                                    cwd=self._buck_project.root,
@@ -548,7 +545,7 @@ class BuckTool(object):
 
             process = subprocess.Popen(
                 command,
-                executable=which("java"),
+                executable=get_java_path(),
                 cwd=self._buck_project.root,
                 env=self._environ_for_buck(),
                 creationflags=creationflags,
@@ -719,6 +716,27 @@ def install_signal_handlers():
         signal.signal(
             signal.SIGUSR1,
             lambda sig, frame: traceback.print_stack(frame))
+
+
+def _get_java_exec_under_home(java_home_base):
+    java_exec = 'java.exe' if os.name == 'nt' else 'java'
+    return os.path.join(java_home_base, 'bin', java_exec)
+
+
+def get_java_path():
+    java_home_path = os.getenv('JAVA_HOME')
+    java_path = None
+    if java_home_path is None:
+        java_path = which('java')
+        if java_path is None:
+            raise BuckToolException('Could not find Java executable. \
+Make sure it is on PATH or JAVA_HOME is set.')
+    else:
+        java_path = _get_java_exec_under_home(java_home_path)
+        if not os.path.isfile(java_path):
+            raise BuckToolException("JAVA_HOME is set to be '{}', but Buck could not find Java executable \
+under JAVA_HOME at: '{}'.".format(java_home_path, java_path))
+    return java_path
 
 
 def platform_path(path):
