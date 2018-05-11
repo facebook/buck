@@ -185,6 +185,8 @@ public class AndroidInstrumentationApkDescription
             /* skipCrunchPngs */ false,
             args.getIncludesVectorDrawables(),
             /* noAutoVersionResources */ false,
+            /* noVersionTransitionsResources */ false,
+            /* noAutoAddOverlayResources */ false,
             javaBuckConfig,
             JavacFactory.create(ruleFinder, javaBuckConfig, null),
             toolchainProvider

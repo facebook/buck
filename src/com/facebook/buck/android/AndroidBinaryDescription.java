@@ -315,6 +315,8 @@ public class AndroidBinaryDescription
             args.isSkipCrunchPngs(),
             args.isIncludesVectorDrawables(),
             args.isNoAutoVersionResources(),
+            args.isNoVersionTransitionsResources(),
+            args.isNoAutoAddOverlayResources(),
             javaBuckConfig,
             JavacFactory.create(ruleFinder, javaBuckConfig, null),
             toolchainProvider
@@ -608,6 +610,16 @@ public class AndroidBinaryDescription
 
     @Value.Default
     default boolean isNoAutoVersionResources() {
+      return false;
+    }
+
+    @Value.Default
+    default boolean isNoVersionTransitionsResources() {
+      return false;
+    }
+
+    @Value.Default
+    default boolean isNoAutoAddOverlayResources() {
       return false;
     }
 
