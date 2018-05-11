@@ -48,7 +48,7 @@
     <output url="%androidFacet.compiler_output_path%" />
     %endif%
     <exclude-output />
-%if(androidFacet.enabled)%
+%if(androidFacet.enabled && androidFacet.autogenerate_sources)%
     <content url="file://$MODULE_DIR$%androidFacet.module_gen_path%">
       <sourceFolder url="file://$MODULE_DIR$%androidFacet.module_gen_path%" isTestSource="false" />
     </content>
