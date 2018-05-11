@@ -128,7 +128,7 @@ public class DarwinLinker extends DelegatingTool implements Linker, HasLinkerMap
       BuildRuleResolver ruleResolver,
       SourcePathRuleFinder ruleFinder,
       BuildTarget target,
-      Iterable<? extends SourcePath> symbolFiles) {
+      ImmutableList<? extends SourcePath> symbolFiles) {
     return ImmutableList.of(new UndefinedSymbolsArg(symbolFiles));
   }
 
@@ -171,9 +171,9 @@ public class DarwinLinker extends DelegatingTool implements Linker, HasLinkerMap
    * contains the undefined symbols listed in the symbol files).
    */
   private static class UndefinedSymbolsArg implements Arg {
-    @AddToRuleKey private final Iterable<? extends SourcePath> symbolFiles;
+    @AddToRuleKey private final ImmutableList<? extends SourcePath> symbolFiles;
 
-    public UndefinedSymbolsArg(Iterable<? extends SourcePath> symbolFiles) {
+    public UndefinedSymbolsArg(ImmutableList<? extends SourcePath> symbolFiles) {
       this.symbolFiles = symbolFiles;
     }
 

@@ -40,7 +40,7 @@ class OmnibusRootNode extends OmnibusNode implements NativeLinkTarget, NativeLin
 
   @Override
   public NativeLinkTargetMode getNativeLinkTargetMode(CxxPlatform cxxPlatform) {
-    return NativeLinkTargetMode.library(getBuildTarget().toString());
+    return NativeLinkTargetMode.library(getBuildTarget().getShortName());
   }
 
   @Override

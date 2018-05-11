@@ -435,7 +435,7 @@ public class CxxPrecompiledHeaderRuleTest {
                 binTarget, Optional.of(LinkerMapMode.NO_LINKER_MAP)),
             Linker.LinkType.EXECUTABLE,
             Optional.empty(), // soname
-            Paths.get("/tmp/bin.prog"),
+            Paths.get("tmp/bin.prog"),
             ImmutableList.of(),
             Linker.LinkableDepType.STATIC,
             CxxLinkOptions.of(),

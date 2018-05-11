@@ -33,7 +33,7 @@ import javax.annotation.Nullable;
  * An abstract implementation of ValueVisitor used for implementations that only care about some
  * underlying non-composed types.
  */
-abstract class AbstractValueVisitor<E extends Exception> implements ValueVisitor<E> {
+public abstract class AbstractValueVisitor<E extends Exception> implements ValueVisitor<E> {
   @Override
   public <T> void visitList(ImmutableList<T> value, ValueTypeInfo<T> innerType) throws E {
     for (T e : value) {

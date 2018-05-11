@@ -38,6 +38,7 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.args.RuleKeyAppendableFunction;
 import com.facebook.buck.rules.args.SanitizedArg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
@@ -55,7 +56,6 @@ import java.util.EnumSet;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -342,7 +342,7 @@ public class CxxLinkableEnhancer {
   }
 
   private static class FrameworkLinkerArgs extends FrameworkPathArg {
-    @AddToRuleKey final Function<FrameworkPath, Path> frameworkPathToSearchPath;
+    @AddToRuleKey final RuleKeyAppendableFunction<FrameworkPath, Path> frameworkPathToSearchPath;
 
     public FrameworkLinkerArgs(
         ImmutableSortedSet<FrameworkPath> allFrameworks,
@@ -404,7 +404,7 @@ public class CxxLinkableEnhancer {
   }
 
   private static class SharedLibraryLinkArgs extends FrameworkPathArg {
-    @AddToRuleKey final Function<FrameworkPath, Path> frameworkPathToSearchPath;
+    @AddToRuleKey final RuleKeyAppendableFunction<FrameworkPath, Path> frameworkPathToSearchPath;
 
     public SharedLibraryLinkArgs(
         ImmutableSortedSet<FrameworkPath> allLibraries,

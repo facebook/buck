@@ -153,7 +153,7 @@ public class RustCompileTest {
           BuildRuleResolver ruleResolver,
           SourcePathRuleFinder ruleFinder,
           BuildTarget target,
-          Iterable<? extends SourcePath> symbolFiles) {
+          ImmutableList<? extends SourcePath> symbolFiles) {
         return null;
       }
 

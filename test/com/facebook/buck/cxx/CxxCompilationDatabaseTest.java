@@ -194,11 +194,11 @@ public class CxxCompilationDatabaseTest {
                     "-isystem",
                     "/test",
                     "-o",
-                    "buck-out/gen/foo/baz#compile-test.cpp__/test.o",
+                    "buck-out/gen/foo/baz#compile-test.cpp/test.o",
                     "-c",
                     "-MD",
                     "-MF",
-                    "buck-out/gen/foo/baz#compile-test.cpp__/test.o.dep",
+                    "buck-out/gen/foo/baz#compile-test.cpp/test.o.dep",
                     "test.cpp")));
     MoreAsserts.assertIterablesEquals(expectedEntries, observedEntries);
   }

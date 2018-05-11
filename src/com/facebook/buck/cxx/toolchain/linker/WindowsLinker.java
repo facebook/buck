@@ -87,7 +87,7 @@ public class WindowsLinker extends DelegatingTool implements Linker, HasImportLi
       BuildRuleResolver ruleResolver,
       SourcePathRuleFinder ruleFinder,
       BuildTarget target,
-      Iterable<? extends SourcePath> symbolFiles) {
+      ImmutableList<? extends SourcePath> symbolFiles) {
     throw new UnsupportedOperationException();
   }
 

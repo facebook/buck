@@ -171,13 +171,12 @@ public class CxxCompilationDatabaseIntegrationTest {
                     .collect(Collectors.toList()))
             .addAll(MORE_COMPILER_SPECIFIC_FLAGS)
             .add("-o")
-            .add(
-                BuildTargets.getGenPath(filesystem, compilationTarget, "%s__/foo.cpp.o").toString())
+            .add(BuildTargets.getGenPath(filesystem, compilationTarget, "%s/foo.cpp.o").toString())
             .add("-c")
             .add("-MD")
             .add("-MF")
             .add(
-                BuildTargets.getGenPath(filesystem, compilationTarget, "%s__/foo.cpp.o.dep")
+                BuildTargets.getGenPath(filesystem, compilationTarget, "%s/foo.cpp.o.dep")
                     .toString())
             .add(Paths.get(path).toString())
             .build());
@@ -253,13 +252,12 @@ public class CxxCompilationDatabaseIntegrationTest {
                     .collect(Collectors.toList()))
             .addAll(MORE_COMPILER_SPECIFIC_FLAGS)
             .add("-o")
-            .add(
-                BuildTargets.getGenPath(filesystem, compilationTarget, "%s__/bar.cpp.o").toString())
+            .add(BuildTargets.getGenPath(filesystem, compilationTarget, "%s/bar.cpp.o").toString())
             .add("-c")
             .add("-MD")
             .add("-MF")
             .add(
-                BuildTargets.getGenPath(filesystem, compilationTarget, "%s__/bar.cpp.o.dep")
+                BuildTargets.getGenPath(filesystem, compilationTarget, "%s/bar.cpp.o.dep")
                     .toString())
             .add(Paths.get(path).toString())
             .build());
@@ -307,14 +305,12 @@ public class CxxCompilationDatabaseIntegrationTest {
             .add("-fdebug-prefix-map=" + rootPath + "=.")
             .addAll(MORE_COMPILER_SPECIFIC_FLAGS)
             .add("-o")
-            .add(
-                BuildTargets.getGenPath(filesystem, compilationTarget, "%s__/test.cpp.o")
-                    .toString())
+            .add(BuildTargets.getGenPath(filesystem, compilationTarget, "%s/test.cpp.o").toString())
             .add("-c")
             .add("-MD")
             .add("-MF")
             .add(
-                BuildTargets.getGenPath(filesystem, compilationTarget, "%s__/test.cpp.o.dep")
+                BuildTargets.getGenPath(filesystem, compilationTarget, "%s/test.cpp.o.dep")
                     .toString())
             .add(Paths.get(path).toString())
             .build());
@@ -364,14 +360,12 @@ public class CxxCompilationDatabaseIntegrationTest {
             .add("-fdebug-prefix-map=" + rootPath + "=.")
             .addAll(MORE_COMPILER_SPECIFIC_FLAGS)
             .add("-o")
-            .add(
-                BuildTargets.getGenPath(filesystem, compilationTarget, "%s__/test.cpp.o")
-                    .toString())
+            .add(BuildTargets.getGenPath(filesystem, compilationTarget, "%s/test.cpp.o").toString())
             .add("-c")
             .add("-MD")
             .add("-MF")
             .add(
-                BuildTargets.getGenPath(filesystem, compilationTarget, "%s__/test.cpp.o.dep")
+                BuildTargets.getGenPath(filesystem, compilationTarget, "%s/test.cpp.o.dep")
                     .toString())
             .add(Paths.get(path).toString())
             .build());
