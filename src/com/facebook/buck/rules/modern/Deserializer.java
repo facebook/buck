@@ -63,6 +63,7 @@ import org.objenesis.instantiator.ObjectInstantiator;
 public class Deserializer {
   private ObjenesisStd objenesis = new ObjenesisStd();
   private Map<Class<?>, ObjectInstantiator> instantiators = new ConcurrentHashMap<>();
+  private Map<HashCode, AddsToRuleKey> childCache = new ConcurrentHashMap<>();
 
   /**
    * DataProviders are used for deserializing "dynamic" objects. These are serialized as hashcodes
@@ -127,10 +128,16 @@ public class Deserializer {
     public AddsToRuleKey createDynamic() throws IOException {
       DataProvider childProvider;
       if (stream.readBoolean()) {
-        childProvider = provider.getChild(HashCode.fromBytes(readBytes()));
+        HashCode hash = HashCode.fromBytes(readBytes());
+        if (childCache.containsKey(hash)) {
+          return childCache.get(hash);
+        }
+        childProvider = provider.getChild(hash);
+        AddsToRuleKey child = deserialize(childProvider, AddsToRuleKey.class);
+        return childCache.computeIfAbsent(hash, ignored -> child);
       } else {
         byte[] data = readBytes();
-        childProvider =
+        return deserialize(
             new DataProvider() {
               @Override
               public InputStream getData() {
@@ -141,9 +148,9 @@ public class Deserializer {
               public DataProvider getChild(HashCode hash) {
                 throw new IllegalStateException();
               }
-            };
+            },
+            AddsToRuleKey.class);
       }
-      return deserialize(childProvider, AddsToRuleKey.class);
     }
 
     @Override
