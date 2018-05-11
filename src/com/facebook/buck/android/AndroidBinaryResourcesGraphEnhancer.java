@@ -91,6 +91,8 @@ class AndroidBinaryResourcesGraphEnhancer {
   private final Optional<Arg> postFilterResourcesCmd;
   private final boolean exopackageForResources;
   private final boolean noAutoVersionResources;
+  private final boolean noVersionTransitionsResources;
+  private final boolean noAutoAddOverlayResources;
   private final APKModuleGraph apkModuleGraph;
 
   public AndroidBinaryResourcesGraphEnhancer(
@@ -117,6 +119,8 @@ class AndroidBinaryResourcesGraphEnhancer {
       ManifestEntries manifestEntries,
       Optional<Arg> postFilterResourcesCmd,
       boolean noAutoVersionResources,
+      boolean noVersionTransitionsResources,
+      boolean noAutoAddOverlayResources,
       APKModuleGraph apkModuleGraph) {
     this.androidPlatformTarget = androidPlatformTarget;
     this.buildTarget = buildTarget;
@@ -142,6 +146,8 @@ class AndroidBinaryResourcesGraphEnhancer {
     this.originalBuildTarget = originalBuildTarget;
     this.postFilterResourcesCmd = postFilterResourcesCmd;
     this.noAutoVersionResources = noAutoVersionResources;
+    this.noVersionTransitionsResources = noVersionTransitionsResources;
+    this.noAutoAddOverlayResources = noAutoAddOverlayResources;
     this.apkModuleGraph = apkModuleGraph;
   }
 
@@ -305,8 +311,10 @@ class AndroidBinaryResourcesGraphEnhancer {
                       moduleManifestMergeRule.getSourcePathToOutput(),
                       ManifestEntries.empty(),
                       ImmutableList.of(aaptOutputInfo.getPrimaryResourcesApkPath()),
-                      noAutoVersionResources,
                       includesVectorDrawables,
+                      noAutoVersionResources,
+                      noVersionTransitionsResources,
+                      noAutoAddOverlayResources,
                       androidPlatformTarget);
               ruleResolver.addToIndex(aapt2ModuleLink);
               resultBuilder.putModuleResourceApkPaths(
@@ -499,8 +507,10 @@ class AndroidBinaryResourcesGraphEnhancer {
         realManifest,
         manifestEntries,
         ImmutableList.of(),
-        noAutoVersionResources,
         includesVectorDrawables,
+        noAutoVersionResources,
+        noVersionTransitionsResources,
+        noAutoAddOverlayResources,
         androidPlatformTarget);
   }
 
