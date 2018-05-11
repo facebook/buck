@@ -56,8 +56,8 @@ public class PublisherTest {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     publisher =
         new Publisher(
-            filesystem,
-            /* remoteRepoUrl */ Optional.empty(),
+            filesystem.getRootPath(),
+            /* remoteRepoUrl */ Publisher.MAVEN_CENTRAL,
             /* username */ Optional.empty(),
             /* password */ Optional.empty(),
             /* dryRun */ true);

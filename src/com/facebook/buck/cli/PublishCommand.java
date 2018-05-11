@@ -58,6 +58,8 @@ public class PublishCommand extends BuildCommand {
   public static final String TO_MAVEN_CENTRAL_LONG_ARG = "--to-maven-central";
   public static final String DRY_RUN_LONG_ARG = "--dry-run";
 
+  private static final String PUBLISH_GEN_PATH = "publish";
+
   @Option(
     name = REMOTE_REPO_LONG_ARG,
     aliases = REMOTE_REPO_SHORT_ARG,
@@ -110,6 +112,16 @@ public class PublishCommand extends BuildCommand {
       throws IOException, InterruptedException {
 
     // Input validation
+    if (remoteRepo != null && toMavenCentral) {
+      throw new CommandLineException(
+          "please specify only a single remote repository to publish to.\n"
+              + "Use "
+              + REMOTE_REPO_LONG_ARG
+              + " <URL> or "
+              + TO_MAVEN_CENTRAL_LONG_ARG
+              + " but not both.");
+    }
+
     if (remoteRepo == null && !toMavenCentral) {
       throw new CommandLineException(
           "please specify a remote repository to publish to.\n"
@@ -172,10 +184,13 @@ public class PublishCommand extends BuildCommand {
       publishables.add(publishable);
     }
 
+    // Assume validation passed.
+    URL repoUrl = toMavenCentral ? Publisher.MAVEN_CENTRAL : Preconditions.checkNotNull(remoteRepo);
+
     Publisher publisher =
         new Publisher(
-            params.getCell().getFilesystem(),
-            Optional.ofNullable(remoteRepo),
+            params.getCell().getFilesystem().getBuckPaths().getTmpDir().resolve(PUBLISH_GEN_PATH),
+            repoUrl,
             Optional.ofNullable(username),
             Optional.ofNullable(password),
             dryRun);
