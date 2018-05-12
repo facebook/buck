@@ -734,8 +734,11 @@ Make sure it is on PATH or JAVA_HOME is set.')
     else:
         java_path = _get_java_exec_under_home(java_home_path)
         if not os.path.isfile(java_path):
-            raise BuckToolException("JAVA_HOME is set to be '{}', but Buck could not find Java executable \
-under JAVA_HOME at: '{}'.".format(java_home_path, java_path))
+            message = textwrap.dedent("""
+            Could not find Java executable under JAVA_HOME at: '{}'.
+            Please make sure your JAVA_HOME environment variable is set correctly.
+            """).format(java_path)
+            raise BuckToolException(message)
     return java_path
 
 
