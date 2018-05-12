@@ -72,6 +72,7 @@ java_test(
         "//src/com/facebook/buck/rules:cli",
         "//test/com/facebook/buck/android:testutil",
         "//test/com/facebook/buck/android:utils",
+        "//test/com/facebook/buck/core/rules/resolver/impl:testutil",
         "//test/com/facebook/buck/event:testutil",
         "//test/com/facebook/buck/io/filesystem:testutil",
         "//test/com/facebook/buck/rules:testutil",

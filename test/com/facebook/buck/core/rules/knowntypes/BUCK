@@ -14,6 +14,7 @@ java_test(
         "//src/com/facebook/buck/toolchain/impl:impl",
         "//src/com/facebook/buck/versions:versions",
         "//test/com/facebook/buck/config:FakeBuckConfig",
+        "//test/com/facebook/buck/core/rules/resolver/impl:testutil",
         "//test/com/facebook/buck/cxx:testutil",
         "//test/com/facebook/buck/cxx/toolchain:testutil",
         "//test/com/facebook/buck/io/filesystem:testutil",

@@ -208,6 +208,7 @@ java_test(
         "//src/com/facebook/buck/shell:worker_tool",
         "//src/com/facebook/buck/slb:slb",
         "//src/com/facebook/buck/step:step",
+        "//test/com/facebook/buck/core/rules/resolver/impl:testutil",
         "//src/com/facebook/buck/parser/exceptions:exceptions",
         "//src/com/facebook/buck/parser/options:options",
         "//src/com/facebook/buck/parser/api:api",

@@ -235,6 +235,7 @@ java_test(
         "//src/com/facebook/buck/worker:worker_process",
         "//test/com/facebook/buck/android:testutil",
         "//test/com/facebook/buck/config:FakeBuckConfig",
+        "//test/com/facebook/buck/core/rules/resolver/impl:testutil",
         "//test/com/facebook/buck/cxx:testutil",
         "//test/com/facebook/buck/jvm/groovy:testutil",
         "//test/com/facebook/buck/jvm/java:fakepackagefinder",

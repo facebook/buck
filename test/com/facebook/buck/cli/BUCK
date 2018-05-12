@@ -424,6 +424,7 @@ java_test(
         "//test/com/facebook/buck/config:FakeBuckConfig",
         "//test/com/facebook/buck/config:testutil",
         "//test/com/facebook/buck/core/cell:testutil",
+        "//test/com/facebook/buck/core/rules/resolver/impl:testutil",
         "//test/com/facebook/buck/cxx:testutil",
         "//test/com/facebook/buck/cxx/toolchain:testutil",
         "//test/com/facebook/buck/event:testutil",

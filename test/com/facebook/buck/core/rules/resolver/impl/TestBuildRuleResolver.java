@@ -14,11 +14,14 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
+package com.facebook.buck.core.rules.resolver.impl;
 
 import com.facebook.buck.core.cell.CellProvider;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TargetNodeToBuildRuleTransformer;
 import com.facebook.buck.toolchain.ToolchainProvider;
 
 public class TestBuildRuleResolver extends SingleThreadedBuildRuleResolver {

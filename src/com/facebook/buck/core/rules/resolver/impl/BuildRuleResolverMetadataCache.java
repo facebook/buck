@@ -13,9 +13,14 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.facebook.buck.rules;
+package com.facebook.buck.core.rules.resolver.impl;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.MetadataProvidingDescription;
+import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
