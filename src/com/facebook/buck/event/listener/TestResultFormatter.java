@@ -29,6 +29,7 @@ import com.facebook.buck.util.Verbosity;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
+import com.google.common.base.Strings;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -43,7 +44,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.TimeZone;
-import org.testng.util.Strings;
 
 public class TestResultFormatter {
 
@@ -116,6 +116,7 @@ public class TestResultFormatter {
   public void reportResult(ImmutableList.Builder<String> addTo, TestResults results) {
     if (verbosity.shouldPrintBinaryRunInformation() && results.getTotalNumberOfTests() > 1) {
       addTo.add("");
+
       addTo.add(
           String.format(
               locale,
