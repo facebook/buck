@@ -219,11 +219,11 @@ public class TestResultFormatter {
       }
     }
 
-    if (summaryVerbosity.getIncludeStdOut() && Strings.isNullOrEmpty(testResult.getStdOut())) {
+    if (summaryVerbosity.getIncludeStdOut() && !Strings.isNullOrEmpty(testResult.getStdOut())) {
       addTo.add("====STANDARD OUT====", testResult.getStdOut());
     }
 
-    if (summaryVerbosity.getIncludeStdErr() && Strings.isNullOrEmpty(testResult.getStdErr())) {
+    if (summaryVerbosity.getIncludeStdErr() && !Strings.isNullOrEmpty(testResult.getStdErr())) {
       addTo.add("====STANDARD ERR====", testResult.getStdErr());
     }
 
