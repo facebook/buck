@@ -18,10 +18,10 @@ package com.facebook.buck.core.rules.resolver.impl;
 
 import com.facebook.buck.core.cell.CellProvider;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rules.transformer.TargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.AbstractBuildRuleResolver;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.TargetNodeToBuildRuleTransformer;
 import com.facebook.buck.util.Scope;
 import com.facebook.buck.util.concurrent.Parallelizer;
 import com.facebook.buck.util.concurrent.WorkThreadTrackingFuture;

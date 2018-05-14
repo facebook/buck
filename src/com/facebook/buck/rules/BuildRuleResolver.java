@@ -46,7 +46,9 @@ public interface BuildRuleResolver {
   /**
    * Retrieve the {@code BuildRule} for the given {@code BuildTarget}. If no rules are associated
    * with the target, compute it by transforming the {@code TargetNode} associated with this build
-   * target using the {@link TargetNodeToBuildRuleTransformer} associated with this instance.
+   * target using the {@link
+   * com.facebook.buck.core.rules.transformer.TargetNodeToBuildRuleTransformer} associated with this
+   * instance.
    */
   BuildRule requireRule(BuildTarget target);
 

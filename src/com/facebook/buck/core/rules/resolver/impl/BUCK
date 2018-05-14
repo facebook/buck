@@ -6,6 +6,7 @@ java_library(
     exported_deps = [
         "//src/com/facebook/buck/core/cell:cell",
         "//src/com/facebook/buck/core/model:model",
+        "//src/com/facebook/buck/core/rules/transformer:transformer",
         "//src/com/facebook/buck/rules:build_rule",
         "//src/com/facebook/buck/util/types:types",
     ],

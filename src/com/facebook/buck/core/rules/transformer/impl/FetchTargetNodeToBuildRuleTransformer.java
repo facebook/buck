@@ -14,21 +14,20 @@
  * under the License.
  */
 
-package com.facebook.buck.cli;
+package com.facebook.buck.core.rules.transformer.impl;
 
 import com.facebook.buck.core.cell.CellProvider;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rules.transformer.TargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.DescriptionCache;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
-import com.facebook.buck.rules.TargetNodeToBuildRuleTransformer;
 import com.google.common.collect.ImmutableSet;
 
-class FetchTargetNodeToBuildRuleTransformer implements TargetNodeToBuildRuleTransformer {
+public class FetchTargetNodeToBuildRuleTransformer implements TargetNodeToBuildRuleTransformer {
 
   private final ImmutableSet<Description<?>> descriptions;
   // TODO(simons): Allow the TargetToActionGraph to be stateless.

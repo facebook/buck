@@ -20,6 +20,7 @@ java_immutables_library(
         "//src/com/facebook/buck/core/cell:cell",
         "//src/com/facebook/buck/core/cell/resolver:resolver",
         "//src/com/facebook/buck/core/rules/resolver/impl:impl",
+        "//src/com/facebook/buck/core/rules/transformer/impl:impl",
         "//src/com/facebook/buck/core/sourcepath/resolver/impl:impl",
         "//src/com/facebook/buck/cxx:rules",
         "//src/com/facebook/buck/cxx/toolchain:toolchain",

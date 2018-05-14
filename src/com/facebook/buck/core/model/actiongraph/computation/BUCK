@@ -22,6 +22,7 @@ java_immutables_library(
         "PUBLIC",
     ],
     deps = [
+        "//src/com/facebook/buck/core/rules/transformer/impl:impl",
         "//src/com/facebook/buck/core/sourcepath/resolver/impl:impl",
         "//src/com/facebook/buck/event:event",
         "//src/com/facebook/buck/graph:graph",
