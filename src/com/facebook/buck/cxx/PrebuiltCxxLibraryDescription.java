@@ -133,27 +133,16 @@ public class PrebuiltCxxLibraryDescription
   }
 
   private PrebuiltCxxLibraryPaths getPaths(
-      BuildTarget target,
-      AbstractPrebuiltCxxLibraryDescriptionArg args,
-      Optional<String> versionSubDir) {
+      BuildTarget target, AbstractPrebuiltCxxLibraryDescriptionArg args) {
     if (args.isNewApiUsed() && args.isOldApiUsed()) {
       throw new HumanReadableException("%s: cannot use both old and new APIs", target);
     }
     if (args.isOldApiUsed()) {
-      if (!cxxBuckConfig.isDeprecatedPrebuiltCxxLibraryApiEnabled()) {
-        throw new HumanReadableException(
-            "%s(%s) uses the deprecated API, but `cxx.enable_deprecated_prebuilt_cxx_library_api` "
-                + "isn't set.  Please see the `prebuilt_cxx_library` documentation for details and "
-                + "examples on how to port to the new API.",
-            DescriptionCache.getBuildRuleType(this).toString(), target);
-      }
-      return DeprecatedPrebuiltCxxLibraryPaths.builder()
-          .setTarget(target)
-          .setVersionSubdir(versionSubDir)
-          .setIncludeDirs(args.getIncludeDirs().orElse(ImmutableList.of()))
-          .setLibDir(args.getLibDir())
-          .setLibName(args.getLibName())
-          .build();
+      throw new HumanReadableException(
+          "%s(%s) uses the deprecated API, but `cxx.enable_deprecated_prebuilt_cxx_library_api` "
+              + "isn't set.  Please see the `prebuilt_cxx_library` documentation for details and "
+              + "examples on how to port to the new API.",
+          DescriptionCache.getBuildRuleType(this).toString(), target);
     }
     return NewPrebuiltCxxLibraryPaths.builder()
         .setTarget(target)
@@ -259,12 +248,11 @@ public class PrebuiltCxxLibraryDescription
       CellPathResolver cellRoots,
       CxxPlatform cxxPlatform,
       Optional<ImmutableMap<BuildTarget, Version>> selectedVersions,
-      Optional<String> versionSubDir,
       PrebuiltCxxLibraryDescriptionArg args) {
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
-    PrebuiltCxxLibraryPaths paths = getPaths(buildTarget, args, versionSubDir);
+    PrebuiltCxxLibraryPaths paths = getPaths(buildTarget, args);
 
     String soname = getSoname(buildTarget, cxxPlatform, args.getSoname(), args.getLibName());
 
@@ -335,11 +323,10 @@ public class PrebuiltCxxLibraryDescription
       ProjectFilesystem filesystem,
       CxxPlatform cxxPlatform,
       Optional<ImmutableMap<BuildTarget, Version>> selectedVersions,
-      Optional<String> versionSubdir,
       PrebuiltCxxLibraryDescriptionArg args) {
 
     // If the shared library is prebuilt, just return a reference to it.
-    PrebuiltCxxLibraryPaths paths = getPaths(target, args, versionSubdir);
+    PrebuiltCxxLibraryPaths paths = getPaths(target, args);
     Optional<SourcePath> sharedLibraryPath =
         paths.getSharedLibrary(filesystem, resolver, cellRoots, cxxPlatform, selectedVersions);
     if (sharedLibraryPath.isPresent()) {
@@ -362,7 +349,6 @@ public class PrebuiltCxxLibraryDescription
       CellPathResolver cellRoots,
       CxxPlatform cxxPlatform,
       Optional<ImmutableMap<BuildTarget, Version>> selectedVersions,
-      Optional<String> versionSubdir,
       PrebuiltCxxLibraryDescriptionArg args) {
 
     if (!args.isSupportsSharedLibraryInterface()) {
@@ -389,7 +375,6 @@ public class PrebuiltCxxLibraryDescription
             projectFilesystem,
             cxxPlatform,
             selectedVersions,
-            versionSubdir,
             args);
 
     return SharedLibraryInterfaceFactoryResolver.resolveFactory(params.get())
@@ -422,15 +407,6 @@ public class PrebuiltCxxLibraryDescription
 
     Optional<ImmutableMap<BuildTarget, Version>> selectedVersions =
         context.getTargetGraph().get(buildTarget).getSelectedVersions();
-    Optional<String> versionSubdir =
-        selectedVersions.isPresent() && args.getVersionedSubDir().isPresent()
-            ? Optional.of(
-                args.getVersionedSubDir()
-                    .get()
-                    .getOnlyMatchingValue(
-                        String.format("%s: %s", buildTarget, "versioned_sub_dir"),
-                        selectedVersions.get()))
-            : Optional.empty();
 
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
     CellPathResolver cellRoots = context.getCellPathResolver();
@@ -459,7 +435,6 @@ public class PrebuiltCxxLibraryDescription
             cellRoots,
             platform.get().getValue(),
             selectedVersions,
-            versionSubdir,
             args);
       } else if (type.get().getValue() == Type.SHARED_INTERFACE) {
         return createSharedLibraryInterface(
@@ -469,7 +444,6 @@ public class PrebuiltCxxLibraryDescription
             cellRoots,
             platform.get().getValue(),
             selectedVersions,
-            versionSubdir,
             args);
       }
     }
@@ -488,7 +462,7 @@ public class PrebuiltCxxLibraryDescription
 
     // Otherwise, we return the generic placeholder of this library, that dependents can use
     // get the real build rules via querying the action graph.
-    PrebuiltCxxLibraryPaths paths = getPaths(buildTarget, args, versionSubdir);
+    PrebuiltCxxLibraryPaths paths = getPaths(buildTarget, args);
     return new PrebuiltCxxLibrary(buildTarget, projectFilesystem, params) {
 
       private final Cache<NativeLinkableCacheKey, NativeLinkableInput> nativeLinkableCache =
@@ -566,7 +540,6 @@ public class PrebuiltCxxLibraryDescription
             projectFilesystem,
             cxxPlatform,
             selectedVersions,
-            versionSubdir,
             args);
       }
 
@@ -869,7 +842,7 @@ public class PrebuiltCxxLibraryDescription
       AbstractPrebuiltCxxLibraryDescriptionArg constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
-    getPaths(buildTarget, constructorArg, Optional.empty())
+    getPaths(buildTarget, constructorArg)
         .findParseTimeDeps(cellRoots, extraDepsBuilder, targetGraphOnlyDepsBuilder);
   }
 

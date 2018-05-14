@@ -80,8 +80,6 @@ public class CxxBuckConfig {
   private static final String INDEPENDENT_SHLIB_INTERFACES = "independent_shlib_interfaces";
   private static final String INDEPENDENT_SHLIB_INTERFACE_LDFLAGS =
       "independent_shlib_interface_ldflags";
-  private static final String ENABLE_DEPRECATED_PREBUILT_CXX_LIBRARY_API =
-      "enable_deprecated_prebuilt_cxx_library_api";
   private static final String DECLARED_PLATFORMS = "declared_platforms";
   private static final String SHARED_LIBRARY_EXT = "shared_library_extension";
 
@@ -495,10 +493,6 @@ public class CxxBuckConfig {
    */
   public boolean isIndependentSharedLibraryInterfaces() {
     return delegate.getBooleanValue(cxxSection, INDEPENDENT_SHLIB_INTERFACES, false);
-  }
-
-  public boolean isDeprecatedPrebuiltCxxLibraryApiEnabled() {
-    return delegate.getBooleanValue(cxxSection, ENABLE_DEPRECATED_PREBUILT_CXX_LIBRARY_API, false);
   }
 
   /** @return the list of flavors that buck will consider valid when building the target graph. */
