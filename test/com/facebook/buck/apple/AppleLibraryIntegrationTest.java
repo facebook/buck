@@ -896,6 +896,43 @@ public class AppleLibraryIntegrationTest {
     result.assertSuccess();
   }
 
+  @Test
+  public void testBuildAppleLibraryWhereModularObjcUsesSwiftDiffLib() throws Exception {
+    testModularScenario("apple_library_modular_objc_uses_swift_diff_lib", "Bar");
+  }
+
+  @Test
+  public void testBuildAppleLibraryWhereModularObjcUsesSwiftSameLib() throws Exception {
+    testModularScenario("apple_library_modular_objc_uses_swift_same_lib", "Mixed");
+  }
+
+  @Test
+  public void testBuildAppleLibraryWhereModularSwiftUsesObjcDiffLib() throws Exception {
+    testModularScenario("apple_library_modular_swift_uses_objc_diff_lib", "Bar");
+  }
+
+  @Test
+  public void testBuildAppleLibraryWhereModularSwiftUsesObjcSameLib() throws Exception {
+    testModularScenario("apple_library_modular_swift_uses_objc_same_lib", "Mixed");
+  }
+
+  private void testModularScenario(String scenario, String targetName) throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, scenario, tmp);
+    workspace.setUp();
+    workspace.addBuckConfigLocalOption("apple", "use_swift_delegate", "false");
+    workspace.addBuckConfigLocalOption("cxx", "cflags", "-fmodules");
+    BuildTarget dylibTarget =
+        workspace
+            .newBuildTarget(String.format("//:%s#iphonesimulator-x86_64", targetName))
+            .withAppendedFlavors(CxxDescriptionEnhancer.SHARED_FLAVOR);
+    ProcessResult result = workspace.runBuckCommand("build", dylibTarget.getFullyQualifiedName());
+    result.assertSuccess();
+  }
+
   private static void assertIsSymbolicLink(Path link, Path target) throws IOException {
     assertTrue(Files.isSymbolicLink(link));
     assertEquals(target, Files.readSymbolicLink(link));
