@@ -117,7 +117,7 @@ public class AppleLibraryDescriptionSwiftEnhancer {
 
     ImmutableSet.Builder<CxxPreprocessorInput> builder = ImmutableSet.builder();
     builder.addAll(transitiveMap.values());
-    if (arg.isModular()) {
+    if (arg.isModular()) { // NOPMD PMD.EmptyIfStmt till stacked PR lands
       // TODO(robbert): Need to query for objc_module headers here
     } else {
       builder.add(lib.getPublicCxxPreprocessorInputExcludingDelegate(platform, graphBuilder));
