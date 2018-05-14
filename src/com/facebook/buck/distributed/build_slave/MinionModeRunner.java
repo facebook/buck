@@ -177,7 +177,7 @@ public class MinionModeRunner extends AbstractDistBuildModeRunner {
     try (ThriftCoordinatorClient client = newStartedThriftCoordinatorClient();
         Closeable healthCheck =
             heartbeatService.addCallback(
-                "MinionIsAlive", createHeartbeatCallback(client, minionId))) {
+                "MinionIsAlive", createHeartbeatCallback(client, minionId, buildSlaveRunId))) {
       while (!finished.get()) {
         signalFinishedTargetsAndFetchMoreWork(minionId, client);
         Thread.sleep(minionPollLoopIntervalMillis);
@@ -208,12 +208,12 @@ public class MinionModeRunner extends AbstractDistBuildModeRunner {
   }
 
   private HeartbeatCallback createHeartbeatCallback(
-      ThriftCoordinatorClient client, String minionId) {
+      ThriftCoordinatorClient client, String minionId, BuildSlaveRunId runId) {
     return new HeartbeatCallback() {
       @Override
       public void runHeartbeat() throws IOException {
         LOG.debug(String.format("About to send keep alive heartbeat for Minion [%s]", minionId));
-        client.reportMinionAlive(minionId);
+        client.reportMinionAlive(minionId, runId);
       }
     };
   }

@@ -21,11 +21,13 @@ struct StampedeId {
   1 : optional string id;
 }
 
-# Identifies the hardware category for a particular minion when running in mixed environment.
+# Identifies the hardware category for a particular minion when running in
+# mixed environment.
 enum MinionType {
     UNKNOWN = 0,
     LOW_SPEC = 1,
-    # This is the default, and should always be used for minion running on coordinator machine
+    # This is the default, and should always be used for minion running on
+    # coordinator machine
     STANDARD_SPEC = 2,
 }
 
@@ -33,7 +35,8 @@ enum SchedulingEnvironmentType {
     UNKNOWN = 0,
     # Nodes in build are scheduled on machines with identical hardware
     IDENTICAL_HARDWARE = 1,
-    # Nodes in build are scheduled on machines with varying hardware types (i.e. low/standard spec)
+    # Nodes in build are scheduled on machines with varying hardware types
+    # (i.e. low/standard spec)
     MIXED_HARDWARE = 2,
 }
 
@@ -43,7 +46,8 @@ struct MinionRequirement {
   2: optional i32 requiredCount;
 }
 
-# Gives requirements for all minion types (only one if running in IDENTICAL_HARDWARE environment)
+# Gives requirements for all minion types (only one if running in
+# IDENTICAL_HARDWARE environment)
 struct MinionRequirements {
   1: optional list<MinionRequirement> requirements;
 }
@@ -88,6 +92,9 @@ enum BuildStatus {
 
   // In the initialization stage, not yet queued for building
   CREATED = 5,
+
+  // Build worker failed health checks
+  LOST = 6,
 }
 
 struct BuildSlaveInfo {
@@ -499,6 +506,15 @@ struct ReportCoordinatorAliveRequest {
 struct ReportCoordinatorAliveResponse {
 }
 
+struct UpdateBuildSlaveBuildStatusRequest {
+  1: optional StampedeId stampedeId;
+  2: optional BuildSlaveRunId runId;
+  3: optional BuildStatus buildStatus;
+}
+
+struct UpdateBuildSlaveBuildStatusResponse {
+}
+
 ##############################################################################
 ## Top-Level Buck-Frontend HTTP body thrift Request/Response format
 ##############################################################################
@@ -532,6 +548,7 @@ enum FrontendRequestType {
   ENQUEUE_MINIONS = 26,
   SET_FINAL_BUILD_STATUS = 27,
   REPORT_COORDINATOR_ALIVE = 28,
+  UPDATE_BUILD_SLAVE_BUILD_STATUS = 29,
 
   // [100-199] Values are reserved for the buck cache request types.
 }
@@ -566,6 +583,8 @@ struct FrontendRequest {
   26: optional EnqueueMinionsRequest enqueueMinionsRequest;
   27: optional SetFinalBuildStatusRequest setFinalBuildStatusRequest;
   28: optional ReportCoordinatorAliveRequest reportCoordinatorAliveRequest;
+  29: optional UpdateBuildSlaveBuildStatusRequest
+    updateBuildSlaveBuildStatusRequest;
 
   // [100-199] Values are reserved for the buck cache request types.
 }
@@ -600,6 +619,8 @@ struct FrontendResponse {
   30: optional EnqueueMinionsResponse enqueueMinionsResponse;
   31: optional SetFinalBuildStatusResponse setFinalBuildStatusResponse;
   32: optional ReportCoordinatorAliveResponse reportCoordinatorAliveResponse;
+  33: optional UpdateBuildSlaveBuildStatusResponse
+    updateBuildSlaveBuildStatusResponse;
 
   // [100-199] Values are reserved for the buck cache request types.
 }

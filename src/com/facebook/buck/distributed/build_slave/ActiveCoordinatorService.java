@@ -133,7 +133,7 @@ public class ActiveCoordinatorService implements CoordinatorService.Iface {
 
   @Override
   public ReportMinionAliveResponse reportMinionAlive(ReportMinionAliveRequest request) {
-    minionHealthTracker.reportMinionAlive(request.minionId);
+    minionHealthTracker.reportMinionAlive(request.minionId, request.runId.id);
     return new ReportMinionAliveResponse();
   }
 }

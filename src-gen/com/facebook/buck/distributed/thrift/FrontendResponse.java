@@ -34,6 +34,7 @@ public class FrontendResponse implements org.apache.thrift.TBase<FrontendRespons
   private static final org.apache.thrift.protocol.TField ENQUEUE_MINIONS_RESPONSE_FIELD_DESC = new org.apache.thrift.protocol.TField("enqueueMinionsResponse", org.apache.thrift.protocol.TType.STRUCT, (short)30);
   private static final org.apache.thrift.protocol.TField SET_FINAL_BUILD_STATUS_RESPONSE_FIELD_DESC = new org.apache.thrift.protocol.TField("setFinalBuildStatusResponse", org.apache.thrift.protocol.TType.STRUCT, (short)31);
   private static final org.apache.thrift.protocol.TField REPORT_COORDINATOR_ALIVE_RESPONSE_FIELD_DESC = new org.apache.thrift.protocol.TField("reportCoordinatorAliveResponse", org.apache.thrift.protocol.TType.STRUCT, (short)32);
+  private static final org.apache.thrift.protocol.TField UPDATE_BUILD_SLAVE_BUILD_STATUS_RESPONSE_FIELD_DESC = new org.apache.thrift.protocol.TField("updateBuildSlaveBuildStatusResponse", org.apache.thrift.protocol.TType.STRUCT, (short)33);
 
   private static final org.apache.thrift.scheme.SchemeFactory STANDARD_SCHEME_FACTORY = new FrontendResponseStandardSchemeFactory();
   private static final org.apache.thrift.scheme.SchemeFactory TUPLE_SCHEME_FACTORY = new FrontendResponseTupleSchemeFactory();
@@ -65,6 +66,7 @@ public class FrontendResponse implements org.apache.thrift.TBase<FrontendRespons
   public EnqueueMinionsResponse enqueueMinionsResponse; // optional
   public SetFinalBuildStatusResponse setFinalBuildStatusResponse; // optional
   public ReportCoordinatorAliveResponse reportCoordinatorAliveResponse; // optional
+  public UpdateBuildSlaveBuildStatusResponse updateBuildSlaveBuildStatusResponse; // optional
 
   /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
   public enum _Fields implements org.apache.thrift.TFieldIdEnum {
@@ -94,7 +96,8 @@ public class FrontendResponse implements org.apache.thrift.TBase<FrontendRespons
     SET_COORDINATOR_RESPONSE((short)29, "setCoordinatorResponse"),
     ENQUEUE_MINIONS_RESPONSE((short)30, "enqueueMinionsResponse"),
     SET_FINAL_BUILD_STATUS_RESPONSE((short)31, "setFinalBuildStatusResponse"),
-    REPORT_COORDINATOR_ALIVE_RESPONSE((short)32, "reportCoordinatorAliveResponse");
+    REPORT_COORDINATOR_ALIVE_RESPONSE((short)32, "reportCoordinatorAliveResponse"),
+    UPDATE_BUILD_SLAVE_BUILD_STATUS_RESPONSE((short)33, "updateBuildSlaveBuildStatusResponse");
 
     private static final java.util.Map<java.lang.String, _Fields> byName = new java.util.HashMap<java.lang.String, _Fields>();
 
@@ -155,6 +158,8 @@ public class FrontendResponse implements org.apache.thrift.TBase<FrontendRespons
           return SET_FINAL_BUILD_STATUS_RESPONSE;
         case 32: // REPORT_COORDINATOR_ALIVE_RESPONSE
           return REPORT_COORDINATOR_ALIVE_RESPONSE;
+        case 33: // UPDATE_BUILD_SLAVE_BUILD_STATUS_RESPONSE
+          return UPDATE_BUILD_SLAVE_BUILD_STATUS_RESPONSE;
         default:
           return null;
       }
@@ -197,7 +202,7 @@ public class FrontendResponse implements org.apache.thrift.TBase<FrontendRespons
   // isset id assignments
   private static final int __WASSUCCESSFUL_ISSET_ID = 0;
   private byte __isset_bitfield = 0;
-  private static final _Fields optionals[] = {_Fields.WAS_SUCCESSFUL,_Fields.ERROR_MESSAGE,_Fields.TYPE,_Fields.START_BUILD_RESPONSE,_Fields.BUILD_STATUS_RESPONSE,_Fields.CAS_CONTAINS_RESPONSE,_Fields.CREATE_BUILD_RESPONSE,_Fields.FETCH_SOURCE_FILES_RESPONSE,_Fields.FETCH_BUILD_GRAPH_RESPONSE,_Fields.ANNOUNCEMENT_RESPONSE,_Fields.MULTI_GET_BUILD_SLAVE_LOG_DIR_RESPONSE,_Fields.MULTI_GET_BUILD_SLAVE_REAL_TIME_LOGS_RESPONSE,_Fields.UPDATE_BUILD_SLAVE_STATUS_RESPONSE,_Fields.FETCH_BUILD_SLAVE_STATUS_RESPONSE,_Fields.APPEND_BUILD_SLAVE_EVENTS_RESPONSE,_Fields.MULTI_GET_BUILD_SLAVE_EVENTS_RESPONSE,_Fields.FETCH_RULE_KEY_LOGS_RESPONSE,_Fields.STORE_BUILD_SLAVE_FINISHED_STATS_RESPONSE,_Fields.FETCH_BUILD_SLAVE_FINISHED_STATS_RESPONSE,_Fields.SET_COORDINATOR_RESPONSE,_Fields.ENQUEUE_MINIONS_RESPONSE,_Fields.SET_FINAL_BUILD_STATUS_RESPONSE,_Fields.REPORT_COORDINATOR_ALIVE_RESPONSE};
+  private static final _Fields optionals[] = {_Fields.WAS_SUCCESSFUL,_Fields.ERROR_MESSAGE,_Fields.TYPE,_Fields.START_BUILD_RESPONSE,_Fields.BUILD_STATUS_RESPONSE,_Fields.CAS_CONTAINS_RESPONSE,_Fields.CREATE_BUILD_RESPONSE,_Fields.FETCH_SOURCE_FILES_RESPONSE,_Fields.FETCH_BUILD_GRAPH_RESPONSE,_Fields.ANNOUNCEMENT_RESPONSE,_Fields.MULTI_GET_BUILD_SLAVE_LOG_DIR_RESPONSE,_Fields.MULTI_GET_BUILD_SLAVE_REAL_TIME_LOGS_RESPONSE,_Fields.UPDATE_BUILD_SLAVE_STATUS_RESPONSE,_Fields.FETCH_BUILD_SLAVE_STATUS_RESPONSE,_Fields.APPEND_BUILD_SLAVE_EVENTS_RESPONSE,_Fields.MULTI_GET_BUILD_SLAVE_EVENTS_RESPONSE,_Fields.FETCH_RULE_KEY_LOGS_RESPONSE,_Fields.STORE_BUILD_SLAVE_FINISHED_STATS_RESPONSE,_Fields.FETCH_BUILD_SLAVE_FINISHED_STATS_RESPONSE,_Fields.SET_COORDINATOR_RESPONSE,_Fields.ENQUEUE_MINIONS_RESPONSE,_Fields.SET_FINAL_BUILD_STATUS_RESPONSE,_Fields.REPORT_COORDINATOR_ALIVE_RESPONSE,_Fields.UPDATE_BUILD_SLAVE_BUILD_STATUS_RESPONSE};
   public static final java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
   static {
     java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new java.util.EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
@@ -247,6 +252,8 @@ public class FrontendResponse implements org.apache.thrift.TBase<FrontendRespons
         new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, SetFinalBuildStatusResponse.class)));
     tmpMap.put(_Fields.REPORT_COORDINATOR_ALIVE_RESPONSE, new org.apache.thrift.meta_data.FieldMetaData("reportCoordinatorAliveResponse", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
         new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, ReportCoordinatorAliveResponse.class)));
+    tmpMap.put(_Fields.UPDATE_BUILD_SLAVE_BUILD_STATUS_RESPONSE, new org.apache.thrift.meta_data.FieldMetaData("updateBuildSlaveBuildStatusResponse", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
+        new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, UpdateBuildSlaveBuildStatusResponse.class)));
     metaDataMap = java.util.Collections.unmodifiableMap(tmpMap);
     org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(FrontendResponse.class, metaDataMap);
   }
@@ -328,6 +335,9 @@ public class FrontendResponse implements org.apache.thrift.TBase<FrontendRespons
     if (other.isSetReportCoordinatorAliveResponse()) {
       this.reportCoordinatorAliveResponse = new ReportCoordinatorAliveResponse(other.reportCoordinatorAliveResponse);
     }
+    if (other.isSetUpdateBuildSlaveBuildStatusResponse()) {
+      this.updateBuildSlaveBuildStatusResponse = new UpdateBuildSlaveBuildStatusResponse(other.updateBuildSlaveBuildStatusResponse);
+    }
   }
 
   public FrontendResponse deepCopy() {
@@ -361,6 +371,7 @@ public class FrontendResponse implements org.apache.thrift.TBase<FrontendRespons
     this.enqueueMinionsResponse = null;
     this.setFinalBuildStatusResponse = null;
     this.reportCoordinatorAliveResponse = null;
+    this.updateBuildSlaveBuildStatusResponse = null;
   }
 
   public boolean isWasSuccessful() {
@@ -922,6 +933,30 @@ public class FrontendResponse implements org.apache.thrift.TBase<FrontendRespons
     }
   }
 
+  public UpdateBuildSlaveBuildStatusResponse getUpdateBuildSlaveBuildStatusResponse() {
+    return this.updateBuildSlaveBuildStatusResponse;
+  }
+
+  public FrontendResponse setUpdateBuildSlaveBuildStatusResponse(UpdateBuildSlaveBuildStatusResponse updateBuildSlaveBuildStatusResponse) {
+    this.updateBuildSlaveBuildStatusResponse = updateBuildSlaveBuildStatusResponse;
+    return this;
+  }
+
+  public void unsetUpdateBuildSlaveBuildStatusResponse() {
+    this.updateBuildSlaveBuildStatusResponse = null;
+  }
+
+  /** Returns true if field updateBuildSlaveBuildStatusResponse is set (has been assigned a value) and false otherwise */
+  public boolean isSetUpdateBuildSlaveBuildStatusResponse() {
+    return this.updateBuildSlaveBuildStatusResponse != null;
+  }
+
+  public void setUpdateBuildSlaveBuildStatusResponseIsSet(boolean value) {
+    if (!value) {
+      this.updateBuildSlaveBuildStatusResponse = null;
+    }
+  }
+
   public void setFieldValue(_Fields field, java.lang.Object value) {
     switch (field) {
     case WAS_SUCCESSFUL:
@@ -1108,6 +1143,14 @@ public class FrontendResponse implements org.apache.thrift.TBase<FrontendRespons
       }
       break;
 
+    case UPDATE_BUILD_SLAVE_BUILD_STATUS_RESPONSE:
+      if (value == null) {
+        unsetUpdateBuildSlaveBuildStatusResponse();
+      } else {
+        setUpdateBuildSlaveBuildStatusResponse((UpdateBuildSlaveBuildStatusResponse)value);
+      }
+      break;
+
     }
   }
 
@@ -1182,6 +1225,9 @@ public class FrontendResponse implements org.apache.thrift.TBase<FrontendRespons
     case REPORT_COORDINATOR_ALIVE_RESPONSE:
       return getReportCoordinatorAliveResponse();
 
+    case UPDATE_BUILD_SLAVE_BUILD_STATUS_RESPONSE:
+      return getUpdateBuildSlaveBuildStatusResponse();
+
     }
     throw new java.lang.IllegalStateException();
   }
@@ -1239,6 +1285,8 @@ public class FrontendResponse implements org.apache.thrift.TBase<FrontendRespons
       return isSetSetFinalBuildStatusResponse();
     case REPORT_COORDINATOR_ALIVE_RESPONSE:
       return isSetReportCoordinatorAliveResponse();
+    case UPDATE_BUILD_SLAVE_BUILD_STATUS_RESPONSE:
+      return isSetUpdateBuildSlaveBuildStatusResponse();
     }
     throw new java.lang.IllegalStateException();
   }
@@ -1465,6 +1513,15 @@ public class FrontendResponse implements org.apache.thrift.TBase<FrontendRespons
         return false;
     }
 
+    boolean this_present_updateBuildSlaveBuildStatusResponse = true && this.isSetUpdateBuildSlaveBuildStatusResponse();
+    boolean that_present_updateBuildSlaveBuildStatusResponse = true && that.isSetUpdateBuildSlaveBuildStatusResponse();
+    if (this_present_updateBuildSlaveBuildStatusResponse || that_present_updateBuildSlaveBuildStatusResponse) {
+      if (!(this_present_updateBuildSlaveBuildStatusResponse && that_present_updateBuildSlaveBuildStatusResponse))
+        return false;
+      if (!this.updateBuildSlaveBuildStatusResponse.equals(that.updateBuildSlaveBuildStatusResponse))
+        return false;
+    }
+
     return true;
   }
 
@@ -1563,6 +1620,10 @@ public class FrontendResponse implements org.apache.thrift.TBase<FrontendRespons
     hashCode = hashCode * 8191 + ((isSetReportCoordinatorAliveResponse()) ? 131071 : 524287);
     if (isSetReportCoordinatorAliveResponse())
       hashCode = hashCode * 8191 + reportCoordinatorAliveResponse.hashCode();
+
+    hashCode = hashCode * 8191 + ((isSetUpdateBuildSlaveBuildStatusResponse()) ? 131071 : 524287);
+    if (isSetUpdateBuildSlaveBuildStatusResponse())
+      hashCode = hashCode * 8191 + updateBuildSlaveBuildStatusResponse.hashCode();
 
     return hashCode;
   }
@@ -1801,6 +1862,16 @@ public class FrontendResponse implements org.apache.thrift.TBase<FrontendRespons
     }
     if (isSetReportCoordinatorAliveResponse()) {
       lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.reportCoordinatorAliveResponse, other.reportCoordinatorAliveResponse);
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+    }
+    lastComparison = java.lang.Boolean.valueOf(isSetUpdateBuildSlaveBuildStatusResponse()).compareTo(other.isSetUpdateBuildSlaveBuildStatusResponse());
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    if (isSetUpdateBuildSlaveBuildStatusResponse()) {
+      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.updateBuildSlaveBuildStatusResponse, other.updateBuildSlaveBuildStatusResponse);
       if (lastComparison != 0) {
         return lastComparison;
       }
@@ -2050,6 +2121,16 @@ public class FrontendResponse implements org.apache.thrift.TBase<FrontendRespons
       }
       first = false;
     }
+    if (isSetUpdateBuildSlaveBuildStatusResponse()) {
+      if (!first) sb.append(", ");
+      sb.append("updateBuildSlaveBuildStatusResponse:");
+      if (this.updateBuildSlaveBuildStatusResponse == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.updateBuildSlaveBuildStatusResponse);
+      }
+      first = false;
+    }
     sb.append(")");
     return sb.toString();
   }
@@ -2116,6 +2197,9 @@ public class FrontendResponse implements org.apache.thrift.TBase<FrontendRespons
     }
     if (reportCoordinatorAliveResponse != null) {
       reportCoordinatorAliveResponse.validate();
+    }
+    if (updateBuildSlaveBuildStatusResponse != null) {
+      updateBuildSlaveBuildStatusResponse.validate();
     }
   }
 
@@ -2359,6 +2443,15 @@ public class FrontendResponse implements org.apache.thrift.TBase<FrontendRespons
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
             break;
+          case 33: // UPDATE_BUILD_SLAVE_BUILD_STATUS_RESPONSE
+            if (schemeField.type == org.apache.thrift.protocol.TType.STRUCT) {
+              struct.updateBuildSlaveBuildStatusResponse = new UpdateBuildSlaveBuildStatusResponse();
+              struct.updateBuildSlaveBuildStatusResponse.read(iprot);
+              struct.setUpdateBuildSlaveBuildStatusResponseIsSet(true);
+            } else { 
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+            }
+            break;
           default:
             org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
         }
@@ -2533,6 +2626,13 @@ public class FrontendResponse implements org.apache.thrift.TBase<FrontendRespons
           oprot.writeFieldEnd();
         }
       }
+      if (struct.updateBuildSlaveBuildStatusResponse != null) {
+        if (struct.isSetUpdateBuildSlaveBuildStatusResponse()) {
+          oprot.writeFieldBegin(UPDATE_BUILD_SLAVE_BUILD_STATUS_RESPONSE_FIELD_DESC);
+          struct.updateBuildSlaveBuildStatusResponse.write(oprot);
+          oprot.writeFieldEnd();
+        }
+      }
       oprot.writeFieldStop();
       oprot.writeStructEnd();
     }
@@ -2620,7 +2720,10 @@ public class FrontendResponse implements org.apache.thrift.TBase<FrontendRespons
       if (struct.isSetReportCoordinatorAliveResponse()) {
         optionals.set(22);
       }
-      oprot.writeBitSet(optionals, 23);
+      if (struct.isSetUpdateBuildSlaveBuildStatusResponse()) {
+        optionals.set(23);
+      }
+      oprot.writeBitSet(optionals, 24);
       if (struct.isSetWasSuccessful()) {
         oprot.writeBool(struct.wasSuccessful);
       }
@@ -2690,12 +2793,15 @@ public class FrontendResponse implements org.apache.thrift.TBase<FrontendRespons
       if (struct.isSetReportCoordinatorAliveResponse()) {
         struct.reportCoordinatorAliveResponse.write(oprot);
       }
+      if (struct.isSetUpdateBuildSlaveBuildStatusResponse()) {
+        struct.updateBuildSlaveBuildStatusResponse.write(oprot);
+      }
     }
 
     @Override
     public void read(org.apache.thrift.protocol.TProtocol prot, FrontendResponse struct) throws org.apache.thrift.TException {
       org.apache.thrift.protocol.TTupleProtocol iprot = (org.apache.thrift.protocol.TTupleProtocol) prot;
-      java.util.BitSet incoming = iprot.readBitSet(23);
+      java.util.BitSet incoming = iprot.readBitSet(24);
       if (incoming.get(0)) {
         struct.wasSuccessful = iprot.readBool();
         struct.setWasSuccessfulIsSet(true);
@@ -2807,6 +2913,11 @@ public class FrontendResponse implements org.apache.thrift.TBase<FrontendRespons
         struct.reportCoordinatorAliveResponse = new ReportCoordinatorAliveResponse();
         struct.reportCoordinatorAliveResponse.read(iprot);
         struct.setReportCoordinatorAliveResponseIsSet(true);
+      }
+      if (incoming.get(23)) {
+        struct.updateBuildSlaveBuildStatusResponse = new UpdateBuildSlaveBuildStatusResponse();
+        struct.updateBuildSlaveBuildStatusResponse.read(iprot);
+        struct.setUpdateBuildSlaveBuildStatusResponseIsSet(true);
       }
     }
   }

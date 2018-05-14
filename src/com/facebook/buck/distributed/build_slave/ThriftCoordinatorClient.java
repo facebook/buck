@@ -16,6 +16,7 @@
 
 package com.facebook.buck.distributed.build_slave;
 
+import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
 import com.facebook.buck.distributed.thrift.CoordinatorService;
 import com.facebook.buck.distributed.thrift.CoordinatorService.Client;
 import com.facebook.buck.distributed.thrift.GetWorkRequest;
@@ -137,12 +138,16 @@ public class ThriftCoordinatorClient implements Closeable {
   }
 
   /** Reports back to the Coordinator that the current Minion is alive and healthy. */
-  public synchronized void reportMinionAlive(String minionId) throws ThriftException {
+  public synchronized void reportMinionAlive(String minionId, BuildSlaveRunId runId)
+      throws ThriftException {
     LOG.info("Sending ReportMinionAliveRequest.");
     Client checkedClient = checkThriftClientRunningOrThrow();
 
     ReportMinionAliveRequest request =
-        new ReportMinionAliveRequest().setMinionId(minionId).setStampedeId(stampedeId);
+        new ReportMinionAliveRequest()
+            .setMinionId(minionId)
+            .setStampedeId(stampedeId)
+            .setRunId(runId);
     try {
       checkedClient.reportMinionAlive(request);
       LOG.info("Finished sending ReportMinionAliveRequest.");

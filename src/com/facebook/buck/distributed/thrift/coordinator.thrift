@@ -55,6 +55,7 @@ struct GetWorkResponse {
 struct ReportMinionAliveRequest {
   1: optional string minionId;
   2: optional stampede.StampedeId stampedeId;
+  3: optional stampede.BuildSlaveRunId runId;
 }
 
 struct ReportMinionAliveResponse {

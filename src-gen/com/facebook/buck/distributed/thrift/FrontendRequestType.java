@@ -38,7 +38,8 @@ public enum FrontendRequestType implements org.apache.thrift.TEnum {
   SET_COORDINATOR(25),
   ENQUEUE_MINIONS(26),
   SET_FINAL_BUILD_STATUS(27),
-  REPORT_COORDINATOR_ALIVE(28);
+  REPORT_COORDINATOR_ALIVE(28),
+  UPDATE_BUILD_SLAVE_BUILD_STATUS(29);
 
   private final int value;
 
@@ -113,6 +114,8 @@ public enum FrontendRequestType implements org.apache.thrift.TEnum {
         return SET_FINAL_BUILD_STATUS;
       case 28:
         return REPORT_COORDINATOR_ALIVE;
+      case 29:
+        return UPDATE_BUILD_SLAVE_BUILD_STATUS;
       default:
         return null;
     }

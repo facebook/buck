@@ -37,6 +37,7 @@ public class FrontendRequest implements org.apache.thrift.TBase<FrontendRequest,
   private static final org.apache.thrift.protocol.TField ENQUEUE_MINIONS_REQUEST_FIELD_DESC = new org.apache.thrift.protocol.TField("enqueueMinionsRequest", org.apache.thrift.protocol.TType.STRUCT, (short)26);
   private static final org.apache.thrift.protocol.TField SET_FINAL_BUILD_STATUS_REQUEST_FIELD_DESC = new org.apache.thrift.protocol.TField("setFinalBuildStatusRequest", org.apache.thrift.protocol.TType.STRUCT, (short)27);
   private static final org.apache.thrift.protocol.TField REPORT_COORDINATOR_ALIVE_REQUEST_FIELD_DESC = new org.apache.thrift.protocol.TField("reportCoordinatorAliveRequest", org.apache.thrift.protocol.TType.STRUCT, (short)28);
+  private static final org.apache.thrift.protocol.TField UPDATE_BUILD_SLAVE_BUILD_STATUS_REQUEST_FIELD_DESC = new org.apache.thrift.protocol.TField("updateBuildSlaveBuildStatusRequest", org.apache.thrift.protocol.TType.STRUCT, (short)29);
 
   private static final org.apache.thrift.scheme.SchemeFactory STANDARD_SCHEME_FACTORY = new FrontendRequestStandardSchemeFactory();
   private static final org.apache.thrift.scheme.SchemeFactory TUPLE_SCHEME_FACTORY = new FrontendRequestTupleSchemeFactory();
@@ -71,6 +72,7 @@ public class FrontendRequest implements org.apache.thrift.TBase<FrontendRequest,
   public EnqueueMinionsRequest enqueueMinionsRequest; // optional
   public SetFinalBuildStatusRequest setFinalBuildStatusRequest; // optional
   public ReportCoordinatorAliveRequest reportCoordinatorAliveRequest; // optional
+  public UpdateBuildSlaveBuildStatusRequest updateBuildSlaveBuildStatusRequest; // optional
 
   /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
   public enum _Fields implements org.apache.thrift.TFieldIdEnum {
@@ -103,7 +105,8 @@ public class FrontendRequest implements org.apache.thrift.TBase<FrontendRequest,
     SET_COORDINATOR_REQUEST((short)25, "setCoordinatorRequest"),
     ENQUEUE_MINIONS_REQUEST((short)26, "enqueueMinionsRequest"),
     SET_FINAL_BUILD_STATUS_REQUEST((short)27, "setFinalBuildStatusRequest"),
-    REPORT_COORDINATOR_ALIVE_REQUEST((short)28, "reportCoordinatorAliveRequest");
+    REPORT_COORDINATOR_ALIVE_REQUEST((short)28, "reportCoordinatorAliveRequest"),
+    UPDATE_BUILD_SLAVE_BUILD_STATUS_REQUEST((short)29, "updateBuildSlaveBuildStatusRequest");
 
     private static final java.util.Map<java.lang.String, _Fields> byName = new java.util.HashMap<java.lang.String, _Fields>();
 
@@ -170,6 +173,8 @@ public class FrontendRequest implements org.apache.thrift.TBase<FrontendRequest,
           return SET_FINAL_BUILD_STATUS_REQUEST;
         case 28: // REPORT_COORDINATOR_ALIVE_REQUEST
           return REPORT_COORDINATOR_ALIVE_REQUEST;
+        case 29: // UPDATE_BUILD_SLAVE_BUILD_STATUS_REQUEST
+          return UPDATE_BUILD_SLAVE_BUILD_STATUS_REQUEST;
         default:
           return null;
       }
@@ -210,7 +215,7 @@ public class FrontendRequest implements org.apache.thrift.TBase<FrontendRequest,
   }
 
   // isset id assignments
-  private static final _Fields optionals[] = {_Fields.TYPE,_Fields.START_BUILD_REQUEST,_Fields.BUILD_STATUS_REQUEST,_Fields.LOG_REQUEST,_Fields.CAS_CONTAINS_REQUEST,_Fields.CREATE_BUILD_REQUEST,_Fields.STORE_LOCAL_CHANGES_REQUEST,_Fields.FETCH_SOURCE_FILES_REQUEST,_Fields.STORE_BUILD_GRAPH_REQUEST,_Fields.FETCH_BUILD_GRAPH_REQUEST,_Fields.SET_BUCK_VERSION_REQUEST,_Fields.ANNOUNCEMENT_REQUEST,_Fields.SET_BUCK_DOT_FILE_PATHS_REQUEST,_Fields.MULTI_GET_BUILD_SLAVE_LOG_DIR_REQUEST,_Fields.MULTI_GET_BUILD_SLAVE_REAL_TIME_LOGS_REQUEST,_Fields.UPDATE_BUILD_SLAVE_STATUS_REQUEST,_Fields.FETCH_BUILD_SLAVE_STATUS_REQUEST,_Fields.APPEND_BUILD_SLAVE_EVENTS_REQUEST,_Fields.MULTI_GET_BUILD_SLAVE_EVENTS_REQUEST,_Fields.FETCH_RULE_KEY_LOGS_REQUEST,_Fields.STORE_BUILD_SLAVE_FINISHED_STATS_REQUEST,_Fields.FETCH_BUILD_SLAVE_FINISHED_STATS_REQUEST,_Fields.SET_COORDINATOR_REQUEST,_Fields.ENQUEUE_MINIONS_REQUEST,_Fields.SET_FINAL_BUILD_STATUS_REQUEST,_Fields.REPORT_COORDINATOR_ALIVE_REQUEST};
+  private static final _Fields optionals[] = {_Fields.TYPE,_Fields.START_BUILD_REQUEST,_Fields.BUILD_STATUS_REQUEST,_Fields.LOG_REQUEST,_Fields.CAS_CONTAINS_REQUEST,_Fields.CREATE_BUILD_REQUEST,_Fields.STORE_LOCAL_CHANGES_REQUEST,_Fields.FETCH_SOURCE_FILES_REQUEST,_Fields.STORE_BUILD_GRAPH_REQUEST,_Fields.FETCH_BUILD_GRAPH_REQUEST,_Fields.SET_BUCK_VERSION_REQUEST,_Fields.ANNOUNCEMENT_REQUEST,_Fields.SET_BUCK_DOT_FILE_PATHS_REQUEST,_Fields.MULTI_GET_BUILD_SLAVE_LOG_DIR_REQUEST,_Fields.MULTI_GET_BUILD_SLAVE_REAL_TIME_LOGS_REQUEST,_Fields.UPDATE_BUILD_SLAVE_STATUS_REQUEST,_Fields.FETCH_BUILD_SLAVE_STATUS_REQUEST,_Fields.APPEND_BUILD_SLAVE_EVENTS_REQUEST,_Fields.MULTI_GET_BUILD_SLAVE_EVENTS_REQUEST,_Fields.FETCH_RULE_KEY_LOGS_REQUEST,_Fields.STORE_BUILD_SLAVE_FINISHED_STATS_REQUEST,_Fields.FETCH_BUILD_SLAVE_FINISHED_STATS_REQUEST,_Fields.SET_COORDINATOR_REQUEST,_Fields.ENQUEUE_MINIONS_REQUEST,_Fields.SET_FINAL_BUILD_STATUS_REQUEST,_Fields.REPORT_COORDINATOR_ALIVE_REQUEST,_Fields.UPDATE_BUILD_SLAVE_BUILD_STATUS_REQUEST};
   public static final java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
   static {
     java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new java.util.EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
@@ -266,6 +271,8 @@ public class FrontendRequest implements org.apache.thrift.TBase<FrontendRequest,
         new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, SetFinalBuildStatusRequest.class)));
     tmpMap.put(_Fields.REPORT_COORDINATOR_ALIVE_REQUEST, new org.apache.thrift.meta_data.FieldMetaData("reportCoordinatorAliveRequest", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
         new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, ReportCoordinatorAliveRequest.class)));
+    tmpMap.put(_Fields.UPDATE_BUILD_SLAVE_BUILD_STATUS_REQUEST, new org.apache.thrift.meta_data.FieldMetaData("updateBuildSlaveBuildStatusRequest", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
+        new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, UpdateBuildSlaveBuildStatusRequest.class)));
     metaDataMap = java.util.Collections.unmodifiableMap(tmpMap);
     org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(FrontendRequest.class, metaDataMap);
   }
@@ -357,6 +364,9 @@ public class FrontendRequest implements org.apache.thrift.TBase<FrontendRequest,
     if (other.isSetReportCoordinatorAliveRequest()) {
       this.reportCoordinatorAliveRequest = new ReportCoordinatorAliveRequest(other.reportCoordinatorAliveRequest);
     }
+    if (other.isSetUpdateBuildSlaveBuildStatusRequest()) {
+      this.updateBuildSlaveBuildStatusRequest = new UpdateBuildSlaveBuildStatusRequest(other.updateBuildSlaveBuildStatusRequest);
+    }
   }
 
   public FrontendRequest deepCopy() {
@@ -392,6 +402,7 @@ public class FrontendRequest implements org.apache.thrift.TBase<FrontendRequest,
     this.enqueueMinionsRequest = null;
     this.setFinalBuildStatusRequest = null;
     this.reportCoordinatorAliveRequest = null;
+    this.updateBuildSlaveBuildStatusRequest = null;
   }
 
   /**
@@ -1026,6 +1037,30 @@ public class FrontendRequest implements org.apache.thrift.TBase<FrontendRequest,
     }
   }
 
+  public UpdateBuildSlaveBuildStatusRequest getUpdateBuildSlaveBuildStatusRequest() {
+    return this.updateBuildSlaveBuildStatusRequest;
+  }
+
+  public FrontendRequest setUpdateBuildSlaveBuildStatusRequest(UpdateBuildSlaveBuildStatusRequest updateBuildSlaveBuildStatusRequest) {
+    this.updateBuildSlaveBuildStatusRequest = updateBuildSlaveBuildStatusRequest;
+    return this;
+  }
+
+  public void unsetUpdateBuildSlaveBuildStatusRequest() {
+    this.updateBuildSlaveBuildStatusRequest = null;
+  }
+
+  /** Returns true if field updateBuildSlaveBuildStatusRequest is set (has been assigned a value) and false otherwise */
+  public boolean isSetUpdateBuildSlaveBuildStatusRequest() {
+    return this.updateBuildSlaveBuildStatusRequest != null;
+  }
+
+  public void setUpdateBuildSlaveBuildStatusRequestIsSet(boolean value) {
+    if (!value) {
+      this.updateBuildSlaveBuildStatusRequest = null;
+    }
+  }
+
   public void setFieldValue(_Fields field, java.lang.Object value) {
     switch (field) {
     case TYPE:
@@ -1236,6 +1271,14 @@ public class FrontendRequest implements org.apache.thrift.TBase<FrontendRequest,
       }
       break;
 
+    case UPDATE_BUILD_SLAVE_BUILD_STATUS_REQUEST:
+      if (value == null) {
+        unsetUpdateBuildSlaveBuildStatusRequest();
+      } else {
+        setUpdateBuildSlaveBuildStatusRequest((UpdateBuildSlaveBuildStatusRequest)value);
+      }
+      break;
+
     }
   }
 
@@ -1319,6 +1362,9 @@ public class FrontendRequest implements org.apache.thrift.TBase<FrontendRequest,
     case REPORT_COORDINATOR_ALIVE_REQUEST:
       return getReportCoordinatorAliveRequest();
 
+    case UPDATE_BUILD_SLAVE_BUILD_STATUS_REQUEST:
+      return getUpdateBuildSlaveBuildStatusRequest();
+
     }
     throw new java.lang.IllegalStateException();
   }
@@ -1382,6 +1428,8 @@ public class FrontendRequest implements org.apache.thrift.TBase<FrontendRequest,
       return isSetSetFinalBuildStatusRequest();
     case REPORT_COORDINATOR_ALIVE_REQUEST:
       return isSetReportCoordinatorAliveRequest();
+    case UPDATE_BUILD_SLAVE_BUILD_STATUS_REQUEST:
+      return isSetUpdateBuildSlaveBuildStatusRequest();
     }
     throw new java.lang.IllegalStateException();
   }
@@ -1635,6 +1683,15 @@ public class FrontendRequest implements org.apache.thrift.TBase<FrontendRequest,
         return false;
     }
 
+    boolean this_present_updateBuildSlaveBuildStatusRequest = true && this.isSetUpdateBuildSlaveBuildStatusRequest();
+    boolean that_present_updateBuildSlaveBuildStatusRequest = true && that.isSetUpdateBuildSlaveBuildStatusRequest();
+    if (this_present_updateBuildSlaveBuildStatusRequest || that_present_updateBuildSlaveBuildStatusRequest) {
+      if (!(this_present_updateBuildSlaveBuildStatusRequest && that_present_updateBuildSlaveBuildStatusRequest))
+        return false;
+      if (!this.updateBuildSlaveBuildStatusRequest.equals(that.updateBuildSlaveBuildStatusRequest))
+        return false;
+    }
+
     return true;
   }
 
@@ -1745,6 +1802,10 @@ public class FrontendRequest implements org.apache.thrift.TBase<FrontendRequest,
     hashCode = hashCode * 8191 + ((isSetReportCoordinatorAliveRequest()) ? 131071 : 524287);
     if (isSetReportCoordinatorAliveRequest())
       hashCode = hashCode * 8191 + reportCoordinatorAliveRequest.hashCode();
+
+    hashCode = hashCode * 8191 + ((isSetUpdateBuildSlaveBuildStatusRequest()) ? 131071 : 524287);
+    if (isSetUpdateBuildSlaveBuildStatusRequest())
+      hashCode = hashCode * 8191 + updateBuildSlaveBuildStatusRequest.hashCode();
 
     return hashCode;
   }
@@ -2013,6 +2074,16 @@ public class FrontendRequest implements org.apache.thrift.TBase<FrontendRequest,
     }
     if (isSetReportCoordinatorAliveRequest()) {
       lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.reportCoordinatorAliveRequest, other.reportCoordinatorAliveRequest);
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+    }
+    lastComparison = java.lang.Boolean.valueOf(isSetUpdateBuildSlaveBuildStatusRequest()).compareTo(other.isSetUpdateBuildSlaveBuildStatusRequest());
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    if (isSetUpdateBuildSlaveBuildStatusRequest()) {
+      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.updateBuildSlaveBuildStatusRequest, other.updateBuildSlaveBuildStatusRequest);
       if (lastComparison != 0) {
         return lastComparison;
       }
@@ -2296,6 +2367,16 @@ public class FrontendRequest implements org.apache.thrift.TBase<FrontendRequest,
       }
       first = false;
     }
+    if (isSetUpdateBuildSlaveBuildStatusRequest()) {
+      if (!first) sb.append(", ");
+      sb.append("updateBuildSlaveBuildStatusRequest:");
+      if (this.updateBuildSlaveBuildStatusRequest == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.updateBuildSlaveBuildStatusRequest);
+      }
+      first = false;
+    }
     sb.append(")");
     return sb.toString();
   }
@@ -2377,6 +2458,9 @@ public class FrontendRequest implements org.apache.thrift.TBase<FrontendRequest,
     }
     if (reportCoordinatorAliveRequest != null) {
       reportCoordinatorAliveRequest.validate();
+    }
+    if (updateBuildSlaveBuildStatusRequest != null) {
+      updateBuildSlaveBuildStatusRequest.validate();
     }
   }
 
@@ -2647,6 +2731,15 @@ public class FrontendRequest implements org.apache.thrift.TBase<FrontendRequest,
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
             break;
+          case 29: // UPDATE_BUILD_SLAVE_BUILD_STATUS_REQUEST
+            if (schemeField.type == org.apache.thrift.protocol.TType.STRUCT) {
+              struct.updateBuildSlaveBuildStatusRequest = new UpdateBuildSlaveBuildStatusRequest();
+              struct.updateBuildSlaveBuildStatusRequest.read(iprot);
+              struct.setUpdateBuildSlaveBuildStatusRequestIsSet(true);
+            } else { 
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+            }
+            break;
           default:
             org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
         }
@@ -2844,6 +2937,13 @@ public class FrontendRequest implements org.apache.thrift.TBase<FrontendRequest,
           oprot.writeFieldEnd();
         }
       }
+      if (struct.updateBuildSlaveBuildStatusRequest != null) {
+        if (struct.isSetUpdateBuildSlaveBuildStatusRequest()) {
+          oprot.writeFieldBegin(UPDATE_BUILD_SLAVE_BUILD_STATUS_REQUEST_FIELD_DESC);
+          struct.updateBuildSlaveBuildStatusRequest.write(oprot);
+          oprot.writeFieldEnd();
+        }
+      }
       oprot.writeFieldStop();
       oprot.writeStructEnd();
     }
@@ -2940,7 +3040,10 @@ public class FrontendRequest implements org.apache.thrift.TBase<FrontendRequest,
       if (struct.isSetReportCoordinatorAliveRequest()) {
         optionals.set(25);
       }
-      oprot.writeBitSet(optionals, 26);
+      if (struct.isSetUpdateBuildSlaveBuildStatusRequest()) {
+        optionals.set(26);
+      }
+      oprot.writeBitSet(optionals, 27);
       if (struct.isSetType()) {
         oprot.writeI32(struct.type.getValue());
       }
@@ -3019,12 +3122,15 @@ public class FrontendRequest implements org.apache.thrift.TBase<FrontendRequest,
       if (struct.isSetReportCoordinatorAliveRequest()) {
         struct.reportCoordinatorAliveRequest.write(oprot);
       }
+      if (struct.isSetUpdateBuildSlaveBuildStatusRequest()) {
+        struct.updateBuildSlaveBuildStatusRequest.write(oprot);
+      }
     }
 
     @Override
     public void read(org.apache.thrift.protocol.TProtocol prot, FrontendRequest struct) throws org.apache.thrift.TException {
       org.apache.thrift.protocol.TTupleProtocol iprot = (org.apache.thrift.protocol.TTupleProtocol) prot;
-      java.util.BitSet incoming = iprot.readBitSet(26);
+      java.util.BitSet incoming = iprot.readBitSet(27);
       if (incoming.get(0)) {
         struct.type = com.facebook.buck.distributed.thrift.FrontendRequestType.findByValue(iprot.readI32());
         struct.setTypeIsSet(true);
@@ -3153,6 +3259,11 @@ public class FrontendRequest implements org.apache.thrift.TBase<FrontendRequest,
         struct.reportCoordinatorAliveRequest = new ReportCoordinatorAliveRequest();
         struct.reportCoordinatorAliveRequest.read(iprot);
         struct.setReportCoordinatorAliveRequestIsSet(true);
+      }
+      if (incoming.get(26)) {
+        struct.updateBuildSlaveBuildStatusRequest = new UpdateBuildSlaveBuildStatusRequest();
+        struct.updateBuildSlaveBuildStatusRequest.read(iprot);
+        struct.setUpdateBuildSlaveBuildStatusRequestIsSet(true);
       }
     }
   }

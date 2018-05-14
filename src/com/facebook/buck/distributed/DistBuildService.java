@@ -74,6 +74,7 @@ import com.facebook.buck.distributed.thrift.StartBuildRequest;
 import com.facebook.buck.distributed.thrift.StoreBuildGraphRequest;
 import com.facebook.buck.distributed.thrift.StoreBuildSlaveFinishedStatsRequest;
 import com.facebook.buck.distributed.thrift.StoreLocalChangesRequest;
+import com.facebook.buck.distributed.thrift.UpdateBuildSlaveBuildStatusRequest;
 import com.facebook.buck.distributed.thrift.UpdateBuildSlaveStatusRequest;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
@@ -624,6 +625,26 @@ public class DistBuildService implements Closeable {
     FrontendRequest frontendRequest = new FrontendRequest();
     frontendRequest.setType(FrontendRequestType.APPEND_BUILD_SLAVE_EVENTS);
     frontendRequest.setAppendBuildSlaveEventsRequest(request);
+    makeRequestChecked(frontendRequest);
+  }
+
+  /**
+   * Sets the build status for minion with given run ID.
+   *
+   * @throws IOException
+   */
+  public void updateBuildSlaveBuildStatus(
+      StampedeId stampedeId, String runIdStr, BuildStatus status) throws IOException {
+    UpdateBuildSlaveBuildStatusRequest request = new UpdateBuildSlaveBuildStatusRequest();
+    request.setStampedeId(stampedeId);
+    BuildSlaveRunId buildSlaveRunId = new BuildSlaveRunId();
+    buildSlaveRunId.setId(runIdStr);
+    request.setRunId(buildSlaveRunId);
+    request.setBuildStatus(status);
+
+    FrontendRequest frontendRequest = new FrontendRequest();
+    frontendRequest.setType(FrontendRequestType.UPDATE_BUILD_SLAVE_BUILD_STATUS);
+    frontendRequest.setUpdateBuildSlaveBuildStatusRequest(request);
     makeRequestChecked(frontendRequest);
   }
 
