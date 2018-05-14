@@ -1,8 +1,18 @@
-diff --git c/src/main/java/com/google/devtools/build/lib/BUILD i/src/main/java/com/google/devtools/build/lib/BUILD
-index 840ced7bf2..456f903ae9 100644
---- c/src/main/java/com/google/devtools/build/lib/BUILD
-+++ i/src/main/java/com/google/devtools/build/lib/BUILD
-@@ -288,15 +288,46 @@ java_library(
+From 08ba713b4ad4688b8b7822edaf9bd579880b9fc9 Mon Sep 17 00:00:00 2001
+From: Taras Tsugrii <ttsugrii@fb.com>
+Date: Sat, 12 May 2018 20:21:17 -0700
+Subject: [PATCH] [Buck] Patch Skylark build file for Buck.
+
+---
+ .../java/com/google/devtools/build/lib/BUILD  |   46 +-
+ .../build/lib/packages/Attribute.java         | 2364 +----------------
+ 2 files changed, 42 insertions(+), 2368 deletions(-)
+
+diff --git a/src/main/java/com/google/devtools/build/lib/BUILD b/src/main/java/com/google/devtools/build/lib/BUILD
+index 9f193c82de..d4ea0c9310 100644
+--- a/src/main/java/com/google/devtools/build/lib/BUILD
++++ b/src/main/java/com/google/devtools/build/lib/BUILD
+@@ -304,16 +304,52 @@ java_library(
  #
  # IMPORTANT:  NOT A PUBLIC INTERFACE. TARGETS SHOULDN'T DEPEND ON THIS.
  #
@@ -15,9 +25,11 @@ index 840ced7bf2..456f903ae9 100644
 +        "skylarkinterface/*.java",
 +    ]) + [
 +        "packages/Attribute.java",
++        "packages/BazelLibrary.java",
 +        "packages/Info.java",
 +        "packages/NativeProvider.java",
 +        "packages/Provider.java",
++        "packages/ProviderFromFunction.java",
 +        "packages/SkylarkExportable.java",
 +        "packages/SkylarkInfo.java",
 +        "packages/SkylarkProvider.java",
@@ -31,7 +43,8 @@ index 840ced7bf2..456f903ae9 100644
 +    deps = [
 +        "//src/main/java/com/google/devtools/build/lib/cmdline",
          "//src/main/java/com/google/devtools/build/lib/vfs",
--        "//src/main/java/com/google/devtools/build/lib/vfs/inmemoryfs",
+         "//src/main/java/com/google/devtools/build/lib/vfs:pathfragment",
+         "//src/main/java/com/google/devtools/build/lib/vfs/inmemoryfs",
 +        "//src/main/java/com/google/devtools/common/options",
 +        "//third_party:asm",
 +        "//third_party:asm-commons",
@@ -52,14 +65,70 @@ index 840ced7bf2..456f903ae9 100644
 +        "//src/main/java/com/google/devtools/build/lib/profiler",
 +        "//src/main/java/com/google/devtools/build/lib/collect/nestedset",
 +        "//src/main/java/com/google/devtools/build/lib/skyframe/serialization/autocodec:autocodec-annotation",
++        "//src/main/java/com/google/devtools/build/lib/skylarkbuildapi",
++        "//third_party/protobuf/3.4.0:protobuf_java"
      ],
  )
  
-diff --git c/src/main/java/com/google/devtools/build/lib/packages/Attribute.java i/src/main/java/com/google/devtools/build/lib/packages/Attribute.java
-index 933790f253..76eb7a890f 100644
---- c/src/main/java/com/google/devtools/build/lib/packages/Attribute.java
-+++ i/src/main/java/com/google/devtools/build/lib/packages/Attribute.java
-@@ -71,2244 +71,8 @@ import javax.annotation.concurrent.Immutable;
+diff --git a/src/main/java/com/google/devtools/build/lib/packages/Attribute.java b/src/main/java/com/google/devtools/build/lib/packages/Attribute.java
+index 933790f253..c7afa8a21d 100644
+--- a/src/main/java/com/google/devtools/build/lib/packages/Attribute.java
++++ b/src/main/java/com/google/devtools/build/lib/packages/Attribute.java
+@@ -14,53 +14,7 @@
+ 
+ package com.google.devtools.build.lib.packages;
+ 
+-import static com.google.common.collect.Sets.newEnumSet;
+-
+-import com.google.common.annotations.VisibleForTesting;
+-import com.google.common.base.Function;
+-import com.google.common.base.Preconditions;
+-import com.google.common.base.Predicate;
+-import com.google.common.base.Predicates;
+-import com.google.common.base.Verify;
+-import com.google.common.collect.ImmutableList;
+-import com.google.common.collect.ImmutableMap;
+-import com.google.common.collect.ImmutableSet;
+-import com.google.common.collect.Iterables;
+-import com.google.common.collect.Ordering;
+-import com.google.common.collect.Sets;
+-import com.google.devtools.build.lib.analysis.TransitiveInfoProvider;
+-import com.google.devtools.build.lib.analysis.config.transitions.ConfigurationTransition;
+-import com.google.devtools.build.lib.analysis.config.transitions.NoTransition;
+-import com.google.devtools.build.lib.analysis.config.transitions.SplitTransition;
+-import com.google.devtools.build.lib.cmdline.Label;
+-import com.google.devtools.build.lib.events.EventHandler;
+-import com.google.devtools.build.lib.events.Location;
+-import com.google.devtools.build.lib.packages.RuleClass.Builder.RuleClassNamePredicate;
+ import com.google.devtools.build.lib.skyframe.serialization.autocodec.AutoCodec;
+-import com.google.devtools.build.lib.skyframe.serialization.autocodec.AutoCodec.VisibleForSerialization;
+-import com.google.devtools.build.lib.syntax.ClassObject;
+-import com.google.devtools.build.lib.syntax.EvalException;
+-import com.google.devtools.build.lib.syntax.EvalUtils;
+-import com.google.devtools.build.lib.syntax.Runtime;
+-import com.google.devtools.build.lib.syntax.SkylarkCallbackFunction;
+-import com.google.devtools.build.lib.syntax.Type;
+-import com.google.devtools.build.lib.syntax.Type.ConversionException;
+-import com.google.devtools.build.lib.syntax.Type.LabelClass;
+-import com.google.devtools.build.lib.util.FileType;
+-import com.google.devtools.build.lib.util.FileTypeSet;
+-import com.google.devtools.build.lib.util.StringUtil;
+-import java.util.ArrayList;
+-import java.util.Arrays;
+-import java.util.Collection;
+-import java.util.EnumSet;
+-import java.util.HashMap;
+-import java.util.LinkedHashMap;
+-import java.util.List;
+-import java.util.Map;
+-import java.util.Objects;
+-import java.util.Set;
+-import java.util.concurrent.atomic.AtomicReference;
+-import javax.annotation.Nullable;
+ import javax.annotation.concurrent.Immutable;
+ 
+ /**
+@@ -71,2244 +25,8 @@ import javax.annotation.concurrent.Immutable;
   */
  @Immutable
  @AutoCodec
@@ -2305,7 +2374,7 @@ index 933790f253..76eb7a890f 100644
  
    /**
     * Returns if an attribute with the given name is an implicit dependency according to the
-@@ -2318,14 +82,6 @@ public final class Attribute implements Comparable<Attribute> {
+@@ -2318,14 +36,6 @@ public final class Attribute implements Comparable<Attribute> {
      return name.startsWith("$");
    }
  
@@ -2320,7 +2389,7 @@ index 933790f253..76eb7a890f 100644
    /**
     * Returns if an attribute with the given name is late-bound according to the naming policy
     * that designates late-bound attributes.
-@@ -2350,76 +106,4 @@ public final class Attribute implements Comparable<Attribute> {
+@@ -2350,76 +60,4 @@ public final class Attribute implements Comparable<Attribute> {
      }
      return nativeAttrName;
    }
@@ -2397,23 +2466,6 @@ index 933790f253..76eb7a890f 100644
 -    return cloneBuilder(this.type);
 -  }
  }
-diff --git c/src/main/java/com/google/devtools/build/lib/syntax/BaseFunction.java i/src/main/java/com/google/devtools/build/lib/syntax/BaseFunction.java
-index fea0b8d458..12c8e5c63d 100644
---- c/src/main/java/com/google/devtools/build/lib/syntax/BaseFunction.java
-+++ i/src/main/java/com/google/devtools/build/lib/syntax/BaseFunction.java
-@@ -431,11 +431,13 @@ public abstract class BaseFunction implements SkylarkValue {
-       @Nullable FuncallExpression ast,
-       Environment env)
-       throws EvalException, InterruptedException {
--    Preconditions.checkState(isConfigured(), "Function %s was not configured", getName());
--
-     // ast is null when called from Java (as there's no Skylark call site).
-     Location loc = ast == null ? Location.BUILTIN : ast.getLocation();
- 
-+    if (!isConfigured()) {
-+      throw new EvalException(loc, String.format("Function %s was not configured", getName()));
-+    }
-+
-     Object[] arguments = processArguments(args, kwargs, loc, env);
-     return callWithArgArray(arguments, ast, env, location);
-   }
+-- 
+2.17.0
+

@@ -19,7 +19,7 @@ package com.facebook.buck.skylark.function;
 import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.packages.Info;
 import com.google.devtools.build.lib.packages.NativeProvider;
-import com.google.devtools.build.lib.packages.Provider;
+import com.google.devtools.build.lib.skylarkbuildapi.StructApi;
 import com.google.devtools.build.lib.skylarkinterface.Param;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkSignature;
 import com.google.devtools.build.lib.syntax.BuiltinFunction;
@@ -44,7 +44,7 @@ public class SkylarkExtensionFunctions {
     extraKeywords = @Param(name = "kwargs", doc = "the struct attributes."),
     useLocation = true
   )
-  private static final Provider struct = NativeProvider.STRUCT;
+  private static final NativeProvider<?> struct = NativeProvider.STRUCT;
 
   @SkylarkSignature(
     name = "to_json",
@@ -63,15 +63,15 @@ public class SkylarkExtensionFunctions {
             + "# {\"key\":[{\"inner_key\":1},{\"inner_key\":2}]}\n\n"
             + "struct(key=struct(inner_key=struct(inner_inner_key='text'))).to_json()\n"
             + "# {\"key\":{\"inner_key\":{\"inner_inner_key\":\"text\"}}}\n</pre>",
-    objectType = Info.class,
+    objectType = StructApi.class,
     returnType = String.class,
-    parameters = {@Param(name = "self", type = Info.class, doc = "this struct.")},
+    parameters = {@Param(name = "self", type = StructApi.class, doc = "this struct.")},
     useLocation = true
   )
   private static final BuiltinFunction toJson =
       new BuiltinFunction("to_json") {
         @SuppressWarnings("unused") // it's used through reflection by Skylark runtime
-        public String invoke(Info self, Location loc) throws EvalException {
+        public String invoke(StructApi self, Location loc) throws EvalException {
           return JsonPrinter.printJson(self, loc);
         }
       };
