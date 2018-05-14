@@ -130,7 +130,7 @@ sudo: false
 
 before_install:
   # Install ant on MacOS
-  - if \[ ${TRAVIS_OS_NAME} == "osx" \]; then brew install ant; fi
+  - if \[ ${TRAVIS_OS_NAME} == "osx" \]; then brew install ant watchman; fi
   # Limit Ant's and Buck's memory usage to avoid the OOM killer.
   - export ANT_OPTS='-Xmx500m'
   - echo '-Xmx500m' > .buckjavaargs.local
