@@ -218,11 +218,15 @@ public class TestResultFormatter {
       }
     }
 
-    if (summaryVerbosity.getIncludeStdOut() && testResult.getStdOut() != null) {
+    if (summaryVerbosity.getIncludeStdOut()
+        && testResult.getStdOut() != null
+        && testResult.getStdOut().length() > 0) {
       addTo.add("====STANDARD OUT====", testResult.getStdOut());
     }
 
-    if (summaryVerbosity.getIncludeStdErr() && testResult.getStdErr() != null) {
+    if (summaryVerbosity.getIncludeStdErr()
+        && testResult.getStdErr() != null
+        && testResult.getStdErr().length() > 0) {
       addTo.add("====STANDARD ERR====", testResult.getStdErr());
     }
   }
