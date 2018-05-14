@@ -48,7 +48,12 @@ public class ScalaLibraryIntegrationTest {
     assertThat(
         workspace
             .runBuckCommand(
-                "run", "--config", "scala.compiler=//:scala-compiler", "//:bin", "--", "world!")
+                "run",
+                "--config",
+                "scala.compiler=buck//third-party/scala:scala-compiler",
+                "//:bin",
+                "--",
+                "world!")
             .assertSuccess()
             .getStdout(),
         Matchers.containsString("Hello WORLD!"));
@@ -105,7 +110,7 @@ public class ScalaLibraryIntegrationTest {
             .runBuckCommand(
                 "run",
                 "--config",
-                "scala.compiler=//:scala-compiler",
+                "scala.compiler=buck//third-party/scala:scala-compiler",
                 "//:bin_mixed",
                 "--",
                 "world!")

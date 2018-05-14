@@ -1,4 +1,4 @@
 [scala]
-library = //:scala-library
-compiler = //:scala-compiler
+library = buck//third-party/scala:scala-library
+compiler = buck//third-party/scala:scala-compiler
 compiler_plugins = //:paradise
