@@ -46,9 +46,6 @@ abstract class AbstractIjLibrary implements IjProjectElement {
   /** @return url to the javadoc. */
   public abstract ImmutableSet<String> getJavadocUrls();
 
-  /** @return path to the directories containing Java sources for the library. */
-  public abstract ImmutableSet<Path> getSourceDirs();
-
   @Value.Check
   protected void eitherBinaryJarOrClassPathPresent() {
     // IntelliJ library should have a binary jar or classpath, but we also allow it to have an

@@ -299,22 +299,6 @@ public class ProjectIntegrationTest {
         "//project1/lib:lib");
   }
 
-  // This test is identical to testProjectWithSourceRoot, except
-  // one of the dependencies follows the proper source root structure.
-  // This should cause the corresponding file under .idea/libraries/
-  // to create SOURCES entries for IntelliJ.
-  @Test
-  public void testProjectWithSourceRoot() throws InterruptedException, IOException {
-    runBuckProjectAndVerify(
-        "project_with_source_root",
-        "--intellij-project-root",
-        "project1",
-        "--intellij-include-transitive-dependencies",
-        "--intellij-module-group-name",
-        "",
-        "//project1/lib:lib");
-  }
-
   @Test
   public void testGeneratingAndroidManifest() throws InterruptedException, IOException {
     runBuckProjectAndVerify("generate_android_manifest");
