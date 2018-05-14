@@ -43,6 +43,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.TimeZone;
+import org.testng.util.Strings;
 
 public class TestResultFormatter {
 
@@ -218,16 +219,19 @@ public class TestResultFormatter {
       }
     }
 
-    if (summaryVerbosity.getIncludeStdOut()
-        && testResult.getStdOut() != null
-        && testResult.getStdOut().length() > 0) {
+    if (summaryVerbosity.getIncludeStdOut() && Strings.isNullOrEmpty(testResult.getStdOut())) {
       addTo.add("====STANDARD OUT====", testResult.getStdOut());
     }
 
-    if (summaryVerbosity.getIncludeStdErr()
-        && testResult.getStdErr() != null
-        && testResult.getStdErr().length() > 0) {
+    if (summaryVerbosity.getIncludeStdErr() && Strings.isNullOrEmpty(testResult.getStdErr())) {
       addTo.add("====STANDARD ERR====", testResult.getStdErr());
+    }
+
+    if (Strings.isNullOrEmpty(testResult.getMessage())
+        && Strings.isNullOrEmpty(testResult.getStacktrace())
+        && Strings.isNullOrEmpty(testResult.getStdOut())
+        && Strings.isNullOrEmpty(testResult.getStdErr())) {
+      addTo.add("Test did not produce any output.");
     }
   }
 
