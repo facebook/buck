@@ -19,11 +19,13 @@ package com.facebook.buck.skylark.io.impl;
 import static org.hamcrest.core.IsEqual.equalTo;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.cli.TestWithBuckd;
 import com.facebook.buck.io.StubWatchmanClient;
 import com.facebook.buck.io.Watchman;
+import com.facebook.buck.io.WatchmanClient;
 import com.facebook.buck.io.WatchmanFactory;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.skylark.SkylarkFilesystem;
@@ -38,6 +40,7 @@ import com.google.devtools.build.lib.vfs.FileSystemUtils;
 import com.google.devtools.build.lib.vfs.Path;
 import java.io.IOException;
 import java.util.Collections;
+import java.util.Map;
 import java.util.Optional;
 import org.junit.Before;
 import org.junit.Rule;
@@ -66,7 +69,8 @@ public class WatchmanGlobberTest {
             FakeClock.doNotCare(),
             Optional.empty());
     assumeTrue(watchman.getTransportPath().isPresent());
-    globber = WatchmanGlobber.create(watchman.createClient(), "", root.toString());
+    globber =
+        WatchmanGlobber.create(watchman.createClient(), new SyncCookieState(), "", root.toString());
   }
 
   @Test
@@ -111,7 +115,56 @@ public class WatchmanGlobberTest {
 
   @Test
   public void noResultsAreReturnedIfWatchmanDoesNotProduceAnything() throws Exception {
-    globber = WatchmanGlobber.create(new StubWatchmanClient(Optional.empty()), "", root.toString());
+    globber =
+        WatchmanGlobber.create(
+            new StubWatchmanClient(Optional.empty()), new SyncCookieState(), "", root.toString());
     assertFalse(globber.run(ImmutableList.of("*.txt"), ImmutableList.of(), false).isPresent());
+  }
+
+  @Test
+  public void watchmanSyncIsIssuedForTheFirstInvocation() throws Exception {
+    CapturingWatchmanClient watchmanClient = new CapturingWatchmanClient();
+    globber = WatchmanGlobber.create(watchmanClient, new SyncCookieState(), "", root.toString());
+    globber.run(ImmutableList.of("*.txt"), ImmutableList.of(), false);
+
+    assertTrue(watchmanClient.syncRequested());
+  }
+
+  @Test
+  public void watchmanSyncIsNotIssuedForTheSecondInvocation() throws Exception {
+    CapturingWatchmanClient watchmanClient = new CapturingWatchmanClient();
+    globber = WatchmanGlobber.create(watchmanClient, new SyncCookieState(), "", root.toString());
+    globber.run(ImmutableList.of("*.txt"), ImmutableList.of(), false);
+    globber.run(ImmutableList.of("*.txt"), ImmutableList.of(), false);
+
+    assertTrue(watchmanClient.syncDisabled());
+  }
+
+  private static class CapturingWatchmanClient implements WatchmanClient {
+
+    private ImmutableList<Object> query;
+
+    @Override
+    public Optional<? extends Map<String, ? extends Object>> queryWithTimeout(
+        long timeoutNanos, Object... query) {
+      this.query = ImmutableList.copyOf(query);
+      return Optional.empty();
+    }
+
+    @Override
+    public void close() {}
+
+    public boolean syncRequested() {
+      return !getQueryExpression().containsKey("sync_timeout");
+    }
+
+    public boolean syncDisabled() {
+      return ((int) getQueryExpression().get("sync_timeout")) == 0;
+    }
+
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> getQueryExpression() {
+      return (Map<String, Object>) query.get(2);
+    }
   }
 }

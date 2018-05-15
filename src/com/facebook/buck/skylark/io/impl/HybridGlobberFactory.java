@@ -30,12 +30,15 @@ public class HybridGlobberFactory implements GlobberFactory {
   private final WatchmanClient watchmanClient;
   private final java.nio.file.Path projectRoot;
   private final ImmutableMap<java.nio.file.Path, ProjectWatch> projectWatches;
+  private final SyncCookieState syncCookieState;
 
   private HybridGlobberFactory(
       WatchmanClient watchmanClient,
+      SyncCookieState syncCookieState,
       java.nio.file.Path projectRoot,
       ImmutableMap<java.nio.file.Path, ProjectWatch> projectWatches) {
     this.watchmanClient = watchmanClient;
+    this.syncCookieState = syncCookieState;
     this.projectRoot = projectRoot;
     this.projectWatches = projectWatches;
   }
@@ -52,13 +55,14 @@ public class HybridGlobberFactory implements GlobberFactory {
         basePath.relativeTo(basePath.getFileSystem().getPath(watchRoot)).toString();
     return new HybridGlobber(
         NativeGlobber.create(basePath),
-        WatchmanGlobber.create(watchmanClient, relativeRoot, watchRoot));
+        WatchmanGlobber.create(watchmanClient, syncCookieState, relativeRoot, watchRoot));
   }
 
   public static HybridGlobberFactory using(
       WatchmanClient watchmanClient,
+      SyncCookieState syncCookieState,
       java.nio.file.Path projectRoot,
       ImmutableMap<java.nio.file.Path, ProjectWatch> projectWatches) {
-    return new HybridGlobberFactory(watchmanClient, projectRoot, projectWatches);
+    return new HybridGlobberFactory(watchmanClient, syncCookieState, projectRoot, projectWatches);
   }
 }

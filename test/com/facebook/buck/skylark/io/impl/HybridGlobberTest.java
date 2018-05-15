@@ -79,7 +79,8 @@ public class HybridGlobberTest {
   }
 
   private WatchmanGlobber newGlobber(Optional<ImmutableMap<String, ImmutableList<String>>> result) {
-    return WatchmanGlobber.create(new StubWatchmanClient(result), "", root.toString());
+    return WatchmanGlobber.create(
+        new StubWatchmanClient(result), new SyncCookieState(), "", root.toString());
   }
 
   @Test

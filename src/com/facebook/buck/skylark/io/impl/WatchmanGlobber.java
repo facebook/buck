@@ -50,12 +50,17 @@ public class WatchmanGlobber {
   private final String basePath;
 
   private final String watchmanWatchRoot;
+  private final SyncCookieState syncCookieState;
 
   private WatchmanGlobber(
-      WatchmanClient watchmanClient, String basePath, String watchmanWatchRoot) {
+      WatchmanClient watchmanClient,
+      String basePath,
+      String watchmanWatchRoot,
+      SyncCookieState syncCookieState) {
     this.watchmanClient = watchmanClient;
     this.basePath = basePath;
     this.watchmanWatchRoot = watchmanWatchRoot;
+    this.syncCookieState = syncCookieState;
   }
 
   /**
@@ -88,15 +93,28 @@ public class WatchmanGlobber {
    */
   private ImmutableMap<String, ?> createWatchmanQuery(
       Collection<String> include, Collection<String> exclude, boolean excludeDirectories) {
-    return ImmutableMap.of(
-        "relative_root",
-        basePath,
-        "expression",
-        toMatchExpressions(exclude, excludeDirectories),
-        "glob",
-        include,
-        "fields",
-        FIELDS_TO_INCLUDE);
+    ImmutableMap.Builder<String, Object> builder = ImmutableMap.builder();
+    builder.putAll(
+        ImmutableMap.of(
+            "relative_root",
+            basePath,
+            "expression",
+            toMatchExpressions(exclude, excludeDirectories),
+            "glob",
+            include,
+            "fields",
+            FIELDS_TO_INCLUDE));
+
+    // Sync cookies cause a massive overhead when issuing thousands of
+    // glob queries.  Only enable them (by not setting sync_timeout to 0)
+    // for the very first request issued by this process.
+    if (syncCookieState.shouldSyncCookies()) {
+      syncCookieState.disableSyncCookies();
+    } else {
+      builder.put("sync_timeout", 0);
+    }
+
+    return builder.build();
   }
 
   /** Returns an expression for every matched include file should match in order to be returned. */
@@ -143,7 +161,10 @@ public class WatchmanGlobber {
    * @param basePath The base path relative to which paths matching glob patterns will be resolved.
    */
   public static WatchmanGlobber create(
-      WatchmanClient watchmanClient, String basePath, String watchmanWatchRoot) {
-    return new WatchmanGlobber(watchmanClient, basePath, watchmanWatchRoot);
+      WatchmanClient watchmanClient,
+      SyncCookieState syncCookieState,
+      String basePath,
+      String watchmanWatchRoot) {
+    return new WatchmanGlobber(watchmanClient, basePath, watchmanWatchRoot, syncCookieState);
   }
 }
