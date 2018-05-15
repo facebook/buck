@@ -37,33 +37,5 @@ prebuilt_jar(
 prebuilt_jar(
     name = "scala-xml",
     binary_jar = "scala-xml_2.11-1.0.2.jar",
-    deps = [":scala-library"],
-)
-
-###### Compiler
-
-prebuilt_jar(
-    name = "scala-library",
-    binary_jar = "scala-library-2.11.7.jar",
-)
-
-prebuilt_jar(
-    name = "scala-reflect",
-    binary_jar = "scala-reflect-2.11.7.jar",
-    deps = [":scala-library"],
-)
-
-prebuilt_jar(
-    name = "scala-compiler-lib",
-    binary_jar = "scala-compiler-2.11.7.jar",
-    deps = [
-        ":scala-library",
-        ":scala-reflect",
-    ],
-)
-
-java_binary(
-    name = "scala-compiler",
-    main_class = "scala.tools.nsc.Main",
-    deps = [":scala-compiler-lib"],
+    deps = ["buck//third-party/scala:scala-library"],
 )

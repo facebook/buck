@@ -18,14 +18,21 @@ package com.facebook.buck.jvm.scala;
 
 import com.facebook.buck.core.cell.resolver.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.Flavor;
+import com.facebook.buck.core.model.Flavored;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.HasJavaAbi;
+import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.DefaultJavaLibraryRules;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
+import com.facebook.buck.jvm.java.JavaSourceJar;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacOptionsFactory;
+import com.facebook.buck.jvm.java.MavenUberJar;
 import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
+import com.facebook.buck.maven.aether.AetherUtil;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleCreationContext;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -35,12 +42,19 @@ import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.Optionals;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
+import java.util.Optional;
 import org.immutables.value.Value;
 
 public class ScalaLibraryDescription
     implements Description<ScalaLibraryDescriptionArg>,
+        Flavored,
         ImplicitDepsInferringDescription<
             ScalaLibraryDescription.AbstractScalaLibraryDescriptionArg> {
+
+  private static final ImmutableSet<Flavor> SUPPORTED_FLAVORS =
+      ImmutableSet.of(JavaLibrary.MAVEN_JAR, JavaLibrary.SRC_JAR);
 
   private final ToolchainProvider toolchainProvider;
   private final ScalaBuckConfig scalaBuckConfig;
@@ -56,6 +70,11 @@ public class ScalaLibraryDescription
   }
 
   @Override
+  public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
+    return SUPPORTED_FLAVORS.containsAll(flavors);
+  }
+
+  @Override
   public Class<ScalaLibraryDescriptionArg> getConstructorArgType() {
     return ScalaLibraryDescriptionArg.class;
   }
@@ -66,6 +85,37 @@ public class ScalaLibraryDescription
       BuildTarget buildTarget,
       BuildRuleParams rawParams,
       ScalaLibraryDescriptionArg args) {
+    ImmutableSortedSet<Flavor> flavors = buildTarget.getFlavors();
+
+    ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
+
+    BuildTarget buildTargetWithMavenFlavor = buildTarget;
+    if (flavors.contains(JavaLibrary.MAVEN_JAR)) {
+
+      // Maven rules will depend upon their vanilla versions, so the latter have to be constructed
+      // without the maven flavor to prevent output-path conflict
+      buildTarget = buildTarget.withoutFlavors(JavaLibrary.MAVEN_JAR);
+    }
+
+    if (flavors.contains(JavaLibrary.SRC_JAR)) {
+      Optional<String> mavenCoords =
+          args.getMavenCoords()
+              .map(input -> AetherUtil.addClassifier(input, AetherUtil.CLASSIFIER_SOURCES));
+
+      if (!flavors.contains(JavaLibrary.MAVEN_JAR)) {
+        return new JavaSourceJar(
+            buildTarget, projectFilesystem, rawParams, args.getSrcs(), mavenCoords);
+      } else {
+        return MavenUberJar.SourceJar.create(
+            buildTargetWithMavenFlavor,
+            projectFilesystem,
+            rawParams,
+            args.getSrcs(),
+            mavenCoords,
+            args.getMavenPomTemplate());
+      }
+    }
+
     JavacOptions javacOptions =
         JavacOptionsFactory.create(
             toolchainProvider
@@ -90,9 +140,24 @@ public class ScalaLibraryDescription
             .setJavacOptions(javacOptions)
             .build();
 
-    return HasJavaAbi.isAbiTarget(buildTarget)
-        ? scalaLibraryBuilder.buildAbi()
-        : scalaLibraryBuilder.buildLibrary();
+    if (HasJavaAbi.isAbiTarget(buildTarget)) {
+      return scalaLibraryBuilder.buildAbi();
+    }
+
+    JavaLibrary defaultScalaLibrary = scalaLibraryBuilder.buildLibrary();
+
+    if (!flavors.contains(JavaLibrary.MAVEN_JAR)) {
+      return defaultScalaLibrary;
+    } else {
+      context.getBuildRuleResolver().addToIndex(defaultScalaLibrary);
+      return MavenUberJar.create(
+          defaultScalaLibrary,
+          buildTargetWithMavenFlavor,
+          projectFilesystem,
+          rawParams,
+          args.getMavenCoords(),
+          args.getMavenPomTemplate());
+    }
   }
 
   @Override
