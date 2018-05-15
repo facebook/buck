@@ -71,7 +71,10 @@ public class GrpcExecutionFactory {
   public static IsolatedExecution createRemote(String host, int port)
       throws IOException {
     ManagedChannel channel =
-        ManagedChannelBuilder.forAddress(host, port).usePlaintext(true).build();
+        ManagedChannelBuilder.forAddress(host, port)
+            .usePlaintext(true)
+            .maxInboundMessageSize(500 * 1024 * 1024)
+            .build();
 
     return new GrpcRemoteExecution("buck", channel) {
       @Override
