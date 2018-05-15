@@ -203,18 +203,12 @@ public class SmartDexingStep implements Step {
             Step concatStep =
                 new ConcatStep(
                     filesystem, ImmutableList.copyOf(secondaryDexJars), secondaryBlobOutput);
-            Step xzStep;
-
-            if (xzCompressionLevel.isPresent()) {
-              xzStep =
-                  new XzStep(
-                      filesystem,
-                      secondaryBlobOutput,
-                      secondaryCompressedBlobOutput,
-                      xzCompressionLevel.get().intValue());
-            } else {
-              xzStep = new XzStep(filesystem, secondaryBlobOutput, secondaryCompressedBlobOutput);
-            }
+            Step xzStep =
+                new XzStep(
+                    filesystem,
+                    secondaryBlobOutput,
+                    secondaryCompressedBlobOutput,
+                    xzCompressionLevel.orElse(XzStep.DEFAULT_COMPRESSION_LEVEL));
             stepRunner.runStepForBuildTarget(context, concatStep, Optional.empty());
             stepRunner.runStepForBuildTarget(context, xzStep, Optional.empty());
           }
