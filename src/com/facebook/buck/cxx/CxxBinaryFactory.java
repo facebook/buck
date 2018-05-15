@@ -40,7 +40,6 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Sets;
 import java.util.Optional;
 
 public class CxxBinaryFactory {
@@ -82,12 +81,12 @@ public class CxxBinaryFactory {
     CxxPlatform cxxPlatform =
         CxxPlatforms.getCxxPlatform(cxxPlatformsProvider, target, args.getDefaultPlatform());
     if (flavors.contains(CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR)) {
-      flavors =
-          ImmutableSet.copyOf(
-              Sets.difference(
-                  flavors, ImmutableSet.of(CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR)));
       return createHeaderSymlinkTreeBuildRule(
-          target.withFlavors(flavors), projectFilesystem, resolver, cxxPlatform, args);
+          target.withoutFlavors(CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR),
+          projectFilesystem,
+          resolver,
+          cxxPlatform,
+          args);
     }
 
     if (flavors.contains(CxxCompilationDatabase.COMPILATION_DATABASE)) {
