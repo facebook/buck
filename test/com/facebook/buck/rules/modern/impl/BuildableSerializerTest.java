@@ -17,6 +17,7 @@
 package com.facebook.buck.rules.modern.impl;
 
 import static org.easymock.EasyMock.anyObject;
+import static org.easymock.EasyMock.createMock;
 import static org.easymock.EasyMock.createStrictMock;
 import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.expectLastCall;
@@ -51,7 +52,7 @@ import com.facebook.buck.util.types.Either;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -75,14 +76,19 @@ public class BuildableSerializerTest extends AbstractValueVisitorTest {
   public void setUp() throws IOException, InterruptedException {
     resolver = createStrictMock(SourcePathResolver.class);
     ruleFinder = createStrictMock(SourcePathRuleFinder.class);
-    cellResolver = createStrictMock(CellPathResolver.class);
+    cellResolver = createMock(CellPathResolver.class);
 
-    expect(cellResolver.getCellPaths())
-        .andReturn(ImmutableMap.of("other", otherFilesystem.getRootPath()))
+    expect(cellResolver.getKnownRoots())
+        .andReturn(ImmutableSet.of(rootFilesystem.getRootPath(), otherFilesystem.getRootPath()))
         .anyTimes();
-    expect(cellResolver.getCellPath(Optional.empty()))
-        .andReturn(Optional.of(rootFilesystem.getRootPath()))
+
+    expect(cellResolver.getCanonicalCellName(rootFilesystem.getRootPath()))
+        .andReturn(Optional.empty())
         .anyTimes();
+    expect(cellResolver.getCanonicalCellName(otherFilesystem.getRootPath()))
+        .andReturn(Optional.of("other"))
+        .anyTimes();
+
     expect(cellResolver.getCellPathOrThrow(Optional.empty()))
         .andReturn(rootFilesystem.getRootPath())
         .anyTimes();

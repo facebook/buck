@@ -86,11 +86,12 @@ public class Serializer {
       SourcePathRuleFinder ruleFinder, CellPathResolver cellResolver, Delegate delegate) {
     this.ruleFinder = ruleFinder;
     this.delegate = delegate;
-    ImmutableMap.Builder<Path, Optional<String>> builder = ImmutableMap.builder();
-    cellResolver.getCellPaths().forEach((name, path) -> builder.put(path, Optional.of(name)));
-    builder.put(cellResolver.getCellPathOrThrow(Optional.empty()), Optional.empty());
-    this.cellMap = builder.build();
     this.rootCellPath = cellResolver.getCellPathOrThrow(Optional.empty());
+    this.cellMap =
+        cellResolver
+            .getKnownRoots()
+            .stream()
+            .collect(ImmutableMap.toImmutableMap(root -> root, cellResolver::getCanonicalCellName));
   }
 
   /**
