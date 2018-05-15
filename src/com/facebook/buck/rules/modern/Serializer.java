@@ -24,6 +24,7 @@ import com.facebook.buck.core.rules.modern.annotations.CustomFieldBehavior;
 import com.facebook.buck.core.rules.modern.annotations.DefaultFieldSerialization;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
+import com.facebook.buck.core.sourcepath.ForwardingBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -203,6 +204,8 @@ public class Serializer {
         ExplicitBuildTargetSourcePath buildTargetSourcePath = (ExplicitBuildTargetSourcePath) value;
         writeValue(buildTargetSourcePath.getTarget(), new TypeToken<BuildTarget>() {});
         writeString(buildTargetSourcePath.getResolvedPath().toString());
+      } else if (value instanceof ForwardingBuildTargetSourcePath) {
+        visitSourcePath(((ForwardingBuildTargetSourcePath) value).getDelegate());
       } else if (value instanceof PathSourcePath) {
         PathSourcePath pathSourcePath = (PathSourcePath) value;
         stream.writeBoolean(false);
