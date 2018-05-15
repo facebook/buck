@@ -33,6 +33,7 @@ import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.config.Config;
 import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Joiner;
@@ -648,12 +649,32 @@ public class BuckConfigTest {
   }
 
   @Test
-  public void testGetMap() throws InterruptedException, IOException {
+  public void testGetMap() throws IOException {
     Reader reader =
         new StringReader(Joiner.on('\n').join("[section]", "args_map = key0=>val0,key1=>val1"));
     BuckConfig config = BuckConfigTestUtils.createWithDefaultFilesystem(temporaryFolder, reader);
 
     assertEquals(
         ImmutableMap.of("key0", "val0", "key1", "val1"), config.getMap("section", "args_map"));
+  }
+
+  @Test
+  public void testGetMapComplex() throws IOException {
+    Reader reader =
+        new StringReader(
+            Joiner.on('\n').join("[section]", "args_map = key0 => \"val0,val1\", key1 => val2"));
+    BuckConfig config = BuckConfigTestUtils.createWithDefaultFilesystem(temporaryFolder, reader);
+    assertEquals(
+        ImmutableMap.of("key0", "val0,val1", "key1", "val2"),
+        config.getConfig().getMap("section", "args_map"));
+    assertEquals(
+        ImmutableMap.of("key0", "val0,val1", "key1", "val2"),
+        config
+            .getConfig()
+            .getMap(
+                "section",
+                "args_map",
+                Config.DEFAULT_PAIR_SEPARATOR,
+                Config.DEFAULT_KEY_VALUE_SEPARATOR));
   }
 }
