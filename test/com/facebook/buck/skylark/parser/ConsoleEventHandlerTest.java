@@ -16,11 +16,13 @@
 
 package com.facebook.buck.skylark.parser;
 
+import com.facebook.buck.cli.exceptions.handlers.HumanReadableExceptionAugmentor;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.FakeBuckEventListener;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.devtools.build.lib.events.Event;
 import com.google.devtools.build.lib.events.EventKind;
@@ -170,7 +172,11 @@ public class ConsoleEventHandlerTest {
     ImmutableList<ConsoleEvent> expectedEvents = expectedEventsBuilder.build();
 
     ConsoleEventHandler eventHandler =
-        new ConsoleEventHandler(eventBus, EventKind.ALL_EVENTS, ImmutableSet.of("cxx_binary"));
+        new ConsoleEventHandler(
+            eventBus,
+            EventKind.ALL_EVENTS,
+            ImmutableSet.of("cxx_binary"),
+            new HumanReadableExceptionAugmentor(ImmutableMap.of()));
     for (Event event : toSend) {
       eventHandler.handle(event);
     }
@@ -207,7 +213,11 @@ public class ConsoleEventHandlerTest {
       handledEvents.addAll(EventKind.ALL_EVENTS);
       handledEvents.remove(EventKind.WARNING);
       ConsoleEventHandler eventHandler =
-          new ConsoleEventHandler(eventBus, handledEvents, ImmutableSet.of());
+          new ConsoleEventHandler(
+              eventBus,
+              handledEvents,
+              ImmutableSet.of(),
+              new HumanReadableExceptionAugmentor(ImmutableMap.of()));
       eventHandler.handle(
           Event.of(
               EventKind.WARNING,

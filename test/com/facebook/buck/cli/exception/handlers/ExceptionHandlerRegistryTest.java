@@ -22,6 +22,7 @@ import static org.hamcrest.Matchers.emptyString;
 import static org.hamcrest.Matchers.is;
 
 import com.facebook.buck.cli.exceptions.handlers.ExceptionHandlerRegistryFactory;
+import com.facebook.buck.cli.exceptions.handlers.HumanReadableExceptionAugmentor;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.exceptions.handler.ExceptionHandlerRegistry;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
@@ -30,6 +31,7 @@ import com.facebook.buck.util.BuckIsDyingException;
 import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.InterruptionFailedException;
+import com.google.common.collect.ImmutableMap;
 import com.martiansoftware.nailgun.NGContext;
 import java.io.IOException;
 import java.nio.channels.ClosedByInterruptException;
@@ -48,7 +50,9 @@ public class ExceptionHandlerRegistryTest {
   @Before
   public void setUp() {
     console = new TestConsole();
-    registry = ExceptionHandlerRegistryFactory.create(console, ngContext);
+    registry =
+        ExceptionHandlerRegistryFactory.create(
+            console, ngContext, new HumanReadableExceptionAugmentor(ImmutableMap.of()));
   }
 
   @Test

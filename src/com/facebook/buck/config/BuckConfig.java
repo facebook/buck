@@ -59,6 +59,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -1031,5 +1032,25 @@ public class BuckConfig implements ConfigPathGetter {
   /** The timeout to apply to entire test rules. */
   public Optional<Long> getDefaultTestRuleTimeoutMs() {
     return config.getLong(TEST_SECTION_HEADER, "rule_timeout");
+  }
+
+  /** List of error message replacements to make things more friendly for humans */
+  public Map<Pattern, String> getErrorMessageAugmentations() throws HumanReadableException {
+    return config
+        .getMap("ui", "error_message_augmentations")
+        .entrySet()
+        .stream()
+        .collect(
+            ImmutableMap.toImmutableMap(
+                e -> {
+                  try {
+                    return Pattern.compile(e.getKey(), Pattern.MULTILINE | Pattern.DOTALL);
+                  } catch (Exception ex) {
+                    throw new HumanReadableException(
+                        "Could not parse regular expression %s from buckconfig: %s",
+                        e.getKey(), ex.getMessage());
+                  }
+                },
+                Entry::getValue));
   }
 }

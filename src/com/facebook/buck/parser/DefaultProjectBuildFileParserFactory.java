@@ -16,10 +16,12 @@
 
 package com.facebook.buck.parser;
 
+import com.facebook.buck.cli.exceptions.handlers.HumanReadableExceptionAugmentor;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypesProvider;
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.WatchmanFactory;
 import com.facebook.buck.io.filesystem.skylark.SkylarkFilesystem;
 import com.facebook.buck.json.HybridProjectBuildFileParser;
@@ -231,6 +233,16 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
             .setDescriptions(buildFileParserOptions.getDescriptions())
             .setRuleFunctionFactory(new RuleFunctionFactory(typeCoercerFactory))
             .build();
+
+    HumanReadableExceptionAugmentor augmentor;
+    try {
+      augmentor =
+          new HumanReadableExceptionAugmentor(cell.getBuckConfig().getErrorMessageAugmentations());
+    } catch (HumanReadableException e) {
+      eventBus.post(ConsoleEvent.warning(e.getHumanReadableErrorMessage()));
+      augmentor = new HumanReadableExceptionAugmentor(ImmutableMap.of());
+    }
+
     try {
       return SkylarkProjectBuildFileParser.using(
           buildFileParserOptions,
@@ -240,7 +252,8 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
           new ConsoleEventHandler(
               eventBus,
               EventKind.ALL_EVENTS,
-              ImmutableSet.copyOf(buckGlobals.getNativeModule().getFieldNames())),
+              ImmutableSet.copyOf(buckGlobals.getNativeModule().getFieldNames()),
+              augmentor),
           globberFactory);
     } catch (EvalException e) {
       throw new RuntimeException(e);

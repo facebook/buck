@@ -39,12 +39,16 @@ public class ExceptionHandlerRegistryFactory {
   /**
    * @param console Console for the related handlers print the messages to
    * @param ngContext NailGun context for the related handlers to take action on
+   * @param errorAugmentor Augmentor to make errors more clear to users (e.g. for macro failures)
    * @return a new ExceptionHandlerRegistry with the default handlers
    */
   public static ExceptionHandlerRegistry<ExitCode> create(
-      Console console, Optional<NGContext> ngContext) {
+      Console console,
+      Optional<NGContext> ngContext,
+      HumanReadableExceptionAugmentor errorAugmentor) {
     ImmutableList.Builder<ExceptionHandler<? extends Throwable, ExitCode>> handlerListBuilder =
         ImmutableList.builder();
+
     handlerListBuilder.addAll(
         Arrays.asList(
             new ExceptionHandlerWithConsole<InterruptedException>(
@@ -77,7 +81,8 @@ public class ExceptionHandlerRegistryFactory {
                 BuildFileParseException.class, console) {
               @Override
               public ExitCode handleException(BuildFileParseException e) {
-                console.printBuildFailure(e.getHumanReadableErrorMessage());
+                console.printBuildFailure(
+                    errorAugmentor.getAugmentedError(e.getHumanReadableErrorMessage()));
                 return ExitCode.PARSE_ERROR;
               }
             },
@@ -93,7 +98,8 @@ public class ExceptionHandlerRegistryFactory {
                 HumanReadableException.class, console) {
               @Override
               public ExitCode handleException(HumanReadableException e) {
-                console.printBuildFailure(e.getHumanReadableErrorMessage());
+                console.printBuildFailure(
+                    errorAugmentor.getAugmentedError(e.getHumanReadableErrorMessage()));
                 return ExitCode.BUILD_ERROR;
               }
             },

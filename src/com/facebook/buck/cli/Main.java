@@ -25,6 +25,7 @@ import static com.google.common.util.concurrent.MoreExecutors.newDirectExecutorS
 import com.facebook.buck.artifact_cache.ArtifactCaches;
 import com.facebook.buck.artifact_cache.config.ArtifactCacheBuckConfig;
 import com.facebook.buck.cli.exceptions.handlers.ExceptionHandlerRegistryFactory;
+import com.facebook.buck.cli.exceptions.handlers.HumanReadableExceptionAugmentor;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.core.build.engine.cache.manager.BuildInfoStoreManager;
 import com.facebook.buck.core.cell.Cell;
@@ -345,6 +346,8 @@ public final class Main {
 
   private final KnownBuildRuleTypesFactoryFactory knownBuildRuleTypesFactoryFactory;
 
+  private Optional<BuckConfig> parsedRootConfig = Optional.empty();
+
   static {
     MacIpv6BugWorkaround.apply();
   }
@@ -420,7 +423,20 @@ public final class Main {
               initTimestamp,
               ImmutableList.copyOf(args));
     } catch (Throwable t) {
-      exceptionHandlerRegistry = ExceptionHandlerRegistryFactory.create(console, context);
+
+      HumanReadableExceptionAugmentor augmentor;
+      try {
+        augmentor =
+            new HumanReadableExceptionAugmentor(
+                parsedRootConfig
+                    .map(BuckConfig::getErrorMessageAugmentations)
+                    .orElse(ImmutableMap.of()));
+      } catch (HumanReadableException e) {
+        console.printErrorText(e.getHumanReadableErrorMessage());
+        augmentor = new HumanReadableExceptionAugmentor(ImmutableMap.of());
+      }
+      exceptionHandlerRegistry =
+          ExceptionHandlerRegistryFactory.create(console, context, augmentor);
       exitCode = exceptionHandlerRegistry.handleException(t);
     } finally {
       LOG.debug("Done.");
@@ -582,6 +598,9 @@ public final class Main {
       BuckConfig buckConfig =
           new BuckConfig(
               config, filesystem, architecture, platform, clientEnvironment, cellPathResolver);
+      // Set so that we can use some settings when we print out messages to users
+      parsedRootConfig = Optional.of(buckConfig);
+
       ImmutableSet<Path> projectWatchList =
           getProjectWatchList(canonicalRootPath, buckConfig, cellPathResolver);
 

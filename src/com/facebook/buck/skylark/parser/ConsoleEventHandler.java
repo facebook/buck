@@ -16,6 +16,7 @@
 
 package com.facebook.buck.skylark.parser;
 
+import com.facebook.buck.cli.exceptions.handlers.HumanReadableExceptionAugmentor;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.google.common.collect.ImmutableSet;
@@ -35,20 +36,24 @@ public class ConsoleEventHandler implements EventHandler {
   private final BuckEventBus eventBus;
   private final Set<EventKind> supportedEvents;
   private final ImmutableSet<String> nativeModuleFunctionNames;
+  private final HumanReadableExceptionAugmentor humanReadableExceptionAugmentor;
 
   /**
    * Create an instance of {@link ConsoleEventHandler} that posts to {@code eventBus}
    *
    * @param eventBus The event bus to post {@link ConsoleEvent} to
    * @param supportedEvents The events that should post to the event bus
+   * @param humanReadableExceptionAugmentor
    */
   public ConsoleEventHandler(
       BuckEventBus eventBus,
       Set<EventKind> supportedEvents,
-      ImmutableSet<String> nativeModuleFunctionNames) {
+      ImmutableSet<String> nativeModuleFunctionNames,
+      HumanReadableExceptionAugmentor humanReadableExceptionAugmentor) {
     this.eventBus = eventBus;
     this.supportedEvents = supportedEvents;
     this.nativeModuleFunctionNames = nativeModuleFunctionNames;
+    this.humanReadableExceptionAugmentor = humanReadableExceptionAugmentor;
   }
 
   private static String getConsoleMessage(Event event) {
@@ -90,7 +95,10 @@ public class ConsoleEventHandler implements EventHandler {
         eventBus.post(ConsoleEvent.severe(getConsoleMessage(event)));
         break;
       case ERROR:
-        eventBus.post(ConsoleEvent.severe(checkNativeRules(getConsoleMessage(event))));
+        eventBus.post(
+            ConsoleEvent.severe(
+                humanReadableExceptionAugmentor.getAugmentedError(
+                    checkNativeRules(getConsoleMessage(event)))));
         break;
       case DEBUG:
       case PASS:
