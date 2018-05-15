@@ -41,6 +41,9 @@ java_immutables_library(
         "//src/com/facebook/buck/util/timing:timing",
         "//src/com/facebook/buck/worker:worker_process",
         "//third-party/java/googleapis:googleapis",
+        # Nothing in here explicitly uses netty, but grpc picks it up dynamically when trying to
+        # connect to a remote server.
+        "//third-party/java/grpc:grpc-netty",
         "//third-party/java/guava:guava",
         "//third-party/java/infer-annotations:infer-annotations",
         "//third-party/java/jsr:jsr305",
