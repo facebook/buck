@@ -193,6 +193,9 @@ public class DistBuildConfig {
   private static final String SLAVE_SERVER_HTTP_PORT = "slave_server_http_port";
   private static final Integer SLAVE_SERVER_HTTP_PORT_DEFAULT_VALUE = 8080;
 
+  private static final String ENABLE_GREEDY_STACKING = "enable_greedy_stacking";
+  private static final boolean DEFAULT_ENABLE_GREEDY_STACKING = false;
+
   private final SlbBuckConfig frontendConfig;
   private final BuckConfig buckConfig;
 
@@ -502,6 +505,11 @@ public class DistBuildConfig {
     return buckConfig
         .getInteger(STAMPEDE_SECTION, SLAVE_SERVER_HTTP_PORT)
         .orElse(SLAVE_SERVER_HTTP_PORT_DEFAULT_VALUE);
+  }
+
+  public boolean isGreedyStackingEnabled() {
+    return buckConfig.getBooleanValue(
+        STAMPEDE_SECTION, ENABLE_GREEDY_STACKING, DEFAULT_ENABLE_GREEDY_STACKING);
   }
 
   public OkHttpClient createOkHttpClient() {

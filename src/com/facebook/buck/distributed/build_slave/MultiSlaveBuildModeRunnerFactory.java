@@ -291,8 +291,11 @@ public class MultiSlaveBuildModeRunnerFactory {
     // For stacked builds (size > 1) we want to communicate with the build slave which
     // coordinates multiple minion processes and keeps track of available cores.
     if (distBuildConfig.getStackSize() > 1) {
+      if (distBuildConfig.isGreedyStackingEnabled()) {
+        LOG.info("Creating GreedyMultiBuildCapacityTracker");
+        return new GreedyMultiBuildCapacityTracker(service, availableBuildCapacity);
+      }
       LOG.info("Creating DefaultMultiBuildCapacityTracker");
-      // TODO(selim): choose greedy/naive implementation based on configuration
       return new DefaultMultiBuildCapacityTracker(service, availableBuildCapacity);
     }
 
