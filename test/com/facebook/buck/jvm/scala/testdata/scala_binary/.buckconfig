@@ -1,2 +1,2 @@
 [scala]
-library = //:scala-library
+library = buck//third-party/scala:scala-library

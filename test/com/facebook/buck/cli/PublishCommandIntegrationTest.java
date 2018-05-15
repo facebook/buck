@@ -17,21 +17,31 @@
 package com.facebook.buck.cli;
 
 import static org.hamcrest.Matchers.hasItem;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.jvm.java.Javac;
-import com.facebook.buck.maven.TestPublisher;
 import com.facebook.buck.maven.aether.AetherUtil;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
+import com.facebook.buck.testutil.integration.HttpdForTests;
+import com.facebook.buck.testutil.integration.HttpdForTests.DummyPutRequestsHandler;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ExitCode;
 import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.ImmutableSortedSet.Builder;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.util.Comparator;
 import java.util.List;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -44,25 +54,30 @@ public class PublishCommandIntegrationTest {
   public static final String SRC_JAR = Javac.SRC_JAR;
   public static final String SHA1 = ".sha1";
   public static final String TARGET = "//:foo";
+
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
-  private TestPublisher publisher;
+  private DummyPutRequestsHandler requestsHandler;
+  private HttpdForTests httpd;
 
   @Before
   public void setUp() throws Exception {
-    publisher = TestPublisher.create(tmp);
+    requestsHandler = new DummyPutRequestsHandler();
+    httpd = new HttpdForTests();
+    httpd.addHandler(requestsHandler);
+    httpd.start();
   }
 
   @After
   public void tearDown() throws Exception {
-    publisher.close();
+    httpd.close();
   }
 
   @Test
   public void testDependenciesTriggerPomGeneration() throws IOException {
     ProcessResult result = runValidBuckPublish("publish_fatjar");
     result.assertSuccess();
-    List<String> putRequestsPaths = publisher.getPutRequestsHandler().getPutRequestsPaths();
+    List<String> putRequestsPaths = requestsHandler.getPutRequestsPaths();
     assertThat(putRequestsPaths, hasItem(EXPECTED_PUT_URL_PATH_BASE + POM));
     assertThat(putRequestsPaths, hasItem(EXPECTED_PUT_URL_PATH_BASE + POM + SHA1));
   }
@@ -80,7 +95,7 @@ public class PublishCommandIntegrationTest {
 
     ProcessResult result = runBuckPublish(workspace, PublishCommand.INCLUDE_SOURCE_LONG_ARG);
     result.assertSuccess();
-    List<String> putRequestsPaths = publisher.getPutRequestsHandler().getPutRequestsPaths();
+    List<String> putRequestsPaths = requestsHandler.getPutRequestsPaths();
     assertThat(putRequestsPaths, hasItem(EXPECTED_PUT_URL_PATH_BASE + JAR));
     assertThat(putRequestsPaths, hasItem(EXPECTED_PUT_URL_PATH_BASE + JAR + SHA1));
     assertThat(putRequestsPaths, hasItem(EXPECTED_PUT_URL_PATH_BASE + SRC_JAR));
@@ -124,7 +139,7 @@ public class PublishCommandIntegrationTest {
             workspace, PublishCommand.INCLUDE_SOURCE_LONG_ARG, PublishCommand.DRY_RUN_LONG_ARG);
     result.assertSuccess();
 
-    assertTrue(publisher.getPutRequestsHandler().getPutRequestsPaths().isEmpty());
+    assertTrue(requestsHandler.getPutRequestsPaths().isEmpty());
 
     String stdOut = result.getStdout();
     assertTrue(stdOut, stdOut.contains("com.example:foo:jar:1.0"));
@@ -135,16 +150,74 @@ public class PublishCommandIntegrationTest {
     assertTrue(stdOut, stdOut.contains(getMockRepoUrl()));
   }
 
+  @Test
+  public void testScalaPublish() throws IOException {
+    runValidBuckPublish("publish_scala");
+  }
+
+  @Test
+  public void testScalaPublishToFS() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "publish_scala", tmp);
+    workspace.setUp();
+
+    Path publishPath = tmp.newFolder();
+
+    ProcessResult result =
+        workspace.runBuckCommand(
+            FluentIterable.from(new String[] {"publish"})
+                .append(PublishCommand.INCLUDE_SOURCE_LONG_ARG)
+                .append(PublishCommand.REMOTE_REPO_SHORT_ARG, publishPath.toUri().toString())
+                .append(TARGET)
+                .toArray(String.class));
+
+    result.assertSuccess();
+
+    File publisherRoot = publishPath.toFile();
+
+    File jarFile = new File(publisherRoot, EXPECTED_PUT_URL_PATH_BASE + JAR);
+    ImmutableSortedSet<ZipEntry> jarContents = getZipFilesFiltered(jarFile);
+    assertEquals(1, jarContents.size());
+    assertEquals("foo/bar/ScalaFoo.class", jarContents.first().getName());
+
+    File srcFile = new File(publisherRoot, EXPECTED_PUT_URL_PATH_BASE + SRC_JAR);
+    ImmutableSortedSet<ZipEntry> srcJarContents = getZipFilesFiltered(srcFile);
+    assertEquals(1, srcJarContents.size());
+    assertEquals("ScalaFoo.scala", srcJarContents.first().getName());
+  }
+
+  private static ImmutableSortedSet<ZipEntry> getZipFilesFiltered(File zipFile) throws IOException {
+    return getZipContents(zipFile)
+        .stream()
+        .filter(zipEntry -> !zipEntry.isDirectory())
+        .filter(zipEntry -> !zipEntry.getName().startsWith("META-INF"))
+        .collect(ImmutableSortedSet.toImmutableSortedSet(Comparator.comparing(ZipEntry::getName)));
+  }
+
+  private static ImmutableSortedSet<ZipEntry> getZipContents(File zipFile) throws IOException {
+    assertTrue(zipFile + " should exits", zipFile.isFile());
+    ZipInputStream inputStream = new ZipInputStream(new FileInputStream(zipFile));
+    Builder<ZipEntry> zipEntries =
+        ImmutableSortedSet.orderedBy(Comparator.comparing(ZipEntry::getName));
+    ZipEntry entry = inputStream.getNextEntry();
+    while (entry != null) {
+      zipEntries.add(entry);
+      entry = inputStream.getNextEntry();
+    }
+    return zipEntries.build();
+  }
+
   private ProcessResult runBuckPublish(ProjectWorkspace workspace, String... extraArgs)
       throws IOException {
     return workspace.runBuckCommand(
         FluentIterable.from(new String[] {"publish"})
             .append(extraArgs)
-            .append(PublishCommand.REMOTE_REPO_SHORT_ARG, getMockRepoUrl(), TARGET)
+            .append(PublishCommand.REMOTE_REPO_SHORT_ARG, getMockRepoUrl())
+            .append(TARGET)
             .toArray(String.class));
   }
 
   private String getMockRepoUrl() {
-    return publisher.getHttpd().getRootUri().toString();
+    return httpd.getRootUri().toString();
   }
 }
