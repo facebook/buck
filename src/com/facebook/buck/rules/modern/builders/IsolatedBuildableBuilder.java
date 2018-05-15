@@ -53,6 +53,7 @@ import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.hash.HashCode;
+import java.io.BufferedInputStream;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -285,7 +286,7 @@ public abstract class IsolatedBuildableBuilder {
       public InputStream getData() {
         try {
           Path path = dir.resolve("__value__");
-          return new FileInputStream(path.toFile());
+          return new BufferedInputStream(new FileInputStream(path.toFile()));
         } catch (FileNotFoundException e) {
           throw new RuntimeException(e);
         }
