@@ -26,6 +26,7 @@ import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.impl.AbstractSourcePathResolver;
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.EmbeddedCellBuckOutInfo;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
@@ -58,6 +59,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
@@ -228,8 +230,26 @@ public abstract class IsolatedBuildableBuilder {
         .forEachThrowing(
             name -> {
               // Sadly, some things assume this exists and writes to it.
-              Files.createDirectories(
-                  filesystemFunction.apply(Optional.of(name)).getBuckPaths().getTmpDir());
+              ProjectFilesystem fs = filesystemFunction.apply(Optional.of(name));
+              BuckPaths configuredPaths = fs.getBuckPaths();
+              Files.createDirectories(configuredPaths.getTmpDir());
+
+              if (!configuredPaths.getConfiguredBuckOut().equals(configuredPaths.getBuckOut())
+                  && buckConfig.getBuckOutCompatLink()
+                  && Platform.detect() != Platform.WINDOWS) {
+                BuckPaths unconfiguredPaths =
+                    configuredPaths.withConfiguredBuckOut(configuredPaths.getBuckOut());
+                ImmutableMap<Path, Path> paths =
+                    ImmutableMap.of(
+                        unconfiguredPaths.getGenDir(), configuredPaths.getGenDir(),
+                        unconfiguredPaths.getScratchDir(), configuredPaths.getScratchDir());
+                for (Map.Entry<Path, Path> entry : paths.entrySet()) {
+                  filesystem.createSymLink(
+                      entry.getKey(),
+                      entry.getKey().getParent().relativize(entry.getValue()),
+                      /* force */ false);
+                }
+              }
             });
   }
 
