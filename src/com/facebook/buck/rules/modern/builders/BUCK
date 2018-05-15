@@ -46,3 +46,9 @@ java_immutables_library(
         "//third-party/java/jsr:jsr305",
     ],
 )
+
+export_file(
+    name = "trampoline",
+    src = "trampoline.sh",
+    visibility = ["PUBLIC"],
+)

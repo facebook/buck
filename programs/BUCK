@@ -71,6 +71,7 @@ RESOURCES_NOT_AFFECTING_BUILD_ARTIFACTS = {
     "logging_config_file": "//config:logging.properties",
     "report_generator_jar": "//src/com/facebook/buck/jvm/java/coverage:report-generator",
     "testrunner_classes": "//src/com/facebook/buck/testrunner:testrunner-bin-fixed",
+    "path_to_isolated_trampoline": "//src/com/facebook/buck/rules/modern/builders:trampoline",
 }
 
 # These resources contain code that can affect the content of build artifacts.
