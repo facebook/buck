@@ -109,7 +109,7 @@ public class Serializer {
   /** See Serialize(T instance) above. */
   public <T extends AddsToRuleKey> Either<HashCode, byte[]> serialize(
       T instance, ClassInfo<T> classInfo) throws IOException {
-    if (cache.contains(instance)) {
+    if (cache.containsKey(instance)) {
       return Preconditions.checkNotNull(cache.get(instance));
     }
     Visitor visitor = new Visitor(instance.getClass());
