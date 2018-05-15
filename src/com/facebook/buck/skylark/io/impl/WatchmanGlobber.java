@@ -44,6 +44,7 @@ import java.util.stream.Collectors;
 public class WatchmanGlobber {
 
   private static final long TIMEOUT_NANOS = TimeUnit.SECONDS.toNanos(10);
+  private static final ImmutableList<String> FIELDS_TO_INCLUDE = ImmutableList.of("name");
   private final WatchmanClient watchmanClient;
   /** Path used as a root when resolving patterns. */
   private final String basePath;
@@ -87,23 +88,30 @@ public class WatchmanGlobber {
    */
   private ImmutableMap<String, ?> createWatchmanQuery(
       Collection<String> include, Collection<String> exclude, boolean excludeDirectories) {
+    return ImmutableMap.of(
+        "relative_root",
+        basePath,
+        "expression",
+        toMatchExpressions(exclude, excludeDirectories),
+        "glob",
+        include,
+        "fields",
+        FIELDS_TO_INCLUDE);
+  }
+
+  /** Returns an expression for every matched include file should match in order to be returned. */
+  private static ImmutableList<Object> toMatchExpressions(
+      Collection<String> exclude, boolean excludeDirectories) {
     ImmutableList.Builder<Object> matchExpressions = ImmutableList.builder();
     matchExpressions.add("allof", toTypeExpression(excludeDirectories));
     if (!exclude.isEmpty()) {
       matchExpressions.add(toExcludeExpression(exclude));
     }
-    return ImmutableMap.of(
-        "relative_root",
-        basePath,
-        "expression",
-        matchExpressions.build(),
-        "glob",
-        include,
-        "fields",
-        ImmutableList.of("name"));
+    return matchExpressions.build();
   }
 
-  private ImmutableList<Object> toTypeExpression(boolean excludeDirectories) {
+  /** Returns an expression for matching types of files to return. */
+  private static ImmutableList<Object> toTypeExpression(boolean excludeDirectories) {
     ImmutableList.Builder<Object> typeExpressionBuilder =
         ImmutableList.builder()
             .add("anyof")
@@ -115,7 +123,8 @@ public class WatchmanGlobber {
     return typeExpressionBuilder.build();
   }
 
-  private ImmutableList<Serializable> toExcludeExpression(Collection<String> exclude) {
+  /** Returns an expression that excludes all paths in {@code exclude}. */
+  private static ImmutableList<Serializable> toExcludeExpression(Collection<String> exclude) {
     return ImmutableList.of(
         "not",
         ImmutableList.builder()
