@@ -6,6 +6,7 @@ java_library_with_plugins(
     exported_deps = [
         "//src/com/facebook/buck/android/packageable:packageable",
         "//src/com/facebook/buck/core/description/arg:arg",
+        "//src/com/facebook/buck/core/rules/schedule:schedule",
         "//src/com/facebook/buck/core/sourcepath/resolver:resolver",
         "//src/com/facebook/buck/core/test/rule:rule",
         "//src/com/facebook/buck/cxx/toolchain/linker:linker",

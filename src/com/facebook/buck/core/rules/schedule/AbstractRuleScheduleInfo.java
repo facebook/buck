@@ -14,11 +14,24 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
+package com.facebook.buck.core.rules.schedule;
 
-/**
- * A interface for a {@link BuildRule} which overrides how it gets scheduled by the build engine.
- */
-public interface OverrideScheduleRule extends BuildRule {
-  RuleScheduleInfo getRuleScheduleInfo();
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import org.immutables.value.Value;
+
+/** Used to override how the build engine schedules a build rule. */
+@Value.Immutable
+@BuckStyleImmutable
+abstract class AbstractRuleScheduleInfo {
+
+  public static final RuleScheduleInfo DEFAULT = RuleScheduleInfo.builder().build();
+
+  /**
+   * @return the multiplier used to calculate the number of jobs to assign to a rule when running
+   *     its steps.
+   */
+  @Value.Default
+  public int getJobsMultiplier() {
+    return 1;
+  }
 }

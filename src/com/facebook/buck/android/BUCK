@@ -129,6 +129,7 @@ java_library_with_plugins(
         ":utils",
         "//src/com/facebook/buck/android/packageable:packageable",
         "//src/com/facebook/buck/core/description/arg:arg",
+        "//src/com/facebook/buck/core/rules/schedule:schedule",
         "//src/com/facebook/buck/jvm/java:support",
         "//src/com/facebook/buck/rules:build_rule",
         "//src/com/facebook/buck/rules:rules",
