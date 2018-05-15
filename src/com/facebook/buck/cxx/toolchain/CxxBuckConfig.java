@@ -67,6 +67,7 @@ public class CxxBuckConfig {
   private static final String HEADERS_SYMLINKS_ENABLED = "headers_symlinks_enabled";
   private static final String LINK_WEIGHT = "link_weight";
   private static final String CACHE_LINKS = "cache_links";
+  private static final String CACHE_BINARIES = "cache_binaries";
   private static final String PCH_ENABLED = "pch_enabled";
   private static final String SANDBOX_SOURCES = "sandbox_sources";
   private static final String ARCHIVE_CONTENTS = "archive_contents";
@@ -394,6 +395,10 @@ public class CxxBuckConfig {
 
   public boolean shouldCacheLinks() {
     return delegate.getBooleanValue(cxxSection, CACHE_LINKS, true);
+  }
+
+  public boolean shouldCacheBinaries() {
+    return delegate.getBooleanValue(cxxSection, CACHE_BINARIES, false);
   }
 
   public boolean isPCHEnabled() {

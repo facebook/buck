@@ -58,6 +58,7 @@ public class CxxBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final ImmutableSortedSet<BuildTarget> tests;
   private final ImmutableSortedSet<FrameworkPath> frameworks;
   private final BuildTarget platformlessTarget;
+  private final boolean cacheable;
 
   public CxxBinary(
       BuildTarget buildTarget,
@@ -68,7 +69,8 @@ public class CxxBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
       Tool executable,
       Iterable<FrameworkPath> frameworks,
       Iterable<BuildTarget> tests,
-      BuildTarget platformlessTarget) {
+      BuildTarget platformlessTarget,
+      boolean cacheable) {
     super(buildTarget, projectFilesystem, params);
     this.cxxPlatform = cxxPlatform;
     this.linkRule = linkRule;
@@ -76,6 +78,7 @@ public class CxxBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.tests = ImmutableSortedSet.copyOf(tests);
     this.frameworks = ImmutableSortedSet.copyOf(frameworks);
     this.platformlessTarget = platformlessTarget;
+    this.cacheable = cacheable;
     performChecks();
   }
 
@@ -155,7 +158,7 @@ public class CxxBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public boolean isCacheable() {
-    return false; // CxxBinary is a wrapper rule, and takes < 1ms to complete.
+    return cacheable;
   }
 
   // This rule just delegates to the output of the `CxxLink` rule and so needs that available at

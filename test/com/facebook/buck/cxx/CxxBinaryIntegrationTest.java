@@ -1476,7 +1476,7 @@ public class CxxBinaryIntegrationTest {
   }
 
   @Test
-  public void testLinkMapIsCached() throws Exception {
+  public void testLinkMapIsNotCached() throws Exception {
     // Currently we only support Apple platforms for generating link maps.
     assumeTrue(Platform.detect() == Platform.MACOS);
 
@@ -1500,6 +1500,38 @@ public class CxxBinaryIntegrationTest {
     workspace.runBuckCommand("build", target.toString()).assertSuccess();
     BuckBuildLog buildLog = workspace.getBuildLog();
     buildLog.assertTargetBuiltLocally(target.toString());
+    assertThat(Files.exists(Paths.get(outputPath + "-LinkMap.txt")), is(true));
+  }
+
+  @Test
+  public void testLinkMapIsCached() throws Exception {
+    // Currently we only support Apple platforms for generating link maps.
+    assumeTrue(Platform.detect() == Platform.MACOS);
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "simple", tmp);
+    workspace.setUp();
+    workspace.enableDirCache();
+    workspace.setupCxxSandboxing(sandboxSources);
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
+
+    BuildTarget target = BuildTargetFactory.newInstance("//foo:simple");
+    workspace
+        .runBuckCommand("build", "-c", "cxx.cache_binaries=true", target.getFullyQualifiedName())
+        .assertSuccess();
+
+    Path outputPath = workspace.getPath(BuildTargets.getGenPath(filesystem, target, "%s"));
+
+    /*
+     * Check that building after clean will use the cache
+     */
+    workspace.runBuckCommand("clean", "--keep-cache").assertSuccess();
+    workspace
+        .runBuckCommand("build", "-c", "cxx.cache_binaries=true", target.toString())
+        .assertSuccess();
+    BuckBuildLog buildLog = workspace.getBuildLog();
+    buildLog.assertTargetWasFetchedFromCache(target.toString());
     assertThat(Files.exists(Paths.get(outputPath + "-LinkMap.txt")), is(true));
   }
 

@@ -184,7 +184,8 @@ public class CxxBinaryFactory {
         cxxLinkAndCompileRules.executable,
         args.getFrameworks(),
         args.getTests(),
-        target.withoutFlavors(cxxPlatforms.getFlavors()));
+        target.withoutFlavors(cxxPlatforms.getFlavors()),
+        cxxBuckConfig.shouldCacheBinaries());
   }
 
   private CxxPlatformsProvider getCxxPlatformsProvider() {

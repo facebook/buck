@@ -197,7 +197,8 @@ public class HalideLibraryDescription
         cxxLinkAndCompileRules.executable,
         ImmutableSortedSet.of(),
         ImmutableSortedSet.of(),
-        buildTarget.withoutFlavors(cxxPlatformsProvider.getCxxPlatforms().getFlavors()));
+        buildTarget.withoutFlavors(cxxPlatformsProvider.getCxxPlatforms().getFlavors()),
+        cxxBuckConfig.shouldCacheBinaries());
   }
 
   private BuildRule createHalideStaticLibrary(
