@@ -152,6 +152,35 @@ public class ServerContentsProviderTest {
 
   @Test
   @SuppressWarnings("PMD.EmptyCatchBlock")
+  public void testFutureIsSetOnRemoteCallException()
+      throws IOException, InterruptedException, ExecutionException, TimeoutException {
+    initProvider(1, 100);
+
+    ImmutableMap.Builder<String, byte[]> result1 = new ImmutableMap.Builder<>();
+    result1.put(HASH1, FILE_CONTENTS1.getBytes(StandardCharsets.UTF_8));
+    expect(distBuildService.multiFetchSourceFiles(ImmutableSet.of(HASH1)))
+        .andThrow(new IOException("remote call failed"));
+
+    replay(distBuildService);
+
+    Future<?> future1 =
+        provider.materializeFileContentsAsync(
+            new BuildJobStateFileHashEntry().setSha1(HASH1), path1);
+
+    fakeScheduledExecutor.drain();
+
+    try {
+      future1.get(FUTURE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+      Assert.fail("ExecutionException was expected.");
+    } catch (ExecutionException ex) {
+      Assert.assertTrue(ex.getCause() instanceof IOException);
+    }
+
+    verify(distBuildService);
+  }
+
+  @Test
+  @SuppressWarnings("PMD.EmptyCatchBlock")
   public void testMultiFetchMaxBufferSizeWorks()
       throws IOException, InterruptedException, ExecutionException, TimeoutException {
     initProvider(1000 * 60 * 60 * 24, 2);
