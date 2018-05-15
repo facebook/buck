@@ -95,6 +95,33 @@ td {
     padding: 0 0.5em;
 }
 
+/*
+ * Use a class to scope styling specifically for the exit-codes.
+ *
+ * The styling from the incumbent styling (above) is not being
+ * expressed in the tables on the exit-codes page. I suspect that 
+ * I am getting collisions from styling for <table> elsewhere.
+ *
+ * Note that the styling specified above also does not show up 
+ * correctly in the Exopackage and HTTP Cache API topics.
+ * 
+ * I will take a task to debug this global CSS issue as a separate
+ * issue.
+*/
+
+table.exit-codes {
+    background: #fff;
+    border: 1px solid #ccc;
+    padding: 0.5em 1em;
+    border-collapse: collapse;
+    margin: 1em 0;
+}
+
+td.exit-codes {
+    border: 1px solid #ccc;
+    padding: 0 0.5em;
+}
+
 ul, ol {
  list-style-position: outside;
  margin-left: 1em;
