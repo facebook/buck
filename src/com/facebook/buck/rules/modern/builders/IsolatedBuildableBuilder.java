@@ -83,7 +83,7 @@ public abstract class IsolatedBuildableBuilder {
   @SuppressWarnings("PMD.EmptyCatchBlock")
   IsolatedBuildableBuilder(Path workRoot, Path projectRoot) throws IOException {
     Path canonicalWorkRoot = workRoot.toRealPath().normalize();
-    Path canonicalProjectRoot = canonicalWorkRoot.resolve(projectRoot);
+    Path canonicalProjectRoot = canonicalWorkRoot.resolve(projectRoot).normalize();
 
     this.dataRoot = workRoot.resolve("__data__");
 

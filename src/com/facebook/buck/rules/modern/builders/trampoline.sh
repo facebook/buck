@@ -13,11 +13,11 @@ function resolve() {
   echo $1 | tr ':' '\n' | sed "s/^\([^/].*\)$/$(echo $PWD | sed 's/\//\\\//g')\/\1/" | tr '\n' ':'
 }
 
-cd $1
 export BUCK_CLASSPATH=$(resolve $BUCK_CLASSPATH)
+export CLASSPATH=$(resolve $CLASSPATH)
 export BUCK_ISOLATED_ROOT=$PWD
 
-exec java -cp $(resolve $CLASSPATH) com.facebook.buck.cli.bootstrapper.ClassLoaderBootstrapper com.facebook.buck.rules.modern.builders.OutOfProcessIsolatedBuilder $BUCK_ISOLATED_ROOT $2 $3
-exit 1
+cd $1
+java -cp $CLASSPATH com.facebook.buck.cli.bootstrapper.ClassLoaderBootstrapper com.facebook.buck.rules.modern.builders.OutOfProcessIsolatedBuilder $BUCK_ISOLATED_ROOT $1 $2
 )
 
