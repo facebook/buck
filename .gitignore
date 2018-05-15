@@ -30,16 +30,6 @@
 # bootstrapper test is run in the source tree
 /test/com/facebook/buck/cli/bootstrapper/testdata/old_guava/buck-out/
 
-# IntelliJ, based on http://devnet.jetbrains.net/docs/DOC-1186
-/.idea/ant.xml
-/.idea/dictionaries
-/.idea/inspectionProfiles
-/.idea/tasks.xml
-/.idea/uiDesigner.xml
-/.idea/workspace.xml
-/.idea/misc.xml
-/.idea/copyright/profiles_settings.xml
-
 # From building Emma with Ant.
 /third-party/java/emma-2.0.5312/out/
 

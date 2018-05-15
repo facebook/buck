@@ -1,0 +1,21 @@
+# Whitelist the IntelliJ settings that we find useful/compelling
+# enough to inflict upon all buck developers.
+/*
+!/codeInsightSettings.xml
+!/codeStyleSettings.xml
+!/codeStyles/Project.xml
+!/codeStyles/codeStyleConfig.xml
+!/compiler.xml
+!/copyright
+!/libraries
+!/encodings.xml
+!/google-java-format.xml
+!/kotlinc.xml
+!/misc.xml
+!/modules.xml
+!/runConfigurations/Debug_Buck.xml
+!/runConfigurations/Debug_Buck_Test.xml
+!/runConfigurations/_buck__JUnit_test_with_correct_console_log_format_.xml
+!/scopes/scope_settings.xml
+!/thriftCompiler.xml
+!/vcs.xml
