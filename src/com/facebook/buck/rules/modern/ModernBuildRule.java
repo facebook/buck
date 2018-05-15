@@ -221,11 +221,6 @@ public class ModernBuildRule<T extends Buildable> extends AbstractBuildRule
   }
 
   @Override
-  public final String getType() {
-    return classInfo.getType();
-  }
-
-  @Override
   public final ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
     ImmutableList.Builder<Path> outputsBuilder = ImmutableList.builder();
