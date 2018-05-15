@@ -58,8 +58,8 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Streams;
+import com.google.common.io.Files;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.function.Function;
@@ -229,11 +229,24 @@ public class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
           "-emit-objc-header-path",
           headerPath.toString());
 
-      if (!moduleOnly) {
-        compilerCommand.add(
-            "-c", "-emit-object",
-            "-o",
-            objectFilePath.toString());
+      if (moduleOnly) {
+        compilerCommand.add("-emit-bc");
+        compilerCommand.add("-num-threads", "1");
+        this.srcs
+            .stream()
+            .map(
+                input ->
+                    Files.getNameWithoutExtension(
+                            resolver.getAbsolutePath(input).getFileName().toString())
+                        + ".bc")
+            .map(outputPath::resolve)
+            .forEach(
+                x -> {
+                  compilerCommand.add("-o");
+                  compilerCommand.add(x.toString());
+                });
+      } else {
+        compilerCommand.add("-c", "-emit-object", "-o", objectFilePath.toString());
       }
     } else {
       compilerCommand.add(
@@ -338,8 +351,8 @@ public class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     return new Step() {
       @Override
       public StepExecutionResult execute(ExecutionContext context) throws IOException {
-        if (Files.notExists(swiftFileListPath.getParent())) {
-          Files.createDirectories(swiftFileListPath.getParent());
+        if (java.nio.file.Files.notExists(swiftFileListPath.getParent())) {
+          java.nio.file.Files.createDirectories(swiftFileListPath.getParent());
         }
         MostFiles.writeLinesToFile(relativePaths, swiftFileListPath);
         return StepExecutionResults.SUCCESS;
@@ -431,6 +444,9 @@ public class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   /** @return List of {@link SourcePath} to the output object file(s) (i.e., .o file) */
   public ImmutableList<SourcePath> getObjectPaths() {
     // Ensures that users of the object path can depend on this build target
+    if (moduleOnly) {
+      return ImmutableList.of();
+    }
     return objectPaths
         .stream()
         .map(objectPath -> ExplicitBuildTargetSourcePath.of(getBuildTarget(), objectPath))
