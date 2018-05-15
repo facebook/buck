@@ -41,22 +41,17 @@ import java.util.stream.Stream;
 
 /** Buck-specific implementation of java.nio.file.Path optimized for memory footprint */
 public class BuckUnixPath implements Path {
+  // Constant strings are already interned, but having the constant here makes it more obvious in
+  // code below.
+  private static final String DOTDOT = "..";
+
   private final String[] segments;
   private final BuckFileSystem fs;
 
-  BuckUnixPath(BuckFileSystem fs, String[] segments, boolean intern) {
+  // segments should already be interned.
+  private BuckUnixPath(BuckFileSystem fs, String[] segments) {
     this.fs = fs;
-    String[] internedSegments;
-    if (!intern) {
-      internedSegments = segments;
-    } else {
-      internedSegments = new String[segments.length];
-      // using plain old loops for performance
-      for (int i = 0; i < segments.length; i++) {
-        internedSegments[i] = segments[i].intern();
-      }
-    }
-    this.segments = internedSegments;
+    this.segments = segments;
   }
 
   /**
@@ -72,7 +67,23 @@ public class BuckUnixPath implements Path {
     if (path.equals("/")) {
       return fs.getRootDirectory();
     }
-    return new BuckUnixPath(fs, normalizeAndCheck(path).split("/"), true);
+    return new BuckUnixPath(fs, intern(normalizeAndCheck(path).split("/")));
+  }
+
+  private static String[] intern(String[] segments) {
+    // using plain old loops for performance
+    for (int i = 0; i < segments.length; i++) {
+      segments[i] = segments[i].intern();
+    }
+    return segments;
+  }
+
+  static BuckUnixPath rootOf(BuckFileSystem fs) {
+    return new BuckUnixPath(fs, new String[] {""});
+  }
+
+  static BuckUnixPath emptyOf(BuckFileSystem fs) {
+    return new BuckUnixPath(fs, new String[0]);
   }
 
   /** Return Java default implementation of Path inferred from current instance */
@@ -181,7 +192,7 @@ public class BuckUnixPath implements Path {
     if (isAbsolute() && segments.length == 1) {
       return fs.getRootDirectory();
     }
-    return new BuckUnixPath(fs, new String[] {segments[segments.length - 1]}, false);
+    return new BuckUnixPath(fs, new String[] {segments[segments.length - 1]});
   }
 
   @Override
@@ -192,7 +203,7 @@ public class BuckUnixPath implements Path {
     if (segments[segments.length - 2].isEmpty()) {
       return getRoot();
     }
-    return new BuckUnixPath(fs, Arrays.copyOf(segments, segments.length - 1), false);
+    return new BuckUnixPath(fs, Arrays.copyOf(segments, segments.length - 1));
   }
 
   @Override
@@ -215,7 +226,7 @@ public class BuckUnixPath implements Path {
       throw new IllegalArgumentException();
     }
 
-    return new BuckUnixPath(fs, new String[] {segments[index]}, false);
+    return new BuckUnixPath(fs, new String[] {segments[index]});
   }
 
   @Override
@@ -238,7 +249,7 @@ public class BuckUnixPath implements Path {
       throw new IllegalArgumentException();
     }
 
-    return new BuckUnixPath(fs, Arrays.copyOfRange(segments, beginIndex, endIndex), false);
+    return new BuckUnixPath(fs, Arrays.copyOfRange(segments, beginIndex, endIndex));
   }
 
   @Override
@@ -258,7 +269,7 @@ public class BuckUnixPath implements Path {
       return other;
     }
 
-    return new BuckUnixPath(fs, concatSegments(segments, other.segments), false);
+    return new BuckUnixPath(fs, concatSegments(segments, other.segments));
   }
 
   @Override
@@ -327,14 +338,14 @@ public class BuckUnixPath implements Path {
       // followed by the remaining names in other. If the remainder is
       // the empty path then we don't add the final trailing slash.
       String[] newSegments = new String[dotdots];
-      Arrays.fill(newSegments, "..");
-      return new BuckUnixPath(fs, concatSegments(newSegments, remainder.segments), true);
+      Arrays.fill(newSegments, DOTDOT);
+      return new BuckUnixPath(fs, concatSegments(newSegments, remainder.segments));
     }
 
     // no remaining names in other so result is simply a sequence of ".."
     String[] newSegments = new String[dotdots];
-    Arrays.fill(newSegments, "..");
-    return new BuckUnixPath(fs, newSegments, true);
+    Arrays.fill(newSegments, DOTDOT);
+    return new BuckUnixPath(fs, newSegments);
   }
 
   @Override
@@ -370,7 +381,7 @@ public class BuckUnixPath implements Path {
             .mapToObj(i -> segments[i])
             .toArray(String[]::new);
 
-    return new BuckUnixPath(fs, filtered, false);
+    return new BuckUnixPath(fs, filtered);
   }
 
   @Override

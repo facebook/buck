@@ -34,8 +34,8 @@ import java.util.Set;
 public class BuckFileSystem extends FileSystem {
 
   private BuckFileSystemProvider provider;
-  private BuckUnixPath rootDirectory = new BuckUnixPath(this, new String[] {""}, true);
-  private BuckUnixPath emptyPath = new BuckUnixPath(this, new String[0], false);
+  private BuckUnixPath rootDirectory = BuckUnixPath.rootOf(this);
+  private BuckUnixPath emptyPath = BuckUnixPath.emptyOf(this);
   private BuckUnixPath defaultDirectory;
 
   /**
