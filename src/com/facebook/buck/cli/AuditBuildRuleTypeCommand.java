@@ -16,8 +16,8 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.core.rules.BuildRuleType;
 import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypes;
+import com.facebook.buck.core.rules.type.BuildRuleType;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.DescriptionCache;
 import com.facebook.buck.rules.coercer.CoercedTypeCache;

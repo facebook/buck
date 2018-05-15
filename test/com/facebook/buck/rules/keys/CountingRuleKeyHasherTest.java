@@ -20,7 +20,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.RuleKey;
-import com.facebook.buck.core.rules.BuildRuleType;
+import com.facebook.buck.core.rules.type.BuildRuleType;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.model.BuildTargetFactory;

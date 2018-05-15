@@ -22,7 +22,7 @@ import com.facebook.buck.core.build.engine.BuildEngine;
 import com.facebook.buck.core.build.engine.BuildEngineBuildContext;
 import com.facebook.buck.core.build.engine.BuildResult;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.rules.BuildRuleType;
+import com.facebook.buck.core.rules.type.BuildRuleType;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaFileParser;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;

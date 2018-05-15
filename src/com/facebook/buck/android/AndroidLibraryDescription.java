@@ -22,7 +22,7 @@ import com.facebook.buck.core.description.arg.HasProvidedDepsQuery;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.Flavored;
-import com.facebook.buck.core.rules.BuildRuleType;
+import com.facebook.buck.core.rules.type.BuildRuleType;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;

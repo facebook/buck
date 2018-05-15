@@ -16,8 +16,8 @@
 
 package com.facebook.buck.rules;
 
-import com.facebook.buck.core.rules.BuildRuleType;
-import com.facebook.buck.core.rules.impl.BuildRuleTypeFactory;
+import com.facebook.buck.core.rules.type.BuildRuleType;
+import com.facebook.buck.core.rules.type.impl.BuildRuleTypeFactory;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;

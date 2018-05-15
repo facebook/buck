@@ -20,7 +20,7 @@ import static com.facebook.buck.log.thrift.rulekeys.Value._Fields.STRING_VALUE;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.RuleKey;
-import com.facebook.buck.core.rules.BuildRuleType;
+import com.facebook.buck.core.rules.type.BuildRuleType;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.log.Logger;

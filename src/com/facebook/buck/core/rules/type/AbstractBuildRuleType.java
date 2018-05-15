@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.core.rules;
+package com.facebook.buck.core.rules.type;
 
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Preconditions;

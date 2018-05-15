@@ -21,7 +21,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.rules.BuildRuleType;
+import com.facebook.buck.core.rules.type.BuildRuleType;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.rules.coercer.CoercedTypeCache;

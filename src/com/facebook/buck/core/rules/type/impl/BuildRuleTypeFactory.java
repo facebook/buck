@@ -14,9 +14,9 @@
  * under the License.
  */
 
-package com.facebook.buck.core.rules.impl;
+package com.facebook.buck.core.rules.type.impl;
 
-import com.facebook.buck.core.rules.BuildRuleType;
+import com.facebook.buck.core.rules.type.BuildRuleType;
 import com.facebook.buck.util.MoreStrings;
 import com.google.common.base.CaseFormat;
 
