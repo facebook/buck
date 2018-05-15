@@ -586,11 +586,16 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
         parseStackTrace(exceptionMap));
   }
 
+  private static boolean stackFrameFileIsBuckParser(Path filename, Path buckPyDir) {
+    return filename.getParent().equals(buckPyDir)
+        || filename.endsWith(Paths.get("buck_server", "buck_parser", "buck.py"));
+  }
+
   private static String formatStackTrace(
       Path buckPyDir, ImmutableList<BuildFileParseExceptionStackTraceEntry> stackTrace) {
     StringBuilder formattedTraceback = new StringBuilder();
     for (BuildFileParseExceptionStackTraceEntry entry : stackTrace) {
-      if (entry.getFileName().getParent().equals(buckPyDir)) {
+      if (stackFrameFileIsBuckParser(entry.getFileName(), buckPyDir)) {
         // Skip stack trace entries for buck.py itself
         continue;
       }

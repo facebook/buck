@@ -10,8 +10,8 @@ import StringIO
 from pywatchman import WatchmanError
 from typing import Sequence
 
-from .buck import BuildFileProcessor, BuildInclude, IncludeContext, Diagnostic, add_rule, \
-    process_with_diagnostics
+from .buck import BuildFileFailError, BuildFileProcessor, BuildInclude, \
+    IncludeContext, Diagnostic, add_rule, process_with_diagnostics
 
 
 def foo_rule(name, srcs=None, visibility=None, options=None, some_optional=None, build_env=None):
@@ -1336,7 +1336,7 @@ class BuckTest(unittest.TestCase):
         processor = self.create_build_file_processor()
 
         with processor.with_builtins(__builtin__.__dict__):
-            with self.assertRaisesRegexp(AssertionError, "expected error"):
+            with self.assertRaisesRegexp(BuildFileFailError, "expected error"):
                 processor.process(self.project_root, None, 'BUCK_fail', [])
 
     def test_fail_function_includes_attribute_information(self):
@@ -1352,7 +1352,7 @@ class BuckTest(unittest.TestCase):
         processor = self.create_build_file_processor()
 
         with processor.with_builtins(__builtin__.__dict__):
-            with self.assertRaisesRegexp(AssertionError, "attribute foo: error"):
+            with self.assertRaisesRegexp(BuildFileFailError, "attribute foo: error"):
                 processor.process(self.project_root, None, 'BUCK_fail', [])
 
     def test_values_from_namespaced_includes_accessible_only_via_namespace(self):

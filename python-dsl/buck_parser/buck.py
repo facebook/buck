@@ -361,6 +361,10 @@ class IncorrectArgumentsException(TypeError):
         super(IncorrectArgumentsException, self).__init__(message)
 
 
+class BuildFileFailError(Exception):
+    pass
+
+
 def provide_as_native_rule(func):
     NATIVE_FUNCTIONS.append(func)
     return func
@@ -604,7 +608,7 @@ def fail(message, attr=None, build_env=None):
     """
     attribute_prefix = ("attribute " + attr + ": " if attr is not None else "")
     msg = attribute_prefix + str(message)
-    raise AssertionError(msg)
+    raise BuildFileFailError(msg)
 
 
 @provide_for_build
