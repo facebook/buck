@@ -20,13 +20,11 @@ import com.facebook.buck.rules.modern.builders.LocalContentAddressedStorage;
 import com.facebook.buck.rules.modern.builders.grpc.GrpcRemoteExecution;
 import com.facebook.buck.rules.modern.builders.grpc.GrpcRemoteExecutionServiceImpl;
 import com.facebook.buck.util.NamedTemporaryDirectory;
-import com.facebook.buck.util.concurrent.MostExecutors;
 import com.google.common.io.Closer;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import java.io.Closeable;
 import java.io.IOException;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
 /** A simple remote execution server. */
@@ -41,9 +39,7 @@ public class GrpcServer implements Closeable {
             new LocalContentAddressedStorage(
                 workDir.getPath().resolve("__cache__"), GrpcRemoteExecution.PROTOCOL),
             workDir.getPath().resolve("__work__"));
-    ExecutorService serverExecutor = MostExecutors.newMultiThreadExecutor("remote-exec-server", 8);
     ServerBuilder<?> builder = ServerBuilder.forPort(port);
-    builder.executor(serverExecutor);
     remoteExecution.getServices().forEach(builder::addService);
     this.server = builder.build().start();
   }

@@ -19,7 +19,6 @@ package com.facebook.buck.rules.modern.builders.grpc;
 import com.facebook.buck.rules.modern.builders.IsolatedExecution;
 import com.facebook.buck.rules.modern.builders.LocalContentAddressedStorage;
 import com.facebook.buck.util.NamedTemporaryDirectory;
-import com.facebook.buck.util.concurrent.MostExecutors;
 import com.google.common.io.Closer;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
@@ -27,8 +26,6 @@ import io.grpc.Server;
 import io.grpc.inprocess.InProcessChannelBuilder;
 import io.grpc.inprocess.InProcessServerBuilder;
 import java.io.IOException;
-import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
 /** Factory for creating grpc-based strategies. */
@@ -45,13 +42,11 @@ public class GrpcExecutionFactory {
             new LocalContentAddressedStorage(
                 workDir.getPath().resolve("__cache__"), GrpcRemoteExecution.PROTOCOL),
             workDir.getPath().resolve("__work__"));
-    ExecutorService serverExecutor = MostExecutors.newMultiThreadExecutor("remote-execution", 8);
-    InProcessServerBuilder builder =
-        InProcessServerBuilder.forName("unique").executor(serverExecutor);
+
+    InProcessServerBuilder builder = InProcessServerBuilder.forName("unique");
     remoteExecution.getServices().forEach(builder::addService);
     Server server = builder.build().start();
-    ManagedChannel channel =
-        InProcessChannelBuilder.forName("unique").executor(serverExecutor).build();
+    ManagedChannel channel = InProcessChannelBuilder.forName("unique").build();
 
     return new GrpcRemoteExecution("in-process", channel) {
       @Override
@@ -73,10 +68,10 @@ public class GrpcExecutionFactory {
   }
 
   /** The remote strategy connects to a remote grpc remote execution service. */
-  public static IsolatedExecution createRemote(String host, int port) throws IOException {
-    Executor executor = MostExecutors.newMultiThreadExecutor("remote-exec-client", 4);
+  public static IsolatedExecution createRemote(String host, int port)
+      throws IOException {
     ManagedChannel channel =
-        ManagedChannelBuilder.forAddress(host, port).usePlaintext(true).executor(executor).build();
+        ManagedChannelBuilder.forAddress(host, port).usePlaintext(true).build();
 
     return new GrpcRemoteExecution("buck", channel) {
       @Override
