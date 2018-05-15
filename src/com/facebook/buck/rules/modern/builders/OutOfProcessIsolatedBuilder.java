@@ -20,7 +20,9 @@ import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.DefaultBuckEventBus;
 import com.facebook.buck.step.StepFailedException;
+import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
+import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.timing.DefaultClock;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -56,7 +58,8 @@ public class OutOfProcessIsolatedBuilder {
     new IsolatedBuildableBuilder(buildDir, projectRoot) {
       @Override
       protected Console createConsole() {
-        return Console.createNullConsole();
+        return new Console(
+            Verbosity.STANDARD_INFORMATION, System.out, System.err, Ansi.withoutTty());
       }
 
       @Override
