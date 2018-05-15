@@ -4,5 +4,6 @@
   root=//:root_repo
 [project]
   ignore = buck-out
-  pre_process = ./preprocessing-script.sh
+  pre_process = scripts/preprocessing-script.sh
+  post_process = scripts/postprocessing-script.sh
   ide = intellij

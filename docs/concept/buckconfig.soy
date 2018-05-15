@@ -3211,8 +3211,23 @@ your <code>.buckjavaargs</code> file</a>:
     The environment of this script contains the following variables:
     <ul>
       <li><code>BUCK_PROJECT_TARGETS</code> - whitespace-separated list of input targets.</li>
-      <li><code>BUCK_PROJECT_TYPE</code> - the type of a project, can be "xcode", "intellij" or
-      "intellij-view".</li>
+      <li><code>BUCK_PROJECT_TYPE</code> - the type of a project, can be "xcode" or "intellij".</li>
+    </ul>
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'project' /}
+  {param name: 'post_process' /}
+  {param example_value: 'scripts/post_process_buck_project.py' /}
+  {param description}
+     A script that should be executed after the project files are generated. This should only be
+    used to do some project-specific actions that are reasonably fast.
+    <p/>
+    The environment of this script contains the following variables:
+    <ul>
+      <li><code>BUCK_PROJECT_TARGETS</code> - whitespace-separated list of input targets.</li>
+      <li><code>BUCK_PROJECT_TYPE</code> - the type of a project, can be "xcode" or "intellij".</li>
     </ul>
   {/param}
 {/call}
