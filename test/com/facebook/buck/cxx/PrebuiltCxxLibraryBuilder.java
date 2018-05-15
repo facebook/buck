@@ -151,12 +151,6 @@ public class PrebuiltCxxLibraryBuilder
     return this;
   }
 
-  public PrebuiltCxxLibraryBuilder setVersionedSubDir(
-      VersionMatchedCollection<String> versionedSubDir) {
-    getArgForPopulating().setVersionedSubDir(Optional.of(versionedSubDir));
-    return this;
-  }
-
   public PrebuiltCxxLibraryBuilder setPreferredLinkage(NativeLinkable.Linkage linkage) {
     getArgForPopulating().setPreferredLinkage(linkage);
     return this;

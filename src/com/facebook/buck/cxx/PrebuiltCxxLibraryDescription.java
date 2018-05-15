@@ -47,15 +47,11 @@ import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableCacheKey;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.model.macros.MacroException;
-import com.facebook.buck.model.macros.MacroFinder;
-import com.facebook.buck.model.macros.StringMacroCombiner;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleCreationContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.DescriptionCache;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.args.Arg;
@@ -66,7 +62,6 @@ import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.coercer.VersionMatchedCollection;
-import com.facebook.buck.rules.macros.FunctionMacroReplacer;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.versions.Version;
 import com.facebook.buck.versions.VersionPropagator;
@@ -88,7 +83,6 @@ import java.nio.file.Paths;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
-import java.util.function.Function;
 import java.util.regex.Pattern;
 import org.immutables.value.Value;
 
@@ -134,16 +128,6 @@ public class PrebuiltCxxLibraryDescription
 
   private PrebuiltCxxLibraryPaths getPaths(
       BuildTarget target, AbstractPrebuiltCxxLibraryDescriptionArg args) {
-    if (args.isNewApiUsed() && args.isOldApiUsed()) {
-      throw new HumanReadableException("%s: cannot use both old and new APIs", target);
-    }
-    if (args.isOldApiUsed()) {
-      throw new HumanReadableException(
-          "%s(%s) uses the deprecated API, but `cxx.enable_deprecated_prebuilt_cxx_library_api` "
-              + "isn't set.  Please see the `prebuilt_cxx_library` documentation for details and "
-              + "examples on how to port to the new API.",
-          DescriptionCache.getBuildRuleType(this).toString(), target);
-    }
     return NewPrebuiltCxxLibraryPaths.builder()
         .setTarget(target)
         .setHeaderDirs(args.getHeaderDirs())
@@ -161,34 +145,10 @@ public class PrebuiltCxxLibraryDescription
         .build();
   }
 
-  // Platform unlike most macro expanders needs access to the cxx build flavor.
-  // Because of that it can't be like normal expanders. So just create a handler here.
-  private static Function<String, String> getMacroExpander(
-      BuildTarget target, CxxPlatform cxxPlatform) {
-    return str -> {
-      try {
-        return MacroFinder.replace(
-            ImmutableMap.of(
-                "platform", new FunctionMacroReplacer<>(f -> cxxPlatform.getFlavor().toString())),
-            str,
-            true,
-            new StringMacroCombiner());
-      } catch (MacroException e) {
-        throw new HumanReadableException(e, "%s: %s in \"%s\"", target, e.getMessage(), str);
-      }
-    };
-  }
-
   public static String getSoname(
-      BuildTarget target,
-      CxxPlatform cxxPlatform,
-      Optional<String> soname,
-      Optional<String> libName) {
+      BuildTarget target, CxxPlatform cxxPlatform, Optional<String> soname) {
     return soname.orElse(
-        String.format(
-            "lib%s.%s",
-            libName.map(getMacroExpander(target, cxxPlatform)).orElse(target.getShortName()),
-            cxxPlatform.getSharedLibraryExtension()));
+        String.format("lib%s.%s", target.getShortName(), cxxPlatform.getSharedLibraryExtension()));
   }
 
   /**
@@ -254,7 +214,7 @@ public class PrebuiltCxxLibraryDescription
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     PrebuiltCxxLibraryPaths paths = getPaths(buildTarget, args);
 
-    String soname = getSoname(buildTarget, cxxPlatform, args.getSoname(), args.getLibName());
+    String soname = getSoname(buildTarget, cxxPlatform, args.getSoname());
 
     // Use the static PIC variant, if available.
     Optional<SourcePath> staticPicLibraryPath =
@@ -448,18 +408,6 @@ public class PrebuiltCxxLibraryDescription
       }
     }
 
-    if (selectedVersions.isPresent() && args.getVersionedSubDir().isPresent()) {
-      ImmutableList<String> versionSubDirs =
-          args.getVersionedSubDir()
-              .orElse(VersionMatchedCollection.of())
-              .getMatchingValues(selectedVersions.get());
-      if (versionSubDirs.size() != 1) {
-        throw new HumanReadableException(
-            "%s: could not get a single version sub dir: %s, %s, %s",
-            buildTarget, args.getVersionedSubDir(), versionSubDirs, selectedVersions);
-      }
-    }
-
     // Otherwise, we return the generic placeholder of this library, that dependents can use
     // get the real build rules via querying the action graph.
     PrebuiltCxxLibraryPaths paths = getPaths(buildTarget, args);
@@ -505,7 +453,7 @@ public class PrebuiltCxxLibraryDescription
 
       private String getSoname(CxxPlatform cxxPlatform) {
         return PrebuiltCxxLibraryDescription.getSoname(
-            getBuildTarget(), cxxPlatform, args.getSoname(), args.getLibName());
+            getBuildTarget(), cxxPlatform, args.getSoname());
       }
 
       private boolean isPlatformSupported(CxxPlatform cxxPlatform) {
@@ -883,13 +831,6 @@ public class PrebuiltCxxLibraryDescription
 
     Optional<VersionMatchedCollection<SourcePath>> getVersionedStaticPicLib();
 
-    // Deprecated API.
-    Optional<ImmutableList<String>> getIncludeDirs();
-
-    Optional<String> getLibName();
-
-    Optional<String> getLibDir();
-
     @Value.Default
     default boolean isHeaderOnly() {
       return false;
@@ -963,8 +904,6 @@ public class PrebuiltCxxLibraryDescription
 
     Optional<Pattern> getSupportedPlatformsRegex();
 
-    Optional<VersionMatchedCollection<String>> getVersionedSubDir();
-
     @Value.Default
     default boolean isSupportsSharedLibraryInterface() {
       return false;
@@ -985,13 +924,6 @@ public class PrebuiltCxxLibraryDescription
           || getStaticPicLib().isPresent()
           || getPlatformStaticPicLib().isPresent()
           || getVersionedStaticPicLib().isPresent();
-    }
-
-    default boolean isOldApiUsed() {
-      return getVersionedSubDir().isPresent()
-          || getIncludeDirs().isPresent()
-          || getLibDir().isPresent()
-          || getLibName().isPresent();
     }
   }
 }
