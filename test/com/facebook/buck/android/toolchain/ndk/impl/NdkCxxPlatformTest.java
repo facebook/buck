@@ -469,7 +469,6 @@ public class NdkCxxPlatformTest {
                       .setGccVersion("clang-version")
                       .build(),
                   NdkCxxRuntime.GNUSTL,
-                  "target-app-platform",
                   ImmutableSet.of("x86"),
                   platform,
                   new AlwaysFoundExecutableFinder(),
@@ -522,7 +521,6 @@ public class NdkCxxPlatformTest {
                 .setGccVersion("clang-version")
                 .build(),
             NdkCxxRuntime.GNUSTL,
-            "target-app-platform",
             ImmutableSet.of("x86"),
             Platform.LINUX,
             new AlwaysFoundExecutableFinder(),

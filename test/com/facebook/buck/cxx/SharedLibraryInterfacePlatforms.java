@@ -63,7 +63,6 @@ public class SharedLibraryInterfacePlatforms {
             ndkDir,
             compiler,
             NdkCxxPlatforms.DEFAULT_CXX_RUNTIME,
-            NdkCxxPlatforms.DEFAULT_TARGET_APP_PLATFORM,
             NdkCxxPlatforms.DEFAULT_CPU_ABIS,
             Platform.detect());
     // Just return one of the NDK platforms, which should be enough to test shared library interface

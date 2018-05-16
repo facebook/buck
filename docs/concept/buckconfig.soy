@@ -2890,10 +2890,23 @@ your <code>.buckjavaargs</code> file</a>:
 {call buckconfig.entry}
   {param section: 'ndk' /}
   {param name: 'app_platform' /}
-  {param example_value: 'android-21' /}
   {param description}
+  <p>
     The android platform libraries that the code is targeting.  This is equivalent to the{sp}
     <code>APP_TARGET</code> in the NDK build system.  The default is <code>android-16</code>.
+  </p>
+  <p>
+  This setting can also be set on a per-CPU ABI basis. Each key should begin with the{sp}
+  prefix <code>app_platform-</code>, followed by the CPU ABI name. ABI-specific values{sp}
+  have higher precedence.
+  </p>
+  {/param}
+  {param raw_example}
+{literal}<pre class="prettyprint lang-ini">
+[ndk]
+  app_platform = android-19
+  app_platform-arm64 = android-21
+</pre>{/literal}
   {/param}
 {/call}
 

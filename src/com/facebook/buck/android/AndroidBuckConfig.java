@@ -21,13 +21,16 @@ import com.facebook.buck.android.toolchain.ndk.NdkCxxRuntime;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
 public class AndroidBuckConfig {
+  private static final String APP_PLATFORM_KEY_PREFIX = "app_platform-";
 
   private final BuckConfig delegate;
   private final Platform platform;
@@ -65,7 +68,7 @@ public class AndroidBuckConfig {
     return delegate.getValue("ndk", "ndk_repository_path");
   }
 
-  public Optional<String> getNdkAppPlatform() {
+  public Optional<String> getNdkCpuAbiAgnosticAppPlatform() {
     return delegate.getValue("ndk", "app_platform");
   }
 
@@ -103,6 +106,30 @@ public class AndroidBuckConfig {
 
   public boolean isGrayscaleImageProcessingEnabled() {
     return delegate.getBooleanValue("resources", "resource_grayscale_enabled", false);
+  }
+
+  /**
+   * Returns the CPU specific app platform, or the agnostic one if set. If neither are set, returns
+   * `Optional.empty` instead of a default value so callers can determine the difference between
+   * user-set and buck defaults.
+   */
+  public Optional<String> getNdkAppPlatformForCpuAbi(String cpuAbi) {
+    ImmutableMap<String, String> platformMap = getNdkAppPlatformMap();
+    Optional<String> specificAppPlatform = Optional.ofNullable(platformMap.get(cpuAbi));
+    return specificAppPlatform.isPresent()
+        ? specificAppPlatform
+        : getNdkCpuAbiAgnosticAppPlatform();
+  }
+
+  private ImmutableMap<String, String> getNdkAppPlatformMap() {
+    ImmutableMap<String, String> allEntries = delegate.getEntriesForSection("ndk");
+    ImmutableMap.Builder<String, String> platforms = ImmutableMap.builder();
+    for (Map.Entry<String, String> entry : allEntries.entrySet()) {
+      if (entry.getKey().startsWith(APP_PLATFORM_KEY_PREFIX)) {
+        platforms.put(entry.getKey().substring(APP_PLATFORM_KEY_PREFIX.length()), entry.getValue());
+      }
+    }
+    return platforms.build();
   }
 
   /**
