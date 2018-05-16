@@ -7,8 +7,13 @@ import sys
 class ExitCode(object):
     """Python equivalent of com.facebook.buck.util.ExitCode"""
     SUCCESS = 0
-    FATAL_BOOTSTRAP = 11
     COMMANDLINE_ERROR = 3
+    FATAL_GENERIC = 10
+    FATAL_BOOTSTRAP = 11
+    FATAL_IO = 13
+    FATAL_DISK_FULL = 14
+    SIGNAL_INTERRUPT = 130
+    SIGNAL_PIPE = 141
 
 
 if sys.version_info < (2, 7):
@@ -146,7 +151,7 @@ def main(argv, reporter):
                     # process
                     if sys.argv[1:] == ['kill']:
                         buck_repo.kill_buckd()
-                        return 0
+                        return ExitCode.SUCCESS
                     return buck_repo.launch_buck(build_id)
     finally:
         if tracing_dir:
@@ -154,7 +159,7 @@ def main(argv, reporter):
 
 
 if __name__ == "__main__":
-    exit_code = 0
+    exit_code = ExitCode.SUCCESS
     reporter = BuckStatusReporter(sys.argv)
     fn_exec = None
     exception = None
@@ -168,28 +173,27 @@ if __name__ == "__main__":
     except NoBuckConfigFoundException:
         exc_type, exception, exc_traceback = sys.exc_info()
         # buck is started outside project root
-        exit_code = 3  # COMMANDLINE_ERROR
+        exit_code = ExitCode.COMMANDLINE_ERROR
     except BuckDaemonErrorException:
         reporter.status_message = 'Buck daemon disconnected unexpectedly'
         _, exception, _ = sys.exc_info()
         print(str(exception))
         exception = None
-        exit_code = 10  # FATAL_GENERIC
+        exit_code = ExitCode.FATAL_GENERIC
     except IOError as e:
         exc_type, exception, exc_traceback = sys.exc_info()
         if e.errno == errno.ENOSPC:
-            exit_code = 14  # FATAL_DISK_FULL
+            exit_code = ExitCode.FATAL_DISK_FULL
         elif e.errno == errno.EPIPE:
-            exit_code = 141  # SIGNAL_PIPE
+            exit_code = ExitCode.SIGNAL_PIPE
         else:
-            exit_code = 13  # FATAL_IO
+            exit_code = ExitCode.FATAL_IO
     except KeyboardInterrupt:
         reporter.status_message = 'Python wrapper keyboard interrupt'
-        exit_code = 130  # SIGNAL_INTERRUPT
+        exit_code = ExitCode.SIGNAL_INTERRUPT
     except Exception:
         exc_type, exception, exc_traceback = sys.exc_info()
-        # 11 is fatal bootstrapper error
-        exit_code = 11
+        exit_code = ExitCode.FATAL_BOOTSTRAP
 
     if exception is not None:
         logging.error(exception, exc_info=(exc_type, exception, exc_traceback))
