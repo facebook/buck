@@ -18,6 +18,7 @@ package com.facebook.buck.rules.modern.builders;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.LeafEvents;
 import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.rules.modern.builders.FileTreeBuilder.ProtocolTreeBuilder;
 import com.facebook.buck.rules.modern.builders.Protocol.Digest;
@@ -25,6 +26,7 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.NamedTemporaryDirectory;
+import com.facebook.buck.util.Scope;
 import com.facebook.buck.util.function.ThrowingSupplier;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
@@ -82,8 +84,14 @@ class InProcessIsolatedExecution implements IsolatedExecution {
       ThriftProtocol protocol = new ThriftProtocol();
       Digest rootDigest =
           inputsBuilder.buildTree(new ProtocolTreeBuilder(requiredData::put, dir -> {}, protocol));
-      storage.addMissing(ImmutableMap.copyOf(requiredData));
-      storage.materializeInputs(buildDir, rootDigest, Optional.empty());
+
+      try (Scope scope = LeafEvents.scope(eventBus, "uploading_inputs")) {
+        storage.addMissing(ImmutableMap.copyOf(requiredData));
+      }
+
+      try (Scope scope = LeafEvents.scope(eventBus, "materializing_inputs")) {
+        storage.materializeInputs(buildDir, rootDigest, Optional.empty());
+      }
       new IsolatedBuildableBuilder(buildDir, projectRoot) {
         @Override
         protected Console createConsole() {
@@ -95,7 +103,9 @@ class InProcessIsolatedExecution implements IsolatedExecution {
           return eventBus;
         }
       }.build(hash);
-      materializeOutputs(outputs, buildDir, cellPrefixRoot);
+      try (Scope scope = LeafEvents.scope(eventBus, "materializing_outputs")) {
+        materializeOutputs(outputs, buildDir, cellPrefixRoot);
+      }
     }
   }
 

@@ -16,6 +16,8 @@
 
 package com.facebook.buck.rules.modern.builders;
 
+import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.LeafEvents;
 import com.facebook.buck.rules.modern.builders.FileTreeBuilder.InputFile;
 import com.facebook.buck.rules.modern.builders.FileTreeBuilder.ProtocolTreeBuilder;
 import com.facebook.buck.rules.modern.builders.Protocol.Digest;
@@ -31,6 +33,7 @@ import com.facebook.buck.util.ProcessExecutor.Result;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.ProcessExecutorParams.Builder;
 import com.facebook.buck.util.RichStream;
+import com.facebook.buck.util.Scope;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.function.ThrowingSupplier;
 import com.google.common.base.Preconditions;
@@ -56,9 +59,11 @@ import java.util.stream.Stream;
  */
 public class ActionRunner {
   private final Protocol protocol;
+  private final BuckEventBus eventBus;
 
-  public ActionRunner(Protocol protocol) {
+  public ActionRunner(Protocol protocol, BuckEventBus eventBus) {
     this.protocol = protocol;
+    this.eventBus = eventBus;
   }
 
   /** Results of an action. */
@@ -94,24 +99,34 @@ public class ActionRunner {
       Set<Path> outputs,
       Path buildDir)
       throws IOException, InterruptedException {
-    Builder paramsBuilder = ProcessExecutorParams.builder();
-    paramsBuilder.setCommand(command);
-    paramsBuilder.setEnvironment(environment);
-    paramsBuilder.setDirectory(buildDir);
-    CapturingPrintStream stdOut = new CapturingPrintStream();
-    CapturingPrintStream stdErr = new CapturingPrintStream();
-    Console console =
-        new Console(Verbosity.STANDARD_INFORMATION, stdOut, stdErr, Ansi.withoutTty());
-    Result result = new DefaultProcessExecutor(console).launchAndExecute(paramsBuilder.build());
+    Console console;
+    Builder paramsBuilder;
+    try (Scope ignored = LeafEvents.scope(eventBus, "preparing_action")) {
+      paramsBuilder = ProcessExecutorParams.builder();
+      paramsBuilder.setCommand(command);
+      paramsBuilder.setEnvironment(environment);
+      paramsBuilder.setDirectory(buildDir);
+      CapturingPrintStream stdOut = new CapturingPrintStream();
+      CapturingPrintStream stdErr = new CapturingPrintStream();
+      console = new Console(Verbosity.STANDARD_INFORMATION, stdOut, stdErr, Ansi.withoutTty());
+    }
 
-    ImmutableList.Builder<OutputFile> outputFiles = ImmutableList.builder();
-    ImmutableList.Builder<OutputDirectory> outputDirectories = ImmutableList.builder();
+    Result result;
+    try (Scope ignored = LeafEvents.scope(eventBus, "subprocess")) {
+      result = new DefaultProcessExecutor(console).launchAndExecute(paramsBuilder.build());
+    }
 
-    ImmutableMap.Builder<Digest, ThrowingSupplier<InputStream, IOException>> requiredData =
-        ImmutableMap.builder();
-    if (result.getExitCode() == 0) {
-      // TODO(cjhopman): Should outputs be returned on failure?
-      collectOutputs(outputs, buildDir, outputFiles, outputDirectories, requiredData);
+    ImmutableList.Builder<OutputFile> outputFiles;
+    ImmutableList.Builder<OutputDirectory> outputDirectories;
+    ImmutableMap.Builder<Digest, ThrowingSupplier<InputStream, IOException>> requiredData;
+    try (Scope ignored = LeafEvents.scope(eventBus, "collecting_outputs")) {
+      outputFiles = ImmutableList.builder();
+      outputDirectories = ImmutableList.builder();
+      requiredData = ImmutableMap.builder();
+      if (result.getExitCode() == 0) {
+        // TODO(cjhopman): Should outputs be returned on failure?
+        collectOutputs(outputs, buildDir, outputFiles, outputDirectories, requiredData);
+      }
     }
 
     return new ActionResult(

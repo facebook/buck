@@ -58,6 +58,7 @@ public class ModernBuildRuleBuilderFactory {
         case GRPC_REMOTE:
           return Optional.of(
               createGrpcRemote(
+                  eventBus,
                   new SourcePathRuleFinder(resolver),
                   cellResolver,
                   rootCell,
@@ -81,6 +82,7 @@ public class ModernBuildRuleBuilderFactory {
         case DEBUG_ISOLATED_OUT_OF_PROCESS:
           return Optional.of(
               createIsolatedOutOfProcess(
+                  eventBus,
                   new SourcePathRuleFinder(resolver),
                   cellResolver,
                   rootCell,
@@ -89,6 +91,7 @@ public class ModernBuildRuleBuilderFactory {
         case DEBUG_ISOLATED_OUT_OF_PROCESS_GRPC:
           return Optional.of(
               createIsolatedOutOfProcess(
+                  eventBus,
                   new SourcePathRuleFinder(resolver),
                   cellResolver,
                   rootCell,
@@ -97,7 +100,11 @@ public class ModernBuildRuleBuilderFactory {
         case DEBUG_GRPC_SERVICE_IN_PROCESS:
           return Optional.of(
               createGrpcInProcess(
-                  new SourcePathRuleFinder(resolver), cellResolver, rootCell, hashLoader::get));
+                  eventBus,
+                  new SourcePathRuleFinder(resolver),
+                  cellResolver,
+                  rootCell,
+                  hashLoader::get));
       }
     } catch (IOException e) {
       throw new BuckUncheckedExecutionException(e, "When creating MBR build strategy.");
@@ -134,6 +141,7 @@ public class ModernBuildRuleBuilderFactory {
    * copied back to the real build directory.
    */
   public static BuildRuleStrategy createIsolatedOutOfProcess(
+      BuckEventBus eventBus,
       SourcePathRuleFinder ruleFinder,
       CellPathResolver cellResolver,
       Cell rootCell,
@@ -141,7 +149,7 @@ public class ModernBuildRuleBuilderFactory {
       Protocol protocol)
       throws IOException {
     return IsolatedExecution.createIsolatedExecutionStrategy(
-        OutOfProcessIsolatedExecution.create(protocol),
+        OutOfProcessIsolatedExecution.create(protocol, eventBus),
         ruleFinder,
         cellResolver,
         rootCell,
@@ -171,6 +179,7 @@ public class ModernBuildRuleBuilderFactory {
   }
 
   private static BuildRuleStrategy createGrpcRemote(
+      BuckEventBus eventBus,
       SourcePathRuleFinder ruleFinder,
       CellPathResolver cellResolver,
       Cell rootCell,
@@ -179,7 +188,7 @@ public class ModernBuildRuleBuilderFactory {
       int port)
       throws IOException {
     return IsolatedExecution.createIsolatedExecutionStrategy(
-        GrpcExecutionFactory.createRemote(host, port),
+        GrpcExecutionFactory.createRemote(host, port, eventBus),
         ruleFinder,
         cellResolver,
         rootCell,
@@ -187,12 +196,17 @@ public class ModernBuildRuleBuilderFactory {
   }
 
   public static BuildRuleStrategy createGrpcInProcess(
+      BuckEventBus eventBus,
       SourcePathRuleFinder ruleFinder,
       CellPathResolver cellResolver,
       Cell rootCell,
       ThrowingFunction<Path, HashCode, IOException> fileHasher)
       throws IOException {
     return IsolatedExecution.createIsolatedExecutionStrategy(
-        GrpcExecutionFactory.createInProcess(), ruleFinder, cellResolver, rootCell, fileHasher);
+        GrpcExecutionFactory.createInProcess(eventBus),
+        ruleFinder,
+        cellResolver,
+        rootCell,
+        fileHasher);
   }
 }

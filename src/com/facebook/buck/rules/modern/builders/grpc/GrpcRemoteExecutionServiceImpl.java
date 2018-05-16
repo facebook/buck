@@ -16,6 +16,8 @@
 
 package com.facebook.buck.rules.modern.builders.grpc;
 
+import com.facebook.buck.core.model.BuildId;
+import com.facebook.buck.event.DefaultBuckEventBus;
 import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.rules.modern.builders.ActionRunner;
 import com.facebook.buck.rules.modern.builders.LocalContentAddressedStorage;
@@ -24,6 +26,7 @@ import com.facebook.buck.rules.modern.builders.MultiThreadedBlobUploader.UploadR
 import com.facebook.buck.rules.modern.builders.Protocol;
 import com.facebook.buck.rules.modern.builders.Protocol.Command;
 import com.facebook.buck.rules.modern.builders.grpc.GrpcProtocol.GrpcDigest;
+import com.facebook.buck.util.timing.DefaultClock;
 import com.google.bytestream.ByteStreamGrpc.ByteStreamImplBase;
 import com.google.bytestream.ByteStreamProto.QueryWriteStatusRequest;
 import com.google.bytestream.ByteStreamProto.QueryWriteStatusResponse;
@@ -249,7 +252,9 @@ public class GrpcRemoteExecutionServiceImpl {
                   .get();
 
           ActionRunner.ActionResult actionResult =
-              new ActionRunner(new GrpcProtocol())
+              new ActionRunner(
+                      new GrpcProtocol(),
+                      new DefaultBuckEventBus(new DefaultClock(), new BuildId("RemoteExec")))
                   .runAction(
                       command.getCommand(),
                       command.getEnvironment(),

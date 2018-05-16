@@ -23,6 +23,7 @@ import com.facebook.buck.core.build.engine.BuildExecutorRunner;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.resolver.CellPathResolver;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.event.LeafEvents;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -33,6 +34,7 @@ import com.facebook.buck.rules.modern.Serializer.Delegate;
 import com.facebook.buck.rules.modern.builders.FileTreeBuilder.InputFile;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.StepFailedException;
+import com.facebook.buck.util.Scope;
 import com.facebook.buck.util.function.ThrowingFunction;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
@@ -173,18 +175,29 @@ public class IsolatedExecutionStrategy extends AbstractModernBuildRuleStrategy {
       BuildContext buildRuleBuildContext,
       BuildableContext buildableContext)
       throws IOException, StepFailedException, InterruptedException {
-    ModernBuildRule<?> converted = (ModernBuildRule<?>) rule;
-    Buildable original = converted.getBuildable();
-    HashCode hash = serializer.serialize(new BuildableAndTarget(original, rule.getBuildTarget()));
+    Set<Path> outputs;
+    HashCode hash;
+    FileTreeBuilder inputsBuilder;
+    ModernBuildRule<?> converted;
 
-    FileTreeBuilder inputsBuilder = new FileTreeBuilder();
-    addBuckConfigInputs(inputsBuilder);
-    addDeserializationInputs(hash, inputsBuilder);
-    addRuleInputs(inputsBuilder, converted, buildRuleBuildContext);
+    try (Scope ignored = LeafEvents.scope(executionContext.getBuckEventBus(), "serializing")) {
+      converted = (ModernBuildRule<?>) rule;
+      Buildable original = converted.getBuildable();
+      hash = serializer.serialize(new BuildableAndTarget(original, rule.getBuildTarget()));
+    }
 
-    Set<Path> outputs = new HashSet<>();
-    converted.recordOutputs(
-        path -> outputs.add(cellPathPrefix.relativize(rule.getProjectFilesystem().resolve(path))));
+    try (Scope ignored =
+        LeafEvents.scope(executionContext.getBuckEventBus(), "constructing_inputs_tree")) {
+      inputsBuilder = new FileTreeBuilder();
+      addBuckConfigInputs(inputsBuilder);
+      addDeserializationInputs(hash, inputsBuilder);
+      addRuleInputs(inputsBuilder, converted, buildRuleBuildContext);
+
+      outputs = new HashSet<>();
+      converted.recordOutputs(
+          path ->
+              outputs.add(cellPathPrefix.relativize(rule.getProjectFilesystem().resolve(path))));
+    }
 
     executionStrategy.build(
         executionContext,

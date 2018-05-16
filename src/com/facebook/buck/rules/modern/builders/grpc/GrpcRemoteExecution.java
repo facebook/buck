@@ -17,6 +17,7 @@
 package com.facebook.buck.rules.modern.builders.grpc;
 
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.rules.modern.builders.AsyncBlobFetcher;
 import com.facebook.buck.rules.modern.builders.CasBlobUploader;
 import com.facebook.buck.rules.modern.builders.ContentAddressedStorage;
@@ -103,8 +104,9 @@ public class GrpcRemoteExecution extends RemoteExecution {
     Digest getDigest();
   }
 
-  GrpcRemoteExecution(String instanceName, ManagedChannel channel) throws IOException {
-    super();
+  GrpcRemoteExecution(String instanceName, ManagedChannel channel, BuckEventBus eventBus)
+      throws IOException {
+    super(eventBus);
     ByteStreamStub byteStreamStub = ByteStreamGrpc.newStub(channel);
     this.storage =
         createStorage(

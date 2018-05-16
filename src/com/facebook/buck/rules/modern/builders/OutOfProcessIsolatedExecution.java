@@ -16,12 +16,15 @@
 
 package com.facebook.buck.rules.modern.builders;
 
+import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.LeafEvents;
 import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.rules.modern.builders.Protocol.Command;
 import com.facebook.buck.rules.modern.builders.Protocol.OutputDirectory;
 import com.facebook.buck.rules.modern.builders.Protocol.OutputFile;
 import com.facebook.buck.rules.modern.builders.RemoteExecutionService.ExecutionResult;
 import com.facebook.buck.util.NamedTemporaryDirectory;
+import com.facebook.buck.util.Scope;
 import com.google.common.collect.ImmutableList;
 import java.io.Closeable;
 import java.io.IOException;
@@ -40,35 +43,42 @@ public class OutOfProcessIsolatedExecution extends RemoteExecution {
    * Returns a RemoteExecution implementation that uses a local CAS and a separate local temporary
    * directory for execution.
    */
-  public static OutOfProcessIsolatedExecution create(Protocol protocol) throws IOException {
+  public static OutOfProcessIsolatedExecution create(Protocol protocol, BuckEventBus eventBus)
+      throws IOException {
     NamedTemporaryDirectory workDir = new NamedTemporaryDirectory("__work__");
     LocalContentAddressedStorage storage =
         new LocalContentAddressedStorage(workDir.getPath().resolve("__cache__"), protocol);
-    return new OutOfProcessIsolatedExecution(workDir, storage, protocol);
+    return new OutOfProcessIsolatedExecution(workDir, storage, protocol, eventBus);
   }
 
   private OutOfProcessIsolatedExecution(
       NamedTemporaryDirectory workDir,
       LocalContentAddressedStorage storage,
-      final Protocol protocol)
+      final Protocol protocol,
+      BuckEventBus eventBus)
       throws IOException {
-    super();
+    super(eventBus);
     this.storage = storage;
     this.protocol = protocol;
     this.executionService =
         (digest, inputsRootDigest, outputs) -> {
           Path buildDir = workDir.getPath().resolve(inputsRootDigest.getHash());
           try (Closeable ignored = () -> MostFiles.deleteRecursively(buildDir)) {
-            Optional<Command> command =
-                storage.materializeInputs(buildDir, inputsRootDigest, Optional.of(digest));
+            Optional<Command> command;
+            try (Scope ignored2 = LeafEvents.scope(getEventBus(), "materializing_inputs")) {
+              command = storage.materializeInputs(buildDir, inputsRootDigest, Optional.of(digest));
+            }
+
             ActionRunner.ActionResult actionResult =
-                new ActionRunner(protocol)
+                new ActionRunner(protocol, eventBus)
                     .runAction(
                         command.get().getCommand(),
                         command.get().getEnvironment(),
                         outputs,
                         buildDir);
-            storage.addMissing(actionResult.requiredData);
+            try (Scope ignored2 = LeafEvents.scope(getEventBus(), "uploading_results")) {
+              storage.addMissing(actionResult.requiredData);
+            }
             return new ExecutionResult() {
               @Override
               public ImmutableList<OutputDirectory> getOutputDirectories() {

@@ -17,6 +17,8 @@
 package com.facebook.buck.rules.modern.builders;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.LeafEvents;
 import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.rules.modern.builders.FileTreeBuilder.InputFile;
 import com.facebook.buck.rules.modern.builders.FileTreeBuilder.ProtocolTreeBuilder;
@@ -27,6 +29,7 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.util.MoreSuppliers;
+import com.facebook.buck.util.Scope;
 import com.facebook.buck.util.env.BuckClasspath;
 import com.facebook.buck.util.function.ThrowingSupplier;
 import com.google.common.base.Joiner;
@@ -65,6 +68,12 @@ public abstract class RemoteExecution implements IsolatedExecution {
               "src/com/facebook/buck/rules/modern/builders/trampoline.sh"));
 
   private final byte[] trampoline;
+
+  private final BuckEventBus eventBus;
+
+  public BuckEventBus getEventBus() {
+    return eventBus;
+  }
 
   private static class Holder {
 
@@ -108,7 +117,8 @@ public abstract class RemoteExecution implements IsolatedExecution {
     }
   }
 
-  protected RemoteExecution() throws IOException {
+  protected RemoteExecution(BuckEventBus eventBus) throws IOException {
+    this.eventBus = eventBus;
     this.trampoline = Files.readAllBytes(TRAMPOLINE);
   }
 
@@ -123,25 +133,56 @@ public abstract class RemoteExecution implements IsolatedExecution {
       Path cellPrefixRoot)
       throws IOException, InterruptedException, StepFailedException {
 
-    ImmutableList<Path> isolatedClasspath =
-        processClasspath(inputsBuilder, cellPrefixRoot, Holder.classPath);
-    ImmutableList<Path> isolatedBootstrapClasspath =
-        processClasspath(inputsBuilder, cellPrefixRoot, Holder.bootstrapClassPath);
+    HashMap<Digest, ThrowingSupplier<InputStream, IOException>> requiredDataBuilder;
+    Digest commandDigest;
+    Digest inputsRootDigest;
 
-    Path trampolinePath = Paths.get("./__trampoline__.sh");
-    ImmutableList<String> command = getBuilderCommand(trampolinePath, projectRoot, hash.toString());
-    ImmutableSortedMap<String, String> commandEnvironment =
-        getBuilderEnvironmentOverrides(isolatedBootstrapClasspath, isolatedClasspath);
-
-    inputsBuilder.addFile(
-        trampolinePath, () -> trampoline, data -> Hashing.sha1().hashBytes(data).toString(), true);
-
-    for (Path path : outputs) {
-      MostFiles.deleteRecursivelyIfExists(cellPrefixRoot.resolve(path));
+    try (Scope ignored = LeafEvents.scope(eventBus, "deleting_stale_outputs")) {
+      for (Path path : outputs) {
+        MostFiles.deleteRecursivelyIfExists(cellPrefixRoot.resolve(path));
+      }
     }
 
-    ExecutionResult result =
-        execute(command, commandEnvironment, inputsBuilder, outputs, cellPrefixRoot);
+    try (Scope ignored = LeafEvents.scope(eventBus, "computing_action")) {
+      ImmutableList<Path> isolatedClasspath =
+          processClasspath(inputsBuilder, cellPrefixRoot, Holder.classPath);
+      ImmutableList<Path> isolatedBootstrapClasspath =
+          processClasspath(inputsBuilder, cellPrefixRoot, Holder.bootstrapClassPath);
+
+      Path trampolinePath = Paths.get("./__trampoline__.sh");
+      ImmutableList<String> command =
+          getBuilderCommand(trampolinePath, projectRoot, hash.toString());
+      ImmutableSortedMap<String, String> commandEnvironment =
+          getBuilderEnvironmentOverrides(isolatedBootstrapClasspath, isolatedClasspath);
+
+      inputsBuilder.addFile(
+          trampolinePath,
+          () -> trampoline,
+          data -> Hashing.sha1().hashBytes(data).toString(),
+          true);
+
+      Protocol.Command actionCommand = getProtocol().newCommand(command, commandEnvironment);
+
+      requiredDataBuilder = new HashMap<>();
+      ProtocolTreeBuilder grpcTreeBuilder =
+          new ProtocolTreeBuilder(requiredDataBuilder::put, directory -> {}, getProtocol());
+      inputsRootDigest = inputsBuilder.buildTree(grpcTreeBuilder);
+      byte[] commandData = getProtocol().toByteArray(actionCommand);
+      commandDigest = getProtocol().computeDigest(commandData);
+      requiredDataBuilder.put(commandDigest, () -> new ByteArrayInputStream(commandData));
+    }
+
+    try (Scope scope = LeafEvents.scope(eventBus, "uploading_inputs")) {
+      getStorage().addMissing(ImmutableMap.copyOf(requiredDataBuilder));
+    }
+    ExecutionResult result11 =
+        getExecutionService().execute(commandDigest, inputsRootDigest, outputs);
+    try (Scope scope = LeafEvents.scope(eventBus, "materializing_outputs")) {
+      getStorage()
+          .materializeOutputs(
+              result11.getOutputDirectories(), result11.getOutputFiles(), cellPrefixRoot);
+    }
+    ExecutionResult result = result11;
 
     if (result.getExitCode() != 0) {
       throw StepFailedException.createForFailingStepWithExitCode(
@@ -155,31 +196,6 @@ public abstract class RemoteExecution implements IsolatedExecution {
           StepExecutionResult.of(result.getExitCode(), result.getStderr()),
           Optional.of(buildTarget));
     }
-  }
-
-  private ExecutionResult execute(
-      ImmutableList<String> command,
-      ImmutableSortedMap<String, String> commandEnvironment,
-      FileTreeBuilder inputsBuilder,
-      Set<Path> outputs,
-      Path outputRoot)
-      throws IOException, InterruptedException {
-    Protocol.Command actionCommand = getProtocol().newCommand(command, commandEnvironment);
-
-    HashMap<Digest, ThrowingSupplier<InputStream, IOException>> requiredDataBuilder =
-        new HashMap<>();
-    ProtocolTreeBuilder grpcTreeBuilder =
-        new ProtocolTreeBuilder(requiredDataBuilder::put, directory -> {}, getProtocol());
-    Protocol.Digest inputsRootDigest = inputsBuilder.buildTree(grpcTreeBuilder);
-    byte[] commandData = getProtocol().toByteArray(actionCommand);
-    Protocol.Digest commandDigest = getProtocol().computeDigest(commandData);
-    requiredDataBuilder.put(commandDigest, () -> new ByteArrayInputStream(commandData));
-    getStorage().addMissing(ImmutableMap.copyOf(requiredDataBuilder));
-    ExecutionResult result =
-        getExecutionService().execute(commandDigest, inputsRootDigest, outputs);
-    getStorage()
-        .materializeOutputs(result.getOutputDirectories(), result.getOutputFiles(), outputRoot);
-    return result;
   }
 
   protected abstract Protocol getProtocol();

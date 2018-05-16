@@ -26,6 +26,7 @@ import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.impl.AbstractSourcePathResolver;
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.LeafEvents;
 import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.EmbeddedCellBuckOutInfo;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -45,6 +46,7 @@ import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.RichStream;
+import com.facebook.buck.util.Scope;
 import com.facebook.buck.util.config.Config;
 import com.facebook.buck.util.config.Configs;
 import com.facebook.buck.util.environment.Architecture;
@@ -79,6 +81,7 @@ public abstract class IsolatedBuildableBuilder {
   private final Function<Optional<String>, ProjectFilesystem> filesystemFunction;
   private final Deserializer.ClassFinder classFinder;
   private final Path dataRoot;
+  private final BuckEventBus eventBus;
 
   @SuppressWarnings("PMD.EmptyCatchBlock")
   IsolatedBuildableBuilder(Path workRoot, Path projectRoot) throws IOException {
@@ -177,7 +180,7 @@ public abstract class IsolatedBuildableBuilder {
     JavaPackageFinder javaPackageFinder =
         buckConfig.getView(JavaBuckConfig.class).createDefaultJavaPackageFinder();
     Console console = createConsole();
-    BuckEventBus eventBus = createEventBus(console);
+    this.eventBus = createEventBus(console);
     ProcessExecutor processExecutor = new DefaultProcessExecutor(console);
 
     this.executionContext =
@@ -263,18 +266,23 @@ public abstract class IsolatedBuildableBuilder {
     Deserializer deserializer =
         new Deserializer(filesystemFunction, classFinder, buildContext::getSourcePathResolver);
 
-    BuildableAndTarget reconstructed =
-        deserializer.deserialize(
-            getProvider(dataRoot.resolve(hash.toString())), BuildableAndTarget.class);
+    BuildableAndTarget reconstructed;
+    try (Scope ignored = LeafEvents.scope(eventBus, "deserializing")) {
+      reconstructed =
+          deserializer.deserialize(
+              getProvider(dataRoot.resolve(hash.toString())), BuildableAndTarget.class);
+    }
 
-    for (Step step :
-        ModernBuildRule.stepsForBuildable(
-            buildContext,
-            reconstructed.buildable,
-            filesystemFunction.apply(reconstructed.target.getCell()),
-            reconstructed.target)) {
-      new DefaultStepRunner()
-          .runStepForBuildTarget(executionContext, step, Optional.of(reconstructed.target));
+    try (Scope ignored = LeafEvents.scope(eventBus, "steps")) {
+      for (Step step :
+          ModernBuildRule.stepsForBuildable(
+              buildContext,
+              reconstructed.buildable,
+              filesystemFunction.apply(reconstructed.target.getCell()),
+              reconstructed.target)) {
+        new DefaultStepRunner()
+            .runStepForBuildTarget(executionContext, step, Optional.of(reconstructed.target));
+      }
     }
   }
 

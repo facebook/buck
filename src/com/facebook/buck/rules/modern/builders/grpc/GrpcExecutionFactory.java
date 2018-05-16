@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules.modern.builders.grpc;
 
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.rules.modern.builders.IsolatedExecution;
 import com.facebook.buck.rules.modern.builders.LocalContentAddressedStorage;
 import com.facebook.buck.util.NamedTemporaryDirectory;
@@ -35,7 +36,7 @@ public class GrpcExecutionFactory {
    * The in-process strategy starts up a grpc remote execution service in process and connects to it
    * directly.
    */
-  public static IsolatedExecution createInProcess() throws IOException {
+  public static IsolatedExecution createInProcess(BuckEventBus eventBus) throws IOException {
     NamedTemporaryDirectory workDir = new NamedTemporaryDirectory("__remote__");
     GrpcRemoteExecutionServiceImpl remoteExecution =
         new GrpcRemoteExecutionServiceImpl(
@@ -48,7 +49,7 @@ public class GrpcExecutionFactory {
     Server server = builder.build().start();
     ManagedChannel channel = InProcessChannelBuilder.forName("unique").build();
 
-    return new GrpcRemoteExecution("in-process", channel) {
+    return new GrpcRemoteExecution("in-process", channel, eventBus) {
       @Override
       public void close() throws IOException {
         try (Closer closer = Closer.create()) {
@@ -68,7 +69,7 @@ public class GrpcExecutionFactory {
   }
 
   /** The remote strategy connects to a remote grpc remote execution service. */
-  public static IsolatedExecution createRemote(String host, int port)
+  public static IsolatedExecution createRemote(String host, int port, BuckEventBus eventBus)
       throws IOException {
     ManagedChannel channel =
         ManagedChannelBuilder.forAddress(host, port)
@@ -76,7 +77,7 @@ public class GrpcExecutionFactory {
             .maxInboundMessageSize(500 * 1024 * 1024)
             .build();
 
-    return new GrpcRemoteExecution("buck", channel) {
+    return new GrpcRemoteExecution("buck", channel, eventBus) {
       @Override
       public void close() throws IOException {
         channel.shutdown();
