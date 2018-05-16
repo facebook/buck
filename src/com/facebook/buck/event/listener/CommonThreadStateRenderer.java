@@ -114,49 +114,48 @@ public class CommonThreadStateRenderer {
     if (!startEvent.isPresent() || !buildTarget.isPresent()) {
       return ansi.asSubtleText(
           formatWithTruncatable(outputMaxColumns, LINE_PREFIX, IDLE_STRING, "", ""));
-    } else {
-      String buildTargetStr = buildTarget.get().toString();
-      String elapsedTimeStr = formatElapsedTime(elapsedTimeMs);
+    }
+    String buildTargetStr = buildTarget.get().toString();
+    String elapsedTimeStr = formatElapsedTime(elapsedTimeMs);
 
-      String lineWithoutStep =
-          formatWithTruncatable(
-              outputMaxColumns, LINE_PREFIX, ELLIPSIS + elapsedTimeStr, buildTargetStr, "");
+    String lineWithoutStep =
+        formatWithTruncatable(
+            outputMaxColumns, LINE_PREFIX, ELLIPSIS + elapsedTimeStr, buildTargetStr, "");
 
-      lineBuilder.append(lineWithoutStep);
-      if (lineWithoutStep.length()
-          < outputMaxColumns
-              - (STEP_INFO_PREFIX.length() + STEP_INFO_SUFFIX.length() + ELLIPSIS.length())) {
-        if (runningStep.isPresent() && stepCategory.isPresent()) {
-          String stepTimeString =
-              String.format(
-                  "[%s]%s",
-                  formatElapsedTime(currentTimeMs - runningStep.get().getTimestamp()),
-                  STEP_INFO_SUFFIX);
-          lineBuilder.append(
-              formatWithTruncatable(
-                  outputMaxColumns - lineWithoutStep.length(),
-                  STEP_INFO_PREFIX,
-                  stepTimeString,
-                  stepCategory.get(),
-                  ELLIPSIS));
-        } else if (placeholderStepInformation.isPresent()) {
-          lineBuilder.append(
-              formatWithTruncatable(
-                  outputMaxColumns - lineWithoutStep.length(),
-                  " (",
-                  ")",
-                  placeholderStepInformation.get(),
-                  ELLIPSIS));
-        }
-      }
-      if (elapsedTimeMs > ERROR_THRESHOLD_MS) {
-        return ansi.asErrorText(lineBuilder.toString());
-      } else if (elapsedTimeMs > WARNING_THRESHOLD_MS) {
-        return ansi.asWarningText(lineBuilder.toString());
-      } else {
-        return lineBuilder.toString();
+    lineBuilder.append(lineWithoutStep);
+    if (lineWithoutStep.length()
+        < outputMaxColumns
+            - (STEP_INFO_PREFIX.length() + STEP_INFO_SUFFIX.length() + ELLIPSIS.length())) {
+      if (runningStep.isPresent() && stepCategory.isPresent()) {
+        String stepTimeString =
+            String.format(
+                "[%s]%s",
+                formatElapsedTime(currentTimeMs - runningStep.get().getTimestamp()),
+                STEP_INFO_SUFFIX);
+        lineBuilder.append(
+            formatWithTruncatable(
+                outputMaxColumns - lineWithoutStep.length(),
+                STEP_INFO_PREFIX,
+                stepTimeString,
+                stepCategory.get(),
+                ELLIPSIS));
+      } else if (placeholderStepInformation.isPresent()) {
+        lineBuilder.append(
+            formatWithTruncatable(
+                outputMaxColumns - lineWithoutStep.length(),
+                " (",
+                ")",
+                placeholderStepInformation.get(),
+                ELLIPSIS));
       }
     }
+    if (elapsedTimeMs > ERROR_THRESHOLD_MS) {
+      return ansi.asErrorText(lineBuilder.toString());
+    }
+    if (elapsedTimeMs > WARNING_THRESHOLD_MS) {
+      return ansi.asWarningText(lineBuilder.toString());
+    }
+    return lineBuilder.toString();
   }
 
   private static String formatWithTruncatable(
@@ -180,20 +179,20 @@ public class CommonThreadStateRenderer {
   public String renderShortStatus(boolean isActive, boolean renderSubtle, long elapsedTimeMs) {
     if (!isActive) {
       return ansi.asSubtleText(THREAD_SHORT_IDLE_STATUS);
-    } else {
-      int offset = (int) ((currentTimeMs / 400) % THREAD_SHORT_STATUS_ANIMATION.length());
-      String status =
-          String.format(THREAD_SHORT_STATUS_FORMAT, THREAD_SHORT_STATUS_ANIMATION.charAt(offset));
-      if (renderSubtle) {
-        return ansi.asSubtleText(status);
-      } else if (elapsedTimeMs > ERROR_THRESHOLD_MS) {
-        return ansi.asErrorText(status);
-      } else if (elapsedTimeMs > WARNING_THRESHOLD_MS) {
-        return ansi.asWarningText(status);
-      } else {
-        return status;
-      }
     }
+    int offset = (int) ((currentTimeMs / 400) % THREAD_SHORT_STATUS_ANIMATION.length());
+    String status =
+        String.format(THREAD_SHORT_STATUS_FORMAT, THREAD_SHORT_STATUS_ANIMATION.charAt(offset));
+    if (renderSubtle) {
+      return ansi.asSubtleText(status);
+    }
+    if (elapsedTimeMs > ERROR_THRESHOLD_MS) {
+      return ansi.asErrorText(status);
+    }
+    if (elapsedTimeMs > WARNING_THRESHOLD_MS) {
+      return ansi.asWarningText(status);
+    }
+    return status;
   }
 
   private String formatElapsedTime(long elapsedTimeMs) {
