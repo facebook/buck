@@ -1,0 +1,8 @@
+java_library(name = "foo")
+
+java_library(name = "bar")
+
+genrule(
+    name = "baz",
+    out = "",
+)

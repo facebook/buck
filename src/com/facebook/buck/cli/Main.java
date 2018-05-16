@@ -98,6 +98,7 @@ import com.facebook.buck.module.impl.DefaultBuckModuleManager;
 import com.facebook.buck.parser.DefaultParser;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
+import com.facebook.buck.parser.TargetSpecResolver;
 import com.facebook.buck.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
@@ -1293,7 +1294,8 @@ public final class Main {
                   typeCoercerFactory,
                   new ConstructorArgMarshaller(typeCoercerFactory),
                   knownBuildRuleTypesProvider,
-                  executableFinder),
+                  executableFinder,
+                  new TargetSpecResolver()),
               typeCoercerFactory,
               new InstrumentedVersionedTargetGraphCache(
                   new VersionedTargetGraphCache(), new InstrumentingCacheStatsTracker()),

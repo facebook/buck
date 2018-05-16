@@ -41,6 +41,7 @@ import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
 import com.facebook.buck.module.TestBuckModuleManagerFactory;
 import com.facebook.buck.parser.DefaultParser;
 import com.facebook.buck.parser.ParserConfig;
+import com.facebook.buck.parser.TargetSpecResolver;
 import com.facebook.buck.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
@@ -304,7 +305,8 @@ public class CleanCommandTest {
             typeCoercerFactory,
             new ConstructorArgMarshaller(typeCoercerFactory),
             knownBuildRuleTypesProvider,
-            executableFinder),
+            executableFinder,
+            new TargetSpecResolver()),
         BuckEventBusForTests.newInstance(),
         Platform.detect(),
         ImmutableMap.copyOf(System.getenv()),

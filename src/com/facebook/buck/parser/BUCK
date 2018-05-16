@@ -51,6 +51,7 @@ java_immutables_library(
         "TargetNodeListener.java",
         "TargetNodeParsePipeline.java",
         "TargetNodeSpec.java",
+        "TargetSpecResolver.java",
         "UnexpectedFlavorException.java",
     ],
     tests = [

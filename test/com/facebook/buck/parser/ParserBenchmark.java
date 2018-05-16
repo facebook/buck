@@ -131,7 +131,8 @@ public class ParserBenchmark {
             typeCoercerFactory,
             marshaller,
             knownBuildRuleTypesProvider,
-            new ExecutableFinder());
+            new ExecutableFinder(),
+            new TargetSpecResolver());
   }
 
   @After

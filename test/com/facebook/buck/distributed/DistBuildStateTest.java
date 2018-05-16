@@ -53,6 +53,7 @@ import com.facebook.buck.parser.DefaultParserTargetNodeFactory;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.ParserTargetNodeFactory;
+import com.facebook.buck.parser.TargetSpecResolver;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -261,7 +262,8 @@ public class DistBuildStateTest {
             typeCoercerFactory,
             constructorArgMarshaller,
             knownBuildRuleTypesProvider,
-            executableFinder);
+            executableFinder,
+            new TargetSpecResolver());
     TargetGraph targetGraph =
         parser.buildTargetGraph(
             BuckEventBusForTests.newInstance(),

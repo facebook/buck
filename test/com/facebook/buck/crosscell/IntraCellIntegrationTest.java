@@ -29,6 +29,7 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.DefaultParser;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
+import com.facebook.buck.parser.TargetSpecResolver;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
@@ -80,7 +81,8 @@ public class IntraCellIntegrationTest {
             coercerFactory,
             new ConstructorArgMarshaller(coercerFactory),
             knownBuildRuleTypesProvider,
-            new ExecutableFinder());
+            new ExecutableFinder(),
+            new TargetSpecResolver());
 
     // This parses cleanly
     parser.buildTargetGraph(

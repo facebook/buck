@@ -316,7 +316,8 @@ public class DefaultParserTest {
             typeCoercerFactory,
             new ConstructorArgMarshaller(typeCoercerFactory),
             knownBuildRuleTypesProvider,
-            executableFinder);
+            executableFinder,
+            new TargetSpecResolver());
 
     counter = new ParseEventStartedCounter();
     eventBus.register(counter);
@@ -562,21 +563,6 @@ public class DefaultParserTest {
     Iterable<BuildTarget> buildTargets = ImmutableList.of(fooTarget);
 
     parser.buildTargetGraph(eventBus, cell, false, executorService, buildTargets);
-  }
-
-  @Test
-  public void whenAllRulesRequestedWithTrueFilterThenMultipleRulesReturned()
-      throws BuildFileParseException, IOException, InterruptedException {
-    ImmutableSet<BuildTarget> targets =
-        filterAllTargetsInProject(
-            parser, cell, BuckEventBusForTests.newInstance(), executorService);
-
-    ImmutableSet<BuildTarget> expectedTargets =
-        ImmutableSet.of(
-            BuildTargetFactory.newInstance(cellRoot, "//java/com/facebook", "foo"),
-            BuildTargetFactory.newInstance(cellRoot, "//java/com/facebook", "bar"),
-            BuildTargetFactory.newInstance(cellRoot, "//java/com/facebook", "baz"));
-    assertEquals("Should have returned all rules.", expectedTargets, targets);
   }
 
   @Test
@@ -1681,7 +1667,8 @@ public class DefaultParserTest {
             typeCoercerFactory,
             new ConstructorArgMarshaller(typeCoercerFactory),
             knownBuildRuleTypesProvider,
-            executableFinder);
+            executableFinder,
+            new TargetSpecResolver());
     Path testFooJavaFile = tempDir.newFile("foo/Foo.java");
     Files.write(testFooJavaFile, "// Ceci n'est pas une Javafile\n".getBytes(UTF_8));
     HashCode updated = buildTargetGraphAndGetHashCodes(parser, fooLibTarget).get(fooLibTarget);
@@ -1799,7 +1786,8 @@ public class DefaultParserTest {
             typeCoercerFactory,
             new ConstructorArgMarshaller(typeCoercerFactory),
             knownBuildRuleTypesProvider,
-            executableFinder);
+            executableFinder,
+            new TargetSpecResolver());
     Files.write(
         testFooBuckFile,
         ("java_library(name = 'lib', deps = [], visibility=['PUBLIC'])\njava_library("
@@ -2084,7 +2072,8 @@ public class DefaultParserTest {
             typeCoercerFactory,
             new ConstructorArgMarshaller(typeCoercerFactory),
             knownBuildRuleTypesProvider,
-            executableFinder);
+            executableFinder,
+            new TargetSpecResolver());
     // Restore state.
     parser.getPermState().restoreState(remote, cell);
     // Try to use the restored target graph.
@@ -2182,77 +2171,6 @@ public class DefaultParserTest {
 
     // Test that the second parseBuildFile call repopulated the cache.
     assertEquals("Should not have invalidated.", 1, counter.calls);
-  }
-
-  @Test(timeout = 20000)
-  public void resolveTargetSpecsDoesNotHangOnException() throws Exception {
-    Path buckFile = cellRoot.resolve("foo/BUCK");
-    Files.createDirectories(buckFile.getParent());
-    Files.write(buckFile, "# empty".getBytes(UTF_8));
-
-    buckFile = cellRoot.resolve("bar/BUCK");
-    Files.createDirectories(buckFile.getParent());
-    Files.write(buckFile, "I do not parse as python".getBytes(UTF_8));
-
-    thrown.expect(BuildFileParseException.class);
-    thrown.expectMessage("Buck wasn't able to parse");
-    thrown.expectMessage(Paths.get("bar/BUCK").toString());
-
-    parser.resolveTargetSpecs(
-        eventBus,
-        cell,
-        false,
-        executorService,
-        ImmutableList.of(
-            TargetNodePredicateSpec.of(
-                BuildFileSpec.fromRecursivePath(Paths.get("bar"), cell.getRoot())),
-            TargetNodePredicateSpec.of(
-                BuildFileSpec.fromRecursivePath(Paths.get("foo"), cell.getRoot()))),
-        SpeculativeParsing.ENABLED,
-        ParserConfig.ApplyDefaultFlavorsMode.ENABLED);
-  }
-
-  @Test
-  public void resolveTargetSpecsPreservesOrder() throws Exception {
-    BuildTarget foo = BuildTargetFactory.newInstance(filesystem.getRootPath(), "//foo:foo");
-    Path buckFile = cellRoot.resolve("foo/BUCK");
-    Files.createDirectories(buckFile.getParent());
-    Files.write(buckFile, "genrule(name='foo', out='foo', cmd='foo')".getBytes(UTF_8));
-
-    BuildTarget bar = BuildTargetFactory.newInstance(filesystem.getRootPath(), "//bar:bar");
-    buckFile = cellRoot.resolve("bar/BUCK");
-    Files.createDirectories(buckFile.getParent());
-    Files.write(buckFile, "genrule(name='bar', out='bar', cmd='bar')".getBytes(UTF_8));
-
-    ImmutableList<ImmutableSet<BuildTarget>> targets =
-        parser.resolveTargetSpecs(
-            eventBus,
-            cell,
-            false,
-            executorService,
-            ImmutableList.of(
-                TargetNodePredicateSpec.of(
-                    BuildFileSpec.fromRecursivePath(Paths.get("bar"), cell.getRoot())),
-                TargetNodePredicateSpec.of(
-                    BuildFileSpec.fromRecursivePath(Paths.get("foo"), cell.getRoot()))),
-            SpeculativeParsing.ENABLED,
-            ParserConfig.ApplyDefaultFlavorsMode.ENABLED);
-    assertThat(targets, equalTo(ImmutableList.of(ImmutableSet.of(bar), ImmutableSet.of(foo))));
-
-    targets =
-        parser.resolveTargetSpecs(
-            eventBus,
-            cell,
-            false,
-            executorService,
-            ImmutableList.of(
-                TargetNodePredicateSpec.of(
-                    BuildFileSpec.fromRecursivePath(Paths.get("foo"), cell.getRoot())),
-                TargetNodePredicateSpec.of(
-                    BuildFileSpec.fromRecursivePath(Paths.get("bar"), cell.getRoot()))),
-            SpeculativeParsing.ENABLED,
-            ParserConfig.ApplyDefaultFlavorsMode.ENABLED);
-    assertThat(targets, equalTo(ImmutableList.of(ImmutableSet.of(foo), ImmutableSet.of(bar))));
   }
 
   @Test

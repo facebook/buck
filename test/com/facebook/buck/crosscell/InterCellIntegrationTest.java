@@ -51,6 +51,7 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.DefaultParser;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
+import com.facebook.buck.parser.TargetSpecResolver;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -398,7 +399,8 @@ public class InterCellIntegrationTest {
             coercerFactory,
             new ConstructorArgMarshaller(coercerFactory),
             knownBuildRuleTypesProvider,
-            new ExecutableFinder());
+            new ExecutableFinder(),
+            new TargetSpecResolver());
     BuckEventBus eventBus = BuckEventBusForTests.newInstance();
 
     Cell primaryCell = primary.asCell();

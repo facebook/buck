@@ -37,6 +37,7 @@ import com.facebook.buck.model.FilesystemBackedBuildFileTree;
 import com.facebook.buck.parser.DefaultParser;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
+import com.facebook.buck.parser.TargetSpecResolver;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.rules.BuildRule;
@@ -294,7 +295,8 @@ public class OwnersReportTest {
         coercerFactory,
         new ConstructorArgMarshaller(coercerFactory),
         knownBuildRuleTypesProvider,
-        new ExecutableFinder());
+        new ExecutableFinder(),
+        new TargetSpecResolver());
   }
 
   private ImmutableMap<Cell, BuildFileTree> getBuildFileTrees(Cell rootCell) {
