@@ -18,6 +18,7 @@ package com.facebook.buck.distributed.build_slave;
 
 import static com.facebook.buck.distributed.testutil.CustomBuildRuleResolverFactory.CACHABLE_A;
 import static com.facebook.buck.distributed.testutil.CustomBuildRuleResolverFactory.CACHABLE_B;
+import static com.facebook.buck.distributed.testutil.CustomBuildRuleResolverFactory.CACHABLE_BUILD_LOCALLY_A;
 import static com.facebook.buck.distributed.testutil.CustomBuildRuleResolverFactory.CACHABLE_C;
 import static com.facebook.buck.distributed.testutil.CustomBuildRuleResolverFactory.CACHABLE_D;
 import static com.facebook.buck.distributed.testutil.CustomBuildRuleResolverFactory.CHAIN_TOP_TARGET;
@@ -25,9 +26,11 @@ import static com.facebook.buck.distributed.testutil.CustomBuildRuleResolverFact
 import static com.facebook.buck.distributed.testutil.CustomBuildRuleResolverFactory.LEFT_TARGET;
 import static com.facebook.buck.distributed.testutil.CustomBuildRuleResolverFactory.RIGHT_TARGET;
 import static com.facebook.buck.distributed.testutil.CustomBuildRuleResolverFactory.ROOT_TARGET;
+import static com.facebook.buck.distributed.testutil.CustomBuildRuleResolverFactory.UNCACHABLE_A;
 import static org.easymock.EasyMock.capture;
 import static org.easymock.EasyMock.expectLastCall;
 import static org.easymock.EasyMock.replay;
+import static org.easymock.EasyMock.verify;
 
 import com.facebook.buck.core.build.engine.impl.DefaultRuleDepsCache;
 import com.facebook.buck.core.model.BuildTarget;
@@ -41,6 +44,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.Futures;
 import java.util.List;
@@ -62,7 +66,7 @@ public class CacheOptimizedBuildTargetsQueueFactoryTest {
   @Before
   public void setUp() {
     this.artifactCache = null;
-    this.ruleFinishedPublisher = EasyMock.createMock(CoordinatorBuildRuleEventsPublisher.class);
+    this.ruleFinishedPublisher = EasyMock.createNiceMock(CoordinatorBuildRuleEventsPublisher.class);
   }
 
   private BuildTargetsQueue createQueueWithLocalCacheHits(
@@ -153,6 +157,7 @@ public class CacheOptimizedBuildTargetsQueueFactoryTest {
 
     // LEAF_TARGET and RIGHT_TARGET were pruned, so should have corresponding
     // started and completed events
+    verify(ruleFinishedPublisher);
     Assert.assertEquals(1, startedEventsCapture.getValues().size());
     Set<String> startedEvents = Sets.newHashSet(startedEventsCapture.getValues().get(0));
     Assert.assertTrue(startedEvents.contains(LEAF_TARGET));
@@ -390,13 +395,25 @@ public class CacheOptimizedBuildTargetsQueueFactoryTest {
             resolver, ImmutableList.of(cacheableA, cacheableB), ImmutableList.of(), false);
     Assert.assertEquals(5, queue.getDistributableBuildGraph().getNumCachableNodes());
 
-    // Check enabling of building locally marks correct rules as uncacheable.
+    // Check enabling of building locally marks correct rules as uncacheable and sends "unlocked"
+    // events for them.
+    Capture<ImmutableList<String>> unlockedEventsCapture = Capture.newInstance();
+    ruleFinishedPublisher.createBuildRuleUnlockedEvents(capture(unlockedEventsCapture));
+    expectLastCall();
+    replay(ruleFinishedPublisher);
+
     queue =
         createQueueWithRemoteCacheHits(
             resolver, ImmutableList.of(cacheableA, cacheableB), ImmutableList.of(), true);
     Assert.assertEquals(2, queue.getDistributableBuildGraph().getNumCachableNodes());
     Assert.assertFalse(queue.getDistributableBuildGraph().getNode(CACHABLE_C).isUncachable());
     Assert.assertFalse(queue.getDistributableBuildGraph().getNode(CACHABLE_D).isUncachable());
+    verify(ruleFinishedPublisher);
+    Set<String> unlockedEvents = Sets.newHashSet(unlockedEventsCapture.getValues().get(0));
+    Assert.assertEquals(4, unlockedEvents.size());
+    Assert.assertTrue(
+        unlockedEvents.containsAll(
+            Lists.newArrayList(CACHABLE_A, CACHABLE_B, UNCACHABLE_A, CACHABLE_BUILD_LOCALLY_A)));
 
     // Make sure it does not interfere with checking caches for artifacts (marking the (transitive)
     // "buildLocally" rules as uncacheable should happen only after visiting the graph and checking

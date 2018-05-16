@@ -238,6 +238,13 @@ public class BuildPhase {
           public void createMostBuildRulesCompletedEvent() {
             buildRuleEventManager.mostBuildRulesFinishedEventReceived();
           }
+
+          @Override
+          public void createBuildRuleUnlockedEvents(ImmutableList<String> unlockedTargets) {
+            for (String target : unlockedTargets) {
+              buildRuleEventManager.recordBuildRuleUnlockedEvent(target);
+            }
+          }
         };
 
     CoordinatorModeRunner coordinator =
@@ -482,6 +489,10 @@ public class BuildPhase {
                   case COORDINATOR_BUILD_PROGRESS_EVENT:
                     consoleEventsDispatcher.postDistBuildProgressEvent(
                         slaveEvent.getCoordinatorBuildProgressEvent().getBuildProgress());
+                    break;
+                  case BUILD_RULE_UNLOCKED_EVENT:
+                    buildRuleEventManager.recordBuildRuleUnlockedEvent(
+                        slaveEvent.getBuildRuleUnlockedEvent().getBuildTarget());
                     break;
                   case UNKNOWN:
                     LOG.error(

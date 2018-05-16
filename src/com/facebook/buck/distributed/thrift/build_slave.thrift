@@ -20,6 +20,7 @@ enum BuildSlaveEventType {
     ALL_BUILD_RULES_FINISHED_EVENT = 4,
     MOST_BUILD_RULES_FINISHED_EVENT = 5,
     COORDINATOR_BUILD_PROGRESS_EVENT = 6,
+    BUILD_RULE_UNLOCKED_EVENT = 7,
 }
 
 struct BuildSlaveEvent {
@@ -30,6 +31,7 @@ struct BuildSlaveEvent {
     11: optional BuildRuleStartedEvent buildRuleStartedEvent;
     12: optional BuildRuleFinishedEvent buildRuleFinishedEvent;
     13: optional CoordinatorBuildProgressEvent coordinatorBuildProgressEvent;
+    14: optional BuildRuleUnlockedEvent buildRuleUnlockedEvent;
 }
 
 enum ConsoleEventSeverity {
@@ -53,6 +55,10 @@ struct BuildRuleFinishedEvent {
 
 struct CoordinatorBuildProgressEvent {
     1: optional CoordinatorBuildProgress buildProgress;
+}
+
+struct BuildRuleUnlockedEvent {
+    1: optional string buildTarget;
 }
 
 ##############################################################################

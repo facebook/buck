@@ -346,7 +346,14 @@ public class CacheOptimizedBuildTargetsQueueFactory {
       // NOTE: this needs to be after uncacheability property is used for graph nodes visiting (and,
       // hence, pruning and scheduling) - we want caches to be checked for these rules while doing
       // the visiting (local build could have uploaded artifacts for these rules).
-      results.uncachableTargets.addAll(findTransitiveBuildLocallyTargets(results));
+      ImmutableList<String> transitiveBuildLocallyTargets =
+          ImmutableList.copyOf(findTransitiveBuildLocallyTargets(results));
+      results.uncachableTargets.addAll(transitiveBuildLocallyTargets);
+      // Unlock all rules which will not be built remotely so that local client does not get stuck
+      // waiting for them (some of them may be cachable from client point of view). DO NOT use
+      // completed/finished events as we are building deps of these rules remotely.
+      coordinatorBuildRuleEventsPublisher.createBuildRuleUnlockedEvents(
+          transitiveBuildLocallyTargets);
     }
 
     // Do the reference counting and create the EnqueuedTargets.

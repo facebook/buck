@@ -33,5 +33,8 @@ public class NoOpCoordinatorBuildRuleEventsPublisher
   public void createBuildRuleCompletionEvents(ImmutableList<String> finishedTargets) {}
 
   @Override
+  public void createBuildRuleUnlockedEvents(ImmutableList<String> unlockedTargets) {}
+
+  @Override
   public void createMostBuildRulesCompletedEvent() {}
 }

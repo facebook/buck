@@ -28,6 +28,7 @@ import com.facebook.buck.distributed.build_slave.HealthCheckStatsTracker;
 import com.facebook.buck.distributed.build_slave.MinionBuildProgressTracker;
 import com.facebook.buck.distributed.thrift.BuildRuleFinishedEvent;
 import com.facebook.buck.distributed.thrift.BuildRuleStartedEvent;
+import com.facebook.buck.distributed.thrift.BuildRuleUnlockedEvent;
 import com.facebook.buck.distributed.thrift.BuildSlaveEvent;
 import com.facebook.buck.distributed.thrift.BuildSlaveEventType;
 import com.facebook.buck.distributed.thrift.BuildSlaveFinishedStats;
@@ -455,6 +456,29 @@ public class DistBuildSlaveEventBusListener
 
     synchronized (pendingSlaveEvents) {
       pendingSlaveEvents.addAll(ruleCompletionEvents);
+    }
+  }
+
+  @Override
+  public void createBuildRuleUnlockedEvents(ImmutableList<String> unlockedTargets) {
+    if (unlockedTargets.size() == 0) {
+      return;
+    }
+    List<BuildSlaveEvent> ruleUnlockedEvents = new LinkedList<>();
+    for (String target : unlockedTargets) {
+      LOG.info(String.format("Queueing build rule unlocked event for target [%s]", target));
+      BuildRuleUnlockedEvent unlockedEvent = new BuildRuleUnlockedEvent();
+      unlockedEvent.setBuildTarget(target);
+
+      BuildSlaveEvent buildSlaveEvent =
+          DistBuildUtil.createBuildSlaveEvent(
+              BuildSlaveEventType.BUILD_RULE_UNLOCKED_EVENT, clock.currentTimeMillis());
+      buildSlaveEvent.setBuildRuleUnlockedEvent(unlockedEvent);
+      ruleUnlockedEvents.add(buildSlaveEvent);
+    }
+
+    synchronized (pendingSlaveEvents) {
+      pendingSlaveEvents.addAll(ruleUnlockedEvents);
     }
   }
 

@@ -638,4 +638,36 @@ public class DistBuildSlaveEventBusListenerTest {
     verify(distBuildServiceMock);
     Assert.assertEquals(expectedFinishedStats, capturedStats.getValue());
   }
+
+  @Test
+  public void testUnlockedEventsAreSent() throws IOException {
+    distBuildServiceMock.updateBuildSlaveStatus(eq(stampedeId), eq(buildSlaveRunId), anyObject());
+    expectLastCall().anyTimes();
+    distBuildServiceMock.storeBuildSlaveFinishedStats(
+        eq(stampedeId), eq(buildSlaveRunId), anyObject());
+    expectLastCall().anyTimes();
+
+    Capture<List<BuildSlaveEvent>> capturedEventsLists = Capture.newInstance(CaptureType.ALL);
+    distBuildServiceMock.uploadBuildSlaveEvents(
+        eq(stampedeId), eq(buildSlaveRunId), capture(capturedEventsLists));
+    expectLastCall().atLeastOnce();
+    replay(distBuildServiceMock);
+
+    ImmutableList<String> unlockedTargets = ImmutableList.of("unlock_1", "unlock2");
+    setUpDistBuildSlaveEventBusListener();
+    listener.createBuildRuleUnlockedEvents(unlockedTargets);
+    listener.close();
+
+    verify(distBuildServiceMock);
+    List<String> capturedEventsTargets =
+        capturedEventsLists
+            .getValues()
+            .stream()
+            .flatMap(List::stream)
+            .filter(event -> event.eventType.equals(BuildSlaveEventType.BUILD_RULE_UNLOCKED_EVENT))
+            .map(event -> event.getBuildRuleUnlockedEvent().getBuildTarget())
+            .collect(Collectors.toList());
+    Assert.assertEquals(capturedEventsTargets.size(), 2);
+    Assert.assertTrue(capturedEventsTargets.containsAll(unlockedTargets));
+  }
 }

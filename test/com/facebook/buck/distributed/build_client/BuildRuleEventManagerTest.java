@@ -71,6 +71,20 @@ public class BuildRuleEventManagerTest {
   }
 
   @Test
+  public void testBuildRuleUnlockedEventsNotifiedImmediately() {
+    remoteBuildRuleCompletionNotifier.signalCompletionOfBuildRule(BUILD_TARGET_ONE);
+    EasyMock.expectLastCall();
+    remoteBuildRuleCompletionNotifier.signalCompletionOfBuildRule(BUILD_TARGET_TWO);
+    EasyMock.expectLastCall();
+    EasyMock.replay(remoteBuildRuleCompletionNotifier);
+
+    eventManager.recordBuildRuleUnlockedEvent(BUILD_TARGET_ONE);
+    eventManager.recordBuildRuleUnlockedEvent(BUILD_TARGET_TWO);
+
+    EasyMock.verify(remoteBuildRuleCompletionNotifier);
+  }
+
+  @Test
   public void testPublishesOnlyCacheSynchronizedEvents() {
     // Setup expectations for how long event manager will sleep
     // BUILD_TARGET_ONE/TWO are synchronized at time 12
