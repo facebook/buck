@@ -143,5 +143,50 @@ public class CommonThreadStateRendererTest {
             Optional.empty(),
             5000,
             new StringBuilder()));
+
+    renderer =
+        new CommonThreadStateRenderer(
+            new Ansi(false), time -> time.toString(), 0, 45, ImmutableMap.of());
+
+    assertEquals(
+        ansi.asSubtleText(" - //some:target... 5000 (running som... [0])"),
+        renderer.renderLine(
+            Optional.of(BuildTargetFactory.newInstance("some:target")),
+            Optional.of(fakeEvent),
+            Optional.of(fakeEvent),
+            Optional.of("some step"),
+            Optional.empty(),
+            5000,
+            new StringBuilder()));
+
+    renderer =
+        new CommonThreadStateRenderer(
+            new Ansi(false), time -> time.toString(), 0, 80, ImmutableMap.of());
+
+    assertEquals(
+        ansi.asSubtleText(" - //some:target... 5000 (some placeholder)"),
+        renderer.renderLine(
+            Optional.of(BuildTargetFactory.newInstance("some:target")),
+            Optional.of(fakeEvent),
+            Optional.of(fakeEvent),
+            Optional.empty(),
+            Optional.of("some placeholder"),
+            5000,
+            new StringBuilder()));
+
+    renderer =
+        new CommonThreadStateRenderer(
+            new Ansi(false), time -> time.toString(), 0, 40, ImmutableMap.of());
+
+    assertEquals(
+        ansi.asSubtleText(" - //some:target... 5000 (some plac... )"),
+        renderer.renderLine(
+            Optional.of(BuildTargetFactory.newInstance("some:target")),
+            Optional.of(fakeEvent),
+            Optional.of(fakeEvent),
+            Optional.empty(),
+            Optional.of("some placeholder"),
+            5000,
+            new StringBuilder()));
   }
 }

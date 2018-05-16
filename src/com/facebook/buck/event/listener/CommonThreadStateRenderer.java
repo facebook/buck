@@ -51,6 +51,8 @@ public class CommonThreadStateRenderer {
   private static final String THREAD_SHORT_STATUS_FORMAT = "[%s]";
   private static final String THREAD_SHORT_IDLE_STATUS = "[ ]";
   private static final String THREAD_SHORT_STATUS_ANIMATION = ":':.";
+  private static final String STEP_INFO_PREFIX = " (running ";
+  private static final String STEP_INFO_SUFFIX = ")";
 
   private final Ansi ansi;
   private final Function<Long, String> formatTimeFunction;
@@ -109,58 +111,70 @@ public class CommonThreadStateRenderer {
       Optional<String> placeholderStepInformation,
       long elapsedTimeMs,
       StringBuilder lineBuilder) {
-    lineBuilder.append(LINE_PREFIX);
     if (!startEvent.isPresent() || !buildTarget.isPresent()) {
-      lineBuilder.append(IDLE_STRING);
-      return ansi.asSubtleText(lineBuilder.toString());
+      return ansi.asSubtleText(
+          formatWithTruncatable(outputMaxColumns, LINE_PREFIX, IDLE_STRING, "", ""));
     } else {
       String buildTargetStr = buildTarget.get().toString();
       String elapsedTimeStr = formatElapsedTime(elapsedTimeMs);
-      if (LINE_PREFIX.length()
-              + buildTargetStr.length()
-              + ELLIPSIS.length()
-              + elapsedTimeStr.length()
-          > outputMaxColumns) {
-        buildTargetStr =
-            buildTargetStr.substring(
-                0,
-                outputMaxColumns
-                    - (LINE_PREFIX.length() + elapsedTimeStr.length() + ELLIPSIS.length()));
-      }
-      lineBuilder.append(buildTargetStr);
-      lineBuilder.append(ELLIPSIS);
-      lineBuilder.append(elapsedTimeStr);
-      if (LINE_PREFIX.length()
-              + buildTargetStr.length()
-              + ELLIPSIS.length()
-              + elapsedTimeStr.length()
-          >= outputMaxColumns) {
-        return lineBuilder.toString();
-      }
 
-      if (runningStep.isPresent() && stepCategory.isPresent()) {
-        lineBuilder.append(" (running ");
-        lineBuilder.append(stepCategory.get());
-        lineBuilder.append('[');
-        lineBuilder.append(formatElapsedTime(currentTimeMs - runningStep.get().getTimestamp()));
-        lineBuilder.append("])");
+      String lineWithoutStep =
+          formatWithTruncatable(
+              outputMaxColumns, LINE_PREFIX, ELLIPSIS + elapsedTimeStr, buildTargetStr, "");
 
-        if (elapsedTimeMs > ERROR_THRESHOLD_MS) {
-          return ansi.asErrorText(lineBuilder.toString());
-        } else if (elapsedTimeMs > WARNING_THRESHOLD_MS) {
-          return ansi.asWarningText(lineBuilder.toString());
-        } else {
-          return lineBuilder.toString();
+      lineBuilder.append(lineWithoutStep);
+      if (lineWithoutStep.length()
+          < outputMaxColumns
+              - (STEP_INFO_PREFIX.length() + STEP_INFO_SUFFIX.length() + ELLIPSIS.length())) {
+        if (runningStep.isPresent() && stepCategory.isPresent()) {
+          String stepTimeString =
+              String.format(
+                  "[%s]%s",
+                  formatElapsedTime(currentTimeMs - runningStep.get().getTimestamp()),
+                  STEP_INFO_SUFFIX);
+          lineBuilder.append(
+              formatWithTruncatable(
+                  outputMaxColumns - lineWithoutStep.length(),
+                  STEP_INFO_PREFIX,
+                  stepTimeString,
+                  stepCategory.get(),
+                  ELLIPSIS));
+        } else if (placeholderStepInformation.isPresent()) {
+          lineBuilder.append(
+              formatWithTruncatable(
+                  outputMaxColumns - lineWithoutStep.length(),
+                  " (",
+                  ")",
+                  placeholderStepInformation.get(),
+                  ELLIPSIS));
         }
-      } else if (placeholderStepInformation.isPresent()) {
-        lineBuilder.append(" (");
-        lineBuilder.append(placeholderStepInformation.get());
-        lineBuilder.append(')');
-        return ansi.asSubtleText(lineBuilder.toString());
+      }
+      if (elapsedTimeMs > ERROR_THRESHOLD_MS) {
+        return ansi.asErrorText(lineBuilder.toString());
+      } else if (elapsedTimeMs > WARNING_THRESHOLD_MS) {
+        return ansi.asWarningText(lineBuilder.toString());
       } else {
         return lineBuilder.toString();
       }
     }
+  }
+
+  private static String formatWithTruncatable(
+      int maxLength, String prefix, String suffix, String truncatable, String truncateToken) {
+    int prefixAndSuffixLength = prefix.length() + suffix.length();
+    if (prefixAndSuffixLength + truncateToken.length() > maxLength) {
+      return "";
+    }
+
+    if (prefixAndSuffixLength + truncatable.length() > maxLength) {
+      truncatable =
+          String.format(
+              "%s%s",
+              truncatable.substring(0, maxLength - prefixAndSuffixLength - truncateToken.length()),
+              truncateToken);
+    }
+
+    return String.format("%s%s%s", prefix, truncatable, suffix);
   }
 
   public String renderShortStatus(boolean isActive, boolean renderSubtle, long elapsedTimeMs) {
