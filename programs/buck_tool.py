@@ -571,11 +571,14 @@ class BuckTool(object):
 
             returncode = process.poll()
 
-            # If the process hasn't exited yet, everything is working as expected
-            if returncode is None:
-                return True
+            # If the process has exited then daemon failed to start
+            if returncode is not None:
+                return False
 
-            return False
+            # Save pid of running daemon
+            self._buck_project.save_buckd_pid(process.pid)
+
+            return True
 
     def _get_repository(self):
         arcconfig = os.path.join(self._buck_project.root, '.arcconfig')

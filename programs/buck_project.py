@@ -55,6 +55,7 @@ class BuckProject:
 
         self.buckd_dir = os.path.join(root, ".buckd")
         self.buckd_version_file = os.path.join(self.buckd_dir, "buckd.version")
+        self.buckd_pid_file = os.path.join(self.buckd_dir, "pid")
         self.buckd_stdout = os.path.join(self.buckd_dir, "stdout")
         self.buckd_stderr = os.path.join(self.buckd_dir, "stderr")
 
@@ -109,6 +110,9 @@ class BuckProject:
 
     def save_buckd_version(self, version):
         write_contents_to_file(self.buckd_version_file, version)
+
+    def save_buckd_pid(self, pid):
+        write_contents_to_file(self.buckd_pid_file, str(pid))
 
     @staticmethod
     def from_current_dir():
