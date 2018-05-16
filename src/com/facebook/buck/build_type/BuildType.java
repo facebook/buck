@@ -18,7 +18,7 @@ package com.facebook.buck.build_type;
 
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.MoreSuppliers;
-import com.google.common.io.Files;
+import com.google.common.io.MoreFiles;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
@@ -47,8 +47,8 @@ public enum BuildType {
             }
             try {
               String contents =
-                  Files.readFirstLine(
-                      Paths.get(buildTypeFilename).toFile(), StandardCharsets.UTF_8);
+                  MoreFiles.asCharSource(Paths.get(buildTypeFilename), StandardCharsets.UTF_8)
+                      .readFirstLine();
               return BuildType.valueOf(contents);
             } catch (IOException e) {
               LOG.error(e, "Failed to read build type, using LOCAL_ANT type.");
