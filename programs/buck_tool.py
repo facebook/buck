@@ -422,8 +422,18 @@ class BuckTool(object):
                         logging.warning("Not using buckd because watchman isn't installed.")
 
                 if use_buckd:
+                    need_start = True
                     running_version = self._buck_project.get_running_buckd_version()
-                    if running_version != buck_version_uid or not self._is_buckd_running():
+                    if running_version is None:
+                        logging.info("Starting new Buck daemon...")
+                    elif running_version != buck_version_uid:
+                        logging.info("Restarting Buck daemon because Buck version has changed...")
+                    elif not self._is_buckd_running():
+                        logging.info("Unable to connect to Buck daemon, restarting it...")
+                    else:
+                        need_start = False
+
+                    if need_start:
                         self.kill_buckd()
                         if not self.launch_buckd(buck_version_uid=buck_version_uid):
                             use_buckd = False
