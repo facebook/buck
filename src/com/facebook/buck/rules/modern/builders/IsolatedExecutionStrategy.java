@@ -46,7 +46,6 @@ import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.ByteArrayInputStream;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -56,7 +55,9 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import javax.annotation.Nullable;
 
 /**
  * This wraps an IsolatedExecution implementation into a BuildRuleStrategy implementation. This
@@ -216,49 +217,37 @@ public class IsolatedExecutionStrategy extends AbstractModernBuildRuleStrategy {
   private void addRuleInputs(
       FileTreeBuilder inputsBuilder, ModernBuildRule<?> converted, BuildContext buildContext)
       throws IOException {
-    class InputsAdder {
-      Set<Path> linkedDirs = new HashSet<>();
 
-      void addInput(Path path) throws IOException {
-        Preconditions.checkState(!path.isAbsolute(), "Expected relative path: " + path);
-        Path source = cellPathPrefix.resolve(path);
-        Preconditions.checkState(
-            source.normalize().startsWith(cellPathPrefix),
-            String.format(
-                "Expected path starting with %s. Got %s (%s).",
-                cellPathPrefix, source, source.normalize()));
-        if (Files.isDirectory(source) && linkedDirs.contains(source)) {
-          return;
-        }
-
-        if (Files.isDirectory(source)) {
-          linkedDirs.add(source);
-          try (Stream<Path> children = Files.list(source)) {
-            for (Path child : (Iterable<Path>) children::iterator) {
-              addInput(cellPathPrefix.relativize(child));
-            }
-          }
-        } else {
-          inputsBuilder.addFile(
-              path,
-              () ->
-                  new InputFile(
-                      fileHasher.apply(source).toString(),
-                      (int) Files.size(source),
-                      Files.isExecutable(source),
-                      () -> new FileInputStream(source.toFile())));
-        }
-      }
-    }
-    InputsAdder inputsAdder = new InputsAdder();
+    FileInputsAdder inputsAdder =
+        new FileInputsAdder(
+            inputsBuilder,
+            cellPathPrefix,
+            fileHasher,
+            this::getDirectoryContents,
+            this::getSymlinkTarget);
     for (SourcePath inputSourcePath : converted.computeInputs()) {
       Path resolved =
           buildContext.getSourcePathResolver().getAbsolutePath(inputSourcePath).normalize();
+      inputsAdder.addInput(resolved);
+    }
+  }
 
-      // TODO(cjhopman): Should we map absolute paths to platform requirements?
-      if (resolved.startsWith(cellPathPrefix)) {
-        inputsAdder.addInput(cellPathPrefix.relativize(resolved));
-      }
+  @Nullable
+  private Path getSymlinkTarget(Path path) throws IOException {
+    if (!Files.isSymbolicLink(path)) {
+      return null;
+    }
+
+    return Files.readSymbolicLink(path);
+  }
+
+  @Nullable
+  private Iterable<Path> getDirectoryContents(Path path) throws IOException {
+    if (!Files.isDirectory(path)) {
+      return null;
+    }
+    try (Stream<Path> list = Files.list(path)) {
+      return list.collect(Collectors.toList());
     }
   }
 

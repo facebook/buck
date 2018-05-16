@@ -17,6 +17,7 @@ struct Status {
 struct Directory {
   1: list<FileNode> files;
   2: list<DirectoryNode> directories;
+  3: list<SymlinkNode> symlinks;
 }
 
 struct FileNode {
@@ -28,6 +29,11 @@ struct FileNode {
 struct DirectoryNode {
   1: string name;
   2: Digest digest;
+}
+
+struct SymlinkNode {
+  1: string name;
+  2: string target;
 }
 
 struct OutputFile {

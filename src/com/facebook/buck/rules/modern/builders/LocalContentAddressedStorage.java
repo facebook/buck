@@ -22,6 +22,7 @@ import com.facebook.buck.rules.modern.builders.Protocol.DirectoryNode;
 import com.facebook.buck.rules.modern.builders.Protocol.FileNode;
 import com.facebook.buck.rules.modern.builders.Protocol.OutputDirectory;
 import com.facebook.buck.rules.modern.builders.Protocol.OutputFile;
+import com.facebook.buck.rules.modern.builders.Protocol.SymlinkNode;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.concurrent.MostExecutors;
 import com.facebook.buck.util.function.ThrowingSupplier;
@@ -44,6 +45,7 @@ import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
@@ -129,6 +131,7 @@ public class LocalContentAddressedStorage implements ContentAddressedStorage {
                   path = exePath;
                 }
                 Path target = root.resolve(file.getName());
+                Preconditions.checkState(target.normalize().startsWith(root));
                 Files.createLink(target, path);
               }
 
@@ -220,6 +223,10 @@ public class LocalContentAddressedStorage implements ContentAddressedStorage {
       void materializeFile(Path root, Protocol.FileNode file) throws IOException;
 
       InputStream getData(Protocol.Digest digest) throws IOException;
+
+      default void materializeSymlink(Path root, SymlinkNode symlink) throws IOException {
+        Files.createSymbolicLink(root.resolve(symlink.getName()), Paths.get(symlink.getTarget()));
+      }
     }
 
     /** Materializes all of the inputs into root. All required data must be present. */
@@ -238,6 +245,10 @@ public class LocalContentAddressedStorage implements ContentAddressedStorage {
       for (DirectoryNode child : dir.getDirectoriesList()) {
         materializeInputs(root.resolve(child.getName()), child.getDigest(), commandDigest);
       }
+      for (SymlinkNode symlink : dir.getSymlinksList()) {
+        delegate.materializeSymlink(root, symlink);
+      }
+
       if (commandDigest.isPresent()) {
         try (InputStream dataStream = delegate.getData(commandDigest.get())) {
           return Optional.of(

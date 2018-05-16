@@ -49,6 +49,13 @@ public interface Protocol {
     boolean getIsExecutable();
   }
 
+  /** Representation of a symlink. */
+  interface SymlinkNode {
+    String getName();
+
+    String getTarget();
+  }
+
   /** Represents a child of a Directory. */
   interface DirectoryNode {
 
@@ -63,6 +70,8 @@ public interface Protocol {
     Iterable<FileNode> getFilesList();
 
     Iterable<DirectoryNode> getDirectoriesList();
+
+    Iterable<SymlinkNode> getSymlinksList();
   }
 
   /** A Tree contains all Directories in a merkle tree in a single structure. */
@@ -119,6 +128,8 @@ public interface Protocol {
 
   FileNode newFileNode(Digest digest, String name, boolean isExecutable);
 
+  SymlinkNode newSymlinkNode(String name, Path path);
+
   Command parseCommand(ByteBuffer data) throws IOException;
 
   Directory parseDirectory(ByteBuffer data) throws IOException;
@@ -127,7 +138,8 @@ public interface Protocol {
 
   DirectoryNode newDirectoryNode(String name, Digest child);
 
-  Directory newDirectory(List<DirectoryNode> children, List<FileNode> files);
+  Directory newDirectory(
+      List<DirectoryNode> children, List<FileNode> files, List<SymlinkNode> symlinks);
 
   byte[] toByteArray(Directory directory);
 

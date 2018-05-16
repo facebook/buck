@@ -505,6 +505,13 @@ message Directory {
 
   // The subdirectories in the directory.
   repeated DirectoryNode directories = 2;
+
+  repeated SymlinkNode symlinks = 3;
+}
+
+message SymlinkNode {
+  string name = 1;
+  string target = 2;
 }
 
 // A `FileNode` represents a single file and associated metadata.

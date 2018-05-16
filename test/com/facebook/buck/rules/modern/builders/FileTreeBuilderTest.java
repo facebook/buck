@@ -31,6 +31,7 @@ import com.google.common.io.ByteStreams;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
@@ -168,6 +169,11 @@ public class FileTreeBuilderTest {
         } catch (IOException e) {
           throw new RuntimeException(e);
         }
+      }
+
+      @Override
+      public void addSymlink(String name, Path path) {
+        throw new RuntimeException();
       }
 
       @Override

@@ -34,7 +34,12 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-/** Helper for constructing an input Digest for remote execution. */
+/**
+ * Helper for constructing an input Digest for remote execution.
+ *
+ * <p>Users should call addFile/addSymlink to add the inputs and then build the tree. No parents of
+ * an added file/symlink should be a symlink.
+ */
 public class FileTreeBuilder {
 
   /**
@@ -59,20 +64,12 @@ public class FileTreeBuilder {
     }
   }
 
-  private static class WrappedIOException extends RuntimeException {
-    WrappedIOException(IOException e) {
-      super(e);
-    }
-
-    @Override
-    public synchronized IOException getCause() {
-      return (IOException) super.getCause();
-    }
-  }
-
-  private static class DirectoryBuilder {
+  private class DirectoryBuilder {
     private final Map<String, DirectoryBuilder> children = new HashMap<>();
     private final Map<String, InputFile> files = new HashMap<>();
+    private final Map<String, Path> symlinks = new HashMap<>();
+
+    private DirectoryBuilder() {}
 
     private void addFileImpl(
         PathFragment pathFragment, ThrowingSupplier<InputFile, IOException> dataSupplier)
@@ -85,31 +82,46 @@ public class FileTreeBuilder {
             .addFileImpl(pathFragment.subFragment(1, pathFragment.segmentCount()), dataSupplier);
       } else {
         Preconditions.checkState(!children.containsKey(name));
-        try {
-          files.computeIfAbsent(
-              name,
-              ignored -> {
-                try {
-                  return dataSupplier.get();
-                } catch (IOException e) {
-                  throw new WrappedIOException(e);
-                }
-              });
-        } catch (WrappedIOException e) {
-          throw e.getCause();
+        Preconditions.checkState(!symlinks.containsKey(name));
+        if (files.containsKey(name)) {
+          return;
         }
+        files.put(name, dataSupplier.get());
+      }
+    }
+
+    private void addSymlinkImpl(PathFragment pathFragment, Path target) {
+      Preconditions.checkState(pathFragment.segmentCount() > 0);
+      String name = pathFragment.getSegment(0);
+
+      if (pathFragment.segmentCount() > 1) {
+        getDirectory(name)
+            .addSymlinkImpl(pathFragment.subFragment(1, pathFragment.segmentCount()), target);
+      } else {
+        Preconditions.checkState(!children.containsKey(name));
+        Preconditions.checkState(!files.containsKey(name));
+        symlinks.putIfAbsent(name, target);
       }
     }
 
     private DirectoryBuilder getDirectory(String segment) {
       Preconditions.checkState(!files.containsKey(segment));
+      Preconditions.checkState(!symlinks.containsKey(segment));
       return children.computeIfAbsent(segment, ignored -> new DirectoryBuilder());
     }
   }
 
-  private final DirectoryBuilder root = new DirectoryBuilder();
+  private final DirectoryBuilder root;
 
-  FileTreeBuilder() {}
+  FileTreeBuilder() {
+    this.root = new DirectoryBuilder();
+  }
+
+  /** Adds a symlink to the inputs. */
+  public void addSymlink(Path path, Path symlinkTarget) {
+    Preconditions.checkState(!path.isAbsolute());
+    root.addSymlinkImpl(PathFragments.pathToFragment(path), symlinkTarget);
+  }
 
   /** Adds a file to the inputs. */
   public void addFile(Path path, ThrowingSupplier<InputFile, IOException> dataSupplier)
@@ -154,6 +166,8 @@ public class FileTreeBuilder {
         boolean isExecutable,
         ThrowingSupplier<InputStream, IOException> dataSupplier);
 
+    void addSymlink(String name, Path path);
+
     T build();
   }
 
@@ -166,6 +180,7 @@ public class FileTreeBuilder {
 
     private final ImmutableList.Builder<Protocol.DirectoryNode> children = ImmutableList.builder();
     private final ImmutableList.Builder<Protocol.FileNode> files = ImmutableList.builder();
+    private final ImmutableList.Builder<Protocol.SymlinkNode> symlinks = ImmutableList.builder();
 
     public ProtocolTreeBuilder(
         BiConsumer<Protocol.Digest, ThrowingSupplier<InputStream, IOException>>
@@ -202,6 +217,11 @@ public class FileTreeBuilder {
     }
 
     @Override
+    public void addSymlink(String name, Path path) {
+      symlinks.add(protocol.newSymlinkNode(name, path));
+    }
+
+    @Override
     public Protocol.Digest build() {
       Protocol.Directory directory =
           protocol.newDirectory(
@@ -214,6 +234,11 @@ public class FileTreeBuilder {
                   .build()
                   .stream()
                   .sorted(Comparator.comparing(Protocol.FileNode::getName))
+                  .collect(Collectors.toList()),
+              symlinks
+                  .build()
+                  .stream()
+                  .sorted(Comparator.comparing(Protocol.SymlinkNode::getName))
                   .collect(Collectors.toList()));
       byte[] data = protocol.toByteArray(directory);
       Protocol.Digest digest = protocol.computeDigest(data);
@@ -232,6 +257,7 @@ public class FileTreeBuilder {
     root.files.forEach(
         (name, file) ->
             builder.addFile(name, file.hash, file.size, file.isExecutable, file.dataSupplier));
+    root.symlinks.forEach(builder::addSymlink);
     return builder.build();
   }
 }

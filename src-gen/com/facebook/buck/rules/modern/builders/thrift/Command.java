@@ -420,13 +420,13 @@ public class Command implements org.apache.thrift.TBase<Command, Command._Fields
           case 1: // ARGUMENTS
             if (schemeField.type == org.apache.thrift.protocol.TType.LIST) {
               {
-                org.apache.thrift.protocol.TList _list40 = iprot.readListBegin();
-                struct.arguments = new java.util.ArrayList<java.lang.String>(_list40.size);
-                java.lang.String _elem41;
-                for (int _i42 = 0; _i42 < _list40.size; ++_i42)
+                org.apache.thrift.protocol.TList _list48 = iprot.readListBegin();
+                struct.arguments = new java.util.ArrayList<java.lang.String>(_list48.size);
+                java.lang.String _elem49;
+                for (int _i50 = 0; _i50 < _list48.size; ++_i50)
                 {
-                  _elem41 = iprot.readString();
-                  struct.arguments.add(_elem41);
+                  _elem49 = iprot.readString();
+                  struct.arguments.add(_elem49);
                 }
                 iprot.readListEnd();
               }
@@ -438,14 +438,14 @@ public class Command implements org.apache.thrift.TBase<Command, Command._Fields
           case 2: // ENVIRONMENT_VARIABLES
             if (schemeField.type == org.apache.thrift.protocol.TType.LIST) {
               {
-                org.apache.thrift.protocol.TList _list43 = iprot.readListBegin();
-                struct.environmentVariables = new java.util.ArrayList<EnvironmentVariable>(_list43.size);
-                EnvironmentVariable _elem44;
-                for (int _i45 = 0; _i45 < _list43.size; ++_i45)
+                org.apache.thrift.protocol.TList _list51 = iprot.readListBegin();
+                struct.environmentVariables = new java.util.ArrayList<EnvironmentVariable>(_list51.size);
+                EnvironmentVariable _elem52;
+                for (int _i53 = 0; _i53 < _list51.size; ++_i53)
                 {
-                  _elem44 = new EnvironmentVariable();
-                  _elem44.read(iprot);
-                  struct.environmentVariables.add(_elem44);
+                  _elem52 = new EnvironmentVariable();
+                  _elem52.read(iprot);
+                  struct.environmentVariables.add(_elem52);
                 }
                 iprot.readListEnd();
               }
@@ -473,9 +473,9 @@ public class Command implements org.apache.thrift.TBase<Command, Command._Fields
         oprot.writeFieldBegin(ARGUMENTS_FIELD_DESC);
         {
           oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, struct.arguments.size()));
-          for (java.lang.String _iter46 : struct.arguments)
+          for (java.lang.String _iter54 : struct.arguments)
           {
-            oprot.writeString(_iter46);
+            oprot.writeString(_iter54);
           }
           oprot.writeListEnd();
         }
@@ -485,9 +485,9 @@ public class Command implements org.apache.thrift.TBase<Command, Command._Fields
         oprot.writeFieldBegin(ENVIRONMENT_VARIABLES_FIELD_DESC);
         {
           oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, struct.environmentVariables.size()));
-          for (EnvironmentVariable _iter47 : struct.environmentVariables)
+          for (EnvironmentVariable _iter55 : struct.environmentVariables)
           {
-            _iter47.write(oprot);
+            _iter55.write(oprot);
           }
           oprot.writeListEnd();
         }
@@ -521,18 +521,18 @@ public class Command implements org.apache.thrift.TBase<Command, Command._Fields
       if (struct.isSetArguments()) {
         {
           oprot.writeI32(struct.arguments.size());
-          for (java.lang.String _iter48 : struct.arguments)
+          for (java.lang.String _iter56 : struct.arguments)
           {
-            oprot.writeString(_iter48);
+            oprot.writeString(_iter56);
           }
         }
       }
       if (struct.isSetEnvironmentVariables()) {
         {
           oprot.writeI32(struct.environmentVariables.size());
-          for (EnvironmentVariable _iter49 : struct.environmentVariables)
+          for (EnvironmentVariable _iter57 : struct.environmentVariables)
           {
-            _iter49.write(oprot);
+            _iter57.write(oprot);
           }
         }
       }
@@ -544,27 +544,27 @@ public class Command implements org.apache.thrift.TBase<Command, Command._Fields
       java.util.BitSet incoming = iprot.readBitSet(2);
       if (incoming.get(0)) {
         {
-          org.apache.thrift.protocol.TList _list50 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, iprot.readI32());
-          struct.arguments = new java.util.ArrayList<java.lang.String>(_list50.size);
-          java.lang.String _elem51;
-          for (int _i52 = 0; _i52 < _list50.size; ++_i52)
+          org.apache.thrift.protocol.TList _list58 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, iprot.readI32());
+          struct.arguments = new java.util.ArrayList<java.lang.String>(_list58.size);
+          java.lang.String _elem59;
+          for (int _i60 = 0; _i60 < _list58.size; ++_i60)
           {
-            _elem51 = iprot.readString();
-            struct.arguments.add(_elem51);
+            _elem59 = iprot.readString();
+            struct.arguments.add(_elem59);
           }
         }
         struct.setArgumentsIsSet(true);
       }
       if (incoming.get(1)) {
         {
-          org.apache.thrift.protocol.TList _list53 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
-          struct.environmentVariables = new java.util.ArrayList<EnvironmentVariable>(_list53.size);
-          EnvironmentVariable _elem54;
-          for (int _i55 = 0; _i55 < _list53.size; ++_i55)
+          org.apache.thrift.protocol.TList _list61 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
+          struct.environmentVariables = new java.util.ArrayList<EnvironmentVariable>(_list61.size);
+          EnvironmentVariable _elem62;
+          for (int _i63 = 0; _i63 < _list61.size; ++_i63)
           {
-            _elem54 = new EnvironmentVariable();
-            _elem54.read(iprot);
-            struct.environmentVariables.add(_elem54);
+            _elem62 = new EnvironmentVariable();
+            _elem62.read(iprot);
+            struct.environmentVariables.add(_elem62);
           }
         }
         struct.setEnvironmentVariablesIsSet(true);

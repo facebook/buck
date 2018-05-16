@@ -415,14 +415,14 @@ public class Tree implements org.apache.thrift.TBase<Tree, Tree._Fields>, java.i
           case 2: // CHILDREN
             if (schemeField.type == org.apache.thrift.protocol.TType.LIST) {
               {
-                org.apache.thrift.protocol.TList _list16 = iprot.readListBegin();
-                struct.children = new java.util.ArrayList<Directory>(_list16.size);
-                Directory _elem17;
-                for (int _i18 = 0; _i18 < _list16.size; ++_i18)
+                org.apache.thrift.protocol.TList _list24 = iprot.readListBegin();
+                struct.children = new java.util.ArrayList<Directory>(_list24.size);
+                Directory _elem25;
+                for (int _i26 = 0; _i26 < _list24.size; ++_i26)
                 {
-                  _elem17 = new Directory();
-                  _elem17.read(iprot);
-                  struct.children.add(_elem17);
+                  _elem25 = new Directory();
+                  _elem25.read(iprot);
+                  struct.children.add(_elem25);
                 }
                 iprot.readListEnd();
               }
@@ -455,9 +455,9 @@ public class Tree implements org.apache.thrift.TBase<Tree, Tree._Fields>, java.i
         oprot.writeFieldBegin(CHILDREN_FIELD_DESC);
         {
           oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, struct.children.size()));
-          for (Directory _iter19 : struct.children)
+          for (Directory _iter27 : struct.children)
           {
-            _iter19.write(oprot);
+            _iter27.write(oprot);
           }
           oprot.writeListEnd();
         }
@@ -494,9 +494,9 @@ public class Tree implements org.apache.thrift.TBase<Tree, Tree._Fields>, java.i
       if (struct.isSetChildren()) {
         {
           oprot.writeI32(struct.children.size());
-          for (Directory _iter20 : struct.children)
+          for (Directory _iter28 : struct.children)
           {
-            _iter20.write(oprot);
+            _iter28.write(oprot);
           }
         }
       }
@@ -513,14 +513,14 @@ public class Tree implements org.apache.thrift.TBase<Tree, Tree._Fields>, java.i
       }
       if (incoming.get(1)) {
         {
-          org.apache.thrift.protocol.TList _list21 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
-          struct.children = new java.util.ArrayList<Directory>(_list21.size);
-          Directory _elem22;
-          for (int _i23 = 0; _i23 < _list21.size; ++_i23)
+          org.apache.thrift.protocol.TList _list29 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
+          struct.children = new java.util.ArrayList<Directory>(_list29.size);
+          Directory _elem30;
+          for (int _i31 = 0; _i31 < _list29.size; ++_i31)
           {
-            _elem22 = new Directory();
-            _elem22.read(iprot);
-            struct.children.add(_elem22);
+            _elem30 = new Directory();
+            _elem30.read(iprot);
+            struct.children.add(_elem30);
           }
         }
         struct.setChildrenIsSet(true);

@@ -13,17 +13,20 @@ public class Directory implements org.apache.thrift.TBase<Directory, Directory._
 
   private static final org.apache.thrift.protocol.TField FILES_FIELD_DESC = new org.apache.thrift.protocol.TField("files", org.apache.thrift.protocol.TType.LIST, (short)1);
   private static final org.apache.thrift.protocol.TField DIRECTORIES_FIELD_DESC = new org.apache.thrift.protocol.TField("directories", org.apache.thrift.protocol.TType.LIST, (short)2);
+  private static final org.apache.thrift.protocol.TField SYMLINKS_FIELD_DESC = new org.apache.thrift.protocol.TField("symlinks", org.apache.thrift.protocol.TType.LIST, (short)3);
 
   private static final org.apache.thrift.scheme.SchemeFactory STANDARD_SCHEME_FACTORY = new DirectoryStandardSchemeFactory();
   private static final org.apache.thrift.scheme.SchemeFactory TUPLE_SCHEME_FACTORY = new DirectoryTupleSchemeFactory();
 
   public java.util.List<FileNode> files; // required
   public java.util.List<DirectoryNode> directories; // required
+  public java.util.List<SymlinkNode> symlinks; // required
 
   /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
   public enum _Fields implements org.apache.thrift.TFieldIdEnum {
     FILES((short)1, "files"),
-    DIRECTORIES((short)2, "directories");
+    DIRECTORIES((short)2, "directories"),
+    SYMLINKS((short)3, "symlinks");
 
     private static final java.util.Map<java.lang.String, _Fields> byName = new java.util.HashMap<java.lang.String, _Fields>();
 
@@ -42,6 +45,8 @@ public class Directory implements org.apache.thrift.TBase<Directory, Directory._
           return FILES;
         case 2: // DIRECTORIES
           return DIRECTORIES;
+        case 3: // SYMLINKS
+          return SYMLINKS;
         default:
           return null;
       }
@@ -91,6 +96,9 @@ public class Directory implements org.apache.thrift.TBase<Directory, Directory._
     tmpMap.put(_Fields.DIRECTORIES, new org.apache.thrift.meta_data.FieldMetaData("directories", org.apache.thrift.TFieldRequirementType.DEFAULT, 
         new org.apache.thrift.meta_data.ListMetaData(org.apache.thrift.protocol.TType.LIST, 
             new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRUCT            , "DirectoryNode"))));
+    tmpMap.put(_Fields.SYMLINKS, new org.apache.thrift.meta_data.FieldMetaData("symlinks", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+        new org.apache.thrift.meta_data.ListMetaData(org.apache.thrift.protocol.TType.LIST, 
+            new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRUCT            , "SymlinkNode"))));
     metaDataMap = java.util.Collections.unmodifiableMap(tmpMap);
     org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(Directory.class, metaDataMap);
   }
@@ -100,11 +108,13 @@ public class Directory implements org.apache.thrift.TBase<Directory, Directory._
 
   public Directory(
     java.util.List<FileNode> files,
-    java.util.List<DirectoryNode> directories)
+    java.util.List<DirectoryNode> directories,
+    java.util.List<SymlinkNode> symlinks)
   {
     this();
     this.files = files;
     this.directories = directories;
+    this.symlinks = symlinks;
   }
 
   /**
@@ -125,6 +135,13 @@ public class Directory implements org.apache.thrift.TBase<Directory, Directory._
       }
       this.directories = __this__directories;
     }
+    if (other.isSetSymlinks()) {
+      java.util.List<SymlinkNode> __this__symlinks = new java.util.ArrayList<SymlinkNode>(other.symlinks.size());
+      for (SymlinkNode other_element : other.symlinks) {
+        __this__symlinks.add(other_element);
+      }
+      this.symlinks = __this__symlinks;
+    }
   }
 
   public Directory deepCopy() {
@@ -135,6 +152,7 @@ public class Directory implements org.apache.thrift.TBase<Directory, Directory._
   public void clear() {
     this.files = null;
     this.directories = null;
+    this.symlinks = null;
   }
 
   public int getFilesSize() {
@@ -215,6 +233,45 @@ public class Directory implements org.apache.thrift.TBase<Directory, Directory._
     }
   }
 
+  public int getSymlinksSize() {
+    return (this.symlinks == null) ? 0 : this.symlinks.size();
+  }
+
+  public java.util.Iterator<SymlinkNode> getSymlinksIterator() {
+    return (this.symlinks == null) ? null : this.symlinks.iterator();
+  }
+
+  public void addToSymlinks(SymlinkNode elem) {
+    if (this.symlinks == null) {
+      this.symlinks = new java.util.ArrayList<SymlinkNode>();
+    }
+    this.symlinks.add(elem);
+  }
+
+  public java.util.List<SymlinkNode> getSymlinks() {
+    return this.symlinks;
+  }
+
+  public Directory setSymlinks(java.util.List<SymlinkNode> symlinks) {
+    this.symlinks = symlinks;
+    return this;
+  }
+
+  public void unsetSymlinks() {
+    this.symlinks = null;
+  }
+
+  /** Returns true if field symlinks is set (has been assigned a value) and false otherwise */
+  public boolean isSetSymlinks() {
+    return this.symlinks != null;
+  }
+
+  public void setSymlinksIsSet(boolean value) {
+    if (!value) {
+      this.symlinks = null;
+    }
+  }
+
   public void setFieldValue(_Fields field, java.lang.Object value) {
     switch (field) {
     case FILES:
@@ -233,6 +290,14 @@ public class Directory implements org.apache.thrift.TBase<Directory, Directory._
       }
       break;
 
+    case SYMLINKS:
+      if (value == null) {
+        unsetSymlinks();
+      } else {
+        setSymlinks((java.util.List<SymlinkNode>)value);
+      }
+      break;
+
     }
   }
 
@@ -243,6 +308,9 @@ public class Directory implements org.apache.thrift.TBase<Directory, Directory._
 
     case DIRECTORIES:
       return getDirectories();
+
+    case SYMLINKS:
+      return getSymlinks();
 
     }
     throw new java.lang.IllegalStateException();
@@ -259,6 +327,8 @@ public class Directory implements org.apache.thrift.TBase<Directory, Directory._
       return isSetFiles();
     case DIRECTORIES:
       return isSetDirectories();
+    case SYMLINKS:
+      return isSetSymlinks();
     }
     throw new java.lang.IllegalStateException();
   }
@@ -296,6 +366,15 @@ public class Directory implements org.apache.thrift.TBase<Directory, Directory._
         return false;
     }
 
+    boolean this_present_symlinks = true && this.isSetSymlinks();
+    boolean that_present_symlinks = true && that.isSetSymlinks();
+    if (this_present_symlinks || that_present_symlinks) {
+      if (!(this_present_symlinks && that_present_symlinks))
+        return false;
+      if (!this.symlinks.equals(that.symlinks))
+        return false;
+    }
+
     return true;
   }
 
@@ -310,6 +389,10 @@ public class Directory implements org.apache.thrift.TBase<Directory, Directory._
     hashCode = hashCode * 8191 + ((isSetDirectories()) ? 131071 : 524287);
     if (isSetDirectories())
       hashCode = hashCode * 8191 + directories.hashCode();
+
+    hashCode = hashCode * 8191 + ((isSetSymlinks()) ? 131071 : 524287);
+    if (isSetSymlinks())
+      hashCode = hashCode * 8191 + symlinks.hashCode();
 
     return hashCode;
   }
@@ -338,6 +421,16 @@ public class Directory implements org.apache.thrift.TBase<Directory, Directory._
     }
     if (isSetDirectories()) {
       lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.directories, other.directories);
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+    }
+    lastComparison = java.lang.Boolean.valueOf(isSetSymlinks()).compareTo(other.isSetSymlinks());
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    if (isSetSymlinks()) {
+      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.symlinks, other.symlinks);
       if (lastComparison != 0) {
         return lastComparison;
       }
@@ -375,6 +468,14 @@ public class Directory implements org.apache.thrift.TBase<Directory, Directory._
       sb.append("null");
     } else {
       sb.append(this.directories);
+    }
+    first = false;
+    if (!first) sb.append(", ");
+    sb.append("symlinks:");
+    if (this.symlinks == null) {
+      sb.append("null");
+    } else {
+      sb.append(this.symlinks);
     }
     first = false;
     sb.append(")");
@@ -458,6 +559,25 @@ public class Directory implements org.apache.thrift.TBase<Directory, Directory._
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
             break;
+          case 3: // SYMLINKS
+            if (schemeField.type == org.apache.thrift.protocol.TType.LIST) {
+              {
+                org.apache.thrift.protocol.TList _list6 = iprot.readListBegin();
+                struct.symlinks = new java.util.ArrayList<SymlinkNode>(_list6.size);
+                SymlinkNode _elem7;
+                for (int _i8 = 0; _i8 < _list6.size; ++_i8)
+                {
+                  _elem7 = new SymlinkNode();
+                  _elem7.read(iprot);
+                  struct.symlinks.add(_elem7);
+                }
+                iprot.readListEnd();
+              }
+              struct.setSymlinksIsSet(true);
+            } else { 
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+            }
+            break;
           default:
             org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
         }
@@ -477,9 +597,9 @@ public class Directory implements org.apache.thrift.TBase<Directory, Directory._
         oprot.writeFieldBegin(FILES_FIELD_DESC);
         {
           oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, struct.files.size()));
-          for (FileNode _iter6 : struct.files)
+          for (FileNode _iter9 : struct.files)
           {
-            _iter6.write(oprot);
+            _iter9.write(oprot);
           }
           oprot.writeListEnd();
         }
@@ -489,9 +609,21 @@ public class Directory implements org.apache.thrift.TBase<Directory, Directory._
         oprot.writeFieldBegin(DIRECTORIES_FIELD_DESC);
         {
           oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, struct.directories.size()));
-          for (DirectoryNode _iter7 : struct.directories)
+          for (DirectoryNode _iter10 : struct.directories)
           {
-            _iter7.write(oprot);
+            _iter10.write(oprot);
+          }
+          oprot.writeListEnd();
+        }
+        oprot.writeFieldEnd();
+      }
+      if (struct.symlinks != null) {
+        oprot.writeFieldBegin(SYMLINKS_FIELD_DESC);
+        {
+          oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, struct.symlinks.size()));
+          for (SymlinkNode _iter11 : struct.symlinks)
+          {
+            _iter11.write(oprot);
           }
           oprot.writeListEnd();
         }
@@ -521,22 +653,34 @@ public class Directory implements org.apache.thrift.TBase<Directory, Directory._
       if (struct.isSetDirectories()) {
         optionals.set(1);
       }
-      oprot.writeBitSet(optionals, 2);
+      if (struct.isSetSymlinks()) {
+        optionals.set(2);
+      }
+      oprot.writeBitSet(optionals, 3);
       if (struct.isSetFiles()) {
         {
           oprot.writeI32(struct.files.size());
-          for (FileNode _iter8 : struct.files)
+          for (FileNode _iter12 : struct.files)
           {
-            _iter8.write(oprot);
+            _iter12.write(oprot);
           }
         }
       }
       if (struct.isSetDirectories()) {
         {
           oprot.writeI32(struct.directories.size());
-          for (DirectoryNode _iter9 : struct.directories)
+          for (DirectoryNode _iter13 : struct.directories)
           {
-            _iter9.write(oprot);
+            _iter13.write(oprot);
+          }
+        }
+      }
+      if (struct.isSetSymlinks()) {
+        {
+          oprot.writeI32(struct.symlinks.size());
+          for (SymlinkNode _iter14 : struct.symlinks)
+          {
+            _iter14.write(oprot);
           }
         }
       }
@@ -545,34 +689,48 @@ public class Directory implements org.apache.thrift.TBase<Directory, Directory._
     @Override
     public void read(org.apache.thrift.protocol.TProtocol prot, Directory struct) throws org.apache.thrift.TException {
       org.apache.thrift.protocol.TTupleProtocol iprot = (org.apache.thrift.protocol.TTupleProtocol) prot;
-      java.util.BitSet incoming = iprot.readBitSet(2);
+      java.util.BitSet incoming = iprot.readBitSet(3);
       if (incoming.get(0)) {
         {
-          org.apache.thrift.protocol.TList _list10 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
-          struct.files = new java.util.ArrayList<FileNode>(_list10.size);
-          FileNode _elem11;
-          for (int _i12 = 0; _i12 < _list10.size; ++_i12)
+          org.apache.thrift.protocol.TList _list15 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
+          struct.files = new java.util.ArrayList<FileNode>(_list15.size);
+          FileNode _elem16;
+          for (int _i17 = 0; _i17 < _list15.size; ++_i17)
           {
-            _elem11 = new FileNode();
-            _elem11.read(iprot);
-            struct.files.add(_elem11);
+            _elem16 = new FileNode();
+            _elem16.read(iprot);
+            struct.files.add(_elem16);
           }
         }
         struct.setFilesIsSet(true);
       }
       if (incoming.get(1)) {
         {
-          org.apache.thrift.protocol.TList _list13 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
-          struct.directories = new java.util.ArrayList<DirectoryNode>(_list13.size);
-          DirectoryNode _elem14;
-          for (int _i15 = 0; _i15 < _list13.size; ++_i15)
+          org.apache.thrift.protocol.TList _list18 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
+          struct.directories = new java.util.ArrayList<DirectoryNode>(_list18.size);
+          DirectoryNode _elem19;
+          for (int _i20 = 0; _i20 < _list18.size; ++_i20)
           {
-            _elem14 = new DirectoryNode();
-            _elem14.read(iprot);
-            struct.directories.add(_elem14);
+            _elem19 = new DirectoryNode();
+            _elem19.read(iprot);
+            struct.directories.add(_elem19);
           }
         }
         struct.setDirectoriesIsSet(true);
+      }
+      if (incoming.get(2)) {
+        {
+          org.apache.thrift.protocol.TList _list21 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
+          struct.symlinks = new java.util.ArrayList<SymlinkNode>(_list21.size);
+          SymlinkNode _elem22;
+          for (int _i23 = 0; _i23 < _list21.size; ++_i23)
+          {
+            _elem22 = new SymlinkNode();
+            _elem22.read(iprot);
+            struct.symlinks.add(_elem22);
+          }
+        }
+        struct.setSymlinksIsSet(true);
       }
     }
   }

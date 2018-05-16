@@ -133,6 +133,11 @@ public class ThriftProtocol implements Protocol {
           .map(ThriftDirectoryNode::new)
           .collect(Collectors.toList());
     }
+
+    @Override
+    public Iterable<SymlinkNode> getSymlinksList() {
+      return directory.symlinks.stream().map(ThriftSymlinkNode::new).collect(Collectors.toList());
+    }
   }
 
   private static class ThriftDirectoryNode implements DirectoryNode {
@@ -197,6 +202,12 @@ public class ThriftProtocol implements Protocol {
     public Digest getTreeDigest() {
       return new ThriftDigest(outputDirectory.treeDigest);
     }
+  }
+
+  @Override
+  public SymlinkNode newSymlinkNode(String name, Path path) {
+    return new ThriftSymlinkNode(
+        new com.facebook.buck.rules.modern.builders.thrift.SymlinkNode(name, path.toString()));
   }
 
   @Override
@@ -266,6 +277,24 @@ public class ThriftProtocol implements Protocol {
             output.toString(), get(digest), null, isExecutable));
   }
 
+  private static class ThriftSymlinkNode implements SymlinkNode {
+    private final com.facebook.buck.rules.modern.builders.thrift.SymlinkNode symlink;
+
+    private ThriftSymlinkNode(com.facebook.buck.rules.modern.builders.thrift.SymlinkNode symlink) {
+      this.symlink = symlink;
+    }
+
+    @Override
+    public String getName() {
+      return symlink.getName();
+    }
+
+    @Override
+    public String getTarget() {
+      return symlink.getTarget();
+    }
+  }
+
   private static class ThriftOutputFile implements OutputFile {
     private final com.facebook.buck.rules.modern.builders.thrift.OutputFile outputFile;
 
@@ -309,6 +338,11 @@ public class ThriftProtocol implements Protocol {
   private static com.facebook.buck.rules.modern.builders.thrift.DirectoryNode get(
       DirectoryNode directoryNode) {
     return ((ThriftDirectoryNode) directoryNode).directoryNode;
+  }
+
+  private static com.facebook.buck.rules.modern.builders.thrift.SymlinkNode get(
+      SymlinkNode symlink) {
+    return ((ThriftSymlinkNode) symlink).symlink;
   }
 
   private static com.facebook.buck.rules.modern.builders.thrift.FileNode get(FileNode fileNode) {
@@ -359,11 +393,13 @@ public class ThriftProtocol implements Protocol {
   }
 
   @Override
-  public Directory newDirectory(List<DirectoryNode> children, List<FileNode> files) {
+  public Directory newDirectory(
+      List<DirectoryNode> children, List<FileNode> files, List<SymlinkNode> symlinks) {
     return new ThriftDirectory(
         new com.facebook.buck.rules.modern.builders.thrift.Directory(
             files.stream().map(ThriftProtocol::get).collect(Collectors.toList()),
-            children.stream().map(ThriftProtocol::get).collect(Collectors.toList())));
+            children.stream().map(ThriftProtocol::get).collect(Collectors.toList()),
+            symlinks.stream().map(ThriftProtocol::get).collect(Collectors.toList())));
   }
 
   @Override

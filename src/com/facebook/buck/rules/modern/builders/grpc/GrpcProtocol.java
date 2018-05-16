@@ -143,6 +143,33 @@ public class GrpcProtocol implements Protocol {
           .map(GrpcDirectoryNode::new)
           .collect(Collectors.toList());
     }
+
+    @Override
+    public Iterable<SymlinkNode> getSymlinksList() {
+      return directory
+          .getSymlinksList()
+          .stream()
+          .map(GrpcSymlinkNode::new)
+          .collect(Collectors.toList());
+    }
+  }
+
+  private static class GrpcSymlinkNode implements SymlinkNode {
+    private final com.google.devtools.remoteexecution.v1test.SymlinkNode node;
+
+    private GrpcSymlinkNode(com.google.devtools.remoteexecution.v1test.SymlinkNode node) {
+      this.node = node;
+    }
+
+    @Override
+    public String getName() {
+      return node.getName();
+    }
+
+    @Override
+    public String getTarget() {
+      return node.getTarget();
+    }
   }
 
   private static class GrpcDirectoryNode implements DirectoryNode {
@@ -274,6 +301,16 @@ public class GrpcProtocol implements Protocol {
             .build());
   }
 
+  /** Wrapped Grpc OutputFile. */
+  @Override
+  public SymlinkNode newSymlinkNode(String name, Path target) {
+    return new GrpcSymlinkNode(
+        com.google.devtools.remoteexecution.v1test.SymlinkNode.newBuilder()
+            .setName(name)
+            .setTarget(target.toString())
+            .build());
+  }
+
   @Override
   public OutputDirectory newOutputDirectory(Path output, Digest digest, Digest treeDigest) {
     return new GrpcOutputDirectory(
@@ -304,12 +341,14 @@ public class GrpcProtocol implements Protocol {
   }
 
   @Override
-  public Directory newDirectory(List<DirectoryNode> children, List<FileNode> files) {
+  public Directory newDirectory(
+      List<DirectoryNode> children, List<FileNode> files, List<SymlinkNode> symlinks) {
     return new GrpcDirectory(
         com.google.devtools.remoteexecution.v1test.Directory.newBuilder()
             .addAllFiles(files.stream().map(GrpcProtocol::get).collect(Collectors.toList()))
             .addAllDirectories(
                 children.stream().map(GrpcProtocol::get).collect(Collectors.toList()))
+            .addAllSymlinks(symlinks.stream().map(GrpcProtocol::get).collect(Collectors.toList()))
             .build());
   }
 
@@ -378,6 +417,10 @@ public class GrpcProtocol implements Protocol {
   private static com.google.devtools.remoteexecution.v1test.DirectoryNode get(
       DirectoryNode directoryNode) {
     return ((GrpcDirectoryNode) directoryNode).directoryNode;
+  }
+
+  private static com.google.devtools.remoteexecution.v1test.SymlinkNode get(SymlinkNode node) {
+    return ((GrpcSymlinkNode) node).node;
   }
 
   private static com.google.devtools.remoteexecution.v1test.Command get(Command command) {

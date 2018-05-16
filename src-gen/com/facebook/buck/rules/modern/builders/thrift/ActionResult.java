@@ -860,14 +860,14 @@ public class ActionResult implements org.apache.thrift.TBase<ActionResult, Actio
           case 2: // OUTPUT_FILES
             if (schemeField.type == org.apache.thrift.protocol.TType.LIST) {
               {
-                org.apache.thrift.protocol.TList _list24 = iprot.readListBegin();
-                struct.outputFiles = new java.util.ArrayList<OutputFile>(_list24.size);
-                OutputFile _elem25;
-                for (int _i26 = 0; _i26 < _list24.size; ++_i26)
+                org.apache.thrift.protocol.TList _list32 = iprot.readListBegin();
+                struct.outputFiles = new java.util.ArrayList<OutputFile>(_list32.size);
+                OutputFile _elem33;
+                for (int _i34 = 0; _i34 < _list32.size; ++_i34)
                 {
-                  _elem25 = new OutputFile();
-                  _elem25.read(iprot);
-                  struct.outputFiles.add(_elem25);
+                  _elem33 = new OutputFile();
+                  _elem33.read(iprot);
+                  struct.outputFiles.add(_elem33);
                 }
                 iprot.readListEnd();
               }
@@ -879,14 +879,14 @@ public class ActionResult implements org.apache.thrift.TBase<ActionResult, Actio
           case 3: // OUTPUT_DIRECTORIES
             if (schemeField.type == org.apache.thrift.protocol.TType.LIST) {
               {
-                org.apache.thrift.protocol.TList _list27 = iprot.readListBegin();
-                struct.outputDirectories = new java.util.ArrayList<OutputDirectory>(_list27.size);
-                OutputDirectory _elem28;
-                for (int _i29 = 0; _i29 < _list27.size; ++_i29)
+                org.apache.thrift.protocol.TList _list35 = iprot.readListBegin();
+                struct.outputDirectories = new java.util.ArrayList<OutputDirectory>(_list35.size);
+                OutputDirectory _elem36;
+                for (int _i37 = 0; _i37 < _list35.size; ++_i37)
                 {
-                  _elem28 = new OutputDirectory();
-                  _elem28.read(iprot);
-                  struct.outputDirectories.add(_elem28);
+                  _elem36 = new OutputDirectory();
+                  _elem36.read(iprot);
+                  struct.outputDirectories.add(_elem36);
                 }
                 iprot.readListEnd();
               }
@@ -956,9 +956,9 @@ public class ActionResult implements org.apache.thrift.TBase<ActionResult, Actio
         oprot.writeFieldBegin(OUTPUT_FILES_FIELD_DESC);
         {
           oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, struct.outputFiles.size()));
-          for (OutputFile _iter30 : struct.outputFiles)
+          for (OutputFile _iter38 : struct.outputFiles)
           {
-            _iter30.write(oprot);
+            _iter38.write(oprot);
           }
           oprot.writeListEnd();
         }
@@ -968,9 +968,9 @@ public class ActionResult implements org.apache.thrift.TBase<ActionResult, Actio
         oprot.writeFieldBegin(OUTPUT_DIRECTORIES_FIELD_DESC);
         {
           oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, struct.outputDirectories.size()));
-          for (OutputDirectory _iter31 : struct.outputDirectories)
+          for (OutputDirectory _iter39 : struct.outputDirectories)
           {
-            _iter31.write(oprot);
+            _iter39.write(oprot);
           }
           oprot.writeListEnd();
         }
@@ -1042,18 +1042,18 @@ public class ActionResult implements org.apache.thrift.TBase<ActionResult, Actio
       if (struct.isSetOutputFiles()) {
         {
           oprot.writeI32(struct.outputFiles.size());
-          for (OutputFile _iter32 : struct.outputFiles)
+          for (OutputFile _iter40 : struct.outputFiles)
           {
-            _iter32.write(oprot);
+            _iter40.write(oprot);
           }
         }
       }
       if (struct.isSetOutputDirectories()) {
         {
           oprot.writeI32(struct.outputDirectories.size());
-          for (OutputDirectory _iter33 : struct.outputDirectories)
+          for (OutputDirectory _iter41 : struct.outputDirectories)
           {
-            _iter33.write(oprot);
+            _iter41.write(oprot);
           }
         }
       }
@@ -1080,28 +1080,28 @@ public class ActionResult implements org.apache.thrift.TBase<ActionResult, Actio
       java.util.BitSet incoming = iprot.readBitSet(7);
       if (incoming.get(0)) {
         {
-          org.apache.thrift.protocol.TList _list34 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
-          struct.outputFiles = new java.util.ArrayList<OutputFile>(_list34.size);
-          OutputFile _elem35;
-          for (int _i36 = 0; _i36 < _list34.size; ++_i36)
+          org.apache.thrift.protocol.TList _list42 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
+          struct.outputFiles = new java.util.ArrayList<OutputFile>(_list42.size);
+          OutputFile _elem43;
+          for (int _i44 = 0; _i44 < _list42.size; ++_i44)
           {
-            _elem35 = new OutputFile();
-            _elem35.read(iprot);
-            struct.outputFiles.add(_elem35);
+            _elem43 = new OutputFile();
+            _elem43.read(iprot);
+            struct.outputFiles.add(_elem43);
           }
         }
         struct.setOutputFilesIsSet(true);
       }
       if (incoming.get(1)) {
         {
-          org.apache.thrift.protocol.TList _list37 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
-          struct.outputDirectories = new java.util.ArrayList<OutputDirectory>(_list37.size);
-          OutputDirectory _elem38;
-          for (int _i39 = 0; _i39 < _list37.size; ++_i39)
+          org.apache.thrift.protocol.TList _list45 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
+          struct.outputDirectories = new java.util.ArrayList<OutputDirectory>(_list45.size);
+          OutputDirectory _elem46;
+          for (int _i47 = 0; _i47 < _list45.size; ++_i47)
           {
-            _elem38 = new OutputDirectory();
-            _elem38.read(iprot);
-            struct.outputDirectories.add(_elem38);
+            _elem46 = new OutputDirectory();
+            _elem46.read(iprot);
+            struct.outputDirectories.add(_elem46);
           }
         }
         struct.setOutputDirectoriesIsSet(true);
