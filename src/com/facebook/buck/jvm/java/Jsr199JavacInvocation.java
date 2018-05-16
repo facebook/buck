@@ -465,6 +465,14 @@ class Jsr199JavacInvocation implements Javac.Invocation {
                   } catch (RuntimeException e) {
                     if (e.getCause() instanceof StopCompilation) {
                       return 0;
+                    } else if (javacTask instanceof FrontendOnlyJavacTaskProxy) {
+                      throw new HumanReadableException(
+                          e,
+                          "The compiler crashed attempting to generate a source-only ABI: %s.\n"
+                              + "Try building %s instead and fixing any errors that are emitted.\n"
+                              + "If there are none, file an issue, with the crash trace from the log.\n",
+                          invokingRule,
+                          libraryTarget);
                     } else {
                       throw new BuckUncheckedExecutionException(
                           e.getCause() != null ? e.getCause() : e, "When running javac");
