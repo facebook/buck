@@ -82,6 +82,10 @@ public class SuperConsoleConfig {
     return delegate.getBooleanValue(SECTION_NAME, "show_slow_rules_in_console", false);
   }
 
+  public Optional<Integer> getThreadLineOutputMaxColumns() {
+    return delegate.getInteger(SECTION_NAME, "thread_line_output_max_columns");
+  }
+
   private Optional<Integer> getPositiveInt(String sectionName, String propertyName) {
     Optional<Long> optional = delegate.getLong(sectionName, propertyName);
     if (!optional.isPresent()) {
