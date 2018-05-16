@@ -19,7 +19,6 @@ package com.facebook.buck.cxx.toolchain.nativelink;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.resolver.impl.TestBuildRuleResolver;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -39,6 +38,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
@@ -125,7 +125,9 @@ public class NativeLinkablesTest {
                 new TestBuildRuleResolver(),
                 ImmutableList.of(a),
                 Linker.LinkableDepType.SHARED)
-            .keySet(),
+            .stream()
+            .map(NativeLinkable::getBuildTarget)
+            .collect(Collectors.toSet()),
         Matchers.not(Matchers.hasItem(b.getBuildTarget())));
   }
 
@@ -153,7 +155,9 @@ public class NativeLinkablesTest {
                 new TestBuildRuleResolver(),
                 ImmutableList.of(a),
                 Linker.LinkableDepType.SHARED)
-            .keySet(),
+            .stream()
+            .map(NativeLinkable::getBuildTarget)
+            .collect(Collectors.toSet()),
         Matchers.hasItem(b.getBuildTarget()));
   }
 
@@ -181,7 +185,9 @@ public class NativeLinkablesTest {
                 new TestBuildRuleResolver(),
                 ImmutableList.of(a),
                 Linker.LinkableDepType.SHARED)
-            .keySet(),
+            .stream()
+            .map(NativeLinkable::getBuildTarget)
+            .collect(Collectors.toSet()),
         Matchers.hasItem(b.getBuildTarget()));
   }
 
@@ -209,7 +215,9 @@ public class NativeLinkablesTest {
                 new TestBuildRuleResolver(),
                 ImmutableList.of(a),
                 Linker.LinkableDepType.STATIC)
-            .keySet(),
+            .stream()
+            .map(NativeLinkable::getBuildTarget)
+            .collect(Collectors.toSet()),
         Matchers.hasItem(b.getBuildTarget()));
   }
 
@@ -281,7 +289,9 @@ public class NativeLinkablesTest {
                 new TestBuildRuleResolver(),
                 ImmutableList.of(a),
                 Linker.LinkableDepType.STATIC)
-            .keySet(),
+            .stream()
+            .map(NativeLinkable::getBuildTarget)
+            .collect(Collectors.toSet()),
         Matchers.not(Matchers.hasItem(c.getBuildTarget())));
   }
 
@@ -375,23 +385,26 @@ public class NativeLinkablesTest {
             ImmutableMap.of());
     assertThat(
         NativeLinkables.getNativeLinkables(
-            CxxPlatformUtils.DEFAULT_PLATFORM,
-            ruleResolver,
-            ImmutableList.of(a),
-            Linker.LinkableDepType.STATIC,
-            n -> true),
-        Matchers.equalTo(
-            ImmutableMap.<BuildTarget, NativeLinkable>of(
-                a.getBuildTarget(), a,
-                b.getBuildTarget(), b)));
+                CxxPlatformUtils.DEFAULT_PLATFORM,
+                ruleResolver,
+                ImmutableList.of(a),
+                Linker.LinkableDepType.STATIC,
+                n -> true)
+            .stream()
+            .map(NativeLinkable::getBuildTarget)
+            .collect(Collectors.toSet()),
+        Matchers.equalTo(ImmutableSet.of(a.getBuildTarget(), b.getBuildTarget())));
     assertThat(
         NativeLinkables.getNativeLinkables(
-            CxxPlatformUtils.DEFAULT_PLATFORM,
-            ruleResolver,
-            ImmutableList.of(a),
-            Linker.LinkableDepType.STATIC,
-            a::equals),
-        Matchers.equalTo(ImmutableMap.<BuildTarget, NativeLinkable>of(a.getBuildTarget(), a)));
+                CxxPlatformUtils.DEFAULT_PLATFORM,
+                ruleResolver,
+                ImmutableList.of(a),
+                Linker.LinkableDepType.STATIC,
+                a::equals)
+            .stream()
+            .map(NativeLinkable::getBuildTarget)
+            .collect(Collectors.toSet()),
+        Matchers.equalTo(ImmutableSet.of(a.getBuildTarget())));
   }
 
   @Test

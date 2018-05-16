@@ -134,11 +134,10 @@ public class Omnibus {
       roots.put(root.getBuildTarget(), root);
       for (NativeLinkable dep :
           NativeLinkables.getNativeLinkables(
-                  cxxPlatform,
-                  ruleResolver,
-                  root.getNativeLinkTargetDeps(cxxPlatform, ruleResolver),
-                  Linker.LinkableDepType.SHARED)
-              .values()) {
+              cxxPlatform,
+              ruleResolver,
+              root.getNativeLinkTargetDeps(cxxPlatform, ruleResolver),
+              Linker.LinkableDepType.SHARED)) {
         Linker.LinkableDepType linkStyle =
             NativeLinkables.getLinkStyle(
                 dep.getPreferredLinkage(cxxPlatform, ruleResolver), Linker.LinkableDepType.SHARED);
@@ -308,7 +307,7 @@ public class Omnibus {
     argsBuilder.addAll(input.getArgs());
 
     // Grab a topologically sorted mapping of all the root's deps.
-    ImmutableMap<BuildTarget, NativeLinkable> deps =
+    ImmutableList<NativeLinkable> deps =
         NativeLinkables.getNativeLinkables(
             cxxPlatform,
             ruleResolver,
@@ -317,9 +316,8 @@ public class Omnibus {
 
     // Now process the dependencies in topological order, to assemble the link line.
     boolean alreadyAddedOmnibusToArgs = false;
-    for (Map.Entry<BuildTarget, NativeLinkable> entry : deps.entrySet()) {
-      BuildTarget linkableTarget = entry.getKey();
-      NativeLinkable nativeLinkable = entry.getValue();
+    for (NativeLinkable nativeLinkable : deps) {
+      BuildTarget linkableTarget = nativeLinkable.getBuildTarget();
       Linker.LinkableDepType linkStyle =
           NativeLinkables.getLinkStyle(
               nativeLinkable.getPreferredLinkage(cxxPlatform, ruleResolver),
@@ -586,10 +584,10 @@ public class Omnibus {
 
     // We process all excluded omnibus deps last, and just add their components as if this were a
     // normal shared link.
-    ImmutableMap<BuildTarget, NativeLinkable> deps =
+    ImmutableList<NativeLinkable> deps =
         NativeLinkables.getNativeLinkables(
             cxxPlatform, ruleResolver, spec.getDeps().values(), Linker.LinkableDepType.SHARED);
-    for (NativeLinkable nativeLinkable : deps.values()) {
+    for (NativeLinkable nativeLinkable : deps) {
       NativeLinkableInput input =
           NativeLinkables.getNativeLinkableInput(
               cxxPlatform, Linker.LinkableDepType.SHARED, nativeLinkable, ruleResolver);

@@ -295,8 +295,7 @@ public class HaskellDescriptionUtils {
     // the args go straight to the linker, and preserve their order.
     linkerArgsBuilder.addAll(linkerInputs);
     for (NativeLinkable nativeLinkable :
-        NativeLinkables.getNativeLinkables(platform.getCxxPlatform(), resolver, deps, depType)
-            .values()) {
+        NativeLinkables.getNativeLinkables(platform.getCxxPlatform(), resolver, deps, depType)) {
       NativeLinkable.Linkage link =
           nativeLinkable.getPreferredLinkage(platform.getCxxPlatform(), resolver);
       NativeLinkableInput input =

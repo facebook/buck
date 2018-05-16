@@ -201,7 +201,7 @@ public class HaskellGhciDescription
     // Topologically sort the body nodes, so that they're ready to add to the link line.
     ImmutableSet<BuildTarget> bodyTargets =
         RichStream.from(body).map(NativeLinkable::getBuildTarget).toImmutableSet();
-    ImmutableMap<BuildTarget, NativeLinkable> topoSortedBody =
+    ImmutableList<NativeLinkable> topoSortedBody =
         NativeLinkables.getTopoSortedNativeLinkables(
             body,
             nativeLinkable ->
@@ -214,7 +214,7 @@ public class HaskellGhciDescription
                     .filter(l -> bodyTargets.contains(l.getBuildTarget())));
 
     // Add the link inputs for all omnibus nodes.
-    for (NativeLinkable nativeLinkable : topoSortedBody.values()) {
+    for (NativeLinkable nativeLinkable : topoSortedBody) {
 
       // We link C/C++ libraries whole...
       if (nativeLinkable instanceof CxxLibrary) {
@@ -250,9 +250,9 @@ public class HaskellGhciDescription
     }
 
     // Link in omnibus deps dynamically.
-    ImmutableMap<BuildTarget, NativeLinkable> depLinkables =
+    ImmutableList<NativeLinkable> depLinkables =
         NativeLinkables.getNativeLinkables(cxxPlatform, ruleResolver, deps, LinkableDepType.SHARED);
-    for (NativeLinkable linkable : depLinkables.values()) {
+    for (NativeLinkable linkable : depLinkables) {
       nativeLinkableInputs.add(
           NativeLinkables.getNativeLinkableInput(
               cxxPlatform, LinkableDepType.SHARED, linkable, ruleResolver));

@@ -173,10 +173,8 @@ public class CxxLinkableEnhancer {
             .maybeParallelize(
                 NativeLinkables.getNativeLinkables(
                         cxxPlatform, ruleResolver, nativeLinkableDeps, depType)
-                    .entrySet()
                     .stream())
-            .filter(entry -> !blacklist.contains(entry.getKey()))
-            .map(entry -> entry.getValue())
+            .filter(linkable -> !blacklist.contains(linkable.getBuildTarget()))
             .map(
                 nativeLinkable -> {
                   NativeLinkable.Linkage link =

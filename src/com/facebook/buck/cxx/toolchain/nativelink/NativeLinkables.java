@@ -88,7 +88,7 @@ public class NativeLinkables {
   }
 
   /** @return the nodes found from traversing the given roots in topologically sorted order. */
-  public static ImmutableMap<BuildTarget, NativeLinkable> getTopoSortedNativeLinkables(
+  public static ImmutableList<NativeLinkable> getTopoSortedNativeLinkables(
       Iterable<? extends NativeLinkable> roots,
       Function<? super NativeLinkable, Stream<? extends NativeLinkable>> depsFn) {
 
@@ -122,14 +122,8 @@ public class NativeLinkables {
     visitor.start();
 
     // Topologically sort the rules.
-    Iterable<BuildTarget> ordered = TopologicalSort.sort(graph).reverse();
-
-    // Return a map of of the results.
-    ImmutableMap.Builder<BuildTarget, NativeLinkable> result = ImmutableMap.builder();
-    for (BuildTarget target : ordered) {
-      result.put(target, nativeLinkables.get(target));
-    }
-    return result.build();
+    ImmutableList<BuildTarget> ordered = TopologicalSort.sort(graph).reverse();
+    return ordered.stream().map(nativeLinkables::get).collect(ImmutableList.toImmutableList());
   }
 
   /**
@@ -179,7 +173,7 @@ public class NativeLinkables {
    * @param linkStyle how dependencies should be linked, if their preferred_linkage is {@code
    *     NativeLinkable.Linkage.ANY}.
    */
-  public static ImmutableMap<BuildTarget, NativeLinkable> getNativeLinkables(
+  public static ImmutableList<NativeLinkable> getNativeLinkables(
       CxxPlatform cxxPlatform,
       BuildRuleResolver ruleResolver,
       Iterable<? extends NativeLinkable> inputs,
@@ -192,7 +186,7 @@ public class NativeLinkables {
                 .filter(traverse));
   }
 
-  public static ImmutableMap<BuildTarget, NativeLinkable> getNativeLinkables(
+  public static ImmutableList<NativeLinkable> getNativeLinkables(
       CxxPlatform cxxPlatform,
       BuildRuleResolver ruleResolver,
       Iterable<? extends NativeLinkable> inputs,
@@ -246,10 +240,10 @@ public class NativeLinkables {
 
     // Get the topologically sorted native linkables.
     ImmutableMap<BuildTarget, NativeLinkable> roots = getNativeLinkableRoots(inputs, passthrough);
-    ImmutableMap<BuildTarget, NativeLinkable> nativeLinkables =
+    ImmutableList<NativeLinkable> nativeLinkables =
         getNativeLinkables(cxxPlatform, ruleResolver, roots.values(), depType);
     ImmutableList.Builder<NativeLinkableInput> nativeLinkableInputs = ImmutableList.builder();
-    for (NativeLinkable nativeLinkable : nativeLinkables.values()) {
+    for (NativeLinkable nativeLinkable : nativeLinkables) {
       nativeLinkableInputs.add(
           getNativeLinkableInput(cxxPlatform, depType, nativeLinkable, ruleResolver));
     }
