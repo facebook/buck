@@ -149,8 +149,12 @@ class BuildPrehook implements AutoCloseable {
         buckConfig.getConfig().getRawConfig().getValues();
     StringWriter stringWriter = new StringWriter();
     ObjectMappers.WRITER.withDefaultPrettyPrinter().writeValue(stringWriter, values);
-    tempFile = new NamedTemporaryFile("buckconfig_", ".json");
-    Files.write(tempFile.get(), stringWriter.toString().getBytes(StandardCharsets.UTF_8));
+    try {
+      tempFile = new NamedTemporaryFile("buckconfig_", ".json");
+      Files.write(tempFile.get(), stringWriter.toString().getBytes(StandardCharsets.UTF_8));
+    } catch (IOException e) {
+      LOG.warn("Build pre-hook failed to write build info");
+    }
   }
 
   /** Kill the build prehook script. */
