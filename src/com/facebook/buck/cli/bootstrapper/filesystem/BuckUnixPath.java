@@ -45,8 +45,13 @@ public class BuckUnixPath implements Path {
   // code below.
   private static final String DOTDOT = "..";
 
+  // Java's memory layout is padded to 8 bytes on most implementations. Given that 12 bytes is
+  // a class header, we can use up to 3 4-byte fields to fit into 24-byte object. Reference type
+  // is 4 bytes on heaps < 32Gb on most implementations, so for memory footprint it makes sense
+  // to have either 1 or three 4-byte fields.
   private final String[] segments;
   private final BuckFileSystem fs;
+  private volatile int hashCode = 0;
 
   // segments should already be interned.
   private BuckUnixPath(BuckFileSystem fs, String[] segments) {
@@ -448,7 +453,13 @@ public class BuckUnixPath implements Path {
 
   @Override
   public int hashCode() {
-    return Arrays.hashCode(segments);
+    // We do not have a luxury to keep a flag if hashCode() was ever invoked or not, so using
+    // hashCode==0 for it. The poor guy (1 / 2^32 given good hash distribution) that resolves
+    // to zero hash value will be always rehashed.
+    if (hashCode == 0) {
+      hashCode = Arrays.hashCode(segments);
+    }
+    return hashCode;
   }
 
   @Override
