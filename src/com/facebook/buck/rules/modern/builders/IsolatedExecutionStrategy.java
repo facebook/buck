@@ -232,22 +232,60 @@ public class IsolatedExecutionStrategy extends AbstractModernBuildRuleStrategy {
     }
   }
 
+  private Map<Path, Path> symlinkTargets = new ConcurrentHashMap<>();
+  private Map<Path, Iterable<Path>> directoryContents = new ConcurrentHashMap<>();
+
   @Nullable
   private Path getSymlinkTarget(Path path) throws IOException {
-    if (!Files.isSymbolicLink(path)) {
-      return null;
-    }
+    try {
+      Preconditions.checkState(path.startsWith(cellPathPrefix));
+      return symlinkTargets.computeIfAbsent(
+          path,
+          ignored -> {
+            try {
+              if (!Files.isSymbolicLink(path)) {
+                return null;
+              }
 
-    return Files.readSymbolicLink(path);
+              return Files.readSymbolicLink(path);
+            } catch (IOException e) {
+              throw new WrappedIOException(e);
+            }
+          });
+    } catch (WrappedIOException e) {
+      throw e.getCause();
+    }
   }
 
   @Nullable
   private Iterable<Path> getDirectoryContents(Path path) throws IOException {
-    if (!Files.isDirectory(path)) {
-      return null;
+    try {
+      Preconditions.checkState(path.startsWith(cellPathPrefix));
+      return directoryContents.computeIfAbsent(
+          path,
+          ignored -> {
+            if (!Files.isDirectory(path)) {
+              return null;
+            }
+            try (Stream<Path> list = Files.list(path)) {
+              return list.collect(Collectors.toList());
+            } catch (IOException e) {
+              throw new WrappedIOException(e);
+            }
+          });
+    } catch (WrappedIOException e) {
+      throw e.getCause();
     }
-    try (Stream<Path> list = Files.list(path)) {
-      return list.collect(Collectors.toList());
+  }
+
+  private static class WrappedIOException extends RuntimeException {
+    private WrappedIOException(IOException cause) {
+      super(cause);
+    }
+
+    @Override
+    public synchronized IOException getCause() {
+      return (IOException) super.getCause();
     }
   }
 
