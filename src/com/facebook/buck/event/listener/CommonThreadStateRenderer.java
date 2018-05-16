@@ -31,6 +31,7 @@ import java.util.Comparator;
 import java.util.Optional;
 import java.util.function.Function;
 
+/** Renders the per thread information line during build phase on super console */
 public class CommonThreadStateRenderer {
   /** Amount of time a rule can run before we render it with as a warning. */
   @VisibleForTesting static final long WARNING_THRESHOLD_MS = 15000;
@@ -43,6 +44,13 @@ public class CommonThreadStateRenderer {
 
   /** Maximum width of the terminal. */
   private final int outputMaxColumns;
+
+  private static final String LINE_PREFIX = " - ";
+  private static final String IDLE_STRING = "IDLE";
+  private static final String ELLIPSIS = "... ";
+  private static final String THREAD_SHORT_STATUS_FORMAT = "[%s]";
+  private static final String THREAD_SHORT_IDLE_STATUS = "[ ]";
+  private static final String THREAD_SHORT_STATUS_ANIMATION = ":':.";
 
   private final Ansi ansi;
   private final Function<Long, String> formatTimeFunction;
@@ -101,32 +109,30 @@ public class CommonThreadStateRenderer {
       Optional<String> placeholderStepInformation,
       long elapsedTimeMs,
       StringBuilder lineBuilder) {
-    String linePrefix = " - ";
-    lineBuilder.append(linePrefix);
+    lineBuilder.append(LINE_PREFIX);
     if (!startEvent.isPresent() || !buildTarget.isPresent()) {
-      lineBuilder.append("IDLE");
+      lineBuilder.append(IDLE_STRING);
       return ansi.asSubtleText(lineBuilder.toString());
     } else {
       String buildTargetStr = buildTarget.get().toString();
-      String ellipsis = "... ";
       String elapsedTimeStr = formatElapsedTime(elapsedTimeMs);
-      if (linePrefix.length()
+      if (LINE_PREFIX.length()
               + buildTargetStr.length()
-              + ellipsis.length()
+              + ELLIPSIS.length()
               + elapsedTimeStr.length()
           > outputMaxColumns) {
         buildTargetStr =
             buildTargetStr.substring(
                 0,
                 outputMaxColumns
-                    - (linePrefix.length() + elapsedTimeStr.length() + ellipsis.length()));
+                    - (LINE_PREFIX.length() + elapsedTimeStr.length() + ELLIPSIS.length()));
       }
       lineBuilder.append(buildTargetStr);
-      lineBuilder.append(ellipsis);
+      lineBuilder.append(ELLIPSIS);
       lineBuilder.append(elapsedTimeStr);
-      if (linePrefix.length()
+      if (LINE_PREFIX.length()
               + buildTargetStr.length()
-              + ellipsis.length()
+              + ELLIPSIS.length()
               + elapsedTimeStr.length()
           >= outputMaxColumns) {
         return lineBuilder.toString();
@@ -159,11 +165,11 @@ public class CommonThreadStateRenderer {
 
   public String renderShortStatus(boolean isActive, boolean renderSubtle, long elapsedTimeMs) {
     if (!isActive) {
-      return ansi.asSubtleText("[ ]");
+      return ansi.asSubtleText(THREAD_SHORT_IDLE_STATUS);
     } else {
-      String animationFrames = ":':.";
-      int offset = (int) ((currentTimeMs / 400) % animationFrames.length());
-      String status = "[" + animationFrames.charAt(offset) + "]";
+      int offset = (int) ((currentTimeMs / 400) % THREAD_SHORT_STATUS_ANIMATION.length());
+      String status =
+          String.format(THREAD_SHORT_STATUS_FORMAT, THREAD_SHORT_STATUS_ANIMATION.charAt(offset));
       if (renderSubtle) {
         return ansi.asSubtleText(status);
       } else if (elapsedTimeMs > ERROR_THRESHOLD_MS) {
