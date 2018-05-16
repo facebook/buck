@@ -35,7 +35,7 @@ import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
+import com.facebook.buck.rules.SupportsInputBasedRuleKey;
 import com.facebook.buck.shell.ExportFileDescription.Mode;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;

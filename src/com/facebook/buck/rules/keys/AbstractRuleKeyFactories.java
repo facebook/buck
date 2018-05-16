@@ -25,6 +25,7 @@ import com.facebook.buck.event.RuleKeyCalculationEvent;
 import com.facebook.buck.log.thrift.ThriftRuleKeyLogger;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
+import com.facebook.buck.rules.SupportsDependencyFileRuleKey;
 import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
 import com.facebook.buck.util.Scope;
 import com.facebook.buck.util.cache.FileHashCache;

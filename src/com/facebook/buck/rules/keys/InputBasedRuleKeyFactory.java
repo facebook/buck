@@ -27,6 +27,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.DependencyAggregation;
 import com.facebook.buck.rules.HasDeclaredAndExtraDeps;
 import com.facebook.buck.rules.SourcePathRuleFinder;
+import com.facebook.buck.rules.SupportsInputBasedRuleKey;
 import com.facebook.buck.rules.keys.hasher.RuleKeyHasher;
 import com.facebook.buck.util.hashing.FileHashLoader;
 import com.google.common.base.Preconditions;

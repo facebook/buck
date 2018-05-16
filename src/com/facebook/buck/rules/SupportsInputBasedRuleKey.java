@@ -14,11 +14,10 @@
  * under the License.
  */
 
-package com.facebook.buck.rules.keys;
+package com.facebook.buck.rules;
 
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.rules.BuildRule;
 
 /**
  * Used to tag a rule that supports input-based rule keys.
@@ -31,7 +30,7 @@ import com.facebook.buck.rules.BuildRule;
  * necessarily change if the rule key of a dependency changed. Instead, they only change if a the
  * actual inputs to the rule change.
  *
- * @see InputBasedRuleKeyFactory
+ * @see com.facebook.buck.rules.keys.InputBasedRuleKeyFactory
  */
 public interface SupportsInputBasedRuleKey extends BuildRule {
   default boolean inputBasedRuleKeyIsEnabled() {

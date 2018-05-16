@@ -34,6 +34,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.HasCustomDepsLogic;
 import com.facebook.buck.rules.SourcePathRuleFinder;
+import com.facebook.buck.rules.SupportsDependencyFileRuleKey;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.RuleKeyAppendableFunction;
@@ -257,7 +258,7 @@ final class PreprocessorDelegate implements RuleKeyAppendable, HasCustomDepsLogi
         preprocessor);
   }
 
-  /** @see com.facebook.buck.rules.keys.SupportsDependencyFileRuleKey */
+  /** @see SupportsDependencyFileRuleKey */
   public ImmutableList<SourcePath> getInputsAfterBuildingLocally(
       Iterable<Path> dependencies, SourcePathResolver pathResolver) {
     Stream.Builder<SourcePath> inputsBuilder = Stream.builder();

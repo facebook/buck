@@ -27,7 +27,7 @@ import org.immutables.value.Value;
  * The default data provided by all {@link com.facebook.buck.rules.BuildRule} and contains standard
  * fields available to be passed to dependant BuildRules during action graph construction.
  *
- * <p>{@link ProviderCollection} must contain one and only one of this default provider
+ * <p>{@link BuildRuleInfoProviderCollection} must contain one and only one of this default provider
  */
 @Value.Immutable(builder = false, copy = false)
 public abstract class DefaultBuildRuleInfoProvider implements BuildRuleInfoProvider {
@@ -86,7 +86,7 @@ public abstract class DefaultBuildRuleInfoProvider implements BuildRuleInfoProvi
    *
    * <p>Uncached rules are not always rebuilt, however, as long as the existing on-disk
    * representation is up to date. This means that these rules can take advantage of {@link
-   * com.facebook.buck.rules.keys.SupportsInputBasedRuleKey} to prevent rebuilding.
+   * com.facebook.buck.rules.SupportsInputBasedRuleKey} to prevent rebuilding.
    */
   @Value.Parameter
   public abstract boolean isCacheable();

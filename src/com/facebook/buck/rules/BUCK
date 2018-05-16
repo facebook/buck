@@ -26,6 +26,8 @@ java_immutables_library(
         "NodeCopier.java",
         "SourcePathRuleFinder.java",
         "SourceRoot.java",
+        "SupportsDependencyFileRuleKey.java",
+        "SupportsInputBasedRuleKey.java",
         "TargetGraph.java",
     ],
     exported_deps = [
