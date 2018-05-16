@@ -15,7 +15,7 @@
  */
 package com.facebook.buck.core.build.distributed.synchronization;
 
-import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.core.rules.BuildRule;
 import com.google.common.util.concurrent.ListenableFuture;
 
 /**

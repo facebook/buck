@@ -17,16 +17,17 @@
 package com.facebook.buck.cxx.toolchain.nativelink;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
-import com.facebook.buck.rules.BuildRuleResolver;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 /**
- * Interface for {@link com.facebook.buck.rules.BuildRule} objects (e.g. C++ libraries) which can
- * contribute to the top-level link of a native binary (e.g. C++ binary).
+ * Interface for {@link BuildRule} objects (e.g. C++ libraries) which can contribute to the
+ * top-level link of a native binary (e.g. C++ binary).
  */
 public interface NativeLinkable {
 

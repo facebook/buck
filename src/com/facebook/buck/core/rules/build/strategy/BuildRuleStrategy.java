@@ -17,7 +17,7 @@
 package com.facebook.buck.core.rules.build.strategy;
 
 import com.facebook.buck.core.build.engine.BuildExecutorRunner;
-import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.core.rules.BuildRule;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.Closeable;
 import java.io.IOException;

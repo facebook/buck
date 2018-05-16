@@ -17,9 +17,9 @@
 package com.facebook.buck.cxx.toolchain;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
-import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 

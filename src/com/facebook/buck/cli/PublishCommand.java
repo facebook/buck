@@ -22,14 +22,14 @@ import static com.facebook.buck.jvm.java.Javadoc.DOC_JAR;
 
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.jvm.java.MavenPublishable;
 import com.facebook.buck.maven.Publisher;
 import com.facebook.buck.parser.BuildTargetSpec;
 import com.facebook.buck.parser.TargetNodeSpec;
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.ExitCode;
 import com.google.common.base.Joiner;

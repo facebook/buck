@@ -17,14 +17,15 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.core.rulekey.RuleKey;
+import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.sourcepath.SourcePath;
 
 /**
  * Used to tag a rule that supports input-based rule keys.
  *
- * <p>{@link com.facebook.buck.rules.BuildRule}s implementing this interface will cause rule key to
- * be computed by enumerating their dependencies implicitly through their inputs, which are
- * described by {@link SourcePath}s added to their {@link RuleKey}.
+ * <p>{@link BuildRule}s implementing this interface will cause rule key to be computed by
+ * enumerating their dependencies implicitly through their inputs, which are described by {@link
+ * SourcePath}s added to their {@link RuleKey}.
  *
  * <p>Input-based rule keys are generally more accurate than normal rule keys, as they won't
  * necessarily change if the rule key of a dependency changed. Instead, they only change if a the

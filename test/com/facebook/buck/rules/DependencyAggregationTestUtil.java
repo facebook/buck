@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.rules;
 
+import com.facebook.buck.core.rules.BuildRule;
 import java.util.stream.Stream;
 
 public final class DependencyAggregationTestUtil {

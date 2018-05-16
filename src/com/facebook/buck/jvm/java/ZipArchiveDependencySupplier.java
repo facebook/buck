@@ -16,12 +16,12 @@
 
 package com.facebook.buck.jvm.java;
 
+import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.jvm.core.HasJavaAbi;
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.keys.ArchiveDependencySupplier;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSortedSet;

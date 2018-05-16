@@ -16,8 +16,8 @@
 
 package com.facebook.buck.js;
 
+import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.rules.BuildRule;
 
 /**
  * Represents output paths of JS builds, consisting of JavaScript build output, a corresponding

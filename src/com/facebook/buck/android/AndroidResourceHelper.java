@@ -16,7 +16,7 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.core.rules.BuildRule;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Objects;
 import java.util.SortedSet;

@@ -16,11 +16,11 @@
 
 package com.facebook.buck.maven;
 
+import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.jvm.core.HasMavenCoordinates;
 import com.facebook.buck.jvm.java.MavenPublishable;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.BuildRule;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;

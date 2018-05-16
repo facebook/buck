@@ -16,7 +16,7 @@
 
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.rules.SourcePathRuleFinder;
 
 public interface JavacProvider {
   Javac resolve(SourcePathRuleFinder ruleFinder);

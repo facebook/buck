@@ -18,7 +18,7 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
-import com.facebook.buck.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.rules.SourcePathRuleFinder;
 
 public class ConstantJavacProvider implements JavacProvider, AddsToRuleKey {
   @AddToRuleKey private final Javac javac;

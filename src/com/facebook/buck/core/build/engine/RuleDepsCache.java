@@ -16,7 +16,7 @@
 
 package com.facebook.buck.core.build.engine;
 
-import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.core.rules.BuildRule;
 import java.util.SortedSet;
 
 public interface RuleDepsCache {

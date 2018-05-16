@@ -16,7 +16,7 @@
 
 package com.facebook.buck.core.rules.schedule;
 
-import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.core.rules.BuildRule;
 
 /**
  * A interface for a {@link BuildRule} which overrides how it gets scheduled by the build engine.

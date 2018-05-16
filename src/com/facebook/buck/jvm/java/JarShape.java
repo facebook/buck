@@ -17,10 +17,10 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.jvm.core.HasClasspathEntries;
 import com.facebook.buck.jvm.core.HasMavenCoordinates;
 import com.facebook.buck.jvm.core.JavaLibrary;
-import com.facebook.buck.rules.BuildRule;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.HashSet;

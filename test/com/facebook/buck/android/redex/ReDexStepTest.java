@@ -20,11 +20,11 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.android.KeystoreProperties;
 import com.facebook.buck.android.toolchain.AndroidSdkLocation;
+import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestBuildRuleResolver;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.step.ExecutionContext;

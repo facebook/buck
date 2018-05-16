@@ -16,7 +16,7 @@
 
 package com.facebook.buck.jvm.core;
 
-import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.core.rules.BuildRule;
 import java.util.Optional;
 
 public interface HasMavenCoordinates extends BuildRule {

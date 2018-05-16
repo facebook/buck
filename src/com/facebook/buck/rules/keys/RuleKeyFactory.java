@@ -17,7 +17,7 @@
 package com.facebook.buck.rules.keys;
 
 import com.facebook.buck.core.rulekey.RuleKey;
-import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.core.rules.BuildRule;
 import java.util.Optional;
 import javax.annotation.Nullable;
 

@@ -28,7 +28,7 @@ import org.immutables.value.Value;
 
 /**
  * A {@link BuildTargetSourcePath} which resolves to a specific (possibly non-default) output of the
- * {@link com.facebook.buck.rules.BuildRule} referred to by its target.
+ * {@link com.facebook.buck.core.rules.BuildRule} referred to by its target.
  */
 @BuckStyleTuple
 @Value.Immutable(prehash = true)

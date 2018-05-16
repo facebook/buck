@@ -18,6 +18,8 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.util.RichStream;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Comparator;

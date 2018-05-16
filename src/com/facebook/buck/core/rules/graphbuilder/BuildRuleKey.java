@@ -17,6 +17,7 @@
 package com.facebook.buck.core.rules.graphbuilder;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleCreationContext;
 import com.facebook.buck.rules.TargetNode;
 import org.immutables.value.Value;
@@ -24,9 +25,9 @@ import org.immutables.value.Value;
 /**
  * An Immutable Key to a {@link BuildRule} for computation in {@link
  * com.facebook.buck.graph.transformationengine.AsyncTransformationEngine}. The Key is used to
- * represent what {@link com.facebook.buck.rules.BuildRule} subgraph we are attempting to compute.
+ * represent what {@link BuildRule} subgraph we are attempting to compute.
  *
- * <p>The {@link com.facebook.buck.rules.BuildRule} subgraph is identified by:
+ * <p>The {@link BuildRule} subgraph is identified by:
  *
  * <ul>
  *   <li>the {@link com.facebook.buck.rules.TargetNode} corresponding to the {@link BuildTarget}

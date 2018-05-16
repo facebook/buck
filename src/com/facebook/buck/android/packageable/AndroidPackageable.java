@@ -16,11 +16,12 @@
 
 package com.facebook.buck.android.packageable;
 
-import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.BuildRuleResolver;
 
 /**
- * Something (usually a {@link com.facebook.buck.rules.BuildRule}) that can be included in an
- * Android package (android_binary or (hopefully soon) aar).
+ * Something (usually a {@link BuildRule}) that can be included in an Android package
+ * (android_binary or (hopefully soon) aar).
  */
 public interface AndroidPackageable {
 

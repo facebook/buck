@@ -20,8 +20,8 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.description.arg.CommonDescriptionArg;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypes;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleCreationContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.Description;

@@ -16,7 +16,7 @@
 
 package com.facebook.buck.jvm.core;
 
-import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.core.rules.BuildRule;
 import java.util.Set;
 
 /** A convenience interface for items which contribute to the classpath of a java packageable. */

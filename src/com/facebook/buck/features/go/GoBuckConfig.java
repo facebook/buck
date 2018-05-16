@@ -18,8 +18,8 @@ package com.facebook.buck.features.go;
 
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.toolchain.tool.Tool;
-import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.tool.config.ToolConfig;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;

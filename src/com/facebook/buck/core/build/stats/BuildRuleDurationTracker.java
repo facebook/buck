@@ -17,7 +17,7 @@
 package com.facebook.buck.core.build.stats;
 
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.util.timing.ClockDuration;
 import com.google.common.annotations.VisibleForTesting;
 import java.util.concurrent.ConcurrentHashMap;

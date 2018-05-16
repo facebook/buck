@@ -17,8 +17,8 @@
 package com.facebook.buck.core.rules.transformer;
 
 import com.facebook.buck.core.cell.CellProvider;
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;

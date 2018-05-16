@@ -16,7 +16,7 @@
 
 package com.facebook.buck.core.build.engine.cache.manager;
 
-import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.core.rules.BuildRule;
 import java.nio.file.Path;
 
 /**

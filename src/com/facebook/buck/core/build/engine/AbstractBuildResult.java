@@ -18,8 +18,8 @@ package com.facebook.buck.core.build.engine;
 
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.core.build.engine.BuildResult.Builder;
+import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import com.facebook.buck.rules.BuildRule;
 import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.ListenableFuture;
 import java.util.Optional;

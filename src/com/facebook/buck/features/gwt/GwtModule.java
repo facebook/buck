@@ -20,6 +20,8 @@ import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.BuildCellRelativePath;
@@ -31,7 +33,6 @@ import com.facebook.buck.jvm.java.ResourcesParameters;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.google.common.collect.ImmutableList;
@@ -40,9 +41,8 @@ import java.nio.file.Path;
 import java.util.Optional;
 
 /**
- * {@link com.facebook.buck.rules.BuildRule} whose output file is a JAR containing the .java files
- * and resources suitable for a GWT module. (It differs slightly from a source JAR because it
- * contains resources.)
+ * {@link BuildRule} whose output file is a JAR containing the .java files and resources suitable
+ * for a GWT module. (It differs slightly from a source JAR because it contains resources.)
  */
 public class GwtModule extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 

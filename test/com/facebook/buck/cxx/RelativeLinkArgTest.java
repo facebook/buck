@@ -20,11 +20,11 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.cell.resolver.CellPathResolver;
+import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestBuildRuleResolver;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
-import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.modern.Deserializer;
 import com.facebook.buck.rules.modern.Deserializer.DataProvider;
 import com.facebook.buck.rules.modern.Serializer;

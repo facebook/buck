@@ -17,12 +17,12 @@
 package com.facebook.buck.maven;
 
 import com.facebook.buck.core.model.UnflavoredBuildTarget;
+import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.MavenPublishable;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.maven.aether.AetherUtil;
-import com.facebook.buck.rules.BuildRule;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.StandardSystemProperty;

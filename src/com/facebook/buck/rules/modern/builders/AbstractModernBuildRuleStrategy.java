@@ -16,8 +16,8 @@
 
 package com.facebook.buck.rules.modern.builders;
 
+import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.build.strategy.BuildRuleStrategy;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.modern.ModernBuildRule;
 import java.io.IOException;
 

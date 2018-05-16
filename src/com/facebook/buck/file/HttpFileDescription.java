@@ -17,9 +17,9 @@
 package com.facebook.buck.file;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.file.downloader.Downloader;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleCreationContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.Description;

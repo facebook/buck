@@ -17,14 +17,14 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
+import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.cxx.toolchain.PathShortener;
 import com.facebook.buck.cxx.toolchain.Preprocessor;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.HasCustomDepsLogic;
-import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;

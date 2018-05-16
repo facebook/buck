@@ -16,8 +16,8 @@
 
 package com.facebook.buck.cxx.toolchain.nativelink;
 
+import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
-import com.facebook.buck.rules.BuildRuleResolver;
 import java.util.Optional;
 
 /**

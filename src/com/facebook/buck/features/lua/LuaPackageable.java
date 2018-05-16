@@ -16,8 +16,8 @@
 
 package com.facebook.buck.features.lua;
 
+import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
-import com.facebook.buck.rules.BuildRule;
 
 public interface LuaPackageable {
   Iterable<BuildRule> getLuaPackageDeps(CxxPlatform cxxPlatform);

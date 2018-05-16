@@ -18,10 +18,10 @@ package com.facebook.buck.shell;
 
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.resolver.impl.TestBuildRuleResolver;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.google.common.collect.ImmutableList;

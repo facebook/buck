@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.core.rules.BuildRule;
 import java.util.SortedSet;
 
 /** {@link BuildRule} that can export a subset of it's dependencies. */

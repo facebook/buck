@@ -20,8 +20,8 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.facebook.buck.core.cell.resolver.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.model.macros.MacroException;
-import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.WriteToFileArg;
 import com.google.common.collect.ImmutableCollection;

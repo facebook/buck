@@ -13,7 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.facebook.buck.rules;
+package com.facebook.buck.core.rules;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
@@ -54,7 +54,7 @@ public interface BuildRuleResolver {
 
   /**
    * Retrieve a piece of metadata for a target. This metadata is computed via {@link
-   * MetadataProvidingDescription#createMetadata}.
+   * com.facebook.buck.rules.MetadataProvidingDescription#createMetadata}.
    */
   <T> Optional<T> requireMetadata(BuildTarget target, Class<T> metadataClass);
 

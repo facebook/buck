@@ -16,8 +16,8 @@
 
 package com.facebook.buck.apple;
 
+import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.TargetNode;
 
 public interface HasAppleBundleResourcesDescription<T> {

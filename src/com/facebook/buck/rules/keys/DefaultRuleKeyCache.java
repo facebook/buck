@@ -18,9 +18,9 @@ package com.facebook.buck.rules.keys;
 
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rulekey.RuleKey;
+import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.cache.CacheStatsTracker;
 import com.google.common.annotations.VisibleForTesting;

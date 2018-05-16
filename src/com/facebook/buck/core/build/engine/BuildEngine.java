@@ -17,8 +17,8 @@
 package com.facebook.buck.core.build.engine;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.step.ExecutionContext;
 import com.google.common.util.concurrent.ListenableFuture;
 import java.util.concurrent.ExecutionException;

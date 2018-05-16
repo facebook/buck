@@ -18,13 +18,14 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.core.cell.resolver.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.google.common.collect.ImmutableCollection;
 
 /**
  * While building up the target graph, we infer the implicit dependencies of a rule by parsing all
- * parameters with types {@link SourcePath} or {@link com.facebook.buck.rules.BuildRule}. However,
- * in some cases like {@link com.facebook.buck.shell.GenruleDescription}, the {@link
+ * parameters with types {@link SourcePath} or {@link BuildRule}. However, in some cases like {@link
+ * com.facebook.buck.shell.GenruleDescription}, the {@link
  * com.facebook.buck.shell.AbstractGenruleDescription.Arg#cmd} argument contains build targets in a
  * specific format. Any {@link Description} that implements this interface can modify its implicit
  * deps by poking at the raw build rule params.

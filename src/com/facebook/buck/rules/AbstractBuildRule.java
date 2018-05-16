@@ -18,6 +18,9 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.RuleKey;
+import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.BuildRuleResolver;
+import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.provider.BuildRuleInfoProvider;
 import com.facebook.buck.core.rules.provider.BuildRuleInfoProvider.ProviderKey;
 import com.facebook.buck.core.rules.provider.BuildRuleInfoProviderCollection;

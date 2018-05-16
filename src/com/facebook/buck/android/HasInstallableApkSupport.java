@@ -17,9 +17,9 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.util.RichStream;
 import java.util.Optional;
 import java.util.stream.Stream;

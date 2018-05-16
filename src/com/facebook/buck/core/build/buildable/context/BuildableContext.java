@@ -19,12 +19,12 @@ package com.facebook.buck.core.build.buildable.context;
 import java.nio.file.Path;
 
 /**
- * Context object that is specific to an individual {@link com.facebook.buck.rules.BuildRule}. This
- * differs from {@link com.facebook.buck.core.build.context.BuildContext} in that a {@link
+ * Context object that is specific to an individual {@link com.facebook.buck.core.rules.BuildRule}.
+ * This differs from {@link com.facebook.buck.core.build.context.BuildContext} in that a {@link
  * com.facebook.buck.core.build.context.BuildContext} is a context that is shared by all {@link
- * com.facebook.buck.rules.BuildRule}s whereas a new {@link BuildableContext} is created for each
- * call to {@link
- * com.facebook.buck.rules.BuildRule#getBuildSteps(com.facebook.buck.core.build.context.BuildContext,
+ * com.facebook.buck.core.rules.BuildRule}s whereas a new {@link BuildableContext} is created for
+ * each call to {@link
+ * com.facebook.buck.core.rules.BuildRule#getBuildSteps(com.facebook.buck.core.build.context.BuildContext,
  * BuildableContext)}.
  */
 public interface BuildableContext {

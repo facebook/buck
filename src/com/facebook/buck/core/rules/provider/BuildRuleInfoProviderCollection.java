@@ -21,7 +21,7 @@ import com.google.common.collect.ImmutableMap;
 
 /**
  * A container for storing a collection of {@link BuildRuleInfoProvider} for {@link
- * com.facebook.buck.rules.BuildRule}. This is basically a wrapper around an ImmutableMap that
+ * com.facebook.buck.core.rules.BuildRule}. This is basically a wrapper around an ImmutableMap that
  * provides more convenient provider access and building.
  *
  * <p>The supplied {@link BuildRuleProviderCollection} must contain {@link

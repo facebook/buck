@@ -16,7 +16,7 @@
 
 package com.facebook.buck.jvm.core;
 
-import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.core.rules.BuildRule;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.hash.HashCode;
 

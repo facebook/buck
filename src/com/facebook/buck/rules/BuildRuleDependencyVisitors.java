@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.graph.DirectedAcyclicGraph;
 import com.facebook.buck.graph.MutableDirectedGraph;
@@ -34,7 +35,7 @@ public class BuildRuleDependencyVisitors {
    * @param traverse predicate to determine whether this node should be traversed
    * @param <T> class to fitler on
    * @return filtered BuildRule DAG of transitive dependencies
-   * @see com.facebook.buck.rules.BuildRule
+   * @see BuildRule
    */
   public static <T> DirectedAcyclicGraph<BuildRule> getBuildRuleDirectedGraphFilteredBy(
       Iterable<? extends BuildRule> inputs, Predicate<Object> filter, Predicate<Object> traverse) {

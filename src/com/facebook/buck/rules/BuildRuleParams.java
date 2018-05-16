@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.collect.SortedSets;
 import com.google.common.base.Suppliers;

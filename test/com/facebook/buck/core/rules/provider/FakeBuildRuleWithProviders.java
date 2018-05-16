@@ -18,9 +18,9 @@ package com.facebook.buck.core.rules.provider;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.rules.AbstractBuildRuleWithProviders;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;

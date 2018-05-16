@@ -30,6 +30,7 @@ import static com.facebook.buck.distributed.testutil.CustomBuildRuleResolverFact
 
 import com.facebook.buck.core.build.engine.impl.DefaultRuleDepsCache;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.resolver.impl.TestBuildRuleResolver;
 import com.facebook.buck.distributed.ArtifactCacheByBuildRule;
 import com.facebook.buck.distributed.NoopArtifactCacheByBuildRule;
@@ -39,7 +40,6 @@ import com.facebook.buck.distributed.thrift.WorkUnit;
 import com.facebook.buck.event.listener.NoOpCoordinatorBuildRuleEventsPublisher;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
-import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;

@@ -16,7 +16,7 @@
 
 package com.facebook.buck.core.build.stats;
 
-import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.rules.keys.RuleKeyDiagnostics;
 import com.google.common.collect.ImmutableList;
 import java.util.SortedSet;

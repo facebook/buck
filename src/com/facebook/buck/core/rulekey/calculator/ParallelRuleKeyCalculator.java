@@ -19,8 +19,8 @@ package com.facebook.buck.core.rulekey.calculator;
 import com.facebook.buck.core.build.engine.RuleDepsCache;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.RuleKey;
+import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.keys.RuleKeyFactory;
 import com.facebook.buck.util.Scope;
 import com.facebook.buck.util.collect.SortedSets;
@@ -60,7 +60,7 @@ public class ParallelRuleKeyCalculator<T> {
 
   /**
    * @return a {@link ListenableFuture} wrapping the result of calculating the {@link RuleKey} of
-   *     the given {@link com.facebook.buck.rules.BuildRule}.
+   *     the given {@link BuildRule}.
    */
   public synchronized ListenableFuture<T> calculate(BuckEventBus buckEventBus, BuildRule rule) {
     ListenableFuture<T> fromOurCache = ruleKeys.get(rule.getBuildTarget());

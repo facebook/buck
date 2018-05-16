@@ -18,6 +18,9 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.BuildRuleResolver;
+import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableSet;

@@ -18,8 +18,8 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.apple.xcode.XCScheme;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.rules.AbstractNodeBuilder;
-import com.facebook.buck.rules.BuildRule;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;

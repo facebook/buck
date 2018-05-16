@@ -17,8 +17,8 @@ package com.facebook.buck.core.build.distributed.synchronization.impl;
 
 import com.facebook.buck.core.build.distributed.synchronization.RemoteBuildRuleCompletionNotifier;
 import com.facebook.buck.core.build.distributed.synchronization.RemoteBuildRuleCompletionWaiter;
+import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.rules.BuildRule;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.Futures;

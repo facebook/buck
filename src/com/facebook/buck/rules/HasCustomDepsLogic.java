@@ -16,6 +16,8 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import java.util.stream.Stream;
 
 /**

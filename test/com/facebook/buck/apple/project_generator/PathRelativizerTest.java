@@ -18,11 +18,11 @@ package com.facebook.buck.apple.project_generator;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestBuildRuleResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.FakeSourcePath;
-import com.facebook.buck.rules.SourcePathRuleFinder;
 import java.nio.file.Paths;
 import org.junit.Before;
 import org.junit.Test;

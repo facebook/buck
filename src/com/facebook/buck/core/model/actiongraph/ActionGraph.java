@@ -16,7 +16,7 @@
 
 package com.facebook.buck.core.model.actiongraph;
 
-import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.core.rules.BuildRule;
 import com.google.common.collect.Iterables;
 
 public class ActionGraph {

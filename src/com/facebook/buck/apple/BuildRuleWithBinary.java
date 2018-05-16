@@ -15,7 +15,7 @@
  */
 package com.facebook.buck.apple;
 
-import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.core.rules.BuildRule;
 
 /** Build rule that holds a binary build rule */
 public interface BuildRuleWithBinary extends BuildRule {

@@ -15,7 +15,7 @@
  */
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.core.rules.BuildRule;
 import java.util.stream.Stream;
 
 /**

@@ -16,13 +16,14 @@
 
 package com.facebook.buck.core.build.engine;
 
+import com.facebook.buck.core.rules.BuildRule;
 import com.google.common.collect.ImmutableSet;
 import java.util.EnumSet;
 
 /**
  * Token provided by the result of {@link BuildEngine#build(BuildEngineBuildContext,
- * com.facebook.buck.step.ExecutionContext, com.facebook.buck.rules.BuildRule)}, demonstrating that
- * the associated {@link com.facebook.buck.rules.BuildRule} was built successfully.
+ * com.facebook.buck.step.ExecutionContext, BuildRule)}, demonstrating that the associated {@link
+ * BuildRule} was built successfully.
  */
 public enum BuildRuleSuccessType {
 

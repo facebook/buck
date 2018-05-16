@@ -18,7 +18,7 @@ package com.facebook.buck.rules.macros;
 
 import com.facebook.buck.core.cell.resolver.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.StringArg;
 

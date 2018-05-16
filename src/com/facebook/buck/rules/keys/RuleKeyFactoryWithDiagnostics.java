@@ -17,7 +17,7 @@
 package com.facebook.buck.rules.keys;
 
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
-import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.rules.keys.hasher.RuleKeyHasher;
 
 /** A rule key factory that provides diagnostic facilities. */

@@ -20,9 +20,9 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.RuleKey;
+import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.UncachedRuleKeyBuilder;
 import com.facebook.buck.testutil.FakeFileHashCache;

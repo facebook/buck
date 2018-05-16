@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
+package com.facebook.buck.core.rules;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
@@ -97,7 +97,7 @@ public interface BuildRule extends Comparable<BuildRule> {
    *
    * <p>Uncached rules are not always rebuilt, however, as long as the existing on-disk
    * representation is up to date. This means that these rules can take advantage of {@link
-   * SupportsInputBasedRuleKey} to prevent rebuilding.
+   * com.facebook.buck.rules.SupportsInputBasedRuleKey} to prevent rebuilding.
    */
   @JsonIgnore
   boolean isCacheable();

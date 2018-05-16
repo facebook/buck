@@ -17,14 +17,15 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
-import com.facebook.buck.rules.BuildRuleResolver;
 import com.google.common.collect.ImmutableMap;
 
 /**
- * An interface that represents a {@link com.facebook.buck.rules.BuildRule} which can contribute
- * components (e.g. header files, preprocessor macros) to the preprocessing of some top-level file
- * (e.g. a C++ source from a C++ library rule).
+ * An interface that represents a {@link BuildRule} which can contribute components (e.g. header
+ * files, preprocessor macros) to the preprocessing of some top-level file (e.g. a C++ source from a
+ * C++ library rule).
  */
 public interface CxxPreprocessorDep {
 

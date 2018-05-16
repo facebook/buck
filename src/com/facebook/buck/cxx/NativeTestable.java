@@ -17,8 +17,8 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
-import com.facebook.buck.rules.BuildRuleResolver;
 
 /** Interface marking a rule as having tests. */
 public interface NativeTestable {

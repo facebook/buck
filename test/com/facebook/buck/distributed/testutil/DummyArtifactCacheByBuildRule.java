@@ -16,8 +16,8 @@
 
 package com.facebook.buck.distributed.testutil;
 
+import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.distributed.ArtifactCacheByBuildRule;
-import com.facebook.buck.rules.BuildRule;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
