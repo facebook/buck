@@ -20,6 +20,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.LeafEvent;
 import com.facebook.buck.util.Ansi;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.FluentIterable;
@@ -32,10 +33,13 @@ import java.util.function.Function;
 
 public class CommonThreadStateRenderer {
   /** Amount of time a rule can run before we render it with as a warning. */
-  private static final long WARNING_THRESHOLD_MS = 15000;
+  @VisibleForTesting static final long WARNING_THRESHOLD_MS = 15000;
 
   /** Amount of time a rule can run before we render it with as an error. */
-  private static final long ERROR_THRESHOLD_MS = 30000;
+  @VisibleForTesting static final long ERROR_THRESHOLD_MS = 30000;
+
+  /** Amount of time for one animation frame of short thread status */
+  @VisibleForTesting static final long ANIMATION_DURATION = 400;
 
   /** Maximum width of the terminal. */
   private final int outputMaxColumns;
