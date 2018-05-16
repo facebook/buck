@@ -24,6 +24,7 @@ import static java.nio.file.StandardOpenOption.WRITE;
 
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.modern.annotations.CustomFieldBehavior;
+import com.facebook.buck.rules.modern.PathSerialization;
 import com.facebook.buck.util.ByteBufferReplacer;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
@@ -50,6 +51,7 @@ public class MungingDebugPathSanitizer extends DebugPathSanitizer {
   private static final DebugSectionFinder DEBUG_SECTION_FINDER = new DebugSectionFinder();
 
   @AddToRuleKey(stringify = true)
+  @CustomFieldBehavior(PathSerialization.class)
   private final Path compilationDirectory;
 
   @AddToRuleKey private final int pathSize;
