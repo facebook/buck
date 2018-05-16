@@ -85,6 +85,14 @@ class BuckProject:
     def get_running_buckd_version(self):
         return get_file_contents_if_exists(self.buckd_version_file)
 
+    def get_running_buckd_pid(self):
+        try:
+            return int(get_file_contents_if_exists(self.buckd_pid_file))
+        except ValueError:
+            return None
+        except TypeError:
+            return None
+
     def get_buckd_stdout(self):
         return self.buckd_stdout
 

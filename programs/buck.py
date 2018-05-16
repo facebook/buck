@@ -6,7 +6,9 @@ import sys
 
 class ExitCode(object):
     """Python equivalent of com.facebook.buck.util.ExitCode"""
+    SUCCESS = 0
     FATAL_BOOTSTRAP = 11
+    COMMANDLINE_ERROR = 3
 
 
 if sys.version_info < (2, 7):
@@ -44,7 +46,7 @@ def killall_buck(reporter):
         message = 'killall is not implemented on: ' + os.name
         logging.error(message)
         reporter.status_message = message
-        return 10  # FATAL_GENERIC
+        return ExitCode.COMMANDLINE_ERROR
 
     for line in os.popen('jps -l'):
         split = line.split()
@@ -62,7 +64,8 @@ def killall_buck(reporter):
             continue
 
         os.kill(pid, signal.SIGTERM)
-    return 0
+        # TODO(buck_team) clean .buckd directories
+    return ExitCode.SUCCESS
 
 
 def _get_java_version(java_path):

@@ -602,6 +602,7 @@ class BuckTool(object):
         with Tracing('BuckTool.kill_buckd'):
             buckd_transport_file_path = self._buck_project.get_buckd_transport_file_path()
             if transport_exists(buckd_transport_file_path):
+                buckd_pid = self._buck_project.get_running_buckd_pid()
                 logging.debug("Shutting down buck daemon.")
                 wait_socket_close = False
                 try:
@@ -617,13 +618,29 @@ class BuckTool(object):
                             'Unexpected error shutting down nailgun server: ' +
                             str(e))
 
-                # if ng-stop command succeeds, wait for buckd process to terminate and for the
-                # socket to close
+                # If ng-stop command succeeds, wait for buckd process to terminate and for the
+                # socket to close. On Unix ng-stop always drops the connection and throws.
                 if wait_socket_close:
                     for i in range(0, 300):
                         if not transport_exists(buckd_transport_file_path):
                             break
                         time.sleep(0.01)
+                elif buckd_pid is not None and os.name == 'posix':
+                    # otherwise just wait for up to 5 secs for the process to die
+                    # TODO(buck_team) implement wait for process and hard kill for Windows too
+                    if not wait_for_process_posix(buckd_pid, 5000):
+                        # There is a possibility that daemon is dead for some time but pid file
+                        # still exists and another process is assigned to the same pid. Ideally we
+                        # should check first which process we are killing but so far let's pretend
+                        # this will never happen and kill it with fire anyways.
+
+                        try:
+                            force_kill_process_posix(buckd_pid)
+                        except Exception as e:
+                            # In the worst case it keeps running multiple daemons simultaneously
+                            # consuming memory. Not the good place to be, but let's just issue a
+                            # warning for now.
+                            logging.warning('Error killing running Buck daemon ' + str(e))
 
                 if transport_exists(buckd_transport_file_path):
                     force_close_transport(buckd_transport_file_path)
@@ -809,3 +826,57 @@ if os.name == 'nt':
         result = handle != INVALID_HANDLE_VALUE
         FindClose(handle)
         return result
+
+
+def pid_exists_posix(pid):
+    """
+    Check whether process with given pid exists, does not work on Windows
+    """
+    if pid <= 0:
+        return False
+
+    try:
+        # does not actually kill the process
+        os.kill(pid, 0)
+    except OSError as err:
+        if err.errno == errno.ESRCH:
+            # No such process
+            return False
+        elif err.errno == errno.EPERM:
+            # Access denied which means process still exists
+            return True
+        raise
+
+    return True
+
+
+def wait_for_process_posix(pid, timeout):
+    """
+    Wait for the process with given id to finish, up to timeout in milliseconds
+    Return True if process has finished, False otherwise
+    """
+
+    logging.debug('Waiting for process (pid=' + str(pid) + ') to terminate for ' +
+                  str(timeout) + ' ms...')
+
+    # poll 10 times a second
+    for i in range(0, int(timeout / 100)):
+        if not pid_exists_posix(pid):
+            return True
+        time.sleep(0.1)
+
+    return False
+
+
+def force_kill_process_posix(pid):
+    """
+    Hard kill the process using process id
+    """
+    logging.debug('Sending SIGTERM to process (pid=' + str(pid) + ')')
+    os.kill(pid, signal.SIGTERM)
+
+    # allow up to 5 seconds for the process to react to termination signal, then shoot it
+    # in the head
+    if not wait_for_process(pid, 5000):
+        logging.debug('Sending SIGKILL to process (pid=' + str(pid) + ')')
+        os.kill(pid, signal.SIGKILL)
