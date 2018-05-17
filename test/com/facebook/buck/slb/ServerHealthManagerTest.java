@@ -17,11 +17,11 @@
 package com.facebook.buck.slb;
 
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.util.timing.FakeClock;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.net.URI;
-import org.easymock.EasyMock;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -45,7 +45,7 @@ public class ServerHealthManagerTest {
 
   @Before
   public void setUp() {
-    eventBus = EasyMock.createNiceMock(BuckEventBus.class);
+    eventBus = BuckEventBusForTests.newInstance();
   }
 
   @Test
