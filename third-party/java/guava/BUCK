@@ -10,11 +10,11 @@ prebuilt_jar(
 
 prebuilt_jar(
     name = "guava",
-    binary_jar = "guava-23.3-jre.jar",
+    binary_jar = "guava-25.0-jre.jar",
     licenses = [
         "COPYING",
     ],
-    source_jar = "guava-23.3-jre-sources.jar",
+    source_jar = "guava-25.0-jre-sources.jar",
     visibility = ["PUBLIC"],
     deps = ["//third-party/java/j2objc:j2objc-annotations"],
 )
