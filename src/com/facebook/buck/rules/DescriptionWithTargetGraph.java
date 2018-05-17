@@ -29,10 +29,7 @@ import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
  * @param <T> The object describing the parameters to be passed to the {@link BuildRule}. How this
  *     is processed is described in the class level javadoc of {@link ConstructorArgMarshaller}.
  */
-public interface DescriptionWithTargetGraph<T> {
-
-  /** The class of the argument of this Description uses in createBuildRule(). */
-  Class<T> getConstructorArgType();
+public interface DescriptionWithTargetGraph<T> extends Description<T> {
 
   /**
    * Create a {@link BuildRule} for the given {@link BuildRuleParams}. Note that the {@link
@@ -53,6 +50,7 @@ public interface DescriptionWithTargetGraph<T> {
    * {@link com.facebook.buck.core.model.actiongraph.computation.IncrementalActionGraphGenerator}
    * for incremental action graph generation.
    */
+  @Override
   default boolean producesCacheableSubgraph() {
     return false;
   }

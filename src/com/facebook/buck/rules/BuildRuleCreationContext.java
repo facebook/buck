@@ -17,35 +17,26 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.core.cell.resolver.CellPathResolver;
-import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import org.immutables.value.Value;
 
 /**
- * Contains common objects used during {@link BuildRule} creation in {@link
- * DescriptionWithTargetGraph#createBuildRule}.
+ * Common objects used during {@link com.facebook.buck.core.rules.BuildRule} creation, without a
+ * reference to {@link TargetGraph}
  */
-@Value.Immutable(builder = false, copy = false)
-public interface BuildRuleCreationContextWithTargetGraph extends BuildRuleCreationContext {
+public interface BuildRuleCreationContext {
 
   @Value.Parameter
-  TargetGraph getTargetGraph();
-
-  @Value.Parameter
-  @Override
   BuildRuleResolver getBuildRuleResolver();
 
   @Value.Parameter
-  @Override
   ProjectFilesystem getProjectFilesystem();
 
   @Value.Parameter
-  @Override
   CellPathResolver getCellPathResolver();
 
   @Value.Parameter
-  @Override
   ToolchainProvider getToolchainProvider();
 }
