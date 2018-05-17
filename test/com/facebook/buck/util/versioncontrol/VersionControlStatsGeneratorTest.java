@@ -23,6 +23,9 @@ import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
 
 import com.google.common.collect.ImmutableSet;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.util.Optional;
 import org.junit.Test;
 
@@ -34,7 +37,15 @@ public class VersionControlStatsGeneratorTest {
           .setBranchedFromMasterRevisionId("b47")
           .setBranchedFromMasterTS(0L)
           .setBaseBookmarks(ImmutableSet.of("remote/master"))
-          .setDiff("this is not really a valid diff but whatever")
+          .setDiff(
+              () -> {
+                try {
+                  return new FileInputStream(
+                      new File("/tmp/this_is_not_really_a_valid_diff_but_whatever.diff"));
+                } catch (IOException e) {
+                  throw new VersionControlCommandFailedException(e);
+                }
+              })
           .setPathsChangedInWorkingDirectory(ImmutableSet.of("hello.txt"))
           .build();
 

@@ -17,8 +17,10 @@
 package com.facebook.buck.doctor.config;
 
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.facebook.buck.util.versioncontrol.VersionControlSupplier;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.collect.ImmutableSet;
+import java.io.InputStream;
 import java.util.Optional;
 import org.immutables.value.Value;
 
@@ -35,7 +37,7 @@ interface AbstractSourceControlInfo {
   Optional<Long> getRevisionTimestampOffTracked();
   /* The diff between base and current revision if it exists */
   @JsonIgnore
-  Optional<String> getDiff();
+  Optional<VersionControlSupplier<InputStream>> getDiff();
   /* A list of all the files that are changed from the base revision. */
   ImmutableSet<String> getDirtyFiles();
 }

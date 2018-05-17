@@ -22,6 +22,7 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.Threads;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
+import java.io.InputStream;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import javax.annotation.Nullable;
@@ -76,7 +77,7 @@ public class VersionControlStatsGenerator {
 
   @GuardedBy("this")
   @Nullable
-  private Optional<String> diff;
+  private Optional<VersionControlSupplier<InputStream>> diff;
 
   public VersionControlStatsGenerator(
       VersionControlCmdLineInterface versionControlCmdLineInterface,

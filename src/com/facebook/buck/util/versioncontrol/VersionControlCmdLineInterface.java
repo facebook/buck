@@ -17,6 +17,7 @@
 package com.facebook.buck.util.versioncontrol;
 
 import com.google.common.collect.ImmutableSet;
+import java.io.InputStream;
 import java.util.Optional;
 
 /** * Provides meta-data about the version control repository the project being built is using. */
@@ -27,21 +28,21 @@ public interface VersionControlCmdLineInterface {
   /**
    * @param baseRevision
    * @param tipRevision
-   * @return the produced diff between two revisions
-   * @throws VersionControlCommandFailedException
+   * @return {@link VersionControlSupplier} of the input stream of the diff between two revisions
    * @throws InterruptedException
    */
-  String diffBetweenRevisions(String baseRevision, String tipRevision)
+  VersionControlSupplier<InputStream> diffBetweenRevisions(String baseRevision, String tipRevision)
       throws VersionControlCommandFailedException, InterruptedException;
 
   /**
    * @param baseRevision
    * @param tipRevision
-   * @return the produced diff between two revisions or {@link Optional#empty}
+   * @return {@link VersionControlSupplier} of the input stream of the diff between two revisions or
+   *     {@link Optional#empty}
    * @throws InterruptedException
    */
-  default Optional<String> diffBetweenRevisionsOrAbsent(String baseRevision, String tipRevision)
-      throws InterruptedException {
+  default Optional<VersionControlSupplier<InputStream>> diffBetweenRevisionsOrAbsent(
+      String baseRevision, String tipRevision) throws InterruptedException {
     try {
       return Optional.of(diffBetweenRevisions(baseRevision, tipRevision));
     } catch (VersionControlCommandFailedException e) {

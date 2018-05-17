@@ -17,6 +17,7 @@
 package com.facebook.buck.util.versioncontrol;
 
 import com.google.common.collect.ImmutableSet;
+import java.io.InputStream;
 
 public class FakeVersionControlCmdLineInterface extends NoOpCmdLineInterface {
 
@@ -37,8 +38,8 @@ public class FakeVersionControlCmdLineInterface extends NoOpCmdLineInterface {
   }
 
   @Override
-  public String diffBetweenRevisions(String baseRevision, String tipRevision)
-      throws VersionControlCommandFailedException {
+  public VersionControlSupplier<InputStream> diffBetweenRevisions(
+      String baseRevision, String tipRevision) throws VersionControlCommandFailedException {
     if (!versionControlStats.getDiff().isPresent()) {
       throw new VersionControlCommandFailedException("");
     }

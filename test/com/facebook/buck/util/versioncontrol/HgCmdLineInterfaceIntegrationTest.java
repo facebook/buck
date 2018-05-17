@@ -28,10 +28,14 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.TestProcessExecutorFactory;
 import com.facebook.buck.util.unarchive.ArchiveFormat;
 import com.facebook.buck.util.unarchive.ExistingFileMode;
+import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.io.CharStreams;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import org.hamcrest.Matchers;
@@ -142,12 +146,12 @@ public class HgCmdLineInterfaceIntegrationTest {
   public void testDiffBetweenTheSameRevision()
       throws VersionControlCommandFailedException, InterruptedException {
     exception.expect(VersionControlCommandFailedException.class);
-    repoThreeCmdLine.diffBetweenRevisions("adf7a0", "adf7a0");
+    repoThreeCmdLine.diffBetweenRevisions("adf7a0", "adf7a0").get();
   }
 
   @Test
   public void testDiffBetweenDiffs()
-      throws VersionControlCommandFailedException, InterruptedException {
+      throws VersionControlCommandFailedException, InterruptedException, IOException {
     ImmutableList<String> expectedValue =
         ImmutableList.of(
             "# HG changeset patch",
@@ -161,9 +165,12 @@ public class HgCmdLineInterfaceIntegrationTest {
             "diff --git a/change2 b/change2",
             "new file mode 100644",
             "");
-    assertEquals(
-        String.join("\n", expectedValue),
-        repoThreeCmdLine.diffBetweenRevisions("b1fd7e", "2911b3"));
+    try (InputStream diffFileStream =
+        repoThreeCmdLine.diffBetweenRevisions("b1fd7e", "2911b3").get()) {
+      InputStreamReader diffFileReader = new InputStreamReader(diffFileStream, Charsets.UTF_8);
+      String actualDiff = CharStreams.toString(diffFileReader);
+      assertEquals(String.join("\n", expectedValue), actualDiff);
+    }
   }
 
   private static Path explodeReposZip() throws InterruptedException, IOException {

@@ -12,6 +12,11 @@ VALUE_TYPES_SRCS = [
     "CommonSlowVersionControlStats.java",
 ]
 
+SUPPLIER_SRCS = [
+    "VersionControlCommandFailedException.java",
+    "VersionControlSupplier.java",
+]
+
 GENERATOR_SRCS = [
     "FastVersionControlStatsEvent.java",
     "VersionControlStatsEvent.java",
@@ -63,7 +68,7 @@ java_library(
 
 java_immutables_library(
     name = "value_types",
-    srcs = VALUE_TYPES_SRCS,
+    srcs = SUPPLIER_SRCS + VALUE_TYPES_SRCS,
     visibility = [
         "PUBLIC",
     ],

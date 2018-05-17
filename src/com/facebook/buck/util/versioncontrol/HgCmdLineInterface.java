@@ -25,11 +25,13 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintStream;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Map;
@@ -98,32 +100,35 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
   }
 
   @Override
-  public String diffBetweenRevisions(String baseRevision, String tipRevision)
+  public VersionControlSupplier<InputStream> diffBetweenRevisions(
+      String baseRevision, String tipRevision)
       throws VersionControlCommandFailedException, InterruptedException {
     validateRevisionId(baseRevision);
     validateRevisionId(tipRevision);
 
-    File temp = null;
-    try {
-      temp = File.createTempFile("diff", ".tmp");
-      // Command: hg export -r "base::tip - base"
-      executeCommand(
-          ImmutableList.of(
-              HG_CMD_TEMPLATE,
-              "export",
-              "-o",
-              temp.toString(),
-              "--rev",
-              baseRevision + "::" + tipRevision + " - " + baseRevision));
-      return new String(Files.readAllBytes(temp.toPath()));
-    } catch (IOException e) {
-      LOG.debug(e.getMessage());
-      throw new VersionControlCommandFailedException(e.getMessage());
-    } finally {
-      if (temp != null) {
-        temp.delete();
+    return () -> {
+      try {
+        File diffFile = File.createTempFile("diff", ".tmp");
+        executeCommand(
+            ImmutableList.of(
+                HG_CMD_TEMPLATE,
+                "export",
+                "-o",
+                diffFile.toString(),
+                "--rev",
+                baseRevision + "::" + tipRevision + " - " + baseRevision));
+        return new BufferedInputStream(new FileInputStream(diffFile)) {
+          @Override
+          public void close() throws IOException {
+            super.close();
+            diffFile.delete();
+          }
+        };
+      } catch (IOException e) {
+        LOG.debug(e.getMessage());
+        throw new VersionControlCommandFailedException(e.getMessage());
       }
-    }
+    };
   }
 
   @Override

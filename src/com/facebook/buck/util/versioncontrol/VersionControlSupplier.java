@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright 2018-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -16,17 +16,8 @@
 
 package com.facebook.buck.util.versioncontrol;
 
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import java.io.InputStream;
-import java.util.Optional;
-import org.immutables.value.Value;
-
-@Value.Immutable
-@BuckStyleImmutable
-interface AbstractFullVersionControlStats extends CommonSlowVersionControlStats {
-
-  /* The diff between base and current revision if it exists */
-  @JsonIgnore
-  Optional<VersionControlSupplier<InputStream>> getDiff();
+/** Supplier interface that throws Version Control related exceptions */
+@FunctionalInterface
+public interface VersionControlSupplier<T> {
+  T get() throws VersionControlCommandFailedException, InterruptedException;
 }

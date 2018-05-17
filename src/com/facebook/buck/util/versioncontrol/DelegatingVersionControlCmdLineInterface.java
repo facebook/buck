@@ -20,6 +20,7 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.ProcessExecutorFactory;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.Optional;
 import javax.annotation.Nullable;
@@ -75,14 +76,15 @@ public class DelegatingVersionControlCmdLineInterface implements VersionControlC
   }
 
   @Override
-  public String diffBetweenRevisions(String baseRevision, String tipRevision)
+  public VersionControlSupplier<InputStream> diffBetweenRevisions(
+      String baseRevision, String tipRevision)
       throws VersionControlCommandFailedException, InterruptedException {
     return getDelegate().diffBetweenRevisions(baseRevision, tipRevision);
   }
 
   @Override
-  public Optional<String> diffBetweenRevisionsOrAbsent(String baseRevision, String tipRevision)
-      throws InterruptedException {
+  public Optional<VersionControlSupplier<InputStream>> diffBetweenRevisionsOrAbsent(
+      String baseRevision, String tipRevision) throws InterruptedException {
     return getDelegate().diffBetweenRevisionsOrAbsent(baseRevision, tipRevision);
   }
 
