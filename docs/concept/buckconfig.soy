@@ -18,27 +18,28 @@
     {/param}
     {param prettify: true /}
     {param content}
-<p>
 
+<p>
 The root of your project must contain a configuration file
 named <code>.buckconfig</code>. If present, Buck will read this file
 before executing its business logic so that any customizations specified
 in <code>.buckconfig</code> will take effect. This file uses the
-{sp}<a href="http://en.wikipedia.org/wiki/INI_file">INI file format</a>
-with a few extensions discussed below.
+{sp}<a href="http://en.wikipedia.org/wiki/INI_file">INI file format</a> with 
+a few extensions discussed below.
+</p>
 
 <p>
-
 Although the INI format only recognizes strings as values, Buck allows
 fields to be parsed as a list of strings, separated by a separator character.
 For example, a field containing command line flags to be passed to a compiler
 may parse its value as a list of strings, separated by space, so
 that <code>-foo -bar</code> is parsed as a list of two strings, instead of
 a single string.
+</p>
 
 <p>
 
-To ensure that any character can be encoded in a .buckconfig value, Buck
+To ensure that any character can be encoded in a <code>.buckconfig</code> value, Buck
 allows values or part of values to be quoted by surrounding them by double
 quotes. Inside double quotes, escape sequences can be used to encode
 characters that would otherwise be problematic to use in values. The

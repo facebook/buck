@@ -479,12 +479,15 @@ footer {
   border-radius: 3px;
   text-decoration: none !important;
 }
+
 .toggler table {
   border-collapse: collapse;
 }
-.toggler table, td, th {
+
+.toggler table, .toggler td, .toggler th {
   border: 0;
 }
+
 .display-os-mac .toggler .button-mac,
 .display-os-linux .toggler .button-linux,
 .display-os-windows .toggler .button-windows,
@@ -495,9 +498,11 @@ footer {
   background-color: #05A5D1;
   color: white;
 }
+
 block {
   display: none;
 }
+
 .display-platform-ios.display-os-mac .ios.mac,
 .display-platform-ios.display-os-linux .ios.linux,
 .display-platform-ios.display-os-windows .ios.windows,
@@ -512,3 +517,4 @@ block {
 .display-platform-java.display-os-windows .java.windows {
   display: block;
 }
+
