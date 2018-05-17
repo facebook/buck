@@ -272,6 +272,10 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
               columnsStr.get());
         }
       }
+      // If the parsed value is zero, we reset the value to the default 80.
+      if (outputMaxColumns == 0) {
+        outputMaxColumns = 80;
+      }
     }
     this.outputMaxColumns = outputMaxColumns;
     this.buildIdLine =
