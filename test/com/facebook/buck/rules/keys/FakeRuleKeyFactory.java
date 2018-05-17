@@ -20,7 +20,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.rules.SupportsDependencyFileRuleKey;
+import com.facebook.buck.core.rules.attr.SupportsDependencyFileRuleKey;
 import com.facebook.buck.rules.keys.hasher.RuleKeyHasher;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;

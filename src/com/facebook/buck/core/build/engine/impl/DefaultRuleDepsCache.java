@@ -20,7 +20,7 @@ import com.facebook.buck.core.build.engine.RuleDepsCache;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.rules.HasRuntimeDeps;
+import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.collect.SortedSets;
 import com.google.common.collect.ImmutableSortedSet;

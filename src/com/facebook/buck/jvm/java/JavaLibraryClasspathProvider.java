@@ -17,10 +17,10 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.attr.ExportDependencies;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.jvm.core.HasClasspathEntries;
 import com.facebook.buck.jvm.core.JavaLibrary;
-import com.facebook.buck.rules.ExportDependencies;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
 import java.util.HashSet;

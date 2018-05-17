@@ -18,8 +18,8 @@ package com.facebook.buck.rules.modern.impl;
 
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.attr.HasCustomDepsLogic;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.rules.HasCustomDepsLogic;
 import com.facebook.buck.rules.modern.ClassInfo;
 import com.facebook.buck.rules.modern.InputRuleResolver;
 import com.facebook.buck.rules.modern.OutputPath;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright 2018-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -14,16 +14,10 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
+package com.facebook.buck.core.rules.attr;
 
-import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.sourcepath.SourcePath;
-import javax.annotation.Nullable;
-
-/** BuildRules which supports supplementary outputs. */
-public interface HasSupplementaryOutputs extends BuildRule {
-
-  /** Returns a SourcePath to a named supplementary output, or null if it does not exist. */
-  @Nullable
-  SourcePath getSourcePathToSupplementaryOutput(String name);
-}
+/**
+ * An interface that allows a rule to be specified in a `buck install` command, but that doesn't
+ * require any post-build work for installation.
+ */
+public interface NoopInstallable {}

@@ -4,7 +4,7 @@ java_immutables_library(
     name = "actiongraph",
     srcs = glob(["*.java"]),
     exported_deps = [
-        "//src/com/facebook/buck/rules:build_rule",
+        "//src/com/facebook/buck/core/rules:rules",
     ],
     visibility = [
         "PUBLIC",
