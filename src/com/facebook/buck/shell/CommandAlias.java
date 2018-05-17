@@ -130,7 +130,7 @@ public class CommandAlias extends NoopBuildRule implements BinaryBuildRule, HasR
         (platform, rule) -> platformTools.put(platform, buildRuleAsTool(rule)));
 
     return CrossPlatformTool.of(
-        genericDelegate.map(this::buildRuleAsTool).orElseGet(this::unsupportedPlatformTool),
+        genericDelegate.map(this::buildRuleAsTool).orElseGet(UnsupportedPlatformTool::new),
         platformTools.build(),
         platform);
   }
@@ -151,18 +151,16 @@ public class CommandAlias extends NoopBuildRule implements BinaryBuildRule, HasR
     return tool.build();
   }
 
-  private Tool unsupportedPlatformTool() {
-    return new Tool() {
-      @Override
-      public ImmutableList<String> getCommandPrefix(SourcePathResolver resolver) {
-        throw new UnsupportedPlatformException(getBuildTarget(), platform);
-      }
+  private class UnsupportedPlatformTool implements Tool {
+    @Override
+    public ImmutableList<String> getCommandPrefix(SourcePathResolver resolver) {
+      throw new UnsupportedPlatformException(getBuildTarget(), platform);
+    }
 
-      @Override
-      public ImmutableMap<String, String> getEnvironment(SourcePathResolver resolver) {
-        throw new UnsupportedPlatformException(getBuildTarget(), platform);
-      }
-    };
+    @Override
+    public ImmutableMap<String, String> getEnvironment(SourcePathResolver resolver) {
+      throw new UnsupportedPlatformException(getBuildTarget(), platform);
+    }
   }
 
   private Stream<BuildRule> extractDepsFromArgs(Stream<Arg> args, SourcePathRuleFinder ruleFinder) {
