@@ -68,6 +68,8 @@ abstract class AbstractIjProjectConfig {
 
   public abstract boolean isRemovingUnusedLibrariesEnabled();
 
+  public abstract boolean isRawSourcesForLibrariesEnabled();
+
   public abstract boolean isExcludeArtifactsEnabled();
 
   public abstract boolean isIncludeTransitiveDependency();

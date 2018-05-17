@@ -190,11 +190,13 @@ public class IjProjectWriter {
     contents.add("javadocUrls", library.getJavadocUrls());
     contents.add(
         "sourceDirs",
-        library
-            .getSourceDirs()
-            .stream()
-            .map(projectPaths::toProjectDirRelativeString)
-            .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())));
+        projectConfig.isRawSourcesForLibrariesEnabled()
+            ? library
+                .getSourceDirs()
+                .stream()
+                .map(projectPaths::toProjectDirRelativeString)
+                .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()))
+            : ImmutableSortedSet.of());
     // TODO(mkosiba): support res and assets for aar.
 
     StringTemplateFile.writeToFile(

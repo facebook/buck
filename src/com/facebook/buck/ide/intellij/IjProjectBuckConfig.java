@@ -128,6 +128,9 @@ public class IjProjectBuckConfig {
                 INTELLIJ_BUCK_CONFIG_SECTION, "extra_compiler_output_modules_path", false))
         .setMinAndroidSdkVersion(
             buckConfig.getValue(INTELLIJ_BUCK_CONFIG_SECTION, "default_min_android_sdk_version"))
+        .setRawSourcesForLibrariesEnabled(
+            buckConfig.getBooleanValue(
+                INTELLIJ_BUCK_CONFIG_SECTION, "enable_raw_sources_for_libraries", false))
         .build();
   }
 
