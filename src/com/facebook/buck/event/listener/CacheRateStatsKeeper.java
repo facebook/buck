@@ -191,12 +191,14 @@ public class CacheRateStatsKeeper {
 
     @Override
     public double getCacheMissRate() {
-      return ruleCount == 0 ? 0 : 100 * (double) cacheMissCount / ruleCount;
+      int cacheRequestsCount = cacheHitCount + cacheMissCount + cacheErrorCount;
+      return cacheRequestsCount == 0 ? 0 : 100 * (double) cacheMissCount / cacheRequestsCount;
     }
 
     @Override
     public double getCacheErrorRate() {
-      return updated == 0 ? 0 : 100 * (double) cacheErrorCount / updated;
+      int cacheRequestsCount = cacheHitCount + cacheMissCount + cacheErrorCount;
+      return cacheRequestsCount == 0 ? 0 : 100 * (double) cacheErrorCount / cacheRequestsCount;
     }
 
     @Override

@@ -81,7 +81,7 @@ public class CacheRateStatsKeeperTest {
     assertThat(stats.getCacheErrorCount(), Matchers.is(0));
     assertThat(stats.getCacheErrorRate(), Matchers.is(0.0));
     assertThat(stats.getCacheMissCount(), Matchers.is(1));
-    assertThat(stats.getCacheMissRate(), Matchers.is(0.0));
+    assertThat(stats.getCacheMissRate(), Matchers.is(50.0));
     assertThat(stats.getCacheHitCount(), Matchers.is(1));
     assertThat(stats.getUpdatedRulesCount(), Matchers.is(2));
   }
@@ -108,17 +108,23 @@ public class CacheRateStatsKeeperTest {
   public void cacheMiss() {
     CacheRateStatsKeeper cacheRateStatsKeeper = new CacheRateStatsKeeper();
     cacheRateStatsKeeper.ruleCountCalculated(
-        BuildEvent.RuleCountCalculated.ruleCountCalculated(ImmutableSet.of(), 4));
+        BuildEvent.RuleCountCalculated.ruleCountCalculated(ImmutableSet.of(), 5));
+    cacheRateStatsKeeper.buildRuleFinished(finishedEvent(CacheResult.miss()));
+    cacheRateStatsKeeper.buildRuleFinished(
+        finishedEvent(CacheResult.hit("dir", ArtifactCacheMode.dir)));
+    cacheRateStatsKeeper.buildRuleFinished(finishedEvent(CacheResult.miss()));
+    cacheRateStatsKeeper.buildRuleFinished(
+        finishedEvent(CacheResult.hit("dir", ArtifactCacheMode.dir)));
     cacheRateStatsKeeper.buildRuleFinished(finishedEvent(CacheResult.miss()));
 
     CacheRateStatsKeeper.CacheRateStatsUpdateEvent stats = cacheRateStatsKeeper.getStats();
 
     assertThat(stats.getCacheErrorCount(), Matchers.is(0));
     assertThat(stats.getCacheErrorRate(), Matchers.is(0.0));
-    assertThat(stats.getCacheMissCount(), Matchers.is(1));
-    assertThat(stats.getCacheMissRate(), Matchers.is(25.0));
-    assertThat(stats.getCacheHitCount(), Matchers.is(0));
-    assertThat(stats.getUpdatedRulesCount(), Matchers.is(1));
+    assertThat(stats.getCacheMissCount(), Matchers.is(3));
+    assertThat(stats.getCacheMissRate(), Matchers.is(60.0));
+    assertThat(stats.getCacheHitCount(), Matchers.is(2));
+    assertThat(stats.getUpdatedRulesCount(), Matchers.is(5));
   }
 
   @Test

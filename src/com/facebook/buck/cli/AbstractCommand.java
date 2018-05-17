@@ -207,7 +207,7 @@ public abstract class AbstractCommand implements Command {
 
   @Option(
     name = NO_CACHE_LONG_ARG,
-    usage = "Whether to ignore the [cache] declared in .buckconfig."
+    usage = "Whether to ignore the remote & local cache declared in .buckconfig."
   )
   private boolean noCache = false;
 

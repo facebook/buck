@@ -663,20 +663,6 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
               locale,
               "%d " + convertToAllCapsIfNeeded("updated"),
               cacheRateStats.getUpdatedRulesCount()));
-      if (ruleCount.orElse(0) > 0) {
-        columns.add(
-            String.format(
-                locale,
-                "%.1f%% " + convertToAllCapsIfNeeded("cache miss"),
-                cacheRateStats.getCacheMissRate()));
-        if (cacheRateStats.getCacheErrorCount() > 0) {
-          columns.add(
-              String.format(
-                  locale,
-                  "%.1f%% " + convertToAllCapsIfNeeded("cache errors"),
-                  cacheRateStats.getCacheErrorRate()));
-        }
-      }
       jobSummary = Joiner.on(", ").join(columns);
     }
 
@@ -706,6 +692,19 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
             "%s",
             convertToAllCapsIfNeeded(
                 SizeUnit.toHumanReadableString(redableRemoteDownloadedBytes, locale))));
+    CacheRateStatsKeeper.CacheRateStatsUpdateEvent cacheRateStats = cacheRateStatsKeeper.getStats();
+    columns.add(
+        String.format(
+            locale,
+            "%.1f%% " + convertToAllCapsIfNeeded("cache miss"),
+            cacheRateStats.getCacheMissRate()));
+    if (cacheRateStats.getCacheErrorCount() > 0) {
+      columns.add(
+          String.format(
+              locale,
+              "%.1f%% " + convertToAllCapsIfNeeded("cache errors"),
+              cacheRateStats.getCacheErrorRate()));
+    }
     return parseLine + " " + Joiner.on(", ").join(columns);
   }
 

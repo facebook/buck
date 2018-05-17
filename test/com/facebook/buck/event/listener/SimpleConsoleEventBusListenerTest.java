@@ -159,6 +159,7 @@ public class SimpleConsoleEventBusListenerTest {
     expectedOutput +=
         "BUILT  0.4s //banana:stand\n"
             + FINISHED_DOWNLOAD_STRING
+            + ", 100.0% CACHE MISS"
             + "\n"
             + "BUILDING: FINISHED IN 1.2s\n"
             + "WAITING FOR HTTP CACHE UPLOADS 0.00 BYTES (0 COMPLETE/0 FAILED/1 UPLOADING/1 PENDING)\n"
@@ -235,9 +236,9 @@ public class SimpleConsoleEventBusListenerTest {
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
 
-    expectedOutput += "BUILDING: FINISHED IN 1.0s 0/10 JOBS, 0 UPDATED, 0.0% CACHE MISS\n";
+    expectedOutput += "BUILDING: FINISHED IN 1.0s 0/10 JOBS, 0 UPDATED\n";
     expectedOutput += "BUILD SUCCEEDED\n";
-    assertOutput(FINISHED_DOWNLOAD_STRING + "\n" + expectedOutput, console);
+    assertOutput(FINISHED_DOWNLOAD_STRING + ", 0.0% CACHE MISS" + "\n" + expectedOutput, console);
   }
 
   @Test
@@ -287,7 +288,7 @@ public class SimpleConsoleEventBusListenerTest {
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
     expectedOutput += "CREATING ACTION GRAPH: FINISHED IN 0.2s\n";
-    expectedOutput += FINISHED_DOWNLOAD_STRING + "\n";
+    expectedOutput += FINISHED_DOWNLOAD_STRING + ", 0.0% CACHE MISS" + "\n";
     expectedOutput += "BUILDING: FINISHED IN 0.1s\n";
     expectedOutput += "BUILD SUCCEEDED\n";
     assertOutput(expectedOutput, console);
@@ -355,7 +356,11 @@ public class SimpleConsoleEventBusListenerTest {
             threadId));
 
     expectedOutput +=
-        FINISHED_DOWNLOAD_STRING + "\n" + "BUILDING: FINISHED IN 1.2s\n" + "BUILD SUCCEEDED\n";
+        FINISHED_DOWNLOAD_STRING
+            + ", 100.0% CACHE MISS"
+            + "\n"
+            + "BUILDING: FINISHED IN 1.2s\n"
+            + "BUILD SUCCEEDED\n";
     assertOutput(expectedOutput, console);
   }
 
