@@ -42,9 +42,9 @@ import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.rules.BuildRuleCreationContext;
+import com.facebook.buck.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
@@ -65,7 +65,7 @@ import java.util.function.Function;
 import org.immutables.value.Value;
 
 public class RustLibraryDescription
-    implements Description<RustLibraryDescriptionArg>,
+    implements DescriptionWithTargetGraph<RustLibraryDescriptionArg>,
         ImplicitDepsInferringDescription<RustLibraryDescription.AbstractRustLibraryDescriptionArg>,
         Flavored,
         VersionPropagator<RustLibraryDescriptionArg> {
@@ -138,7 +138,7 @@ public class RustLibraryDescription
 
   @Override
   public BuildRule createBuildRule(
-      BuildRuleCreationContext context,
+      BuildRuleCreationContextWithTargetGraph context,
       BuildTarget buildTarget,
       BuildRuleParams params,
       RustLibraryDescriptionArg args) {

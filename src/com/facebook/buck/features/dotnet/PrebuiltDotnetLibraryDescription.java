@@ -24,13 +24,13 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import com.facebook.buck.rules.BuildRuleCreationContext;
+import com.facebook.buck.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.DescriptionWithTargetGraph;
 import org.immutables.value.Value;
 
 public class PrebuiltDotnetLibraryDescription
-    implements Description<PrebuiltDotnetLibraryDescriptionArg> {
+    implements DescriptionWithTargetGraph<PrebuiltDotnetLibraryDescriptionArg> {
 
   @Override
   public Class<PrebuiltDotnetLibraryDescriptionArg> getConstructorArgType() {
@@ -39,7 +39,7 @@ public class PrebuiltDotnetLibraryDescription
 
   @Override
   public BuildRule createBuildRule(
-      BuildRuleCreationContext context,
+      BuildRuleCreationContextWithTargetGraph context,
       BuildTarget buildTarget,
       BuildRuleParams params,
       PrebuiltDotnetLibraryDescriptionArg args) {

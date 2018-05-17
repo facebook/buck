@@ -34,9 +34,9 @@ import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.BuildRuleCreationContext;
+import com.facebook.buck.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.RichStream;
@@ -63,7 +63,7 @@ import java.util.Optional;
 import org.immutables.value.Value;
 
 public class AndroidResourceDescription
-    implements Description<AndroidResourceDescriptionArg>, Flavored {
+    implements DescriptionWithTargetGraph<AndroidResourceDescriptionArg>, Flavored {
 
   private static final ImmutableSet<String> NON_ASSET_FILENAMES =
       ImmutableSet.of(
@@ -94,7 +94,7 @@ public class AndroidResourceDescription
   @SuppressWarnings("PMD.PrematureDeclaration")
   @Override
   public BuildRule createBuildRule(
-      BuildRuleCreationContext context,
+      BuildRuleCreationContextWithTargetGraph context,
       BuildTarget buildTarget,
       BuildRuleParams params,
       AndroidResourceDescriptionArg args) {

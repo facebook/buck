@@ -19,9 +19,9 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.InferBuckConfig;
-import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.DescriptionCreationContext;
 import com.facebook.buck.rules.DescriptionProvider;
+import com.facebook.buck.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import java.util.Arrays;
 import java.util.Collection;
@@ -31,7 +31,8 @@ import org.pf4j.Extension;
 public class CxxDescriptionsProvider implements DescriptionProvider {
 
   @Override
-  public Collection<Description<?>> getDescriptions(DescriptionCreationContext context) {
+  public Collection<DescriptionWithTargetGraph<?>> getDescriptions(
+      DescriptionCreationContext context) {
     ToolchainProvider toolchainProvider = context.getToolchainProvider();
     BuckConfig config = context.getBuckConfig();
     CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(config);

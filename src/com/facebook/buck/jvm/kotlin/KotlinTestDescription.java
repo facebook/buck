@@ -32,9 +32,9 @@ import com.facebook.buck.jvm.java.JavacOptionsFactory;
 import com.facebook.buck.jvm.java.TestType;
 import com.facebook.buck.jvm.java.toolchain.JavaOptionsProvider;
 import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
-import com.facebook.buck.rules.BuildRuleCreationContext;
+import com.facebook.buck.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.rules.macros.StringWithMacrosConverter;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.types.Either;
@@ -45,7 +45,7 @@ import com.google.common.collect.Maps;
 import java.util.Optional;
 import org.immutables.value.Value;
 
-public class KotlinTestDescription implements Description<KotlinTestDescriptionArg> {
+public class KotlinTestDescription implements DescriptionWithTargetGraph<KotlinTestDescriptionArg> {
 
   private final ToolchainProvider toolchainProvider;
   private final KotlinBuckConfig kotlinBuckConfig;
@@ -67,7 +67,7 @@ public class KotlinTestDescription implements Description<KotlinTestDescriptionA
 
   @Override
   public BuildRule createBuildRule(
-      BuildRuleCreationContext context,
+      BuildRuleCreationContextWithTargetGraph context,
       BuildTarget buildTarget,
       BuildRuleParams params,
       KotlinTestDescriptionArg args) {

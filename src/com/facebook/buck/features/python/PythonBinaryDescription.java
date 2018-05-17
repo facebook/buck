@@ -42,9 +42,9 @@ import com.facebook.buck.file.WriteFile;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.BuildRuleCreationContext;
+import com.facebook.buck.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
@@ -69,7 +69,7 @@ import java.util.Set;
 import org.immutables.value.Value;
 
 public class PythonBinaryDescription
-    implements Description<PythonBinaryDescriptionArg>,
+    implements DescriptionWithTargetGraph<PythonBinaryDescriptionArg>,
         ImplicitDepsInferringDescription<
             PythonBinaryDescription.AbstractPythonBinaryDescriptionArg>,
         VersionRoot<PythonBinaryDescriptionArg> {
@@ -256,7 +256,7 @@ public class PythonBinaryDescription
 
   @Override
   public PythonBinary createBuildRule(
-      BuildRuleCreationContext context,
+      BuildRuleCreationContextWithTargetGraph context,
       BuildTarget buildTarget,
       BuildRuleParams params,
       PythonBinaryDescriptionArg args) {

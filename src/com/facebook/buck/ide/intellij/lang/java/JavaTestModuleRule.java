@@ -25,7 +25,7 @@ import com.facebook.buck.ide.intellij.model.folders.IjResourceFolderType;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.jvm.java.JavaTestDescription;
-import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
@@ -47,7 +47,7 @@ public class JavaTestModuleRule extends BaseIjModuleRule<JavaTestDescription.Cor
   }
 
   @Override
-  public Class<? extends Description<?>> getDescriptionClass() {
+  public Class<? extends DescriptionWithTargetGraph<?>> getDescriptionClass() {
     return JavaTestDescription.class;
   }
 

@@ -23,7 +23,7 @@ import com.facebook.buck.ide.intellij.model.IjModuleFactoryResolver;
 import com.facebook.buck.ide.intellij.model.IjModuleType;
 import com.facebook.buck.ide.intellij.model.IjProjectConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.rules.TargetNode;
 
 public class RobolectricTestModuleRule extends AndroidModuleRule<RobolectricTestDescriptionArg> {
@@ -36,7 +36,7 @@ public class RobolectricTestModuleRule extends AndroidModuleRule<RobolectricTest
   }
 
   @Override
-  public Class<? extends Description<?>> getDescriptionClass() {
+  public Class<? extends DescriptionWithTargetGraph<?>> getDescriptionClass() {
     return RobolectricTestDescription.class;
   }
 

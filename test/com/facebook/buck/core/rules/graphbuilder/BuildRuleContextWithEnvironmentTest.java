@@ -35,7 +35,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeTargetNodeBuilder;
-import com.facebook.buck.rules.ImmutableBuildRuleCreationContext;
+import com.facebook.buck.rules.ImmutableBuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -96,7 +96,7 @@ public class BuildRuleContextWithEnvironmentTest {
     BuildRuleKey key =
         ImmutableBuildRuleKey.of(
             fakeKeyTarget,
-            ImmutableBuildRuleCreationContext.of(
+            ImmutableBuildRuleCreationContextWithTargetGraph.of(
                 new TargetGraph(mutableTargetGraph, ImmutableMap.of(fakeKeyTarget, fakeTargetNode)),
                 ruleResolver,
                 projectFilesystem,
@@ -151,13 +151,13 @@ public class BuildRuleContextWithEnvironmentTest {
     BuildRuleKey key1 =
         ImmutableBuildRuleKey.of(
             fakeKeyTarget1,
-            ImmutableBuildRuleCreationContext.of(
+            ImmutableBuildRuleCreationContextWithTargetGraph.of(
                 targetGraph, ruleResolver, projectFilesystem, cellPathResolver, toolchainProvider));
 
     BuildRuleKey key2 =
         ImmutableBuildRuleKey.of(
             fakeKeyTarget2,
-            ImmutableBuildRuleCreationContext.of(
+            ImmutableBuildRuleCreationContextWithTargetGraph.of(
                 targetGraph, ruleResolver, projectFilesystem, cellPathResolver, toolchainProvider));
 
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//fake:fake");

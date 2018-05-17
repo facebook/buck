@@ -22,9 +22,9 @@ import com.facebook.buck.core.description.arg.CommonDescriptionArg;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypes;
-import com.facebook.buck.rules.BuildRuleCreationContext;
+import com.facebook.buck.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.google.common.base.Splitter;
@@ -41,7 +41,8 @@ public class AuditBuildRuleTypesCommandTest {
   private static final List<String> KNOWN_RULE_TYPES =
       Arrays.asList("another_build_rule", "some_build_rule");
 
-  private static class SomeBuildRuleDescription implements Description<CommonDescriptionArg> {
+  private static class SomeBuildRuleDescription
+      implements DescriptionWithTargetGraph<CommonDescriptionArg> {
 
     @Override
     public Class<CommonDescriptionArg> getConstructorArgType() {
@@ -50,7 +51,7 @@ public class AuditBuildRuleTypesCommandTest {
 
     @Override
     public BuildRule createBuildRule(
-        BuildRuleCreationContext context,
+        BuildRuleCreationContextWithTargetGraph context,
         BuildTarget buildTarget,
         BuildRuleParams params,
         CommonDescriptionArg args) {
@@ -60,7 +61,7 @@ public class AuditBuildRuleTypesCommandTest {
 
   private static class AnotherBuildRuleDescription extends SomeBuildRuleDescription {}
 
-  private static final ImmutableList<Description<?>> DESCRIPTIONS =
+  private static final ImmutableList<DescriptionWithTargetGraph<?>> DESCRIPTIONS =
       ImmutableList.of(new SomeBuildRuleDescription(), new AnotherBuildRuleDescription());
 
   @Before

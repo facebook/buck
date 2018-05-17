@@ -34,9 +34,9 @@ import com.facebook.buck.jvm.java.JavacOptionsFactory;
 import com.facebook.buck.jvm.java.MavenUberJar;
 import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.maven.aether.AetherUtil;
-import com.facebook.buck.rules.BuildRuleCreationContext;
+import com.facebook.buck.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.Optionals;
@@ -48,7 +48,7 @@ import java.util.Optional;
 import org.immutables.value.Value;
 
 public class ScalaLibraryDescription
-    implements Description<ScalaLibraryDescriptionArg>,
+    implements DescriptionWithTargetGraph<ScalaLibraryDescriptionArg>,
         Flavored,
         ImplicitDepsInferringDescription<
             ScalaLibraryDescription.AbstractScalaLibraryDescriptionArg> {
@@ -81,7 +81,7 @@ public class ScalaLibraryDescription
 
   @Override
   public BuildRule createBuildRule(
-      BuildRuleCreationContext context,
+      BuildRuleCreationContextWithTargetGraph context,
       BuildTarget buildTarget,
       BuildRuleParams rawParams,
       ScalaLibraryDescriptionArg args) {

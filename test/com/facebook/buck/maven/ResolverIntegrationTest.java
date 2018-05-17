@@ -41,7 +41,7 @@ import com.facebook.buck.maven.aether.Repository;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.options.ProjectBuildFileParserOptions;
-import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -112,7 +112,7 @@ public class ResolverIntegrationTest {
         new ToolchainProviderBuilder()
             .withToolchain(Downloader.DEFAULT_NAME, new ExplodingDownloader())
             .build();
-    ImmutableSet<Description<?>> descriptions =
+    ImmutableSet<DescriptionWithTargetGraph<?>> descriptions =
         ImmutableSet.of(new RemoteFileDescription(toolchainProvider), new PrebuiltJarDescription());
 
     buildFileParser =

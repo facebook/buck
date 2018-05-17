@@ -28,10 +28,10 @@ import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.rules.BuildRuleCreationContext;
+import com.facebook.buck.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableSupport;
-import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.macros.AbstractMacroExpanderWithoutPrecomputedWork;
@@ -53,7 +53,7 @@ import java.util.Optional;
 import java.util.stream.Stream;
 import org.immutables.value.Value;
 
-public class ShTestDescription implements Description<ShTestDescriptionArg> {
+public class ShTestDescription implements DescriptionWithTargetGraph<ShTestDescriptionArg> {
 
   private static final ImmutableList<AbstractMacroExpanderWithoutPrecomputedWork<? extends Macro>>
       MACRO_EXPANDERS =
@@ -75,7 +75,7 @@ public class ShTestDescription implements Description<ShTestDescriptionArg> {
 
   @Override
   public ShTest createBuildRule(
-      BuildRuleCreationContext context,
+      BuildRuleCreationContextWithTargetGraph context,
       BuildTarget buildTarget,
       BuildRuleParams params,
       ShTestDescriptionArg args) {

@@ -25,7 +25,7 @@ import com.facebook.buck.ide.intellij.model.IjModuleFactoryResolver;
 import com.facebook.buck.ide.intellij.model.IjModuleType;
 import com.facebook.buck.ide.intellij.model.IjProjectConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -43,7 +43,7 @@ public class AndroidLibraryModuleRule extends AndroidModuleRule<AndroidLibraryDe
   }
 
   @Override
-  public Class<? extends Description<?>> getDescriptionClass() {
+  public Class<? extends DescriptionWithTargetGraph<?>> getDescriptionClass() {
     return AndroidLibraryDescription.class;
   }
 

@@ -20,10 +20,10 @@ import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.rules.type.BuildRuleType;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.DescriptionCache;
 import com.facebook.buck.rules.DescriptionCreationContext;
 import com.facebook.buck.rules.DescriptionProvider;
+import com.facebook.buck.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.sandbox.SandboxExecutionStrategy;
 import com.facebook.buck.sandbox.SandboxExecutionStrategyFactory;
 import com.facebook.buck.toolchain.ToolchainProvider;
@@ -41,15 +41,15 @@ import org.pf4j.PluginManager;
 @BuckStyleImmutable
 abstract class AbstractKnownBuildRuleTypes {
 
-  /** @return all the underlying {@link Description}s. */
+  /** @return all the underlying {@link DescriptionWithTargetGraph}s. */
   @Value.Parameter
-  abstract ImmutableList<Description<?>> getDescriptions();
+  abstract ImmutableList<DescriptionWithTargetGraph<?>> getDescriptions();
 
   // Verify that there are no duplicate rule types being defined.
   @Value.Check
   protected void check() {
     Set<BuildRuleType> types = new HashSet<>();
-    for (Description<?> description : getDescriptions()) {
+    for (DescriptionWithTargetGraph<?> description : getDescriptions()) {
       BuildRuleType type = DescriptionCache.getBuildRuleType(description);
       if (!types.add(DescriptionCache.getBuildRuleType(description))) {
         throw new IllegalStateException(String.format("multiple descriptions with type %s", type));
@@ -58,7 +58,7 @@ abstract class AbstractKnownBuildRuleTypes {
   }
 
   @Value.Lazy
-  protected ImmutableMap<BuildRuleType, Description<?>> getDescriptionsByType() {
+  protected ImmutableMap<BuildRuleType, DescriptionWithTargetGraph<?>> getDescriptionsByType() {
     return getDescriptions()
         .stream()
         .collect(ImmutableMap.toImmutableMap(DescriptionCache::getBuildRuleType, d -> d));
@@ -80,8 +80,8 @@ abstract class AbstractKnownBuildRuleTypes {
     return type;
   }
 
-  public Description<?> getDescription(BuildRuleType buildRuleType) {
-    Description<?> description = getDescriptionsByType().get(buildRuleType);
+  public DescriptionWithTargetGraph<?> getDescription(BuildRuleType buildRuleType) {
+    DescriptionWithTargetGraph<?> description = getDescriptionsByType().get(buildRuleType);
     if (description == null) {
       throw new HumanReadableException(
           "Unable to find description for build rule type: " + buildRuleType);
@@ -106,7 +106,8 @@ abstract class AbstractKnownBuildRuleTypes {
     List<DescriptionProvider> descriptionProviders =
         pluginManager.getExtensions(DescriptionProvider.class);
     for (DescriptionProvider provider : descriptionProviders) {
-      for (Description<?> description : provider.getDescriptions(descriptionCreationContext)) {
+      for (DescriptionWithTargetGraph<?> description :
+          provider.getDescriptions(descriptionCreationContext)) {
         builder.addDescriptions(description);
       }
     }

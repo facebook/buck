@@ -42,9 +42,9 @@ import com.facebook.buck.jvm.java.TestType;
 import com.facebook.buck.jvm.java.toolchain.JavaCxxPlatformProvider;
 import com.facebook.buck.jvm.java.toolchain.JavaOptionsProvider;
 import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
-import com.facebook.buck.rules.BuildRuleCreationContext;
+import com.facebook.buck.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.macros.StringWithMacrosConverter;
 import com.facebook.buck.toolchain.ToolchainProvider;
@@ -61,7 +61,7 @@ import java.util.Optional;
 import org.immutables.value.Value;
 
 public class RobolectricTestDescription
-    implements Description<RobolectricTestDescriptionArg>,
+    implements DescriptionWithTargetGraph<RobolectricTestDescriptionArg>,
         ImplicitDepsInferringDescription<RobolectricTestDescriptionArg> {
 
 
@@ -98,7 +98,7 @@ public class RobolectricTestDescription
 
   @Override
   public BuildRule createBuildRule(
-      BuildRuleCreationContext context,
+      BuildRuleCreationContextWithTargetGraph context,
       BuildTarget buildTarget,
       BuildRuleParams params,
       RobolectricTestDescriptionArg args) {

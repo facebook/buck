@@ -460,7 +460,8 @@ public final class JUnitRunner extends BaseRunner {
     public boolean shouldRun(Description description) {
       String methodName = description.getMethodName();
       if (methodName == null) {
-        // JUnit will give us an org.junit.runner.Description like this for the test class
+        // JUnit will give us an org.junit.runner.Description like this for the
+        // test class
         // itself.  It's easier for our filtering to make decisions just at the method level,
         // however, so just always return true here.
         return true;

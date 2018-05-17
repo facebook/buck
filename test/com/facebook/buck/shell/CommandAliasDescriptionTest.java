@@ -36,9 +36,9 @@ import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.AbstractNodeBuilder;
-import com.facebook.buck.rules.BuildRuleCreationContext;
+import com.facebook.buck.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeSourcePath;
@@ -559,7 +559,8 @@ public class CommandAliasDescriptionTest {
   }
 
   // reuses CommandAliasDescriptionArg to avoid generating another Arg class with builder
-  private static class TestBinaryDescription implements Description<CommandAliasDescriptionArg> {
+  private static class TestBinaryDescription
+      implements DescriptionWithTargetGraph<CommandAliasDescriptionArg> {
     private final String arg;
     private final String env;
 
@@ -575,7 +576,7 @@ public class CommandAliasDescriptionTest {
 
     @Override
     public BuildRule createBuildRule(
-        BuildRuleCreationContext context,
+        BuildRuleCreationContextWithTargetGraph context,
         BuildTarget target,
         BuildRuleParams params,
         CommandAliasDescriptionArg args) {

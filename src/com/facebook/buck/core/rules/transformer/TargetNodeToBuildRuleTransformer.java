@@ -19,13 +19,13 @@ package com.facebook.buck.core.rules.transformer;
 import com.facebook.buck.core.cell.CellProvider;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 
 public interface TargetNodeToBuildRuleTransformer {
 
-  <T, U extends Description<T>> BuildRule transform(
+  <T, U extends DescriptionWithTargetGraph<T>> BuildRule transform(
       CellProvider cellProvider,
       TargetGraph targetGraph,
       BuildRuleResolver ruleResolver,

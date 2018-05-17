@@ -36,9 +36,9 @@ import com.facebook.buck.jvm.core.HasJavaAbi;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
-import com.facebook.buck.rules.BuildRuleCreationContext;
+import com.facebook.buck.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
@@ -49,7 +49,8 @@ import java.nio.file.Path;
 import java.util.Optional;
 import org.immutables.value.Value;
 
-public class PrebuiltJarDescription implements Description<PrebuiltJarDescriptionArg> {
+public class PrebuiltJarDescription
+    implements DescriptionWithTargetGraph<PrebuiltJarDescriptionArg> {
 
   @Override
   public Class<PrebuiltJarDescriptionArg> getConstructorArgType() {
@@ -58,7 +59,7 @@ public class PrebuiltJarDescription implements Description<PrebuiltJarDescriptio
 
   @Override
   public BuildRule createBuildRule(
-      BuildRuleCreationContext context,
+      BuildRuleCreationContextWithTargetGraph context,
       BuildTarget buildTarget,
       BuildRuleParams params,
       PrebuiltJarDescriptionArg args) {

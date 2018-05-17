@@ -32,9 +32,9 @@ import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
-import com.facebook.buck.rules.BuildRuleCreationContext;
+import com.facebook.buck.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
@@ -48,7 +48,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import org.immutables.value.Value;
 
 public class HaskellPrebuiltLibraryDescription
-    implements Description<HaskellPrebuiltLibraryDescriptionArg>,
+    implements DescriptionWithTargetGraph<HaskellPrebuiltLibraryDescriptionArg>,
         VersionPropagator<HaskellPrebuiltLibraryDescriptionArg> {
 
   @Override
@@ -58,7 +58,7 @@ public class HaskellPrebuiltLibraryDescription
 
   @Override
   public BuildRule createBuildRule(
-      BuildRuleCreationContext context,
+      BuildRuleCreationContextWithTargetGraph context,
       BuildTarget buildTarget,
       BuildRuleParams params,
       HaskellPrebuiltLibraryDescriptionArg args) {

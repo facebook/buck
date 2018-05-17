@@ -202,7 +202,8 @@ public class TargetNodeVisibilityTest {
         rule.getBuildTarget(), target);
   }
 
-  public static class FakeRuleDescription implements Description<FakeRuleDescriptionArg> {
+  public static class FakeRuleDescription
+      implements DescriptionWithTargetGraph<FakeRuleDescriptionArg> {
 
     @Override
     public Class<FakeRuleDescriptionArg> getConstructorArgType() {
@@ -211,7 +212,7 @@ public class TargetNodeVisibilityTest {
 
     @Override
     public BuildRule createBuildRule(
-        BuildRuleCreationContext context,
+        BuildRuleCreationContextWithTargetGraph context,
         BuildTarget buildTarget,
         BuildRuleParams params,
         FakeRuleDescriptionArg args) {

@@ -36,9 +36,9 @@ import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.HasSystemFrameworkAndLibraries;
 import com.facebook.buck.cxx.toolchain.StripStyle;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
-import com.facebook.buck.rules.BuildRuleCreationContext;
+import com.facebook.buck.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.rules.MetadataProvidingDescription;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.toolchain.ToolchainProvider;
@@ -52,7 +52,7 @@ import java.util.regex.Pattern;
 import org.immutables.value.Value;
 
 public class PrebuiltAppleFrameworkDescription
-    implements Description<PrebuiltAppleFrameworkDescriptionArg>,
+    implements DescriptionWithTargetGraph<PrebuiltAppleFrameworkDescriptionArg>,
         Flavored,
         MetadataProvidingDescription<PrebuiltAppleFrameworkDescriptionArg> {
 
@@ -107,7 +107,7 @@ public class PrebuiltAppleFrameworkDescription
 
   @Override
   public BuildRule createBuildRule(
-      BuildRuleCreationContext context,
+      BuildRuleCreationContextWithTargetGraph context,
       BuildTarget buildTarget,
       BuildRuleParams params,
       PrebuiltAppleFrameworkDescriptionArg args) {

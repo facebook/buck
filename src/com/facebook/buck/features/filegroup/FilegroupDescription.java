@@ -23,12 +23,12 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.rules.BuildRuleCreationContext;
+import com.facebook.buck.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.DescriptionWithTargetGraph;
 import org.immutables.value.Value;
 
-public class FilegroupDescription implements Description<FileGroupDescriptionArg> {
+public class FilegroupDescription implements DescriptionWithTargetGraph<FileGroupDescriptionArg> {
 
   @Override
   public Class<FileGroupDescriptionArg> getConstructorArgType() {
@@ -37,7 +37,7 @@ public class FilegroupDescription implements Description<FileGroupDescriptionArg
 
   @Override
   public BuildRule createBuildRule(
-      BuildRuleCreationContext context,
+      BuildRuleCreationContextWithTargetGraph context,
       BuildTarget buildTarget,
       BuildRuleParams params,
       FileGroupDescriptionArg args) {

@@ -148,7 +148,8 @@ public class IncrementalActionGraphGenerator {
         }
       }
     }
-    // Incremental caching is only supported for {@link Description}s known to be safe. This is
+    // Incremental caching is only supported for {@link Description}s known to
+    // be safe. This is
     // because we cannot generally guarantee that descriptions won't do crazy things that violate
     // our assumptions during their construction.
     if (!targetNode.getDescription().producesCacheableSubgraph()) {

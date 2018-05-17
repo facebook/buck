@@ -26,7 +26,7 @@ import com.facebook.buck.ide.intellij.model.IjLibraryFactoryResolver;
 import com.facebook.buck.jvm.java.PrebuiltJarDescription;
 import com.facebook.buck.jvm.java.PrebuiltJarDescriptionArg;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
@@ -55,7 +55,7 @@ class DefaultIjLibraryFactory extends IjLibraryFactory {
    * @param <T> the type of the TargetNode.
    */
   abstract class TypedIjLibraryRule<T> implements IjLibraryRule {
-    abstract Class<? extends Description<?>> getDescriptionClass();
+    abstract Class<? extends DescriptionWithTargetGraph<?>> getDescriptionClass();
 
     abstract void apply(TargetNode<T, ?> targetNode, IjLibrary.Builder library);
 
@@ -66,7 +66,8 @@ class DefaultIjLibraryFactory extends IjLibraryFactory {
     }
   }
 
-  private Map<Class<? extends Description<?>>, IjLibraryRule> libraryRuleIndex = new HashMap<>();
+  private Map<Class<? extends DescriptionWithTargetGraph<?>>, IjLibraryRule> libraryRuleIndex =
+      new HashMap<>();
   private Set<String> uniqueLibraryNamesSet = new HashSet<>();
   private IjLibraryFactoryResolver libraryFactoryResolver;
   private Map<TargetNode<?, ?>, Optional<IjLibrary>> libraryCache;
@@ -142,7 +143,7 @@ class DefaultIjLibraryFactory extends IjLibraryFactory {
       extends TypedIjLibraryRule<AndroidPrebuiltAarDescriptionArg> {
 
     @Override
-    public Class<? extends Description<?>> getDescriptionClass() {
+    public Class<? extends DescriptionWithTargetGraph<?>> getDescriptionClass() {
       return AndroidPrebuiltAarDescription.class;
     }
 
@@ -175,7 +176,7 @@ class DefaultIjLibraryFactory extends IjLibraryFactory {
   private class PrebuiltJarLibraryRule extends TypedIjLibraryRule<PrebuiltJarDescriptionArg> {
 
     @Override
-    public Class<? extends Description<?>> getDescriptionClass() {
+    public Class<? extends DescriptionWithTargetGraph<?>> getDescriptionClass() {
       return PrebuiltJarDescription.class;
     }
 

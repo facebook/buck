@@ -86,7 +86,7 @@ public class FakeTargetNodeBuilder
   interface AbstractFakeTargetNodeArg extends CommonDescriptionArg, HasDeclaredDeps {}
 
   public static class FakeDescription
-      implements Description<FakeTargetNodeArg>,
+      implements DescriptionWithTargetGraph<FakeTargetNodeArg>,
           ImplicitDepsInferringDescription<FakeTargetNodeArg> {
     private final BuildRule rule;
     private Set<BuildTarget> extraDeps;
@@ -120,7 +120,7 @@ public class FakeTargetNodeBuilder
 
     @Override
     public BuildRule createBuildRule(
-        BuildRuleCreationContext context,
+        BuildRuleCreationContextWithTargetGraph context,
         BuildTarget buildTarget,
         BuildRuleParams params,
         FakeTargetNodeArg args) {

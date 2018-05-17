@@ -33,9 +33,9 @@ import com.facebook.buck.jvm.java.JavacOptionsFactory;
 import com.facebook.buck.jvm.java.TestType;
 import com.facebook.buck.jvm.java.toolchain.JavaOptionsProvider;
 import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
-import com.facebook.buck.rules.BuildRuleCreationContext;
+import com.facebook.buck.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.rules.macros.StringWithMacrosConverter;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.google.common.collect.ImmutableMap;
@@ -45,7 +45,7 @@ import com.google.common.collect.Maps;
 import java.util.Optional;
 import org.immutables.value.Value;
 
-public class GroovyTestDescription implements Description<GroovyTestDescriptionArg> {
+public class GroovyTestDescription implements DescriptionWithTargetGraph<GroovyTestDescriptionArg> {
 
   private final ToolchainProvider toolchainProvider;
   private final GroovyBuckConfig groovyBuckConfig;
@@ -67,7 +67,7 @@ public class GroovyTestDescription implements Description<GroovyTestDescriptionA
 
   @Override
   public BuildRule createBuildRule(
-      BuildRuleCreationContext context,
+      BuildRuleCreationContextWithTargetGraph context,
       BuildTarget buildTarget,
       BuildRuleParams params,
       GroovyTestDescriptionArg args) {

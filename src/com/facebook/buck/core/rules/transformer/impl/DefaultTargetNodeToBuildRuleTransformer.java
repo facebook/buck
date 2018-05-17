@@ -22,10 +22,10 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.transformer.TargetNodeToBuildRuleTransformer;
-import com.facebook.buck.rules.BuildRuleCreationContext;
+import com.facebook.buck.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.ImmutableBuildRuleCreationContext;
+import com.facebook.buck.rules.DescriptionWithTargetGraph;
+import com.facebook.buck.rules.ImmutableBuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.query.QueryCache;
@@ -42,7 +42,7 @@ public class DefaultTargetNodeToBuildRuleTransformer implements TargetNodeToBuil
   }
 
   @Override
-  public <T, U extends Description<T>> BuildRule transform(
+  public <T, U extends DescriptionWithTargetGraph<T>> BuildRule transform(
       CellProvider cellProvider,
       TargetGraph targetGraph,
       BuildRuleResolver ruleResolver,
@@ -81,8 +81,8 @@ public class DefaultTargetNodeToBuildRuleTransformer implements TargetNodeToBuil
 
     Cell targetCell = cellProvider.getBuildTargetCell(targetNode.getBuildTarget());
 
-    BuildRuleCreationContext context =
-        ImmutableBuildRuleCreationContext.of(
+    BuildRuleCreationContextWithTargetGraph context =
+        ImmutableBuildRuleCreationContextWithTargetGraph.of(
             targetGraph,
             ruleResolver,
             targetNode.getFilesystem(),

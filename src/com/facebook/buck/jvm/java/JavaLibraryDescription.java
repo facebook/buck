@@ -37,9 +37,9 @@ import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.maven.aether.AetherUtil;
 import com.facebook.buck.model.ImmutableBuildTarget;
-import com.facebook.buck.rules.BuildRuleCreationContext;
+import com.facebook.buck.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.versions.VersionPropagator;
 import com.google.common.collect.ImmutableList;
@@ -51,7 +51,7 @@ import java.util.Optional;
 import org.immutables.value.Value;
 
 public class JavaLibraryDescription
-    implements Description<JavaLibraryDescriptionArg>,
+    implements DescriptionWithTargetGraph<JavaLibraryDescriptionArg>,
         Flavored,
         VersionPropagator<JavaLibraryDescriptionArg> {
 
@@ -86,7 +86,7 @@ public class JavaLibraryDescription
 
   @Override
   public BuildRule createBuildRule(
-      BuildRuleCreationContext context,
+      BuildRuleCreationContextWithTargetGraph context,
       BuildTarget buildTarget,
       BuildRuleParams params,
       JavaLibraryDescriptionArg args) {

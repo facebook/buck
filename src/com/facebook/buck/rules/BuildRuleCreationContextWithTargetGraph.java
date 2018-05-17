@@ -25,10 +25,10 @@ import org.immutables.value.Value;
 
 /**
  * Contains common objects used during {@link BuildRule} creation in {@link
- * Description#createBuildRule}.
+ * DescriptionWithTargetGraph#createBuildRule}.
  */
 @Value.Immutable(builder = false, copy = false)
-public interface BuildRuleCreationContext {
+public interface BuildRuleCreationContextWithTargetGraph {
   @Value.Parameter
   TargetGraph getTargetGraph();
 

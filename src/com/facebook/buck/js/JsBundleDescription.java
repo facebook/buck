@@ -38,9 +38,9 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.rules.BuildRuleCreationContext;
+import com.facebook.buck.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.shell.ExportFile;
@@ -61,7 +61,7 @@ import java.util.Optional;
 import org.immutables.value.Value;
 
 public class JsBundleDescription
-    implements Description<JsBundleDescriptionArg>,
+    implements DescriptionWithTargetGraph<JsBundleDescriptionArg>,
         Flavored,
         HasAppleBundleResourcesDescription<JsBundleDescriptionArg>,
         JsBundleOutputsDescription<JsBundleDescriptionArg> {
@@ -100,7 +100,7 @@ public class JsBundleDescription
 
   @Override
   public BuildRule createBuildRule(
-      BuildRuleCreationContext context,
+      BuildRuleCreationContextWithTargetGraph context,
       BuildTarget buildTarget,
       BuildRuleParams params,
       JsBundleDescriptionArg args) {
@@ -382,7 +382,7 @@ public class JsBundleDescription
         @Override
         public Iterable<BuildTarget> visit(BuildTarget target) throws RuntimeException {
           TargetNode<?, ?> targetNode = targetGraph.get(target);
-          Description<?> description = targetNode.getDescription();
+          DescriptionWithTargetGraph<?> description = targetNode.getDescription();
 
           if (description instanceof JsLibraryDescription) {
             JsLibrary library = requireLibrary(target);

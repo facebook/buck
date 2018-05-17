@@ -25,7 +25,7 @@ import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
-import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.DirtyPrintStreamDecorator;
@@ -130,7 +130,7 @@ public class AuditFlavorsCommand extends AbstractCommand {
       ImmutableList<TargetNode<?, ?>> targetNodes, CommandRunnerParams params) {
     DirtyPrintStreamDecorator stdout = params.getConsole().getStdOut();
     for (TargetNode<?, ?> node : targetNodes) {
-      Description<?> description = node.getDescription();
+      DescriptionWithTargetGraph<?> description = node.getDescription();
       stdout.println(node.getBuildTarget().getFullyQualifiedName());
       if (description instanceof Flavored) {
         Optional<ImmutableSet<FlavorDomain<?>>> flavorDomains =
@@ -169,7 +169,7 @@ public class AuditFlavorsCommand extends AbstractCommand {
     DirtyPrintStreamDecorator stdout = params.getConsole().getStdOut();
     SortedMap<String, SortedMap<String, SortedMap<String, String>>> targetsJson = new TreeMap<>();
     for (TargetNode<?, ?> node : targetNodes) {
-      Description<?> description = node.getDescription();
+      DescriptionWithTargetGraph<?> description = node.getDescription();
       SortedMap<String, SortedMap<String, String>> flavorDomainsJson = new TreeMap<>();
 
       if (description instanceof Flavored) {

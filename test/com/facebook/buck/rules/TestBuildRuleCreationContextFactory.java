@@ -24,12 +24,12 @@ import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 
 public class TestBuildRuleCreationContextFactory {
 
-  public static BuildRuleCreationContext create(
+  public static BuildRuleCreationContextWithTargetGraph create(
       BuildRuleResolver buildRuleResolver, ProjectFilesystem projectFilesystem) {
     return create(TargetGraph.EMPTY, buildRuleResolver, projectFilesystem);
   }
 
-  public static BuildRuleCreationContext create(
+  public static BuildRuleCreationContextWithTargetGraph create(
       TargetGraph targetGraph,
       BuildRuleResolver buildRuleResolver,
       ProjectFilesystem projectFilesystem) {
@@ -37,19 +37,19 @@ public class TestBuildRuleCreationContextFactory {
         targetGraph, buildRuleResolver, projectFilesystem, new ToolchainProviderBuilder().build());
   }
 
-  public static BuildRuleCreationContext create(
+  public static BuildRuleCreationContextWithTargetGraph create(
       BuildRuleResolver buildRuleResolver,
       ProjectFilesystem projectFilesystem,
       ToolchainProvider toolchainProvider) {
     return create(TargetGraph.EMPTY, buildRuleResolver, projectFilesystem, toolchainProvider);
   }
 
-  public static BuildRuleCreationContext create(
+  public static BuildRuleCreationContextWithTargetGraph create(
       TargetGraph targetGraph,
       BuildRuleResolver buildRuleResolver,
       ProjectFilesystem projectFilesystem,
       ToolchainProvider toolchainProvider) {
-    return ImmutableBuildRuleCreationContext.of(
+    return ImmutableBuildRuleCreationContextWithTargetGraph.of(
         targetGraph,
         buildRuleResolver,
         projectFilesystem,

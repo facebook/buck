@@ -36,10 +36,10 @@ import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.macros.MacroException;
-import com.facebook.buck.rules.BuildRuleCreationContext;
+import com.facebook.buck.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableSupport;
-import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.macros.ClasspathMacroExpander;
@@ -71,7 +71,7 @@ import java.util.function.Function;
 import org.immutables.value.Value;
 
 public class ApplePackageDescription
-    implements Description<ApplePackageDescriptionArg>,
+    implements DescriptionWithTargetGraph<ApplePackageDescriptionArg>,
         Flavored,
         ImplicitDepsInferringDescription<
             ApplePackageDescription.AbstractApplePackageDescriptionArg> {
@@ -107,7 +107,7 @@ public class ApplePackageDescription
 
   @Override
   public BuildRule createBuildRule(
-      BuildRuleCreationContext context,
+      BuildRuleCreationContextWithTargetGraph context,
       BuildTarget buildTarget,
       BuildRuleParams params,
       ApplePackageDescriptionArg args) {

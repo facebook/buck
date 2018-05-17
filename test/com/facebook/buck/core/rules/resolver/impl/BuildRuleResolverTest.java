@@ -36,7 +36,7 @@ import com.facebook.buck.core.rules.transformer.impl.DefaultTargetNodeToBuildRul
 import com.facebook.buck.jvm.java.JavaBinary;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.TargetGraph;
@@ -235,7 +235,7 @@ public class BuildRuleResolverTest {
             targetGraph,
             new TargetNodeToBuildRuleTransformer() {
               @Override
-              public <T, U extends Description<T>> BuildRule transform(
+              public <T, U extends DescriptionWithTargetGraph<T>> BuildRule transform(
                   CellProvider cellProvider,
                   TargetGraph targetGraph,
                   BuildRuleResolver ruleResolver,
@@ -268,7 +268,7 @@ public class BuildRuleResolverTest {
             targetGraph,
             new TargetNodeToBuildRuleTransformer() {
               @Override
-              public <T, U extends Description<T>> BuildRule transform(
+              public <T, U extends DescriptionWithTargetGraph<T>> BuildRule transform(
                   CellProvider cellProvider,
                   TargetGraph targetGraph,
                   BuildRuleResolver ruleResolver,
@@ -357,7 +357,7 @@ public class BuildRuleResolverTest {
               targetGraph,
               new TargetNodeToBuildRuleTransformer() {
                 @Override
-                public <T, U extends Description<T>> BuildRule transform(
+                public <T, U extends DescriptionWithTargetGraph<T>> BuildRule transform(
                     CellProvider cellProvider,
                     TargetGraph targetGraph,
                     BuildRuleResolver ruleResolver,

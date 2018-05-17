@@ -35,9 +35,9 @@ import com.facebook.buck.jvm.java.JavaSourceJar;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacOptionsFactory;
 import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
-import com.facebook.buck.rules.BuildRuleCreationContext;
+import com.facebook.buck.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.google.common.base.Preconditions;
@@ -47,7 +47,7 @@ import java.util.Optional;
 import org.immutables.value.Value;
 
 public class AndroidLibraryDescription
-    implements Description<AndroidLibraryDescriptionArg>,
+    implements DescriptionWithTargetGraph<AndroidLibraryDescriptionArg>,
         Flavored,
         ImplicitDepsInferringDescription<
             AndroidLibraryDescription.AbstractAndroidLibraryDescriptionArg> {
@@ -78,7 +78,7 @@ public class AndroidLibraryDescription
 
   @Override
   public BuildRule createBuildRule(
-      BuildRuleCreationContext context,
+      BuildRuleCreationContextWithTargetGraph context,
       BuildTarget buildTarget,
       BuildRuleParams params,
       AndroidLibraryDescriptionArg args) {

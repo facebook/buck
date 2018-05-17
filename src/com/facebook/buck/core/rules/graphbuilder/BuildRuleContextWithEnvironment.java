@@ -23,7 +23,7 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.provider.BuildRuleInfoProvider;
 import com.facebook.buck.core.rules.provider.BuildRuleInfoProviderCollection;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.rules.BuildRuleCreationContext;
+import com.facebook.buck.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.google.common.collect.ImmutableMap;
@@ -39,8 +39,8 @@ import org.immutables.value.Value.Style.ImplementationVisibility;
  * Context information used for construction of ActionGraph in {@link
  * com.facebook.buck.graph.transformationengine.AsyncTransformationEngine}.
  *
- * <p>This wraps the {@link BuildRuleCreationContext} needed for constructing {@link BuildRule}s
- * with {@link TransformationEnvironment} from the {@link
+ * <p>This wraps the {@link BuildRuleCreationContextWithTargetGraph} needed for constructing {@link
+ * BuildRule}s with {@link TransformationEnvironment} from the {@link
  * com.facebook.buck.graph.transformationengine.AsyncTransformationEngine}.
  *
  * <p>Access to the {@link TransformationEnvironment} is limited to restrict access of BuildRule
@@ -63,7 +63,7 @@ public abstract class BuildRuleContextWithEnvironment {
   @Value.Parameter
   protected abstract BuildRuleKey getKey();
 
-  protected BuildRuleCreationContext getCreationContext() {
+  protected BuildRuleCreationContextWithTargetGraph getCreationContext() {
     return getKey().getBuildRuleCreationContext();
   }
 

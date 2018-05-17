@@ -21,20 +21,21 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.transformer.TargetNodeToBuildRuleTransformer;
-import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.DescriptionCache;
+import com.facebook.buck.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.google.common.collect.ImmutableSet;
 
 public class FetchTargetNodeToBuildRuleTransformer implements TargetNodeToBuildRuleTransformer {
 
-  private final ImmutableSet<Description<?>> descriptions;
+  private final ImmutableSet<DescriptionWithTargetGraph<?>> descriptions;
   // TODO(simons): Allow the TargetToActionGraph to be stateless.
   private final ImmutableSet.Builder<BuildTarget> downloadableTargets;
   private final DefaultTargetNodeToBuildRuleTransformer delegate;
 
-  public FetchTargetNodeToBuildRuleTransformer(ImmutableSet<Description<?>> descriptions) {
+  public FetchTargetNodeToBuildRuleTransformer(
+      ImmutableSet<DescriptionWithTargetGraph<?>> descriptions) {
     this.descriptions = descriptions;
 
     this.downloadableTargets = ImmutableSet.builder();
@@ -42,7 +43,7 @@ public class FetchTargetNodeToBuildRuleTransformer implements TargetNodeToBuildR
   }
 
   @Override
-  public <T, U extends Description<T>> BuildRule transform(
+  public <T, U extends DescriptionWithTargetGraph<T>> BuildRule transform(
       CellProvider cellProvider,
       TargetGraph targetGraph,
       BuildRuleResolver ruleResolver,
@@ -56,7 +57,7 @@ public class FetchTargetNodeToBuildRuleTransformer implements TargetNodeToBuildR
   }
 
   private TargetNode<?, ?> substituteTargetNodeIfNecessary(TargetNode<?, ?> node) {
-    for (Description<?> description : descriptions) {
+    for (DescriptionWithTargetGraph<?> description : descriptions) {
       if (node.getBuildRuleType().equals(DescriptionCache.getBuildRuleType(description))) {
         downloadableTargets.add(node.getBuildTarget());
         return node.copyWithDescription(description);

@@ -16,8 +16,8 @@
 
 package com.facebook.buck.skylark.parser;
 
-import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.DescriptionCache;
+import com.facebook.buck.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.rules.coercer.CoercedTypeCache;
 import com.facebook.buck.rules.coercer.ParamInfo;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
@@ -38,7 +38,8 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
- * Responsible for creating instances of Skylark functions based on Buck's {@link Description}s.
+ * Responsible for creating instances of Skylark functions based on Buck's {@link
+ * DescriptionWithTargetGraph}s.
  *
  * <p>For example for a {@link com.facebook.buck.jvm.java.JavaLibraryDescription} instance, a
  * Skylark function using snake case of its name prefix will be created - {@code java_library}.
@@ -68,7 +69,7 @@ public class RuleFunctionFactory {
    * @param ruleClass The name of the rule to to define.
    * @return Skylark function to handle the Buck rule.
    */
-  BuiltinFunction create(Description<?> ruleClass) {
+  BuiltinFunction create(DescriptionWithTargetGraph<?> ruleClass) {
     String name = DescriptionCache.getBuildRuleType(ruleClass).getName();
     return new BuiltinFunction(
         name, FunctionSignature.KWARGS, BuiltinFunction.USE_AST_ENV, /*isRule=*/ true) {
@@ -132,7 +133,7 @@ public class RuleFunctionFactory {
 
   /**
    * Populates provided {@code builder} with values from {@code kwargs} assuming {@code ruleClass}
-   * as the target {@link Description} class.
+   * as the target {@link DescriptionWithTargetGraph} class.
    *
    * @param kwargs The keyword arguments and their values passed to rule function in build file.
    * @param builder The map builder used for storing extracted attributes and their values.

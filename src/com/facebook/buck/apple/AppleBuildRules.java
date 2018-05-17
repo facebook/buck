@@ -24,7 +24,7 @@ import com.facebook.buck.graph.AcyclicDepthFirstPostOrderTraversal;
 import com.facebook.buck.graph.GraphTraversable;
 import com.facebook.buck.halide.HalideLibraryDescription;
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.swift.SwiftLibraryDescription;
@@ -46,7 +46,7 @@ public final class AppleBuildRules {
   // Utility class not to be instantiated.
   private AppleBuildRules() {}
 
-  public static final ImmutableSet<Class<? extends Description<?>>>
+  public static final ImmutableSet<Class<? extends DescriptionWithTargetGraph<?>>>
       XCODE_TARGET_DESCRIPTION_CLASSES =
           ImmutableSet.of(
               AppleLibraryDescription.class,
@@ -60,28 +60,28 @@ public final class AppleBuildRules {
   private static final ImmutableSet<Class<? extends BuildRule>> XCODE_TARGET_BUILD_RULE_TEST_TYPES =
       ImmutableSet.of(AppleTest.class);
 
-  private static final ImmutableSet<Class<? extends Description<?>>>
+  private static final ImmutableSet<Class<? extends DescriptionWithTargetGraph<?>>>
       RECURSIVE_DEPENDENCIES_STOP_AT_DESCRIPTION_CLASSES =
           ImmutableSet.of(AppleBundleDescription.class, AppleResourceDescription.class);
 
   private static final ImmutableSet<AppleBundleExtension> XCODE_TARGET_TEST_BUNDLE_EXTENSIONS =
       ImmutableSet.of(AppleBundleExtension.XCTEST);
 
-  private static final ImmutableSet<Class<? extends Description<?>>>
+  private static final ImmutableSet<Class<? extends DescriptionWithTargetGraph<?>>>
       WRAPPER_RESOURCE_DESCRIPTION_CLASSES =
           ImmutableSet.of(CoreDataModelDescription.class, SceneKitAssetsDescription.class);
 
-  private static final ImmutableSet<Class<? extends Description<?>>>
+  private static final ImmutableSet<Class<? extends DescriptionWithTargetGraph<?>>>
       APPLE_ASSET_CATALOG_DESCRIPTION_CLASSES = ImmutableSet.of(AppleAssetCatalogDescription.class);
 
-  public static final ImmutableSet<Class<? extends Description<?>>>
+  public static final ImmutableSet<Class<? extends DescriptionWithTargetGraph<?>>>
       CORE_DATA_MODEL_DESCRIPTION_CLASSES = ImmutableSet.of(CoreDataModelDescription.class);
 
-  public static final ImmutableSet<Class<? extends Description<?>>>
+  public static final ImmutableSet<Class<? extends DescriptionWithTargetGraph<?>>>
       SCENEKIT_ASSETS_DESCRIPTION_CLASSES = ImmutableSet.of(SceneKitAssetsDescription.class);
 
   /** Whether the build rule type is equivalent to some kind of Xcode target. */
-  public static boolean isXcodeTargetDescription(Description<?> description) {
+  public static boolean isXcodeTargetDescription(DescriptionWithTargetGraph<?> description) {
     return XCODE_TARGET_DESCRIPTION_CLASSES.contains(description.getClass());
   }
 
@@ -119,7 +119,7 @@ public final class AppleBuildRules {
       Optional<AppleDependenciesCache> cache,
       RecursiveDependenciesMode mode,
       TargetNode<?, ?> targetNode,
-      Optional<ImmutableSet<Class<? extends Description<?>>>> descriptionClasses) {
+      Optional<ImmutableSet<Class<? extends DescriptionWithTargetGraph<?>>>> descriptionClasses) {
     LOG.verbose(
         "Getting recursive dependencies of node %s, mode %s, including only types %s\n",
         targetNode, mode, descriptionClasses);
@@ -277,7 +277,7 @@ public final class AppleBuildRules {
       Optional<AppleDependenciesCache> cache,
       RecursiveDependenciesMode mode,
       TargetNode<?, ?> input,
-      ImmutableSet<Class<? extends Description<?>>> descriptionClasses) {
+      ImmutableSet<Class<? extends DescriptionWithTargetGraph<?>>> descriptionClasses) {
     return getRecursiveTargetNodeDependenciesOfTypes(
         targetGraph, cache, mode, input, Optional.of(descriptionClasses));
   }
@@ -376,7 +376,7 @@ public final class AppleBuildRules {
   public static <T> ImmutableSet<T> collectTransitiveBuildRules(
       TargetGraph targetGraph,
       Optional<AppleDependenciesCache> cache,
-      ImmutableSet<Class<? extends Description<?>>> descriptionClasses,
+      ImmutableSet<Class<? extends DescriptionWithTargetGraph<?>>> descriptionClasses,
       Collection<TargetNode<?, ?>> targetNodes) {
     return RichStream.from(targetNodes)
         .flatMap(

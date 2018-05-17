@@ -22,7 +22,7 @@ import com.facebook.buck.ide.intellij.model.IjModuleType;
 import com.facebook.buck.ide.intellij.model.IjProjectConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.groovy.GroovyLibraryDescription;
-import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.rules.TargetNode;
 
 public class GroovyLibraryModuleRule extends BaseIjModuleRule<GroovyLibraryDescription.CoreArg> {
@@ -35,7 +35,7 @@ public class GroovyLibraryModuleRule extends BaseIjModuleRule<GroovyLibraryDescr
   }
 
   @Override
-  public Class<? extends Description<?>> getDescriptionClass() {
+  public Class<? extends DescriptionWithTargetGraph<?>> getDescriptionClass() {
     return GroovyLibraryDescription.class;
   }
 

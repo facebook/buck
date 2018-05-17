@@ -29,9 +29,9 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.AbstractBuildRule;
-import com.facebook.buck.rules.BuildRuleCreationContext;
+import com.facebook.buck.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.rules.InstallTrigger;
 import com.facebook.buck.shell.ExportFileDescription;
 import com.facebook.buck.step.AbstractExecutionStep;
@@ -91,7 +91,7 @@ public class InstallTriggerIntegrationTest {
   }
 
   private static class InstallTriggerDescription
-      implements Description<InstallTriggerDescriptionArg> {
+      implements DescriptionWithTargetGraph<InstallTriggerDescriptionArg> {
     @Override
     public Class<InstallTriggerDescriptionArg> getConstructorArgType() {
       return InstallTriggerDescriptionArg.class;
@@ -99,7 +99,7 @@ public class InstallTriggerIntegrationTest {
 
     @Override
     public BuildRule createBuildRule(
-        BuildRuleCreationContext context,
+        BuildRuleCreationContextWithTargetGraph context,
         BuildTarget buildTarget,
         BuildRuleParams params,
         InstallTriggerDescriptionArg args) {

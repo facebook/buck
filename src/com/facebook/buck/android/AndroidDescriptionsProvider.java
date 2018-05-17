@@ -21,9 +21,9 @@ import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.kotlin.KotlinBuckConfig;
 import com.facebook.buck.jvm.scala.ScalaBuckConfig;
-import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.DescriptionCreationContext;
 import com.facebook.buck.rules.DescriptionProvider;
+import com.facebook.buck.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.sandbox.SandboxExecutionStrategy;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.environment.Platform;
@@ -35,7 +35,8 @@ import org.pf4j.Extension;
 public class AndroidDescriptionsProvider implements DescriptionProvider {
 
   @Override
-  public Collection<Description<?>> getDescriptions(DescriptionCreationContext context) {
+  public Collection<DescriptionWithTargetGraph<?>> getDescriptions(
+      DescriptionCreationContext context) {
     SandboxExecutionStrategy sandboxExecutionStrategy = context.getSandboxExecutionStrategy();
     ToolchainProvider toolchainProvider = context.getToolchainProvider();
     BuckConfig config = context.getBuckConfig();

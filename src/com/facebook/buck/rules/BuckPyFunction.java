@@ -35,7 +35,7 @@ import org.stringtemplate.v4.STGroupFile;
 
 /**
  * Used to generate a function for use within buck.py for the rule described by a {@link
- * Description}.
+ * DescriptionWithTargetGraph}.
  */
 public class BuckPyFunction {
 

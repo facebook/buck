@@ -50,7 +50,10 @@ import javax.annotation.Nullable;
  * the actual parser as closely as possible.
  */
 public abstract class AbstractNodeBuilder<
-    TArgBuilder, TArg, TDescription extends Description<TArg>, TBuildRule extends BuildRule> {
+    TArgBuilder,
+    TArg,
+    TDescription extends DescriptionWithTargetGraph<TArg>,
+    TBuildRule extends BuildRule> {
   protected static final TypeCoercerFactory TYPE_COERCER_FACTORY = new DefaultTypeCoercerFactory();
   private static final VisibilityPatternParser VISIBILITY_PATTERN_PARSER =
       new VisibilityPatternParser();
@@ -147,7 +150,7 @@ public abstract class AbstractNodeBuilder<
     TBuildRule rule =
         (TBuildRule)
             description.createBuildRule(
-                ImmutableBuildRuleCreationContext.of(
+                ImmutableBuildRuleCreationContextWithTargetGraph.of(
                     targetGraph, resolver, filesystem, cellRoots, toolchainProvider),
                 target,
                 params,

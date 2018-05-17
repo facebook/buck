@@ -25,9 +25,9 @@ import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.CxxDeps;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
-import com.facebook.buck.rules.BuildRuleCreationContext;
+import com.facebook.buck.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.versions.VersionPropagator;
 import com.google.common.collect.ImmutableMap;
@@ -36,7 +36,7 @@ import java.util.Optional;
 import org.immutables.value.Value;
 
 public class PrebuiltRustLibraryDescription
-    implements Description<PrebuiltRustLibraryDescriptionArg>,
+    implements DescriptionWithTargetGraph<PrebuiltRustLibraryDescriptionArg>,
         VersionPropagator<PrebuiltRustLibraryDescriptionArg> {
 
   @Override
@@ -46,7 +46,7 @@ public class PrebuiltRustLibraryDescription
 
   @Override
   public PrebuiltRustLibrary createBuildRule(
-      BuildRuleCreationContext context,
+      BuildRuleCreationContextWithTargetGraph context,
       BuildTarget buildTarget,
       BuildRuleParams params,
       PrebuiltRustLibraryDescriptionArg args) {

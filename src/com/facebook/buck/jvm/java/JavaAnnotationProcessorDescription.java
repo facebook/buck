@@ -26,9 +26,9 @@ import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.jvm.core.JavaLibrary;
-import com.facebook.buck.rules.BuildRuleCreationContext;
+import com.facebook.buck.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.versions.VersionPropagator;
 import com.google.common.collect.ImmutableSet;
 import java.util.Optional;
@@ -39,7 +39,7 @@ import org.immutables.value.Value;
  * javax.annotation.processing.Processor} or TODO(jkeljo): a {@link com.sun.source.util.Plugin}).
  */
 public class JavaAnnotationProcessorDescription
-    implements Description<JavaAnnotationProcessorDescriptionArg>,
+    implements DescriptionWithTargetGraph<JavaAnnotationProcessorDescriptionArg>,
         VersionPropagator<JavaAnnotationProcessorDescriptionArg> {
   @Override
   public Class<JavaAnnotationProcessorDescriptionArg> getConstructorArgType() {
@@ -48,7 +48,7 @@ public class JavaAnnotationProcessorDescription
 
   @Override
   public BuildRule createBuildRule(
-      BuildRuleCreationContext context,
+      BuildRuleCreationContextWithTargetGraph context,
       BuildTarget buildTarget,
       BuildRuleParams params,
       JavaAnnotationProcessorDescriptionArg args) {

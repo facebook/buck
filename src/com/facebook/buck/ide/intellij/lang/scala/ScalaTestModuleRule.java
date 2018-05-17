@@ -23,7 +23,7 @@ import com.facebook.buck.ide.intellij.model.IjProjectConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.scala.ScalaTestDescription;
 import com.facebook.buck.jvm.scala.ScalaTestDescriptionArg;
-import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.rules.TargetNode;
 
 public class ScalaTestModuleRule extends BaseIjModuleRule<ScalaTestDescriptionArg> {
@@ -36,7 +36,7 @@ public class ScalaTestModuleRule extends BaseIjModuleRule<ScalaTestDescriptionAr
   }
 
   @Override
-  public Class<? extends Description<?>> getDescriptionClass() {
+  public Class<? extends DescriptionWithTargetGraph<?>> getDescriptionClass() {
     return ScalaTestDescription.class;
   }
 

@@ -29,7 +29,7 @@ import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.resolver.impl.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.core.rules.transformer.impl.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.BuildRuleCreationContext;
+import com.facebook.buck.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeTargetNodeArg;
@@ -200,7 +200,7 @@ public class IncrementalActionGraphGeneratorTest {
                 new FakeDescription() {
                   @Override
                   public BuildRule createBuildRule(
-                      BuildRuleCreationContext context,
+                      BuildRuleCreationContextWithTargetGraph context,
                       BuildTarget buildTarget,
                       BuildRuleParams params,
                       FakeTargetNodeArg args) {
@@ -338,7 +338,7 @@ public class IncrementalActionGraphGeneratorTest {
                 new FakeDescription() {
                   @Override
                   public BuildRule createBuildRule(
-                      BuildRuleCreationContext context,
+                      BuildRuleCreationContextWithTargetGraph context,
                       BuildTarget buildTarget,
                       BuildRuleParams params,
                       FakeTargetNodeArg args) {
@@ -380,7 +380,7 @@ public class IncrementalActionGraphGeneratorTest {
                 new FakeDescription() {
                   @Override
                   public BuildRule createBuildRule(
-                      BuildRuleCreationContext context,
+                      BuildRuleCreationContextWithTargetGraph context,
                       BuildTarget buildTarget,
                       BuildRuleParams params,
                       FakeTargetNodeArg args) {
@@ -423,7 +423,7 @@ public class IncrementalActionGraphGeneratorTest {
                 new FakeDescription() {
                   @Override
                   public BuildRule createBuildRule(
-                      BuildRuleCreationContext context,
+                      BuildRuleCreationContextWithTargetGraph context,
                       BuildTarget buildTarget,
                       BuildRuleParams params,
                       FakeTargetNodeArg args) {

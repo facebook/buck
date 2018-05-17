@@ -60,10 +60,10 @@ import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
-import com.facebook.buck.rules.BuildRuleCreationContext;
+import com.facebook.buck.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.DescriptionCache;
+import com.facebook.buck.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.MetadataProvidingDescription;
 import com.facebook.buck.step.Step;
@@ -95,7 +95,7 @@ import java.util.Set;
 import org.immutables.value.Value;
 
 public class AppleTestDescription
-    implements Description<AppleTestDescriptionArg>,
+    implements DescriptionWithTargetGraph<AppleTestDescriptionArg>,
         Flavored,
         ImplicitDepsInferringDescription<AppleTestDescription.AbstractAppleTestDescriptionArg>,
         MetadataProvidingDescription<AppleTestDescriptionArg>,
@@ -152,7 +152,7 @@ public class AppleTestDescription
 
   @Override
   public BuildRule createBuildRule(
-      BuildRuleCreationContext context,
+      BuildRuleCreationContextWithTargetGraph context,
       BuildTarget buildTarget,
       BuildRuleParams params,
       AppleTestDescriptionArg args) {
@@ -430,7 +430,7 @@ public class AppleTestDescription
   }
 
   private BuildRule createTestLibraryRule(
-      BuildRuleCreationContext context,
+      BuildRuleCreationContextWithTargetGraph context,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       AppleTestDescriptionArg args,

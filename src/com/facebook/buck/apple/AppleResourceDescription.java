@@ -25,9 +25,9 @@ import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.rules.BuildRuleCreationContext;
+import com.facebook.buck.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.rules.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.TargetNode;
 import com.google.common.collect.ImmutableSet;
@@ -35,7 +35,7 @@ import org.immutables.value.Value;
 
 /** Description for an apple_resource rule which copies resource files to the built bundle. */
 public class AppleResourceDescription
-    implements Description<AppleResourceDescriptionArg>,
+    implements DescriptionWithTargetGraph<AppleResourceDescriptionArg>,
         Flavored,
         HasAppleBundleResourcesDescription<AppleResourceDescriptionArg> {
 
@@ -46,7 +46,7 @@ public class AppleResourceDescription
 
   @Override
   public BuildRule createBuildRule(
-      BuildRuleCreationContext context,
+      BuildRuleCreationContextWithTargetGraph context,
       BuildTarget buildTarget,
       BuildRuleParams params,
       AppleResourceDescriptionArg args) {

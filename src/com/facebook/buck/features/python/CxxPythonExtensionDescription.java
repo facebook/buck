@@ -58,9 +58,9 @@ import com.facebook.buck.features.python.toolchain.PythonPlatform;
 import com.facebook.buck.features.python.toolchain.PythonPlatformsProvider;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.BuildRuleCreationContext;
+import com.facebook.buck.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.args.Arg;
@@ -85,7 +85,7 @@ import java.util.stream.Stream;
 import org.immutables.value.Value;
 
 public class CxxPythonExtensionDescription
-    implements Description<CxxPythonExtensionDescriptionArg>,
+    implements DescriptionWithTargetGraph<CxxPythonExtensionDescriptionArg>,
         ImplicitDepsInferringDescription<
             CxxPythonExtensionDescription.AbstractCxxPythonExtensionDescriptionArg>,
         VersionPropagator<CxxPythonExtensionDescriptionArg>,
@@ -399,7 +399,7 @@ public class CxxPythonExtensionDescription
 
   @Override
   public BuildRule createBuildRule(
-      BuildRuleCreationContext context,
+      BuildRuleCreationContextWithTargetGraph context,
       BuildTarget buildTarget,
       BuildRuleParams params,
       CxxPythonExtensionDescriptionArg args) {

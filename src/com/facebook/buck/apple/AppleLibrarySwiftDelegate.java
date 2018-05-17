@@ -21,12 +21,13 @@ import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.rules.DescriptionWithTargetGraph;
 import com.google.common.collect.ImmutableSet;
 
 /**
  * Provides an ability to inject {@link CxxPreprocessorInput}s for the Swift compilation process.
  * This is useful if {@link AppleLibraryDescription} is composed by another {@link
- * com.facebook.buck.rules.Description}.
+ * DescriptionWithTargetGraph}.
  */
 public interface AppleLibrarySwiftDelegate {
   ImmutableSet<CxxPreprocessorInput> getPreprocessorInputForSwift(

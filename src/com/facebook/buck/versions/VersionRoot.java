@@ -17,11 +17,11 @@
 package com.facebook.buck.versions;
 
 import com.facebook.buck.core.model.Flavor;
-import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.DescriptionWithTargetGraph;
 import com.google.common.collect.ImmutableSet;
 
 /** A node which is the root of a version sub-graph. */
-public interface VersionRoot<A> extends Description<A> {
+public interface VersionRoot<A> extends DescriptionWithTargetGraph<A> {
 
   default boolean isVersionRoot(@SuppressWarnings("unused") ImmutableSet<Flavor> flavors) {
     return true;

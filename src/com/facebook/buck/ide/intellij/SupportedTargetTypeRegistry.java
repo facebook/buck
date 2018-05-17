@@ -48,7 +48,7 @@ import com.facebook.buck.jvm.kotlin.KotlinLibraryDescription;
 import com.facebook.buck.jvm.kotlin.KotlinTestDescription;
 import com.facebook.buck.jvm.scala.ScalaLibraryDescription;
 import com.facebook.buck.jvm.scala.ScalaTestDescription;
-import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.DescriptionWithTargetGraph;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import java.util.HashMap;
@@ -57,7 +57,7 @@ import java.util.Set;
 
 public class SupportedTargetTypeRegistry {
   /** These target types are mapped onto .iml module files. */
-  private static final ImmutableSet<Class<? extends Description<?>>>
+  private static final ImmutableSet<Class<? extends DescriptionWithTargetGraph<?>>>
       SUPPORTED_MODULE_DESCRIPTION_CLASSES =
           ImmutableSet.of(
               AndroidBinaryDescription.class,
@@ -79,12 +79,13 @@ public class SupportedTargetTypeRegistry {
     return SUPPORTED_MODULE_DESCRIPTION_CLASSES.contains(descriptionClass);
   }
 
-  public static boolean areTargetTypesEqual(Set<Class<? extends Description<?>>> otherTypes) {
+  public static boolean areTargetTypesEqual(
+      Set<Class<? extends DescriptionWithTargetGraph<?>>> otherTypes) {
     return SUPPORTED_MODULE_DESCRIPTION_CLASSES.equals(otherTypes);
   }
 
-  private final Map<Class<? extends Description<?>>, IjModuleRule<?>> moduleRuleIndex =
-      new HashMap<>();
+  private final Map<Class<? extends DescriptionWithTargetGraph<?>>, IjModuleRule<?>>
+      moduleRuleIndex = new HashMap<>();
 
   public SupportedTargetTypeRegistry(
       ProjectFilesystem projectFilesystem,

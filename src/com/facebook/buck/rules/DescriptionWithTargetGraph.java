@@ -29,7 +29,7 @@ import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
  * @param <T> The object describing the parameters to be passed to the {@link BuildRule}. How this
  *     is processed is described in the class level javadoc of {@link ConstructorArgMarshaller}.
  */
-public interface Description<T> {
+public interface DescriptionWithTargetGraph<T> {
 
   /** The class of the argument of this Description uses in createBuildRule(). */
   Class<T> getConstructorArgType();
@@ -43,7 +43,10 @@ public interface Description<T> {
    * @return The {@link BuildRule} that describes the default flavour of the rule being described.
    */
   BuildRule createBuildRule(
-      BuildRuleCreationContext context, BuildTarget buildTarget, BuildRuleParams params, T args);
+      BuildRuleCreationContextWithTargetGraph context,
+      BuildTarget buildTarget,
+      BuildRuleParams params,
+      T args);
 
   /**
    * Whether or not the build rule subgraph produced by this {@code Description} is safe to cache in

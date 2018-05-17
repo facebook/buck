@@ -36,9 +36,9 @@ import com.facebook.buck.cxx.toolchain.CxxPlatforms;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.PicType;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.rules.BuildRuleCreationContext;
+import com.facebook.buck.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.toolchain.ToolchainProvider;
@@ -50,7 +50,7 @@ import java.util.Optional;
 import org.immutables.value.Value;
 
 public class DLibraryDescription
-    implements Description<DLibraryDescriptionArg>,
+    implements DescriptionWithTargetGraph<DLibraryDescriptionArg>,
         ImplicitDepsInferringDescription<DLibraryDescriptionArg>,
         VersionPropagator<DLibraryDescriptionArg> {
 
@@ -72,7 +72,7 @@ public class DLibraryDescription
 
   @Override
   public BuildRule createBuildRule(
-      BuildRuleCreationContext context,
+      BuildRuleCreationContextWithTargetGraph context,
       BuildTarget buildTarget,
       BuildRuleParams params,
       DLibraryDescriptionArg args) {

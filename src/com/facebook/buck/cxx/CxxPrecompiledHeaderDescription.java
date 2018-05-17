@@ -25,14 +25,14 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import com.facebook.buck.rules.BuildRuleCreationContext;
+import com.facebook.buck.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.versions.VersionPropagator;
 import org.immutables.value.Value;
 
 public class CxxPrecompiledHeaderDescription
-    implements Description<CxxPrecompiledHeaderDescriptionArg>,
+    implements DescriptionWithTargetGraph<CxxPrecompiledHeaderDescriptionArg>,
         VersionPropagator<CxxPrecompiledHeaderDescriptionArg> {
 
   @Override
@@ -42,7 +42,7 @@ public class CxxPrecompiledHeaderDescription
 
   @Override
   public CxxPrecompiledHeaderTemplate createBuildRule(
-      BuildRuleCreationContext context,
+      BuildRuleCreationContextWithTargetGraph context,
       BuildTarget buildTarget,
       BuildRuleParams params,
       CxxPrecompiledHeaderDescriptionArg args) {

@@ -57,9 +57,9 @@ import com.facebook.buck.jvm.java.Keystore;
 import com.facebook.buck.jvm.java.toolchain.JavaOptionsProvider;
 import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.rules.BuildRuleCreationContext;
+import com.facebook.buck.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
@@ -91,7 +91,7 @@ import java.util.stream.Collectors;
 import org.immutables.value.Value;
 
 public class AndroidBinaryDescription
-    implements Description<AndroidBinaryDescriptionArg>,
+    implements DescriptionWithTargetGraph<AndroidBinaryDescriptionArg>,
         Flavored,
         ImplicitDepsInferringDescription<
             AndroidBinaryDescription.AbstractAndroidBinaryDescriptionArg> {
@@ -154,7 +154,7 @@ public class AndroidBinaryDescription
 
   @Override
   public BuildRule createBuildRule(
-      BuildRuleCreationContext context,
+      BuildRuleCreationContextWithTargetGraph context,
       BuildTarget buildTarget,
       BuildRuleParams params,
       AndroidBinaryDescriptionArg args) {

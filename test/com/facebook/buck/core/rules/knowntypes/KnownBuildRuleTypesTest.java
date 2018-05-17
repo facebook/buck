@@ -44,10 +44,10 @@ import com.facebook.buck.jvm.java.JavaLibraryDescriptionArg;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.plugin.impl.BuckPluginManagerFactory;
-import com.facebook.buck.rules.BuildRuleCreationContext;
+import com.facebook.buck.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.DescriptionCache;
+import com.facebook.buck.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.rules.TestBuildRuleCreationContextFactory;
 import com.facebook.buck.rules.TestBuildRuleParams;
 import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
@@ -93,7 +93,8 @@ public class KnownBuildRuleTypesTest {
   private static BuildRuleParams buildRuleParams;
   private ExecutableFinder executableFinder = new ExecutableFinder();
 
-  static class KnownRuleTestDescription implements Description<KnownRuleTestDescriptionArg> {
+  static class KnownRuleTestDescription
+      implements DescriptionWithTargetGraph<KnownRuleTestDescriptionArg> {
 
     @BuckStyleImmutable
     @Value.Immutable
@@ -116,7 +117,7 @@ public class KnownBuildRuleTypesTest {
 
     @Override
     public BuildRule createBuildRule(
-        BuildRuleCreationContext context,
+        BuildRuleCreationContextWithTargetGraph context,
         BuildTarget buildTarget,
         BuildRuleParams params,
         KnownRuleTestDescriptionArg args) {

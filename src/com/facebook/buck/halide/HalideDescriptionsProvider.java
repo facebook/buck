@@ -18,9 +18,9 @@ package com.facebook.buck.halide;
 
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
-import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.DescriptionCreationContext;
 import com.facebook.buck.rules.DescriptionProvider;
+import com.facebook.buck.rules.DescriptionWithTargetGraph;
 import java.util.Collection;
 import java.util.Collections;
 import org.pf4j.Extension;
@@ -29,7 +29,8 @@ import org.pf4j.Extension;
 public class HalideDescriptionsProvider implements DescriptionProvider {
 
   @Override
-  public Collection<Description<?>> getDescriptions(DescriptionCreationContext context) {
+  public Collection<DescriptionWithTargetGraph<?>> getDescriptions(
+      DescriptionCreationContext context) {
     BuckConfig buckConfig = context.getBuckConfig();
     CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(buckConfig);
     HalideBuckConfig halideBuckConfig = new HalideBuckConfig(buckConfig);

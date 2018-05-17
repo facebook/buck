@@ -34,9 +34,9 @@ import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.features.python.toolchain.PythonPlatform;
 import com.facebook.buck.features.python.toolchain.PythonPlatformsProvider;
-import com.facebook.buck.rules.BuildRuleCreationContext;
+import com.facebook.buck.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.rules.MetadataProvidingDescription;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
@@ -54,7 +54,7 @@ import java.util.Optional;
 import org.immutables.value.Value;
 
 public class PythonLibraryDescription
-    implements Description<PythonLibraryDescriptionArg>,
+    implements DescriptionWithTargetGraph<PythonLibraryDescriptionArg>,
         VersionPropagator<PythonLibraryDescriptionArg>,
         MetadataProvidingDescription<PythonLibraryDescriptionArg> {
 
@@ -74,7 +74,7 @@ public class PythonLibraryDescription
 
   @Override
   public PythonLibrary createBuildRule(
-      BuildRuleCreationContext context,
+      BuildRuleCreationContextWithTargetGraph context,
       BuildTarget buildTarget,
       BuildRuleParams params,
       PythonLibraryDescriptionArg args) {

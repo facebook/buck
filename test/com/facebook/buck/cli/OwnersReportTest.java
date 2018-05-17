@@ -41,9 +41,9 @@ import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.TargetSpecResolver;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.plugin.impl.BuckPluginManagerFactory;
-import com.facebook.buck.rules.BuildRuleCreationContext;
+import com.facebook.buck.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TargetNodeFactory;
@@ -72,7 +72,8 @@ import org.junit.Test;
 /** Reports targets that own a specified list of files. */
 public class OwnersReportTest {
 
-  public static class FakeRuleDescription implements Description<FakeRuleDescriptionArg> {
+  public static class FakeRuleDescription
+      implements DescriptionWithTargetGraph<FakeRuleDescriptionArg> {
 
     @Override
     public Class<FakeRuleDescriptionArg> getConstructorArgType() {
@@ -81,7 +82,7 @@ public class OwnersReportTest {
 
     @Override
     public BuildRule createBuildRule(
-        BuildRuleCreationContext context,
+        BuildRuleCreationContextWithTargetGraph context,
         BuildTarget buildTarget,
         BuildRuleParams params,
         FakeRuleDescriptionArg args) {

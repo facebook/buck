@@ -50,7 +50,7 @@ import com.facebook.buck.parser.TargetNodePredicateSpec;
 import com.facebook.buck.parser.TargetNodeSpec;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
-import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphAndTargets;
 import com.facebook.buck.rules.TargetNode;
@@ -735,7 +735,8 @@ public class XCodeProjectCommandHelper {
     return resultBuilder.build();
   }
 
-  private static boolean canGenerateImplicitWorkspaceForDescription(Description<?> description) {
+  private static boolean canGenerateImplicitWorkspaceForDescription(
+      DescriptionWithTargetGraph<?> description) {
     // We weren't given a workspace target, but we may have been given something that could
     // still turn into a workspace (for example, a library or an actual app rule). If that's the
     // case we still want to generate a workspace.

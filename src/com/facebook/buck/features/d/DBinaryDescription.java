@@ -37,9 +37,9 @@ import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatforms;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.rules.BuildRuleCreationContext;
+import com.facebook.buck.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.args.SourcePathArg;
@@ -52,7 +52,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import org.immutables.value.Value;
 
 public class DBinaryDescription
-    implements Description<DBinaryDescriptionArg>,
+    implements DescriptionWithTargetGraph<DBinaryDescriptionArg>,
         ImplicitDepsInferringDescription<DBinaryDescription.AbstractDBinaryDescriptionArg>,
         VersionRoot<DBinaryDescriptionArg> {
 
@@ -76,7 +76,7 @@ public class DBinaryDescription
 
   @Override
   public BuildRule createBuildRule(
-      BuildRuleCreationContext context,
+      BuildRuleCreationContextWithTargetGraph context,
       BuildTarget buildTarget,
       BuildRuleParams params,
       DBinaryDescriptionArg args) {

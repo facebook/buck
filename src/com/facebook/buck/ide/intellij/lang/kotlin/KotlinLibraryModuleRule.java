@@ -23,7 +23,7 @@ import com.facebook.buck.ide.intellij.model.IjProjectConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.kotlin.KotlinLibraryDescription;
 import com.facebook.buck.jvm.kotlin.KotlinLibraryDescriptionArg;
-import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.rules.TargetNode;
 
 public class KotlinLibraryModuleRule extends BaseIjModuleRule<KotlinLibraryDescriptionArg> {
@@ -36,7 +36,7 @@ public class KotlinLibraryModuleRule extends BaseIjModuleRule<KotlinLibraryDescr
   }
 
   @Override
-  public Class<? extends Description<?>> getDescriptionClass() {
+  public Class<? extends DescriptionWithTargetGraph<?>> getDescriptionClass() {
     return KotlinLibraryDescription.class;
   }
 

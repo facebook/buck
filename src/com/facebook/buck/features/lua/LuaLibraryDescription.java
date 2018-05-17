@@ -26,9 +26,9 @@ import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
-import com.facebook.buck.rules.BuildRuleCreationContext;
+import com.facebook.buck.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.versions.VersionPropagator;
@@ -38,7 +38,8 @@ import java.util.Optional;
 import org.immutables.value.Value;
 
 public class LuaLibraryDescription
-    implements Description<LuaLibraryDescriptionArg>, VersionPropagator<LuaLibraryDescriptionArg> {
+    implements DescriptionWithTargetGraph<LuaLibraryDescriptionArg>,
+        VersionPropagator<LuaLibraryDescriptionArg> {
 
   @Override
   public Class<LuaLibraryDescriptionArg> getConstructorArgType() {
@@ -47,7 +48,7 @@ public class LuaLibraryDescription
 
   @Override
   public BuildRule createBuildRule(
-      BuildRuleCreationContext context,
+      BuildRuleCreationContextWithTargetGraph context,
       BuildTarget buildTarget,
       BuildRuleParams params,
       LuaLibraryDescriptionArg args) {

@@ -56,6 +56,7 @@ import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRules;
+import com.facebook.buck.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
@@ -88,9 +89,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
-/**
- * Common logic for a {@link com.facebook.buck.rules.Description} that creates Apple target rules.
- */
+/** Common logic for a {@link DescriptionWithTargetGraph} that creates Apple target rules. */
 public class AppleDescriptions {
 
   public static final Flavor FRAMEWORK_FLAVOR = InternalFlavor.of("framework");

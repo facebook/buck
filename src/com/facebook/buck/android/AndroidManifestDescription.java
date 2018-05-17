@@ -21,13 +21,14 @@ import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import com.facebook.buck.rules.BuildRuleCreationContext;
+import com.facebook.buck.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.DescriptionWithTargetGraph;
 import com.google.common.collect.ImmutableSortedSet;
 import org.immutables.value.Value;
 
-public class AndroidManifestDescription implements Description<AndroidManifestDescriptionArg> {
+public class AndroidManifestDescription
+    implements DescriptionWithTargetGraph<AndroidManifestDescriptionArg> {
 
   private final AndroidManifestFactory androidManifestFactory;
 
@@ -42,7 +43,7 @@ public class AndroidManifestDescription implements Description<AndroidManifestDe
 
   @Override
   public AndroidManifest createBuildRule(
-      BuildRuleCreationContext context,
+      BuildRuleCreationContextWithTargetGraph context,
       BuildTarget buildTarget,
       BuildRuleParams params,
       AndroidManifestDescriptionArg args) {

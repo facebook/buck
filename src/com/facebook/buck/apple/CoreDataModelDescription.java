@@ -20,9 +20,9 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.Flavored;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleCreationContext;
+import com.facebook.buck.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.rules.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
@@ -32,7 +32,8 @@ import com.google.common.io.Files;
  * Description for a core_data_model rule, which identifies a model file for use with Apple's Core
  * Data.
  */
-public class CoreDataModelDescription implements Description<AppleWrapperResourceArg>, Flavored {
+public class CoreDataModelDescription
+    implements DescriptionWithTargetGraph<AppleWrapperResourceArg>, Flavored {
 
   private static final String CORE_DATA_MODEL_EXTENSION = "xcdatamodel";
   private static final String VERSIONED_CORE_DATA_MODEL_EXTENSION = "xcdatamodeld";
@@ -44,7 +45,7 @@ public class CoreDataModelDescription implements Description<AppleWrapperResourc
 
   @Override
   public BuildRule createBuildRule(
-      BuildRuleCreationContext context,
+      BuildRuleCreationContextWithTargetGraph context,
       BuildTarget buildTarget,
       BuildRuleParams params,
       AppleWrapperResourceArg args) {

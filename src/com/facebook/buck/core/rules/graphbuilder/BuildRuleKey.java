@@ -18,7 +18,7 @@ package com.facebook.buck.core.rules.graphbuilder;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleCreationContext;
+import com.facebook.buck.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import org.immutables.value.Value;
 
@@ -54,5 +54,5 @@ public abstract class BuildRuleKey {
 
   @Value.Parameter
   @Value.Auxiliary
-  public abstract BuildRuleCreationContext getBuildRuleCreationContext();
+  public abstract BuildRuleCreationContextWithTargetGraph getBuildRuleCreationContext();
 }

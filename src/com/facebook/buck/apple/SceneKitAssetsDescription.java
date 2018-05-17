@@ -20,9 +20,9 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.Flavored;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleCreationContext;
+import com.facebook.buck.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.rules.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
@@ -32,7 +32,8 @@ import com.google.common.io.Files;
  * Description for a scenekit_assets rule, which identifies a assets directory for use with Apple's
  * SceneKit.
  */
-public class SceneKitAssetsDescription implements Description<AppleWrapperResourceArg>, Flavored {
+public class SceneKitAssetsDescription
+    implements DescriptionWithTargetGraph<AppleWrapperResourceArg>, Flavored {
 
   private static final String SCENEKIT_ASSETS_EXTENSION = "scnassets";
 
@@ -43,7 +44,7 @@ public class SceneKitAssetsDescription implements Description<AppleWrapperResour
 
   @Override
   public BuildRule createBuildRule(
-      BuildRuleCreationContext context,
+      BuildRuleCreationContextWithTargetGraph context,
       BuildTarget buildTarget,
       BuildRuleParams params,
       AppleWrapperResourceArg args) {

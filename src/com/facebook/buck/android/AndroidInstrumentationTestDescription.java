@@ -27,10 +27,10 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.toolchain.JavaOptionsProvider;
-import com.facebook.buck.rules.BuildRuleCreationContext;
+import com.facebook.buck.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRules;
-import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.PackagedResource;
 import java.util.Optional;
@@ -38,7 +38,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.immutables.value.Value;
 
 public class AndroidInstrumentationTestDescription
-    implements Description<AndroidInstrumentationTestDescriptionArg> {
+    implements DescriptionWithTargetGraph<AndroidInstrumentationTestDescriptionArg> {
 
   private final BuckConfig buckConfig;
   private final ConcurrentHashMap<ProjectFilesystem, ConcurrentHashMap<String, PackagedResource>>
@@ -56,7 +56,7 @@ public class AndroidInstrumentationTestDescription
 
   @Override
   public AndroidInstrumentationTest createBuildRule(
-      BuildRuleCreationContext context,
+      BuildRuleCreationContextWithTargetGraph context,
       BuildTarget buildTarget,
       BuildRuleParams params,
       AndroidInstrumentationTestDescriptionArg args) {

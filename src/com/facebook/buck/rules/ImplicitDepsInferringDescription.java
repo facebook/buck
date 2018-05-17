@@ -27,8 +27,8 @@ import com.google.common.collect.ImmutableCollection;
  * parameters with types {@link SourcePath} or {@link BuildRule}. However, in some cases like {@link
  * com.facebook.buck.shell.GenruleDescription}, the {@link
  * com.facebook.buck.shell.AbstractGenruleDescription.Arg#cmd} argument contains build targets in a
- * specific format. Any {@link Description} that implements this interface can modify its implicit
- * deps by poking at the raw build rule params.
+ * specific format. Any {@link DescriptionWithTargetGraph} that implements this interface can modify
+ * its implicit deps by poking at the raw build rule params.
  */
 public interface ImplicitDepsInferringDescription<T> {
 

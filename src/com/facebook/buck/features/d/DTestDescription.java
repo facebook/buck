@@ -35,9 +35,9 @@ import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatforms;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.rules.BuildRuleCreationContext;
+import com.facebook.buck.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.coercer.SourceList;
@@ -49,7 +49,7 @@ import java.util.Optional;
 import org.immutables.value.Value;
 
 public class DTestDescription
-    implements Description<DTestDescriptionArg>,
+    implements DescriptionWithTargetGraph<DTestDescriptionArg>,
         ImplicitDepsInferringDescription<DTestDescription.AbstractDTestDescriptionArg>,
         VersionRoot<DTestDescriptionArg> {
 
@@ -71,7 +71,7 @@ public class DTestDescription
 
   @Override
   public BuildRule createBuildRule(
-      BuildRuleCreationContext context,
+      BuildRuleCreationContextWithTargetGraph context,
       BuildTarget buildTarget,
       BuildRuleParams params,
       DTestDescriptionArg args) {

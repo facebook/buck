@@ -28,9 +28,9 @@ import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.rules.BuildRuleCreationContext;
+import com.facebook.buck.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.rules.ImplicitInputsInferringDescription;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
@@ -38,7 +38,7 @@ import java.util.Optional;
 import org.immutables.value.Value;
 
 public class ExportFileDescription
-    implements Description<ExportFileDescriptionArg>,
+    implements DescriptionWithTargetGraph<ExportFileDescriptionArg>,
         ImplicitInputsInferringDescription<ExportFileDescriptionArg> {
 
   @Override
@@ -54,7 +54,7 @@ public class ExportFileDescription
 
   @Override
   public ExportFile createBuildRule(
-      BuildRuleCreationContext context,
+      BuildRuleCreationContextWithTargetGraph context,
       BuildTarget buildTarget,
       BuildRuleParams params,
       ExportFileDescriptionArg args) {

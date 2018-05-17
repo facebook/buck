@@ -27,9 +27,9 @@ import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.rules.BuildRuleCreationContext;
+import com.facebook.buck.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.query.QueryUtils;
 import com.facebook.buck.toolchain.ToolchainProvider;
@@ -41,7 +41,7 @@ import java.util.Optional;
 import org.immutables.value.Value;
 
 public class HaskellHaddockDescription
-    implements Description<HaskellHaddockDescriptionArg>,
+    implements DescriptionWithTargetGraph<HaskellHaddockDescriptionArg>,
         ImplicitDepsInferringDescription<
             HaskellHaddockDescription.AbstractHaskellHaddockDescriptionArg>,
         VersionPropagator<HaskellHaddockDescriptionArg> {
@@ -61,7 +61,7 @@ public class HaskellHaddockDescription
 
   @Override
   public BuildRule createBuildRule(
-      BuildRuleCreationContext context,
+      BuildRuleCreationContextWithTargetGraph context,
       BuildTarget baseTarget,
       BuildRuleParams params,
       HaskellHaddockDescriptionArg args) {

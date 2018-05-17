@@ -23,7 +23,7 @@ import com.facebook.buck.ide.intellij.model.IjProjectConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.kotlin.KotlinTestDescription;
 import com.facebook.buck.jvm.kotlin.KotlinTestDescriptionArg;
-import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.rules.TargetNode;
 
 public class KotlinTestModuleRule extends BaseIjModuleRule<KotlinTestDescriptionArg> {
@@ -36,7 +36,7 @@ public class KotlinTestModuleRule extends BaseIjModuleRule<KotlinTestDescription
   }
 
   @Override
-  public Class<? extends Description<?>> getDescriptionClass() {
+  public Class<? extends DescriptionWithTargetGraph<?>> getDescriptionClass() {
     return KotlinTestDescription.class;
   }
 

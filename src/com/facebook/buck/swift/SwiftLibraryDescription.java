@@ -55,10 +55,10 @@ import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.BuildRuleCreationContext;
+import com.facebook.buck.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableSupport;
-import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.swift.toolchain.SwiftPlatform;
@@ -78,7 +78,8 @@ import java.util.Set;
 import java.util.regex.Pattern;
 import org.immutables.value.Value;
 
-public class SwiftLibraryDescription implements Description<SwiftLibraryDescriptionArg>, Flavored {
+public class SwiftLibraryDescription
+    implements DescriptionWithTargetGraph<SwiftLibraryDescriptionArg>, Flavored {
 
   static final Flavor SWIFT_COMPANION_FLAVOR = InternalFlavor.of("swift-companion");
   static final Flavor SWIFT_COMPILE_FLAVOR = InternalFlavor.of("swift-compile");
@@ -147,7 +148,7 @@ public class SwiftLibraryDescription implements Description<SwiftLibraryDescript
 
   @Override
   public BuildRule createBuildRule(
-      BuildRuleCreationContext context,
+      BuildRuleCreationContextWithTargetGraph context,
       BuildTarget buildTarget,
       BuildRuleParams params,
       SwiftLibraryDescriptionArg args) {
@@ -387,7 +388,7 @@ public class SwiftLibraryDescription implements Description<SwiftLibraryDescript
   }
 
   public Optional<BuildRule> createCompanionBuildRule(
-      BuildRuleCreationContext context,
+      BuildRuleCreationContextWithTargetGraph context,
       BuildTarget buildTarget,
       BuildRuleParams params,
       BuildRuleResolver resolver,

@@ -41,9 +41,9 @@ import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.LinkerMapMode;
 import com.facebook.buck.cxx.toolchain.StripStyle;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.BuildRuleCreationContext;
+import com.facebook.buck.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.MetadataProvidingDescription;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
@@ -58,7 +58,7 @@ import java.util.Optional;
 import org.immutables.value.Value;
 
 public class AppleBundleDescription
-    implements Description<AppleBundleDescriptionArg>,
+    implements DescriptionWithTargetGraph<AppleBundleDescriptionArg>,
         Flavored,
         ImplicitDepsInferringDescription<AppleBundleDescription.AbstractAppleBundleDescriptionArg>,
         MetadataProvidingDescription<AppleBundleDescriptionArg> {
@@ -126,7 +126,7 @@ public class AppleBundleDescription
 
   @Override
   public AppleBundle createBuildRule(
-      BuildRuleCreationContext context,
+      BuildRuleCreationContextWithTargetGraph context,
       BuildTarget buildTarget,
       BuildRuleParams params,
       AppleBundleDescriptionArg args) {

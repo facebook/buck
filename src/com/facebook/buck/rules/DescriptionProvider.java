@@ -21,7 +21,7 @@ import org.pf4j.ExtensionPoint;
 
 /**
  * An {@link ExtensionPoint} which provides a way to register an arbitrary set of {@link
- * Description}s.
+ * DescriptionWithTargetGraph}s.
  *
  * <p>Clients that want to provide descriptions need to implement this interface and annotation that
  * class with {@link org.pf4j.Extension} annotation.
@@ -44,5 +44,5 @@ import org.pf4j.ExtensionPoint;
  * //src/com/facebook/buck/cli:main} target.
  */
 public interface DescriptionProvider extends ExtensionPoint {
-  Collection<Description<?>> getDescriptions(DescriptionCreationContext context);
+  Collection<DescriptionWithTargetGraph<?>> getDescriptions(DescriptionCreationContext context);
 }

@@ -21,13 +21,13 @@ import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import com.facebook.buck.rules.BuildRuleCreationContext;
+import com.facebook.buck.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.DescriptionWithTargetGraph;
 import com.google.common.collect.ImmutableSet;
 import org.immutables.value.Value;
 
-public class ShBinaryDescription implements Description<ShBinaryDescriptionArg> {
+public class ShBinaryDescription implements DescriptionWithTargetGraph<ShBinaryDescriptionArg> {
 
   @Override
   public Class<ShBinaryDescriptionArg> getConstructorArgType() {
@@ -36,7 +36,7 @@ public class ShBinaryDescription implements Description<ShBinaryDescriptionArg> 
 
   @Override
   public ShBinary createBuildRule(
-      BuildRuleCreationContext context,
+      BuildRuleCreationContextWithTargetGraph context,
       BuildTarget buildTarget,
       BuildRuleParams params,
       ShBinaryDescriptionArg args) {

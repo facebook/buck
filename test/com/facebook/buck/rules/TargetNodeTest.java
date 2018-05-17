@@ -145,7 +145,8 @@ public class TargetNodeTest {
     Optional<BuildTarget> getTarget();
   }
 
-  public static class ExampleDescription implements Description<ExampleDescriptionArg> {
+  public static class ExampleDescription
+      implements DescriptionWithTargetGraph<ExampleDescriptionArg> {
 
     @Override
     public Class<ExampleDescriptionArg> getConstructorArgType() {
@@ -154,7 +155,7 @@ public class TargetNodeTest {
 
     @Override
     public BuildRule createBuildRule(
-        BuildRuleCreationContext context,
+        BuildRuleCreationContextWithTargetGraph context,
         BuildTarget buildTarget,
         BuildRuleParams params,
         ExampleDescriptionArg args) {

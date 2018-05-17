@@ -34,7 +34,7 @@ import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuckPyFunction;
-import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TargetNodeFactory;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
@@ -121,7 +121,7 @@ public class DefaultParserTargetNodeFactory
     BuildRuleType buildRuleType = parseBuildRuleTypeFromRawRule(knownBuildRuleTypes, rawNode);
 
     // Because of the way that the parser works, we know this can never return null.
-    Description<?> description = knownBuildRuleTypes.getDescription(buildRuleType);
+    DescriptionWithTargetGraph<?> description = knownBuildRuleTypes.getDescription(buildRuleType);
 
     verifyUnflavoredBuildTarget(cell, buildRuleType, buildFile, target, description, rawNode);
 
@@ -174,7 +174,7 @@ public class DefaultParserTargetNodeFactory
       BuildRuleType buildRuleType,
       Path buildFile,
       BuildTarget target,
-      Description<?> description,
+      DescriptionWithTargetGraph<?> description,
       Map<String, Object> rawNode) {
     UnflavoredBuildTarget unflavoredBuildTarget = target.getUnflavoredBuildTarget();
     if (target.isFlavored()) {
@@ -220,7 +220,7 @@ public class DefaultParserTargetNodeFactory
       Cell cell,
       Path buildFile,
       BuildTarget target,
-      Description<?> description,
+      DescriptionWithTargetGraph<?> description,
       Object constructorArg,
       Map<String, Object> rawNode,
       ImmutableSet<BuildTarget> declaredDeps,

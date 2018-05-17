@@ -36,10 +36,10 @@ import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.CxxDeps;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.rules.BuildRuleCreationContext;
+import com.facebook.buck.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableSupport;
-import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.toolchain.ToolchainProvider;
@@ -54,7 +54,7 @@ import java.util.stream.Stream;
 import org.immutables.value.Value;
 
 public class RustTestDescription
-    implements Description<RustTestDescriptionArg>,
+    implements DescriptionWithTargetGraph<RustTestDescriptionArg>,
         ImplicitDepsInferringDescription<RustTestDescription.AbstractRustTestDescriptionArg>,
         Flavored,
         VersionRoot<RustTestDescriptionArg> {
@@ -74,7 +74,7 @@ public class RustTestDescription
 
   @Override
   public BuildRule createBuildRule(
-      BuildRuleCreationContext context,
+      BuildRuleCreationContextWithTargetGraph context,
       BuildTarget buildTarget,
       BuildRuleParams params,
       RustTestDescriptionArg args) {

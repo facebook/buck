@@ -50,9 +50,9 @@ import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableCacheKey;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.BuildRuleCreationContext;
+import com.facebook.buck.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.FileListableLinkerInputArg;
@@ -87,7 +87,7 @@ import java.util.regex.Pattern;
 import org.immutables.value.Value;
 
 public class PrebuiltCxxLibraryDescription
-    implements Description<PrebuiltCxxLibraryDescriptionArg>,
+    implements DescriptionWithTargetGraph<PrebuiltCxxLibraryDescriptionArg>,
         ImplicitDepsInferringDescription<
             PrebuiltCxxLibraryDescription.AbstractPrebuiltCxxLibraryDescriptionArg>,
         VersionPropagator<PrebuiltCxxLibraryDescriptionArg> {
@@ -351,7 +351,7 @@ public class PrebuiltCxxLibraryDescription
 
   @Override
   public BuildRule createBuildRule(
-      BuildRuleCreationContext context,
+      BuildRuleCreationContextWithTargetGraph context,
       BuildTarget buildTarget,
       BuildRuleParams params,
       PrebuiltCxxLibraryDescriptionArg args) {

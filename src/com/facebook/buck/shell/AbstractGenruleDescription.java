@@ -27,10 +27,10 @@ import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.rules.BuildRuleCreationContext;
+import com.facebook.buck.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableSupport;
-import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.macros.AbstractMacroExpander;
@@ -63,7 +63,7 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 
 public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescription.CommonArg>
-    implements Description<T> {
+    implements DescriptionWithTargetGraph<T> {
 
   protected final ToolchainProvider toolchainProvider;
   protected final SandboxExecutionStrategy sandboxExecutionStrategy;
@@ -147,7 +147,10 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
 
   @Override
   public BuildRule createBuildRule(
-      BuildRuleCreationContext context, BuildTarget buildTarget, BuildRuleParams params, T args) {
+      BuildRuleCreationContextWithTargetGraph context,
+      BuildTarget buildTarget,
+      BuildRuleParams params,
+      T args) {
     BuildRuleResolver resolver = context.getBuildRuleResolver();
     Optional<ImmutableList<AbstractMacroExpander<? extends Macro, ?>>> maybeExpanders =
         getMacroHandler(

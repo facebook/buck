@@ -24,9 +24,9 @@ import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.AbstractNodeBuilder;
-import com.facebook.buck.rules.BuildRuleCreationContext;
+import com.facebook.buck.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.rules.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -92,7 +92,8 @@ public class FakeWorkerBuilder
     }
   }
 
-  public static class FakeWorkerDescription implements Description<FakeWorkerDescriptionArg> {
+  public static class FakeWorkerDescription
+      implements DescriptionWithTargetGraph<FakeWorkerDescriptionArg> {
     @Override
     public Class<FakeWorkerDescriptionArg> getConstructorArgType() {
       return FakeWorkerDescriptionArg.class;
@@ -100,7 +101,7 @@ public class FakeWorkerBuilder
 
     @Override
     public BuildRule createBuildRule(
-        BuildRuleCreationContext context,
+        BuildRuleCreationContextWithTargetGraph context,
         BuildTarget buildTarget,
         BuildRuleParams params,
         FakeWorkerDescriptionArg args) {

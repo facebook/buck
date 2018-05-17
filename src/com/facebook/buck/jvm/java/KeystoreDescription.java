@@ -21,12 +21,12 @@ import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import com.facebook.buck.rules.BuildRuleCreationContext;
+import com.facebook.buck.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.DescriptionWithTargetGraph;
 import org.immutables.value.Value;
 
-public class KeystoreDescription implements Description<KeystoreDescriptionArg> {
+public class KeystoreDescription implements DescriptionWithTargetGraph<KeystoreDescriptionArg> {
 
   @Override
   public Class<KeystoreDescriptionArg> getConstructorArgType() {
@@ -35,7 +35,7 @@ public class KeystoreDescription implements Description<KeystoreDescriptionArg> 
 
   @Override
   public Keystore createBuildRule(
-      BuildRuleCreationContext context,
+      BuildRuleCreationContextWithTargetGraph context,
       BuildTarget buildTarget,
       BuildRuleParams params,
       KeystoreDescriptionArg args) {

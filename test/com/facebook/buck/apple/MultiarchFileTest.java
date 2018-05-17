@@ -42,7 +42,7 @@ import com.facebook.buck.cxx.CxxInferEnhancer;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.AbstractNodeBuilder;
-import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeSourcePath;
@@ -103,7 +103,7 @@ public class MultiarchFileTest {
   public String name;
 
   @Parameterized.Parameter(1)
-  public Description<?> description;
+  public DescriptionWithTargetGraph<?> description;
 
   @Parameterized.Parameter(2)
   public NodeBuilderFactory nodeBuilderFactory;

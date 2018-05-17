@@ -31,7 +31,7 @@ import com.facebook.buck.parser.events.ParseBuckFileEvent;
 import com.facebook.buck.parser.events.ParseBuckProfilerReportEvent;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.options.ProjectBuildFileParserOptions;
-import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.InputStreamConsumer;
 import com.facebook.buck.util.MoreSuppliers;
@@ -774,8 +774,8 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
     }
   }
 
-  private synchronized Path getPathToBuckPy(ImmutableSet<Description<?>> descriptions)
-      throws IOException {
+  private synchronized Path getPathToBuckPy(
+      ImmutableSet<DescriptionWithTargetGraph<?>> descriptions) throws IOException {
     if (buckPythonProgram == null) {
       buckPythonProgram =
           BuckPythonProgram.newInstance(

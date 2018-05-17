@@ -27,9 +27,9 @@ import com.facebook.buck.core.model.Flavored;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.toolchain.CxxPlatforms;
-import com.facebook.buck.rules.BuildRuleCreationContext;
+import com.facebook.buck.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.versions.VersionRoot;
@@ -40,7 +40,7 @@ import java.util.Optional;
 import org.immutables.value.Value;
 
 public class GoBinaryDescription
-    implements Description<GoBinaryDescriptionArg>,
+    implements DescriptionWithTargetGraph<GoBinaryDescriptionArg>,
         ImplicitDepsInferringDescription<GoBinaryDescription.AbstractGoBinaryDescriptionArg>,
         VersionRoot<GoBinaryDescriptionArg>,
         Flavored {
@@ -65,7 +65,7 @@ public class GoBinaryDescription
 
   @Override
   public BuildRule createBuildRule(
-      BuildRuleCreationContext context,
+      BuildRuleCreationContextWithTargetGraph context,
       BuildTarget buildTarget,
       BuildRuleParams params,
       GoBinaryDescriptionArg args) {

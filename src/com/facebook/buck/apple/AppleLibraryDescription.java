@@ -65,10 +65,10 @@ import com.facebook.buck.cxx.toolchain.StripStyle;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.rules.BuildRuleCreationContext;
+import com.facebook.buck.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.DescriptionCache;
+import com.facebook.buck.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.ImplicitFlavorsInferringDescription;
 import com.facebook.buck.rules.MetadataProvidingDescription;
@@ -100,7 +100,7 @@ import java.util.SortedSet;
 import org.immutables.value.Value;
 
 public class AppleLibraryDescription
-    implements Description<AppleLibraryDescriptionArg>,
+    implements DescriptionWithTargetGraph<AppleLibraryDescriptionArg>,
         Flavored,
         ImplicitDepsInferringDescription<
             AppleLibraryDescription.AbstractAppleLibraryDescriptionArg>,
@@ -324,7 +324,7 @@ public class AppleLibraryDescription
 
   @Override
   public BuildRule createBuildRule(
-      BuildRuleCreationContext context,
+      BuildRuleCreationContextWithTargetGraph context,
       BuildTarget buildTarget,
       BuildRuleParams params,
       AppleLibraryDescriptionArg args) {
@@ -426,7 +426,7 @@ public class AppleLibraryDescription
    * @param bundleLoader The binary in which the current library will be (dynamically) loaded into.
    */
   public <A extends AppleNativeTargetDescriptionArg> BuildRule createLibraryBuildRule(
-      BuildRuleCreationContext context,
+      BuildRuleCreationContextWithTargetGraph context,
       BuildTarget buildTarget,
       BuildRuleParams params,
       BuildRuleResolver resolver,
@@ -503,7 +503,7 @@ public class AppleLibraryDescription
   }
 
   private <A extends AppleNativeTargetDescriptionArg> BuildRule requireUnstrippedBuildRule(
-      BuildRuleCreationContext context,
+      BuildRuleCreationContextWithTargetGraph context,
       BuildTarget buildTarget,
       BuildRuleParams params,
       BuildRuleResolver resolver,
@@ -562,7 +562,7 @@ public class AppleLibraryDescription
 
   private <A extends AppleNativeTargetDescriptionArg>
       BuildRule requireSingleArchUnstrippedBuildRule(
-          BuildRuleCreationContext context,
+          BuildRuleCreationContextWithTargetGraph context,
           BuildTarget buildTarget,
           BuildRuleParams params,
           BuildRuleResolver resolver,

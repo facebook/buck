@@ -35,9 +35,9 @@ import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.BuildRuleCreationContext;
+import com.facebook.buck.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.rules.modern.builders.grpc.server.GrpcServer;
 import com.facebook.buck.rules.modern.config.ModernBuildRuleConfig;
 import com.facebook.buck.step.AbstractExecutionStep;
@@ -99,7 +99,8 @@ public class ModernBuildRuleStrategyIntegrationTest {
     String getOut();
   }
 
-  private static class TouchOutputDescription implements Description<TouchOutputDescriptionArg> {
+  private static class TouchOutputDescription
+      implements DescriptionWithTargetGraph<TouchOutputDescriptionArg> {
     @Override
     public Class<TouchOutputDescriptionArg> getConstructorArgType() {
       return TouchOutputDescriptionArg.class;
@@ -107,7 +108,7 @@ public class ModernBuildRuleStrategyIntegrationTest {
 
     @Override
     public BuildRule createBuildRule(
-        BuildRuleCreationContext creationContext,
+        BuildRuleCreationContextWithTargetGraph creationContext,
         BuildTarget buildTarget,
         BuildRuleParams params,
         TouchOutputDescriptionArg args) {
@@ -129,7 +130,8 @@ public class ModernBuildRuleStrategyIntegrationTest {
     String getValue();
   }
 
-  private static class LargeDynamicsDescription implements Description<LargeDynamicsArg> {
+  private static class LargeDynamicsDescription
+      implements DescriptionWithTargetGraph<LargeDynamicsArg> {
     @Override
     public Class<LargeDynamicsArg> getConstructorArgType() {
       return LargeDynamicsArg.class;
@@ -137,7 +139,7 @@ public class ModernBuildRuleStrategyIntegrationTest {
 
     @Override
     public BuildRule createBuildRule(
-        BuildRuleCreationContext context,
+        BuildRuleCreationContextWithTargetGraph context,
         BuildTarget buildTarget,
         BuildRuleParams params,
         LargeDynamicsArg args) {
@@ -163,7 +165,8 @@ public class ModernBuildRuleStrategyIntegrationTest {
     boolean getStepFailure();
   }
 
-  private static class FailingRuleDescription implements Description<FailingRuleArg> {
+  private static class FailingRuleDescription
+      implements DescriptionWithTargetGraph<FailingRuleArg> {
     @Override
     public Class<FailingRuleArg> getConstructorArgType() {
       return FailingRuleArg.class;
@@ -171,7 +174,7 @@ public class ModernBuildRuleStrategyIntegrationTest {
 
     @Override
     public BuildRule createBuildRule(
-        BuildRuleCreationContext context,
+        BuildRuleCreationContextWithTargetGraph context,
         BuildTarget buildTarget,
         BuildRuleParams params,
         FailingRuleArg args) {

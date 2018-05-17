@@ -21,8 +21,8 @@ import java.nio.file.Path;
 
 /**
  * While building up the target graph, we infer implicit inputs of a rule if certain fields are
- * absent (e.g. src field). Any {@link Description} that implements this interface can modify its
- * implicit inputs by poking at the raw build rule params.
+ * absent (e.g. src field). Any {@link DescriptionWithTargetGraph} that implements this interface
+ * can modify its implicit inputs by poking at the raw build rule params.
  */
 public interface ImplicitInputsInferringDescription<T> {
 

@@ -108,7 +108,8 @@ class DelegateRunNotifier extends RunNotifier {
   @Override
   public void fireTestRunFinished(Result result) {
     // This method does not appear to be invoked. Presumably whoever has a reference to the original
-    // delegate is invoking its fireTestRunFinished(Description) method directly.
+    // delegate is invoking its fireTestRunFinished(Description) method
+    // directly.
     timer.cancel();
     delegate.fireTestRunFinished(result);
   }

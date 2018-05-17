@@ -39,7 +39,7 @@ import com.facebook.buck.file.downloader.impl.StackedDownloader;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
-import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.rules.TargetGraphAndBuildTargets;
 import com.facebook.buck.rules.keys.RuleKeyCacheRecycler;
 import com.facebook.buck.rules.keys.RuleKeyCacheScope;
@@ -186,7 +186,7 @@ public class FetchCommand extends BuildCommand {
     Downloader downloader =
         StackedDownloader.createFromConfig(
             params.getBuckConfig(), params.getCell().getToolchainProvider());
-    ImmutableSet<Description<?>> fetchingDescriptions =
+    ImmutableSet<DescriptionWithTargetGraph<?>> fetchingDescriptions =
         ImmutableSet.of(
             new RemoteFileDescription(downloader),
             new HttpFileDescription(downloader),

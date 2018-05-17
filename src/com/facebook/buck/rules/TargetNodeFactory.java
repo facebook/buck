@@ -51,7 +51,7 @@ public class TargetNodeFactory implements NodeCopier {
    * Capture and Helper Methods</a>.
    */
   @SuppressWarnings("unchecked")
-  public <T, U extends Description<T>> TargetNode<T, U> createFromObject(
+  public <T, U extends DescriptionWithTargetGraph<T>> TargetNode<T, U> createFromObject(
       HashCode rawInputsHashCode,
       U description,
       Object constructorArg,
@@ -75,7 +75,7 @@ public class TargetNodeFactory implements NodeCopier {
   }
 
   @SuppressWarnings("unchecked")
-  private <T, U extends Description<T>> TargetNode<T, U> create(
+  private <T, U extends DescriptionWithTargetGraph<T>> TargetNode<T, U> create(
       HashCode rawInputsHashCode,
       U description,
       T constructorArg,
@@ -178,7 +178,7 @@ public class TargetNodeFactory implements NodeCopier {
 
   @SuppressWarnings("unchecked")
   @Override
-  public <T, U extends Description<T>> TargetNode<T, U> copyNodeWithDescription(
+  public <T, U extends DescriptionWithTargetGraph<T>> TargetNode<T, U> copyNodeWithDescription(
       TargetNode<?, ?> originalNode, U description) {
     try {
       return create(
@@ -201,7 +201,7 @@ public class TargetNodeFactory implements NodeCopier {
   }
 
   @Override
-  public <T, U extends Description<T>> TargetNode<T, U> copyNodeWithFlavors(
+  public <T, U extends DescriptionWithTargetGraph<T>> TargetNode<T, U> copyNodeWithFlavors(
       TargetNode<T, U> originalNode, ImmutableSet<Flavor> flavors) {
     try {
       return create(

@@ -46,7 +46,7 @@ import org.immutables.value.Value;
  */
 @BuckStyleImmutable
 @Value.Immutable(builder = false, prehash = true)
-abstract class AbstractTargetNode<T, U extends Description<T>>
+abstract class AbstractTargetNode<T, U extends DescriptionWithTargetGraph<T>>
     implements Comparable<TargetNode<?, ?>>, ObeysVisibility {
 
   @Value.Parameter
@@ -176,7 +176,8 @@ abstract class AbstractTargetNode<T, U extends Description<T>>
   // ImplicitDepsInferringDescriptions may give different results for deps.
   //
   // Note that this method strips away selected versions, and may be buggy because of it.
-  public <V, W extends Description<V>> TargetNode<V, W> copyWithDescription(W description) {
+  public <V, W extends DescriptionWithTargetGraph<V>> TargetNode<V, W> copyWithDescription(
+      W description) {
     return getNodeCopier().copyNodeWithDescription(TargetNode.copyOf(this), description);
   }
 

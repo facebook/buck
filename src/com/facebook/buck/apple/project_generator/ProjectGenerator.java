@@ -116,7 +116,7 @@ import com.facebook.buck.js.JsBundleOutputsDescription;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.macros.MacroException;
-import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.args.Arg;
@@ -198,7 +198,7 @@ public class ProjectGenerator {
   private static final ImmutableList<String> DEFAULT_SWIFTFLAGS = ImmutableList.of();
   private static final String PRODUCT_NAME = "PRODUCT_NAME";
 
-  private static final ImmutableSet<Class<? extends Description<?>>>
+  private static final ImmutableSet<Class<? extends DescriptionWithTargetGraph<?>>>
       APPLE_NATIVE_DESCRIPTION_CLASSES =
           ImmutableSet.of(
               AppleBinaryDescription.class,
@@ -2792,7 +2792,7 @@ public class ProjectGenerator {
   private static Optional<TargetNode<CxxLibraryDescription.CommonArg, ?>> getAppleNativeNodeOfType(
       TargetGraph targetGraph,
       TargetNode<?, ?> targetNode,
-      Set<Class<? extends Description<?>>> nodeTypes,
+      Set<Class<? extends DescriptionWithTargetGraph<?>>> nodeTypes,
       Set<AppleBundleExtension> bundleExtensions) {
     Optional<TargetNode<CxxLibraryDescription.CommonArg, ?>> nativeNode = Optional.empty();
     if (nodeTypes.contains(targetNode.getDescription().getClass())) {
@@ -2993,7 +2993,7 @@ public class ProjectGenerator {
                 Optional.of(dependenciesCache),
                 AppleBuildRules.RecursiveDependenciesMode.LINKING,
                 targetNode,
-                ImmutableSet.<Class<? extends Description<?>>>builder()
+                ImmutableSet.<Class<? extends DescriptionWithTargetGraph<?>>>builder()
                     .addAll(AppleBuildRules.XCODE_TARGET_DESCRIPTION_CLASSES)
                     .add(PrebuiltAppleFrameworkDescription.class)
                     .build()))
@@ -3315,7 +3315,8 @@ public class ProjectGenerator {
 
       boolean nodeIsAppleLibrary = binaryNode.getDescription() instanceof AppleLibraryDescription;
       boolean nodeIsCxxLibrary =
-          ((Description<?>) binaryNode.getDescription()) instanceof CxxLibraryDescription;
+          ((DescriptionWithTargetGraph<?>) binaryNode.getDescription())
+              instanceof CxxLibraryDescription;
       if (nodeIsAppleLibrary || nodeIsCxxLibrary) {
         if (binaryNode
             .getBuildTarget()

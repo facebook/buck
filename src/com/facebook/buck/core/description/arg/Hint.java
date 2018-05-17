@@ -25,7 +25,7 @@ import java.lang.annotation.Target;
 
 /**
  * Represents hints given when deal with the value of a type returned by {@link
- * com.facebook.buck.rules.Description#getConstructorArgType()}.
+ * com.facebook.buck.rules.DescriptionWithTargetGraph#getConstructorArgType()}.
  */
 @Retention(RUNTIME)
 @Target({FIELD, METHOD})

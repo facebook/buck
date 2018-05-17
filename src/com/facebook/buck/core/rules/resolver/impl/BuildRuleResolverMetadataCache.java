@@ -17,7 +17,7 @@ package com.facebook.buck.core.rules.resolver.impl;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.rules.MetadataProvidingDescription;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
@@ -67,7 +67,7 @@ final class BuildRuleResolverMetadataCache {
         return Optional.of(metadataClass.cast(arg));
       }
 
-      Description<?> description = node.getDescription();
+      DescriptionWithTargetGraph<?> description = node.getDescription();
       if (!(description instanceof MetadataProvidingDescription)) {
         return Optional.empty();
       }

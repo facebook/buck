@@ -44,9 +44,9 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.ImmutableBuildTarget;
 import com.facebook.buck.model.ImmutableUnflavoredBuildTarget;
-import com.facebook.buck.rules.BuildRuleCreationContext;
+import com.facebook.buck.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
@@ -71,7 +71,7 @@ import java.util.Optional;
 import org.immutables.value.Value;
 
 public class HaskellGhciDescription
-    implements Description<HaskellGhciDescriptionArg>,
+    implements DescriptionWithTargetGraph<HaskellGhciDescriptionArg>,
         ImplicitDepsInferringDescription<HaskellGhciDescription.AbstractHaskellGhciDescriptionArg>,
         VersionRoot<HaskellGhciDescriptionArg> {
 
@@ -332,7 +332,7 @@ public class HaskellGhciDescription
 
   @Override
   public BuildRule createBuildRule(
-      BuildRuleCreationContext context,
+      BuildRuleCreationContextWithTargetGraph context,
       BuildTarget buildTarget,
       BuildRuleParams params,
       HaskellGhciDescriptionArg args) {

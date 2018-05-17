@@ -34,10 +34,10 @@ import com.facebook.buck.cxx.toolchain.HeaderMode;
 import com.facebook.buck.cxx.toolchain.HeaderSymlinkTree;
 import com.facebook.buck.cxx.toolchain.HeaderVisibility;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
-import com.facebook.buck.rules.BuildRuleCreationContext;
+import com.facebook.buck.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.DescriptionCache;
+import com.facebook.buck.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.ImplicitFlavorsInferringDescription;
 import com.facebook.buck.rules.MetadataProvidingDescription;
@@ -65,7 +65,7 @@ import java.util.stream.Stream;
 import org.immutables.value.Value;
 
 public class CxxLibraryDescription
-    implements Description<CxxLibraryDescriptionArg>,
+    implements DescriptionWithTargetGraph<CxxLibraryDescriptionArg>,
         ImplicitDepsInferringDescription<CxxLibraryDescription.CommonArg>,
         ImplicitFlavorsInferringDescription,
         Flavored,
@@ -206,7 +206,7 @@ public class CxxLibraryDescription
 
   @Override
   public BuildRule createBuildRule(
-      BuildRuleCreationContext context,
+      BuildRuleCreationContextWithTargetGraph context,
       BuildTarget buildTarget,
       BuildRuleParams params,
       CxxLibraryDescriptionArg args) {

@@ -20,9 +20,9 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.file.downloader.Downloader;
-import com.facebook.buck.rules.BuildRuleCreationContext;
+import com.facebook.buck.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.google.common.hash.HashCode;
 import java.util.Optional;
@@ -33,7 +33,7 @@ import org.immutables.value.Value;
  * A description for downloading a single HttpFile (versus the combo logic contained in {@link
  * RemoteFileDescription}.
  */
-public class HttpFileDescription implements Description<HttpFileDescriptionArg> {
+public class HttpFileDescription implements DescriptionWithTargetGraph<HttpFileDescriptionArg> {
 
   private final Supplier<Downloader> downloaderSupplier;
 
@@ -53,7 +53,7 @@ public class HttpFileDescription implements Description<HttpFileDescriptionArg> 
 
   @Override
   public BuildRule createBuildRule(
-      BuildRuleCreationContext context,
+      BuildRuleCreationContextWithTargetGraph context,
       BuildTarget buildTarget,
       BuildRuleParams params,
       HttpFileDescriptionArg args) {

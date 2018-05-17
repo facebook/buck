@@ -18,8 +18,8 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypes;
 import com.facebook.buck.core.rules.type.BuildRuleType;
-import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.DescriptionCache;
+import com.facebook.buck.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.rules.coercer.CoercedTypeCache;
 import com.facebook.buck.rules.coercer.ParamInfo;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
@@ -42,7 +42,7 @@ public class AuditBuildRuleTypeCommand extends AbstractCommand {
     KnownBuildRuleTypes knownBuildRuleTypes =
         params.getKnownBuildRuleTypesProvider().get(params.getCell());
     BuildRuleType buildRuleType = knownBuildRuleTypes.getBuildRuleType(ruleName);
-    Description<?> description = knownBuildRuleTypes.getDescription(buildRuleType);
+    DescriptionWithTargetGraph<?> description = knownBuildRuleTypes.getDescription(buildRuleType);
     printPythonFunction(params.getConsole(), description, params.getTypeCoercerFactory());
     return ExitCode.SUCCESS;
   }
@@ -61,7 +61,9 @@ public class AuditBuildRuleTypeCommand extends AbstractCommand {
   }
 
   static void printPythonFunction(
-      Console console, Description<?> description, TypeCoercerFactory typeCoercerFactory) {
+      Console console,
+      DescriptionWithTargetGraph<?> description,
+      TypeCoercerFactory typeCoercerFactory) {
     PrintStream printStream = console.getStdOut();
     ImmutableMap<String, ParamInfo> allParamInfo =
         CoercedTypeCache.INSTANCE.getAllParamInfo(

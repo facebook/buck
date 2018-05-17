@@ -31,9 +31,9 @@ import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.CxxDeps;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
-import com.facebook.buck.rules.BuildRuleCreationContext;
+import com.facebook.buck.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.OcamlSource;
@@ -50,7 +50,7 @@ import java.util.Optional;
 import org.immutables.value.Value;
 
 public class OcamlLibraryDescription
-    implements Description<OcamlLibraryDescriptionArg>,
+    implements DescriptionWithTargetGraph<OcamlLibraryDescriptionArg>,
         ImplicitDepsInferringDescription<
             OcamlLibraryDescription.AbstractOcamlLibraryDescriptionArg>,
         VersionPropagator<OcamlLibraryDescriptionArg>,
@@ -69,7 +69,7 @@ public class OcamlLibraryDescription
 
   @Override
   public BuildRule createBuildRule(
-      BuildRuleCreationContext context,
+      BuildRuleCreationContextWithTargetGraph context,
       BuildTarget buildTarget,
       BuildRuleParams params,
       OcamlLibraryDescriptionArg args) {

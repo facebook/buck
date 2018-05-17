@@ -16,10 +16,10 @@
 
 package com.facebook.buck.js;
 
-import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.DescriptionWithTargetGraph;
 
 /**
- * Empty interface to mark {@link com.facebook.buck.rules.Description} subclasses that return {@link
- * JsBundleOutputs} instances from their {@link Description#createBuildRule} method.
+ * Empty interface to mark {@link DescriptionWithTargetGraph} subclasses that return {@link
+ * JsBundleOutputs} instances from their {@link DescriptionWithTargetGraph#createBuildRule} method.
  */
-public interface JsBundleOutputsDescription<T> extends Description<T> {}
+public interface JsBundleOutputsDescription<T> extends DescriptionWithTargetGraph<T> {}

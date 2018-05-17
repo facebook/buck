@@ -16,7 +16,7 @@
 
 package com.facebook.buck.versions;
 
-import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.DescriptionWithTargetGraph;
 
 /** A node constitutes the body of a version sub-graph. */
-public interface VersionPropagator<A> extends Description<A> {}
+public interface VersionPropagator<A> extends DescriptionWithTargetGraph<A> {}
