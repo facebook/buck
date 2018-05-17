@@ -30,6 +30,7 @@ import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 public class CxxPlatformsProviderFactory implements ToolchainFactory<CxxPlatformsProvider> {
@@ -104,7 +105,26 @@ public class CxxPlatformsProviderFactory implements ToolchainFactory<CxxPlatform
               baseCxxPlatform, platform, new CxxBuckConfig(config, flavor), flavor));
     }
 
-    // Finalize our "default" host.
+    CxxPlatform hostCxxPlatform = getHostCxxPlatform(cxxBuckConfig, cxxOverridePlatformsMap);
+    cxxOverridePlatformsMap.put(hostCxxPlatform.getFlavor(), hostCxxPlatform);
+
+    ImmutableMap<Flavor, CxxPlatform> cxxPlatformsMap =
+        ImmutableMap.<Flavor, CxxPlatform>builder().putAll(cxxOverridePlatformsMap).build();
+
+    // Build up the final list of C/C++ platforms.
+    FlavorDomain<CxxPlatform> cxxPlatforms = new FlavorDomain<>("C/C++ platform", cxxPlatformsMap);
+
+    // Get the default target platform from config.
+    CxxPlatform defaultCxxPlatform =
+        CxxPlatforms.getConfigDefaultCxxPlatform(cxxBuckConfig, cxxPlatformsMap, hostCxxPlatform);
+
+    return CxxPlatformsProvider.of(defaultCxxPlatform, cxxPlatforms);
+  }
+
+  private static CxxPlatform getHostCxxPlatform(
+      CxxBuckConfig cxxBuckConfig, Map<Flavor, CxxPlatform> cxxOverridePlatformsMap) {
+    Flavor hostFlavor = CxxPlatforms.getHostFlavor();
+
     if (!cxxBuckConfig.getShouldRemapHostPlatform()) {
       hostFlavor = DefaultCxxPlatforms.FLAVOR;
     }
@@ -122,21 +142,9 @@ public class CxxPlatformsProviderFactory implements ToolchainFactory<CxxPlatform
               .from(cxxOverridePlatformsMap.get(hostFlavor))
               .setFlavor(DefaultCxxPlatforms.FLAVOR)
               .build();
-      cxxOverridePlatformsMap.put(DefaultCxxPlatforms.FLAVOR, hostCxxPlatform);
     } else {
       hostCxxPlatform = cxxOverridePlatformsMap.get(hostFlavor);
     }
-
-    ImmutableMap<Flavor, CxxPlatform> cxxPlatformsMap =
-        ImmutableMap.<Flavor, CxxPlatform>builder().putAll(cxxOverridePlatformsMap).build();
-
-    // Build up the final list of C/C++ platforms.
-    FlavorDomain<CxxPlatform> cxxPlatforms = new FlavorDomain<>("C/C++ platform", cxxPlatformsMap);
-
-    // Get the default target platform from config.
-    CxxPlatform defaultCxxPlatform =
-        CxxPlatforms.getConfigDefaultCxxPlatform(cxxBuckConfig, cxxPlatformsMap, hostCxxPlatform);
-
-    return CxxPlatformsProvider.of(defaultCxxPlatform, cxxPlatforms);
+    return hostCxxPlatform;
   }
 }
