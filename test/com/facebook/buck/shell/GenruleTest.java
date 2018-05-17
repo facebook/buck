@@ -142,14 +142,6 @@ public class GenruleTest {
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(ruleResolver));
     createSampleJavaBinaryRule(ruleResolver);
 
-    // From the Python object, create a GenruleBuildRuleFactory to create a Genrule.Builder
-    // that builds a Genrule from the Python object.
-    //    BuildTargetParser parser = BuildTargetParser.INSTANCE;
-    //    EasyMock.expect(parser.parse(EasyMock.eq("//java/com/facebook/util:util"),
-    //        EasyMock.anyObject(BuildTargetPatternParser.class)))
-    //        .andStubReturn(BuildTargetFactory.newInstance("//java/com/facebook/util:util"));
-    //    EasyMock.replay(parser);
-
     BuildTarget buildTarget =
         BuildTargetFactory.newInstance(
             filesystem.getRootPath(), "//src/com/facebook/katana:katana_manifest");
