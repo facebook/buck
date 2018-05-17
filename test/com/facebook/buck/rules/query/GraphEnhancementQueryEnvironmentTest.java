@@ -16,7 +16,6 @@
 
 package com.facebook.buck.rules.query;
 
-import static org.easymock.EasyMock.createMock;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -66,8 +65,8 @@ public class GraphEnhancementQueryEnvironmentTest {
     BuildTarget target = BuildTargetFactory.newInstance(ROOT, "//foo/bar:bar");
     GraphEnhancementQueryEnvironment envWithoutDeps =
         new GraphEnhancementQueryEnvironment(
-            Optional.of(createMock(BuildRuleResolver.class)),
-            Optional.of(createMock(TargetGraph.class)),
+            Optional.of(new TestBuildRuleResolver()),
+            Optional.of(TargetGraph.EMPTY),
             TYPE_COERCER_FACTORY,
             cellRoots,
             BuildTargetPatternParser.forBaseName(target.getBaseName()),
@@ -85,8 +84,8 @@ public class GraphEnhancementQueryEnvironmentTest {
     BuildTarget target = BuildTargetFactory.newInstance(ROOT, "//foo/bar:bar");
     GraphEnhancementQueryEnvironment envWithoutDeps =
         new GraphEnhancementQueryEnvironment(
-            Optional.of(createMock(BuildRuleResolver.class)),
-            Optional.of(createMock(TargetGraph.class)),
+            Optional.of(new TestBuildRuleResolver()),
+            Optional.of(TargetGraph.EMPTY),
             TYPE_COERCER_FACTORY,
             cellRoots,
             BuildTargetPatternParser.forBaseName(target.getBaseName()),
@@ -114,8 +113,8 @@ public class GraphEnhancementQueryEnvironmentTest {
 
     GraphEnhancementQueryEnvironment env =
         new GraphEnhancementQueryEnvironment(
-            Optional.of(createMock(BuildRuleResolver.class)),
-            Optional.of(createMock(TargetGraph.class)),
+            Optional.of(new TestBuildRuleResolver()),
+            Optional.of(TargetGraph.EMPTY),
             TYPE_COERCER_FACTORY,
             cellRoots,
             BuildTargetPatternParser.forBaseName(target.getBaseName()),
