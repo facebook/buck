@@ -35,17 +35,9 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
-import org.easymock.EasyMockSupport;
-import org.junit.After;
 import org.junit.Test;
 
-public class ShTestTest extends EasyMockSupport {
-
-  @After
-  public void tearDown() {
-    // I don't understand why EasyMockSupport doesn't do this by default.
-    verifyAll();
-  }
+public class ShTestTest {
 
   @Test
   public void depsAreRuntimeDeps() {
