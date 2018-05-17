@@ -73,14 +73,8 @@ public class CxxPlatformsProviderFactory implements ToolchainFactory<CxxPlatform
     cxxSystemPlatformsBuilder.put(defaultHostCxxPlatform.getFlavor(), defaultHostCxxPlatform);
     ImmutableMap<Flavor, CxxPlatform> cxxSystemPlatformsMap = cxxSystemPlatformsBuilder.build();
 
-    // Add the host platform if needed (for example, when building on Linux).
-    Flavor hostFlavor = CxxPlatforms.getHostFlavor();
-    if (!cxxSystemPlatformsMap.containsKey(hostFlavor)) {
-      cxxSystemPlatformsBuilder.put(
-          hostFlavor,
-          CxxPlatform.builder().from(defaultHostCxxPlatform).setFlavor(hostFlavor).build());
-      cxxSystemPlatformsMap = cxxSystemPlatformsBuilder.build();
-    }
+    cxxSystemPlatformsMap =
+        appendHostPlatformIfNeeded(defaultHostCxxPlatform, cxxSystemPlatformsMap);
 
     // Add platforms for each cxx flavor obtained from the buck config files
     // from sections of the form cxx#{flavor name}.
@@ -119,6 +113,21 @@ public class CxxPlatformsProviderFactory implements ToolchainFactory<CxxPlatform
         CxxPlatforms.getConfigDefaultCxxPlatform(cxxBuckConfig, cxxPlatformsMap, hostCxxPlatform);
 
     return CxxPlatformsProvider.of(defaultCxxPlatform, cxxPlatforms);
+  }
+
+  private static ImmutableMap<Flavor, CxxPlatform> appendHostPlatformIfNeeded(
+      CxxPlatform defaultHostCxxPlatform, ImmutableMap<Flavor, CxxPlatform> cxxSystemPlatforms) {
+    Flavor hostFlavor = CxxPlatforms.getHostFlavor();
+    if (!cxxSystemPlatforms.containsKey(hostFlavor)) {
+      return ImmutableMap.<Flavor, CxxPlatform>builder()
+          .putAll(cxxSystemPlatforms)
+          .put(
+              hostFlavor,
+              CxxPlatform.builder().from(defaultHostCxxPlatform).setFlavor(hostFlavor).build())
+          .build();
+    } else {
+      return cxxSystemPlatforms;
+    }
   }
 
   private static CxxPlatform getHostCxxPlatform(
