@@ -18,6 +18,7 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.description.BuildRuleParams;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
@@ -133,9 +134,9 @@ public class Archive extends AbstractBuildRule implements SupportsInputBasedRule
   }
 
   /**
-   * Construct an {@link com.facebook.buck.cxx.Archive} from a {@link
-   * com.facebook.buck.rules.BuildRuleParams} object representing a target node. In particular, make
-   * sure to trim dependencies to *only* those that provide the input {@link SourcePath}.
+   * Construct an {@link com.facebook.buck.cxx.Archive} from a {@link BuildRuleParams} object
+   * representing a target node. In particular, make sure to trim dependencies to *only* those that
+   * provide the input {@link SourcePath}.
    */
   public static Archive from(
       BuildTarget target,

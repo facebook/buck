@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.core.description.BuildRuleParams;
 import com.google.common.collect.ImmutableSortedSet;
 
 public class TestBuildRuleParams {

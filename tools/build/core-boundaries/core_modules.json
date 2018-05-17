@@ -8,6 +8,7 @@
   "//src/com/facebook/buck/config:config",
   "//src/com/facebook/buck/core/build/buildable/context:context",
   "//src/com/facebook/buck/core/build/context:context",
+  "//src/com/facebook/buck/core/description:description",
   "//src/com/facebook/buck/core/description/arg:arg",
   "//src/com/facebook/buck/core/exceptions:exceptions",
   "//src/com/facebook/buck/core/rulekey:rulekey",

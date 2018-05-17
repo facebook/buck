@@ -14,11 +14,11 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
+package com.facebook.buck.core.description;
 
 /**
- * Contains information regarding a specific {@link TargetNode} and the logic to create the
- * corresponding {@link com.facebook.buck.core.rules.BuildRule}
+ * Contains information regarding a specific {@link com.facebook.buck.rules.TargetNode} and the
+ * logic to create the corresponding {@link com.facebook.buck.core.rules.BuildRule}
  *
  * @param <T> the argument type for the description to construct the {@link
  *     com.facebook.buck.core.rules.BuildRule}
@@ -31,10 +31,9 @@ public interface Description<T> {
   Class<T> getConstructorArgType();
 
   /**
-   * Whether or not the build rule subgraph produced by this {@code DescriptionWithDepOnTargetGraph}
-   * is safe to cache in {@link
-   * com.facebook.buck.core.model.actiongraph.computation.IncrementalActionGraphGenerator} for
-   * incremental action graph generation.
+   * Whether or not the build rule subgraph produced by this {@code Description} is safe to cache in
+   * {@link com.facebook.buck.core.model.actiongraph.computation.IncrementalActionGraphGenerator}
+   * for incremental action graph generation.
    */
   boolean producesCacheableSubgraph();
 }
