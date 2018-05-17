@@ -58,7 +58,6 @@ import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Optional;
 import javax.annotation.Nullable;
-import org.easymock.EasyMock;
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
@@ -82,15 +81,11 @@ public class RemoteFileTest {
             .setSha1(Hashing.sha1().hashLong(42))
             .build(resolver);
 
-    BuildableContext buildableContext = EasyMock.createNiceMock(BuildableContext.class);
+    BuildableContext buildableContext = new FakeBuildableContext();
     buildableContext.recordArtifact(
         pathResolver.getRelativePath(remoteFile.getSourcePathToOutput()));
-    EasyMock.replay(buildableContext);
-
     remoteFile.getBuildSteps(
         FakeBuildContext.withSourcePathResolver(pathResolver), buildableContext);
-
-    EasyMock.verify(buildableContext);
   }
 
   @Test
