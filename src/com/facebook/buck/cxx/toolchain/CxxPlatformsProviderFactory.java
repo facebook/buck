@@ -76,28 +76,9 @@ public class CxxPlatformsProviderFactory implements ToolchainFactory<CxxPlatform
     cxxSystemPlatformsMap =
         appendHostPlatformIfNeeded(defaultHostCxxPlatform, cxxSystemPlatformsMap);
 
-    // Add platforms for each cxx flavor obtained from the buck config files
-    // from sections of the form cxx#{flavor name}.
-    // These platforms are overrides for existing system platforms.
-    ImmutableSet<Flavor> possibleHostFlavors = CxxPlatforms.getAllPossibleHostFlavors();
-    HashMap<Flavor, CxxPlatform> cxxOverridePlatformsMap =
-        new HashMap<Flavor, CxxPlatform>(cxxSystemPlatformsMap);
-    ImmutableSet<Flavor> cxxFlavors = CxxBuckConfig.getCxxFlavors(config);
-    for (Flavor flavor : cxxFlavors) {
-      CxxPlatform baseCxxPlatform = cxxSystemPlatformsMap.get(flavor);
-      if (baseCxxPlatform == null) {
-        if (possibleHostFlavors.contains(flavor)) {
-          // If a flavor is for an alternate host, it's safe to skip.
-          continue;
-        }
-        LOG.info("Applying \"%s\" overrides to default host platform", flavor);
-        baseCxxPlatform = defaultHostCxxPlatform;
-      }
-      cxxOverridePlatformsMap.put(
-          flavor,
-          CxxPlatforms.copyPlatformWithFlavorAndConfig(
-              baseCxxPlatform, platform, new CxxBuckConfig(config, flavor), flavor));
-    }
+    Map<Flavor, CxxPlatform> cxxOverridePlatformsMap =
+        updateCxxPlatformsWithOptionsFromBuckConfig(
+            platform, config, cxxSystemPlatformsMap, defaultHostCxxPlatform);
 
     CxxPlatform hostCxxPlatform = getHostCxxPlatform(cxxBuckConfig, cxxOverridePlatformsMap);
     cxxOverridePlatformsMap.put(hostCxxPlatform.getFlavor(), hostCxxPlatform);
@@ -128,6 +109,36 @@ public class CxxPlatformsProviderFactory implements ToolchainFactory<CxxPlatform
     } else {
       return cxxSystemPlatforms;
     }
+  }
+
+  /**
+   * Add platforms for each cxx flavor obtained from the buck config files from sections of the form
+   * cxx#{flavor name}. These platforms are overrides for existing system platforms.
+   */
+  private static Map<Flavor, CxxPlatform> updateCxxPlatformsWithOptionsFromBuckConfig(
+      Platform platform,
+      BuckConfig config,
+      ImmutableMap<Flavor, CxxPlatform> cxxSystemPlatformsMap,
+      CxxPlatform defaultHostCxxPlatform) {
+    ImmutableSet<Flavor> possibleHostFlavors = CxxPlatforms.getAllPossibleHostFlavors();
+    HashMap<Flavor, CxxPlatform> cxxOverridePlatformsMap = new HashMap<>(cxxSystemPlatformsMap);
+    ImmutableSet<Flavor> cxxFlavors = CxxBuckConfig.getCxxFlavors(config);
+    for (Flavor flavor : cxxFlavors) {
+      CxxPlatform baseCxxPlatform = cxxSystemPlatformsMap.get(flavor);
+      if (baseCxxPlatform == null) {
+        if (possibleHostFlavors.contains(flavor)) {
+          // If a flavor is for an alternate host, it's safe to skip.
+          continue;
+        }
+        LOG.info("Applying \"%s\" overrides to default host platform", flavor);
+        baseCxxPlatform = defaultHostCxxPlatform;
+      }
+      cxxOverridePlatformsMap.put(
+          flavor,
+          CxxPlatforms.copyPlatformWithFlavorAndConfig(
+              baseCxxPlatform, platform, new CxxBuckConfig(config, flavor), flavor));
+    }
+    return cxxOverridePlatformsMap;
   }
 
   private static CxxPlatform getHostCxxPlatform(
