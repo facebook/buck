@@ -128,6 +128,10 @@ public class RuleKeyLoggerListenerTest {
         null,
         Optional.empty(),
         Optional.empty(),
+        Optional.empty(),
+        Optional.empty(),
+        Optional.empty(),
+        Optional.empty(),
         Optional.empty());
   }
 

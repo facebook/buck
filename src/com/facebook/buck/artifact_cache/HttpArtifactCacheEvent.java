@@ -194,6 +194,10 @@ public abstract class HttpArtifactCacheEvent extends ArtifactCacheEvent {
       return fetchData.get();
     }
 
+    public Started getStartedEvent() {
+      return startedEvent;
+    }
+
     public HttpArtifactCacheEventStoreData getStoreData() {
       Preconditions.checkState(storeData.isPresent());
       return storeData.get();

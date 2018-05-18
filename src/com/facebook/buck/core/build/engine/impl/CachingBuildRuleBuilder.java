@@ -93,6 +93,7 @@ import com.facebook.buck.util.concurrent.ResourceAmounts;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.util.json.ObjectMappers;
+import com.facebook.buck.util.types.Pair;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
@@ -155,6 +156,11 @@ class CachingBuildRuleBuilder {
   private final InputBasedRuleKeyManager inputBasedRuleKeyManager;
   private final ManifestRuleKeyManager manifestRuleKeyManager;
   private final BuildCacheArtifactUploader buildCacheArtifactUploader;
+
+  @Nullable private volatile Pair<Long, Long> ruleKeyCacheCheckTimestampsMillis = null;
+  @Nullable private volatile Pair<Long, Long> inputRuleKeyCacheCheckTimestampsMillis = null;
+  @Nullable private volatile Pair<Long, Long> manifestRuleKeyCacheCheckTimestampsMillis = null;
+  @Nullable private volatile Pair<Long, Long> buildTimestampsMillis = null;
 
   /**
    * This is used to weakly cache the manifest RuleKeyAndInputs. I
@@ -768,7 +774,15 @@ class CachingBuildRuleBuilder {
       }
 
       buildRuleScopeManager.finished(
-          input, outputSize, outputHash, successType, shouldUploadToCache);
+          input,
+          outputSize,
+          outputHash,
+          successType,
+          shouldUploadToCache,
+          Optional.ofNullable(ruleKeyCacheCheckTimestampsMillis),
+          Optional.ofNullable(inputRuleKeyCacheCheckTimestampsMillis),
+          Optional.ofNullable(manifestRuleKeyCacheCheckTimestampsMillis),
+          Optional.ofNullable(buildTimestampsMillis));
     }
   }
 
@@ -797,11 +811,13 @@ class CachingBuildRuleBuilder {
             buildRuleSteps.runWithExecutor(buildExecutor);
           }
         };
+    long start = System.currentTimeMillis();
     if (customBuildRuleStrategy.isPresent() && customBuildRuleStrategy.get().canBuild(rule)) {
       customBuildRuleStrategy.get().build(service, rule, runner);
     } else {
       service.execute(runner::runWithDefaultExecutor);
     }
+    buildTimestampsMillis = new Pair<>(start, System.currentTimeMillis());
     return future;
   }
 
@@ -814,10 +830,13 @@ class CachingBuildRuleBuilder {
         .addBuildMetadata(
             BuildInfo.MetadataKey.MANIFEST_KEY, manifestKeyAndInputs.get().getRuleKey().toString());
     try (Scope ignored = LeafEvents.scope(eventBus, "checking_cache_depfile_based")) {
+      long start = System.currentTimeMillis();
       return Futures.transform(
           manifestRuleKeyManager.performManifestBasedCacheFetch(manifestKeyAndInputs.get()),
           (@Nonnull ManifestFetchResult result) -> {
-            this.buildRuleScopeManager.setManifestFetchResult(result);
+            buildRuleScopeManager.setManifestFetchResult(result);
+            manifestRuleKeyCacheCheckTimestampsMillis =
+                new Pair<>(start, System.currentTimeMillis());
             if (!result.getRuleCacheResult().isPresent()) {
               return Optional.empty();
             }
@@ -842,10 +861,16 @@ class CachingBuildRuleBuilder {
   }
 
   private ListenableFuture<Optional<BuildResult>> checkInputBasedCaches() throws IOException {
+    long start = System.currentTimeMillis();
     return Futures.transform(
         inputBasedRuleKeyManager.checkInputBasedCaches(),
         optionalResult ->
-            optionalResult.map(result -> success(result.getFirst(), result.getSecond())));
+            optionalResult.map(
+                result -> {
+                  inputRuleKeyCacheCheckTimestampsMillis =
+                      new Pair<>(start, System.currentTimeMillis());
+                  return success(result.getFirst(), result.getSecond());
+                }));
   }
 
   private ListenableFuture<BuildResult> buildOrFetchFromCache() throws IOException {
@@ -1041,6 +1066,8 @@ class CachingBuildRuleBuilder {
                   .setRequestTimestampMillis(cacheRequestTimestampMillis)
                   .setTwoLevelContentHashKey(cacheResult.twoLevelContentHashKey())
                   .build();
+          ruleKeyCacheCheckTimestampsMillis =
+              new Pair<>(cacheRequestTimestampMillis, System.currentTimeMillis());
           eventBus.post(new RuleKeyCacheResultEvent(ruleKeyCacheResult, cacheHitExpected));
           return cacheResult;
         });

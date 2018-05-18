@@ -39,6 +39,7 @@ import com.facebook.buck.rules.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.keys.RuleKeyFactory;
 import com.facebook.buck.util.Scope;
 import com.facebook.buck.util.timing.ClockDuration;
+import com.facebook.buck.util.types.Pair;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.google.common.base.Preconditions;
@@ -102,7 +103,11 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
       Optional<Long> outputSize,
       Optional<BuildRuleDiagnosticData> diagnosticData,
       Optional<ManifestFetchResult> manifestFetchResult,
-      Optional<ManifestStoreResult> manifestStoreResult) {
+      Optional<ManifestStoreResult> manifestStoreResult,
+      Optional<Pair<Long, Long>> ruleKeyCacheCheckTimestamps,
+      Optional<Pair<Long, Long>> inputRuleKeyCacheCheckTimestamps,
+      Optional<Pair<Long, Long>> manifestRuleKeyCacheCheckTimestamps,
+      Optional<Pair<Long, Long>> buildTimestamps) {
     return new Finished(
         beginning,
         ruleKeys,
@@ -115,7 +120,11 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
         outputSize,
         diagnosticData,
         manifestFetchResult,
-        manifestStoreResult);
+        manifestStoreResult,
+        ruleKeyCacheCheckTimestamps,
+        inputRuleKeyCacheCheckTimestamps,
+        manifestRuleKeyCacheCheckTimestamps,
+        buildTimestamps);
   }
 
   public static StartedRuleKeyCalc ruleKeyCalculationStarted(
@@ -226,6 +235,10 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
     private final Optional<BuildRuleDiagnosticData> diagnosticData;
     private final Optional<ManifestFetchResult> manifestFetchResult;
     private final Optional<ManifestStoreResult> manifestStoreResult;
+    private final Optional<Pair<Long, Long>> ruleKeyCacheCheckTimestamps;
+    private final Optional<Pair<Long, Long>> inputRuleKeyCacheCheckTimestamps;
+    private final Optional<Pair<Long, Long>> manifestRuleKeyCacheCheckTimestamps;
+    private final Optional<Pair<Long, Long>> buildTimestamps;
 
     private Finished(
         BeginningBuildRuleEvent beginning,
@@ -239,7 +252,11 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
         Optional<Long> outputSize,
         Optional<BuildRuleDiagnosticData> diagnosticData,
         Optional<ManifestFetchResult> manifestFetchResult,
-        Optional<ManifestStoreResult> manifestStoreResult) {
+        Optional<ManifestStoreResult> manifestStoreResult,
+        Optional<Pair<Long, Long>> ruleKeyCacheCheckTimestamps,
+        Optional<Pair<Long, Long>> inputRuleKeyCacheCheckTimestamps,
+        Optional<Pair<Long, Long>> manifestRuleKeyCacheCheckTimestamps,
+        Optional<Pair<Long, Long>> buildTimestamps) {
       super(beginning);
       this.status = status;
       this.cacheResult = cacheResult;
@@ -252,6 +269,10 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
       this.diagnosticData = diagnosticData;
       this.manifestFetchResult = manifestFetchResult;
       this.manifestStoreResult = manifestStoreResult;
+      this.ruleKeyCacheCheckTimestamps = ruleKeyCacheCheckTimestamps;
+      this.inputRuleKeyCacheCheckTimestamps = inputRuleKeyCacheCheckTimestamps;
+      this.manifestRuleKeyCacheCheckTimestamps = manifestRuleKeyCacheCheckTimestamps;
+      this.buildTimestamps = buildTimestamps;
     }
 
     @JsonView(JsonViews.MachineReadableLog.class)
@@ -312,6 +333,26 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
     @JsonIgnore
     public Optional<ManifestStoreResult> getManifestStoreResult() {
       return manifestStoreResult;
+    }
+
+    @JsonIgnore
+    public Optional<Pair<Long, Long>> getRuleKeyCacheCheckTimestamps() {
+      return ruleKeyCacheCheckTimestamps;
+    }
+
+    @JsonIgnore
+    public Optional<Pair<Long, Long>> getInputRuleKeyCacheCheckTimestamps() {
+      return inputRuleKeyCacheCheckTimestamps;
+    }
+
+    @JsonIgnore
+    public Optional<Pair<Long, Long>> getManifestRuleKeyCacheCheckTimestamps() {
+      return manifestRuleKeyCacheCheckTimestamps;
+    }
+
+    @JsonIgnore
+    public Optional<Pair<Long, Long>> getBuildTimestamps() {
+      return buildTimestamps;
     }
 
     @JsonIgnore

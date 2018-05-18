@@ -411,6 +411,10 @@ public class DistBuildSlaveEventBusListenerTest {
             Optional.empty(),
             Optional.empty(),
             Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
             Optional.empty()));
     listener.updateFinishedRuleCount(1);
     eventBus.post(started3);
@@ -423,6 +427,10 @@ public class DistBuildSlaveEventBusListenerTest {
             Optional.empty(),
             Optional.of(BuildRuleSuccessType.BUILT_LOCALLY),
             false,
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
             Optional.empty(),
             Optional.empty(),
             Optional.empty(),
@@ -444,6 +452,10 @@ public class DistBuildSlaveEventBusListenerTest {
             Optional.empty(),
             Optional.empty(),
             Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
             Optional.empty()));
     eventBus.post(
         BuildRuleEvent.finished(
@@ -454,6 +466,10 @@ public class DistBuildSlaveEventBusListenerTest {
             Optional.empty(),
             Optional.empty(),
             false,
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
             Optional.empty(),
             Optional.empty(),
             Optional.empty(),
@@ -472,6 +488,10 @@ public class DistBuildSlaveEventBusListenerTest {
             Optional.empty(),
             Optional.of(BuildRuleSuccessType.BUILT_LOCALLY),
             false,
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
             Optional.empty(),
             Optional.empty(),
             Optional.empty(),

@@ -117,6 +117,10 @@ public class DistBuildPostBuildAnalysisTest {
             Optional.empty(),
             Optional.empty(),
             Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
             Optional.empty());
 
     finishedEvent.configure(durationMs, 0, 0, 0, buildId);
