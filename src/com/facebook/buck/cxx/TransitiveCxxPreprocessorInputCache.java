@@ -24,8 +24,9 @@ import com.facebook.buck.util.concurrent.Parallelizer;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.util.concurrent.UncheckedExecutionException;
-import java.util.LinkedHashMap;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Stream;
@@ -33,7 +34,7 @@ import javax.annotation.Nonnull;
 
 /** Transitive C++ preprocessor input cache */
 public class TransitiveCxxPreprocessorInputCache {
-  private final Cache<CxxPlatform, ImmutableMap<BuildTarget, CxxPreprocessorInput>> cache =
+  private final Cache<CxxPlatform, ImmutableSortedMap<BuildTarget, CxxPreprocessorInput>> cache =
       CacheBuilder.newBuilder().build();
   private final CxxPreprocessorDep preprocessorDep;
   private final Parallelizer parallelizer;
@@ -72,14 +73,14 @@ public class TransitiveCxxPreprocessorInputCache {
         key, preprocessorDep, includeDep, ruleResolver, Parallelizer.SERIAL);
   }
 
-  private static ImmutableMap<BuildTarget, CxxPreprocessorInput>
+  private static ImmutableSortedMap<BuildTarget, CxxPreprocessorInput>
       computeTransitiveCxxToPreprocessorInputMap(
           @Nonnull CxxPlatform key,
           CxxPreprocessorDep preprocessorDep,
           boolean includeDep,
           BuildRuleResolver ruleResolver,
           Parallelizer parallelizer) {
-    Map<BuildTarget, CxxPreprocessorInput> builder = new LinkedHashMap<>();
+    Map<BuildTarget, CxxPreprocessorInput> builder = new HashMap<>();
     if (includeDep) {
       builder.put(
           preprocessorDep.getBuildTarget(),
@@ -99,6 +100,17 @@ public class TransitiveCxxPreprocessorInputCache {
     transitiveDepInputs
         .map(dep -> dep.getTransitiveCxxPreprocessorInput(key, ruleResolver))
         .forEachOrdered(builder::putAll);
-    return ImmutableMap.copyOf(builder);
+
+    // Using an ImmutableSortedMap here:
+    //
+    // 1. Memory efficiency. ImmutableSortedMap is implemented with 2 lists (an ImmutableSortedSet
+    // of keys, and a ImmutableList of values). This is much more efficient than an ImmutableMap,
+    // which creates an Entry instance for each entry.
+    //
+    // 2. Historically we seem to care that the result has some definite order.
+    //
+    // 3. We mostly iterate over these maps rather than do lookups, so ImmutableSortedMap
+    // binary-search based lookup is not an issue.
+    return ImmutableSortedMap.copyOf(builder);
   }
 }
