@@ -209,7 +209,7 @@ public class NdkLibraryDescription implements DescriptionWithTargetGraph<NdkLibr
           nativeLinkableInput
               .getArgs()
               .stream()
-              .flatMap(arg -> BuildableSupport.getDepsCollection(arg, ruleFinder).stream())
+              .flatMap(arg -> BuildableSupport.getDeps(arg, ruleFinder))
               .iterator());
 
       // Add in the transitive native linkable flags contributed by C/C++ library rules into the

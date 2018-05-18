@@ -176,9 +176,7 @@ public class PythonPackagedBinary extends PythonBinary implements HasRuntimeDeps
     return RichStream.<BuildTarget>empty()
         .concat(super.getRuntimeDeps(ruleFinder))
         .concat(
-            BuildableSupport.getDepsCollection(pathToPexExecuter, ruleFinder)
-                .stream()
-                .map(BuildRule::getBuildTarget));
+            BuildableSupport.getDeps(pathToPexExecuter, ruleFinder).map(BuildRule::getBuildTarget));
   }
 
   @Override

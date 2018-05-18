@@ -183,7 +183,7 @@ public class ResourcesFilter extends AbstractBuildRule
         .addAll(rulesWithResourceDirectories)
         .addAll(
             RichStream.from(postFilterResourcesCmd)
-                .flatMap(a -> BuildableSupport.getDepsCollection(a, ruleFinder).stream())
+                .flatMap(a -> BuildableSupport.getDeps(a, ruleFinder))
                 .toOnceIterable())
         .build();
   }

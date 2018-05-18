@@ -59,7 +59,12 @@ public final class BuildableSupport {
   /** Derives dependencies based on everything added to its rulekey. */
   public static ImmutableCollection<BuildRule> getDepsCollection(
       AddsToRuleKey tool, SourcePathRuleFinder ruleFinder) {
-    return deriveDeps(tool, ruleFinder).collect(ImmutableList.toImmutableList());
+    return getDeps(tool, ruleFinder).collect(ImmutableList.toImmutableList());
+  }
+
+  /** Streams dependencies based on everything added to its rulekey. */
+  public static Stream<BuildRule> getDeps(AddsToRuleKey tool, SourcePathRuleFinder ruleFinder) {
+    return deriveDeps(tool, ruleFinder);
   }
 
   /** Derives inputs based on everything added to the rulekey. */

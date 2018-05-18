@@ -288,7 +288,7 @@ public class RustTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   public Stream<BuildTarget> getRuntimeDeps(SourcePathRuleFinder ruleFinder) {
     return Stream.concat(
             getDeclaredDeps().stream(),
-            BuildableSupport.getDepsCollection(getExecutableCommand(), ruleFinder).stream())
+            BuildableSupport.getDeps(getExecutableCommand(), ruleFinder))
         .map(BuildRule::getBuildTarget);
   }
 }

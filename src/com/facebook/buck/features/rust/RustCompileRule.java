@@ -149,10 +149,7 @@ public class RustCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
                                     a ->
                                         a.stream()
                                             .flatMap(
-                                                arg ->
-                                                    BuildableSupport.getDepsCollection(
-                                                            arg, ruleFinder)
-                                                        .stream()))
+                                                arg -> BuildableSupport.getDeps(arg, ruleFinder)))
                                 .iterator())
                         .addAll(ruleFinder.filterBuildRuleInputs(ImmutableList.of(rootModule)))
                         .addAll(ruleFinder.filterBuildRuleInputs(sources))

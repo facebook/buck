@@ -138,9 +138,9 @@ abstract class ElfSharedLibraryInterface extends AbstractBuildRule
         ruleFinder,
         (ruleFinderInner) ->
             RichStream.from(args)
-                .flatMap(arg -> BuildableSupport.getDepsCollection(arg, ruleFinderInner).stream())
-                .concat(BuildableSupport.getDepsCollection(linker, ruleFinderInner).stream())
-                .concat(BuildableSupport.getDepsCollection(objcopy, ruleFinderInner).stream())
+                .flatMap(arg -> BuildableSupport.getDeps(arg, ruleFinderInner))
+                .concat(BuildableSupport.getDeps(linker, ruleFinderInner))
+                .concat(BuildableSupport.getDeps(objcopy, ruleFinderInner))
                 .toImmutableSortedSet(Ordering.natural()),
         objcopy,
         libName,

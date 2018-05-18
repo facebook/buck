@@ -372,10 +372,7 @@ public class HaskellDescriptionUtils {
                         .addAll(
                             Stream.of(args, linkerArgs)
                                 .flatMap(Collection::stream)
-                                .flatMap(
-                                    arg ->
-                                        BuildableSupport.getDepsCollection(arg, ruleFinder)
-                                            .stream())
+                                .flatMap(arg -> BuildableSupport.getDeps(arg, ruleFinder))
                                 .iterator())
                         .build())
                 .withoutExtraDeps(),

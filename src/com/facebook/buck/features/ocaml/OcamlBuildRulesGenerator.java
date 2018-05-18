@@ -194,8 +194,7 @@ public class OcamlBuildRulesGenerator {
                       .addAll(params.getDeclaredDeps().get())
                       .addAll(
                           RichStream.from(ocamlContext.getCCompileFlags())
-                              .flatMap(
-                                  f -> BuildableSupport.getDepsCollection(f, ruleFinder).stream())
+                              .flatMap(f -> BuildableSupport.getDeps(f, ruleFinder))
                               .toImmutableList())
                       .build()));
 
@@ -267,16 +266,14 @@ public class OcamlBuildRulesGenerator {
                             .getNativeLinkableInput()
                             .getArgs()
                             .stream()
-                            .flatMap(
-                                arg -> BuildableSupport.getDepsCollection(arg, ruleFinder).stream())
+                            .flatMap(arg -> BuildableSupport.getDeps(arg, ruleFinder))
                             .iterator())
                     .addAll(
                         ocamlContext
                             .getCLinkableInput()
                             .getArgs()
                             .stream()
-                            .flatMap(
-                                arg -> BuildableSupport.getDepsCollection(arg, ruleFinder).stream())
+                            .flatMap(arg -> BuildableSupport.getDeps(arg, ruleFinder))
                             .iterator())
                     .addAll(BuildableSupport.getDepsCollection(cxxCompiler, ruleFinder))
                     .build())
@@ -326,8 +323,7 @@ public class OcamlBuildRulesGenerator {
                         Stream.concat(
                                 ocamlContext.getBytecodeLinkableInput().getArgs().stream(),
                                 ocamlContext.getCLinkableInput().getArgs().stream())
-                            .flatMap(
-                                arg -> BuildableSupport.getDepsCollection(arg, ruleFinder).stream())
+                            .flatMap(arg -> BuildableSupport.getDeps(arg, ruleFinder))
                             .filter(rule -> !(rule instanceof OcamlBuild))
                             .iterator())
                     .addAll(BuildableSupport.getDepsCollection(cxxCompiler, ruleFinder))

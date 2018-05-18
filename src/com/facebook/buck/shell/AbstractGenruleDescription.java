@@ -182,9 +182,7 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
                       ruleFinder.filterBuildRuleInputs(args.getSrcs()).stream(),
                       Stream.of(cmd, bash, cmdExe)
                           .flatMap(Optionals::toStream)
-                          .flatMap(
-                              input ->
-                                  BuildableSupport.getDepsCollection(input, ruleFinder).stream()))
+                          .flatMap(input -> BuildableSupport.getDeps(input, ruleFinder)))
                   .collect(ImmutableSortedSet.toImmutableSortedSet(Comparator.naturalOrder()))),
           resolver,
           args,

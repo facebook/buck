@@ -228,7 +228,7 @@ public class OcamlRuleBuilder {
     allDepsBuilder.addAll(
         Stream.of(nativeLinkableInput, bytecodeLinkableInput, cLinkableInput)
             .flatMap(input -> input.getArgs().stream())
-            .flatMap(arg -> BuildableSupport.getDepsCollection(arg, ruleFinder).stream())
+            .flatMap(arg -> BuildableSupport.getDeps(arg, ruleFinder))
             .iterator());
     for (OcamlLibrary library : ocamlInput) {
       allDepsBuilder.addAll(library.getNativeCompileDeps(ocamlPlatform));
@@ -242,10 +242,7 @@ public class OcamlRuleBuilder {
         BuildableSupport.getDepsCollection(
             ocamlPlatform.getCxxCompiler().resolve(resolver), ruleFinder));
     allDepsBuilder.addAll(
-        argFlags
-            .stream()
-            .flatMap(arg -> BuildableSupport.getDepsCollection(arg, ruleFinder).stream())
-            .iterator());
+        argFlags.stream().flatMap(arg -> BuildableSupport.getDeps(arg, ruleFinder)).iterator());
 
     // The bulk rule will do preprocessing on sources, and so needs deps from the preprocessor
     // input object.
@@ -352,14 +349,12 @@ public class OcamlRuleBuilder {
                     .addAll(
                         Stream.of(nativeLinkableInput, bytecodeLinkableInput, cLinkableInput)
                             .flatMap(input -> input.getArgs().stream())
-                            .flatMap(
-                                arg -> BuildableSupport.getDepsCollection(arg, ruleFinder).stream())
+                            .flatMap(arg -> BuildableSupport.getDeps(arg, ruleFinder))
                             .iterator())
                     .addAll(
                         argFlags
                             .stream()
-                            .flatMap(
-                                arg -> BuildableSupport.getDepsCollection(arg, ruleFinder).stream())
+                            .flatMap(arg -> BuildableSupport.getDeps(arg, ruleFinder))
                             .iterator())
                     .addAll(
                         BuildableSupport.getDepsCollection(
