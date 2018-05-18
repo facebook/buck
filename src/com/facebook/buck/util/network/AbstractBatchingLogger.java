@@ -75,7 +75,7 @@ public abstract class AbstractBatchingLogger implements BatchingLogger {
   }
 
   @Override
-  public final Optional<ListenableFuture<Void>> log(String logLine) {
+  public Optional<ListenableFuture<Void>> log(String logLine) {
     batch.add(new BatchEntry(logLine));
     currentBatchSize += logLine.length();
     if (currentBatchSize >= minBatchSize) {
@@ -85,7 +85,7 @@ public abstract class AbstractBatchingLogger implements BatchingLogger {
   }
 
   @Override
-  public final ListenableFuture<Void> forceFlush() {
+  public ListenableFuture<Void> forceFlush() {
     return sendBatch();
   }
 
