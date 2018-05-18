@@ -40,6 +40,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Ordering;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.SortedSet;
 import java.util.function.Function;
@@ -125,13 +127,17 @@ public class CommandAlias extends NoopBuildRule implements BinaryBuildRule, HasR
 
   @Override
   public Tool getExecutableCommand() {
-    ImmutableSortedMap.Builder<Platform, Tool> platformTools = ImmutableSortedMap.naturalOrder();
-    platformDelegates.forEach(
-        (platform, rule) -> platformTools.put(platform, buildRuleAsTool(rule)));
+    ImmutableSortedMap<Platform, Tool> platformTools =
+        platformDelegates
+            .entrySet()
+            .stream()
+            .collect(
+                ImmutableSortedMap.toImmutableSortedMap(
+                    Ordering.natural(), Entry::getKey, e -> buildRuleAsTool(e.getValue())));
 
     return CrossPlatformTool.of(
         genericDelegate.map(this::buildRuleAsTool).orElseGet(UnsupportedPlatformTool::new),
-        platformTools.build(),
+        platformTools,
         platform);
   }
 
