@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.core.description.DescriptionCreationContext;
 import java.util.Collection;
 import org.pf4j.ExtensionPoint;
 

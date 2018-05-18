@@ -16,7 +16,7 @@
 
 package com.facebook.buck.js;
 
-import com.facebook.buck.rules.DescriptionCreationContext;
+import com.facebook.buck.core.description.DescriptionCreationContext;
 import com.facebook.buck.rules.DescriptionProvider;
 import com.facebook.buck.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.toolchain.ToolchainProvider;

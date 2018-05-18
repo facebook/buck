@@ -16,7 +16,7 @@
 
 package com.facebook.buck.file;
 
-import com.facebook.buck.rules.DescriptionCreationContext;
+import com.facebook.buck.core.description.DescriptionCreationContext;
 import com.facebook.buck.rules.DescriptionProvider;
 import com.facebook.buck.rules.DescriptionWithTargetGraph;
 import com.google.common.collect.ImmutableList;

@@ -8,7 +8,6 @@ java_immutables_library(
     srcs = [
         "AbstractBuildRule.java",
         "AbstractBuildRuleWithProviders.java",
-        "AbstractDescriptionCreationContext.java",
         "AbstractTargetGraphAndBuildTargets.java",
         "AbstractTargetNode.java",
         "BuildDeps.java",

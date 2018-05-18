@@ -16,8 +16,8 @@
 
 package com.facebook.buck.jvm.java.rules;
 
+import com.facebook.buck.core.description.DescriptionCreationContext;
 import com.facebook.buck.jvm.java.PrebuiltJarDescription;
-import com.facebook.buck.rules.DescriptionCreationContext;
 import com.facebook.buck.rules.DescriptionProvider;
 import com.facebook.buck.rules.DescriptionWithTargetGraph;
 import java.util.Collection;

@@ -17,8 +17,8 @@
 package com.facebook.buck.jvm.groovy;
 
 import com.facebook.buck.config.BuckConfig;
+import com.facebook.buck.core.description.DescriptionCreationContext;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
-import com.facebook.buck.rules.DescriptionCreationContext;
 import com.facebook.buck.rules.DescriptionProvider;
 import com.facebook.buck.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.toolchain.ToolchainProvider;
