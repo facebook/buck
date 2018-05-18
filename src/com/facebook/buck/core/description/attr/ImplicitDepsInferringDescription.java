@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright 2018-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -14,21 +14,21 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
+
+package com.facebook.buck.core.description.attr;
 
 import com.facebook.buck.core.cell.resolver.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.sourcepath.SourcePath;
 import com.google.common.collect.ImmutableCollection;
 
 /**
  * While building up the target graph, we infer the implicit dependencies of a rule by parsing all
- * parameters with types {@link SourcePath} or {@link BuildRule}. However, in some cases like {@link
+ * parameters with types {@link com.facebook.buck.core.sourcepath.SourcePath} or {@link
+ * com.facebook.buck.core.rules.BuildRule}. However, in some cases like {@link
  * com.facebook.buck.shell.GenruleDescription}, the {@link
  * com.facebook.buck.shell.AbstractGenruleDescription.Arg#cmd} argument contains build targets in a
- * specific format. Any {@link DescriptionWithTargetGraph} that implements this interface can modify
- * its implicit deps by poking at the raw build rule params.
+ * specific format. Any {@link com.facebook.buck.core.description.Description} that implements this
+ * interface can modify its implicit deps by poking at the raw build rule params.
  */
 public interface ImplicitDepsInferringDescription<T> {
 

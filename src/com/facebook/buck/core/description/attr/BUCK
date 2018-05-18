@@ -1,0 +1,14 @@
+java_library(
+    name = "attr",
+    srcs = glob(["*.java"]),
+    exported_deps = [
+        "//src/com/facebook/buck/core/cell/resolver:resolver",
+        "//src/com/facebook/buck/core/model:model",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//third-party/java/guava:guava",
+    ],
+)

@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright 2018-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -14,15 +14,16 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
+
+package com.facebook.buck.core.description.attr;
 
 import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import java.nio.file.Path;
 
 /**
  * While building up the target graph, we infer implicit inputs of a rule if certain fields are
- * absent (e.g. src field). Any {@link DescriptionWithTargetGraph} that implements this interface
- * can modify its implicit inputs by poking at the raw build rule params.
+ * absent (e.g. src field). Any {@link com.facebook.buck.core.description.Description} that
+ * implements this interface can modify its implicit inputs by poking at the raw build rule params.
  */
 public interface ImplicitInputsInferringDescription<T> {
 
