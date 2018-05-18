@@ -27,6 +27,7 @@ import com.facebook.buck.artifact_cache.config.ArtifactCacheBuckConfig;
 import com.facebook.buck.cli.exceptions.handlers.ExceptionHandlerRegistryFactory;
 import com.facebook.buck.cli.exceptions.handlers.HumanReadableExceptionAugmentor;
 import com.facebook.buck.config.BuckConfig;
+import com.facebook.buck.config.resources.ResourcesConfig;
 import com.facebook.buck.core.build.engine.cache.manager.BuildInfoStoreManager;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.DefaultCellPathResolver;
@@ -117,6 +118,7 @@ import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.AnsiEnvironmentChecking;
 import com.facebook.buck.util.BgProcessKiller;
 import com.facebook.buck.util.BuckArgsMethods;
+import com.facebook.buck.util.CloseableMemoizedSupplier;
 import com.facebook.buck.util.CloseableWrapper;
 import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.Console;
@@ -211,6 +213,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
@@ -1163,7 +1166,8 @@ public final class Main {
                         processExecutor,
                         executableFinder,
                         pluginManager,
-                        moduleManager));
+                        moduleManager,
+                        getForkJoinPoolSupplier(buckConfig)));
           } catch (InterruptedException | ClosedByInterruptException e) {
             buildEventBus.post(CommandEvent.interrupted(startedEvent, ExitCode.SIGNAL_INTERRUPT));
             throw e;
@@ -1775,6 +1779,20 @@ public final class Main {
       specifiedBuildId = UUID.randomUUID().toString();
     }
     return new BuildId(specifiedBuildId);
+  }
+
+  /**
+   * @param buckConfig the configuration for resources
+   * @return a memoized supplier for a ForkJoinPool that will be closed properly if initialized
+   */
+  @VisibleForTesting
+  static CloseableMemoizedSupplier<ForkJoinPool> getForkJoinPoolSupplier(BuckConfig buckConfig) {
+    ResourcesConfig resource = buckConfig.getView(ResourcesConfig.class);
+    return CloseableMemoizedSupplier.of(
+        () ->
+            MostExecutors.forkJoinPoolWithThreadLimit(
+                resource.getMaximumResourceAmounts().getCpu(), 16),
+        ForkJoinPool::shutdownNow);
   }
 
   private static void installUncaughtExceptionHandler(Optional<NGContext> context) {

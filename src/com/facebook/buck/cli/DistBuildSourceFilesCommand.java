@@ -22,7 +22,6 @@ import com.facebook.buck.distributed.thrift.BuildJobStateFileHashEntry;
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashes;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.util.CloseableMemoizedSupplier;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.ThrowingPrintWriter;
 import com.google.common.collect.Lists;
@@ -34,7 +33,6 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ForkJoinPool;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
 
@@ -107,13 +105,11 @@ public class DistBuildSourceFilesCommand extends AbstractDistBuildCommand {
    */
   private void runLocally(CommandRunnerParams params) throws IOException, InterruptedException {
     try (CommandThreadManager pool =
-            new CommandThreadManager(
-                "DistBuildSourceFiles", getConcurrencyLimit(params.getBuckConfig()));
-        CloseableMemoizedSupplier<ForkJoinPool> poolSupplier =
-            getForkJoinPoolSupplier(params.getBuckConfig())) {
+        new CommandThreadManager(
+            "DistBuildSourceFiles", getConcurrencyLimit(params.getBuckConfig())); ) {
       BuildJobState jobState =
           BuildCommand.getAsyncDistBuildState(
-                  arguments, params, pool.getWeightedListeningExecutorService(), poolSupplier)
+                  arguments, params, pool.getWeightedListeningExecutorService())
               .get();
       outputResultToTempFile(params, jobState);
     } catch (ExecutionException e) {

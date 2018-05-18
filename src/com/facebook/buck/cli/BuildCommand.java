@@ -101,7 +101,6 @@ import com.facebook.buck.rules.keys.RuleKeyCacheScope;
 import com.facebook.buck.rules.keys.RuleKeyFieldLoader;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.ExecutorPool;
-import com.facebook.buck.util.CloseableMemoizedSupplier;
 import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.ListeningProcessExecutor;
@@ -139,7 +138,6 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
@@ -397,7 +395,6 @@ public class BuildCommand extends AbstractCommand {
    * @param buildTargets - Top level targets.
    * @param params - Client side parameters.
    * @param executor - Executor for async ops.
-   * @param poolSupplier - the supplier of an executor for parallel action graph construction
    * @return - New instance of serializable {@link BuildJobState}.
    * @throws InterruptedException
    * @throws IOException
@@ -405,8 +402,7 @@ public class BuildCommand extends AbstractCommand {
   public static ListenableFuture<BuildJobState> getAsyncDistBuildState(
       List<String> buildTargets,
       CommandRunnerParams params,
-      WeightedListeningExecutorService executor,
-      CloseableMemoizedSupplier<ForkJoinPool> poolSupplier)
+      WeightedListeningExecutorService executor)
       throws InterruptedException, IOException {
     BuildCommand buildCommand = new BuildCommand(buildTargets);
     buildCommand.assertArguments(params);
@@ -414,7 +410,7 @@ public class BuildCommand extends AbstractCommand {
     GraphsAndBuildTargets graphsAndBuildTargets = null;
     try {
       graphsAndBuildTargets =
-          buildCommand.createGraphsAndTargets(params, executor, Optional.empty(), poolSupplier);
+          buildCommand.createGraphsAndTargets(params, executor, Optional.empty());
     } catch (ActionGraphCreationException e) {
       throw BuildFileParseException.createForUnknownParseError(e.getMessage());
     }
@@ -472,9 +468,8 @@ public class BuildCommand extends AbstractCommand {
     }
     BuildEvent.Started started = postBuildStartedEvent(params);
     BuildRunResult result = ImmutableBuildRunResult.of(ExitCode.BUILD_ERROR, ImmutableList.of());
-    try (CloseableMemoizedSupplier<ForkJoinPool> poolSupplier =
-        getForkJoinPoolSupplier(params.getBuckConfig())) {
-      result = executeBuildAndProcessResult(params, commandThreadManager, poolSupplier);
+    try {
+      result = executeBuildAndProcessResult(params, commandThreadManager);
     } catch (ActionGraphCreationException e) {
       params.getConsole().printBuildFailure(e.getMessage());
       result = ImmutableBuildRunResult.of(ExitCode.PARSE_ERROR, ImmutableList.of());
@@ -494,8 +489,7 @@ public class BuildCommand extends AbstractCommand {
   private GraphsAndBuildTargets createGraphsAndTargets(
       CommandRunnerParams params,
       ListeningExecutorService executorService,
-      Optional<ThriftRuleKeyLogger> ruleKeyLogger,
-      CloseableMemoizedSupplier<ForkJoinPool> poolSupplier)
+      Optional<ThriftRuleKeyLogger> ruleKeyLogger)
       throws ActionGraphCreationException, IOException, InterruptedException {
     TargetGraphAndBuildTargets unversionedTargetGraph =
         createUnversionedTargetGraph(params, executorService);
@@ -514,7 +508,7 @@ public class BuildCommand extends AbstractCommand {
             unversionedTargetGraph, versionedTargetGraph);
     checkSingleBuildTargetSpecifiedForOutBuildMode(targetGraphForLocalBuild);
     ActionGraphAndResolver actionGraph =
-        createActionGraphAndResolver(params, targetGraphForLocalBuild, ruleKeyLogger, poolSupplier);
+        createActionGraphAndResolver(params, targetGraphForLocalBuild, ruleKeyLogger);
 
     ImmutableSet<BuildTarget> buildTargets =
         getBuildTargets(params, actionGraph, targetGraphForLocalBuild, justBuildTarget);
@@ -545,9 +539,7 @@ public class BuildCommand extends AbstractCommand {
   }
 
   private BuildRunResult executeBuildAndProcessResult(
-      CommandRunnerParams params,
-      CommandThreadManager commandThreadManager,
-      CloseableMemoizedSupplier<ForkJoinPool> poolSupplier)
+      CommandRunnerParams params, CommandThreadManager commandThreadManager)
       throws IOException, InterruptedException, ActionGraphCreationException {
     ExitCode exitCode = ExitCode.SUCCESS;
     GraphsAndBuildTargets graphsAndBuildTargets;
@@ -560,10 +552,7 @@ public class BuildCommand extends AbstractCommand {
       distBuildClientStatsTracker.startTimer(LOCAL_GRAPH_CONSTRUCTION);
       graphsAndBuildTargets =
           createGraphsAndTargets(
-              params,
-              commandThreadManager.getListeningExecutorService(),
-              Optional.empty(),
-              poolSupplier);
+              params, commandThreadManager.getListeningExecutorService(), Optional.empty());
       distBuildClientStatsTracker.stopTimer(LOCAL_GRAPH_CONSTRUCTION);
 
       try (RuleKeyCacheScope<RuleKey> ruleKeyCacheScope =
@@ -602,10 +591,7 @@ public class BuildCommand extends AbstractCommand {
         Optional<ThriftRuleKeyLogger> optionalRuleKeyLogger = Optional.ofNullable(ruleKeyLogger);
         graphsAndBuildTargets =
             createGraphsAndTargets(
-                params,
-                commandThreadManager.getListeningExecutorService(),
-                optionalRuleKeyLogger,
-                poolSupplier);
+                params, commandThreadManager.getListeningExecutorService(), optionalRuleKeyLogger);
         try (RuleKeyCacheScope<RuleKey> ruleKeyCacheScope =
             getDefaultRuleKeyCacheScope(
                 params, graphsAndBuildTargets.getGraphs().getActionGraphAndResolver())) {
@@ -1307,8 +1293,7 @@ public class BuildCommand extends AbstractCommand {
   private static ActionGraphAndResolver createActionGraphAndResolver(
       CommandRunnerParams params,
       TargetGraphAndBuildTargets targetGraphAndBuildTargets,
-      Optional<ThriftRuleKeyLogger> ruleKeyLogger,
-      CloseableMemoizedSupplier<ForkJoinPool> poolSupplier) {
+      Optional<ThriftRuleKeyLogger> ruleKeyLogger) {
     ActionGraphAndResolver actionGraphAndResolver =
         params
             .getActionGraphCache()
@@ -1319,7 +1304,7 @@ public class BuildCommand extends AbstractCommand {
                 params.getBuckConfig(),
                 params.getRuleKeyConfiguration(),
                 ruleKeyLogger,
-                poolSupplier);
+                params.getPoolSupplier());
     return actionGraphAndResolver;
   }
 

@@ -145,7 +145,8 @@ public class CommandRunnerParamsForTesting {
         processExecutor,
         new ExecutableFinder(),
         pluginManager,
-        TestBuckModuleManagerFactory.create(pluginManager));
+        TestBuckModuleManagerFactory.create(pluginManager),
+        Main.getForkJoinPoolSupplier(config));
   }
 
   public static Builder builder() {
