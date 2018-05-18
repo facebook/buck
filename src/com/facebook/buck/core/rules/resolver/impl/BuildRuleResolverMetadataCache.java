@@ -15,10 +15,10 @@
  */
 package com.facebook.buck.core.rules.resolver.impl;
 
+import com.facebook.buck.core.description.MetadataProvidingDescription;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DescriptionWithTargetGraph;
-import com.facebook.buck.rules.MetadataProvidingDescription;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.types.Pair;

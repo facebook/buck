@@ -18,6 +18,7 @@ package com.facebook.buck.features.go;
 
 import com.facebook.buck.core.cell.resolver.CellPathResolver;
 import com.facebook.buck.core.description.BuildRuleParams;
+import com.facebook.buck.core.description.MetadataProvidingDescription;
 import com.facebook.buck.core.description.arg.CommonDescriptionArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.description.arg.HasSrcs;
@@ -35,7 +36,6 @@ import com.facebook.buck.features.go.GoListStep.FileType;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.rules.DescriptionWithTargetGraph;
-import com.facebook.buck.rules.MetadataProvidingDescription;
 import com.facebook.buck.rules.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.versions.Version;

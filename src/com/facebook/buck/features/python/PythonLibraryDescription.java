@@ -18,6 +18,7 @@ package com.facebook.buck.features.python;
 
 import com.facebook.buck.core.cell.resolver.CellPathResolver;
 import com.facebook.buck.core.description.BuildRuleParams;
+import com.facebook.buck.core.description.MetadataProvidingDescription;
 import com.facebook.buck.core.description.arg.CommonDescriptionArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.description.arg.HasTests;
@@ -37,7 +38,6 @@ import com.facebook.buck.features.python.toolchain.PythonPlatform;
 import com.facebook.buck.features.python.toolchain.PythonPlatformsProvider;
 import com.facebook.buck.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.rules.DescriptionWithTargetGraph;
-import com.facebook.buck.rules.MetadataProvidingDescription;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.coercer.VersionMatchedCollection;

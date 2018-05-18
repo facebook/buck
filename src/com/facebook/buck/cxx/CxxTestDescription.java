@@ -18,6 +18,7 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.cell.resolver.CellPathResolver;
 import com.facebook.buck.core.description.BuildRuleParams;
+import com.facebook.buck.core.description.MetadataProvidingDescription;
 import com.facebook.buck.core.description.arg.HasContacts;
 import com.facebook.buck.core.description.arg.HasTestTimeout;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
@@ -41,7 +42,6 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.DescriptionWithTargetGraph;
-import com.facebook.buck.rules.MetadataProvidingDescription;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.StringWithMacros;
