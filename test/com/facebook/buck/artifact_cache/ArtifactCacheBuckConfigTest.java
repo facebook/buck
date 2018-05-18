@@ -78,15 +78,15 @@ public class ArtifactCacheBuckConfigTest {
   @Test
   public void testMode() throws IOException {
     ArtifactCacheBuckConfig config = createFromText("[cache]", "mode = http");
-    assertThat(config.hasAtLeastOneWriteableCache(), Matchers.is(true));
+    assertThat(config.hasAtLeastOneWriteableRemoteCache(), Matchers.is(true));
     assertThat(config.getArtifactCacheModes(), Matchers.contains(ArtifactCacheMode.http));
 
     config = createFromText("[cache]", "mode = dir");
-    assertThat(config.hasAtLeastOneWriteableCache(), Matchers.is(false));
+    assertThat(config.hasAtLeastOneWriteableRemoteCache(), Matchers.is(false));
     assertThat(config.getArtifactCacheModes(), Matchers.contains(ArtifactCacheMode.dir));
 
     config = createFromText("[cache]", "mode = dir, http");
-    assertThat(config.hasAtLeastOneWriteableCache(), Matchers.is(true));
+    assertThat(config.hasAtLeastOneWriteableRemoteCache(), Matchers.is(true));
     assertThat(
         config.getArtifactCacheModes(),
         Matchers.containsInAnyOrder(ArtifactCacheMode.dir, ArtifactCacheMode.http));

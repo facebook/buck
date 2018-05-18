@@ -241,7 +241,7 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
         .orElse(DEFAULT_HTTP_STORE_RETRY_INTERVAL);
   }
 
-  public boolean hasAtLeastOneWriteableCache() {
+  public boolean hasAtLeastOneWriteableRemoteCache() {
     return getHttpCacheEntries()
         .stream()
         .anyMatch(entry -> entry.getCacheReadMode().equals(CacheReadMode.READWRITE));
