@@ -17,10 +17,10 @@
 package com.facebook.buck.core.rules.knowntypes;
 
 import com.facebook.buck.config.BuckConfig;
+import com.facebook.buck.core.description.DescriptionCache;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.rules.type.BuildRuleType;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import com.facebook.buck.rules.DescriptionCache;
 import com.facebook.buck.rules.DescriptionCreationContext;
 import com.facebook.buck.rules.DescriptionProvider;
 import com.facebook.buck.rules.DescriptionWithTargetGraph;

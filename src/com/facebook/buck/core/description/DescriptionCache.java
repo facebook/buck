@@ -14,7 +14,8 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
+
+package com.facebook.buck.core.description;
 
 import com.facebook.buck.core.rules.type.BuildRuleType;
 import com.facebook.buck.core.rules.type.impl.BuildRuleTypeFactory;
@@ -24,26 +25,24 @@ import com.google.common.cache.LoadingCache;
 
 public class DescriptionCache {
 
-  private static final LoadingCache<Class<? extends DescriptionWithTargetGraph<?>>, BuildRuleType>
+  private static final LoadingCache<Class<? extends Description<?>>, BuildRuleType>
       BUILD_RULE_TYPES_BY_CLASS =
           CacheBuilder.newBuilder()
               .build(
-                  new CacheLoader<Class<? extends DescriptionWithTargetGraph<?>>, BuildRuleType>() {
+                  new CacheLoader<Class<? extends Description<?>>, BuildRuleType>() {
                     @Override
-                    public BuildRuleType load(Class<? extends DescriptionWithTargetGraph<?>> key) {
+                    public BuildRuleType load(Class<? extends Description<?>> key) {
                       return BuildRuleTypeFactory.fromClassName(key);
                     }
                   });
 
   /** @return The {@link BuildRuleType} being described. */
-  public static BuildRuleType getBuildRuleType(
-      Class<? extends DescriptionWithTargetGraph<?>> descriptionClass) {
+  public static BuildRuleType getBuildRuleType(Class<? extends Description<?>> descriptionClass) {
     return BUILD_RULE_TYPES_BY_CLASS.getUnchecked(descriptionClass);
   }
 
   @SuppressWarnings("unchecked")
-  public static BuildRuleType getBuildRuleType(DescriptionWithTargetGraph<?> description) {
-    return getBuildRuleType(
-        (Class<? extends DescriptionWithTargetGraph<?>>) description.getClass());
+  public static BuildRuleType getBuildRuleType(Description<?> description) {
+    return getBuildRuleType((Class<? extends Description<?>>) description.getClass());
   }
 }
