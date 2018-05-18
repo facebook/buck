@@ -88,7 +88,6 @@ import java.util.TimeZone;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.zip.GZIPInputStream;
-import org.easymock.EasyMock;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
@@ -194,9 +193,7 @@ public class ChromeTraceBuildListenerTest {
     ProjectFilesystem projectFilesystem =
         TestProjectFilesystems.createProjectFilesystem(tmpDir.getRoot().toPath());
 
-    ThreadMXBean threadMXBean = EasyMock.createMock(ThreadMXBean.class);
-    EasyMock.expect(threadMXBean.getThreadInfo(EasyMock.anyLong())).andReturn(null).anyTimes();
-    EasyMock.replay();
+    ThreadMXBean threadMXBean = new FakeThreadMXBean();
 
     ChromeTraceBuildListener listener =
         new ChromeTraceBuildListener(
