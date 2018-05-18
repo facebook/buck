@@ -21,14 +21,16 @@ import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 
 public class UserInputFixture {
   private CapturingPrintStream outputStream;
   private UserInput userInput;
 
-  public UserInputFixture(String cannedAnswer) throws Exception {
+  public UserInputFixture(String cannedAnswer) {
     outputStream = new CapturingPrintStream();
-    InputStream inputStream = new ByteArrayInputStream((cannedAnswer + "\n").getBytes("UTF-8"));
+    InputStream inputStream =
+        new ByteArrayInputStream((cannedAnswer + "\n").getBytes(StandardCharsets.UTF_8));
 
     userInput = new UserInput(outputStream, new BufferedReader(new InputStreamReader(inputStream)));
   }

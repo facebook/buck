@@ -20,7 +20,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
@@ -189,13 +189,9 @@ public class TestSelectorList {
       String className = selectorParts[0];
       String methodName = selectorParts[1];
       Base64.Decoder decoder = Base64.getDecoder();
-      try {
-        String decodedClassName = new String(decoder.decode(className), "UTF-8");
-        String decodedMethodName = new String(decoder.decode(methodName), "UTF-8");
-        this.testSelectors.add(new SimpleTestSelector(decodedClassName, decodedMethodName));
-      } catch (UnsupportedEncodingException e) {
-        throw new RuntimeException(e);
-      }
+      String decodedClassName = new String(decoder.decode(className), StandardCharsets.UTF_8);
+      String decodedMethodName = new String(decoder.decode(methodName), StandardCharsets.UTF_8);
+      this.testSelectors.add(new SimpleTestSelector(decodedClassName, decodedMethodName));
       return this;
     }
 

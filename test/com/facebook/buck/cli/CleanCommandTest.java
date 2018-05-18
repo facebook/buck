@@ -67,6 +67,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.Optional;
 import org.junit.Before;
@@ -280,8 +281,7 @@ public class CleanCommandTest {
     return createCommandRunnerParams(buckConfig, cell);
   }
 
-  private CommandRunnerParams createCommandRunnerParams(BuckConfig buckConfig, Cell cell)
-      throws IOException {
+  private CommandRunnerParams createCommandRunnerParams(BuckConfig buckConfig, Cell cell) {
     ProcessExecutor processExecutor = new FakeProcessExecutor();
 
     PluginManager pluginManager = BuckPluginManagerFactory.createPluginManager();
@@ -294,7 +294,7 @@ public class CleanCommandTest {
 
     return CommandRunnerParams.of(
         new TestConsole(),
-        new ByteArrayInputStream("".getBytes("UTF-8")),
+        new ByteArrayInputStream("".getBytes(StandardCharsets.UTF_8)),
         cell,
         new InstrumentedVersionedTargetGraphCache(
             new VersionedTargetGraphCache(), new NoOpCacheStatsTracker()),

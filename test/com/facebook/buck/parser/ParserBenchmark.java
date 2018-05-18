@@ -43,6 +43,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -90,12 +91,13 @@ public class ParserBenchmark {
       Files.write(
           buckFile,
           ("java_library(name = 'foo', srcs = ['A.java'])\n" + "genrule(name = 'baz', out = '')\n")
-              .getBytes("UTF-8"));
+              .getBytes(StandardCharsets.UTF_8));
       Path javaFile = targetRoot.resolve("A.java");
       Files.createFile(javaFile);
       Files.write(
           javaFile,
-          String.format("package com.facebook.target_%d; class A {}", i).getBytes("UTF-8"));
+          String.format("package com.facebook.target_%d; class A {}", i)
+              .getBytes(StandardCharsets.UTF_8));
     }
 
     ImmutableMap.Builder<String, ImmutableMap<String, String>> configSectionsBuilder =

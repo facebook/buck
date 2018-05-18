@@ -23,7 +23,7 @@ import java.io.IOError;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
-import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.util.logging.Formatter;
 import java.util.logging.Handler;
 import java.util.logging.Level;
@@ -134,27 +134,24 @@ public class ConsoleHandler extends Handler {
   }
 
   public static ConsoleHandlerState.Writer utf8OutputStreamWriter(OutputStream outputStream) {
-    try {
-      OutputStreamWriter outputStreamWriter = new OutputStreamWriter(outputStream, "UTF-8");
-      return new ConsoleHandlerState.Writer() {
-        @Override
-        public void write(String line) throws IOException {
-          outputStreamWriter.write(line);
-        }
+    OutputStreamWriter outputStreamWriter =
+        new OutputStreamWriter(outputStream, StandardCharsets.UTF_8);
+    return new ConsoleHandlerState.Writer() {
+      @Override
+      public void write(String line) throws IOException {
+        outputStreamWriter.write(line);
+      }
 
-        @Override
-        public void flush() throws IOException {
-          outputStreamWriter.flush();
-        }
+      @Override
+      public void flush() throws IOException {
+        outputStreamWriter.flush();
+      }
 
-        @Override
-        public void close() throws IOException {
-          outputStreamWriter.close();
-        }
-      };
-    } catch (UnsupportedEncodingException e) {
-      throw new IOError(e);
-    }
+      @Override
+      public void close() throws IOException {
+        outputStreamWriter.close();
+      }
+    };
   }
 
   private boolean isLoggableWithRegisteredLogLevel(LogRecord record) {

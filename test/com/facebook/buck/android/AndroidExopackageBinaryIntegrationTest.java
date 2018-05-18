@@ -31,6 +31,7 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
 import com.google.common.collect.Lists;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -114,7 +115,7 @@ public class AndroidExopackageBinaryIntegrationTest extends AbiCompilationModeTe
       Path dexMeta = files.get(1);
       assertEquals(
           String.format("jar:%s dex:%s", jarSize, classesDexSize),
-          new String(Files.readAllBytes(dexMeta), "US-ASCII"));
+          new String(Files.readAllBytes(dexMeta), StandardCharsets.US_ASCII));
     }
   }
 

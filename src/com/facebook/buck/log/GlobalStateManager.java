@@ -28,6 +28,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
@@ -190,7 +191,8 @@ public class GlobalStateManager {
     try {
       Files.createDirectories(logFilePath.getParent());
       return new ReferenceCountedWriter(
-          new OutputStreamWriter(new FileOutputStream(logFilePath.toString()), "UTF-8"));
+          new OutputStreamWriter(
+              new FileOutputStream(logFilePath.toString()), StandardCharsets.UTF_8));
     } catch (FileNotFoundException e) {
       throw new RuntimeException(String.format("Could not create file [%s].", logFilePath), e);
     } catch (IOException e) {

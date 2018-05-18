@@ -65,6 +65,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 import javax.annotation.Nullable;
 import org.pf4j.PluginManager;
@@ -96,8 +97,7 @@ public class CommandRunnerParamsForTesting {
       Platform platform,
       ImmutableMap<String, String> environment,
       JavaPackageFinder javaPackageFinder,
-      Optional<WebServer> webServer)
-      throws IOException {
+      Optional<WebServer> webServer) {
     ProcessExecutor processExecutor = new DefaultProcessExecutor(new TestConsole());
     TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
     PluginManager pluginManager = BuckPluginManagerFactory.createPluginManager();
@@ -108,7 +108,7 @@ public class CommandRunnerParamsForTesting {
 
     return CommandRunnerParams.of(
         console,
-        new ByteArrayInputStream("".getBytes("UTF-8")),
+        new ByteArrayInputStream("".getBytes(StandardCharsets.UTF_8)),
         cell,
         new InstrumentedVersionedTargetGraphCache(
             new VersionedTargetGraphCache(), new NoOpCacheStatsTracker()),

@@ -30,7 +30,6 @@ import com.google.common.collect.ImmutableMap;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.StringWriter;
-import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -131,13 +130,9 @@ class BuildPrehook implements AutoCloseable {
       @Override
       public void onExit(int exitCode) {
         LOG.debug("Finished build pre-hook script with error %s", exitCode);
-        try {
-          String stderrOutput = new String(prehookStderr.toByteArray(), "UTF-8");
-          LOG.debug("Build pre-hook script output:\n%s", stderrOutput);
-          eventBus.post(ConsoleEvent.warning(stderrOutput));
-        } catch (UnsupportedEncodingException e) {
-          LOG.error("The build pre-hook script output unsupported encoding");
-        }
+        String stderrOutput = new String(prehookStderr.toByteArray(), StandardCharsets.UTF_8);
+        LOG.debug("Build pre-hook script output:\n%s", stderrOutput);
+        eventBus.post(ConsoleEvent.warning(stderrOutput));
         // TODO(t23755518): Interrupt build when the script returns an exit code != 0.
       }
     };
