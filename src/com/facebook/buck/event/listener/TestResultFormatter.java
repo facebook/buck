@@ -116,7 +116,6 @@ public class TestResultFormatter {
   public void reportResult(ImmutableList.Builder<String> addTo, TestResults results) {
     if (verbosity.shouldPrintBinaryRunInformation() && results.getTotalNumberOfTests() > 1) {
       addTo.add("");
-
       addTo.add(
           String.format(
               locale,

@@ -229,7 +229,7 @@ public class GoTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
                   "",
                   Joiner.on(System.lineSeparator()).join(stackTrace),
                   Joiner.on(System.lineSeparator()).join(stdout),
-                  null));
+                  ""));
 
           currentTests.remove(matcher.group("name"));
           stdout.clear();
