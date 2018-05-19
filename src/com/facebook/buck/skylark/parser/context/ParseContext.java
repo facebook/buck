@@ -16,6 +16,7 @@
 
 package com.facebook.buck.skylark.parser.context;
 
+import com.facebook.buck.skylark.packages.PackageContext;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -36,17 +37,20 @@ import javax.annotation.Nullable;
  * rules.
  */
 public class ParseContext {
-  private final ImmutableMap.Builder<String, ImmutableMap<String, Object>> rawRuleBuilder;
-  // stores every accessed configuration option while parsing the build file.
-  // the schema is: section->key->value
-  private final Map<String, Map<String, Optional<String>>> readConfigOptions;
   // internal variable exposed to rules that is used to track parse events. This allows us to
   // remove parse state from rules and as such makes rules reusable across parse invocations
   private static final String PARSE_CONTEXT = "$parse_context";
 
-  public ParseContext() {
-    rawRuleBuilder = ImmutableMap.builder();
-    readConfigOptions = new ConcurrentHashMap<>();
+  private final ImmutableMap.Builder<String, ImmutableMap<String, Object>> rawRuleBuilder;
+  // stores every accessed configuration option while parsing the build file.
+  // the schema is: section->key->value
+  private final Map<String, Map<String, Optional<String>>> readConfigOptions;
+  private final PackageContext packageContext;
+
+  public ParseContext(PackageContext packageContext) {
+    this.rawRuleBuilder = ImmutableMap.builder();
+    this.readConfigOptions = new ConcurrentHashMap<>();
+    this.packageContext = packageContext;
   }
 
   /** Records the parsed {@code rawRule}. */
@@ -83,6 +87,11 @@ public class ParseContext {
         .stream()
         .collect(
             ImmutableMap.toImmutableMap(Entry::getKey, e -> ImmutableMap.copyOf(e.getValue())));
+  }
+
+  /** Returns a context of the package currently being parsed. */
+  public PackageContext getPackageContext() {
+    return packageContext;
   }
 
   /** Get the {@link ParseContext} by looking up in the environment. */

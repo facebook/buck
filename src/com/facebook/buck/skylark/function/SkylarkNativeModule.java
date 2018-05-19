@@ -16,8 +16,7 @@
 
 package com.facebook.buck.skylark.function;
 
-import com.facebook.buck.skylark.packages.PackageContext;
-import com.facebook.buck.skylark.packages.PackageFactory;
+import com.facebook.buck.skylark.parser.context.ParseContext;
 import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkModule;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkModuleCategory;
@@ -64,8 +63,12 @@ public class SkylarkNativeModule {
         @SuppressWarnings("unused")
         public String invoke(FuncallExpression ast, Environment env) throws EvalException {
           env.checkLoadingPhase("native.package_name", ast.getLocation());
-          PackageContext packageContext = PackageFactory.getPackageContext(env, ast);
-          return packageContext.getPackageIdentifier().getPackageFragment().getPathString();
+          ParseContext parseContext = ParseContext.getParseContext(env, ast);
+          return parseContext
+              .getPackageContext()
+              .getPackageIdentifier()
+              .getPackageFragment()
+              .getPathString();
         }
       };
 
@@ -89,8 +92,8 @@ public class SkylarkNativeModule {
         public String invoke(Location location, FuncallExpression ast, Environment env)
             throws EvalException {
           env.checkLoadingPhase("native.repository_name", location);
-          PackageContext packageContext = PackageFactory.getPackageContext(env, ast);
-          return packageContext.getPackageIdentifier().getRepository().getName();
+          ParseContext parseContext = ParseContext.getParseContext(env, ast);
+          return parseContext.getPackageContext().getPackageIdentifier().getRepository().getName();
         }
       };
 

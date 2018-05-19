@@ -16,8 +16,6 @@
 
 package com.facebook.buck.skylark.function;
 
-import com.facebook.buck.skylark.packages.PackageContext;
-import com.facebook.buck.skylark.packages.PackageFactory;
 import com.facebook.buck.skylark.parser.context.ParseContext;
 import com.google.common.collect.ImmutableMap;
 import com.google.devtools.build.lib.skylarkinterface.Param;
@@ -87,11 +85,15 @@ public class ReadConfig {
             FuncallExpression ast,
             Environment env)
             throws EvalException {
-          PackageContext packageContext = PackageFactory.getPackageContext(env, ast);
+          ParseContext parseContext = ParseContext.getParseContext(env, ast);
           @Nullable
           String value =
-              packageContext.getRawConfig().getOrDefault(section, ImmutableMap.of()).get(field);
-          ParseContext parseContext = ParseContext.getParseContext(env, ast);
+              parseContext
+                  .getPackageContext()
+                  .getRawConfig()
+                  .getOrDefault(section, ImmutableMap.of())
+                  .get(field);
+
           parseContext.recordReadConfigurationOption(section, field, value);
           return value != null ? value : defaultValue;
         }

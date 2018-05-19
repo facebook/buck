@@ -16,8 +16,7 @@
 
 package com.facebook.buck.skylark.function;
 
-import com.facebook.buck.skylark.packages.PackageContext;
-import com.facebook.buck.skylark.packages.PackageFactory;
+import com.facebook.buck.skylark.parser.context.ParseContext;
 import com.google.common.collect.ImmutableList;
 import com.google.devtools.build.lib.skylarkinterface.Param;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkSignature;
@@ -104,14 +103,15 @@ public class Glob {
             FuncallExpression ast,
             Environment env)
             throws EvalException, IOException, InterruptedException {
-          PackageContext packageContext = PackageFactory.getPackageContext(env, ast);
+          ParseContext parseContext = ParseContext.getParseContext(env, ast);
           try {
             return SkylarkList.MutableList.copyOf(
                 env,
                 GlobList.captureResults(
                     include,
                     exclude,
-                    packageContext
+                    parseContext
+                        .getPackageContext()
                         .getGlobber()
                         .run(
                             Type.STRING_LIST.convert(include, "'glob' include"),

@@ -23,7 +23,6 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.skylark.SkylarkFilesystem;
 import com.facebook.buck.skylark.io.impl.NativeGlobber;
 import com.facebook.buck.skylark.packages.PackageContext;
-import com.facebook.buck.skylark.packages.PackageFactory;
 import com.facebook.buck.skylark.parser.context.ParseContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableMap;
@@ -103,16 +102,15 @@ public class ReadConfigTest {
             .setGlobals(BazelLibrary.GLOBALS)
             .useDefaultSemantics()
             .build();
-    ParseContext parseContext = new ParseContext();
+    ParseContext parseContext =
+        new ParseContext(
+            PackageContext.builder()
+                .setGlobber(NativeGlobber.create(root))
+                .setRawConfig(rawConfig)
+                .setPackageIdentifier(
+                    PackageIdentifier.create(RepositoryName.DEFAULT, PathFragment.create("pkg")))
+                .build());
     parseContext.setup(env);
-    env.setupDynamic(
-        PackageFactory.PACKAGE_CONTEXT,
-        PackageContext.builder()
-            .setGlobber(NativeGlobber.create(root))
-            .setRawConfig(rawConfig)
-            .setPackageIdentifier(
-                PackageIdentifier.create(RepositoryName.DEFAULT, PathFragment.create("pkg")))
-            .build());
     env.setup("read_config", ReadConfig.create());
     boolean exec = buildFileAst.exec(env, eventHandler);
     if (!exec) {

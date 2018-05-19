@@ -23,7 +23,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.skylark.SkylarkFilesystem;
 import com.facebook.buck.skylark.io.impl.NativeGlobber;
 import com.facebook.buck.skylark.packages.PackageContext;
-import com.facebook.buck.skylark.packages.PackageFactory;
+import com.facebook.buck.skylark.parser.context.ParseContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableList;
@@ -156,13 +156,13 @@ public class GlobTest {
             .setGlobals(BazelLibrary.GLOBALS)
             .useDefaultSemantics()
             .build();
-    env.setupDynamic(
-        PackageFactory.PACKAGE_CONTEXT,
-        PackageContext.builder()
-            .setGlobber(NativeGlobber.create(root))
-            .setPackageIdentifier(
-                PackageIdentifier.create(RepositoryName.DEFAULT, PathFragment.create("pkg")))
-            .build());
+    new ParseContext(
+            PackageContext.builder()
+                .setGlobber(NativeGlobber.create(root))
+                .setPackageIdentifier(
+                    PackageIdentifier.create(RepositoryName.DEFAULT, PathFragment.create("pkg")))
+                .build())
+        .setup(env);
     env.setup("glob", Glob.create());
     return new Pair<>(buildFileAst.exec(env, eventHandler), env);
   }

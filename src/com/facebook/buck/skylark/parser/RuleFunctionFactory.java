@@ -21,8 +21,6 @@ import com.facebook.buck.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.rules.coercer.CoercedTypeCache;
 import com.facebook.buck.rules.coercer.ParamInfo;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
-import com.facebook.buck.skylark.packages.PackageContext;
-import com.facebook.buck.skylark.packages.PackageFactory;
 import com.facebook.buck.skylark.parser.context.ParseContext;
 import com.google.common.base.CaseFormat;
 import com.google.common.collect.ImmutableList;
@@ -77,19 +75,22 @@ public class RuleFunctionFactory {
       @SuppressWarnings({"unused"})
       public Runtime.NoneType invoke(
           Map<String, Object> kwargs, FuncallExpression ast, Environment env) throws EvalException {
-        PackageContext packageContext = PackageFactory.getPackageContext(env, ast);
+        ParseContext parseContext = ParseContext.getParseContext(env, ast);
         ImmutableMap.Builder<String, Object> builder =
             ImmutableMap.<String, Object>builder()
                 .put(
                     "buck.base_path",
-                    packageContext.getPackageIdentifier().getPackageFragment().getPathString())
+                    parseContext
+                        .getPackageContext()
+                        .getPackageIdentifier()
+                        .getPackageFragment()
+                        .getPathString())
                 .put("buck.type", name);
         ImmutableMap<String, ParamInfo> allParamInfo =
             CoercedTypeCache.INSTANCE.getAllParamInfo(
                 typeCoercerFactory, ruleClass.getConstructorArgType());
         populateAttributes(kwargs, builder, allParamInfo);
         throwOnMissingRequiredAttribute(kwargs, allParamInfo, getName(), ast);
-        ParseContext parseContext = ParseContext.getParseContext(env, ast);
         parseContext.recordRule(builder.build());
         return Runtime.NONE;
       }
