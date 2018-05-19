@@ -16,32 +16,23 @@
 
 package com.facebook.buck.util;
 
-import static org.easymock.EasyMock.createMock;
-import static org.easymock.EasyMock.expect;
-import static org.easymock.EasyMock.replay;
-import static org.easymock.EasyMock.verify;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.Locale;
-import org.easymock.EasyMock;
 import org.junit.Test;
 
 public class DirtyPrintStreamDecoratorTest {
 
   @Test
   public void testInitialState() {
-    PrintStream delegate = createMock(PrintStream.class);
-
-    delegate.close();
-    EasyMock.expectLastCall().anyTimes();
-    replay(delegate);
+    PrintStream delegate = new PrintStream(new ByteArrayOutputStream());
 
     try (DirtyPrintStreamDecorator dirtyPrintStream = new DirtyPrintStreamDecorator(delegate)) {
-      verify(delegate);
       assertFalse(dirtyPrintStream.isDirty());
       assertEquals(delegate, dirtyPrintStream.getRawStream());
     }
@@ -49,410 +40,462 @@ public class DirtyPrintStreamDecoratorTest {
 
   @Test
   public void testWriteInt() {
-    PrintStream delegate = createMock(PrintStream.class);
+    int[] written = new int[1];
+    PrintStream delegate =
+        new PrintStream(new ByteArrayOutputStream()) {
+          @Override
+          public void write(int b) {
+            written[0] = b;
+          }
+        };
     int n = 42;
-    delegate.write(n);
-
-    delegate.close();
-    EasyMock.expectLastCall().anyTimes();
-    replay(delegate);
 
     try (DirtyPrintStreamDecorator dirtyPrintStream = new DirtyPrintStreamDecorator(delegate)) {
       dirtyPrintStream.write(n);
-      verify(delegate);
 
       assertTrue(dirtyPrintStream.isDirty());
+      assertEquals(n, written[0]);
     }
   }
 
   @Test
   public void testWriteBytes() throws IOException {
-    PrintStream delegate = createMock(PrintStream.class);
+    byte[][] written = new byte[1][];
+    PrintStream delegate =
+        new PrintStream(new ByteArrayOutputStream()) {
+          @Override
+          public void write(byte[] b) {
+            written[0] = b;
+          }
+        };
     byte[] bytes = new byte[] {65, 66, 67};
-    delegate.write(bytes);
-
-    delegate.close();
-    EasyMock.expectLastCall().anyTimes();
-    replay(delegate);
 
     try (DirtyPrintStreamDecorator dirtyPrintStream = new DirtyPrintStreamDecorator(delegate)) {
       dirtyPrintStream.write(bytes);
-      verify(delegate);
 
       assertTrue(dirtyPrintStream.isDirty());
+      assertEquals(bytes, written[0]);
     }
   }
 
   @Test
   public void testWriteBytesAndOffset() {
-    PrintStream delegate = createMock(PrintStream.class);
+    byte[][] writtenBytes = new byte[1][];
+    int[] writtenOff = new int[1];
+    int[] writtenLen = new int[1];
+    PrintStream delegate =
+        new PrintStream(new ByteArrayOutputStream()) {
+          public void write(byte[] buf, int off, int len) {
+            writtenBytes[0] = buf;
+            writtenOff[0] = off;
+            writtenLen[0] = len;
+          }
+        };
     byte[] bytes = new byte[] {65, 66, 67};
-    delegate.write(bytes, 0, 3);
-
-    delegate.close();
-    EasyMock.expectLastCall().anyTimes();
-    replay(delegate);
 
     try (DirtyPrintStreamDecorator dirtyPrintStream = new DirtyPrintStreamDecorator(delegate)) {
       dirtyPrintStream.write(bytes, 0, 3);
-      verify(delegate);
 
       assertTrue(dirtyPrintStream.isDirty());
+      assertEquals(bytes, writtenBytes[0]);
+      assertEquals(0, writtenOff[0]);
+      assertEquals(3, writtenLen[0]);
     }
   }
 
   @Test
   public void testPrintBoolean() {
-    PrintStream delegate = createMock(PrintStream.class);
-    boolean value = true;
-    delegate.print(value);
-
-    delegate.close();
-    EasyMock.expectLastCall().anyTimes();
-    replay(delegate);
+    boolean[] written = new boolean[1];
+    PrintStream delegate =
+        new PrintStream(new ByteArrayOutputStream()) {
+          @Override
+          public void print(boolean b) {
+            written[0] = b;
+          }
+        };
 
     try (DirtyPrintStreamDecorator dirtyPrintStream = new DirtyPrintStreamDecorator(delegate)) {
-      dirtyPrintStream.print(value);
-      verify(delegate);
+      dirtyPrintStream.print(true);
 
       assertTrue(dirtyPrintStream.isDirty());
+      assertTrue(written[0]);
     }
   }
 
   @Test
   public void testPrintChar() {
-    PrintStream delegate = createMock(PrintStream.class);
+    char[] written = new char[1];
+    PrintStream delegate =
+        new PrintStream(new ByteArrayOutputStream()) {
+          @Override
+          public void print(char b) {
+            written[0] = b;
+          }
+        };
     char value = 'a';
-    delegate.print(value);
-
-    delegate.close();
-    EasyMock.expectLastCall().anyTimes();
-    replay(delegate);
 
     try (DirtyPrintStreamDecorator dirtyPrintStream = new DirtyPrintStreamDecorator(delegate)) {
       dirtyPrintStream.print(value);
-      verify(delegate);
 
       assertTrue(dirtyPrintStream.isDirty());
+      assertEquals(value, written[0]);
     }
   }
 
   @Test
   public void testPrintInt() {
-    PrintStream delegate = createMock(PrintStream.class);
+    int[] written = new int[1];
+    PrintStream delegate =
+        new PrintStream(new ByteArrayOutputStream()) {
+          @Override
+          public void print(int b) {
+            written[0] = b;
+          }
+        };
     int value = 42;
-    delegate.print(value);
-
-    delegate.close();
-    EasyMock.expectLastCall().anyTimes();
-    replay(delegate);
 
     try (DirtyPrintStreamDecorator dirtyPrintStream = new DirtyPrintStreamDecorator(delegate)) {
       dirtyPrintStream.print(value);
-      verify(delegate);
 
       assertTrue(dirtyPrintStream.isDirty());
+      assertEquals(value, written[0]);
     }
   }
 
   @Test
   public void testPrintLong() {
-    PrintStream delegate = createMock(PrintStream.class);
+    long[] written = new long[1];
+    PrintStream delegate =
+        new PrintStream(new ByteArrayOutputStream()) {
+          @Override
+          public void print(long b) {
+            written[0] = b;
+          }
+        };
     long value = Long.MAX_VALUE;
-    delegate.print(value);
-
-    delegate.close();
-    EasyMock.expectLastCall().anyTimes();
-    replay(delegate);
 
     try (DirtyPrintStreamDecorator dirtyPrintStream = new DirtyPrintStreamDecorator(delegate)) {
       dirtyPrintStream.print(value);
-      verify(delegate);
 
       assertTrue(dirtyPrintStream.isDirty());
+      assertEquals(value, written[0]);
     }
   }
 
   @Test
   public void testPrintFloat() {
-    PrintStream delegate = createMock(PrintStream.class);
+    float[] written = new float[1];
+    PrintStream delegate =
+        new PrintStream(new ByteArrayOutputStream()) {
+          @Override
+          public void print(float b) {
+            written[0] = b;
+          }
+        };
     float value = 3.14f;
-    delegate.print(value);
-
-    delegate.close();
-    EasyMock.expectLastCall().anyTimes();
-    replay(delegate);
 
     try (DirtyPrintStreamDecorator dirtyPrintStream = new DirtyPrintStreamDecorator(delegate)) {
       dirtyPrintStream.print(value);
-      verify(delegate);
 
       assertTrue(dirtyPrintStream.isDirty());
+      assertEquals(value, written[0], 0);
     }
   }
 
   @Test
   public void testPrintDouble() {
-    PrintStream delegate = createMock(PrintStream.class);
+    double[] written = new double[1];
+    PrintStream delegate =
+        new PrintStream(new ByteArrayOutputStream()) {
+          @Override
+          public void print(double b) {
+            written[0] = b;
+          }
+        };
     double value = Math.PI;
-    delegate.print(value);
-
-    delegate.close();
-    EasyMock.expectLastCall().anyTimes();
-    replay(delegate);
 
     try (DirtyPrintStreamDecorator dirtyPrintStream = new DirtyPrintStreamDecorator(delegate)) {
       dirtyPrintStream.print(value);
-      verify(delegate);
 
       assertTrue(dirtyPrintStream.isDirty());
+      assertEquals(value, written[0], 0);
     }
   }
 
   @Test
   public void testPrintCharArray() {
-    PrintStream delegate = createMock(PrintStream.class);
+    char[][] written = new char[1][];
+    PrintStream delegate =
+        new PrintStream(new ByteArrayOutputStream()) {
+          @Override
+          public void print(char[] s) {
+            written[0] = s;
+          }
+        };
     char[] value = new char[] {'h', 'e', 'l', 'l', 'o'};
-    delegate.print(value);
-
-    delegate.close();
-    EasyMock.expectLastCall().anyTimes();
-    replay(delegate);
 
     try (DirtyPrintStreamDecorator dirtyPrintStream = new DirtyPrintStreamDecorator(delegate)) {
       dirtyPrintStream.print(value);
-      verify(delegate);
 
       assertTrue(dirtyPrintStream.isDirty());
+      assertEquals(value, written[0]);
     }
   }
 
   @Test
   public void testPrintString() {
-    PrintStream delegate = createMock(PrintStream.class);
+    String[] written = new String[1];
+    PrintStream delegate =
+        new PrintStream(new ByteArrayOutputStream()) {
+          @Override
+          public void print(String s) {
+            written[0] = s;
+          }
+        };
     String value = "hello";
-    delegate.print(value);
-
-    delegate.close();
-    EasyMock.expectLastCall().anyTimes();
-    replay(delegate);
 
     try (DirtyPrintStreamDecorator dirtyPrintStream = new DirtyPrintStreamDecorator(delegate)) {
       dirtyPrintStream.print(value);
-      verify(delegate);
 
       assertTrue(dirtyPrintStream.isDirty());
+      assertEquals(value, written[0]);
     }
   }
 
   @Test
   public void testPrintObject() {
-    PrintStream delegate = createMock(PrintStream.class);
+    Object[] written = new Object[1];
+    PrintStream delegate =
+        new PrintStream(new ByteArrayOutputStream()) {
+          @Override
+          public void print(Object obj) {
+            written[0] = obj;
+          }
+        };
     Object value = new Object();
-    delegate.print(value);
-
-    delegate.close();
-    EasyMock.expectLastCall().anyTimes();
-    replay(delegate);
 
     try (DirtyPrintStreamDecorator dirtyPrintStream = new DirtyPrintStreamDecorator(delegate)) {
       dirtyPrintStream.print(value);
-      verify(delegate);
 
       assertTrue(dirtyPrintStream.isDirty());
+      assertEquals(value, written[0]);
     }
   }
 
   @Test
   public void testPrintlnWithNoArguments() {
-    PrintStream delegate = createMock(PrintStream.class);
-    delegate.println();
-
-    delegate.close();
-    EasyMock.expectLastCall().anyTimes();
-    replay(delegate);
+    boolean[] called = new boolean[1];
+    PrintStream delegate =
+        new PrintStream(new ByteArrayOutputStream()) {
+          @Override
+          public void println() {
+            called[0] = true;
+          }
+        };
 
     try (DirtyPrintStreamDecorator dirtyPrintStream = new DirtyPrintStreamDecorator(delegate)) {
       dirtyPrintStream.println();
-      verify(delegate);
 
       assertTrue(dirtyPrintStream.isDirty());
+      assertTrue(called[0]);
     }
   }
 
   @Test
   public void testPrintlnBoolean() {
-    PrintStream delegate = createMock(PrintStream.class);
-    boolean value = false;
-    delegate.println(value);
-
-    delegate.close();
-    EasyMock.expectLastCall().anyTimes();
-    replay(delegate);
+    boolean[] written = new boolean[1];
+    PrintStream delegate =
+        new PrintStream(new ByteArrayOutputStream()) {
+          @Override
+          public void println(boolean b) {
+            written[0] = b;
+          }
+        };
 
     try (DirtyPrintStreamDecorator dirtyPrintStream = new DirtyPrintStreamDecorator(delegate)) {
-      dirtyPrintStream.println(value);
-      verify(delegate);
+      dirtyPrintStream.println(true);
 
       assertTrue(dirtyPrintStream.isDirty());
+      assertTrue(written[0]);
     }
   }
 
   @Test
   public void testPrintlnChar() {
-    PrintStream delegate = createMock(PrintStream.class);
+    char[] written = new char[1];
+    PrintStream delegate =
+        new PrintStream(new ByteArrayOutputStream()) {
+          @Override
+          public void println(char c) {
+            written[0] = c;
+          }
+        };
     char value = 'z';
-    delegate.println(value);
-
-    delegate.close();
-    EasyMock.expectLastCall().anyTimes();
-    replay(delegate);
 
     try (DirtyPrintStreamDecorator dirtyPrintStream = new DirtyPrintStreamDecorator(delegate)) {
       dirtyPrintStream.println(value);
-      verify(delegate);
 
       assertTrue(dirtyPrintStream.isDirty());
+      assertEquals(value, written[0]);
     }
   }
 
   @Test
   public void testPrintlnInt() {
-    PrintStream delegate = createMock(PrintStream.class);
+    int[] written = new int[1];
+    PrintStream delegate =
+        new PrintStream(new ByteArrayOutputStream()) {
+          @Override
+          public void println(int i) {
+            written[0] = i;
+          }
+        };
     int value = 144;
-    delegate.println(value);
-
-    delegate.close();
-    EasyMock.expectLastCall().anyTimes();
-    replay(delegate);
 
     try (DirtyPrintStreamDecorator dirtyPrintStream = new DirtyPrintStreamDecorator(delegate)) {
       dirtyPrintStream.println(value);
-      verify(delegate);
 
       assertTrue(dirtyPrintStream.isDirty());
+      assertEquals(value, written[0]);
     }
   }
 
   @Test
   public void testPrintlnLong() {
-    PrintStream delegate = createMock(PrintStream.class);
+    long[] written = new long[1];
+    PrintStream delegate =
+        new PrintStream(new ByteArrayOutputStream()) {
+          @Override
+          public void println(long l) {
+            written[0] = l;
+          }
+        };
     long value = Long.MIN_VALUE;
-    delegate.println(value);
-
-    delegate.close();
-    EasyMock.expectLastCall().anyTimes();
-    replay(delegate);
 
     try (DirtyPrintStreamDecorator dirtyPrintStream = new DirtyPrintStreamDecorator(delegate)) {
       dirtyPrintStream.println(value);
-      verify(delegate);
 
       assertTrue(dirtyPrintStream.isDirty());
+      assertEquals(value, written[0]);
     }
   }
 
   @Test
   public void testPrintlnFloat() {
-    PrintStream delegate = createMock(PrintStream.class);
+    float[] written = new float[1];
+    PrintStream delegate =
+        new PrintStream(new ByteArrayOutputStream()) {
+          @Override
+          public void println(float f) {
+            written[0] = f;
+          }
+        };
     float value = 2.718f;
-    delegate.println(value);
-
-    delegate.close();
-    EasyMock.expectLastCall().anyTimes();
-    replay(delegate);
 
     try (DirtyPrintStreamDecorator dirtyPrintStream = new DirtyPrintStreamDecorator(delegate)) {
       dirtyPrintStream.println(value);
-      verify(delegate);
 
       assertTrue(dirtyPrintStream.isDirty());
+      assertEquals(value, written[0], 0);
     }
   }
 
   @Test
   public void testPrintlnDouble() {
-    PrintStream delegate = createMock(PrintStream.class);
+    double[] written = new double[1];
+    PrintStream delegate =
+        new PrintStream(new ByteArrayOutputStream()) {
+          @Override
+          public void println(double d) {
+            written[0] = d;
+          }
+        };
     double value = Math.E;
-    delegate.println(value);
-
-    delegate.close();
-    EasyMock.expectLastCall().anyTimes();
-    replay(delegate);
 
     try (DirtyPrintStreamDecorator dirtyPrintStream = new DirtyPrintStreamDecorator(delegate)) {
       dirtyPrintStream.println(value);
-      verify(delegate);
 
       assertTrue(dirtyPrintStream.isDirty());
+      assertEquals(value, written[0], 0);
     }
   }
 
   @Test
   public void testPrintlnCharArray() {
-    PrintStream delegate = createMock(PrintStream.class);
+    char[][] written = new char[1][];
+    PrintStream delegate =
+        new PrintStream(new ByteArrayOutputStream()) {
+          @Override
+          public void println(char[] s) {
+            written[0] = s;
+          }
+        };
     char[] value = new char[] {'a', 'p', 'p', 'l', 'e'};
-    delegate.println(value);
-
-    delegate.close();
-    EasyMock.expectLastCall().anyTimes();
-    replay(delegate);
 
     try (DirtyPrintStreamDecorator dirtyPrintStream = new DirtyPrintStreamDecorator(delegate)) {
       dirtyPrintStream.println(value);
-      verify(delegate);
 
       assertTrue(dirtyPrintStream.isDirty());
+      assertEquals(value, written[0]);
     }
   }
 
   @Test
   public void testPrintlnString() {
-    PrintStream delegate = createMock(PrintStream.class);
+    String[] written = new String[1];
+    PrintStream delegate =
+        new PrintStream(new ByteArrayOutputStream()) {
+          @Override
+          public void println(String s) {
+            written[0] = s;
+          }
+        };
     String value = "buck";
-    delegate.println(value);
-
-    delegate.close();
-    EasyMock.expectLastCall().anyTimes();
-    replay(delegate);
 
     try (DirtyPrintStreamDecorator dirtyPrintStream = new DirtyPrintStreamDecorator(delegate)) {
       dirtyPrintStream.println(value);
-      verify(delegate);
 
       assertTrue(dirtyPrintStream.isDirty());
+      assertEquals(value, written[0]);
     }
   }
 
   @Test
   public void testPrintlnObject() {
-    PrintStream delegate = createMock(PrintStream.class);
+    Object[] written = new Object[1];
+    PrintStream delegate =
+        new PrintStream(new ByteArrayOutputStream()) {
+          @Override
+          public void println(Object obj) {
+            written[0] = obj;
+          }
+        };
     Object value = new Object();
-    delegate.println(value);
-
-    delegate.close();
-    EasyMock.expectLastCall().anyTimes();
-    replay(delegate);
 
     try (DirtyPrintStreamDecorator dirtyPrintStream = new DirtyPrintStreamDecorator(delegate)) {
       dirtyPrintStream.println(value);
-      verify(delegate);
 
       assertTrue(dirtyPrintStream.isDirty());
+      assertEquals(value, written[0]);
     }
   }
 
   @Test
   public void testPrintfWithoutLocale() {
-    PrintStream delegate = createMock(PrintStream.class);
     String formatString = "Build target [%s] does not exist.";
     String greeter = "//foo:bar";
-    expect(delegate.printf(formatString, greeter)).andReturn(delegate);
+    PrintStream delegate =
+        new PrintStream(new ByteArrayOutputStream()) {
+          @Override
+          public PrintStream printf(String format, Object... args) {
+            assertEquals(format, formatString);
+            assertEquals(args[0], greeter);
+            return this;
+          }
+        };
 
-    replay(delegate);
     DirtyPrintStreamDecorator dirtyPrintStream = new DirtyPrintStreamDecorator(delegate);
     PrintStream valueToChain = dirtyPrintStream.printf(formatString, greeter);
-    verify(delegate);
 
     assertEquals(dirtyPrintStream, valueToChain);
     assertTrue(dirtyPrintStream.isDirty());
@@ -460,16 +503,22 @@ public class DirtyPrintStreamDecoratorTest {
 
   @Test
   public void testPrintfWithLocale() {
-    PrintStream delegate = createMock(PrintStream.class);
     Locale locale = Locale.ENGLISH;
     String formatString = "Build target [%s] does not exist.";
     String greeter = "//foo:bar";
-    expect(delegate.printf(locale, formatString, greeter)).andReturn(delegate);
+    PrintStream delegate =
+        new PrintStream(new ByteArrayOutputStream()) {
+          @Override
+          public PrintStream printf(Locale l, String format, Object... args) {
+            assertEquals(locale, l);
+            assertEquals(format, formatString);
+            assertEquals(args[0], greeter);
+            return this;
+          }
+        };
 
-    replay(delegate);
     DirtyPrintStreamDecorator dirtyPrintStream = new DirtyPrintStreamDecorator(delegate);
     PrintStream valueToChain = dirtyPrintStream.printf(locale, formatString, greeter);
-    verify(delegate);
 
     assertEquals(dirtyPrintStream, valueToChain);
     assertTrue(dirtyPrintStream.isDirty());
@@ -477,15 +526,20 @@ public class DirtyPrintStreamDecoratorTest {
 
   @Test
   public void testFormatWithoutLocale() {
-    PrintStream delegate = createMock(PrintStream.class);
     String formatString = "Build target [%s] does not exist.";
     String greeter = "//foo:bar";
-    expect(delegate.format(formatString, greeter)).andReturn(delegate);
+    PrintStream delegate =
+        new PrintStream(new ByteArrayOutputStream()) {
+          @Override
+          public PrintStream format(String format, Object... args) {
+            assertEquals(format, formatString);
+            assertEquals(args[0], greeter);
+            return this;
+          }
+        };
 
-    replay(delegate);
     DirtyPrintStreamDecorator dirtyPrintStream = new DirtyPrintStreamDecorator(delegate);
     PrintStream valueToChain = dirtyPrintStream.format(formatString, greeter);
-    verify(delegate);
 
     assertEquals(dirtyPrintStream, valueToChain);
     assertTrue(dirtyPrintStream.isDirty());
@@ -493,16 +547,22 @@ public class DirtyPrintStreamDecoratorTest {
 
   @Test
   public void testFormatWithLocale() {
-    PrintStream delegate = createMock(PrintStream.class);
     Locale locale = Locale.ENGLISH;
     String formatString = "Build target [%s] does not exist.";
     String greeter = "//foo:bar";
-    expect(delegate.format(locale, formatString, greeter)).andReturn(delegate);
+    PrintStream delegate =
+        new PrintStream(new ByteArrayOutputStream()) {
+          @Override
+          public PrintStream format(Locale l, String format, Object... args) {
+            assertEquals(locale, l);
+            assertEquals(format, formatString);
+            assertEquals(args[0], greeter);
+            return this;
+          }
+        };
 
-    replay(delegate);
     DirtyPrintStreamDecorator dirtyPrintStream = new DirtyPrintStreamDecorator(delegate);
     PrintStream valueToChain = dirtyPrintStream.format(locale, formatString, greeter);
-    verify(delegate);
 
     assertEquals(dirtyPrintStream, valueToChain);
     assertTrue(dirtyPrintStream.isDirty());
@@ -510,14 +570,18 @@ public class DirtyPrintStreamDecoratorTest {
 
   @Test
   public void testAppendCharSequence() {
-    PrintStream delegate = createMock(PrintStream.class);
     CharSequence charSequence = "text";
-    expect(delegate.append(charSequence)).andReturn(delegate);
+    PrintStream delegate =
+        new PrintStream(new ByteArrayOutputStream()) {
+          @Override
+          public PrintStream append(CharSequence s) {
+            assertEquals(s, charSequence);
+            return this;
+          }
+        };
 
-    replay(delegate);
     DirtyPrintStreamDecorator dirtyPrintStream = new DirtyPrintStreamDecorator(delegate);
     PrintStream valueToChain = dirtyPrintStream.append(charSequence);
-    verify(delegate);
 
     assertEquals(dirtyPrintStream, valueToChain);
     assertTrue(dirtyPrintStream.isDirty());
@@ -525,14 +589,20 @@ public class DirtyPrintStreamDecoratorTest {
 
   @Test
   public void testAppendCharSequenceAndOffset() {
-    PrintStream delegate = createMock(PrintStream.class);
     CharSequence charSequence = "text";
-    expect(delegate.append(charSequence, 0, 4)).andReturn(delegate);
+    PrintStream delegate =
+        new PrintStream(new ByteArrayOutputStream()) {
+          @Override
+          public PrintStream append(CharSequence s, int start, int end) {
+            assertEquals(s, charSequence);
+            assertEquals(0, start);
+            assertEquals(4, end);
+            return this;
+          }
+        };
 
-    replay(delegate);
     DirtyPrintStreamDecorator dirtyPrintStream = new DirtyPrintStreamDecorator(delegate);
     PrintStream valueToChain = dirtyPrintStream.append(charSequence, 0, 4);
-    verify(delegate);
 
     assertEquals(dirtyPrintStream, valueToChain);
     assertTrue(dirtyPrintStream.isDirty());
@@ -540,14 +610,18 @@ public class DirtyPrintStreamDecoratorTest {
 
   @Test
   public void testAppendChar() {
-    PrintStream delegate = createMock(PrintStream.class);
     char value = 'q';
-    expect(delegate.append(value)).andReturn(delegate);
+    PrintStream delegate =
+        new PrintStream(new ByteArrayOutputStream()) {
+          @Override
+          public PrintStream append(char c) {
+            assertEquals(value, c);
+            return this;
+          }
+        };
 
-    replay(delegate);
     DirtyPrintStreamDecorator dirtyPrintStream = new DirtyPrintStreamDecorator(delegate);
     PrintStream valueToChain = dirtyPrintStream.append(value);
-    verify(delegate);
 
     assertEquals(dirtyPrintStream, valueToChain);
     assertTrue(dirtyPrintStream.isDirty());
