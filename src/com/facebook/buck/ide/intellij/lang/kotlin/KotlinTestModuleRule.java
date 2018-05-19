@@ -15,6 +15,8 @@
  */
 package com.facebook.buck.ide.intellij.lang.kotlin;
 
+import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
+import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.ide.intellij.BaseIjModuleRule;
 import com.facebook.buck.ide.intellij.ModuleBuildContext;
 import com.facebook.buck.ide.intellij.model.IjModuleFactoryResolver;
@@ -23,8 +25,6 @@ import com.facebook.buck.ide.intellij.model.IjProjectConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.kotlin.KotlinTestDescription;
 import com.facebook.buck.jvm.kotlin.KotlinTestDescriptionArg;
-import com.facebook.buck.rules.DescriptionWithTargetGraph;
-import com.facebook.buck.rules.TargetNode;
 
 public class KotlinTestModuleRule extends BaseIjModuleRule<KotlinTestDescriptionArg> {
 

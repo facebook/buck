@@ -15,7 +15,7 @@
  */
 package com.facebook.buck.ide.intellij.model;
 
-import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.util.Set;
@@ -30,7 +30,8 @@ public interface IjModuleFactory {
    * @return nice shiny new module.
    */
   @SuppressWarnings(
-      "rawtypes") // https://github.com/immutables/immutables/issues/548 requires us to use TargetNode not TargetNode<?, ?>
+      "rawtypes") // https://github.com/immutables/immutables/issues/548 requires us to use
+  // TargetNode not TargetNode<?, ?>
   IjModule createModule(
       Path moduleBasePath, ImmutableSet<TargetNode> targetNodes, Set<Path> excludes);
 }

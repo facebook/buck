@@ -21,6 +21,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import com.facebook.buck.core.cell.resolver.CellPathResolver;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.model.macros.MacroException;
 import com.facebook.buck.rules.args.Arg;
@@ -70,10 +71,10 @@ public interface MacroExpander {
   }
 
   /**
-   * @return names of additional {@link com.facebook.buck.rules.TargetNode}s which must be followed
-   *     by the parser to support this macro when constructing the target graph. To be used by
-   *     {@link ImplicitDepsInferringDescription#findDepsForTargetFromConstructorArgs} to extract
-   *     implicit dependencies hidden behind macros.
+   * @return names of additional {@link TargetNode}s which must be followed by the parser to support
+   *     this macro when constructing the target graph. To be used by {@link
+   *     ImplicitDepsInferringDescription#findDepsForTargetFromConstructorArgs} to extract implicit
+   *     dependencies hidden behind macros.
    */
   void extractParseTimeDeps(
       BuildTarget target,

@@ -17,6 +17,8 @@ package com.facebook.buck.ide.intellij;
 
 import com.facebook.buck.core.description.arg.CommonDescriptionArg;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.targetgraph.TargetGraph;
+import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.ide.intellij.aggregation.AggregationModule;
 import com.facebook.buck.ide.intellij.aggregation.AggregationModuleFactory;
 import com.facebook.buck.ide.intellij.aggregation.AggregationTree;
@@ -29,8 +31,6 @@ import com.facebook.buck.ide.intellij.model.IjModuleType;
 import com.facebook.buck.ide.intellij.model.IjProjectConfig;
 import com.facebook.buck.ide.intellij.model.IjProjectElement;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.TargetNode;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;

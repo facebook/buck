@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright 2018-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
+package com.facebook.buck.core.model.targetgraph;
 
 import com.facebook.buck.core.exceptions.ExceptionWithHumanReadableMessage;
 import com.facebook.buck.core.model.BuildTarget;
@@ -31,10 +31,7 @@ import java.util.Map;
 import java.util.Optional;
 import javax.annotation.Nullable;
 
-/**
- * Represents the graph of {@link com.facebook.buck.rules.TargetNode}s constructed by parsing the
- * build files.
- */
+/** Represents the graph of {@link TargetNode}s constructed by parsing the build files. */
 public class TargetGraph extends DirectedAcyclicGraph<TargetNode<?, ?>> {
 
   public static final TargetGraph EMPTY =

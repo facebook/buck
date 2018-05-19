@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright 2018-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -14,20 +14,20 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
+package com.facebook.buck.core.model.targetgraph;
 
-import com.facebook.buck.core.model.Flavor;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableSet;
+import org.immutables.value.Value;
 
-/**
- * Provides method for copying TargetNodes.
- *
- * <p>Primarily just used to break dependency between TargetNode and TargetNodeFactory.
- */
-interface NodeCopier {
-  <T, U extends DescriptionWithTargetGraph<T>> TargetNode<T, U> copyNodeWithDescription(
-      TargetNode<?, ?> node, U description);
+/** Holds a TargetGraph and a set of BuildTargets. */
+@Value.Immutable(copy = true)
+@BuckStyleImmutable
+interface AbstractTargetGraphAndBuildTargets {
+  @Value.Parameter
+  TargetGraph getTargetGraph();
 
-  <T, U extends DescriptionWithTargetGraph<T>> TargetNode<T, U> copyNodeWithFlavors(
-      TargetNode<T, U> node, ImmutableSet<Flavor> flavors);
+  @Value.Parameter
+  ImmutableSet<BuildTarget> getBuildTargets();
 }

@@ -16,8 +16,8 @@
 
 package com.facebook.buck.ide.intellij.model;
 
+import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.rules.TargetNode;
 import java.nio.file.Path;
 import java.util.Optional;
 

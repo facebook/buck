@@ -17,8 +17,8 @@
 package com.facebook.buck.versions;
 
 import com.facebook.buck.core.description.DescriptionCreationContext;
-import com.facebook.buck.rules.DescriptionProvider;
-import com.facebook.buck.rules.DescriptionWithTargetGraph;
+import com.facebook.buck.core.model.targetgraph.DescriptionProvider;
+import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import java.util.Collection;
 import java.util.Collections;
 import org.pf4j.Extension;

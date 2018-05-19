@@ -15,6 +15,8 @@
  */
 package com.facebook.buck.ide.intellij.lang.java;
 
+import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
+import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.ide.intellij.BaseIjModuleRule;
 import com.facebook.buck.ide.intellij.ModuleBuildContext;
@@ -25,8 +27,6 @@ import com.facebook.buck.ide.intellij.model.folders.IjResourceFolderType;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.jvm.java.JavaTestDescription;
-import com.facebook.buck.rules.DescriptionWithTargetGraph;
-import com.facebook.buck.rules.TargetNode;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;

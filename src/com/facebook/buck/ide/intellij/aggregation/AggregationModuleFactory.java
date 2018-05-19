@@ -16,7 +16,7 @@
 
 package com.facebook.buck.ide.intellij.aggregation;
 
-import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 

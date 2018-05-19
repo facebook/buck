@@ -17,8 +17,8 @@
 package com.facebook.buck.parser;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import com.facebook.buck.rules.TargetNode;
 import com.google.common.collect.ImmutableMap;
 import java.util.Optional;
 import org.immutables.value.Value;

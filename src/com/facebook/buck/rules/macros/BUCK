@@ -35,6 +35,7 @@ java_immutables_library(
     visibility = ["PUBLIC"],
     deps = [
         ":types",
+        "//src/com/facebook/buck/core/model/targetgraph:targetgraph",
         "//src/com/facebook/buck/core/rules/tool:tool",
         "//src/com/facebook/buck/core/sourcepath/resolver/impl:impl",
         "//src/com/facebook/buck/event:event",

@@ -24,7 +24,7 @@ import org.immutables.value.Value;
 
 /**
  * Common objects used during {@link com.facebook.buck.core.rules.BuildRule} creation, without a
- * reference to {@link TargetGraph}
+ * reference to {@link com.facebook.buck.core.model.targetgraph.TargetGraph}
  */
 public interface BuildRuleCreationContext {
 

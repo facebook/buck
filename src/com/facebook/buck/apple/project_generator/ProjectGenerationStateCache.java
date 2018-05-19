@@ -17,8 +17,8 @@
 package com.facebook.buck.apple.project_generator;
 
 import com.facebook.buck.apple.AppleDescriptions;
+import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.cxx.CxxLibraryDescription;
-import com.facebook.buck.rules.TargetNode;
 import java.util.IdentityHashMap;
 
 public class ProjectGenerationStateCache {

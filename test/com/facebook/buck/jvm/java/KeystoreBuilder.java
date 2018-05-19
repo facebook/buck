@@ -17,8 +17,8 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.targetgraph.AbstractNodeBuilder;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.rules.AbstractNodeBuilder;
 
 public class KeystoreBuilder
     extends AbstractNodeBuilder<

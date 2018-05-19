@@ -17,9 +17,9 @@
 package com.facebook.buck.core.rules.graphbuilder;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
+import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleCreationContextWithTargetGraph;
-import com.facebook.buck.rules.TargetNode;
 import org.immutables.value.Value;
 
 /**
@@ -30,9 +30,8 @@ import org.immutables.value.Value;
  * <p>The {@link BuildRule} subgraph is identified by:
  *
  * <ul>
- *   <li>the {@link com.facebook.buck.rules.TargetNode} corresponding to the {@link BuildTarget}
- *       which contains information about the desired {@link BuildTarget}, including flavour
- *       information, and cell path, etc.
+ *   <li>the {@link TargetNode} corresponding to the {@link BuildTarget} which contains information
+ *       about the desired {@link BuildTarget}, including flavour information, and cell path, etc.
  * </ul>
  */
 @Value.Immutable(builder = false, copy = false, prehash = true)

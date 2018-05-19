@@ -16,6 +16,8 @@
 package com.facebook.buck.ide.intellij.lang.android;
 
 import com.facebook.buck.android.AndroidLibraryDescription;
+import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
+import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.ide.intellij.ModuleBuildContext;
 import com.facebook.buck.ide.intellij.aggregation.AggregationContext;
 import com.facebook.buck.ide.intellij.aggregation.AggregationKeys;
@@ -25,8 +27,6 @@ import com.facebook.buck.ide.intellij.model.IjModuleFactoryResolver;
 import com.facebook.buck.ide.intellij.model.IjModuleType;
 import com.facebook.buck.ide.intellij.model.IjProjectConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.rules.DescriptionWithTargetGraph;
-import com.facebook.buck.rules.TargetNode;
 import java.nio.file.Path;
 import java.util.Optional;
 

@@ -23,6 +23,7 @@ java_test(
         "//test/com/facebook/buck/core/build/distributed/synchronization/impl:testutil",
         "//test/com/facebook/buck/core/build/engine/cache/manager:testutil",
         "//test/com/facebook/buck/core/build/engine/manifest:testutil",
+        "//test/com/facebook/buck/core/model/targetgraph:testutil",
         "//test/com/facebook/buck/core/rules/resolver/impl:testutil",
         "//test/com/facebook/buck/event:testutil",
         "//test/com/facebook/buck/io/filesystem:testutil",

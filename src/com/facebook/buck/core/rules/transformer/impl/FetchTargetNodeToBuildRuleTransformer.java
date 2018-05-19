@@ -19,12 +19,12 @@ package com.facebook.buck.core.rules.transformer.impl;
 import com.facebook.buck.core.cell.CellProvider;
 import com.facebook.buck.core.description.DescriptionCache;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
+import com.facebook.buck.core.model.targetgraph.TargetGraph;
+import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.transformer.TargetNodeToBuildRuleTransformer;
-import com.facebook.buck.rules.DescriptionWithTargetGraph;
-import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.TargetNode;
 import com.google.common.collect.ImmutableSet;
 
 public class FetchTargetNodeToBuildRuleTransformer implements TargetNodeToBuildRuleTransformer {

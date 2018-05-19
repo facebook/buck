@@ -1,0 +1,46 @@
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library", "java_test")
+
+java_test(
+    name = "targetgraph",
+    srcs = glob(["*Test.java"]),
+    has_immutable_types = True,
+    deps = [
+        ":testutil",
+        "//src/com/facebook/buck/core/model/targetgraph/impl:impl",
+        "//src/com/facebook/buck/rules/coercer:coercer",
+        "//test/com/facebook/buck/core/cell:testutil",
+        "//test/com/facebook/buck/jvm/java:testutil",
+        "//test/com/facebook/buck/model:testutil",
+        "//test/com/facebook/buck/rules:testutil",
+        "//test/com/facebook/buck/testutil:testutil",
+        "//third-party/java/junit:junit",
+    ],
+)
+
+java_immutables_library(
+    name = "testutil",
+    srcs = glob(
+        ["*.java"],
+        exclude = ["*Test.java"],
+    ),
+    exported_deps = [
+        "//src/com/facebook/buck/core/description/arg:arg",
+        "//src/com/facebook/buck/core/description/attr:attr",
+        "//src/com/facebook/buck/core/model/targetgraph:targetgraph",
+        "//src/com/facebook/buck/rules:rules",
+    ],
+    visibility = [
+        "//test/...",
+    ],
+    deps = [
+        "//src/com/facebook/buck/core/model/actiongraph:actiongraph",
+        "//src/com/facebook/buck/core/model/targetgraph/impl:impl",
+        "//src/com/facebook/buck/core/util/immutables:immutables",
+        "//src/com/facebook/buck/rules/coercer:coercer",
+        "//src/com/facebook/buck/rules/query:query",
+        "//src/com/facebook/buck/rules/query:utils",
+        "//test/com/facebook/buck/core/cell:testutil",
+        "//test/com/facebook/buck/rules:testutil",
+        "//test/com/facebook/buck/toolchain/impl:testutil",
+    ],
+)

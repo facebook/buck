@@ -18,8 +18,8 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.core.description.DescriptionCreationContext;
-import com.facebook.buck.rules.DescriptionProvider;
-import com.facebook.buck.rules.DescriptionWithTargetGraph;
+import com.facebook.buck.core.model.targetgraph.DescriptionProvider;
+import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import java.util.Arrays;
 import java.util.Collection;

@@ -17,7 +17,7 @@
 package com.facebook.buck.versions;
 
 import com.facebook.buck.core.model.Flavor;
-import com.facebook.buck.rules.DescriptionWithTargetGraph;
+import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.google.common.collect.ImmutableSet;
 
 /** A node which is the root of a version sub-graph. */

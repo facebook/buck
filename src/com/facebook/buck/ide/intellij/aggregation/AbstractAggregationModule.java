@@ -16,10 +16,10 @@
 
 package com.facebook.buck.ide.intellij.aggregation;
 
+import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.ide.intellij.model.IjModule;
 import com.facebook.buck.ide.intellij.model.IjModuleType;
-import com.facebook.buck.rules.TargetNode;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import org.immutables.value.Value;

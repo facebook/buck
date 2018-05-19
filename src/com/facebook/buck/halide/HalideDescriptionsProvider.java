@@ -18,9 +18,9 @@ package com.facebook.buck.halide;
 
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.core.description.DescriptionCreationContext;
+import com.facebook.buck.core.model.targetgraph.DescriptionProvider;
+import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
-import com.facebook.buck.rules.DescriptionProvider;
-import com.facebook.buck.rules.DescriptionWithTargetGraph;
 import java.util.Collection;
 import java.util.Collections;
 import org.pf4j.Extension;

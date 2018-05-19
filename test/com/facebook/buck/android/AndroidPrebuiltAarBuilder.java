@@ -17,9 +17,9 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.targetgraph.AbstractNodeBuilder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.jvm.java.JavaCompilationConstants;
-import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.FakeSourcePath;
 import java.nio.file.Path;
 import java.util.Optional;

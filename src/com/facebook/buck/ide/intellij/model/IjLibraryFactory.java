@@ -16,7 +16,7 @@
 
 package com.facebook.buck.ide.intellij.model;
 
-import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.core.model.targetgraph.TargetNode;
 import java.util.Optional;
 
 /** Interface for building {@link IjLibrary} objects from {@link TargetNode}s. */

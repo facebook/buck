@@ -17,8 +17,8 @@
 package com.facebook.buck.versions;
 
 import com.facebook.buck.config.BuckConfig;
+import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.rules.TargetGraphAndBuildTargets;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.cache.CacheStats;
 import com.facebook.buck.util.cache.CacheStatsTracker;

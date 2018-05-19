@@ -69,7 +69,6 @@ java_test(
         "//src/com/facebook/buck/event:interfaces",
         "//src/com/facebook/buck/event/external:external_lib",
         "//src/com/facebook/buck/event/listener:listener",
-        "//src/com/facebook/buck/rules:cli",
         "//test/com/facebook/buck/android:testutil",
         "//test/com/facebook/buck/android:utils",
         "//test/com/facebook/buck/core/rules/resolver/impl:testutil",

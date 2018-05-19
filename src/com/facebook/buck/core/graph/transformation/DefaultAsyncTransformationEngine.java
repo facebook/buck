@@ -62,7 +62,8 @@ import java.util.function.Function;
  * the dependency calculation such that if Transformer is implemented to be tail recursive, the
  * whole graph computation will be tail recursive, eliminating stack use.
  *
- * <p>Currently, we only use the engine for {@link com.facebook.buck.rules.TargetGraph} to {@link
+ * <p>Currently, we only use the engine for {@link
+ * com.facebook.buck.core.model.targetgraph.TargetGraph} to {@link
  * com.facebook.buck.core.model.actiongraph.ActionGraph}, but theoretically this can be extended to
  * work with any computation.
  */

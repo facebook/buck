@@ -5,7 +5,6 @@ standard_java_test(
     deps = [
         "//src/com/facebook/buck/core/sourcepath/resolver/impl:impl",
         "//src/com/facebook/buck/features/filebundler:filebundler",
-        "//src/com/facebook/buck/rules:cli",
         "//src/com/facebook/buck/rules:rules",
         "//src/com/facebook/buck/rules/modern:modern",
         "//src/com/facebook/buck/step:step",

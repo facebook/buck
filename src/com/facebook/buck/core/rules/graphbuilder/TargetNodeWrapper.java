@@ -16,7 +16,7 @@
 
 package com.facebook.buck.core.rules.graphbuilder;
 
-import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.core.model.targetgraph.TargetNode;
 import javax.annotation.concurrent.Immutable;
 
 /**

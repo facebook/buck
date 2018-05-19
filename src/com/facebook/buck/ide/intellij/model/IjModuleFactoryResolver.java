@@ -19,8 +19,8 @@ package com.facebook.buck.ide.intellij.model;
 import com.facebook.buck.android.AndroidBinaryDescriptionArg;
 import com.facebook.buck.android.AndroidLibraryDescription;
 import com.facebook.buck.android.AndroidResourceDescriptionArg;
+import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.jvm.java.JvmLibraryArg;
-import com.facebook.buck.rules.TargetNode;
 import java.nio.file.Path;
 import java.util.Optional;
 

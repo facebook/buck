@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright 2018-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -14,14 +14,13 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
+package com.facebook.buck.core.model.targetgraph;
 
 import com.facebook.buck.core.description.BuildRuleParams;
 import com.facebook.buck.core.description.Description;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 
 /**
  * The Source of Truth about a {@link BuildRule}, providing mechanisms to expose the arguments that
@@ -29,7 +28,8 @@ import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
  * expected that instances of this class are stateless.
  *
  * @param <T> The object describing the parameters to be passed to the {@link BuildRule}. How this
- *     is processed is described in the class level javadoc of {@link ConstructorArgMarshaller}.
+ *     is processed is described in the class level javadoc of {@link
+ *     com.facebook.buck.rules.coercer.ConstructorArgMarshaller}.
  */
 public interface DescriptionWithTargetGraph<T> extends Description<T> {
 

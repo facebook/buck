@@ -16,7 +16,6 @@ standard_java_test(
         "//src/com/facebook/buck/module/impl:impl",
         "//src/com/facebook/buck/parser/exceptions:exceptions",
         "//src/com/facebook/buck/rules:build_rule",
-        "//src/com/facebook/buck/rules:cli",
         "//src/com/facebook/buck/rules:rules",
         "//src/com/facebook/buck/rules/keys:keys",
         "//src/com/facebook/buck/slb:slb",

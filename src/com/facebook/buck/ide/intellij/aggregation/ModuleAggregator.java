@@ -16,8 +16,8 @@
 
 package com.facebook.buck.ide.intellij.aggregation;
 
+import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.ide.intellij.model.IjModuleType;
-import com.facebook.buck.rules.TargetNode;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.util.Collection;
@@ -27,7 +27,8 @@ class ModuleAggregator {
   private ModuleAggregator() {}
 
   @SuppressWarnings(
-      "rawtypes") // https://github.com/immutables/immutables/issues/548 requires us to use TargetNode not TargetNode<?, ?>
+      "rawtypes") // https://github.com/immutables/immutables/issues/548 requires us to use
+  // TargetNode not TargetNode<?, ?>
   public static AggregationModule aggregate(
       AggregationModule rootModule, Collection<AggregationModule> modulesToAggregate) {
 

@@ -18,7 +18,7 @@ package com.facebook.buck.shell;
 
 import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.rules.AbstractNodeBuilder;
+import com.facebook.buck.core.model.targetgraph.AbstractNodeBuilder;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.util.types.Either;
 import com.google.common.collect.ImmutableList;

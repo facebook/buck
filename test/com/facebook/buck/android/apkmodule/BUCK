@@ -12,6 +12,7 @@ standard_java_test(
         "//src/com/facebook/buck/parser:rule_pattern",
         "//src/com/facebook/buck/util:util",
         "//test/com/facebook/buck/android:testutil",
+        "//test/com/facebook/buck/core/model/targetgraph:testutil",
         "//test/com/facebook/buck/jvm/java:testutil",
         "//test/com/facebook/buck/model:testutil",
         "//test/com/facebook/buck/rules:testutil",

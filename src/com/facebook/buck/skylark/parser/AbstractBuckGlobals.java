@@ -16,8 +16,8 @@
 
 package com.facebook.buck.skylark.parser;
 
+import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import com.facebook.buck.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.skylark.function.Glob;
 import com.facebook.buck.skylark.function.HostInfo;
 import com.facebook.buck.skylark.function.ReadConfig;

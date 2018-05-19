@@ -17,8 +17,9 @@
 package com.facebook.buck.core.description;
 
 /**
- * Contains information regarding a specific {@link com.facebook.buck.rules.TargetNode} and the
- * logic to create the corresponding {@link com.facebook.buck.core.rules.BuildRule}
+ * Contains information regarding a specific {@link
+ * com.facebook.buck.core.model.targetgraph.TargetNode} and the logic to create the corresponding
+ * {@link com.facebook.buck.core.rules.BuildRule}
  *
  * @param <T> the argument type for the description to construct the {@link
  *     com.facebook.buck.core.rules.BuildRule}

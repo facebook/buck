@@ -8,17 +8,10 @@ java_immutables_library(
     srcs = [
         "AbstractBuildRule.java",
         "AbstractBuildRuleWithProviders.java",
-        "AbstractTargetGraphAndBuildTargets.java",
-        "AbstractTargetNode.java",
         "BuildDeps.java",
         "BuildRuleCreationContext.java",
-        "BuildRuleCreationContextWithTargetGraph.java",
         "DependencyAggregation.java",
-        "DescriptionProvider.java",
-        "DescriptionWithTargetGraph.java",
-        "NodeCopier.java",
         "SourceRoot.java",
-        "TargetGraph.java",
     ],
     exported_deps = [
         "//src/com/facebook/buck/core/build/buildable/context:context",
@@ -69,29 +62,6 @@ java_immutables_library(
     ],
 )
 
-java_library(
-    name = "cli",
-    srcs = [
-        "TargetGraphAndTargets.java",
-    ],
-    visibility = [
-        "PUBLIC",
-    ],
-    deps = [
-        "//src/com/facebook/buck/config:config",
-        "//src/com/facebook/buck/event:event",
-        "//src/com/facebook/buck/model:model",
-        "//src/com/facebook/buck/rules:rules",
-        "//src/com/facebook/buck/rules/coercer:interface",
-        "//src/com/facebook/buck/rules/query:query",
-        "//src/com/facebook/buck/rules/query:utils",
-        "//src/com/facebook/buck/util:util",
-        "//src/com/facebook/buck/versions:types",
-        "//src/com/facebook/buck/versions:versions",
-        "//third-party/java/guava:guava",
-    ],
-)
-
 java_immutables_library(
     name = "rules",
     srcs = [
@@ -107,9 +77,6 @@ java_immutables_library(
         "NoopBuildRule.java",
         "NoopBuildRuleWithDeclaredAndExtraDeps.java",
         "SymlinkTree.java",
-        "TargetGraphHashing.java",
-        "TargetNodeFactory.java",
-        "TargetNodes.java",
         "WriteStringTemplateRule.java",
     ],
     exported_deps = [

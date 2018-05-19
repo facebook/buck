@@ -102,7 +102,7 @@ public class BuildRuleParams {
     return extraDeps;
   }
 
-  /** See {@link com.facebook.buck.rules.TargetNode#getTargetGraphOnlyDeps}. */
+  /** See {@link com.facebook.buck.core.model.targetgraph.TargetNode#getTargetGraphOnlyDeps}. */
   public ImmutableSortedSet<BuildRule> getTargetGraphOnlyDeps() {
     return targetGraphOnlyDeps;
   }

@@ -37,10 +37,10 @@ import javax.annotation.Nullable;
 
 /**
  * Used to derive information from the constructor args returned by {@link
- * com.facebook.buck.rules.DescriptionWithTargetGraph} instances. There are two major uses this
- * information is put to: populating the DTO object from the deserialized JSON maps, which are
- * outputted by the functions added to Buck's core build file parsing script. The second function of
- * this class is to generate those functions.
+ * com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph} instances. There are two
+ * major uses this information is put to: populating the DTO object from the deserialized JSON maps,
+ * which are outputted by the functions added to Buck's core build file parsing script. The second
+ * function of this class is to generate those functions.
  */
 public class ConstructorArgMarshaller {
 

@@ -17,7 +17,7 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.rules.AbstractNodeBuilder;
+import com.facebook.buck.core.model.targetgraph.AbstractNodeBuilder;
 import java.nio.file.Path;
 
 public class CoreDataModelBuilder

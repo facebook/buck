@@ -59,7 +59,7 @@ public abstract class AbstractBuildRuleWithDeclaredAndExtraDeps extends Abstract
     return extraDeps.get();
   }
 
-  /** See {@link TargetNode#getTargetGraphOnlyDeps}. */
+  /** See {@link com.facebook.buck.core.model.targetgraph.TargetNode#getTargetGraphOnlyDeps}. */
   @Override
   public final ImmutableSortedSet<BuildRule> getTargetGraphOnlyDeps() {
     return targetGraphOnlyDeps;

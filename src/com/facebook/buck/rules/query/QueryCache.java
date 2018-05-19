@@ -16,11 +16,11 @@
 
 package com.facebook.buck.rules.query;
 
+import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.query.CachingQueryEvaluator;
 import com.facebook.buck.query.QueryEvaluator;
 import com.facebook.buck.query.QueryException;
 import com.facebook.buck.query.QueryExpression;
-import com.facebook.buck.rules.TargetGraph;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;

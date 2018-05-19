@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright 2018-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
+package com.facebook.buck.core.model.targetgraph;
 
 import com.facebook.buck.core.cell.resolver.CellPathResolver;
 import com.facebook.buck.core.description.BuildRuleParams;
@@ -22,8 +22,10 @@ import com.facebook.buck.core.description.arg.CommonDescriptionArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.targetgraph.FakeTargetNodeBuilder.FakeDescription;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.rules.FakeBuildRule;
 import com.google.common.collect.ImmutableCollection;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -32,8 +34,7 @@ import org.immutables.value.Value;
 
 public class FakeTargetNodeBuilder
     extends AbstractNodeBuilder<
-        FakeTargetNodeArg.Builder, FakeTargetNodeArg, FakeTargetNodeBuilder.FakeDescription,
-        BuildRule> {
+        FakeTargetNodeArg.Builder, FakeTargetNodeArg, FakeDescription, BuildRule> {
 
   private FakeTargetNodeBuilder(FakeDescription description, BuildTarget target) {
     super(description, target);

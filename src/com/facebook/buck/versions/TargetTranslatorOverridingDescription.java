@@ -18,7 +18,7 @@ package com.facebook.buck.versions;
 
 import com.facebook.buck.core.cell.resolver.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.rules.DescriptionWithTargetGraph;
+import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import java.util.Optional;
 
 /**

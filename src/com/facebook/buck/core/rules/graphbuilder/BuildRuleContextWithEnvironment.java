@@ -19,12 +19,12 @@ package com.facebook.buck.core.rules.graphbuilder;
 import com.facebook.buck.core.cell.resolver.CellPathResolver;
 import com.facebook.buck.core.graph.transformation.TransformationEnvironment;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.provider.BuildRuleInfoProvider;
 import com.facebook.buck.core.rules.provider.BuildRuleInfoProviderCollection;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.BuildRuleCreationContext;
-import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -88,9 +88,9 @@ public abstract class BuildRuleContextWithEnvironment {
   }
 
   /**
-   * Access to {@link com.facebook.buck.rules.TargetGraph} and {@link TargetNode} is limited during
-   * ActionGraph construction. The list of target graph dependencies can only be accessed through
-   * this context via the three methods below.
+   * Access to {@link TargetGraph} and {@link TargetNode} is limited during ActionGraph
+   * construction. The list of target graph dependencies can only be accessed through this context
+   * via the three methods below.
    */
 
   /** @return The {@link TargetNode#getDeclaredDeps()} */
