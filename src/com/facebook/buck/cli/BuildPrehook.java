@@ -46,20 +46,24 @@ class BuildPrehook implements AutoCloseable {
   private Cell cell;
   private BuckConfig buckConfig;
   private ImmutableMap<String, String> environment;
+  private final Iterable<String> arguments;
   @Nullable ListeningProcessExecutor.LaunchedProcess process;
   @Nullable private NamedTemporaryFile tempFile;
+  @Nullable private NamedTemporaryFile argumentsFile;
 
   BuildPrehook(
       ListeningProcessExecutor processExecutor,
       Cell cell,
       BuckEventBus eventBus,
       BuckConfig buckConfig,
-      ImmutableMap<String, String> environment) {
+      ImmutableMap<String, String> environment,
+      Iterable<String> arguments) {
     this.processExecutor = processExecutor;
     this.cell = cell;
     this.eventBus = eventBus;
     this.buckConfig = buckConfig;
     this.environment = environment;
+    this.arguments = arguments;
   }
 
   /** Start the build prehook script. */
@@ -78,6 +82,8 @@ class BuildPrehook implements AutoCloseable {
     ImmutableMap.Builder<String, String> environmentBuilder =
         ImmutableMap.<String, String>builder().putAll(environment);
     writeJsonBuckconfigFile();
+    NamedTemporaryFile argumentsJsonFile = createArgumentsJsonFile(arguments);
+    argumentsFile = argumentsJsonFile;
     Preconditions.checkState(tempFile != null);
     environmentBuilder.put("BUCKCONFIG_FILE", tempFile.get().toString());
     environmentBuilder.put("BUCK_ROOT", cell.getRoot().toString());
@@ -86,6 +92,7 @@ class BuildPrehook implements AutoCloseable {
         cell.getRoot()
             .resolve(cell.getFilesystem().getBuckPaths().getConfiguredBuckOut())
             .toString());
+    environmentBuilder.put("BUCK_BUILD_ARGUMENTS_FILE", argumentsJsonFile.get().toString());
 
     ProcessExecutorParams processExecutorParams =
         ProcessExecutorParams.builder()
@@ -97,6 +104,15 @@ class BuildPrehook implements AutoCloseable {
     ListeningProcessExecutor.ProcessListener processListener = createProcessListener(prehookStderr);
     LOG.debug("Starting build pre-hook script %s", pathToScript);
     process = processExecutor.launchProcess(processExecutorParams, processListener);
+  }
+
+  private static NamedTemporaryFile createArgumentsJsonFile(Iterable<String> arguments)
+      throws IOException {
+    StringWriter stringWriter = new StringWriter();
+    ObjectMappers.WRITER.withDefaultPrettyPrinter().writeValue(stringWriter, arguments);
+    NamedTemporaryFile argumentsFile = new NamedTemporaryFile("arguments_", ".json");
+    Files.write(argumentsFile.get(), stringWriter.toString().getBytes(StandardCharsets.UTF_8));
+    return argumentsFile;
   }
 
   private ListeningProcessExecutor.ProcessListener createProcessListener(
@@ -164,6 +180,9 @@ class BuildPrehook implements AutoCloseable {
     // Removes the temporary file.
     if (tempFile != null) {
       tempFile.close();
+    }
+    if (argumentsFile != null) {
+      argumentsFile.close();
     }
   }
 }

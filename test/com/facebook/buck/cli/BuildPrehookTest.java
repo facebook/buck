@@ -29,10 +29,14 @@ import com.facebook.buck.event.FakeBuckEventListener;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.FakeListeningProcessExecutor;
 import com.facebook.buck.util.FakeListeningProcessState;
+import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.timing.SettableFakeClock;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -50,6 +54,7 @@ public class BuildPrehookTest {
   private BuckEventBus eventBus;
   private BuckConfig buckConfig;
   private FakeBuckEventListener eventListener;
+  private ProcessExecutorParams params;
 
   @Before
   public void setUp() {
@@ -63,7 +68,12 @@ public class BuildPrehookTest {
             .build();
 
     processExecutor =
-        new FakeListeningProcessExecutor(params -> processStates, SettableFakeClock.DO_NOT_CARE);
+        new FakeListeningProcessExecutor(
+            params -> {
+              this.params = params;
+              return processStates;
+            },
+            SettableFakeClock.DO_NOT_CARE);
 
     eventBus = BuckEventBusForTests.newInstance();
     eventListener = new FakeBuckEventListener();
@@ -101,8 +111,25 @@ public class BuildPrehookTest {
     assertThat(eventListener.getEvents(), Matchers.empty());
   }
 
+  @Test
+  public void buildArgumentsArePassed() throws Exception {
+    processStates = Collections.singleton(FakeListeningProcessState.ofExit(0));
+
+    try (BuildPrehook buildPrehook = newBuildHook(ImmutableList.of("target"))) {
+      buildPrehook.startPrehookScript();
+      processExecutor.waitForProcess(buildPrehook.process);
+      String argumentsFile = params.getEnvironment().get().get("BUCK_BUILD_ARGUMENTS_FILE");
+      String argumentsJson = Iterables.getOnlyElement(Files.readAllLines(Paths.get(argumentsFile)));
+      assertThat(argumentsJson, Matchers.equalTo("[ \"target\" ]"));
+    }
+  }
+
   private BuildPrehook newBuildHook() {
+    return newBuildHook(ImmutableList.of());
+  }
+
+  private BuildPrehook newBuildHook(ImmutableList<String> arguments) {
     ImmutableMap<String, String> env = ImmutableMap.of();
-    return new BuildPrehook(processExecutor, cell, eventBus, buckConfig, env);
+    return new BuildPrehook(processExecutor, cell, eventBus, buckConfig, env, arguments);
   }
 }

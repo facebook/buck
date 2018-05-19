@@ -434,7 +434,8 @@ public class BuildCommand extends AbstractCommand {
                 params.getCell(),
                 params.getBuckEventBus(),
                 params.getBuckConfig(),
-                params.getEnvironment())) {
+                params.getEnvironment(),
+                getArguments())) {
       prehook.startPrehookScript();
       return run(params, pool, ImmutableSet.of()).getExitCode();
     }
