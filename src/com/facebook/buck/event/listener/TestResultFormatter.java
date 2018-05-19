@@ -29,6 +29,7 @@ import com.facebook.buck.util.Verbosity;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
+import com.google.common.base.Strings;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -218,12 +219,19 @@ public class TestResultFormatter {
       }
     }
 
-    if (summaryVerbosity.getIncludeStdOut() && testResult.getStdOut() != null) {
+    if (summaryVerbosity.getIncludeStdOut() && !Strings.isNullOrEmpty(testResult.getStdOut())) {
       addTo.add("====STANDARD OUT====", testResult.getStdOut());
     }
 
-    if (summaryVerbosity.getIncludeStdErr() && testResult.getStdErr() != null) {
+    if (summaryVerbosity.getIncludeStdErr() && !Strings.isNullOrEmpty(testResult.getStdErr())) {
       addTo.add("====STANDARD ERR====", testResult.getStdErr());
+    }
+
+    if (Strings.isNullOrEmpty(testResult.getMessage())
+        && Strings.isNullOrEmpty(testResult.getStacktrace())
+        && Strings.isNullOrEmpty(testResult.getStdOut())
+        && Strings.isNullOrEmpty(testResult.getStdErr())) {
+      addTo.add("Test did not produce any output.");
     }
   }
 
