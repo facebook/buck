@@ -94,8 +94,9 @@ public class ParseContext {
       // uses native.some_func() in the wrong place.
       throw new EvalException(
           ast.getLocation(),
-          "The native module cannot be accessed from here. "
-              + "Wrap the function in a macro and call it from a BUCK file");
+          "Top-level invocations of "
+              + ast.getFunction()
+              + " are not allowed in .bzl files. Wrap it in a macro and call it from a BUCK file.");
     }
     return value;
   }

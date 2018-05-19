@@ -314,6 +314,28 @@ public class SkylarkProjectBuildFileParserTest {
   }
 
   @Test
+  public void nativeFunctionUsageAtTopLevelIsReportedAsAnError() throws Exception {
+    EventCollector eventCollector = new EventCollector(EnumSet.allOf(EventKind.class));
+    parser = createParser(eventCollector);
+    Path buildFile = projectFilesystem.resolve("BUCK");
+    Files.write(buildFile, Arrays.asList("load('//:ext.bzl', 'ext')"));
+    Path extensionFile = projectFilesystem.resolve("ext.bzl");
+    Files.write(extensionFile, Arrays.asList("ext = read_config('foo', 'bar')"));
+    try {
+      parser.getBuildFileManifest(buildFile, new AtomicLong());
+      fail("Parsing should have failed.");
+    } catch (BuildFileParseException e) {
+      Event printEvent = eventCollector.iterator().next();
+      assertThat(
+          printEvent.getMessage(),
+          equalTo(
+              "Top-level invocations of read_config are not allowed in .bzl files. "
+                  + "Wrap it in a macro and call it from a BUCK file."));
+      assertThat(printEvent.getKind(), equalTo(EventKind.ERROR));
+    }
+  }
+
+  @Test
   public void canLoadSameExtensionMultipleTimes() throws Exception {
     Path buildFile = projectFilesystem.resolve("BUCK");
     Files.write(buildFile, Arrays.asList("load('//:ext.bzl', 'ext')", "load('//:ext.bzl', 'ext')"));
