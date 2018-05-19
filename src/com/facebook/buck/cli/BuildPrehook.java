@@ -49,7 +49,7 @@ class BuildPrehook implements AutoCloseable {
   @Nullable ListeningProcessExecutor.LaunchedProcess process;
   @Nullable private NamedTemporaryFile tempFile;
 
-  public BuildPrehook(
+  BuildPrehook(
       ListeningProcessExecutor processExecutor,
       Cell cell,
       BuckEventBus eventBus,
@@ -63,7 +63,7 @@ class BuildPrehook implements AutoCloseable {
   }
 
   /** Start the build prehook script. */
-  public synchronized void startPrehookScript() throws IOException {
+  synchronized void startPrehookScript() throws IOException {
     Optional<String> pathToPrehookScript = buckConfig.getPathToBuildPrehookScript();
     if (!pathToPrehookScript.isPresent()) {
       return;
@@ -132,7 +132,9 @@ class BuildPrehook implements AutoCloseable {
         LOG.debug("Finished build pre-hook script with error %s", exitCode);
         String stderrOutput = new String(prehookStderr.toByteArray(), StandardCharsets.UTF_8);
         LOG.debug("Build pre-hook script output:\n%s", stderrOutput);
-        eventBus.post(ConsoleEvent.warning(stderrOutput));
+        if (!stderrOutput.isEmpty()) {
+          eventBus.post(ConsoleEvent.warning(stderrOutput));
+        }
         // TODO(t23755518): Interrupt build when the script returns an exit code != 0.
       }
     };
