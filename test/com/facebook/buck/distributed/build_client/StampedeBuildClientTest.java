@@ -195,7 +195,7 @@ public class StampedeBuildClientTest {
             waitForSynchronizedBuildCalledLatch,
             guardedLocalBuildExecutorInvoker,
             guardedDistBuildControllerInvoker,
-            new ClientStatsTracker(""),
+            new ClientStatsTracker("", ""),
             waitGracefullyForDistributedBuildThreadToFinish,
             distributedBuildThreadKillTimeoutSeconds,
             stampedeId);

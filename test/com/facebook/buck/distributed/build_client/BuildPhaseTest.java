@@ -113,6 +113,7 @@ import org.junit.Test;
 
 public class BuildPhaseTest {
   private static final String BUILD_LABEL = "unit_test";
+  private static final String MINION_TYPE = "standard_type";
   private static final int POLL_MILLIS = 1;
   private static final String MINION_QUEUE_NAME = "awesome_test_queue";
   private static final int NUM_MINIONS = 2;
@@ -136,7 +137,7 @@ public class BuildPhaseTest {
     scheduler = Executors.newSingleThreadScheduledExecutor();
     buckVersion = new BuckVersion();
     buckVersion.setGitHash("thishashisamazing");
-    distBuildClientStatsTracker = new ClientStatsTracker(BUILD_LABEL);
+    distBuildClientStatsTracker = new ClientStatsTracker(BUILD_LABEL, MINION_TYPE);
     directExecutor =
         new FakeWeightedListeningExecutorService(MoreExecutors.newDirectExecutorService());
     mockEventBus = EasyMock.createMock(BuckEventBus.class);

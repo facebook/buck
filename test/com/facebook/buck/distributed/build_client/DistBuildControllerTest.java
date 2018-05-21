@@ -106,6 +106,7 @@ public class DistBuildControllerTest {
   private static final String REPOSITORY = "repositoryOne";
   private static final String TENANT_ID = "tenantOne";
   private static final String BUILD_LABEL = "unit_test";
+  private static final String MINION_TYPE = "standard_type";
   private static final List<String> BUILD_TARGETS = Lists.newArrayList();
 
   private DistBuildService mockDistBuildService;
@@ -128,7 +129,7 @@ public class DistBuildControllerTest {
     scheduler = Executors.newSingleThreadScheduledExecutor();
     buckVersion = new BuckVersion();
     buckVersion.setGitHash("thishashisamazing");
-    distBuildClientStatsTracker = new ClientStatsTracker(BUILD_LABEL);
+    distBuildClientStatsTracker = new ClientStatsTracker(BUILD_LABEL, MINION_TYPE);
     distBuildCellIndexer = new DistBuildCellIndexer(new TestCellBuilder().build());
     directExecutor =
         new FakeWeightedListeningExecutorService(MoreExecutors.newDirectExecutorService());

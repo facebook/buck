@@ -58,10 +58,11 @@ public class ClientStatsTrackerTest {
   private static final int MISSING_FILES_UPLOADED_COUNT = 2001;
   private static final String BUCK_CLIENT_ERROR_MESSAGE = "Some error message";
   private static final String BUILD_LABEL = "unit_test";
+  private static final String MINION_TYPE = "standard_type";
 
   @Test
   public void testGenerateStatsDoesNotThrowOnEmptyStampedeId() {
-    ClientStatsTracker tracker = new ClientStatsTracker(BUILD_LABEL);
+    ClientStatsTracker tracker = new ClientStatsTracker(BUILD_LABEL, MINION_TYPE);
     tracker.setDistributedBuildExitCode(0);
     tracker.setIsLocalFallbackBuildEnabled(false);
     DistBuildClientStats stats = tracker.generateStats();
@@ -71,13 +72,13 @@ public class ClientStatsTrackerTest {
 
   @Test(expected = java.lang.IllegalArgumentException.class)
   public void testGenerateThrowsExceptionWhenStatsNotRecorded() {
-    ClientStatsTracker tracker = new ClientStatsTracker(BUILD_LABEL);
+    ClientStatsTracker tracker = new ClientStatsTracker(BUILD_LABEL, MINION_TYPE);
     tracker.generateStats();
   }
 
   @Test
   public void testGenerateSucceedsWhenAllStandardStatsSet() {
-    ClientStatsTracker tracker = new ClientStatsTracker(BUILD_LABEL);
+    ClientStatsTracker tracker = new ClientStatsTracker(BUILD_LABEL, MINION_TYPE);
     initializeCommonStats(tracker);
     DistBuildClientStats stats = tracker.generateStats();
     assertCommonStats(stats);
@@ -85,7 +86,7 @@ public class ClientStatsTrackerTest {
 
   @Test(expected = java.lang.IllegalArgumentException.class)
   public void testGenerateFailsWhenLocalBuildButMissingLocalBuildFields() {
-    ClientStatsTracker tracker = new ClientStatsTracker(BUILD_LABEL);
+    ClientStatsTracker tracker = new ClientStatsTracker(BUILD_LABEL, MINION_TYPE);
     initializeCommonStats(tracker);
     tracker.setPerformedLocalBuild(true);
     tracker.generateStats();
@@ -93,20 +94,20 @@ public class ClientStatsTrackerTest {
 
   @Test(expected = java.lang.IllegalArgumentException.class)
   public void testGenerateFailsWhenNoStampedeId() {
-    ClientStatsTracker tracker = new ClientStatsTracker(BUILD_LABEL);
+    ClientStatsTracker tracker = new ClientStatsTracker(BUILD_LABEL, MINION_TYPE);
     tracker.generateStats();
   }
 
   @Test(expected = java.lang.IllegalArgumentException.class)
   public void testGenerateFailsWhenNoErrorButRequiredFieldMissing() {
-    ClientStatsTracker tracker = new ClientStatsTracker(BUILD_LABEL);
+    ClientStatsTracker tracker = new ClientStatsTracker(BUILD_LABEL, MINION_TYPE);
     tracker.setStampedeId(STAMPEDE_ID_ONE);
     tracker.generateStats();
   }
 
   @Test
   public void testGeneratesPartialResultWhenErrorButRequiredFields() {
-    ClientStatsTracker tracker = new ClientStatsTracker(BUILD_LABEL);
+    ClientStatsTracker tracker = new ClientStatsTracker(BUILD_LABEL, MINION_TYPE);
     tracker.setBuckClientError(true);
     tracker.setBuckClientErrorMessage(BUCK_CLIENT_ERROR_MESSAGE);
 
@@ -122,6 +123,7 @@ public class ClientStatsTrackerTest {
     Assert.assertEquals(IS_LOCAL_FALLBACK_BUILD_ENABLED, stats.isLocalFallbackBuildEnabled().get());
     Assert.assertEquals(BUCK_CLIENT_ERROR_MESSAGE, stats.buckClientErrorMessage().get());
     Assert.assertEquals(BUILD_LABEL, stats.buildLabel());
+    Assert.assertEquals(MINION_TYPE, stats.minionType());
     Assert.assertTrue(stats.buckClientError());
 
     Assert.assertFalse(stats.localPreparationDurationMs().isPresent());
@@ -137,7 +139,7 @@ public class ClientStatsTrackerTest {
 
   @Test
   public void testGenerateSucceedsWhenLocalBuildAndHasLocalBuildFields() {
-    ClientStatsTracker tracker = new ClientStatsTracker(BUILD_LABEL);
+    ClientStatsTracker tracker = new ClientStatsTracker(BUILD_LABEL, MINION_TYPE);
     initializeCommonStats(tracker);
     tracker.setPerformedLocalBuild(true);
     tracker.setDurationMs(PERFORM_LOCAL_BUILD, PERFORM_LOCAL_BUILD_DURATION);
@@ -166,14 +168,14 @@ public class ClientStatsTrackerTest {
   @Test
   public void testRacingBuildFinishedFirstIsPopulatedWhenRacingBuildIsPerformed() {
     // Racing build not performed.
-    ClientStatsTracker tracker = new ClientStatsTracker(BUILD_LABEL);
+    ClientStatsTracker tracker = new ClientStatsTracker(BUILD_LABEL, MINION_TYPE);
     initializeCommonStats(tracker);
     DistBuildClientStats stats = tracker.generateStats();
     Assert.assertFalse(stats.performedRacingBuild());
     Assert.assertFalse(stats.racingBuildFinishedFirst().isPresent());
 
     // Racing build performed.
-    tracker = new ClientStatsTracker(BUILD_LABEL);
+    tracker = new ClientStatsTracker(BUILD_LABEL, MINION_TYPE);
     initializeCommonStats(tracker);
     tracker.setPerformedRacingBuild(true);
     tracker.setRacingBuildFinishedFirst(false);

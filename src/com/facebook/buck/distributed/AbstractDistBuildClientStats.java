@@ -28,6 +28,8 @@ abstract class AbstractDistBuildClientStats {
 
   abstract String buildLabel();
 
+  abstract String minionType();
+
   abstract Optional<String> buckClientErrorMessage();
 
   abstract boolean performedLocalBuild();

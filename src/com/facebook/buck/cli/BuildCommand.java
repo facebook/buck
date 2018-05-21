@@ -547,7 +547,8 @@ public class BuildCommand extends AbstractCommand {
     if (isUsingDistributedBuild()) {
       DistBuildConfig distBuildConfig = new DistBuildConfig(params.getBuckConfig());
       ClientStatsTracker distBuildClientStatsTracker =
-          new ClientStatsTracker(distBuildConfig.getBuildLabel());
+          new ClientStatsTracker(
+              distBuildConfig.getBuildLabel(), distBuildConfig.getMinionType().toString());
 
       distBuildClientStatsTracker.startTimer(LOCAL_PREPARATION);
       distBuildClientStatsTracker.startTimer(LOCAL_GRAPH_CONSTRUCTION);

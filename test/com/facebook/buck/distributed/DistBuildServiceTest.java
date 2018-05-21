@@ -111,6 +111,7 @@ public class DistBuildServiceTest {
   private static final String REPOSITORY = "repositoryOne";
   private static final String TENANT_ID = "tenantOne";
   private static final String BUILD_LABEL = "unit_test";
+  private static final String MINION_TYPE = "standard_type";
   private static final String USERNAME = "unit_test_user";
   private static final List<String> BUILD_TARGETS = Lists.newArrayList();
 
@@ -119,7 +120,7 @@ public class DistBuildServiceTest {
     frontendService = EasyMock.createStrictMock(FrontendService.class);
     executor = MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor());
     distBuildService = new DistBuildService(frontendService, USERNAME);
-    distBuildClientStatsTracker = new ClientStatsTracker(BUILD_LABEL);
+    distBuildClientStatsTracker = new ClientStatsTracker(BUILD_LABEL, MINION_TYPE);
   }
 
   @After

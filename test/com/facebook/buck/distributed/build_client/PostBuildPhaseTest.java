@@ -52,6 +52,7 @@ import org.junit.Test;
 
 public class PostBuildPhaseTest {
   private static final String BUILD_LABEL = "unit_test";
+  private static final String MINION_TYPE = "standard_type";
 
   private DistBuildService mockDistBuildService;
   private LogStateTracker mockLogStateTracker;
@@ -71,7 +72,7 @@ public class PostBuildPhaseTest {
     scheduler = Executors.newSingleThreadScheduledExecutor();
     buckVersion = new BuckVersion();
     buckVersion.setGitHash("thishashisamazing");
-    distBuildClientStatsTracker = new ClientStatsTracker(BUILD_LABEL);
+    distBuildClientStatsTracker = new ClientStatsTracker(BUILD_LABEL, MINION_TYPE);
     postBuildPhase =
         new PostBuildPhase(
             mockDistBuildService, distBuildClientStatsTracker, mockLogStateTracker, 0, false);
