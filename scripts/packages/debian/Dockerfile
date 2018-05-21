@@ -13,7 +13,7 @@ RUN apt-get install -y --no-install-recommends curl ca-certificates \
       equivs && \
       apt-get clean
 
-RUN git clone https://github.com/facebook/buck.git src
+RUN git clone --depth 1 https://github.com/facebook/buck.git src
 
 WORKDIR /src
 
