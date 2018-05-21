@@ -18,7 +18,7 @@ Since Buck is used to build Buck, the initial build process involves 2 phases:
 
 ##### 1. Bootstrap Buck with ant
 
-    git clone https://github.com/facebook/buck.git
+    git clone --depth 1 https://github.com/facebook/buck.git
     cd buck
     ant
 
