@@ -1072,6 +1072,7 @@ public class IncrementalActionGraphScenarioTest {
             ActionGraphParallelizationMode.DISABLED,
             false,
             IncrementalActionGraphMode.ENABLED,
+            ImmutableMap.of(),
             fakePoolSupplier);
     // Grab a copy of the data since we invalidate the collections in previous BuildRuleResolvers.
     return ActionGraphAndResolver.of(

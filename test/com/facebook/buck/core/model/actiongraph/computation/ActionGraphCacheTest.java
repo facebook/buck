@@ -59,6 +59,7 @@ import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.concurrent.MostExecutors;
 import com.facebook.buck.util.timing.IncrementingFakeClock;
 import com.facebook.buck.util.types.Pair;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.eventbus.Subscribe;
 import java.util.ArrayList;
@@ -150,6 +151,7 @@ public class ActionGraphCacheTest {
             ActionGraphParallelizationMode.DISABLED,
             false,
             IncrementalActionGraphMode.DISABLED,
+            ImmutableMap.of(),
             fakePoolSupplier);
     // The 1st time you query the ActionGraph it's a cache miss.
     assertEquals(countEventsOf(ActionGraphEvent.Cache.Hit.class), 0);
@@ -166,6 +168,7 @@ public class ActionGraphCacheTest {
             ActionGraphParallelizationMode.DISABLED,
             false,
             IncrementalActionGraphMode.DISABLED,
+            ImmutableMap.of(),
             fakePoolSupplier);
     // The 2nd time it should be a cache hit and the ActionGraphs should be exactly the same.
     assertEquals(countEventsOf(ActionGraphEvent.Cache.Hit.class), 1);
@@ -237,6 +240,7 @@ public class ActionGraphCacheTest {
           ActionGraphParallelizationMode.DISABLED,
           false,
           IncrementalActionGraphMode.DISABLED,
+          ImmutableMap.of(),
           fakePoolSupplier);
 
       assertEquals(
@@ -260,6 +264,7 @@ public class ActionGraphCacheTest {
             ActionGraphParallelizationMode.DISABLED,
             false,
             IncrementalActionGraphMode.DISABLED,
+            ImmutableMap.of(),
             fakePoolSupplier);
     // Each time you call it for a different TargetGraph so all calls should be misses.
     assertEquals(0, countEventsOf(ActionGraphEvent.Cache.Hit.class));
@@ -277,6 +282,7 @@ public class ActionGraphCacheTest {
             ActionGraphParallelizationMode.DISABLED,
             false,
             IncrementalActionGraphMode.DISABLED,
+            ImmutableMap.of(),
             fakePoolSupplier);
     assertEquals(0, countEventsOf(ActionGraphEvent.Cache.Hit.class));
     assertEquals(1, countEventsOf(ActionGraphEvent.Cache.Miss.class));
@@ -294,6 +300,7 @@ public class ActionGraphCacheTest {
             ActionGraphParallelizationMode.DISABLED,
             false,
             IncrementalActionGraphMode.DISABLED,
+            ImmutableMap.of(),
             fakePoolSupplier);
     assertEquals(0, countEventsOf(ActionGraphEvent.Cache.Hit.class));
     assertEquals(1, countEventsOf(ActionGraphEvent.Cache.Miss.class));
@@ -365,6 +372,7 @@ public class ActionGraphCacheTest {
                 mode,
                 false,
                 IncrementalActionGraphMode.DISABLED,
+                ImmutableMap.of(),
                 poolSupplier);
         experimentEvents =
             RichStream.from(trackedEvents.stream())
@@ -386,6 +394,7 @@ public class ActionGraphCacheTest {
               ActionGraphParallelizationMode.EXPERIMENT,
               false,
               IncrementalActionGraphMode.DISABLED,
+              ImmutableMap.of(),
               poolSupplier);
       experimentEvents =
           RichStream.from(trackedEvents.stream())
@@ -411,6 +420,7 @@ public class ActionGraphCacheTest {
               ActionGraphParallelizationMode.EXPERIMENT_UNSTABLE,
               false,
               IncrementalActionGraphMode.DISABLED,
+              ImmutableMap.of(),
               poolSupplier);
       experimentEvents =
           RichStream.from(trackedEvents.stream())
@@ -442,6 +452,7 @@ public class ActionGraphCacheTest {
               ActionGraphParallelizationMode.DISABLED,
               false,
               mode,
+              ImmutableMap.of(),
               fakePoolSupplier);
       experimentEvents =
           RichStream.from(trackedEvents.stream())
@@ -452,6 +463,11 @@ public class ActionGraphCacheTest {
     }
 
     trackedEvents.clear();
+
+    ImmutableMap.Builder<IncrementalActionGraphMode, Double> experimentGroups =
+        ImmutableMap.builder();
+    experimentGroups.put(IncrementalActionGraphMode.ENABLED, 0.5);
+    experimentGroups.put(IncrementalActionGraphMode.DISABLED, 0.5);
     new ActionGraphCache(1)
         .getActionGraph(
             eventBus,
@@ -463,6 +479,7 @@ public class ActionGraphCacheTest {
             ActionGraphParallelizationMode.DISABLED,
             false,
             IncrementalActionGraphMode.EXPERIMENT,
+            experimentGroups.build(),
             fakePoolSupplier);
     experimentEvents =
         RichStream.from(trackedEvents.stream())
@@ -516,6 +533,7 @@ public class ActionGraphCacheTest {
             parallelizationMode,
             false,
             IncrementalActionGraphMode.ENABLED,
+            ImmutableMap.of(),
             poolSupplier);
 
     BuildRule originalBuildRule1 =
@@ -542,6 +560,7 @@ public class ActionGraphCacheTest {
             parallelizationMode,
             false,
             IncrementalActionGraphMode.ENABLED,
+            ImmutableMap.of(),
             poolSupplier);
 
     assertNotSame(originalBuildRule1, newResult.getResolver().getRule(newNode1.getBuildTarget()));

@@ -167,6 +167,7 @@ public class DelegateAndGraphsInitializer {
                   Optional.empty(),
                   args.getShouldInstrumentActionGraph(),
                   args.getIncrementalActionGraphMode(),
+                  args.getIncrementalActionGraphExperimentGroups(),
                   CloseableMemoizedSupplier.of(
                       () -> {
                         int threadCount = args.getMaxActionGraphParallelism();

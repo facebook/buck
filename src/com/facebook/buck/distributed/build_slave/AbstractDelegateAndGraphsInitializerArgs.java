@@ -68,6 +68,9 @@ abstract class AbstractDelegateAndGraphsInitializerArgs {
 
   public abstract IncrementalActionGraphMode getIncrementalActionGraphMode();
 
+  public abstract Map<IncrementalActionGraphMode, Double>
+      getIncrementalActionGraphExperimentGroups();
+
   public abstract DistBuildConfig getDistBuildConfig();
 
   public abstract int getMaxActionGraphParallelism();

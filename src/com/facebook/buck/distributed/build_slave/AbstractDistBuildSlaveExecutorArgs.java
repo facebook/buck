@@ -167,6 +167,8 @@ abstract class AbstractDistBuildSlaveExecutorArgs {
             this.getDistBuildConfig().getBuckConfig().getShouldInstrumentActionGraph())
         .setIncrementalActionGraphMode(
             this.getDistBuildConfig().getBuckConfig().getIncrementalActionGraphMode())
+        .setIncrementalActionGraphExperimentGroups(
+            this.getDistBuildConfig().getBuckConfig().getIncrementalActionGraphExperimentGroups())
         .setDistBuildConfig(this.getDistBuildConfig())
         .setMaxActionGraphParallelism(this.getMaxActionGraphParallelism())
         .setActionGraphParallelizationMode(this.getActionGraphParallelizationMode())

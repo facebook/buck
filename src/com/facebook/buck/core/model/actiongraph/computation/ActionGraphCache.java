@@ -59,6 +59,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.MapDifference;
 import com.google.common.collect.Maps;
@@ -104,6 +105,7 @@ public class ActionGraphCache {
         Optional.empty(),
         buckConfig.getShouldInstrumentActionGraph(),
         buckConfig.getIncrementalActionGraphMode(),
+        buckConfig.getIncrementalActionGraphExperimentGroups(),
         poolSupplier);
   }
 
@@ -127,6 +129,7 @@ public class ActionGraphCache {
         ruleKeyLogger,
         buckConfig.getShouldInstrumentActionGraph(),
         buckConfig.getIncrementalActionGraphMode(),
+        buckConfig.getIncrementalActionGraphExperimentGroups(),
         poolSupplier);
   }
 
@@ -140,6 +143,7 @@ public class ActionGraphCache {
       ActionGraphParallelizationMode parallelizationMode,
       boolean shouldInstrumentGraphBuilding,
       IncrementalActionGraphMode incrementalActionGraphMode,
+      Map<IncrementalActionGraphMode, Double> incrementalActionGraphExperimentGroups,
       CloseableMemoizedSupplier<ForkJoinPool> poolSupplier) {
     return getActionGraph(
         eventBus,
@@ -152,6 +156,7 @@ public class ActionGraphCache {
         Optional.empty(),
         shouldInstrumentGraphBuilding,
         incrementalActionGraphMode,
+        incrementalActionGraphExperimentGroups,
         poolSupplier);
   }
 
@@ -179,6 +184,7 @@ public class ActionGraphCache {
       Optional<ThriftRuleKeyLogger> ruleKeyLogger,
       boolean shouldInstrumentGraphBuilding,
       IncrementalActionGraphMode incrementalActionGraphMode,
+      Map<IncrementalActionGraphMode, Double> incrementalActionGraphExperimentGroups,
       CloseableMemoizedSupplier<ForkJoinPool> poolSupplier) {
     ActionGraphEvent.Started started = ActionGraphEvent.started();
     eventBus.post(started);
@@ -228,6 +234,7 @@ public class ActionGraphCache {
                     skipActionGraphCache
                         ? IncrementalActionGraphMode.DISABLED
                         : incrementalActionGraphMode,
+                    incrementalActionGraphExperimentGroups,
                     poolSupplier));
         out = freshActionGraph.getSecond();
         if (!skipActionGraphCache) {
@@ -300,6 +307,7 @@ public class ActionGraphCache {
             parallelizationMode,
             shouldInstrumentGraphBuilding,
             IncrementalActionGraphMode.DISABLED,
+            ImmutableMap.of(),
             poolSupplier);
 
     eventBus.post(ActionGraphEvent.finished(started, actionGraph.getActionGraph().getSize()));
@@ -314,12 +322,13 @@ public class ActionGraphCache {
       ActionGraphParallelizationMode parallelizationMode,
       boolean shouldInstrumentGraphBuilding,
       IncrementalActionGraphMode incrementalActionGraphMode,
+      Map<IncrementalActionGraphMode, Double> incrementalActionGraphExperimentGroups,
       CloseableMemoizedSupplier<ForkJoinPool> poolSupplier) {
 
     if (incrementalActionGraphMode == IncrementalActionGraphMode.EXPERIMENT) {
       incrementalActionGraphMode =
           RandomizedTrial.getGroupStable(
-              "incremental_action_graph", IncrementalActionGraphMode.class);
+              "incremental_action_graph", incrementalActionGraphExperimentGroups);
       Preconditions.checkState(incrementalActionGraphMode != IncrementalActionGraphMode.EXPERIMENT);
       eventBus.post(
           new ExperimentEvent(
@@ -545,6 +554,7 @@ public class ActionGraphCache {
                   parallelizationMode,
                   shouldInstrumentGraphBuilding,
                   IncrementalActionGraphMode.DISABLED,
+                  ImmutableMap.of(),
                   poolSupplier));
 
       Map<BuildRule, RuleKey> lastActionGraphRuleKeys =

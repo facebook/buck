@@ -566,6 +566,11 @@ public class BuckConfig implements ConfigPathGetter {
         .orElse(IncrementalActionGraphMode.DEFAULT);
   }
 
+  public Map<IncrementalActionGraphMode, Double> getIncrementalActionGraphExperimentGroups() {
+    return getExperimentGroups(
+        "cache", "incremental_action_graph_experiment", IncrementalActionGraphMode.class);
+  }
+
   public Optional<String> getRepository() {
     return config.get("cache", "repository");
   }

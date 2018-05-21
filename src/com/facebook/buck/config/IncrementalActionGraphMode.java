@@ -16,30 +16,17 @@
 
 package com.facebook.buck.config;
 
-import com.facebook.buck.util.randomizedtrial.WithProbability;
-
 /**
  * Incremental action graph mode with A/B experiment support.
  *
  * <p>Note that only a stable experiment makes sense here, as incrementality requires at least two
  * runs in a row with the feature enabled to show any effect.
  */
-public enum IncrementalActionGraphMode implements WithProbability {
-  ENABLED(0.5),
-  DISABLED(0.5),
-  EXPERIMENT(0.0),
+public enum IncrementalActionGraphMode {
+  ENABLED,
+  DISABLED,
+  EXPERIMENT,
   ;
 
   public static final IncrementalActionGraphMode DEFAULT = DISABLED;
-
-  private final double probability;
-
-  IncrementalActionGraphMode(double probability) {
-    this.probability = probability;
-  }
-
-  @Override
-  public double getProbability() {
-    return probability;
-  }
 }
