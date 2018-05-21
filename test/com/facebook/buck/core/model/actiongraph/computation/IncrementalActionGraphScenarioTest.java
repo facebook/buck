@@ -18,6 +18,7 @@ package com.facebook.buck.core.model.actiongraph.computation;
 
 import static junit.framework.TestCase.assertSame;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
@@ -88,6 +89,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 import java.nio.file.Paths;
 import java.util.HashSet;
 import java.util.Map;
@@ -96,9 +98,13 @@ import java.util.Set;
 import java.util.concurrent.ForkJoinPool;
 import java.util.stream.Collectors;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 public class IncrementalActionGraphScenarioTest {
+  @Rule public ExpectedException expectedException = ExpectedException.none();
+
   private static final PythonPlatform PY2 = createPy2Platform(Optional.empty());
   private static final PythonPlatform PY3 = createPy3Platform(Optional.empty());
 
@@ -128,7 +134,7 @@ public class IncrementalActionGraphScenarioTest {
             },
             ignored -> {});
     fieldLoader = new RuleKeyFieldLoader(TestRuleKeyConfigurationFactory.create());
-    cache = new ActionGraphCache(1);
+    cache = new ActionGraphCache(0);
   }
 
   @Test
@@ -842,6 +848,104 @@ public class IncrementalActionGraphScenarioTest {
     assertCommonBuildRulesNotSame(result, newResult, genruleTarget.getUnflavoredBuildTarget());
   }
 
+  @Test
+  public void testChangeSkipActionGraphCacheValue() {
+    BuildTarget target = BuildTargetFactory.newInstance("//:bin");
+    CxxBinaryBuilder builder =
+        new CxxBinaryBuilder(target)
+            .setSrcs(
+                ImmutableSortedSet.of(
+                    SourceWithFlags.of(FakeSourcePath.of("binary.cpp"), ImmutableList.of())));
+
+    createActionGraph(TargetGraphFactory.newInstance(buildNodes(builder)), false);
+
+    CxxBinaryBuilder builder2 =
+        new CxxBinaryBuilder(target)
+            .setSrcs(
+                ImmutableSortedSet.of(
+                    SourceWithFlags.of(FakeSourcePath.of("binary2.cpp"), ImmutableList.of())));
+    createActionGraph(TargetGraphFactory.newInstance(buildNodes(builder2)), true);
+
+    ActionGraphAndResolver lastResult =
+        createActionGraph(TargetGraphFactory.newInstance(buildNodes(builder)), false);
+    assertFalse(Iterables.isEmpty(lastResult.getResolver().getBuildRules()));
+  }
+
+  @Test
+  public void testBuildRuleResolverInActionGraphCacheNotInvalidated() {
+    cache = new ActionGraphCache(2);
+
+    BuildTarget target = BuildTargetFactory.newInstance("//:bin");
+    CxxBinaryBuilder builder =
+        new CxxBinaryBuilder(target)
+            .setSrcs(
+                ImmutableSortedSet.of(
+                    SourceWithFlags.of(FakeSourcePath.of("binary.cpp"), ImmutableList.of())));
+
+    createActionGraph(TargetGraphFactory.newInstance(buildNodes(builder)), false);
+
+    CxxBinaryBuilder builder2 =
+        new CxxBinaryBuilder(target)
+            .setSrcs(
+                ImmutableSortedSet.of(
+                    SourceWithFlags.of(FakeSourcePath.of("binary2.cpp"), ImmutableList.of())));
+    createActionGraph(builder2);
+
+    ActionGraphAndResolver lastResult =
+        createActionGraph(TargetGraphFactory.newInstance(buildNodes(builder)), false);
+    assertFalse(Iterables.isEmpty(lastResult.getResolver().getBuildRules()));
+  }
+
+  @Test
+  public void testBuildRuleResolverNotInActionGraphCacheInvalidated() {
+    expectedException.expect(IllegalStateException.class);
+
+    cache = new ActionGraphCache(2);
+
+    BuildTarget target = BuildTargetFactory.newInstance("//:bin");
+    CxxBinaryBuilder builder =
+        new CxxBinaryBuilder(target)
+            .setSrcs(
+                ImmutableSortedSet.of(
+                    SourceWithFlags.of(FakeSourcePath.of("binary.cpp"), ImmutableList.of())));
+
+    ActionGraphAndResolver originalResult = createActionGraph(builder);
+
+    CxxBinaryBuilder builder2 =
+        new CxxBinaryBuilder(target)
+            .setSrcs(
+                ImmutableSortedSet.of(
+                    SourceWithFlags.of(FakeSourcePath.of("binary2.cpp"), ImmutableList.of())));
+    createActionGraph(builder2);
+
+    CxxBinaryBuilder builder3 =
+        new CxxBinaryBuilder(target)
+            .setSrcs(
+                ImmutableSortedSet.of(
+                    SourceWithFlags.of(FakeSourcePath.of("binary3.cpp"), ImmutableList.of())));
+    createActionGraph(builder3);
+
+    originalResult.getResolver().getBuildRules();
+  }
+
+  @Test
+  public void testIncrementalityDisabledOnSkipActionGraphCache() {
+    BuildTarget target = BuildTargetFactory.newInstance("//:bin");
+    CxxBinaryBuilder builder =
+        new CxxBinaryBuilder(target)
+            .setSrcs(
+                ImmutableSortedSet.of(
+                    SourceWithFlags.of(FakeSourcePath.of("binary.cpp"), ImmutableList.of())));
+
+    ActionGraphAndResolver firstResult =
+        createActionGraph(TargetGraphFactory.newInstance(buildNodes(builder)), true);
+
+    ActionGraphAndResolver lastResult =
+        createActionGraph(TargetGraphFactory.newInstance(buildNodes(builder)), true);
+
+    assertCommonBuildRulesNotSame(firstResult, lastResult, target.getUnflavoredBuildTarget());
+  }
+
   private void assertBuildRulesSame(
       ActionGraphAndResolver expectedActionGraph, ActionGraphAndResolver actualActionGraph) {
     assertBuildRulesSame(
@@ -952,11 +1056,16 @@ public class IncrementalActionGraphScenarioTest {
   }
 
   private ActionGraphAndResolver createActionGraph(TargetGraph targetGraph) {
+    return createActionGraph(targetGraph, false);
+  }
+
+  private ActionGraphAndResolver createActionGraph(
+      TargetGraph targetGraph, boolean skipActionGraphCache) {
     ActionGraphAndResolver result =
         cache.getActionGraph(
             eventBus,
             false, /* checkActionGraphs */
-            true, /* skipActionGraphCache */
+            skipActionGraphCache,
             targetGraph,
             new TestCellBuilder().build().getCellProvider(),
             TestRuleKeyConfigurationFactory.createWithSeed(0),
@@ -978,17 +1087,19 @@ public class IncrementalActionGraphScenarioTest {
   }
 
   private ActionGraphAndResolver createActionGraph(AbstractNodeBuilder<?, ?, ?, ?>... builders) {
-    ActionGraphAndResolver result =
-        createActionGraph(
-            RichStream.from(builders)
-                .map(builder -> builder.build(filesystem))
-                .toArray(TargetNode<?, ?>[]::new));
+    ActionGraphAndResolver result = createActionGraph(buildNodes(builders));
 
     // Grab a copy of the data since we invalidate the collections in previous BuildRuleResolvers.
     return ActionGraphAndResolver.of(
         new ActionGraph(
             RichStream.from(result.getActionGraph().getNodes()).collect(Collectors.toList())),
         result.getResolver());
+  }
+
+  private TargetNode<?, ?>[] buildNodes(AbstractNodeBuilder<?, ?, ?, ?>... builders) {
+    return RichStream.from(builders)
+        .map(builder -> builder.build(filesystem))
+        .toArray(TargetNode<?, ?>[]::new);
   }
 
   private static PythonPlatform createPy2Platform(Optional<BuildTarget> cxxLibrary) {

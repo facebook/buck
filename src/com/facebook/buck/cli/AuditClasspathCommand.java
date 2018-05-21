@@ -180,7 +180,6 @@ public class AuditClasspathCommand extends AbstractCommand {
                         params.getCell().getCellProvider(),
                         params.getBuckConfig().getActionGraphParallelizationMode(),
                         params.getBuckConfig().getShouldInstrumentActionGraph(),
-                        params.getBuckConfig().getIncrementalActionGraphMode(),
                         params.getPoolSupplier()))
             .getResolver();
     SourcePathResolver pathResolver =
@@ -226,7 +225,6 @@ public class AuditClasspathCommand extends AbstractCommand {
                         params.getCell().getCellProvider(),
                         params.getBuckConfig().getActionGraphParallelizationMode(),
                         params.getBuckConfig().getShouldInstrumentActionGraph(),
-                        params.getBuckConfig().getIncrementalActionGraphMode(),
                         params.getPoolSupplier()))
             .getResolver();
     SourcePathResolver pathResolver =

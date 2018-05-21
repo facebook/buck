@@ -324,7 +324,6 @@ public class ActionGraphCacheTest {
             new TestCellBuilder().build().getCellProvider(),
             ActionGraphParallelizationMode.DISABLED,
             false,
-            IncrementalActionGraphMode.DISABLED,
             fakePoolSupplier);
 
     ActionGraphAndResolver resultRun2 =
@@ -335,7 +334,6 @@ public class ActionGraphCacheTest {
             new TestCellBuilder().build().getCellProvider(),
             ActionGraphParallelizationMode.DISABLED,
             false,
-            IncrementalActionGraphMode.DISABLED,
             fakePoolSupplier);
 
     // Check all the RuleKeys are the same between the 2 ActionGraphs.
@@ -510,8 +508,8 @@ public class ActionGraphCacheTest {
     ActionGraphAndResolver originalResult =
         cache.getActionGraph(
             eventBus,
-            NOT_CHECK_GRAPHS, /* skipActionGraphCache */
-            true,
+            NOT_CHECK_GRAPHS,
+            false,
             targetGraph1,
             new TestCellBuilder().build().getCellProvider(),
             TestRuleKeyConfigurationFactory.createWithSeed(keySeed),
@@ -536,8 +534,8 @@ public class ActionGraphCacheTest {
     ActionGraphAndResolver newResult =
         cache.getActionGraph(
             eventBus,
-            NOT_CHECK_GRAPHS, /* skipActionGraphCache */
-            true,
+            NOT_CHECK_GRAPHS,
+            false,
             targetGraph2,
             new TestCellBuilder().build().getCellProvider(),
             TestRuleKeyConfigurationFactory.createWithSeed(keySeed),

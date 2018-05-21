@@ -200,7 +200,6 @@ public class ActionGraphCache {
               parallelizationMode,
               ruleKeyLogger,
               shouldInstrumentGraphBuilding,
-              incrementalActionGraphMode,
               poolSupplier);
         }
         out = cachedActionGraph;
@@ -226,7 +225,9 @@ public class ActionGraphCache {
                     cellProvider,
                     parallelizationMode,
                     shouldInstrumentGraphBuilding,
-                    incrementalActionGraphMode,
+                    skipActionGraphCache
+                        ? IncrementalActionGraphMode.DISABLED
+                        : incrementalActionGraphMode,
                     poolSupplier));
         out = freshActionGraph.getSecond();
         if (!skipActionGraphCache) {
@@ -256,7 +257,6 @@ public class ActionGraphCache {
       CellProvider cellProvider,
       ActionGraphParallelizationMode parallelizationMode,
       boolean shouldInstrumentGraphBuilding,
-      IncrementalActionGraphMode incrementalActionGraphMode,
       CloseableMemoizedSupplier<ForkJoinPool> poolSupplier) {
     TargetNodeToBuildRuleTransformer transformer = new DefaultTargetNodeToBuildRuleTransformer();
     return getFreshActionGraph(
@@ -266,7 +266,6 @@ public class ActionGraphCache {
         cellProvider,
         parallelizationMode,
         shouldInstrumentGraphBuilding,
-        incrementalActionGraphMode,
         poolSupplier);
   }
 
@@ -288,7 +287,6 @@ public class ActionGraphCache {
       CellProvider cellProvider,
       ActionGraphParallelizationMode parallelizationMode,
       boolean shouldInstrumentGraphBuilding,
-      IncrementalActionGraphMode incrementalActionGraphMode,
       CloseableMemoizedSupplier<ForkJoinPool> poolSupplier) {
     ActionGraphEvent.Started started = ActionGraphEvent.started();
     eventBus.post(started);
@@ -301,7 +299,7 @@ public class ActionGraphCache {
             cellProvider,
             parallelizationMode,
             shouldInstrumentGraphBuilding,
-            incrementalActionGraphMode,
+            IncrementalActionGraphMode.DISABLED,
             poolSupplier);
 
     eventBus.post(ActionGraphEvent.finished(started, actionGraph.getActionGraph().getSize()));
@@ -386,6 +384,11 @@ public class ActionGraphCache {
     HashMap<BuildTarget, CompletableFuture<BuildRule>> futures = new HashMap<>();
 
     if (incrementalActionGraphMode == IncrementalActionGraphMode.ENABLED) {
+      // Any previously cached action graphs are no longer valid, as we may use build rules from
+      // those graphs to construct a new graph incrementally, and update those build rules to use a
+      // new BuildRuleResolver.
+      invalidateCache();
+
       // Populate the new build rule resolver with all of the usable rules from the last build rule
       // resolver for incremental action graph generation.
       incrementalActionGraphGenerator.populateRuleResolverWithCachedRules(targetGraph, resolver);
@@ -440,6 +443,11 @@ public class ActionGraphCache {
         new SingleThreadedBuildRuleResolver(targetGraph, transformer, cellProvider);
 
     if (incrementalActionGraphMode == IncrementalActionGraphMode.ENABLED) {
+      // Any previously cached action graphs are no longer valid, as we may use build rules from
+      // those graphs to construct a new graph incrementally, and update those build rules to use a
+      // new BuildRuleResolver.
+      invalidateCache();
+
       // Populate the new build rule resolver with all of the usable rules from the last build rule
       // resolver for incremental action graph generation.
       incrementalActionGraphGenerator.populateRuleResolverWithCachedRules(targetGraph, resolver);
@@ -520,7 +528,6 @@ public class ActionGraphCache {
       ActionGraphParallelizationMode parallelizationMode,
       Optional<ThriftRuleKeyLogger> ruleKeyLogger,
       boolean shouldInstrumentGraphBuilding,
-      IncrementalActionGraphMode incrementalActionGraphMode,
       CloseableMemoizedSupplier<ForkJoinPool> poolSupplier) {
     try (SimplePerfEvent.Scope scope =
         SimplePerfEvent.scope(eventBus, PerfEventId.of("ActionGraphCacheCheck"))) {
@@ -537,7 +544,7 @@ public class ActionGraphCache {
                   cellProvider,
                   parallelizationMode,
                   shouldInstrumentGraphBuilding,
-                  incrementalActionGraphMode,
+                  IncrementalActionGraphMode.DISABLED,
                   poolSupplier));
 
       Map<BuildRule, RuleKey> lastActionGraphRuleKeys =

@@ -99,7 +99,6 @@ public class FetchCommand extends BuildCommand {
                         params.getCell().getCellProvider(),
                         params.getBuckConfig().getActionGraphParallelizationMode(),
                         params.getBuckConfig().getShouldInstrumentActionGraph(),
-                        params.getBuckConfig().getIncrementalActionGraphMode(),
                         params.getPoolSupplier()));
         buildTargets = ruleGenerator.getDownloadableTargets();
       } catch (BuildFileParseException | VersionException e) {
