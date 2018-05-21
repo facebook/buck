@@ -47,6 +47,11 @@ public class FilegroupDescription implements DescriptionWithTargetGraph<FileGrou
     return new Filegroup(buildTarget, projectFilesystem, ruleFinder, name, args.getSrcs());
   }
 
+  @Override
+  public boolean producesCacheableSubgraph() {
+    return true;
+  }
+
   @BuckStyleImmutable
   @Value.Immutable
   interface AbstractFileGroupDescriptionArg extends CommonDescriptionArg, HasSrcs {}

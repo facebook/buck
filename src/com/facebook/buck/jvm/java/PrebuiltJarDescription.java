@@ -164,6 +164,11 @@ public class PrebuiltJarDescription
     return new ExistingOuputs(buildTarget, projectFilesystem, params, input);
   }
 
+  @Override
+  public boolean producesCacheableSubgraph() {
+    return true;
+  }
+
   @BuckStyleImmutable
   @Value.Immutable
   interface AbstractPrebuiltJarDescriptionArg

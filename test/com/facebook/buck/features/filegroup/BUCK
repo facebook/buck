@@ -1,4 +1,22 @@
-load("//tools/build_rules:java_rules.bzl", "standard_java_test")
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library", "standard_java_test")
+
+java_immutables_library(
+    name = "testutil",
+    srcs = [
+        "FilegroupBuilder.java",
+    ],
+    visibility = [
+        "//test/...",
+    ],
+    deps = [
+        "//src/com/facebook/buck/core/sourcepath:sourcepath",
+        "//src/com/facebook/buck/features/filegroup:filegroup",
+        "//src/com/facebook/buck/rules:rules",
+        "//src/com/facebook/buck/rules/modern:modern",
+        "//test/com/facebook/buck/core/model/targetgraph:testutil",
+        "//test/com/facebook/buck/rules:testutil",
+    ],
+)
 
 standard_java_test(
     name = "filegroup",

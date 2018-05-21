@@ -78,6 +78,11 @@ public class LuaLibraryDescription
     };
   }
 
+  @Override
+  public boolean producesCacheableSubgraph() {
+    return true;
+  }
+
   @BuckStyleImmutable
   @Value.Immutable
   interface AbstractLuaLibraryDescriptionArg extends CommonDescriptionArg, HasDeclaredDeps {

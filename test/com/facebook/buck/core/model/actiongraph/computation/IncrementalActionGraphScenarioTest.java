@@ -60,6 +60,8 @@ import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.linker.Linker.LinkableDepType;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
+import com.facebook.buck.features.filegroup.FilegroupBuilder;
+import com.facebook.buck.features.lua.LuaLibraryBuilder;
 import com.facebook.buck.features.python.CxxPythonExtensionBuilder;
 import com.facebook.buck.features.python.PythonBinaryBuilder;
 import com.facebook.buck.features.python.PythonBuckConfig;
@@ -69,6 +71,7 @@ import com.facebook.buck.features.python.toolchain.PythonEnvironment;
 import com.facebook.buck.features.python.toolchain.PythonPlatform;
 import com.facebook.buck.features.python.toolchain.PythonVersion;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.jvm.java.PrebuiltJarBuilder;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
@@ -846,6 +849,55 @@ public class IncrementalActionGraphScenarioTest {
 
     assertCommonBuildRulesNotSame(result, newResult, binaryTarget.getUnflavoredBuildTarget());
     assertCommonBuildRulesNotSame(result, newResult, genruleTarget.getUnflavoredBuildTarget());
+  }
+
+  @Test
+  public void testFilegroupLoadedFromCache() {
+    BuildTarget target = BuildTargetFactory.newInstance("//:group");
+    FilegroupBuilder builder =
+        FilegroupBuilder.createBuilder(target)
+            .setSrcs(ImmutableSortedSet.of(FakeSourcePath.of("file.txt")));
+
+    ActionGraphAndResolver result = createActionGraph(builder);
+    ImmutableMap<BuildRule, RuleKey> ruleKeys = getRuleKeys(result);
+    ActionGraphAndResolver newResult = createActionGraph(builder);
+    queryTransitiveDeps(newResult);
+    ImmutableMap<BuildRule, RuleKey> newRuleKeys = getRuleKeys(newResult);
+
+    assertBuildRulesSame(result, newResult);
+    assertEquals(ruleKeys, newRuleKeys);
+  }
+
+  @Test
+  public void testPrebuiltJarLoadedFromCache() {
+    BuildTarget target = BuildTargetFactory.newInstance("//:jar");
+    PrebuiltJarBuilder builder =
+        PrebuiltJarBuilder.createBuilder(target).setBinaryJar(FakeSourcePath.of("app.jar"));
+
+    ActionGraphAndResolver result = createActionGraph(builder);
+    ImmutableMap<BuildRule, RuleKey> ruleKeys = getRuleKeys(result);
+    ActionGraphAndResolver newResult = createActionGraph(builder);
+    queryTransitiveDeps(newResult);
+    ImmutableMap<BuildRule, RuleKey> newRuleKeys = getRuleKeys(newResult);
+
+    assertBuildRulesSame(result, newResult);
+    assertEquals(ruleKeys, newRuleKeys);
+  }
+
+  @Test
+  public void testLuaLibraryLoadedFromCache() {
+    BuildTarget target = BuildTargetFactory.newInstance("//:lib");
+    LuaLibraryBuilder builder =
+        new LuaLibraryBuilder(target).setSrcs(ImmutableSortedSet.of(FakeSourcePath.of("lib.lua")));
+
+    ActionGraphAndResolver result = createActionGraph(builder);
+    ImmutableMap<BuildRule, RuleKey> ruleKeys = getRuleKeys(result);
+    ActionGraphAndResolver newResult = createActionGraph(builder);
+    queryTransitiveDeps(newResult);
+    ImmutableMap<BuildRule, RuleKey> newRuleKeys = getRuleKeys(newResult);
+
+    assertBuildRulesSame(result, newResult);
+    assertEquals(ruleKeys, newRuleKeys);
   }
 
   @Test
