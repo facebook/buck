@@ -19,6 +19,8 @@ package com.facebook.buck.util.randomizedtrial;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.model.BuildId;
+import java.util.Map;
+import java.util.TreeMap;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
@@ -51,6 +53,12 @@ public class RandomizedTrialTest {
         return probabilityGroup2;
       }
     }
+  }
+
+  public enum RegularEnum {
+    GROUP1,
+    GROUP2,
+    ;
   }
 
   @Test
@@ -100,5 +108,17 @@ public class RandomizedTrialTest {
     assertThat(
         RandomizedTrial.getGroupStable("name", MutableEnum.class),
         Matchers.equalTo(MutableEnum.GROUP2));
+  }
+
+  @Test
+  public void testGetGroupStableWithExperimentSetReturnsCorrectGroup() {
+    double point = RandomizedTrial.getPoint("name");
+    Map<RegularEnum, Double> enumValuesWithProbabilities = new TreeMap<>();
+    enumValuesWithProbabilities.put(RegularEnum.GROUP1, point);
+    enumValuesWithProbabilities.put(RegularEnum.GROUP2, 1.0 - point);
+
+    assertThat(
+        RandomizedTrial.getGroupStable("name", enumValuesWithProbabilities),
+        Matchers.equalTo(RegularEnum.GROUP2));
   }
 }

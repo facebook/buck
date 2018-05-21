@@ -21,11 +21,13 @@ import com.facebook.buck.util.MoreSuppliers;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Maps;
 import com.google.common.hash.Hashing;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 import java.util.EnumSet;
+import java.util.Map;
 import java.util.Random;
 import java.util.function.Supplier;
 
@@ -65,6 +67,19 @@ public class RandomizedTrial {
   /**
    * Returns a group for trial with given name.
    *
+   * <p>This choice is stable for each test/user/hostname.
+   *
+   * @param name name of trial.
+   * @param enumValuesWithProbabilities Map of enum values to probabilities.
+   */
+  public static <T extends Enum<T>> T getGroupStable(
+      String name, Map<T, Double> enumValuesWithProbabilities) {
+    return selectGroup(name, enumValuesWithProbabilities, getPoint(name));
+  }
+
+  /**
+   * Returns a group for trial with given name.
+   *
    * <p>This choice is stable for a particular buildId/test/user/hostname.
    *
    * @param name name of trial.
@@ -77,9 +92,14 @@ public class RandomizedTrial {
 
   private static <T extends Enum<T> & WithProbability> T selectGroup(
       String name, Class<T> enumClass, double point) {
-    EnumSet<T> enumSet = EnumSet.allOf(enumClass);
+    return selectGroup(name, Maps.toMap(EnumSet.allOf(enumClass), x -> x.getProbability()), point);
+  }
 
-    double sumOfAllProbabilities = enumSet.stream().mapToDouble(x -> x.getProbability()).sum();
+  private static <T extends Enum<T>> T selectGroup(
+      String name, Map<T, Double> enumValuesWithProbabilities, double point) {
+
+    double sumOfAllProbabilities =
+        enumValuesWithProbabilities.values().stream().mapToDouble(x -> x).sum();
     Preconditions.checkArgument(
         sumOfAllProbabilities == 1.0,
         "RandomizedTrial '%s' is misconfigured: sum of probabilities of all groups must be "
@@ -88,10 +108,10 @@ public class RandomizedTrial {
         sumOfAllProbabilities);
 
     double remainder = point;
-    for (T value : enumSet) {
-      remainder -= value.getProbability();
+    for (Map.Entry<T, Double> entry : enumValuesWithProbabilities.entrySet()) {
+      remainder -= entry.getValue();
       if (remainder < 0) {
-        return value;
+        return entry.getKey();
       }
     }
 

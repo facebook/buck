@@ -58,6 +58,7 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
@@ -647,6 +648,18 @@ public class BuckConfig implements ConfigPathGetter {
 
   public ImmutableMap<String, String> getMap(String section, String field) {
     return config.getMap(section, field);
+  }
+
+  /** Returns the probabilities for each group in an experiment. */
+  public <T extends Enum<T>> Map<T, Double> getExperimentGroups(
+      String section, String field, Class<T> enumClass) {
+    return getMap(section, field)
+        .entrySet()
+        .stream()
+        .collect(
+            ImmutableMap.toImmutableMap(
+                x -> Enum.valueOf(enumClass, x.getKey().toUpperCase(Locale.ROOT)),
+                x -> Double.parseDouble(x.getValue())));
   }
 
   public <T> T getOrThrow(String section, String field, Optional<T> value) {
