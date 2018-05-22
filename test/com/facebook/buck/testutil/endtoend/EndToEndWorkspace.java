@@ -36,6 +36,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -138,8 +139,10 @@ public class EndToEndWorkspace extends AbstractWorkspace implements TestRule {
     if (!buckdEnabled) {
       environmentBuilder.put("NO_BUCKD", "1");
     }
-    environmentBuilder.putAll(environmentOverrides);
-    return environmentBuilder.build();
+
+    Map<String, String> finalEnvironment = new HashMap<>(environmentBuilder.build());
+    finalEnvironment.putAll(environmentOverrides);
+    return ImmutableMap.copyOf(finalEnvironment);
   }
 
   /**
