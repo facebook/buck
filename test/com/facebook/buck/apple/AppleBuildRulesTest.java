@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.TestCellBuilder;
@@ -42,6 +43,7 @@ import com.facebook.buck.rules.TestBuildRuleCreationContextFactory;
 import com.facebook.buck.rules.TestBuildRuleParams;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.types.Either;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -49,6 +51,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import java.util.Collection;
 import java.util.Optional;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -63,6 +66,11 @@ public class AppleBuildRulesTest {
 
   @Parameterized.Parameter(0)
   public boolean useCache;
+
+  @Before
+  public void setUp() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS || Platform.detect() == Platform.LINUX);
+  }
 
   @Test
   public void testAppleLibraryIsXcodeTargetDescription() {

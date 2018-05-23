@@ -17,6 +17,7 @@
 package com.facebook.buck.apple.project_generator;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.apple.AppleBinaryBuilder;
 import com.facebook.buck.apple.AppleBundleBuilder;
@@ -39,6 +40,7 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.timing.SettableFakeClock;
 import com.facebook.buck.util.types.Either;
 import com.google.common.collect.ImmutableSet;
@@ -72,6 +74,8 @@ public class XCodeProjectCommandHelperTest {
 
   @Before
   public void buildGraph() {
+    assumeTrue(Platform.detect() == Platform.MACOS || Platform.detect() == Platform.LINUX);
+
     // Create the following dep tree:
     //
     // FooBin -has-test-> FooBinTest
