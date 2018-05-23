@@ -63,7 +63,7 @@ import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
 import java.nio.file.Path;
 import java.util.Optional;
-import java.util.function.Supplier;
+import java.util.function.BiFunction;
 import org.immutables.value.Value;
 
 public class CxxTestDescription
@@ -234,33 +234,34 @@ public class CxxTestDescription
         ImmutableMap.copyOf(
             Maps.transformValues(args.getEnv(), x -> macrosConverter.convert(x, resolver)));
 
-    // Supplier which expands macros in the passed in test arguments.
-    Supplier<ImmutableList<Arg>> testArgs =
-        () ->
-            args.getArgs()
-                .stream()
-                .map(x -> macrosConverter.convert(x, resolver))
-                .collect(ImmutableList.toImmutableList());
+    ImmutableList<Arg> testArgs =
+        args.getArgs()
+            .stream()
+            .map(x -> macrosConverter.convert(x, resolver))
+            .collect(ImmutableList.toImmutableList());
 
-    Supplier<ImmutableSortedSet<BuildRule>> additionalDeps =
-        () -> {
-          ImmutableSortedSet.Builder<BuildRule> deps = ImmutableSortedSet.naturalOrder();
+    BiFunction<BuildRuleResolver, SourcePathRuleFinder, ImmutableSortedSet<BuildRule>>
+        additionalDeps =
+            (ruleResolverInner, ruleFinderInner) -> {
+              ImmutableSortedSet.Builder<BuildRule> deps = ImmutableSortedSet.naturalOrder();
 
-          // It's not uncommon for users to add dependencies onto other binaries that they run
-          // during the test, so make sure to add them as runtime deps.
-          deps.addAll(
-              Sets.difference(
-                  params.getBuildDeps(), cxxLinkAndCompileRules.getBinaryRule().getBuildDeps()));
+              // It's not uncommon for users to add dependencies onto other binaries that they run
+              // during the test, so make sure to add them as runtime deps.
+              deps.addAll(
+                  Sets.difference(
+                      params.getBuildDeps(),
+                      cxxLinkAndCompileRules.getBinaryRule().getBuildDeps()));
 
-          // Add any build-time from any macros embedded in the `env` or `args` parameter.
-          for (StringWithMacros part : Iterables.concat(args.getArgs(), args.getEnv().values())) {
-            deps.addAll(
-                BuildableSupport.getDepsCollection(
-                    macrosConverter.convert(part, resolver), ruleFinder));
-          }
+              // Add any build-time from any macros embedded in the `env` or `args` parameter.
+              for (StringWithMacros part :
+                  Iterables.concat(args.getArgs(), args.getEnv().values())) {
+                deps.addAll(
+                    BuildableSupport.getDepsCollection(
+                        macrosConverter.convert(part, ruleResolverInner), ruleFinderInner));
+              }
 
-          return deps.build();
-        };
+              return deps.build();
+            };
 
     CxxTest test;
 
@@ -273,6 +274,7 @@ public class CxxTestDescription
                   testBuildTarget,
                   projectFilesystem,
                   testParams,
+                  resolver,
                   cxxLinkAndCompileRules.getBinaryRule(),
                   cxxLinkAndCompileRules.executable,
                   testEnv,
@@ -298,6 +300,7 @@ public class CxxTestDescription
                   testBuildTarget,
                   projectFilesystem,
                   testParams,
+                  resolver,
                   cxxLinkAndCompileRules.getBinaryRule(),
                   cxxLinkAndCompileRules.executable,
                   testEnv,

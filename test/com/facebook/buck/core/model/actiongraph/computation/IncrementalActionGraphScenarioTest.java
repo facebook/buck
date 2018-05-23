@@ -52,6 +52,7 @@ import com.facebook.buck.cxx.CxxBinaryBuilder;
 import com.facebook.buck.cxx.CxxCompilationDatabase;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxLibraryBuilder;
+import com.facebook.buck.cxx.CxxTestBuilder;
 import com.facebook.buck.cxx.CxxTestUtils;
 import com.facebook.buck.cxx.SharedLibraryInterfacePlatforms;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
@@ -79,6 +80,8 @@ import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.keys.ContentAgnosticRuleKeyFactory;
 import com.facebook.buck.rules.keys.RuleKeyFieldLoader;
 import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
+import com.facebook.buck.rules.macros.LocationMacro;
+import com.facebook.buck.rules.macros.StringWithMacrosUtils;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.CloseableMemoizedSupplier;
@@ -898,6 +901,77 @@ public class IncrementalActionGraphScenarioTest {
 
     assertBuildRulesSame(result, newResult);
     assertEquals(ruleKeys, newRuleKeys);
+  }
+
+  @Test
+  public void testCxxTestWithMacroAndBinaryLoadedFromCache() {
+    BuildTarget binaryTarget = BuildTargetFactory.newInstance("//:bin");
+    CxxBinaryBuilder binaryBuilder =
+        new CxxBinaryBuilder(binaryTarget)
+            .setSrcs(
+                ImmutableSortedSet.of(
+                    SourceWithFlags.of(FakeSourcePath.of("bin.cpp"), ImmutableList.of())));
+
+    BuildTarget testTarget = BuildTargetFactory.newInstance("//:test");
+    CxxTestBuilder testBuilder =
+        new CxxTestBuilder(testTarget, cxxBuckConfig)
+            .setDeps(ImmutableSortedSet.of(binaryTarget))
+            .setEnv(
+                ImmutableMap.of(
+                    "TEST",
+                    StringWithMacrosUtils.format("value %s", LocationMacro.of(binaryTarget))))
+            .setArgs(
+                ImmutableList.of(
+                    StringWithMacrosUtils.format("value %s", LocationMacro.of(binaryTarget))))
+            .setSrcs(
+                ImmutableSortedSet.of(
+                    SourceWithFlags.of(FakeSourcePath.of("test.cpp"), ImmutableList.of())));
+
+    ActionGraphAndResolver result = createActionGraph(testBuilder, binaryBuilder);
+    ImmutableMap<BuildRule, RuleKey> ruleKeys = getRuleKeys(result);
+
+    ActionGraphAndResolver newResult = createActionGraph(testBuilder, binaryBuilder);
+    queryTransitiveDeps(newResult);
+    ImmutableMap<BuildRule, RuleKey> newRuleKeys = getRuleKeys(newResult);
+
+    assertBuildRulesSame(result, newResult);
+    assertEquals(ruleKeys, newRuleKeys);
+  }
+
+  @Test
+  public void testCxxTestWithMacroAndBinaryLoadedFromCache_DelayRuleKeys() {
+    BuildTarget binaryTarget = BuildTargetFactory.newInstance("//:bin");
+    CxxBinaryBuilder binaryBuilder =
+        new CxxBinaryBuilder(binaryTarget)
+            .setSrcs(
+                ImmutableSortedSet.of(
+                    SourceWithFlags.of(FakeSourcePath.of("bin.cpp"), ImmutableList.of())));
+
+    BuildTarget testTarget = BuildTargetFactory.newInstance("//:test");
+    CxxTestBuilder testBuilder =
+        new CxxTestBuilder(testTarget, cxxBuckConfig)
+            .setDeps(ImmutableSortedSet.of(binaryTarget))
+            .setEnv(
+                ImmutableMap.of(
+                    "TEST",
+                    StringWithMacrosUtils.format("value %s", LocationMacro.of(binaryTarget))))
+            .setArgs(
+                ImmutableList.of(
+                    StringWithMacrosUtils.format("value %s", LocationMacro.of(binaryTarget))))
+            .setSrcs(
+                ImmutableSortedSet.of(
+                    SourceWithFlags.of(FakeSourcePath.of("test.cpp"), ImmutableList.of())));
+
+    ActionGraphAndResolver result = createActionGraph(testBuilder, binaryBuilder);
+
+    // Calculating rulekeys immediately caches some things in the CxxTest. Make sure we compute them
+    // for the first time only the second time around to check that we don't try to access an
+    // invalidated BuildRuleResolver during the computation.
+    ActionGraphAndResolver newResult = createActionGraph(testBuilder, binaryBuilder);
+    queryTransitiveDeps(newResult);
+    getRuleKeys(newResult);
+
+    assertBuildRulesSame(result, newResult);
   }
 
   @Test

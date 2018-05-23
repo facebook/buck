@@ -41,7 +41,6 @@ import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.TestRunningOptions;
 import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -65,17 +64,18 @@ public class CxxTestTest {
       return TestBuildRuleParams.create();
     }
 
-    public FakeCxxTest() {
+    public FakeCxxTest(BuildRuleResolver ruleResolver) {
       super(
           buildTarget,
           new FakeProjectFilesystem(),
           createBuildParams(),
+          ruleResolver,
           new CommandTool.Builder().build(),
           ImmutableMap.of(),
-          Suppliers.ofInstance(ImmutableList.of()),
+          ImmutableList.of(),
           ImmutableSortedSet.of(),
           ImmutableSet.of(),
-          Suppliers.ofInstance(ImmutableSortedSet.of()),
+          (unused1, unused2) -> ImmutableSortedSet.of(),
           ImmutableSet.of(),
           ImmutableSet.of(),
           /* runTestSeparately */ false,
@@ -98,8 +98,9 @@ public class CxxTestTest {
   public void runTests() {
     ImmutableList<String> command = ImmutableList.of("hello", "world");
 
+    BuildRuleResolver ruleResolver = new TestBuildRuleResolver();
     FakeCxxTest cxxTest =
-        new FakeCxxTest() {
+        new FakeCxxTest(ruleResolver) {
 
           @Override
           public SourcePath getSourcePathToOutput() {
@@ -150,7 +151,7 @@ public class CxxTestTest {
 
     BuildRuleResolver ruleResolver = new TestBuildRuleResolver();
     FakeCxxTest cxxTest =
-        new FakeCxxTest() {
+        new FakeCxxTest(ruleResolver) {
 
           @Override
           public SourcePath getSourcePathToOutput() {

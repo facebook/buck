@@ -37,7 +37,6 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -76,6 +75,7 @@ public class CxxBoostTestTest {
             target,
             projectFilesystem,
             TestBuildRuleParams.create(),
+            ruleResolver,
             new CxxLink(
                 linkTarget,
                 new FakeProjectFilesystem(),
@@ -91,10 +91,10 @@ public class CxxBoostTestTest {
                 /* thinLto */ false),
             new CommandTool.Builder().addArg(StringArg.of("")).build(),
             ImmutableMap.of(),
-            Suppliers.ofInstance(ImmutableList.of()),
+            ImmutableList.of(),
             ImmutableSortedSet.of(),
             ImmutableSet.of(),
-            Suppliers.ofInstance(ImmutableSortedSet.of()),
+            (unused1, unused2) -> ImmutableSortedSet.of(),
             ImmutableSet.of(),
             ImmutableSet.of(),
             /* runTestSeparately */ false,
