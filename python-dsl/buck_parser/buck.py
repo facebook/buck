@@ -69,7 +69,9 @@ DEFAULT_WATCHMAN_QUERY_TIMEOUT = 60.0
 
 ORIGINAL_IMPORT = __builtin__.__import__
 
-_LOAD_TARGET_PATH_RE = re.compile(r'^(@?[A-Za-z0-9_]+)?//(.*):(.*)$')
+_LOAD_TARGET_PATH_RE = re.compile(
+    r'^(?P<cell>@?[A-Za-z0-9_]+)?//(?P<package>.*):(?P<target>.*)$'
+)
 
 
 class AbstractContext(object):
@@ -941,7 +943,7 @@ class BuildFileProcessor(object):
             raise ValueError(
                 'load label {} should be in the form of '
                 '//path:file or cellname//path:file'.format(label))
-        cell_name = match.group(1)
+        cell_name = match.group('cell')
         if cell_name:
             if cell_name.startswith('@'):
                 cell_name = cell_name[1:]
@@ -952,8 +954,8 @@ class BuildFileProcessor(object):
                                         cell_name), 'load function')
         else:
             cell_name = self._current_build_env.cell_name
-        relative_path = match.group(2)
-        file_name = match.group(3)
+        relative_path = match.group('package')
+        file_name = match.group('target')
         if cell_name:
             cell_root = self._cell_roots.get(cell_name)
             if cell_root is None:
