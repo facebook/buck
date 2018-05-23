@@ -42,6 +42,7 @@ import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.Verbosity;
 import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
@@ -145,7 +146,10 @@ public class HaskellPackageRule extends AbstractBuildRuleWithDeclaredAndExtraDep
   }
 
   private Path getPackageDb() {
-    return BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s");
+    ProjectFilesystem fs = getProjectFilesystem();
+    Path relPath = BuildTargets.getGenPath(fs, getBuildTarget(), "%s");
+    Preconditions.checkState(!relPath.isAbsolute());
+    return fs.resolve(relPath);
   }
 
   private WriteFileStep getWriteRegistrationFileStep(
@@ -170,7 +174,7 @@ public class HaskellPackageRule extends AbstractBuildRuleWithDeclaredAndExtraDep
       for (SourcePath interfaceDir : interfaces) {
         Path relInterfaceDir =
             pkgRoot.resolve(
-                packageDb.getParent().relativize(resolver.getRelativePath(interfaceDir)));
+                packageDb.getParent().relativize(resolver.getAbsolutePath(interfaceDir)));
         importDirs.add('"' + relInterfaceDir.toString() + '"');
       }
       entries.put("import-dirs", Joiner.on(", ").join(importDirs));
@@ -180,7 +184,7 @@ public class HaskellPackageRule extends AbstractBuildRuleWithDeclaredAndExtraDep
     Set<String> libs = new LinkedHashSet<>();
     for (SourcePath library : libraries) {
       Path relLibPath =
-          pkgRoot.resolve(packageDb.getParent().relativize(resolver.getRelativePath(library)));
+          pkgRoot.resolve(packageDb.getParent().relativize(resolver.getAbsolutePath(library)));
       libDirs.add('"' + relLibPath.getParent().toString() + '"');
 
       String libName = MorePaths.stripPathPrefixAndExtension(relLibPath.getFileName(), "lib");
@@ -207,6 +211,24 @@ public class HaskellPackageRule extends AbstractBuildRuleWithDeclaredAndExtraDep
         /* executable */ false);
   }
 
+  /** @return the path relative to the root of the project filesystem. */
+  private Path getProjectRelativePath(Path absPath) {
+    Preconditions.checkArgument(absPath.isAbsolute(), "path not absolute: " + absPath);
+    return getProjectFilesystem()
+        .getPathRelativeToProjectRoot(absPath)
+        .orElseThrow(
+            () ->
+                new RuntimeException(
+                    "Relative path is required, but could not resolve this path "
+                        + "["
+                        + absPath
+                        + "] "
+                        + "against project's root directory "
+                        + "["
+                        + getProjectFilesystem().getRootPath()
+                        + "]"));
+  }
+
   @Override
   public ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
@@ -228,7 +250,8 @@ public class HaskellPackageRule extends AbstractBuildRuleWithDeclaredAndExtraDep
                 BuildCellRelativePath.fromCellRelativePath(
                     context.getBuildCellRootPath(), getProjectFilesystem(), packageDb))
             .withRecursive(true));
-    buildableContext.recordArtifact(packageDb);
+
+    buildableContext.recordArtifact(getProjectRelativePath(packageDb));
 
     // Create the registration file.
     Path registrationFile = scratchDir.resolve("registration-file");

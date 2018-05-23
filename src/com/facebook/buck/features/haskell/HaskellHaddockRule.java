@@ -178,7 +178,7 @@ public class HaskellHaddockRule extends AbstractBuildRuleWithDeclaredAndExtraDep
               MoreIterables.zipAndConcat(
                   Iterables.cycle("--read-interface"),
                   RichStream.from(interfaces)
-                      .map(sp -> resolver.getAbsolutePath(sp).toString())
+                      .map(sp -> resolver.getRelativePath(getProjectFilesystem(), sp).toString())
                       .toImmutableList()))
           .add("-o", getOutputDir().resolve("HTML").toString())
           .build();

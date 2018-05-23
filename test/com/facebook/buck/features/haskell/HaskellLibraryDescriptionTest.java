@@ -18,9 +18,13 @@ package com.facebook.buck.features.haskell;
 
 import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.not;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.config.FakeBuckConfig;
+import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
@@ -28,6 +32,8 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestBuildRuleResolver;
+import com.facebook.buck.core.sourcepath.PathSourcePath;
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
@@ -35,20 +41,30 @@ import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildableSupport;
+import com.facebook.buck.rules.FakeBuildContext;
+import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
+import com.facebook.buck.shell.ShellStep;
+import com.facebook.buck.step.Step;
+import com.facebook.buck.step.TestExecutionContext;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.List;
 import java.util.regex.Pattern;
 import org.hamcrest.Matchers;
 import org.junit.Test;
@@ -271,5 +287,82 @@ public class HaskellLibraryDescriptionTest {
     assertThat(
         rule.getCxxPreprocessorDeps(CxxPlatformUtils.DEFAULT_PLATFORM, resolver),
         Matchers.allOf(Matchers.hasItem(depA), not(Matchers.hasItem(depB))));
+  }
+
+  @Test
+  public void pathArgsAreRelative() {
+    ProjectFilesystem fs = FakeProjectFilesystem.createRealTempFilesystem();
+    Path sourceDir = fs.resolve("srcs");
+    Path sourceFile = sourceDir.resolve("foo.hs");
+    SourcePath source = PathSourcePath.of(fs, sourceFile);
+    BuildTarget target = BuildTargetFactory.newInstance("//:rule");
+    ImmutableSortedMap<String, SourcePath> namedSources =
+        ImmutableSortedMap.of(sourceFile.toString(), source);
+    HaskellLibraryBuilder builder =
+        new HaskellLibraryBuilder(target, fs).setSrcs(SourceList.ofNamedSources(namedSources));
+    BuildRuleResolver ruleResolver =
+        new TestBuildRuleResolver(TargetGraphFactory.newInstance(builder.build()));
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    HaskellLibrary library = builder.build(ruleResolver);
+    BuildTarget compileTarget =
+        HaskellDescriptionUtils.getCompileBuildTarget(
+            target, HaskellTestUtils.DEFAULT_PLATFORM, Linker.LinkableDepType.STATIC, false);
+    library.getCompileInput(
+        HaskellTestUtils.DEFAULT_PLATFORM, Linker.LinkableDepType.STATIC, false);
+    HaskellCompileRule rule = ruleResolver.getRuleWithType(compileTarget, HaskellCompileRule.class);
+    BuildContext buildContext = FakeBuildContext.withSourcePathResolver(pathResolver);
+    FakeBuildableContext buildableContext = new FakeBuildableContext();
+    String sourceArg = null;
+    String odirArg = null;
+    String hidirArg = null;
+    String stubdirArg = null;
+    for (Step step : rule.getBuildSteps(buildContext, buildableContext)) {
+      if (step instanceof ShellStep) {
+        ShellStep shellStep = (ShellStep) step;
+        List<String> flags = shellStep.getShellCommand(TestExecutionContext.newInstance());
+        int i = 0;
+        while (i < flags.size()) {
+          String flag = flags.get(i);
+          if (flag.endsWith(".hs")) {
+            assertNull(sourceArg);
+            sourceArg = flag;
+            i++;
+          } else if (i + 1 < flags.size()) {
+            switch (flag) {
+              case "-odir":
+                assertNull(odirArg);
+                odirArg = flags.get(i + 1);
+                i += 2;
+                break;
+              case "-hidir":
+                assertNull(hidirArg);
+                hidirArg = flags.get(i + 1);
+                i += 2;
+                break;
+              case "-stubdir":
+                assertNull(stubdirArg);
+                stubdirArg = flags.get(i + 1);
+                i += 2;
+                break;
+              default:
+                i++;
+            }
+          } else {
+            i++;
+          }
+        }
+
+        assertNotNull(sourceArg);
+        assertNotNull(hidirArg);
+        assertNotNull(odirArg);
+        assertNotNull(stubdirArg);
+
+        assertFalse(Paths.get(sourceArg).isAbsolute());
+        assertFalse(Paths.get(hidirArg).isAbsolute());
+        assertFalse(Paths.get(odirArg).isAbsolute());
+        assertFalse(Paths.get(stubdirArg).isAbsolute());
+      }
+    }
   }
 }
