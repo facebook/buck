@@ -28,6 +28,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.util.types.Either;
 import com.google.common.collect.ImmutableSet;
@@ -45,15 +46,10 @@ public class JavaLibraryBuilder
   protected JavaLibraryBuilder(
       BuildTarget target, ProjectFilesystem projectFilesystem, HashCode hashCode) {
     super(
-        new JavaLibraryDescription(
-            new ToolchainProviderBuilder()
-                .withToolchain(
-                    JavacOptionsProvider.DEFAULT_NAME,
-                    JavacOptionsProvider.of(DEFAULT_JAVAC_OPTIONS))
-                .build(),
-            DEFAULT_JAVA_CONFIG),
+        new JavaLibraryDescription(DEFAULT_JAVA_CONFIG),
         target,
         projectFilesystem,
+        createToolchainProviderForJavaLibrary(),
         hashCode);
     this.projectFilesystem = projectFilesystem;
   }
@@ -64,15 +60,10 @@ public class JavaLibraryBuilder
       ProjectFilesystem projectFilesystem,
       HashCode hashCode) {
     super(
-        new JavaLibraryDescription(
-            new ToolchainProviderBuilder()
-                .withToolchain(
-                    JavacOptionsProvider.DEFAULT_NAME,
-                    JavacOptionsProvider.of(DEFAULT_JAVAC_OPTIONS))
-                .build(),
-            javaBuckConfig),
+        new JavaLibraryDescription(javaBuckConfig),
         target,
         projectFilesystem,
+        createToolchainProviderForJavaLibrary(),
         hashCode);
     this.projectFilesystem = projectFilesystem;
   }
@@ -181,5 +172,12 @@ public class JavaLibraryBuilder
   public JavaLibraryBuilder addTest(BuildTarget test) {
     getArgForPopulating().addTests(test);
     return this;
+  }
+
+  public static ToolchainProvider createToolchainProviderForJavaLibrary() {
+    return new ToolchainProviderBuilder()
+        .withToolchain(
+            JavacOptionsProvider.DEFAULT_NAME, JavacOptionsProvider.of(DEFAULT_JAVAC_OPTIONS))
+        .build();
   }
 }

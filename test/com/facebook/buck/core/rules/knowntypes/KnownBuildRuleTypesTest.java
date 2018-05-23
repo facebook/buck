@@ -43,6 +43,7 @@ import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
+import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.jvm.java.JavaLibraryDescriptionArg;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -143,7 +144,10 @@ public class KnownBuildRuleTypesTest {
     BuildRuleResolver resolver = new TestBuildRuleResolver();
     return (DefaultJavaLibrary)
         description.createBuildRule(
-            TestBuildRuleCreationContextFactory.create(resolver, projectFilesystem),
+            TestBuildRuleCreationContextFactory.create(
+                resolver,
+                projectFilesystem,
+                JavaLibraryBuilder.createToolchainProviderForJavaLibrary()),
             buildTarget,
             buildRuleParams,
             arg);
