@@ -194,13 +194,11 @@ public class GoCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     }
 
     ImmutableList.Builder<Path> asmOutputs = ImmutableList.builder();
-
-    FilteredSourceFiles filteredAsmSrcs =
-        new FilteredSourceFiles(
-            rawAsmSrcs, getBuildTarget(), platform, Arrays.asList(FileType.SFiles));
-    steps.addAll(filteredAsmSrcs.getFilterSteps());
-
     if (!rawAsmSrcs.isEmpty()) {
+      FilteredSourceFiles filteredAsmSrcs =
+          new FilteredSourceFiles(
+              rawAsmSrcs, getBuildTarget(), platform, Arrays.asList(FileType.SFiles));
+      steps.addAll(filteredAsmSrcs.getFilterSteps());
       Path asmIncludeDir =
           BuildTargets.getScratchPath(
               getProjectFilesystem(),
@@ -255,6 +253,7 @@ public class GoCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
               asmOutputPath));
       asmOutputs.add(asmOutputPath);
     }
+
     if (!rawAsmSrcs.isEmpty() || !extraAsmOutputs.isEmpty()) {
       steps.add(
           new GoPackStep(
@@ -267,7 +266,6 @@ public class GoCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
                   .addAll(
                       extraAsmOutputs.stream().map(x -> pathResolver.getAbsolutePath(x)).iterator())
                   .build(),
-              filteredAsmSrcs,
               output));
     }
 

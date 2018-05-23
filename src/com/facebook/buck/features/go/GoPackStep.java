@@ -21,7 +21,6 @@ import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Iterables;
 import java.nio.file.Path;
 import java.util.Optional;
 
@@ -47,7 +46,6 @@ public class GoPackStep extends ShellStep {
   private final Operation op;
   private final ImmutableList<Path> srcs;
   private final Path output;
-  private final Iterable<Path> filteredAsmSrcs;
 
   public GoPackStep(
       BuildTarget buildTarget,
@@ -56,7 +54,6 @@ public class GoPackStep extends ShellStep {
       ImmutableList<String> packCommandPrefix,
       Operation op,
       ImmutableList<Path> srcs,
-      Iterable<Path> filteredAsmSrcs,
       Path output) {
     super(Optional.of(buildTarget), workingDirectory);
     this.environment = environment;
@@ -64,14 +61,10 @@ public class GoPackStep extends ShellStep {
     this.op = op;
     this.output = output;
     this.srcs = srcs;
-    this.filteredAsmSrcs = filteredAsmSrcs;
   }
 
   @Override
   protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
-    if (Iterables.isEmpty(filteredAsmSrcs)) {
-      return ImmutableList.of();
-    }
     return ImmutableList.<String>builder()
         .addAll(packCommandPrefix)
         .add(op.getOpCode(context.getVerbosity().shouldUseVerbosityFlagIfAvailable()))
