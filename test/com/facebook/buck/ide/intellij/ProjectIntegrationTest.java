@@ -288,6 +288,11 @@ public class ProjectIntegrationTest {
   }
 
   @Test
+  public void testProjectWithPrebuiltJarExportedDeps() throws InterruptedException, IOException {
+    runBuckProjectAndVerify("project_with_prebuilt_exported_deps", "//a:a");
+  }
+
+  @Test
   public void testProjectWithProjectRoot() throws InterruptedException, IOException {
     runBuckProjectAndVerify(
         "project_with_project_root",
