@@ -17,10 +17,12 @@
 package com.facebook.buck.features.lua;
 
 import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.BuildRuleResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 
 public interface LuaPackageable {
-  Iterable<BuildRule> getLuaPackageDeps(CxxPlatform cxxPlatform);
+  Iterable<BuildRule> getLuaPackageDeps(CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver);
 
-  LuaPackageComponents getLuaPackageComponents();
+  LuaPackageComponents getLuaPackageComponents(SourcePathResolver pathResolver);
 }

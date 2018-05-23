@@ -24,9 +24,7 @@ import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTarg
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
@@ -52,19 +50,17 @@ public class LuaLibraryDescription
       BuildTarget buildTarget,
       BuildRuleParams params,
       LuaLibraryDescriptionArg args) {
-    BuildRuleResolver resolver = context.getBuildRuleResolver();
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
     return new LuaLibrary(buildTarget, context.getProjectFilesystem(), params) {
 
       @Override
-      public Iterable<BuildRule> getLuaPackageDeps(CxxPlatform cxxPlatform) {
-        return resolver.getAllRules(
+      public Iterable<BuildRule> getLuaPackageDeps(
+          CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
+        return ruleResolver.getAllRules(
             LuaUtil.getDeps(cxxPlatform, args.getDeps(), args.getPlatformDeps()));
       }
 
       @Override
-      public LuaPackageComponents getLuaPackageComponents() {
+      public LuaPackageComponents getLuaPackageComponents(SourcePathResolver pathResolver) {
         return LuaPackageComponents.builder()
             .putAllModules(
                 LuaUtil.toModuleMap(

@@ -53,6 +53,11 @@ public class LuaLibraryBuilder
     return this;
   }
 
+  public LuaLibraryBuilder setDeps(ImmutableSortedSet<BuildTarget> deps) {
+    getArgForPopulating().setDeps(deps);
+    return this;
+  }
+
   public LuaLibraryBuilder setPlatformDeps(
       PatternMatchedCollection<ImmutableSortedSet<BuildTarget>> deps) {
     getArgForPopulating().setPlatformDeps(deps);

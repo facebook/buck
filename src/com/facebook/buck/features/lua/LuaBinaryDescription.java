@@ -323,9 +323,9 @@ public class LuaBinaryDescription
         Iterable<BuildRule> deps = empty;
         if (rule instanceof LuaPackageable) {
           LuaPackageable packageable = (LuaPackageable) rule;
-          LuaPackageComponents components = packageable.getLuaPackageComponents();
+          LuaPackageComponents components = packageable.getLuaPackageComponents(pathResolver);
           LuaPackageComponents.addComponents(builder, components);
-          deps = packageable.getLuaPackageDeps(cxxPlatform);
+          deps = packageable.getLuaPackageDeps(cxxPlatform, ruleResolver);
           if (components.hasNativeCode(cxxPlatform)) {
             for (BuildRule dep : deps) {
               if (dep instanceof NativeLinkable) {

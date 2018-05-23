@@ -48,6 +48,9 @@ import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
+import com.facebook.buck.core.toolchain.tool.Tool;
+import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
+import com.facebook.buck.core.toolchain.toolprovider.impl.ConstantToolProvider;
 import com.facebook.buck.cxx.CxxBinaryBuilder;
 import com.facebook.buck.cxx.CxxCompilationDatabase;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
@@ -62,7 +65,9 @@ import com.facebook.buck.cxx.toolchain.linker.Linker.LinkableDepType;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.features.filegroup.FilegroupBuilder;
+import com.facebook.buck.features.lua.LuaBinaryBuilder;
 import com.facebook.buck.features.lua.LuaLibraryBuilder;
+import com.facebook.buck.features.lua.LuaTestUtils;
 import com.facebook.buck.features.python.CxxPythonExtensionBuilder;
 import com.facebook.buck.features.python.PythonBinaryBuilder;
 import com.facebook.buck.features.python.PythonBuckConfig;
@@ -889,18 +894,43 @@ public class IncrementalActionGraphScenarioTest {
   }
 
   @Test
-  public void testLuaLibraryLoadedFromCache() {
-    BuildTarget target = BuildTargetFactory.newInstance("//:lib");
-    LuaLibraryBuilder builder =
-        new LuaLibraryBuilder(target).setSrcs(ImmutableSortedSet.of(FakeSourcePath.of("lib.lua")));
+  public void testLuaBinaryAndLibraryOnlyLibraryLoadedFromCache() {
+    BuildTarget cxxLibraryTarget = BuildTargetFactory.newInstance("//:cxxlib");
+    CxxLibraryBuilder cxxLibraryBuilder =
+        new CxxLibraryBuilder(cxxLibraryTarget)
+            .setSrcs(
+                ImmutableSortedSet.of(
+                    SourceWithFlags.of(FakeSourcePath.of("something.cpp"), ImmutableList.of())));
 
-    ActionGraphAndResolver result = createActionGraph(builder);
+    BuildTarget libraryTarget = BuildTargetFactory.newInstance("//:lib");
+    LuaLibraryBuilder libraryBuilder =
+        new LuaLibraryBuilder(libraryTarget)
+            .setSrcs(ImmutableSortedSet.of(FakeSourcePath.of("lib.lua")))
+            .setDeps(ImmutableSortedSet.of(cxxLibraryTarget));
+
+    BuildTarget binaryTarget = BuildTargetFactory.newInstance("//:bin");
+    Tool override = new CommandTool.Builder().addArg("override").build();
+    LuaBinaryBuilder binaryBuilder =
+        new LuaBinaryBuilder(
+                binaryTarget,
+                LuaTestUtils.DEFAULT_PLATFORM
+                    .withLua(new ConstantToolProvider(override))
+                    .withExtension(".override"))
+            .setMainModule("main")
+            .setDeps(ImmutableSortedSet.of(libraryTarget));
+
+    ActionGraphAndResolver result =
+        createActionGraph(binaryBuilder, libraryBuilder, cxxLibraryBuilder);
     ImmutableMap<BuildRule, RuleKey> ruleKeys = getRuleKeys(result);
-    ActionGraphAndResolver newResult = createActionGraph(builder);
+
+    ActionGraphAndResolver newResult =
+        createActionGraph(binaryBuilder, libraryBuilder, cxxLibraryBuilder);
     queryTransitiveDeps(newResult);
     ImmutableMap<BuildRule, RuleKey> newRuleKeys = getRuleKeys(newResult);
 
-    assertBuildRulesSame(result, newResult);
+    assertBuildRulesSame(result, newResult, libraryTarget.getUnflavoredBuildTarget());
+    assertBuildRulesSame(result, newResult, cxxLibraryTarget.getUnflavoredBuildTarget());
+    assertCommonBuildRulesNotSame(result, newResult, binaryTarget.getUnflavoredBuildTarget());
     assertEquals(ruleKeys, newRuleKeys);
   }
 
