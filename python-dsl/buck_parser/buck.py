@@ -69,6 +69,8 @@ DEFAULT_WATCHMAN_QUERY_TIMEOUT = 60.0
 
 ORIGINAL_IMPORT = __builtin__.__import__
 
+_LOAD_TARGET_PATH_RE = re.compile(r'^(@?[A-Za-z0-9_]+)?//(.*):(.*)$')
+
 
 class AbstractContext(object):
     """Superclass of execution contexts."""
@@ -934,7 +936,7 @@ class BuildFileProcessor(object):
     def _get_load_path(self, label):
         # type: (str) -> BuildInclude
         """Resolve the given load function label to a BuildInclude metadata."""
-        match = re.match(r'^(@?[A-Za-z0-9_]+)?//(.*):(.*)$', label)
+        match = _LOAD_TARGET_PATH_RE.match(label)
         if match is None:
             raise ValueError(
                 'load label {} should be in the form of '
