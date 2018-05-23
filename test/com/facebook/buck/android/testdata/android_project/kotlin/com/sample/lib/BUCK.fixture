@@ -82,6 +82,21 @@ android_library(
     ],
 )
 
+android_library(
+    name = "lib_mixed_no_kotlin_sources",
+    srcs = glob([
+        "EmptyJavaClass.java",
+    ]),
+    language = "KOTLIN",
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//res/com/sample/title:title",
+        "//res/com/sample/top:top",
+    ],
+)
+
 robolectric_test(
     name = "test",
     srcs = glob([
