@@ -208,7 +208,7 @@ android_binary(
 android_binary(
     name = "app-native-exo",
     cpu_filters = [
-        "arm",
+        "armv7",
     ],
     exopackage_modes = ["native_library"],
     keystore = "//keystores:debug",
@@ -228,7 +228,7 @@ android_binary(
 android_binary(
     name = "app-dex-native-exo",
     cpu_filters = [
-        "arm",
+        "armv7",
     ],
     exopackage_modes = [
         "native_library",
@@ -251,7 +251,7 @@ android_binary(
 android_binary(
     name = "app-full-exo",
     cpu_filters = [
-        "arm",
+        "armv7",
     ],
     exopackage_modes = [
         "native_library",

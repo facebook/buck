@@ -178,7 +178,6 @@ android_binary(
 android_binary(
     name = "app_cxx_lib_dep",
     cpu_filters = [
-        "arm",
         "armv7",
         "x86",
     ],
@@ -244,7 +243,6 @@ android_binary(
         "//native/cxx:lib",
     ],
     cpu_filters = [
-        "arm",
         "armv7",
         "x86",
     ],
@@ -312,7 +310,6 @@ android_binary(
 android_binary(
     name = "app_no_cxx_deps",
     cpu_filters = [
-        "arm",
         "armv7",
         "x86",
     ],
@@ -383,7 +380,6 @@ android_binary(
 android_binary(
     name = "app_with_native_lib_proguard",
     cpu_filters = [
-        "arm",
         "armv7",
         "x86",
     ],

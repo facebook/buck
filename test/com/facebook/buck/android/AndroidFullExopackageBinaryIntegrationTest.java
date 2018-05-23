@@ -60,7 +60,7 @@ public class AndroidFullExopackageBinaryIntegrationTest {
 
     zipInspector.assertFileDoesNotExist("assets/secondary-program-dex-jars/metadata.txt");
     zipInspector.assertFileDoesNotExist("classes2.dex");
-    zipInspector.assertFileDoesNotExist("lib/armeabi/libnative_cxx_lib.so");
+    zipInspector.assertFileDoesNotExist("lib/armeabi-v7a/libnative_cxx_lib.so");
     zipInspector.assertFileDoesNotExist("assets/hilarity.txt");
 
     zipInspector.assertFileExists("classes.dex");
