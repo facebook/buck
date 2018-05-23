@@ -40,10 +40,9 @@ public class OcamlDescriptionEnhancer {
         StringWithMacrosConverter.of(
             target,
             cellPathResolver,
-            resolver,
             ImmutableList.of(new LocationMacroExpander(), new ExecutableMacroExpander()));
     for (StringWithMacros flag : flags) {
-      args.add(macrosConverter.convert(flag));
+      args.add(macrosConverter.convert(flag, resolver));
     }
     return args.build();
   }

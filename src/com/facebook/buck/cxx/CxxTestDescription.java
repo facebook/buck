@@ -226,20 +226,20 @@ public class CxxTestDescription
         StringWithMacrosConverter.builder()
             .setBuildTarget(buildTarget)
             .setCellPathResolver(cellRoots)
-            .setResolver(resolver)
             .addExpanders(new LocationMacroExpander())
             .build();
 
     // Supplier which expands macros in the passed in test environment.
     ImmutableMap<String, Arg> testEnv =
-        ImmutableMap.copyOf(Maps.transformValues(args.getEnv(), macrosConverter::convert));
+        ImmutableMap.copyOf(
+            Maps.transformValues(args.getEnv(), x -> macrosConverter.convert(x, resolver)));
 
     // Supplier which expands macros in the passed in test arguments.
     Supplier<ImmutableList<Arg>> testArgs =
         () ->
             args.getArgs()
                 .stream()
-                .map(macrosConverter::convert)
+                .map(x -> macrosConverter.convert(x, resolver))
                 .collect(ImmutableList.toImmutableList());
 
     Supplier<ImmutableSortedSet<BuildRule>> additionalDeps =
@@ -255,7 +255,8 @@ public class CxxTestDescription
           // Add any build-time from any macros embedded in the `env` or `args` parameter.
           for (StringWithMacros part : Iterables.concat(args.getArgs(), args.getEnv().values())) {
             deps.addAll(
-                BuildableSupport.getDepsCollection(macrosConverter.convert(part), ruleFinder));
+                BuildableSupport.getDepsCollection(
+                    macrosConverter.convert(part, resolver), ruleFinder));
           }
 
           return deps.build();

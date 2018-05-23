@@ -323,7 +323,6 @@ public class PythonTestDescription
         StringWithMacrosConverter.builder()
             .setBuildTarget(buildTarget)
             .setCellPathResolver(cellRoots)
-            .setResolver(resolver)
             .setExpanders(PythonUtil.MACRO_EXPANDERS)
             .build();
     PythonPackageComponents allComponents =
@@ -341,7 +340,7 @@ public class PythonTestDescription
             cxxPlatform,
             args.getLinkerFlags()
                 .stream()
-                .map(macrosConverter::convert)
+                .map(x -> macrosConverter.convert(x, resolver))
                 .collect(ImmutableList.toImmutableList()),
             pythonBuckConfig.getNativeLinkStrategy(),
             args.getPreloadDeps());
@@ -403,7 +402,9 @@ public class PythonTestDescription
     }
 
     Supplier<ImmutableMap<String, Arg>> testEnv =
-        () -> ImmutableMap.copyOf(Maps.transformValues(args.getEnv(), macrosConverter::convert));
+        () ->
+            ImmutableMap.copyOf(
+                Maps.transformValues(args.getEnv(), x -> macrosConverter.convert(x, resolver)));
 
     // Generate and return the python test rule, which depends on the python binary rule above.
     return PythonTest.from(

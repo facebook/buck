@@ -174,8 +174,8 @@ public class JsUtil {
       BuildRuleResolver resolver,
       CellPathResolver cellRoots) {
     StringWithMacrosConverter macrosConverter =
-        StringWithMacrosConverter.of(target, cellRoots, resolver, MACRO_EXPANDERS);
-    return args.getExtraJson().map(macrosConverter::convert);
+        StringWithMacrosConverter.of(target, cellRoots, MACRO_EXPANDERS);
+    return args.getExtraJson().map(x -> macrosConverter.convert(x, resolver));
   }
 
   /** @return The input with all special JSON characters escaped, but not wrapped in quotes. */

@@ -102,13 +102,12 @@ public class WorkerToolDescription implements DescriptionWithTargetGraph<WorkerT
         StringWithMacrosConverter.builder()
             .setBuildTarget(buildTarget)
             .setCellPathResolver(context.getCellPathResolver())
-            .setResolver(resolver)
             .setExpanders(MACRO_EXPANDERS)
             .build();
 
     if (args.getArgs().isLeft()) {
       builder.addArg(
-          new ProxyArg(macrosConverter.convert(args.getArgs().getLeft())) {
+          new ProxyArg(macrosConverter.convert(args.getArgs().getLeft(), resolver)) {
             @Override
             public void appendToCommandLine(
                 Consumer<String> consumer, SourcePathResolver pathResolver) {
@@ -123,11 +122,11 @@ public class WorkerToolDescription implements DescriptionWithTargetGraph<WorkerT
           });
     } else {
       for (StringWithMacros arg : args.getArgs().getRight()) {
-        builder.addArg(macrosConverter.convert(arg));
+        builder.addArg(macrosConverter.convert(arg, resolver));
       }
     }
     for (Map.Entry<String, StringWithMacros> e : args.getEnv().entrySet()) {
-      builder.addEnv(e.getKey(), macrosConverter.convert(e.getValue()));
+      builder.addEnv(e.getKey(), macrosConverter.convert(e.getValue(), resolver));
     }
 
     // negative or zero: unlimited number of worker processes

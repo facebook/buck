@@ -111,7 +111,6 @@ public class GroovyTestDescription implements DescriptionWithTargetGraph<GroovyT
         StringWithMacrosConverter.builder()
             .setBuildTarget(buildTarget)
             .setCellPathResolver(cellRoots)
-            .setResolver(resolver)
             .setExpanders(JavaTestDescription.MACRO_EXPANDERS)
             .build();
     return new JavaTest(
@@ -133,7 +132,8 @@ public class GroovyTestDescription implements DescriptionWithTargetGraph<GroovyT
             .map(Optional::of)
             .orElse(groovyBuckConfig.getDelegate().getDefaultTestRuleTimeoutMs()),
         args.getTestCaseTimeoutMs(),
-        ImmutableMap.copyOf(Maps.transformValues(args.getEnv(), macrosConverter::convert)),
+        ImmutableMap.copyOf(
+            Maps.transformValues(args.getEnv(), x -> macrosConverter.convert(x, resolver))),
         args.getRunTestSeparately(),
         args.getForkMode(),
         args.getStdOutLogLevel(),

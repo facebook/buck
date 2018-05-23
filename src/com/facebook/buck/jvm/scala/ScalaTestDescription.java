@@ -128,7 +128,6 @@ public class ScalaTestDescription
         StringWithMacrosConverter.builder()
             .setBuildTarget(buildTarget)
             .setCellPathResolver(cellRoots)
-            .setResolver(resolver)
             .setExpanders(JavaTestDescription.MACRO_EXPANDERS)
             .build();
     JavaLibrary testsLibrary = resolver.addToIndex(scalaLibraryBuilder.buildLibrary());
@@ -152,7 +151,8 @@ public class ScalaTestDescription
             .map(Optional::of)
             .orElse(javaBuckConfig.getDelegate().getDefaultTestRuleTimeoutMs()),
         args.getTestCaseTimeoutMs(),
-        ImmutableMap.copyOf(Maps.transformValues(args.getEnv(), macrosConverter::convert)),
+        ImmutableMap.copyOf(
+            Maps.transformValues(args.getEnv(), x -> macrosConverter.convert(x, resolver))),
         args.getRunTestSeparately(),
         args.getForkMode(),
         args.getStdOutLogLevel(),

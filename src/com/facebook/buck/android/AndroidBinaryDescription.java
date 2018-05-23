@@ -488,10 +488,9 @@ public class AndroidBinaryDescription
         StringWithMacrosConverter.builder()
             .setBuildTarget(buildTarget)
             .setCellPathResolver(cellRoots)
-            .setResolver(resolver)
             .setExpanders(MACRO_EXPANDERS)
             .build();
-    return arg.getPostFilterResourcesCmd().map(macrosConverter::convert);
+    return arg.getPostFilterResourcesCmd().map(x -> macrosConverter.convert(x, resolver));
   }
 
   private Optional<Arg> getPreprocessJavaClassesBash(
@@ -503,10 +502,9 @@ public class AndroidBinaryDescription
         StringWithMacrosConverter.builder()
             .setBuildTarget(buildTarget)
             .setCellPathResolver(cellRoots)
-            .setResolver(resolver)
             .setExpanders(MACRO_EXPANDERS)
             .build();
-    return arg.getPreprocessJavaClassesBash().map(macrosConverter::convert);
+    return arg.getPreprocessJavaClassesBash().map(x -> macrosConverter.convert(x, resolver));
   }
 
   private Optional<RedexOptions> getRedexOptions(
@@ -532,11 +530,13 @@ public class AndroidBinaryDescription
         StringWithMacrosConverter.builder()
             .setBuildTarget(buildTarget)
             .setCellPathResolver(cellRoots)
-            .setResolver(resolver)
             .setExpanders(MACRO_EXPANDERS)
             .build();
     List<Arg> redexExtraArgs =
-        arg.getRedexExtraArgs().stream().map(macrosConverter::convert).collect(Collectors.toList());
+        arg.getRedexExtraArgs()
+            .stream()
+            .map(x -> macrosConverter.convert(x, resolver))
+            .collect(Collectors.toList());
 
     return Optional.of(
         RedexOptions.builder()

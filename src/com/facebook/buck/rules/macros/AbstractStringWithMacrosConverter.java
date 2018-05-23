@@ -53,9 +53,6 @@ abstract class AbstractStringWithMacrosConverter {
   abstract CellPathResolver getCellPathResolver();
 
   @Value.Parameter
-  abstract BuildRuleResolver getResolver();
-
-  @Value.Parameter
   abstract ImmutableList<AbstractMacroExpander<? extends Macro, ?>> getExpanders();
 
   abstract Optional<Function<String, String>> getSanitizer();
@@ -90,28 +87,29 @@ abstract class AbstractStringWithMacrosConverter {
   }
 
   @SuppressWarnings("unchecked")
-  private <T extends Macro, P> Arg expand(T macro) throws MacroException {
+  private <T extends Macro, P> Arg expand(T macro, BuildRuleResolver ruleResolver)
+      throws MacroException {
     AbstractMacroExpander<T, P> expander = getExpander(macro);
 
     // Calculate precomputed work.
     P precomputedWork = (P) getPrecomputedWorkCache().get(macro);
     if (precomputedWork == null) {
       precomputedWork =
-          expander.precomputeWorkFrom(
-              getBuildTarget(), getCellPathResolver(), getResolver(), macro);
+          expander.precomputeWorkFrom(getBuildTarget(), getCellPathResolver(), ruleResolver, macro);
       getPrecomputedWorkCache().put(macro, precomputedWork);
     }
 
     return expander.expandFrom(
-        getBuildTarget(), getCellPathResolver(), getResolver(), macro, precomputedWork);
+        getBuildTarget(), getCellPathResolver(), ruleResolver, macro, precomputedWork);
   }
 
   /**
    * Expand the input given for the this macro to some string, which is intended to be written to a
    * file.
    */
-  private Arg expand(MacroContainer macroContainer) throws MacroException {
-    Arg arg = expand(macroContainer.getMacro());
+  private Arg expand(MacroContainer macroContainer, BuildRuleResolver ruleResolver)
+      throws MacroException {
+    Arg arg = expand(macroContainer.getMacro(), ruleResolver);
 
     // If specified, wrap this macro's output in a `WriteToFileArg`.
     if (macroContainer.isOutputToFile()) {
@@ -129,7 +127,7 @@ abstract class AbstractStringWithMacrosConverter {
     return arg;
   }
 
-  public Arg convert(StringWithMacros val) {
+  public Arg convert(StringWithMacros val, BuildRuleResolver ruleResolver) {
     return CompositeArg.of(
         val.map(
             str ->
@@ -138,7 +136,7 @@ abstract class AbstractStringWithMacrosConverter {
                     .orElseGet(() -> StringArg.of(str)),
             macroContainer -> {
               try {
-                return expand(macroContainer);
+                return expand(macroContainer, ruleResolver);
               } catch (MacroException e) {
                 throw new HumanReadableException(e, "%s: %s", getBuildTarget(), e.getMessage());
               }

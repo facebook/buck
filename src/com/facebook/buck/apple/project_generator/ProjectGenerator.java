@@ -941,12 +941,11 @@ public class ProjectGenerator {
     ImmutableList.Builder<String> result = new ImmutableList.Builder<>();
     StringWithMacrosConverter macrosConverter =
         StringWithMacrosConverter.of(
-            node.getBuildTarget(),
-            node.getCellNames(),
-            emptyBuildRuleResolver,
-            ImmutableList.of(locationMacroExpander));
+            node.getBuildTarget(), node.getCellNames(), ImmutableList.of(locationMacroExpander));
     for (StringWithMacros flag : flags) {
-      macrosConverter.convert(flag).appendToCommandLine(result::add, defaultPathResolver);
+      macrosConverter
+          .convert(flag, emptyBuildRuleResolver)
+          .appendToCommandLine(result::add, defaultPathResolver);
     }
     return result.build();
   }

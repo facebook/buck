@@ -110,7 +110,6 @@ public class KotlinTestDescription implements DescriptionWithTargetGraph<KotlinT
         StringWithMacrosConverter.builder()
             .setBuildTarget(buildTarget)
             .setCellPathResolver(context.getCellPathResolver())
-            .setResolver(resolver)
             .setExpanders(JavaTestDescription.MACRO_EXPANDERS)
             .build();
     return new JavaTest(
@@ -132,7 +131,8 @@ public class KotlinTestDescription implements DescriptionWithTargetGraph<KotlinT
             .map(Optional::of)
             .orElse(javaBuckConfig.getDelegate().getDefaultTestRuleTimeoutMs()),
         args.getTestCaseTimeoutMs(),
-        ImmutableMap.copyOf(Maps.transformValues(args.getEnv(), macrosConverter::convert)),
+        ImmutableMap.copyOf(
+            Maps.transformValues(args.getEnv(), x -> macrosConverter.convert(x, resolver))),
         args.getRunTestSeparately(),
         args.getForkMode(),
         args.getStdOutLogLevel(),

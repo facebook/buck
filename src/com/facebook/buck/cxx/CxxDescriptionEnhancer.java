@@ -985,14 +985,13 @@ public class CxxDescriptionEnhancer {
           StringWithMacrosConverter.builder()
               .setBuildTarget(linkRuleTarget)
               .setCellPathResolver(cellRoots)
-              .setResolver(resolver)
               .setExpanders(expanders)
               .setSanitizer(getStringWithMacrosArgSanitizer(cxxPlatform))
               .build();
       CxxFlags.getFlagsWithMacrosWithPlatformMacroExpansion(
               linkerFlags, platformLinkerFlags, cxxPlatform)
           .stream()
-          .map(macrosConverter::convert)
+          .map(x -> macrosConverter.convert(x, resolver))
           .forEach(argsBuilder::add);
     }
 
@@ -1446,11 +1445,10 @@ public class CxxDescriptionEnhancer {
         StringWithMacrosConverter.builder()
             .setBuildTarget(target)
             .setCellPathResolver(cellPathResolver)
-            .setResolver(resolver)
             .addExpanders(new CxxLocationMacroExpander(cxxPlatform), new OutputMacroExpander())
             .setSanitizer(getStringWithMacrosArgSanitizer(cxxPlatform))
             .build();
-    return macrosConverter.convert(flag);
+    return macrosConverter.convert(flag, resolver);
   }
 
   private static Function<String, String> getStringWithMacrosArgSanitizer(CxxPlatform platform) {

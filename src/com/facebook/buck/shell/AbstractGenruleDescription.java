@@ -159,11 +159,10 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
       ImmutableList<AbstractMacroExpander<? extends Macro, ?>> expanders = maybeExpanders.get();
       SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
       StringWithMacrosConverter converter =
-          StringWithMacrosConverter.of(
-              buildTarget, context.getCellPathResolver(), resolver, expanders);
+          StringWithMacrosConverter.of(buildTarget, context.getCellPathResolver(), expanders);
       Function<StringWithMacros, Arg> toArg =
           str -> {
-            Arg arg = converter.convert(str);
+            Arg arg = converter.convert(str, resolver);
             if (RichStream.from(str.getMacros())
                 .map(MacroContainer::getMacro)
                 .anyMatch(WorkerMacro.class::isInstance)) {

@@ -83,15 +83,15 @@ public class ShTestDescription implements DescriptionWithTargetGraph<ShTestDescr
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
     StringWithMacrosConverter macrosConverter =
-        StringWithMacrosConverter.of(
-            buildTarget, context.getCellPathResolver(), resolver, MACRO_EXPANDERS);
+        StringWithMacrosConverter.of(buildTarget, context.getCellPathResolver(), MACRO_EXPANDERS);
     ImmutableList<Arg> testArgs =
         Stream.concat(
                 Optionals.toStream(args.getTest()).map(SourcePathArg::of),
-                args.getArgs().stream().map(macrosConverter::convert))
+                args.getArgs().stream().map(x -> macrosConverter.convert(x, resolver)))
             .collect(ImmutableList.toImmutableList());
     ImmutableMap<String, Arg> testEnv =
-        ImmutableMap.copyOf(Maps.transformValues(args.getEnv(), macrosConverter::convert));
+        ImmutableMap.copyOf(
+            Maps.transformValues(args.getEnv(), x -> macrosConverter.convert(x, resolver)));
     return new ShTest(
         buildTarget,
         projectFilesystem,

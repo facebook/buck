@@ -72,15 +72,14 @@ public class CommandAliasDescription
 
     BuildRuleResolver resolver = context.getBuildRuleResolver();
     StringWithMacrosConverter macrosConverter =
-        StringWithMacrosConverter.of(
-            buildTarget, context.getCellPathResolver(), resolver, MACRO_EXPANDERS);
+        StringWithMacrosConverter.of(buildTarget, context.getCellPathResolver(), MACRO_EXPANDERS);
 
     for (StringWithMacros x : args.getArgs()) {
-      toolArgs.add(macrosConverter.convert(x));
+      toolArgs.add(macrosConverter.convert(x, resolver));
     }
 
     for (Map.Entry<String, StringWithMacros> x : args.getEnv().entrySet()) {
-      toolEnv.put(x.getKey(), macrosConverter.convert(x.getValue()));
+      toolEnv.put(x.getKey(), macrosConverter.convert(x.getValue(), resolver));
     }
 
     Optional<BuildRule> exe = args.getExe().map(resolver::getRule);

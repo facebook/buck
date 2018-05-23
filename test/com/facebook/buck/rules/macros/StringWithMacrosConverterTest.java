@@ -50,9 +50,9 @@ public class StringWithMacrosConverterTest {
   public void noMacros() {
     BuildRuleResolver resolver = new TestBuildRuleResolver();
     StringWithMacrosConverter converter =
-        StringWithMacrosConverter.of(TARGET, CELL_ROOTS, resolver, MACRO_EXPANDERS);
+        StringWithMacrosConverter.of(TARGET, CELL_ROOTS, MACRO_EXPANDERS);
     assertThat(
-        converter.convert(StringWithMacrosUtils.format("something")),
+        converter.convert(StringWithMacrosUtils.format("something"), resolver),
         Matchers.equalTo(CompositeArg.of(ImmutableList.of(StringArg.of("something")))));
   }
 
@@ -64,10 +64,11 @@ public class StringWithMacrosConverterTest {
             .setOut("out")
             .build(resolver);
     StringWithMacrosConverter converter =
-        StringWithMacrosConverter.of(TARGET, CELL_ROOTS, resolver, MACRO_EXPANDERS);
+        StringWithMacrosConverter.of(TARGET, CELL_ROOTS, MACRO_EXPANDERS);
     assertThat(
         converter.convert(
-            StringWithMacrosUtils.format("%s", LocationMacro.of(genrule.getBuildTarget()))),
+            StringWithMacrosUtils.format("%s", LocationMacro.of(genrule.getBuildTarget())),
+            resolver),
         Matchers.equalTo(
             CompositeArg.of(
                 ImmutableList.of(
@@ -82,12 +83,11 @@ public class StringWithMacrosConverterTest {
         StringWithMacrosConverter.builder()
             .setBuildTarget(TARGET)
             .setCellPathResolver(CELL_ROOTS)
-            .setResolver(resolver)
             .setExpanders(MACRO_EXPANDERS)
             .setSanitizer(s -> "something else")
             .build();
     assertThat(
-        converter.convert(StringWithMacrosUtils.format("something")),
+        converter.convert(StringWithMacrosUtils.format("something"), resolver),
         Matchers.equalTo(
             CompositeArg.of(
                 ImmutableList.of(SanitizedArg.create(s -> "something else", "something")))));
@@ -101,11 +101,12 @@ public class StringWithMacrosConverterTest {
             .setOut("out")
             .build(resolver);
     StringWithMacrosConverter converter =
-        StringWithMacrosConverter.of(TARGET, CELL_ROOTS, resolver, MACRO_EXPANDERS);
+        StringWithMacrosConverter.of(TARGET, CELL_ROOTS, MACRO_EXPANDERS);
     Arg result =
         converter.convert(
             StringWithMacrosUtils.format(
-                "%s", MacroContainer.of(LocationMacro.of(genrule.getBuildTarget()), true)));
+                "%s", MacroContainer.of(LocationMacro.of(genrule.getBuildTarget()), true)),
+            resolver);
     assertThat(
         ((CompositeArg) result).getArgs(),
         Matchers.contains(Matchers.instanceOf(WriteToFileArg.class)));
