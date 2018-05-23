@@ -21,6 +21,7 @@ import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.description.BuildRuleParams;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
 import com.facebook.buck.core.rules.tool.BinaryBuildRule;
@@ -44,6 +45,7 @@ import com.facebook.buck.test.TestCaseSummary;
 import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.TestRunningOptions;
+import com.facebook.buck.util.Memoizer;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.facebook.buck.util.types.Pair;
@@ -56,6 +58,7 @@ import java.nio.file.Path;
 import java.util.Optional;
 import java.util.SortedSet;
 import java.util.concurrent.Callable;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
@@ -63,8 +66,10 @@ import java.util.stream.Stream;
 public class PythonTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
     implements TestRule, HasRuntimeDeps, ExternalTestRunnerRule, BinaryBuildRule {
 
+  private BuildRuleResolver ruleResolver;
   private final Supplier<? extends SortedSet<BuildRule>> originalDeclaredDeps;
-  private final Supplier<ImmutableMap<String, Arg>> env;
+  private final Function<BuildRuleResolver, ImmutableMap<String, Arg>> envSupplier;
+  private final Memoizer<ImmutableMap<String, Arg>> env = new Memoizer<>();
   private final PythonBinary binary;
   private final ImmutableSet<String> labels;
   private final Optional<Long> testRuleTimeoutMs;
@@ -75,16 +80,18 @@ public class PythonTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
+      BuildRuleResolver ruleResolver,
       Supplier<? extends SortedSet<BuildRule>> originalDeclaredDeps,
-      Supplier<ImmutableMap<String, Arg>> env,
+      Function<BuildRuleResolver, ImmutableMap<String, Arg>> envSupplier,
       PythonBinary binary,
       ImmutableSet<String> labels,
       ImmutableList<Pair<Float, ImmutableSet<Path>>> neededCoverage,
       Optional<Long> testRuleTimeoutMs,
       ImmutableSet<String> contacts) {
     super(buildTarget, projectFilesystem, params);
+    this.ruleResolver = ruleResolver;
     this.originalDeclaredDeps = originalDeclaredDeps;
-    this.env = env;
+    this.envSupplier = envSupplier;
     this.binary = binary;
     this.labels = labels;
     this.neededCoverage = neededCoverage;
@@ -96,7 +103,8 @@ public class PythonTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      Supplier<ImmutableMap<String, Arg>> env,
+      BuildRuleResolver ruleResolver,
+      Function<BuildRuleResolver, ImmutableMap<String, Arg>> env,
       PythonBinary binary,
       ImmutableSet<String> labels,
       ImmutableList<Pair<Float, ImmutableSet<Path>>> neededCoverage,
@@ -106,6 +114,7 @@ public class PythonTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
         buildTarget,
         projectFilesystem,
         params.withDeclaredDeps(ImmutableSortedSet.of(binary)).withoutExtraDeps(),
+        ruleResolver,
         params.getDeclaredDeps(),
         env,
         binary,
@@ -157,8 +166,12 @@ public class PythonTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private ImmutableMap<String, String> getMergedEnv(SourcePathResolver pathResolver) {
     return new ImmutableMap.Builder<String, String>()
         .putAll(binary.getExecutableCommand().getEnvironment(pathResolver))
-        .putAll(Arg.stringify(env.get(), pathResolver))
+        .putAll(Arg.stringify(getEnv(), pathResolver))
         .build();
+  }
+
+  private ImmutableMap<String, Arg> getEnv() {
+    return env.get(() -> envSupplier.apply(ruleResolver));
   }
 
   @Override
@@ -250,5 +263,13 @@ public class PythonTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
         .addAllLabels(getLabels())
         .addAllContacts(getContacts())
         .build();
+  }
+
+  @Override
+  public void updateBuildRuleResolver(
+      BuildRuleResolver ruleResolver,
+      SourcePathRuleFinder ruleFinder,
+      SourcePathResolver pathResolver) {
+    this.ruleResolver = ruleResolver;
   }
 }

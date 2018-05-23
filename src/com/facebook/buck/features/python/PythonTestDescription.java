@@ -76,7 +76,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.SortedSet;
-import java.util.function.Supplier;
+import java.util.function.Function;
 import org.immutables.value.Value;
 
 public class PythonTestDescription
@@ -401,16 +401,18 @@ public class PythonTestDescription
       }
     }
 
-    Supplier<ImmutableMap<String, Arg>> testEnv =
-        () ->
+    Function<BuildRuleResolver, ImmutableMap<String, Arg>> testEnv =
+        (ruleResolverInner) ->
             ImmutableMap.copyOf(
-                Maps.transformValues(args.getEnv(), x -> macrosConverter.convert(x, resolver)));
+                Maps.transformValues(
+                    args.getEnv(), x -> macrosConverter.convert(x, ruleResolverInner)));
 
     // Generate and return the python test rule, which depends on the python binary rule above.
     return PythonTest.from(
         buildTarget,
         projectFilesystem,
         params,
+        resolver,
         testEnv,
         binary,
         args.getLabels(),

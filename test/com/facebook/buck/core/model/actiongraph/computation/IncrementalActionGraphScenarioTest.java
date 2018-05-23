@@ -67,6 +67,7 @@ import com.facebook.buck.features.python.CxxPythonExtensionBuilder;
 import com.facebook.buck.features.python.PythonBinaryBuilder;
 import com.facebook.buck.features.python.PythonBuckConfig;
 import com.facebook.buck.features.python.PythonLibraryBuilder;
+import com.facebook.buck.features.python.PythonTestBuilder;
 import com.facebook.buck.features.python.TestPythonPlatform;
 import com.facebook.buck.features.python.toolchain.PythonEnvironment;
 import com.facebook.buck.features.python.toolchain.PythonPlatform;
@@ -971,6 +972,32 @@ public class IncrementalActionGraphScenarioTest {
     queryTransitiveDeps(newResult);
     getRuleKeys(newResult);
 
+    assertBuildRulesSame(result, newResult);
+  }
+
+  @Test
+  public void testPythonTestLoadedFromCache() {
+    BuildTarget libraryTarget = BuildTargetFactory.newInstance("//:lib");
+    PythonLibraryBuilder libraryBuilder =
+        PythonLibraryBuilder.createBuilder(libraryTarget)
+            .setSrcs(
+                SourceList.ofUnnamedSources(ImmutableSortedSet.of(FakeSourcePath.of("lib.py"))));
+
+    BuildTarget testTarget = BuildTargetFactory.newInstance("//:test");
+    PythonTestBuilder testBuilder =
+        PythonTestBuilder.create(testTarget)
+            .setDeps(ImmutableSortedSet.of(libraryTarget))
+            .setSrcs(
+                SourceList.ofUnnamedSources(ImmutableSortedSet.of(FakeSourcePath.of("test.py"))));
+
+    ActionGraphAndResolver result = createActionGraph(testBuilder, libraryBuilder);
+    ImmutableMap<BuildRule, RuleKey> ruleKeys = getRuleKeys(result);
+
+    ActionGraphAndResolver newResult = createActionGraph(testBuilder, libraryBuilder);
+    queryTransitiveDeps(newResult);
+    ImmutableMap<BuildRule, RuleKey> newRuleKeys = getRuleKeys(newResult);
+
+    assertEquals(ruleKeys, newRuleKeys);
     assertBuildRulesSame(result, newResult);
   }
 
