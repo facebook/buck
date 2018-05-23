@@ -673,10 +673,9 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
         watchmanDiagnosticLevel = WatchmanDiagnostic.Level.WARNING;
         break;
       case "error":
+      case "fatal":
         watchmanDiagnosticLevel = WatchmanDiagnostic.Level.ERROR;
         break;
-      case "fatal":
-        throw new IOException(String.format("%s (watchman): %s", buildFile, message));
       default:
         throw new RuntimeException(
             String.format(
