@@ -616,6 +616,58 @@ public class SkylarkProjectBuildFileParserTest {
   }
 
   @Test
+  public void testCanLoadExtensionFromBuildFileUsingRelativeLabel() throws Exception {
+    Path directory = projectFilesystem.resolve("src").resolve("test");
+    Files.createDirectories(directory);
+    Path buildFile = directory.resolve("BUCK");
+    Path extensionFile = directory.resolve("build_rules.bzl");
+    Files.write(
+        buildFile,
+        Arrays.asList(
+            "load(':build_rules.bzl', 'jar')", "prebuilt_jar(name='foo', binary_jar=jar)"));
+    Files.write(extensionFile, Arrays.asList("jar = 'jar.jar'"));
+    Map<String, Object> rule = getSingleRule(buildFile);
+    assertThat(rule.get("binaryJar"), equalTo("jar.jar"));
+  }
+
+  @Test
+  public void testCannotLoadExtensionFromANestedDirectory() throws Exception {
+    Path directory = projectFilesystem.resolve("src").resolve("test");
+    Files.createDirectories(directory);
+    Path buildFile = directory.resolve("BUCK");
+    Path extensionFile = directory.resolve("build_rules.bzl");
+    Files.write(
+        buildFile,
+        Arrays.asList(
+            "load(':foo/build_rules.bzl', 'jar')", "prebuilt_jar(name='foo', binary_jar=jar)"));
+    Files.write(extensionFile, Arrays.asList("jar = 'jar.jar'"));
+    thrown.expect(BuildFileParseException.class);
+    thrown.expectMessage(
+        "Relative loads work only for files in the same directory but "
+            + ":foo/build_rules.bzl is trying to load a file from a nested directory. "
+            + "Please use absolute label instead ([cell]//pkg[/pkg]:target).");
+    getSingleRule(buildFile);
+  }
+
+  @Test
+  public void testCanLoadExtensionFromExtensionUsingRelativeLabel() throws Exception {
+    Path directory = projectFilesystem.resolve("src").resolve("test");
+    Files.createDirectories(directory);
+    Path buildFile = directory.resolve("BUCK");
+    Path extensionFile = directory.resolve("build_rules.bzl");
+    Path extensionExtensionFile = directory.resolve("extension_rules.bzl");
+    Files.write(
+        buildFile,
+        Arrays.asList(
+            "load('//src/test:build_rules.bzl', 'get_name')",
+            "prebuilt_jar(name='foo', binary_jar=get_name())"));
+    Files.write(extensionExtensionFile, Arrays.asList("def get_name():", "  return 'jar'"));
+    Files.write(extensionFile, Arrays.asList("load(':extension_rules.bzl', 'get_name')"));
+    Map<String, Object> rule = getSingleRule(buildFile);
+    assertThat(rule.get("binaryJar"), equalTo("jar"));
+  }
+
+  @Test
   public void parsingOfExtensionWithSyntacticErrorsFails() throws Exception {
     Path directory = projectFilesystem.resolve("src").resolve("test");
     Files.createDirectories(directory);

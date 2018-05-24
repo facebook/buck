@@ -73,10 +73,6 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
 
   private static final Logger LOG = Logger.get(SkylarkProjectBuildFileParser.class);
 
-  // Dummy label used for resolving paths for other labels.
-  private static final Label EMPTY_LABEL =
-      Label.createUnvalidated(PackageIdentifier.EMPTY_PACKAGE_ID, "");
-
   private final FileSystem fileSystem;
 
   private final ProjectBuildFileParserOptions options;
@@ -179,7 +175,15 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
     ParseContext parseContext = new ParseContext(packageContext);
     try (Mutability mutability = Mutability.create("parsing " + buildFile)) {
       EnvironmentData envData =
-          createBuildFileEvaluationEnvironment(buildFileAst, mutability, parseContext);
+          createBuildFileEvaluationEnvironment(
+              Label.createUnvalidated(
+                  PackageIdentifier.create(
+                      RepositoryName.createFromValidStrippedName(options.getCellName()),
+                      PathFragment.create(basePath)),
+                  "BUCK"),
+              buildFileAst,
+              mutability,
+              parseContext);
       boolean exec = buildFileAst.exec(envData.getEnvironment(), eventHandler);
       if (!exec) {
         throw BuildFileParseException.createForUnknownParseError(
@@ -213,10 +217,13 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
    *     functions like {@code glob} and native rules like {@code java_library}.
    */
   private EnvironmentData createBuildFileEvaluationEnvironment(
-      BuildFileAST buildFileAst, Mutability mutability, ParseContext parseContext)
+      Label containingLabel,
+      BuildFileAST buildFileAst,
+      Mutability mutability,
+      ParseContext parseContext)
       throws IOException, InterruptedException, BuildFileParseException {
     ImmutableList<ExtensionData> dependencies =
-        loadExtensions(EMPTY_LABEL, buildFileAst.getImports());
+        loadExtensions(containingLabel, buildFileAst.getImports());
     ImmutableMap<String, Environment.Extension> importMap = toImportMap(dependencies);
     Environment env =
         Environment.builder(mutability)
@@ -372,6 +379,13 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
    */
   private com.google.devtools.build.lib.vfs.Path getImportPath(
       Label containingLabel, SkylarkImport skylarkImport) throws BuildFileParseException {
+    if (isRelativeLoad(skylarkImport) && skylarkImport.getImportString().contains("/")) {
+      throw BuildFileParseException.createForUnknownParseError(
+          "Relative loads work only for files in the same directory but "
+              + skylarkImport.getImportString()
+              + " is trying to load a file from a nested directory. "
+              + "Please use absolute label instead ([cell]//pkg[/pkg]:target).");
+    }
     PathFragment relativeExtensionPath = containingLabel.toPathFragment();
     RepositoryName repository = containingLabel.getPackageIdentifier().getRepository();
     if (repository.isMain()) {
@@ -386,6 +400,10 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
           skylarkImport.getImportString() + " references an unknown repository " + repositoryName);
     }
     return fileSystem.getPath(repositoryPath.resolve(relativeExtensionPath.toString()).toString());
+  }
+
+  private boolean isRelativeLoad(SkylarkImport skylarkImport) {
+    return skylarkImport.getImportString().startsWith(":");
   }
 
   /**
