@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright 2018-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -17,23 +17,28 @@
 package com.facebook.buck.slb;
 
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import java.util.concurrent.ScheduledExecutorService;
 import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleImmutable
-abstract class AbstractThriftOverHttpServiceConfig {
+abstract class AbstractHybridThriftOverHttpServiceArgs {
 
-  public static final String DEFAULT_THRIFT_PATH = "/thrift";
+  public static final String DEFAULT_HYBRID_THRIFT_PATH = "/hybrid_thrift";
 
   @Value.Parameter
   public abstract HttpService getService();
 
+  @Value.Parameter
+  public abstract ScheduledExecutorService getExecutor();
+
+  @Value.Default
   public ThriftProtocol getThriftProtocol() {
-    return ThriftProtocol.BINARY;
+    return ThriftProtocol.COMPACT;
   }
 
   @Value.Default
-  public String getThriftPath() {
-    return DEFAULT_THRIFT_PATH;
+  public String getHybridThriftPath() {
+    return DEFAULT_HYBRID_THRIFT_PATH;
   }
 }
