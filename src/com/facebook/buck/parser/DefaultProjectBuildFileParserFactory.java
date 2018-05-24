@@ -16,9 +16,9 @@
 
 package com.facebook.buck.parser;
 
-import com.facebook.buck.cli.exceptions.handlers.HumanReadableExceptionAugmentor;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.exceptions.handler.HumanReadableExceptionAugmentor;
 import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypesProvider;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;

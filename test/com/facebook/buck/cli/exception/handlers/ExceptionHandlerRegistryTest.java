@@ -22,9 +22,9 @@ import static org.hamcrest.Matchers.emptyString;
 import static org.hamcrest.Matchers.is;
 
 import com.facebook.buck.cli.exceptions.handlers.ExceptionHandlerRegistryFactory;
-import com.facebook.buck.cli.exceptions.handlers.HumanReadableExceptionAugmentor;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.exceptions.handler.ExceptionHandlerRegistry;
+import com.facebook.buck.core.exceptions.handler.HumanReadableExceptionAugmentor;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.BuckIsDyingException;

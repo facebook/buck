@@ -14,9 +14,8 @@
  * under the License.
  */
 
-package com.facebook.buck.cli.exception.handlers;
+package com.facebook.buck.core.exceptions.handler;
 
-import com.facebook.buck.cli.exceptions.handlers.HumanReadableExceptionAugmentor;
 import com.google.common.collect.ImmutableMap;
 import java.util.regex.Pattern;
 import org.junit.Assert;

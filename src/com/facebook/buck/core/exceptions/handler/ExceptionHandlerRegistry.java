@@ -16,7 +16,7 @@
 
 package com.facebook.buck.core.exceptions.handler;
 
-import com.facebook.buck.util.ThrowableCauseIterable;
+import com.facebook.buck.core.exceptions.ThrowableCauseIterable;
 import com.google.common.collect.ImmutableList;
 import java.util.Iterator;
 

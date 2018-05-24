@@ -25,7 +25,6 @@ import static com.google.common.util.concurrent.MoreExecutors.newDirectExecutorS
 import com.facebook.buck.artifact_cache.ArtifactCaches;
 import com.facebook.buck.artifact_cache.config.ArtifactCacheBuckConfig;
 import com.facebook.buck.cli.exceptions.handlers.ExceptionHandlerRegistryFactory;
-import com.facebook.buck.cli.exceptions.handlers.HumanReadableExceptionAugmentor;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.resources.ResourcesConfig;
 import com.facebook.buck.core.build.engine.cache.manager.BuildInfoStoreManager;
@@ -35,6 +34,7 @@ import com.facebook.buck.core.cell.LocalCellProviderFactory;
 import com.facebook.buck.core.cell.name.RelativeCellName;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.exceptions.handler.ExceptionHandlerRegistry;
+import com.facebook.buck.core.exceptions.handler.HumanReadableExceptionAugmentor;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphCache;
 import com.facebook.buck.core.rulekey.RuleKey;

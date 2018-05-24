@@ -1,0 +1,10 @@
+load("//tools/build_rules:java_rules.bzl", "standard_java_test")
+
+standard_java_test(
+    name = "handler",
+    deps = [
+        "//src/com/facebook/buck/core/exceptions/handler:handler",
+        "//third-party/java/guava:guava",
+        "//third-party/java/junit:junit",
+    ],
+)

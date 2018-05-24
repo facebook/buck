@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.cli.exceptions.handlers;
+package com.facebook.buck.core.exceptions.handler;
 
 import java.util.Map;
 import java.util.regex.Matcher;

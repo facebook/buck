@@ -19,6 +19,7 @@ package com.facebook.buck.cli.exceptions.handlers;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.exceptions.handler.ExceptionHandler;
 import com.facebook.buck.core.exceptions.handler.ExceptionHandlerRegistry;
+import com.facebook.buck.core.exceptions.handler.HumanReadableExceptionAugmentor;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.util.BuckIsDyingException;
