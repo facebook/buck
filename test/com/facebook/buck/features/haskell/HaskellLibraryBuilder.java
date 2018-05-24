@@ -22,10 +22,8 @@ import com.facebook.buck.core.model.targetgraph.AbstractNodeBuilder;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
@@ -39,8 +37,7 @@ public class HaskellLibraryBuilder
       BuildTarget target,
       HaskellPlatform defaultPlatform,
       FlavorDomain<HaskellPlatform> platforms,
-      CxxBuckConfig cxxBuckConfig,
-      ProjectFilesystem projectFilesystem) {
+      CxxBuckConfig cxxBuckConfig) {
     super(
         new HaskellLibraryDescription(
             new ToolchainProviderBuilder()
@@ -49,29 +46,15 @@ public class HaskellLibraryBuilder
                     HaskellPlatformsProvider.of(defaultPlatform, platforms))
                 .build(),
             cxxBuckConfig),
-        target,
-        projectFilesystem);
+        target);
   }
 
-  public HaskellLibraryBuilder(
-      BuildTarget target,
-      HaskellPlatform defaultPlatform,
-      FlavorDomain<HaskellPlatform> platforms,
-      CxxBuckConfig cxxBuckConfig) {
-    this(target, defaultPlatform, platforms, cxxBuckConfig, new FakeProjectFilesystem());
-  }
-
-  public HaskellLibraryBuilder(BuildTarget target, ProjectFilesystem projectFilesystem) {
+  public HaskellLibraryBuilder(BuildTarget target) {
     this(
         target,
         HaskellTestUtils.DEFAULT_PLATFORM,
         HaskellTestUtils.DEFAULT_PLATFORMS,
-        CxxPlatformUtils.DEFAULT_CONFIG,
-        projectFilesystem);
-  }
-
-  public HaskellLibraryBuilder(BuildTarget target) {
-    this(target, new FakeProjectFilesystem());
+        CxxPlatformUtils.DEFAULT_CONFIG);
   }
 
   public HaskellLibraryBuilder setSrcs(SourceList srcs) {

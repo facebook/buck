@@ -201,24 +201,19 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
         preprocessor);
   }
 
-  /** Return an absolute path for the `gen` directory. */
-  private Path getAbsoluteGenPath() {
-    Path relPath = BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s");
-    Preconditions.checkState(!relPath.isAbsolute());
-    return getProjectFilesystem().getRootPath().resolve(relPath);
-  }
-
   private Path getObjectDir() {
-    return getAbsoluteGenPath().resolve("objects");
+    return BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s")
+        .resolve("objects");
   }
 
   private Path getInterfaceDir() {
-    return getAbsoluteGenPath().resolve("interfaces");
+    return BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s")
+        .resolve("interfaces");
   }
 
   /** @return the path where the compiler places generated FFI stub files. */
   private Path getStubDir() {
-    return getAbsoluteGenPath().resolve("stubs");
+    return BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s").resolve("stubs");
   }
 
   private Iterable<String> getPackageNameArgs() {
@@ -241,14 +236,14 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
     Set<String> exposed = new TreeSet<>();
 
     for (HaskellPackage haskellPackage : packages.values()) {
-      packageDbs.add(getProjectRelativePath(haskellPackage.getPackageDb(), resolver).toString());
+      packageDbs.add(resolver.getAbsolutePath(haskellPackage.getPackageDb()).toString());
       hidden.add(
           String.format(
               "%s-%s", haskellPackage.getInfo().getName(), haskellPackage.getInfo().getVersion()));
     }
 
     for (HaskellPackage haskellPackage : exposedPackages.values()) {
-      packageDbs.add(getProjectRelativePath(haskellPackage.getPackageDb(), resolver).toString());
+      packageDbs.add(resolver.getAbsolutePath(haskellPackage.getPackageDb()).toString());
       exposed.add(
           String.format(
               "%s-%s", haskellPackage.getInfo().getName(), haskellPackage.getInfo().getVersion()));
@@ -274,30 +269,6 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
             /* pch */ Optional.empty());
     return MoreIterables.zipAndConcat(
         Iterables.cycle("-optP"), Arg.stringify(cxxToolFlags.getAllFlags(), resolver));
-  }
-
-  /** @return the path relative to the root of the project filesystem. */
-  private Path getProjectRelativePath(Path absPath) {
-    Preconditions.checkArgument(absPath.isAbsolute(), "path not absolute: " + absPath);
-    return getProjectFilesystem()
-        .getPathRelativeToProjectRoot(absPath)
-        .orElseThrow(
-            () ->
-                new RuntimeException(
-                    "Relative path is required, but could not resolve this path "
-                        + "["
-                        + absPath
-                        + "] "
-                        + "against project's root directory "
-                        + "["
-                        + getProjectFilesystem().getRootPath()
-                        + "]"));
-  }
-
-  /** @return the path relative to the root of the project filesystem. */
-  private Path getProjectRelativePath(SourcePath sourcePath, SourcePathResolver resolver) {
-    // First obtain the absolute path, so it can be correctly relativized to the project base path.
-    return getProjectRelativePath(resolver.getAbsolutePath(sourcePath));
   }
 
   private class GhcStep extends ShellStep {
@@ -349,14 +320,14 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
                   Iterables.cycle("-main-is"), Optionals.toStream(main).toOnceIterable()))
           .addAll(getPackageNameArgs())
           .addAll(getPreprocessorFlags(buildContext.getSourcePathResolver()))
-          .add("-odir", getProjectRelativePath(getObjectDir()).toString())
-          .add("-hidir", getProjectRelativePath(getInterfaceDir()).toString())
-          .add("-stubdir", getProjectRelativePath(getStubDir()).toString())
+          .add("-odir", getProjectFilesystem().resolve(getObjectDir()).toString())
+          .add("-hidir", getProjectFilesystem().resolve(getInterfaceDir()).toString())
+          .add("-stubdir", getProjectFilesystem().resolve(getStubDir()).toString())
           .add(
               "-i"
                   + includes
                       .stream()
-                      .map(sp -> getProjectRelativePath(sp, resolver))
+                      .map(resolver::getAbsolutePath)
                       .map(Object::toString)
                       .collect(Collectors.joining(":")))
           .addAll(getPackageArgs(buildContext.getSourcePathResolver()))
@@ -364,7 +335,7 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
               sources
                   .getSourcePaths()
                   .stream()
-                  .map(sp -> getProjectRelativePath(sp, resolver))
+                  .map(resolver::getAbsolutePath)
                   .map(Object::toString)
                   .iterator())
           .build();
@@ -379,9 +350,9 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
   @Override
   public ImmutableList<Step> getBuildSteps(
       BuildContext buildContext, BuildableContext buildableContext) {
-    buildableContext.recordArtifact(getProjectRelativePath(getObjectDir()));
-    buildableContext.recordArtifact(getProjectRelativePath(getInterfaceDir()));
-    buildableContext.recordArtifact(getProjectRelativePath(getStubDir()));
+    buildableContext.recordArtifact(getObjectDir());
+    buildableContext.recordArtifact(getInterfaceDir());
+    buildableContext.recordArtifact(getStubDir());
 
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
@@ -430,8 +401,7 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
       objects.add(
           ExplicitBuildTargetSourcePath.of(
               getBuildTarget(),
-              getProjectRelativePath(getObjectDir())
-                  .resolve(module.replace('.', File.separatorChar) + suffix)));
+              getObjectDir().resolve(module.replace('.', File.separatorChar) + suffix)));
     }
     return objects.build();
   }
