@@ -1,0 +1,11 @@
+go_binary(
+    name = "bin",
+    srcs = [
+        "main.go",
+        "sum_386.s",
+        "sum_386.go",
+        "local.h",
+        # TODO(mikekap): Implement build tag filtering
+        "sum.go",
+    ],
+)
