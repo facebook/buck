@@ -63,6 +63,8 @@ public class DistBuildConfig {
 
   private static final String NUMBER_OF_LOW_SPEC_MINIONS = "number_of_low_spec_minions";
 
+  private static final String JOB_NAME_ENVIRONMENT_VARIABLE = "job_name_environment_variable";
+  private static final String TAKS_ID_ENVIRONMENT_VARIABLE = "task_id_environment_variable";
   private static final String REPOSITORY = "repository";
   private static final String DEFAULT_REPOSITORY = "";
   private static final String TENANT_ID = "tenant_id";
@@ -214,6 +216,14 @@ public class DistBuildConfig {
 
   public Optional<Long> getSourceFileMultiFetchBufferPeriodMs() {
     return buckConfig.getLong(STAMPEDE_SECTION, SOURCE_FILE_MULTI_FETCH_BUFFER_PERIOD_MS);
+  }
+
+  public Optional<String> getJobNameEnvironmentVariable() {
+    return buckConfig.getValue(STAMPEDE_SECTION, JOB_NAME_ENVIRONMENT_VARIABLE);
+  }
+
+  public Optional<String> getTaskIdEnvironmentVariable() {
+    return buckConfig.getValue(STAMPEDE_SECTION, TAKS_ID_ENVIRONMENT_VARIABLE);
   }
 
   public Optional<Integer> getSourceFileMultiFetchMaxBufferSize() {

@@ -83,6 +83,7 @@ import org.junit.Test;
 
 public class DistBuildSlaveEventBusListenerTest {
   private static final int FILES_MATERIALIZED_COUNT = 1;
+  private static final String JOB_NAME = "job_name";
 
   private DistBuildSlaveEventBusListener listener;
   private BuildSlaveRunId buildSlaveRunId;
@@ -120,6 +121,7 @@ public class DistBuildSlaveEventBusListenerTest {
             healthCheckStatsTracker,
             Executors.newScheduledThreadPool(1),
             1);
+    listener.setJobName(JOB_NAME);
     eventBus.register(listener);
     listener.setDistBuildService(distBuildServiceMock);
   }
@@ -616,6 +618,7 @@ public class DistBuildSlaveEventBusListenerTest {
     expectedFinishedStats.setBuildSlavePerStageTimingStats(timingStats);
     expectedFinishedStats.setDistBuildMode("REMOTE_BUILD");
     expectedFinishedStats.setExitCode(EXIT_CODE);
+    expectedFinishedStats.setJobName(JOB_NAME);
 
     HealthCheckStats healthCheckStats = new HealthCheckStats();
     healthCheckStats.setSlowHeartbeatsReceivedCount(0);

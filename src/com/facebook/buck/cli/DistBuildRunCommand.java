@@ -53,10 +53,13 @@ import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.cache.InstrumentingCacheStatsTracker;
 import com.facebook.buck.util.concurrent.ConcurrencyLimit;
+import com.facebook.buck.util.environment.DefaultExecutionEnvironment;
+import com.facebook.buck.util.environment.ExecutionEnvironment;
 import com.facebook.buck.util.timing.DefaultClock;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -134,6 +137,25 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
     return "runs a distributed build in the current machine (experimental)";
   }
 
+  private static String getFullJobName(
+      ImmutableMap<String, String> environment,
+      String jobNameEnvironmentVariable,
+      String taskIdEnvironmentVariable) {
+    StringBuilder jobNameBuilder = new StringBuilder();
+
+    ExecutionEnvironment executionEnvironment =
+        new DefaultExecutionEnvironment(environment, System.getProperties());
+
+    executionEnvironment
+        .getenv(jobNameEnvironmentVariable)
+        .ifPresent(val -> jobNameBuilder.append(val));
+    executionEnvironment
+        .getenv(taskIdEnvironmentVariable)
+        .ifPresent(val -> jobNameBuilder.append("/" + val));
+
+    return jobNameBuilder.toString();
+  }
+
   @Override
   public ExitCode runWithoutHelp(CommandRunnerParams params)
       throws IOException, InterruptedException {
@@ -147,6 +169,7 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
     timeStatsTracker.startTimer(SlaveEvents.TOTAL_RUNTIME);
     timeStatsTracker.startTimer(SlaveEvents.DIST_BUILD_PREPARATION_TIME);
     Console console = params.getConsole();
+
     try (DistBuildService service = DistBuildFactory.newDistBuildService(params)) {
       if (slaveEventListener != null) {
         slaveEventListener.setDistBuildService(service);
@@ -184,6 +207,18 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
                 params.getProjectFilesystemFactory());
         timeStatsTracker.stopTimer(SlaveEvents.DIST_BUILD_STATE_LOADING_TIME);
 
+        DistBuildConfig distBuildConfig = new DistBuildConfig(state.getRootCell().getBuckConfig());
+
+        if (slaveEventListener != null
+            && distBuildConfig.getJobNameEnvironmentVariable().isPresent()
+            && distBuildConfig.getTaskIdEnvironmentVariable().isPresent()) {
+          slaveEventListener.setJobName(
+              getFullJobName(
+                  params.getEnvironment(),
+                  distBuildConfig.getJobNameEnvironmentVariable().get(),
+                  distBuildConfig.getTaskIdEnvironmentVariable().get()));
+        }
+
         ConcurrencyLimit concurrencyLimit =
             getConcurrencyLimit(state.getRootCell().getBuckConfig());
 
@@ -201,8 +236,6 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
           // Note that we cannot use the same pool of build threads for file materialization
           // because usually all build threads are waiting for files to be materialized, and
           // there is no thread left for the FileContentsProvider(s) to use.
-          DistBuildConfig distBuildConfig =
-              new DistBuildConfig(state.getRootCell().getBuckConfig());
           FileContentsProvider multiSourceFileContentsProvider =
               DistBuildFactory.createMultiSourceContentsProvider(
                   service,
@@ -258,6 +291,8 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
 
             if (slaveEventListener != null) {
               slaveEventListener.sendFinalServerUpdates(returnCode.getCode());
+              slaveEventListener.publishServerSideBuildSlaveFinishedStatsEvent(
+                  params.getBuckEventBus());
               LOG.info("Sent the final slave status and events.");
             }
 

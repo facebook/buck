@@ -140,6 +140,7 @@ struct BuildSlaveFinishedStats {
     5: optional string hostname;
     6: optional string distBuildMode;
     7: optional HealthCheckStats healthCheckStats;
+    8: optional string jobName;
 }
 
 ##############################################################################

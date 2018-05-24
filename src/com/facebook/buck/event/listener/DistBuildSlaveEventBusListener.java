@@ -26,6 +26,7 @@ import com.facebook.buck.distributed.build_slave.BuildSlaveTimingStatsTracker;
 import com.facebook.buck.distributed.build_slave.CoordinatorBuildRuleEventsPublisher;
 import com.facebook.buck.distributed.build_slave.HealthCheckStatsTracker;
 import com.facebook.buck.distributed.build_slave.MinionBuildProgressTracker;
+import com.facebook.buck.distributed.build_slave.ServerSideBuildSlaveFinishedStatsEvent;
 import com.facebook.buck.distributed.thrift.BuildRuleFinishedEvent;
 import com.facebook.buck.distributed.thrift.BuildRuleStartedEvent;
 import com.facebook.buck.distributed.thrift.BuildRuleUnlockedEvent;
@@ -37,6 +38,7 @@ import com.facebook.buck.distributed.thrift.BuildSlaveStatus;
 import com.facebook.buck.distributed.thrift.CoordinatorBuildProgress;
 import com.facebook.buck.distributed.thrift.CoordinatorBuildProgressEvent;
 import com.facebook.buck.distributed.thrift.StampedeId;
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.log.Logger;
@@ -80,6 +82,7 @@ public class DistBuildSlaveEventBusListener
   private static final int SHUTDOWN_TIMEOUT_SECONDS = 10;
 
   private final StampedeId stampedeId;
+  private volatile String jobName = "";
   private final BuildSlaveRunId buildSlaveRunId;
   private final Clock clock;
   private final ScheduledFuture<?> scheduledServerUpdates;
@@ -196,6 +199,7 @@ public class DistBuildSlaveEventBusListener
     BuildSlaveFinishedStats finishedStats =
         new BuildSlaveFinishedStats()
             .setHostname(hostname)
+            .setJobName(jobName)
             .setDistBuildMode(distBuildMode.name())
             .setBuildSlaveStatus(createBuildSlaveStatus())
             .setFileMaterializationStats(
@@ -323,6 +327,16 @@ public class DistBuildSlaveEventBusListener
     stopScheduledUpdates();
     sendAllRulesFinishedEvent();
     sendFinishedStatsToFrontend(createBuildSlaveFinishedStats());
+  }
+
+  /** Sends a ServerSideBuildSlaveFinishedStatsEvent to the given BuckEventBus */
+  public void publishServerSideBuildSlaveFinishedStatsEvent(BuckEventBus eventBus) {
+    BuildSlaveFinishedStats buildSlaveFinishedStats = createBuildSlaveFinishedStats();
+    ServerSideBuildSlaveFinishedStatsEvent event =
+        new ServerSideBuildSlaveFinishedStatsEvent(
+            stampedeId, buildSlaveRunId, buildSlaveFinishedStats);
+
+    eventBus.post(event);
   }
 
   /** Record unexpected cache misses in build slaves. */
@@ -489,5 +503,9 @@ public class DistBuildSlaveEventBusListener
           DistBuildUtil.createBuildSlaveEvent(
               BuildSlaveEventType.MOST_BUILD_RULES_FINISHED_EVENT, clock.currentTimeMillis()));
     }
+  }
+
+  public void setJobName(String jobName) {
+    this.jobName = jobName;
   }
 }
