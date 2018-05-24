@@ -21,20 +21,24 @@ import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.EventKey;
+import java.util.Optional;
 
 /** Published at the end of a build slaves run. */
 public class ServerSideBuildSlaveFinishedStatsEvent extends AbstractBuckEvent {
   private final StampedeId stampedeId;
   private final BuildSlaveRunId runId;
+  private final Optional<String> buildLabel;
   private final BuildSlaveFinishedStats buildSlaveFinishedStats;
 
   public ServerSideBuildSlaveFinishedStatsEvent(
       StampedeId stampedeId,
       BuildSlaveRunId runId,
+      Optional<String> buildLabel,
       BuildSlaveFinishedStats buildSlaveFinishedStats) {
     super(EventKey.unique());
     this.stampedeId = stampedeId;
     this.runId = runId;
+    this.buildLabel = buildLabel;
     this.buildSlaveFinishedStats = buildSlaveFinishedStats;
   }
 
@@ -58,5 +62,9 @@ public class ServerSideBuildSlaveFinishedStatsEvent extends AbstractBuckEvent {
 
   public BuildSlaveRunId getRunId() {
     return runId;
+  }
+
+  public Optional<String> getBuildLabel() {
+    return buildLabel;
   }
 }

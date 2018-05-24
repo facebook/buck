@@ -209,14 +209,17 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
 
         DistBuildConfig distBuildConfig = new DistBuildConfig(state.getRootCell().getBuckConfig());
 
-        if (slaveEventListener != null
-            && distBuildConfig.getJobNameEnvironmentVariable().isPresent()
-            && distBuildConfig.getTaskIdEnvironmentVariable().isPresent()) {
-          slaveEventListener.setJobName(
-              getFullJobName(
-                  params.getEnvironment(),
-                  distBuildConfig.getJobNameEnvironmentVariable().get(),
-                  distBuildConfig.getTaskIdEnvironmentVariable().get()));
+        if (slaveEventListener != null) {
+          if (distBuildConfig.getJobNameEnvironmentVariable().isPresent()
+              && distBuildConfig.getTaskIdEnvironmentVariable().isPresent()) {
+            slaveEventListener.setJobName(
+                getFullJobName(
+                    params.getEnvironment(),
+                    distBuildConfig.getJobNameEnvironmentVariable().get(),
+                    distBuildConfig.getTaskIdEnvironmentVariable().get()));
+          }
+
+          slaveEventListener.setBuildLabel(distBuildConfig.getBuildLabel());
         }
 
         ConcurrencyLimit concurrencyLimit =

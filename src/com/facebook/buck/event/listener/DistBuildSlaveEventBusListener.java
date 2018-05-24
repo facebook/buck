@@ -112,6 +112,7 @@ public class DistBuildSlaveEventBusListener
   private volatile @Nullable DistBuildService distBuildService;
   private volatile Optional<Integer> exitCode = Optional.empty();
   private volatile boolean sentFinishedStatsToServer;
+  private volatile Optional<String> buildLabel = Optional.empty();
 
   public DistBuildSlaveEventBusListener(
       StampedeId stampedeId,
@@ -334,7 +335,7 @@ public class DistBuildSlaveEventBusListener
     BuildSlaveFinishedStats buildSlaveFinishedStats = createBuildSlaveFinishedStats();
     ServerSideBuildSlaveFinishedStatsEvent event =
         new ServerSideBuildSlaveFinishedStatsEvent(
-            stampedeId, buildSlaveRunId, buildSlaveFinishedStats);
+            stampedeId, buildSlaveRunId, buildLabel, buildSlaveFinishedStats);
 
     eventBus.post(event);
   }
@@ -507,5 +508,12 @@ public class DistBuildSlaveEventBusListener
 
   public void setJobName(String jobName) {
     this.jobName = jobName;
+  }
+
+  /** Sets build label that will be included in finished event */
+  public void setBuildLabel(String buildLabel) {
+    if (buildLabel != null && !buildLabel.equals("")) {
+      this.buildLabel = Optional.of(buildLabel);
+    }
   }
 }
