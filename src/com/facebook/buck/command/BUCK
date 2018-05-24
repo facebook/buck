@@ -26,6 +26,7 @@ java_immutables_library(
         "//src/com/facebook/buck/core/build/engine/impl:impl",
         "//src/com/facebook/buck/core/build/event:event",
         "//src/com/facebook/buck/core/cell:cell",
+        "//src/com/facebook/buck/core/exceptions/handler:handler",
         "//src/com/facebook/buck/core/model/actiongraph:actiongraph",
         "//src/com/facebook/buck/core/sourcepath/resolver/impl:impl",
         "//src/com/facebook/buck/event:event",

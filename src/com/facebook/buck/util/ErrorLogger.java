@@ -17,15 +17,16 @@
 package com.facebook.buck.util;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.exceptions.handler.HumanReadableExceptionAugmentor;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.EventDispatcher;
-import com.facebook.buck.util.exceptions.BuckExecutionException;
 import com.facebook.buck.util.exceptions.ExceptionWithContext;
 import com.facebook.buck.util.exceptions.WrapsException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import java.util.LinkedList;
 import java.util.List;
@@ -55,18 +56,10 @@ public class ErrorLogger {
   }
 
   private final LogImpl logger;
-
-  public static void logGeneric(
-      EventDispatcher dispatcher, Throwable e, String format, Object... args) {
-    String context = args.length == 0 ? format : String.format(format, args);
-    logGeneric(dispatcher, new BuckExecutionException(e, context));
-  }
-
-  public static void logGeneric(EventDispatcher dispatcher, Throwable e) {
-    new ErrorLogger(dispatcher, "Error occurred: ", "Error occured: ").logException(e);
-  }
+  private final HumanReadableExceptionAugmentor errorAugmentor;
 
   /** Prints the stacktrace as formatted by an ErrorLogger. */
+  @VisibleForTesting
   public static String getUserFriendlyMessage(Throwable e) {
     StringBuilder builder = new StringBuilder();
     new ErrorLogger(
@@ -83,12 +76,17 @@ public class ErrorLogger {
 
               @Override
               public void logVerbose(Throwable e) {}
-            })
+            },
+            new HumanReadableExceptionAugmentor(ImmutableMap.of()))
         .logException(e);
     return builder.toString();
   }
 
-  public ErrorLogger(EventDispatcher dispatcher, String userPrefix, String verboseMessage) {
+  public ErrorLogger(
+      EventDispatcher dispatcher,
+      String userPrefix,
+      String verboseMessage,
+      HumanReadableExceptionAugmentor errorAugmentor) {
     this(
         new LogImpl() {
           @Override
@@ -107,11 +105,13 @@ public class ErrorLogger {
           public void logVerbose(Throwable e) {
             LOG.debug(e, verboseMessage);
           }
-        });
+        },
+        errorAugmentor);
   }
 
-  public ErrorLogger(LogImpl logger) {
+  public ErrorLogger(LogImpl logger, HumanReadableExceptionAugmentor errorAugmentor) {
     this.logger = logger;
+    this.errorAugmentor = errorAugmentor;
   }
 
   public void logException(Throwable e) {
@@ -152,7 +152,7 @@ public class ErrorLogger {
     }
 
     if (rootCause instanceof HumanReadableException) {
-      logger.logUserVisible(messageBuilder.toString());
+      logger.logUserVisible(errorAugmentor.getAugmentedError(messageBuilder.toString()));
     } else {
       logger.logUserVisibleInternalError(messageBuilder.toString());
     }

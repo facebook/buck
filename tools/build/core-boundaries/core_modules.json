@@ -12,6 +12,7 @@
   "//src/com/facebook/buck/core/description/arg:arg",
   "//src/com/facebook/buck/core/description/attr:attr",
   "//src/com/facebook/buck/core/exceptions:exceptions",
+  "//src/com/facebook/buck/core/exceptions/handler:handler",
   "//src/com/facebook/buck/core/rulekey:rulekey",
   "//src/com/facebook/buck/core/cell:cell",
   "//src/com/facebook/buck/core/cell/name:name",

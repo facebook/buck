@@ -26,6 +26,7 @@ import com.facebook.buck.core.build.engine.BuildResult;
 import com.facebook.buck.core.build.event.BuildEvent;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.exceptions.ExceptionWithHumanReadableMessage;
+import com.facebook.buck.core.exceptions.handler.HumanReadableExceptionAugmentor;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRule;
@@ -85,6 +86,7 @@ public class Build implements Closeable {
   private final JavaPackageFinder javaPackageFinder;
   private final Clock clock;
   private final BuildEngineBuildContext buildContext;
+  private final HumanReadableExceptionAugmentor errorAugmentor;
   private boolean symlinksCreated = false;
 
   public Build(
@@ -104,6 +106,9 @@ public class Build implements Closeable {
     this.javaPackageFinder = javaPackageFinder;
     this.clock = clock;
     this.buildContext = createBuildContext(isKeepGoing);
+    this.errorAugmentor =
+        new HumanReadableExceptionAugmentor(
+            this.rootCell.getBuckConfig().getErrorMessageAugmentations());
   }
 
   private BuildEngineBuildContext createBuildContext(boolean isKeepGoing) {
@@ -430,7 +435,8 @@ public class Build implements Closeable {
     if (e instanceof RuntimeException) {
       e = rootCauseOfBuildException(e);
     }
-    new ErrorLogger(eventBus, "Build failed: ", "Got an exception during the build.")
+    new ErrorLogger(
+            eventBus, "Build failed: ", "Got an exception during the build.", this.errorAugmentor)
         .logException(e);
   }
 

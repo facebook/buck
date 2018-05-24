@@ -28,6 +28,7 @@ import java.util.regex.Pattern;
 public class HumanReadableExceptionAugmentor {
 
   private final Map<Pattern, String> augmentations;
+  private static final Pattern REMOVE_COLOR_REGEX = Pattern.compile("\u001B\\[[;\\d]*m");
 
   /**
    * Create an instance of {@link HumanReadableExceptionAugmentor}
@@ -54,10 +55,11 @@ public class HumanReadableExceptionAugmentor {
       return humanReadableErrorMessage;
     }
 
+    String decolored = REMOVE_COLOR_REGEX.matcher(humanReadableErrorMessage).replaceAll("");
     StringBuilder ret = new StringBuilder(humanReadableErrorMessage);
 
     for (Map.Entry<Pattern, String> augmentation : augmentations.entrySet()) {
-      Matcher matcher = augmentation.getKey().matcher(humanReadableErrorMessage);
+      Matcher matcher = augmentation.getKey().matcher(decolored);
       if (matcher.find()) {
         // We want to keep the original string as is, and use the match as the basis for replacement
         // (so that people can use backrefs in their messages)

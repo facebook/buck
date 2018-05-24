@@ -52,4 +52,23 @@ public class HumanReadableExceptionAugmentorTest {
         "Replace foo bar baz with something else\nCould not replace text \"Replace foo bar baz with something else\" with regex \"Should replace $9\": No group 9",
         error);
   }
+
+  @Test
+  public void removesColorProperly() {
+    // Sample output from clang that has some red, bold, resets, etc in it
+    String coloredString =
+        "\u001B[1mmain.cpp:1:13: \u001B[0m\u001B[0;1;31merror: \u001B[0m\u001B[1mexpected '}'\u001B[0m\n"
+            + "int main() {\n"
+            + "\u001B[0;1;32m            ^\n"
+            + "\u001B[0m\u001B[1mmain.cpp:1:12: \u001B[0m\u001B[0;1;30mnote: \u001B[0mto match this '{'\u001B[0m\n"
+            + "int main() {\n"
+            + "\u001B[0;1;32m           ^\n"
+            + "\u001B[0m1 error generated.";
+    String expected = coloredString + "\nTry adding '}'!";
+    HumanReadableExceptionAugmentor augmentor =
+        new HumanReadableExceptionAugmentor(
+            ImmutableMap.of(
+                Pattern.compile("main.cpp:1:13: error: expected ('}')"), "Try adding $1!"));
+    Assert.assertEquals(expected, augmentor.getAugmentedError(coloredString));
+  }
 }

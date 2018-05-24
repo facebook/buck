@@ -19,9 +19,12 @@ package com.facebook.buck.util;
 import static org.junit.Assert.*;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.exceptions.handler.HumanReadableExceptionAugmentor;
 import com.facebook.buck.util.exceptions.BuckExecutionException;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import java.util.concurrent.ExecutionException;
+import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 import org.junit.Test;
 
@@ -78,6 +81,24 @@ public class ErrorLoggerTest {
     assertEquals("message\n" + "    context", errors.userVisible);
   }
 
+  @Test
+  public void addsErrorMessageAugmentations() {
+    String rawMessage =
+        "\u001B[1mmain.cpp:1:13: \u001B[0m\u001B[0;1;31merror: \u001B[0m\u001B[1mexpected '}'\u001B[0m\n"
+            + "int main() {\n"
+            + "\u001B[0;1;32m            ^\n"
+            + "\u001B[0m\u001B[1mmain.cpp:1:12: \u001B[0m\u001B[0;1;30mnote: \u001B[0mto match this '{'\u001B[0m\n"
+            + "int main() {\n"
+            + "\u001B[0;1;32m           ^\n"
+            + "\u001B[0m1 error generated.";
+    String expected = rawMessage + "\n    context\nTry adding '}'!";
+
+    LoggedErrors errors =
+        logException(new BuckExecutionException(new HumanReadableException(rawMessage), "context"));
+    assertNull(errors.userVisibleInternal);
+    assertEquals(expected, errors.userVisible);
+  }
+
   LoggedErrors logException(Exception e) {
     LoggedErrors result = new LoggedErrors();
     new ErrorLogger(
@@ -99,7 +120,10 @@ public class ErrorLoggerTest {
                 assertNull(result.verbose);
                 result.verbose = e;
               }
-            })
+            },
+            new HumanReadableExceptionAugmentor(
+                ImmutableMap.of(
+                    Pattern.compile("main.cpp:1:13: error: expected ('}')"), "Try adding $1!")))
         .setSuppressStackTraces(true)
         .logException(e);
     assertTrue(result.userVisibleInternal == null ^ result.userVisible == null);
