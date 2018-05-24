@@ -207,6 +207,16 @@ struct Announcement {
   2: optional string solutionMessage;
 }
 
+struct Digest {
+  1: optional string hash;
+  2: optional i64 sizeBytes;
+}
+
+struct DigestAndContent {
+  1: optional Digest digest;
+  2: optional binary content;
+}
+
 ##############################################################################
 ## Build slave structs
 ##############################################################################
@@ -515,6 +525,30 @@ struct UpdateBuildSlaveBuildStatusRequest {
 struct UpdateBuildSlaveBuildStatusResponse {
 }
 
+struct RemoteExecutionFetchRequest {
+  1: optional list<Digest> digests;
+}
+
+struct RemoteExecutionFetchResponse {
+  1: optional list<DigestAndContent> digests;
+}
+
+struct RemoteExecutionStoreRequest {
+  1: optional list<DigestAndContent> digests;
+}
+
+struct RemoteExecutionStoreResponse {
+}
+
+struct RemoteExecutionContainsRequest {
+  1: optional list<Digest> digests;
+}
+
+struct RemoteExecutionContainsResponse {
+  1: optional list<Digest> containedDigests;
+  2: optional list<Digest> missingDigests;
+}
+
 ##############################################################################
 ## Top-Level Buck-Frontend HTTP body thrift Request/Response format
 ##############################################################################
@@ -549,6 +583,9 @@ enum FrontendRequestType {
   SET_FINAL_BUILD_STATUS = 27,
   REPORT_COORDINATOR_ALIVE = 28,
   UPDATE_BUILD_SLAVE_BUILD_STATUS = 29,
+  REMOTE_EXECUTION_STORE = 30,
+  REMOTE_EXECUTION_FETCH = 31,
+  REMOTE_EXECUTION_CONTAINS = 32,
 
   // [100-199] Values are reserved for the buck cache request types.
 }
@@ -585,6 +622,9 @@ struct FrontendRequest {
   28: optional ReportCoordinatorAliveRequest reportCoordinatorAliveRequest;
   29: optional UpdateBuildSlaveBuildStatusRequest
     updateBuildSlaveBuildStatusRequest;
+  30: optional RemoteExecutionStoreRequest remoteExecutionStoreRequest;
+  31: optional RemoteExecutionFetchRequest remoteExecutionFetchRequest;
+  32: optional RemoteExecutionContainsRequest remoteExecutionContainsRequest;
 
   // [100-199] Values are reserved for the buck cache request types.
 }
@@ -621,6 +661,9 @@ struct FrontendResponse {
   32: optional ReportCoordinatorAliveResponse reportCoordinatorAliveResponse;
   33: optional UpdateBuildSlaveBuildStatusResponse
     updateBuildSlaveBuildStatusResponse;
+  34: optional RemoteExecutionStoreResponse remoteExecutionStoreResponse;
+  35: optional RemoteExecutionFetchResponse remoteExecutionFetchResponse;
+  36: optional RemoteExecutionContainsResponse remoteExecutionContainsResponse;
 
   // [100-199] Values are reserved for the buck cache request types.
 }

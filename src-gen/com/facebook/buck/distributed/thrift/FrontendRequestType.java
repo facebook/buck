@@ -39,7 +39,10 @@ public enum FrontendRequestType implements org.apache.thrift.TEnum {
   ENQUEUE_MINIONS(26),
   SET_FINAL_BUILD_STATUS(27),
   REPORT_COORDINATOR_ALIVE(28),
-  UPDATE_BUILD_SLAVE_BUILD_STATUS(29);
+  UPDATE_BUILD_SLAVE_BUILD_STATUS(29),
+  REMOTE_EXECUTION_STORE(30),
+  REMOTE_EXECUTION_FETCH(31),
+  REMOTE_EXECUTION_CONTAINS(32);
 
   private final int value;
 
@@ -116,6 +119,12 @@ public enum FrontendRequestType implements org.apache.thrift.TEnum {
         return REPORT_COORDINATOR_ALIVE;
       case 29:
         return UPDATE_BUILD_SLAVE_BUILD_STATUS;
+      case 30:
+        return REMOTE_EXECUTION_STORE;
+      case 31:
+        return REMOTE_EXECUTION_FETCH;
+      case 32:
+        return REMOTE_EXECUTION_CONTAINS;
       default:
         return null;
     }

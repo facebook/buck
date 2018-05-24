@@ -38,6 +38,9 @@ public class FrontendRequest implements org.apache.thrift.TBase<FrontendRequest,
   private static final org.apache.thrift.protocol.TField SET_FINAL_BUILD_STATUS_REQUEST_FIELD_DESC = new org.apache.thrift.protocol.TField("setFinalBuildStatusRequest", org.apache.thrift.protocol.TType.STRUCT, (short)27);
   private static final org.apache.thrift.protocol.TField REPORT_COORDINATOR_ALIVE_REQUEST_FIELD_DESC = new org.apache.thrift.protocol.TField("reportCoordinatorAliveRequest", org.apache.thrift.protocol.TType.STRUCT, (short)28);
   private static final org.apache.thrift.protocol.TField UPDATE_BUILD_SLAVE_BUILD_STATUS_REQUEST_FIELD_DESC = new org.apache.thrift.protocol.TField("updateBuildSlaveBuildStatusRequest", org.apache.thrift.protocol.TType.STRUCT, (short)29);
+  private static final org.apache.thrift.protocol.TField REMOTE_EXECUTION_STORE_REQUEST_FIELD_DESC = new org.apache.thrift.protocol.TField("remoteExecutionStoreRequest", org.apache.thrift.protocol.TType.STRUCT, (short)30);
+  private static final org.apache.thrift.protocol.TField REMOTE_EXECUTION_FETCH_REQUEST_FIELD_DESC = new org.apache.thrift.protocol.TField("remoteExecutionFetchRequest", org.apache.thrift.protocol.TType.STRUCT, (short)31);
+  private static final org.apache.thrift.protocol.TField REMOTE_EXECUTION_CONTAINS_REQUEST_FIELD_DESC = new org.apache.thrift.protocol.TField("remoteExecutionContainsRequest", org.apache.thrift.protocol.TType.STRUCT, (short)32);
 
   private static final org.apache.thrift.scheme.SchemeFactory STANDARD_SCHEME_FACTORY = new FrontendRequestStandardSchemeFactory();
   private static final org.apache.thrift.scheme.SchemeFactory TUPLE_SCHEME_FACTORY = new FrontendRequestTupleSchemeFactory();
@@ -73,6 +76,9 @@ public class FrontendRequest implements org.apache.thrift.TBase<FrontendRequest,
   public SetFinalBuildStatusRequest setFinalBuildStatusRequest; // optional
   public ReportCoordinatorAliveRequest reportCoordinatorAliveRequest; // optional
   public UpdateBuildSlaveBuildStatusRequest updateBuildSlaveBuildStatusRequest; // optional
+  public RemoteExecutionStoreRequest remoteExecutionStoreRequest; // optional
+  public RemoteExecutionFetchRequest remoteExecutionFetchRequest; // optional
+  public RemoteExecutionContainsRequest remoteExecutionContainsRequest; // optional
 
   /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
   public enum _Fields implements org.apache.thrift.TFieldIdEnum {
@@ -106,7 +112,10 @@ public class FrontendRequest implements org.apache.thrift.TBase<FrontendRequest,
     ENQUEUE_MINIONS_REQUEST((short)26, "enqueueMinionsRequest"),
     SET_FINAL_BUILD_STATUS_REQUEST((short)27, "setFinalBuildStatusRequest"),
     REPORT_COORDINATOR_ALIVE_REQUEST((short)28, "reportCoordinatorAliveRequest"),
-    UPDATE_BUILD_SLAVE_BUILD_STATUS_REQUEST((short)29, "updateBuildSlaveBuildStatusRequest");
+    UPDATE_BUILD_SLAVE_BUILD_STATUS_REQUEST((short)29, "updateBuildSlaveBuildStatusRequest"),
+    REMOTE_EXECUTION_STORE_REQUEST((short)30, "remoteExecutionStoreRequest"),
+    REMOTE_EXECUTION_FETCH_REQUEST((short)31, "remoteExecutionFetchRequest"),
+    REMOTE_EXECUTION_CONTAINS_REQUEST((short)32, "remoteExecutionContainsRequest");
 
     private static final java.util.Map<java.lang.String, _Fields> byName = new java.util.HashMap<java.lang.String, _Fields>();
 
@@ -175,6 +184,12 @@ public class FrontendRequest implements org.apache.thrift.TBase<FrontendRequest,
           return REPORT_COORDINATOR_ALIVE_REQUEST;
         case 29: // UPDATE_BUILD_SLAVE_BUILD_STATUS_REQUEST
           return UPDATE_BUILD_SLAVE_BUILD_STATUS_REQUEST;
+        case 30: // REMOTE_EXECUTION_STORE_REQUEST
+          return REMOTE_EXECUTION_STORE_REQUEST;
+        case 31: // REMOTE_EXECUTION_FETCH_REQUEST
+          return REMOTE_EXECUTION_FETCH_REQUEST;
+        case 32: // REMOTE_EXECUTION_CONTAINS_REQUEST
+          return REMOTE_EXECUTION_CONTAINS_REQUEST;
         default:
           return null;
       }
@@ -215,7 +230,7 @@ public class FrontendRequest implements org.apache.thrift.TBase<FrontendRequest,
   }
 
   // isset id assignments
-  private static final _Fields optionals[] = {_Fields.TYPE,_Fields.START_BUILD_REQUEST,_Fields.BUILD_STATUS_REQUEST,_Fields.LOG_REQUEST,_Fields.CAS_CONTAINS_REQUEST,_Fields.CREATE_BUILD_REQUEST,_Fields.STORE_LOCAL_CHANGES_REQUEST,_Fields.FETCH_SOURCE_FILES_REQUEST,_Fields.STORE_BUILD_GRAPH_REQUEST,_Fields.FETCH_BUILD_GRAPH_REQUEST,_Fields.SET_BUCK_VERSION_REQUEST,_Fields.ANNOUNCEMENT_REQUEST,_Fields.SET_BUCK_DOT_FILE_PATHS_REQUEST,_Fields.MULTI_GET_BUILD_SLAVE_LOG_DIR_REQUEST,_Fields.MULTI_GET_BUILD_SLAVE_REAL_TIME_LOGS_REQUEST,_Fields.UPDATE_BUILD_SLAVE_STATUS_REQUEST,_Fields.FETCH_BUILD_SLAVE_STATUS_REQUEST,_Fields.APPEND_BUILD_SLAVE_EVENTS_REQUEST,_Fields.MULTI_GET_BUILD_SLAVE_EVENTS_REQUEST,_Fields.FETCH_RULE_KEY_LOGS_REQUEST,_Fields.STORE_BUILD_SLAVE_FINISHED_STATS_REQUEST,_Fields.FETCH_BUILD_SLAVE_FINISHED_STATS_REQUEST,_Fields.SET_COORDINATOR_REQUEST,_Fields.ENQUEUE_MINIONS_REQUEST,_Fields.SET_FINAL_BUILD_STATUS_REQUEST,_Fields.REPORT_COORDINATOR_ALIVE_REQUEST,_Fields.UPDATE_BUILD_SLAVE_BUILD_STATUS_REQUEST};
+  private static final _Fields optionals[] = {_Fields.TYPE,_Fields.START_BUILD_REQUEST,_Fields.BUILD_STATUS_REQUEST,_Fields.LOG_REQUEST,_Fields.CAS_CONTAINS_REQUEST,_Fields.CREATE_BUILD_REQUEST,_Fields.STORE_LOCAL_CHANGES_REQUEST,_Fields.FETCH_SOURCE_FILES_REQUEST,_Fields.STORE_BUILD_GRAPH_REQUEST,_Fields.FETCH_BUILD_GRAPH_REQUEST,_Fields.SET_BUCK_VERSION_REQUEST,_Fields.ANNOUNCEMENT_REQUEST,_Fields.SET_BUCK_DOT_FILE_PATHS_REQUEST,_Fields.MULTI_GET_BUILD_SLAVE_LOG_DIR_REQUEST,_Fields.MULTI_GET_BUILD_SLAVE_REAL_TIME_LOGS_REQUEST,_Fields.UPDATE_BUILD_SLAVE_STATUS_REQUEST,_Fields.FETCH_BUILD_SLAVE_STATUS_REQUEST,_Fields.APPEND_BUILD_SLAVE_EVENTS_REQUEST,_Fields.MULTI_GET_BUILD_SLAVE_EVENTS_REQUEST,_Fields.FETCH_RULE_KEY_LOGS_REQUEST,_Fields.STORE_BUILD_SLAVE_FINISHED_STATS_REQUEST,_Fields.FETCH_BUILD_SLAVE_FINISHED_STATS_REQUEST,_Fields.SET_COORDINATOR_REQUEST,_Fields.ENQUEUE_MINIONS_REQUEST,_Fields.SET_FINAL_BUILD_STATUS_REQUEST,_Fields.REPORT_COORDINATOR_ALIVE_REQUEST,_Fields.UPDATE_BUILD_SLAVE_BUILD_STATUS_REQUEST,_Fields.REMOTE_EXECUTION_STORE_REQUEST,_Fields.REMOTE_EXECUTION_FETCH_REQUEST,_Fields.REMOTE_EXECUTION_CONTAINS_REQUEST};
   public static final java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
   static {
     java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new java.util.EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
@@ -273,6 +288,12 @@ public class FrontendRequest implements org.apache.thrift.TBase<FrontendRequest,
         new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, ReportCoordinatorAliveRequest.class)));
     tmpMap.put(_Fields.UPDATE_BUILD_SLAVE_BUILD_STATUS_REQUEST, new org.apache.thrift.meta_data.FieldMetaData("updateBuildSlaveBuildStatusRequest", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
         new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, UpdateBuildSlaveBuildStatusRequest.class)));
+    tmpMap.put(_Fields.REMOTE_EXECUTION_STORE_REQUEST, new org.apache.thrift.meta_data.FieldMetaData("remoteExecutionStoreRequest", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
+        new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, RemoteExecutionStoreRequest.class)));
+    tmpMap.put(_Fields.REMOTE_EXECUTION_FETCH_REQUEST, new org.apache.thrift.meta_data.FieldMetaData("remoteExecutionFetchRequest", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
+        new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, RemoteExecutionFetchRequest.class)));
+    tmpMap.put(_Fields.REMOTE_EXECUTION_CONTAINS_REQUEST, new org.apache.thrift.meta_data.FieldMetaData("remoteExecutionContainsRequest", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
+        new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, RemoteExecutionContainsRequest.class)));
     metaDataMap = java.util.Collections.unmodifiableMap(tmpMap);
     org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(FrontendRequest.class, metaDataMap);
   }
@@ -367,6 +388,15 @@ public class FrontendRequest implements org.apache.thrift.TBase<FrontendRequest,
     if (other.isSetUpdateBuildSlaveBuildStatusRequest()) {
       this.updateBuildSlaveBuildStatusRequest = new UpdateBuildSlaveBuildStatusRequest(other.updateBuildSlaveBuildStatusRequest);
     }
+    if (other.isSetRemoteExecutionStoreRequest()) {
+      this.remoteExecutionStoreRequest = new RemoteExecutionStoreRequest(other.remoteExecutionStoreRequest);
+    }
+    if (other.isSetRemoteExecutionFetchRequest()) {
+      this.remoteExecutionFetchRequest = new RemoteExecutionFetchRequest(other.remoteExecutionFetchRequest);
+    }
+    if (other.isSetRemoteExecutionContainsRequest()) {
+      this.remoteExecutionContainsRequest = new RemoteExecutionContainsRequest(other.remoteExecutionContainsRequest);
+    }
   }
 
   public FrontendRequest deepCopy() {
@@ -403,6 +433,9 @@ public class FrontendRequest implements org.apache.thrift.TBase<FrontendRequest,
     this.setFinalBuildStatusRequest = null;
     this.reportCoordinatorAliveRequest = null;
     this.updateBuildSlaveBuildStatusRequest = null;
+    this.remoteExecutionStoreRequest = null;
+    this.remoteExecutionFetchRequest = null;
+    this.remoteExecutionContainsRequest = null;
   }
 
   /**
@@ -1061,6 +1094,78 @@ public class FrontendRequest implements org.apache.thrift.TBase<FrontendRequest,
     }
   }
 
+  public RemoteExecutionStoreRequest getRemoteExecutionStoreRequest() {
+    return this.remoteExecutionStoreRequest;
+  }
+
+  public FrontendRequest setRemoteExecutionStoreRequest(RemoteExecutionStoreRequest remoteExecutionStoreRequest) {
+    this.remoteExecutionStoreRequest = remoteExecutionStoreRequest;
+    return this;
+  }
+
+  public void unsetRemoteExecutionStoreRequest() {
+    this.remoteExecutionStoreRequest = null;
+  }
+
+  /** Returns true if field remoteExecutionStoreRequest is set (has been assigned a value) and false otherwise */
+  public boolean isSetRemoteExecutionStoreRequest() {
+    return this.remoteExecutionStoreRequest != null;
+  }
+
+  public void setRemoteExecutionStoreRequestIsSet(boolean value) {
+    if (!value) {
+      this.remoteExecutionStoreRequest = null;
+    }
+  }
+
+  public RemoteExecutionFetchRequest getRemoteExecutionFetchRequest() {
+    return this.remoteExecutionFetchRequest;
+  }
+
+  public FrontendRequest setRemoteExecutionFetchRequest(RemoteExecutionFetchRequest remoteExecutionFetchRequest) {
+    this.remoteExecutionFetchRequest = remoteExecutionFetchRequest;
+    return this;
+  }
+
+  public void unsetRemoteExecutionFetchRequest() {
+    this.remoteExecutionFetchRequest = null;
+  }
+
+  /** Returns true if field remoteExecutionFetchRequest is set (has been assigned a value) and false otherwise */
+  public boolean isSetRemoteExecutionFetchRequest() {
+    return this.remoteExecutionFetchRequest != null;
+  }
+
+  public void setRemoteExecutionFetchRequestIsSet(boolean value) {
+    if (!value) {
+      this.remoteExecutionFetchRequest = null;
+    }
+  }
+
+  public RemoteExecutionContainsRequest getRemoteExecutionContainsRequest() {
+    return this.remoteExecutionContainsRequest;
+  }
+
+  public FrontendRequest setRemoteExecutionContainsRequest(RemoteExecutionContainsRequest remoteExecutionContainsRequest) {
+    this.remoteExecutionContainsRequest = remoteExecutionContainsRequest;
+    return this;
+  }
+
+  public void unsetRemoteExecutionContainsRequest() {
+    this.remoteExecutionContainsRequest = null;
+  }
+
+  /** Returns true if field remoteExecutionContainsRequest is set (has been assigned a value) and false otherwise */
+  public boolean isSetRemoteExecutionContainsRequest() {
+    return this.remoteExecutionContainsRequest != null;
+  }
+
+  public void setRemoteExecutionContainsRequestIsSet(boolean value) {
+    if (!value) {
+      this.remoteExecutionContainsRequest = null;
+    }
+  }
+
   public void setFieldValue(_Fields field, java.lang.Object value) {
     switch (field) {
     case TYPE:
@@ -1279,6 +1384,30 @@ public class FrontendRequest implements org.apache.thrift.TBase<FrontendRequest,
       }
       break;
 
+    case REMOTE_EXECUTION_STORE_REQUEST:
+      if (value == null) {
+        unsetRemoteExecutionStoreRequest();
+      } else {
+        setRemoteExecutionStoreRequest((RemoteExecutionStoreRequest)value);
+      }
+      break;
+
+    case REMOTE_EXECUTION_FETCH_REQUEST:
+      if (value == null) {
+        unsetRemoteExecutionFetchRequest();
+      } else {
+        setRemoteExecutionFetchRequest((RemoteExecutionFetchRequest)value);
+      }
+      break;
+
+    case REMOTE_EXECUTION_CONTAINS_REQUEST:
+      if (value == null) {
+        unsetRemoteExecutionContainsRequest();
+      } else {
+        setRemoteExecutionContainsRequest((RemoteExecutionContainsRequest)value);
+      }
+      break;
+
     }
   }
 
@@ -1365,6 +1494,15 @@ public class FrontendRequest implements org.apache.thrift.TBase<FrontendRequest,
     case UPDATE_BUILD_SLAVE_BUILD_STATUS_REQUEST:
       return getUpdateBuildSlaveBuildStatusRequest();
 
+    case REMOTE_EXECUTION_STORE_REQUEST:
+      return getRemoteExecutionStoreRequest();
+
+    case REMOTE_EXECUTION_FETCH_REQUEST:
+      return getRemoteExecutionFetchRequest();
+
+    case REMOTE_EXECUTION_CONTAINS_REQUEST:
+      return getRemoteExecutionContainsRequest();
+
     }
     throw new java.lang.IllegalStateException();
   }
@@ -1430,6 +1568,12 @@ public class FrontendRequest implements org.apache.thrift.TBase<FrontendRequest,
       return isSetReportCoordinatorAliveRequest();
     case UPDATE_BUILD_SLAVE_BUILD_STATUS_REQUEST:
       return isSetUpdateBuildSlaveBuildStatusRequest();
+    case REMOTE_EXECUTION_STORE_REQUEST:
+      return isSetRemoteExecutionStoreRequest();
+    case REMOTE_EXECUTION_FETCH_REQUEST:
+      return isSetRemoteExecutionFetchRequest();
+    case REMOTE_EXECUTION_CONTAINS_REQUEST:
+      return isSetRemoteExecutionContainsRequest();
     }
     throw new java.lang.IllegalStateException();
   }
@@ -1692,6 +1836,33 @@ public class FrontendRequest implements org.apache.thrift.TBase<FrontendRequest,
         return false;
     }
 
+    boolean this_present_remoteExecutionStoreRequest = true && this.isSetRemoteExecutionStoreRequest();
+    boolean that_present_remoteExecutionStoreRequest = true && that.isSetRemoteExecutionStoreRequest();
+    if (this_present_remoteExecutionStoreRequest || that_present_remoteExecutionStoreRequest) {
+      if (!(this_present_remoteExecutionStoreRequest && that_present_remoteExecutionStoreRequest))
+        return false;
+      if (!this.remoteExecutionStoreRequest.equals(that.remoteExecutionStoreRequest))
+        return false;
+    }
+
+    boolean this_present_remoteExecutionFetchRequest = true && this.isSetRemoteExecutionFetchRequest();
+    boolean that_present_remoteExecutionFetchRequest = true && that.isSetRemoteExecutionFetchRequest();
+    if (this_present_remoteExecutionFetchRequest || that_present_remoteExecutionFetchRequest) {
+      if (!(this_present_remoteExecutionFetchRequest && that_present_remoteExecutionFetchRequest))
+        return false;
+      if (!this.remoteExecutionFetchRequest.equals(that.remoteExecutionFetchRequest))
+        return false;
+    }
+
+    boolean this_present_remoteExecutionContainsRequest = true && this.isSetRemoteExecutionContainsRequest();
+    boolean that_present_remoteExecutionContainsRequest = true && that.isSetRemoteExecutionContainsRequest();
+    if (this_present_remoteExecutionContainsRequest || that_present_remoteExecutionContainsRequest) {
+      if (!(this_present_remoteExecutionContainsRequest && that_present_remoteExecutionContainsRequest))
+        return false;
+      if (!this.remoteExecutionContainsRequest.equals(that.remoteExecutionContainsRequest))
+        return false;
+    }
+
     return true;
   }
 
@@ -1806,6 +1977,18 @@ public class FrontendRequest implements org.apache.thrift.TBase<FrontendRequest,
     hashCode = hashCode * 8191 + ((isSetUpdateBuildSlaveBuildStatusRequest()) ? 131071 : 524287);
     if (isSetUpdateBuildSlaveBuildStatusRequest())
       hashCode = hashCode * 8191 + updateBuildSlaveBuildStatusRequest.hashCode();
+
+    hashCode = hashCode * 8191 + ((isSetRemoteExecutionStoreRequest()) ? 131071 : 524287);
+    if (isSetRemoteExecutionStoreRequest())
+      hashCode = hashCode * 8191 + remoteExecutionStoreRequest.hashCode();
+
+    hashCode = hashCode * 8191 + ((isSetRemoteExecutionFetchRequest()) ? 131071 : 524287);
+    if (isSetRemoteExecutionFetchRequest())
+      hashCode = hashCode * 8191 + remoteExecutionFetchRequest.hashCode();
+
+    hashCode = hashCode * 8191 + ((isSetRemoteExecutionContainsRequest()) ? 131071 : 524287);
+    if (isSetRemoteExecutionContainsRequest())
+      hashCode = hashCode * 8191 + remoteExecutionContainsRequest.hashCode();
 
     return hashCode;
   }
@@ -2084,6 +2267,36 @@ public class FrontendRequest implements org.apache.thrift.TBase<FrontendRequest,
     }
     if (isSetUpdateBuildSlaveBuildStatusRequest()) {
       lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.updateBuildSlaveBuildStatusRequest, other.updateBuildSlaveBuildStatusRequest);
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+    }
+    lastComparison = java.lang.Boolean.valueOf(isSetRemoteExecutionStoreRequest()).compareTo(other.isSetRemoteExecutionStoreRequest());
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    if (isSetRemoteExecutionStoreRequest()) {
+      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.remoteExecutionStoreRequest, other.remoteExecutionStoreRequest);
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+    }
+    lastComparison = java.lang.Boolean.valueOf(isSetRemoteExecutionFetchRequest()).compareTo(other.isSetRemoteExecutionFetchRequest());
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    if (isSetRemoteExecutionFetchRequest()) {
+      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.remoteExecutionFetchRequest, other.remoteExecutionFetchRequest);
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+    }
+    lastComparison = java.lang.Boolean.valueOf(isSetRemoteExecutionContainsRequest()).compareTo(other.isSetRemoteExecutionContainsRequest());
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    if (isSetRemoteExecutionContainsRequest()) {
+      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.remoteExecutionContainsRequest, other.remoteExecutionContainsRequest);
       if (lastComparison != 0) {
         return lastComparison;
       }
@@ -2377,6 +2590,36 @@ public class FrontendRequest implements org.apache.thrift.TBase<FrontendRequest,
       }
       first = false;
     }
+    if (isSetRemoteExecutionStoreRequest()) {
+      if (!first) sb.append(", ");
+      sb.append("remoteExecutionStoreRequest:");
+      if (this.remoteExecutionStoreRequest == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.remoteExecutionStoreRequest);
+      }
+      first = false;
+    }
+    if (isSetRemoteExecutionFetchRequest()) {
+      if (!first) sb.append(", ");
+      sb.append("remoteExecutionFetchRequest:");
+      if (this.remoteExecutionFetchRequest == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.remoteExecutionFetchRequest);
+      }
+      first = false;
+    }
+    if (isSetRemoteExecutionContainsRequest()) {
+      if (!first) sb.append(", ");
+      sb.append("remoteExecutionContainsRequest:");
+      if (this.remoteExecutionContainsRequest == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.remoteExecutionContainsRequest);
+      }
+      first = false;
+    }
     sb.append(")");
     return sb.toString();
   }
@@ -2461,6 +2704,15 @@ public class FrontendRequest implements org.apache.thrift.TBase<FrontendRequest,
     }
     if (updateBuildSlaveBuildStatusRequest != null) {
       updateBuildSlaveBuildStatusRequest.validate();
+    }
+    if (remoteExecutionStoreRequest != null) {
+      remoteExecutionStoreRequest.validate();
+    }
+    if (remoteExecutionFetchRequest != null) {
+      remoteExecutionFetchRequest.validate();
+    }
+    if (remoteExecutionContainsRequest != null) {
+      remoteExecutionContainsRequest.validate();
     }
   }
 
@@ -2740,6 +2992,33 @@ public class FrontendRequest implements org.apache.thrift.TBase<FrontendRequest,
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
             break;
+          case 30: // REMOTE_EXECUTION_STORE_REQUEST
+            if (schemeField.type == org.apache.thrift.protocol.TType.STRUCT) {
+              struct.remoteExecutionStoreRequest = new RemoteExecutionStoreRequest();
+              struct.remoteExecutionStoreRequest.read(iprot);
+              struct.setRemoteExecutionStoreRequestIsSet(true);
+            } else { 
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+            }
+            break;
+          case 31: // REMOTE_EXECUTION_FETCH_REQUEST
+            if (schemeField.type == org.apache.thrift.protocol.TType.STRUCT) {
+              struct.remoteExecutionFetchRequest = new RemoteExecutionFetchRequest();
+              struct.remoteExecutionFetchRequest.read(iprot);
+              struct.setRemoteExecutionFetchRequestIsSet(true);
+            } else { 
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+            }
+            break;
+          case 32: // REMOTE_EXECUTION_CONTAINS_REQUEST
+            if (schemeField.type == org.apache.thrift.protocol.TType.STRUCT) {
+              struct.remoteExecutionContainsRequest = new RemoteExecutionContainsRequest();
+              struct.remoteExecutionContainsRequest.read(iprot);
+              struct.setRemoteExecutionContainsRequestIsSet(true);
+            } else { 
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+            }
+            break;
           default:
             org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
         }
@@ -2944,6 +3223,27 @@ public class FrontendRequest implements org.apache.thrift.TBase<FrontendRequest,
           oprot.writeFieldEnd();
         }
       }
+      if (struct.remoteExecutionStoreRequest != null) {
+        if (struct.isSetRemoteExecutionStoreRequest()) {
+          oprot.writeFieldBegin(REMOTE_EXECUTION_STORE_REQUEST_FIELD_DESC);
+          struct.remoteExecutionStoreRequest.write(oprot);
+          oprot.writeFieldEnd();
+        }
+      }
+      if (struct.remoteExecutionFetchRequest != null) {
+        if (struct.isSetRemoteExecutionFetchRequest()) {
+          oprot.writeFieldBegin(REMOTE_EXECUTION_FETCH_REQUEST_FIELD_DESC);
+          struct.remoteExecutionFetchRequest.write(oprot);
+          oprot.writeFieldEnd();
+        }
+      }
+      if (struct.remoteExecutionContainsRequest != null) {
+        if (struct.isSetRemoteExecutionContainsRequest()) {
+          oprot.writeFieldBegin(REMOTE_EXECUTION_CONTAINS_REQUEST_FIELD_DESC);
+          struct.remoteExecutionContainsRequest.write(oprot);
+          oprot.writeFieldEnd();
+        }
+      }
       oprot.writeFieldStop();
       oprot.writeStructEnd();
     }
@@ -3043,7 +3343,16 @@ public class FrontendRequest implements org.apache.thrift.TBase<FrontendRequest,
       if (struct.isSetUpdateBuildSlaveBuildStatusRequest()) {
         optionals.set(26);
       }
-      oprot.writeBitSet(optionals, 27);
+      if (struct.isSetRemoteExecutionStoreRequest()) {
+        optionals.set(27);
+      }
+      if (struct.isSetRemoteExecutionFetchRequest()) {
+        optionals.set(28);
+      }
+      if (struct.isSetRemoteExecutionContainsRequest()) {
+        optionals.set(29);
+      }
+      oprot.writeBitSet(optionals, 30);
       if (struct.isSetType()) {
         oprot.writeI32(struct.type.getValue());
       }
@@ -3125,12 +3434,21 @@ public class FrontendRequest implements org.apache.thrift.TBase<FrontendRequest,
       if (struct.isSetUpdateBuildSlaveBuildStatusRequest()) {
         struct.updateBuildSlaveBuildStatusRequest.write(oprot);
       }
+      if (struct.isSetRemoteExecutionStoreRequest()) {
+        struct.remoteExecutionStoreRequest.write(oprot);
+      }
+      if (struct.isSetRemoteExecutionFetchRequest()) {
+        struct.remoteExecutionFetchRequest.write(oprot);
+      }
+      if (struct.isSetRemoteExecutionContainsRequest()) {
+        struct.remoteExecutionContainsRequest.write(oprot);
+      }
     }
 
     @Override
     public void read(org.apache.thrift.protocol.TProtocol prot, FrontendRequest struct) throws org.apache.thrift.TException {
       org.apache.thrift.protocol.TTupleProtocol iprot = (org.apache.thrift.protocol.TTupleProtocol) prot;
-      java.util.BitSet incoming = iprot.readBitSet(27);
+      java.util.BitSet incoming = iprot.readBitSet(30);
       if (incoming.get(0)) {
         struct.type = com.facebook.buck.distributed.thrift.FrontendRequestType.findByValue(iprot.readI32());
         struct.setTypeIsSet(true);
@@ -3264,6 +3582,21 @@ public class FrontendRequest implements org.apache.thrift.TBase<FrontendRequest,
         struct.updateBuildSlaveBuildStatusRequest = new UpdateBuildSlaveBuildStatusRequest();
         struct.updateBuildSlaveBuildStatusRequest.read(iprot);
         struct.setUpdateBuildSlaveBuildStatusRequestIsSet(true);
+      }
+      if (incoming.get(27)) {
+        struct.remoteExecutionStoreRequest = new RemoteExecutionStoreRequest();
+        struct.remoteExecutionStoreRequest.read(iprot);
+        struct.setRemoteExecutionStoreRequestIsSet(true);
+      }
+      if (incoming.get(28)) {
+        struct.remoteExecutionFetchRequest = new RemoteExecutionFetchRequest();
+        struct.remoteExecutionFetchRequest.read(iprot);
+        struct.setRemoteExecutionFetchRequestIsSet(true);
+      }
+      if (incoming.get(29)) {
+        struct.remoteExecutionContainsRequest = new RemoteExecutionContainsRequest();
+        struct.remoteExecutionContainsRequest.read(iprot);
+        struct.setRemoteExecutionContainsRequestIsSet(true);
       }
     }
   }
