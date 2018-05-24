@@ -68,3 +68,23 @@ python_test(
         "//:binary-with-tests",
     ],
 )
+
+sh_binary(
+    name = "sh_binary1",
+    main = "sh_binary1.sh",
+)
+
+sh_binary(
+    name = "sh_binary2",
+    main = "sh_binary2.sh",
+)
+
+python_test(
+    name = "test-deps-with-env-macros",
+    srcs = [
+        "test_deps_with_env_macros.py",
+    ],
+    env = {
+        "TESTING_BINARIES": "$(location :sh_binary1) -- $(location :sh_binary2)",
+    },
+)

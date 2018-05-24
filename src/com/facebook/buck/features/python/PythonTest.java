@@ -68,6 +68,7 @@ public class PythonTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   private BuildRuleResolver ruleResolver;
   private final Supplier<? extends SortedSet<BuildRule>> originalDeclaredDeps;
+  private final Supplier<? extends SortedSet<BuildRule>> originalExtraDeps;
   private final Function<BuildRuleResolver, ImmutableMap<String, Arg>> envSupplier;
   private final Memoizer<ImmutableMap<String, Arg>> env = new Memoizer<>();
   private final PythonBinary binary;
@@ -82,6 +83,7 @@ public class PythonTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
       Supplier<? extends SortedSet<BuildRule>> originalDeclaredDeps,
+      Supplier<? extends SortedSet<BuildRule>> originalExtraDeps,
       Function<BuildRuleResolver, ImmutableMap<String, Arg>> envSupplier,
       PythonBinary binary,
       ImmutableSet<String> labels,
@@ -91,6 +93,7 @@ public class PythonTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
     super(buildTarget, projectFilesystem, params);
     this.ruleResolver = ruleResolver;
     this.originalDeclaredDeps = originalDeclaredDeps;
+    this.originalExtraDeps = originalExtraDeps;
     this.envSupplier = envSupplier;
     this.binary = binary;
     this.labels = labels;
@@ -110,12 +113,14 @@ public class PythonTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
       ImmutableList<Pair<Float, ImmutableSet<Path>>> neededCoverage,
       Optional<Long> testRuleTimeoutMs,
       ImmutableSet<String> contacts) {
+
     return new PythonTest(
         buildTarget,
         projectFilesystem,
         params.withDeclaredDeps(ImmutableSortedSet.of(binary)).withoutExtraDeps(),
         ruleResolver,
         params.getDeclaredDeps(),
+        params.getExtraDeps(),
         env,
         binary,
         labels,
@@ -227,6 +232,7 @@ public class PythonTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   public Stream<BuildTarget> getRuntimeDeps(SourcePathRuleFinder ruleFinder) {
     return RichStream.<BuildTarget>empty()
         .concat(originalDeclaredDeps.get().stream().map(BuildRule::getBuildTarget))
+        .concat(originalExtraDeps.get().stream().map(BuildRule::getBuildTarget))
         .concat(binary.getRuntimeDeps(ruleFinder))
         .concat(
             BuildableSupport.getDeps(binary.getExecutableCommand(), ruleFinder)

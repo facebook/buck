@@ -197,6 +197,12 @@ public class PythonTestIntegrationTest {
     workspace.runBuckCommand("test", "//:test-success").assertSuccess();
   }
 
+  @Test
+  public void addsTargetsFromMacrosToDependencies() throws IOException {
+    ProcessResult result = workspace.runBuckCommand("test", "//:test-deps-with-env-macros");
+    result.assertSuccess();
+  }
+
   private void assumePythonVersionIsAtLeast(String expectedVersion, String message) {
     PythonVersion actualVersion =
         PythonPlatformsProviderFactoryUtils.getPythonEnvironment(
