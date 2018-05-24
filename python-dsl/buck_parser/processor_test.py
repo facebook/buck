@@ -651,6 +651,85 @@ class BuckTest(unittest.TestCase):
                 build_file.root, build_file.prefix, build_file.path, diagnostics)
             self.assertEqual(rules[0].get('name'), '{"name":"foo"}')
 
+    def test_can_load_extension_from_extension_using_relative_target(self):
+        extension_dep_file = ProjectFile(
+            self.project_root,
+            path='dep.bzl',
+            contents=(
+                'foo = "bar"',
+            )
+        )
+        extension_file = ProjectFile(
+            self.project_root,
+            path='ext.bzl',
+            contents=(
+                'load(":dep.bzl", _foo = "foo")',
+                'foo = _foo',
+            )
+        )
+        build_file = ProjectFile(
+            self.project_root,
+            path='BUCK',
+            contents=(
+                'load("//:ext.bzl", "foo")',
+                'foo_rule(',
+                '  name=foo,',
+                ')'
+            ))
+        self.write_files(extension_dep_file, extension_file, build_file)
+        build_file_processor = self.create_build_file_processor(extra_funcs=[foo_rule])
+        diagnostics = []
+        with build_file_processor.with_builtins(__builtin__.__dict__):
+            rules = build_file_processor.process(
+                build_file.root, build_file.prefix, build_file.path, diagnostics)
+            self.assertEqual(rules[0].get('name'), 'bar')
+
+    def test_can_load_extension_from_build_file_using_relative_target(self):
+        extension_file = ProjectFile(
+            self.project_root,
+            path='ext.bzl',
+            contents=(
+                'foo = "bar"',
+            )
+        )
+        build_file = ProjectFile(
+            self.project_root,
+            path='BUCK',
+            contents=(
+                'load(":ext.bzl", "foo")',
+                'foo_rule(',
+                '  name=foo,',
+                ')'
+            ))
+        self.write_files(extension_file, build_file)
+        build_file_processor = self.create_build_file_processor(extra_funcs=[foo_rule])
+        diagnostics = []
+        with build_file_processor.with_builtins(__builtin__.__dict__):
+            rules = build_file_processor.process(
+                build_file.root, build_file.prefix, build_file.path, diagnostics)
+            self.assertEqual(rules[0].get('name'), 'bar')
+
+    def test_cannot_use_relative_load_for_a_nested_directory(self):
+        build_file = ProjectFile(
+            self.project_root,
+            path='BUCK',
+            contents=(
+                'load(":foo/ext.bzl", "foo")',
+                'foo_rule(',
+                '  name=foo,',
+                ')'
+            ))
+        self.write_file(build_file)
+        build_file_processor = self.create_build_file_processor(extra_funcs=[foo_rule])
+        diagnostics = []
+        with build_file_processor.with_builtins(__builtin__.__dict__):
+            with self.assertRaisesRegexp(
+                    ValueError,
+                    'Relative loads work only for files in the same directory. '
+                    'Please use absolute label instead \(\[cell\]//pkg\[/pkg\]:target\).'):
+                build_file_processor.process(
+                    build_file.root, build_file.prefix, build_file.path, diagnostics)
+
     def test_provider_is_available(self):
         extension_file = ProjectFile(
             self.project_root,

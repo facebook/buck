@@ -70,7 +70,7 @@ DEFAULT_WATCHMAN_QUERY_TIMEOUT = 60.0
 ORIGINAL_IMPORT = __builtin__.__import__
 
 _LOAD_TARGET_PATH_RE = re.compile(
-    r'^(?P<cell>@?[A-Za-z0-9_]+)?//(?P<package>.*):(?P<target>.*)$'
+    r'^(?P<root>(?P<cell>@?[A-Za-z0-9_]+)?//)?(?P<package>.*):(?P<target>.*)$'
 )
 
 
@@ -956,7 +956,19 @@ class BuildFileProcessor(object):
             cell_name = self._current_build_env.cell_name
         relative_path = match.group('package')
         file_name = match.group('target')
-        if cell_name:
+        label_root = match.group('root')
+        if not label_root:
+            # relative include. e.g. :foo.bzl
+            if '/' in file_name:
+                raise ValueError(
+                    'Relative loads work only for files in the same directory. ' +
+                    'Please use absolute label instead ([cell]//pkg[/pkg]:target).',
+                )
+            callee_dir = os.path.dirname(self._current_build_env.path)
+            return BuildInclude(
+                cell_name=cell_name,
+                path=os.path.normpath(os.path.join(callee_dir, file_name)))
+        elif cell_name:
             cell_root = self._cell_roots.get(cell_name)
             if cell_root is None:
                 raise KeyError(
