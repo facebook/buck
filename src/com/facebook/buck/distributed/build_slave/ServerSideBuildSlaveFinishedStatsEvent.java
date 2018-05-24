@@ -28,17 +28,20 @@ public class ServerSideBuildSlaveFinishedStatsEvent extends AbstractBuckEvent {
   private final StampedeId stampedeId;
   private final BuildSlaveRunId runId;
   private final Optional<String> buildLabel;
+  private final String minionType;
   private final BuildSlaveFinishedStats buildSlaveFinishedStats;
 
   public ServerSideBuildSlaveFinishedStatsEvent(
       StampedeId stampedeId,
       BuildSlaveRunId runId,
       Optional<String> buildLabel,
+      String minionType,
       BuildSlaveFinishedStats buildSlaveFinishedStats) {
     super(EventKey.unique());
     this.stampedeId = stampedeId;
     this.runId = runId;
     this.buildLabel = buildLabel;
+    this.minionType = minionType;
     this.buildSlaveFinishedStats = buildSlaveFinishedStats;
   }
 
@@ -66,5 +69,9 @@ public class ServerSideBuildSlaveFinishedStatsEvent extends AbstractBuckEvent {
 
   public Optional<String> getBuildLabel() {
     return buildLabel;
+  }
+
+  public String getMinionType() {
+    return minionType;
   }
 }

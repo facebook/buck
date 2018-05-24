@@ -37,6 +37,7 @@ import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
 import com.facebook.buck.distributed.thrift.BuildSlaveStatus;
 import com.facebook.buck.distributed.thrift.CoordinatorBuildProgress;
 import com.facebook.buck.distributed.thrift.CoordinatorBuildProgressEvent;
+import com.facebook.buck.distributed.thrift.MinionType;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventListener;
@@ -113,6 +114,7 @@ public class DistBuildSlaveEventBusListener
   private volatile Optional<Integer> exitCode = Optional.empty();
   private volatile boolean sentFinishedStatsToServer;
   private volatile Optional<String> buildLabel = Optional.empty();
+  private volatile String minionType = MinionType.STANDARD_SPEC.name();
 
   public DistBuildSlaveEventBusListener(
       StampedeId stampedeId,
@@ -335,7 +337,7 @@ public class DistBuildSlaveEventBusListener
     BuildSlaveFinishedStats buildSlaveFinishedStats = createBuildSlaveFinishedStats();
     ServerSideBuildSlaveFinishedStatsEvent event =
         new ServerSideBuildSlaveFinishedStatsEvent(
-            stampedeId, buildSlaveRunId, buildLabel, buildSlaveFinishedStats);
+            stampedeId, buildSlaveRunId, buildLabel, minionType, buildSlaveFinishedStats);
 
     eventBus.post(event);
   }
@@ -515,5 +517,9 @@ public class DistBuildSlaveEventBusListener
     if (buildLabel != null && !buildLabel.equals("")) {
       this.buildLabel = Optional.of(buildLabel);
     }
+  }
+
+  public void setMinionType(String minionType) {
+    this.minionType = minionType;
   }
 }

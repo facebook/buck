@@ -220,6 +220,7 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
           }
 
           slaveEventListener.setBuildLabel(distBuildConfig.getBuildLabel());
+          slaveEventListener.setMinionType(distBuildConfig.getMinionType().name());
         }
 
         ConcurrencyLimit concurrencyLimit =
