@@ -29,7 +29,7 @@ def write_contents_to_file(path, contents):
 def makedirs(path):
     try:
         os.makedirs(path)
-    except OSError, e:
+    except OSError as e:
         # Potentially the case that multiple processes are running in parallel
         # (e.g. a series of linters running buck query without buckd), so we
         # should just swallow the error.
