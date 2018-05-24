@@ -3870,6 +3870,34 @@ your <code>.buckjavaargs</code> file</a>:
 
 {call buckconfig.entry}
   {param section: 'ui' /}
+  {param name: 'error_message_augmentations' /}
+  {param example_value: '"The rule (//S+)-cxx could not be found.\" => \"Please make sure that $1 is a cxx library.' /}
+  {param description}
+  <p class="warning-banner">
+  [This configuration entry is preliminary and subject to change.]
+  </p>
+  <p>
+  Specifies a comma-separated list of mappings from regular expressions
+  (regexes) to message strings. 
+  </p>
+  <p>
+  If the text of a Buck parser error
+  matches one of the specified regexes, the corresponding message string
+  is appended to the error. You can use the message string to provide
+  additional helpful information to the user. 
+  </p>
+  <p>
+  If the regex contains unescaped parentheses, <code>()</code>, the text
+  that the parentheses enclose is captured. You can then insert this captured text 
+  in the appended string by using <code>$1</code> for the first captured text 
+  string, <code>$2</code> for the second, and so on. This works exactly like 
+  Java regex replacement strings.
+  </p>
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'ui' /}
   {param name: 'thread_line_limit' /}
   {param example_value: '10' /}
   {param description}

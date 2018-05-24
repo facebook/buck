@@ -38,6 +38,10 @@ h1 {
   padding-top: 10px;
 }
 
+.warning-banner {
+  color: red
+}
+
 h2 {
   font-size: 1.4em;
 }
