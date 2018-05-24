@@ -21,7 +21,7 @@ import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Streams;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
@@ -66,9 +66,8 @@ public class GoTestMainStep extends ShellStep {
             .add("--import-path", packageName.toString())
             .add("--cover-mode", coverageMode.getMode());
 
-    ImmutableSet<Path> filteredFiles = ImmutableSet.<Path>builder().addAll(testFiles).build();
     Set<Path> filteredFileNames =
-        filteredFiles.stream().map(Path::getFileName).collect(Collectors.toSet());
+        Streams.stream(testFiles).map(Path::getFileName).collect(Collectors.toSet());
     for (Map.Entry<Path, ImmutableMap<String, Path>> pkg : coverageVariables.entrySet()) {
       if (pkg.getValue().isEmpty()) {
         continue;
@@ -93,7 +92,11 @@ public class GoTestMainStep extends ShellStep {
 
       command.add("--cover-pkgs", pkgFlag.toString());
     }
-    command.addAll(filteredFiles.stream().map(Path::toString).collect(Collectors.toList()));
+
+    for (Path source : testFiles) {
+      command.add(source.toString());
+    }
+
     return command.build();
   }
 
