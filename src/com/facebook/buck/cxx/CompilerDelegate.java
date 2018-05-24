@@ -33,6 +33,7 @@ import com.facebook.buck.util.RichStream;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 /** Helper class for generating compiler invocations for a cxx compilation rule. */
@@ -109,5 +110,12 @@ class CompilerDelegate implements AddsToRuleKey {
         .flatMap(a -> BuildableSupport.getDeps(a, ruleFinder))
         .forEach(deps::add);
     return deps.build();
+  }
+
+  public Predicate<SourcePath> getCoveredByDepFilePredicate() {
+    // TODO(cjhopman): this should not include tools (an actual compiler)
+    return (SourcePath path) ->
+        !(path instanceof PathSourcePath)
+            || !((PathSourcePath) path).getRelativePath().isAbsolute();
   }
 }

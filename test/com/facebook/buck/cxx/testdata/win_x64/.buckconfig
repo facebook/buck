@@ -1,6 +1,3 @@
-[build]
-  depfiles=disabled
-
 [cxx]
   sandbox_sources=true
 

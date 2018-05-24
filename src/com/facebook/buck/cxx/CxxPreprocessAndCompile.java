@@ -172,6 +172,10 @@ public class CxxPreprocessAndCompile extends ModernBuildRule<CxxPreprocessAndCom
     return getBuildable().preprocessDelegate;
   }
 
+  CompilerDelegate getCompilerDelegate() {
+    return getBuildable().compilerDelegate;
+  }
+
   /** Returns the compilation command (used for compdb). */
   public ImmutableList<String> getCommand(SourcePathResolver resolver) {
     return getBuildable()
@@ -198,7 +202,7 @@ public class CxxPreprocessAndCompile extends ModernBuildRule<CxxPreprocessAndCom
     if (getPreprocessorDelegate().isPresent()) {
       return getPreprocessorDelegate().get().getCoveredByDepFilePredicate();
     }
-    return (SourcePath path) -> true;
+    return getCompilerDelegate().getCoveredByDepFilePredicate();
   }
 
   @Override
