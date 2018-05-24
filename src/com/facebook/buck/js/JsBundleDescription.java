@@ -43,6 +43,7 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.shell.ExportFile;
 import com.facebook.buck.shell.ExportFileDescription;
 import com.facebook.buck.shell.ExportFileDirectoryAction;
@@ -170,6 +171,9 @@ public class JsBundleDescription
     ImmutableSet<String> entryPoints =
         entryPoint.isLeft() ? entryPoint.getLeft() : ImmutableSet.of(entryPoint.getRight());
 
+    Optional<Arg> extraJson =
+        JsUtil.getExtraJson(args, buildTarget, resolver, context.getCellPathResolver());
+
     // If {@link JsFlavors.DEPENDENCY_FILE} is specified, the worker will output a file containing
     // all dependencies between files that go into the final bundle
     if (flavors.contains(JsFlavors.DEPENDENCY_FILE)) {
@@ -179,6 +183,7 @@ public class JsBundleDescription
           paramsWithLibraries,
           libraries,
           entryPoints,
+          extraJson,
           resolver.getRuleWithType(args.getWorker(), WorkerTool.class));
     }
 
@@ -204,7 +209,7 @@ public class JsBundleDescription
         paramsWithLibraries,
         libraries,
         entryPoints,
-        JsUtil.getExtraJson(args, buildTarget, resolver, context.getCellPathResolver()),
+        extraJson,
         libraryPathGroups,
         bundleName,
         resolver.getRuleWithType(args.getWorker(), WorkerTool.class));

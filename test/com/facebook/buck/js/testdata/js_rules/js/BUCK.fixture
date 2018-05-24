@@ -70,6 +70,7 @@ js_bundle(
     name = "fruit-salad-in-a-bundle",
     android_package = "com.sample",
     entry = "fruit-salad",
+    extra_json = """{"a":[1,2,3],"b":true,"s":"hello $(location :empty)!"}""",
     visibility = ["PUBLIC"],
     worker = ":packager_worker",
     deps = [":fruit-salad"],

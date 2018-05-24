@@ -29,6 +29,7 @@ import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.shell.WorkerTool;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
@@ -37,12 +38,15 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
+import java.util.Optional;
 
 public class JsDependenciesFile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 
   @AddToRuleKey private final ImmutableSet<String> entryPoints;
 
   @AddToRuleKey private final ImmutableSortedSet<SourcePath> libraries;
+
+  @AddToRuleKey private final Optional<Arg> extraJson;
 
   @AddToRuleKey private final WorkerTool worker;
 
@@ -52,10 +56,12 @@ public class JsDependenciesFile extends AbstractBuildRuleWithDeclaredAndExtraDep
       BuildRuleParams buildRuleParams,
       ImmutableSortedSet<SourcePath> libraries,
       ImmutableSet<String> entryPoints,
+      Optional<Arg> extraJson,
       WorkerTool worker) {
     super(buildTarget, projectFilesystem, buildRuleParams);
     this.entryPoints = entryPoints;
     this.libraries = libraries;
+    this.extraJson = extraJson;
     this.worker = worker;
   }
 
@@ -99,6 +105,7 @@ public class JsDependenciesFile extends AbstractBuildRuleWithDeclaredAndExtraDep
         .addString("platform", JsUtil.getPlatformString(flavors))
         .addBoolean("release", flavors.contains(JsFlavors.RELEASE))
         .addString("rootPath", getProjectFilesystem().getRootPath().toString())
+        .addRaw("extraData", extraJson.map(a -> Arg.stringify(a, sourcePathResolver)))
         .toString();
   }
 
