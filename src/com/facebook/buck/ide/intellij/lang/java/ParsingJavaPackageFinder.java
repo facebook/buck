@@ -119,6 +119,9 @@ public abstract class ParsingJavaPackageFinder {
      */
     public Optional<Path> getSourceRootFromSource(Path sourcePath) {
       Path normalizedSourcePath = sourcePath.normalize();
+      if (!normalizedSourcePath.toString().endsWith(".java")) {
+        return Optional.empty();
+      }
       Path sourceDirectoryPath = normalizedSourcePath.getParent();
       return getPackagePathFromSource(normalizedSourcePath)
           .flatMap(

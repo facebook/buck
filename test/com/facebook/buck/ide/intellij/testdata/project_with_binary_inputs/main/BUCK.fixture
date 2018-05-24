@@ -1,0 +1,7 @@
+java_library(
+    name = "main",
+    srcs = [
+        "Main.java",
+        "//libs:rule_with_binary_input_file",
+    ],
+)

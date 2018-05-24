@@ -337,6 +337,11 @@ public class ProjectIntegrationTest {
   }
 
   @Test
+  public void testProjectWithBinaryInputs() throws InterruptedException, IOException {
+    runBuckProjectAndVerify("project_with_binary_inputs");
+  }
+
+  @Test
   public void testGeneratingAndroidManifest() throws InterruptedException, IOException {
     runBuckProjectAndVerify("generate_android_manifest");
   }
