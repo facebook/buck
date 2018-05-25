@@ -18,6 +18,8 @@ install:
   - cmd: java -version
   - cmd: ant -version
   - cmd: reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\AppModelUnlock" /t REG_DWORD /f /v "AllowDevelopmentWithoutDevLicense" /d "1"
+  - cmd: mklink link.md README.md
+  - cmd: dir
 
 # to disable automatic builds by MsBuild
 build: off
