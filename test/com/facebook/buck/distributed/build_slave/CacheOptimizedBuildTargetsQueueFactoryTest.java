@@ -397,7 +397,7 @@ public class CacheOptimizedBuildTargetsQueueFactoryTest {
     BuildTargetsQueue queue =
         createQueueWithRemoteCacheHits(
             resolver, ImmutableList.of(cacheableA, cacheableB), ImmutableList.of(), false);
-    Assert.assertEquals(5, queue.getDistributableBuildGraph().getNumCachableNodes());
+    Assert.assertEquals(5, queue.getDistributableBuildGraph().getNumberOfCacheableNodes());
 
     // Check enabling of building locally marks correct rules as uncacheable and sends "unlocked"
     // events for them.
@@ -409,9 +409,9 @@ public class CacheOptimizedBuildTargetsQueueFactoryTest {
     queue =
         createQueueWithRemoteCacheHits(
             resolver, ImmutableList.of(cacheableA, cacheableB), ImmutableList.of(), true);
-    Assert.assertEquals(2, queue.getDistributableBuildGraph().getNumCachableNodes());
-    Assert.assertFalse(queue.getDistributableBuildGraph().getNode(CACHABLE_C).isUncachable());
-    Assert.assertFalse(queue.getDistributableBuildGraph().getNode(CACHABLE_D).isUncachable());
+    Assert.assertEquals(2, queue.getDistributableBuildGraph().getNumberOfCacheableNodes());
+    Assert.assertFalse(queue.getDistributableBuildGraph().getNode(CACHABLE_C).isUncacheable());
+    Assert.assertFalse(queue.getDistributableBuildGraph().getNode(CACHABLE_D).isUncacheable());
     verify(ruleFinishedPublisher);
     Set<String> unlockedEvents = Sets.newHashSet(unlockedEventsCapture.getValues().get(0));
     Assert.assertEquals(4, unlockedEvents.size());

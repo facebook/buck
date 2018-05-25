@@ -106,31 +106,31 @@ public class DistributableBuildGraphTest {
   public void testTransitiveCachableDeps() {
     // Check for all nodes, but randomize the order to make sure that doesn't affect computation.
     Assert.assertEquals(
-        graph.getNode("a").getTransitiveCachableDependents(graph), ImmutableSet.of());
+        graph.getNode("a").getTransitiveCacheableDependents(graph), ImmutableSet.of());
     Assert.assertEquals(
-        graph.getNode("f").getTransitiveCachableDependents(graph), ImmutableSet.of("a"));
+        graph.getNode("f").getTransitiveCacheableDependents(graph), ImmutableSet.of("a"));
     Assert.assertEquals(
-        graph.getNode("b").getTransitiveCachableDependents(graph), ImmutableSet.of("a"));
+        graph.getNode("b").getTransitiveCacheableDependents(graph), ImmutableSet.of("a"));
     Assert.assertEquals(
-        graph.getNode("c").getTransitiveCachableDependents(graph), ImmutableSet.of("a"));
+        graph.getNode("c").getTransitiveCacheableDependents(graph), ImmutableSet.of("a"));
     Assert.assertEquals(
-        graph.getNode("d").getTransitiveCachableDependents(graph), ImmutableSet.of("b"));
+        graph.getNode("d").getTransitiveCacheableDependents(graph), ImmutableSet.of("b"));
     Assert.assertEquals(
-        graph.getNode("l").getTransitiveCachableDependents(graph), ImmutableSet.of("f", "b", "a"));
+        graph.getNode("l").getTransitiveCacheableDependents(graph), ImmutableSet.of("f", "b", "a"));
     Assert.assertEquals(
-        graph.getNode("k").getTransitiveCachableDependents(graph), ImmutableSet.of("b", "a"));
+        graph.getNode("k").getTransitiveCacheableDependents(graph), ImmutableSet.of("b", "a"));
     Assert.assertEquals(
-        graph.getNode("e").getTransitiveCachableDependents(graph), ImmutableSet.of("b", "a"));
+        graph.getNode("e").getTransitiveCacheableDependents(graph), ImmutableSet.of("b", "a"));
     Assert.assertEquals(
-        graph.getNode("h").getTransitiveCachableDependents(graph), ImmutableSet.of("a"));
+        graph.getNode("h").getTransitiveCacheableDependents(graph), ImmutableSet.of("a"));
     Assert.assertEquals(
-        graph.getNode("j").getTransitiveCachableDependents(graph), ImmutableSet.of("d"));
+        graph.getNode("j").getTransitiveCacheableDependents(graph), ImmutableSet.of("d"));
     Assert.assertEquals(
-        graph.getNode("i").getTransitiveCachableDependents(graph), ImmutableSet.of("d"));
+        graph.getNode("i").getTransitiveCacheableDependents(graph), ImmutableSet.of("d"));
     Assert.assertEquals(
-        graph.getNode("m").getTransitiveCachableDependents(graph), ImmutableSet.of("f"));
+        graph.getNode("m").getTransitiveCacheableDependents(graph), ImmutableSet.of("f"));
     Assert.assertEquals(
-        graph.getNode("g").getTransitiveCachableDependents(graph), ImmutableSet.of("a"));
+        graph.getNode("g").getTransitiveCacheableDependents(graph), ImmutableSet.of("a"));
   }
 
   @SuppressWarnings("PMD.EmptyCatchBlock")

@@ -64,10 +64,10 @@ public class ReverseDepBuildTargetsQueue implements BuildTargetsQueue {
         distributableBuildGraph
             .leafNodes
             .stream()
-            .filter(DistributableNode::isUncachable)
+            .filter(DistributableNode::isUncacheable)
             .map(DistributableNode::getTargetName)
             .collect(Collectors.toSet());
-    totalCacheableNodes = distributableBuildGraph.getNumCachableNodes();
+    totalCacheableNodes = distributableBuildGraph.getNumberOfCacheableNodes();
 
     LOG.verbose(
         String.format(
@@ -181,7 +181,7 @@ public class ReverseDepBuildTargetsQueue implements BuildTargetsQueue {
       throw new RuntimeException(errorMessage);
     }
     seenFinishedNodes.add(target.getTargetName());
-    finishedCacheableNodes += (target.isUncachable() ? 0 : 1);
+    finishedCacheableNodes += (target.isUncacheable() ? 0 : 1);
 
     ImmutableSet<String> dependents = target.dependentTargets;
     LOG.debug(
@@ -193,10 +193,10 @@ public class ReverseDepBuildTargetsQueue implements BuildTargetsQueue {
       dep.finishDependency(target.getTargetName());
 
       if (dep.areAllDependenciesResolved()
-          && !dep.isUncachable()
+          && !dep.isUncacheable()
           && !seenWorkingNodes.contains(dep.getTargetName())) {
         zeroDependencyTargets.add(dep.getTargetName());
-      } else if (dep.areAllDependenciesResolved() && dep.isUncachable()) {
+      } else if (dep.areAllDependenciesResolved() && dep.isUncacheable()) {
         LOG.debug(
             String.format(
                 "Uncachable dependent [%s] is ready to auto complete.", dep.getTargetName()));
@@ -234,7 +234,7 @@ public class ReverseDepBuildTargetsQueue implements BuildTargetsQueue {
 
   private void addToWorkUnit(
       DistributableNode node, List<String> unitOfWork, Queue<DistributableNode> nodesToCheck) {
-    if (node.isUncachable()) {
+    if (node.isUncacheable()) {
       // Uncachables do not need to be scheduled explicitly. If they are needed for a
       // cachable in the chain, they will be built anyway.
       // Note: we still need to check the parent of this uncachable, as it might be cacheable.

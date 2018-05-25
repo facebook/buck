@@ -52,37 +52,37 @@ public class DistributableBuildGraph {
     return allNodes.size();
   }
 
-  public int getNumCachableNodes() {
-    return Math.toIntExact(allNodes.values().stream().filter(t -> !t.isUncachable()).count());
+  public int getNumberOfCacheableNodes() {
+    return Math.toIntExact(allNodes.values().stream().filter(t -> !t.isUncacheable()).count());
   }
 
   /** Custom structure for nodes used by the {@link BuildTargetsQueue}. */
   static class DistributableNode {
     private final String targetName;
-    private final boolean uncachable;
+    private final boolean uncacheable;
     public final ImmutableSet<String> dependentTargets;
     public final ImmutableSet<String> allDependencies;
 
     private final Set<String> dependenciesRemaining;
     private int unsatisfiedDependencies;
-    private Optional<ImmutableSet<String>> transitiveCachableDependents = Optional.empty();
+    private Optional<ImmutableSet<String>> transitiveCacheableDependents = Optional.empty();
 
     public DistributableNode(
         String targetName,
         ImmutableSet<String> dependentTargets,
         ImmutableSet<String> dependencyTargets,
-        boolean uncachable) {
+        boolean uncacheable) {
       this.targetName = targetName;
       this.dependentTargets = dependentTargets;
       this.allDependencies = dependencyTargets;
-      this.uncachable = uncachable;
+      this.uncacheable = uncacheable;
 
       this.dependenciesRemaining = new HashSet<>(dependencyTargets);
       this.unsatisfiedDependencies = this.dependenciesRemaining.size();
     }
 
-    public boolean isUncachable() {
-      return uncachable;
+    public boolean isUncacheable() {
+      return uncacheable;
     }
 
     public boolean areAllDependenciesResolved() {
@@ -101,23 +101,23 @@ public class DistributableBuildGraph {
       return dependenciesRemaining.contains(targetName);
     }
 
-    public ImmutableSet<String> getTransitiveCachableDependents(DistributableBuildGraph graph) {
-      if (transitiveCachableDependents.isPresent()) {
-        return transitiveCachableDependents.get();
+    public ImmutableSet<String> getTransitiveCacheableDependents(DistributableBuildGraph graph) {
+      if (transitiveCacheableDependents.isPresent()) {
+        return transitiveCacheableDependents.get();
       }
 
-      ImmutableSet.Builder<String> cachableDependents = ImmutableSet.builder();
+      ImmutableSet.Builder<String> cacheableDependents = ImmutableSet.builder();
       for (String parent : dependentTargets) {
         DistributableNode parentNode = graph.getNode(parent);
-        if (parentNode.isUncachable()) {
-          cachableDependents.addAll(parentNode.getTransitiveCachableDependents(graph));
+        if (parentNode.isUncacheable()) {
+          cacheableDependents.addAll(parentNode.getTransitiveCacheableDependents(graph));
         } else {
-          cachableDependents.add(parent);
+          cacheableDependents.add(parent);
         }
       }
 
-      transitiveCachableDependents = Optional.of(cachableDependents.build());
-      return transitiveCachableDependents.get();
+      transitiveCacheableDependents = Optional.of(cacheableDependents.build());
+      return transitiveCacheableDependents.get();
     }
 
     public void finishDependency(String dependency) {
