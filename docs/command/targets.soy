@@ -137,6 +137,68 @@ buck targets --print0 | xargs -0 buck build
   {/param}
 {/call}
 
+
+{call buck.param}
+  {param name: 'show-rulekey' /}
+  {param desc}
+  <p>
+  Prints the {call buck.concept_link}{param page: 'rule_keys' /}{param name: 'rule keys' /}{/call},
+  for the specified targets. 
+  </p>
+  <p>
+  For example, if you have a rule named <code>main</code> defined in the build file
+  in your current directory, the following command prints its rule key.
+  </p>
+
+<p>
+<pre>
+{literal}
+buck targets --show-rulekey ':main'
+{/literal}
+</pre>
+</p>
+
+  <p>
+  Note that the rule key for a target is different from the <em>target hash</em> for 
+  that target.  (See <code>show-target-hash</code> below.) Further,
+  the inputs for the computation of the rule key are <em>not</em> a
+  superset of the inputs for the target hash. For example, the value of 
+  the {call buck.concept_link}{param page: 'Visibility' /}{param name: 'visibility' /}{/call} argument <em>is not</em> an 
+  input for the rule key but <em>is</em> an input for the target hash. 
+  </p>
+
+  {/param} 
+{/call} 
+
+
+{call buck.param}
+  {param name: 'show-transitive-rulekeys' /}
+  {param desc}
+  <p>
+  When specified in conjunction with <code>--show-rulekey</code>, 
+  prints the {call buck.concept_link}{param page: 'rule_keys' /}{param name: 'rule keys' /}{/call} for 
+  the specified targets <em>and their transitive closure</em>. 
+  </p>
+
+  <p>
+  For example, if you have a rule named <code>main</code> defined in the
+  build file in your current directory, the following command prints the
+  rule key for that rule and the rule keys for all of the rules that are
+  in its transitive closure.
+  </p>
+
+<p>
+<pre>
+{literal}
+buck targets --show-rulekey --show-transitive-rulekeys ':main'
+{/literal}
+</pre>
+</p>
+
+  {/param}
+{/call}
+
+
 {call buck.param}
   {param name: 'show-target-hash' /}
   {param desc}
@@ -149,6 +211,7 @@ buck targets --print0 | xargs -0 buck build
   be different after the change from what it was before.
   {/param}
 {/call}
+
 
 {call buck.param}
   {param name: 'target-hash-file-mode' /}
