@@ -15,15 +15,16 @@
  */
 package com.facebook.buck.rules.coercer;
 
-import static org.easymock.EasyMock.createMock;
-import static org.easymock.EasyMock.expect;
-import static org.easymock.EasyMock.replay;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.rulekey.RuleKeyObjectSink;
 import com.google.common.collect.ImmutableMap;
+import java.nio.file.Path;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
+import javax.annotation.Nullable;
 import org.junit.Test;
 
 /** Test functionality for the ManifestEntries class that goes beyond basic key/value get/set */
@@ -47,21 +48,50 @@ public class ManifestEntriesTest {
   @Test
   public void shouldUpdateRuleKey() {
 
-    RuleKeyObjectSink ruleKeyBuilder = createMock(RuleKeyObjectSink.class);
+    AtomicBoolean minSdkVersionSet = new AtomicBoolean(false);
+    AtomicBoolean targetSdkVersionSet = new AtomicBoolean(false);
+    AtomicBoolean versionCodeSet = new AtomicBoolean(false);
+    AtomicBoolean versionNameSet = new AtomicBoolean(false);
+    AtomicBoolean debugModeSet = new AtomicBoolean(false);
+    AtomicBoolean placeholdersSet = new AtomicBoolean(false);
 
-    expect(ruleKeyBuilder.setReflectively("minSdkVersion", Optional.of(5)))
-        .andReturn(ruleKeyBuilder);
-    expect(ruleKeyBuilder.setReflectively("targetSdkVersion", Optional.of(7)))
-        .andReturn(ruleKeyBuilder);
-    expect(ruleKeyBuilder.setReflectively("versionCode", Optional.of(11)))
-        .andReturn(ruleKeyBuilder);
-    expect(ruleKeyBuilder.setReflectively("versionName", Optional.of("thirteen")))
-        .andReturn(ruleKeyBuilder);
-    expect(ruleKeyBuilder.setReflectively("debugMode", Optional.empty())).andReturn(ruleKeyBuilder);
-    expect(ruleKeyBuilder.setReflectively("placeholders", Optional.empty()))
-        .andReturn(ruleKeyBuilder);
+    RuleKeyObjectSink ruleKeyBuilder =
+        new RuleKeyObjectSink() {
+          @Override
+          public RuleKeyObjectSink setReflectively(String key, @Nullable Object val) {
+            if ("minSdkVersion".equals(key)) {
+              assertEquals(Optional.of(5), val);
+              minSdkVersionSet.set(true);
+              return this;
+            } else if ("targetSdkVersion".equals(key)) {
+              assertEquals(Optional.of(7), val);
+              targetSdkVersionSet.set(true);
+              return this;
+            } else if ("versionCode".equals(key)) {
+              assertEquals(Optional.of(11), val);
+              versionCodeSet.set(true);
+              return this;
+            } else if ("versionName".equals(key)) {
+              assertEquals(Optional.of("thirteen"), val);
+              versionNameSet.set(true);
+              return this;
+            } else if ("debugMode".equals(key)) {
+              assertEquals(Optional.empty(), val);
+              debugModeSet.set(true);
+              return this;
+            } else if ("placeholders".equals(key)) {
+              assertEquals(Optional.empty(), val);
+              placeholdersSet.set(true);
+              return this;
+            }
+            throw new IllegalArgumentException(key);
+          }
 
-    replay(ruleKeyBuilder);
+          @Override
+          public RuleKeyObjectSink setPath(Path absolutePath, Path ideallyRelative) {
+            throw new UnsupportedOperationException();
+          }
+        };
 
     ManifestEntries entries =
         ManifestEntries.builder()
@@ -73,5 +103,13 @@ public class ManifestEntriesTest {
 
     // The appendToRuleKey should set both present and absent properties
     entries.appendToRuleKey(ruleKeyBuilder);
+
+    assertTrue(
+        minSdkVersionSet.get()
+            && targetSdkVersionSet.get()
+            && versionCodeSet.get()
+            && versionNameSet.get()
+            && debugModeSet.get()
+            && placeholdersSet.get());
   }
 }
