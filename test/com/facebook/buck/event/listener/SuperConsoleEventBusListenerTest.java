@@ -59,6 +59,7 @@ import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.DaemonEvent;
 import com.facebook.buck.event.InstallEvent;
 import com.facebook.buck.event.ParsingEvent;
+import com.facebook.buck.event.ProgressEvent;
 import com.facebook.buck.event.ProjectGenerationEvent;
 import com.facebook.buck.event.WatchmanStatusEvent;
 import com.facebook.buck.json.ProjectBuildFileParseEvents;
@@ -89,6 +90,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
+import com.google.common.eventbus.Subscribe;
 import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
 import java.io.IOException;
@@ -101,10 +103,12 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.TimeZone;
 import java.util.UUID;
+import java.util.concurrent.Phaser;
 import java.util.concurrent.TimeUnit;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.Timeout;
 
 public class SuperConsoleEventBusListenerTest {
   private static final String TARGET_ONE = "TARGET_ONE";
@@ -118,6 +122,7 @@ public class SuperConsoleEventBusListenerTest {
       TestResultSummaryVerbosity.of(false, false);
 
   @Rule public final TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public final Timeout timeout = Timeout.seconds(10);
 
   private FileSystem vfs;
   private Path logPath;
@@ -2550,6 +2555,9 @@ public class SuperConsoleEventBusListenerTest {
   public void testProjectGenerationWithProgress() throws IOException {
     Clock fakeClock = new IncrementingFakeClock(TimeUnit.SECONDS.toNanos(1));
     BuckEventBus eventBus = BuckEventBusForTests.newInstance(fakeClock);
+    ProgressEstimatorSynchronization progressEstimatorSynchronization =
+        new ProgressEstimatorSynchronization(eventBus);
+
     SuperConsoleEventBusListener listener = createSuperConsole(fakeClock, eventBus);
 
     Path storagePath = getStorageForTest();
@@ -2576,6 +2584,9 @@ public class SuperConsoleEventBusListenerTest {
 
     validateConsole(listener, 0L, ImmutableList.of("Generating project... 0.0 sec"));
 
+    progressEstimatorSynchronization.expectCalculation();
+    progressEstimatorSynchronization.expectCalculation();
+
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
             ProjectGenerationEvent.processed(), 0L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
@@ -2583,11 +2594,17 @@ public class SuperConsoleEventBusListenerTest {
         configureTestEventAtTime(
             ProjectGenerationEvent.processed(), 100L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
 
+    progressEstimatorSynchronization.awaitCalculation();
+
     validateConsole(listener, 100L, ImmutableList.of("Generating project... 0.1 sec (20%)"));
+
+    progressEstimatorSynchronization.expectCalculation();
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
             new ProjectGenerationEvent.Finished(), 200L, TimeUnit.MILLISECONDS, 0L));
+
+    progressEstimatorSynchronization.awaitCalculation();
 
     validateConsole(
         listener, 0L, ImmutableList.of("Generating project: finished in 0.2 sec (100%)"));
@@ -2599,6 +2616,9 @@ public class SuperConsoleEventBusListenerTest {
     BuckEventBus eventBus = BuckEventBusForTests.newInstance(fakeClock);
     SuperConsoleEventBusListener listener = createSuperConsole(fakeClock, eventBus);
 
+    ProgressEstimatorSynchronization progressEstimatorSynchronization =
+        new ProgressEstimatorSynchronization(eventBus);
+
     Path storagePath = getStorageForTest();
     Map<String, Object> storageContents =
         ImmutableSortedMap.<String, Object>naturalOrder()
@@ -2623,12 +2643,17 @@ public class SuperConsoleEventBusListenerTest {
 
     validateConsole(listener, 0L, ImmutableList.of("Generating project... 0.0 sec"));
 
+    progressEstimatorSynchronization.expectCalculation();
+    progressEstimatorSynchronization.expectCalculation();
+
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
             ProjectGenerationEvent.processed(), 0L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
             ProjectGenerationEvent.processed(), 100L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
+
+    progressEstimatorSynchronization.awaitCalculation();
 
     validateConsole(listener, 100L, ImmutableList.of("Generating project... 0.1 sec (20%)"));
 
@@ -2690,9 +2715,13 @@ public class SuperConsoleEventBusListenerTest {
             formatCacheStatsLine(false, 0, 0, 0),
             "Building: finished in 0.2 sec"));
 
+    progressEstimatorSynchronization.expectCalculation();
+
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
             new ProjectGenerationEvent.Finished(), 1200L, TimeUnit.MILLISECONDS, 0L));
+
+    progressEstimatorSynchronization.awaitCalculation();
 
     validateConsole(
         listener,
@@ -2903,5 +2932,41 @@ public class SuperConsoleEventBusListenerTest {
     listener.renderLines(fakeRenderer, lines, maxLines, false);
     assertThat(lines.build(), equalTo(fullOutput));
     assertThat(fakeRenderer.lastSortWasByTime(), is(false));
+  }
+
+  private static class ProgressEstimatorSynchronization {
+    /**
+     * ProgressEstimator calculates progress asynchronously, indicating that it's down with
+     * ProgressEvent.ProjectGenerationProgressUpdated. We create synchronization around the event so
+     * that we can properly wait until progress calculation is completed to validate the
+     * calculation.
+     */
+    private final Phaser phaser;
+
+    ProgressEstimatorSynchronization(BuckEventBus eventBus) {
+      phaser = new Phaser();
+      phaser.register();
+
+      eventBus.register(this);
+    }
+
+    /**
+     * Every event should have been previous expected via {@link #expectCalculation()}
+     *
+     * @param e
+     */
+    @Subscribe
+    public void progressCalculationDoneListener(ProgressEvent.ProjectGenerationProgressUpdated e) {
+      phaser.arriveAndDeregister();
+    }
+
+    /** Indicates that we expect one progress calculation event to be received */
+    public void expectCalculation() {
+      phaser.register();
+    }
+
+    public void awaitCalculation() {
+      phaser.arriveAndAwaitAdvance();
+    }
   }
 }

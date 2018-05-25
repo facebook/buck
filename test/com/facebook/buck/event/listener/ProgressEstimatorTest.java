@@ -63,6 +63,9 @@ public class ProgressEstimatorTest {
 
     estimator.setCurrentCommand("project", ImmutableList.of("arg1", "arg2"));
     estimator.didParseBuckRules(10);
+
+    estimator.close();
+
     assertThat(
         estimator.getEstimatedProgressOfParsingBuckFiles().isPresent(), Matchers.equalTo(false));
   }
@@ -88,6 +91,9 @@ public class ProgressEstimatorTest {
 
     estimator.setCurrentCommand("project", ImmutableList.of("arg1", "arg2"));
     estimator.didParseBuckRules(10);
+
+    estimator.close();
+
     assertThat(
         estimator.getEstimatedProgressOfParsingBuckFiles().get(), Matchers.closeTo(0.1, 0.01));
   }
@@ -116,6 +122,8 @@ public class ProgressEstimatorTest {
     estimator.didParseBuckRules(30);
     estimator.didParseBuckRules(10);
     estimator.didFinishParsing();
+
+    estimator.close();
 
     Map<String, Map<String, Number>> jsonObject =
         ObjectMappers.READER.readValue(
@@ -152,6 +160,9 @@ public class ProgressEstimatorTest {
     estimator.setCurrentCommand("project", ImmutableList.of("arg1", "arg2"));
     estimator.didGenerateProjectForTarget();
     estimator.didGenerateProjectForTarget();
+
+    estimator.close();
+
     assertThat(
         estimator.getEstimatedProgressOfGeneratingProjectFiles().get(),
         Matchers.closeTo(0.2, 0.01));
@@ -181,6 +192,8 @@ public class ProgressEstimatorTest {
     estimator.didGenerateProjectForTarget();
     estimator.didGenerateProjectForTarget();
     estimator.didFinishProjectGeneration();
+
+    estimator.close();
 
     Map<String, Map<String, Number>> jsonObject =
         ObjectMappers.READER.readValue(
@@ -212,6 +225,8 @@ public class ProgressEstimatorTest {
     estimator.didGenerateProjectForTarget();
     estimator.didGenerateProjectForTarget();
     estimator.didFinishProjectGeneration();
+
+    estimator.close();
 
     Map<String, Map<String, Number>> jsonObject =
         ObjectMappers.READER.readValue(

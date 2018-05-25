@@ -928,5 +928,7 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   public void outputTrace(BuildId buildId) {}
 
   @Override
-  public void close() throws IOException {}
+  public void close() throws IOException {
+    progressEstimator.ifPresent(ProgressEstimator::close);
+  }
 }

@@ -24,17 +24,28 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.AtomicDouble;
+import com.google.common.util.concurrent.Futures;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
-public class ProgressEstimator {
+public class ProgressEstimator implements AutoCloseable {
 
+  private static final Duration PROCESS_ESTIMATE_IO_TIMEOUT = Duration.ofMillis(5000);
   private final Path storageFile;
 
   private static final Logger LOG = Logger.get(ProgressEstimator.class);
@@ -50,6 +61,7 @@ public class ProgressEstimator {
 
   private BuckEventBus buckEventBus;
 
+  // This should only be accessed from within the executorService
   @Nullable private Map<String, Map<String, Number>> expectationsStorage;
 
   private final AtomicInteger numberOfParsedRules = new AtomicInteger(0);
@@ -67,6 +79,15 @@ public class ProgressEstimator {
   private final AtomicDouble parsingFilesProgress = new AtomicDouble(-1.0);
   private final AtomicDouble projectGenerationProgress = new AtomicDouble(-1.0);
   private final AtomicDouble buildProgress = new AtomicDouble(-1.0);
+
+  private final ExecutorService executorService = Executors.newSingleThreadExecutor();
+  // We expect more calls to this ProgressEstimator even after it is closed. In which case, we
+  // should just return the data already computed, but not attempt to run any new estimation tasks.
+  // This is because the ConsoleListeners are closed before the BuckEventBus closes, which means
+  // that we can expect more events that triggers console events to occur.
+  // Ideally we would change this behaviour, but doing so right now is going to break console
+  // printing.
+  private volatile boolean isClosed = false;
 
   public ProgressEstimator(Path storageFile, BuckEventBus buckEventBus) {
     this.storageFile = storageFile;
@@ -86,37 +107,77 @@ public class ProgressEstimator {
     buildProgress.set(-1.0);
   }
 
-  public void setCurrentCommand(String commandName, ImmutableList<String> commandArgs) {
+  /**
+   * Sets the current command that we are estimating
+   *
+   * @param commandName the name of the command
+   * @param commandArgs the arguments to the command
+   * @return a future that completes when estimation calculation is complete
+   */
+  public Future<?> setCurrentCommand(String commandName, ImmutableList<String> commandArgs) {
     command = commandName + " " + Joiner.on(" ").join(commandArgs);
-    fillEstimationsForCommand(command);
+    return fillEstimationsForCommand(command);
   }
 
-  public void didParseBuckRules(int amount) {
+  /**
+   * Updates the amount of rules done parsing
+   *
+   * @param amount the number of rules done parsing
+   * @return a future that completes when estimation calculation is complete
+   */
+  public Future<?> didParseBuckRules(int amount) {
     numberOfParsedRules.addAndGet(amount);
     numberOfParsedBUCKFiles.incrementAndGet();
-    calculateParsingBuckFilesEstimatedProgress();
+
+    return runAsync(() -> calculateParsingBuckFilesEstimatedProgress());
   }
 
-  public void didFinishParsing() {
+  /**
+   * Indicates that buck has finished parsing, updating the progress estimation accordingly
+   *
+   * @return a future that completes when estimation calculation is complete
+   */
+  public Future<?> didFinishParsing() {
     if (command != null) {
-      expectedNumberOfParsedRules.set(numberOfParsedRules.get());
-      expectedNumberOfParsedBUCKFiles.set(numberOfParsedBUCKFiles.get());
-      calculateParsingBuckFilesEstimatedProgress();
-      updateEstimatedBuckFilesParsingValues(command);
+      return runAsync(
+          () -> {
+            expectedNumberOfParsedRules.set(numberOfParsedRules.get());
+            expectedNumberOfParsedBUCKFiles.set(numberOfParsedBUCKFiles.get());
+            calculateParsingBuckFilesEstimatedProgress();
+            updateEstimatedBuckFilesParsingValues(command);
+          });
     }
+    return Futures.immediateFuture(null);
   }
 
-  public void didGenerateProjectForTarget() {
-    numberOfGeneratedProjectFiles.incrementAndGet();
-    calculateProjectFilesGenerationEstimatedProgress();
+  /**
+   * Indicates that a project file has been generated
+   *
+   * @return a future that completes when estimation calculation is complete
+   */
+  public Future<?> didGenerateProjectForTarget() {
+    return runAsync(
+        () -> {
+          numberOfGeneratedProjectFiles.incrementAndGet();
+          calculateProjectFilesGenerationEstimatedProgress();
+        });
   }
 
-  public void didFinishProjectGeneration() {
+  /**
+   * Indicates that project generation is finished
+   *
+   * @return a future that completes when estimation calculation is complete
+   */
+  public Future<?> didFinishProjectGeneration() {
     if (command != null) {
-      expectedNumberOfGeneratedProjectFiles.set(numberOfGeneratedProjectFiles.get());
-      calculateProjectFilesGenerationEstimatedProgress();
-      updateEstimatedProjectGenerationValues(command);
+      return runAsync(
+          () -> {
+            expectedNumberOfGeneratedProjectFiles.set(numberOfGeneratedProjectFiles.get());
+            calculateProjectFilesGenerationEstimatedProgress();
+            updateEstimatedProjectGenerationValues(command);
+          });
     }
+    return Futures.immediateFuture(null);
   }
 
   public void setNumberOfRules(int count) {
@@ -159,42 +220,51 @@ public class ProgressEstimator {
     }
   }
 
-  private void fillEstimationsForCommand(String aCommand) {
-    preloadEstimationsFromStorageFile();
-    Map<String, Number> commandEstimations = getEstimationsForCommand(aCommand);
-    if (commandEstimations != null) {
-      if (commandEstimations.containsKey(EXPECTED_NUMBER_OF_PARSED_RULES)
-          && commandEstimations.containsKey(EXPECTED_NUMBER_OF_PARSED_BUCK_FILES)) {
-        expectedNumberOfParsedRules.set(
-            commandEstimations.get(EXPECTED_NUMBER_OF_PARSED_RULES).intValue());
-        expectedNumberOfParsedBUCKFiles.set(
-            commandEstimations.get(EXPECTED_NUMBER_OF_PARSED_BUCK_FILES).intValue());
-      }
-      if (commandEstimations.containsKey(EXPECTED_NUMBER_OF_GENERATED_PROJECT_FILES)) {
-        expectedNumberOfGeneratedProjectFiles.set(
-            commandEstimations.get(EXPECTED_NUMBER_OF_GENERATED_PROJECT_FILES).intValue());
-      }
-      calculateParsingBuckFilesEstimatedProgress();
-    }
+  private Future<?> fillEstimationsForCommand(String aCommand) {
+    return runAsync(
+        () -> {
+          preloadEstimationsFromStorageFile();
+          Map<String, Number> commandEstimations = getEstimationsForCommand(aCommand);
+          if (commandEstimations != null) {
+            if (commandEstimations.containsKey(EXPECTED_NUMBER_OF_PARSED_RULES)
+                && commandEstimations.containsKey(EXPECTED_NUMBER_OF_PARSED_BUCK_FILES)) {
+              expectedNumberOfParsedRules.set(
+                  commandEstimations.get(EXPECTED_NUMBER_OF_PARSED_RULES).intValue());
+              expectedNumberOfParsedBUCKFiles.set(
+                  commandEstimations.get(EXPECTED_NUMBER_OF_PARSED_BUCK_FILES).intValue());
+            }
+            if (commandEstimations.containsKey(EXPECTED_NUMBER_OF_GENERATED_PROJECT_FILES)) {
+              expectedNumberOfGeneratedProjectFiles.set(
+                  commandEstimations.get(EXPECTED_NUMBER_OF_GENERATED_PROJECT_FILES).intValue());
+            }
+            calculateParsingBuckFilesEstimatedProgress();
+          }
+        });
   }
 
+  /** This should be run from within the {@code executorService} */
   private void preloadEstimationsFromStorageFile() {
-    Map<String, Map<String, Number>> map = null;
-    if (Files.exists(storageFile)) {
-      try {
-        byte[] bytes = Files.readAllBytes(storageFile);
-        map =
-            ObjectMappers.READER.readValue(
-                ObjectMappers.createParser(bytes),
-                new TypeReference<HashMap<String, Map<String, Number>>>() {});
-      } catch (Exception e) {
-        LOG.warn("Unable to load progress estimations from file: " + e.getMessage());
-      }
-    }
-    if (map == null) {
-      map = new HashMap<>();
-    }
-    expectationsStorage = map;
+    expectationsStorage =
+        runWithTimeout(
+                () -> {
+                  Map<String, Map<String, Number>> map = null;
+                  if (Files.exists(storageFile)) {
+                    try {
+                      byte[] bytes = Files.readAllBytes(storageFile);
+                      map =
+                          ObjectMappers.READER.readValue(
+                              ObjectMappers.createParser(bytes),
+                              new TypeReference<HashMap<String, Map<String, Number>>>() {});
+                    } catch (Exception e) {
+                      LOG.warn("Unable to load progress estimations from file: " + e.getMessage());
+                    }
+                  }
+                  if (map == null) {
+                    map = new HashMap<>();
+                  }
+                  return map;
+                })
+            .orElse(null);
   }
 
   @Nullable
@@ -220,6 +290,7 @@ public class ProgressEstimator {
   }
 
   private void updateEstimatedBuckFilesParsingValues(String aCommand) {
+    // runs in executor
     Map<String, Number> commandEstimations = getEstimationsForCommand(aCommand);
     if (commandEstimations != null) {
       commandEstimations.put(EXPECTED_NUMBER_OF_PARSED_RULES, numberOfParsedRules);
@@ -228,23 +299,28 @@ public class ProgressEstimator {
     }
   }
 
+  /** This should be run from within the {@code executorService} */
   private void saveEstimatedValues() {
-    if (expectationsStorage == null) {
-      return;
-    }
-    try {
-      Files.createDirectories(storageFile.getParent());
-    } catch (IOException e) {
-      LOG.warn(
-          "Unable to make path for storage %s: %s",
-          storageFile.toString(), e.getLocalizedMessage());
-      return;
-    }
-    try {
-      ObjectMappers.WRITER.writeValue(storageFile.toFile(), expectationsStorage);
-    } catch (IOException e) {
-      LOG.warn("Unable to save progress expectations: " + e.getLocalizedMessage());
-    }
+    runWithTimeout(
+        () -> {
+          if (expectationsStorage == null) {
+            return null;
+          }
+          try {
+            Files.createDirectories(storageFile.getParent());
+          } catch (IOException e) {
+            LOG.warn(
+                "Unable to make path for storage %s: %s",
+                storageFile.toString(), e.getLocalizedMessage());
+            return null;
+          }
+          try {
+            ObjectMappers.WRITER.writeValue(storageFile.toFile(), expectationsStorage);
+          } catch (IOException e) {
+            LOG.warn("Unable to save progress expectations: " + e.getLocalizedMessage());
+          }
+          return null;
+        });
   }
 
   /**
@@ -330,6 +406,50 @@ public class ProgressEstimator {
     double oldValue = buildProgress.getAndSet(newValue);
     if (oldValue != newValue) {
       buckEventBus.post(ProgressEvent.buildProgressUpdated(newValue));
+    }
+  }
+
+  private Future<?> runAsync(Runnable func) {
+    if (!isClosed) {
+      synchronized (this) {
+        if (!isClosed) {
+          return executorService.submit(func);
+        }
+      }
+    }
+    return CompletableFuture.completedFuture(null);
+  }
+
+  private <T> Optional<T> runWithTimeout(Supplier<T> func) {
+    try {
+      return Optional.of(
+          // this runs in the executorService thread, so we cannot use that to schedule this
+          // Future as we will deadlock.
+          CompletableFuture.supplyAsync(func)
+              .get(PROCESS_ESTIMATE_IO_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS));
+    } catch (TimeoutException e) {
+      LOG.warn("Timed out operating with Progress Estimator file at %s", storageFile);
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+    } catch (ExecutionException e) {
+      LOG.error("Error executing ProgressEstimation task: %s", e);
+    }
+    return Optional.empty();
+  }
+
+  @Override
+  public void close() {
+    synchronized (this) {
+      isClosed = true;
+    }
+    executorService.shutdown();
+    try {
+      executorService.awaitTermination(
+          PROCESS_ESTIMATE_IO_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS);
+    } catch (InterruptedException e) {
+      LOG.warn(
+          "Progress Estimator failed to flush all estimation calculations before shutdown. "
+              + "Estimated Progress may be incorrect.");
     }
   }
 }
