@@ -11,10 +11,8 @@ genrule(
         "mkdir -p $OUT",
         "cp $SRCS $OUT",
         "cp $(location //programs:buck) $OUT",
-        "cp $(location //programs:gen_buck_info) $OUT",
         "cd $OUT",
         "mv buck.pex buck",
-        "mv gen_buck_info.pex gen_buck_info",
         "equivs-build buck.equivs",
     ]),
 )

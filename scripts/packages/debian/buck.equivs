@@ -13,5 +13,4 @@ Copyright: LICENSE
 Readme: README.md
 Changelog: Changelog
 Files: buck /usr/bin
- gen_buck_info /usr/bin
 Description: A fast build system that encourages the creation of small, reusable modules over a variety of platforms and languages. https://buckbuild.com
