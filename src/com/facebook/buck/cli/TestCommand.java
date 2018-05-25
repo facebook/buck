@@ -409,15 +409,22 @@ public class TestCommand extends BuildCommand {
     // Launch and run the external test runner, forwarding it's stdout/stderr to the console.
     // We wait for it to complete then returns its error code.
     ListeningProcessExecutor processExecutor = new ListeningProcessExecutor();
-    ProcessExecutorParams processExecutorParams =
+
+    ProcessExecutorParams.Builder builder =
         ProcessExecutorParams.builder()
             .addAllCommand(command)
             .addAllCommand(withDashArguments)
             .setEnvironment(params.getEnvironment())
-            .addCommand("--buck-test-info", infoFile.toString())
-            .addCommand("--jobs", String.valueOf(getTestConcurrencyLimit(params).threadLimit))
-            .setDirectory(params.getCell().getFilesystem().getRootPath())
-            .build();
+            .setDirectory(params.getCell().getFilesystem().getRootPath());
+    if (!withDashArguments.contains("--buck-test-info")) {
+      builder = builder.addCommand("--buck-test-info", infoFile.toString());
+    }
+    if (!withDashArguments.contains("--jobs")) {
+      builder =
+          builder.addCommand("--jobs", String.valueOf(getTestConcurrencyLimit(params).threadLimit));
+    }
+    ProcessExecutorParams processExecutorParams = builder.build();
+
     ForwardingProcessListener processListener =
         new ForwardingProcessListener(
             params.getConsole().getStdOut(), params.getConsole().getStdErr());

@@ -17,7 +17,9 @@
 package com.facebook.buck.cli;
 
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.lessThan;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
@@ -27,6 +29,8 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.google.common.base.Joiner;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
@@ -151,6 +155,32 @@ public class ExternalTestRunnerIntegrationTest {
             "13");
     result.assertSuccess();
     assertThat(result.getStdout().trim(), is(equalTo("13")));
+  }
+
+  @Test
+  public void numberOfJobsInExtraArgsIsPassedToExternalRunner() throws IOException {
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "test",
+            "-c",
+            "test.external_runner=" + workspace.getPath("test_runner_echo_all_args.py"),
+            "//:pass",
+            "--",
+            "--jobs",
+            "13");
+    result.assertSuccess();
+
+    List<String> args = Arrays.asList(result.getStdout().trim().split(" "));
+    int jobsIndex = args.indexOf("--jobs");
+
+    // exists
+    assertThat(jobsIndex, greaterThanOrEqualTo(0));
+    // appears only once
+    assertThat(jobsIndex, equalTo(args.lastIndexOf("--jobs")));
+    // not the last token
+    assertThat(jobsIndex, lessThan(args.size() - 1));
+    // expected value
+    assertThat(args.get(jobsIndex + 1), equalTo("13"));
   }
 
   @Test
