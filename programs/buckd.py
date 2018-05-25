@@ -32,6 +32,7 @@ def main(argv):
             return 0
         return buck_repo.launch_buckd()
 
+
 if __name__ == "__main__":
     try:
         setup_logging()
