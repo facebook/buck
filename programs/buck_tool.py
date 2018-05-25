@@ -850,6 +850,6 @@ def force_kill_process_posix(pid):
 
     # allow up to 5 seconds for the process to react to termination signal, then shoot it
     # in the head
-    if not wait_for_process(pid, 5000):
+    if not wait_for_process_posix(pid, 5000):
         logging.debug('Sending SIGKILL to process (pid=' + str(pid) + ')')
         os.kill(pid, signal.SIGKILL)
