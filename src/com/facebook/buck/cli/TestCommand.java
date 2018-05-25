@@ -808,4 +808,10 @@ public class TestCommand extends BuildCommand {
   public boolean performsBuild() {
     return true;
   }
+
+  /** It prints error message when users do not pass arguments to underlying binary correctly. */
+  @Override
+  public void handleException(CmdLineException e) throws CmdLineException {
+    handleException(e, "If using an external runner, remember to use '--'.");
+  }
 }

@@ -48,6 +48,7 @@ import java.util.List;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
 import org.kohsuke.args4j.Argument;
+import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.Option;
 
 public final class RunCommand extends AbstractCommand {
@@ -213,5 +214,11 @@ public final class RunCommand extends AbstractCommand {
   @Override
   public boolean performsBuild() {
     return true;
+  }
+
+  /** It prints error message when users do not pass arguments to underlying binary correctly. */
+  @Override
+  public void handleException(CmdLineException e) throws CmdLineException {
+    handleException(e, "If passing arguments to the binary, remember to use '--'.");
   }
 }

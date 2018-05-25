@@ -68,6 +68,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ScheduledExecutorService;
 import javax.annotation.Nullable;
+import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.NamedOptionDef;
 import org.kohsuke.args4j.Option;
@@ -239,6 +240,23 @@ public abstract class AbstractCommand implements Command {
       return Optional.empty();
     } else {
       return Optional.of(Paths.get(eventsOutputPath));
+    }
+  }
+
+  /** Handle CmdLineException when calling parseArguments() */
+  public void handleException(CmdLineException e) throws CmdLineException {
+    throw e;
+  }
+
+  /** Print error message when there are unknown options */
+  protected void handleException(CmdLineException e, String printedErrorMessage)
+      throws CmdLineException {
+    String message = e.getMessage();
+    if (message != null && message.endsWith("is not a valid option")) {
+      throw new CmdLineException(
+          e.getParser(), String.format("%s\n%s", message, printedErrorMessage), e.getCause());
+    } else {
+      throw e;
     }
   }
 

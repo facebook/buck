@@ -69,7 +69,16 @@ public class AdditionalOptionsSubCommandHandler extends SubCommandHandler {
       }
     }
     if (c != null) {
-      cachedSetter.addValue(subCommand(c, params));
+      try {
+        cachedSetter.addValue(subCommand(c, params));
+      } catch (CmdLineException e) {
+        Object subCmdObj = instantiate(c);
+        if (subCmdObj instanceof AbstractCommand) {
+          ((AbstractCommand) subCmdObj).handleException(e);
+        } else {
+          throw e;
+        }
+      }
       return params.size(); // consume all the remaining tokens
     } else {
       return fallback(subCmd);
