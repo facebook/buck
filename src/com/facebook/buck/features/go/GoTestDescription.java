@@ -164,6 +164,7 @@ public class GoTestDescription
             testMainGenerator,
             srcs,
             packageName,
+            platform,
             coverVariables,
             coverageMode);
     resolver.addToIndex(generatedTestMain);
