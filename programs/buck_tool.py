@@ -460,32 +460,6 @@ class BuckTool(object):
                 return exit_code
 
 
-    def _generate_log_entry(self, message, logs_array):
-        import socket
-        import getpass
-        traits = {
-            "severity": "SEVERE",
-            "logger": "com.facebook.buck.python.buck_tool.py",
-            "buckGitCommit": self._get_buck_git_commit(),
-            "buckVersion": self._get_buck_version_uid(),
-            "isBuckRepoDirty": self._get_buck_repo_dirty(),
-            "os": platform.system(),
-            "osVersion": platform.release(),
-            "user": getpass.getuser(),
-            "hostname": socket.gethostname(),
-            "isSuperConsoleEnabled": "false",
-            "isDaemon": "false",
-        }
-        entry = {
-            "logs": logs_array,
-            "traits": traits,
-            "message": message,
-            "category": message,
-            "time": int(time.time()),
-            "logger": "com.facebook.buck.python.buck_tool.py",
-        }
-        return entry
-
     def launch_buckd(self, buck_version_uid=None):
         with Tracing('BuckTool.launch_buckd'):
             setup_watchman_watch()
