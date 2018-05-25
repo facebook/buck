@@ -755,7 +755,6 @@ def _get_java_exec_under_home(java_home_base):
 
 def get_java_path():
     java_home_path = os.getenv('JAVA_HOME')
-    java_path = None
     if java_home_path is None:
         java_path = which('java')
         if java_path is None:
