@@ -90,19 +90,14 @@ abstract class AbstractGoPlatformFactory {
           .put("sparc64", Architecture.UNKNOWN)
           .build();
 
-  @Value.Parameter
   abstract BuckConfig getBuckConfig();
 
-  @Value.Parameter
   abstract ProcessExecutor getProcessExecutor();
 
-  @Value.Parameter
   abstract ExecutableFinder getExecutableFinder();
 
-  @Value.Parameter
   abstract FlavorDomain<CxxPlatform> getCxxPlatforms();
 
-  @Value.Parameter
   abstract CxxPlatform getDefaultCxxPlatform();
 
   @Value.Lazy
