@@ -17,6 +17,7 @@
 package com.facebook.buck.step.fs;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.io.PathByteSource;
@@ -29,8 +30,10 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -78,6 +81,42 @@ public class XzStepTest {
           }
         };
 
+    assertTrue(Files.exists(sourceFile));
+    assertTrue(
+        "Decompressed file must be identical to original.", original.contentEquals(decompressed));
+  }
+
+  @Test
+  public void testXzStepDeletesOriginal() throws InterruptedException, IOException {
+    Path sourceFileOriginal =
+        TestDataHelper.getTestDataScenario(this, "xz_with_rm_and_check").resolve("xzstep.data");
+    Path sourceFile = tmp.newFile("xzstep.data").toPath();
+    Files.copy(sourceFileOriginal, sourceFile, StandardCopyOption.REPLACE_EXISTING);
+    File destinationFile = tmp.newFile("xzstep.data.xz");
+
+    XzStep step =
+        new XzStep(
+            TestProjectFilesystems.createProjectFilesystem(tmp.getRoot().toPath()),
+            sourceFile,
+            destinationFile.toPath(),
+            /* compressionLevel -- for faster testing */ 1,
+            /* keep */ false,
+            XZ.CHECK_CRC32);
+
+    ExecutionContext context = TestExecutionContext.newInstance();
+
+    assertEquals(0, step.execute(context).getExitCode());
+
+    ByteSource original = PathByteSource.asByteSource(sourceFileOriginal);
+    ByteSource decompressed =
+        new ByteSource() {
+          @Override
+          public InputStream openStream() throws IOException {
+            return new XZInputStream(new FileInputStream(destinationFile));
+          }
+        };
+
+    assertFalse(Files.exists(sourceFile));
     assertTrue(
         "Decompressed file must be identical to original.", original.contentEquals(decompressed));
   }

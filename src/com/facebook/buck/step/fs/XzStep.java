@@ -145,17 +145,19 @@ public class XzStep implements Step {
   @Override
   public StepExecutionResult execute(ExecutionContext context)
       throws IOException, InterruptedException {
+    boolean deleteSource = false;
     try (InputStream in = filesystem.newFileInputStream(sourceFile);
         OutputStream out = filesystem.newFileOutputStream(destinationFile);
         XZOutputStream xzOut = new XZOutputStream(out, new LZMA2Options(compressionLevel), check)) {
       XzMemorySemaphore.acquireMemory(compressionLevel);
       ByteStreams.copy(in, xzOut);
       xzOut.finish();
-      if (!keep) {
-        filesystem.deleteFileAtPath(sourceFile);
-      }
+      deleteSource = !keep;
     } finally {
       XzMemorySemaphore.releaseMemory(compressionLevel);
+    }
+    if (deleteSource) {
+      filesystem.deleteFileAtPath(sourceFile);
     }
     return StepExecutionResults.SUCCESS;
   }
