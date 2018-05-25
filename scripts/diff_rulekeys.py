@@ -171,7 +171,7 @@ class KeyValueDiff(object):
                             self._left_format % left_lower_index[k])
                     differences.append(
                             self._right_format % right_lower_index[k])
-            return ([KeyValueDiff.ORDER_AND_CASE_ONLY] + differences)
+            return [KeyValueDiff.ORDER_AND_CASE_ONLY] + differences
 
         left_set = set(self._left)
         right_set = set(self._right)
@@ -491,7 +491,7 @@ def diffInternal(
     if len(report) > 0:
         report = ['Change details for [' + label + ']'] + report
 
-    return (report, changed_key_pairs_with_labels)
+    return report, changed_key_pairs_with_labels
 
 
 def diffAndReturnSeen(starting_refs, left_info, right_info, verbose,
@@ -523,7 +523,7 @@ def diffAndReturnSeen(starting_refs, left_info, right_info, verbose,
             queue.append(e)
 
         result += report
-    return (result, visited_keys)
+    return result, visited_keys
 
 
 def diff(name, left_info, right_info, verbose, format_tuple=None,
@@ -544,7 +544,8 @@ def diff(name, left_info, right_info, verbose, format_tuple=None,
 
 
 def diffAll(left_info, right_info, verbose, format_tuple=None,
-            check_paths=False, excludes=set()):
+            check_paths=False, excludes=None):
+    excludes = excludes or set()
     # Ghetto ordered set implementation.
     seen_left_names = collections.OrderedDict(
         [(k, True) for k in left_info.getAllNames()])
@@ -570,7 +571,6 @@ def diffAll(left_info, right_info, verbose, format_tuple=None,
             continue
         print('Analyzing', name, 'for changes...')
 
-        all_seen_before = len(all_seen)
         single_result, visited_keys = diffAndReturnSeen(
                 [(name, (left_key, right_key))], left_info, right_info,
                 verbose, format_tuple, check_paths, all_seen, excludes)
@@ -578,7 +578,6 @@ def diffAll(left_info, right_info, verbose, format_tuple=None,
             single_result.append(
                 "I don't know why RuleKeys for {} do not match.".format(name))
         all_results.extend(single_result)
-        deleted_names = 0
         for l, r in visited_keys:
             left_name = left_info.getNameForKey(l)
             seen_left_names.pop(left_name, False)
