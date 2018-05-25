@@ -21,9 +21,12 @@ import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Streams;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class GoTestMainStep extends ShellStep {
   private final ImmutableMap<String, String> environment;
@@ -31,7 +34,7 @@ public class GoTestMainStep extends ShellStep {
   private final GoTestCoverStep.Mode coverageMode;
   private final ImmutableMap<Path, ImmutableMap<String, Path>> coverageVariables;
   private final Path packageName;
-  private final ImmutableList<Path> testFiles;
+  private final Iterable<Path> testFiles;
   private final Path output;
 
   public GoTestMainStep(
@@ -42,7 +45,7 @@ public class GoTestMainStep extends ShellStep {
       GoTestCoverStep.Mode coverageMode,
       ImmutableMap<Path, ImmutableMap<String, Path>> coverageVariables,
       Path packageName,
-      ImmutableList<Path> testFiles,
+      Iterable<Path> testFiles,
       Path output) {
     super(Optional.of(buildTarget), workingDirectory);
     this.environment = environment;
@@ -63,6 +66,8 @@ public class GoTestMainStep extends ShellStep {
             .add("--import-path", packageName.toString())
             .add("--cover-mode", coverageMode.getMode());
 
+    Set<Path> filteredFileNames =
+        Streams.stream(testFiles).map(Path::getFileName).collect(Collectors.toSet());
     for (Map.Entry<Path, ImmutableMap<String, Path>> pkg : coverageVariables.entrySet()) {
       if (pkg.getValue().isEmpty()) {
         continue;
@@ -74,14 +79,15 @@ public class GoTestMainStep extends ShellStep {
 
       boolean first = true;
       for (Map.Entry<String, Path> pkgVars : pkg.getValue().entrySet()) {
-        if (!first) {
-          pkgFlag.append(',');
+        if (filteredFileNames.contains(pkgVars.getValue())) {
+          if (!first) {
+            pkgFlag.append(',');
+          }
+          first = false;
+          pkgFlag.append(pkgVars.getKey());
+          pkgFlag.append('=');
+          pkgFlag.append(pkgVars.getValue());
         }
-        first = false;
-
-        pkgFlag.append(pkgVars.getKey());
-        pkgFlag.append('=');
-        pkgFlag.append(pkgVars.getValue());
       }
 
       command.add("--cover-pkgs", pkgFlag.toString());
