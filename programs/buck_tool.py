@@ -27,6 +27,7 @@ GC_MAX_PAUSE_TARGET = 15000
 
 JAVA_MAX_HEAP_SIZE_MB = 1000
 
+
 class Resource(object):
     """Describes a resource used by this driver.
 
@@ -69,7 +70,7 @@ class CommandLineArgs:
         self.command_options = []
 
         for arg in self.args:
-            if (self.command is not None):
+            if self.command is not None:
                 self.command_options.append(arg)
             elif (arg[:1]) == "-":
                 self.buck_options.append(arg)
@@ -182,7 +183,6 @@ class BuckTool(object):
         if sys.platform == 'cygwin':
             self._pathsep = ';'
 
-
     def _get_package_info(self):
         raise NotImplementedError()
 
@@ -269,7 +269,7 @@ class BuckTool(object):
         Add new arguments to the beginning of arguments string
         Adding to the end will mess up with custom test runner params
         """
-        if (len(argv) < 2):
+        if len(argv) < 2:
             return argv + args
         return [argv[0]] + args + argv[1:]
 
@@ -669,7 +669,7 @@ class BuckTool(object):
                     raise
             return True
 
-    def _get_java_args(self, version_uid, extra_default_options=[]):
+    def _get_java_args(self, version_uid, extra_default_options=None):
         with Tracing('BuckTool._get_java_args'):
             java_args = [
                 "-Xmx{0}m".format(JAVA_MAX_HEAP_SIZE_MB),
@@ -723,7 +723,7 @@ class BuckTool(object):
             if os.environ.get("BUCK_DEBUG_SOY"):
                 java_args.append("-Dbuck.soy.debug=true")
 
-            java_args.extend(extra_default_options)
+            java_args.extend(extra_default_options or [])
 
             if self._buck_project.buck_javaargs:
                 java_args.extend(shlex.split(self._buck_project.buck_javaargs))
