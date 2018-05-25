@@ -169,19 +169,6 @@ python_binary(
     ],
 )
 
-python_binary(
-    name = "buckd",
-    build_args = interpreter_override_args(),
-    main = "buckd.py",
-    visibility = [
-        "//scripts/packages/debian:debian",
-    ],
-    deps = [
-        ":bucklib",
-        ":subprocutils",
-    ],
-)
-
 python_test(
     name = "test",
     srcs = glob(["test_*.py"]),
