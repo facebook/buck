@@ -18,6 +18,7 @@ install:
   - cmd: java -version
   - cmd: ant -version
   - cmd: reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\AppModelUnlock" /t REG_DWORD /f /v "AllowDevelopmentWithoutDevLicense" /d "1"
+  - cmd: reg add "HKLM\SYSTEM\CurrentControlSet\Control\FileSystem" /t REG_DWORD /f /v "LongPathsEnabled" /d "1"
   - cmd: mklink link.md README.md
   - cmd: dir
 
