@@ -23,6 +23,7 @@ build: off
 
 build_script:
   - ant
+  - if exist "buck-out" (rmdir /s /q "buck-out")
   - bin\buck build buck
 
 test_script:
