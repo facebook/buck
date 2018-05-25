@@ -127,8 +127,54 @@
   {param name: 'type' /}
   {param default: 'None' /}
   {param desc}
-   The type of this genrule. This is used for logging and is particularly useful for grouping
-   different genrules that share an underlying logical "type".
+  <p>
+  Specifies the <em>type</em> of this genrule. This is used for logging
+  and is particularly useful for grouping genrules that share an
+  underlying logical "type".
+  </p>
+
+  <p>
+  For example, if you have the following <code>cxx_genrule</code> defined 
+  in the root directory of your Buck project
+  </p>
+
+<p>
+<pre>
+{literal}
+cxx_genrule(
+  name = 'cxx_gen',
+  type = 'epilog',
+  cmd  = 'touch finish.txt; cp finish.txt $OUT',
+  out  = 'finish.txt'
+)
+{/literal}
+</pre>
+</p>
+
+  <p>
+  then the following <code>buck query</code> command 
+  </p>
+
+<p>
+<pre>
+{literal}
+buck query "attrfilter( type, 'epilog', '//...' )"
+{/literal}
+</pre>
+</p>
+
+  <p>
+  returns
+  </p>
+
+<p>
+<pre>
+{literal}
+//:cxx_gen
+{/literal}
+</pre>
+</p>
+
   {/param}
 {/call}
 {/template}
