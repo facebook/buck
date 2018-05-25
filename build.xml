@@ -121,8 +121,8 @@
     <include name="jackson/jackson-datatype-guava-2.7.8.jar" />
     <include name="android/sdklib-25.3.0.jar" />
     <include name="nailgun/nailgun-server-0.9.3-SNAPSHOT.jar" />
-    <include name="jna/jna-4.4.0.jar" />
-    <include name="jna/jna-platform-4.4.0.jar" />
+    <include name="jna/jna-4.5.1.jar" />
+    <include name="jna/jna-platform-4.5.1.jar" />
     <include name="sqlite/sqlite-jdbc-3.20.0.jar" />
     <include name="bazel/skylark-lang_deploy.jar" />
     <include name="googleapis/googleapis.jar" />
@@ -180,7 +180,7 @@
     <include name="json-simple/json-simple-1.1.1.jar" />
     <include name="jsr/javax.inject-1.jar" />
     <include name="jsr/jsr305.jar" />
-    <include name="nuprocess/nuprocess-1.1.0.jar" />
+    <include name="nuprocess/nuprocess-1.2.3.jar" />
     <include name="objenesis/objenesis-1.2.jar" />
     <include name="okhttp/okhttp-3.9.0.jar" />
     <include name="okio/okio-1.13.0.jar" />
