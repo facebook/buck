@@ -49,13 +49,13 @@ import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 
-public class BuildTargetsQueueTest {
+public class ReverseDepBuildTargetsQueueTest {
 
   public static final int MAX_UNITS_OF_WORK = 10;
   public static final int MOST_BUILD_RULES_FINISHED_PERCENTAGE = 50;
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
-  private static BuildTargetsQueue createQueueWithoutRemoteCache(
+  private static ReverseDepBuildTargetsQueue createQueueWithoutRemoteCache(
       BuildRuleResolver resolver, Iterable<BuildTarget> topLevelTargets) {
     return new CacheOptimizedBuildTargetsQueueFactory(
             resolver,
@@ -71,7 +71,7 @@ public class BuildTargetsQueueTest {
 
   @Test
   public void testEmptyQueue() {
-    BuildTargetsQueue queue = BuildTargetsQueue.newEmptyQueue();
+    ReverseDepBuildTargetsQueue queue = ReverseDepBuildTargetsQueue.newEmptyQueue();
     List<WorkUnit> zeroDepTargets =
         queue.dequeueZeroDependencyNodes(ImmutableList.of(), MAX_UNITS_OF_WORK);
     Assert.assertEquals(0, zeroDepTargets.size());

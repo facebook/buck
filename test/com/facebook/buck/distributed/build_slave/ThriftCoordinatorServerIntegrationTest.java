@@ -58,7 +58,7 @@ public class ThriftCoordinatorServerIntegrationTest {
   @Test
   public void testMakingSimpleRequest() throws IOException {
     try (ThriftCoordinatorServer server =
-            createServerOnRandomPort(BuildTargetsQueue.newEmptyQueue());
+            createServerOnRandomPort(ReverseDepBuildTargetsQueue.newEmptyQueue());
         ThriftCoordinatorClient client =
             new ThriftCoordinatorClient("localhost", STAMPEDE_ID, CONNECTION_TIMEOUT_MILLIS)) {
       server.start();
@@ -72,7 +72,7 @@ public class ThriftCoordinatorServerIntegrationTest {
 
   @Test
   public void testThriftServerWithDiamondGraph() throws IOException, NoSuchBuildTargetException {
-    BuildTargetsQueue diamondQueue = BuildTargetsQueueTest.createDiamondDependencyQueue();
+    BuildTargetsQueue diamondQueue = ReverseDepBuildTargetsQueueTest.createDiamondDependencyQueue();
 
     Capture<ExitState> exitState = EasyMock.newCapture();
     ThriftCoordinatorServer.EventListener eventListener =
@@ -183,7 +183,8 @@ public class ThriftCoordinatorServerIntegrationTest {
     StampedeId wrongStampedeId = new StampedeId().setId("not-" + STAMPEDE_ID.id);
 
     try (ThriftCoordinatorServer server =
-            createCoordinatorServer(OptionalInt.empty(), BuildTargetsQueue.newEmptyQueue());
+            createCoordinatorServer(
+                OptionalInt.empty(), ReverseDepBuildTargetsQueue.newEmptyQueue());
         ThriftCoordinatorClient client =
             new ThriftCoordinatorClient("localhost", wrongStampedeId, CONNECTION_TIMEOUT_MILLIS)) {
       server.start();
@@ -239,7 +240,7 @@ public class ThriftCoordinatorServerIntegrationTest {
   @SuppressWarnings("PMD.EmptyCatchBlock")
   public void testCoordinatorExitsCodeIsZeroIfSucceededExternally() throws Exception {
     SettableFuture<BuildTargetsQueue> future = SettableFuture.create();
-    future.set(BuildTargetsQueueTest.createDiamondDependencyQueue());
+    future.set(ReverseDepBuildTargetsQueueTest.createDiamondDependencyQueue());
 
     SettableFuture<BuildTargetsQueue> queueFuture = SettableFuture.create();
     ThriftCoordinatorServer.EventListener eventListener =
@@ -279,7 +280,7 @@ public class ThriftCoordinatorServerIntegrationTest {
   @SuppressWarnings("PMD.EmptyCatchBlock")
   public void testCoordinatorExitsCodeIsNonZeroIfFailedExternally() throws Exception {
     SettableFuture<BuildTargetsQueue> future = SettableFuture.create();
-    future.set(BuildTargetsQueueTest.createDiamondDependencyQueue());
+    future.set(ReverseDepBuildTargetsQueueTest.createDiamondDependencyQueue());
 
     SettableFuture<BuildTargetsQueue> queueFuture = SettableFuture.create();
     ThriftCoordinatorServer.EventListener eventListener =

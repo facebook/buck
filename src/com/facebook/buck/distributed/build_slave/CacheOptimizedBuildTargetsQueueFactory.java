@@ -312,7 +312,7 @@ public class CacheOptimizedBuildTargetsQueueFactory {
    * @param targetsToBuild top-level targets that need to be built.
    * @return an instance of {@link BuildTargetsQueue} with the top-level targets at the root.
    */
-  public BuildTargetsQueue createBuildTargetsQueue(
+  public ReverseDepBuildTargetsQueue createBuildTargetsQueue(
       Iterable<BuildTarget> targetsToBuild,
       CoordinatorBuildRuleEventsPublisher coordinatorBuildRuleEventsPublisher,
       int mostBuildRulesFinishedPercentageThreshold) {
@@ -389,7 +389,7 @@ public class CacheOptimizedBuildTargetsQueueFactory {
       LOG.error(e, "Failed to upload artifacts from the local cache.");
     }
 
-    return new BuildTargetsQueue(
+    return new ReverseDepBuildTargetsQueue(
         new DistributableBuildGraph(allNodes.build(), zeroDependencyNodes.build()),
         mostBuildRulesFinishedPercentageThreshold);
   }

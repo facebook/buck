@@ -70,7 +70,7 @@ public class CoordinatorAndMinionModeRunnerIntegrationTest {
     ThriftCoordinatorServer.EventListener eventListener =
         EasyMock.createNiceMock(ThriftCoordinatorServer.EventListener.class);
     SettableFuture<BuildTargetsQueue> queueFuture = SettableFuture.create();
-    queueFuture.set(BuildTargetsQueueTest.createDiamondDependencyQueue());
+    queueFuture.set(ReverseDepBuildTargetsQueueTest.createDiamondDependencyQueue());
 
     CoordinatorModeRunner coordinator =
         new CoordinatorModeRunner(

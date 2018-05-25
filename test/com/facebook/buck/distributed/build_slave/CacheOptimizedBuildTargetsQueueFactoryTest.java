@@ -140,7 +140,7 @@ public class CacheOptimizedBuildTargetsQueueFactoryTest {
     BuildTargetsQueue queue =
         createQueueWithRemoteCacheHits(resolver, ImmutableList.of(rootTarget), hitTargets, false);
 
-    List<WorkUnit> zeroDepTargets = BuildTargetsQueueTest.dequeueNoFinishedTargets(queue);
+    List<WorkUnit> zeroDepTargets = ReverseDepBuildTargetsQueueTest.dequeueNoFinishedTargets(queue);
     Assert.assertEquals(1, zeroDepTargets.size());
     Assert.assertEquals(3, zeroDepTargets.get(0).getBuildTargets().size());
 
@@ -152,7 +152,7 @@ public class CacheOptimizedBuildTargetsQueueFactoryTest {
     List<WorkUnit> newZeroDepNodes =
         queue.dequeueZeroDependencyNodes(
             ImmutableList.of(CACHABLE_C, LEFT_TARGET, ROOT_TARGET),
-            BuildTargetsQueueTest.MAX_UNITS_OF_WORK);
+            ReverseDepBuildTargetsQueueTest.MAX_UNITS_OF_WORK);
     Assert.assertEquals(0, newZeroDepNodes.size());
 
     // LEAF_TARGET and RIGHT_TARGET were pruned, so should have corresponding
@@ -178,7 +178,7 @@ public class CacheOptimizedBuildTargetsQueueFactoryTest {
     BuildTargetsQueue queue =
         createQueueWithRemoteCacheHits(
             resolver, ImmutableList.of(target), ImmutableList.of(target), false);
-    List<WorkUnit> zeroDepTargets = BuildTargetsQueueTest.dequeueNoFinishedTargets(queue);
+    List<WorkUnit> zeroDepTargets = ReverseDepBuildTargetsQueueTest.dequeueNoFinishedTargets(queue);
     Assert.assertEquals(1, zeroDepTargets.size());
     Assert.assertEquals(2, zeroDepTargets.get(0).getBuildTargets().size());
 
@@ -211,7 +211,8 @@ public class CacheOptimizedBuildTargetsQueueFactoryTest {
             ImmutableList.of(rightTarget, leafTarget),
             false);
 
-    List<WorkUnit> zeroDepWorkUnits = BuildTargetsQueueTest.dequeueNoFinishedTargets(queue);
+    List<WorkUnit> zeroDepWorkUnits =
+        ReverseDepBuildTargetsQueueTest.dequeueNoFinishedTargets(queue);
     Assert.assertEquals(1, zeroDepWorkUnits.size());
     WorkUnit workUnit = zeroDepWorkUnits.get(0);
     List<String> targets = workUnit.getBuildTargets();
@@ -221,7 +222,8 @@ public class CacheOptimizedBuildTargetsQueueFactoryTest {
     Assert.assertEquals(ROOT_TARGET, targets.get(2));
 
     zeroDepWorkUnits =
-        queue.dequeueZeroDependencyNodes(targets, BuildTargetsQueueTest.MAX_UNITS_OF_WORK);
+        queue.dequeueZeroDependencyNodes(
+            targets, ReverseDepBuildTargetsQueueTest.MAX_UNITS_OF_WORK);
     Assert.assertEquals(0, zeroDepWorkUnits.size());
   }
 
@@ -232,7 +234,7 @@ public class CacheOptimizedBuildTargetsQueueFactoryTest {
     BuildTargetsQueue queue =
         createQueueWithRemoteCacheHits(
             resolver, ImmutableList.of(target), ImmutableList.of(target), false);
-    List<WorkUnit> zeroDepTargets = BuildTargetsQueueTest.dequeueNoFinishedTargets(queue);
+    List<WorkUnit> zeroDepTargets = ReverseDepBuildTargetsQueueTest.dequeueNoFinishedTargets(queue);
     Assert.assertEquals(0, zeroDepTargets.size());
   }
 
@@ -253,7 +255,8 @@ public class CacheOptimizedBuildTargetsQueueFactoryTest {
     BuildTargetsQueue queue =
         createQueueWithLocalCacheHits(resolver, ImmutableList.of(rootTarget), localHitTargets);
 
-    List<WorkUnit> zeroDepWorkUnits = BuildTargetsQueueTest.dequeueNoFinishedTargets(queue);
+    List<WorkUnit> zeroDepWorkUnits =
+        ReverseDepBuildTargetsQueueTest.dequeueNoFinishedTargets(queue);
     Assert.assertEquals(1, zeroDepWorkUnits.size());
     WorkUnit workUnit = zeroDepWorkUnits.get(0);
     List<String> targets = workUnit.getBuildTargets();
@@ -263,7 +266,8 @@ public class CacheOptimizedBuildTargetsQueueFactoryTest {
     Assert.assertEquals(ROOT_TARGET, targets.get(2));
 
     zeroDepWorkUnits =
-        queue.dequeueZeroDependencyNodes(targets, BuildTargetsQueueTest.MAX_UNITS_OF_WORK);
+        queue.dequeueZeroDependencyNodes(
+            targets, ReverseDepBuildTargetsQueueTest.MAX_UNITS_OF_WORK);
     Assert.assertEquals(0, zeroDepWorkUnits.size());
 
     Assert.assertEquals(
@@ -301,7 +305,7 @@ public class CacheOptimizedBuildTargetsQueueFactoryTest {
     BuildTargetsQueue queue =
         createQueueWithLocalCacheHits(resolver, ImmutableList.of(rootTarget), hitTargets);
 
-    List<WorkUnit> zeroDepTargets = BuildTargetsQueueTest.dequeueNoFinishedTargets(queue);
+    List<WorkUnit> zeroDepTargets = ReverseDepBuildTargetsQueueTest.dequeueNoFinishedTargets(queue);
     Assert.assertEquals(1, zeroDepTargets.size());
     Assert.assertEquals(3, zeroDepTargets.get(0).getBuildTargets().size());
 
@@ -313,7 +317,7 @@ public class CacheOptimizedBuildTargetsQueueFactoryTest {
     List<WorkUnit> newZeroDepNodes =
         queue.dequeueZeroDependencyNodes(
             ImmutableList.of(CACHABLE_C, LEFT_TARGET, ROOT_TARGET),
-            BuildTargetsQueueTest.MAX_UNITS_OF_WORK);
+            ReverseDepBuildTargetsQueueTest.MAX_UNITS_OF_WORK);
     Assert.assertEquals(0, newZeroDepNodes.size());
 
     Assert.assertEquals(
@@ -352,7 +356,7 @@ public class CacheOptimizedBuildTargetsQueueFactoryTest {
     BuildTargetsQueue queue =
         createQueueWithLocalCacheHits(resolver, ImmutableList.of(rootTarget), hitTargets);
 
-    List<WorkUnit> zeroDepTargets = BuildTargetsQueueTest.dequeueNoFinishedTargets(queue);
+    List<WorkUnit> zeroDepTargets = ReverseDepBuildTargetsQueueTest.dequeueNoFinishedTargets(queue);
     Assert.assertEquals(1, zeroDepTargets.size());
     Assert.assertEquals(1, zeroDepTargets.get(0).getBuildTargets().size());
 
@@ -361,7 +365,7 @@ public class CacheOptimizedBuildTargetsQueueFactoryTest {
 
     List<WorkUnit> newZeroDepNodes =
         queue.dequeueZeroDependencyNodes(
-            ImmutableList.of(ROOT_TARGET), BuildTargetsQueueTest.MAX_UNITS_OF_WORK);
+            ImmutableList.of(ROOT_TARGET), ReverseDepBuildTargetsQueueTest.MAX_UNITS_OF_WORK);
     Assert.assertEquals(0, newZeroDepNodes.size());
 
     // But we should still be uploading cachable c, because without that, fetching left would
