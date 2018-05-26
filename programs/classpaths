@@ -55,8 +55,8 @@ third-party/java/jackson/jackson-datatype-guava-2.7.8.jar
 third-party/java/jackson/jackson-datatype-jdk8-2.7.8.jar
 third-party/java/jdom/jdom-2.0.6.jar
 third-party/java/jetty/jetty-all-9.4.9.v20180320-uber.jar
-third-party/java/jna/jna-4.4.0.jar
-third-party/java/jna/jna-platform-4.4.0.jar
+third-party/java/jna/jna-4.5.1.jar
+third-party/java/jna/jna-platform-4.5.1.jar
 third-party/java/jopt-simple/jopt-simple-4.6.jar
 third-party/java/json-simple/json-simple-1.1.1.jar
 third-party/java/jsr/javax.inject-1.jar

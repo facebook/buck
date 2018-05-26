@@ -5,8 +5,6 @@
       <root url="jar://$PROJECT_DIR$/third-party/java/args4j/args4j-2.0.30.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/ini4j/ini4j-0.5.2.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/jsr/jsr305.jar!/" />
-      <root url="jar://$PROJECT_DIR$/third-party/java/jna/jna-4.4.0.jar!/" />
-      <root url="jar://$PROJECT_DIR$/third-party/java/jna/jna-platform-4.4.0.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/nailgun/nailgun-server-0.9.3-SNAPSHOT.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/nuprocess/nuprocess-1.1.0.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/stringtemplate/ST-4.0.8.jar!/" />
@@ -26,8 +24,6 @@
     <JAVADOC />
     <SOURCES>
       <root url="jar://$PROJECT_DIR$/third-party/java/args4j/args4j-2.0.30-sources.jar!/" />
-      <root url="jar://$PROJECT_DIR$/third-party/java/jna/jna-4.4.0-sources.jar!/" />
-      <root url="jar://$PROJECT_DIR$/third-party/java/jna/jna-platform-4.4.0-sources.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/jsr/jsr305.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/nailgun/nailgun-server-0.9.3-SNAPSHOT-sources.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/nuprocess/nuprocess-1.1.0-sources.jar!/" />
