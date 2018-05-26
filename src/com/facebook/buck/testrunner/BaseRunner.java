@@ -217,7 +217,7 @@ public abstract class BaseRunner {
           try {
             testSelectorListBuilder.addSimpleTestSelector(args[++i]);
           } catch (IllegalArgumentException e) {
-            System.err.printf("--simple-test-selector takes 2 args: [suite] and [method name].");
+            System.err.print("--simple-test-selector takes 2 args: [suite] and [method name].");
             System.exit(1);
           }
           break;
@@ -225,7 +225,7 @@ public abstract class BaseRunner {
           try {
             testSelectorListBuilder.addBase64EncodedTestSelector(args[++i]);
           } catch (IllegalArgumentException e) {
-            System.err.printf("--b64-test-selector takes 2 args: [suite] and [method name].");
+            System.err.print("--b64-test-selector takes 2 args: [suite] and [method name].");
             System.exit(1);
           }
           break;

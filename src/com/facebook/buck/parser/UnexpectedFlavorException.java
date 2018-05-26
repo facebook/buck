@@ -94,10 +94,9 @@ public class UnexpectedFlavorException extends HumanReadableException {
     ImmutableList<String> suggestions = suggestionsBuilder.build();
 
     exceptionMessage +=
-        String.format(
-            "\n\n"
-                + "- Please check the spelling of the flavor(s).\n"
-                + "- If the spelling is correct, please check that the related SDK has been installed.");
+        "\n\n"
+            + "- Please check the spelling of the flavor(s).\n"
+            + "- If the spelling is correct, please check that the related SDK has been installed.";
     if (!suggestions.isEmpty()) {
       exceptionMessage += "\n" + String.join(", ", suggestions);
     }

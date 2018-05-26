@@ -168,7 +168,7 @@ public class MinionModeRunner extends AbstractDistBuildModeRunner {
     try {
       buildExecutor = buildExecutorFuture.get();
     } catch (ExecutionException e) {
-      String msg = String.format("Failed to get the BuildExecutor.");
+      String msg = "Failed to get the BuildExecutor.";
       LOG.error(e, msg);
       throw new RuntimeException(msg, e);
     }
@@ -332,7 +332,7 @@ public class MinionModeRunner extends AbstractDistBuildModeRunner {
 
           @Override
           public void onFailure(Throwable t) {
-            LOG.error(t, String.format("Building of unknown target failed."));
+            LOG.error(t, "Building of unknown target failed.");
             // Fail the Stampede build, and ensure it doesn't deadlock.
             exitCode.set(ExitCode.BUILD_ERROR);
           }

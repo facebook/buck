@@ -161,7 +161,7 @@ public class AsyncLogHandler extends Handler {
       } catch (InterruptedException e) {
         Thread.currentThread().interrupt(); // reset interrupt flag
         shutdownAsyncHandler();
-        logViaDelegate(Level.SEVERE, String.format("AsyncLogHandler was interrupted. Exiting."));
+        logViaDelegate(Level.SEVERE, "AsyncLogHandler was interrupted. Exiting.");
         return;
       }
 

@@ -86,7 +86,7 @@ public class SimpleProcessListenerTest {
     process.wantWrite();
     int returnCode = executor.waitForProcess(process);
     assertThat(returnCode, equalTo(0));
-    assertThat(listener.getStdout(), equalTo(String.format("MeowWow")));
+    assertThat(listener.getStdout(), equalTo("MeowWow"));
     assertThat(listener.getStderr(), is(emptyString()));
   }
 }

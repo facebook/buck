@@ -75,7 +75,7 @@ public class RemoteBuildModeRunner extends AbstractDistBuildModeRunner {
       setter.setFinalBuildStatus(buildExitCode.getCode());
       return buildExitCode;
     } catch (ExecutionException e) {
-      String msg = String.format("Failed to get the BuildExecutor.");
+      String msg = "Failed to get the BuildExecutor.";
       LOG.error(e, msg);
       throw new RuntimeException(msg, e);
     }

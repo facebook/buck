@@ -465,9 +465,8 @@ public class GenruleTest {
       genruleBuilder.setBash("no worker macro here").build(ruleResolver);
     } catch (HumanReadableException e) {
       assertEquals(
-          String.format(
-              "You cannot use a worker macro in one of the cmd, bash, or "
-                  + "cmd_exe properties and not in the others for genrule //:genrule_with_worker."),
+          "You cannot use a worker macro in one of the cmd, bash, or "
+              + "cmd_exe properties and not in the others for genrule //:genrule_with_worker.",
           e.getHumanReadableErrorMessage());
     }
   }

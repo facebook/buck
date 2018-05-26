@@ -229,7 +229,7 @@ public class AuditRulesCommand extends AbstractCommand {
     }
 
     // Close the rule definition.
-    out.printf(")\n\n");
+    out.print(")\n\n");
   }
 
   private boolean shouldInclude(@Nullable Object rawValue) {

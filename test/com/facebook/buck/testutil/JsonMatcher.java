@@ -36,9 +36,8 @@ public class JsonMatcher extends TypeSafeDiagnosingMatcher<String> {
   protected boolean matchesSafely(String actualJson, Description description) {
     try {
       JsonNode expectedObject =
-          ObjectMappers.READER.readTree(ObjectMappers.createParser(String.format(expectedJson)));
-      JsonNode actualObject =
-          ObjectMappers.READER.readTree(ObjectMappers.createParser(String.format(actualJson)));
+          ObjectMappers.READER.readTree(ObjectMappers.createParser(expectedJson));
+      JsonNode actualObject = ObjectMappers.READER.readTree(ObjectMappers.createParser(actualJson));
 
       if (!matchJsonObjects("/", expectedObject, actualObject, description)) {
         description.appendText(String.format(" in <%s>", actualJson));
