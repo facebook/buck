@@ -97,6 +97,7 @@ public class SkylarkNativeModuleTest {
                 .setPackageIdentifier(
                     PackageIdentifier.create(
                         RepositoryName.DEFAULT, PathFragment.create("my/package")))
+                .setEventHandler(eventHandler)
                 .build())
         .setup(env);
     env.setup("package_name", SkylarkNativeModule.packageName);

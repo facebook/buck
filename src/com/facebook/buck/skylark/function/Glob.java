@@ -18,6 +18,7 @@ package com.facebook.buck.skylark.function;
 
 import com.facebook.buck.skylark.parser.context.ParseContext;
 import com.google.common.collect.ImmutableList;
+import com.google.devtools.build.lib.events.Event;
 import com.google.devtools.build.lib.skylarkinterface.Param;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkSignature;
 import com.google.devtools.build.lib.syntax.BuiltinFunction;
@@ -104,6 +105,18 @@ public class Glob {
             Environment env)
             throws EvalException, IOException, InterruptedException {
           ParseContext parseContext = ParseContext.getParseContext(env, ast);
+          if (include.isEmpty()) {
+            parseContext
+                .getPackageContext()
+                .getEventHandler()
+                .handle(
+                    Event.warn(
+                        ast.getLocation(),
+                        "glob's 'include' attribute is empty. "
+                            + "Such calls are expensive and unnecessary. "
+                            + "Please use an empty list ([]) instead."));
+            return SkylarkList.MutableList.empty();
+          }
           try {
             return SkylarkList.MutableList.copyOf(
                 env,

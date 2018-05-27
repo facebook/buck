@@ -109,6 +109,7 @@ public class ReadConfigTest {
                 .setRawConfig(rawConfig)
                 .setPackageIdentifier(
                     PackageIdentifier.create(RepositoryName.DEFAULT, PathFragment.create("pkg")))
+                .setEventHandler(eventHandler)
                 .build());
     parseContext.setup(env);
     env.setup("read_config", ReadConfig.create());

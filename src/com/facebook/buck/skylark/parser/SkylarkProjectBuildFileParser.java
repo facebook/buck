@@ -255,6 +255,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
             PackageIdentifier.create(
                 RepositoryName.createFromValidStrippedName(options.getCellName()),
                 PathFragment.create(basePath)))
+        .setEventHandler(eventHandler)
         .build();
   }
 
