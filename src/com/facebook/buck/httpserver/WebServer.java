@@ -142,7 +142,7 @@ public class WebServer {
       try {
         Files.write(filePath, String.valueOf(port.get()).getBytes(StandardCharsets.UTF_8));
       } catch (IOException e) {
-        throw new WebServerException("Unable to write to " + HTTP_PORT_FILE.toString(), e);
+        throw new WebServerException("Unable to write to " + HTTP_PORT_FILE, e);
       }
     }
   }

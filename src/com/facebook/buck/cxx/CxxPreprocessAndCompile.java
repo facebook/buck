@@ -362,7 +362,7 @@ public class CxxPreprocessAndCompile extends ModernBuildRule<CxxPreprocessAndCom
     }
 
     static Path getDepFilePath(Path outputPath) {
-      return outputPath.getParent().resolve(outputPath.getFileName().toString() + ".dep");
+      return outputPath.getParent().resolve(outputPath.getFileName() + ".dep");
     }
 
     @Override

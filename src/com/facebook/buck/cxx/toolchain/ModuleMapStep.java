@@ -43,7 +43,7 @@ class ModuleMapStep implements Step {
 
   @Override
   public String getDescription(ExecutionContext context) {
-    return "modulemap @ " + output.toString();
+    return "modulemap @ " + output;
   }
 
   @Override

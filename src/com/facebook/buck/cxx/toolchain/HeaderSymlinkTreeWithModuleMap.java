@@ -105,9 +105,7 @@ public final class HeaderSymlinkTreeWithModuleMap extends HeaderSymlinkTree {
                                 .collect(ImmutableList.toImmutableList()))
                         .render(),
                     BuildTargets.getGenPath(
-                        getProjectFilesystem(),
-                        getBuildTarget(),
-                        "%s/" + umbrellaHeaderPath.toString()),
+                        getProjectFilesystem(), getBuildTarget(), "%s/" + umbrellaHeaderPath),
                     false));
           }
         });

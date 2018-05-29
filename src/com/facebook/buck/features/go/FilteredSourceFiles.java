@@ -73,7 +73,7 @@ public class FilteredSourceFiles implements Iterable<Path> {
     HashSet<Path> sourceFiles = new HashSet<>();
     for (Path srcFile : rawSrcFiles) {
       GoListStep step = filterSteps.get(srcFile.getParent());
-      Preconditions.checkNotNull(step, "No GoListStep is found for " + srcFile.toString());
+      Preconditions.checkNotNull(step, "No GoListStep is found for " + srcFile);
       if (step.getSourceFiles().contains(srcFile)) {
         sourceFiles.add(srcFile);
       }

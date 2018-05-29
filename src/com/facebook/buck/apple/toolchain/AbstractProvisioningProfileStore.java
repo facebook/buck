@@ -148,10 +148,7 @@ public abstract class AbstractProvisioningProfileStore implements RuleKeyAppenda
         atLeastOneMatch = true;
         if (!profile.getExpirationDate().after(new Date())) {
           String message =
-              "Ignoring expired profile "
-                  + profile.getUUID()
-                  + ": "
-                  + profile.getExpirationDate().toString();
+              "Ignoring expired profile " + profile.getUUID() + ": " + profile.getExpirationDate();
           LOG.debug(message);
           lines.add(message);
           continue;
