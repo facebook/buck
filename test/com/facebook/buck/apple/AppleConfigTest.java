@@ -18,6 +18,8 @@ package com.facebook.buck.apple;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.startsWith;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
@@ -36,6 +38,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Duration;
 import java.util.Optional;
 import java.util.function.Supplier;
 import org.hamcrest.junit.ExpectedException;
@@ -164,5 +167,33 @@ public class AppleConfigTest {
     AppleConfig config = buckConfig.getView(AppleConfig.class);
     ZipCompressionLevel compressionLevel = config.getZipCompressionLevel();
     assertEquals(ZipCompressionLevel.DEFAULT, compressionLevel);
+  }
+
+  @Test
+  public void testNegativeCodesignTimout() {
+    /* negative values should throw */
+    AppleConfig config =
+        FakeBuckConfig.builder()
+            .setSections("[apple]", "codesign_timeout = -1")
+            .build()
+            .getView(AppleConfig.class);
+    HumanReadableException exception = null;
+    try {
+      config.getCodesignTimeout();
+    } catch (HumanReadableException e) {
+      exception = e;
+    }
+    assertThat(exception, notNullValue());
+    assertThat(
+        "Should throw exceptions for negative timeouts.",
+        exception.getHumanReadableErrorMessage(),
+        startsWith("negative timeout"));
+  }
+
+  @Test
+  public void testDefaultCodesignTimeout() {
+    /* make sure that we have a sane default of 300s when the value is not specified */
+    AppleConfig config = FakeBuckConfig.builder().build().getView(AppleConfig.class);
+    assertThat(config.getCodesignTimeout(), equalTo(Duration.ofSeconds(300)));
   }
 }

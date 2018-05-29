@@ -79,6 +79,7 @@ import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Duration;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
@@ -573,7 +574,8 @@ public class AppleDescriptions {
       AppleAssetCatalogsCompilationOptions appleAssetCatalogsCompilationOptions,
       ImmutableList<String> codesignFlags,
       Optional<String> codesignAdhocIdentity,
-      Optional<Boolean> ibtoolModuleFlag) {
+      Optional<Boolean> ibtoolModuleFlag,
+      Duration codesignTimeout) {
     AppleCxxPlatform appleCxxPlatform =
         ApplePlatforms.getAppleCxxPlatformForBuildTarget(
             cxxPlatformFlavorDomain,
@@ -797,7 +799,8 @@ public class AppleDescriptions {
         verifyResources,
         codesignFlags,
         codesignAdhocIdentity,
-        ibtoolModuleFlag);
+        ibtoolModuleFlag,
+        codesignTimeout);
   }
 
   /**
