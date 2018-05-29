@@ -627,6 +627,15 @@ osx_toolchains_override = tools.stable,tools.swift40,tools.common
   {/param}
 {/call}
 
+{call buckconfig.entry}
+  {param name: 'codesign_timeout' /}
+  {param example_value: '600' /}
+  {param description}
+    The timeout of the code-signing step in seconds. The value is set
+    to 300 seconds by default if not specified explicitly.
+  {/param}
+{/call}
+
 {call buckconfig.section}
   {param name: 'build' /}
   {param description}
