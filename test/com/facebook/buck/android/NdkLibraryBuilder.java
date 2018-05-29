@@ -87,15 +87,13 @@ public class NdkLibraryBuilder
   }
 
   public static ToolchainProvider createToolchainProviderForNdkLibrary() {
-    ToolchainProvider toolchainProvider =
-        new ToolchainProviderBuilder()
-            .withToolchain(
-                NdkCxxPlatformsProvider.DEFAULT_NAME, NdkCxxPlatformsProvider.of(NDK_PLATFORMS))
-            .withToolchain(
-                AndroidNdk.DEFAULT_NAME,
-                AndroidNdk.of("12b", Paths.get("/android/ndk"), new ExecutableFinder()))
-            .build();
-    return toolchainProvider;
+    return new ToolchainProviderBuilder()
+        .withToolchain(
+            NdkCxxPlatformsProvider.DEFAULT_NAME, NdkCxxPlatformsProvider.of(NDK_PLATFORMS))
+        .withToolchain(
+            AndroidNdk.DEFAULT_NAME,
+            AndroidNdk.of("12b", Paths.get("/android/ndk"), new ExecutableFinder()))
+        .build();
   }
 
   public NdkLibraryBuilder addDep(BuildTarget target) {

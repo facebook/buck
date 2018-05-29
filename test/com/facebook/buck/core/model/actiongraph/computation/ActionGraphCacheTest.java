@@ -569,12 +569,10 @@ public class ActionGraphCacheTest {
   }
 
   private TargetNode<?, ?> createCacheableTargetNode(String name, TargetNode<?, ?>... deps) {
-    TargetNode<?, ?> node =
-        FakeTargetNodeBuilder.newBuilder(BuildTargetFactory.newInstance("//foo:" + name))
-            .setDeps(deps)
-            .setProducesCacheableSubgraph(true)
-            .build();
-    return node;
+    return FakeTargetNodeBuilder.newBuilder(BuildTargetFactory.newInstance("//foo:" + name))
+        .setDeps(deps)
+        .setProducesCacheableSubgraph(true)
+        .build();
   }
 
   private TargetNode<?, ?> createTargetNode(String name, TargetNode<?, ?>... deps) {

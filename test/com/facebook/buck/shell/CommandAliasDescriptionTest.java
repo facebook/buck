@@ -95,8 +95,7 @@ public class CommandAliasDescriptionTest {
     CommandAliasBuilder.BuildResult result = builder().setExe(delegate).buildResult();
 
     assertThat(result.getCommandPrefix(), equalTo(ImmutableList.of(result.pathOf(delegate))));
-    BuildTarget v = CommandAliasDescriptionTest.delegate;
-    assertThat(result.getRuntimeDeps(), hasItem(v));
+    assertThat(result.getRuntimeDeps(), hasItem(CommandAliasDescriptionTest.delegate));
   }
 
   @Test

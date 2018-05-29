@@ -185,9 +185,8 @@ public class GwtBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps {
             }
             javaArgsBuilder.addAll(experimentalArgs);
             javaArgsBuilder.addAll(modules);
-            ImmutableList<String> javaArgs = javaArgsBuilder.build();
 
-            return javaArgs;
+            return javaArgsBuilder.build();
           }
         };
     steps.add(javaStep);

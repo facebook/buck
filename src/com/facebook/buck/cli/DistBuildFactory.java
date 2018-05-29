@@ -175,44 +175,42 @@ public abstract class DistBuildFactory {
     // ResourceConfig based on buckconfig local to Stampede worker.
     ResourcesConfig resource = params.getBuckConfig().getView(ResourcesConfig.class);
 
-    DistBuildSlaveExecutor executor =
-        new DistBuildSlaveExecutor(
-            DistBuildSlaveExecutorArgs.builder()
-                .setBuckEventBus(params.getBuckEventBus())
-                .setPlatform(params.getPlatform())
-                .setClock(params.getClock())
-                .setArtifactCacheFactory(distBuildArtifactCacheFactory)
-                .setState(state)
-                .setParser(params.getParser())
-                .setExecutorService(executorService)
-                .setActionGraphCache(params.getActionGraphCache())
-                .setRuleKeyConfiguration(
-                    ConfigRuleKeyConfigurationFactory.create(
-                        state.getRemoteRootCellConfig(), params.getBuckModuleManager()))
-                .setConsole(params.getConsole())
-                .setLogDirectoryPath(params.getInvocationInfo().get().getLogDirectoryPath())
-                .setProvider(fileContentsProvider)
-                .setExecutors(params.getExecutors())
-                .setDistBuildMode(mode)
-                .setRemoteCoordinatorPort(coordinatorPort)
-                .setRemoteCoordinatorAddress(coordinatorAddress)
-                .setStampedeId(stampedeId.orElse(new StampedeId().setId("LOCAL_FILE")))
-                .setCapacityService(capacityService)
-                .setBuildSlaveRunId(buildSlaveRunId)
-                .setVersionedTargetGraphCache(params.getVersionedTargetGraphCache())
-                .setBuildInfoStoreManager(params.getBuildInfoStoreManager())
-                .setDistBuildService(service)
-                .setProjectFilesystemFactory(params.getProjectFilesystemFactory())
-                .setTimingStatsTracker(timingStatsTracker)
-                .setKnownBuildRuleTypesProvider(params.getKnownBuildRuleTypesProvider())
-                .setCoordinatorBuildRuleEventsPublisher(coordinatorBuildRuleEventsPublisher)
-                .setMinionBuildProgressTracker(minionBuildProgressTracker)
-                .setHealthCheckStatsTracker(healthCheckStatsTracker)
-                .setRuleKeyCacheScope(ruleKeyCacheScope)
-                .setMaxActionGraphParallelism(resource.getMaximumResourceAmounts().getCpu())
-                .setActionGraphParallelizationMode(
-                    params.getBuckConfig().getActionGraphParallelizationMode())
-                .build());
-    return executor;
+    return new DistBuildSlaveExecutor(
+        DistBuildSlaveExecutorArgs.builder()
+            .setBuckEventBus(params.getBuckEventBus())
+            .setPlatform(params.getPlatform())
+            .setClock(params.getClock())
+            .setArtifactCacheFactory(distBuildArtifactCacheFactory)
+            .setState(state)
+            .setParser(params.getParser())
+            .setExecutorService(executorService)
+            .setActionGraphCache(params.getActionGraphCache())
+            .setRuleKeyConfiguration(
+                ConfigRuleKeyConfigurationFactory.create(
+                    state.getRemoteRootCellConfig(), params.getBuckModuleManager()))
+            .setConsole(params.getConsole())
+            .setLogDirectoryPath(params.getInvocationInfo().get().getLogDirectoryPath())
+            .setProvider(fileContentsProvider)
+            .setExecutors(params.getExecutors())
+            .setDistBuildMode(mode)
+            .setRemoteCoordinatorPort(coordinatorPort)
+            .setRemoteCoordinatorAddress(coordinatorAddress)
+            .setStampedeId(stampedeId.orElse(new StampedeId().setId("LOCAL_FILE")))
+            .setCapacityService(capacityService)
+            .setBuildSlaveRunId(buildSlaveRunId)
+            .setVersionedTargetGraphCache(params.getVersionedTargetGraphCache())
+            .setBuildInfoStoreManager(params.getBuildInfoStoreManager())
+            .setDistBuildService(service)
+            .setProjectFilesystemFactory(params.getProjectFilesystemFactory())
+            .setTimingStatsTracker(timingStatsTracker)
+            .setKnownBuildRuleTypesProvider(params.getKnownBuildRuleTypesProvider())
+            .setCoordinatorBuildRuleEventsPublisher(coordinatorBuildRuleEventsPublisher)
+            .setMinionBuildProgressTracker(minionBuildProgressTracker)
+            .setHealthCheckStatsTracker(healthCheckStatsTracker)
+            .setRuleKeyCacheScope(ruleKeyCacheScope)
+            .setMaxActionGraphParallelism(resource.getMaximumResourceAmounts().getCpu())
+            .setActionGraphParallelizationMode(
+                params.getBuckConfig().getActionGraphParallelizationMode())
+            .build());
   }
 }

@@ -53,9 +53,7 @@ public class SwiftPlatformsProviderFactory implements ToolchainFactory<SwiftPlat
           .getSwiftPlatform()
           .ifPresent(swiftPlatform -> swiftPlatforms.put(flavor, swiftPlatform));
     }
-    FlavorDomain<SwiftPlatform> swiftPlatformDomain =
-        new FlavorDomain<>("Swift Platform", swiftPlatforms.build());
 
-    return swiftPlatformDomain;
+    return new FlavorDomain<>("Swift Platform", swiftPlatforms.build());
   }
 }

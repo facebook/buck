@@ -88,25 +88,22 @@ public class DefaultToolchainProviderTest {
                 ToolchainDescriptor.of(
                     NoopToolchain.DEFAULT_NAME, NoopToolchain.class, factoryClass));
 
-    DefaultToolchainProvider toolchainProvider =
-        new DefaultToolchainProvider(
-            new DefaultPluginManager() {
-              @Override
-              public <T> List<T> getExtensions(Class<T> type) {
-                if (ToolchainSupplier.class.equals(type)) {
-                  return (List<T>) Collections.singletonList(supplier);
-                }
-                return super.getExtensions(type);
-              }
-            },
-            ImmutableMap.of(),
-            FakeBuckConfig.builder().build(),
-            new FakeProjectFilesystem(),
-            new FakeProcessExecutor(),
-            new ExecutableFinder(),
-            TestRuleKeyConfigurationFactory.create());
-
-    return toolchainProvider;
+    return new DefaultToolchainProvider(
+        new DefaultPluginManager() {
+          @Override
+          public <T> List<T> getExtensions(Class<T> type) {
+            if (ToolchainSupplier.class.equals(type)) {
+              return (List<T>) Collections.singletonList(supplier);
+            }
+            return super.getExtensions(type);
+          }
+        },
+        ImmutableMap.of(),
+        FakeBuckConfig.builder().build(),
+        new FakeProjectFilesystem(),
+        new FakeProcessExecutor(),
+        new ExecutableFinder(),
+        TestRuleKeyConfigurationFactory.create());
   }
 
   @Rule public ExpectedException thrown = ExpectedException.none();

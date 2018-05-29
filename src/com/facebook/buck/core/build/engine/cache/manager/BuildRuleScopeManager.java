@@ -240,27 +240,23 @@ public class BuildRuleScopeManager {
           input.getStatus() == BuildRuleStatus.FAIL
               || (input.isSuccess() && input.getSuccess() == BuildRuleSuccessType.BUILT_LOCALLY);
       // Log the result to the event bus.
-      BuildRuleEvent.Finished finished =
-          BuildRuleEvent.finished(
-              resumedEvent,
-              getBuildRuleKeys(),
-              input.getStatus(),
-              input.getCacheResult().orElse(CacheResult.miss()),
-              onDiskBuildInfo
-                  .getBuildValue(BuildInfo.MetadataKey.ORIGIN_BUILD_ID)
-                  .map(BuildId::new),
-              successType,
-              shouldUploadToCache,
-              outputHash,
-              outputSize,
-              getBuildRuleDiagnosticData(failureOrBuiltLocally),
-              Optional.ofNullable(manifestFetchResult),
-              Optional.ofNullable(manifestStoreResult),
-              ruleKeyCacheCheckTimestamps,
-              inputRuleKeyCacheCheckTimestamps,
-              manifestRuleKeyCacheCheckTimestamps,
-              buildTimestamps);
-      return finished;
+      return BuildRuleEvent.finished(
+          resumedEvent,
+          getBuildRuleKeys(),
+          input.getStatus(),
+          input.getCacheResult().orElse(CacheResult.miss()),
+          onDiskBuildInfo.getBuildValue(BuildInfo.MetadataKey.ORIGIN_BUILD_ID).map(BuildId::new),
+          successType,
+          shouldUploadToCache,
+          outputHash,
+          outputSize,
+          getBuildRuleDiagnosticData(failureOrBuiltLocally),
+          Optional.ofNullable(manifestFetchResult),
+          Optional.ofNullable(manifestStoreResult),
+          ruleKeyCacheCheckTimestamps,
+          inputRuleKeyCacheCheckTimestamps,
+          manifestRuleKeyCacheCheckTimestamps,
+          buildTimestamps);
     }
   }
 }

@@ -131,8 +131,7 @@ public class CapacityServiceTest {
     BuildSlaveResponse response = new BuildSlaveResponse();
     response.setWasSuccessful(true);
 
-    ObtainCapacityResponse obtainCapacityResponse = new ObtainCapacityResponse();
-    response.obtainCapacityResponse = obtainCapacityResponse;
+    response.obtainCapacityResponse = new ObtainCapacityResponse();
 
     return response;
   }
@@ -153,8 +152,7 @@ public class CapacityServiceTest {
     BuildSlaveResponse response = new BuildSlaveResponse();
     response.setWasSuccessful(true);
 
-    ReturnCapacityResponse returnCapacityResponse = new ReturnCapacityResponse();
-    response.returnCapacityResponse = returnCapacityResponse;
+    response.returnCapacityResponse = new ReturnCapacityResponse();
 
     return response;
   }

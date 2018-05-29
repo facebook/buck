@@ -43,8 +43,7 @@ public class AndroidSdkDirectoryResolver extends BaseAndroidToolchainResolver {
 
     this.sdkErrorMessage = Optional.empty();
 
-    Optional<Path> sdkPath = findSdk(config);
-    this.sdk = sdkPath;
+    this.sdk = findSdk(config);
   }
 
   public Path getSdkOrThrow() {

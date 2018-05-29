@@ -80,9 +80,7 @@ public class AppleCxxPlatformsProviderFactory
         AppleCxxPlatforms.buildAppleCxxPlatforms(
             appleSdkPaths, appleToolchains, filesystem, config, swiftBuckConfig);
     checkApplePlatforms(appleCxxPlatforms);
-    FlavorDomain<AppleCxxPlatform> platformFlavorsToAppleCxxPlatforms =
-        FlavorDomain.from("Apple C++ Platform", appleCxxPlatforms);
-    return platformFlavorsToAppleCxxPlatforms;
+    return FlavorDomain.from("Apple C++ Platform", appleCxxPlatforms);
   }
 
   private static void checkApplePlatforms(ImmutableList<AppleCxxPlatform> appleCxxPlatforms) {

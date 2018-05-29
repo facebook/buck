@@ -54,8 +54,7 @@ public class CapacityService {
     BuildSlaveResponse response = makeRequestChecked(request);
     GetAllAvailableCapacityResponse getAvailableCapacityResponse =
         response.getGetAllAvailableCapacityResponse();
-    int capacity = getAvailableCapacityResponse.availableCapacity;
-    return capacity;
+    return getAvailableCapacityResponse.availableCapacity;
   }
 
   public int obtainAllAvailableCapacity() throws IOException {
@@ -72,8 +71,7 @@ public class CapacityService {
     BuildSlaveResponse response = makeRequestChecked(request);
     ObtainAllAvailableCapacityResponse obtainCapacityResponse =
         response.getObtainAllAvailableCapacityResponse();
-    int capacity = obtainCapacityResponse.obtainedCapacity;
-    return capacity;
+    return obtainCapacityResponse.obtainedCapacity;
   }
 
   public void obtainCapacity(int size) {

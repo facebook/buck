@@ -59,10 +59,7 @@ public class NdkCxxPlatformsProviderFactory implements ToolchainFactory<NdkCxxPl
       ndkVersion = androidNdk.getNdkVersion();
     }
 
-    ImmutableMap<TargetCpuType, NdkCxxPlatform> ndkCxxPlatforms =
-        NdkCxxPlatforms.getPlatforms(
-            cxxBuckConfig, androidConfig, filesystem, platform, toolchainProvider, ndkVersion);
-
-    return ndkCxxPlatforms;
+    return NdkCxxPlatforms.getPlatforms(
+        cxxBuckConfig, androidConfig, filesystem, platform, toolchainProvider, ndkVersion);
   }
 }

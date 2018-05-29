@@ -230,9 +230,7 @@ public class AppleBundleIntegrationTest {
   private NSDictionary verifyAndParsePlist(Path path) throws Exception {
     assertTrue(Files.exists(path));
     String resultContents = filesystem.readFileIfItExists(path).get();
-    NSDictionary resultPlist =
-        (NSDictionary) PropertyListParser.parse(resultContents.getBytes(Charsets.UTF_8));
-    return resultPlist;
+    return (NSDictionary) PropertyListParser.parse(resultContents.getBytes(Charsets.UTF_8));
   }
 
   @Test

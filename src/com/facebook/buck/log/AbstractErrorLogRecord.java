@@ -55,24 +55,22 @@ abstract class AbstractErrorLogRecord {
     } catch (IOException e) {
       LOG.debug(e, "Unable to fetch hostname");
     }
-    ImmutableMap<String, String> traits =
-        ImmutableMap.<String, String>builder()
-            .put("severity", getRecord().getLevel().toString())
-            .put("logger", logger != null ? logger : "unknown")
-            .put("buckGitCommit", System.getProperty("buck.git_commit", "unknown"))
-            .put("javaVersion", System.getProperty("java.version", "unknown"))
-            .put("os", System.getProperty("os.name", "unknown"))
-            .put("osVersion", System.getProperty("os.version", "unknown"))
-            .put("user", System.getProperty("user.name", "unknown"))
-            .put("buckBinaryBuildType", BuildType.CURRENT_BUILD_TYPE.get().toString())
-            .put("hostname", hostname)
-            .put(
-                "isSuperConsoleEnabled",
-                getIsSuperConsoleEnabled().map(Object::toString).orElse("null"))
-            .put("isDaemon", getIsDaemon().map(Object::toString).orElse("null"))
-            .put("commandId", getBuildUuid().orElse("null"))
-            .build();
-    return traits;
+    return ImmutableMap.<String, String>builder()
+        .put("severity", getRecord().getLevel().toString())
+        .put("logger", logger != null ? logger : "unknown")
+        .put("buckGitCommit", System.getProperty("buck.git_commit", "unknown"))
+        .put("javaVersion", System.getProperty("java.version", "unknown"))
+        .put("os", System.getProperty("os.name", "unknown"))
+        .put("osVersion", System.getProperty("os.version", "unknown"))
+        .put("user", System.getProperty("user.name", "unknown"))
+        .put("buckBinaryBuildType", BuildType.CURRENT_BUILD_TYPE.get().toString())
+        .put("hostname", hostname)
+        .put(
+            "isSuperConsoleEnabled",
+            getIsSuperConsoleEnabled().map(Object::toString).orElse("null"))
+        .put("isDaemon", getIsDaemon().map(Object::toString).orElse("null"))
+        .put("commandId", getBuildUuid().orElse("null"))
+        .build();
   }
 
   @Value.Derived

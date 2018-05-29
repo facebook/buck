@@ -1498,11 +1498,8 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
               .setDebugEnabled(true)
               .build();
 
-      ImmutableList<String> options =
-          javacCommand.getOptions(
-              executionContext, /* buildClasspathEntries */ ImmutableSortedSet.of());
-
-      return options;
+      return javacCommand.getOptions(
+          executionContext, /* buildClasspathEntries */ ImmutableSortedSet.of());
     }
 
     private DefaultJavaLibrary createJavaLibraryRule(ProjectFilesystem projectFilesystem)

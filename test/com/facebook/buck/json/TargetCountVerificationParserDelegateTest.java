@@ -92,10 +92,7 @@ public class TargetCountVerificationParserDelegateTest {
   }
 
   private TargetCountVerificationParserDelegate newParserDelegate(int threshold) {
-    TargetCountVerificationParserDelegate parserDelegate =
-        new TargetCountVerificationParserDelegate(parserMock, threshold, eventBus);
-
-    return parserDelegate;
+    return new TargetCountVerificationParserDelegate(parserMock, threshold, eventBus);
   }
 
   @Test

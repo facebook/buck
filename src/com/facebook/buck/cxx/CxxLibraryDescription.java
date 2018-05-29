@@ -236,8 +236,7 @@ public class CxxLibraryDescription
     }
     Set<Flavor> flavors = Sets.newHashSet(buildTarget.getFlavors());
     flavors.remove(type.get().getKey());
-    BuildTarget target = buildTarget.withFlavors(flavors);
-    return target;
+    return buildTarget.withFlavors(flavors);
   }
 
   @Override

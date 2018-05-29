@@ -86,10 +86,7 @@ public class AaptStepTest {
    * calling replay().
    */
   private ExecutionContext createTestExecutionContext(Verbosity verbosity) {
-    ExecutionContext executionContext =
-        TestExecutionContext.newBuilder().setConsole(new TestConsole(verbosity)).build();
-
-    return executionContext;
+    return TestExecutionContext.newBuilder().setConsole(new TestConsole(verbosity)).build();
   }
 
   @Test

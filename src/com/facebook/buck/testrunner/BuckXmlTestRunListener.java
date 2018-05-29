@@ -88,7 +88,6 @@ public class BuckXmlTestRunListener extends XmlTestRunListener {
     }
   }
 
-  @Override
   /**
    * Creates a {@link File} where the report will be created. Instead of creating a temp file,
    * create a file with the devices serial number, so it's possible to refer back to it afterwards.
@@ -97,6 +96,7 @@ public class BuckXmlTestRunListener extends XmlTestRunListener {
    * @return a file
    * @throws IOException
    */
+  @Override
   protected File getResultFile(File reportDir) {
     File reportFile = new File(reportDir, TEST_RESULT_FILE);
     return reportFile;

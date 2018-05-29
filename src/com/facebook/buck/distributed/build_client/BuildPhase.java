@@ -424,9 +424,7 @@ public class BuildPhase {
         networkExecutorService.submit(
             () -> {
               try {
-                List<BuildSlaveEventWrapper> events =
-                    distBuildService.multiGetBuildSlaveEvents(fetchEventQueries);
-                return events;
+                return distBuildService.multiGetBuildSlaveEvents(fetchEventQueries);
               } catch (IOException e) {
                 LOG.error(e, "Fetching build slave events failed. Returning empty list.");
                 return Lists.newArrayList();

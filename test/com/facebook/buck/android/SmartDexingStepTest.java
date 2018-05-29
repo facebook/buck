@@ -288,21 +288,19 @@ public class SmartDexingStepTest {
   }
 
   private AndroidPlatformTarget createAndroidPlatformTarget() {
-    AndroidPlatformTarget androidPlatformTarget =
-        AndroidPlatformTarget.of(
-            "android",
-            Paths.get(""),
-            Collections.emptyList(),
-            Paths.get(""),
-            Paths.get(""),
-            Paths.get(""),
-            Paths.get(""),
-            Paths.get(""),
-            Paths.get("/usr/bin/dx"),
-            Paths.get(""),
-            Paths.get(""),
-            Paths.get(""),
-            Paths.get(""));
-    return androidPlatformTarget;
+    return AndroidPlatformTarget.of(
+        "android",
+        Paths.get(""),
+        Collections.emptyList(),
+        Paths.get(""),
+        Paths.get(""),
+        Paths.get(""),
+        Paths.get(""),
+        Paths.get(""),
+        Paths.get("/usr/bin/dx"),
+        Paths.get(""),
+        Paths.get(""),
+        Paths.get(""),
+        Paths.get(""));
   }
 }

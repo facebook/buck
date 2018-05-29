@@ -26,13 +26,11 @@ import java.util.Optional;
 public class TestAndroidPlatformTargetFactory {
 
   public static AndroidPlatformTarget create() {
-    AndroidPlatformTarget androidPlatformTarget =
-        AndroidPlatformTargetProducer.getDefaultPlatformTarget(
-            AndroidBuildToolsLocation.of(
-                MorePathsForTests.rootRelativePath("AndroidSDK").resolve("build-tools")),
-            AndroidSdkLocation.of(MorePathsForTests.rootRelativePath("AndroidSDK")),
-            Optional.empty(),
-            Optional.empty());
-    return androidPlatformTarget;
+    return AndroidPlatformTargetProducer.getDefaultPlatformTarget(
+        AndroidBuildToolsLocation.of(
+            MorePathsForTests.rootRelativePath("AndroidSDK").resolve("build-tools")),
+        AndroidSdkLocation.of(MorePathsForTests.rootRelativePath("AndroidSDK")),
+        Optional.empty(),
+        Optional.empty());
   }
 }

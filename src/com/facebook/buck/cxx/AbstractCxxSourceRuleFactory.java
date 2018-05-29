@@ -200,12 +200,10 @@ abstract class AbstractCxxSourceRuleFactory {
 
   @Value.Lazy
   protected ImmutableList<CxxHeaders> getIncludes() {
-    ImmutableList<CxxHeaders> result =
-        getCxxPreprocessorInput()
-            .stream()
-            .flatMap(input -> input.getIncludes().stream())
-            .collect(ImmutableList.toImmutableList());
-    return result;
+    return getCxxPreprocessorInput()
+        .stream()
+        .flatMap(input -> input.getIncludes().stream())
+        .collect(ImmutableList.toImmutableList());
   }
 
   private final Function<CxxSource.Type, ImmutableList<Arg>> rulePreprocessorFlags =

@@ -163,16 +163,13 @@ public class WorkerShellStepTest {
         new ConcurrentHashMap<>();
     persistentWorkerProcessMap.put(persistentWorkerKey, persistentWorkerProcessPool);
 
-    ExecutionContext context =
-        TestExecutionContext.newBuilder()
-            .setPlatform(Platform.LINUX)
-            .setWorkerProcessPools(workerProcessMap)
-            .setPersistentWorkerPools(persistentWorkerProcessMap)
-            .setConsole(new TestConsole(Verbosity.ALL))
-            .setBuckEventBus(BuckEventBusForTests.newInstance())
-            .build();
-
-    return context;
+    return TestExecutionContext.newBuilder()
+        .setPlatform(Platform.LINUX)
+        .setWorkerProcessPools(workerProcessMap)
+        .setPersistentWorkerPools(persistentWorkerProcessMap)
+        .setConsole(new TestConsole(Verbosity.ALL))
+        .setBuckEventBus(BuckEventBusForTests.newInstance())
+        .build();
   }
 
   @Test

@@ -56,13 +56,7 @@ public class LoggingBuildListener implements BuckEventListener {
               .build();
 
   private static final ThreadLocal<SimpleDateFormat> DATE_FORMAT =
-      new ThreadLocal<SimpleDateFormat>() {
-        @Override
-        protected SimpleDateFormat initialValue() {
-          SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
-          return format;
-        }
-      };
+      ThreadLocal.withInitial(() -> new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS"));
 
   @Subscribe
   public void handleConsoleEvent(ConsoleEvent logEvent) {

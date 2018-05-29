@@ -136,7 +136,6 @@ public class LogFileHandler extends Handler {
             .setMinAmountOfEntriesToKeep(minAmountOfLogsToKeep)
             .build();
 
-    DirectoryCleaner cleaner = new DirectoryCleaner(cleanerArgs);
-    return cleaner;
+    return new DirectoryCleaner(cleanerArgs);
   }
 }
