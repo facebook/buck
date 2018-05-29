@@ -41,6 +41,7 @@ import com.google.common.collect.Lists;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Duration;
 import java.util.EnumSet;
 import java.util.Optional;
 import java.util.Set;
@@ -202,6 +203,17 @@ public class AppleConfig implements ConfigView<BuckConfig> {
           new HashedFileTool(delegate.getPathSourcePath(codesignPath.orElse(defaultCodesignPath)));
       return new ConstantToolProvider(codesign);
     }
+  }
+
+  /** Specify the maximum code-signing time before timing out. */
+  public Duration getCodesignTimeout() {
+    long timeout = delegate.getLong(APPLE_SECTION, "codesign_timeout").orElse(300l);
+    if (timeout < 0) {
+      throw new HumanReadableException(
+          "negative timeout (" + timeout + "s) specified for codesigning");
+    }
+
+    return Duration.ofSeconds(timeout);
   }
 
   public Optional<String> getXctoolDefaultDestinationSpecifier() {
