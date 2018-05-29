@@ -379,7 +379,7 @@ public class DistBuildConfig {
         DEFAULT_ALWAYS_WAIT_FOR_REMOTE_BUILD_BEFORE_PROCEEDING_LOCALLY);
   }
 
-  public long getHearbeatServiceRateMillis() {
+  public long getHeartbeatServiceRateMillis() {
     return buckConfig
         .getLong(STAMPEDE_SECTION, HEARTBEAT_SERVICE_INTERVAL_MILLIS)
         .orElse(DEFAULT_HEARTBEAT_SERVICE_INTERVAL_MILLIS);

@@ -133,7 +133,7 @@ public class MultiSlaveBuildModeRunnerFactory {
         new MinionHealthTracker(
             new DefaultClock(),
             distBuildConfig.getMaxMinionSilenceMillis(),
-            distBuildConfig.getHearbeatServiceRateMillis(),
+            distBuildConfig.getHeartbeatServiceRateMillis(),
             distBuildConfig.getSlowHeartbeatWarningThresholdMillis(),
             healthCheckStatsTracker);
 
