@@ -16,6 +16,7 @@ COMMON_FILES = (
     "DistBuildClientStatsEvent.java",
     "DistBuildFileHashes.java",
     "DistBuildMode.java",
+    "DistLocalBuildMode.java",
     "DistBuildRunEvent.java",
     "DistBuildService.java",
     "DistBuildState.java",

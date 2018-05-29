@@ -63,6 +63,7 @@ import com.facebook.buck.distributed.DistBuildPostBuildAnalysis;
 import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.DistBuildState;
 import com.facebook.buck.distributed.DistBuildTargetGraphCodec;
+import com.facebook.buck.distributed.DistLocalBuildMode;
 import com.facebook.buck.distributed.RuleKeyNameAndType;
 import com.facebook.buck.distributed.build_client.DistBuildControllerArgs;
 import com.facebook.buck.distributed.build_client.DistBuildControllerInvocationArgs;
@@ -1011,8 +1012,10 @@ public class BuildCommand extends AbstractCommand {
       // Perform either a single phase build that waits for all remote artifacts before proceeding,
       // or a two stage build where local build first races against remote, and depending on
       // progress either completes first or falls back to build that waits for remote artifacts.
-      boolean skipRacingBuild =
-          distBuildConfig.shouldAlwaysWaitForRemoteBuildBeforeProceedingLocally();
+      DistLocalBuildMode localMode = distBuildConfig.getLocalBuildMode();
+      boolean skipRacingBuild = localMode == DistLocalBuildMode.WAIT_FOR_REMOTE;
+
+      // Perform a build
       int localExitCode =
           stampedeBuildClient.build(
               skipRacingBuild, distBuildConfig.isSlowLocalBuildFallbackModeEnabled());
