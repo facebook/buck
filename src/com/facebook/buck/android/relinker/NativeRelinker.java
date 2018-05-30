@@ -240,7 +240,7 @@ public class NativeRelinker {
     BuildRule baseRule = ruleFinder.getRule(source).orElse(null);
     ImmutableList<Arg> linkerArgs = ImmutableList.of();
     Linker linker = null;
-    if (baseRule != null && baseRule instanceof CxxLink) {
+    if (baseRule instanceof CxxLink) {
       CxxLink link = (CxxLink) baseRule;
       linkerArgs = link.getArgs();
       linker = link.getLinker();

@@ -90,7 +90,7 @@ public class SourceTreePath implements Comparable<SourceTreePath>, AddsToRuleKey
 
   @Override
   public boolean equals(@Nullable Object other) {
-    if (other == null || !(other instanceof SourceTreePath)) {
+    if (!(other instanceof SourceTreePath)) {
       return false;
     }
 

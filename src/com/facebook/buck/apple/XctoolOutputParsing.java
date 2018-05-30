@@ -172,7 +172,7 @@ class XctoolOutputParsing {
       return;
     }
     Object event = object.get("event");
-    if (event == null || !(event instanceof String)) {
+    if (!(event instanceof String)) {
       LOG.warn("Couldn't parse event field from xctool event: %s", object);
       return;
     }

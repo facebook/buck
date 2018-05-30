@@ -122,8 +122,7 @@ public class ActionGraphCacheIntegrationTest {
             }
 
             Object argsEl = json.get("args");
-            if (argsEl == null
-                || !(argsEl instanceof Map)
+            if (!(argsEl instanceof Map)
                 || ((Map<String, Object>) argsEl).get("hit") == null
                 || !((((Map<String, Object>) argsEl)).get("hit") instanceof Boolean)) {
               return Optional.empty();

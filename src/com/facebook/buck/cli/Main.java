@@ -619,7 +619,7 @@ public final class Main {
       boolean isUsingDistributedBuild = false;
 
       // Automatically use distributed build for supported repositories and users.
-      if (command.subcommand != null && command.subcommand instanceof BuildCommand) {
+      if (command.subcommand instanceof BuildCommand) {
         BuildCommand subcommand = (BuildCommand) command.subcommand;
         isUsingDistributedBuild = subcommand.isUsingDistributedBuild();
         if (!isUsingDistributedBuild && distBuildConfig.shouldUseDistributedBuild(buildId)) {
@@ -629,8 +629,7 @@ public final class Main {
 
       // Switch to async file logging, if configured. A few log samples will have already gone
       // via the regular file logger, but that's OK.
-      boolean isDistBuildCommand =
-          command.subcommand != null && command.subcommand instanceof DistBuildCommand;
+      boolean isDistBuildCommand = command.subcommand instanceof DistBuildCommand;
       if (isDistBuildCommand) {
         LogConfig.setUseAsyncFileLogging(distBuildConfig.isAsyncLoggingEnabled());
       }

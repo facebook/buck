@@ -407,10 +407,7 @@ public class BuckUnixPath implements Path {
     BuckUnixPath that = toUnixPath(other);
 
     if (isEmpty() || that.isEmpty()) {
-      if (isEmpty() && that.isEmpty()) {
-        return true;
-      }
-      return false;
+      return isEmpty() && that.isEmpty();
     }
 
     if (that.segments.length > segments.length) {
@@ -445,7 +442,7 @@ public class BuckUnixPath implements Path {
 
   @Override
   public boolean equals(Object ob) {
-    if ((ob != null) && (ob instanceof BuckUnixPath)) {
+    if ((ob instanceof BuckUnixPath)) {
       return Arrays.equals(segments, ((BuckUnixPath) ob).segments);
     }
     return false;

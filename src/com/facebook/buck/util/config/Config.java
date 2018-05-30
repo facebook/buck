@@ -387,7 +387,7 @@ public class Config {
       for (String field : fields) {
         String leftValue = leftFields.get(field);
         String rightValue = rightFields.get(field);
-        if (leftValue == null || rightValue == null || !leftValue.equals(rightValue)) {
+        if (leftValue == null || !leftValue.equals(rightValue)) {
           return false;
         }
       }

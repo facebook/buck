@@ -166,7 +166,7 @@ public class PublishCommand extends BuildCommand {
             .post(
                 ConsoleEvent.severe(
                     "Cannot publish rule of type %s", buildRule.getClass().getName()));
-        success &= false;
+        success = false;
         continue;
       }
 
@@ -178,7 +178,7 @@ public class PublishCommand extends BuildCommand {
                 ConsoleEvent.severe(
                     "No maven coordinates specified for %s",
                     buildTarget.getUnflavoredBuildTarget().getFullyQualifiedName()));
-        success &= false;
+        success = false;
         continue;
       }
       publishables.add(publishable);

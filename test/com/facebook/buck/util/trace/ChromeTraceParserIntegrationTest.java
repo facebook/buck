@@ -81,8 +81,7 @@ public class ChromeTraceParserIntegrationTest {
           }
 
           Object argsEl = json.get("args");
-          if (argsEl == null
-              || !(argsEl instanceof Map)
+          if (!(argsEl instanceof Map)
               || ((Map<String, Object>) argsEl).get("is") == null
               || !(((Map<String, Object>) argsEl).get("is") instanceof Integer)) {
             return Optional.empty();

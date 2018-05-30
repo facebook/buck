@@ -57,7 +57,7 @@ public class ChromeTraceParser {
   public static final ChromeTraceEventMatcher<String> COMMAND =
       (json, name) -> {
         Object rawArgs = json.get("args");
-        if (rawArgs == null || !(rawArgs instanceof Map)) {
+        if (!(rawArgs instanceof Map)) {
           return Optional.empty();
         }
         Map<String, Object> args = (Map<String, Object>) rawArgs;
@@ -107,7 +107,7 @@ public class ChromeTraceParser {
         // Verify and extract the name property before invoking any of the matchers.
         ImmutableMap<String, Object> event = it.next();
         Object nameEl = event.get("name");
-        if (nameEl == null || !(nameEl instanceof String)) {
+        if (!(nameEl instanceof String)) {
           continue;
         }
         String name = (String) nameEl;

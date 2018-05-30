@@ -448,7 +448,7 @@ public class Build implements Closeable {
    */
   private Exception rootCauseOfBuildException(Exception e) {
     Throwable cause = e.getCause();
-    if (cause == null || !(cause instanceof Exception)) {
+    if (!(cause instanceof Exception)) {
       return e;
     }
     if (cause instanceof IOException

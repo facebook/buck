@@ -72,7 +72,7 @@ public class BuckCommand extends AbstractContainerCommand {
 
   @Override
   public Optional<ExitCode> runHelp(PrintStream stream) {
-    if (subcommand != null && subcommand instanceof HelpCommand) {
+    if (subcommand instanceof HelpCommand) {
       return Optional.of(((HelpCommand) subcommand).run(stream));
     }
     return super.runHelp(stream);
