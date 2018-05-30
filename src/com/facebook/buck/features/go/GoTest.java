@@ -20,6 +20,7 @@ import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.description.BuildRuleParams;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
@@ -84,6 +85,7 @@ public class GoTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final Optional<Long> testRuleTimeoutMs;
   private final ImmutableSet<String> contacts;
   private final boolean runTestsSeparately;
+  private final boolean createResourcesSymlinkTree;
   private final ImmutableSortedSet<SourcePath> resources;
   private final Mode coverageMode;
 
@@ -96,6 +98,7 @@ public class GoTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
       ImmutableSet<String> contacts,
       Optional<Long> testRuleTimeoutMs,
       boolean runTestsSeparately,
+      boolean createResourcesSymlinkTree,
       ImmutableSortedSet<SourcePath> resources,
       Mode coverageMode) {
     super(buildTarget, projectFilesystem, buildRuleParams);
@@ -104,6 +107,7 @@ public class GoTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.contacts = contacts;
     this.testRuleTimeoutMs = testRuleTimeoutMs;
     this.runTestsSeparately = runTestsSeparately;
+    this.createResourcesSymlinkTree = createResourcesSymlinkTree;
     this.resources = resources;
     this.coverageMode = coverageMode;
   }
@@ -146,21 +150,7 @@ public class GoTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
                     getProjectFilesystem(),
                     getPathToTestWorkingDirectory())))
         .add(
-            new SymlinkTreeStep(
-                "go_test",
-                getProjectFilesystem(),
-                getPathToTestWorkingDirectory(),
-                ImmutableMap.copyOf(
-                    FluentIterable.from(resources)
-                        .transform(
-                            input ->
-                                Maps.immutableEntry(
-                                    getProjectFilesystem()
-                                        .getPath(
-                                            buildContext
-                                                .getSourcePathResolver()
-                                                .getSourcePathName(getBuildTarget(), input)),
-                                    buildContext.getSourcePathResolver().getAbsolutePath(input))))))
+            getResourceSymlinkTree(buildContext, getPathToTestWorkingDirectory(), Optional.empty()))
         .add(
             new GoTestStep(
                 getProjectFilesystem(),
@@ -290,6 +280,16 @@ public class GoTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @Override
   public ImmutableList<? extends Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
+    if (createResourcesSymlinkTree) {
+      Path outputDir =
+          BuildTargets.getGenPath(
+              getProjectFilesystem(),
+              getBuildTarget().withFlavors(InternalFlavor.of("test-main")),
+              "%s");
+
+      return ImmutableList.of(
+          getResourceSymlinkTree(context, outputDir, Optional.of(buildableContext)));
+    }
     return ImmutableList.of();
   }
 
@@ -308,6 +308,39 @@ public class GoTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   protected Path getPathToTestExitCode() {
     return getPathToTestOutputDirectory().resolve("exitCode");
+  }
+
+  private SymlinkTreeStep getResourceSymlinkTree(
+      BuildContext buildContext,
+      Path outputDirectory,
+      Optional<BuildableContext> buildableContext) {
+
+    if (buildableContext.isPresent()) {
+      resources.forEach(
+          pth ->
+              buildableContext
+                  .get()
+                  .recordArtifact(
+                      buildContext
+                          .getSourcePathResolver()
+                          .getRelativePath(getProjectFilesystem(), pth)));
+    }
+
+    return new SymlinkTreeStep(
+        "go_test",
+        getProjectFilesystem(),
+        outputDirectory,
+        ImmutableMap.copyOf(
+            FluentIterable.from(resources)
+                .transform(
+                    input ->
+                        Maps.immutableEntry(
+                            getProjectFilesystem()
+                                .getPath(
+                                    buildContext
+                                        .getSourcePathResolver()
+                                        .getSourcePathName(getBuildTarget(), input)),
+                            buildContext.getSourcePathResolver().getAbsolutePath(input)))));
   }
 
   @Override

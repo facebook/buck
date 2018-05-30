@@ -265,6 +265,7 @@ public class GoTestDescription
             .map(Optional::of)
             .orElse(goBuckConfig.getDelegate().getDefaultTestRuleTimeoutMs()),
         args.getRunTestSeparately(),
+        goBuckConfig.getDelegate().getExternalTestRunner().isPresent(),
         args.getResources(),
         coverageMode);
   }

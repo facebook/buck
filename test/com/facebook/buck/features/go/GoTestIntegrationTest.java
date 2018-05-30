@@ -17,7 +17,9 @@
 package com.facebook.buck.features.go;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.testutil.ProcessResult;
@@ -25,6 +27,8 @@ import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Rule;
@@ -90,6 +94,25 @@ public class GoTestIntegrationTest {
   public void testWithResources() throws IOException {
     ProcessResult result1 = workspace.runBuckCommand("test", "//:test-with-resources");
     result1.assertSuccess();
+
+    // no external runner. No symlink should be created
+    Path input = workspace.resolve("buck-out/gen/test-with-resources#test-main/testdata/input");
+    assertFalse(Files.exists(input));
+  }
+
+  @Test
+  public void testWithResourcesAndExternalRunner() throws IOException {
+    ProcessResult result1 =
+        workspace.runBuckCommand(
+            "build",
+            "--config",
+            "test.external_runner=fake/bin/fake_runner",
+            "//:test-with-resources");
+    result1.assertSuccess();
+
+    assertIsSymbolicLink(
+        workspace.resolve("buck-out/gen/test-with-resources#test-main/testdata/input"),
+        workspace.resolve("testdata/input"));
   }
 
   @Test(expected = HumanReadableException.class)
@@ -154,5 +177,10 @@ public class GoTestIntegrationTest {
     // This test should pass.
     ProcessResult result = workspace.runBuckCommand("test", "//:test-hyphen");
     result.assertSuccess();
+  }
+
+  private static void assertIsSymbolicLink(Path link, Path target) throws IOException {
+    assertTrue(Files.isSymbolicLink(link));
+    assertTrue(Files.isSameFile(target, Files.readSymbolicLink(link)));
   }
 }
