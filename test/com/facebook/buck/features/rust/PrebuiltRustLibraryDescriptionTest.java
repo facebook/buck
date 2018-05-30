@@ -22,8 +22,8 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
-import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.rules.resolver.impl.TestBuildRuleResolver;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.google.common.collect.ImmutableSortedSet;
@@ -55,10 +55,13 @@ public class PrebuiltRustLibraryDescriptionTest {
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(
             depABuilder.build(), depBBuilder.build(), ruleBuilder.build());
-    BuildRuleResolver resolver = new TestBuildRuleResolver(targetGraph);
-    PrebuiltRustLibrary depA = (PrebuiltRustLibrary) resolver.requireRule(depABuilder.getTarget());
-    PrebuiltRustLibrary depB = (PrebuiltRustLibrary) resolver.requireRule(depBBuilder.getTarget());
-    PrebuiltRustLibrary rule = (PrebuiltRustLibrary) resolver.requireRule(ruleBuilder.getTarget());
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
+    PrebuiltRustLibrary depA =
+        (PrebuiltRustLibrary) graphBuilder.requireRule(depABuilder.getTarget());
+    PrebuiltRustLibrary depB =
+        (PrebuiltRustLibrary) graphBuilder.requireRule(depBBuilder.getTarget());
+    PrebuiltRustLibrary rule =
+        (PrebuiltRustLibrary) graphBuilder.requireRule(ruleBuilder.getTarget());
     assertThat(
         rule.getRustLinakbleDeps(RustTestUtils.DEFAULT_PLATFORM),
         Matchers.allOf(Matchers.hasItem(depA), not(Matchers.hasItem(depB))));

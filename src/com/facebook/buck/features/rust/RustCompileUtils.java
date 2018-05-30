@@ -22,8 +22,8 @@ import com.facebook.buck.core.description.BuildRuleParams;
 import com.facebook.buck.core.description.arg.HasDefaultPlatform;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.tool.BinaryWrapperRule;
 import com.facebook.buck.core.sourcepath.ForwardingBuildTargetSourcePath;
@@ -88,7 +88,7 @@ public class RustCompileUtils {
       String crateName,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      BuildRuleResolver resolver,
+      ActionGraphBuilder graphBuilder,
       SourcePathRuleFinder ruleFinder,
       RustPlatform rustPlatform,
       RustBuckConfig rustConfig,
@@ -195,7 +195,7 @@ public class RustCompileUtils {
       ImmutableList<Arg> nativeArgs =
           NativeLinkables.getTransitiveNativeLinkableInput(
                   cxxPlatform,
-                  resolver,
+                  graphBuilder,
                   ruledeps,
                   depType,
                   r ->
@@ -227,13 +227,13 @@ public class RustCompileUtils {
         projectFilesystem,
         params,
         filename,
-        rustPlatform.getRustCompiler().resolve(resolver),
-        rustPlatform.getLinkerProvider().resolve(resolver),
+        rustPlatform.getRustCompiler().resolve(graphBuilder),
+        rustPlatform.getLinkerProvider().resolve(graphBuilder),
         args.build(),
         depArgs.build(),
         linkerArgs.build(),
-        CxxGenruleDescription.fixupSourcePaths(resolver, ruleFinder, cxxPlatform, sources),
-        CxxGenruleDescription.fixupSourcePath(resolver, ruleFinder, cxxPlatform, rootModule),
+        CxxGenruleDescription.fixupSourcePaths(graphBuilder, ruleFinder, cxxPlatform, sources),
+        CxxGenruleDescription.fixupSourcePath(graphBuilder, ruleFinder, cxxPlatform, rootModule),
         crateType.hasOutput(),
         rustConfig.getRemapSrcPaths());
   }
@@ -242,7 +242,7 @@ public class RustCompileUtils {
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      BuildRuleResolver resolver,
+      ActionGraphBuilder graphBuilder,
       SourcePathRuleFinder ruleFinder,
       RustPlatform rustPlatform,
       RustBuckConfig rustConfig,
@@ -258,7 +258,7 @@ public class RustCompileUtils {
       boolean preferStatic,
       Iterable<BuildRule> deps) {
     return (RustCompileRule)
-        resolver.computeIfAbsent(
+        graphBuilder.computeIfAbsent(
             getCompileBuildTarget(buildTarget, rustPlatform.getCxxPlatform(), crateType),
             target ->
                 createBuild(
@@ -266,7 +266,7 @@ public class RustCompileUtils {
                     crateName,
                     projectFilesystem,
                     params,
-                    resolver,
+                    graphBuilder,
                     ruleFinder,
                     rustPlatform,
                     rustConfig,
@@ -337,7 +337,7 @@ public class RustCompileUtils {
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      BuildRuleResolver resolver,
+      ActionGraphBuilder graphBuilder,
       RustBuckConfig rustBuckConfig,
       RustPlatform rustPlatform,
       Optional<String> crateName,
@@ -351,7 +351,7 @@ public class RustCompileUtils {
       ImmutableSet<String> defaultRoots,
       boolean isCheck,
       Iterable<BuildRule> deps) {
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
     ImmutableList.Builder<String> rustcArgs = ImmutableList.builder();
@@ -370,7 +370,7 @@ public class RustCompileUtils {
     Pair<SourcePath, ImmutableSortedSet<SourcePath>> rootModuleAndSources =
         getRootModuleAndSources(
             buildTarget,
-            resolver,
+            graphBuilder,
             pathResolver,
             ruleFinder,
             cxxPlatform,
@@ -400,13 +400,13 @@ public class RustCompileUtils {
       // needed by this binary.
       SymlinkTree sharedLibraries =
           (SymlinkTree)
-              resolver.computeIfAbsent(
+              graphBuilder.computeIfAbsent(
                   createSharedLibrarySymlinkTreeTarget(buildTarget, cxxPlatform.getFlavor()),
                   target ->
                       CxxDescriptionEnhancer.createSharedLibrarySymlinkTree(
                           target,
                           projectFilesystem,
-                          resolver,
+                          graphBuilder,
                           ruleFinder,
                           cxxPlatform,
                           deps,
@@ -428,7 +428,7 @@ public class RustCompileUtils {
               "-rpath",
               String.format(
                   "%s/%s",
-                  cxxPlatform.getLd().resolve(resolver).origin(),
+                  cxxPlatform.getLd().resolve(graphBuilder).origin(),
                   absBinaryDir.relativize(sharedLibraries.getRoot()).toString())));
 
       // Add all the shared libraries and the symlink tree as inputs to the tool that represents
@@ -446,7 +446,7 @@ public class RustCompileUtils {
 
     RustCompileRule buildRule =
         (RustCompileRule)
-            resolver.computeIfAbsent(
+            graphBuilder.computeIfAbsent(
                 binaryTarget,
                 target ->
                     createBuild(
@@ -454,7 +454,7 @@ public class RustCompileUtils {
                         crate,
                         projectFilesystem,
                         params,
-                        resolver,
+                        graphBuilder,
                         ruleFinder,
                         rustPlatform,
                         rustBuckConfig,
@@ -495,7 +495,7 @@ public class RustCompileUtils {
    * Given a list of sources, return the one which is the root based on the defaults and user
    * parameters.
    *
-   * @param resolver Source path resolver for rule
+   * @param resolver Source path graphBuilder for rule
    * @param crate Name of crate
    * @param defaults Default names for this rule (library, binary, etc)
    * @param sources List of sources
@@ -575,7 +575,7 @@ public class RustCompileUtils {
 
   static Pair<SourcePath, ImmutableSortedSet<SourcePath>> getRootModuleAndSources(
       BuildTarget target,
-      BuildRuleResolver resolver,
+      ActionGraphBuilder graphBuilder,
       SourcePathResolver pathResolver,
       SourcePathRuleFinder ruleFinder,
       CxxPlatform cxxPlatform,
@@ -585,7 +585,7 @@ public class RustCompileUtils {
       ImmutableSortedSet<SourcePath> srcs) {
 
     ImmutableSortedSet<SourcePath> fixedSrcs =
-        CxxGenruleDescription.fixupSourcePaths(resolver, ruleFinder, cxxPlatform, srcs);
+        CxxGenruleDescription.fixupSourcePaths(graphBuilder, ruleFinder, cxxPlatform, srcs);
 
     Optional<SourcePath> rootModule =
         crateRoot

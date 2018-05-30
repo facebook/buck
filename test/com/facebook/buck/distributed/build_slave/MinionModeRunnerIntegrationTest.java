@@ -16,11 +16,11 @@
 
 package com.facebook.buck.distributed.build_slave;
 
-import static com.facebook.buck.distributed.testutil.CustomBuildRuleResolverFactory.CHAIN_TOP_TARGET;
-import static com.facebook.buck.distributed.testutil.CustomBuildRuleResolverFactory.LEAF_TARGET;
-import static com.facebook.buck.distributed.testutil.CustomBuildRuleResolverFactory.LEFT_TARGET;
-import static com.facebook.buck.distributed.testutil.CustomBuildRuleResolverFactory.RIGHT_TARGET;
-import static com.facebook.buck.distributed.testutil.CustomBuildRuleResolverFactory.ROOT_TARGET;
+import static com.facebook.buck.distributed.testutil.CustomActiongGraphBuilderFactory.CHAIN_TOP_TARGET;
+import static com.facebook.buck.distributed.testutil.CustomActiongGraphBuilderFactory.LEAF_TARGET;
+import static com.facebook.buck.distributed.testutil.CustomActiongGraphBuilderFactory.LEFT_TARGET;
+import static com.facebook.buck.distributed.testutil.CustomActiongGraphBuilderFactory.RIGHT_TARGET;
+import static com.facebook.buck.distributed.testutil.CustomActiongGraphBuilderFactory.ROOT_TARGET;
 
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.command.BuildExecutor;

@@ -48,7 +48,7 @@ import javax.annotation.Nullable;
  *       Accessing incomplete rules from other threads waits for the rule future to complete.
  * </ul>
  */
-public class MultiThreadedBuildRuleResolver extends AbstractBuildRuleResolver {
+public class MultiThreadedActionGraphBuilder extends AbstractActionGraphBuilder {
   private boolean isValid = true;
   private final ForkJoinPool forkJoinPool;
 
@@ -56,10 +56,10 @@ public class MultiThreadedBuildRuleResolver extends AbstractBuildRuleResolver {
   private final TargetNodeToBuildRuleTransformer buildRuleGenerator;
   private final CellProvider cellProvider;
 
-  private final BuildRuleResolverMetadataCache metadataCache;
+  private final ActionGraphBuilderMetadataCache metadataCache;
   private final ConcurrentHashMap<BuildTarget, Task<BuildRule>> buildRuleIndex;
 
-  public MultiThreadedBuildRuleResolver(
+  public MultiThreadedActionGraphBuilder(
       ForkJoinPool forkJoinPool,
       TargetGraph targetGraph,
       TargetNodeToBuildRuleTransformer buildRuleGenerator,
@@ -72,7 +72,7 @@ public class MultiThreadedBuildRuleResolver extends AbstractBuildRuleResolver {
     int initialCapacity = (int) (targetGraph.getNodes().size() * 5 * 1.1);
     this.buildRuleIndex = new ConcurrentHashMap<>(initialCapacity);
     this.metadataCache =
-        new BuildRuleResolverMetadataCache(this, this.targetGraph, initialCapacity);
+        new ActionGraphBuilderMetadataCache(this, this.targetGraph, initialCapacity);
   }
 
   @Override

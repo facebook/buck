@@ -19,7 +19,7 @@ package com.facebook.buck.features.lua;
 import com.facebook.buck.core.description.BuildRuleParams;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.InternalFlavor;
-import com.facebook.buck.core.rules.BuildRuleResolver;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
@@ -51,7 +51,7 @@ abstract class AbstractLuaScriptStarter implements Starter {
 
   abstract BuildRuleParams getBaseParams();
 
-  abstract BuildRuleResolver getRuleResolver();
+  abstract ActionGraphBuilder getActionGraphBuilder();
 
   abstract SourcePathResolver getPathResolver();
 
@@ -83,7 +83,7 @@ abstract class AbstractLuaScriptStarter implements Starter {
     BuildTarget templateTarget =
         getBaseTarget().withAppendedFlavors(InternalFlavor.of("starter-template"));
     WriteFile templateRule =
-        getRuleResolver()
+        getActionGraphBuilder()
             .addToIndex(
                 new WriteFile(
                     templateTarget,
@@ -93,9 +93,9 @@ abstract class AbstractLuaScriptStarter implements Starter {
                         getProjectFilesystem(), templateTarget, "%s/starter.lua.in"),
                     /* executable */ false));
 
-    Tool lua = getLuaPlatform().getLua().resolve(getRuleResolver());
+    Tool lua = getLuaPlatform().getLua().resolve(getActionGraphBuilder());
     WriteStringTemplateRule writeStringTemplateRule =
-        getRuleResolver()
+        getActionGraphBuilder()
             .addToIndex(
                 WriteStringTemplateRule.from(
                     getProjectFilesystem(),

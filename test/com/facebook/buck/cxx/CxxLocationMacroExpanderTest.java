@@ -21,9 +21,9 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
-import com.facebook.buck.core.rules.BuildRuleResolver;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.rules.resolver.impl.TestBuildRuleResolver;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
@@ -41,10 +41,10 @@ public class CxxLocationMacroExpanderTest {
         new CxxGenruleBuilder(BuildTargetFactory.newInstance("//:rule")).setOut("out.txt");
     TargetNode<?, ?> node = builder.build();
     TargetGraph targetGraph = TargetGraphFactory.newInstance(node);
-    BuildRuleResolver resolver = new TestBuildRuleResolver(targetGraph);
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
-    CxxGenrule cxxGenrule = (CxxGenrule) resolver.requireRule(node.getBuildTarget());
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
+    CxxGenrule cxxGenrule = (CxxGenrule) graphBuilder.requireRule(node.getBuildTarget());
     CxxLocationMacroExpander expander =
         new CxxLocationMacroExpander(CxxPlatformUtils.DEFAULT_PLATFORM);
     String expanded =
@@ -52,14 +52,15 @@ public class CxxLocationMacroExpanderTest {
             expander.expandFrom(
                 node.getBuildTarget(),
                 node.getCellNames(),
-                resolver,
+                graphBuilder,
                 LocationMacro.of(node.getBuildTarget())),
             pathResolver);
     assertThat(
         expanded,
         Matchers.equalTo(
             pathResolver
-                .getAbsolutePath(cxxGenrule.getGenrule(CxxPlatformUtils.DEFAULT_PLATFORM, resolver))
+                .getAbsolutePath(
+                    cxxGenrule.getGenrule(CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder))
                 .toString()));
   }
 }

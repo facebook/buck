@@ -36,11 +36,11 @@ import com.facebook.buck.core.build.event.BuildEvent;
 import com.facebook.buck.core.build.event.BuildEvent.DistBuildFinished;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.model.actiongraph.ActionGraph;
-import com.facebook.buck.core.model.actiongraph.ActionGraphAndResolver;
+import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
 import com.facebook.buck.core.model.graph.ActionAndTargetGraphs;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
-import com.facebook.buck.core.rules.BuildRuleResolver;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.distributed.BuildSlaveEventWrapper;
 import com.facebook.buck.distributed.ClientStatsTracker;
 import com.facebook.buck.distributed.DistBuildCellIndexer;
@@ -171,9 +171,9 @@ public class DistBuildControllerTest {
 
     ActionAndTargetGraphs graphs =
         ActionAndTargetGraphs.builder()
-            .setActionGraphAndResolver(
-                ActionGraphAndResolver.of(
-                    createNiceMock(ActionGraph.class), createNiceMock(BuildRuleResolver.class)))
+            .setActionGraphAndBuilder(
+                ActionGraphAndBuilder.of(
+                    createNiceMock(ActionGraph.class), createNiceMock(ActionGraphBuilder.class)))
             .setUnversionedTargetGraph(
                 TargetGraphAndBuildTargets.of(createNiceMock(TargetGraph.class), ImmutableSet.of()))
             .build();

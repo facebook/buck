@@ -85,7 +85,7 @@ public class PrebuiltRustLibraryDescription
 
       @Override
       public Iterable<BuildRule> getRustLinakbleDeps(RustPlatform rustPlatform) {
-        return allDeps.get(context.getBuildRuleResolver(), rustPlatform.getCxxPlatform());
+        return allDeps.get(context.getActionGraphBuilder(), rustPlatform.getCxxPlatform());
       }
     };
   }

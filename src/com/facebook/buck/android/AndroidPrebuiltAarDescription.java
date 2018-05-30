@@ -26,8 +26,8 @@ import com.facebook.buck.core.model.Flavored;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -97,8 +97,8 @@ public class AndroidPrebuiltAarDescription
       BuildTarget buildTarget,
       BuildRuleParams params,
       AndroidPrebuiltAarDescriptionArg args) {
-    BuildRuleResolver buildRuleResolver = context.getBuildRuleResolver();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
+    ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
 
     ImmutableSet<Flavor> flavors = buildTarget.getFlavors();
@@ -112,8 +112,7 @@ public class AndroidPrebuiltAarDescription
       return new UnzipAar(buildTarget, projectFilesystem, unzipAarParams, args.getAar());
     }
 
-    BuildRule unzipAarRule =
-        buildRuleResolver.requireRule(buildTarget.withFlavors(AAR_UNZIP_FLAVOR));
+    BuildRule unzipAarRule = graphBuilder.requireRule(buildTarget.withFlavors(AAR_UNZIP_FLAVOR));
     Preconditions.checkState(
         unzipAarRule instanceof UnzipAar,
         "aar_unzip flavor created rule of unexpected type %s for target %s",
@@ -135,10 +134,10 @@ public class AndroidPrebuiltAarDescription
 
     Iterable<PrebuiltJar> javaDeps =
         Iterables.concat(
-            Iterables.filter(buildRuleResolver.getAllRules(args.getDeps()), PrebuiltJar.class),
+            Iterables.filter(graphBuilder.getAllRules(args.getDeps()), PrebuiltJar.class),
             Iterables.transform(
                 Iterables.filter(
-                    buildRuleResolver.getAllRules(args.getDeps()), AndroidPrebuiltAar.class),
+                    graphBuilder.getAllRules(args.getDeps()), AndroidPrebuiltAar.class),
                 AndroidPrebuiltAar::getPrebuiltJar));
 
     if (flavors.contains(AAR_PREBUILT_JAR_FLAVOR)) {
@@ -155,7 +154,7 @@ public class AndroidPrebuiltAarDescription
           buildTarget,
           projectFilesystem,
           /* params */ buildRuleParams,
-          /* resolver */ pathResolver,
+          /* graphBuilder */ pathResolver,
           /* binaryJar */ ExplicitBuildTargetSourcePath.of(
               unzipAar.getBuildTarget(), unzipAar.getPathToClassesJar()),
           /* sourceJar */ Optional.empty(),
@@ -181,7 +180,7 @@ public class AndroidPrebuiltAarDescription
     }
 
     BuildRule prebuiltJarRule =
-        buildRuleResolver.requireRule(
+        graphBuilder.requireRule(
             ImmutableBuildTarget.of(
                 buildTarget.checkUnflavored(), ImmutableSet.of(AAR_PREBUILT_JAR_FLAVOR)));
     Preconditions.checkState(
@@ -205,7 +204,7 @@ public class AndroidPrebuiltAarDescription
         buildTarget,
         projectFilesystem,
         androidLibraryParams,
-        /* resolver */ pathResolver,
+        /* graphBuilder */ pathResolver,
         ruleFinder,
         /* proguardConfig */ ExplicitBuildTargetSourcePath.of(
             unzipAar.getBuildTarget(), unzipAar.getProguardConfig()),
@@ -223,7 +222,7 @@ public class AndroidPrebuiltAarDescription
                 .getJavacOptions(),
             new AndroidClasspathProvider(toolchainProvider)),
         /* exportedDeps */ javaDeps,
-        JavaLibraryRules.getAbiClasspath(buildRuleResolver, androidLibraryParams.getBuildDeps()),
+        JavaLibraryRules.getAbiClasspath(graphBuilder, androidLibraryParams.getBuildDeps()),
         args.getRequiredForSourceOnlyAbi());
   }
 

@@ -18,6 +18,7 @@ package com.facebook.buck.features.d;
 
 import com.facebook.buck.core.description.BuildRuleParams;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.cxx.Archive;
@@ -35,17 +36,17 @@ import com.google.common.collect.ImmutableSet;
 
 public class DLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps implements NativeLinkable {
 
-  private final BuildRuleResolver buildRuleResolver;
+  private final ActionGraphBuilder graphBuilder;
   private final DIncludes includes;
 
   public DLibrary(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      BuildRuleResolver buildRuleResolver,
+      ActionGraphBuilder graphBuilder,
       DIncludes includes) {
     super(buildTarget, projectFilesystem, params);
-    this.buildRuleResolver = buildRuleResolver;
+    this.graphBuilder = graphBuilder;
     this.includes = includes;
   }
 
@@ -65,10 +66,10 @@ public class DLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps implements N
       Linker.LinkableDepType type,
       boolean forceLinkWhole,
       ImmutableSet<LanguageExtensions> languageExtensions,
-      BuildRuleResolver ruleResolver) {
+      ActionGraphBuilder graphBuilder) {
     Archive archive =
         (Archive)
-            buildRuleResolver.requireRule(
+            this.graphBuilder.requireRule(
                 getBuildTarget()
                     .withAppendedFlavors(
                         cxxPlatform.getFlavor(), CxxDescriptionEnhancer.STATIC_FLAVOR));
@@ -78,18 +79,18 @@ public class DLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps implements N
 
   @Override
   public NativeLinkable.Linkage getPreferredLinkage(
-      CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
+      CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
     return Linkage.STATIC;
   }
 
   @Override
   public ImmutableMap<String, SourcePath> getSharedLibraries(
-      CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
+      CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
     return ImmutableMap.of();
   }
 
   public DIncludes getIncludes() {
-    buildRuleResolver.requireRule(
+    graphBuilder.requireRule(
         getBuildTarget().withAppendedFlavors(DDescriptionUtils.SOURCE_LINK_TREE));
     return includes;
   }

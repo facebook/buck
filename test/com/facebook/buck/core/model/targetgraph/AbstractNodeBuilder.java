@@ -26,6 +26,7 @@ import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.actiongraph.ActionGraph;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -125,41 +126,43 @@ public abstract class AbstractNodeBuilder<
     return builder;
   }
 
-  public final TBuildRule build(BuildRuleResolver resolver) {
-    return build(resolver, filesystem, TargetGraph.EMPTY);
+  public final TBuildRule build(ActionGraphBuilder graphBuilder) {
+    return build(graphBuilder, filesystem, TargetGraph.EMPTY);
   }
 
-  public final TBuildRule build(BuildRuleResolver resolver, TargetGraph targetGraph) {
-    return build(resolver, filesystem, targetGraph);
+  public final TBuildRule build(ActionGraphBuilder graphBuilder, TargetGraph targetGraph) {
+    return build(graphBuilder, filesystem, targetGraph);
   }
 
-  public final TBuildRule build(BuildRuleResolver resolver, ProjectFilesystem filesystem) {
-    return build(resolver, filesystem, TargetGraph.EMPTY);
+  public final TBuildRule build(ActionGraphBuilder graphBuilder, ProjectFilesystem filesystem) {
+    return build(graphBuilder, filesystem, TargetGraph.EMPTY);
   }
 
   public final TBuildRule build(
-      BuildRuleResolver resolver, ProjectFilesystem filesystem, TargetGraph targetGraph) {
+      ActionGraphBuilder graphBuilder, ProjectFilesystem filesystem, TargetGraph targetGraph) {
 
     // The BuildRule determines its deps by extracting them from the rule parameters.
-    BuildRuleParams params = createBuildRuleParams(resolver);
+    BuildRuleParams params = createBuildRuleParams(graphBuilder);
 
     TArg builtArg = getPopulatedArg();
 
     QueryCache cache = new QueryCache();
-    builtArg = QueryUtils.withDepsQuery(builtArg, target, cache, resolver, cellRoots, targetGraph);
     builtArg =
-        QueryUtils.withProvidedDepsQuery(builtArg, target, cache, resolver, cellRoots, targetGraph);
+        QueryUtils.withDepsQuery(builtArg, target, cache, graphBuilder, cellRoots, targetGraph);
+    builtArg =
+        QueryUtils.withProvidedDepsQuery(
+            builtArg, target, cache, graphBuilder, cellRoots, targetGraph);
 
     @SuppressWarnings("unchecked")
     TBuildRule rule =
         (TBuildRule)
             description.createBuildRule(
                 ImmutableBuildRuleCreationContextWithTargetGraph.of(
-                    targetGraph, resolver, filesystem, cellRoots, toolchainProvider),
+                    targetGraph, graphBuilder, filesystem, cellRoots, toolchainProvider),
                 target,
                 params,
                 builtArg);
-    resolver.addToIndex(rule);
+    graphBuilder.addToIndex(rule);
     return rule;
   }
 

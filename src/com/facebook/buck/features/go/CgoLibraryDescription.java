@@ -24,8 +24,8 @@ import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.Flavored;
 import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
@@ -89,14 +89,14 @@ public class CgoLibraryDescription
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
 
     if (platform.isPresent()) {
-      BuildRuleResolver resolver = context.getBuildRuleResolver();
-      SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+      ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
+      SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
       SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
       return CGoLibrary.create(
           buildTarget,
           projectFilesystem,
-          resolver,
+          graphBuilder,
           pathResolver,
           context.getCellPathResolver(),
           cxxBuckConfig,

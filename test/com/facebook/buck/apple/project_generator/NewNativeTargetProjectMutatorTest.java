@@ -52,7 +52,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.rules.resolver.impl.TestBuildRuleResolver;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
@@ -86,9 +86,9 @@ public class NewNativeTargetProjectMutatorTest {
   public void setUp() {
     assumeTrue(Platform.detect() == Platform.MACOS || Platform.detect() == Platform.LINUX);
     generatedProject = new PBXProject("TestProject");
-    buildRuleResolver = new TestBuildRuleResolver();
+    buildRuleResolver = new TestActionGraphBuilder();
     sourcePathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(new TestBuildRuleResolver()));
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(new TestActionGraphBuilder()));
     pathRelativizer =
         new PathRelativizer(Paths.get("_output"), sourcePathResolver::getRelativePath);
   }
@@ -367,12 +367,12 @@ public class NewNativeTargetProjectMutatorTest {
         JsTestScenario.builder().bundle(depBuildTarget, ImmutableSortedSet.of()).build();
 
     NewNativeTargetProjectMutator mutator =
-        mutator(DefaultSourcePathResolver.from(new SourcePathRuleFinder(scenario.resolver)));
+        mutator(DefaultSourcePathResolver.from(new SourcePathRuleFinder(scenario.graphBuilder)));
 
     TargetNode<?, ?> jsBundleNode = scenario.targetGraph.get(depBuildTarget);
 
     mutator.setPostBuildRunScriptPhasesFromTargetNodes(
-        ImmutableList.of(jsBundleNode), x -> scenario.resolver);
+        ImmutableList.of(jsBundleNode), x -> scenario.graphBuilder);
     NewNativeTargetProjectMutator.Result result =
         mutator.buildTargetAndAddToProject(generatedProject, true);
 
@@ -401,12 +401,12 @@ public class NewNativeTargetProjectMutatorTest {
             .build();
 
     NewNativeTargetProjectMutator mutator =
-        mutator(DefaultSourcePathResolver.from(new SourcePathRuleFinder(scenario.resolver)));
+        mutator(DefaultSourcePathResolver.from(new SourcePathRuleFinder(scenario.graphBuilder)));
 
     TargetNode<?, ?> jsBundleGenruleNode = scenario.targetGraph.get(depBuildTarget);
 
     mutator.setPostBuildRunScriptPhasesFromTargetNodes(
-        ImmutableList.of(jsBundleGenruleNode), x -> scenario.resolver);
+        ImmutableList.of(jsBundleGenruleNode), x -> scenario.graphBuilder);
     NewNativeTargetProjectMutator.Result result =
         mutator.buildTargetAndAddToProject(generatedProject, true);
 

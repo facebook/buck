@@ -19,8 +19,8 @@ package com.facebook.buck.rules.macros;
 import com.facebook.buck.core.cell.resolver.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.jvm.core.HasClasspathEntries;
@@ -74,18 +74,18 @@ public class ClasspathAbiMacroExpander extends BuildTargetMacroExpander<Classpat
    * Get the class abi jar if present for the rule otherwise return the rule's output
    *
    * @param rule The rule whose jar path needs to be returned
-   * @param ruleResolver BuildRuleResolver
+   * @param graphBuilder ActionGraphBuilder
    * @return class abi jar or output jar if not found
    */
   @Nullable
-  private SourcePath getJarPath(BuildRule rule, BuildRuleResolver ruleResolver) {
+  private SourcePath getJarPath(BuildRule rule, ActionGraphBuilder graphBuilder) {
     SourcePath jarPath = null;
 
     if (rule instanceof HasJavaAbi) {
       HasJavaAbi javaAbiRule = (HasJavaAbi) rule;
       Optional<BuildTarget> optionalBuildTarget = javaAbiRule.getAbiJar();
       if (optionalBuildTarget.isPresent()) {
-        jarPath = ruleResolver.requireRule(optionalBuildTarget.get()).getSourcePathToOutput();
+        jarPath = graphBuilder.requireRule(optionalBuildTarget.get()).getSourcePathToOutput();
       }
     }
 
@@ -107,22 +107,22 @@ public class ClasspathAbiMacroExpander extends BuildTargetMacroExpander<Classpat
   public Arg expandFrom(
       BuildTarget target,
       CellPathResolver cellNames,
-      BuildRuleResolver resolver,
+      ActionGraphBuilder graphBuilder,
       ClasspathAbiMacro input)
       throws MacroException {
 
-    BuildRule inputRule = resolve(resolver, input);
-    return expand(resolver, inputRule);
+    BuildRule inputRule = resolve(graphBuilder, input);
+    return expand(graphBuilder, inputRule);
   }
 
-  protected Arg expand(BuildRuleResolver ruleResolver, BuildRule inputRule) throws MacroException {
+  protected Arg expand(ActionGraphBuilder graphBuilder, BuildRule inputRule) throws MacroException {
 
     ImmutableList<SourcePath> jarPaths =
         getHasClasspathEntries(inputRule)
             .getTransitiveClasspathDeps()
             .stream()
             .filter(d -> d.getSourcePathToOutput() != null)
-            .map(d -> getJarPath(d, ruleResolver))
+            .map(d -> getJarPath(d, graphBuilder))
             .filter(Objects::nonNull)
             .sorted()
             .collect(ImmutableList.toImmutableList());

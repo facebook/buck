@@ -29,7 +29,7 @@ import com.facebook.buck.core.build.engine.impl.CachingBuildEngine;
 import com.facebook.buck.core.build.engine.impl.MetadataChecker;
 import com.facebook.buck.core.build.event.BuildEvent;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.actiongraph.ActionGraphAndResolver;
+import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -322,7 +322,7 @@ public class TestCommand extends BuildCommand {
 
     try (CommandThreadManager testPool =
         new CommandThreadManager("Test-Run", getTestConcurrencyLimit(params))) {
-      SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(build.getRuleResolver());
+      SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(build.getGraphBuilder());
       int exitCodeInt =
           TestRunning.runTests(
               params,
@@ -548,7 +548,7 @@ public class TestCommand extends BuildCommand {
         return ExitCode.PARSE_ERROR;
       }
 
-      ActionGraphAndResolver actionGraphAndResolver =
+      ActionGraphAndBuilder actionGraphAndBuilder =
           params
               .getActionGraphCache()
               .getActionGraph(
@@ -560,7 +560,7 @@ public class TestCommand extends BuildCommand {
                   params.getPoolSupplier());
       // Look up all of the test rules in the action graph.
       Iterable<TestRule> testRules =
-          Iterables.filter(actionGraphAndResolver.getActionGraph().getNodes(), TestRule.class);
+          Iterables.filter(actionGraphAndBuilder.getActionGraph().getNodes(), TestRule.class);
 
       // Unless the user requests that we build filtered tests, filter them out here, before
       // the build.
@@ -577,17 +577,17 @@ public class TestCommand extends BuildCommand {
           getDefaultRuleKeyCacheScope(
               params,
               new RuleKeyCacheRecycler.SettingsAffectingCache(
-                  params.getBuckConfig().getKeySeed(), actionGraphAndResolver.getActionGraph()))) {
+                  params.getBuckConfig().getKeySeed(), actionGraphAndBuilder.getActionGraph()))) {
         LocalCachingBuildEngineDelegate localCachingBuildEngineDelegate =
             new LocalCachingBuildEngineDelegate(params.getFileHashCache());
         SourcePathRuleFinder sourcePathRuleFinder =
-            new SourcePathRuleFinder(actionGraphAndResolver.getResolver());
+            new SourcePathRuleFinder(actionGraphAndBuilder.getActionGraphBuilder());
         try (CachingBuildEngine cachingBuildEngine =
                 new CachingBuildEngine(
                     localCachingBuildEngineDelegate,
                     ModernBuildRuleBuilderFactory.getBuildStrategy(
                         params.getBuckConfig().getView(ModernBuildRuleConfig.class),
-                        actionGraphAndResolver.getResolver(),
+                        actionGraphAndBuilder.getActionGraphBuilder(),
                         params.getCell(),
                         params.getBuckConfig().getCellPathResolver(),
                         localCachingBuildEngineDelegate.getFileHashCache(),
@@ -600,7 +600,7 @@ public class TestCommand extends BuildCommand {
                     cachingBuildEngineBuckConfig.getBuildDepFiles(),
                     cachingBuildEngineBuckConfig.getBuildMaxDepFileCacheEntries(),
                     cachingBuildEngineBuckConfig.getBuildArtifactCacheSizeLimit(),
-                    actionGraphAndResolver.getResolver(),
+                    actionGraphAndBuilder.getActionGraphBuilder(),
                     sourcePathRuleFinder,
                     DefaultSourcePathResolver.from(sourcePathRuleFinder),
                     params.getBuildInfoStoreManager(),
@@ -609,13 +609,13 @@ public class TestCommand extends BuildCommand {
                     RuleKeyFactories.of(
                         params.getRuleKeyConfiguration(),
                         localCachingBuildEngineDelegate.getFileHashCache(),
-                        actionGraphAndResolver.getResolver(),
+                        actionGraphAndBuilder.getActionGraphBuilder(),
                         params.getBuckConfig().getBuildInputRuleKeyFileSizeLimit(),
                         ruleKeyCacheScope.getCache()),
                     new NoOpRemoteBuildRuleCompletionWaiter());
             Build build =
                 new Build(
-                    actionGraphAndResolver.getResolver(),
+                    actionGraphAndBuilder.getActionGraphBuilder(),
                     params.getCell(),
                     cachingBuildEngine,
                     params.getArtifactCacheFactory().newInstance(),
@@ -655,7 +655,7 @@ public class TestCommand extends BuildCommand {
               BuildContext.builder()
                   .setSourcePathResolver(
                       DefaultSourcePathResolver.from(
-                          new SourcePathRuleFinder(actionGraphAndResolver.getResolver())))
+                          new SourcePathRuleFinder(actionGraphAndBuilder.getActionGraphBuilder())))
                   .setBuildCellRootPath(params.getCell().getRoot())
                   .setJavaPackageFinder(params.getJavaPackageFinder())
                   .setEventBus(params.getBuckEventBus())

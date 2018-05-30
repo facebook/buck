@@ -33,6 +33,7 @@ import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.transformer.TargetNodeToBuildRuleTransformer;
@@ -67,15 +68,15 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 @RunWith(Parameterized.class)
-public class BuildRuleResolverTest {
+public class ActionGraphBuilderTest {
 
   @Rule public ExpectedException expectedException = ExpectedException.none();
 
   @FunctionalInterface
-  private interface BuildRuleResolverFactory {
-    BuildRuleResolver create(TargetGraph graph, TargetNodeToBuildRuleTransformer transformer);
+  private interface ActionGraphBuilderFactory {
+    ActionGraphBuilder create(TargetGraph graph, TargetNodeToBuildRuleTransformer transformer);
 
-    default BuildRuleResolver create(TargetGraph graph) {
+    default ActionGraphBuilder create(TargetGraph graph) {
       return create(graph, new DefaultTargetNodeToBuildRuleTransformer());
     }
   }
@@ -87,18 +88,18 @@ public class BuildRuleResolverTest {
     return Arrays.asList(
         new Object[][] {
           {
-            SingleThreadedBuildRuleResolver.class,
-            (BuildRuleResolverFactory)
+            SingleThreadedActionGraphBuilder.class,
+            (ActionGraphBuilderFactory)
                 (graph, transformer) ->
-                    new SingleThreadedBuildRuleResolver(
+                    new SingleThreadedActionGraphBuilder(
                         graph, transformer, new TestCellBuilder().build().getCellProvider()),
             MoreExecutors.newDirectExecutorService(),
           },
           {
-            MultiThreadedBuildRuleResolver.class,
-            (BuildRuleResolverFactory)
+            MultiThreadedActionGraphBuilder.class,
+            (ActionGraphBuilderFactory)
                 (graph, transformer) ->
-                    new MultiThreadedBuildRuleResolver(
+                    new MultiThreadedActionGraphBuilder(
                         pool, graph, transformer, new TestCellBuilder().build().getCellProvider()),
             pool,
           },
@@ -109,7 +110,7 @@ public class BuildRuleResolverTest {
   public Class<? extends BuildRuleResolver> classUnderTest;
 
   @Parameterized.Parameter(1)
-  public BuildRuleResolverFactory buildRuleResolverFactory;
+  public ActionGraphBuilderFactory actionGraphBuilderFactory;
 
   @Parameterized.Parameter(2)
   public ExecutorService executorService;
@@ -121,14 +122,14 @@ public class BuildRuleResolverTest {
 
   @Test
   public void testBuildAndAddToIndexRejectsDuplicateBuildTarget() {
-    BuildRuleResolver buildRuleResolver = buildRuleResolverFactory.create(TargetGraph.EMPTY);
+    ActionGraphBuilder graphBuilder = actionGraphBuilderFactory.create(TargetGraph.EMPTY);
 
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
-    buildRuleResolver.addToIndex(new FakeBuildRule(target));
+    graphBuilder.addToIndex(new FakeBuildRule(target));
 
     // A BuildRuleResolver should allow only one entry for a BuildTarget.
     try {
-      buildRuleResolver.addToIndex(new FakeBuildRule(target));
+      graphBuilder.addToIndex(new FakeBuildRule(target));
       fail("Should throw IllegalStateException.");
     } catch (IllegalStateException e) {
       assertEquals(
@@ -141,9 +142,9 @@ public class BuildRuleResolverTest {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     TargetNode<?, ?> library = JavaLibraryBuilder.createBuilder(target).build();
     TargetGraph targetGraph = TargetGraphFactory.newInstance(library);
-    BuildRuleResolver resolver = buildRuleResolverFactory.create(targetGraph);
+    ActionGraphBuilder graphBuilder = actionGraphBuilderFactory.create(targetGraph);
 
-    BuildRule rule = resolver.requireRule(target);
+    BuildRule rule = graphBuilder.requireRule(target);
     assertThat(rule, is(notNullValue()));
     assertThat(rule.getBuildTarget(), is(equalTo(target)));
   }
@@ -154,12 +155,12 @@ public class BuildRuleResolverTest {
     JavaLibraryBuilder builder = JavaLibraryBuilder.createBuilder(target);
     TargetNode<?, ?> library = builder.build();
     TargetGraph targetGraph = TargetGraphFactory.newInstance(library);
-    BuildRuleResolver resolver = buildRuleResolverFactory.create(targetGraph);
-    BuildRule existing = resolver.requireRule(target);
+    ActionGraphBuilder graphBuilder = actionGraphBuilderFactory.create(targetGraph);
+    BuildRule existing = graphBuilder.requireRule(target);
 
-    assertThat(resolver.getRuleOptional(target).isPresent(), is(true));
+    assertThat(graphBuilder.getRuleOptional(target).isPresent(), is(true));
 
-    BuildRule rule = resolver.requireRule(target);
+    BuildRule rule = graphBuilder.requireRule(target);
     assertThat(rule, is(notNullValue()));
     assertThat(rule.getBuildTarget(), is(equalTo(target)));
     assertThat(rule, is(equalTo(existing)));
@@ -167,7 +168,7 @@ public class BuildRuleResolverTest {
 
   @Test
   public void getRuleWithTypeMissingRule() {
-    BuildRuleResolver resolver = buildRuleResolverFactory.create(TargetGraph.EMPTY);
+    BuildRuleResolver resolver = actionGraphBuilderFactory.create(TargetGraph.EMPTY);
     expectedException.expect(HumanReadableException.class);
     expectedException.expectMessage(Matchers.containsString("could not be resolved"));
     resolver.getRuleWithType(BuildTargetFactory.newInstance("//:non-existent"), BuildRule.class);
@@ -179,16 +180,16 @@ public class BuildRuleResolverTest {
     JavaLibraryBuilder builder = JavaLibraryBuilder.createBuilder(target);
     TargetNode<?, ?> library = builder.build();
     TargetGraph targetGraph = TargetGraphFactory.newInstance(library);
-    BuildRuleResolver resolver = buildRuleResolverFactory.create(targetGraph);
-    resolver.requireRule(target);
+    ActionGraphBuilder graphBuilder = actionGraphBuilderFactory.create(targetGraph);
+    graphBuilder.requireRule(target);
     expectedException.expect(HumanReadableException.class);
     expectedException.expectMessage(Matchers.containsString("not of expected type"));
-    resolver.getRuleWithType(BuildTargetFactory.newInstance("//foo:bar"), JavaBinary.class);
+    graphBuilder.getRuleWithType(BuildTargetFactory.newInstance("//foo:bar"), JavaBinary.class);
   }
 
   @Test
   public void computeIfAbsentComputesOnlyIfAbsent() throws Exception {
-    BuildRuleResolver resolver = buildRuleResolverFactory.create(TargetGraph.EMPTY);
+    ActionGraphBuilder graphBuilder = actionGraphBuilderFactory.create(TargetGraph.EMPTY);
     BuildTarget target = BuildTargetFactory.newInstance("//:target");
     AtomicInteger supplierInvoked = new AtomicInteger(0);
     BuildRule buildRule =
@@ -198,7 +199,7 @@ public class BuildRuleResolverTest {
         executorService
             .submit(
                 () ->
-                    resolver.computeIfAbsent(
+                    graphBuilder.computeIfAbsent(
                         target,
                         passedTarget -> {
                           assertEquals(passedTarget, target);
@@ -208,12 +209,12 @@ public class BuildRuleResolverTest {
             .get();
     assertEquals("supplier was called once", supplierInvoked.get(), 1);
     assertSame("returned the same build rule that was generated", returnedBuildRule, buildRule);
-    assertSame("the rule can be retrieved again", resolver.getRule(target), buildRule);
+    assertSame("the rule can be retrieved again", graphBuilder.getRule(target), buildRule);
     returnedBuildRule =
         executorService
             .submit(
                 () ->
-                    resolver.computeIfAbsent(
+                    graphBuilder.computeIfAbsent(
                         target,
                         passedTarget -> {
                           assertEquals(passedTarget, target);
@@ -230,26 +231,26 @@ public class BuildRuleResolverTest {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     TargetNode<?, ?> library = JavaLibraryBuilder.createBuilder(target).build();
     TargetGraph targetGraph = TargetGraphFactory.newInstance(library);
-    BuildRuleResolver resolver =
-        buildRuleResolverFactory.create(
+    ActionGraphBuilder graphBuilder =
+        actionGraphBuilderFactory.create(
             targetGraph,
             new TargetNodeToBuildRuleTransformer() {
               @Override
               public <T, U extends DescriptionWithTargetGraph<T>> BuildRule transform(
                   CellProvider cellProvider,
                   TargetGraph targetGraph,
-                  BuildRuleResolver ruleResolver,
+                  ActionGraphBuilder graphBuilder,
                   TargetNode<T, U> targetNode) {
-                Assert.assertFalse(ruleResolver.getRuleOptional(target).isPresent());
-                return ruleResolver.computeIfAbsent(target, FakeBuildRule::new);
+                Assert.assertFalse(graphBuilder.getRuleOptional(target).isPresent());
+                return graphBuilder.computeIfAbsent(target, FakeBuildRule::new);
               }
             });
-    resolver.requireRule(target);
+    graphBuilder.requireRule(target);
   }
 
   @Test
   public void accessingTargetBeingBuildInDifferentThreadsWaitsForItsCompletion() throws Exception {
-    Assume.assumeTrue(classUnderTest == MultiThreadedBuildRuleResolver.class);
+    Assume.assumeTrue(classUnderTest == MultiThreadedActionGraphBuilder.class);
 
     BuildTarget target1 = BuildTargetFactory.newInstance("//foo:bar1");
     TargetNode<?, ?> library1 = JavaLibraryBuilder.createBuilder(target1).build();
@@ -263,15 +264,15 @@ public class BuildRuleResolverTest {
 
     ConcurrentHashMap<BuildTarget, Boolean> transformCalls = new ConcurrentHashMap<>();
 
-    BuildRuleResolver resolver =
-        buildRuleResolverFactory.create(
+    ActionGraphBuilder graphBuilder =
+        actionGraphBuilderFactory.create(
             targetGraph,
             new TargetNodeToBuildRuleTransformer() {
               @Override
               public <T, U extends DescriptionWithTargetGraph<T>> BuildRule transform(
                   CellProvider cellProvider,
                   TargetGraph targetGraph,
-                  BuildRuleResolver ruleResolver,
+                  ActionGraphBuilder graphBuilder,
                   TargetNode<T, U> targetNode) {
                 Boolean existing = transformCalls.put(targetNode.getBuildTarget(), true);
                 assertEquals("Should only be called once for each build target", null, existing);
@@ -283,7 +284,7 @@ public class BuildRuleResolverTest {
                     jobsStarted.countDown();
                     // There's a race condition here where target1 is allowed to proceed before we
                     // start waiting. This will result in a false-negative if this test would fail.
-                    ruleResolver.requireRule(target1);
+                    graphBuilder.requireRule(target1);
                   } else {
                     throw new AssertionError("only 2 targets should be specified in this test.");
                   }
@@ -294,8 +295,8 @@ public class BuildRuleResolverTest {
               }
             });
 
-    Future<BuildRule> first = executorService.submit(() -> resolver.requireRule(target1));
-    Future<BuildRule> second = executorService.submit(() -> resolver.requireRule(target2));
+    Future<BuildRule> first = executorService.submit(() -> graphBuilder.requireRule(target1));
+    Future<BuildRule> second = executorService.submit(() -> graphBuilder.requireRule(target2));
     jobsStarted.await(); // wait for both jobs to start.
     Thread.sleep(10); // Insert a small delay to reduce the chances of race condition.
     target1Finish.countDown();
@@ -307,7 +308,7 @@ public class BuildRuleResolverTest {
 
   @Test(timeout = 5000)
   public void deadLockOnDependencyTest() throws ExecutionException, InterruptedException {
-    Assume.assumeTrue(classUnderTest == MultiThreadedBuildRuleResolver.class);
+    Assume.assumeTrue(classUnderTest == MultiThreadedActionGraphBuilder.class);
 
     /**
      * create a graph of the following
@@ -351,8 +352,8 @@ public class BuildRuleResolverTest {
     // run this with ThreadLimited FJP like our actual parallel implementation
     ForkJoinPool forkJoinPool = MostExecutors.forkJoinPoolWithThreadLimit(4, 0);
     try {
-      BuildRuleResolver resolver =
-          new MultiThreadedBuildRuleResolver(
+      ActionGraphBuilder graphBuilder =
+          new MultiThreadedActionGraphBuilder(
               forkJoinPool,
               targetGraph,
               new TargetNodeToBuildRuleTransformer() {
@@ -360,7 +361,7 @@ public class BuildRuleResolverTest {
                 public <T, U extends DescriptionWithTargetGraph<T>> BuildRule transform(
                     CellProvider cellProvider,
                     TargetGraph targetGraph,
-                    BuildRuleResolver ruleResolver,
+                    ActionGraphBuilder graphBuilder,
                     TargetNode<T, U> targetNode) {
 
                   jobsStarted.countDown();
@@ -376,7 +377,7 @@ public class BuildRuleResolverTest {
                       assumeNoException(e);
                     }
 
-                    targetNode.getExtraDeps().stream().forEach(ruleResolver::requireRule);
+                    targetNode.getExtraDeps().stream().forEach(graphBuilder::requireRule);
                   }
                   return new FakeBuildRule(targetNode.getBuildTarget());
                 }
@@ -386,10 +387,12 @@ public class BuildRuleResolverTest {
       // mimic our actual parallel action graph construction, in which we call requireRule with
       // threads
       // outside the ForkJoinPool, which will then fork tasks to the ForkJoinPool.
-      CompletableFuture first = CompletableFuture.runAsync(() -> resolver.requireRule(target0));
-      CompletableFuture second = CompletableFuture.runAsync(() -> resolver.requireRule(target1));
-      CompletableFuture third = CompletableFuture.runAsync(() -> resolver.requireRule(target2));
-      CompletableFuture fourth = CompletableFuture.runAsync(() -> resolver.requireRule(target3));
+      CompletableFuture first = CompletableFuture.runAsync(() -> graphBuilder.requireRule(target0));
+      CompletableFuture second =
+          CompletableFuture.runAsync(() -> graphBuilder.requireRule(target1));
+      CompletableFuture third = CompletableFuture.runAsync(() -> graphBuilder.requireRule(target2));
+      CompletableFuture fourth =
+          CompletableFuture.runAsync(() -> graphBuilder.requireRule(target3));
 
       CompletableFuture.allOf(first, second, third, fourth).get();
     } finally {

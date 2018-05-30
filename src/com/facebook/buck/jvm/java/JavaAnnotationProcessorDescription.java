@@ -84,7 +84,7 @@ public class JavaAnnotationProcessorDescription
     JavacPluginProperties properties = propsBuilder.build();
 
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(context.getBuildRuleResolver()));
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(context.getActionGraphBuilder()));
     return new JavaAnnotationProcessor(
         buildTarget,
         context.getProjectFilesystem(),

@@ -29,8 +29,8 @@ import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
@@ -101,9 +101,9 @@ public class AndroidAarDescription implements DescriptionWithTargetGraph<Android
       AndroidAarDescriptionArg args) {
 
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
-    BuildRuleResolver resolver = context.getBuildRuleResolver();
+    ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
     buildTarget.checkUnflavored();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     ImmutableSortedSet.Builder<BuildRule> aarExtraDepsBuilder =
         new ImmutableSortedSet.Builder<BuildRule>(Ordering.natural())
             .addAll(originalBuildRuleParams.getExtraDeps().get());
@@ -116,10 +116,10 @@ public class AndroidAarDescription implements DescriptionWithTargetGraph<Android
         androidManifestFactory.createBuildRule(
             androidManifestTarget,
             projectFilesystem,
-            resolver,
+            graphBuilder,
             args.getDeps(),
             args.getManifestSkeleton());
-    aarExtraDepsBuilder.add(resolver.addToIndex(manifest));
+    aarExtraDepsBuilder.add(graphBuilder.addToIndex(manifest));
 
     APKModuleGraph apkModuleGraph =
         new APKModuleGraph(
@@ -134,7 +134,7 @@ public class AndroidAarDescription implements DescriptionWithTargetGraph<Android
             apkModuleGraph);
     collector.addPackageables(
         AndroidPackageableCollector.getPackageableRules(originalBuildRuleParams.getBuildDeps()),
-        resolver);
+        graphBuilder);
     AndroidPackageableCollection packageableCollection = collector.build();
 
     ImmutableCollection<SourcePath> assetsDirectories =
@@ -145,7 +145,7 @@ public class AndroidAarDescription implements DescriptionWithTargetGraph<Android
             projectFilesystem,
             ruleFinder,
             assetsDirectories);
-    aarExtraDepsBuilder.add(resolver.addToIndex(assembleAssetsDirectories));
+    aarExtraDepsBuilder.add(graphBuilder.addToIndex(assembleAssetsDirectories));
 
     ImmutableCollection<SourcePath> resDirectories =
         packageableCollection.getResourceDetails().getResourceDirectories();
@@ -155,7 +155,7 @@ public class AndroidAarDescription implements DescriptionWithTargetGraph<Android
             projectFilesystem,
             ruleFinder,
             resDirectories);
-    aarExtraDepsBuilder.add(resolver.addToIndex(assembleResourceDirectories));
+    aarExtraDepsBuilder.add(graphBuilder.addToIndex(assembleResourceDirectories));
 
     /* android_resource */
     BuildRuleParams androidResourceParams =
@@ -183,14 +183,14 @@ public class AndroidAarDescription implements DescriptionWithTargetGraph<Android
             /* assetsSrcs */ ImmutableSortedMap.of(),
             manifest.getSourcePathToOutput(),
             /* hasWhitelistedStrings */ false);
-    aarExtraDepsBuilder.add(resolver.addToIndex(androidResource));
+    aarExtraDepsBuilder.add(graphBuilder.addToIndex(androidResource));
 
     ImmutableSortedSet.Builder<SourcePath> classpathToIncludeInAar =
         ImmutableSortedSet.naturalOrder();
     classpathToIncludeInAar.addAll(packageableCollection.getClasspathEntriesToDex());
     aarExtraDepsBuilder.addAll(
         BuildRules.toBuildRulesFor(
-            buildTarget, resolver, packageableCollection.getJavaLibrariesToDex()));
+            buildTarget, graphBuilder, packageableCollection.getJavaLibrariesToDex()));
 
     if (!args.getBuildConfigValues().getNameToField().isEmpty()
         && !args.getIncludeBuildConfigClass()) {
@@ -210,13 +210,13 @@ public class AndroidAarDescription implements DescriptionWithTargetGraph<Android
               EnumSet.noneOf(ExopackageMode.class),
               args.getBuildConfigValues(),
               Optional.empty(),
-              resolver,
+              graphBuilder,
               JavacFactory.create(ruleFinder, javaBuckConfig, args),
               toolchainProvider
                   .getByName(JavacOptionsProvider.DEFAULT_NAME, JavacOptionsProvider.class)
                   .getJavacOptions(),
               packageableCollection);
-      buildConfigRules.forEach(resolver::addToIndex);
+      buildConfigRules.forEach(graphBuilder::addToIndex);
       aarExtraDepsBuilder.addAll(buildConfigRules);
       classpathToIncludeInAar.addAll(
           buildConfigRules
@@ -230,7 +230,7 @@ public class AndroidAarDescription implements DescriptionWithTargetGraph<Android
         new AndroidNativeLibsPackageableGraphEnhancer(
             toolchainProvider,
             context.getCellPathResolver(),
-            resolver,
+            graphBuilder,
             buildTarget,
             projectFilesystem,
             originalBuildRuleParams,

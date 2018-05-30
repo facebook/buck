@@ -21,7 +21,7 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.cell.resolver.CellPathResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.rules.resolver.impl.TestBuildRuleResolver;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
@@ -55,7 +55,7 @@ public class RelativeLinkArgTest {
     // TODO(cjhopman): Extract these details of serializing+deserializing for use in other tests.
     HashCode hash =
         new Serializer(
-                new SourcePathRuleFinder(new TestBuildRuleResolver()),
+                new SourcePathRuleFinder(new TestActionGraphBuilder()),
                 cellRoots,
                 (instance, data, children) -> {
                   HashCode childHash = Hashing.sipHash24().hashBytes(data);

@@ -16,8 +16,8 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.model.macros.MacroException;
 import com.facebook.buck.rules.macros.LocationMacro;
@@ -32,11 +32,12 @@ class CxxLocationMacroExpander extends LocationMacroExpander {
   }
 
   @Override
-  protected BuildRule resolve(BuildRuleResolver resolver, LocationMacro input)
+  protected BuildRule resolve(ActionGraphBuilder graphBuilder, LocationMacro input)
       throws MacroException {
-    BuildRule rule = super.resolve(resolver, input);
+    BuildRule rule = super.resolve(graphBuilder, input);
     if (rule instanceof CxxGenrule) {
-      rule = resolver.requireRule(rule.getBuildTarget().withAppendedFlavors(platform.getFlavor()));
+      rule =
+          graphBuilder.requireRule(rule.getBuildTarget().withAppendedFlavors(platform.getFlavor()));
     }
     return rule;
   }

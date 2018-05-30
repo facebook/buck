@@ -21,8 +21,8 @@ import com.facebook.buck.artifact_cache.ArtifactInfo;
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rulekey.calculator.ParallelRuleKeyCalculator;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.file.BorrowablePath;
 import com.facebook.buck.io.file.LazyPath;
@@ -57,7 +57,7 @@ public class DistBuildArtifactCacheImpl implements ArtifactCacheByBuildRule {
   // TODO(shivanker): Make these configurable.
   private static final int MAX_RULEKEYS_IN_MULTI_CONTAINS_REQUEST = 5000;
 
-  private final BuildRuleResolver resolver;
+  private final ActionGraphBuilder graphBuilder;
   private final BuckEventBus eventBus;
   private final ListeningExecutorService executorService;
   private final ArtifactCache remoteCache;
@@ -67,13 +67,13 @@ public class DistBuildArtifactCacheImpl implements ArtifactCacheByBuildRule {
   private final Map<BuildRule, ListenableFuture<BuildRule>> localUploadFutures;
 
   public DistBuildArtifactCacheImpl(
-      BuildRuleResolver resolver,
+      ActionGraphBuilder graphBuilder,
       ListeningExecutorService executorService,
       ArtifactCache remoteCache,
       BuckEventBus eventBus,
       ParallelRuleKeyCalculator<RuleKey> ruleKeyCalculator,
       Optional<ArtifactCache> localCacheToUploadFrom) {
-    this.resolver = resolver;
+    this.graphBuilder = graphBuilder;
     this.eventBus = eventBus;
     this.executorService = executorService;
     this.remoteCache = remoteCache;
@@ -212,7 +212,7 @@ public class DistBuildArtifactCacheImpl implements ArtifactCacheByBuildRule {
         ruleKeyCalculator
             .getAllKnownTargets()
             .stream()
-            .map(resolver::requireRule)
+            .map(graphBuilder::requireRule)
             .collect(ImmutableSet.toImmutableSet()));
   }
 

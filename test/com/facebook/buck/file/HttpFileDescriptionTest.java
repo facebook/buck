@@ -21,8 +21,8 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.rules.resolver.impl.SingleThreadedBuildRuleResolver;
-import com.facebook.buck.core.rules.resolver.impl.TestBuildRuleResolver;
+import com.facebook.buck.core.rules.resolver.impl.SingleThreadedActionGraphBuilder;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -48,14 +48,14 @@ public class HttpFileDescriptionTest {
   public @Rule ExpectedException thrown = ExpectedException.none();
 
   private HttpFileDescription description;
-  private SingleThreadedBuildRuleResolver buildRuleResolver;
+  private SingleThreadedActionGraphBuilder graphBuilder;
   private ProjectFilesystem filesystem;
   private TargetGraph targetGraph;
 
   @Before
   public void setUp() {
     description = new HttpFileDescription((eventBus, uri, output) -> false);
-    buildRuleResolver = new TestBuildRuleResolver();
+    graphBuilder = new TestActionGraphBuilder();
     filesystem = TestProjectFilesystems.createProjectFilesystem(temporaryDir.getRoot());
     targetGraph = TargetGraph.EMPTY;
   }
@@ -64,7 +64,7 @@ public class HttpFileDescriptionTest {
     BuildTarget target = BuildTargetFactory.newInstance(targetName);
     return (HttpFile)
         description.createBuildRule(
-            TestBuildRuleCreationContextFactory.create(targetGraph, buildRuleResolver, filesystem),
+            TestBuildRuleCreationContextFactory.create(targetGraph, graphBuilder, filesystem),
             target,
             new BuildRuleParams(
                 ImmutableSortedSet::of, ImmutableSortedSet::of, ImmutableSortedSet.of()),
@@ -72,9 +72,9 @@ public class HttpFileDescriptionTest {
   }
 
   private Path getOutputPath(HttpFile buildRule) {
-    buildRuleResolver.computeIfAbsent(buildRule.getBuildTarget(), t -> buildRule);
+    graphBuilder.computeIfAbsent(buildRule.getBuildTarget(), t -> buildRule);
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(buildRuleResolver));
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
     return pathResolver.getAbsolutePath(buildRule.getSourcePathToOutput());
   }
 

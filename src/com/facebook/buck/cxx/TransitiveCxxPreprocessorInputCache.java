@@ -17,7 +17,7 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.rules.BuildRuleResolver;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.concurrent.Parallelizer;
@@ -51,13 +51,13 @@ public class TransitiveCxxPreprocessorInputCache {
 
   /** Get a value from the cache */
   public ImmutableMap<BuildTarget, CxxPreprocessorInput> getUnchecked(
-      CxxPlatform key, BuildRuleResolver ruleResolver) {
+      CxxPlatform key, ActionGraphBuilder graphBuilder) {
     try {
       return cache.get(
           key,
           () ->
               computeTransitiveCxxToPreprocessorInputMap(
-                  key, preprocessorDep, true, ruleResolver, parallelizer));
+                  key, preprocessorDep, true, graphBuilder, parallelizer));
     } catch (ExecutionException e) {
       throw new UncheckedExecutionException(e.getCause());
     }
@@ -68,9 +68,9 @@ public class TransitiveCxxPreprocessorInputCache {
           @Nonnull CxxPlatform key,
           CxxPreprocessorDep preprocessorDep,
           boolean includeDep,
-          BuildRuleResolver ruleResolver) {
+          ActionGraphBuilder graphBuilder) {
     return computeTransitiveCxxToPreprocessorInputMap(
-        key, preprocessorDep, includeDep, ruleResolver, Parallelizer.SERIAL);
+        key, preprocessorDep, includeDep, graphBuilder, Parallelizer.SERIAL);
   }
 
   private static ImmutableSortedMap<BuildTarget, CxxPreprocessorInput>
@@ -78,18 +78,18 @@ public class TransitiveCxxPreprocessorInputCache {
           @Nonnull CxxPlatform key,
           CxxPreprocessorDep preprocessorDep,
           boolean includeDep,
-          BuildRuleResolver ruleResolver,
+          ActionGraphBuilder graphBuilder,
           Parallelizer parallelizer) {
     Map<BuildTarget, CxxPreprocessorInput> builder = new HashMap<>();
     if (includeDep) {
       builder.put(
           preprocessorDep.getBuildTarget(),
-          preprocessorDep.getCxxPreprocessorInput(key, ruleResolver));
+          preprocessorDep.getCxxPreprocessorInput(key, graphBuilder));
     }
 
     Stream<CxxPreprocessorDep> transitiveDepInputs =
         parallelizer.maybeParallelize(
-            RichStream.from(preprocessorDep.getCxxPreprocessorDeps(key, ruleResolver)));
+            RichStream.from(preprocessorDep.getCxxPreprocessorDeps(key, graphBuilder)));
 
     // We get CxxProcessorInput in parallel for each dep.
     // We have one cache per CxxPreprocessable. Cache miss may trigger the creation of more
@@ -98,7 +98,7 @@ public class TransitiveCxxPreprocessorInputCache {
     // Futures of the tasks directly, FJP will have current thread steal the work for those tasks
     // and no deadlock will occur {@link BuildRuleResolverTest.deadLockOnDependencyTest() }.
     transitiveDepInputs
-        .map(dep -> dep.getTransitiveCxxPreprocessorInput(key, ruleResolver))
+        .map(dep -> dep.getTransitiveCxxPreprocessorInput(key, graphBuilder))
         .forEachOrdered(builder::putAll);
 
     // Using an ImmutableSortedMap here:

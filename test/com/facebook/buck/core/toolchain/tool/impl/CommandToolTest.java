@@ -18,9 +18,10 @@ package com.facebook.buck.core.toolchain.tool.impl;
 
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.rules.resolver.impl.TestBuildRuleResolver;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
@@ -44,8 +45,8 @@ public class CommandToolTest {
 
   @Test
   public void buildTargetSourcePath() throws Exception {
-    BuildRuleResolver resolver = new TestBuildRuleResolver();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
 
@@ -53,7 +54,7 @@ public class CommandToolTest {
     Genrule rule =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:rule"))
             .setOut("output")
-            .build(resolver, filesystem);
+            .build(graphBuilder, filesystem);
     SourcePath path = rule.getSourcePathToOutput();
 
     // Test command and inputs for just passing the source path.
@@ -69,7 +70,7 @@ public class CommandToolTest {
 
   @Test
   public void pathSourcePath() {
-    BuildRuleResolver resolver = new TestBuildRuleResolver();
+    BuildRuleResolver resolver = new TestActionGraphBuilder();
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
@@ -86,11 +87,11 @@ public class CommandToolTest {
 
   @Test
   public void extraInputs() {
-    BuildRuleResolver ruleResolver = new TestBuildRuleResolver();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     FakeBuildRule rule = new FakeBuildRule("//some:target");
     rule.setOutputFile("foo");
-    ruleResolver.addToIndex(rule);
+    graphBuilder.addToIndex(rule);
     SourcePath path = rule.getSourcePathToOutput();
 
     CommandTool tool = new CommandTool.Builder().addInputs(ImmutableList.of(path)).build();
@@ -103,7 +104,7 @@ public class CommandToolTest {
 
   @Test
   public void environment() {
-    BuildRuleResolver resolver = new TestBuildRuleResolver();
+    BuildRuleResolver resolver = new TestActionGraphBuilder();
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
     SourcePath path = FakeSourcePath.of("input");
@@ -117,8 +118,8 @@ public class CommandToolTest {
 
   @Test
   public void environmentBuildTargetSourcePath() throws NoSuchBuildTargetException {
-    BuildRuleResolver resolver = new TestBuildRuleResolver();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
 
@@ -126,7 +127,7 @@ public class CommandToolTest {
     Genrule rule =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:rule"))
             .setOut("output")
-            .build(resolver, filesystem);
+            .build(graphBuilder, filesystem);
     SourcePath path = rule.getSourcePathToOutput();
 
     CommandTool tool = new CommandTool.Builder().addEnv("ENV", SourcePathArg.of(path)).build();

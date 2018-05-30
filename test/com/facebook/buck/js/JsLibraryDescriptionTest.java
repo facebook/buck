@@ -30,8 +30,8 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.UserFlavor;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -67,11 +67,12 @@ public class JsLibraryDescriptionTest {
   @Test
   public void ruleDependsOnInternalFileRule() {
     JsTestScenario scenario = scenarioBuilder.library(target).build();
-    BuildRule library = scenario.resolver.requireRule(target);
+    BuildRule library = scenario.graphBuilder.requireRule(target);
     assertThat(
         library.getBuildDeps(),
         hasItem(
-            scenario.resolver.requireRule(target.withAppendedFlavors(JsFlavors.LIBRARY_FILES))));
+            scenario.graphBuilder.requireRule(
+                target.withAppendedFlavors(JsFlavors.LIBRARY_FILES))));
   }
 
   @Test
@@ -86,10 +87,14 @@ public class JsLibraryDescriptionTest {
       scenarioBuilder.library(depTarget);
     }
     JsTestScenario scenario = scenarioBuilder.library(target, depTargets).build();
-    BuildRule library = scenario.resolver.requireRule(target);
+    BuildRule library = scenario.graphBuilder.requireRule(target);
 
     BuildRule[] deps =
-        scenario.resolver.getAllRules(Arrays.asList(depTargets)).stream().toArray(BuildRule[]::new);
+        scenario
+            .graphBuilder
+            .getAllRules(Arrays.asList(depTargets))
+            .stream()
+            .toArray(BuildRule[]::new);
     assertThat(library.getBuildDeps(), hasItems(deps));
   }
 
@@ -100,7 +105,7 @@ public class JsLibraryDescriptionTest {
     PathSourcePath c = FakeSourcePath.of("source/c");
     JsTestScenario scenario = scenarioBuilder.library(target, a, b, c).build();
 
-    BuildRule library = scenario.resolver.requireRule(target);
+    BuildRule library = scenario.graphBuilder.requireRule(target);
     assertThat(library.getBuildDeps(), not(hasItem(instanceOf(JsFile.class))));
   }
 
@@ -110,7 +115,7 @@ public class JsLibraryDescriptionTest {
     BuildTarget withFlavors = target.withFlavors(extraFlavors);
     JsTestScenario scenario = scenarioBuilder.library(withFlavors).build();
 
-    BuildRule library = scenario.resolver.requireRule(withFlavors);
+    BuildRule library = scenario.graphBuilder.requireRule(withFlavors);
     BuildRule filesRule =
         library
             .getBuildDeps()
@@ -125,8 +130,9 @@ public class JsLibraryDescriptionTest {
   @Test
   public void internalFileRuleDependsOnWorker() {
     JsTestScenario scenario = scenarioBuilder.library(target).build();
-    BuildRule filesRule = internalFileRule(scenario.resolver);
-    assertThat(filesRule.getBuildDeps(), hasItem(scenario.resolver.getRule(scenario.workerTarget)));
+    BuildRule filesRule = internalFileRule(scenario.graphBuilder);
+    assertThat(
+        filesRule.getBuildDeps(), hasItem(scenario.graphBuilder.getRule(scenario.workerTarget)));
   }
 
   @Test
@@ -136,7 +142,7 @@ public class JsLibraryDescriptionTest {
     PathSourcePath c = FakeSourcePath.of("source/c");
     JsTestScenario scenario = scenarioBuilder.library(target, a, b, c).build();
 
-    BuildRule filesRule = internalFileRule(scenario.resolver);
+    BuildRule filesRule = internalFileRule(scenario.graphBuilder);
     assertThat(
         filesRule.getBuildDeps(),
         hasItems(Stream.of(a, b, c).map(JsFileMatcher::new).toArray(JsFileMatcher[]::new)));
@@ -150,7 +156,7 @@ public class JsLibraryDescriptionTest {
 
     assertEquals(
         "arbitrary/path/base/path/sub/file.js",
-        findFirstJsFileDevRule(scenario.resolver).getVirtualPath().get());
+        findFirstJsFileDevRule(scenario.graphBuilder).getVirtualPath().get());
   }
 
   @Test
@@ -161,7 +167,7 @@ public class JsLibraryDescriptionTest {
 
     assertEquals(
         "arbitrary/base/path/sub/file.js",
-        findFirstJsFileDevRule(scenario.resolver).getVirtualPath().get());
+        findFirstJsFileDevRule(scenario.graphBuilder).getVirtualPath().get());
   }
 
   @Test
@@ -173,7 +179,7 @@ public class JsLibraryDescriptionTest {
 
     assertEquals(
         "arbitrary/path/base/path.js",
-        findFirstJsFileDevRule(scenario.resolver).getVirtualPath().get());
+        findFirstJsFileDevRule(scenario.graphBuilder).getVirtualPath().get());
   }
 
   @Test
@@ -184,7 +190,7 @@ public class JsLibraryDescriptionTest {
     JsTestScenario scenario = buildScenario(basePath, DefaultBuildTargetSourcePath.of(target));
 
     assertEquals(
-        "arbitrary/path.js", findFirstJsFileDevRule(scenario.resolver).getVirtualPath().get());
+        "arbitrary/path.js", findFirstJsFileDevRule(scenario.graphBuilder).getVirtualPath().get());
   }
 
   @Test
@@ -199,7 +205,7 @@ public class JsLibraryDescriptionTest {
 
     assertEquals(
         "arbitrary/path/node_modules/left-pad/index.js",
-        findFirstJsFileDevRule(scenario.resolver).getVirtualPath().get());
+        findFirstJsFileDevRule(scenario.graphBuilder).getVirtualPath().get());
   }
 
   @Test
@@ -212,7 +218,7 @@ public class JsLibraryDescriptionTest {
             .library(target, FakeSourcePath.of("apples"), FakeSourcePath.of("pears"))
             .build();
 
-    findJsFileRules(scenario.resolver)
+    findJsFileRules(scenario.graphBuilder)
         .map(JsFile::getBuildTarget)
         .peek(
             depTarget ->
@@ -235,7 +241,7 @@ public class JsLibraryDescriptionTest {
             .library(withPlatformFlavor, FakeSourcePath.of("apples"), FakeSourcePath.of("pears"))
             .build();
 
-    findJsFileRules(scenario.resolver)
+    findJsFileRules(scenario.graphBuilder)
         .map(JsFile::getBuildTarget)
         .peek(
             fileTarget ->
@@ -270,8 +276,9 @@ public class JsLibraryDescriptionTest {
     TargetNode<?, ?> node = scenario.targetGraph.get(target);
     assertThat(x, in(node.getBuildDeps()));
 
-    JsLibrary lib = scenario.resolver.getRuleWithType(target, JsLibrary.class);
-    ImmutableSortedSet<BuildRule> deps = scenario.resolver.getAllRules(ImmutableList.of(a, b, c));
+    JsLibrary lib = scenario.graphBuilder.getRuleWithType(target, JsLibrary.class);
+    ImmutableSortedSet<BuildRule> deps =
+        scenario.graphBuilder.getAllRules(ImmutableList.of(a, b, c));
     assertThat(deps, everyItem(in(lib.getBuildDeps())));
     assertEquals(
         deps.stream()
@@ -288,8 +295,8 @@ public class JsLibraryDescriptionTest {
     JsTestScenario scenario =
         scenarioBuilder.library(a).library(b).library(target, Query.of(a.toString()), b).build();
 
-    JsLibrary lib = scenario.resolver.getRuleWithType(target, JsLibrary.class);
-    ImmutableSortedSet<BuildRule> deps = scenario.resolver.getAllRules(ImmutableList.of(a, b));
+    JsLibrary lib = scenario.graphBuilder.getRuleWithType(target, JsLibrary.class);
+    ImmutableSortedSet<BuildRule> deps = scenario.graphBuilder.getAllRules(ImmutableList.of(a, b));
     assertThat(deps, everyItem(in(lib.getBuildDeps())));
     assertEquals(
         deps.stream()
@@ -306,16 +313,16 @@ public class JsLibraryDescriptionTest {
     return scenarioBuilder.library(target, basePath, source).build();
   }
 
-  private RichStream<JsFile> findJsFileRules(BuildRuleResolver resolver) {
-    return RichStream.from(internalFileRule(resolver).getBuildDeps()).filter(JsFile.class);
+  private RichStream<JsFile> findJsFileRules(ActionGraphBuilder graphBuilder) {
+    return RichStream.from(internalFileRule(graphBuilder).getBuildDeps()).filter(JsFile.class);
   }
 
-  private JsFile.JsFileDev findFirstJsFileDevRule(BuildRuleResolver resolver) {
-    return findJsFileRules(resolver).filter(JsFileDev.class).findFirst().get();
+  private JsFile.JsFileDev findFirstJsFileDevRule(ActionGraphBuilder graphBuilder) {
+    return findJsFileRules(graphBuilder).filter(JsFileDev.class).findFirst().get();
   }
 
-  private JsLibrary.Files internalFileRule(BuildRuleResolver resolver) {
-    return (Files) resolver.requireRule(target.withAppendedFlavors(JsFlavors.LIBRARY_FILES));
+  private JsLibrary.Files internalFileRule(ActionGraphBuilder graphBuilder) {
+    return (Files) graphBuilder.requireRule(target.withAppendedFlavors(JsFlavors.LIBRARY_FILES));
   }
 
   private static class JsFileMatcher extends BaseMatcher<BuildRule> {

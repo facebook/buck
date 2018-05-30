@@ -18,8 +18,8 @@ package com.facebook.buck.features.python;
 
 import com.facebook.buck.core.description.BuildRuleParams;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
@@ -45,8 +45,8 @@ public class PythonLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
   @Override
   @SuppressWarnings("unchecked")
   public Iterable<BuildRule> getPythonPackageDeps(
-      PythonPlatform pythonPlatform, CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
-    return ruleResolver
+      PythonPlatform pythonPlatform, CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
+    return graphBuilder
         .requireMetadata(
             getBuildTarget()
                 .withAppendedFlavors(
@@ -59,8 +59,8 @@ public class PythonLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public PythonPackageComponents getPythonPackageComponents(
-      PythonPlatform pythonPlatform, CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
-    return ruleResolver
+      PythonPlatform pythonPlatform, CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
+    return graphBuilder
         .requireMetadata(
             getBuildTarget()
                 .withAppendedFlavors(

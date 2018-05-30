@@ -21,6 +21,7 @@ import com.facebook.buck.android.packageable.AndroidPackageableCollector;
 import com.facebook.buck.core.description.BuildRuleParams;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
@@ -71,10 +72,10 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
   private final CxxDeps deps;
   private final CxxDeps exportedDeps;
   private final Predicate<CxxPlatform> headerOnly;
-  private final BiFunction<? super CxxPlatform, BuildRuleResolver, Iterable<? extends Arg>>
+  private final BiFunction<? super CxxPlatform, ActionGraphBuilder, Iterable<? extends Arg>>
       exportedLinkerFlags;
   private final QuadFunction<
-          ? super CxxPlatform, BuildRuleResolver, SourcePathResolver, SourcePathRuleFinder,
+          ? super CxxPlatform, ActionGraphBuilder, SourcePathResolver, SourcePathRuleFinder,
           NativeLinkableInput>
       linkTargetInput;
   private final Optional<Pattern> supportedPlatformsRegex;
@@ -107,10 +108,10 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
       CxxDeps deps,
       CxxDeps exportedDeps,
       Predicate<CxxPlatform> headerOnly,
-      BiFunction<? super CxxPlatform, BuildRuleResolver, Iterable<? extends Arg>>
+      BiFunction<? super CxxPlatform, ActionGraphBuilder, Iterable<? extends Arg>>
           exportedLinkerFlags,
       QuadFunction<
-              ? super CxxPlatform, BuildRuleResolver, SourcePathResolver, SourcePathRuleFinder,
+              ? super CxxPlatform, ActionGraphBuilder, SourcePathResolver, SourcePathRuleFinder,
               NativeLinkableInput>
           linkTargetInput,
       Optional<Pattern> supportedPlatformsRegex,
@@ -166,20 +167,20 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
   }
 
   private CxxPreprocessorInput getCxxPreprocessorInput(
-      CxxPlatform cxxPlatform, HeaderVisibility headerVisibility, BuildRuleResolver ruleResolver) {
+      CxxPlatform cxxPlatform, HeaderVisibility headerVisibility, ActionGraphBuilder graphBuilder) {
     // Handle via metadata query.
     return CxxLibraryDescription.queryMetadataCxxPreprocessorInput(
-            ruleResolver, getBuildTarget(), cxxPlatform, headerVisibility)
+            graphBuilder, getBuildTarget(), cxxPlatform, headerVisibility)
         .orElseThrow(IllegalStateException::new);
   }
 
   @Override
   public CxxPreprocessorInput getCxxPreprocessorInput(
-      CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
+      CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
     CxxPreprocessorInput publicHeaders =
-        getPublicCxxPreprocessorInputExcludingDelegate(cxxPlatform, ruleResolver);
+        getPublicCxxPreprocessorInputExcludingDelegate(cxxPlatform, graphBuilder);
     Optional<CxxPreprocessorInput> pluginHeaders =
-        delegate.flatMap(p -> p.getPreprocessorInput(getBuildTarget(), ruleResolver, cxxPlatform));
+        delegate.flatMap(p -> p.getPreprocessorInput(getBuildTarget(), graphBuilder, cxxPlatform));
 
     if (pluginHeaders.isPresent()) {
       return CxxPreprocessorInput.concat(ImmutableList.of(publicHeaders, pluginHeaders.get()));
@@ -192,18 +193,18 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
    * Returns public headers excluding contribution from any {@link CxxLibraryDescriptionDelegate}.
    */
   public CxxPreprocessorInput getPublicCxxPreprocessorInputExcludingDelegate(
-      CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
-    return getCxxPreprocessorInput(cxxPlatform, HeaderVisibility.PUBLIC, ruleResolver);
+      CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
+    return getCxxPreprocessorInput(cxxPlatform, HeaderVisibility.PUBLIC, graphBuilder);
   }
 
   @Override
   public CxxPreprocessorInput getPrivateCxxPreprocessorInput(
-      CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
+      CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
     CxxPreprocessorInput privateInput =
-        getCxxPreprocessorInput(cxxPlatform, HeaderVisibility.PRIVATE, ruleResolver);
+        getCxxPreprocessorInput(cxxPlatform, HeaderVisibility.PRIVATE, graphBuilder);
     Optional<CxxPreprocessorInput> delegateInput =
         delegate.flatMap(
-            p -> p.getPrivatePreprocessorInput(getBuildTarget(), ruleResolver, cxxPlatform));
+            p -> p.getPrivatePreprocessorInput(getBuildTarget(), graphBuilder, cxxPlatform));
 
     if (delegateInput.isPresent()) {
       return CxxPreprocessorInput.concat(ImmutableList.of(privateInput, delegateInput.get()));
@@ -214,8 +215,8 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public ImmutableMap<BuildTarget, CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(
-      CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
-    return transitiveCxxPreprocessorInputCache.getUnchecked(cxxPlatform, ruleResolver);
+      CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
+    return transitiveCxxPreprocessorInputCache.getUnchecked(cxxPlatform, graphBuilder);
   }
 
   @Override
@@ -255,7 +256,7 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public Iterable<? extends NativeLinkable> getNativeLinkableExportedDepsForPlatform(
-      CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
+      CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
     if (!propagateLinkables) {
       return ImmutableList.of();
     }
@@ -266,17 +267,17 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
     ImmutableList<NativeLinkable> delegateLinkables =
         delegate
             .flatMap(
-                d -> d.getNativeLinkableExportedDeps(getBuildTarget(), ruleResolver, cxxPlatform))
+                d -> d.getNativeLinkableExportedDeps(getBuildTarget(), graphBuilder, cxxPlatform))
             .orElse(ImmutableList.of());
 
-    return RichStream.from(exportedDeps.get(ruleResolver, cxxPlatform))
+    return RichStream.from(exportedDeps.get(graphBuilder, cxxPlatform))
         .filter(NativeLinkable.class)
         .concat(RichStream.from(delegateLinkables))
         .toImmutableList();
   }
 
   private NativeLinkableInput computeNativeLinkableInputUncached(
-      NativeLinkableCacheKey key, BuildRuleResolver ruleResolver) {
+      NativeLinkableCacheKey key, ActionGraphBuilder graphBuilder) {
     CxxPlatform cxxPlatform = key.getCxxPlatform();
 
     if (!isPlatformSupported(cxxPlatform)) {
@@ -290,14 +291,14 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
     // whole archive, wrap the library argument in the necessary "ld" flags.
     ImmutableList.Builder<Arg> linkerArgsBuilder = ImmutableList.builder();
     linkerArgsBuilder.addAll(
-        Preconditions.checkNotNull(exportedLinkerFlags.apply(cxxPlatform, ruleResolver)));
+        Preconditions.checkNotNull(exportedLinkerFlags.apply(cxxPlatform, graphBuilder)));
 
     boolean delegateWantsArtifact =
         delegate
             .map(
                 d ->
                     d.getShouldProduceLibraryArtifact(
-                        getBuildTarget(), ruleResolver, cxxPlatform, type, forceLinkWhole))
+                        getBuildTarget(), graphBuilder, cxxPlatform, type, forceLinkWhole))
             .orElse(false);
     boolean headersOnly = headerOnly.test(cxxPlatform);
     boolean shouldProduceArtifact = (!headersOnly || delegateWantsArtifact) && propagateLinkables;
@@ -325,13 +326,13 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
         Archive archive =
             (Archive)
                 requireBuildRule(
-                    ruleResolver,
+                    graphBuilder,
                     cxxPlatform.getFlavor(),
                     type == Linker.LinkableDepType.STATIC
                         ? CxxDescriptionEnhancer.STATIC_FLAVOR
                         : CxxDescriptionEnhancer.STATIC_PIC_FLAVOR);
         if (linkWhole || forceLinkWhole) {
-          Linker linker = cxxPlatform.getLd().resolve(ruleResolver);
+          Linker linker = cxxPlatform.getLd().resolve(graphBuilder);
           linkerArgsBuilder.addAll(linker.linkWhole(archive.toArg()));
         } else {
           Arg libraryArg = archive.toArg();
@@ -345,7 +346,7 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
       } else {
         BuildRule rule =
             requireBuildRule(
-                ruleResolver,
+                graphBuilder,
                 cxxPlatform.getFlavor(),
                 cxxPlatform.getSharedLibraryInterfaceParams().isPresent()
                     ? CxxLibraryDescription.Type.SHARED_INTERFACE.getFlavor()
@@ -370,25 +371,25 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
       Linker.LinkableDepType type,
       boolean forceLinkWhole,
       ImmutableSet<LanguageExtensions> languageExtensions,
-      BuildRuleResolver ruleResolver) {
+      ActionGraphBuilder graphBuilder) {
     NativeLinkableCacheKey key =
         NativeLinkableCacheKey.of(cxxPlatform.getFlavor(), type, forceLinkWhole, cxxPlatform);
     try {
       return nativeLinkableCache.get(
-          key, () -> computeNativeLinkableInputUncached(key, ruleResolver));
+          key, () -> computeNativeLinkableInputUncached(key, graphBuilder));
     } catch (ExecutionException e) {
       throw new UncheckedExecutionException(e.getCause());
     }
   }
 
   /** Require a flavored version of this build rule */
-  public BuildRule requireBuildRule(BuildRuleResolver ruleResolver, Flavor... flavors) {
-    return ruleResolver.requireRule(getBuildTarget().withAppendedFlavors(flavors));
+  public BuildRule requireBuildRule(ActionGraphBuilder graphBuilder, Flavor... flavors) {
+    return graphBuilder.requireRule(getBuildTarget().withAppendedFlavors(flavors));
   }
 
   @Override
   public NativeLinkable.Linkage getPreferredLinkage(
-      CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
+      CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
     return linkage;
   }
 
@@ -413,7 +414,7 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public ImmutableMap<String, SourcePath> getSharedLibraries(
-      CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
+      CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
     if (headerOnly.test(cxxPlatform)) {
       return ImmutableMap.of();
     }
@@ -425,7 +426,7 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
         CxxDescriptionEnhancer.getSharedLibrarySoname(soname, getBuildTarget(), cxxPlatform);
     BuildRule sharedLibraryBuildRule =
         requireBuildRule(
-            ruleResolver, cxxPlatform.getFlavor(), CxxDescriptionEnhancer.SHARED_FLAVOR);
+            graphBuilder, cxxPlatform.getFlavor(), CxxDescriptionEnhancer.SHARED_FLAVOR);
     libs.put(sharedLibrarySoname, sharedLibraryBuildRule.getSourcePathToOutput());
     return libs.build();
   }
@@ -443,22 +444,22 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public Iterable<? extends NativeLinkable> getNativeLinkTargetDeps(
-      CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
+      CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
     return Iterables.concat(
-        getNativeLinkableDepsForPlatform(cxxPlatform, ruleResolver),
-        getNativeLinkableExportedDepsForPlatform(cxxPlatform, ruleResolver));
+        getNativeLinkableDepsForPlatform(cxxPlatform, graphBuilder),
+        getNativeLinkableExportedDepsForPlatform(cxxPlatform, graphBuilder));
   }
 
   @Override
   public NativeLinkableInput getNativeLinkTargetInput(
       CxxPlatform cxxPlatform,
-      BuildRuleResolver ruleResolver,
+      ActionGraphBuilder graphBuilder,
       SourcePathResolver pathResolver,
       SourcePathRuleFinder ruleFinder) {
     if (!isPlatformSupported(cxxPlatform)) {
       return NativeLinkableInput.of();
     }
-    return linkTargetInput.apply(cxxPlatform, ruleResolver, pathResolver, ruleFinder);
+    return linkTargetInput.apply(cxxPlatform, graphBuilder, pathResolver, ruleFinder);
   }
 
   @Override
@@ -473,8 +474,10 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
     // `CxxLibrary` rules themselves are noop meta rules, they shouldn't add any unnecessary
     // overhead.
     return RichStream.from(getDeclaredDeps().stream())
-        // Make sure to use the rule resolver that's passed in rather than the field we're holding,
-        // since we need to access nodes already created by the previous build rule resolver in the
+        // Make sure to use the rule graphBuilder that's passed in rather than the field we're
+        // holding,
+        // since we need to access nodes already created by the previous build rule graphBuilder in
+        // the
         // incremental action graph scenario, and {@see #updateBuildRuleResolver} may already have
         // been called.
         .concat(exportedDeps.getForAllPlatforms(ruleFinder.getRuleResolver()).stream())
@@ -482,7 +485,7 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
   }
 
   public Iterable<? extends Arg> getExportedLinkerFlags(
-      CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
-    return exportedLinkerFlags.apply(cxxPlatform, ruleResolver);
+      CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
+    return exportedLinkerFlags.apply(cxxPlatform, graphBuilder);
   }
 }

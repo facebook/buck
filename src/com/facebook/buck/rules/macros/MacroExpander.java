@@ -22,7 +22,7 @@ import com.facebook.buck.core.cell.resolver.CellPathResolver;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
-import com.facebook.buck.core.rules.BuildRuleResolver;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.model.macros.MacroException;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.WriteToFileArg;
@@ -37,7 +37,7 @@ public interface MacroExpander {
   Arg expand(
       BuildTarget target,
       CellPathResolver cellNames,
-      BuildRuleResolver resolver,
+      ActionGraphBuilder graphBuilder,
       ImmutableList<String> input,
       Object precomputedWork)
       throws MacroException;
@@ -49,7 +49,7 @@ public interface MacroExpander {
   default Arg expandForFile(
       BuildTarget target,
       CellPathResolver cellNames,
-      BuildRuleResolver resolver,
+      ActionGraphBuilder graphBuilder,
       ImmutableList<String> input,
       Object precomputedWork)
       throws MacroException {
@@ -63,7 +63,7 @@ public interface MacroExpander {
     return makeExpandToFileArg(
         target,
         hasher.hash().toString(),
-        expand(target, cellNames, resolver, input, precomputedWork));
+        expand(target, cellNames, graphBuilder, input, precomputedWork));
   }
 
   default Arg makeExpandToFileArg(BuildTarget target, String prefix, Arg delegate) {
@@ -88,7 +88,7 @@ public interface MacroExpander {
   Object extractRuleKeyAppendables(
       BuildTarget target,
       CellPathResolver cellNames,
-      BuildRuleResolver resolver,
+      ActionGraphBuilder graphBuilder,
       ImmutableList<String> input,
       Object precomputedWork)
       throws MacroException;
@@ -97,7 +97,7 @@ public interface MacroExpander {
   Object precomputeWork(
       BuildTarget target,
       CellPathResolver cellNames,
-      BuildRuleResolver resolver,
+      ActionGraphBuilder graphBuilder,
       ImmutableList<String> input)
       throws MacroException;
 }

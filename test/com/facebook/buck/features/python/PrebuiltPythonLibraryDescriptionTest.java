@@ -20,8 +20,8 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
-import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.rules.resolver.impl.TestBuildRuleResolver;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
 import com.facebook.buck.cxx.CxxLibraryBuilder;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkStrategy;
@@ -62,17 +62,17 @@ public class PrebuiltPythonLibraryDescriptionTest {
     binaryBuilder.setMainModule("main");
     binaryBuilder.setDeps(ImmutableSortedSet.of(libBuilder.getTarget()));
 
-    BuildRuleResolver resolver =
-        new TestBuildRuleResolver(
+    ActionGraphBuilder graphBuilder =
+        new TestActionGraphBuilder(
             TargetGraphFactory.newInstance(
                 cxxDepBuilder.build(),
                 cxxBuilder.build(),
                 libBuilder.build(),
                 binaryBuilder.build()));
-    cxxDepBuilder.build(resolver);
-    cxxBuilder.build(resolver);
-    libBuilder.build(resolver);
-    PythonBinary binary = binaryBuilder.build(resolver);
+    cxxDepBuilder.build(graphBuilder);
+    cxxBuilder.build(graphBuilder);
+    libBuilder.build(graphBuilder);
+    PythonBinary binary = binaryBuilder.build(graphBuilder);
     assertThat(
         Iterables.transform(binary.getComponents().getNativeLibraries().keySet(), Object::toString),
         Matchers.containsInAnyOrder("libdep.so", "libcxx.so"));

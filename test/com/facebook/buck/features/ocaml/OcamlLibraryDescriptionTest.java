@@ -22,8 +22,8 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
-import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.rules.resolver.impl.TestBuildRuleResolver;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.google.common.collect.ImmutableSortedSet;
@@ -55,10 +55,10 @@ public class OcamlLibraryDescriptionTest {
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(
             depABuilder.build(), depBBuilder.build(), ruleBuilder.build());
-    BuildRuleResolver resolver = new TestBuildRuleResolver(targetGraph);
-    OcamlLibrary depA = (OcamlLibrary) resolver.requireRule(depABuilder.getTarget());
-    OcamlLibrary depB = (OcamlLibrary) resolver.requireRule(depBBuilder.getTarget());
-    OcamlLibrary rule = (OcamlLibrary) resolver.requireRule(ruleBuilder.getTarget());
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
+    OcamlLibrary depA = (OcamlLibrary) graphBuilder.requireRule(depABuilder.getTarget());
+    OcamlLibrary depB = (OcamlLibrary) graphBuilder.requireRule(depBBuilder.getTarget());
+    OcamlLibrary rule = (OcamlLibrary) graphBuilder.requireRule(ruleBuilder.getTarget());
     assertThat(
         rule.getOcamlLibraryDeps(OcamlTestUtils.DEFAULT_PLATFORM),
         Matchers.allOf(Matchers.hasItem(depA), not(Matchers.hasItem(depB))));

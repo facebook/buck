@@ -22,7 +22,7 @@ import com.facebook.buck.core.cell.DefaultCellPathResolver;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.rules.resolver.impl.TestBuildRuleResolver;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
 import com.facebook.buck.core.toolchain.toolprovider.impl.ConstantToolProvider;
@@ -114,7 +114,7 @@ public class CxxPlatformUtils {
 
   public static HeaderMode getHeaderModeForDefaultPlatform(Path root)
       throws InterruptedException, IOException {
-    BuildRuleResolver ruleResolver = new TestBuildRuleResolver();
+    BuildRuleResolver ruleResolver = new TestActionGraphBuilder();
     CxxPlatform defaultPlatform = getDefaultPlatform(root);
     return defaultPlatform.getCpp().resolve(ruleResolver).supportsHeaderMaps()
         ? HeaderMode.SYMLINK_TREE_WITH_HEADER_MAP

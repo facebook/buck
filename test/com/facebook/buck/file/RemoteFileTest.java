@@ -29,9 +29,9 @@ import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.description.BuildRuleParams;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.rules.BuildRuleResolver;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.rules.resolver.impl.TestBuildRuleResolver;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
@@ -72,14 +72,14 @@ public class RemoteFileTest {
   public void ensureOutputIsAddedToBuildableContextSoItIsCached() {
     Downloader downloader = new ExplodingDownloader();
     BuildTarget target = BuildTargetFactory.newInstance("//cheese:cake");
-    BuildRuleResolver resolver = new TestBuildRuleResolver();
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
     RemoteFile remoteFile =
         new RemoteFileBuilder(downloader, target)
             .setUrl("http://www.facebook.com/")
             .setSha1(Hashing.sha1().hashLong(42))
-            .build(resolver);
+            .build(graphBuilder);
 
     BuildableContext buildableContext = new FakeBuildableContext();
     buildableContext.recordArtifact(
@@ -92,13 +92,13 @@ public class RemoteFileTest {
   public void shouldReturnSha1AsPrecomputedHashForSourcePathToOutput() {
     Downloader downloader = new ExplodingDownloader();
     BuildTarget target = BuildTargetFactory.newInstance("//cheese:cake");
-    BuildRuleResolver resolver = new TestBuildRuleResolver();
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     HashCode hash = Hashing.sha1().hashLong(42);
     RemoteFile remoteFile =
         new RemoteFileBuilder(downloader, target)
             .setUrl("http://www.facebook.com/")
             .setSha1(hash)
-            .build(resolver);
+            .build(graphBuilder);
     assertThat(
         ((BuildTargetSourcePath) remoteFile.getSourcePathToOutput()).getPrecomputedHash(),
         equalTo(Optional.of(hash)));
@@ -594,10 +594,10 @@ public class RemoteFileTest {
             hashCode,
             "output.txt",
             type);
-    BuildRuleResolver resolver = new TestBuildRuleResolver();
-    resolver.addToIndex(remoteFile);
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
+    graphBuilder.addToIndex(remoteFile);
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
 
     ImmutableList<Step> buildSteps =
         remoteFile.getBuildSteps(

@@ -23,10 +23,10 @@ import com.facebook.buck.android.FilterResourcesSteps.ResourceFilter;
 import com.facebook.buck.android.packageable.AndroidPackageableCollection;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.rules.resolver.impl.TestBuildRuleResolver;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
@@ -71,35 +71,35 @@ public class AndroidBinaryTest {
 
   @Test
   public void testAndroidBinaryNoDx() throws Exception {
-    BuildRuleResolver ruleResolver = new TestBuildRuleResolver();
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(ruleResolver));
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
     BuildContext buildContext = FakeBuildContext.withSourcePathResolver(pathResolver);
 
     // Two android_library deps, neither with an assets directory.
     BuildRule libraryOne =
         createAndroidLibraryRule(
             "//java/src/com/facebook/base:libraryOne",
-            ruleResolver,
+            graphBuilder,
             null, /* resDirectory */
             null, /* assetDirectory */
             null /* nativeLibsDirectory */);
-    BuildRule libraryOneRule = ruleResolver.getRule(libraryOne.getBuildTarget());
+    BuildRule libraryOneRule = graphBuilder.getRule(libraryOne.getBuildTarget());
     BuildRule libraryTwo =
         createAndroidLibraryRule(
             "//java/src/com/facebook/base:libraryTwo",
-            ruleResolver,
+            graphBuilder,
             null, /* resDirectory */
             null, /* assetDirectory */
             null /* nativeLibsDirectory */);
-    BuildRule libraryTwoRule = ruleResolver.getRule(libraryTwo.getBuildTarget());
+    BuildRule libraryTwoRule = graphBuilder.getRule(libraryTwo.getBuildTarget());
 
     // One android_binary rule that depends on the two android_library rules.
     BuildTarget binaryBuildTarget =
         BuildTargetFactory.newInstance("//java/src/com/facebook/base:apk");
     ImmutableSortedSet<BuildTarget> originalDepsTargets =
         ImmutableSortedSet.of(libraryOneRule.getBuildTarget(), libraryTwoRule.getBuildTarget());
-    BuildRule keystoreRule = addKeystoreRule(ruleResolver);
+    BuildRule keystoreRule = addKeystoreRule(graphBuilder);
     PathSourcePath proguardConfig = FakeSourcePath.of("proguard.cfg");
     AndroidBinary androidBinary =
         AndroidBinaryBuilder.createBuilder(binaryBuildTarget)
@@ -108,7 +108,7 @@ public class AndroidBinaryTest {
             .setManifest(FakeSourcePath.of("java/src/com/facebook/base/AndroidManifest.xml"))
             .setKeystore(keystoreRule.getBuildTarget())
             .setProguardConfig(proguardConfig)
-            .build(ruleResolver);
+            .build(graphBuilder);
 
     AndroidPackageableCollection packageableCollection =
         androidBinary.getAndroidPackageableCollection();
@@ -208,7 +208,7 @@ public class AndroidBinaryTest {
 
   static BuildRule createAndroidLibraryRule(
       String buildTarget,
-      BuildRuleResolver ruleResolver,
+      ActionGraphBuilder graphBuilder,
       String resDirectory,
       String assetDirectory,
       String nativeLibsDirectory) {
@@ -220,9 +220,9 @@ public class AndroidBinaryTest {
     if (!Strings.isNullOrEmpty(resDirectory) || !Strings.isNullOrEmpty(assetDirectory)) {
       BuildTarget resourceOnebuildTarget =
           BuildTargetFactory.newInstance(buildTarget + "_resources");
-      SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
+      SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
       BuildRule androidResourceRule =
-          ruleResolver.addToIndex(
+          graphBuilder.addToIndex(
               AndroidResourceRuleBuilder.newBuilder()
                   .setRuleFinder(ruleFinder)
                   .setAssets(FakeSourcePath.of(assetDirectory))
@@ -239,27 +239,27 @@ public class AndroidBinaryTest {
       BuildRule nativeLibsRule =
           PrebuiltNativeLibraryBuilder.newBuilder(nativeLibOnebuildTarget)
               .setNativeLibs(Paths.get(nativeLibsDirectory))
-              .build(ruleResolver);
-      ruleResolver.addToIndex(nativeLibsRule);
+              .build(graphBuilder);
+      graphBuilder.addToIndex(nativeLibsRule);
       androidLibraryRuleBuilder.addDep(nativeLibsRule.getBuildTarget());
     }
 
-    return androidLibraryRuleBuilder.build(ruleResolver);
+    return androidLibraryRuleBuilder.build(graphBuilder);
   }
 
   @Test
   public void testGetUnsignedApkPath() throws Exception {
-    BuildRuleResolver ruleResolver = new TestBuildRuleResolver();
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(ruleResolver));
-    Keystore keystore = addKeystoreRule(ruleResolver);
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
+    Keystore keystore = addKeystoreRule(graphBuilder);
 
     BuildTarget targetInRootDirectory = BuildTargetFactory.newInstance("//:fb4a");
     AndroidBinary ruleInRootDirectory =
         AndroidBinaryBuilder.createBuilder(targetInRootDirectory)
             .setManifest(FakeSourcePath.of("AndroidManifest.xml"))
             .setKeystore(keystore.getBuildTarget())
-            .build(ruleResolver);
+            .build(graphBuilder);
     assertEquals(
         BuildTargets.getGenPath(
             ruleInRootDirectory.getProjectFilesystem(), targetInRootDirectory, "%s.apk"),
@@ -271,7 +271,7 @@ public class AndroidBinaryTest {
         AndroidBinaryBuilder.createBuilder(targetInNonRootDirectory)
             .setManifest(FakeSourcePath.of("AndroidManifest.xml"))
             .setKeystore(keystore.getBuildTarget())
-            .build(ruleResolver);
+            .build(graphBuilder);
     assertEquals(
         BuildTargets.getGenPath(
             ruleInNonRootDirectory.getProjectFilesystem(), targetInNonRootDirectory, "%s.apk"),
@@ -280,14 +280,14 @@ public class AndroidBinaryTest {
 
   @Test
   public void testGetProguardOutputFromInputClasspath() throws Exception {
-    BuildRuleResolver ruleResolver = new TestBuildRuleResolver();
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
 
     BuildTarget target = BuildTargetFactory.newInstance("//:fbandroid_with_dash_debug_fbsign");
     AndroidBinary rule =
         AndroidBinaryBuilder.createBuilder(target)
             .setManifest(FakeSourcePath.of("AndroidManifest.xml"))
-            .setKeystore(addKeystoreRule(ruleResolver).getBuildTarget())
-            .build(ruleResolver);
+            .setKeystore(addKeystoreRule(graphBuilder).getBuildTarget())
+            .build(graphBuilder);
 
     BuildTarget libBaseTarget =
         BuildTargetFactory.newInstance("//first-party/orca/lib-base:lib-base");
@@ -320,19 +320,19 @@ public class AndroidBinaryTest {
 
   @Test
   public void testDexingCommand() throws Exception {
-    BuildRuleResolver ruleResolver = new TestBuildRuleResolver();
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     AndroidBinary splitDexRule =
         AndroidBinaryBuilder.createBuilder(
                 BuildTargetFactory.newInstance("//:fbandroid_with_dash_debug_fbsign"))
             .setManifest(FakeSourcePath.of("AndroidManifest.xml"))
-            .setKeystore(addKeystoreRule(ruleResolver).getBuildTarget())
+            .setKeystore(addKeystoreRule(graphBuilder).getBuildTarget())
             .setShouldSplitDex(true)
             .setLinearAllocHardLimit(0)
             .setPrimaryDexScenarioOverflowAllowed(true)
             .setDexCompression(DexStore.JAR)
             // Force no predexing.
             .setPreprocessJavaClassesBash(StringWithMacrosUtils.format("cp"))
-            .build(ruleResolver);
+            .build(graphBuilder);
 
     Set<Path> classpath = new HashSet<>();
     ImmutableSet.Builder<Path> secondaryDexDirectories = ImmutableSet.builder();
@@ -357,7 +357,7 @@ public class AndroidBinaryTest {
             Optional.empty(),
             /*  additionalDexStoreToJarPathMap */ ImmutableMultimap.of(),
             FakeBuildContext.withSourcePathResolver(
-                DefaultSourcePathResolver.from(new SourcePathRuleFinder(ruleResolver))));
+                DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder))));
 
     assertEquals(
         "Expected 2 new assets paths (one for metadata.txt and the other for the "
@@ -373,12 +373,12 @@ public class AndroidBinaryTest {
   public void testDexingCommandWithIntraDexReorder() throws Exception {
     SourcePath reorderTool = FakeSourcePath.of("/tools#reorder_tool");
     SourcePath reorderData = FakeSourcePath.of("/tools#reorder_data");
-    BuildRuleResolver ruleResolver = new TestBuildRuleResolver();
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     AndroidBinary splitDexRule =
         AndroidBinaryBuilder.createBuilder(
                 BuildTargetFactory.newInstance("//:fbandroid_with_dash_debug_fbsign"))
             .setManifest(FakeSourcePath.of("AndroidManifest.xml"))
-            .setKeystore(addKeystoreRule(ruleResolver).getBuildTarget())
+            .setKeystore(addKeystoreRule(graphBuilder).getBuildTarget())
             .setShouldSplitDex(true)
             .setLinearAllocHardLimit(0)
             .setPrimaryDexScenarioOverflowAllowed(true)
@@ -386,7 +386,7 @@ public class AndroidBinaryTest {
             .setIntraDexReorderResources(true, reorderTool, reorderData)
             // Force no predexing.
             .setPreprocessJavaClassesBash(StringWithMacrosUtils.format("cp"))
-            .build(ruleResolver);
+            .build(graphBuilder);
 
     Set<Path> classpath = new HashSet<>();
     ImmutableSet.Builder<Path> secondaryDexDirectories = ImmutableSet.builder();
@@ -411,7 +411,7 @@ public class AndroidBinaryTest {
             Optional.of(reorderData),
             /*  additionalDexStoreToJarPathMap */ ImmutableMultimap.of(),
             FakeBuildContext.withSourcePathResolver(
-                DefaultSourcePathResolver.from(new SourcePathRuleFinder(ruleResolver))));
+                DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder))));
 
     assertEquals(
         "Expected 2 new assets paths (one for metadata.txt and the other for the "
@@ -425,10 +425,10 @@ public class AndroidBinaryTest {
 
   @Test
   public void testAddPostFilterCommandSteps() throws Exception {
-    BuildRuleResolver resolver = new TestBuildRuleResolver();
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
-    BuildRule keystoreRule = addKeystoreRule(resolver);
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
+    BuildRule keystoreRule = addKeystoreRule(graphBuilder);
     BuildTarget target = BuildTargetFactory.newInstance("//:target");
     AndroidBinaryBuilder builder =
         AndroidBinaryBuilder.createBuilder(target)
@@ -436,10 +436,10 @@ public class AndroidBinaryTest {
             .setResourceFilter(new ResourceFilter(ImmutableList.of("mdpi")))
             .setKeystore(keystoreRule.getBuildTarget())
             .setManifest(FakeSourcePath.of("manifest"));
-    AndroidBinary androidBinary = builder.build(resolver);
+    AndroidBinary androidBinary = builder.build(graphBuilder);
 
     BuildRule aaptPackageRule =
-        resolver.getRule(BuildTargetFactory.newInstance("//:target#aapt_package"));
+        graphBuilder.getRule(BuildTargetFactory.newInstance("//:target#aapt_package"));
     ResourcesFilter resourcesFilter =
         (ResourcesFilter) ((AaptPackageResources) aaptPackageRule).getFilteredResourcesProvider();
     ImmutableList.Builder<Step> stepsBuilder = new ImmutableList.Builder<>();
@@ -461,34 +461,34 @@ public class AndroidBinaryTest {
 
   @Test
   public void noDxParametersAreHintsAndNotHardDependencies() throws Exception {
-    BuildRuleResolver resolver = new TestBuildRuleResolver();
-    BuildRule keystoreRule = addKeystoreRule(resolver);
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
+    BuildRule keystoreRule = addKeystoreRule(graphBuilder);
 
     AndroidBinaryBuilder.createBuilder(BuildTargetFactory.newInstance("//:target"))
         .setBuildTargetsToExcludeFromDex(
             ImmutableSet.of(BuildTargetFactory.newInstance("//missing:dep")))
         .setKeystore(keystoreRule.getBuildTarget())
         .setManifest(FakeSourcePath.of("AndroidManifest.xml"))
-        .build(resolver);
+        .build(graphBuilder);
   }
 
   @Test
   public void transitivePrebuiltJarsAreFirstOrderDeps() throws Exception {
-    BuildRuleResolver resolver = new TestBuildRuleResolver();
-    BuildRule keystoreRule = addKeystoreRule(resolver);
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
+    BuildRule keystoreRule = addKeystoreRule(graphBuilder);
 
     BuildRule prebuiltJarGen =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:jar"))
             .setOut("foo.jar")
-            .build(resolver);
+            .build(graphBuilder);
 
     BuildRule transitivePrebuiltJarDep =
         PrebuiltJarBuilder.createBuilder(BuildTargetFactory.newInstance("//:transitive_dep"))
             .setBinaryJar(prebuiltJarGen.getSourcePathToOutput())
-            .build(resolver);
+            .build(graphBuilder);
 
     FakeJavaLibrary immediateDep =
-        resolver.addToIndex(
+        graphBuilder.addToIndex(
             new FakeJavaLibrary(
                 BuildTargetFactory.newInstance("//:immediate_dep"),
                 ImmutableSortedSet.of(transitivePrebuiltJarDep)));
@@ -498,16 +498,16 @@ public class AndroidBinaryTest {
             .setKeystore(keystoreRule.getBuildTarget())
             .setManifest(FakeSourcePath.of("AndroidManifest.xml"))
             .setOriginalDeps(ImmutableSortedSet.of(immediateDep.getBuildTarget()))
-            .build(resolver);
+            .build(graphBuilder);
 
     assertThat(rule.getBuildDeps(), Matchers.hasItem(transitivePrebuiltJarDep));
   }
 
-  private Keystore addKeystoreRule(BuildRuleResolver ruleResolver) {
+  private Keystore addKeystoreRule(ActionGraphBuilder graphBuilder) {
     BuildTarget keystoreTarget = BuildTargetFactory.newInstance("//keystore:debug");
     return KeystoreBuilder.createBuilder(keystoreTarget)
         .setStore(FakeSourcePath.of("keystore/debug.keystore"))
         .setProperties(FakeSourcePath.of("keystore/debug.keystore.properties"))
-        .build(ruleResolver);
+        .build(graphBuilder);
   }
 }

@@ -185,6 +185,6 @@ public class JsBundleWorkerJobArgsTest {
   private void buildContext(JsTestScenario scenario) {
     context =
         FakeBuildContext.withSourcePathResolver(
-            DefaultSourcePathResolver.from(new SourcePathRuleFinder(scenario.resolver)));
+            DefaultSourcePathResolver.from(new SourcePathRuleFinder(scenario.graphBuilder)));
   }
 }

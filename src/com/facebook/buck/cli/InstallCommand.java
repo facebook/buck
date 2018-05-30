@@ -41,6 +41,7 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
@@ -246,7 +247,7 @@ public class InstallCommand extends BuildCommand {
   protected Iterable<BuildTarget> getAdditionalTargetsToBuild(
       GraphsAndBuildTargets graphsAndBuildTargets) {
     BuildRuleResolver resolver =
-        graphsAndBuildTargets.getGraphs().getActionGraphAndResolver().getResolver();
+        graphsAndBuildTargets.getGraphs().getActionGraphAndBuilder().getActionGraphBuilder();
     ImmutableList.Builder<BuildTarget> builder = ImmutableList.builder();
     builder.addAll(super.getAdditionalTargetsToBuild(graphsAndBuildTargets));
     for (BuildTarget target : graphsAndBuildTargets.getBuildTargets()) {
@@ -278,9 +279,9 @@ public class InstallCommand extends BuildCommand {
 
     for (BuildTarget buildTarget : buildRunResult.getBuildTargets()) {
 
-      BuildRule buildRule = build.getRuleResolver().requireRule(buildTarget);
+      BuildRule buildRule = build.getGraphBuilder().requireRule(buildTarget);
       SourcePathResolver pathResolver =
-          DefaultSourcePathResolver.from(new SourcePathRuleFinder(build.getRuleResolver()));
+          DefaultSourcePathResolver.from(new SourcePathRuleFinder(build.getGraphBuilder()));
 
       if (buildRule instanceof HasInstallableApk) {
         exitCode =
@@ -510,8 +511,8 @@ public class InstallCommand extends BuildCommand {
     Path helperPath;
     Optional<BuildTarget> helperTarget = appleConfig.getAppleDeviceHelperTarget();
     if (helperTarget.isPresent()) {
-      BuildRuleResolver resolver = getBuild().getRuleResolver();
-      BuildRule buildRule = resolver.requireRule(helperTarget.get());
+      ActionGraphBuilder graphBuilder = getBuild().getGraphBuilder();
+      BuildRule buildRule = graphBuilder.requireRule(helperTarget.get());
       if (buildRule == null) {
         params
             .getConsole()

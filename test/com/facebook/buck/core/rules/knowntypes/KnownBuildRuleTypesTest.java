@@ -30,10 +30,10 @@ import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rulekey.RuleKey;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.rules.resolver.impl.TestBuildRuleResolver;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
@@ -141,11 +141,11 @@ public class KnownBuildRuleTypesTest {
                 DescriptionCache.getBuildRuleType(JavaLibraryDescription.class));
 
     JavaLibraryDescriptionArg arg = JavaLibraryDescriptionArg.builder().setName("foo").build();
-    BuildRuleResolver resolver = new TestBuildRuleResolver();
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     return (DefaultJavaLibrary)
         description.createBuildRule(
             TestBuildRuleCreationContextFactory.create(
-                resolver,
+                graphBuilder,
                 projectFilesystem,
                 JavaLibraryBuilder.createToolchainProviderForJavaLibrary()),
             buildTarget,
@@ -190,7 +190,7 @@ public class KnownBuildRuleTypesTest {
         KnownBuildRuleTypesTestUtil.createInstance(buckConfig, toolchainProvider, processExecutor);
     DefaultJavaLibrary configuredRule = createJavaLibrary(configuredBuildRuleTypes);
 
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestBuildRuleResolver());
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestActionGraphBuilder());
     SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
     FakeFileHashCache hashCache =
         new FakeFileHashCache(

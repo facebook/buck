@@ -17,7 +17,7 @@
 package com.facebook.buck.cxx.toolchain.nativelink;
 
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.rules.BuildRuleResolver;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
@@ -32,12 +32,12 @@ public interface NativeLinkTarget {
 
   /** @return the {@link NativeLinkable} dependencies used to link this target. */
   Iterable<? extends NativeLinkable> getNativeLinkTargetDeps(
-      CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver);
+      CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder);
 
   /** @return the {@link NativeLinkableInput} used to link this target. */
   NativeLinkableInput getNativeLinkTargetInput(
       CxxPlatform cxxPlatform,
-      BuildRuleResolver ruleResolver,
+      ActionGraphBuilder graphBuilder,
       SourcePathResolver pathResolver,
       SourcePathRuleFinder ruleFinder);
 

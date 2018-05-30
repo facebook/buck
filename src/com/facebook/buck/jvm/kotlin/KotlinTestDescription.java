@@ -20,8 +20,8 @@ import com.facebook.buck.core.description.BuildRuleParams;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.HasJavaAbi;
@@ -75,7 +75,7 @@ public class KotlinTestDescription implements DescriptionWithTargetGraph<KotlinT
         buildTarget.withAppendedFlavors(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR);
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
 
-    BuildRuleResolver resolver = context.getBuildRuleResolver();
+    ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
     JavacOptions javacOptions =
         JavacOptionsFactory.create(
             toolchainProvider
@@ -83,7 +83,7 @@ public class KotlinTestDescription implements DescriptionWithTargetGraph<KotlinT
                 .getJavacOptions(),
             buildTarget,
             projectFilesystem,
-            resolver,
+            graphBuilder,
             args);
 
     DefaultJavaLibraryRules defaultJavaLibraryRules =
@@ -92,7 +92,7 @@ public class KotlinTestDescription implements DescriptionWithTargetGraph<KotlinT
                 projectFilesystem,
                 context.getToolchainProvider(),
                 params,
-                resolver,
+                graphBuilder,
                 context.getCellPathResolver(),
                 kotlinBuckConfig,
                 javaBuckConfig,
@@ -104,7 +104,8 @@ public class KotlinTestDescription implements DescriptionWithTargetGraph<KotlinT
       return defaultJavaLibraryRules.buildAbi();
     }
 
-    DefaultJavaLibrary testsLibrary = resolver.addToIndex(defaultJavaLibraryRules.buildLibrary());
+    DefaultJavaLibrary testsLibrary =
+        graphBuilder.addToIndex(defaultJavaLibraryRules.buildLibrary());
 
     StringWithMacrosConverter macrosConverter =
         StringWithMacrosConverter.builder()
@@ -132,7 +133,7 @@ public class KotlinTestDescription implements DescriptionWithTargetGraph<KotlinT
             .orElse(javaBuckConfig.getDelegate().getDefaultTestRuleTimeoutMs()),
         args.getTestCaseTimeoutMs(),
         ImmutableMap.copyOf(
-            Maps.transformValues(args.getEnv(), x -> macrosConverter.convert(x, resolver))),
+            Maps.transformValues(args.getEnv(), x -> macrosConverter.convert(x, graphBuilder))),
         args.getRunTestSeparately(),
         args.getForkMode(),
         args.getStdOutLogLevel(),

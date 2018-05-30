@@ -25,8 +25,8 @@ import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -92,7 +92,7 @@ public class HaskellGhciDescription
 
   /** Whether the nativeLinkable should be linked shared or othewise */
   public static boolean isPrebuiltSO(
-      NativeLinkable nativeLinkable, CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
+      NativeLinkable nativeLinkable, CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
 
     if (nativeLinkable instanceof PrebuiltCxxLibraryGroupDescription.CustomPrebuiltCxxLibrary) {
       return true;
@@ -103,7 +103,7 @@ public class HaskellGhciDescription
     }
 
     ImmutableMap<String, SourcePath> sharedLibraries =
-        nativeLinkable.getSharedLibraries(cxxPlatform, ruleResolver);
+        nativeLinkable.getSharedLibraries(cxxPlatform, graphBuilder);
 
     for (Map.Entry<String, SourcePath> ent : sharedLibraries.entrySet()) {
       if (!(ent.getValue() instanceof PathSourcePath)) {
@@ -124,7 +124,7 @@ public class HaskellGhciDescription
   public static HaskellGhciOmnibusSpec getOmnibusSpec(
       BuildTarget baseTarget,
       CxxPlatform cxxPlatform,
-      BuildRuleResolver ruleResolver,
+      ActionGraphBuilder graphBuilder,
       ImmutableMap<BuildTarget, ? extends NativeLinkable> omnibusRoots,
       ImmutableMap<BuildTarget, ? extends NativeLinkable> excludedRoots) {
 
@@ -136,7 +136,7 @@ public class HaskellGhciDescription
     // Calculate excluded roots/deps, and add them to the link.
     ImmutableMap<BuildTarget, NativeLinkable> transitiveExcludedLinkables =
         NativeLinkables.getTransitiveNativeLinkables(
-            cxxPlatform, ruleResolver, excludedRoots.values());
+            cxxPlatform, graphBuilder, excludedRoots.values());
     builder.setExcludedRoots(excludedRoots);
     builder.setExcludedTransitiveDeps(transitiveExcludedLinkables);
 
@@ -157,7 +157,7 @@ public class HaskellGhciDescription
         // TODO(agallagher): We should also use `NativeLinkable.supportsOmnibusLinking()` to
         // determine if we can include the library, but this will need likely need to be updated for
         // a multi-pass walk first.
-        if (isPrebuiltSO(nativeLinkable, cxxPlatform, ruleResolver)) {
+        if (isPrebuiltSO(nativeLinkable, cxxPlatform, graphBuilder)) {
           builder.putDeps(nativeLinkable.getBuildTarget(), nativeLinkable);
           LOG.verbose("%s: skipping prebuilt SO %s", baseTarget, nativeLinkable.getBuildTarget());
           return ImmutableSet.of();
@@ -172,8 +172,8 @@ public class HaskellGhciDescription
           LOG.verbose(
               "%s: including C/C++ library %s", baseTarget, nativeLinkable.getBuildTarget());
           return Iterables.concat(
-              nativeLinkable.getNativeLinkableDepsForPlatform(cxxPlatform, ruleResolver),
-              nativeLinkable.getNativeLinkableExportedDepsForPlatform(cxxPlatform, ruleResolver));
+              nativeLinkable.getNativeLinkableDepsForPlatform(cxxPlatform, graphBuilder),
+              nativeLinkable.getNativeLinkableExportedDepsForPlatform(cxxPlatform, graphBuilder));
         }
 
         // Unexpected node.  Can this actually happen?
@@ -192,7 +192,7 @@ public class HaskellGhciDescription
   private static NativeLinkableInput getOmnibusNativeLinkableInput(
       BuildTarget baseTarget,
       CxxPlatform cxxPlatform,
-      BuildRuleResolver ruleResolver,
+      ActionGraphBuilder graphBuilder,
       Iterable<NativeLinkable> body,
       Iterable<NativeLinkable> deps) {
 
@@ -208,9 +208,9 @@ public class HaskellGhciDescription
                 RichStream.from(
                         Iterables.concat(
                             nativeLinkable.getNativeLinkableExportedDepsForPlatform(
-                                cxxPlatform, ruleResolver),
+                                cxxPlatform, graphBuilder),
                             nativeLinkable.getNativeLinkableDepsForPlatform(
-                                cxxPlatform, ruleResolver)))
+                                cxxPlatform, graphBuilder)))
                     .filter(l -> bodyTargets.contains(l.getBuildTarget())));
 
     // Add the link inputs for all omnibus nodes.
@@ -218,14 +218,14 @@ public class HaskellGhciDescription
 
       // We link C/C++ libraries whole...
       if (nativeLinkable instanceof CxxLibrary) {
-        NativeLinkable.Linkage link = nativeLinkable.getPreferredLinkage(cxxPlatform, ruleResolver);
+        NativeLinkable.Linkage link = nativeLinkable.getPreferredLinkage(cxxPlatform, graphBuilder);
         nativeLinkableInputs.add(
             nativeLinkable.getNativeLinkableInput(
                 cxxPlatform,
                 NativeLinkables.getLinkStyle(link, Linker.LinkableDepType.STATIC_PIC),
                 true,
                 ImmutableSet.of(),
-                ruleResolver));
+                graphBuilder));
         LOG.verbose(
             "%s: linking C/C++ library %s whole into omnibus",
             baseTarget, nativeLinkable.getBuildTarget());
@@ -236,7 +236,7 @@ public class HaskellGhciDescription
       if (nativeLinkable instanceof PrebuiltCxxLibrary) {
         nativeLinkableInputs.add(
             NativeLinkables.getNativeLinkableInput(
-                cxxPlatform, Linker.LinkableDepType.STATIC_PIC, nativeLinkable, ruleResolver));
+                cxxPlatform, Linker.LinkableDepType.STATIC_PIC, nativeLinkable, graphBuilder));
         LOG.verbose(
             "%s: linking prebuilt C/C++ library %s into omnibus",
             baseTarget, nativeLinkable.getBuildTarget());
@@ -251,11 +251,11 @@ public class HaskellGhciDescription
 
     // Link in omnibus deps dynamically.
     ImmutableList<NativeLinkable> depLinkables =
-        NativeLinkables.getNativeLinkables(cxxPlatform, ruleResolver, deps, LinkableDepType.SHARED);
+        NativeLinkables.getNativeLinkables(cxxPlatform, graphBuilder, deps, LinkableDepType.SHARED);
     for (NativeLinkable linkable : depLinkables) {
       nativeLinkableInputs.add(
           NativeLinkables.getNativeLinkableInput(
-              cxxPlatform, LinkableDepType.SHARED, linkable, ruleResolver));
+              cxxPlatform, LinkableDepType.SHARED, linkable, graphBuilder));
     }
 
     return NativeLinkableInput.concat(nativeLinkableInputs);
@@ -274,13 +274,13 @@ public class HaskellGhciDescription
       CellPathResolver cellPathResolver,
       BuildTarget baseTarget,
       ProjectFilesystem projectFilesystem,
-      BuildRuleResolver resolver,
+      ActionGraphBuilder graphBuilder,
       CxxPlatform cxxPlatform,
       CxxBuckConfig cxxBuckConfig,
       Iterable<NativeLinkable> body,
       Iterable<NativeLinkable> deps,
       ImmutableList<Arg> extraLdFlags) {
-    return resolver.computeIfAbsent(
+    return graphBuilder.computeIfAbsent(
         ImmutableBuildTarget.of(
             ImmutableUnflavoredBuildTarget.of(
                 baseTarget.getCellPath(),
@@ -292,17 +292,17 @@ public class HaskellGhciDescription
           ImmutableList.Builder<Arg> linkFlagsBuilder = ImmutableList.builder();
           linkFlagsBuilder.addAll(extraLdFlags);
           linkFlagsBuilder.addAll(
-              getOmnibusNativeLinkableInput(baseTarget, cxxPlatform, resolver, body, deps)
+              getOmnibusNativeLinkableInput(baseTarget, cxxPlatform, graphBuilder, body, deps)
                   .getArgs());
 
           // ----------------------------------------------------------------
-          // Add to resolver
+          // Add to graphBuilder
           return CxxLinkableEnhancer.createCxxLinkableSharedBuildRule(
               cxxBuckConfig,
               cxxPlatform,
               projectFilesystem,
-              resolver,
-              new SourcePathRuleFinder(resolver),
+              graphBuilder,
+              new SourcePathRuleFinder(graphBuilder),
               ruleTarget,
               BuildTargets.getGenPath(projectFilesystem, ruleTarget, "%s")
                   .resolve("libghci_dependencies.so"),
@@ -343,7 +343,7 @@ public class HaskellGhciDescription
         context.getProjectFilesystem(),
         params,
         context.getCellPathResolver(),
-        context.getBuildRuleResolver(),
+        context.getActionGraphBuilder(),
         platform,
         cxxBuckConfig,
         args.getDeps(),

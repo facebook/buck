@@ -18,8 +18,8 @@ package com.facebook.buck.shell;
 
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.rules.resolver.impl.TestBuildRuleResolver;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildableSupport;
@@ -33,12 +33,12 @@ public class ShBinaryDescriptionTest {
 
   @Test
   public void mainIsIncludedInCommand() throws Exception {
-    BuildRuleResolver resolver = new TestBuildRuleResolver();
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     PathSourcePath main = FakeSourcePath.of("main.sh");
     ShBinary shBinary =
         new ShBinaryBuilder(BuildTargetFactory.newInstance("//:rule"))
             .setMain(main)
-            .build(resolver);
+            .build(graphBuilder);
     assertThat(
         BuildableSupport.deriveInputs(shBinary.getExecutableCommand())
             .collect(ImmutableList.toImmutableList()),
@@ -47,14 +47,14 @@ public class ShBinaryDescriptionTest {
 
   @Test
   public void resourcesAreIncludedInCommand() throws Exception {
-    BuildRuleResolver resolver = new TestBuildRuleResolver();
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     PathSourcePath main = FakeSourcePath.of("main.sh");
     PathSourcePath resource = FakeSourcePath.of("resource.dat");
     ShBinary shBinary =
         new ShBinaryBuilder(BuildTargetFactory.newInstance("//:rule"))
             .setMain(main)
             .setResources(ImmutableSet.of(resource))
-            .build(resolver);
+            .build(graphBuilder);
     assertThat(
         BuildableSupport.deriveInputs(shBinary.getExecutableCommand())
             .collect(ImmutableList.toImmutableList()),

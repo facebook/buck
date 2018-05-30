@@ -17,8 +17,8 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -49,7 +49,7 @@ abstract class AbstractPreIncludeFactory {
   protected abstract BuildTarget getBaseBuildTarget();
 
   @Value.Parameter
-  protected abstract BuildRuleResolver getRuleResolver();
+  protected abstract ActionGraphBuilder getActionGraphBuilder();
 
   @Value.Parameter
   protected abstract SourcePathResolver getPathResolver();
@@ -87,7 +87,7 @@ abstract class AbstractPreIncludeFactory {
     if (getPrefixHeader().isPresent()) {
       return Optional.of(
           (CxxPrefixHeader)
-              getRuleResolver()
+              getActionGraphBuilder()
                   .computeIfAbsent(
                       getBaseBuildTarget().withAppendedFlavors(CxxPrefixHeader.FLAVOR),
                       prefixTarget ->
@@ -102,7 +102,7 @@ abstract class AbstractPreIncludeFactory {
     if (getPrecompiledHeader().isPresent()) {
       Preconditions.checkState(getPrecompiledHeader().get() instanceof BuildTargetSourcePath);
       BuildTargetSourcePath headerPath = (BuildTargetSourcePath) getPrecompiledHeader().get();
-      BuildRule rule = getRuleResolver().requireRule(headerPath.getTarget());
+      BuildRule rule = getActionGraphBuilder().requireRule(headerPath.getTarget());
       Preconditions.checkArgument(rule instanceof CxxPrecompiledHeaderTemplate);
       return Optional.of((CxxPrecompiledHeaderTemplate) rule);
     }

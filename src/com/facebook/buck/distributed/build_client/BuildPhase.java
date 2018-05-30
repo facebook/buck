@@ -207,7 +207,7 @@ public class BuildPhase {
     ListenableFuture<DelegateAndGraphs> delegateAndGraphs =
         Futures.immediateFuture(
             DelegateAndGraphs.builder()
-                .setActionGraphAndResolver(buildGraphs.getActionGraphAndResolver())
+                .setActionGraphAndBuilder(buildGraphs.getActionGraphAndBuilder())
                 .setCachingBuildEngineDelegate(cachingBuildEngineDelegate.get())
                 .setTargetGraph(buildGraphs.getTargetGraphForDistributedBuild().getTargetGraph())
                 .build());

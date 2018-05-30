@@ -28,7 +28,7 @@ import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.rules.resolver.impl.SingleThreadedBuildRuleResolver;
+import com.facebook.buck.core.rules.resolver.impl.SingleThreadedActionGraphBuilder;
 import com.facebook.buck.core.rules.transformer.impl.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.core.rules.type.BuildRuleType;
 import com.facebook.buck.core.sourcepath.ArchiveMemberSourcePath;
@@ -213,7 +213,7 @@ public class RuleKeyBuilderTest {
     Map<BuildRule, RuleKey> ruleKeyMap = ImmutableMap.of(RULE_1, RULE_KEY_1, RULE_2, RULE_KEY_2);
     Map<AddsToRuleKey, RuleKey> appendableKeys =
         ImmutableMap.of(APPENDABLE_1, RULE_KEY_1, APPENDABLE_2, RULE_KEY_2);
-    BuildRuleResolver ruleResolver = new FakeBuildRuleResolver(ruleMap);
+    BuildRuleResolver ruleResolver = new FakeActionGraphBuilder(ruleMap);
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     FakeFileHashCache hashCache =
@@ -262,10 +262,10 @@ public class RuleKeyBuilderTest {
   }
 
   // This ugliness is necessary as we don't have mocks in Buck unit tests.
-  private static class FakeBuildRuleResolver extends SingleThreadedBuildRuleResolver {
+  private static class FakeActionGraphBuilder extends SingleThreadedActionGraphBuilder {
     private final Map<BuildTarget, BuildRule> ruleMap;
 
-    public FakeBuildRuleResolver(Map<BuildTarget, BuildRule> ruleMap) {
+    public FakeActionGraphBuilder(Map<BuildTarget, BuildRule> ruleMap) {
       super(
           TargetGraph.EMPTY,
           new DefaultTargetNodeToBuildRuleTransformer(),

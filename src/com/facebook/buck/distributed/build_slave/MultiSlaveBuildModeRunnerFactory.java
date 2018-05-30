@@ -90,7 +90,7 @@ public class MultiSlaveBuildModeRunnerFactory {
                       BuildTargetsQueue queue;
                       try (ArtifactCacheByBuildRule artifactCache =
                           new DistBuildArtifactCacheImpl(
-                              graphs.getActionGraphAndResolver().getResolver(),
+                              graphs.getActionGraphAndBuilder().getActionGraphBuilder(),
                               executorService,
                               remoteCache,
                               eventBus,
@@ -98,7 +98,7 @@ public class MultiSlaveBuildModeRunnerFactory {
                               Optional.empty())) {
                         queue =
                             new CacheOptimizedBuildTargetsQueueFactory(
-                                    graphs.getActionGraphAndResolver().getResolver(),
+                                    graphs.getActionGraphAndBuilder().getActionGraphBuilder(),
                                     artifactCache,
                                     distBuildConfig.isDeepRemoteBuildEnabled(),
                                     ruleKeyCalculator.getRuleDepsCache(),

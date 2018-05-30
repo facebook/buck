@@ -133,7 +133,7 @@ public final class RunCommand extends AbstractCommand {
 
     Build build = buildCommand.getBuild();
     BuildRule targetRule;
-    targetRule = build.getRuleResolver().requireRule(target);
+    targetRule = build.getGraphBuilder().requireRule(target);
     BinaryBuildRule binaryBuildRule = null;
     if (targetRule instanceof BinaryBuildRule) {
       binaryBuildRule = (BinaryBuildRule) targetRule;
@@ -159,7 +159,7 @@ public final class RunCommand extends AbstractCommand {
     //
     // If we haven't received a command args file, we assume it's fine to just run in-process.
     SourcePathResolver resolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(build.getRuleResolver()));
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(build.getGraphBuilder()));
     Tool executable = binaryBuildRule.getExecutableCommand();
     if (commandArgsFile == null) {
       ListeningProcessExecutor processExecutor = new ListeningProcessExecutor();

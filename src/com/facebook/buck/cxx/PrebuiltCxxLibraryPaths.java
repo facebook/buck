@@ -18,7 +18,7 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.cell.resolver.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.rules.BuildRuleResolver;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
@@ -34,28 +34,28 @@ interface PrebuiltCxxLibraryPaths {
 
   Optional<SourcePath> getSharedLibrary(
       ProjectFilesystem filesystem,
-      BuildRuleResolver resolver,
+      ActionGraphBuilder graphBuilder,
       CellPathResolver cellRoots,
       CxxPlatform cxxPlatform,
       Optional<ImmutableMap<BuildTarget, Version>> selectedVersions);
 
   Optional<SourcePath> getStaticLibrary(
       ProjectFilesystem filesystem,
-      BuildRuleResolver resolver,
+      ActionGraphBuilder graphBuilder,
       CellPathResolver cellRoots,
       CxxPlatform cxxPlatform,
       Optional<ImmutableMap<BuildTarget, Version>> selectedVersions);
 
   Optional<SourcePath> getStaticPicLibrary(
       ProjectFilesystem filesystem,
-      BuildRuleResolver resolver,
+      ActionGraphBuilder graphBuilder,
       CellPathResolver cellRoots,
       CxxPlatform cxxPlatform,
       Optional<ImmutableMap<BuildTarget, Version>> selectedVersions);
 
   ImmutableList<SourcePath> getIncludeDirs(
       ProjectFilesystem filesystem,
-      BuildRuleResolver resolver,
+      ActionGraphBuilder graphBuilder,
       CellPathResolver cellRoots,
       CxxPlatform cxxPlatform,
       Optional<ImmutableMap<BuildTarget, Version>> selectedVersions);
@@ -63,7 +63,7 @@ interface PrebuiltCxxLibraryPaths {
   @SuppressWarnings("unused")
   default Optional<NativeLinkable.Linkage> getLinkage(
       ProjectFilesystem filesystem,
-      BuildRuleResolver resolver,
+      ActionGraphBuilder graphBuilder,
       CellPathResolver cellRoots,
       CxxPlatform cxxPlatform) {
     return Optional.empty();

@@ -48,7 +48,7 @@ public class BuildReport {
 
   /**
    * @param buildExecutionResult the build result to generate the report for.
-   * @param pathResolver source path resolver which can be used for the result.
+   * @param pathResolver source path graphBuilder which can be used for the result.
    */
   public BuildReport(BuildExecutionResult buildExecutionResult, SourcePathResolver pathResolver) {
     this.buildExecutionResult = buildExecutionResult;

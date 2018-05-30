@@ -31,8 +31,8 @@ import com.facebook.buck.core.model.Flavored;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
@@ -156,7 +156,7 @@ public class CxxLibraryDescription
    */
   static ImmutableList<CxxPreprocessorInput> getPreprocessorInputsForBuildingLibrarySources(
       CxxBuckConfig cxxBuckConfig,
-      BuildRuleResolver ruleResolver,
+      ActionGraphBuilder graphBuilder,
       CellPathResolver cellRoots,
       BuildTarget target,
       CommonArg args,
@@ -168,7 +168,7 @@ public class CxxLibraryDescription
     return CxxDescriptionEnhancer.collectCxxPreprocessorInput(
         target,
         cxxPlatform,
-        ruleResolver,
+        graphBuilder,
         deps,
         ImmutableListMultimap.copyOf(
             Multimaps.transformValues(
@@ -179,13 +179,13 @@ public class CxxLibraryDescription
                     cxxPlatform),
                 f ->
                     CxxDescriptionEnhancer.toStringWithMacrosArgs(
-                        target, cellRoots, ruleResolver, cxxPlatform, f))),
+                        target, cellRoots, graphBuilder, cxxPlatform, f))),
         headerSymlinkTrees,
         ImmutableSet.of(),
         RichStream.from(
                 transitivePreprocessorInputs.apply(
                     target,
-                    ruleResolver,
+                    graphBuilder,
                     cxxPlatform,
                     deps,
                     // Also add private deps if we are _not_ reexporting all deps.
@@ -214,7 +214,7 @@ public class CxxLibraryDescription
         buildTarget,
         context.getProjectFilesystem(),
         params,
-        context.getBuildRuleResolver(),
+        context.getActionGraphBuilder(),
         context.getCellPathResolver(),
         args,
         args.getLinkStyle(),
@@ -257,11 +257,11 @@ public class CxxLibraryDescription
    * <p>Use this function instead of constructing the BuildTarget manually.
    */
   public static Optional<CxxPreprocessorInput> queryMetadataCxxPreprocessorInput(
-      BuildRuleResolver resolver,
+      ActionGraphBuilder graphBuilder,
       BuildTarget baseTarget,
       CxxPlatform platform,
       HeaderVisibility visibility) {
-    return resolver.requireMetadata(
+    return graphBuilder.requireMetadata(
         baseTarget.withAppendedFlavors(
             MetadataType.CXX_PREPROCESSOR_INPUT.getFlavor(),
             platform.getFlavor(),
@@ -272,13 +272,13 @@ public class CxxLibraryDescription
   @Override
   public <U> Optional<U> createMetadata(
       BuildTarget buildTarget,
-      BuildRuleResolver resolver,
+      ActionGraphBuilder graphBuilder,
       CellPathResolver cellRoots,
       CxxLibraryDescriptionArg args,
       Optional<ImmutableMap<BuildTarget, Version>> selectedVersions,
       Class<U> metadataClass) {
     return cxxLibraryMetadataFactory.createMetadata(
-        buildTarget, resolver, cellRoots, args, metadataClass);
+        buildTarget, graphBuilder, cellRoots, args, metadataClass);
   }
 
   @Override
@@ -305,7 +305,7 @@ public class CxxLibraryDescription
   public interface TransitiveCxxPreprocessorInputFunction {
     Stream<CxxPreprocessorInput> apply(
         BuildTarget target,
-        BuildRuleResolver ruleResolver,
+        ActionGraphBuilder graphBuilder,
         CxxPlatform cxxPlatform,
         ImmutableSet<BuildRule> deps,
         CxxDeps privateDeps);
@@ -317,20 +317,20 @@ public class CxxLibraryDescription
      * (namely AppleTest) cannot use this.
      */
     static TransitiveCxxPreprocessorInputFunction fromLibraryRule() {
-      return (target, ruleResolver, cxxPlatform, ignored, privateDeps) -> {
+      return (target, graphBuilder, cxxPlatform, ignored, privateDeps) -> {
         BuildTarget rawTarget =
             target.withoutFlavors(
                 ImmutableSet.<Flavor>builder()
                     .addAll(LIBRARY_TYPE.getFlavors())
                     .add(cxxPlatform.getFlavor())
                     .build());
-        BuildRule rawRule = ruleResolver.requireRule(rawTarget);
+        BuildRule rawRule = graphBuilder.requireRule(rawTarget);
         CxxLibrary rule = (CxxLibrary) rawRule;
         ImmutableMap<BuildTarget, CxxPreprocessorInput> inputs =
-            rule.getTransitiveCxxPreprocessorInput(cxxPlatform, ruleResolver);
+            rule.getTransitiveCxxPreprocessorInput(cxxPlatform, graphBuilder);
 
         ImmutableList<CxxPreprocessorDep> privateDepsForPlatform =
-            RichStream.from(privateDeps.get(ruleResolver, cxxPlatform))
+            RichStream.from(privateDeps.get(graphBuilder, cxxPlatform))
                 .filter(CxxPreprocessorDep.class)
                 .toImmutableList();
         if (privateDepsForPlatform.isEmpty()) {
@@ -340,7 +340,7 @@ public class CxxLibraryDescription
           Map<BuildTarget, CxxPreprocessorInput> result = new LinkedHashMap<>();
           result.putAll(inputs);
           for (CxxPreprocessorDep dep : privateDepsForPlatform) {
-            result.putAll(dep.getTransitiveCxxPreprocessorInput(cxxPlatform, ruleResolver));
+            result.putAll(dep.getTransitiveCxxPreprocessorInput(cxxPlatform, graphBuilder));
           }
           return result.values().stream();
         }

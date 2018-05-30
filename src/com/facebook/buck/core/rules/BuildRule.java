@@ -122,11 +122,11 @@ public interface BuildRule extends Comparable<BuildRule> {
   }
 
   /**
-   * Updates the build rule resolver and associated objects for this build rule.
+   * Updates the build rule graphBuilder and associated objects for this build rule.
    *
    * <p>Build rules sometimes hold field references to build rule resolvers. If this build rule is
-   * to be cached, it must update its build rule resolver when a new action graph is constructed to
-   * avoid leaking the entire action graph it was originally associated with.
+   * to be cached, it must update its build rule graphBuilder when a new action graph is constructed
+   * to avoid leaking the entire action graph it was originally associated with.
    */
   @SuppressWarnings("unused")
   void updateBuildRuleResolver(

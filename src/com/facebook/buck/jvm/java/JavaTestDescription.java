@@ -25,8 +25,8 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -102,7 +102,7 @@ public class JavaTestDescription
       BuildTarget buildTarget,
       BuildRuleParams params,
       JavaTestDescriptionArg args) {
-    BuildRuleResolver resolver = context.getBuildRuleResolver();
+    ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
     CellPathResolver cellRoots = context.getCellPathResolver();
     JavacOptions javacOptions =
@@ -112,10 +112,10 @@ public class JavaTestDescription
                 .getJavacOptions(),
             buildTarget,
             projectFilesystem,
-            resolver,
+            graphBuilder,
             args);
 
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     CxxLibraryEnhancement cxxLibraryEnhancement =
         new CxxLibraryEnhancement(
             buildTarget,
@@ -123,7 +123,7 @@ public class JavaTestDescription
             params,
             args.getUseCxxLibraries(),
             args.getCxxLibraryWhitelist(),
-            resolver,
+            graphBuilder,
             ruleFinder,
             getCxxPlatform(args));
     params = cxxLibraryEnhancement.updatedParams;
@@ -134,7 +134,7 @@ public class JavaTestDescription
                 projectFilesystem,
                 context.getToolchainProvider(),
                 params,
-                resolver,
+                graphBuilder,
                 cellRoots,
                 new JavaConfiguredCompilerFactory(javaBuckConfig),
                 javaBuckConfig,
@@ -147,7 +147,7 @@ public class JavaTestDescription
       return defaultJavaLibraryRules.buildAbi();
     }
 
-    JavaLibrary testsLibrary = resolver.addToIndex(defaultJavaLibraryRules.buildLibrary());
+    JavaLibrary testsLibrary = graphBuilder.addToIndex(defaultJavaLibraryRules.buildLibrary());
 
     StringWithMacrosConverter macrosConverter =
         StringWithMacrosConverter.builder()
@@ -176,7 +176,7 @@ public class JavaTestDescription
             .orElse(javaBuckConfig.getDelegate().getDefaultTestRuleTimeoutMs()),
         args.getTestCaseTimeoutMs(),
         ImmutableMap.copyOf(
-            Maps.transformValues(args.getEnv(), x -> macrosConverter.convert(x, resolver))),
+            Maps.transformValues(args.getEnv(), x -> macrosConverter.convert(x, graphBuilder))),
         args.getRunTestSeparately(),
         args.getForkMode(),
         args.getStdOutLogLevel(),
@@ -241,13 +241,13 @@ public class JavaTestDescription
         BuildRuleParams params,
         Optional<Boolean> useCxxLibraries,
         ImmutableSet<BuildTarget> cxxLibraryWhitelist,
-        BuildRuleResolver resolver,
+        ActionGraphBuilder graphBuilder,
         SourcePathRuleFinder ruleFinder,
         CxxPlatform cxxPlatform) {
       if (useCxxLibraries.orElse(false)) {
         SymlinkTree nativeLibsSymlinkTree =
             buildNativeLibsSymlinkTreeRule(
-                buildTarget, projectFilesystem, resolver, ruleFinder, params, cxxPlatform);
+                buildTarget, projectFilesystem, graphBuilder, ruleFinder, params, cxxPlatform);
 
         // If the cxxLibraryWhitelist is present, remove symlinks that were not requested.
         // They could point to old, invalid versions of the library in question.
@@ -276,7 +276,7 @@ public class JavaTestDescription
                   ruleFinder);
         }
 
-        resolver.addToIndex(nativeLibsSymlinkTree);
+        graphBuilder.addToIndex(nativeLibsSymlinkTree);
         updatedParams =
             params.copyAppendingExtraDeps(
                 ImmutableList.<BuildRule>builder()
@@ -291,7 +291,7 @@ public class JavaTestDescription
                     .build());
         nativeLibsEnvironment =
             ImmutableMap.of(
-                cxxPlatform.getLd().resolve(resolver).searchPathEnvVar(),
+                cxxPlatform.getLd().resolve(graphBuilder).searchPathEnvVar(),
                 nativeLibsSymlinkTree.getRoot().toString());
       } else {
         updatedParams = params;
@@ -302,14 +302,14 @@ public class JavaTestDescription
     public static SymlinkTree buildNativeLibsSymlinkTreeRule(
         BuildTarget buildTarget,
         ProjectFilesystem projectFilesystem,
-        BuildRuleResolver ruleResolver,
+        ActionGraphBuilder graphBuilder,
         SourcePathRuleFinder ruleFinder,
         BuildRuleParams buildRuleParams,
         CxxPlatform cxxPlatform) {
       return CxxDescriptionEnhancer.createSharedLibrarySymlinkTree(
           buildTarget,
           projectFilesystem,
-          ruleResolver,
+          graphBuilder,
           ruleFinder,
           cxxPlatform,
           buildRuleParams.getBuildDeps(),

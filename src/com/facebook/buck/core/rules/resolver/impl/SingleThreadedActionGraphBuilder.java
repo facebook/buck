@@ -34,7 +34,7 @@ import java.util.function.Function;
  * Provides a mechanism for mapping between a {@link BuildTarget} and the {@link BuildRule} it
  * represents. Once parsing is complete, instances of this class can be considered immutable.
  */
-public class SingleThreadedBuildRuleResolver extends AbstractBuildRuleResolver {
+public class SingleThreadedActionGraphBuilder extends AbstractActionGraphBuilder {
 
   private boolean isValid = true;
   private final TargetGraph targetGraph;
@@ -42,9 +42,9 @@ public class SingleThreadedBuildRuleResolver extends AbstractBuildRuleResolver {
   private final CellProvider cellProvider;
 
   private final ConcurrentHashMap<BuildTarget, BuildRule> buildRuleIndex;
-  private final BuildRuleResolverMetadataCache metadataCache;
+  private final ActionGraphBuilderMetadataCache metadataCache;
 
-  public SingleThreadedBuildRuleResolver(
+  public SingleThreadedActionGraphBuilder(
       TargetGraph targetGraph,
       TargetNodeToBuildRuleTransformer buildRuleGenerator,
       CellProvider cellProvider) {
@@ -57,7 +57,7 @@ public class SingleThreadedBuildRuleResolver extends AbstractBuildRuleResolver {
 
     this.buildRuleIndex = new ConcurrentHashMap<>(initialCapacity);
     this.metadataCache =
-        new BuildRuleResolverMetadataCache(this, this.targetGraph, initialCapacity);
+        new ActionGraphBuilderMetadataCache(this, this.targetGraph, initialCapacity);
   }
 
   @Override

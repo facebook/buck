@@ -31,10 +31,10 @@ import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.description.BuildRuleParams;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.rules.resolver.impl.TestBuildRuleResolver;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.rules.transformer.TargetNodeToBuildRuleTransformer;
 import com.facebook.buck.core.rules.transformer.impl.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
@@ -131,11 +131,11 @@ public class CxxPrecompiledHeaderRuleTest {
   public final TargetNodeToBuildRuleTransformer transformer =
       new DefaultTargetNodeToBuildRuleTransformer();
 
-  public final BuildRuleResolver ruleResolver = new TestBuildRuleResolver(transformer);
-  public final SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
+  public final ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(transformer);
+  public final SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
   public final SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
-  public final Compiler compiler = CxxPlatformUtils.DEFAULT_PLATFORM.getCxx().resolve(ruleResolver);
+  public final Compiler compiler = CxxPlatformUtils.DEFAULT_PLATFORM.getCxx().resolve(graphBuilder);
 
   public BuildTarget newTarget(String fullyQualifiedName) {
     return BuildTargetFactory.newInstance(fullyQualifiedName);
@@ -145,7 +145,7 @@ public class CxxPrecompiledHeaderRuleTest {
     return TestBuildRuleParams.create();
   }
 
-  /** Note: creates the {@link CxxPrecompiledHeaderTemplate}, add to ruleResolver index. */
+  /** Note: creates the {@link CxxPrecompiledHeaderTemplate}, add to graphBuilder index. */
   public CxxPrecompiledHeaderTemplate newPCH(
       BuildTarget target, SourcePath headerSourcePath, ImmutableSortedSet<BuildRule> deps) {
     return new CxxPrecompiledHeaderTemplate(
@@ -170,11 +170,11 @@ public class CxxPrecompiledHeaderRuleTest {
 
   public CxxSourceRuleFactory.Builder newFactoryBuilder(
       BuildTarget buildTarget, ProjectFilesystem projectFilesystem) {
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     return CxxSourceRuleFactory.builder()
         .setBaseBuildTarget(buildTarget)
         .setProjectFilesystem(projectFilesystem)
-        .setResolver(ruleResolver)
+        .setActionGraphBuilder(graphBuilder)
         .setRuleFinder(ruleFinder)
         .setPathResolver(DefaultSourcePathResolver.from(ruleFinder))
         .setCxxPlatform(platformSupportingPch)
@@ -252,7 +252,7 @@ public class CxxPrecompiledHeaderRuleTest {
   public void samePchIffSameFlags() {
     BuildTarget pchTarget = newTarget("//test:pch");
     CxxPrecompiledHeaderTemplate pch = newPCH(pchTarget);
-    ruleResolver.addToIndex(pch);
+    graphBuilder.addToIndex(pch);
 
     BuildTarget lib1Target = newTarget("//test:lib1");
     CxxSourceRuleFactory factory1 =
@@ -261,7 +261,7 @@ public class CxxPrecompiledHeaderRuleTest {
             .build();
     CxxPreprocessAndCompile lib1 =
         factory1.requirePreprocessAndCompileBuildRule("lib1.cpp", newSource("lib1.cpp"));
-    ruleResolver.addToIndex(lib1);
+    graphBuilder.addToIndex(lib1);
     ImmutableList<String> cmd1 = lib1.makeMainStep(pathResolver, false).getCommand();
 
     BuildTarget lib2Target = newTarget("//test:lib2");
@@ -271,7 +271,7 @@ public class CxxPrecompiledHeaderRuleTest {
             .build();
     CxxPreprocessAndCompile lib2 =
         factory2.requirePreprocessAndCompileBuildRule("lib2.cpp", newSource("lib2.cpp"));
-    ruleResolver.addToIndex(lib2);
+    graphBuilder.addToIndex(lib2);
     ImmutableList<String> cmd2 = lib2.makeMainStep(pathResolver, false).getCommand();
 
     BuildTarget lib3Target = newTarget("//test:lib3");
@@ -281,7 +281,7 @@ public class CxxPrecompiledHeaderRuleTest {
             .build();
     CxxPreprocessAndCompile lib3 =
         factory3.requirePreprocessAndCompileBuildRule("lib3.cpp", newSource("lib3.cpp"));
-    ruleResolver.addToIndex(lib3);
+    graphBuilder.addToIndex(lib3);
     ImmutableList<String> cmd3 = lib3.makeMainStep(pathResolver, false).getCommand();
 
     assertTrue(seek(cmd1, "-frtti").size() > 0);
@@ -312,7 +312,7 @@ public class CxxPrecompiledHeaderRuleTest {
   public void userRuleChangesDependencyPCHRuleFlags() {
     BuildTarget pchTarget = newTarget("//test:pch");
     CxxPrecompiledHeaderTemplate pch = newPCH(pchTarget);
-    ruleResolver.addToIndex(pch);
+    graphBuilder.addToIndex(pch);
 
     BuildTarget libTarget = newTarget("//test:lib");
     CxxSourceRuleFactory factory1 =
@@ -326,7 +326,7 @@ public class CxxPrecompiledHeaderRuleTest {
                 .setPath(FakeSourcePath.of("lib.cpp"))
                 .setFlags(ImmutableList.of("-flag-for-source"))
                 .build());
-    ruleResolver.addToIndex(lib);
+    graphBuilder.addToIndex(lib);
     ImmutableList<String> libCmd = lib.makeMainStep(pathResolver, false).getCommand();
     assertTrue(seek(libCmd, "-flag-for-source").size() > 0);
     assertTrue(seek(libCmd, "-flag-for-factory").size() > 0);
@@ -353,21 +353,21 @@ public class CxxPrecompiledHeaderRuleTest {
     BuildTarget privateHeaderSymlinkTreeTarget =
         BuildTargetFactory.newInstance("//test:privatesymlink");
 
-    ruleResolver.addToIndex(new FakeBuildRule(publicHeaderTarget));
-    ruleResolver.addToIndex(new FakeBuildRule(publicHeaderSymlinkTreeTarget));
-    ruleResolver.addToIndex(new FakeBuildRule(privateHeaderTarget));
-    ruleResolver.addToIndex(new FakeBuildRule(privateHeaderSymlinkTreeTarget));
+    graphBuilder.addToIndex(new FakeBuildRule(publicHeaderTarget));
+    graphBuilder.addToIndex(new FakeBuildRule(publicHeaderSymlinkTreeTarget));
+    graphBuilder.addToIndex(new FakeBuildRule(privateHeaderTarget));
+    graphBuilder.addToIndex(new FakeBuildRule(privateHeaderSymlinkTreeTarget));
 
     BuildRuleParams libParams = TestBuildRuleParams.create();
     BuildRule liba =
-        ruleResolver.addToIndex(
+        graphBuilder.addToIndex(
             new FakeBuildRule("//test:liba").setOutputFile(Paths.get("lib.a").toString()));
     BuildRule libso =
-        ruleResolver.addToIndex(
+        graphBuilder.addToIndex(
             new FakeBuildRule("//test:libso").setOutputFile(Paths.get("lib.so").toString()));
     BuildTarget libTarget = BuildTargetFactory.newInstance("//test:lib");
     FakeCxxLibrary lib =
-        ruleResolver.addToIndex(
+        graphBuilder.addToIndex(
             new FakeCxxLibrary(
                 libTarget,
                 filesystem,
@@ -384,7 +384,7 @@ public class CxxPrecompiledHeaderRuleTest {
 
     BuildTarget pchTarget = newTarget("//test:pch");
     CxxPrecompiledHeaderTemplate pchTemplate =
-        ruleResolver.addToIndex(
+        graphBuilder.addToIndex(
             newPCH(
                 pchTarget,
                 FakeSourcePath.of(
@@ -402,7 +402,7 @@ public class CxxPrecompiledHeaderRuleTest {
                 newCxxSourceBuilder()
                     .setPath(FakeSourcePath.of(filesystem, "test/bin.cpp"))
                     .build());
-    ruleResolver.addToIndex(binBuildRule);
+    graphBuilder.addToIndex(binBuildRule);
 
     CxxPrecompiledHeader foundPCH = null;
     for (BuildRule dep : binBuildRule.getBuildDeps()) {
@@ -428,7 +428,7 @@ public class CxxPrecompiledHeaderRuleTest {
             CXX_CONFIG_PCH_ENABLED,
             platformSupportingPch,
             filesystem,
-            ruleResolver,
+            graphBuilder,
             pathResolver,
             ruleFinder,
             CxxDescriptionEnhancer.createCxxLinkTarget(
@@ -479,7 +479,7 @@ public class CxxPrecompiledHeaderRuleTest {
     BuildTarget pchTarget = newTarget("//test:pch");
     CxxPrecompiledHeaderTemplate pch =
         newPCH(pchTarget, FakeSourcePath.of("header.h"), ImmutableSortedSet.of());
-    ruleResolver.addToIndex(pch);
+    graphBuilder.addToIndex(pch);
     CxxPreprocessAndCompile compileLibRule =
         newFactoryBuilder(newTarget("//test:lib"), new FakeProjectFilesystem())
             .setPrecompiledHeader(DefaultBuildTargetSourcePath.of(pchTarget))
@@ -488,7 +488,7 @@ public class CxxPrecompiledHeaderRuleTest {
             .build()
             .requirePreprocessAndCompileBuildRule("lib.cpp", newSource("lib.cpp"));
 
-    ruleResolver.addToIndex(compileLibRule);
+    graphBuilder.addToIndex(compileLibRule);
     ImmutableList<String> compileLibCmd =
         compileLibRule.makeMainStep(pathResolver, false).getCommand();
 
@@ -515,14 +515,14 @@ public class CxxPrecompiledHeaderRuleTest {
             .build();
     CxxPreprocessAndCompile lib1 =
         lib1Factory.requirePreprocessAndCompileBuildRule("lib1.cpp", newSource("lib1.cpp"));
-    ruleResolver.addToIndex(lib1);
+    graphBuilder.addToIndex(lib1);
 
     ImmutableList<String> lib1Cmd = lib1.makeMainStep(pathResolver, false).getCommand();
 
     BuildTarget pchTarget = newTarget("//test:pch");
     CxxPrecompiledHeaderTemplate pch =
         newPCH(pchTarget, FakeSourcePath.of("header.h"), ImmutableSortedSet.of(lib1));
-    ruleResolver.addToIndex(pch);
+    graphBuilder.addToIndex(pch);
 
     BuildTarget lib2Target = newTarget("//test:lib2");
     CxxSourceRuleFactory lib2Factory =
@@ -531,7 +531,7 @@ public class CxxPrecompiledHeaderRuleTest {
             .build();
     CxxPreprocessAndCompile lib2 =
         lib2Factory.requirePreprocessAndCompileBuildRule("lib2.cpp", newSource("lib2.cpp"));
-    ruleResolver.addToIndex(lib2);
+    graphBuilder.addToIndex(lib2);
     ImmutableList<String> lib2Cmd = lib2.makeMainStep(pathResolver, false).getCommand();
 
     CxxPrecompiledHeader pchInstance = null;

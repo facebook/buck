@@ -20,7 +20,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.rules.resolver.impl.TestBuildRuleResolver;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -40,7 +40,7 @@ public class PythonUtilTest {
     ImmutableMap<Path, SourcePath> srcs =
         PythonUtil.toModuleMap(
             target,
-            DefaultSourcePathResolver.from(new SourcePathRuleFinder(new TestBuildRuleResolver())),
+            DefaultSourcePathResolver.from(new SourcePathRuleFinder(new TestActionGraphBuilder())),
             "srcs",
             target.getBasePath(),
             ImmutableList.of(

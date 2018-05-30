@@ -20,9 +20,9 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
-import com.facebook.buck.core.rules.BuildRuleResolver;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.rules.resolver.impl.TestBuildRuleResolver;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -93,12 +93,12 @@ public class PublisherTest {
 
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(depNode, publishableANode, publishableBNode);
-    BuildRuleResolver resolver = new TestBuildRuleResolver(targetGraph);
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
 
-    MavenPublishable publishableA = (MavenPublishable) resolver.requireRule(publishableTargetA);
-    MavenPublishable publishableB = (MavenPublishable) resolver.requireRule(publishableTargetB);
+    MavenPublishable publishableA = (MavenPublishable) graphBuilder.requireRule(publishableTargetA);
+    MavenPublishable publishableB = (MavenPublishable) graphBuilder.requireRule(publishableTargetB);
 
     expectedException.expect(DeploymentException.class);
     expectedException.expectMessage(
@@ -152,12 +152,12 @@ public class PublisherTest {
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(
             transitiveDepNode, depNode, publishableANode, publishableBNode);
-    BuildRuleResolver resolver = new TestBuildRuleResolver(targetGraph);
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
 
-    MavenPublishable publishableA = (MavenPublishable) resolver.requireRule(publishableTargetA);
-    MavenPublishable publishableB = (MavenPublishable) resolver.requireRule(publishableTargetB);
+    MavenPublishable publishableA = (MavenPublishable) graphBuilder.requireRule(publishableTargetA);
+    MavenPublishable publishableB = (MavenPublishable) graphBuilder.requireRule(publishableTargetB);
 
     expectedException.expect(DeploymentException.class);
     expectedException.expectMessage(
@@ -217,12 +217,12 @@ public class PublisherTest {
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(
             transitiveDepNode, dep1Node, dep2Node, publishableANode, publishableBNode);
-    BuildRuleResolver resolver = new TestBuildRuleResolver(targetGraph);
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
 
-    MavenPublishable publishableA = (MavenPublishable) resolver.requireRule(publishableTargetA);
-    MavenPublishable publishableB = (MavenPublishable) resolver.requireRule(publishableTargetB);
+    MavenPublishable publishableA = (MavenPublishable) graphBuilder.requireRule(publishableTargetA);
+    MavenPublishable publishableB = (MavenPublishable) graphBuilder.requireRule(publishableTargetB);
 
     expectedException.expect(DeploymentException.class);
     expectedException.expectMessage(

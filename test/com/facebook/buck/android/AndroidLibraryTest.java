@@ -22,8 +22,8 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
-import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.rules.resolver.impl.TestBuildRuleResolver;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.model.BuildTargetFactory;
 import java.nio.file.Paths;
@@ -47,11 +47,11 @@ public class AndroidLibraryTest {
             .build();
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(processorNode, libraryNode);
-    BuildRuleResolver ruleResolver =
-        new TestBuildRuleResolver(
+    ActionGraphBuilder graphBuilder =
+        new TestActionGraphBuilder(
             targetGraph, AndroidLibraryBuilder.createToolchainProviderForAndroidLibrary());
 
-    AndroidLibrary library = (AndroidLibrary) ruleResolver.requireRule(libTarget);
+    AndroidLibrary library = (AndroidLibrary) graphBuilder.requireRule(libTarget);
 
     assertTrue(library.getGeneratedSourcePath().isPresent());
   }

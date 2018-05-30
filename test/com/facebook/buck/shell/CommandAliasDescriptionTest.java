@@ -109,7 +109,7 @@ public class CommandAliasDescriptionTest {
         result.getCommandPrefix(),
         equalTo(
             result
-                .resolver()
+                .graphBuilder()
                 .getRuleWithType(delegate, BinaryBuildRule.class)
                 .getExecutableCommand()
                 .getCommandPrefix(result.sourcePathResolver())));

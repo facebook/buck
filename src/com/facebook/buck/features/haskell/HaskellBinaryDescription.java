@@ -29,8 +29,8 @@ import com.facebook.buck.core.model.Flavored;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
@@ -132,7 +132,7 @@ public class HaskellBinaryDescription
     CellPathResolver cellRoots = context.getCellPathResolver();
     HaskellPlatform platform = getPlatform(buildTarget, args);
 
-    BuildRuleResolver resolver = context.getBuildRuleResolver();
+    ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
     Optional<Type> type = BINARY_TYPE.getValue(buildTarget);
     // Handle #ghci flavor
     if (type.isPresent() && type.get() == Type.GHCI) {
@@ -141,7 +141,7 @@ public class HaskellBinaryDescription
           projectFilesystem,
           params,
           cellRoots,
-          resolver,
+          graphBuilder,
           platform,
           cxxBuckConfig,
           args.getDeps(),
@@ -154,7 +154,7 @@ public class HaskellBinaryDescription
           Optional.empty());
     }
 
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     Linker.LinkableDepType depType = getLinkStyle(args, type);
 
@@ -173,7 +173,7 @@ public class HaskellBinaryDescription
             .addDeps(args.getDeps())
             .addPlatformDeps(args.getPlatformDeps())
             .build()
-            .get(resolver, platform.getCxxPlatform()));
+            .get(graphBuilder, platform.getCxxPlatform()));
 
     ImmutableList<BuildRule> depQueryDeps =
         args.getDepsQuery()
@@ -181,7 +181,7 @@ public class HaskellBinaryDescription
                 query ->
                     Preconditions.checkNotNull(query.getResolvedQuery())
                         .stream()
-                        .map(resolver::getRule)
+                        .map(graphBuilder::getRule)
                         .filter(NativeLinkable.class::isInstance))
             .orElse(Stream.of())
             .collect(ImmutableList.toImmutableList());
@@ -208,11 +208,11 @@ public class HaskellBinaryDescription
 
       // Create a symlink tree with for all shared libraries needed by this binary.
       SymlinkTree sharedLibraries =
-          resolver.addToIndex(
+          graphBuilder.addToIndex(
               CxxDescriptionEnhancer.createSharedLibrarySymlinkTree(
                   buildTarget,
                   projectFilesystem,
-                  resolver,
+                  graphBuilder,
                   ruleFinder,
                   platform.getCxxPlatform(),
                   deps,
@@ -228,7 +228,7 @@ public class HaskellBinaryDescription
                       "-rpath",
                       String.format(
                           "%s/%s",
-                          platform.getCxxPlatform().getLd().resolve(resolver).origin(),
+                          platform.getCxxPlatform().getLd().resolve(graphBuilder).origin(),
                           absBinaryDir.relativize(sharedLibraries.getRoot()).toString())))));
 
       // Add all the shared libraries and the symlink tree as inputs to the tool that represents
@@ -244,16 +244,16 @@ public class HaskellBinaryDescription
                 args.getLinkerFlags(),
                 f ->
                     CxxDescriptionEnhancer.toStringWithMacrosArgs(
-                        buildTarget, cellRoots, resolver, platform.getCxxPlatform(), f))));
+                        buildTarget, cellRoots, graphBuilder, platform.getCxxPlatform(), f))));
 
     // Generate the compile rule and add its objects to the link.
     HaskellCompileRule compileRule =
-        resolver.addToIndex(
+        graphBuilder.addToIndex(
             HaskellDescriptionUtils.requireCompileRule(
                 buildTarget,
                 projectFilesystem,
                 params,
-                resolver,
+                graphBuilder,
                 ruleFinder,
                 RichStream.from(deps)
                     .filter(
@@ -268,7 +268,7 @@ public class HaskellBinaryDescription
                 args.getCompilerFlags(),
                 HaskellSources.from(
                     buildTarget,
-                    resolver,
+                    graphBuilder,
                     pathResolver,
                     ruleFinder,
                     platform,
@@ -285,7 +285,7 @@ public class HaskellBinaryDescription
             binaryTarget,
             projectFilesystem,
             params,
-            resolver,
+            graphBuilder,
             ruleFinder,
             platform,
             Linker.LinkType.EXECUTABLE,

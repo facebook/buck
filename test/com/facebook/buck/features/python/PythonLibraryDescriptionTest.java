@@ -24,9 +24,9 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.rules.resolver.impl.TestBuildRuleResolver;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
@@ -74,13 +74,13 @@ public class PythonLibraryDescriptionTest {
         new PythonLibraryBuilder(target)
             .setSrcs(SourceList.ofUnnamedSources(ImmutableSortedSet.of(source)));
     TargetGraph normalTargetGraph = TargetGraphFactory.newInstance(normalBuilder.build());
-    BuildRuleResolver ruleResolver = new TestBuildRuleResolver(normalTargetGraph);
-    PythonLibrary normal = normalBuilder.build(ruleResolver, filesystem, normalTargetGraph);
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(normalTargetGraph);
+    PythonLibrary normal = normalBuilder.build(graphBuilder, filesystem, normalTargetGraph);
     assertEquals(
         ImmutableMap.of(target.getBasePath().resolve(sourceName), source),
         normal
             .getPythonPackageComponents(
-                PythonTestUtils.PYTHON_PLATFORM, CxxPlatformUtils.DEFAULT_PLATFORM, ruleResolver)
+                PythonTestUtils.PYTHON_PLATFORM, CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder)
             .getModules());
 
     // Run *with* a base module set and verify it gets used to build the main module path.
@@ -91,14 +91,14 @@ public class PythonLibraryDescriptionTest {
             .setBaseModule(baseModule);
     TargetGraph withBaseModuleTargetGraph =
         TargetGraphFactory.newInstance(withBaseModuleBuilder.build());
-    ruleResolver = new TestBuildRuleResolver(withBaseModuleTargetGraph);
+    graphBuilder = new TestActionGraphBuilder(withBaseModuleTargetGraph);
     PythonLibrary withBaseModule =
-        withBaseModuleBuilder.build(ruleResolver, filesystem, withBaseModuleTargetGraph);
+        withBaseModuleBuilder.build(graphBuilder, filesystem, withBaseModuleTargetGraph);
     assertEquals(
         ImmutableMap.of(Paths.get(baseModule).resolve(sourceName), source),
         withBaseModule
             .getPythonPackageComponents(
-                PythonTestUtils.PYTHON_PLATFORM, CxxPlatformUtils.DEFAULT_PLATFORM, ruleResolver)
+                PythonTestUtils.PYTHON_PLATFORM, CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder)
             .getModules());
   }
 
@@ -120,12 +120,12 @@ public class PythonLibraryDescriptionTest {
                         SourceList.ofUnnamedSources(ImmutableSortedSet.of(unmatchedSource)))
                     .build());
     TargetGraph targetGraph = TargetGraphFactory.newInstance(builder.build());
-    BuildRuleResolver ruleResolver = new TestBuildRuleResolver(targetGraph);
-    PythonLibrary library = builder.build(ruleResolver, filesystem, targetGraph);
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
+    PythonLibrary library = builder.build(graphBuilder, filesystem, targetGraph);
     assertThat(
         library
             .getPythonPackageComponents(
-                PythonTestUtils.PYTHON_PLATFORM, CxxPlatformUtils.DEFAULT_PLATFORM, ruleResolver)
+                PythonTestUtils.PYTHON_PLATFORM, CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder)
             .getModules()
             .values(),
         Matchers.contains(matchedSource));
@@ -149,12 +149,12 @@ public class PythonLibraryDescriptionTest {
                         SourceList.ofUnnamedSources(ImmutableSortedSet.of(unmatchedSource)))
                     .build());
     TargetGraph targetGraph = TargetGraphFactory.newInstance(builder.build());
-    BuildRuleResolver ruleResolver = new TestBuildRuleResolver(targetGraph);
-    PythonLibrary library = builder.build(ruleResolver, filesystem, targetGraph);
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
+    PythonLibrary library = builder.build(graphBuilder, filesystem, targetGraph);
     assertThat(
         library
             .getPythonPackageComponents(
-                PythonTestUtils.PYTHON_PLATFORM, CxxPlatformUtils.DEFAULT_PLATFORM, ruleResolver)
+                PythonTestUtils.PYTHON_PLATFORM, CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder)
             .getResources()
             .values(),
         Matchers.contains(matchedSource));
@@ -197,12 +197,12 @@ public class PythonLibraryDescriptionTest {
                 new ForkJoinPool(),
                 new DefaultTypeCoercerFactory())
             .getTargetGraph();
-    BuildRuleResolver resolver = new TestBuildRuleResolver(targetGraph);
-    PythonLibrary library = (PythonLibrary) resolver.requireRule(builder.getTarget());
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
+    PythonLibrary library = (PythonLibrary) graphBuilder.requireRule(builder.getTarget());
     assertThat(
         library
             .getPythonPackageComponents(
-                PythonTestUtils.PYTHON_PLATFORM, CxxPlatformUtils.DEFAULT_PLATFORM, resolver)
+                PythonTestUtils.PYTHON_PLATFORM, CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder)
             .getModules()
             .values(),
         Matchers.contains(matchedSource));
@@ -245,12 +245,12 @@ public class PythonLibraryDescriptionTest {
                 new ForkJoinPool(),
                 new DefaultTypeCoercerFactory())
             .getTargetGraph();
-    BuildRuleResolver resolver = new TestBuildRuleResolver(targetGraph);
-    PythonLibrary library = (PythonLibrary) resolver.requireRule(builder.getTarget());
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
+    PythonLibrary library = (PythonLibrary) graphBuilder.requireRule(builder.getTarget());
     assertThat(
         library
             .getPythonPackageComponents(
-                PythonTestUtils.PYTHON_PLATFORM, CxxPlatformUtils.DEFAULT_PLATFORM, resolver)
+                PythonTestUtils.PYTHON_PLATFORM, CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder)
             .getResources()
             .values(),
         Matchers.contains(matchedSource));
@@ -268,15 +268,15 @@ public class PythonLibraryDescriptionTest {
                         DefaultBuildTargetSourcePath.of(srcBuilder.getTarget()))));
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(srcBuilder.build(), libraryBuilder.build());
-    BuildRuleResolver resolver = new TestBuildRuleResolver(targetGraph);
-    CxxGenrule src = (CxxGenrule) resolver.requireRule(srcBuilder.getTarget());
-    PythonLibrary library = (PythonLibrary) resolver.requireRule(libraryBuilder.getTarget());
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
+    CxxGenrule src = (CxxGenrule) graphBuilder.requireRule(srcBuilder.getTarget());
+    PythonLibrary library = (PythonLibrary) graphBuilder.requireRule(libraryBuilder.getTarget());
     PythonPackageComponents components =
         library.getPythonPackageComponents(
-            PythonTestUtils.PYTHON_PLATFORM, CxxPlatformUtils.DEFAULT_PLATFORM, resolver);
+            PythonTestUtils.PYTHON_PLATFORM, CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder);
     assertThat(
         components.getModules().values(),
-        Matchers.contains(src.getGenrule(CxxPlatformUtils.DEFAULT_PLATFORM, resolver)));
+        Matchers.contains(src.getGenrule(CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder)));
   }
 
   @Test
@@ -301,12 +301,14 @@ public class PythonLibraryDescriptionTest {
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(
             libraryABuilder.build(), libraryBBuilder.build(), ruleBuilder.build());
-    BuildRuleResolver resolver = new TestBuildRuleResolver(targetGraph);
-    PythonLibrary rule = (PythonLibrary) resolver.requireRule(ruleBuilder.getTarget());
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
+    PythonLibrary rule = (PythonLibrary) graphBuilder.requireRule(ruleBuilder.getTarget());
     assertThat(
         RichStream.from(
                 rule.getPythonPackageDeps(
-                    PythonTestUtils.PYTHON_PLATFORM, CxxPlatformUtils.DEFAULT_PLATFORM, resolver))
+                    PythonTestUtils.PYTHON_PLATFORM,
+                    CxxPlatformUtils.DEFAULT_PLATFORM,
+                    graphBuilder))
             .map(BuildRule::getBuildTarget)
             .toImmutableSet(),
         Matchers.allOf(
@@ -341,17 +343,17 @@ public class PythonLibraryDescriptionTest {
     binaryBuilder.setMainModule("main");
     binaryBuilder.setDeps(ImmutableSortedSet.of(libBuilder.getTarget()));
 
-    BuildRuleResolver resolver =
-        new TestBuildRuleResolver(
+    ActionGraphBuilder graphBuilder =
+        new TestActionGraphBuilder(
             TargetGraphFactory.newInstance(
                 cxxDepBuilder.build(),
                 cxxBuilder.build(),
                 libBuilder.build(),
                 binaryBuilder.build()));
-    cxxDepBuilder.build(resolver);
-    cxxBuilder.build(resolver);
-    libBuilder.build(resolver);
-    PythonBinary binary = binaryBuilder.build(resolver);
+    cxxDepBuilder.build(graphBuilder);
+    cxxBuilder.build(graphBuilder);
+    libBuilder.build(graphBuilder);
+    PythonBinary binary = binaryBuilder.build(graphBuilder);
     assertThat(
         Iterables.transform(binary.getComponents().getNativeLibraries().keySet(), Object::toString),
         Matchers.containsInAnyOrder("libdep.so", "libcxx.so"));

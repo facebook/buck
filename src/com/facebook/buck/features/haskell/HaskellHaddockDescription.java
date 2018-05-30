@@ -25,8 +25,8 @@ import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
@@ -68,10 +68,10 @@ public class HaskellHaddockDescription
     String name = baseTarget.getShortName();
     LOG.info("Creating Haddock " + name);
 
-    BuildRuleResolver resolver = context.getBuildRuleResolver();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     HaskellPlatform platform = getPlatform(baseTarget, args);
-    Iterable<BuildRule> deps = resolver.getAllRules(args.getDeps());
+    Iterable<BuildRule> deps = graphBuilder.getAllRules(args.getDeps());
 
     // Collect all Haskell deps
     ImmutableSet.Builder<HaskellHaddockInput> haddockInputs = ImmutableSet.builder();
@@ -90,13 +90,13 @@ public class HaskellHaddockDescription
       }
     }.start();
 
-    return resolver.addToIndex(
+    return graphBuilder.addToIndex(
         HaskellHaddockRule.from(
             baseTarget,
             context.getProjectFilesystem(),
             params,
             ruleFinder,
-            platform.getHaddock().resolve(resolver),
+            platform.getHaddock().resolve(graphBuilder),
             args.getHaddockFlags(),
             haddockInputs.build()));
   }

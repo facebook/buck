@@ -17,7 +17,7 @@
 package com.facebook.buck.distributed.build_slave;
 
 import com.facebook.buck.core.build.engine.delegate.CachingBuildEngineDelegate;
-import com.facebook.buck.core.model.actiongraph.ActionGraphAndResolver;
+import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import org.immutables.value.Value;
@@ -30,5 +30,5 @@ abstract class AbstractDelegateAndGraphs {
 
   public abstract TargetGraph getTargetGraph();
 
-  public abstract ActionGraphAndResolver getActionGraphAndResolver();
+  public abstract ActionGraphAndBuilder getActionGraphAndBuilder();
 }

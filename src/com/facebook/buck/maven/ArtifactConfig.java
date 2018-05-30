@@ -99,7 +99,7 @@ public class ArtifactConfig {
   private static void usage(CmdLineParser parser) {
     System.out.println("Import Maven JARs as Buck build rules.");
     System.out.println();
-    System.out.println("Usage: java -jar resolver.jar [OPTIONS] -repo REPO artifact...");
+    System.out.println("Usage: java -jar graphBuilder.jar [OPTIONS] -repo REPO artifact...");
     System.out.println();
     System.out.println(
         "Artifacts are of the form group:artifact[:extension[:classifier]]:version, "

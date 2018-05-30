@@ -21,10 +21,10 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.cell.resolver.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.rules.resolver.impl.TestBuildRuleResolver;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -44,14 +44,14 @@ import org.junit.Test;
 public class WorkerMacroArgTest {
   @Test
   public void testWorkerMacroArgConstruction() throws MacroException, NoSuchBuildTargetException {
-    BuildRuleResolver resolver = new TestBuildRuleResolver();
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
 
     BuildRule shBinaryRule =
         new ShBinaryBuilder(BuildTargetFactory.newInstance("//:my_exe"))
             .setMain(FakeSourcePath.of("bin/exe"))
-            .build(resolver);
+            .build(graphBuilder);
 
     String startupArgs = "startupargs";
     Integer maxWorkers = 5;
@@ -59,7 +59,7 @@ public class WorkerMacroArgTest {
         .setExe(shBinaryRule.getBuildTarget())
         .setArgs(StringWithMacrosUtils.format(startupArgs))
         .setMaxWorkers(maxWorkers)
-        .build(resolver);
+        .build(graphBuilder);
 
     MacroHandler macroHandler =
         new MacroHandler(ImmutableMap.of("worker", new WorkerMacroExpander()));
@@ -70,11 +70,11 @@ public class WorkerMacroArgTest {
     String unexpanded = "$(worker //:worker_rule) " + jobArgs;
     WorkerMacroArg arg =
         WorkerMacroArg.fromMacroArg(
-            new MacroArg(macroHandler, target, cellNames, resolver, unexpanded),
+            new MacroArg(macroHandler, target, cellNames, graphBuilder, unexpanded),
             macroHandler,
             target,
             cellNames,
-            resolver,
+            graphBuilder,
             unexpanded);
     assertThat(arg.getJobArgs(pathResolver), Matchers.equalTo(jobArgs));
     assertThat(
@@ -85,7 +85,7 @@ public class WorkerMacroArgTest {
 
   @Test
   public void testWorkerMacroArgWithNoMacros() throws MacroException, NoSuchBuildTargetException {
-    BuildRuleResolver resolver = new TestBuildRuleResolver();
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
 
     MacroHandler macroHandler =
         new MacroHandler(ImmutableMap.of("worker", new WorkerMacroExpander()));
@@ -95,11 +95,11 @@ public class WorkerMacroArgTest {
     CellPathResolver cellNames = TestCellBuilder.createCellRoots(filesystem);
     try {
       WorkerMacroArg.fromMacroArg(
-          new MacroArg(macroHandler, target, cellNames, resolver, unexpanded),
+          new MacroArg(macroHandler, target, cellNames, graphBuilder, unexpanded),
           macroHandler,
           target,
           cellNames,
-          resolver,
+          graphBuilder,
           unexpanded);
     } catch (MacroException e) {
       assertThat(e.getMessage(), Matchers.containsString("Unable to extract any build targets"));
@@ -109,11 +109,11 @@ public class WorkerMacroArgTest {
   @Test
   public void testWorkerMacroArgWithBadReference()
       throws MacroException, NoSuchBuildTargetException {
-    BuildRuleResolver resolver = new TestBuildRuleResolver();
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
 
     BuildRule nonWorkerBuildRule =
         new FakeBuildRule(BuildTargetFactory.newInstance("//:not_worker_rule"));
-    resolver.addToIndex(nonWorkerBuildRule);
+    graphBuilder.addToIndex(nonWorkerBuildRule);
 
     MacroHandler macroHandler =
         new MacroHandler(ImmutableMap.of("worker", new WorkerMacroExpander()));
@@ -123,11 +123,11 @@ public class WorkerMacroArgTest {
     String unexpanded = "$(worker //:not_worker_rule)";
     try {
       WorkerMacroArg.fromMacroArg(
-          new MacroArg(macroHandler, target, cellNames, resolver, unexpanded),
+          new MacroArg(macroHandler, target, cellNames, graphBuilder, unexpanded),
           macroHandler,
           target,
           cellNames,
-          resolver,
+          graphBuilder,
           unexpanded);
     } catch (MacroException e) {
       assertThat(e.getMessage(), Matchers.containsString("does not correspond to a worker_tool"));
@@ -136,7 +136,7 @@ public class WorkerMacroArgTest {
 
   @Test
   public void testWorkerMacroArgWithMacroInWrongLocation() {
-    BuildRuleResolver resolver = new TestBuildRuleResolver();
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
 
     MacroHandler macroHandler =
         new MacroHandler(ImmutableMap.of("worker", new WorkerMacroExpander()));
@@ -147,11 +147,11 @@ public class WorkerMacroArgTest {
 
     try {
       WorkerMacroArg.fromMacroArg(
-          new MacroArg(macroHandler, target, cellNames, resolver, unexpanded),
+          new MacroArg(macroHandler, target, cellNames, graphBuilder, unexpanded),
           macroHandler,
           target,
           cellNames,
-          resolver,
+          graphBuilder,
           unexpanded);
     } catch (MacroException e) {
       assertThat(e.getMessage(), Matchers.containsString("must be at the beginning"));

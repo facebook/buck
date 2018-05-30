@@ -20,9 +20,9 @@ import static org.junit.Assert.fail;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.rules.BuildRuleResolver;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.rules.resolver.impl.TestBuildRuleResolver;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
@@ -38,12 +38,12 @@ public class DefaultBuildTargetSourcePathTest {
 
   @Test
   public void shouldThrowAnExceptionIfRuleDoesNotHaveAnOutput() {
-    BuildRuleResolver resolver = new TestBuildRuleResolver();
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
     FakeBuildRule rule = new FakeBuildRule(target);
     rule.setOutputFile(null);
-    resolver.addToIndex(rule);
+    graphBuilder.addToIndex(rule);
     SourcePath path = DefaultBuildTargetSourcePath.of(target);
 
     try {
@@ -56,12 +56,12 @@ public class DefaultBuildTargetSourcePathTest {
 
   @Test
   public void mustUseProjectFilesystemToResolvePathToFile() {
-    BuildRuleResolver resolver = new TestBuildRuleResolver();
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
     FakeBuildRule rule = new FakeBuildRule(target);
     rule.setOutputFile("cheese");
-    resolver.addToIndex(rule);
+    graphBuilder.addToIndex(rule);
 
     SourcePath path = rule.getSourcePathToOutput();
 

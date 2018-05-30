@@ -25,8 +25,8 @@ import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.ImmutableBuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.transformer.TargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.query.QueryCache;
 import com.facebook.buck.rules.query.QueryUtils;
@@ -45,7 +45,7 @@ public class DefaultTargetNodeToBuildRuleTransformer implements TargetNodeToBuil
   public <T, U extends DescriptionWithTargetGraph<T>> BuildRule transform(
       CellProvider cellProvider,
       TargetGraph targetGraph,
-      BuildRuleResolver ruleResolver,
+      ActionGraphBuilder graphBuilder,
       TargetNode<T, U> targetNode) {
     U description = targetNode.getDescription();
     T arg = targetNode.getConstructorArg();
@@ -58,7 +58,7 @@ public class DefaultTargetNodeToBuildRuleTransformer implements TargetNodeToBuil
             arg,
             targetNode.getBuildTarget(),
             cache,
-            ruleResolver,
+            graphBuilder,
             targetNode.getCellNames(),
             targetGraph);
     arg =
@@ -66,7 +66,7 @@ public class DefaultTargetNodeToBuildRuleTransformer implements TargetNodeToBuil
             arg,
             targetNode.getBuildTarget(),
             cache,
-            ruleResolver,
+            graphBuilder,
             targetNode.getCellNames(),
             targetGraph);
 
@@ -75,16 +75,16 @@ public class DefaultTargetNodeToBuildRuleTransformer implements TargetNodeToBuil
     // via a SourcePath.
     BuildRuleParams params =
         new BuildRuleParams(
-            Suppliers.ofInstance(ruleResolver.requireAllRules(targetNode.getDeclaredDeps())),
-            Suppliers.ofInstance(ruleResolver.requireAllRules(extraDeps)),
-            ruleResolver.requireAllRules(targetGraphOnlyDeps));
+            Suppliers.ofInstance(graphBuilder.requireAllRules(targetNode.getDeclaredDeps())),
+            Suppliers.ofInstance(graphBuilder.requireAllRules(extraDeps)),
+            graphBuilder.requireAllRules(targetGraphOnlyDeps));
 
     Cell targetCell = cellProvider.getBuildTargetCell(targetNode.getBuildTarget());
 
     BuildRuleCreationContextWithTargetGraph context =
         ImmutableBuildRuleCreationContextWithTargetGraph.of(
             targetGraph,
-            ruleResolver,
+            graphBuilder,
             targetNode.getFilesystem(),
             targetNode.getCellNames(),
             targetCell.getToolchainProvider());

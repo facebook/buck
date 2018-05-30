@@ -18,9 +18,9 @@ package com.facebook.buck.rules.args;
 
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.core.rules.BuildRuleResolver;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.rules.resolver.impl.TestBuildRuleResolver;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
@@ -38,7 +38,7 @@ public class SourcePathArgTest {
   public void stringify() {
     SourcePath path = FakeSourcePath.of("something");
     SourcePathResolver resolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(new TestBuildRuleResolver()));
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(new TestActionGraphBuilder()));
     SourcePathArg arg = SourcePathArg.of(path);
     assertThat(
         Arg.stringifyList(arg, resolver),
@@ -47,12 +47,12 @@ public class SourcePathArgTest {
 
   @Test
   public void getDeps() throws Exception {
-    BuildRuleResolver resolver = new TestBuildRuleResolver();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     Genrule rule =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:rule"))
             .setOut("output")
-            .build(resolver);
+            .build(graphBuilder);
     SourcePathArg arg = SourcePathArg.of(rule.getSourcePathToOutput());
     assertThat(BuildableSupport.getDepsCollection(arg, ruleFinder), Matchers.contains(rule));
   }

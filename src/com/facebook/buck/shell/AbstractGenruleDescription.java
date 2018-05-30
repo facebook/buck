@@ -26,6 +26,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
@@ -82,7 +83,7 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      BuildRuleResolver resolver,
+      ActionGraphBuilder graphBuilder,
       T args,
       Optional<Arg> cmd,
       Optional<Arg> bash,
@@ -151,22 +152,26 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
       BuildTarget buildTarget,
       BuildRuleParams params,
       T args) {
-    BuildRuleResolver resolver = context.getBuildRuleResolver();
+    ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
     Optional<ImmutableList<AbstractMacroExpander<? extends Macro, ?>>> maybeExpanders =
         getMacroHandler(
-            buildTarget, context.getProjectFilesystem(), resolver, context.getTargetGraph(), args);
+            buildTarget,
+            context.getProjectFilesystem(),
+            graphBuilder,
+            context.getTargetGraph(),
+            args);
     if (maybeExpanders.isPresent()) {
       ImmutableList<AbstractMacroExpander<? extends Macro, ?>> expanders = maybeExpanders.get();
-      SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+      SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
       StringWithMacrosConverter converter =
           StringWithMacrosConverter.of(buildTarget, context.getCellPathResolver(), expanders);
       Function<StringWithMacros, Arg> toArg =
           str -> {
-            Arg arg = converter.convert(str, resolver);
+            Arg arg = converter.convert(str, graphBuilder);
             if (RichStream.from(str.getMacros())
                 .map(MacroContainer::getMacro)
                 .anyMatch(WorkerMacro.class::isInstance)) {
-              arg = WorkerMacroArg.fromStringWithMacros(arg, buildTarget, resolver, str);
+              arg = WorkerMacroArg.fromStringWithMacros(arg, buildTarget, graphBuilder, str);
             }
             return arg;
           };
@@ -183,7 +188,7 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
                           .flatMap(Optionals::toStream)
                           .flatMap(input -> BuildableSupport.getDeps(input, ruleFinder)))
                   .collect(ImmutableSortedSet.toImmutableSortedSet(Comparator.naturalOrder()))),
-          resolver,
+          graphBuilder,
           args,
           cmd,
           bash,
@@ -193,7 +198,7 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
         buildTarget,
         context.getProjectFilesystem(),
         params,
-        resolver,
+        graphBuilder,
         args,
         Optional.empty(),
         Optional.empty(),

@@ -22,8 +22,8 @@ import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.Flavored;
 import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.HasJavaAbi;
@@ -114,7 +114,7 @@ public class KotlinLibraryDescription
             args.getMavenPomTemplate());
       }
     }
-    BuildRuleResolver resolver = context.getBuildRuleResolver();
+    ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
     JavacOptions javacOptions =
         JavacOptionsFactory.create(
             toolchainProvider
@@ -122,7 +122,7 @@ public class KotlinLibraryDescription
                 .getJavacOptions(),
             buildTarget,
             projectFilesystem,
-            resolver,
+            graphBuilder,
             args);
 
     DefaultJavaLibraryRules defaultKotlinLibraryBuilder =
@@ -131,7 +131,7 @@ public class KotlinLibraryDescription
                 projectFilesystem,
                 context.getToolchainProvider(),
                 params,
-                resolver,
+                graphBuilder,
                 context.getCellPathResolver(),
                 kotlinBuckConfig,
                 javaBuckConfig,
@@ -150,7 +150,7 @@ public class KotlinLibraryDescription
     if (!flavors.contains(JavaLibrary.MAVEN_JAR)) {
       return defaultKotlinLibrary;
     } else {
-      resolver.addToIndex(defaultKotlinLibrary);
+      graphBuilder.addToIndex(defaultKotlinLibrary);
       return MavenUberJar.create(
           defaultKotlinLibrary,
           buildTargetWithMavenFlavor,

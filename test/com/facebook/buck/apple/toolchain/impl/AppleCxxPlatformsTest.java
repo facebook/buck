@@ -47,10 +47,11 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.rulekey.RuleKey;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.rules.resolver.impl.TestBuildRuleResolver;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.rules.tool.BinaryBuildRule;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
@@ -201,7 +202,7 @@ public class AppleCxxPlatformsTest {
 
     CxxPlatform cxxPlatform = appleCxxPlatform.getCxxPlatform();
 
-    BuildRuleResolver ruleResolver = new TestBuildRuleResolver();
+    BuildRuleResolver ruleResolver = new TestActionGraphBuilder();
     SourcePathResolver resolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(ruleResolver));
 
@@ -298,7 +299,7 @@ public class AppleCxxPlatformsTest {
 
     CxxPlatform cxxPlatform = appleCxxPlatform.getCxxPlatform();
 
-    BuildRuleResolver ruleResolver = new TestBuildRuleResolver();
+    BuildRuleResolver ruleResolver = new TestActionGraphBuilder();
     SourcePathResolver resolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(ruleResolver));
 
@@ -391,7 +392,7 @@ public class AppleCxxPlatformsTest {
 
     CxxPlatform cxxPlatform = appleCxxPlatform.getCxxPlatform();
 
-    BuildRuleResolver ruleResolver = new TestBuildRuleResolver();
+    BuildRuleResolver ruleResolver = new TestActionGraphBuilder();
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
     SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
 
@@ -769,8 +770,8 @@ public class AppleCxxPlatformsTest {
   // Create and return some rule keys from a dummy source for the given platforms.
   private ImmutableMap<Flavor, RuleKey> constructCompileRuleKeys(
       Operation operation, ImmutableMap<Flavor, AppleCxxPlatform> cxxPlatforms) throws IOException {
-    BuildRuleResolver resolver = new TestBuildRuleResolver();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     String source = "source.cpp";
     DefaultRuleKeyFactory ruleKeyFactory =
@@ -789,7 +790,7 @@ public class AppleCxxPlatformsTest {
           CxxSourceRuleFactory.builder()
               .setProjectFilesystem(projectFilesystem)
               .setBaseBuildTarget(target)
-              .setResolver(resolver)
+              .setActionGraphBuilder(graphBuilder)
               .setPathResolver(pathResolver)
               .setRuleFinder(ruleFinder)
               .setCxxBuckConfig(CxxPlatformUtils.DEFAULT_CONFIG)
@@ -827,8 +828,8 @@ public class AppleCxxPlatformsTest {
   // Create and return some rule keys from a dummy source for the given platforms.
   private ImmutableMap<Flavor, RuleKey> constructLinkRuleKeys(
       ImmutableMap<Flavor, AppleCxxPlatform> cxxPlatforms) throws NoSuchBuildTargetException {
-    BuildRuleResolver resolver = new TestBuildRuleResolver();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     DefaultRuleKeyFactory ruleKeyFactory =
         new TestDefaultRuleKeyFactory(
@@ -846,7 +847,7 @@ public class AppleCxxPlatformsTest {
               CxxPlatformUtils.DEFAULT_CONFIG,
               entry.getValue().getCxxPlatform(),
               new FakeProjectFilesystem(),
-              resolver,
+              graphBuilder,
               pathResolver,
               ruleFinder,
               target,
@@ -920,7 +921,7 @@ public class AppleCxxPlatformsTest {
   @Test
   public void byDefaultCodesignToolIsConstant() {
     AppleCxxPlatform appleCxxPlatform = buildAppleCxxPlatform();
-    BuildRuleResolver buildRuleResolver = new TestBuildRuleResolver();
+    BuildRuleResolver buildRuleResolver = new TestActionGraphBuilder();
     SourcePathResolver sourcePathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(buildRuleResolver));
     assertThat(
@@ -969,9 +970,9 @@ public class AppleCxxPlatformsTest {
             return codesign;
           }
         };
-    BuildRuleResolver buildRuleResolver = new TestBuildRuleResolver();
-    buildRuleResolver.computeIfAbsent(buildTarget, target -> buildRule);
-    assertThat(appleCxxPlatform.getCodesignProvider().resolve(buildRuleResolver), is(codesign));
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
+    graphBuilder.computeIfAbsent(buildTarget, target -> buildRule);
+    assertThat(appleCxxPlatform.getCodesignProvider().resolve(graphBuilder), is(codesign));
   }
 
   @Test
@@ -985,7 +986,7 @@ public class AppleCxxPlatformsTest {
                 .setFilesystem(projectFilesystem)
                 .setSections("[apple]", "codesign = " + codesignPath)
                 .build());
-    BuildRuleResolver buildRuleResolver = new TestBuildRuleResolver();
+    BuildRuleResolver buildRuleResolver = new TestActionGraphBuilder();
     SourcePathResolver sourcePathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(buildRuleResolver));
     assertThat(

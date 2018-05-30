@@ -23,8 +23,8 @@ import com.facebook.buck.android.exopackage.AndroidDevicesHelperFactory;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
@@ -94,7 +94,7 @@ public class UninstallCommand extends AbstractCommand {
       throws IOException, InterruptedException {
 
     // Parse all of the build targets specified by the user.
-    BuildRuleResolver resolver;
+    ActionGraphBuilder graphBuilder;
     ImmutableSet<BuildTarget> buildTargets;
 
     try (CommandThreadManager pool =
@@ -109,7 +109,7 @@ public class UninstallCommand extends AbstractCommand {
                   pool.getListeningExecutorService(),
                   parseArgumentsAsTargetNodeSpecs(params.getBuckConfig(), getArguments()));
       buildTargets = result.getBuildTargets();
-      resolver =
+      graphBuilder =
           params
               .getActionGraphCache()
               .getActionGraph(
@@ -119,7 +119,7 @@ public class UninstallCommand extends AbstractCommand {
                   params.getBuckConfig(),
                   params.getRuleKeyConfiguration(),
                   params.getPoolSupplier())
-              .getResolver();
+              .getActionGraphBuilder();
     } catch (BuildFileParseException e) {
       params
           .getBuckEventBus()
@@ -134,7 +134,7 @@ public class UninstallCommand extends AbstractCommand {
     BuildTarget buildTarget = Iterables.get(buildTargets, 0);
 
     // Find the android_binary() rule from the parse.
-    BuildRule buildRule = resolver.requireRule(buildTarget);
+    BuildRule buildRule = graphBuilder.requireRule(buildTarget);
     if (!(buildRule instanceof HasInstallableApk)) {
       params
           .getBuckEventBus()
@@ -151,7 +151,7 @@ public class UninstallCommand extends AbstractCommand {
 
     // Find application package name from manifest and uninstall from matching devices.
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
     String appId =
         AdbHelper.tryToExtractPackageNameFromManifest(pathResolver, hasInstallableApk.getApkInfo());
     return adbHelper.uninstallApp(appId, uninstallOptions().shouldKeepUserData())

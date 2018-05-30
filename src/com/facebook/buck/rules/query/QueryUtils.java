@@ -21,7 +21,7 @@ import com.facebook.buck.core.description.arg.HasDepsQuery;
 import com.facebook.buck.core.description.arg.HasProvidedDepsQuery;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
-import com.facebook.buck.core.rules.BuildRuleResolver;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.query.QueryBuildTarget;
@@ -56,7 +56,7 @@ public final class QueryUtils {
       T arg,
       BuildTarget target,
       QueryCache cache,
-      BuildRuleResolver resolver,
+      ActionGraphBuilder graphBuilder,
       CellPathResolver cellRoots,
       TargetGraph graph) {
     if (arg instanceof HasDepsQuery) {
@@ -64,7 +64,8 @@ public final class QueryUtils {
       if (castedArg.getDepsQuery().isPresent()) {
         Query query = castedArg.getDepsQuery().get();
         ImmutableSortedSet<BuildTarget> resolvedQuery =
-            resolveDepQuery(target, query, cache, resolver, cellRoots, graph, castedArg.getDeps());
+            resolveDepQuery(
+                target, query, cache, graphBuilder, cellRoots, graph, castedArg.getDeps());
         return (T) castedArg.withDepsQuery(query.withResolvedQuery(resolvedQuery));
       }
     }
@@ -77,7 +78,7 @@ public final class QueryUtils {
       T arg,
       BuildTarget target,
       QueryCache cache,
-      BuildRuleResolver resolver,
+      ActionGraphBuilder graphBuilder,
       CellPathResolver cellRoots,
       TargetGraph graph) {
     if (arg instanceof HasProvidedDepsQuery) {
@@ -86,7 +87,7 @@ public final class QueryUtils {
         Query query = castedArg.getProvidedDepsQuery().get();
         ImmutableSortedSet<BuildTarget> resolvedQuery =
             resolveDepQuery(
-                target, query, cache, resolver, cellRoots, graph, castedArg.getProvidedDeps());
+                target, query, cache, graphBuilder, cellRoots, graph, castedArg.getProvidedDeps());
         arg = (T) castedArg.withProvidedDepsQuery(query.withResolvedQuery(resolvedQuery));
       }
     }
@@ -98,13 +99,13 @@ public final class QueryUtils {
       BuildTarget target,
       Query query,
       QueryCache cache,
-      BuildRuleResolver resolver,
+      ActionGraphBuilder graphBuilder,
       CellPathResolver cellRoots,
       TargetGraph targetGraph,
       ImmutableSet<BuildTarget> declaredDeps) {
     GraphEnhancementQueryEnvironment env =
         new GraphEnhancementQueryEnvironment(
-            Optional.of(resolver),
+            Optional.of(graphBuilder),
             Optional.of(targetGraph),
             TYPE_COERCER_FACTORY,
             cellRoots,

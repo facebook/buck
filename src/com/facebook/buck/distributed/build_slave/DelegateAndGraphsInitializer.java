@@ -19,7 +19,7 @@ package com.facebook.buck.distributed.build_slave;
 import com.facebook.buck.core.build.engine.delegate.CachingBuildEngineDelegate;
 import com.facebook.buck.core.build.engine.delegate.LocalCachingBuildEngineDelegate;
 import com.facebook.buck.core.cell.Cell;
-import com.facebook.buck.core.model.actiongraph.ActionGraphAndResolver;
+import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
@@ -85,9 +85,9 @@ public class DelegateAndGraphsInitializer {
     return delegateAndGraphs;
   }
 
-  public ListenableFuture<ActionGraphAndResolver> getActionGraphAndResolver() {
+  public ListenableFuture<ActionGraphAndBuilder> getActionGraphAndBuilder() {
     return Futures.transform(
-        delegateAndGraphs, x -> x.getActionGraphAndResolver(), MoreExecutors.directExecutor());
+        delegateAndGraphs, x -> x.getActionGraphAndBuilder(), MoreExecutors.directExecutor());
   }
 
   private DelegateAndGraphs createDelegateAndGraphs() throws IOException, InterruptedException {
@@ -98,13 +98,13 @@ public class DelegateAndGraphsInitializer {
     TargetGraph targetGraph = createTargetGraph();
     LOG.info("Finished creating the target graph.");
     LOG.info("Starting to create the action graph.");
-    ActionGraphAndResolver actionGraphAndResolver = createActionGraphAndResolver(targetGraph);
+    ActionGraphAndBuilder actionGraphAndBuilder = createActionGraphAndResolver(targetGraph);
     LOG.info("Finished creating the action graph.");
     CachingBuildEngineDelegate engineDelegate =
-        createBuildEngineDelegate(stackedCaches, actionGraphAndResolver);
+        createBuildEngineDelegate(stackedCaches, actionGraphAndBuilder);
     return DelegateAndGraphs.builder()
         .setTargetGraph(targetGraph)
-        .setActionGraphAndResolver(actionGraphAndResolver)
+        .setActionGraphAndBuilder(actionGraphAndBuilder)
         .setCachingBuildEngineDelegate(engineDelegate)
         .build();
   }
@@ -147,14 +147,14 @@ public class DelegateAndGraphsInitializer {
   }
 
   // TODO(ruibm): This thing is time consuming and should execute in the background.
-  private ActionGraphAndResolver createActionGraphAndResolver(TargetGraph targetGraph) {
+  private ActionGraphAndBuilder createActionGraphAndResolver(TargetGraph targetGraph) {
     args.getTimingStatsTracker().startTimer(SlaveEvents.ACTION_GRAPH_CREATION_TIME);
     try {
       LOG.info(
           String.format(
               "Parallel action graph mode: [%s]. Parallel action graph threads [%d]",
               args.getActionGraphParallelizationMode(), args.getMaxActionGraphParallelism()));
-      ActionGraphAndResolver actionGraphAndResolver =
+      ActionGraphAndBuilder actionGraphAndBuilder =
           args.getActionGraphCache()
               .getActionGraph(
                   args.getBuckEventBus(),
@@ -178,7 +178,7 @@ public class DelegateAndGraphsInitializer {
                         return MostExecutors.forkJoinPoolWithThreadLimit(threadCount, 16);
                       },
                       ForkJoinPool::shutdownNow));
-      return actionGraphAndResolver;
+      return actionGraphAndBuilder;
     } finally {
       args.getTimingStatsTracker().stopTimer(SlaveEvents.ACTION_GRAPH_CREATION_TIME);
     }
@@ -186,13 +186,13 @@ public class DelegateAndGraphsInitializer {
 
   /** Creates the delegate for the distributed build. */
   private CachingBuildEngineDelegate createBuildEngineDelegate(
-      StackedFileHashCaches caches, ActionGraphAndResolver actionGraphAndResolver) {
+      StackedFileHashCaches caches, ActionGraphAndBuilder actionGraphAndBuilder) {
     CachingBuildEngineDelegate cachingBuildEngineDelegate = null;
     DistBuildConfig remoteConfig = new DistBuildConfig(args.getState().getRemoteRootCellConfig());
     if (remoteConfig.materializeSourceFilesOnDemand()) {
       SourcePathRuleFinder ruleFinder =
           new SourcePathRuleFinder(
-              Preconditions.checkNotNull(actionGraphAndResolver).getResolver());
+              Preconditions.checkNotNull(actionGraphAndBuilder).getActionGraphBuilder());
       cachingBuildEngineDelegate =
           new DistBuildCachingEngineDelegate(
               DefaultSourcePathResolver.from(ruleFinder),

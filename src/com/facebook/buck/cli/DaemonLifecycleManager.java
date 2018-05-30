@@ -73,7 +73,7 @@ class DaemonLifecycleManager {
           daemon.getRootCell().isCompatibleForCaching(rootCell);
       if (cacheCompat != Cell.IsCompatibleForCaching.IS_COMPATIBLE) {
         LOG.warn(
-            "Shutting down and restarting daemon on config or directory resolver change (%s != %s)",
+            "Shutting down and restarting daemon on config or directory graphBuilder change (%s != %s)",
             daemon.getRootCell(), rootCell);
         // Use the raw stream because otherwise this will stop superconsole from ever printing again
         console

@@ -143,7 +143,7 @@ public class SymlinkTree extends AbstractBuildRule
    * gathering all of the inputs in one directory.
    *
    * @param sourcePaths set of SourcePaths to process
-   * @param resolver resolver
+   * @param resolver graphBuilder
    * @return a map that assigns a unique relative path to each of the SourcePaths.
    */
   public static ImmutableBiMap<SourcePath, Path> resolveDuplicateRelativePaths(

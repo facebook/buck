@@ -22,8 +22,8 @@ import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.core.description.BuildRuleParams;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
@@ -57,7 +57,7 @@ public class GenruleDescription extends AbstractGenruleDescription<GenruleDescri
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      BuildRuleResolver resolver,
+      ActionGraphBuilder graphBuilder,
       GenruleDescriptionArg args,
       Optional<Arg> cmd,
       Optional<Arg> bash,
@@ -76,7 +76,7 @@ public class GenruleDescription extends AbstractGenruleDescription<GenruleDescri
       return new Genrule(
           buildTarget,
           projectFilesystem,
-          resolver,
+          graphBuilder,
           params,
           sandboxExecutionStrategy,
           args.getSrcs(),
@@ -98,7 +98,7 @@ public class GenruleDescription extends AbstractGenruleDescription<GenruleDescri
           buildTarget,
           projectFilesystem,
           sandboxExecutionStrategy,
-          resolver,
+          graphBuilder,
           params,
           args.getSrcs(),
           cmd,

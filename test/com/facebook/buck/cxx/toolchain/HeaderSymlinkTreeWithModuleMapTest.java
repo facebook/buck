@@ -29,7 +29,7 @@ import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.rules.resolver.impl.TestBuildRuleResolver;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
@@ -107,7 +107,7 @@ public class HeaderSymlinkTreeWithModuleMapTest {
     symlinkTreeRoot =
         BuildTargets.getGenPath(projectFilesystem, buildTarget, "%s/symlink-tree-root");
 
-    ruleResolver = new TestBuildRuleResolver(TargetGraph.EMPTY);
+    ruleResolver = new TestActionGraphBuilder(TargetGraph.EMPTY);
     ruleFinder = new SourcePathRuleFinder(ruleResolver);
     resolver = DefaultSourcePathResolver.from(ruleFinder);
 

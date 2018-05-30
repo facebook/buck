@@ -26,7 +26,7 @@ import com.facebook.buck.core.description.DescriptionCache;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.rules.resolver.impl.TestBuildRuleResolver;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
@@ -102,7 +102,7 @@ public class GenAidlTest {
         BuildTargetFactory.newInstance(
             stubFilesystem.getRootPath(), "//java/com/example/base:IWhateverService");
     pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(new TestBuildRuleResolver()));
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(new TestActionGraphBuilder()));
   }
 
   private GenAidl createGenAidlRule(ImmutableSortedSet<SourcePath> aidlSourceDeps) {
@@ -163,7 +163,7 @@ public class GenAidlTest {
 
   @Test
   public void testTransitiveAidlDependenciesAffectTheRuleKey() throws IOException {
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestBuildRuleResolver());
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestActionGraphBuilder());
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     StackedFileHashCache hashCache =
         StackedFileHashCache.createDefaultHashCaches(

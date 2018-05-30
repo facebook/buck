@@ -18,8 +18,8 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.description.BuildRuleParams;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.toolchain.JavaOptionsProvider;
@@ -53,7 +53,7 @@ public class JarGenruleDescription extends AbstractGenruleDescription<JarGenrule
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      BuildRuleResolver resolver,
+      ActionGraphBuilder graphBuilder,
       JarGenruleDescriptionArg args,
       Optional<Arg> cmd,
       Optional<Arg> bash,
@@ -67,7 +67,7 @@ public class JarGenruleDescription extends AbstractGenruleDescription<JarGenrule
         buildTarget,
         projectFilesystem,
         sandboxExecutionStrategy,
-        resolver,
+        graphBuilder,
         params,
         args.getSrcs(),
         cmd,

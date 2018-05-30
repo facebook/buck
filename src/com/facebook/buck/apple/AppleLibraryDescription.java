@@ -40,8 +40,8 @@ import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTarg
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
@@ -248,7 +248,7 @@ public class AppleLibraryDescription
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      BuildRuleResolver resolver,
+      ActionGraphBuilder graphBuilder,
       SourcePathRuleFinder ruleFinder,
       CellPathResolver cellRoots,
       AppleNativeTargetDescriptionArg args,
@@ -266,7 +266,7 @@ public class AppleLibraryDescription
                     buildTarget,
                     projectFilesystem,
                     ruleFinder,
-                    resolver,
+                    graphBuilder,
                     cxxPlatform,
                     HeaderVisibility.PUBLIC));
           } else if (type.getValue().equals(Type.SWIFT_OBJC_GENERATED_HEADER)) {
@@ -278,7 +278,7 @@ public class AppleLibraryDescription
                     buildTarget,
                     projectFilesystem,
                     ruleFinder,
-                    resolver,
+                    graphBuilder,
                     cxxPlatform,
                     HeaderVisibility.PRIVATE));
           } else if (type.getValue().equals(Type.SWIFT_COMPILE)) {
@@ -296,18 +296,18 @@ public class AppleLibraryDescription
                     .map(
                         d ->
                             d.getPreprocessorInputForSwift(
-                                buildTarget, resolver, cxxPlatform, args))
+                                buildTarget, graphBuilder, cxxPlatform, args))
                     .orElseGet(
                         () ->
                             AppleLibraryDescriptionSwiftEnhancer
                                 .getPreprocessorInputsForAppleLibrary(
-                                    buildTarget, resolver, cxxPlatform));
+                                    buildTarget, graphBuilder, cxxPlatform));
 
             return Optional.of(
                 AppleLibraryDescriptionSwiftEnhancer.createSwiftCompileRule(
                     buildTarget,
                     cellRoots,
-                    resolver,
+                    graphBuilder,
                     ruleFinder,
                     params,
                     args,
@@ -329,11 +329,11 @@ public class AppleLibraryDescription
       BuildRuleParams params,
       AppleLibraryDescriptionArg args) {
     TargetGraph targetGraph = context.getTargetGraph();
-    BuildRuleResolver resolver = context.getBuildRuleResolver();
+    ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
     Optional<Map.Entry<Flavor, Type>> type = LIBRARY_TYPE.getFlavorAndValue(buildTarget);
     if (type.isPresent() && type.get().getValue().equals(Type.FRAMEWORK)) {
       return createFrameworkBundleBuildRule(
-          targetGraph, buildTarget, context.getProjectFilesystem(), params, resolver, args);
+          targetGraph, buildTarget, context.getProjectFilesystem(), params, graphBuilder, args);
     }
 
     Optional<BuildRule> swiftRule =
@@ -341,8 +341,8 @@ public class AppleLibraryDescription
             buildTarget,
             context.getProjectFilesystem(),
             params,
-            resolver,
-            new SourcePathRuleFinder(resolver),
+            graphBuilder,
+            new SourcePathRuleFinder(graphBuilder),
             context.getCellPathResolver(),
             args,
             Optional.empty());
@@ -354,7 +354,7 @@ public class AppleLibraryDescription
         context,
         buildTarget,
         params,
-        resolver,
+        graphBuilder,
         args,
         args.getLinkStyle(),
         Optional.empty(),
@@ -368,7 +368,7 @@ public class AppleLibraryDescription
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      BuildRuleResolver resolver,
+      ActionGraphBuilder graphBuilder,
       AppleLibraryDescriptionArg args) {
     if (!args.getInfoPlist().isPresent()) {
       throw new HumanReadableException(
@@ -377,7 +377,7 @@ public class AppleLibraryDescription
           buildTarget.getUnflavoredBuildTarget());
     }
     if (!AppleDescriptions.INCLUDE_FRAMEWORKS.getValue(buildTarget).isPresent()) {
-      return resolver.requireRule(
+      return graphBuilder.requireRule(
           buildTarget.withAppendedFlavors(AppleDescriptions.INCLUDE_FRAMEWORKS_FLAVOR));
     }
     AppleDebugFormat debugFormat =
@@ -385,7 +385,7 @@ public class AppleLibraryDescription
             .getValue(buildTarget)
             .orElse(appleConfig.getDefaultDebugInfoFormatForLibraries());
     if (!buildTarget.getFlavors().contains(debugFormat.getFlavor())) {
-      return resolver.requireRule(buildTarget.withAppendedFlavors(debugFormat.getFlavor()));
+      return graphBuilder.requireRule(buildTarget.withAppendedFlavors(debugFormat.getFlavor()));
     }
 
     CxxPlatformsProvider cxxPlatformsProvider = getCxxPlatformsProvider();
@@ -398,7 +398,7 @@ public class AppleLibraryDescription
         buildTarget,
         projectFilesystem,
         params,
-        resolver,
+        graphBuilder,
         toolchainProvider.getByName(
             CodeSignIdentityStore.DEFAULT_NAME, CodeSignIdentityStore.class),
         toolchainProvider.getByName(
@@ -430,7 +430,7 @@ public class AppleLibraryDescription
       BuildRuleCreationContextWithTargetGraph context,
       BuildTarget buildTarget,
       BuildRuleParams params,
-      BuildRuleResolver resolver,
+      ActionGraphBuilder graphBuilder,
       A args,
       Optional<Linker.LinkableDepType> linkableDepType,
       Optional<SourcePath> bundleLoader,
@@ -444,14 +444,14 @@ public class AppleLibraryDescription
         CxxStrip.removeStripStyleFlavorInTarget(buildTarget, flavoredStripStyle);
 
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
 
     BuildRule unstrippedBinaryRule =
         requireUnstrippedBuildRule(
             context,
             unstrippedBuildTarget,
             params,
-            resolver,
+            graphBuilder,
             args,
             linkableDepType,
             bundleLoader,
@@ -484,7 +484,7 @@ public class AppleLibraryDescription
         CxxDescriptionEnhancer.createCxxStripRule(
             strippedBuildTarget,
             context.getProjectFilesystem(),
-            resolver,
+            graphBuilder,
             flavoredStripStyle.orElse(StripStyle.NON_GLOBAL_SYMBOLS),
             unstrippedBinaryRule,
             representativePlatform);
@@ -492,7 +492,7 @@ public class AppleLibraryDescription
     return AppleDescriptions.createAppleDebuggableBinary(
         unstrippedBuildTarget,
         context.getProjectFilesystem(),
-        resolver,
+        graphBuilder,
         strippedBinaryRule,
         (HasAppleDebugSymbolDeps) unstrippedBinaryRule,
         AppleDebugFormat.FLAVOR_DOMAIN
@@ -507,7 +507,7 @@ public class AppleLibraryDescription
       BuildRuleCreationContextWithTargetGraph context,
       BuildTarget buildTarget,
       BuildRuleParams params,
-      BuildRuleResolver resolver,
+      ActionGraphBuilder graphBuilder,
       A args,
       Optional<Linker.LinkableDepType> linkableDepType,
       Optional<SourcePath> bundleLoader,
@@ -525,7 +525,7 @@ public class AppleLibraryDescription
                 context,
                 thinTarget,
                 params,
-                resolver,
+                graphBuilder,
                 args,
                 linkableDepType,
                 bundleLoader,
@@ -542,7 +542,7 @@ public class AppleLibraryDescription
           // In the same manner that debug flavors are omitted from single-arch constituents, they
           // are omitted here as well.
           params,
-          resolver,
+          graphBuilder,
           multiarchFileInfo.get(),
           thinRules.build());
     } else {
@@ -550,7 +550,7 @@ public class AppleLibraryDescription
           context,
           buildTarget,
           params,
-          resolver,
+          graphBuilder,
           args,
           linkableDepType,
           bundleLoader,
@@ -566,7 +566,7 @@ public class AppleLibraryDescription
           BuildRuleCreationContextWithTargetGraph context,
           BuildTarget buildTarget,
           BuildRuleParams params,
-          BuildRuleResolver resolver,
+          ActionGraphBuilder graphBuilder,
           A args,
           Optional<Linker.LinkableDepType> linkableDepType,
           Optional<SourcePath> bundleLoader,
@@ -582,7 +582,8 @@ public class AppleLibraryDescription
     BuildRuleParams newParams;
     Optional<BuildRule> swiftCompanionBuildRule =
         swiftDelegate.flatMap(
-            swift -> swift.createCompanionBuildRule(context, buildTarget, params, resolver, args));
+            swift ->
+                swift.createCompanionBuildRule(context, buildTarget, params, graphBuilder, args));
     if (swiftCompanionBuildRule.isPresent() && isSwiftTarget(buildTarget)) {
       // when creating a swift target, there is no need to proceed with apple library rules
       return swiftCompanionBuildRule.get();
@@ -600,7 +601,7 @@ public class AppleLibraryDescription
       unstrippedTarget = unstrippedTarget.withoutFlavors(LinkerMapMode.NO_LINKER_MAP.getFlavor());
     }
 
-    return resolver.computeIfAbsent(
+    return graphBuilder.computeIfAbsent(
         unstrippedTarget,
         unstrippedTarget1 -> {
           Optional<CxxLibraryDescriptionDelegate> cxxDelegate =
@@ -609,7 +610,7 @@ public class AppleLibraryDescription
               unstrippedTarget1,
               context.getProjectFilesystem(),
               newParams,
-              resolver,
+              graphBuilder,
               context.getCellPathResolver(),
               delegateArg.build(),
               linkableDepType,
@@ -635,13 +636,13 @@ public class AppleLibraryDescription
 
   <U> Optional<U> createMetadataForLibrary(
       BuildTarget buildTarget,
-      BuildRuleResolver resolver,
+      ActionGraphBuilder graphBuilder,
       CellPathResolver cellRoots,
       AppleNativeTargetDescriptionArg args,
       Class<U> metadataClass) {
 
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
 
     // Forward to C/C++ library description.
     if (CxxLibraryDescription.METADATA_TYPE.containsAnyOf(buildTarget.getFlavors())) {
@@ -649,7 +650,7 @@ public class AppleLibraryDescription
       AppleDescriptions.populateCxxLibraryDescriptionArg(
           pathResolver, delegateArg, args, buildTarget);
       return cxxLibraryMetadataFactory.createMetadata(
-          buildTarget, resolver, cellRoots, delegateArg.build(), metadataClass);
+          buildTarget, graphBuilder, cellRoots, delegateArg.build(), metadataClass);
     }
 
     if (metadataClass.isAssignableFrom(FrameworkDependencies.class)
@@ -663,7 +664,7 @@ public class AppleLibraryDescription
       ImmutableSet.Builder<SourcePath> sourcePaths = ImmutableSet.builder();
       for (BuildTarget dep : args.getDeps()) {
         Optional<FrameworkDependencies> frameworks =
-            resolver.requireMetadata(
+            graphBuilder.requireMetadata(
                 dep.withAppendedFlavors(
                     AppleDescriptions.FRAMEWORK_FLAVOR,
                     AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR,
@@ -674,8 +675,8 @@ public class AppleLibraryDescription
         }
       }
       // Not all parts of Buck use require yet, so require the rule here so it's available in the
-      // resolver for the parts that don't.
-      BuildRule buildRule = resolver.requireRule(buildTarget);
+      // graphBuilder for the parts that don't.
+      BuildRule buildRule = graphBuilder.requireRule(buildTarget);
       sourcePaths.add(buildRule.getSourcePathToOutput());
       return Optional.of(metadataClass.cast(FrameworkDependencies.of(sourcePaths.build())));
     }
@@ -699,7 +700,7 @@ public class AppleLibraryDescription
                 baseTarget.withAppendedFlavors(
                     Type.SWIFT_EXPORTED_OBJC_GENERATED_HEADER.getFlavor());
             HeaderSymlinkTreeWithHeaderMap headersRule =
-                (HeaderSymlinkTreeWithHeaderMap) resolver.requireRule(swiftHeadersTarget);
+                (HeaderSymlinkTreeWithHeaderMap) graphBuilder.requireRule(swiftHeadersTarget);
 
             CxxHeaders headers =
                 CxxSymlinkTreeHeaders.from(headersRule, CxxPreprocessables.IncludeType.LOCAL);
@@ -711,7 +712,7 @@ public class AppleLibraryDescription
             BuildTarget swiftHeadersTarget =
                 baseTarget.withAppendedFlavors(Type.SWIFT_OBJC_GENERATED_HEADER.getFlavor());
             HeaderSymlinkTreeWithHeaderMap headersRule =
-                (HeaderSymlinkTreeWithHeaderMap) resolver.requireRule(swiftHeadersTarget);
+                (HeaderSymlinkTreeWithHeaderMap) graphBuilder.requireRule(swiftHeadersTarget);
 
             CxxHeaders headers =
                 CxxSymlinkTreeHeaders.from(headersRule, CxxPreprocessables.IncludeType.LOCAL);
@@ -722,7 +723,7 @@ public class AppleLibraryDescription
           {
             BuildTarget swiftCompileTarget =
                 baseTarget.withAppendedFlavors(Type.SWIFT_COMPILE.getFlavor());
-            SwiftCompile compile = (SwiftCompile) resolver.requireRule(swiftCompileTarget);
+            SwiftCompile compile = (SwiftCompile) graphBuilder.requireRule(swiftCompileTarget);
 
             CxxHeaders headers =
                 CxxHeadersDir.of(CxxPreprocessables.IncludeType.LOCAL, compile.getOutputPath());
@@ -735,13 +736,13 @@ public class AppleLibraryDescription
                 baseTarget.withAppendedFlavors(
                     MetadataType.APPLE_SWIFT_MODULE_CXX_HEADERS.getFlavor());
             Optional<CxxHeaders> moduleHeaders =
-                resolver.requireMetadata(moduleHeadersTarget, CxxHeaders.class);
+                graphBuilder.requireMetadata(moduleHeadersTarget, CxxHeaders.class);
 
             BuildTarget objcHeadersTarget =
                 baseTarget.withAppendedFlavors(
                     MetadataType.APPLE_SWIFT_EXPORTED_OBJC_CXX_HEADERS.getFlavor());
             Optional<CxxHeaders> objcHeaders =
-                resolver.requireMetadata(objcHeadersTarget, CxxHeaders.class);
+                graphBuilder.requireMetadata(objcHeadersTarget, CxxHeaders.class);
 
             CxxPreprocessorInput.Builder builder = CxxPreprocessorInput.builder();
             moduleHeaders.ifPresent(s -> builder.addIncludes(s));
@@ -757,7 +758,7 @@ public class AppleLibraryDescription
                 baseTarget.withAppendedFlavors(
                     MetadataType.APPLE_SWIFT_OBJC_CXX_HEADERS.getFlavor());
             Optional<CxxHeaders> objcHeaders =
-                resolver.requireMetadata(objcHeadersTarget, CxxHeaders.class);
+                graphBuilder.requireMetadata(objcHeadersTarget, CxxHeaders.class);
 
             CxxPreprocessorInput.Builder builder = CxxPreprocessorInput.builder();
             objcHeaders.ifPresent(s -> builder.addIncludes(s));
@@ -774,12 +775,12 @@ public class AppleLibraryDescription
   @Override
   public <U> Optional<U> createMetadata(
       BuildTarget buildTarget,
-      BuildRuleResolver resolver,
+      ActionGraphBuilder graphBuilder,
       CellPathResolver cellRoots,
       AppleLibraryDescriptionArg args,
       Optional<ImmutableMap<BuildTarget, Version>> selectedVersions,
       Class<U> metadataClass) {
-    return createMetadataForLibrary(buildTarget, resolver, cellRoots, args, metadataClass);
+    return createMetadataForLibrary(buildTarget, graphBuilder, cellRoots, args, metadataClass);
   }
 
   @Override
@@ -825,19 +826,19 @@ public class AppleLibraryDescription
 
   // CxxLibraryDescriptionDelegate
 
-  private static boolean targetContainsSwift(BuildTarget target, BuildRuleResolver resolver) {
+  private static boolean targetContainsSwift(BuildTarget target, ActionGraphBuilder graphBuilder) {
     BuildTarget metadataTarget = target.withFlavors(MetadataType.APPLE_SWIFT_METADATA.getFlavor());
     Optional<AppleLibrarySwiftMetadata> metadata =
-        resolver.requireMetadata(metadataTarget, AppleLibrarySwiftMetadata.class);
+        graphBuilder.requireMetadata(metadataTarget, AppleLibrarySwiftMetadata.class);
     return metadata.map(m -> !m.getSwiftSources().isEmpty()).orElse(false);
   }
 
   public static Optional<CxxPreprocessorInput> queryMetadataCxxSwiftPreprocessorInput(
-      BuildRuleResolver resolver,
+      ActionGraphBuilder graphBuilder,
       BuildTarget baseTarget,
       CxxPlatform platform,
       HeaderVisibility headerVisibility) {
-    if (!targetContainsSwift(baseTarget, resolver)) {
+    if (!targetContainsSwift(baseTarget, graphBuilder)) {
       return Optional.empty();
     }
 
@@ -853,44 +854,44 @@ public class AppleLibraryDescription
 
     Preconditions.checkNotNull(metadataType);
 
-    return resolver.requireMetadata(
+    return graphBuilder.requireMetadata(
         baseTarget.withAppendedFlavors(metadataType.getFlavor(), platform.getFlavor()),
         CxxPreprocessorInput.class);
   }
 
   @Override
   public Optional<CxxPreprocessorInput> getPreprocessorInput(
-      BuildTarget target, BuildRuleResolver resolver, CxxPlatform platform) {
-    if (!targetContainsSwift(target, resolver)) {
+      BuildTarget target, ActionGraphBuilder graphBuilder, CxxPlatform platform) {
+    if (!targetContainsSwift(target, graphBuilder)) {
       return Optional.empty();
     }
 
     return queryMetadataCxxSwiftPreprocessorInput(
-        resolver, target, platform, HeaderVisibility.PUBLIC);
+        graphBuilder, target, platform, HeaderVisibility.PUBLIC);
   }
 
   @Override
   public Optional<CxxPreprocessorInput> getPrivatePreprocessorInput(
-      BuildTarget target, BuildRuleResolver resolver, CxxPlatform platform) {
-    if (!targetContainsSwift(target, resolver)) {
+      BuildTarget target, ActionGraphBuilder graphBuilder, CxxPlatform platform) {
+    if (!targetContainsSwift(target, graphBuilder)) {
       return Optional.empty();
     }
 
     return queryMetadataCxxSwiftPreprocessorInput(
-        resolver, target, platform, HeaderVisibility.PRIVATE);
+        graphBuilder, target, platform, HeaderVisibility.PRIVATE);
   }
 
   @Override
   public Optional<HeaderSymlinkTree> getPrivateHeaderSymlinkTree(
-      BuildTarget buildTarget, BuildRuleResolver ruleResolver, CxxPlatform cxxPlatform) {
-    if (!targetContainsSwift(buildTarget, ruleResolver)) {
+      BuildTarget buildTarget, ActionGraphBuilder graphBuilder, CxxPlatform cxxPlatform) {
+    if (!targetContainsSwift(buildTarget, graphBuilder)) {
       return Optional.empty();
     }
 
     BuildTarget ruleTarget =
         AppleLibraryDescriptionSwiftEnhancer.createBuildTargetForObjCGeneratedHeaderBuildRule(
             buildTarget, HeaderVisibility.PRIVATE, cxxPlatform);
-    BuildRule headerRule = ruleResolver.requireRule(ruleTarget);
+    BuildRule headerRule = graphBuilder.requireRule(ruleTarget);
     if (headerRule instanceof HeaderSymlinkTree) {
       return Optional.of((HeaderSymlinkTree) headerRule);
     }
@@ -900,21 +901,21 @@ public class AppleLibraryDescription
 
   @Override
   public Optional<ImmutableList<SourcePath>> getObjectFilePaths(
-      BuildTarget target, BuildRuleResolver resolver, CxxPlatform cxxPlatform) {
-    if (!targetContainsSwift(target, resolver)) {
+      BuildTarget target, ActionGraphBuilder graphBuilder, CxxPlatform cxxPlatform) {
+    if (!targetContainsSwift(target, graphBuilder)) {
       return Optional.empty();
     }
 
     BuildTarget swiftTarget =
         AppleLibraryDescriptionSwiftEnhancer.createBuildTargetForSwiftCompile(target, cxxPlatform);
-    SwiftCompile compile = (SwiftCompile) resolver.requireRule(swiftTarget);
+    SwiftCompile compile = (SwiftCompile) graphBuilder.requireRule(swiftTarget);
     return Optional.of(compile.getObjectPaths());
   }
 
   @Override
   public Optional<ImmutableList<NativeLinkable>> getNativeLinkableExportedDeps(
-      BuildTarget target, BuildRuleResolver resolver, CxxPlatform platform) {
-    if (!targetContainsSwift(target, resolver)) {
+      BuildTarget target, ActionGraphBuilder graphBuilder, CxxPlatform platform) {
+    if (!targetContainsSwift(target, graphBuilder)) {
       return Optional.empty();
     }
 
@@ -935,14 +936,14 @@ public class AppleLibraryDescription
 
   @Override
   public ImmutableList<Arg> getAdditionalExportedLinkerFlags(
-      BuildTarget target, BuildRuleResolver resolver, CxxPlatform cxxPlatform) {
-    if (!targetContainsSwift(target, resolver)) {
+      BuildTarget target, ActionGraphBuilder graphBuilder, CxxPlatform cxxPlatform) {
+    if (!targetContainsSwift(target, graphBuilder)) {
       return ImmutableList.of();
     }
 
     BuildTarget swiftTarget =
         AppleLibraryDescriptionSwiftEnhancer.createBuildTargetForSwiftCompile(target, cxxPlatform);
-    SwiftCompile compile = (SwiftCompile) resolver.requireRule(swiftTarget);
+    SwiftCompile compile = (SwiftCompile) graphBuilder.requireRule(swiftTarget);
 
     return compile.getAstLinkArgs();
   }
@@ -950,11 +951,11 @@ public class AppleLibraryDescription
   @Override
   public boolean getShouldProduceLibraryArtifact(
       BuildTarget target,
-      BuildRuleResolver resolver,
+      ActionGraphBuilder graphBuilder,
       CxxPlatform cxxPlatform,
       Linker.LinkableDepType type,
       boolean forceLinkWhole) {
-    return targetContainsSwift(target, resolver);
+    return targetContainsSwift(target, graphBuilder);
   }
 
   private FlavorDomain<AppleCxxPlatform> getAppleCxxPlatformDomain() {

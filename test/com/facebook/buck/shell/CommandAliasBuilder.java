@@ -22,9 +22,9 @@ import com.facebook.buck.core.model.targetgraph.AbstractNodeBuilder;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
-import com.facebook.buck.core.rules.BuildRuleResolver;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.rules.resolver.impl.TestBuildRuleResolver;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.rules.tool.BinaryBuildRule;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
@@ -145,10 +145,13 @@ public class CommandAliasBuilder
   public BuildResult buildResult() {
     nodes.add(build());
     TargetGraph graph = TargetGraphFactory.newInstance(nodes);
-    BuildRuleResolver resolver = new TestBuildRuleResolver(graph);
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(graph);
 
     return new BuildResult(
-        (CommandAlias) resolver.requireRule(getTarget()), getPopulatedArg(), resolver, cellRoots);
+        (CommandAlias) graphBuilder.requireRule(getTarget()),
+        getPopulatedArg(),
+        graphBuilder,
+        cellRoots);
   }
 
   public BuildTarget addBuildRule(BuildTarget target) {
@@ -159,7 +162,7 @@ public class CommandAliasBuilder
   public static class BuildResult {
     private final CommandAlias commandAlias;
     private final SourcePathResolver sourcePathResolver;
-    private final BuildRuleResolver resolver;
+    private final ActionGraphBuilder graphBuilder;
     private final CommandAliasDescriptionArg arg;
     private final SourcePathRuleFinder ruleFinder;
     private final CellPathResolver cellRoots;
@@ -167,14 +170,14 @@ public class CommandAliasBuilder
     BuildResult(
         CommandAlias commandAlias,
         CommandAliasDescriptionArg arg,
-        BuildRuleResolver resolver,
+        ActionGraphBuilder graphBuilder,
         CellPathResolver cellRoots) {
       this.commandAlias = commandAlias;
       this.arg = arg;
-      ruleFinder = new SourcePathRuleFinder(resolver);
+      ruleFinder = new SourcePathRuleFinder(graphBuilder);
       this.cellRoots = cellRoots;
       sourcePathResolver = DefaultSourcePathResolver.from(this.ruleFinder);
-      this.resolver = resolver;
+      this.graphBuilder = graphBuilder;
     }
 
     CommandAlias commandAlias() {
@@ -187,19 +190,19 @@ public class CommandAliasBuilder
 
     public String pathOf(BuildTarget target) {
       return sourcePathResolver
-          .getAbsolutePath(resolver.requireRule(target).getSourcePathToOutput())
+          .getAbsolutePath(graphBuilder.requireRule(target).getSourcePathToOutput())
           .toString();
     }
 
     public ImmutableList<String> exeOf(BuildTarget target) {
-      return resolver
+      return graphBuilder
           .getRuleWithType(target, BinaryBuildRule.class)
           .getExecutableCommand()
           .getCommandPrefix(sourcePathResolver);
     }
 
-    public BuildRuleResolver resolver() {
-      return resolver;
+    public ActionGraphBuilder graphBuilder() {
+      return graphBuilder;
     }
 
     public CommandAliasDescriptionArg arg() {

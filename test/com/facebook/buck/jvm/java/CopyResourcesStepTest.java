@@ -20,7 +20,7 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.rules.resolver.impl.TestBuildRuleResolver;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.io.BuildCellRelativePath;
@@ -45,7 +45,7 @@ public class CopyResourcesStepTest {
   @Test
   public void testAddResourceCommandsWithBuildFileParentOfSrcDirectory()
       throws InterruptedException {
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestBuildRuleResolver());
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestActionGraphBuilder());
     SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
     // Files:
     // android/java/BUCK
@@ -123,7 +123,7 @@ public class CopyResourcesStepTest {
     JavaPackageFinder javaPackageFinder = createJavaPackageFinder();
     ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
 
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestBuildRuleResolver());
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestActionGraphBuilder());
     BuildContext buildContext =
         FakeBuildContext.withSourcePathResolver(DefaultSourcePathResolver.from(ruleFinder))
             .withJavaPackageFinder(javaPackageFinder)
@@ -191,7 +191,7 @@ public class CopyResourcesStepTest {
     JavaPackageFinder javaPackageFinder = createJavaPackageFinder();
     ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
 
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestBuildRuleResolver());
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestActionGraphBuilder());
     BuildContext buildContext =
         FakeBuildContext.withSourcePathResolver(DefaultSourcePathResolver.from(ruleFinder))
             .withJavaPackageFinder(javaPackageFinder)

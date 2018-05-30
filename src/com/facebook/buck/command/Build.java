@@ -29,8 +29,8 @@ import com.facebook.buck.core.exceptions.ExceptionWithHumanReadableMessage;
 import com.facebook.buck.core.exceptions.handler.HumanReadableExceptionAugmentor;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
@@ -78,7 +78,7 @@ public class Build implements Closeable {
 
   private static final Logger LOG = Logger.get(Build.class);
 
-  private final BuildRuleResolver ruleResolver;
+  private final ActionGraphBuilder graphBuilder;
   private final Cell rootCell;
   private final ExecutionContext executionContext;
   private final ArtifactCache artifactCache;
@@ -90,7 +90,7 @@ public class Build implements Closeable {
   private boolean symlinksCreated = false;
 
   public Build(
-      BuildRuleResolver ruleResolver,
+      ActionGraphBuilder graphBuilder,
       Cell rootCell,
       BuildEngine buildEngine,
       ArtifactCache artifactCache,
@@ -98,7 +98,7 @@ public class Build implements Closeable {
       Clock clock,
       ExecutionContext executionContext,
       boolean isKeepGoing) {
-    this.ruleResolver = ruleResolver;
+    this.graphBuilder = graphBuilder;
     this.rootCell = rootCell;
     this.executionContext = executionContext;
     this.artifactCache = artifactCache;
@@ -117,7 +117,7 @@ public class Build implements Closeable {
         .setBuildContext(
             BuildContext.builder()
                 .setSourcePathResolver(
-                    DefaultSourcePathResolver.from(new SourcePathRuleFinder(ruleResolver)))
+                    DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder)))
                 .setBuildCellRootPath(rootCell.getRoot())
                 .setJavaPackageFinder(javaPackageFinder)
                 .setEventBus(executionContext.getBuckEventBus())
@@ -130,8 +130,8 @@ public class Build implements Closeable {
         .build();
   }
 
-  public BuildRuleResolver getRuleResolver() {
-    return ruleResolver;
+  public ActionGraphBuilder getGraphBuilder() {
+    return graphBuilder;
   }
 
   public ExecutionContext getExecutionContext() {
@@ -220,7 +220,7 @@ public class Build implements Closeable {
         ImmutableList.copyOf(
             targetsToBuild
                 .stream()
-                .map(buildTarget -> getRuleResolver().requireRule(buildTarget))
+                .map(buildTarget -> getGraphBuilder().requireRule(buildTarget))
                 .collect(ImmutableSet.toImmutableSet()));
 
     // Calculate and post the number of rules that need to built.
@@ -355,7 +355,7 @@ public class Build implements Closeable {
     int exitCode;
 
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(ruleResolver));
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
     BuildReport buildReport = new BuildReport(buildExecutionResult, pathResolver);
 
     if (buildContext.isKeepGoing()) {
@@ -473,7 +473,7 @@ public class Build implements Closeable {
     // Note that pathToBuildReport is an absolute path that may exist outside of the project
     // root, so it is not appropriate to use ProjectFilesystem to write the output.
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(ruleResolver));
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
     BuildReport buildReport = new BuildReport(e.createBuildExecutionResult(), pathResolver);
     try {
       String jsonBuildReport = buildReport.generateJsonBuildReport();

@@ -23,7 +23,7 @@ import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.rules.resolver.impl.TestBuildRuleResolver;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.features.python.PythonBuckConfig;
 import com.facebook.buck.features.python.toolchain.PexToolProvider;
@@ -46,7 +46,7 @@ public class PexToolProviderFactoryTest {
         FakeBuckConfig.builder()
             .setSections(ImmutableMap.of("python", ImmutableMap.of("pex_flags", "--hello --world")))
             .build();
-    BuildRuleResolver resolver = new TestBuildRuleResolver();
+    BuildRuleResolver resolver = new TestActionGraphBuilder();
     PexToolProviderFactory pexToolProviderFactory = new PexToolProviderFactory();
     PexToolProvider pexToolProvider =
         pexToolProviderFactory

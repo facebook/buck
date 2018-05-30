@@ -30,6 +30,7 @@ import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
@@ -207,9 +208,9 @@ public class PythonTestDescription
   }
 
   private SourcePath requireTestMain(
-      BuildTarget baseTarget, ProjectFilesystem filesystem, BuildRuleResolver ruleResolver) {
+      BuildTarget baseTarget, ProjectFilesystem filesystem, ActionGraphBuilder graphBuilder) {
     BuildRule testMainRule =
-        ruleResolver.computeIfAbsent(
+        graphBuilder.computeIfAbsent(
             baseTarget.withFlavors(InternalFlavor.of("python-test-main")),
             target -> new PythonTestMainRule(target, filesystem));
     return Preconditions.checkNotNull(testMainRule.getSourcePathToOutput());
@@ -227,7 +228,7 @@ public class PythonTestDescription
             .getByName(PythonPlatformsProvider.DEFAULT_NAME, PythonPlatformsProvider.class)
             .getPythonPlatforms();
 
-    BuildRuleResolver resolver = context.getBuildRuleResolver();
+    ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
     PythonPlatform pythonPlatform =
         pythonPlatforms
             .getValue(buildTarget)
@@ -237,7 +238,7 @@ public class PythonTestDescription
                         .<Flavor>map(InternalFlavor::of)
                         .orElse(pythonPlatforms.getFlavors().iterator().next())));
     CxxPlatform cxxPlatform = getCxxPlatform(buildTarget, args);
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     Path baseModule = PythonUtil.getBasePath(buildTarget, args.getBaseModule());
     Optional<ImmutableMap<BuildTarget, Version>> selectedVersions =
@@ -246,7 +247,7 @@ public class PythonTestDescription
     ImmutableMap<Path, SourcePath> srcs =
         PythonUtil.getModules(
             buildTarget,
-            resolver,
+            graphBuilder,
             ruleFinder,
             pathResolver,
             pythonPlatform,
@@ -261,7 +262,7 @@ public class PythonTestDescription
     ImmutableMap<Path, SourcePath> resources =
         PythonUtil.getModules(
             buildTarget,
-            resolver,
+            graphBuilder,
             ruleFinder,
             pathResolver,
             pythonPlatform,
@@ -290,7 +291,7 @@ public class PythonTestDescription
             projectFilesystem,
             getTestModulesListPath(buildTarget, projectFilesystem),
             testModules);
-    resolver.addToIndex(testModulesBuildRule);
+    graphBuilder.addToIndex(testModulesBuildRule);
 
     String mainModule;
     if (args.getMainModule().isPresent()) {
@@ -304,7 +305,9 @@ public class PythonTestDescription
         PythonPackageComponents.of(
             ImmutableMap.<Path, SourcePath>builder()
                 .put(getTestModulesListName(), testModulesBuildRule.getSourcePathToOutput())
-                .put(getTestMainName(), requireTestMain(buildTarget, projectFilesystem, resolver))
+                .put(
+                    getTestMainName(),
+                    requireTestMain(buildTarget, projectFilesystem, graphBuilder))
                 .putAll(srcs)
                 .build(),
             resources,
@@ -316,7 +319,7 @@ public class PythonTestDescription
                 PythonUtil.getDeps(
                     pythonPlatform, cxxPlatform, args.getDeps(), args.getPlatformDeps()))
             .concat(args.getNeededCoverage().stream().map(NeededCoverageSpec::getBuildTarget))
-            .map(resolver::getRule)
+            .map(graphBuilder::getRule)
             .collect(ImmutableList.toImmutableList());
     CellPathResolver cellRoots = context.getCellPathResolver();
     StringWithMacrosConverter macrosConverter =
@@ -331,7 +334,7 @@ public class PythonTestDescription
             buildTarget,
             projectFilesystem,
             params,
-            resolver,
+            graphBuilder,
             ruleFinder,
             deps,
             testComponents,
@@ -340,7 +343,7 @@ public class PythonTestDescription
             cxxPlatform,
             args.getLinkerFlags()
                 .stream()
-                .map(x -> macrosConverter.convert(x, resolver))
+                .map(x -> macrosConverter.convert(x, graphBuilder))
                 .collect(ImmutableList.toImmutableList()),
             pythonBuckConfig.getNativeLinkStrategy(),
             args.getPreloadDeps());
@@ -352,7 +355,7 @@ public class PythonTestDescription
             buildTarget.withAppendedFlavors(BINARY_FLAVOR),
             projectFilesystem,
             params,
-            resolver,
+            graphBuilder,
             ruleFinder,
             pythonPlatform,
             cxxPlatform,
@@ -361,13 +364,13 @@ public class PythonTestDescription
             allComponents,
             args.getBuildArgs(),
             args.getPackageStyle().orElse(pythonBuckConfig.getPackageStyle()),
-            PythonUtil.getPreloadNames(resolver, cxxPlatform, args.getPreloadDeps()));
-    resolver.addToIndex(binary);
+            PythonUtil.getPreloadNames(graphBuilder, cxxPlatform, args.getPreloadDeps()));
+    graphBuilder.addToIndex(binary);
 
     ImmutableList.Builder<Pair<Float, ImmutableSet<Path>>> neededCoverageBuilder =
         ImmutableList.builder();
     for (NeededCoverageSpec coverageSpec : args.getNeededCoverage()) {
-      BuildRule buildRule = resolver.getRule(coverageSpec.getBuildTarget());
+      BuildRule buildRule = graphBuilder.getRule(coverageSpec.getBuildTarget());
       if (deps.contains(buildRule) && buildRule instanceof PythonLibrary) {
         PythonLibrary pythonLibrary = (PythonLibrary) buildRule;
         ImmutableSortedSet<Path> paths;
@@ -375,7 +378,7 @@ public class PythonTestDescription
           Path path =
               coverageSpec.getBuildTarget().getBasePath().resolve(coverageSpec.getPathName().get());
           if (!pythonLibrary
-              .getPythonPackageComponents(pythonPlatform, cxxPlatform, resolver)
+              .getPythonPackageComponents(pythonPlatform, cxxPlatform, graphBuilder)
               .getModules()
               .keySet()
               .contains(path)) {
@@ -388,7 +391,7 @@ public class PythonTestDescription
           paths =
               ImmutableSortedSet.copyOf(
                   pythonLibrary
-                      .getPythonPackageComponents(pythonPlatform, cxxPlatform, resolver)
+                      .getPythonPackageComponents(pythonPlatform, cxxPlatform, graphBuilder)
                       .getModules()
                       .keySet());
         }
@@ -404,15 +407,14 @@ public class PythonTestDescription
     Function<BuildRuleResolver, ImmutableMap<String, Arg>> testEnv =
         (ruleResolverInner) ->
             ImmutableMap.copyOf(
-                Maps.transformValues(
-                    args.getEnv(), x -> macrosConverter.convert(x, ruleResolverInner)));
+                Maps.transformValues(args.getEnv(), x -> macrosConverter.convert(x, graphBuilder)));
 
     // Generate and return the python test rule, which depends on the python binary rule above.
     return PythonTest.from(
         buildTarget,
         projectFilesystem,
         params,
-        resolver,
+        graphBuilder,
         testEnv,
         binary,
         args.getLabels(),

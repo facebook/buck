@@ -18,9 +18,9 @@ package com.facebook.buck.android;
 
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.rules.resolver.impl.TestBuildRuleResolver;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.google.common.collect.ImmutableSortedSet;
@@ -31,20 +31,20 @@ public class AndroidTransitiveDependencyGraphTest {
 
   @Test
   public void findManifestFilesWithTransitiveDeps() throws Exception {
-    BuildRuleResolver resolver = new TestBuildRuleResolver();
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     BuildRule dep3 =
         AndroidLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:dep3"))
             .setManifestFile(FakeSourcePath.of("manifest3.xml"))
-            .build(resolver);
+            .build(graphBuilder);
     BuildRule dep2 =
         AndroidLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:dep2"))
             .addDep(dep3.getBuildTarget())
-            .build(resolver);
+            .build(graphBuilder);
     BuildRule dep1 =
         AndroidLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:dep1"))
             .setManifestFile(FakeSourcePath.of("manifest1.xml"))
             .addDep(dep2.getBuildTarget())
-            .build(resolver);
+            .build(graphBuilder);
     assertThat(
         new AndroidTransitiveDependencyGraph(ImmutableSortedSet.of(dep1)).findManifestFiles(),
         Matchers.containsInAnyOrder(

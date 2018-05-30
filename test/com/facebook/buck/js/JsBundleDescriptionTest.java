@@ -69,21 +69,22 @@ public class JsBundleDescriptionTest {
 
   @Test
   public void testTransitiveLibraryDependencies() throws NoSuchBuildTargetException {
-    BuildRule jsBundle = scenario.resolver.requireRule(bundleTarget);
+    BuildRule jsBundle = scenario.graphBuilder.requireRule(bundleTarget);
     assertThat(allLibaryTargets(), everyItem(in(dependencyTargets(jsBundle))));
   }
 
   @Test
   public void testTransitiveLibraryDependenciesWithFlavors() throws NoSuchBuildTargetException {
     Flavor[] flavors = {JsFlavors.IOS, JsFlavors.RELEASE};
-    BuildRule jsBundle = scenario.resolver.requireRule(bundleTarget.withFlavors(flavors));
+    BuildRule jsBundle = scenario.graphBuilder.requireRule(bundleTarget.withFlavors(flavors));
     assertThat(allLibaryTargets(flavors), everyItem(in(dependencyTargets(jsBundle))));
   }
 
   @Test
   public void testFlavoredBundleDoesNotDependOnUnflavoredLibs() throws NoSuchBuildTargetException {
     BuildRule jsBundle =
-        scenario.resolver.requireRule(bundleTarget.withFlavors(JsFlavors.IOS, JsFlavors.RELEASE));
+        scenario.graphBuilder.requireRule(
+            bundleTarget.withFlavors(JsFlavors.IOS, JsFlavors.RELEASE));
     assertThat(allLibaryTargets(), everyItem(not(in(dependencyTargets(jsBundle)))));
   }
 
@@ -91,7 +92,7 @@ public class JsBundleDescriptionTest {
   public void testFlavoredBundleWithoutReleaseFlavorDependOnFlavoredLibs()
       throws NoSuchBuildTargetException {
     Flavor[] flavors = {JsFlavors.IOS, JsFlavors.RAM_BUNDLE_INDEXED};
-    BuildRule jsBundle = scenario.resolver.requireRule((bundleTarget.withFlavors(flavors)));
+    BuildRule jsBundle = scenario.graphBuilder.requireRule((bundleTarget.withFlavors(flavors)));
     assertThat(allLibaryTargets(JsFlavors.IOS), everyItem(in(dependencyTargets(jsBundle))));
     assertThat(allLibaryTargets(flavors), everyItem(not(in(dependencyTargets(jsBundle)))));
   }
@@ -101,7 +102,8 @@ public class JsBundleDescriptionTest {
       throws NoSuchBuildTargetException {
     Flavor[] bundleFlavors = {JsFlavors.IOS, JsFlavors.RAM_BUNDLE_INDEXED, JsFlavors.RELEASE};
     Flavor[] flavorsToBePropagated = {JsFlavors.IOS, JsFlavors.RELEASE};
-    BuildRule jsBundle = scenario.resolver.requireRule((bundleTarget.withFlavors(bundleFlavors)));
+    BuildRule jsBundle =
+        scenario.graphBuilder.requireRule((bundleTarget.withFlavors(bundleFlavors)));
     assertThat(allLibaryTargets(flavorsToBePropagated), everyItem(in(dependencyTargets(jsBundle))));
     assertThat(allLibaryTargets(bundleFlavors), everyItem(not(in(dependencyTargets(jsBundle)))));
   }
@@ -111,7 +113,8 @@ public class JsBundleDescriptionTest {
       throws NoSuchBuildTargetException {
     Flavor[] bundleFlavors = {JsFlavors.ANDROID, JsFlavors.RAM_BUNDLE_INDEXED, JsFlavors.RELEASE};
     Flavor[] flavorsToBePropagated = {JsFlavors.ANDROID, JsFlavors.RELEASE};
-    BuildRule jsBundle = scenario.resolver.requireRule((bundleTarget.withFlavors(bundleFlavors)));
+    BuildRule jsBundle =
+        scenario.graphBuilder.requireRule((bundleTarget.withFlavors(bundleFlavors)));
     assertThat(allLibaryTargets(flavorsToBePropagated), everyItem(in(dependencyTargets(jsBundle))));
     assertThat(allLibaryTargets(bundleFlavors), everyItem(not(in(dependencyTargets(jsBundle)))));
   }
@@ -120,21 +123,21 @@ public class JsBundleDescriptionTest {
   public void testTransitiveLibraryDependenciesWithFlavorsForAndroid()
       throws NoSuchBuildTargetException {
     Flavor[] flavors = {JsFlavors.ANDROID, JsFlavors.RELEASE};
-    BuildRule jsBundle = scenario.resolver.requireRule(bundleTarget.withFlavors(flavors));
+    BuildRule jsBundle = scenario.graphBuilder.requireRule(bundleTarget.withFlavors(flavors));
     assertThat(allLibaryTargets(flavors), everyItem(in(dependencyTargets(jsBundle))));
   }
 
   @Test
   public void testSourceMapExport() throws NoSuchBuildTargetException {
     BuildRule map =
-        scenario.resolver.requireRule(
+        scenario.graphBuilder.requireRule(
             bundleTarget.withFlavors(JsFlavors.IOS, JsFlavors.SOURCE_MAP));
     JsBundleOutputs bundle =
-        scenario.resolver.getRuleWithType(
+        scenario.graphBuilder.getRuleWithType(
             bundleTarget.withFlavors(JsFlavors.IOS), JsBundleOutputs.class);
 
     DefaultSourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(scenario.resolver));
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(scenario.graphBuilder));
     assertEquals(
         pathResolver.getRelativePath(map.getSourcePathToOutput()),
         pathResolver.getRelativePath(bundle.getSourcePathToSourceMap()));
@@ -148,7 +151,7 @@ public class JsBundleDescriptionTest {
             .bundleWithDeps(bundleTarget, directDependencyTarget)
             .build();
 
-    BuildRule jsBundle = testScenario.resolver.requireRule(bundleTarget);
+    BuildRule jsBundle = testScenario.graphBuilder.requireRule(bundleTarget);
     assertThat(allLibaryTargets(), everyItem(in(dependencyTargets(jsBundle))));
   }
 
@@ -171,7 +174,7 @@ public class JsBundleDescriptionTest {
             .build();
 
     Flavor[] flavors = {JsFlavors.IOS, JsFlavors.RELEASE};
-    BuildRule jsBundle = testScenario.resolver.requireRule(bundleTarget.withFlavors(flavors));
+    BuildRule jsBundle = testScenario.graphBuilder.requireRule(bundleTarget.withFlavors(flavors));
     List<BuildTarget> expectedLibDeps =
         Stream.of(level1_1, level1_2, level2, secondLevelA)
             .map(t -> t.withAppendedFlavors(flavors))

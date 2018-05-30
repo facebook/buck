@@ -22,6 +22,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.UserFlavor;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
@@ -171,11 +172,11 @@ public class JsUtil {
   public static Optional<Arg> getExtraJson(
       HasExtraJson args,
       BuildTarget target,
-      BuildRuleResolver resolver,
+      ActionGraphBuilder graphBuilder,
       CellPathResolver cellRoots) {
     StringWithMacrosConverter macrosConverter =
         StringWithMacrosConverter.of(target, cellRoots, MACRO_EXPANDERS);
-    return args.getExtraJson().map(x -> macrosConverter.convert(x, resolver));
+    return args.getExtraJson().map(x -> macrosConverter.convert(x, graphBuilder));
   }
 
   /** @return The input with all special JSON characters escaped, but not wrapped in quotes. */

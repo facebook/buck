@@ -21,9 +21,9 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.rules.BuildRuleResolver;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.rules.resolver.impl.TestBuildRuleResolver;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -83,10 +83,10 @@ public class JavaSymbolsRuleTest {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//:examples");
     JavaSymbolsRule javaSymbolsRule =
         new JavaSymbolsRule(buildTarget, symbolsFinder, projectFilesystem);
-    BuildRuleResolver resolver = new TestBuildRuleResolver();
-    resolver.addToIndex(javaSymbolsRule);
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
+    graphBuilder.addToIndex(javaSymbolsRule);
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
     List<Step> buildSteps =
         javaSymbolsRule.getBuildSteps(
             FakeBuildContext.withSourcePathResolver(pathResolver), /* buildableContext */ null);

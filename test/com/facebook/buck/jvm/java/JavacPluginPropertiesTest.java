@@ -18,9 +18,9 @@ package com.facebook.buck.jvm.java;
 
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.core.rules.BuildRuleResolver;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.rules.resolver.impl.TestBuildRuleResolver;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.google.common.collect.ImmutableSortedSet;
 import org.hamcrest.Matchers;
@@ -29,13 +29,13 @@ import org.junit.Test;
 public class JavacPluginPropertiesTest {
   @Test
   public void transitiveAnnotationProcessorDepsInInputs() {
-    BuildRuleResolver resolver = new TestBuildRuleResolver();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
 
     FakeJavaLibrary dep =
-        resolver.addToIndex(new FakeJavaLibrary(BuildTargetFactory.newInstance("//:dep")));
+        graphBuilder.addToIndex(new FakeJavaLibrary(BuildTargetFactory.newInstance("//:dep")));
     FakeJavaLibrary processor =
-        resolver.addToIndex(
+        graphBuilder.addToIndex(
             new FakeJavaLibrary(
                 BuildTargetFactory.newInstance("//:processor"), ImmutableSortedSet.of(dep)));
 

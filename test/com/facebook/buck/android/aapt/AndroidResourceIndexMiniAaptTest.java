@@ -26,7 +26,7 @@ import com.facebook.buck.android.aapt.MiniAapt.ResourceParseException;
 import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.rules.resolver.impl.TestBuildRuleResolver;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.event.DefaultBuckEventBus;
@@ -52,7 +52,7 @@ import org.junit.Test;
 
 public class AndroidResourceIndexMiniAaptTest {
   private final SourcePathResolver resolver =
-      DefaultSourcePathResolver.from(new SourcePathRuleFinder(new TestBuildRuleResolver()));
+      DefaultSourcePathResolver.from(new SourcePathRuleFinder(new TestActionGraphBuilder()));
 
   @Rule public ExpectedException thrown = ExpectedException.none();
   @Rule public TemporaryPaths tmpFolder = new TemporaryPaths();

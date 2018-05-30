@@ -27,8 +27,8 @@ import com.facebook.buck.core.description.arg.HasSrcs;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -152,9 +152,9 @@ public class NdkLibraryDescription implements DescriptionWithTargetGraph<NdkLibr
       ToolchainProvider toolchainProvider,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      BuildRuleResolver resolver) {
+      ActionGraphBuilder graphBuilder) {
 
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
     ImmutableList.Builder<String> outputLinesBuilder = ImmutableList.builder();
@@ -173,11 +173,11 @@ public class NdkLibraryDescription implements DescriptionWithTargetGraph<NdkLibr
       CxxPreprocessorInput cxxPreprocessorInput =
           CxxPreprocessorInput.concat(
               CxxPreprocessables.getTransitiveCxxPreprocessorInput(
-                  cxxPlatform, resolver, params.getBuildDeps(), NdkLibrary.class::isInstance));
+                  cxxPlatform, graphBuilder, params.getBuildDeps(), NdkLibrary.class::isInstance));
 
       // We add any dependencies from the C/C++ preprocessor input to this rule, even though
       // it technically should be added to the top-level rule.
-      deps.addAll(cxxPreprocessorInput.getDeps(resolver, ruleFinder));
+      deps.addAll(cxxPreprocessorInput.getDeps(graphBuilder, ruleFinder));
 
       // Add in the transitive preprocessor flags contributed by C/C++ library rules into the
       // NDK build.
@@ -186,7 +186,7 @@ public class NdkLibraryDescription implements DescriptionWithTargetGraph<NdkLibr
           Arg.stringify(
               cxxPreprocessorInput.getPreprocessorFlags().get(CxxSource.Type.C), pathResolver));
       Preprocessor preprocessor =
-          CxxSourceTypes.getPreprocessor(cxxPlatform, CxxSource.Type.C).resolve(resolver);
+          CxxSourceTypes.getPreprocessor(cxxPlatform, CxxSource.Type.C).resolve(graphBuilder);
       ppFlags.addAll(
           CxxHeaders.getArgs(
               cxxPreprocessorInput.getIncludes(), pathResolver, Optional.empty(), preprocessor));
@@ -198,7 +198,7 @@ public class NdkLibraryDescription implements DescriptionWithTargetGraph<NdkLibr
       NativeLinkableInput nativeLinkableInput =
           NativeLinkables.getTransitiveNativeLinkableInput(
               cxxPlatform,
-              resolver,
+              graphBuilder,
               params.getBuildDeps(),
               Linker.LinkableDepType.SHARED,
               r -> r instanceof NdkLibrary ? Optional.of(r.getBuildDeps()) : Optional.empty());
@@ -336,7 +336,7 @@ public class NdkLibraryDescription implements DescriptionWithTargetGraph<NdkLibr
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
     Pair<String, Iterable<BuildRule>> makefilePair =
         generateMakefile(
-            toolchainProvider, projectFilesystem, params, context.getBuildRuleResolver());
+            toolchainProvider, projectFilesystem, params, context.getActionGraphBuilder());
 
     ImmutableSortedSet<SourcePath> sources;
     if (!args.getSrcs().isEmpty()) {
@@ -358,7 +358,7 @@ public class NdkLibraryDescription implements DescriptionWithTargetGraph<NdkLibr
         args.getIsAsset(),
         androidNdk.getNdkVersion(),
         MACRO_HANDLER.getExpander(
-            buildTarget, context.getCellPathResolver(), context.getBuildRuleResolver()));
+            buildTarget, context.getCellPathResolver(), context.getActionGraphBuilder()));
   }
 
   @BuckStyleImmutable

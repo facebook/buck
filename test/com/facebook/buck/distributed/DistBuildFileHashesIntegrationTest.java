@@ -25,7 +25,7 @@ import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.config.IncrementalActionGraphMode;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.TestCellBuilder;
-import com.facebook.buck.core.model.actiongraph.ActionGraphAndResolver;
+import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphCache;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.rules.BuildRuleResolver;
@@ -236,7 +236,7 @@ public class DistBuildFileHashesIntegrationTest {
       throws InterruptedException {
     ActionGraphCache cache =
         new ActionGraphCache(rootCell.getBuckConfig().getMaxActionGraphCacheEntries());
-    ActionGraphAndResolver actionGraphAndResolver =
+    ActionGraphAndBuilder actionGraphAndBuilder =
         cache.getActionGraph(
             BuckEventBusForTests.newInstance(),
             true,
@@ -255,7 +255,7 @@ public class DistBuildFileHashesIntegrationTest {
                       "should not use parallel executor for action graph construction in test");
                 },
                 ignored -> {}));
-    BuildRuleResolver ruleResolver = actionGraphAndResolver.getResolver();
+    BuildRuleResolver ruleResolver = actionGraphAndBuilder.getActionGraphBuilder();
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
     SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(ruleFinder);
     DistBuildCellIndexer cellIndexer = new DistBuildCellIndexer(rootCell);
@@ -276,7 +276,7 @@ public class DistBuildFileHashesIntegrationTest {
     StackedFileHashCache stackedCache = new StackedFileHashCache(allCaches.build());
 
     return new DistBuildFileHashes(
-        actionGraphAndResolver.getActionGraph(),
+        actionGraphAndBuilder.getActionGraph(),
         sourcePathResolver,
         ruleFinder,
         stackedCache,

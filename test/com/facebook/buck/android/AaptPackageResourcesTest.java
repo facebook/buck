@@ -24,9 +24,9 @@ import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rulekey.RuleKey;
-import com.facebook.buck.core.rules.BuildRuleResolver;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.rules.resolver.impl.TestBuildRuleResolver;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
@@ -50,7 +50,7 @@ import org.junit.Test;
 
 public class AaptPackageResourcesTest {
 
-  private BuildRuleResolver ruleResolver;
+  private ActionGraphBuilder graphBuilder;
   private SourcePathRuleFinder ruleFinder;
   private SourcePathResolver pathResolver;
   private BuildTarget aaptTarget;
@@ -94,11 +94,11 @@ public class AaptPackageResourcesTest {
             .build();
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(resourceNode, resourceNode2);
-    ruleResolver = new TestBuildRuleResolver(targetGraph);
-    resource1 = (AndroidResource) ruleResolver.requireRule(resourceNode.getBuildTarget());
-    resource2 = (AndroidResource) ruleResolver.requireRule(resourceNode2.getBuildTarget());
+    graphBuilder = new TestActionGraphBuilder(targetGraph);
+    resource1 = (AndroidResource) graphBuilder.requireRule(resourceNode.getBuildTarget());
+    resource2 = (AndroidResource) graphBuilder.requireRule(resourceNode2.getBuildTarget());
 
-    ruleFinder = new SourcePathRuleFinder(ruleResolver);
+    ruleFinder = new SourcePathRuleFinder(graphBuilder);
     pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     aaptTarget = BuildTargetFactory.newInstance("//foo:bar");
 
@@ -262,7 +262,7 @@ public class AaptPackageResourcesTest {
                 filesystem,
                 TestAndroidPlatformTargetFactory.create(),
                 ruleFinder,
-                ruleResolver,
+                graphBuilder,
                 constructorArgs.manifest,
                 ImmutableList.of(),
                 constructorArgs.filteredResourcesProvider,

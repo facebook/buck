@@ -23,10 +23,10 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.rules.resolver.impl.TestBuildRuleResolver;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -108,15 +108,15 @@ public class JavaLibraryClasspathProviderTest extends AbiCompilationModeTest {
 
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(aNode, bNode, cNode, dNode, eNode, zNode);
-    BuildRuleResolver ruleResolver = new TestBuildRuleResolver(targetGraph);
-    resolver = DefaultSourcePathResolver.from(new SourcePathRuleFinder(ruleResolver));
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
+    resolver = DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
 
-    a = ruleResolver.requireRule(aNode.getBuildTarget());
-    b = ruleResolver.requireRule(bNode.getBuildTarget());
-    c = ruleResolver.requireRule(cNode.getBuildTarget());
-    d = ruleResolver.requireRule(dNode.getBuildTarget());
-    e = ruleResolver.requireRule(eNode.getBuildTarget());
-    z = ruleResolver.requireRule(zNode.getBuildTarget());
+    a = graphBuilder.requireRule(aNode.getBuildTarget());
+    b = graphBuilder.requireRule(bNode.getBuildTarget());
+    c = graphBuilder.requireRule(cNode.getBuildTarget());
+    d = graphBuilder.requireRule(dNode.getBuildTarget());
+    e = graphBuilder.requireRule(eNode.getBuildTarget());
+    z = graphBuilder.requireRule(zNode.getBuildTarget());
   }
 
   @Test
@@ -192,9 +192,9 @@ public class JavaLibraryClasspathProviderTest extends AbiCompilationModeTest {
 
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(aNode, bNode, cNode, dNode, eNode, zNode, noOutputNode);
-    BuildRuleResolver ruleResolver = new TestBuildRuleResolver(targetGraph);
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
 
-    JavaLibrary noOutput = (JavaLibrary) ruleResolver.requireRule(noOutputNode.getBuildTarget());
+    JavaLibrary noOutput = (JavaLibrary) graphBuilder.requireRule(noOutputNode.getBuildTarget());
 
     assertEquals(
         "root does not appear if output jar not present.",
@@ -213,7 +213,7 @@ public class JavaLibraryClasspathProviderTest extends AbiCompilationModeTest {
                 HashCode.fromString("aaaa"))
             .setMavenCoords("com.example:buck:1.0")
             .addDep(z.getBuildTarget())
-            .build(ruleResolver);
+            .build(graphBuilder);
 
     assertEquals(
         "Does appear if no output jar but maven coordinate present.",

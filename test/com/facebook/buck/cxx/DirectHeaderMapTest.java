@@ -22,9 +22,9 @@ import static org.junit.Assert.assertNotEquals;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.RuleKey;
-import com.facebook.buck.core.rules.BuildRuleResolver;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.rules.resolver.impl.TestBuildRuleResolver;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
@@ -66,7 +66,7 @@ public class DirectHeaderMapTest {
   private ProjectFilesystem projectFilesystem;
   private BuildTarget buildTarget;
   private DirectHeaderMap buildRule;
-  private BuildRuleResolver ruleResolver;
+  private ActionGraphBuilder graphBuilder;
   private SourcePathResolver pathResolver;
   private ImmutableMap<Path, SourcePath> links;
   private Path symlinkTreeRoot;
@@ -105,14 +105,14 @@ public class DirectHeaderMapTest {
         BuildTargets.getGenPath(projectFilesystem, buildTarget, "%s/symlink-tree-root");
 
     // Setup the symlink tree buildable.
-    ruleResolver = new TestBuildRuleResolver();
+    graphBuilder = new TestActionGraphBuilder();
 
-    ruleFinder = new SourcePathRuleFinder(ruleResolver);
+    ruleFinder = new SourcePathRuleFinder(graphBuilder);
     pathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
     buildRule =
         new DirectHeaderMap(buildTarget, projectFilesystem, symlinkTreeRoot, links, ruleFinder);
-    ruleResolver.addToIndex(buildRule);
+    graphBuilder.addToIndex(buildRule);
 
     headerMapPath = pathResolver.getRelativePath(buildRule.getSourcePathToOutput());
   }
@@ -167,7 +167,7 @@ public class DirectHeaderMapTest {
             modifiedLinksBuilder.build(),
             ruleFinder);
 
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestBuildRuleResolver());
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestActionGraphBuilder());
     SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
 
     // Calculate their rule keys and verify they're different.
@@ -191,9 +191,9 @@ public class DirectHeaderMapTest {
   @Test
   public void testRuleKeyDoesNotChangeIfLinkTargetsChange()
       throws InterruptedException, IOException {
-    BuildRuleResolver ruleResolver = new TestBuildRuleResolver();
-    ruleResolver.addToIndex(buildRule);
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
+    graphBuilder.addToIndex(buildRule);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
     // Calculate their rule keys and verify they're different.
     DefaultFileHashCache hashCache =

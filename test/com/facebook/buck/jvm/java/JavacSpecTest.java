@@ -23,9 +23,9 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.rules.BuildRuleResolver;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.rules.resolver.impl.TestBuildRuleResolver;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -42,14 +42,14 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class JavacSpecTest {
-  private BuildRuleResolver ruleResolver;
+  private ActionGraphBuilder graphBuilder;
   private SourcePathRuleFinder ruleFinder;
   private JavacSpec.Builder specBuilder;
 
   @Before
   public void setUp() {
-    ruleResolver = new TestBuildRuleResolver();
-    ruleFinder = new SourcePathRuleFinder(ruleResolver);
+    graphBuilder = new TestActionGraphBuilder();
+    ruleFinder = new SourcePathRuleFinder(graphBuilder);
     specBuilder = JavacSpec.builder();
   }
 
@@ -126,7 +126,7 @@ public class JavacSpecTest {
     Path javacJarPath = Paths.get("langtools").resolve("javac.jar");
     BuildTarget target = BuildTargetFactory.newInstance("//langtools:javac");
     PrebuiltJar prebuiltJar =
-        PrebuiltJarBuilder.createBuilder(target).setBinaryJar(javacJarPath).build(ruleResolver);
+        PrebuiltJarBuilder.createBuilder(target).setBinaryJar(javacJarPath).build(graphBuilder);
     SourcePath sourcePath = DefaultBuildTargetSourcePath.of(target);
     Either<BuiltInJavac, SourcePath> either = Either.ofRight(sourcePath);
 
@@ -143,7 +143,7 @@ public class JavacSpecTest {
     Path javacJarPath = Paths.get("langtools").resolve("javac.jar");
     BuildTarget target = BuildTargetFactory.newInstance("//langtools:javac");
     PrebuiltJar prebuiltJar =
-        PrebuiltJarBuilder.createBuilder(target).setBinaryJar(javacJarPath).build(ruleResolver);
+        PrebuiltJarBuilder.createBuilder(target).setBinaryJar(javacJarPath).build(graphBuilder);
     SourcePath sourcePath = DefaultBuildTargetSourcePath.of(target);
     Either<BuiltInJavac, SourcePath> either = Either.ofRight(sourcePath);
 

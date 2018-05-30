@@ -114,7 +114,7 @@ public class CommandAliasIntegrationTest {
             pathResolver,
             hashCache,
             new TestDefaultRuleKeyFactory(hashCache, pathResolver, ruleFinder))
-        .setReflectively("key", result.resolver().requireRule(target))
+        .setReflectively("key", result.graphBuilder().requireRule(target))
         .build(RuleKey::new);
   }
 }

@@ -26,10 +26,10 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.rules.resolver.impl.TestBuildRuleResolver;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
@@ -60,16 +60,16 @@ public class ClasspathAbiMacroExpanderTest {
 
   @Test
   public void testShouldIncludeARuleIfNothingIsGiven() throws Exception {
-    BuildRuleResolver ruleResolver = new TestBuildRuleResolver();
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
 
     BuildRule rule =
         getLibraryBuilder("//cheese:cake")
             .addSrc(Paths.get("Example.java")) // Force a jar to be created
-            .build(ruleResolver, filesystem);
+            .build(graphBuilder, filesystem);
 
     assertExpandsTo(
         rule,
-        ruleResolver,
+        graphBuilder,
         String.format(
             "%s" + File.separator + "%s",
             filesystem.getRootPath(),
@@ -88,13 +88,13 @@ public class ClasspathAbiMacroExpanderTest {
             .build();
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(depNode, ruleNode);
-    BuildRuleResolver ruleResolver = new TestBuildRuleResolver(targetGraph, filesystem);
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph, filesystem);
 
-    BuildRule rule = ruleResolver.requireRule(ruleNode.getBuildTarget());
+    BuildRule rule = graphBuilder.requireRule(ruleNode.getBuildTarget());
 
     assertExpandsTo(
         rule,
-        ruleResolver,
+        graphBuilder,
         String.format(
             "%s" + File.separator + "%s" + File.pathSeparatorChar + "%s" + File.separator + "%s",
             filesystem.getRootPath(),
@@ -110,15 +110,15 @@ public class ClasspathAbiMacroExpanderTest {
 
   @Test(expected = MacroException.class)
   public void testShouldThrowAnExceptionWhenRuleToExpandDoesNotHaveAClasspath() throws Exception {
-    BuildRuleResolver ruleResolver = new TestBuildRuleResolver();
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
 
     BuildRule rule =
         new ExportFileBuilder(
                 BuildTargetFactory.newInstance(filesystem.getRootPath(), "//cheese:peas"))
             .setSrc(FakeSourcePath.of("some-file.jar"))
-            .build(ruleResolver);
+            .build(graphBuilder);
 
-    expander.expand(ruleResolver, rule);
+    expander.expand(graphBuilder, rule);
   }
 
   @Test
@@ -132,9 +132,9 @@ public class ClasspathAbiMacroExpanderTest {
             .build();
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(depNode, ruleNode);
-    BuildRuleResolver ruleResolver = new TestBuildRuleResolver(targetGraph, filesystem);
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph, filesystem);
 
-    BuildRule rule = ruleResolver.requireRule(ruleNode.getBuildTarget());
+    BuildRule rule = graphBuilder.requireRule(ruleNode.getBuildTarget());
 
     BuildTarget forTarget = BuildTargetFactory.newInstance("//:rule");
     CellPathResolver cellRoots = createCellRoots(filesystem);
@@ -142,12 +142,12 @@ public class ClasspathAbiMacroExpanderTest {
         expander.expandFrom(
             forTarget,
             cellRoots,
-            ruleResolver,
+            graphBuilder,
             expander.parse(
                 forTarget, cellRoots, ImmutableList.of(rule.getBuildTarget().toString())));
 
     ImmutableList<String> deps =
-        BuildableSupport.deriveDeps(ruleKeyAppendables, new SourcePathRuleFinder(ruleResolver))
+        BuildableSupport.deriveDeps(ruleKeyAppendables, new SourcePathRuleFinder(graphBuilder))
             .map(BuildRule::getFullyQualifiedName)
             .collect(ImmutableList.toImmutableList());
 
@@ -158,13 +158,13 @@ public class ClasspathAbiMacroExpanderTest {
   }
 
   private void assertExpandsTo(
-      BuildRule rule, BuildRuleResolver buildRuleResolver, String expectedClasspath)
+      BuildRule rule, ActionGraphBuilder graphBuilder, String expectedClasspath)
       throws MacroException {
 
     DefaultSourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(buildRuleResolver));
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
 
-    String classpath = Arg.stringify(expander.expand(buildRuleResolver, rule), pathResolver);
+    String classpath = Arg.stringify(expander.expand(graphBuilder, rule), pathResolver);
 
     assertEquals(expectedClasspath, classpath);
 
@@ -173,7 +173,7 @@ public class ClasspathAbiMacroExpanderTest {
             expander.expandForFile(
                 rule.getBuildTarget(),
                 createCellRoots(filesystem),
-                buildRuleResolver,
+                graphBuilder,
                 ImmutableList.of(':' + rule.getBuildTarget().getShortName()),
                 new Object()),
             pathResolver);

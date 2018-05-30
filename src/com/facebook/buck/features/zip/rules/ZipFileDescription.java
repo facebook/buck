@@ -44,7 +44,7 @@ public class ZipFileDescription
       BuildRuleParams params,
       ZipFileDescriptionArg args) {
     return new Zip(
-        new SourcePathRuleFinder(context.getBuildRuleResolver()),
+        new SourcePathRuleFinder(context.getActionGraphBuilder()),
         buildTarget,
         context.getProjectFilesystem(),
         args.getOut(),

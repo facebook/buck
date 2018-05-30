@@ -16,7 +16,7 @@
 
 package com.facebook.buck.core.model.graph;
 
-import com.facebook.buck.core.model.actiongraph.ActionGraphAndResolver;
+import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
@@ -24,7 +24,7 @@ import java.util.Optional;
 import org.immutables.value.Value;
 
 /**
- * Container class for {@link ActionGraphAndResolver} and {@link TargetGraphAndBuildTargets}. Also
+ * Container class for {@link ActionGraphAndBuilder} and {@link TargetGraphAndBuildTargets}. Also
  * contains helper methods for which {@link TargetGraph} to use for local and distributed builds
  * ({@link com.facebook.buck.versions.VersionedTargetGraph} vs un-versioned).
  */
@@ -36,7 +36,7 @@ abstract class AbstractActionAndTargetGraphs {
 
   abstract Optional<TargetGraphAndBuildTargets> getVersionedTargetGraph();
 
-  public abstract ActionGraphAndResolver getActionGraphAndResolver();
+  public abstract ActionGraphAndBuilder getActionGraphAndBuilder();
 
   /**
    * Helper method to choose versioned vs un-versioned {@link TargetGraph} to use for local builds.

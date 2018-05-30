@@ -19,8 +19,8 @@ package com.facebook.buck.jvm.java;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.build.context.BuildContext;
-import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.rules.resolver.impl.TestBuildRuleResolver;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.rules.FakeBuildContext;
@@ -34,11 +34,11 @@ import org.junit.Test;
 public class KeystoreTest {
 
   private static Keystore createKeystoreRuleForTest() throws NoSuchBuildTargetException {
-    BuildRuleResolver ruleResolver = new TestBuildRuleResolver();
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     return KeystoreBuilder.createBuilder(BuildTargetFactory.newInstance("//keystores:debug"))
         .setStore(FakeSourcePath.of("keystores/debug.keystore"))
         .setProperties(FakeSourcePath.of("keystores/debug.keystore.properties"))
-        .build(ruleResolver);
+        .build(graphBuilder);
   }
 
   @Test

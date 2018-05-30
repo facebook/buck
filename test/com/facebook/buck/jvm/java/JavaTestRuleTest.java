@@ -20,9 +20,9 @@ import static org.easymock.EasyMock.createMock;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.core.rules.BuildRuleResolver;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.rules.resolver.impl.TestBuildRuleResolver;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
@@ -92,15 +92,15 @@ public class JavaTestRuleTest {
 
   @Test
   public void transitiveLibraryDependenciesAreRuntimeDeps() throws Exception {
-    BuildRuleResolver resolver = new TestBuildRuleResolver();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
 
     FakeJavaLibrary transitiveDep =
-        resolver.addToIndex(
+        graphBuilder.addToIndex(
             new FakeJavaLibrary(BuildTargetFactory.newInstance("//:transitive_dep")));
 
     FakeJavaLibrary firstOrderDep =
-        resolver.addToIndex(
+        graphBuilder.addToIndex(
             new FakeJavaLibrary(
                 BuildTargetFactory.newInstance("//:first_order_dep"),
                 ImmutableSortedSet.of(transitiveDep)));
@@ -109,7 +109,7 @@ public class JavaTestRuleTest {
         JavaTestBuilder.createBuilder(BuildTargetFactory.newInstance("//:rule"))
             .addSrc(Paths.get("ExampleTest.java"))
             .addDep(firstOrderDep.getBuildTarget())
-            .build(resolver);
+            .build(graphBuilder);
 
     assertThat(
         rule.getRuntimeDeps(ruleFinder).collect(ImmutableSet.toImmutableSet()),
@@ -123,6 +123,6 @@ public class JavaTestRuleTest {
     return JavaTestBuilder.createBuilder(BuildTargetFactory.newInstance("//example:test"))
         .setVmArgs(vmArgs)
         .addSrc(Paths.get("ExampleTest.java"))
-        .build(new TestBuildRuleResolver());
+        .build(new TestActionGraphBuilder());
   }
 }

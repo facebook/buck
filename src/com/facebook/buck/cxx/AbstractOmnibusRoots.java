@@ -17,7 +17,7 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.rules.BuildRuleResolver;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTarget;
@@ -49,15 +49,17 @@ abstract class AbstractOmnibusRoots {
   abstract ImmutableMap<BuildTarget, NativeLinkable> getExcludedRoots();
 
   public static Builder builder(
-      CxxPlatform cxxPlatform, ImmutableSet<BuildTarget> excludes, BuildRuleResolver ruleResolver) {
-    return new Builder(cxxPlatform, excludes, ruleResolver);
+      CxxPlatform cxxPlatform,
+      ImmutableSet<BuildTarget> excludes,
+      ActionGraphBuilder graphBuilder) {
+    return new Builder(cxxPlatform, excludes, graphBuilder);
   }
 
   public static class Builder {
 
     private final CxxPlatform cxxPlatform;
     private final ImmutableSet<BuildTarget> excludes;
-    private final BuildRuleResolver ruleResolver;
+    private final ActionGraphBuilder graphBuilder;
 
     private final Map<BuildTarget, NativeLinkTarget> includedRoots = new LinkedHashMap<>();
     private final Map<BuildTarget, NativeLinkable> excludedRoots = new LinkedHashMap<>();
@@ -65,10 +67,10 @@ abstract class AbstractOmnibusRoots {
     private Builder(
         CxxPlatform cxxPlatform,
         ImmutableSet<BuildTarget> excludes,
-        BuildRuleResolver ruleResolver) {
+        ActionGraphBuilder graphBuilder) {
       this.cxxPlatform = cxxPlatform;
       this.excludes = excludes;
-      this.ruleResolver = ruleResolver;
+      this.graphBuilder = graphBuilder;
     }
 
     /** Add a root which is included in omnibus linking. */
@@ -88,10 +90,10 @@ abstract class AbstractOmnibusRoots {
      */
     public void addPotentialRoot(NativeLinkable node) {
       Optional<NativeLinkTarget> target =
-          NativeLinkables.getNativeLinkTarget(node, cxxPlatform, ruleResolver);
+          NativeLinkables.getNativeLinkTarget(node, cxxPlatform, graphBuilder);
       if (target.isPresent()
           && !excludes.contains(node.getBuildTarget())
-          && node.supportsOmnibusLinking(cxxPlatform, ruleResolver)) {
+          && node.supportsOmnibusLinking(cxxPlatform, graphBuilder)) {
         addIncludedRoot(target.get());
       } else {
         addExcludedRoot(node);
@@ -105,20 +107,20 @@ abstract class AbstractOmnibusRoots {
       // Find all excluded nodes reachable from the included roots.
       Map<BuildTarget, NativeLinkable> includedRootDeps = new LinkedHashMap<>();
       for (NativeLinkTarget target : includedRoots.values()) {
-        for (NativeLinkable linkable : target.getNativeLinkTargetDeps(cxxPlatform, ruleResolver)) {
+        for (NativeLinkable linkable : target.getNativeLinkTargetDeps(cxxPlatform, graphBuilder)) {
           includedRootDeps.put(linkable.getBuildTarget(), linkable);
         }
       }
       new AbstractBreadthFirstTraversal<NativeLinkable>(includedRootDeps.values()) {
         @Override
         public Iterable<NativeLinkable> visit(NativeLinkable linkable) throws RuntimeException {
-          if (!linkable.supportsOmnibusLinking(cxxPlatform, ruleResolver)) {
+          if (!linkable.supportsOmnibusLinking(cxxPlatform, graphBuilder)) {
             excluded.put(linkable.getBuildTarget(), linkable);
             return ImmutableSet.of();
           }
           return Iterables.concat(
-              linkable.getNativeLinkableDepsForPlatform(cxxPlatform, ruleResolver),
-              linkable.getNativeLinkableExportedDepsForPlatform(cxxPlatform, ruleResolver));
+              linkable.getNativeLinkableDepsForPlatform(cxxPlatform, graphBuilder),
+              linkable.getNativeLinkableExportedDepsForPlatform(cxxPlatform, graphBuilder));
         }
       }.start();
 
@@ -135,8 +137,8 @@ abstract class AbstractOmnibusRoots {
             updatedExcludedRoots.put(linkable.getBuildTarget(), linkable);
           }
           return Iterables.concat(
-              linkable.getNativeLinkableDepsForPlatform(cxxPlatform, ruleResolver),
-              linkable.getNativeLinkableExportedDepsForPlatform(cxxPlatform, ruleResolver));
+              linkable.getNativeLinkableDepsForPlatform(cxxPlatform, graphBuilder),
+              linkable.getNativeLinkableExportedDepsForPlatform(cxxPlatform, graphBuilder));
         }
       }.start();
 

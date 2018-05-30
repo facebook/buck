@@ -24,8 +24,8 @@ import com.facebook.buck.android.packageable.AndroidPackageableCollection;
 import com.facebook.buck.android.packageable.AndroidPackageableCollector;
 import com.facebook.buck.core.description.BuildRuleParams;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.rules.resolver.impl.TestBuildRuleResolver;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.rules.TestBuildRuleParams;
@@ -43,7 +43,7 @@ public class AndroidBuildConfigJavaLibraryTest {
   public void testAddToCollector() throws NoSuchBuildTargetException {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar");
     BuildRuleParams params = TestBuildRuleParams.create();
-    BuildRuleResolver buildRuleResolver = new TestBuildRuleResolver();
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     AndroidBuildConfigJavaLibrary buildConfigJavaLibrary =
         AndroidBuildConfigDescription.createBuildRule(
             buildTarget,
@@ -56,7 +56,7 @@ public class AndroidBuildConfigJavaLibraryTest {
             /* useConstantExpressions */ false,
             DEFAULT_JAVAC,
             DEFAULT_JAVAC_OPTIONS,
-            buildRuleResolver);
+            graphBuilder);
 
     AndroidPackageableCollector collector = new AndroidPackageableCollector(buildTarget);
     buildConfigJavaLibrary.addToCollector(collector);
@@ -75,7 +75,7 @@ public class AndroidBuildConfigJavaLibraryTest {
     BuildRuleParams params = TestBuildRuleParams.create();
     BuildConfigFields fields =
         BuildConfigFields.fromFieldDeclarations(Collections.singleton("String KEY = \"value\""));
-    BuildRuleResolver buildRuleResolver = new TestBuildRuleResolver();
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     AndroidBuildConfigJavaLibrary buildConfigJavaLibrary =
         AndroidBuildConfigDescription.createBuildRule(
             buildTarget,
@@ -87,7 +87,7 @@ public class AndroidBuildConfigJavaLibraryTest {
             /* useConstantExpressions */ false,
             DEFAULT_JAVAC,
             DEFAULT_JAVAC_OPTIONS,
-            buildRuleResolver);
+            graphBuilder);
     AndroidBuildConfig buildConfig = buildConfigJavaLibrary.getAndroidBuildConfig();
     assertEquals("com.example.buck", buildConfig.getJavaPackage());
     assertEquals(fields, buildConfig.getBuildConfigFields());

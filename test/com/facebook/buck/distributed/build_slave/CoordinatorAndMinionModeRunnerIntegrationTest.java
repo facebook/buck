@@ -19,7 +19,7 @@ package com.facebook.buck.distributed.build_slave;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.build_slave.MinionModeRunnerIntegrationTest.FakeBuildExecutorImpl;
-import com.facebook.buck.distributed.testutil.CustomBuildRuleResolverFactory;
+import com.facebook.buck.distributed.testutil.CustomActiongGraphBuilderFactory;
 import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
 import com.facebook.buck.distributed.thrift.MinionType;
 import com.facebook.buck.distributed.thrift.StampedeId;
@@ -105,7 +105,7 @@ public class CoordinatorAndMinionModeRunnerIntegrationTest {
     Assert.assertEquals(ExitCode.SUCCESS, exitCode);
     Assert.assertEquals(4, localBuilder.getBuildTargets().size());
     Assert.assertEquals(
-        CustomBuildRuleResolverFactory.ROOT_TARGET, localBuilder.getBuildTargets().get(3));
+        CustomActiongGraphBuilderFactory.ROOT_TARGET, localBuilder.getBuildTargets().get(3));
 
     Path buildTracePath = logDirectoryPath.resolve(BuckConstant.DIST_BUILD_TRACE_FILE_NAME);
     Assert.assertTrue(buildTracePath.toFile().exists());

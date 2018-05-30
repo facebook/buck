@@ -17,7 +17,7 @@ package com.facebook.buck.rules.macros;
 
 import com.facebook.buck.core.cell.resolver.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.rules.BuildRuleResolver;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.model.macros.MacroException;
 import com.facebook.buck.rules.args.Arg;
 import com.google.common.collect.ImmutableCollection;
@@ -65,29 +65,29 @@ public abstract class AbstractMacroExpander<T, P> implements MacroExpander {
   public final P precomputeWork(
       BuildTarget target,
       CellPathResolver cellNames,
-      BuildRuleResolver resolver,
+      ActionGraphBuilder graphBuilder,
       ImmutableList<String> input)
       throws MacroException {
-    return precomputeWorkFrom(target, cellNames, resolver, parse(target, cellNames, input));
+    return precomputeWorkFrom(target, cellNames, graphBuilder, parse(target, cellNames, input));
   }
 
   /** @return the precomputed work that can be re-used between invocations */
   public abstract P precomputeWorkFrom(
-      BuildTarget target, CellPathResolver cellNames, BuildRuleResolver resolver, T input)
+      BuildTarget target, CellPathResolver cellNames, ActionGraphBuilder graphBuilder, T input)
       throws MacroException;
 
   @Override
   public final Arg expand(
       BuildTarget target,
       CellPathResolver cellNames,
-      BuildRuleResolver resolver,
+      ActionGraphBuilder graphBuilder,
       ImmutableList<String> input,
       Object precomputedWork)
       throws MacroException {
     return expandFrom(
         target,
         cellNames,
-        resolver,
+        graphBuilder,
         parse(target, cellNames, input),
         getPrecomputedWorkClass().cast(precomputedWork));
   }
@@ -95,7 +95,7 @@ public abstract class AbstractMacroExpander<T, P> implements MacroExpander {
   public abstract Arg expandFrom(
       BuildTarget target,
       CellPathResolver cellNames,
-      BuildRuleResolver resolver,
+      ActionGraphBuilder graphBuilder,
       T input,
       P precomputedWork)
       throws MacroException;
@@ -104,10 +104,10 @@ public abstract class AbstractMacroExpander<T, P> implements MacroExpander {
   public final Object extractRuleKeyAppendables(
       BuildTarget target,
       CellPathResolver cellNames,
-      BuildRuleResolver resolver,
+      ActionGraphBuilder graphBuilder,
       ImmutableList<String> input,
       Object precomputedWork)
       throws MacroException {
-    return expand(target, cellNames, resolver, input, precomputedWork);
+    return expand(target, cellNames, graphBuilder, input, precomputedWork);
   }
 }

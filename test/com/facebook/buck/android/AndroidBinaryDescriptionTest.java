@@ -24,9 +24,9 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.rules.resolver.impl.TestBuildRuleResolver;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.jvm.java.Keystore;
 import com.facebook.buck.jvm.java.KeystoreBuilder;
@@ -73,24 +73,24 @@ public class AndroidBinaryDescriptionTest {
             .build();
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(transitiveDepNode, depNode, keystoreNode, androidBinaryNode);
-    BuildRuleResolver ruleResolver =
-        new TestBuildRuleResolver(
+    ActionGraphBuilder graphBuilder =
+        new TestActionGraphBuilder(
             targetGraph, AndroidBinaryBuilder.createToolchainProviderForAndroidBinary());
 
-    BuildRule transitiveDep = ruleResolver.requireRule(transitiveDepNode.getBuildTarget());
-    ruleResolver.requireRule(target);
+    BuildRule transitiveDep = graphBuilder.requireRule(transitiveDepNode.getBuildTarget());
+    graphBuilder.requireRule(target);
     BuildRule nonPredexedRule =
-        ruleResolver.requireRule(
+        graphBuilder.requireRule(
             target.withFlavors(AndroidBinaryGraphEnhancer.NON_PREDEXED_DEX_BUILDABLE_FLAVOR));
     assertThat(nonPredexedRule.getBuildDeps(), Matchers.hasItem(transitiveDep));
   }
 
   @Test
   public void turkishCaseRulesDoNotCrashConstructor() throws Exception {
-    BuildRuleResolver ruleResolver = new TestBuildRuleResolver();
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//:keystore");
     Keystore keystore =
-        ruleResolver.addToIndex(
+        graphBuilder.addToIndex(
             new Keystore(
                 buildTarget,
                 new FakeProjectFilesystem(),
@@ -106,7 +106,7 @@ public class AndroidBinaryDescriptionTest {
           .setManifest(FakeSourcePath.of("manifest.xml"))
           .setKeystore(keystore.getBuildTarget())
           .setPackageType("instrumented")
-          .build(ruleResolver, new FakeProjectFilesystem(), TargetGraph.EMPTY);
+          .build(graphBuilder, new FakeProjectFilesystem(), TargetGraph.EMPTY);
     } finally {
       Locale.setDefault(originalLocale);
     }

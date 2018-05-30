@@ -23,7 +23,7 @@ import static org.junit.Assume.assumeFalse;
 import com.facebook.buck.config.ActionGraphParallelizationMode;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.actiongraph.ActionGraphAndResolver;
+import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphCache;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
@@ -248,7 +248,7 @@ public class DuplicateResourcesTest {
             library,
             keystore);
 
-    ActionGraphAndResolver actionGraphAndResolver =
+    ActionGraphAndBuilder actionGraphAndBuilder =
         new ActionGraphCache(1)
             .getFreshActionGraph(
                 BuckEventBusForTests.newInstance(
@@ -272,10 +272,10 @@ public class DuplicateResourcesTest {
 
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(
-            new SourcePathRuleFinder(actionGraphAndResolver.getResolver()));
+            new SourcePathRuleFinder(actionGraphAndBuilder.getActionGraphBuilder()));
 
     ImmutableSet<ImmutableList<Step>> ruleSteps =
-        RichStream.from(actionGraphAndResolver.getActionGraph().getNodes())
+        RichStream.from(actionGraphAndBuilder.getActionGraph().getNodes())
             .filter(AaptPackageResources.class)
             .filter(
                 r ->

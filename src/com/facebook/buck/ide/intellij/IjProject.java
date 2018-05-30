@@ -18,7 +18,7 @@ package com.facebook.buck.ide.intellij;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.impl.TargetGraphAndTargets;
-import com.facebook.buck.core.rules.BuildRuleResolver;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
@@ -41,7 +41,7 @@ public class IjProject {
   private final TargetGraphAndTargets targetGraphAndTargets;
   private final JavaPackageFinder javaPackageFinder;
   private final JavaFileParser javaFileParser;
-  private final BuildRuleResolver buildRuleResolver;
+  private final ActionGraphBuilder graphBuilder;
   private final SourcePathResolver sourcePathResolver;
   private final SourcePathRuleFinder ruleFinder;
   private final ProjectFilesystem projectFilesystem;
@@ -52,14 +52,14 @@ public class IjProject {
       TargetGraphAndTargets targetGraphAndTargets,
       JavaPackageFinder javaPackageFinder,
       JavaFileParser javaFileParser,
-      BuildRuleResolver buildRuleResolver,
+      ActionGraphBuilder graphBuilder,
       ProjectFilesystem projectFilesystem,
       IjProjectConfig projectConfig) {
     this.targetGraphAndTargets = targetGraphAndTargets;
     this.javaPackageFinder = javaPackageFinder;
     this.javaFileParser = javaFileParser;
-    this.buildRuleResolver = buildRuleResolver;
-    this.ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
+    this.graphBuilder = graphBuilder;
+    this.ruleFinder = new SourcePathRuleFinder(graphBuilder);
     this.sourcePathResolver = DefaultSourcePathResolver.from(this.ruleFinder);
     this.projectFilesystem = projectFilesystem;
     this.projectConfig = projectConfig;
@@ -106,7 +106,7 @@ public class IjProject {
             new DefaultIjLibraryFactoryResolver(
                 projectFilesystem,
                 sourcePathResolver,
-                buildRuleResolver,
+                graphBuilder,
                 ruleFinder,
                 requiredBuildTargets),
             Optional.of(
@@ -114,11 +114,7 @@ public class IjProject {
                     javaFileParser, projectFilesystem)));
     IjModuleFactoryResolver moduleFactoryResolver =
         new DefaultIjModuleFactoryResolver(
-            buildRuleResolver,
-            sourcePathResolver,
-            ruleFinder,
-            projectFilesystem,
-            requiredBuildTargets);
+            graphBuilder, sourcePathResolver, ruleFinder, projectFilesystem, requiredBuildTargets);
     SupportedTargetTypeRegistry typeRegistry =
         new SupportedTargetTypeRegistry(
             projectFilesystem, moduleFactoryResolver, projectConfig, javaPackageFinder);

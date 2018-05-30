@@ -102,7 +102,7 @@ public class HttpArchiveDescription
         new BuildRuleParams(
             () -> ImmutableSortedSet.of(httpFile), ImmutableSortedSet::of, ImmutableSortedSet.of());
 
-    context.getBuildRuleResolver().computeIfAbsent(httpFileTarget, ignored -> httpFile);
+    context.getActionGraphBuilder().computeIfAbsent(httpFileTarget, ignored -> httpFile);
 
     return new HttpArchive(
         buildTarget,

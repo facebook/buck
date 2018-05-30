@@ -32,8 +32,8 @@ import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
@@ -95,15 +95,15 @@ public class JsLibraryDescription
       BuildTarget buildTarget,
       BuildRuleParams params,
       JsLibraryDescriptionArg args) {
-    BuildRuleResolver resolver = context.getBuildRuleResolver();
+    ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
 
     // this params object is used as base for the JsLibrary build rule, but also for all dynamically
     // created JsFile rules.
     // For the JsLibrary case, we want to propagate flavors to library dependencies
     // For the JsFile case, we only want to depend on the worker, not on any libraries
-    params = JsUtil.withWorkerDependencyOnly(params, resolver, args.getWorker());
+    params = JsUtil.withWorkerDependencyOnly(params, graphBuilder, args.getWorker());
 
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(ruleFinder);
     ImmutableBiMap<Either<SourcePath, Pair<SourcePath, String>>, Flavor> sourcesToFlavors;
     try {
@@ -118,24 +118,24 @@ public class JsLibraryDescription
 
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
     CellPathResolver cellRoots = context.getCellPathResolver();
-    WorkerTool worker = resolver.getRuleWithType(args.getWorker(), WorkerTool.class);
+    WorkerTool worker = graphBuilder.getRuleWithType(args.getWorker(), WorkerTool.class);
     if (file.isPresent()) {
       return buildTarget.getFlavors().contains(JsFlavors.RELEASE)
           ? createReleaseFileRule(
-              buildTarget, projectFilesystem, params, resolver, cellRoots, args, worker)
+              buildTarget, projectFilesystem, params, graphBuilder, cellRoots, args, worker)
           : createDevFileRule(
               buildTarget,
               projectFilesystem,
               params,
               ruleFinder,
               sourcePathResolver,
-              resolver,
+              graphBuilder,
               cellRoots,
               args,
               file.get(),
               worker);
     } else if (buildTarget.getFlavors().contains(JsFlavors.LIBRARY_FILES)) {
-      return new LibraryFilesBuilder(resolver, buildTarget, params, sourcesToFlavors)
+      return new LibraryFilesBuilder(graphBuilder, buildTarget, params, sourcesToFlavors)
           .setSources(args.getSrcs())
           .build(projectFilesystem, worker);
     } else {
@@ -152,7 +152,7 @@ public class JsLibraryDescription
                 .filter(target -> JsUtil.isJsLibraryTarget(target, context.getTargetGraph()));
         deps = Stream.concat(deps, jsLibraryTargetsInQuery);
       }
-      return new LibraryBuilder(context.getTargetGraph(), resolver, buildTarget, params)
+      return new LibraryBuilder(context.getTargetGraph(), graphBuilder, buildTarget, params)
           .setLibraryDependencies(deps)
           .build(projectFilesystem, worker);
     }
@@ -198,7 +198,7 @@ public class JsLibraryDescription
 
   private static class LibraryFilesBuilder {
 
-    private final BuildRuleResolver resolver;
+    private final ActionGraphBuilder graphBuilder;
     private final BuildTarget baseTarget;
     private final ImmutableBiMap<Either<SourcePath, Pair<SourcePath, String>>, Flavor>
         sourcesToFlavors;
@@ -208,11 +208,11 @@ public class JsLibraryDescription
     @Nullable private ImmutableList<JsFile> sourceFiles;
 
     public LibraryFilesBuilder(
-        BuildRuleResolver resolver,
+        ActionGraphBuilder graphBuilder,
         BuildTarget baseTarget,
         BuildRuleParams baseParams,
         ImmutableBiMap<Either<SourcePath, Pair<SourcePath, String>>, Flavor> sourcesToFlavors) {
-      this.resolver = resolver;
+      this.graphBuilder = graphBuilder;
       this.baseTarget = baseTarget;
       this.sourcesToFlavors = sourcesToFlavors;
 
@@ -235,8 +235,8 @@ public class JsLibraryDescription
     private JsFile requireJsFile(Either<SourcePath, Pair<SourcePath, String>> file) {
       Flavor fileFlavor = sourcesToFlavors.get(file);
       BuildTarget target = fileBaseTarget.withAppendedFlavors(fileFlavor);
-      resolver.requireRule(target);
-      return resolver.getRuleWithType(target, JsFile.class);
+      graphBuilder.requireRule(target);
+      return graphBuilder.getRuleWithType(target, JsFile.class);
     }
 
     private JsLibrary.Files build(ProjectFilesystem projectFileSystem, WorkerTool worker) {
@@ -256,7 +256,7 @@ public class JsLibraryDescription
 
   private static class LibraryBuilder {
     private final TargetGraph targetGraph;
-    private final BuildRuleResolver resolver;
+    private final ActionGraphBuilder graphBuilder;
     private final BuildTarget baseTarget;
     private final BuildRuleParams baseParams;
 
@@ -264,20 +264,20 @@ public class JsLibraryDescription
 
     private LibraryBuilder(
         TargetGraph targetGraph,
-        BuildRuleResolver resolver,
+        ActionGraphBuilder graphBuilder,
         BuildTarget baseTarget,
         BuildRuleParams baseParams) {
       this.targetGraph = targetGraph;
       this.baseTarget = baseTarget;
       this.baseParams = baseParams;
-      this.resolver = resolver;
+      this.graphBuilder = graphBuilder;
     }
 
     private LibraryBuilder setLibraryDependencies(Stream<BuildTarget> deps) {
       this.libraryDependencies =
           deps.map(hasFlavors() ? this::addFlavorsToLibraryTarget : Function.identity())
               // `requireRule()` needed for dependencies to flavored versions
-              .map(resolver::requireRule)
+              .map(graphBuilder::requireRule)
               .map(this::verifyIsJsLibraryRule)
               .collect(ImmutableList.toImmutableList());
       return this;
@@ -287,13 +287,13 @@ public class JsLibraryDescription
       Preconditions.checkNotNull(libraryDependencies, "No library dependencies set");
 
       BuildTarget filesTarget = baseTarget.withAppendedFlavors(JsFlavors.LIBRARY_FILES);
-      BuildRule filesRule = resolver.requireRule(filesTarget);
+      BuildRule filesRule = graphBuilder.requireRule(filesTarget);
       return new JsLibrary(
           baseTarget,
           projectFilesystem,
           baseParams.copyAppendingExtraDeps(
               Iterables.concat(ImmutableList.of(filesRule), libraryDependencies)),
-          resolver.getRuleWithType(filesTarget, JsLibrary.Files.class).getSourcePathToOutput(),
+          graphBuilder.getRuleWithType(filesTarget, JsLibrary.Files.class).getSourcePathToOutput(),
           libraryDependencies
               .stream()
               .map(BuildRule::getSourcePathToOutput)
@@ -326,18 +326,18 @@ public class JsLibraryDescription
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      BuildRuleResolver resolver,
+      ActionGraphBuilder graphBuilder,
       CellPathResolver cellRoots,
       JsLibraryDescriptionArg args,
       WorkerTool worker) {
     BuildTarget devTarget = withFileFlavorOnly(buildTarget);
-    BuildRule devFile = resolver.requireRule(devTarget);
+    BuildRule devFile = graphBuilder.requireRule(devTarget);
     return new JsFile.JsFileRelease(
         buildTarget,
         projectFilesystem,
         params.copyAppendingExtraDeps(devFile),
-        resolver.getRuleWithType(devTarget, JsFile.class).getSourcePathToOutput(),
-        JsUtil.getExtraJson(args, buildTarget, resolver, cellRoots),
+        graphBuilder.getRuleWithType(devTarget, JsFile.class).getSourcePathToOutput(),
+        JsUtil.getExtraJson(args, buildTarget, graphBuilder, cellRoots),
         args.getExtraArgs(),
         worker);
   }
@@ -348,7 +348,7 @@ public class JsLibraryDescription
       BuildRuleParams params,
       SourcePathRuleFinder ruleFinder,
       SourcePathResolver sourcePathResolver,
-      BuildRuleResolver resolver,
+      ActionGraphBuilder graphBuilder,
       CellPathResolver cellRoots,
       A args,
       Either<SourcePath, Pair<SourcePath, String>> source,
@@ -376,7 +376,7 @@ public class JsLibraryDescription
         sourcePath,
         subPath,
         virtualPath,
-        JsUtil.getExtraJson(args, buildTarget, resolver, cellRoots),
+        JsUtil.getExtraJson(args, buildTarget, graphBuilder, cellRoots),
         args.getExtraArgs(),
         worker);
   }

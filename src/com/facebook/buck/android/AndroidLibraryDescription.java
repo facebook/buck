@@ -103,7 +103,7 @@ public class AndroidLibraryDescription
                 .getJavacOptions(),
             buildTarget,
             projectFilesystem,
-            context.getBuildRuleResolver(),
+            context.getActionGraphBuilder(),
             args);
     AndroidLibrary.Builder androidLibraryBuilder =
         AndroidLibrary.builder(
@@ -111,7 +111,7 @@ public class AndroidLibraryDescription
             projectFilesystem,
             toolchainProvider,
             params,
-            context.getBuildRuleResolver(),
+            context.getActionGraphBuilder(),
             context.getCellPathResolver(),
             javaBuckConfig,
             javacOptions,

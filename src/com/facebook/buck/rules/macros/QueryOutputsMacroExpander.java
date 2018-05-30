@@ -20,8 +20,8 @@ import com.facebook.buck.core.cell.resolver.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.query.QueryBuildTarget;
@@ -65,7 +65,7 @@ public class QueryOutputsMacroExpander extends QueryMacroExpander<QueryOutputsMa
   public Arg expandFrom(
       BuildTarget target,
       CellPathResolver cellNames,
-      BuildRuleResolver resolver,
+      ActionGraphBuilder graphBuilder,
       QueryOutputsMacro input,
       QueryResults precomputedWork) {
     return new QueriedOutputsArg(
@@ -75,7 +75,7 @@ public class QueryOutputsMacroExpander extends QueryMacroExpander<QueryOutputsMa
             .map(
                 queryTarget -> {
                   Preconditions.checkState(queryTarget instanceof QueryBuildTarget);
-                  return resolver.getRule(((QueryBuildTarget) queryTarget).getBuildTarget());
+                  return graphBuilder.getRule(((QueryBuildTarget) queryTarget).getBuildTarget());
                 })
             .map(BuildRule::getSourcePathToOutput)
             .filter(Objects::nonNull)

@@ -27,10 +27,10 @@ import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.description.BuildRuleParams;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.rules.BuildRuleResolver;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.attr.BuildOutputInitializer;
-import com.facebook.buck.core.rules.resolver.impl.TestBuildRuleResolver;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -67,9 +67,9 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest {
   public void testGetBuildStepsWhenThereAreClassesToDex() throws IOException, InterruptedException {
     ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
 
-    BuildRuleResolver resolver = new TestBuildRuleResolver();
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
     FakeJavaLibrary javaLibraryRule =
         new FakeJavaLibrary(
             BuildTargetFactory.newInstance(filesystem.getRootPath(), "//foo:bar"),
@@ -80,7 +80,7 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest {
             return ImmutableSortedMap.of("com/example/Foo", HashCode.fromString("cafebabe"));
           }
         };
-    resolver.addToIndex(javaLibraryRule);
+    graphBuilder.addToIndex(javaLibraryRule);
     Path jarOutput =
         BuildTargets.getGenPath(filesystem, javaLibraryRule.getBuildTarget(), "%s.jar");
     javaLibraryRule.setOutputFile(jarOutput.toString());
@@ -165,8 +165,9 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest {
 
   @Test
   public void testGetBuildStepsWhenThereAreNoClassesToDex() throws Exception {
-    BuildRuleResolver resolver = new TestBuildRuleResolver();
-    DefaultJavaLibrary javaLibrary = JavaLibraryBuilder.createBuilder("//foo:bar").build(resolver);
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
+    DefaultJavaLibrary javaLibrary =
+        JavaLibraryBuilder.createBuilder("//foo:bar").build(graphBuilder);
     javaLibrary
         .getBuildOutputInitializer()
         .setBuildOutputForTests(new JavaLibrary.Data(ImmutableSortedMap.of()));
@@ -208,9 +209,9 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest {
 
   @Test
   public void testObserverMethods() throws Exception {
-    BuildRuleResolver resolver = new TestBuildRuleResolver();
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     DefaultJavaLibrary accumulateClassNames =
-        JavaLibraryBuilder.createBuilder("//foo:bar").build(resolver);
+        JavaLibraryBuilder.createBuilder("//foo:bar").build(graphBuilder);
     accumulateClassNames
         .getBuildOutputInitializer()
         .setBuildOutputForTests(

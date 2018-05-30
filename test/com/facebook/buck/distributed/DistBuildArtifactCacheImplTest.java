@@ -16,9 +16,9 @@
 
 package com.facebook.buck.distributed;
 
-import static com.facebook.buck.distributed.testutil.CustomBuildRuleResolverFactory.LEFT_TARGET;
-import static com.facebook.buck.distributed.testutil.CustomBuildRuleResolverFactory.RIGHT_TARGET;
-import static com.facebook.buck.distributed.testutil.CustomBuildRuleResolverFactory.ROOT_TARGET;
+import static com.facebook.buck.distributed.testutil.CustomActiongGraphBuilderFactory.LEFT_TARGET;
+import static com.facebook.buck.distributed.testutil.CustomActiongGraphBuilderFactory.RIGHT_TARGET;
+import static com.facebook.buck.distributed.testutil.CustomActiongGraphBuilderFactory.ROOT_TARGET;
 import static org.easymock.EasyMock.capture;
 import static org.easymock.EasyMock.eq;
 import static org.easymock.EasyMock.expect;
@@ -36,9 +36,9 @@ import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rulekey.calculator.ParallelRuleKeyCalculator;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.distributed.testutil.CustomBuildRuleResolverFactory;
+import com.facebook.buck.distributed.testutil.CustomActiongGraphBuilderFactory;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.DefaultBuckEventBus;
 import com.facebook.buck.io.file.BorrowablePath;
@@ -65,17 +65,18 @@ import org.junit.Test;
 public class DistBuildArtifactCacheImplTest {
   private ParallelRuleKeyCalculator<RuleKey> mockRuleKeyCalculator =
       EasyMock.createMock(RuleKeyCalculator.class);
-  private BuildRuleResolver resolver;
+  private ActionGraphBuilder graphBuilder;
   private BuckEventBus eventBus;
 
   private DistBuildArtifactCacheImpl createTestSubject(
       ArtifactCache remoteCache, Optional<ArtifactCache> localCache) {
 
-    resolver = CustomBuildRuleResolverFactory.createDiamondDependencyResolverWithChainFromLeaf();
+    graphBuilder =
+        CustomActiongGraphBuilderFactory.createDiamondDependencyBuilderWithChainFromLeaf();
     eventBus = new DefaultBuckEventBus(FakeClock.doNotCare(), new BuildId());
 
     return new DistBuildArtifactCacheImpl(
-        resolver,
+        graphBuilder,
         MoreExecutors.newDirectExecutorService(),
         remoteCache,
         eventBus,
@@ -108,9 +109,9 @@ public class DistBuildArtifactCacheImplTest {
     ArtifactCacheByBuildRule distBuildCache =
         createTestSubject(remoteCache, Optional.of(localCache));
 
-    BuildRule rootRule = resolver.getRule(BuildTargetFactory.newInstance(ROOT_TARGET));
-    BuildRule rightRule = resolver.getRule(BuildTargetFactory.newInstance(RIGHT_TARGET));
-    BuildRule leftRule = resolver.getRule(BuildTargetFactory.newInstance(LEFT_TARGET));
+    BuildRule rootRule = graphBuilder.getRule(BuildTargetFactory.newInstance(ROOT_TARGET));
+    BuildRule rightRule = graphBuilder.getRule(BuildTargetFactory.newInstance(RIGHT_TARGET));
+    BuildRule leftRule = graphBuilder.getRule(BuildTargetFactory.newInstance(LEFT_TARGET));
 
     expect(mockRuleKeyCalculator.calculate(eventBus, rootRule))
         .andReturn(Futures.immediateFuture(remoteRuleKey))
@@ -140,7 +141,7 @@ public class DistBuildArtifactCacheImplTest {
         createTestSubject(remoteCache, Optional.of(localCache));
 
     RuleKey ruleKey = new RuleKey("abcd");
-    BuildRule rootRule = resolver.getRule(BuildTargetFactory.newInstance(ROOT_TARGET));
+    BuildRule rootRule = graphBuilder.getRule(BuildTargetFactory.newInstance(ROOT_TARGET));
     expect(mockRuleKeyCalculator.calculate(eventBus, rootRule))
         .andReturn(Futures.immediateFuture(ruleKey))
         .atLeastOnce();
@@ -184,13 +185,13 @@ public class DistBuildArtifactCacheImplTest {
     BuildTarget rightTarget = BuildTargetFactory.newInstance(RIGHT_TARGET);
     BuildTarget leftTarget = BuildTargetFactory.newInstance(LEFT_TARGET);
 
-    expect(mockRuleKeyCalculator.calculate(eventBus, resolver.getRule(rootTarget)))
+    expect(mockRuleKeyCalculator.calculate(eventBus, graphBuilder.getRule(rootTarget)))
         .andReturn(Futures.immediateFuture(ruleKeys.get(0)))
         .atLeastOnce();
-    expect(mockRuleKeyCalculator.calculate(eventBus, resolver.getRule(rightTarget)))
+    expect(mockRuleKeyCalculator.calculate(eventBus, graphBuilder.getRule(rightTarget)))
         .andReturn(Futures.immediateFuture(ruleKeys.get(1)))
         .atLeastOnce();
-    expect(mockRuleKeyCalculator.calculate(eventBus, resolver.getRule(leftTarget)))
+    expect(mockRuleKeyCalculator.calculate(eventBus, graphBuilder.getRule(leftTarget)))
         .andReturn(Futures.immediateFuture(ruleKeys.get(2)))
         .atLeastOnce();
     expect(mockRuleKeyCalculator.getAllKnownTargets())
@@ -209,7 +210,7 @@ public class DistBuildArtifactCacheImplTest {
 
     replay(mockRuleKeyCalculator);
     distBuildCache.prewarmRemoteContains(
-        ImmutableSet.of(resolver.getRule(rootTarget), resolver.getRule(rightTarget)));
+        ImmutableSet.of(graphBuilder.getRule(rootTarget), graphBuilder.getRule(rightTarget)));
     distBuildCache.prewarmRemoteContainsForAllKnownRules();
     verify(mockRuleKeyCalculator);
   }

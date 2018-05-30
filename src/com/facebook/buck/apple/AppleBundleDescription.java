@@ -37,7 +37,7 @@ import com.facebook.buck.core.model.Flavored;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
-import com.facebook.buck.core.rules.BuildRuleResolver;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.FrameworkDependencies;
@@ -130,18 +130,19 @@ public class AppleBundleDescription
       BuildTarget buildTarget,
       BuildRuleParams params,
       AppleBundleDescriptionArg args) {
-    BuildRuleResolver resolver = context.getBuildRuleResolver();
+    ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
     AppleDebugFormat flavoredDebugFormat =
         AppleDebugFormat.FLAVOR_DOMAIN
             .getValue(buildTarget)
             .orElse(appleConfig.getDefaultDebugInfoFormatForBinaries());
     if (!buildTarget.getFlavors().contains(flavoredDebugFormat.getFlavor())) {
       return (AppleBundle)
-          resolver.requireRule(buildTarget.withAppendedFlavors(flavoredDebugFormat.getFlavor()));
+          graphBuilder.requireRule(
+              buildTarget.withAppendedFlavors(flavoredDebugFormat.getFlavor()));
     }
     if (!AppleDescriptions.INCLUDE_FRAMEWORKS.getValue(buildTarget).isPresent()) {
       return (AppleBundle)
-          resolver.requireRule(
+          graphBuilder.requireRule(
               buildTarget.withAppendedFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR));
     }
     CxxPlatformsProvider cxxPlatformsProvider = getCxxPlatformsProvider();
@@ -154,7 +155,7 @@ public class AppleBundleDescription
         buildTarget,
         context.getProjectFilesystem(),
         params,
-        resolver,
+        graphBuilder,
         toolchainProvider.getByName(
             CodeSignIdentityStore.DEFAULT_NAME, CodeSignIdentityStore.class),
         toolchainProvider.getByName(
@@ -293,7 +294,7 @@ public class AppleBundleDescription
   @Override
   public <U> Optional<U> createMetadata(
       BuildTarget buildTarget,
-      BuildRuleResolver resolver,
+      ActionGraphBuilder graphBuilder,
       CellPathResolver cellRoots,
       AppleBundleDescriptionArg args,
       Optional<ImmutableMap<BuildTarget, Version>> selectedVersions,
@@ -314,7 +315,7 @@ public class AppleBundleDescription
     BuildTarget binaryTarget =
         AppleDescriptions.getTargetPlatformBinary(
             args.getBinary(), args.getPlatformBinary(), appleCxxPlatform.getFlavor());
-    return resolver.requireMetadata(binaryTarget, metadataClass);
+    return graphBuilder.requireMetadata(binaryTarget, metadataClass);
   }
 
   private FlavorDomain<AppleCxxPlatform> getAppleCxxPlatformFlavorDomain() {

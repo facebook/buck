@@ -94,7 +94,7 @@ public class RustBinaryDescription
         buildTarget,
         context.getProjectFilesystem(),
         params,
-        context.getBuildRuleResolver(),
+        context.getActionGraphBuilder(),
         rustBuckConfig,
         rustPlatform,
         args.getCrate(),
@@ -109,7 +109,7 @@ public class RustBinaryDescription
         args.getCrateRoot(),
         ImmutableSet.of("main.rs"),
         isCheck,
-        allDeps.get(context.getBuildRuleResolver(), rustPlatform.getCxxPlatform()));
+        allDeps.get(context.getActionGraphBuilder(), rustPlatform.getCxxPlatform()));
   }
 
   @Override

@@ -185,7 +185,7 @@ public class PreBuildPhase {
               localRuleKeyCalculator -> {
                 try (ArtifactCacheByBuildRule artifactCache =
                     new DistBuildArtifactCacheImpl(
-                        actionAndTargetGraphs.getActionGraphAndResolver().getResolver(),
+                        actionAndTargetGraphs.getActionGraphAndBuilder().getActionGraphBuilder(),
                         networkExecutorService,
                         buildExecutorArgs.getArtifactCacheFactory().remoteOnlyInstance(true, false),
                         eventBus,
@@ -196,7 +196,7 @@ public class PreBuildPhase {
                                 .localOnlyInstance(true, false)))) {
 
                   return new CacheOptimizedBuildTargetsQueueFactory(
-                          actionAndTargetGraphs.getActionGraphAndResolver().getResolver(),
+                          actionAndTargetGraphs.getActionGraphAndBuilder().getActionGraphBuilder(),
                           artifactCache,
                           /* isDeepRemoteBuild */ false,
                           localRuleKeyCalculator.getRuleDepsCache(),

@@ -21,7 +21,7 @@ import com.facebook.buck.core.description.arg.HasTests;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.actiongraph.ActionGraph;
-import com.facebook.buck.core.model.actiongraph.ActionGraphAndResolver;
+import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
@@ -31,8 +31,8 @@ import com.facebook.buck.core.model.targetgraph.impl.TargetGraphHashing;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodes;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rulekey.calculator.ParallelRuleKeyCalculator;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypes;
 import com.facebook.buck.core.rules.type.BuildRuleType;
@@ -404,7 +404,7 @@ public class TargetsCommand extends AbstractCommand {
   private void printDotFormat(CommandRunnerParams params, ListeningExecutorService executor)
       throws IOException, InterruptedException, BuildFileParseException, VersionException {
     TargetGraphAndBuildTargets targetGraphAndTargets = buildTargetGraphAndTargets(params, executor);
-    ActionGraphAndResolver result =
+    ActionGraphAndBuilder result =
         params
             .getActionGraphCache()
             .getActionGraph(
@@ -432,7 +432,7 @@ public class TargetsCommand extends AbstractCommand {
                 params.getBuckConfig().getKeySeed(), result.getActionGraph()))) {
 
       // ruleKeyFactory is used to calculate rule key that we also want to display on a graph
-      SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(result.getResolver());
+      SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(result.getActionGraphBuilder());
       DefaultRuleKeyFactory ruleKeyFactory =
           new DefaultRuleKeyFactory(
               new RuleKeyFieldLoader(params.getRuleKeyConfiguration()),
@@ -874,12 +874,12 @@ public class TargetsCommand extends AbstractCommand {
     // We only need the action graph if we're showing the output or the keys, and the
     // RuleKeyFactory if we're showing the keys.
     Optional<ActionGraph> actionGraph;
-    Optional<BuildRuleResolver> buildRuleResolver;
+    Optional<ActionGraphBuilder> graphBuilder;
     Optional<ParallelRuleKeyCalculator<RuleKey>> ruleKeyCalculator = Optional.empty();
 
     try (ThriftRuleKeyLogger ruleKeyLogger = createRuleKeyLogger().orElse(null)) {
       if (isShowRuleKey || isShowOutput || isShowFullOutput) {
-        ActionGraphAndResolver result =
+        ActionGraphAndBuilder result =
             params
                 .getActionGraphCache()
                 .getActionGraph(
@@ -890,9 +890,10 @@ public class TargetsCommand extends AbstractCommand {
                     params.getRuleKeyConfiguration(),
                     params.getPoolSupplier());
         actionGraph = Optional.of(result.getActionGraph());
-        buildRuleResolver = Optional.of(result.getResolver());
+        graphBuilder = Optional.of(result.getActionGraphBuilder());
         if (isShowRuleKey) {
-          SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(result.getResolver());
+          SourcePathRuleFinder ruleFinder =
+              new SourcePathRuleFinder(result.getActionGraphBuilder());
 
           try (RuleKeyCacheScope<RuleKey> ruleKeyCacheScope =
               getDefaultRuleKeyCacheScope(
@@ -912,19 +913,19 @@ public class TargetsCommand extends AbstractCommand {
                             ruleFinder,
                             ruleKeyCacheScope.getCache(),
                             Optional.ofNullable(ruleKeyLogger)),
-                        new DefaultRuleDepsCache(buildRuleResolver.get()),
+                        new DefaultRuleDepsCache(graphBuilder.get()),
                         (eventBus, rule) -> () -> {}));
           }
         }
       } else {
         actionGraph = Optional.empty();
-        buildRuleResolver = Optional.empty();
+        graphBuilder = Optional.empty();
       }
 
       // Start rule calculations in parallel.
       if (actionGraph.isPresent() && isShowRuleKey) {
         for (TargetNode<?, ?> targetNode : targetGraphAndTargetNodes.getSecond()) {
-          BuildRule rule = buildRuleResolver.get().requireRule(targetNode.getBuildTarget());
+          BuildRule rule = graphBuilder.get().requireRule(targetNode.getBuildTarget());
           ruleKeyCalculator.get().calculate(params.getBuckEventBus(), rule);
         }
       }
@@ -935,7 +936,7 @@ public class TargetsCommand extends AbstractCommand {
             targetResultBuilders.getOrCreate(targetNode.getBuildTarget());
         Preconditions.checkNotNull(builder);
         if (actionGraph.isPresent() && isShowRuleKey) {
-          BuildRule rule = buildRuleResolver.get().requireRule(targetNode.getBuildTarget());
+          BuildRule rule = graphBuilder.get().requireRule(targetNode.getBuildTarget());
           builder.setRuleKey(
               Futures.getUnchecked(
                       ruleKeyCalculator.get().calculate(params.getBuckEventBus(), rule))
@@ -961,13 +962,12 @@ public class TargetsCommand extends AbstractCommand {
           targetResultBuilders.map.entrySet()) {
         BuildTarget target = entry.getKey();
         TargetResult.Builder builder = entry.getValue();
-        if (buildRuleResolver.isPresent()) {
-          BuildRule rule = buildRuleResolver.get().requireRule(target);
+        if (graphBuilder.isPresent()) {
+          BuildRule rule = graphBuilder.get().requireRule(target);
           builder.setRuleType(rule.getType());
           if (isShowOutput || isShowFullOutput) {
             getUserFacingOutputPath(
-                    DefaultSourcePathResolver.from(
-                        new SourcePathRuleFinder(buildRuleResolver.get())),
+                    DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder.get())),
                     rule,
                     params.getBuckConfig().getBuckOutCompatLink())
                 .map(

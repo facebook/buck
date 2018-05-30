@@ -18,8 +18,8 @@ package com.facebook.buck.cxx.toolchain.nativelink;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
@@ -132,16 +132,16 @@ public class NativeLinkables {
    */
   private static Iterable<? extends NativeLinkable> getDepsForLink(
       CxxPlatform cxxPlatform,
-      BuildRuleResolver ruleResolver,
+      ActionGraphBuilder graphBuilder,
       NativeLinkable nativeLinkable,
       LinkableDepType linkStyle) {
 
     // We always traverse a rule's exported native linkables.
     Iterable<? extends NativeLinkable> nativeLinkableDeps =
-        nativeLinkable.getNativeLinkableExportedDepsForPlatform(cxxPlatform, ruleResolver);
+        nativeLinkable.getNativeLinkableExportedDepsForPlatform(cxxPlatform, graphBuilder);
 
     boolean shouldTraverse;
-    switch (nativeLinkable.getPreferredLinkage(cxxPlatform, ruleResolver)) {
+    switch (nativeLinkable.getPreferredLinkage(cxxPlatform, graphBuilder)) {
       case ANY:
         shouldTraverse = linkStyle != Linker.LinkableDepType.SHARED;
         break;
@@ -159,7 +159,7 @@ public class NativeLinkables {
       nativeLinkableDeps =
           Iterables.concat(
               nativeLinkableDeps,
-              nativeLinkable.getNativeLinkableDepsForPlatform(cxxPlatform, ruleResolver));
+              nativeLinkable.getNativeLinkableDepsForPlatform(cxxPlatform, graphBuilder));
     }
 
     return nativeLinkableDeps;
@@ -176,23 +176,23 @@ public class NativeLinkables {
    */
   public static ImmutableList<NativeLinkable> getNativeLinkables(
       CxxPlatform cxxPlatform,
-      BuildRuleResolver ruleResolver,
+      ActionGraphBuilder graphBuilder,
       Iterable<? extends NativeLinkable> inputs,
       Linker.LinkableDepType linkStyle,
       Predicate<? super NativeLinkable> traverse) {
     return getTopoSortedNativeLinkables(
         inputs,
         nativeLinkable ->
-            RichStream.from(getDepsForLink(cxxPlatform, ruleResolver, nativeLinkable, linkStyle))
+            RichStream.from(getDepsForLink(cxxPlatform, graphBuilder, nativeLinkable, linkStyle))
                 .filter(traverse));
   }
 
   public static ImmutableList<NativeLinkable> getNativeLinkables(
       CxxPlatform cxxPlatform,
-      BuildRuleResolver ruleResolver,
+      ActionGraphBuilder graphBuilder,
       Iterable<? extends NativeLinkable> inputs,
       Linker.LinkableDepType linkStyle) {
-    return getNativeLinkables(cxxPlatform, ruleResolver, inputs, linkStyle, x -> true);
+    return getNativeLinkables(cxxPlatform, graphBuilder, inputs, linkStyle, x -> true);
   }
 
   public static Linker.LinkableDepType getLinkStyle(
@@ -221,10 +221,10 @@ public class NativeLinkables {
       CxxPlatform cxxPlatform,
       Linker.LinkableDepType linkStyle,
       NativeLinkable nativeLinkable,
-      BuildRuleResolver ruleResolver) {
-    NativeLinkable.Linkage link = nativeLinkable.getPreferredLinkage(cxxPlatform, ruleResolver);
+      ActionGraphBuilder graphBuilder) {
+    NativeLinkable.Linkage link = nativeLinkable.getPreferredLinkage(cxxPlatform, graphBuilder);
     return nativeLinkable.getNativeLinkableInput(
-        cxxPlatform, getLinkStyle(link, linkStyle), ruleResolver);
+        cxxPlatform, getLinkStyle(link, linkStyle), graphBuilder);
   }
 
   /**
@@ -234,7 +234,7 @@ public class NativeLinkables {
    */
   public static <T> NativeLinkableInput getTransitiveNativeLinkableInput(
       CxxPlatform cxxPlatform,
-      BuildRuleResolver ruleResolver,
+      ActionGraphBuilder graphBuilder,
       Iterable<? extends T> inputs,
       Linker.LinkableDepType depType,
       Function<? super T, Optional<Iterable<? extends T>>> passthrough) {
@@ -242,18 +242,18 @@ public class NativeLinkables {
     // Get the topologically sorted native linkables.
     ImmutableMap<BuildTarget, NativeLinkable> roots = getNativeLinkableRoots(inputs, passthrough);
     ImmutableList<NativeLinkable> nativeLinkables =
-        getNativeLinkables(cxxPlatform, ruleResolver, roots.values(), depType);
+        getNativeLinkables(cxxPlatform, graphBuilder, roots.values(), depType);
     ImmutableList.Builder<NativeLinkableInput> nativeLinkableInputs = ImmutableList.builder();
     for (NativeLinkable nativeLinkable : nativeLinkables) {
       nativeLinkableInputs.add(
-          getNativeLinkableInput(cxxPlatform, depType, nativeLinkable, ruleResolver));
+          getNativeLinkableInput(cxxPlatform, depType, nativeLinkable, graphBuilder));
     }
     return NativeLinkableInput.concat(nativeLinkableInputs.build());
   }
 
   public static ImmutableMap<BuildTarget, NativeLinkable> getTransitiveNativeLinkables(
       CxxPlatform cxxPlatform,
-      BuildRuleResolver ruleResolver,
+      ActionGraphBuilder graphBuilder,
       Iterable<? extends NativeLinkable> inputs) {
 
     Map<BuildTarget, NativeLinkable> nativeLinkables = new HashMap<>();
@@ -271,9 +271,9 @@ public class NativeLinkables {
             ImmutableSet.Builder<BuildTarget> deps = ImmutableSet.builder();
             for (NativeLinkable dep :
                 Iterables.concat(
-                    nativeLinkable.getNativeLinkableDepsForPlatform(cxxPlatform, ruleResolver),
+                    nativeLinkable.getNativeLinkableDepsForPlatform(cxxPlatform, graphBuilder),
                     nativeLinkable.getNativeLinkableExportedDepsForPlatform(
-                        cxxPlatform, ruleResolver))) {
+                        cxxPlatform, graphBuilder))) {
               BuildTarget depTarget = dep.getBuildTarget();
               graph.addEdge(target, depTarget);
               deps.add(depTarget);
@@ -298,14 +298,14 @@ public class NativeLinkables {
    */
   public static <T> ImmutableSortedMap<String, SourcePath> getTransitiveSharedLibraries(
       CxxPlatform cxxPlatform,
-      BuildRuleResolver ruleResolver,
+      ActionGraphBuilder graphBuilder,
       Iterable<? extends T> inputs,
       Function<? super T, Optional<Iterable<? extends T>>> passthrough,
       boolean alwaysIncludeRoots) {
 
     ImmutableMap<BuildTarget, NativeLinkable> roots = getNativeLinkableRoots(inputs, passthrough);
     ImmutableMap<BuildTarget, NativeLinkable> nativeLinkables =
-        getTransitiveNativeLinkables(cxxPlatform, ruleResolver, roots.values());
+        getTransitiveNativeLinkables(cxxPlatform, graphBuilder, roots.values());
 
     SharedLibrariesBuilder builder = new SharedLibrariesBuilder();
     nativeLinkables
@@ -313,21 +313,21 @@ public class NativeLinkables {
         .stream()
         .filter(
             e ->
-                e.getValue().getPreferredLinkage(cxxPlatform, ruleResolver)
+                e.getValue().getPreferredLinkage(cxxPlatform, graphBuilder)
                         != NativeLinkable.Linkage.STATIC
                     || (alwaysIncludeRoots && roots.containsKey(e.getKey())))
-        .forEach(e -> builder.add(cxxPlatform, e.getValue(), ruleResolver));
+        .forEach(e -> builder.add(cxxPlatform, e.getValue(), graphBuilder));
     return builder.build();
   }
 
   /** @return the {@link NativeLinkTarget} that can be extracted from {@code object}, if any. */
   public static Optional<NativeLinkTarget> getNativeLinkTarget(
-      Object object, CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
+      Object object, CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
     if (object instanceof NativeLinkTarget) {
       return Optional.of((NativeLinkTarget) object);
     }
     if (object instanceof CanProvideNativeLinkTarget) {
-      return ((CanProvideNativeLinkTarget) object).getNativeLinkTarget(cxxPlatform, ruleResolver);
+      return ((CanProvideNativeLinkTarget) object).getNativeLinkTarget(cxxPlatform, graphBuilder);
     }
     return Optional.empty();
   }
@@ -342,9 +342,9 @@ public class NativeLinkables {
 
     /** Adds libraries from the given {@link NativeLinkable}. */
     public SharedLibrariesBuilder add(
-        CxxPlatform cxxPlatform, NativeLinkable linkable, BuildRuleResolver ruleResolver) {
+        CxxPlatform cxxPlatform, NativeLinkable linkable, ActionGraphBuilder graphBuilder) {
       ImmutableMap<String, SourcePath> libs =
-          linkable.getSharedLibraries(cxxPlatform, ruleResolver);
+          linkable.getSharedLibraries(cxxPlatform, graphBuilder);
       for (Map.Entry<String, SourcePath> lib : libs.entrySet()) {
         SourcePath prev = libraries.put(lib.getKey(), lib.getValue());
         if (prev != null && !prev.equals(lib.getValue())) {

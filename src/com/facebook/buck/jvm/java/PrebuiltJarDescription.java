@@ -25,8 +25,8 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -63,8 +63,8 @@ public class PrebuiltJarDescription
       BuildTarget buildTarget,
       BuildRuleParams params,
       PrebuiltJarDescriptionArg args) {
-    BuildRuleResolver resolver = context.getBuildRuleResolver();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
 
     if (HasJavaAbi.isClassAbiTarget(buildTarget)) {
@@ -93,7 +93,7 @@ public class PrebuiltJarDescription
     BuildRuleParams gwtParams =
         params.withDeclaredDeps(ImmutableSortedSet.of(prebuilt)).withoutExtraDeps();
     BuildRule gwtModule = createGwtModule(gwtTarget, projectFilesystem, gwtParams, args);
-    resolver.addToIndex(gwtModule);
+    graphBuilder.addToIndex(gwtModule);
 
     return prebuilt;
   }

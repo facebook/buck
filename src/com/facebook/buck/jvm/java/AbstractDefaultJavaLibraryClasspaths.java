@@ -17,8 +17,8 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.description.BuildRuleParams;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
@@ -41,7 +41,7 @@ import org.immutables.value.Value;
 abstract class AbstractDefaultJavaLibraryClasspaths {
 
   @Builder.Parameter
-  abstract BuildRuleResolver getBuildRuleResolver();
+  abstract ActionGraphBuilder getActionGraphBuilder();
 
   abstract BuildRuleParams getBuildRuleParams();
 
@@ -61,7 +61,7 @@ abstract class AbstractDefaultJavaLibraryClasspaths {
 
   @Value.Lazy
   SourcePathRuleFinder getSourcePathRuleFinder() {
-    return new SourcePathRuleFinder(getBuildRuleResolver());
+    return new SourcePathRuleFinder(getActionGraphBuilder());
   }
 
   @Value.Lazy
@@ -138,7 +138,7 @@ abstract class AbstractDefaultJavaLibraryClasspaths {
               rulesRequiredForSourceOnlyAbi(classpathFullDeps), getDeps().getSourceOnlyAbiDeps());
     }
 
-    return JavaLibraryRules.getAbiRules(getBuildRuleResolver(), classpathFullDeps);
+    return JavaLibraryRules.getAbiRules(getActionGraphBuilder(), classpathFullDeps);
   }
 
   private ImmutableSortedSet<BuildRule> getCompileTimeClasspathSourceOnlyAbiDeps() {
@@ -149,7 +149,7 @@ abstract class AbstractDefaultJavaLibraryClasspaths {
               rulesRequiredForSourceOnlyAbi(classpathFullDeps), getDeps().getSourceOnlyAbiDeps());
     }
 
-    return JavaLibraryRules.getSourceOnlyAbiRules(getBuildRuleResolver(), classpathFullDeps);
+    return JavaLibraryRules.getSourceOnlyAbiRules(getActionGraphBuilder(), classpathFullDeps);
   }
 
   @Value.Lazy

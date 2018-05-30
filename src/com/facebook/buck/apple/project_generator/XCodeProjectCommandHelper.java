@@ -34,8 +34,8 @@ import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetGraphAndTargets;
-import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.rules.resolver.impl.SingleThreadedBuildRuleResolver;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
+import com.facebook.buck.core.rules.resolver.impl.SingleThreadedActionGraphBuilder;
 import com.facebook.buck.core.rules.transformer.impl.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
@@ -449,7 +449,7 @@ public class XCodeProjectCommandHelper {
               defaultCxxPlatform,
               appleCxxFlavors,
               buckConfig.getView(ParserConfig.class).getBuildFileName(),
-              lazyActionGraph::getBuildRuleResolverWhileRequiringSubgraph,
+              lazyActionGraph::getActionGraphBuilderWhileRequiringSubgraph,
               buckEventBus,
               ruleKeyConfiguration,
               halideBuckConfig,
@@ -795,16 +795,16 @@ public class XCodeProjectCommandHelper {
   @ThreadSafe
   private static class LazyActionGraph {
     private final TargetGraph targetGraph;
-    private final BuildRuleResolver resolver;
+    private final ActionGraphBuilder graphBuilder;
 
     public LazyActionGraph(TargetGraph targetGraph, CellProvider cellProvider) {
       this.targetGraph = targetGraph;
-      this.resolver =
-          new SingleThreadedBuildRuleResolver(
+      this.graphBuilder =
+          new SingleThreadedActionGraphBuilder(
               targetGraph, new DefaultTargetNodeToBuildRuleTransformer(), cellProvider);
     }
 
-    public BuildRuleResolver getBuildRuleResolverWhileRequiringSubgraph(TargetNode<?, ?> root) {
+    public ActionGraphBuilder getActionGraphBuilderWhileRequiringSubgraph(TargetNode<?, ?> root) {
       TargetGraph subgraph = targetGraph.getSubgraph(ImmutableList.of(root));
 
       try {
@@ -812,14 +812,14 @@ public class XCodeProjectCommandHelper {
           new AbstractBottomUpTraversal<TargetNode<?, ?>, NoSuchBuildTargetException>(subgraph) {
             @Override
             public void visit(TargetNode<?, ?> node) throws NoSuchBuildTargetException {
-              resolver.requireRule(node.getBuildTarget());
+              graphBuilder.requireRule(node.getBuildTarget());
             }
           }.traverse();
         }
       } catch (NoSuchBuildTargetException e) {
         throw new HumanReadableException(e);
       }
-      return resolver;
+      return graphBuilder;
     }
   }
 }

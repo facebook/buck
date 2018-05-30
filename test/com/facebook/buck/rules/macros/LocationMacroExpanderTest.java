@@ -23,11 +23,11 @@ import static org.junit.Assert.fail;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.attr.HasSupplementaryOutputs;
-import com.facebook.buck.core.rules.resolver.impl.TestBuildRuleResolver;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
@@ -52,7 +52,7 @@ import org.junit.Test;
 
 public class LocationMacroExpanderTest {
 
-  private BuildRule createSampleJavaBinaryRule(BuildRuleResolver ruleResolver)
+  private BuildRule createSampleJavaBinaryRule(ActionGraphBuilder graphBuilder)
       throws NoSuchBuildTargetException {
     // Create a java_binary that depends on a java_library so it is possible to create a
     // java_binary rule with a classpath entry and a main class.
@@ -60,22 +60,22 @@ public class LocationMacroExpanderTest {
         JavaLibraryBuilder.createBuilder(
                 BuildTargetFactory.newInstance("//java/com/facebook/util:util"))
             .addSrc(Paths.get("java/com/facebook/util/ManifestGenerator.java"))
-            .build(ruleResolver);
+            .build(graphBuilder);
 
     BuildTarget buildTarget =
         BuildTargetFactory.newInstance("//java/com/facebook/util:ManifestGenerator");
     return new JavaBinaryRuleBuilder(buildTarget)
         .setDeps(ImmutableSortedSet.of(javaLibrary.getBuildTarget()))
         .setMainClass("com.facebook.util.ManifestGenerator")
-        .build(ruleResolver);
+        .build(graphBuilder);
   }
 
   @Test
   public void testShouldWarnUsersWhenThereIsNoOutputForARuleButLocationRequested()
       throws NoSuchBuildTargetException {
-    BuildRuleResolver resolver = new TestBuildRuleResolver();
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//cheese:java"))
-        .build(resolver);
+        .build(graphBuilder);
     BuildTarget target = BuildTargetFactory.newInstance("//cheese:cake");
 
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
@@ -83,7 +83,7 @@ public class LocationMacroExpanderTest {
         new MacroHandler(ImmutableMap.of("location", new LocationMacroExpander()));
     try {
       macroHandler.expand(
-          target, createCellRoots(filesystem), resolver, "$(location //cheese:java)");
+          target, createCellRoots(filesystem), graphBuilder, "$(location //cheese:java)");
       fail("Location was null. Expected HumanReadableException with helpful message.");
     } catch (MacroException e) {
       assertEquals(
@@ -96,10 +96,10 @@ public class LocationMacroExpanderTest {
   @Test
   public void replaceLocationOfFullyQualifiedBuildTarget() throws Exception {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    BuildRuleResolver ruleResolver = new TestBuildRuleResolver();
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(ruleResolver));
-    BuildRule javaBinary = createSampleJavaBinaryRule(ruleResolver);
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
+    BuildRule javaBinary = createSampleJavaBinaryRule(graphBuilder);
     Path absolutePath = pathResolver.getAbsolutePath(javaBinary.getSourcePathToOutput());
 
     String originalCmd =
@@ -113,7 +113,7 @@ public class LocationMacroExpanderTest {
         new MacroHandler(ImmutableMap.of("location", new LocationMacroExpander()));
     String transformedString =
         macroHandler.expand(
-            javaBinary.getBuildTarget(), createCellRoots(filesystem), ruleResolver, originalCmd);
+            javaBinary.getBuildTarget(), createCellRoots(filesystem), graphBuilder, originalCmd);
 
     // Verify that the correct cmd was created.
     String expectedCmd = String.format("%s %s $OUT", absolutePath, absolutePath);
@@ -124,14 +124,14 @@ public class LocationMacroExpanderTest {
   public void replaceSupplementalOutputLocation() throws Exception {
     ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem("/some_root");
     BuildTarget target = BuildTargetFactory.newInstance(filesystem.getRootPath(), "//foo:bar");
-    BuildRuleResolver ruleResolver = new TestBuildRuleResolver();
-    ruleResolver.addToIndex(new RuleWithSupplementaryOutput(target, filesystem));
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
+    graphBuilder.addToIndex(new RuleWithSupplementaryOutput(target, filesystem));
 
     String input = "$(location //foo:bar[sup])";
     MacroHandler macroHandler =
         new MacroHandler(ImmutableMap.of("location", new LocationMacroExpander()));
     String transformedString =
-        macroHandler.expand(target, createCellRoots(filesystem), ruleResolver, input);
+        macroHandler.expand(target, createCellRoots(filesystem), graphBuilder, input);
     assertEquals("/some_root/supplementary-sup", transformedString);
   }
 
@@ -139,14 +139,14 @@ public class LocationMacroExpanderTest {
   public void missingLocationArgumentThrows() {
     ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem("/some_root");
     BuildTarget target = BuildTargetFactory.newInstance(filesystem.getRootPath(), "//foo:bar");
-    BuildRuleResolver ruleResolver = new TestBuildRuleResolver();
-    ruleResolver.addToIndex(new RuleWithSupplementaryOutput(target, filesystem));
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
+    graphBuilder.addToIndex(new RuleWithSupplementaryOutput(target, filesystem));
 
     String input = "$(location )";
     MacroHandler macroHandler =
         new MacroHandler(ImmutableMap.of("location", new LocationMacroExpander()));
     try {
-      macroHandler.expand(target, createCellRoots(filesystem), ruleResolver, input);
+      macroHandler.expand(target, createCellRoots(filesystem), graphBuilder, input);
       fail("Location was empty. Expected MacroException");
     } catch (MacroException e) {
       assertEquals("expanding $(location ): expected a single argument: []", e.getMessage());

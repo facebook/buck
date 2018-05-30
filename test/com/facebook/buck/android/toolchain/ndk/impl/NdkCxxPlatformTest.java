@@ -37,10 +37,10 @@ import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.rulekey.RuleKey;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.rules.resolver.impl.TestBuildRuleResolver;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.cxx.CxxLinkOptions;
@@ -104,8 +104,8 @@ public class NdkCxxPlatformTest {
   // Create and return some rule keys from a dummy source for the given platforms.
   private ImmutableMap<TargetCpuType, RuleKey> constructCompileRuleKeys(
       Operation operation, ImmutableMap<TargetCpuType, NdkCxxPlatform> cxxPlatforms) {
-    BuildRuleResolver resolver = new TestBuildRuleResolver();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     String source = "source.cpp";
     DefaultRuleKeyFactory ruleKeyFactory =
@@ -123,7 +123,7 @@ public class NdkCxxPlatformTest {
           CxxSourceRuleFactory.builder()
               .setBaseBuildTarget(target)
               .setProjectFilesystem(new FakeProjectFilesystem())
-              .setResolver(resolver)
+              .setActionGraphBuilder(graphBuilder)
               .setPathResolver(pathResolver)
               .setRuleFinder(ruleFinder)
               .setCxxBuckConfig(CxxPlatformUtils.DEFAULT_CONFIG)
@@ -158,8 +158,8 @@ public class NdkCxxPlatformTest {
   // Create and return some rule keys from a dummy source for the given platforms.
   private ImmutableMap<TargetCpuType, RuleKey> constructLinkRuleKeys(
       ImmutableMap<TargetCpuType, NdkCxxPlatform> cxxPlatforms) throws NoSuchBuildTargetException {
-    BuildRuleResolver resolver = new TestBuildRuleResolver();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     DefaultRuleKeyFactory ruleKeyFactory =
         new TestDefaultRuleKeyFactory(
@@ -178,7 +178,7 @@ public class NdkCxxPlatformTest {
               CxxPlatformUtils.DEFAULT_CONFIG,
               entry.getValue().getCxxPlatform(),
               filesystem,
-              resolver,
+              graphBuilder,
               pathResolver,
               ruleFinder,
               target,

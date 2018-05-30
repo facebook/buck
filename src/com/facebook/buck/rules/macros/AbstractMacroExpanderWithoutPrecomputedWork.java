@@ -17,7 +17,7 @@ package com.facebook.buck.rules.macros;
 
 import com.facebook.buck.core.cell.resolver.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.rules.BuildRuleResolver;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.model.macros.MacroException;
 import com.facebook.buck.rules.args.Arg;
 
@@ -33,7 +33,7 @@ public abstract class AbstractMacroExpanderWithoutPrecomputedWork<T>
 
   @Override
   public final Object precomputeWorkFrom(
-      BuildTarget target, CellPathResolver cellNames, BuildRuleResolver resolver, T input) {
+      BuildTarget target, CellPathResolver cellNames, ActionGraphBuilder graphBuilder, T input) {
     return NO_PRECOMPUTED_WORK;
   }
 
@@ -41,14 +41,14 @@ public abstract class AbstractMacroExpanderWithoutPrecomputedWork<T>
   public final Arg expandFrom(
       BuildTarget target,
       CellPathResolver cellNames,
-      BuildRuleResolver resolver,
+      ActionGraphBuilder graphBuilder,
       T input,
       Object precomputedWork)
       throws MacroException {
-    return expandFrom(target, cellNames, resolver, input);
+    return expandFrom(target, cellNames, graphBuilder, input);
   }
 
   public abstract Arg expandFrom(
-      BuildTarget target, CellPathResolver cellNames, BuildRuleResolver resolver, T input)
+      BuildTarget target, CellPathResolver cellNames, ActionGraphBuilder graphBuilder, T input)
       throws MacroException;
 }

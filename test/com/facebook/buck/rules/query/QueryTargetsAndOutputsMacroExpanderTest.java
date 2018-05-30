@@ -24,9 +24,9 @@ import com.facebook.buck.core.cell.resolver.CellPathResolver;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.rules.resolver.impl.TestBuildRuleResolver;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -56,7 +56,7 @@ public class QueryTargetsAndOutputsMacroExpanderTest {
 
   private QueryTargetsAndOutputsMacroExpander expander;
   private ProjectFilesystem filesystem;
-  private BuildRuleResolver ruleResolver;
+  private ActionGraphBuilder graphBuilder;
   private CellPathResolver cellNames;
   private BuildRule rule;
   private BuildRule dep;
@@ -86,10 +86,10 @@ public class QueryTargetsAndOutputsMacroExpanderTest {
             .build();
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(depNode, ruleNode);
-    ruleResolver = new TestBuildRuleResolver(targetGraph, filesystem);
+    graphBuilder = new TestActionGraphBuilder(targetGraph, filesystem);
 
-    dep = ruleResolver.requireRule(depNode.getBuildTarget());
-    rule = ruleResolver.requireRule(ruleNode.getBuildTarget());
+    dep = graphBuilder.requireRule(depNode.getBuildTarget());
+    rule = graphBuilder.requireRule(ruleNode.getBuildTarget());
   }
 
   @Test
@@ -138,7 +138,7 @@ public class QueryTargetsAndOutputsMacroExpanderTest {
         handler.extractBuildTimeDeps(
             dep.getBuildTarget(),
             cellNames,
-            ruleResolver,
+            graphBuilder,
             "$(query_targets_and_outputs 'classpath(//exciting:target)')",
             cache));
     // Cache should be populated at this point
@@ -165,7 +165,7 @@ public class QueryTargetsAndOutputsMacroExpanderTest {
   private void assertExpandsTo(String input, BuildRule rule, String expected)
       throws MacroException {
 
-    String results = handler.expand(rule.getBuildTarget(), cellNames, ruleResolver, input, cache);
+    String results = handler.expand(rule.getBuildTarget(), cellNames, graphBuilder, input, cache);
 
     assertEquals(expected, results);
   }

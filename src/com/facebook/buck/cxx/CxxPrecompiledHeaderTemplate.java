@@ -19,8 +19,8 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
@@ -69,7 +69,7 @@ public class CxxPrecompiledHeaderTemplate extends PreInclude {
       CxxPlatform cxxPlatform,
       CxxSource.Type sourceType,
       ImmutableList<String> sourceFlags,
-      BuildRuleResolver ruleResolver,
+      ActionGraphBuilder graphBuilder,
       SourcePathRuleFinder ruleFinder,
       SourcePathResolver pathResolver) {
 
@@ -88,7 +88,7 @@ public class CxxPrecompiledHeaderTemplate extends PreInclude {
     // Now build a new pp-delegate specially for this PCH rule.
     PreprocessorDelegate preprocessorDelegate =
         buildPreprocessorDelegate(
-            cxxPlatform, preprocessor, compilerFlags, ruleResolver, pathResolver);
+            cxxPlatform, preprocessor, compilerFlags, graphBuilder, pathResolver);
 
     // Language needs to be part of the key, PCHs built under a different language are incompatible.
     // (Replace `c++` with `cxx`; avoid default scrubbing which would make it the cryptic `c__`.)
@@ -99,7 +99,7 @@ public class CxxPrecompiledHeaderTemplate extends PreInclude {
       depsBuilder.add(rule);
     }
 
-    depsBuilder.add(requireAggregatedDepsRule(cxxPlatform, ruleResolver, ruleFinder));
+    depsBuilder.add(requireAggregatedDepsRule(cxxPlatform, graphBuilder, ruleFinder));
     depsBuilder.add(preprocessorDelegate);
 
     return requirePrecompiledHeader(
@@ -112,6 +112,6 @@ public class CxxPrecompiledHeaderTemplate extends PreInclude {
         getBuildTarget().getUnflavoredBuildTarget(),
         ImmutableSortedSet.of(
             cxxPlatform.getFlavor(), InternalFlavor.of(Flavor.replaceInvalidCharacters(pchBaseID))),
-        ruleResolver);
+        graphBuilder);
   }
 }

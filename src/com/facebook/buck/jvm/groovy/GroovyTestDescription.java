@@ -21,8 +21,8 @@ import com.facebook.buck.core.description.BuildRuleParams;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.HasJavaAbi;
@@ -76,7 +76,7 @@ public class GroovyTestDescription implements DescriptionWithTargetGraph<GroovyT
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
     CellPathResolver cellRoots = context.getCellPathResolver();
 
-    BuildRuleResolver resolver = context.getBuildRuleResolver();
+    ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
     JavacOptions javacOptions =
         JavacOptionsFactory.create(
             toolchainProvider
@@ -84,7 +84,7 @@ public class GroovyTestDescription implements DescriptionWithTargetGraph<GroovyT
                 .getJavacOptions(),
             buildTarget,
             projectFilesystem,
-            resolver,
+            graphBuilder,
             args);
 
     DefaultJavaLibraryRules defaultJavaLibraryRules =
@@ -93,7 +93,7 @@ public class GroovyTestDescription implements DescriptionWithTargetGraph<GroovyT
                 projectFilesystem,
                 context.getToolchainProvider(),
                 params,
-                resolver,
+                graphBuilder,
                 cellRoots,
                 new GroovyConfiguredCompilerFactory(groovyBuckConfig),
                 javaBuckConfig,
@@ -105,7 +105,7 @@ public class GroovyTestDescription implements DescriptionWithTargetGraph<GroovyT
       return defaultJavaLibraryRules.buildAbi();
     }
 
-    JavaLibrary testsLibrary = resolver.addToIndex(defaultJavaLibraryRules.buildLibrary());
+    JavaLibrary testsLibrary = graphBuilder.addToIndex(defaultJavaLibraryRules.buildLibrary());
 
     StringWithMacrosConverter macrosConverter =
         StringWithMacrosConverter.builder()
@@ -133,7 +133,7 @@ public class GroovyTestDescription implements DescriptionWithTargetGraph<GroovyT
             .orElse(groovyBuckConfig.getDelegate().getDefaultTestRuleTimeoutMs()),
         args.getTestCaseTimeoutMs(),
         ImmutableMap.copyOf(
-            Maps.transformValues(args.getEnv(), x -> macrosConverter.convert(x, resolver))),
+            Maps.transformValues(args.getEnv(), x -> macrosConverter.convert(x, graphBuilder))),
         args.getRunTestSeparately(),
         args.getForkMode(),
         args.getStdOutLogLevel(),

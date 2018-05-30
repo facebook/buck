@@ -115,7 +115,7 @@ class DefaultClassUsageFileReader {
    *
    * @param cellRootedPath a path beginning with '/cell_name/' followed by a relative path in that
    *     cell
-   * @param cellPathResolver the resolver capable of mapping cell_name to absolute root path
+   * @param cellPathResolver the graphBuilder capable of mapping cell_name to absolute root path
    * @return an absolute path: 'path/to/cell/root/' + 'relative/path/in/cell'
    */
   private static Path getAbsolutePathForCellRootedPath(

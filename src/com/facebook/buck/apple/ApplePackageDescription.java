@@ -33,8 +33,8 @@ import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.Flavored;
 import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
@@ -111,23 +111,27 @@ public class ApplePackageDescription
       BuildTarget buildTarget,
       BuildRuleParams params,
       ApplePackageDescriptionArg args) {
-    BuildRuleResolver resolver = context.getBuildRuleResolver();
+    ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
-    BuildRule bundle = resolver.getRule(propagateFlavorsToTarget(buildTarget, args.getBundle()));
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    BuildRule bundle =
+        graphBuilder.getRule(propagateFlavorsToTarget(buildTarget, args.getBundle()));
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
 
     Optional<ApplePackageConfigAndPlatformInfo> applePackageConfigAndPlatformInfo =
         getApplePackageConfig(
             buildTarget,
             MacroArg.toMacroArgFunction(
-                PARSE_TIME_MACRO_HANDLER, buildTarget, context.getCellPathResolver(), resolver));
+                PARSE_TIME_MACRO_HANDLER,
+                buildTarget,
+                context.getCellPathResolver(),
+                graphBuilder));
 
     if (applePackageConfigAndPlatformInfo.isPresent()) {
       return new ExternallyBuiltApplePackage(
           buildTarget,
           projectFilesystem,
           sandboxExecutionStrategy,
-          resolver,
+          graphBuilder,
           params.withExtraDeps(
               () ->
                   ImmutableSortedSet.<BuildRule>naturalOrder()

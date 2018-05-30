@@ -20,8 +20,8 @@ import com.facebook.buck.core.cell.resolver.CellPathResolver;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
@@ -74,7 +74,7 @@ public class CGoLibrary extends NoopBuildRule {
   public static BuildRule create(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      BuildRuleResolver ruleResolver,
+      ActionGraphBuilder graphBuilder,
       SourcePathResolver pathResolver,
       CellPathResolver cellRoots,
       CxxBuckConfig cxxBuckConfig,
@@ -90,11 +90,11 @@ public class CGoLibrary extends NoopBuildRule {
     }
 
     // generate C sources with cgo tool (go build writes c files to _obj dir)
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     ImmutableMap<Path, SourcePath> headers =
         CxxDescriptionEnhancer.parseHeaders(
             buildTarget,
-            ruleResolver,
+            graphBuilder,
             ruleFinder,
             pathResolver,
             Optional.of(platform.getCxxPlatform()),
@@ -102,7 +102,7 @@ public class CGoLibrary extends NoopBuildRule {
 
     CGoGenSource genSource =
         (CGoGenSource)
-            ruleResolver.computeIfAbsent(
+            graphBuilder.computeIfAbsent(
                 buildTarget.withAppendedFlavors(InternalFlavor.of("cgo-gen-sources")),
                 target ->
                     new CGoGenSource(
@@ -124,13 +124,13 @@ public class CGoLibrary extends NoopBuildRule {
     //   * _cgo_main.o
     //   * all of the *.cgo2.o
     BuildRule cgoBin =
-        ruleResolver.computeIfAbsent(
+        graphBuilder.computeIfAbsent(
             buildTarget.withAppendedFlavors(InternalFlavor.of("cgo-first-step")),
             target ->
                 nativeBinCompilation(
                     target,
                     projectFilesystem,
-                    ruleResolver,
+                    graphBuilder,
                     pathResolver,
                     cellRoots,
                     cxxBuckConfig,
@@ -150,7 +150,7 @@ public class CGoLibrary extends NoopBuildRule {
 
     // generate cgo_import.h with previously generated object file (_cgo.o)
     BuildRule cgoImport =
-        ruleResolver.computeIfAbsent(
+        graphBuilder.computeIfAbsent(
             buildTarget.withAppendedFlavors(InternalFlavor.of("cgo-gen-import")),
             target ->
                 new CGoGenImport(
@@ -171,13 +171,13 @@ public class CGoLibrary extends NoopBuildRule {
     //  * _cgo_export.o
     //  * all of the *.cgo2.o files
     BuildRule cgoAllBin =
-        ruleResolver.computeIfAbsent(
+        graphBuilder.computeIfAbsent(
             buildTarget.withAppendedFlavors(InternalFlavor.of("cgo-second-step")),
             target ->
                 nativeBinCompilation(
                     target,
                     projectFilesystem,
-                    ruleResolver,
+                    graphBuilder,
                     pathResolver,
                     cellRoots,
                     cxxBuckConfig,
@@ -202,7 +202,7 @@ public class CGoLibrary extends NoopBuildRule {
     //
     // the go sources should be appended to sources list and _all.o file should
     // be appended to the output binary (pack step)
-    return ruleResolver.computeIfAbsent(
+    return graphBuilder.computeIfAbsent(
         buildTarget,
         target ->
             new CGoLibrary(
@@ -218,7 +218,7 @@ public class CGoLibrary extends NoopBuildRule {
   private static BuildRule nativeBinCompilation(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      BuildRuleResolver ruleResolver,
+      ActionGraphBuilder graphBuilder,
       SourcePathResolver pathResolver,
       CellPathResolver cellRoots,
       CxxBuckConfig cxxBuckConfig,
@@ -230,11 +230,11 @@ public class CGoLibrary extends NoopBuildRule {
       Iterable<BuildTarget> cgoDeps,
       ImmutableList<StringWithMacros> flags) {
 
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     ImmutableMap<String, CxxSource> srcs =
         CxxDescriptionEnhancer.parseCxxSources(
             buildTarget,
-            ruleResolver,
+            graphBuilder,
             ruleFinder,
             pathResolver,
             cxxPlatform,
@@ -243,7 +243,7 @@ public class CGoLibrary extends NoopBuildRule {
 
     ImmutableSet.Builder<BuildRule> cgoRules = ImmutableSet.builder();
     for (BuildTarget target : cgoDeps) {
-      cgoRules.add(ruleResolver.requireRule(target));
+      cgoRules.add(graphBuilder.requireRule(target));
     }
 
     ImmutableMap.Builder<Path, SourcePath> headers = ImmutableMap.builder();
@@ -255,7 +255,7 @@ public class CGoLibrary extends NoopBuildRule {
         CxxDescriptionEnhancer.createBuildRulesForCxxBinary(
             buildTarget,
             projectFilesystem,
-            ruleResolver,
+            graphBuilder,
             cellRoots,
             cxxBuckConfig,
             cxxPlatform,

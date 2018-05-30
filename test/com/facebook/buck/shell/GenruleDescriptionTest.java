@@ -27,9 +27,9 @@ import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.rules.resolver.impl.TestBuildRuleResolver;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -125,11 +125,11 @@ public class GenruleDescriptionTest {
 
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(transitiveDepNode, depNode, genruleNode);
-    BuildRuleResolver resolver = new TestBuildRuleResolver(targetGraph);
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
 
-    BuildRule dep = resolver.requireRule(depNode.getBuildTarget());
-    BuildRule transitiveDep = resolver.requireRule(transitiveDepNode.getBuildTarget());
-    BuildRule genrule = resolver.requireRule(genruleNode.getBuildTarget());
+    BuildRule dep = graphBuilder.requireRule(depNode.getBuildTarget());
+    BuildRule transitiveDep = graphBuilder.requireRule(transitiveDepNode.getBuildTarget());
+    BuildRule genrule = graphBuilder.requireRule(genruleNode.getBuildTarget());
 
     assertThat(genrule.getBuildDeps(), Matchers.containsInAnyOrder(dep, transitiveDep));
   }

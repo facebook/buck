@@ -20,7 +20,7 @@ import com.facebook.buck.core.cell.resolver.CellPathResolver;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
-import com.facebook.buck.core.rules.BuildRuleResolver;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.model.macros.MacroException;
 import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.query.NoopQueryEvaluator;
@@ -55,11 +55,11 @@ public abstract class QueryMacroExpander<T extends QueryMacro>
   private Stream<BuildTarget> extractTargets(
       BuildTarget target,
       CellPathResolver cellNames,
-      Optional<BuildRuleResolver> resolver,
+      Optional<ActionGraphBuilder> graphBuilder,
       T input) {
     GraphEnhancementQueryEnvironment env =
         new GraphEnhancementQueryEnvironment(
-            resolver,
+            graphBuilder,
             targetGraph,
             TYPE_COERCER_FACTORY,
             cellNames,
@@ -87,12 +87,12 @@ public abstract class QueryMacroExpander<T extends QueryMacro>
   Stream<QueryTarget> resolveQuery(
       BuildTarget target,
       CellPathResolver cellNames,
-      BuildRuleResolver resolver,
+      ActionGraphBuilder graphBuilder,
       String queryExpression)
       throws MacroException {
     GraphEnhancementQueryEnvironment env =
         new GraphEnhancementQueryEnvironment(
-            Optional.of(resolver),
+            Optional.of(graphBuilder),
             targetGraph,
             TYPE_COERCER_FACTORY,
             cellNames,
@@ -114,9 +114,10 @@ public abstract class QueryMacroExpander<T extends QueryMacro>
 
   @Override
   public QueryResults precomputeWorkFrom(
-      BuildTarget target, CellPathResolver cellNames, BuildRuleResolver resolver, T input)
+      BuildTarget target, CellPathResolver cellNames, ActionGraphBuilder graphBuilder, T input)
       throws MacroException {
-    return new QueryResults(resolveQuery(target, cellNames, resolver, input.getQuery().getQuery()));
+    return new QueryResults(
+        resolveQuery(target, cellNames, graphBuilder, input.getQuery().getQuery()));
   }
 
   abstract T fromQuery(Query query);

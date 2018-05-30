@@ -60,7 +60,7 @@ public class AndroidInstrumentationTestDescription
       BuildTarget buildTarget,
       BuildRuleParams params,
       AndroidInstrumentationTestDescriptionArg args) {
-    BuildRule apk = context.getBuildRuleResolver().getRule(args.getApk());
+    BuildRule apk = context.getActionGraphBuilder().getRule(args.getApk());
     if (!(apk instanceof HasInstallableApk)) {
       throw new HumanReadableException(
           "In %s, instrumentation_apk='%s' must be an android_binary(), apk_genrule() or "

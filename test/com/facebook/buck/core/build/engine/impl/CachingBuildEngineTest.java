@@ -80,8 +80,8 @@ import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.BuildRuleKeys;
 import com.facebook.buck.core.rulekey.RuleKey;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.attr.BuildOutputInitializer;
 import com.facebook.buck.core.rules.attr.HasPostBuildSteps;
@@ -90,7 +90,7 @@ import com.facebook.buck.core.rules.attr.InitializableFromDisk;
 import com.facebook.buck.core.rules.attr.SupportsDependencyFileRuleKey;
 import com.facebook.buck.core.rules.attr.SupportsInputBasedRuleKey;
 import com.facebook.buck.core.rules.build.strategy.BuildRuleStrategy;
-import com.facebook.buck.core.rules.resolver.impl.TestBuildRuleResolver;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.rules.schedule.OverrideScheduleRule;
 import com.facebook.buck.core.rules.schedule.RuleScheduleInfo;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
@@ -236,7 +236,7 @@ public class CachingBuildEngineTest {
   private static final BuildTarget BUILD_TARGET =
       BuildTargetFactory.newInstance("//src/com/facebook/orca:orca");
   private static final SourcePathRuleFinder DEFAULT_RULE_FINDER =
-      new SourcePathRuleFinder(new TestBuildRuleResolver());
+      new SourcePathRuleFinder(new TestActionGraphBuilder());
   private static final SourcePathResolver DEFAULT_SOURCE_PATH_RESOLVER =
       DefaultSourcePathResolver.from(DEFAULT_RULE_FINDER);
   private static final long NO_INPUT_FILE_SIZE_LIMIT = Long.MAX_VALUE;
@@ -274,7 +274,7 @@ public class CachingBuildEngineTest {
     protected RemoteBuildRuleCompletionWaiter defaultRemoteBuildRuleCompletionWaiter;
     protected FileHashCache fileHashCache;
     protected BuildEngineBuildContext buildContext;
-    protected BuildRuleResolver resolver;
+    protected ActionGraphBuilder graphBuilder;
     protected SourcePathRuleFinder ruleFinder;
     protected SourcePathResolver pathResolver;
     protected DefaultRuleKeyFactory defaultRuleKeyFactory;
@@ -310,8 +310,8 @@ public class CachingBuildEngineTest {
               .setClock(new IncrementingFakeClock())
               .build();
       buildContext.getEventBus().register(listener);
-      resolver = new TestBuildRuleResolver();
-      ruleFinder = new SourcePathRuleFinder(resolver);
+      graphBuilder = new TestActionGraphBuilder();
+      ruleFinder = new SourcePathRuleFinder(graphBuilder);
       pathResolver = DefaultSourcePathResolver.from(ruleFinder);
       defaultRuleKeyFactory =
           new DefaultRuleKeyFactory(FIELD_LOADER, fileHashCache, pathResolver, ruleFinder);
@@ -328,7 +328,7 @@ public class CachingBuildEngineTest {
     protected CachingBuildEngineFactory cachingBuildEngineFactory(
         RemoteBuildRuleCompletionWaiter remoteBuildRuleCompletionWaiter) {
       return new CachingBuildEngineFactory(
-              resolver, buildInfoStoreManager, remoteBuildRuleCompletionWaiter)
+              graphBuilder, buildInfoStoreManager, remoteBuildRuleCompletionWaiter)
           .setCachingBuildEngineDelegate(new LocalCachingBuildEngineDelegate(fileHashCache));
     }
 
@@ -385,7 +385,7 @@ public class CachingBuildEngineTest {
       BuildRule ruleToTest =
           createRule(
               filesystem,
-              resolver,
+              graphBuilder,
               ImmutableSortedSet.of(dep),
               buildSteps,
               /* postBuildSteps */ ImmutableList.of(),
@@ -537,7 +537,7 @@ public class CachingBuildEngineTest {
       BuildRule buildRule =
           createRule(
               filesystem,
-              resolver,
+              graphBuilder,
               /* deps */ ImmutableSortedSet.of(),
               ImmutableList.of(step),
               /* postBuildSteps */ ImmutableList.of(),
@@ -626,7 +626,7 @@ public class CachingBuildEngineTest {
       BuildRule buildRule =
           createRule(
               filesystem,
-              resolver,
+              graphBuilder,
               /* deps */ ImmutableSortedSet.of(),
               /* buildSteps */ ImmutableList.of(),
               /* postBuildSteps */ ImmutableList.of(buildStep),
@@ -844,7 +844,7 @@ public class CachingBuildEngineTest {
       BuildTarget buildTarget = BuildTargetFactory.newInstance("//:transitive_dep");
       BuildRuleParams ruleParams = TestBuildRuleParams.create();
       FakeBuildRule transitiveRuntimeDep = new FakeBuildRule(buildTarget, filesystem, ruleParams);
-      resolver.addToIndex(transitiveRuntimeDep);
+      graphBuilder.addToIndex(transitiveRuntimeDep);
       RuleKey transitiveRuntimeDepKey = defaultRuleKeyFactory.build(transitiveRuntimeDep);
 
       BuildInfoRecorder recorder = createBuildInfoRecorder(transitiveRuntimeDep.getBuildTarget());
@@ -856,7 +856,7 @@ public class CachingBuildEngineTest {
       FakeBuildRule runtimeDep =
           new FakeHasRuntimeDeps(
               BuildTargetFactory.newInstance("//:runtime_dep"), filesystem, transitiveRuntimeDep);
-      resolver.addToIndex(runtimeDep);
+      graphBuilder.addToIndex(runtimeDep);
       RuleKey runtimeDepKey = defaultRuleKeyFactory.build(runtimeDep);
       BuildInfoRecorder runtimeDepRec = createBuildInfoRecorder(runtimeDep.getBuildTarget());
       runtimeDepRec.addBuildMetadata(BuildInfo.MetadataKey.RULE_KEY, runtimeDepKey.toString());
@@ -978,23 +978,23 @@ public class CachingBuildEngineTest {
       BuildRule interleavedRuleOne =
           createRule(
               filesystem,
-              resolver,
+              graphBuilder,
               /* deps */ ImmutableSortedSet.of(),
               /* buildSteps */ ImmutableList.of(exchangerStep),
               /* postBuildSteps */ ImmutableList.of(),
               /* pathToOutputFile */ null,
               ImmutableList.of(InternalFlavor.of("interleaved-1")));
-      resolver.addToIndex(interleavedRuleOne);
+      graphBuilder.addToIndex(interleavedRuleOne);
       BuildRule interleavedRuleTwo =
           createRule(
               filesystem,
-              resolver,
+              graphBuilder,
               /* deps */ ImmutableSortedSet.of(),
               /* buildSteps */ ImmutableList.of(exchangerStep),
               /* postBuildSteps */ ImmutableList.of(),
               /* pathToOutputFile */ null,
               ImmutableList.of(InternalFlavor.of("interleaved-2")));
-      resolver.addToIndex(interleavedRuleTwo);
+      graphBuilder.addToIndex(interleavedRuleTwo);
 
       // The engine needs a couple of threads to ensure that it can schedule multiple steps at the
       // same time.
@@ -1027,13 +1027,13 @@ public class CachingBuildEngineTest {
       BuildRule ruleToTest =
           createRule(
               filesystem,
-              resolver,
+              graphBuilder,
               /* deps */ ImmutableSortedSet.of(),
               /* buildSteps */ ImmutableList.of(failingStep),
               /* postBuildSteps */ ImmutableList.of(),
               /* pathToOutputFile */ null,
               ImmutableList.of());
-      resolver.addToIndex(ruleToTest);
+      graphBuilder.addToIndex(ruleToTest);
 
       FakeBuildRule withRuntimeDep =
           new FakeHasRuntimeDeps(
@@ -1072,13 +1072,13 @@ public class CachingBuildEngineTest {
         BuildRule failingDep =
             createRule(
                 filesystem,
-                resolver,
+                graphBuilder,
                 /* deps */ ImmutableSortedSet.of(),
                 /* buildSteps */ ImmutableList.of(failingStep),
                 /* postBuildSteps */ ImmutableList.of(),
                 /* pathToOutputFile */ null,
                 ImmutableList.of(InternalFlavor.of("failing-" + i)));
-        resolver.addToIndex(failingDep);
+        graphBuilder.addToIndex(failingDep);
         depsBuilder.add(failingDep);
       }
 
@@ -1130,13 +1130,13 @@ public class CachingBuildEngineTest {
       BuildRule ruleToTest =
           createRule(
               filesystem,
-              resolver,
+              graphBuilder,
               /* deps */ ImmutableSortedSet.of(),
               /* buildSteps */ ImmutableList.of(failingStep),
               /* postBuildSteps */ ImmutableList.of(),
               /* pathToOutputFile */ null,
               ImmutableList.of());
-      resolver.addToIndex(ruleToTest);
+      graphBuilder.addToIndex(ruleToTest);
 
       FakeBuildRule withRuntimeDep =
           new FakeHasRuntimeDeps(
@@ -1166,7 +1166,7 @@ public class CachingBuildEngineTest {
       BuildRule ruleToTest =
           createRule(
               filesystem,
-              resolver,
+              graphBuilder,
               /* deps */ ImmutableSortedSet.of(),
               /* buildSteps */ ImmutableList.of(),
               /* postBuildSteps */ ImmutableList.of(failingStep),
@@ -1494,17 +1494,17 @@ public class CachingBuildEngineTest {
       BuildRule rule3 =
           GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:rule3"))
               .setOut("out3")
-              .build(resolver);
+              .build(graphBuilder);
       BuildRule rule2 =
           GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:rule2"))
               .setOut("out2")
               .setSrcs(ImmutableList.of(rule3.getSourcePathToOutput()))
-              .build(resolver);
+              .build(graphBuilder);
       BuildRule rule1 =
           GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:rule1"))
               .setOut("out1")
               .setSrcs(ImmutableList.of(rule2.getSourcePathToOutput()))
-              .build(resolver);
+              .build(graphBuilder);
 
       // Create the build engine.
       try (CachingBuildEngine cachingBuildEngine =
@@ -1793,7 +1793,7 @@ public class CachingBuildEngineTest {
       BuildRuleParams params = TestBuildRuleParams.create();
       RuleKey inputRuleKey = new RuleKey("aaaa");
       BuildRule rule = new FailingInputRuleKeyBuildRule(target, filesystem, params);
-      resolver.addToIndex(rule);
+      graphBuilder.addToIndex(rule);
 
       // Create the output file.
       filesystem.writeContentsToPath(
@@ -1851,7 +1851,7 @@ public class CachingBuildEngineTest {
       RuleKey inputRuleKey = new RuleKey("aaaa");
       BuildRuleParams params = TestBuildRuleParams.create();
       BuildRule rule = new FailingInputRuleKeyBuildRule(target, filesystem, params);
-      resolver.addToIndex(rule);
+      graphBuilder.addToIndex(rule);
 
       // Prepopulate the recorded paths metadata.
       Path metadataDirectory = BuildInfo.getPathToArtifactMetadataDirectory(target, filesystem);
@@ -2080,7 +2080,7 @@ public class CachingBuildEngineTest {
               return ExplicitBuildTargetSourcePath.of(getBuildTarget(), output);
             }
           };
-      resolver.addToIndex(rule);
+      graphBuilder.addToIndex(rule);
 
       // Create the output file.
       filesystem.writeContentsToPath(
@@ -2180,7 +2180,7 @@ public class CachingBuildEngineTest {
       Genrule genrule =
           GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
               .setOut("input")
-              .build(resolver, filesystem);
+              .build(graphBuilder, filesystem);
       Path input =
           pathResolver.getRelativePath(Preconditions.checkNotNull(genrule.getSourcePathToOutput()));
       filesystem.mkdirs(input.getParent());
@@ -2348,7 +2348,7 @@ public class CachingBuildEngineTest {
       Genrule genrule =
           GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
               .setOut("input")
-              .build(resolver, filesystem);
+              .build(graphBuilder, filesystem);
       Path input =
           pathResolver.getRelativePath(Preconditions.checkNotNull(genrule.getSourcePathToOutput()));
 
@@ -2515,7 +2515,7 @@ public class CachingBuildEngineTest {
       Genrule genrule =
           GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
               .setOut("input")
-              .build(resolver, filesystem);
+              .build(graphBuilder, filesystem);
       Path input =
           pathResolver.getRelativePath(Preconditions.checkNotNull(genrule.getSourcePathToOutput()));
 
@@ -2602,7 +2602,7 @@ public class CachingBuildEngineTest {
       Genrule genrule =
           GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
               .setOut("input")
-              .build(resolver, filesystem);
+              .build(graphBuilder, filesystem);
       Path input =
           pathResolver.getRelativePath(Preconditions.checkNotNull(genrule.getSourcePathToOutput()));
 
@@ -2727,7 +2727,7 @@ public class CachingBuildEngineTest {
       Genrule genrule =
           GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
               .setOut("input")
-              .build(resolver, filesystem);
+              .build(graphBuilder, filesystem);
       Path input =
           pathResolver.getRelativePath(Preconditions.checkNotNull(genrule.getSourcePathToOutput()));
       filesystem.mkdirs(input.getParent());
@@ -2839,7 +2839,7 @@ public class CachingBuildEngineTest {
       Genrule genrule =
           GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
               .setOut("input")
-              .build(resolver, filesystem);
+              .build(graphBuilder, filesystem);
       Path input =
           pathResolver.getRelativePath(Preconditions.checkNotNull(genrule.getSourcePathToOutput()));
       filesystem.mkdirs(input.getParent());
@@ -2961,7 +2961,7 @@ public class CachingBuildEngineTest {
       Genrule genrule =
           GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
               .setOut("input")
-              .build(resolver, filesystem);
+              .build(graphBuilder, filesystem);
       Path input =
           pathResolver.getRelativePath(Preconditions.checkNotNull(genrule.getSourcePathToOutput()));
       filesystem.mkdirs(input.getParent());
@@ -4212,7 +4212,7 @@ public class CachingBuildEngineTest {
       buildRule =
           createInputBasedRule(
               filesystem,
-              resolver,
+              graphBuilder,
               ImmutableSortedSet.of(dependency),
               ImmutableList.of(),
               ImmutableList.of(),
@@ -4295,7 +4295,7 @@ public class CachingBuildEngineTest {
 
   private static BuildRule createRule(
       ProjectFilesystem filesystem,
-      BuildRuleResolver ruleResolver,
+      ActionGraphBuilder graphBuilder,
       ImmutableSortedSet<BuildRule> deps,
       List<Step> buildSteps,
       ImmutableList<Step> postBuildSteps,
@@ -4307,13 +4307,13 @@ public class CachingBuildEngineTest {
     BuildableAbstractCachingBuildRule rule =
         new BuildableAbstractCachingBuildRule(
             buildTarget, filesystem, deps, pathToOutputFile, buildSteps, postBuildSteps);
-    ruleResolver.addToIndex(rule);
+    graphBuilder.addToIndex(rule);
     return rule;
   }
 
   private static AbstractCachingBuildRuleWithInputs createInputBasedRule(
       ProjectFilesystem filesystem,
-      BuildRuleResolver ruleResolver,
+      ActionGraphBuilder graphBuilder,
       ImmutableSortedSet<BuildRule> deps,
       List<Step> buildSteps,
       ImmutableList<Step> postBuildSteps,
@@ -4332,7 +4332,7 @@ public class CachingBuildEngineTest {
             deps,
             inputs,
             depfileInputs);
-    ruleResolver.addToIndex(rule);
+    graphBuilder.addToIndex(rule);
     return rule;
   }
 

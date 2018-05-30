@@ -26,8 +26,8 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
-import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.rules.resolver.impl.TestBuildRuleResolver;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.jvm.java.JavaBinaryRuleBuilder;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -100,11 +100,11 @@ public class QueryCacheTest {
             JavaLibraryBuilder.createBuilder(targetG).addDep(targetE).build(),
             JavaLibraryBuilder.createBuilder(targetH).build());
 
-    BuildRuleResolver resolver = new TestBuildRuleResolver(targetGraph);
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
 
     GraphEnhancementQueryEnvironment env =
         new GraphEnhancementQueryEnvironment(
-            Optional.of(resolver),
+            Optional.of(graphBuilder),
             Optional.of(targetGraph),
             TYPE_COERCER_FACTORY,
             TestCellPathResolver.get(new FakeProjectFilesystem()),
@@ -164,11 +164,11 @@ public class QueryCacheTest {
             JavaLibraryBuilder.createBuilder(targetA).build(),
             JavaLibraryBuilder.createBuilder(targetB).build());
 
-    BuildRuleResolver resolver = new TestBuildRuleResolver(targetGraph);
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
 
     GraphEnhancementQueryEnvironment fooEnv =
         new GraphEnhancementQueryEnvironment(
-            Optional.of(resolver),
+            Optional.of(graphBuilder),
             Optional.of(targetGraph),
             TYPE_COERCER_FACTORY,
             TestCellPathResolver.get(new FakeProjectFilesystem()),
@@ -177,7 +177,7 @@ public class QueryCacheTest {
 
     GraphEnhancementQueryEnvironment barEnv =
         new GraphEnhancementQueryEnvironment(
-            Optional.of(resolver),
+            Optional.of(graphBuilder),
             Optional.of(targetGraph),
             TYPE_COERCER_FACTORY,
             TestCellPathResolver.get(new FakeProjectFilesystem()),

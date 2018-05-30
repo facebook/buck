@@ -116,7 +116,8 @@ public class DistBuildSlaveExecutor {
                   initializer.getDelegateAndGraphs(),
                   graphs -> {
                     SourcePathRuleFinder ruleFinder =
-                        new SourcePathRuleFinder(graphs.getActionGraphAndResolver().getResolver());
+                        new SourcePathRuleFinder(
+                            graphs.getActionGraphAndBuilder().getActionGraphBuilder());
                     return new ParallelRuleKeyCalculator<RuleKey>(
                         args.getExecutorService(),
                         new DefaultRuleKeyFactory(
@@ -126,7 +127,8 @@ public class DistBuildSlaveExecutor {
                             ruleFinder,
                             args.getRuleKeyCacheScope().getCache(),
                             Optional.empty()),
-                        new DefaultRuleDepsCache(graphs.getActionGraphAndResolver().getResolver()),
+                        new DefaultRuleDepsCache(
+                            graphs.getActionGraphAndBuilder().getActionGraphBuilder()),
                         (buckEventBus, rule) -> () -> {});
                   },
                   MoreExecutors.directExecutor()),
@@ -259,7 +261,7 @@ public class DistBuildSlaveExecutor {
             new LocalBuildExecutor(
                 builderArgs,
                 executionContext,
-                delegateAndGraphs.getActionGraphAndResolver(),
+                delegateAndGraphs.getActionGraphAndBuilder(),
                 delegateAndGraphs.getCachingBuildEngineDelegate(),
                 args.getExecutorService(),
                 KEEP_GOING,

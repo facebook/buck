@@ -16,17 +16,17 @@
 
 package com.facebook.buck.distributed.build_slave;
 
-import static com.facebook.buck.distributed.testutil.CustomBuildRuleResolverFactory.CACHABLE_A;
-import static com.facebook.buck.distributed.testutil.CustomBuildRuleResolverFactory.CACHABLE_B;
-import static com.facebook.buck.distributed.testutil.CustomBuildRuleResolverFactory.CACHABLE_BUILD_LOCALLY_A;
-import static com.facebook.buck.distributed.testutil.CustomBuildRuleResolverFactory.CACHABLE_C;
-import static com.facebook.buck.distributed.testutil.CustomBuildRuleResolverFactory.CACHABLE_D;
-import static com.facebook.buck.distributed.testutil.CustomBuildRuleResolverFactory.CHAIN_TOP_TARGET;
-import static com.facebook.buck.distributed.testutil.CustomBuildRuleResolverFactory.LEAF_TARGET;
-import static com.facebook.buck.distributed.testutil.CustomBuildRuleResolverFactory.LEFT_TARGET;
-import static com.facebook.buck.distributed.testutil.CustomBuildRuleResolverFactory.RIGHT_TARGET;
-import static com.facebook.buck.distributed.testutil.CustomBuildRuleResolverFactory.ROOT_TARGET;
-import static com.facebook.buck.distributed.testutil.CustomBuildRuleResolverFactory.UNCACHABLE_A;
+import static com.facebook.buck.distributed.testutil.CustomActiongGraphBuilderFactory.CACHABLE_A;
+import static com.facebook.buck.distributed.testutil.CustomActiongGraphBuilderFactory.CACHABLE_B;
+import static com.facebook.buck.distributed.testutil.CustomActiongGraphBuilderFactory.CACHABLE_BUILD_LOCALLY_A;
+import static com.facebook.buck.distributed.testutil.CustomActiongGraphBuilderFactory.CACHABLE_C;
+import static com.facebook.buck.distributed.testutil.CustomActiongGraphBuilderFactory.CACHABLE_D;
+import static com.facebook.buck.distributed.testutil.CustomActiongGraphBuilderFactory.CHAIN_TOP_TARGET;
+import static com.facebook.buck.distributed.testutil.CustomActiongGraphBuilderFactory.LEAF_TARGET;
+import static com.facebook.buck.distributed.testutil.CustomActiongGraphBuilderFactory.LEFT_TARGET;
+import static com.facebook.buck.distributed.testutil.CustomActiongGraphBuilderFactory.RIGHT_TARGET;
+import static com.facebook.buck.distributed.testutil.CustomActiongGraphBuilderFactory.ROOT_TARGET;
+import static com.facebook.buck.distributed.testutil.CustomActiongGraphBuilderFactory.UNCACHABLE_A;
 import static org.easymock.EasyMock.capture;
 import static org.easymock.EasyMock.expectLastCall;
 import static org.easymock.EasyMock.replay;
@@ -37,7 +37,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.distributed.ArtifactCacheByBuildRule;
-import com.facebook.buck.distributed.testutil.CustomBuildRuleResolverFactory;
+import com.facebook.buck.distributed.testutil.CustomActiongGraphBuilderFactory;
 import com.facebook.buck.distributed.testutil.DummyArtifactCacheByBuildRule;
 import com.facebook.buck.distributed.thrift.WorkUnit;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -130,7 +130,7 @@ public class CacheOptimizedBuildTargetsQueueFactoryTest {
     replay(ruleFinishedPublisher);
 
     BuildRuleResolver resolver =
-        CustomBuildRuleResolverFactory.createResolverWithUncacheableRuntimeDeps();
+        CustomActiongGraphBuilderFactory.createGraphWithUncacheableRuntimeDeps();
     BuildTarget rootTarget = BuildTargetFactory.newInstance(ROOT_TARGET);
     ImmutableList<BuildTarget> hitTargets =
         ImmutableList.of(
@@ -172,9 +172,9 @@ public class CacheOptimizedBuildTargetsQueueFactoryTest {
   @Test
   public void testTopLevelTargetWithCacheableRuntimeDepsIsNotSkipped()
       throws NoSuchBuildTargetException {
-    BuildRuleResolver resolver = CustomBuildRuleResolverFactory.createSimpleRuntimeDepsResolver();
+    BuildRuleResolver resolver = CustomActiongGraphBuilderFactory.createSimpleRuntimeDepsResolver();
     BuildTarget target =
-        BuildTargetFactory.newInstance(CustomBuildRuleResolverFactory.HAS_RUNTIME_DEP_RULE);
+        BuildTargetFactory.newInstance(CustomActiongGraphBuilderFactory.HAS_RUNTIME_DEP_RULE);
     BuildTargetsQueue queue =
         createQueueWithRemoteCacheHits(
             resolver, ImmutableList.of(target), ImmutableList.of(target), false);
@@ -184,10 +184,10 @@ public class CacheOptimizedBuildTargetsQueueFactoryTest {
 
     // has_runtime_dep -> transitive_dep both form a chain, so should be returned as a work unit.
     Assert.assertEquals(
-        CustomBuildRuleResolverFactory.TRANSITIVE_DEP_RULE,
+        CustomActiongGraphBuilderFactory.TRANSITIVE_DEP_RULE,
         zeroDepTargets.get(0).getBuildTargets().get(0));
     Assert.assertEquals(
-        CustomBuildRuleResolverFactory.HAS_RUNTIME_DEP_RULE,
+        CustomActiongGraphBuilderFactory.HAS_RUNTIME_DEP_RULE,
         zeroDepTargets.get(0).getBuildTargets().get(1));
   }
 
@@ -199,7 +199,7 @@ public class CacheOptimizedBuildTargetsQueueFactoryTest {
     //              \ left (miss) /
 
     BuildRuleResolver resolver =
-        CustomBuildRuleResolverFactory.createDiamondDependencyResolverWithChainFromLeaf();
+        CustomActiongGraphBuilderFactory.createDiamondDependencyBuilderWithChainFromLeaf();
     BuildTarget rootTarget = BuildTargetFactory.newInstance(ROOT_TARGET);
     BuildTarget rightTarget = BuildTargetFactory.newInstance(RIGHT_TARGET);
     BuildTarget leafTarget = BuildTargetFactory.newInstance(LEAF_TARGET);
@@ -229,7 +229,7 @@ public class CacheOptimizedBuildTargetsQueueFactoryTest {
 
   @Test
   public void testGraphWithTopLevelCacheHit() throws NoSuchBuildTargetException {
-    BuildRuleResolver resolver = CustomBuildRuleResolverFactory.createSimpleResolver();
+    BuildRuleResolver resolver = CustomActiongGraphBuilderFactory.createSimpleBuilder();
     BuildTarget target = BuildTargetFactory.newInstance(ROOT_TARGET);
     BuildTargetsQueue queue =
         createQueueWithRemoteCacheHits(
@@ -246,7 +246,7 @@ public class CacheOptimizedBuildTargetsQueueFactoryTest {
     //              \ left (miss) /
 
     BuildRuleResolver resolver =
-        CustomBuildRuleResolverFactory.createDiamondDependencyResolverWithChainFromLeaf();
+        CustomActiongGraphBuilderFactory.createDiamondDependencyBuilderWithChainFromLeaf();
     BuildTarget rootTarget = BuildTargetFactory.newInstance(ROOT_TARGET);
     BuildTarget rightTarget = BuildTargetFactory.newInstance(RIGHT_TARGET);
     BuildTarget leafTarget = BuildTargetFactory.newInstance(LEAF_TARGET);
@@ -295,7 +295,7 @@ public class CacheOptimizedBuildTargetsQueueFactoryTest {
     //                      \
     //                        {uncacheable_b (runtime), cacheable_c (runtime)}
     BuildRuleResolver resolver =
-        CustomBuildRuleResolverFactory.createResolverWithUncacheableRuntimeDeps();
+        CustomActiongGraphBuilderFactory.createGraphWithUncacheableRuntimeDeps();
     BuildTarget rootTarget = BuildTargetFactory.newInstance(ROOT_TARGET);
     BuildTarget leftTarget = BuildTargetFactory.newInstance(LEFT_TARGET);
     BuildTarget rightTarget = BuildTargetFactory.newInstance(RIGHT_TARGET);
@@ -344,7 +344,7 @@ public class CacheOptimizedBuildTargetsQueueFactoryTest {
     //                      \
     //                        {uncacheable_b (runtime), cacheable_c (runtime, hit)}
     BuildRuleResolver resolver =
-        CustomBuildRuleResolverFactory.createResolverWithUncacheableRuntimeDeps();
+        CustomActiongGraphBuilderFactory.createGraphWithUncacheableRuntimeDeps();
     BuildTarget rootTarget = BuildTargetFactory.newInstance(ROOT_TARGET);
     BuildTarget leftTarget = BuildTargetFactory.newInstance(LEFT_TARGET);
     BuildTarget rightTarget = BuildTargetFactory.newInstance(RIGHT_TARGET);
@@ -388,7 +388,7 @@ public class CacheOptimizedBuildTargetsQueueFactoryTest {
     //              uncachaeable_a
     //             /
     // cacheable_b - cacheable_c
-    BuildRuleResolver resolver = CustomBuildRuleResolverFactory.createResolverWithBuildLocallyDep();
+    BuildRuleResolver resolver = CustomActiongGraphBuilderFactory.createGraphWithBuildLocallyDep();
 
     BuildTarget cacheableA = BuildTargetFactory.newInstance(CACHABLE_A);
     BuildTarget cacheableB = BuildTargetFactory.newInstance(CACHABLE_B);

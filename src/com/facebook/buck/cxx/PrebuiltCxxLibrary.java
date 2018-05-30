@@ -18,7 +18,7 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.description.BuildRuleParams;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.rules.BuildRuleResolver;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.nativelink.CanProvideNativeLinkTarget;
@@ -38,8 +38,8 @@ public abstract class PrebuiltCxxLibrary extends NoopBuildRuleWithDeclaredAndExt
   public abstract ImmutableList<String> getExportedLinkerFlags(CxxPlatform cxxPlatform);
 
   abstract Optional<SourcePath> getStaticLibrary(
-      CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver);
+      CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder);
 
   abstract Optional<SourcePath> getStaticPicLibrary(
-      CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver);
+      CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder);
 }

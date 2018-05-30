@@ -29,8 +29,8 @@ import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.Flavored;
 import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.toolchain.CxxPlatforms;
@@ -80,7 +80,7 @@ public class GoLibraryDescription
   @Override
   public <U> Optional<U> createMetadata(
       BuildTarget buildTarget,
-      BuildRuleResolver resolver,
+      ActionGraphBuilder graphBuilder,
       CellPathResolver cellRoots,
       GoLibraryDescriptionArg args,
       Optional<ImmutableMap<BuildTarget, Version>> selectedVersions,
@@ -90,7 +90,7 @@ public class GoLibraryDescription
 
     if (metadataClass.isAssignableFrom(GoLinkable.class)) {
       Preconditions.checkState(platform.isPresent());
-      SourcePath output = resolver.requireRule(buildTarget).getSourcePathToOutput();
+      SourcePath output = graphBuilder.requireRule(buildTarget).getSourcePathToOutput();
       return Optional.of(
           metadataClass.cast(
               GoLinkable.builder()
@@ -109,7 +109,7 @@ public class GoLibraryDescription
           metadataClass.cast(
               GoDescriptors.requireTransitiveGoLinkables(
                   buildTarget,
-                  resolver,
+                  graphBuilder,
                   platform.get(),
                   Iterables.concat(args.getDeps(), args.getExportedDeps()),
                   /* includeSelf */ true)));
@@ -133,7 +133,7 @@ public class GoLibraryDescription
           buildTarget,
           projectFilesystem,
           params,
-          context.getBuildRuleResolver(),
+          context.getActionGraphBuilder(),
           goBuckConfig,
           args.getPackageName()
               .map(Paths::get)

@@ -23,9 +23,9 @@ import static org.junit.Assert.fail;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.rules.resolver.impl.TestBuildRuleResolver;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.google.common.collect.ImmutableSet;
@@ -49,10 +49,10 @@ public class JarShapeTest {
             .build();
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(depNode, libNode);
-    BuildRuleResolver resolver = new TestBuildRuleResolver(targetGraph);
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
 
-    BuildRule dep = resolver.requireRule(depNode.getBuildTarget());
-    BuildRule lib = resolver.requireRule(libNode.getBuildTarget());
+    BuildRule dep = graphBuilder.requireRule(depNode.getBuildTarget());
+    BuildRule lib = graphBuilder.requireRule(libNode.getBuildTarget());
 
     JarShape.Summary deps = JarShape.SINGLE.gatherDeps(lib);
 
@@ -75,10 +75,10 @@ public class JarShapeTest {
             .build();
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(depNode, libNode);
-    BuildRuleResolver resolver = new TestBuildRuleResolver(targetGraph);
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
 
-    BuildRule dep = resolver.requireRule(depNode.getBuildTarget());
-    BuildRule lib = resolver.requireRule(libNode.getBuildTarget());
+    BuildRule dep = graphBuilder.requireRule(depNode.getBuildTarget());
+    BuildRule lib = graphBuilder.requireRule(libNode.getBuildTarget());
 
     JarShape.Summary deps = JarShape.MAVEN.gatherDeps(lib);
 
@@ -108,11 +108,11 @@ public class JarShapeTest {
             .build();
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(depNode, mavenDepNode, libNode);
-    BuildRuleResolver resolver = new TestBuildRuleResolver(targetGraph);
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
 
-    BuildRule dep = resolver.requireRule(depNode.getBuildTarget());
-    BuildRule mavenDep = resolver.requireRule(mavenDepNode.getBuildTarget());
-    BuildRule lib = resolver.requireRule(libNode.getBuildTarget());
+    BuildRule dep = graphBuilder.requireRule(depNode.getBuildTarget());
+    BuildRule mavenDep = graphBuilder.requireRule(mavenDepNode.getBuildTarget());
+    BuildRule lib = graphBuilder.requireRule(libNode.getBuildTarget());
 
     JarShape.Summary deps = JarShape.MAVEN.gatherDeps(lib);
 
@@ -146,11 +146,11 @@ public class JarShapeTest {
 
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(deepMavenDepNode, mavenDepNode, libNode);
-    BuildRuleResolver resolver = new TestBuildRuleResolver(targetGraph);
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
 
-    BuildRule deepMavenDep = resolver.requireRule(deepMavenDepNode.getBuildTarget());
-    BuildRule mavenDep = resolver.requireRule(mavenDepNode.getBuildTarget());
-    BuildRule lib = resolver.requireRule(libNode.getBuildTarget());
+    BuildRule deepMavenDep = graphBuilder.requireRule(deepMavenDepNode.getBuildTarget());
+    BuildRule mavenDep = graphBuilder.requireRule(mavenDepNode.getBuildTarget());
+    BuildRule lib = graphBuilder.requireRule(libNode.getBuildTarget());
 
     JarShape.Summary deps = JarShape.MAVEN.gatherDeps(lib);
 

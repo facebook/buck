@@ -74,7 +74,7 @@ public class GoBinaryDescription
         buildTarget,
         context.getProjectFilesystem(),
         params,
-        context.getBuildRuleResolver(),
+        context.getActionGraphBuilder(),
         goBuckConfig,
         args.getSrcs(),
         args.getCompilerFlags(),

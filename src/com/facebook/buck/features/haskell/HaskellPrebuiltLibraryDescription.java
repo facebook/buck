@@ -22,6 +22,7 @@ import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -62,7 +63,7 @@ public class HaskellPrebuiltLibraryDescription
       BuildTarget buildTarget,
       BuildRuleParams params,
       HaskellPrebuiltLibraryDescriptionArg args) {
-    BuildRuleResolver resolver = context.getBuildRuleResolver();
+    BuildRuleResolver resolver = context.getActionGraphBuilder();
     return new PrebuiltHaskellLibrary(buildTarget, context.getProjectFilesystem(), params) {
 
       private final TransitiveCxxPreprocessorInputCache transitiveCxxPreprocessorInputCache =
@@ -131,7 +132,7 @@ public class HaskellPrebuiltLibraryDescription
           Linker.LinkableDepType type,
           boolean forceLinkWhole,
           ImmutableSet<LanguageExtensions> languageExtensions,
-          BuildRuleResolver ruleResolver) {
+          ActionGraphBuilder graphBuilder) {
         NativeLinkableInput.Builder builder = NativeLinkableInput.builder();
         builder.addAllArgs(StringArg.from(args.getExportedLinkerFlags()));
         if (type == Linker.LinkableDepType.SHARED) {
@@ -153,13 +154,13 @@ public class HaskellPrebuiltLibraryDescription
       }
 
       @Override
-      public Linkage getPreferredLinkage(CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
+      public Linkage getPreferredLinkage(CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
         return Linkage.ANY;
       }
 
       @Override
       public ImmutableMap<String, SourcePath> getSharedLibraries(
-          CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
+          CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
         return args.getSharedLibs();
       }
 
@@ -171,7 +172,7 @@ public class HaskellPrebuiltLibraryDescription
 
       @Override
       public CxxPreprocessorInput getCxxPreprocessorInput(
-          CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
+          CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
         CxxPreprocessorInput.Builder builder = CxxPreprocessorInput.builder();
         for (SourcePath headerDir : args.getCxxHeaderDirs()) {
           builder.addIncludes(CxxHeadersDir.of(CxxPreprocessables.IncludeType.SYSTEM, headerDir));
@@ -181,8 +182,8 @@ public class HaskellPrebuiltLibraryDescription
 
       @Override
       public ImmutableMap<BuildTarget, CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(
-          CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
-        return transitiveCxxPreprocessorInputCache.getUnchecked(cxxPlatform, ruleResolver);
+          CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
+        return transitiveCxxPreprocessorInputCache.getUnchecked(cxxPlatform, graphBuilder);
       }
     };
   }

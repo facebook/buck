@@ -38,13 +38,13 @@ import com.facebook.buck.core.build.engine.impl.DefaultRuleDepsCache;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.actiongraph.ActionGraph;
-import com.facebook.buck.core.model.actiongraph.ActionGraphAndResolver;
+import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
 import com.facebook.buck.core.model.graph.ActionAndTargetGraphs;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rulekey.calculator.ParallelRuleKeyCalculator;
-import com.facebook.buck.core.rules.BuildRuleResolver;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.distributed.BuildSlaveEventWrapper;
@@ -52,7 +52,7 @@ import com.facebook.buck.distributed.ClientStatsTracker;
 import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.DistBuildStatusEvent;
 import com.facebook.buck.distributed.DistBuildUtil;
-import com.facebook.buck.distributed.testutil.CustomBuildRuleResolverFactory;
+import com.facebook.buck.distributed.testutil.CustomActiongGraphBuilderFactory;
 import com.facebook.buck.distributed.thrift.BuckVersion;
 import com.facebook.buck.distributed.thrift.BuildJob;
 import com.facebook.buck.distributed.thrift.BuildMode;
@@ -210,14 +210,16 @@ public class BuildPhaseTest {
   public void testCoordinatorIsRunInLocalCoordinatorMode()
       throws IOException, InterruptedException {
     // Create the full BuildPhase for local coordinator mode.
-    BuildRuleResolver resolver = CustomBuildRuleResolverFactory.createSimpleResolver();
+    ActionGraphBuilder graphBuilder = CustomActiongGraphBuilderFactory.createSimpleBuilder();
     ImmutableSet<BuildTarget> targets =
-        ImmutableSet.of(BuildTargetFactory.newInstance(CustomBuildRuleResolverFactory.ROOT_TARGET));
+        ImmutableSet.of(
+            BuildTargetFactory.newInstance(CustomActiongGraphBuilderFactory.ROOT_TARGET));
 
     ActionAndTargetGraphs graphs =
         ActionAndTargetGraphs.builder()
-            .setActionGraphAndResolver(
-                ActionGraphAndResolver.of(new ActionGraph(resolver.getBuildRules()), resolver))
+            .setActionGraphAndBuilder(
+                ActionGraphAndBuilder.of(
+                    new ActionGraph(graphBuilder.getBuildRules()), graphBuilder))
             .setUnversionedTargetGraph(TargetGraphAndBuildTargets.of(TargetGraph.EMPTY, targets))
             .build();
 
@@ -275,7 +277,7 @@ public class BuildPhaseTest {
     replay(mockEventBus);
 
     SourcePathRuleFinder ruleFinder =
-        new SourcePathRuleFinder(graphs.getActionGraphAndResolver().getResolver());
+        new SourcePathRuleFinder(graphs.getActionGraphAndBuilder().getActionGraphBuilder());
 
     buildPhase.runDistBuildAndUpdateConsoleStatus(
         directExecutor,
@@ -293,7 +295,7 @@ public class BuildPhaseTest {
                     new TrackedRuleKeyCache<RuleKey>(
                         new DefaultRuleKeyCache<>(), new NoOpCacheStatsTracker()),
                     Optional.empty()),
-                new DefaultRuleDepsCache(graphs.getActionGraphAndResolver().getResolver()),
+                new DefaultRuleDepsCache(graphs.getActionGraphAndBuilder().getActionGraphBuilder()),
                 (buckEventBus, rule) -> () -> {})));
 
     verify(mockDistBuildService);

@@ -60,7 +60,7 @@ public class PhiTypeResolver {
     }
 
     /**
-     * Runs the phi-type resolver.
+     * Runs the phi-type graphBuilder.
      */
     private void run() {
 

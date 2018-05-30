@@ -20,9 +20,9 @@ import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.rules.BuildRuleResolver;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.rules.resolver.impl.TestBuildRuleResolver;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -84,8 +84,8 @@ public class TrimUberRDotJavaTest {
       throws InterruptedException, IOException {
     ProjectFilesystem filesystem =
         TestProjectFilesystems.createProjectFilesystem(tmpFolder.getRoot());
-    BuildRuleResolver resolver = new TestBuildRuleResolver();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
     String rDotJavaContents =
@@ -123,7 +123,7 @@ public class TrimUberRDotJavaTest {
                 ImmutableSortedMap.of(),
                 Optional.of(ImmutableList.of("com.test.my_first_resource"))));
 
-    resolver.addToIndex(dexProducedFromJavaLibrary);
+    graphBuilder.addToIndex(dexProducedFromJavaLibrary);
 
     BuildTarget trimTarget = BuildTargetFactory.newInstance("//:trim");
     TrimUberRDotJava trimUberRDotJava =
@@ -134,7 +134,7 @@ public class TrimUberRDotJavaTest {
             Optional.of(FakeSourcePath.of(filesystem, rDotJavaDir)),
             ImmutableList.of(dexProducedFromJavaLibrary),
             keepResourcePattern);
-    resolver.addToIndex(trimUberRDotJava);
+    graphBuilder.addToIndex(trimUberRDotJava);
 
     BuildContext buildContext = FakeBuildContext.withSourcePathResolver(pathResolver);
     BuildableContext buildableContext = new FakeBuildableContext();

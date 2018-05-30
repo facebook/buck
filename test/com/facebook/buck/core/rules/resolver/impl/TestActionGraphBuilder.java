@@ -24,9 +24,9 @@ import com.facebook.buck.core.rules.transformer.impl.DefaultTargetNodeToBuildRul
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.toolchain.ToolchainProvider;
 
-public class TestBuildRuleResolver extends SingleThreadedBuildRuleResolver {
+public class TestActionGraphBuilder extends SingleThreadedActionGraphBuilder {
 
-  public TestBuildRuleResolver(
+  public TestActionGraphBuilder(
       TargetGraph targetGraph,
       TargetNodeToBuildRuleTransformer buildRuleGenerator,
       ToolchainProvider toolchainProvider) {
@@ -36,38 +36,38 @@ public class TestBuildRuleResolver extends SingleThreadedBuildRuleResolver {
         new TestCellBuilder().setToolchainProvider(toolchainProvider).build().getCellProvider());
   }
 
-  public TestBuildRuleResolver(
+  public TestActionGraphBuilder(
       TargetGraph targetGraph,
       TargetNodeToBuildRuleTransformer buildRuleGenerator,
       CellProvider cellProvider) {
     super(targetGraph, buildRuleGenerator, cellProvider);
   }
 
-  public TestBuildRuleResolver(
+  public TestActionGraphBuilder(
       TargetGraph targetGraph, TargetNodeToBuildRuleTransformer buildRuleGenerator) {
     super(targetGraph, buildRuleGenerator, new TestCellBuilder().build().getCellProvider());
   }
 
-  public TestBuildRuleResolver(TargetNodeToBuildRuleTransformer buildRuleGenerator) {
+  public TestActionGraphBuilder(TargetNodeToBuildRuleTransformer buildRuleGenerator) {
     this(TargetGraph.EMPTY, buildRuleGenerator);
   }
 
-  public TestBuildRuleResolver(TargetGraph targetGraph) {
+  public TestActionGraphBuilder(TargetGraph targetGraph) {
     this(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
   }
 
-  public TestBuildRuleResolver(TargetGraph targetGraph, ProjectFilesystem filesystem) {
+  public TestActionGraphBuilder(TargetGraph targetGraph, ProjectFilesystem filesystem) {
     this(
         targetGraph,
         new DefaultTargetNodeToBuildRuleTransformer(),
         new TestCellBuilder().setFilesystem(filesystem).build().getCellProvider());
   }
 
-  public TestBuildRuleResolver(TargetGraph targetGraph, ToolchainProvider toolchainProvider) {
+  public TestActionGraphBuilder(TargetGraph targetGraph, ToolchainProvider toolchainProvider) {
     this(targetGraph, new DefaultTargetNodeToBuildRuleTransformer(), toolchainProvider);
   }
 
-  public TestBuildRuleResolver() {
+  public TestActionGraphBuilder() {
     this(TargetGraph.EMPTY);
   }
 }

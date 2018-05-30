@@ -23,8 +23,8 @@ import com.facebook.buck.android.AndroidResourceDescriptionArg;
 import com.facebook.buck.android.DummyRDotJava;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
@@ -41,19 +41,19 @@ import java.util.Optional;
 
 class DefaultIjModuleFactoryResolver implements IjModuleFactoryResolver {
 
-  private final BuildRuleResolver buildRuleResolver;
+  private final ActionGraphBuilder graphBuilder;
   private final SourcePathResolver sourcePathResolver;
   private final SourcePathRuleFinder ruleFinder;
   private final ProjectFilesystem projectFilesystem;
   private final ImmutableSet.Builder<BuildTarget> requiredBuildTargets;
 
   DefaultIjModuleFactoryResolver(
-      BuildRuleResolver buildRuleResolver,
+      ActionGraphBuilder graphBuilder,
       SourcePathResolver sourcePathResolver,
       SourcePathRuleFinder ruleFinder,
       ProjectFilesystem projectFilesystem,
       ImmutableSet.Builder<BuildTarget> requiredBuildTargets) {
-    this.buildRuleResolver = buildRuleResolver;
+    this.graphBuilder = graphBuilder;
     this.sourcePathResolver = sourcePathResolver;
     this.ruleFinder = ruleFinder;
     this.projectFilesystem = projectFilesystem;
@@ -64,7 +64,7 @@ class DefaultIjModuleFactoryResolver implements IjModuleFactoryResolver {
   public Optional<Path> getDummyRDotJavaPath(TargetNode<?, ?> targetNode) {
     BuildTarget dummyRDotJavaTarget =
         AndroidLibraryGraphEnhancer.getDummyRDotJavaTarget(targetNode.getBuildTarget());
-    Optional<BuildRule> dummyRDotJavaRule = buildRuleResolver.getRuleOptional(dummyRDotJavaTarget);
+    Optional<BuildRule> dummyRDotJavaRule = graphBuilder.getRuleOptional(dummyRDotJavaTarget);
     if (dummyRDotJavaRule.isPresent()) {
       requiredBuildTargets.add(dummyRDotJavaTarget);
       return Optional.of(
@@ -108,13 +108,13 @@ class DefaultIjModuleFactoryResolver implements IjModuleFactoryResolver {
   @Override
   public Optional<Path> getAndroidResourcePath(
       TargetNode<AndroidResourceDescriptionArg, ?> targetNode) {
-    return AndroidResourceDescription.getResDirectoryForProject(buildRuleResolver, targetNode)
+    return AndroidResourceDescription.getResDirectoryForProject(graphBuilder, targetNode)
         .map(this::getRelativePathAndRecordRule);
   }
 
   @Override
   public Optional<Path> getAssetsPath(TargetNode<AndroidResourceDescriptionArg, ?> targetNode) {
-    return AndroidResourceDescription.getAssetsDirectoryForProject(buildRuleResolver, targetNode)
+    return AndroidResourceDescription.getAssetsDirectoryForProject(graphBuilder, targetNode)
         .map(this::getRelativePathAndRecordRule);
   }
 
@@ -124,10 +124,7 @@ class DefaultIjModuleFactoryResolver implements IjModuleFactoryResolver {
         targetNode
             .getConstructorArg()
             .buildAnnotationProcessingParams(
-                targetNode.getBuildTarget(),
-                projectFilesystem,
-                buildRuleResolver,
-                ImmutableSet.of());
+                targetNode.getBuildTarget(), projectFilesystem, graphBuilder, ImmutableSet.of());
     if (annotationProcessingParams == null || annotationProcessingParams.isEmpty()) {
       return Optional.empty();
     }

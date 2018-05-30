@@ -28,6 +28,7 @@ import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.Flavored;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
@@ -73,14 +74,14 @@ public class JsBundleGenruleDescription
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      BuildRuleResolver resolver,
+      ActionGraphBuilder graphBuilder,
       JsBundleGenruleDescriptionArg args,
       Optional<Arg> cmd,
       Optional<Arg> bash,
       Optional<Arg> cmdExe) {
     ImmutableSortedSet<Flavor> flavors = buildTarget.getFlavors();
     BuildTarget bundleTarget = args.getJsBundle().withAppendedFlavors(flavors);
-    BuildRule jsBundle = resolver.requireRule(bundleTarget);
+    BuildRule jsBundle = graphBuilder.requireRule(bundleTarget);
 
     if (flavors.contains(JsFlavors.SOURCE_MAP)
         || flavors.contains(JsFlavors.DEPENDENCY_FILE)
@@ -96,11 +97,11 @@ public class JsBundleGenruleDescription
       if (args.getRewriteSourcemap() && flavors.contains(JsFlavors.SOURCE_MAP)) {
         output =
             ((JsBundleOutputs)
-                    resolver.requireRule(buildTarget.withoutFlavors(JsFlavors.SOURCE_MAP)))
+                    graphBuilder.requireRule(buildTarget.withoutFlavors(JsFlavors.SOURCE_MAP)))
                 .getSourcePathToSourceMap();
       } else if (args.getRewriteMisc() && flavors.contains(JsFlavors.MISC)) {
         output =
-            ((JsBundleOutputs) resolver.requireRule(buildTarget.withoutFlavors(JsFlavors.MISC)))
+            ((JsBundleOutputs) graphBuilder.requireRule(buildTarget.withoutFlavors(JsFlavors.MISC)))
                 .getSourcePathToMisc();
       } else {
         output =
@@ -109,13 +110,13 @@ public class JsBundleGenruleDescription
       }
 
       Path fileName =
-          DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver))
+          DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder))
               .getRelativePath(output)
               .getFileName();
       return new ExportFile(
           buildTarget,
           projectFilesystem,
-          new SourcePathRuleFinder(resolver),
+          new SourcePathRuleFinder(graphBuilder),
           fileName.toString(),
           ExportFileDescription.Mode.REFERENCE,
           output,
@@ -134,7 +135,7 @@ public class JsBundleGenruleDescription
         buildTarget,
         projectFilesystem,
         sandboxExecutionStrategy,
-        resolver,
+        graphBuilder,
         params.withExtraDeps(
             MoreSuppliers.memoize(
                 () ->

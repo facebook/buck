@@ -82,7 +82,7 @@ public class OcamlLibraryDescription
     FlavorDomain<OcamlPlatform> ocamlPlatforms = ocamlToolchain.getOcamlPlatforms();
     Optional<OcamlPlatform> ocamlPlatform = ocamlPlatforms.getValue(buildTarget);
     if (ocamlPlatform.isPresent()) {
-      SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(context.getBuildRuleResolver());
+      SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(context.getActionGraphBuilder());
       SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
       ImmutableList<OcamlSource> srcs = args.getSrcs();
@@ -91,14 +91,14 @@ public class OcamlLibraryDescription
           OcamlRuleBuilder.getFlags(
               buildTarget,
               context.getCellPathResolver(),
-              context.getBuildRuleResolver(),
+              context.getActionGraphBuilder(),
               ocamlPlatform.get(),
               args.getCompilerFlags(),
               args.getWarningsFlags());
 
       BuildTarget compileBuildTarget = OcamlRuleBuilder.createStaticLibraryBuildTarget(buildTarget);
 
-      if (OcamlRuleBuilder.shouldUseFineGrainedRules(context.getBuildRuleResolver(), srcs)) {
+      if (OcamlRuleBuilder.shouldUseFineGrainedRules(context.getActionGraphBuilder(), srcs)) {
         OcamlGeneratedBuildRules result =
             OcamlRuleBuilder.createFineGrainedBuildRules(
                 buildTarget,
@@ -106,8 +106,8 @@ public class OcamlLibraryDescription
                 compileBuildTarget,
                 context.getProjectFilesystem(),
                 params,
-                context.getBuildRuleResolver(),
-                allDeps.get(context.getBuildRuleResolver(), ocamlPlatform.get().getCxxPlatform()),
+                context.getActionGraphBuilder(),
+                allDeps.get(context.getActionGraphBuilder(), ocamlPlatform.get().getCxxPlatform()),
                 srcs,
                 /* isLibrary */ true,
                 args.getBytecodeOnly(),
@@ -142,8 +142,8 @@ public class OcamlLibraryDescription
                 compileBuildTarget,
                 context.getProjectFilesystem(),
                 params,
-                context.getBuildRuleResolver(),
-                allDeps.get(context.getBuildRuleResolver(), ocamlPlatform.get().getCxxPlatform()),
+                context.getActionGraphBuilder(),
+                allDeps.get(context.getActionGraphBuilder(), ocamlPlatform.get().getCxxPlatform()),
                 srcs,
                 /* isLibrary */ true,
                 args.getBytecodeOnly(),
@@ -178,7 +178,7 @@ public class OcamlLibraryDescription
       private OcamlLibrary getWrapped(OcamlPlatform platform) {
         return (OcamlLibrary)
             context
-                .getBuildRuleResolver()
+                .getActionGraphBuilder()
                 .requireRule(getBuildTarget().withAppendedFlavors(platform.getFlavor()));
       }
 
@@ -219,7 +219,7 @@ public class OcamlLibraryDescription
 
       @Override
       public Iterable<BuildRule> getOcamlLibraryDeps(OcamlPlatform platform) {
-        return allDeps.get(context.getBuildRuleResolver(), platform.getCxxPlatform());
+        return allDeps.get(context.getActionGraphBuilder(), platform.getCxxPlatform());
       }
     };
   }

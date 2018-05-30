@@ -22,8 +22,8 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.macros.AbstractMacroExpanderWithoutPrecomputedWork;
@@ -70,22 +70,22 @@ public class CommandAliasDescription
     ImmutableList.Builder<Arg> toolArgs = ImmutableList.builder();
     ImmutableSortedMap.Builder<String, Arg> toolEnv = ImmutableSortedMap.naturalOrder();
 
-    BuildRuleResolver resolver = context.getBuildRuleResolver();
+    ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
     StringWithMacrosConverter macrosConverter =
         StringWithMacrosConverter.of(buildTarget, context.getCellPathResolver(), MACRO_EXPANDERS);
 
     for (StringWithMacros x : args.getArgs()) {
-      toolArgs.add(macrosConverter.convert(x, resolver));
+      toolArgs.add(macrosConverter.convert(x, graphBuilder));
     }
 
     for (Map.Entry<String, StringWithMacros> x : args.getEnv().entrySet()) {
-      toolEnv.put(x.getKey(), macrosConverter.convert(x.getValue(), resolver));
+      toolEnv.put(x.getKey(), macrosConverter.convert(x.getValue(), graphBuilder));
     }
 
-    Optional<BuildRule> exe = args.getExe().map(resolver::getRule);
+    Optional<BuildRule> exe = args.getExe().map(graphBuilder::getRule);
     ImmutableSortedMap.Builder<Platform, BuildRule> platformExe = ImmutableSortedMap.naturalOrder();
     for (Map.Entry<Platform, BuildTarget> entry : args.getPlatformExe().entrySet()) {
-      platformExe.put(entry.getKey(), resolver.getRule(entry.getValue()));
+      platformExe.put(entry.getKey(), graphBuilder.getRule(entry.getValue()));
     }
 
     return new CommandAlias(

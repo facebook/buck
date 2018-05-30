@@ -46,8 +46,8 @@ import com.facebook.buck.core.model.Flavored;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.tool.Tool;
@@ -158,7 +158,7 @@ public class AndroidBinaryDescription
       BuildTarget buildTarget,
       BuildRuleParams params,
       AndroidBinaryDescriptionArg args) {
-    BuildRuleResolver resolver = context.getBuildRuleResolver();
+    ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
 
     params = params.withoutExtraDeps();
 
@@ -166,8 +166,8 @@ public class AndroidBinaryDescription
     // of the main target.
     for (Flavor flavor : FLAVORS) {
       if (buildTarget.getFlavors().contains(flavor)) {
-        resolver.requireRule(buildTarget.withoutFlavors(flavor));
-        return resolver.getRule(buildTarget);
+        graphBuilder.requireRule(buildTarget.withoutFlavors(flavor));
+        return graphBuilder.getRule(buildTarget);
       }
     }
 
@@ -177,7 +177,7 @@ public class AndroidBinaryDescription
           "Requested target %s contains an unrecognized flavor", buildTarget);
     }
 
-    BuildRule keystore = resolver.getRule(args.getKeystore());
+    BuildRule keystore = graphBuilder.getRule(args.getKeystore());
     if (!(keystore instanceof Keystore)) {
       throw new HumanReadableException(
           "In %s, keystore='%s' must be a keystore() but was %s().",
@@ -230,7 +230,7 @@ public class AndroidBinaryDescription
     // target may be mentioned in that parameter, it may not be present as a build rule.
     ImmutableSortedSet.Builder<BuildRule> builder = ImmutableSortedSet.naturalOrder();
     for (BuildTarget noDxTarget : args.getNoDx()) {
-      Optional<BuildRule> ruleOptional = resolver.getRuleOptional(noDxTarget);
+      Optional<BuildRule> ruleOptional = graphBuilder.getRuleOptional(noDxTarget);
       if (ruleOptional.isPresent()) {
         builder.add(ruleOptional.get());
       } else {
@@ -262,7 +262,7 @@ public class AndroidBinaryDescription
             .setProguardMaxHeapSize(proGuardConfig.getProguardMaxHeapSize())
             .setSdkProguardConfig(androidSdkProguardConfig)
             .setPreprocessJavaClassesBash(
-                getPreprocessJavaClassesBash(args, buildTarget, resolver, cellRoots))
+                getPreprocessJavaClassesBash(args, buildTarget, graphBuilder, cellRoots))
             .setReorderClassesIntraDex(args.isReorderClassesIntraDex())
             .setDexReorderToolFile(args.getDexReorderToolFile())
             .setDexReorderDataDumpFile(args.getDexReorderDataDumpFile())
@@ -277,7 +277,7 @@ public class AndroidBinaryDescription
             .build();
 
     ResourceFilter resourceFilter = new ResourceFilter(args.getResourceFilter());
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
 
     AndroidPlatformTarget androidPlatformTarget =
         toolchainProvider.getByName(
@@ -293,7 +293,7 @@ public class AndroidBinaryDescription
             projectFilesystem,
             androidPlatformTarget,
             params,
-            resolver,
+            graphBuilder,
             args.getAaptMode(),
             args.getResourceCompression(),
             resourceFilter,
@@ -342,7 +342,7 @@ public class AndroidBinaryDescription
             apkModuleGraph,
             dxConfig,
             args.getDexTool(),
-            getPostFilterResourcesArgs(args, buildTarget, resolver, cellRoots),
+            getPostFilterResourcesArgs(args, buildTarget, graphBuilder, cellRoots),
             nonPreDexedDexBuildableArgs,
             rulesToExcludeFromDex);
     AndroidGraphEnhancementResult result = graphEnhancer.createAdditionalBuildables();
@@ -359,7 +359,7 @@ public class AndroidBinaryDescription
                   args.isSkipProguard(),
                   result.getDexFilesInfo().proguardTextFilesPath,
                   result.getPackageableCollection()));
-      resolver.addToIndex(moduleVerification.get());
+      graphBuilder.addToIndex(moduleVerification.get());
     } else {
       moduleVerification = Optional.empty();
     }
@@ -383,7 +383,7 @@ public class AndroidBinaryDescription
             args.getOptimizationPasses(),
             args.getProguardConfig(),
             args.isSkipProguard(),
-            getRedexOptions(buildTarget, resolver, cellRoots, args),
+            getRedexOptions(buildTarget, graphBuilder, cellRoots, args),
             args.getResourceCompression(),
             args.getCpuFilters(),
             resourceFilter,
@@ -407,7 +407,7 @@ public class AndroidBinaryDescription
     // between build and install calls.
     new AndroidBinaryInstallGraphEnhancer(
             androidInstallConfig, projectFilesystem, buildTarget, androidBinary)
-        .enhance(resolver);
+        .enhance(graphBuilder);
     return androidBinary;
   }
 
@@ -482,7 +482,7 @@ public class AndroidBinaryDescription
   private Optional<Arg> getPostFilterResourcesArgs(
       AndroidBinaryDescriptionArg arg,
       BuildTarget buildTarget,
-      BuildRuleResolver resolver,
+      ActionGraphBuilder graphBuilder,
       CellPathResolver cellRoots) {
     StringWithMacrosConverter macrosConverter =
         StringWithMacrosConverter.builder()
@@ -490,13 +490,13 @@ public class AndroidBinaryDescription
             .setCellPathResolver(cellRoots)
             .setExpanders(MACRO_EXPANDERS)
             .build();
-    return arg.getPostFilterResourcesCmd().map(x -> macrosConverter.convert(x, resolver));
+    return arg.getPostFilterResourcesCmd().map(x -> macrosConverter.convert(x, graphBuilder));
   }
 
   private Optional<Arg> getPreprocessJavaClassesBash(
       AndroidBinaryDescriptionArg arg,
       BuildTarget buildTarget,
-      BuildRuleResolver resolver,
+      ActionGraphBuilder graphBuilder,
       CellPathResolver cellRoots) {
     StringWithMacrosConverter macrosConverter =
         StringWithMacrosConverter.builder()
@@ -504,12 +504,12 @@ public class AndroidBinaryDescription
             .setCellPathResolver(cellRoots)
             .setExpanders(MACRO_EXPANDERS)
             .build();
-    return arg.getPreprocessJavaClassesBash().map(x -> macrosConverter.convert(x, resolver));
+    return arg.getPreprocessJavaClassesBash().map(x -> macrosConverter.convert(x, graphBuilder));
   }
 
   private Optional<RedexOptions> getRedexOptions(
       BuildTarget buildTarget,
-      BuildRuleResolver resolver,
+      ActionGraphBuilder graphBuilder,
       CellPathResolver cellRoots,
       AndroidBinaryDescriptionArg arg) {
     boolean redexRequested = arg.getRedex();
@@ -518,7 +518,7 @@ public class AndroidBinaryDescription
     }
 
     Optional<Tool> redexBinary =
-        buckConfig.getView(ToolConfig.class).getTool(SECTION, CONFIG_PARAM_REDEX, resolver);
+        buckConfig.getView(ToolConfig.class).getTool(SECTION, CONFIG_PARAM_REDEX, graphBuilder);
     if (!redexBinary.isPresent()) {
       throw new HumanReadableException(
           "Requested running ReDex for %s but the path to the tool"
@@ -535,7 +535,7 @@ public class AndroidBinaryDescription
     List<Arg> redexExtraArgs =
         arg.getRedexExtraArgs()
             .stream()
-            .map(x -> macrosConverter.convert(x, resolver))
+            .map(x -> macrosConverter.convert(x, graphBuilder))
             .collect(Collectors.toList());
 
     return Optional.of(

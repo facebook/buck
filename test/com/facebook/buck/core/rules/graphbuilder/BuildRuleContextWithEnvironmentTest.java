@@ -27,13 +27,13 @@ import com.facebook.buck.core.model.targetgraph.FakeTargetNodeBuilder;
 import com.facebook.buck.core.model.targetgraph.ImmutableBuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.provider.BuildRuleInfoProviderCollection;
 import com.facebook.buck.core.rules.provider.DefaultBuildRuleInfoProvider;
 import com.facebook.buck.core.rules.provider.FakeBuildRuleInfoProvider;
 import com.facebook.buck.core.rules.provider.FakeBuildRuleWithProviders;
-import com.facebook.buck.core.rules.resolver.impl.TestBuildRuleResolver;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -59,7 +59,7 @@ import org.junit.Test;
 public class BuildRuleContextWithEnvironmentTest {
 
   private MutableDirectedGraph<TargetNode<?, ?>> mutableTargetGraph;
-  private BuildRuleResolver ruleResolver;
+  private ActionGraphBuilder graphBuilder;
   private ProjectFilesystem projectFilesystem;
   private CellPathResolver cellPathResolver;
   private ToolchainProvider toolchainProvider;
@@ -68,7 +68,7 @@ public class BuildRuleContextWithEnvironmentTest {
   @Before
   public void setUp() {
     mutableTargetGraph = new MutableDirectedGraph<>();
-    ruleResolver = new TestBuildRuleResolver();
+    graphBuilder = new TestActionGraphBuilder();
     projectFilesystem = new FakeProjectFilesystem();
     cellPathResolver = new TestCellBuilder().build().getCellPathResolver();
     toolchainProvider = new ToolchainProviderBuilder().build();
@@ -98,7 +98,7 @@ public class BuildRuleContextWithEnvironmentTest {
             fakeKeyTarget,
             ImmutableBuildRuleCreationContextWithTargetGraph.of(
                 new TargetGraph(mutableTargetGraph, ImmutableMap.of(fakeKeyTarget, fakeTargetNode)),
-                ruleResolver,
+                graphBuilder,
                 projectFilesystem,
                 cellPathResolver,
                 toolchainProvider));
@@ -152,13 +152,13 @@ public class BuildRuleContextWithEnvironmentTest {
         ImmutableBuildRuleKey.of(
             fakeKeyTarget1,
             ImmutableBuildRuleCreationContextWithTargetGraph.of(
-                targetGraph, ruleResolver, projectFilesystem, cellPathResolver, toolchainProvider));
+                targetGraph, graphBuilder, projectFilesystem, cellPathResolver, toolchainProvider));
 
     BuildRuleKey key2 =
         ImmutableBuildRuleKey.of(
             fakeKeyTarget2,
             ImmutableBuildRuleCreationContextWithTargetGraph.of(
-                targetGraph, ruleResolver, projectFilesystem, cellPathResolver, toolchainProvider));
+                targetGraph, graphBuilder, projectFilesystem, cellPathResolver, toolchainProvider));
 
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//fake:fake");
     BuildRule expectedRule = new FakeBuildRule(buildTarget);

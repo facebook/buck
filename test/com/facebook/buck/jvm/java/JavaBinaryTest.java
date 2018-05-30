@@ -24,10 +24,10 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.rules.resolver.impl.TestBuildRuleResolver;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -72,18 +72,18 @@ public class JavaBinaryTest {
             .build();
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(guavaNode, libraryNode);
-    BuildRuleResolver ruleResolver = new TestBuildRuleResolver(targetGraph);
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(ruleResolver));
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
 
-    BuildRule libraryRule = ruleResolver.requireRule(libraryNode.getBuildTarget());
+    BuildRule libraryRule = graphBuilder.requireRule(libraryNode.getBuildTarget());
 
     BuildTarget target = BuildTargetFactory.newInstance("//java/com/facebook/base:Main");
     BuildRuleParams params =
         TestBuildRuleParams.create().withDeclaredDeps(ImmutableSortedSet.of(libraryRule));
     // java_binary //java/com/facebook/base:Main
     JavaBinary javaBinary =
-        ruleResolver.addToIndex(
+        graphBuilder.addToIndex(
             new JavaBinary(
                 target,
                 new FakeProjectFilesystem(),

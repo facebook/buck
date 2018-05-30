@@ -25,8 +25,8 @@ import static org.junit.Assume.assumeTrue;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
-import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.rules.resolver.impl.TestBuildRuleResolver;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.cxx.FrameworkDependencies;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -247,11 +247,11 @@ public class AppleBundleDescriptionTest {
             .setBinary(binaryTarget)
             .build();
 
-    BuildRuleResolver buildRuleResolver =
-        new TestBuildRuleResolver(TargetGraphFactory.newInstance(bundleNode, binaryNode));
+    ActionGraphBuilder graphBuilder =
+        new TestActionGraphBuilder(TargetGraphFactory.newInstance(bundleNode, binaryNode));
     assertTrue(
         "Although querying a binary's framework dependencies should not return empty...",
-        buildRuleResolver
+        graphBuilder
             .requireMetadata(
                 binaryTarget.withFlavors(
                     FakeAppleRuleDescriptions.DEFAULT_MACOSX_X86_64_PLATFORM.getFlavor()),
@@ -259,6 +259,6 @@ public class AppleBundleDescriptionTest {
             .isPresent());
     assertFalse(
         "Querying a bundle's framework dependencies should return empty.",
-        buildRuleResolver.requireMetadata(bundleTarget, FrameworkDependencies.class).isPresent());
+        graphBuilder.requireMetadata(bundleTarget, FrameworkDependencies.class).isPresent());
   }
 }

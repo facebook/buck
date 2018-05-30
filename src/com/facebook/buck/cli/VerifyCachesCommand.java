@@ -19,10 +19,10 @@ package com.facebook.buck.cli;
 import com.facebook.buck.core.cell.CellProvider;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.rulekey.RuleKey;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.rules.resolver.impl.SingleThreadedBuildRuleResolver;
+import com.facebook.buck.core.rules.resolver.impl.SingleThreadedActionGraphBuilder;
 import com.facebook.buck.core.rules.transformer.impl.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
@@ -69,11 +69,11 @@ public class VerifyCachesCommand extends AbstractCommand {
       RuleKeyCacheRecycler<RuleKey> recycler) {
     ImmutableList<Map.Entry<BuildRule, RuleKey>> contents = recycler.getCachedBuildRules();
     RuleKeyFieldLoader fieldLoader = new RuleKeyFieldLoader(ruleKeyConfiguration);
-    BuildRuleResolver resolver =
-        new SingleThreadedBuildRuleResolver(
+    ActionGraphBuilder graphBuilder =
+        new SingleThreadedActionGraphBuilder(
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer(), cellProvider);
-    contents.forEach(e -> resolver.addToIndex(e.getKey()));
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    contents.forEach(e -> graphBuilder.addToIndex(e.getKey()));
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     DefaultRuleKeyFactory defaultRuleKeyFactory =
         new DefaultRuleKeyFactory(fieldLoader, fileHashCache, pathResolver, ruleFinder);

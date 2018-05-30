@@ -22,9 +22,9 @@ import static org.junit.Assert.assertNull;
 import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.core.description.BuildRuleParams;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.rules.resolver.impl.TestBuildRuleResolver;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
@@ -76,7 +76,7 @@ public class CxxLibraryTest {
     String sharedLibrarySoname = "lib.so";
 
     // Construct a CxxLibrary object to test.
-    BuildRuleResolver ruleResolver = new TestBuildRuleResolver();
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     FakeCxxLibrary cxxLibrary =
         new FakeCxxLibrary(
             target,
@@ -111,7 +111,7 @@ public class CxxLibraryTest {
             .build();
     assertEquals(
         expectedPublicCxxPreprocessorInput,
-        cxxLibrary.getCxxPreprocessorInput(cxxPlatform, ruleResolver));
+        cxxLibrary.getCxxPreprocessorInput(cxxPlatform, graphBuilder));
 
     CxxPreprocessorInput expectedPrivateCxxPreprocessorInput =
         CxxPreprocessorInput.builder()
@@ -130,7 +130,7 @@ public class CxxLibraryTest {
             .build();
     assertEquals(
         expectedPrivateCxxPreprocessorInput,
-        cxxLibrary.getPrivateCxxPreprocessorInput(cxxPlatform, ruleResolver));
+        cxxLibrary.getPrivateCxxPreprocessorInput(cxxPlatform, graphBuilder));
 
     // Verify that we get the static archive and its build target via the NativeLinkable
     // interface.
@@ -142,7 +142,7 @@ public class CxxLibraryTest {
     assertEquals(
         expectedStaticNativeLinkableInput,
         cxxLibrary.getNativeLinkableInput(
-            cxxPlatform, Linker.LinkableDepType.STATIC, ruleResolver));
+            cxxPlatform, Linker.LinkableDepType.STATIC, graphBuilder));
 
     // Verify that we get the static archive and its build target via the NativeLinkable
     // interface.
@@ -154,7 +154,7 @@ public class CxxLibraryTest {
     assertEquals(
         expectedSharedNativeLinkableInput,
         cxxLibrary.getNativeLinkableInput(
-            cxxPlatform, Linker.LinkableDepType.SHARED, ruleResolver));
+            cxxPlatform, Linker.LinkableDepType.SHARED, graphBuilder));
 
     // Verify that the implemented BuildRule methods are effectively unused.
     assertEquals(ImmutableList.<Step>of(), cxxLibrary.getBuildSteps(null, null));
@@ -163,7 +163,7 @@ public class CxxLibraryTest {
 
   @Test
   public void headerOnlyExports() throws Exception {
-    BuildRuleResolver ruleResolver = new TestBuildRuleResolver();
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     BuildRuleParams params = TestBuildRuleParams.create();
@@ -173,7 +173,7 @@ public class CxxLibraryTest {
     BuildTarget staticPicLibraryTarget =
         target.withAppendedFlavors(
             cxxPlatform.getFlavor(), CxxDescriptionEnhancer.STATIC_PIC_FLAVOR);
-    ruleResolver.addToIndex(
+    graphBuilder.addToIndex(
         new FakeBuildRule(staticPicLibraryTarget, projectFilesystem, TestBuildRuleParams.create()));
 
     FrameworkPath frameworkPath =
@@ -186,7 +186,7 @@ public class CxxLibraryTest {
             target,
             projectFilesystem,
             params,
-            ruleResolver.getParallelizer(),
+            graphBuilder.getParallelizer(),
             CxxDeps.of(),
             CxxDeps.of(),
             /* headerOnly */ x -> true,
@@ -211,6 +211,6 @@ public class CxxLibraryTest {
     assertEquals(
         expectedSharedNativeLinkableInput,
         cxxLibrary.getNativeLinkableInput(
-            cxxPlatform, Linker.LinkableDepType.SHARED, ruleResolver));
+            cxxPlatform, Linker.LinkableDepType.SHARED, graphBuilder));
   }
 }

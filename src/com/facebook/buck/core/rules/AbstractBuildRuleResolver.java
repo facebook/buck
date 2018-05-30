@@ -14,18 +14,16 @@
  * under the License.
  */
 
-
-package com.facebook.buck.core.rules.resolver.impl;
+package com.facebook.buck.core.rules;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.util.RichStream;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Comparator;
 import java.util.Optional;
 
+/** An abstract implementation of BuildTargetResolver that simplifies concrete implementations. */
 public abstract class AbstractBuildRuleResolver implements BuildRuleResolver {
   @Override
   public <T> Optional<T> getRuleOptionalWithType(BuildTarget buildTarget, Class<T> cls) {
@@ -53,11 +51,8 @@ public abstract class AbstractBuildRuleResolver implements BuildRuleResolver {
         .orElseThrow(() -> unresolvableRuleException(buildTarget));
   }
 
-  @Override
-  public ImmutableSortedSet<BuildRule> requireAllRules(Iterable<BuildTarget> buildTargets) {
-    return RichStream.from(buildTargets)
-        .map(this::requireRule)
-        .toImmutableSortedSet(Comparator.naturalOrder());
+  private static HumanReadableException unresolvableRuleException(BuildTarget target) {
+    return new HumanReadableException("Rule for target '%s' could not be resolved.", target);
   }
 
   @Override
@@ -68,9 +63,5 @@ public abstract class AbstractBuildRuleResolver implements BuildRuleResolver {
   @Override
   public RichStream<BuildRule> getAllRulesStream(Iterable<BuildTarget> targets) {
     return RichStream.from(targets).map(this::getRule);
-  }
-
-  private static HumanReadableException unresolvableRuleException(BuildTarget target) {
-    return new HumanReadableException("Rule for target '%s' could not be resolved.", target);
   }
 }

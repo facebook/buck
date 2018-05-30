@@ -28,7 +28,7 @@ import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.rules.resolver.impl.SingleThreadedBuildRuleResolver;
+import com.facebook.buck.core.rules.resolver.impl.SingleThreadedActionGraphBuilder;
 import com.facebook.buck.core.rules.transformer.impl.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
@@ -122,7 +122,7 @@ final class JavaBuildGraphProcessor {
       }
 
       BuildRuleResolver buildRuleResolver =
-          new SingleThreadedBuildRuleResolver(
+          new SingleThreadedActionGraphBuilder(
               graph,
               new DefaultTargetNodeToBuildRuleTransformer(),
               params.getCell().getCellProvider());

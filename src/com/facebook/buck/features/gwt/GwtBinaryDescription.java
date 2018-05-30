@@ -22,8 +22,8 @@ import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
@@ -75,14 +75,15 @@ public class GwtBinaryDescription implements DescriptionWithTargetGraph<GwtBinar
       BuildRuleParams params,
       GwtBinaryDescriptionArg args) {
 
-    BuildRuleResolver resolver = context.getBuildRuleResolver();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
 
     ImmutableSortedSet.Builder<BuildRule> extraDeps = ImmutableSortedSet.naturalOrder();
 
     // Find all of the reachable JavaLibrary rules and grab their associated GwtModules.
     ImmutableSortedSet.Builder<SourcePath> gwtModuleJarsBuilder = ImmutableSortedSet.naturalOrder();
-    ImmutableSortedSet<BuildRule> moduleDependencies = resolver.getAllRules(args.getModuleDeps());
+    ImmutableSortedSet<BuildRule> moduleDependencies =
+        graphBuilder.getAllRules(args.getModuleDeps());
     new AbstractBreadthFirstTraversal<BuildRule>(moduleDependencies) {
       @Override
       public Iterable<BuildRule> visit(BuildRule rule) {
@@ -100,7 +101,7 @@ public class GwtBinaryDescription implements DescriptionWithTargetGraph<GwtBinar
         if (javaLibrary.getSourcePathToOutput() != null) {
           gwtModule =
               Optional.of(
-                  resolver.computeIfAbsent(
+                  graphBuilder.computeIfAbsent(
                       ImmutableBuildTarget.of(
                           javaLibrary.getBuildTarget().checkUnflavored(),
                           ImmutableSet.of(JavaLibrary.GWT_MODULE_FLAVOR)),

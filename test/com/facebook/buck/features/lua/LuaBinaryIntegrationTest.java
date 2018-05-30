@@ -28,7 +28,7 @@ import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.core.cell.DefaultCellPathResolver;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.rules.resolver.impl.TestBuildRuleResolver;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
@@ -111,7 +111,7 @@ public class LuaBinaryIntegrationTest {
     lua = luaOptional.get();
 
     // Try to detect if a Lua devel package is available, which is needed to C/C++ support.
-    BuildRuleResolver resolver = new TestBuildRuleResolver();
+    BuildRuleResolver resolver = new TestActionGraphBuilder();
     CxxPlatform cxxPlatform =
         DefaultCxxPlatforms.build(
             Platform.detect(), new CxxBuckConfig(FakeBuckConfig.builder().build()));

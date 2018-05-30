@@ -17,9 +17,9 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.rules.BuildRuleResolver;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.rules.resolver.impl.TestBuildRuleResolver;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
@@ -40,13 +40,13 @@ public class CxxSourceRuleFactoryHelper {
 
   public static CxxSourceRuleFactory of(
       Path cellRoot, BuildTarget target, CxxPlatform cxxPlatform, CxxBuckConfig cxxBuckConfig) {
-    BuildRuleResolver resolver = new TestBuildRuleResolver();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     return CxxSourceRuleFactory.builder()
         .setProjectFilesystem(new FakeProjectFilesystem(cellRoot))
         .setBaseBuildTarget(target)
-        .setResolver(resolver)
+        .setActionGraphBuilder(graphBuilder)
         .setPathResolver(pathResolver)
         .setRuleFinder(ruleFinder)
         .setCxxBuckConfig(cxxBuckConfig)
@@ -66,13 +66,13 @@ public class CxxSourceRuleFactoryHelper {
       CxxPlatform cxxPlatform,
       CxxBuckConfig cxxBuckConfig,
       PicType picType) {
-    BuildRuleResolver resolver = new TestBuildRuleResolver();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     return CxxSourceRuleFactory.builder()
         .setBaseBuildTarget(target)
         .setProjectFilesystem(new FakeProjectFilesystem(cellRoot))
-        .setResolver(resolver)
+        .setActionGraphBuilder(graphBuilder)
         .setPathResolver(pathResolver)
         .setRuleFinder(ruleFinder)
         .setCxxBuckConfig(cxxBuckConfig)

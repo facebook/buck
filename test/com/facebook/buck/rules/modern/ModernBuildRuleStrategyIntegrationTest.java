@@ -30,8 +30,8 @@ import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTarg
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypes;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
@@ -115,7 +115,7 @@ public class ModernBuildRuleStrategyIntegrationTest {
       return new TouchOutput(
           buildTarget,
           creationContext.getProjectFilesystem(),
-          new SourcePathRuleFinder(creationContext.getBuildRuleResolver()),
+          new SourcePathRuleFinder(creationContext.getActionGraphBuilder()),
           args.getOut());
     }
   }
@@ -143,16 +143,16 @@ public class ModernBuildRuleStrategyIntegrationTest {
         BuildTarget buildTarget,
         BuildRuleParams params,
         LargeDynamicsArg args) {
-      BuildRuleResolver resolver = context.getBuildRuleResolver();
+      ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
       Optional<LargeDynamics> firstRef =
-          args.getFirstRef().map(resolver::requireRule).map(LargeDynamics.class::cast);
+          args.getFirstRef().map(graphBuilder::requireRule).map(LargeDynamics.class::cast);
       Optional<LargeDynamics> secondRef =
-          args.getSecondRef().map(resolver::requireRule).map(LargeDynamics.class::cast);
+          args.getSecondRef().map(graphBuilder::requireRule).map(LargeDynamics.class::cast);
 
       return new LargeDynamics(
           buildTarget,
           context.getProjectFilesystem(),
-          new SourcePathRuleFinder(resolver),
+          new SourcePathRuleFinder(graphBuilder),
           firstRef,
           secondRef,
           args.getValue().charAt(0));
@@ -181,7 +181,7 @@ public class ModernBuildRuleStrategyIntegrationTest {
       return new FailingRule(
           buildTarget,
           context.getProjectFilesystem(),
-          new SourcePathRuleFinder(context.getBuildRuleResolver()),
+          new SourcePathRuleFinder(context.getActionGraphBuilder()),
           args.getStepFailure());
     }
   }

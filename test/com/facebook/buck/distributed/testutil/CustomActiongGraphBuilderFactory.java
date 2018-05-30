@@ -18,11 +18,12 @@ package com.facebook.buck.distributed.testutil;
 
 import com.facebook.buck.core.description.BuildRuleParams;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
-import com.facebook.buck.core.rules.resolver.impl.TestBuildRuleResolver;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -36,7 +37,7 @@ import com.google.common.collect.Sets;
 import java.util.Set;
 import java.util.stream.Stream;
 
-public class CustomBuildRuleResolverFactory {
+public class CustomActiongGraphBuilderFactory {
 
   public static final String ROOT_TARGET = "//foo:one";
   public static final String CACHABLE_D = ROOT_TARGET + "cacheable_d";
@@ -57,25 +58,24 @@ public class CustomBuildRuleResolverFactory {
   public static final String TRANSITIVE_DEP_RULE = "//:transitive_dep";
   public static final String HAS_RUNTIME_DEP_RULE = "//:runtime_dep";
 
-  public static BuildRuleResolver createSimpleResolver() throws NoSuchBuildTargetException {
-    BuildRuleResolver resolver = new TestBuildRuleResolver();
+  public static ActionGraphBuilder createSimpleBuilder() throws NoSuchBuildTargetException {
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     ImmutableSortedSet<BuildRule> buildRules =
         ImmutableSortedSet.of(
             JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance(ROOT_TARGET))
-                .build(resolver),
+                .build(graphBuilder),
             JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//foo:two"))
-                .build(resolver));
-    buildRules.forEach(resolver::addToIndex);
-    return resolver;
+                .build(graphBuilder));
+    buildRules.forEach(graphBuilder::addToIndex);
+    return graphBuilder;
   }
 
   // Graph structure:
   //        / right \
   // root -          - leaf
   //        \ left  /
-  public static BuildRuleResolver createDiamondDependencyResolver()
-      throws NoSuchBuildTargetException {
-    BuildRuleResolver resolver = new TestBuildRuleResolver();
+  public static BuildRuleResolver createDiamondDependencyGraph() throws NoSuchBuildTargetException {
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
 
     BuildTarget root = BuildTargetFactory.newInstance(ROOT_TARGET);
     BuildTarget left = BuildTargetFactory.newInstance(LEFT_TARGET);
@@ -84,21 +84,21 @@ public class CustomBuildRuleResolverFactory {
 
     ImmutableSortedSet<BuildRule> buildRules =
         ImmutableSortedSet.of(
-            JavaLibraryBuilder.createBuilder(leaf).build(resolver),
-            JavaLibraryBuilder.createBuilder(left).addDep(leaf).build(resolver),
-            JavaLibraryBuilder.createBuilder(right).addDep(leaf).build(resolver),
-            JavaLibraryBuilder.createBuilder(root).addDep(left).addDep(right).build(resolver));
-    buildRules.forEach(resolver::addToIndex);
-    return resolver;
+            JavaLibraryBuilder.createBuilder(leaf).build(graphBuilder),
+            JavaLibraryBuilder.createBuilder(left).addDep(leaf).build(graphBuilder),
+            JavaLibraryBuilder.createBuilder(right).addDep(leaf).build(graphBuilder),
+            JavaLibraryBuilder.createBuilder(root).addDep(left).addDep(right).build(graphBuilder));
+    buildRules.forEach(graphBuilder::addToIndex);
+    return graphBuilder;
   }
 
   // Graph structure:
   //        / right \
   // root -          - chain top - leaf
   //        \ left  /
-  public static BuildRuleResolver createDiamondDependencyResolverWithChainFromLeaf()
+  public static ActionGraphBuilder createDiamondDependencyBuilderWithChainFromLeaf()
       throws NoSuchBuildTargetException {
-    BuildRuleResolver resolver = new TestBuildRuleResolver();
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
 
     BuildTarget root = BuildTargetFactory.newInstance(ROOT_TARGET);
     BuildTarget left = BuildTargetFactory.newInstance(LEFT_TARGET);
@@ -108,25 +108,25 @@ public class CustomBuildRuleResolverFactory {
 
     ImmutableSortedSet<BuildRule> buildRules =
         ImmutableSortedSet.of(
-            JavaLibraryBuilder.createBuilder(leaf).build(resolver),
-            JavaLibraryBuilder.createBuilder(chainTop).addDep(leaf).build(resolver),
-            JavaLibraryBuilder.createBuilder(left).addDep(chainTop).build(resolver),
-            JavaLibraryBuilder.createBuilder(right).addDep(chainTop).build(resolver),
-            JavaLibraryBuilder.createBuilder(root).addDep(left).addDep(right).build(resolver));
-    buildRules.forEach(resolver::addToIndex);
-    return resolver;
+            JavaLibraryBuilder.createBuilder(leaf).build(graphBuilder),
+            JavaLibraryBuilder.createBuilder(chainTop).addDep(leaf).build(graphBuilder),
+            JavaLibraryBuilder.createBuilder(left).addDep(chainTop).build(graphBuilder),
+            JavaLibraryBuilder.createBuilder(right).addDep(chainTop).build(graphBuilder),
+            JavaLibraryBuilder.createBuilder(root).addDep(left).addDep(right).build(graphBuilder));
+    buildRules.forEach(graphBuilder::addToIndex);
+    return graphBuilder;
   }
 
   // Graph structure
   //  cacheable_a -> uncacheable_b
   public static BuildRuleResolver createBuildGraphWithUncachableLeaf() {
-    BuildRuleResolver resolver = new TestBuildRuleResolver();
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
 
     BuildRule uncacheableB =
-        newUncacheableRule(resolver, CustomBuildRuleResolverFactory.UNCACHABLE_B);
-    newCacheableRule(resolver, CustomBuildRuleResolverFactory.CACHABLE_A, uncacheableB);
+        newUncacheableRule(graphBuilder, CustomActiongGraphBuilderFactory.UNCACHABLE_B);
+    newCacheableRule(graphBuilder, CustomActiongGraphBuilderFactory.CACHABLE_A, uncacheableB);
 
-    return resolver;
+    return graphBuilder;
   }
 
   // Graph structure
@@ -134,71 +134,74 @@ public class CustomBuildRuleResolverFactory {
   // uncacheable_root                                  uc_d -> c_b -> uc_e -> c_c
   //                 \ uncacheable_c -> cacheable_a   /
   public static BuildRuleResolver createBuildGraphWithInterleavedUncacheables() {
-    BuildRuleResolver resolver = new TestBuildRuleResolver();
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
 
     // uncacheable_d -> cacheable_b -> uncacheable_e
-    BuildRule cacheableC = newCacheableRule(resolver, CustomBuildRuleResolverFactory.CACHABLE_C);
+    BuildRule cacheableC =
+        newCacheableRule(graphBuilder, CustomActiongGraphBuilderFactory.CACHABLE_C);
     BuildRule uncacheableE =
-        newUncacheableRule(resolver, CustomBuildRuleResolverFactory.UNCACHABLE_E, cacheableC);
+        newUncacheableRule(graphBuilder, CustomActiongGraphBuilderFactory.UNCACHABLE_E, cacheableC);
     BuildRule cacheableB =
-        newCacheableRule(resolver, CustomBuildRuleResolverFactory.CACHABLE_B, uncacheableE);
+        newCacheableRule(graphBuilder, CustomActiongGraphBuilderFactory.CACHABLE_B, uncacheableE);
     BuildRule uncacheableD =
-        newUncacheableRule(resolver, CustomBuildRuleResolverFactory.UNCACHABLE_D, cacheableB);
+        newUncacheableRule(graphBuilder, CustomActiongGraphBuilderFactory.UNCACHABLE_D, cacheableB);
 
     // uncacheable_a -> uncacheable b \
     BuildRule uncacheableB =
-        newUncacheableRule(resolver, CustomBuildRuleResolverFactory.UNCACHABLE_B, uncacheableD);
+        newUncacheableRule(
+            graphBuilder, CustomActiongGraphBuilderFactory.UNCACHABLE_B, uncacheableD);
     BuildRule uncacheableA =
-        newUncacheableRule(resolver, CustomBuildRuleResolverFactory.UNCACHABLE_A, uncacheableB);
+        newUncacheableRule(
+            graphBuilder, CustomActiongGraphBuilderFactory.UNCACHABLE_A, uncacheableB);
 
     // uncacheable_c -> cacheable a /
     BuildRule cacheableA =
-        newCacheableRule(resolver, CustomBuildRuleResolverFactory.CACHABLE_A, uncacheableD);
+        newCacheableRule(graphBuilder, CustomActiongGraphBuilderFactory.CACHABLE_A, uncacheableD);
     BuildRule uncacheableC =
-        newUncacheableRule(resolver, CustomBuildRuleResolverFactory.UNCACHABLE_C, cacheableA);
+        newUncacheableRule(graphBuilder, CustomActiongGraphBuilderFactory.UNCACHABLE_C, cacheableA);
 
     // uncacheable_root
     newUncacheableRule(
-        resolver, CustomBuildRuleResolverFactory.UNCACHABLE_ROOT, uncacheableA, uncacheableC);
+        graphBuilder, CustomActiongGraphBuilderFactory.UNCACHABLE_ROOT, uncacheableA, uncacheableC);
 
-    return resolver;
+    return graphBuilder;
   }
 
   private static BuildRule newUncacheableRule(
-      BuildRuleResolver resolver, String targetString, BuildRule... deps) {
+      ActionGraphBuilder graphBuilder, String targetString, BuildRule... deps) {
     FakeUncacheableBuildRule uncachableRule =
         new FakeUncacheableBuildRule(
             BuildTargetFactory.newInstance(targetString), new FakeProjectFilesystem(), deps);
-    resolver.addToIndex(uncachableRule);
+    graphBuilder.addToIndex(uncachableRule);
     return uncachableRule;
   }
 
   private static BuildRule newCacheableRule(
-      BuildRuleResolver resolver, String targetString, BuildRule... deps) {
+      ActionGraphBuilder graphBuilder, String targetString, BuildRule... deps) {
     FakeBuildRule rule =
         new FakeBuildRule(
             BuildTargetFactory.newInstance(targetString), new FakeProjectFilesystem(), deps);
-    resolver.addToIndex(rule);
+    graphBuilder.addToIndex(rule);
     return rule;
   }
 
   public static BuildRuleResolver createSimpleRuntimeDepsResolver() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    BuildRuleResolver resolver = new TestBuildRuleResolver();
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
 
     // Create a regular build rule
     BuildTarget buildTarget = BuildTargetFactory.newInstance(TRANSITIVE_DEP_RULE);
     BuildRuleParams ruleParams = TestBuildRuleParams.create();
     FakeBuildRule transitiveRuntimeDep = new FakeBuildRule(buildTarget, filesystem, ruleParams);
-    resolver.addToIndex(transitiveRuntimeDep);
+    graphBuilder.addToIndex(transitiveRuntimeDep);
 
     // Create a build rule with runtime deps
     FakeBuildRule runtimeDepRule =
         new FakeHasRuntimeDepsRule(
             BuildTargetFactory.newInstance(HAS_RUNTIME_DEP_RULE), filesystem, transitiveRuntimeDep);
-    resolver.addToIndex(runtimeDepRule);
+    graphBuilder.addToIndex(runtimeDepRule);
 
-    return resolver;
+    return graphBuilder;
   }
 
   // Graph structure:
@@ -211,22 +214,22 @@ public class CustomBuildRuleResolverFactory {
   //       +- left  -
   //                  \
   //                   {uncacheable b (runtime), cacheable c (runtime)}
-  public static BuildRuleResolver createResolverWithUncacheableRuntimeDeps() {
-    BuildRuleResolver resolver = new TestBuildRuleResolver();
+  public static BuildRuleResolver createGraphWithUncacheableRuntimeDeps() {
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
 
     BuildTarget root = BuildTargetFactory.newInstance(ROOT_TARGET);
     BuildTarget left = BuildTargetFactory.newInstance(LEFT_TARGET);
     BuildTarget right = BuildTargetFactory.newInstance(RIGHT_TARGET);
 
-    BuildRule leafRule = newCacheableRule(resolver, LEAF_TARGET);
-    BuildRule uncachableRuleA = newUncacheableRule(resolver, UNCACHABLE_A);
+    BuildRule leafRule = newCacheableRule(graphBuilder, LEAF_TARGET);
+    BuildRule uncachableRuleA = newUncacheableRule(graphBuilder, UNCACHABLE_A);
     BuildRule rightRule =
         new FakeHasRuntimeDepsRule(
             right, new FakeProjectFilesystem(), ImmutableSet.of(leafRule), uncachableRuleA);
-    resolver.addToIndex(rightRule);
+    graphBuilder.addToIndex(rightRule);
 
-    BuildRule uncachableRuleB = newUncacheableRule(resolver, UNCACHABLE_B);
-    BuildRule cachableRuleC = newCacheableRule(resolver, CACHABLE_C);
+    BuildRule uncachableRuleB = newUncacheableRule(graphBuilder, UNCACHABLE_B);
+    BuildRule cachableRuleC = newCacheableRule(graphBuilder, CACHABLE_C);
     BuildRule leftRule =
         new FakeHasRuntimeDepsRule(
             left,
@@ -234,13 +237,13 @@ public class CustomBuildRuleResolverFactory {
             ImmutableSet.of(leafRule),
             uncachableRuleB,
             cachableRuleC);
-    resolver.addToIndex(leftRule);
+    graphBuilder.addToIndex(leftRule);
 
     ImmutableSortedSet<BuildRule> buildRules =
         ImmutableSortedSet.of(
-            JavaLibraryBuilder.createBuilder(root).addDep(left).addDep(right).build(resolver));
-    buildRules.forEach(resolver::addToIndex);
-    return resolver;
+            JavaLibraryBuilder.createBuilder(root).addDep(left).addDep(right).build(graphBuilder));
+    buildRules.forEach(graphBuilder::addToIndex);
+    return graphBuilder;
   }
 
   // Graph structure:
@@ -249,36 +252,42 @@ public class CustomBuildRuleResolverFactory {
   //              uncachaeable_a
   //             /
   // cacheable_b - cacheable_c
-  public static BuildRuleResolver createResolverWithBuildLocallyDep() {
-    BuildRuleResolver resolver = new TestBuildRuleResolver();
+  public static BuildRuleResolver createGraphWithBuildLocallyDep() {
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
 
     // build_locally_a - cacheable_d
-    BuildRule cacheableD = newCacheableRule(resolver, CustomBuildRuleResolverFactory.CACHABLE_D);
+    BuildRule cacheableD =
+        newCacheableRule(graphBuilder, CustomActiongGraphBuilderFactory.CACHABLE_D);
     BuildRule cacheableBuildLocallyA =
         newCacheableBuildLocallyRule(
-            resolver, CustomBuildRuleResolverFactory.CACHABLE_BUILD_LOCALLY_A, cacheableD);
+            graphBuilder, CustomActiongGraphBuilderFactory.CACHABLE_BUILD_LOCALLY_A, cacheableD);
 
     // uncachaeable_a /
     BuildRule uncacheableA =
         newUncacheableRule(
-            resolver, CustomBuildRuleResolverFactory.UNCACHABLE_A, cacheableBuildLocallyA);
+            graphBuilder, CustomActiongGraphBuilderFactory.UNCACHABLE_A, cacheableBuildLocallyA);
     // cacheable_c
-    BuildRule cacheableC = newCacheableRule(resolver, CustomBuildRuleResolverFactory.CACHABLE_C);
+    BuildRule cacheableC =
+        newCacheableRule(graphBuilder, CustomActiongGraphBuilderFactory.CACHABLE_C);
 
     // cacheable_a, cacheable_b
     newCacheableRule(
-        resolver, CustomBuildRuleResolverFactory.CACHABLE_A, uncacheableA, cacheableBuildLocallyA);
-    newCacheableRule(resolver, CustomBuildRuleResolverFactory.CACHABLE_B, uncacheableA, cacheableC);
+        graphBuilder,
+        CustomActiongGraphBuilderFactory.CACHABLE_A,
+        uncacheableA,
+        cacheableBuildLocallyA);
+    newCacheableRule(
+        graphBuilder, CustomActiongGraphBuilderFactory.CACHABLE_B, uncacheableA, cacheableC);
 
-    return resolver;
+    return graphBuilder;
   }
 
   private static BuildRule newCacheableBuildLocallyRule(
-      BuildRuleResolver resolver, String targetString, BuildRule... deps) {
+      ActionGraphBuilder graphBuilder, String targetString, BuildRule... deps) {
     FakeBuildLocallyBuildRule rule =
         new FakeBuildLocallyBuildRule(
             BuildTargetFactory.newInstance(targetString), new FakeProjectFilesystem(), deps);
-    resolver.addToIndex(rule);
+    graphBuilder.addToIndex(rule);
     return rule;
   }
 

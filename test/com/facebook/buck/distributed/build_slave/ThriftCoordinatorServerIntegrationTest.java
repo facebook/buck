@@ -22,7 +22,7 @@ import static org.easymock.EasyMock.replay;
 import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.ExitCode;
 import com.facebook.buck.distributed.build_slave.ThriftCoordinatorServer.ExitState;
-import com.facebook.buck.distributed.testutil.CustomBuildRuleResolverFactory;
+import com.facebook.buck.distributed.testutil.CustomActiongGraphBuilderFactory;
 import com.facebook.buck.distributed.thrift.BuildJob;
 import com.facebook.buck.distributed.thrift.BuildStatus;
 import com.facebook.buck.distributed.thrift.GetWorkResponse;
@@ -101,7 +101,7 @@ public class ThriftCoordinatorServerIntegrationTest {
               MINION_ID,
               MINION_TYPE,
               0,
-              ImmutableList.of(CustomBuildRuleResolverFactory.LEAF_TARGET),
+              ImmutableList.of(CustomActiongGraphBuilderFactory.LEAF_TARGET),
               MAX_WORK_UNITS_TO_FETCH);
 
       Assert.assertEquals(responseTwo.getWorkUnitsSize(), 2);
@@ -113,8 +113,8 @@ public class ThriftCoordinatorServerIntegrationTest {
               MINION_TYPE,
               0,
               ImmutableList.of(
-                  CustomBuildRuleResolverFactory.LEFT_TARGET,
-                  CustomBuildRuleResolverFactory.RIGHT_TARGET),
+                  CustomActiongGraphBuilderFactory.LEFT_TARGET,
+                  CustomActiongGraphBuilderFactory.RIGHT_TARGET),
               MAX_WORK_UNITS_TO_FETCH);
 
       Assert.assertEquals(responseThree.getWorkUnitsSize(), 1);
@@ -125,7 +125,7 @@ public class ThriftCoordinatorServerIntegrationTest {
               MINION_ID,
               MINION_TYPE,
               0,
-              ImmutableList.of(CustomBuildRuleResolverFactory.ROOT_TARGET),
+              ImmutableList.of(CustomActiongGraphBuilderFactory.ROOT_TARGET),
               MAX_WORK_UNITS_TO_FETCH);
 
       Assert.assertEquals(responseFour.getWorkUnitsSize(), 0);
@@ -137,7 +137,7 @@ public class ThriftCoordinatorServerIntegrationTest {
               MINION_ID,
               MINION_TYPE,
               0,
-              ImmutableList.of(CustomBuildRuleResolverFactory.ROOT_TARGET),
+              ImmutableList.of(CustomActiongGraphBuilderFactory.ROOT_TARGET),
               MAX_WORK_UNITS_TO_FETCH);
 
       Assert.assertEquals(responseFive.getWorkUnitsSize(), 0);

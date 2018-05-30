@@ -22,8 +22,8 @@ import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
 import com.facebook.buck.core.description.BuildRuleParams;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -55,13 +55,13 @@ public class ApkGenruleDescription extends AbstractGenruleDescription<ApkGenrule
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      BuildRuleResolver resolver,
+      ActionGraphBuilder graphBuilder,
       ApkGenruleDescriptionArg args,
       Optional<Arg> cmd,
       Optional<Arg> bash,
       Optional<Arg> cmdExe) {
 
-    BuildRule apk = resolver.getRule(args.getApk());
+    BuildRule apk = graphBuilder.getRule(args.getApk());
     if (!(apk instanceof HasInstallableApk)) {
       throw new HumanReadableException(
           "The 'apk' argument of %s, %s, must correspond to an "
@@ -71,12 +71,12 @@ public class ApkGenruleDescription extends AbstractGenruleDescription<ApkGenrule
 
     Supplier<? extends SortedSet<BuildRule>> originalExtraDeps = params.getExtraDeps();
 
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     return new ApkGenrule(
         buildTarget,
         projectFilesystem,
         sandboxExecutionStrategy,
-        resolver,
+        graphBuilder,
         params.withExtraDeps(
             MoreSuppliers.memoize(
                 () ->

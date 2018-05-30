@@ -22,9 +22,9 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.InternalFlavor;
-import com.facebook.buck.core.rules.BuildRuleResolver;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.rules.resolver.impl.TestBuildRuleResolver;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.cxx.toolchain.Compiler;
@@ -50,16 +50,16 @@ public class CxxPrecompiledHeaderTest {
   @Test
   public void generatesPchStepShouldUseCorrectLang() {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
-    BuildRuleResolver resolver = new TestBuildRuleResolver();
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     Preprocessor preprocessorSupportingPch =
-        new GccPreprocessor(CxxPlatformUtils.DEFAULT_PLATFORM.getCpp().resolve(resolver)) {
+        new GccPreprocessor(CxxPlatformUtils.DEFAULT_PLATFORM.getCpp().resolve(graphBuilder)) {
           @Override
           public boolean supportsPrecompiledHeaders() {
             return true;
           }
         };
-    Compiler compiler = CxxPlatformUtils.DEFAULT_PLATFORM.getCxx().resolve(resolver);
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    Compiler compiler = CxxPlatformUtils.DEFAULT_PLATFORM.getCxx().resolve(graphBuilder);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(ruleFinder);
     CxxPrecompiledHeader precompiledHeader =
         new CxxPrecompiledHeader(
@@ -86,7 +86,7 @@ public class CxxPrecompiledHeaderTest {
             FakeSourcePath.of("foo.h"),
             CxxSource.Type.C,
             CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER);
-    resolver.addToIndex(precompiledHeader);
+    graphBuilder.addToIndex(precompiledHeader);
     BuildContext buildContext = FakeBuildContext.withSourcePathResolver(sourcePathResolver);
     ImmutableList<Step> postBuildSteps =
         precompiledHeader.getBuildSteps(buildContext, new FakeBuildableContext());

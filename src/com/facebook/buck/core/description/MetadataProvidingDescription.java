@@ -18,7 +18,7 @@ package com.facebook.buck.core.description;
 
 import com.facebook.buck.core.cell.resolver.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.rules.BuildRuleResolver;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.versions.Version;
 import com.google.common.collect.ImmutableMap;
 import java.util.Optional;
@@ -27,7 +27,7 @@ public interface MetadataProvidingDescription<T> {
 
   <U> Optional<U> createMetadata(
       BuildTarget buildTarget,
-      BuildRuleResolver resolver,
+      ActionGraphBuilder graphBuilder,
       CellPathResolver cellRoots,
       T args,
       Optional<ImmutableMap<BuildTarget, Version>> selectedVersions,

@@ -22,8 +22,8 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphCache;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
@@ -171,7 +171,7 @@ public class AuditClasspathCommand extends AbstractCommand {
               .getTargetGraph();
     }
 
-    BuildRuleResolver resolver =
+    ActionGraphBuilder graphBuilder =
         Preconditions.checkNotNull(
                 new ActionGraphCache(params.getBuckConfig().getMaxActionGraphCacheEntries())
                     .getFreshActionGraph(
@@ -181,13 +181,13 @@ public class AuditClasspathCommand extends AbstractCommand {
                         params.getBuckConfig().getActionGraphParallelizationMode(),
                         params.getBuckConfig().getShouldInstrumentActionGraph(),
                         params.getPoolSupplier()))
-            .getResolver();
+            .getActionGraphBuilder();
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
     SortedSet<Path> classpathEntries = new TreeSet<>();
 
     for (BuildTarget target : targets) {
-      BuildRule rule = Preconditions.checkNotNull(resolver.requireRule(target));
+      BuildRule rule = Preconditions.checkNotNull(graphBuilder.requireRule(target));
       HasClasspathEntries hasClasspathEntries = getHasClasspathEntriesFrom(rule);
       if (hasClasspathEntries != null) {
         classpathEntries.addAll(
@@ -216,7 +216,7 @@ public class AuditClasspathCommand extends AbstractCommand {
               .getTargetGraph();
     }
 
-    BuildRuleResolver resolver =
+    ActionGraphBuilder graphBuilder =
         Preconditions.checkNotNull(
                 new ActionGraphCache(params.getBuckConfig().getMaxActionGraphCacheEntries())
                     .getFreshActionGraph(
@@ -226,13 +226,13 @@ public class AuditClasspathCommand extends AbstractCommand {
                         params.getBuckConfig().getActionGraphParallelizationMode(),
                         params.getBuckConfig().getShouldInstrumentActionGraph(),
                         params.getPoolSupplier()))
-            .getResolver();
+            .getActionGraphBuilder();
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
     Multimap<String, String> targetClasspaths = LinkedHashMultimap.create();
 
     for (BuildTarget target : targets) {
-      BuildRule rule = Preconditions.checkNotNull(resolver.requireRule(target));
+      BuildRule rule = Preconditions.checkNotNull(graphBuilder.requireRule(target));
       HasClasspathEntries hasClasspathEntries = getHasClasspathEntriesFrom(rule);
       if (hasClasspathEntries == null) {
         continue;

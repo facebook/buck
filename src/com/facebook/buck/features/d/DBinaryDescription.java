@@ -28,8 +28,8 @@ import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
@@ -81,8 +81,8 @@ public class DBinaryDescription
       BuildRuleParams params,
       DBinaryDescriptionArg args) {
 
-    BuildRuleResolver buildRuleResolver = context.getBuildRuleResolver();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
+    ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
 
@@ -92,8 +92,7 @@ public class DBinaryDescription
     }
 
     SymlinkTree sourceTree =
-        (SymlinkTree)
-            buildRuleResolver.requireRule(DDescriptionUtils.getSymlinkTreeTarget(buildTarget));
+        (SymlinkTree) graphBuilder.requireRule(DDescriptionUtils.getSymlinkTreeTarget(buildTarget));
 
     // Create a rule that actually builds the binary, and add that
     // rule to the index.
@@ -103,7 +102,7 @@ public class DBinaryDescription
             buildTarget.withAppendedFlavors(BINARY_FLAVOR),
             projectFilesystem,
             params,
-            buildRuleResolver,
+            graphBuilder,
             getCxxPlatform(),
             dBuckConfig,
             cxxBuckConfig,
@@ -114,7 +113,7 @@ public class DBinaryDescription
                 .setLinkTree(sourceTree.getSourcePathToOutput())
                 .addAllSources(args.getSrcs().getPaths())
                 .build());
-    buildRuleResolver.addToIndex(nativeLinkable);
+    graphBuilder.addToIndex(nativeLinkable);
 
     // Create a Tool for the executable.
     CommandTool.Builder executableBuilder = new CommandTool.Builder();

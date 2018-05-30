@@ -20,7 +20,7 @@ import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.rules.resolver.impl.TestBuildRuleResolver;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -40,7 +40,7 @@ public class AppleAssetCatalogTest {
 
   private ProjectFilesystem filesystem;
   private SourcePathResolver resolver =
-      DefaultSourcePathResolver.from(new SourcePathRuleFinder(new TestBuildRuleResolver()));
+      DefaultSourcePathResolver.from(new SourcePathRuleFinder(new TestActionGraphBuilder()));
 
   @Rule public final TemporaryPaths tmp = new TemporaryPaths();
 

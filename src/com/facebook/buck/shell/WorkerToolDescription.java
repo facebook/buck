@@ -23,8 +23,8 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.tool.BinaryBuildRule;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
@@ -73,11 +73,11 @@ public class WorkerToolDescription implements DescriptionWithTargetGraph<WorkerT
       BuildTarget buildTarget,
       BuildRuleParams params,
       WorkerToolDescriptionArg args) {
-    BuildRuleResolver resolver = context.getBuildRuleResolver();
+    ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
 
     CommandTool.Builder builder;
     if (args.getExe().isPresent()) {
-      BuildRule rule = resolver.requireRule(args.getExe().get());
+      BuildRule rule = graphBuilder.requireRule(args.getExe().get());
       if (!(rule instanceof BinaryBuildRule)) {
         throw new HumanReadableException(
             "The 'exe' argument of %s, %s, needs to correspond to a "
@@ -107,7 +107,7 @@ public class WorkerToolDescription implements DescriptionWithTargetGraph<WorkerT
 
     if (args.getArgs().isLeft()) {
       builder.addArg(
-          new ProxyArg(macrosConverter.convert(args.getArgs().getLeft(), resolver)) {
+          new ProxyArg(macrosConverter.convert(args.getArgs().getLeft(), graphBuilder)) {
             @Override
             public void appendToCommandLine(
                 Consumer<String> consumer, SourcePathResolver pathResolver) {
@@ -122,11 +122,11 @@ public class WorkerToolDescription implements DescriptionWithTargetGraph<WorkerT
           });
     } else {
       for (StringWithMacros arg : args.getArgs().getRight()) {
-        builder.addArg(macrosConverter.convert(arg, resolver));
+        builder.addArg(macrosConverter.convert(arg, graphBuilder));
       }
     }
     for (Map.Entry<String, StringWithMacros> e : args.getEnv().entrySet()) {
-      builder.addEnv(e.getKey(), macrosConverter.convert(e.getValue(), resolver));
+      builder.addEnv(e.getKey(), macrosConverter.convert(e.getValue(), graphBuilder));
     }
 
     // negative or zero: unlimited number of worker processes
@@ -136,7 +136,7 @@ public class WorkerToolDescription implements DescriptionWithTargetGraph<WorkerT
     return new DefaultWorkerTool(
         buildTarget,
         context.getProjectFilesystem(),
-        new SourcePathRuleFinder(resolver),
+        new SourcePathRuleFinder(graphBuilder),
         tool,
         maxWorkers,
         args.getPersistent()

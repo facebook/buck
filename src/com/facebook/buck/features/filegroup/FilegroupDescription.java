@@ -42,7 +42,7 @@ public class FilegroupDescription implements DescriptionWithTargetGraph<FileGrou
       BuildRuleParams params,
       FileGroupDescriptionArg args) {
     String name = args.getName();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(context.getBuildRuleResolver());
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(context.getActionGraphBuilder());
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
     return new Filegroup(buildTarget, projectFilesystem, ruleFinder, name, args.getSrcs());
   }

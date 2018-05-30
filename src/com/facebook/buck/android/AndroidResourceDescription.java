@@ -29,8 +29,8 @@ import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -98,8 +98,8 @@ public class AndroidResourceDescription
       BuildTarget buildTarget,
       BuildRuleParams params,
       AndroidResourceDescriptionArg args) {
-    BuildRuleResolver resolver = context.getBuildRuleResolver();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
     ImmutableSortedSet<Flavor> flavors = buildTarget.getFlavors();
     if (flavors.contains(RESOURCES_SYMLINK_TREE_FLAVOR)) {
@@ -133,10 +133,10 @@ public class AndroidResourceDescription
     // we have to resort to some hackery to make sure things work correctly.
     Pair<Optional<SymlinkTree>, Optional<SourcePath>> resInputs =
         collectInputSourcePaths(
-            resolver, buildTarget, RESOURCES_SYMLINK_TREE_FLAVOR, args.getRes());
+            graphBuilder, buildTarget, RESOURCES_SYMLINK_TREE_FLAVOR, args.getRes());
     Pair<Optional<SymlinkTree>, Optional<SourcePath>> assetsInputs =
         collectInputSourcePaths(
-            resolver, buildTarget, ASSETS_SYMLINK_TREE_FLAVOR, args.getAssets());
+            graphBuilder, buildTarget, ASSETS_SYMLINK_TREE_FLAVOR, args.getAssets());
 
     if (flavors.contains(AAPT2_COMPILE_FLAVOR)) {
       Optional<SourcePath> resDir = resInputs.getSecond();
@@ -186,7 +186,7 @@ public class AndroidResourceDescription
         params.withDeclaredDeps(
             AndroidResourceHelper.androidResOnly(params.getDeclaredDeps().get())),
         ruleFinder,
-        resolver.getAllRules(args.getDeps()),
+        graphBuilder.getAllRules(args.getDeps()),
         resInputs.getSecond().orElse(null),
         resInputs.getFirst().map(SymlinkTree::getLinks).orElse(ImmutableSortedMap.of()),
         args.getPackage().orElse(null),
@@ -239,7 +239,7 @@ public class AndroidResourceDescription
   }
 
   public static Optional<SourcePath> getResDirectoryForProject(
-      BuildRuleResolver ruleResolver, TargetNode<AndroidResourceDescriptionArg, ?> node) {
+      ActionGraphBuilder graphBuilder, TargetNode<AndroidResourceDescriptionArg, ?> node) {
     AndroidResourceDescriptionArg arg = node.getConstructorArg();
     if (arg.getProjectRes().isPresent()) {
       return Optional.of(PathSourcePath.of(node.getFilesystem(), arg.getProjectRes().get()));
@@ -250,12 +250,12 @@ public class AndroidResourceDescription
     if (arg.getRes().get().isLeft()) {
       return Optional.of(arg.getRes().get().getLeft());
     } else {
-      return getResDirectory(ruleResolver, node);
+      return getResDirectory(graphBuilder, node);
     }
   }
 
   public static Optional<SourcePath> getAssetsDirectoryForProject(
-      BuildRuleResolver ruleResolver, TargetNode<AndroidResourceDescriptionArg, ?> node) {
+      ActionGraphBuilder graphBuilder, TargetNode<AndroidResourceDescriptionArg, ?> node) {
     AndroidResourceDescriptionArg arg = node.getConstructorArg();
     if (arg.getProjectAssets().isPresent()) {
       return Optional.of(PathSourcePath.of(node.getFilesystem(), arg.getProjectAssets().get()));
@@ -266,14 +266,14 @@ public class AndroidResourceDescription
     if (arg.getAssets().get().isLeft()) {
       return Optional.of(arg.getAssets().get().getLeft());
     } else {
-      return getAssetsDirectory(ruleResolver, node);
+      return getAssetsDirectory(graphBuilder, node);
     }
   }
 
   private static Optional<SourcePath> getResDirectory(
-      BuildRuleResolver ruleResolver, TargetNode<AndroidResourceDescriptionArg, ?> node) {
+      ActionGraphBuilder graphBuilder, TargetNode<AndroidResourceDescriptionArg, ?> node) {
     return collectInputSourcePaths(
-            ruleResolver,
+            graphBuilder,
             node.getBuildTarget(),
             RESOURCES_SYMLINK_TREE_FLAVOR,
             node.getConstructorArg().getRes())
@@ -281,9 +281,9 @@ public class AndroidResourceDescription
   }
 
   private static Optional<SourcePath> getAssetsDirectory(
-      BuildRuleResolver ruleResolver, TargetNode<AndroidResourceDescriptionArg, ?> node) {
+      ActionGraphBuilder graphBuilder, TargetNode<AndroidResourceDescriptionArg, ?> node) {
     return collectInputSourcePaths(
-            ruleResolver,
+            graphBuilder,
             node.getBuildTarget(),
             ASSETS_SYMLINK_TREE_FLAVOR,
             node.getConstructorArg().getAssets())
@@ -291,7 +291,7 @@ public class AndroidResourceDescription
   }
 
   private static Pair<Optional<SymlinkTree>, Optional<SourcePath>> collectInputSourcePaths(
-      BuildRuleResolver ruleResolver,
+      ActionGraphBuilder graphBuilder,
       BuildTarget resourceRuleTarget,
       Flavor symlinkTreeFlavor,
       Optional<Either<SourcePath, ImmutableSortedMap<String, SourcePath>>> attribute) {
@@ -308,7 +308,7 @@ public class AndroidResourceDescription
     }
     BuildTarget symlinkTreeTarget = resourceRuleTarget.withFlavors(symlinkTreeFlavor);
     SymlinkTree symlinkTree;
-    symlinkTree = (SymlinkTree) ruleResolver.requireRule(symlinkTreeTarget);
+    symlinkTree = (SymlinkTree) graphBuilder.requireRule(symlinkTreeTarget);
     return new Pair<>(Optional.of(symlinkTree), Optional.of(symlinkTree.getSourcePathToOutput()));
   }
 

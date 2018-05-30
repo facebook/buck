@@ -34,8 +34,8 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
@@ -89,9 +89,9 @@ public class AndroidInstrumentationApkDescription
       BuildTarget buildTarget,
       BuildRuleParams params,
       AndroidInstrumentationApkDescriptionArg args) {
-    BuildRuleResolver resolver = context.getBuildRuleResolver();
+    ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
     params = params.withoutExtraDeps();
-    BuildRule installableApk = resolver.getRule(args.getApk());
+    BuildRule installableApk = graphBuilder.getRule(args.getApk());
     if (!(installableApk instanceof HasInstallableApk)) {
       throw new HumanReadableException(
           "In %s, apk='%s' must be an android_binary() or apk_genrule() but was %s().",
@@ -146,7 +146,7 @@ public class AndroidInstrumentationApkDescription
             .setShouldProguard(shouldProguard)
             .build();
 
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
 
     AndroidPlatformTarget androidPlatformTarget =
         toolchainProvider.getByName(
@@ -160,7 +160,7 @@ public class AndroidInstrumentationApkDescription
             context.getProjectFilesystem(),
             androidPlatformTarget,
             params,
-            resolver,
+            graphBuilder,
             args.getAaptMode(),
             ResourceCompressionMode.DISABLED,
             FilterResourcesSteps.ResourceFilter.EMPTY_FILTER,

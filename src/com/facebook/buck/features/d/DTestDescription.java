@@ -28,8 +28,8 @@ import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
@@ -76,8 +76,8 @@ public class DTestDescription
       BuildRuleParams params,
       DTestDescriptionArg args) {
 
-    BuildRuleResolver buildRuleResolver = context.getBuildRuleResolver();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
+    ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
 
@@ -87,8 +87,7 @@ public class DTestDescription
     }
 
     SymlinkTree sourceTree =
-        (SymlinkTree)
-            buildRuleResolver.requireRule(DDescriptionUtils.getSymlinkTreeTarget(buildTarget));
+        (SymlinkTree) graphBuilder.requireRule(DDescriptionUtils.getSymlinkTreeTarget(buildTarget));
 
     CxxPlatform cxxPlatform = getCxxPlatform();
 
@@ -104,7 +103,7 @@ public class DTestDescription
             binaryTarget,
             projectFilesystem,
             params,
-            buildRuleResolver,
+            graphBuilder,
             cxxPlatform,
             dBuckConfig,
             cxxBuckConfig,
@@ -115,7 +114,7 @@ public class DTestDescription
                 .setLinkTree(sourceTree.getSourcePathToOutput())
                 .addAllSources(args.getSrcs().getPaths())
                 .build());
-    buildRuleResolver.addToIndex(binaryRule);
+    graphBuilder.addToIndex(binaryRule);
 
     return new DTest(
         buildTarget,

@@ -34,8 +34,8 @@ import com.facebook.buck.core.description.BuildRuleParams;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
 import com.facebook.buck.core.rules.tool.BinaryBuildRule;
@@ -182,7 +182,7 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      BuildRuleResolver buildRuleResolver,
+      ActionGraphBuilder graphBuilder,
       Either<AppleBundleExtension, String> extension,
       Optional<String> productName,
       SourcePath infoPlist,
@@ -218,8 +218,7 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
     Optional<SourcePath> entitlementsFile = Optional.empty();
     if (binary.isPresent()) {
       Optional<HasEntitlementsFile> hasEntitlementsFile =
-          buildRuleResolver.requireMetadata(
-              binary.get().getBuildTarget(), HasEntitlementsFile.class);
+          graphBuilder.requireMetadata(binary.get().getBuildTarget(), HasEntitlementsFile.class);
       if (hasEntitlementsFile.isPresent()) {
         entitlementsFile = hasEntitlementsFile.get().getEntitlementsFile();
       }
@@ -271,7 +270,7 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
       this.codeSignIdentitiesSupplier = Suppliers.ofInstance(ImmutableList.of());
     }
     this.codesignAllocatePath = appleCxxPlatform.getCodesignAllocate();
-    this.codesign = appleCxxPlatform.getCodesignProvider().resolve(buildRuleResolver);
+    this.codesign = appleCxxPlatform.getCodesignProvider().resolve(graphBuilder);
     this.swiftStdlibTool =
         appleCxxPlatform.getSwiftPlatform().isPresent()
             ? appleCxxPlatform.getSwiftPlatform().get().getSwiftStdlibTool()
@@ -1116,12 +1115,12 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public CxxPreprocessorInput getPrivateCxxPreprocessorInput(
-      CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
+      CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
     if (binary.isPresent()) {
       BuildRule binaryRule = binary.get();
       if (binaryRule instanceof NativeTestable) {
         return ((NativeTestable) binaryRule)
-            .getPrivateCxxPreprocessorInput(cxxPlatform, ruleResolver);
+            .getPrivateCxxPreprocessorInput(cxxPlatform, graphBuilder);
       }
     }
     return CxxPreprocessorInput.of();

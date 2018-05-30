@@ -50,7 +50,7 @@ public class AndroidManifestDescription
     return androidManifestFactory.createBuildRule(
         buildTarget,
         context.getProjectFilesystem(),
-        context.getBuildRuleResolver(),
+        context.getActionGraphBuilder(),
         args.getDeps(),
         args.getSkeleton());
   }

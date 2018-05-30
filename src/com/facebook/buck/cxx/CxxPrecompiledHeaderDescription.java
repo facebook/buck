@@ -46,7 +46,7 @@ public class CxxPrecompiledHeaderDescription
       BuildTarget buildTarget,
       BuildRuleParams params,
       CxxPrecompiledHeaderDescriptionArg args) {
-    BuildRuleResolver ruleResolver = context.getBuildRuleResolver();
+    BuildRuleResolver ruleResolver = context.getActionGraphBuilder();
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     return new CxxPrecompiledHeaderTemplate(

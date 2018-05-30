@@ -17,8 +17,8 @@
 package com.facebook.buck.core.model.targetgraph;
 
 import com.facebook.buck.core.cell.resolver.CellPathResolver;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.BuildRuleCreationContext;
 import com.facebook.buck.toolchain.ToolchainProvider;
@@ -36,7 +36,7 @@ public interface BuildRuleCreationContextWithTargetGraph extends BuildRuleCreati
 
   @Value.Parameter
   @Override
-  BuildRuleResolver getBuildRuleResolver();
+  ActionGraphBuilder getActionGraphBuilder();
 
   @Value.Parameter
   @Override

@@ -24,9 +24,10 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.RuleKey;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.rules.resolver.impl.TestBuildRuleResolver;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
@@ -87,7 +88,7 @@ public class SymlinkTreeTest {
   private Path outputPath;
   private SourcePathRuleFinder ruleFinder;
   private SourcePathResolver pathResolver;
-  private BuildRuleResolver ruleResolver;
+  private ActionGraphBuilder graphBuilder;
 
   @Before
   public void setUp() throws Exception {
@@ -117,8 +118,8 @@ public class SymlinkTreeTest {
     // The output path used by the buildable for the link tree.
     outputPath = BuildTargets.getGenPath(projectFilesystem, buildTarget, "%s/symlink-tree-root");
 
-    ruleResolver = new TestBuildRuleResolver();
-    ruleFinder = new SourcePathRuleFinder(ruleResolver);
+    graphBuilder = new TestActionGraphBuilder();
+    ruleFinder = new SourcePathRuleFinder(graphBuilder);
     pathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
     // Setup the symlink tree buildable.
@@ -180,7 +181,7 @@ public class SymlinkTreeTest {
                     projectFilesystem, MorePaths.relativize(tmpDir.getRoot(), aFile))),
             ImmutableMultimap.of(),
             ruleFinder);
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestBuildRuleResolver());
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestActionGraphBuilder());
     SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
 
     // Calculate their rule keys and verify they're different.
@@ -209,16 +210,16 @@ public class SymlinkTreeTest {
     BuildTarget exportFileTarget2 = BuildTargetFactory.newInstance("//test:dir2");
 
     Genrule exportFile1 =
-        GenruleBuilder.newGenruleBuilder(exportFileTarget1).setOut("dir1").build(ruleResolver);
+        GenruleBuilder.newGenruleBuilder(exportFileTarget1).setOut("dir1").build(graphBuilder);
     Genrule exportFile2 =
-        GenruleBuilder.newGenruleBuilder(exportFileTarget2).setOut("dir1").build(ruleResolver);
+        GenruleBuilder.newGenruleBuilder(exportFileTarget2).setOut("dir1").build(graphBuilder);
 
     projectFilesystem.mkdirs(Paths.get("test", "dir1"));
     projectFilesystem.writeContentsToPath("file", Paths.get("test", "dir1", "file1"));
     projectFilesystem.mkdirs(Paths.get("test", "dir2"));
     projectFilesystem.writeContentsToPath("file", Paths.get("test", "dir2", "file2"));
-    ruleResolver.computeIfAbsent(exportFileTarget1, target -> exportFile1);
-    ruleResolver.computeIfAbsent(exportFileTarget2, target -> exportFile2);
+    graphBuilder.computeIfAbsent(exportFileTarget1, target -> exportFile1);
+    graphBuilder.computeIfAbsent(exportFileTarget2, target -> exportFile2);
 
     // Create three link tree objects. One will change the dependencies, and one just changes
     // destination subdirs to make sure that's taken into account
@@ -296,16 +297,16 @@ public class SymlinkTreeTest {
     BuildTarget exportFileTarget2 = BuildTargetFactory.newInstance("//test:dir2");
 
     Genrule exportFile1 =
-        GenruleBuilder.newGenruleBuilder(exportFileTarget1).setOut("dir1").build(ruleResolver);
+        GenruleBuilder.newGenruleBuilder(exportFileTarget1).setOut("dir1").build(graphBuilder);
     Genrule exportFile2 =
-        GenruleBuilder.newGenruleBuilder(exportFileTarget2).setOut("dir1").build(ruleResolver);
+        GenruleBuilder.newGenruleBuilder(exportFileTarget2).setOut("dir1").build(graphBuilder);
 
     projectFilesystem.mkdirs(Paths.get("test", "dir1"));
     projectFilesystem.writeContentsToPath("file", Paths.get("test", "dir1", "file1"));
     projectFilesystem.mkdirs(Paths.get("test", "dir2"));
     projectFilesystem.writeContentsToPath("file", Paths.get("test", "dir2", "file2"));
-    ruleResolver.computeIfAbsent(exportFileTarget1, target -> exportFile1);
-    ruleResolver.computeIfAbsent(exportFileTarget2, target -> exportFile2);
+    graphBuilder.computeIfAbsent(exportFileTarget1, target -> exportFile1);
+    graphBuilder.computeIfAbsent(exportFileTarget2, target -> exportFile2);
 
     ImmutableListMultimap<Path, SourcePath> firstMergeDirectories =
         ImmutableListMultimap.of(
@@ -378,7 +379,7 @@ public class SymlinkTreeTest {
 
   @Test
   public void testSymlinkTreeRuleKeyDoesNotChangeIfLinkTargetsChangeOnUnix() throws IOException {
-    ruleResolver.addToIndex(symlinkTreeBuildRule);
+    graphBuilder.addToIndex(symlinkTreeBuildRule);
 
     InputBasedRuleKeyFactory ruleKeyFactory =
         new TestInputBasedRuleKeyFactory(
@@ -403,16 +404,16 @@ public class SymlinkTreeTest {
       throws Exception {
     // If a dependent of a symlink tree uses the symlink tree's output as an input, that dependent's
     // rulekey must change when the link contents change.
-    BuildRuleResolver ruleResolver = new TestBuildRuleResolver();
-    ruleResolver.addToIndex(symlinkTreeBuildRule);
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
+    graphBuilder.addToIndex(symlinkTreeBuildRule);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
     Genrule genrule =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
             .setSrcs(ImmutableList.of(symlinkTreeBuildRule.getSourcePathToOutput()))
             .setOut("out")
-            .build(ruleResolver);
+            .build(graphBuilder);
 
     DefaultFileHashCache hashCache =
         DefaultFileHashCache.createDefaultFileHashCache(
@@ -438,7 +439,7 @@ public class SymlinkTreeTest {
     Genrule dep =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
             .setOut("out")
-            .build(ruleResolver);
+            .build(graphBuilder);
 
     symlinkTreeBuildRule =
         new SymlinkTree(
@@ -490,7 +491,7 @@ public class SymlinkTreeTest {
 
   @Test
   public void resolveDuplicateRelativePathsIsNoopWhenThereAreNoDuplicates() {
-    BuildRuleResolver ruleResolver = new TestBuildRuleResolver();
+    BuildRuleResolver ruleResolver = new TestActionGraphBuilder();
     SourcePathResolver resolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(ruleResolver));
 
@@ -510,7 +511,7 @@ public class SymlinkTreeTest {
 
   @Test
   public void resolveDuplicateRelativePaths() throws InterruptedException, IOException {
-    BuildRuleResolver ruleResolver = new TestBuildRuleResolver();
+    BuildRuleResolver ruleResolver = new TestActionGraphBuilder();
     SourcePathResolver resolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(ruleResolver));
     tmp.getRoot().resolve("one").toFile().mkdir();
@@ -536,7 +537,7 @@ public class SymlinkTreeTest {
 
   @Test
   public void resolveDuplicateRelativePathsWithConflicts() throws Exception {
-    BuildRuleResolver ruleResolver = new TestBuildRuleResolver();
+    BuildRuleResolver ruleResolver = new TestActionGraphBuilder();
     SourcePathResolver resolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(ruleResolver));
     tmp.getRoot().resolve("a-fs").toFile().mkdir();
@@ -586,17 +587,17 @@ public class SymlinkTreeTest {
             .setSrcs(ImmutableList.of(FakeSourcePath.of(projectFilesystem, dir1file)))
             .setCmd("mkdir -p $OUT && cp $SRCS $OUT")
             .setCmdExe("mkdir $OUT && copy $SRCS $OUT")
-            .build(ruleResolver);
+            .build(graphBuilder);
     Genrule exportFile2 =
         GenruleBuilder.newGenruleBuilder(exportFileTarget2, projectFilesystem)
             .setOut("dir2")
             .setSrcs(ImmutableList.of(FakeSourcePath.of(projectFilesystem, dir2file)))
             .setCmd("mkdir -p $OUT && cp $SRCS $OUT")
             .setCmdExe("mkdir $OUT && copy $SRCS $OUT")
-            .build(ruleResolver);
+            .build(graphBuilder);
 
-    ruleResolver.computeIfAbsent(exportFileTarget1, target -> exportFile1);
-    ruleResolver.computeIfAbsent(exportFileTarget2, target -> exportFile2);
+    graphBuilder.computeIfAbsent(exportFileTarget1, target -> exportFile1);
+    graphBuilder.computeIfAbsent(exportFileTarget2, target -> exportFile2);
 
     symlinkTreeBuildRule =
         new SymlinkTree(
@@ -666,17 +667,17 @@ public class SymlinkTreeTest {
             .setSrcs(ImmutableList.of(FakeSourcePath.of(projectFilesystem, dir1file)))
             .setCmd("mkdir -p $OUT && cp $SRCS $OUT")
             .setCmdExe("mkdir $OUT && copy $SRCS $OUT")
-            .build(ruleResolver);
+            .build(graphBuilder);
     Genrule exportFile2 =
         GenruleBuilder.newGenruleBuilder(exportFileTarget2, projectFilesystem)
             .setOut("dir2")
             .setSrcs(ImmutableList.of(FakeSourcePath.of(projectFilesystem, dir2file)))
             .setCmd("mkdir -p $OUT && cp $SRCS $OUT")
             .setCmdExe("mkdir $OUT && copy $SRCS $OUT")
-            .build(ruleResolver);
+            .build(graphBuilder);
 
-    ruleResolver.computeIfAbsent(exportFileTarget1, target -> exportFile1);
-    ruleResolver.computeIfAbsent(exportFileTarget2, target -> exportFile2);
+    graphBuilder.computeIfAbsent(exportFileTarget1, target -> exportFile1);
+    graphBuilder.computeIfAbsent(exportFileTarget2, target -> exportFile2);
 
     symlinkTreeBuildRule =
         new SymlinkTree(
@@ -723,11 +724,11 @@ public class SymlinkTreeTest {
             .setSrcs(ImmutableList.of(FakeSourcePath.of(projectFilesystem, dir1file)))
             .setCmd("mkdir $OUT && cp $SRCS $OUT")
             .setCmdExe("mkdir $OUT && copy $SRCS $OUT")
-            .build(ruleResolver);
+            .build(graphBuilder);
 
     projectFilesystem.mkdirs(dir1);
     projectFilesystem.writeContentsToPath("file", dir1file);
-    ruleResolver.computeIfAbsent(exportFileTarget1, target -> exportFile1);
+    graphBuilder.computeIfAbsent(exportFileTarget1, target -> exportFile1);
 
     symlinkTreeBuildRule =
         new SymlinkTree(
@@ -758,8 +759,8 @@ public class SymlinkTreeTest {
   public void getsCorrectCompileTimeDeps() {
     BuildTarget exportFileTarget = BuildTargetFactory.newInstance("//test:dir");
     Genrule exportFile =
-        GenruleBuilder.newGenruleBuilder(exportFileTarget).setOut("dir1").build(ruleResolver);
-    ruleResolver.computeIfAbsent(exportFileTarget, target -> exportFile);
+        GenruleBuilder.newGenruleBuilder(exportFileTarget).setOut("dir1").build(graphBuilder);
+    graphBuilder.computeIfAbsent(exportFileTarget, target -> exportFile);
 
     symlinkTreeBuildRule =
         new SymlinkTree(

@@ -46,7 +46,7 @@ public class CsharpLibraryDescription
       BuildRuleParams params,
       CsharpLibraryDescriptionArg args) {
 
-    BuildRuleResolver resolver = context.getBuildRuleResolver();
+    BuildRuleResolver resolver = context.getActionGraphBuilder();
     ImmutableList.Builder<Either<BuildRule, String>> refsAsRules = ImmutableList.builder();
     for (Either<BuildTarget, String> ref : args.getDeps()) {
       if (ref.isLeft()) {

@@ -24,7 +24,7 @@ import com.facebook.buck.core.build.engine.impl.CachingBuildEngine;
 import com.facebook.buck.core.build.engine.impl.MetadataChecker;
 import com.facebook.buck.core.build.event.BuildEvent;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.actiongraph.ActionGraphAndResolver;
+import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphCache;
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
@@ -72,7 +72,7 @@ public class FetchCommand extends BuildCommand {
 
     try (CommandThreadManager pool =
         new CommandThreadManager("Fetch", getConcurrencyLimit(params.getBuckConfig())); ) {
-      ActionGraphAndResolver actionGraphAndResolver;
+      ActionGraphAndBuilder actionGraphAndBuilder;
       ImmutableSet<BuildTarget> buildTargets;
       try {
         ParserConfig parserConfig = params.getBuckConfig().getView(ParserConfig.class);
@@ -89,7 +89,7 @@ public class FetchCommand extends BuildCommand {
         if (params.getBuckConfig().getBuildVersions()) {
           result = toVersionedTargetGraph(params, result);
         }
-        actionGraphAndResolver =
+        actionGraphAndBuilder =
             Preconditions.checkNotNull(
                 new ActionGraphCache(params.getBuckConfig().getMaxActionGraphCacheEntries())
                     .getFreshActionGraph(
@@ -114,13 +114,13 @@ public class FetchCommand extends BuildCommand {
       LocalCachingBuildEngineDelegate localCachingBuildEngineDelegate =
           new LocalCachingBuildEngineDelegate(params.getFileHashCache());
       SourcePathRuleFinder sourcePathRuleFinder =
-          new SourcePathRuleFinder(actionGraphAndResolver.getResolver());
+          new SourcePathRuleFinder(actionGraphAndBuilder.getActionGraphBuilder());
       try (RuleKeyCacheScope<RuleKey> ruleKeyCacheScope =
               getDefaultRuleKeyCacheScope(
                   params,
                   new RuleKeyCacheRecycler.SettingsAffectingCache(
                       params.getBuckConfig().getKeySeed(),
-                      actionGraphAndResolver.getActionGraph()));
+                      actionGraphAndBuilder.getActionGraph()));
           CachingBuildEngine buildEngine =
               new CachingBuildEngine(
                   localCachingBuildEngineDelegate,
@@ -132,7 +132,7 @@ public class FetchCommand extends BuildCommand {
                   cachingBuildEngineBuckConfig.getBuildDepFiles(),
                   cachingBuildEngineBuckConfig.getBuildMaxDepFileCacheEntries(),
                   cachingBuildEngineBuckConfig.getBuildArtifactCacheSizeLimit(),
-                  actionGraphAndResolver.getResolver(),
+                  actionGraphAndBuilder.getActionGraphBuilder(),
                   sourcePathRuleFinder,
                   DefaultSourcePathResolver.from(sourcePathRuleFinder),
                   params.getBuildInfoStoreManager(),
@@ -141,13 +141,13 @@ public class FetchCommand extends BuildCommand {
                   RuleKeyFactories.of(
                       params.getRuleKeyConfiguration(),
                       localCachingBuildEngineDelegate.getFileHashCache(),
-                      actionGraphAndResolver.getResolver(),
+                      actionGraphAndBuilder.getActionGraphBuilder(),
                       params.getBuckConfig().getBuildInputRuleKeyFileSizeLimit(),
                       ruleKeyCacheScope.getCache()),
                   new NoOpRemoteBuildRuleCompletionWaiter());
           Build build =
               new Build(
-                  actionGraphAndResolver.getResolver(),
+                  actionGraphAndBuilder.getActionGraphBuilder(),
                   params.getCell(),
                   buildEngine,
                   params.getArtifactCacheFactory().newInstance(),

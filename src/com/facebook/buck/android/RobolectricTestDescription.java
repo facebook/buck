@@ -23,8 +23,8 @@ import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
@@ -102,15 +102,15 @@ public class RobolectricTestDescription
       BuildTarget buildTarget,
       BuildRuleParams params,
       RobolectricTestDescriptionArg args) {
-    BuildRuleResolver resolver = context.getBuildRuleResolver();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
 
     if (HasJavaAbi.isClassAbiTarget(buildTarget)) {
       Preconditions.checkArgument(
           !buildTarget.getFlavors().contains(AndroidLibraryGraphEnhancer.DUMMY_R_DOT_JAVA_FLAVOR));
       BuildTarget testTarget = HasJavaAbi.getLibraryTarget(buildTarget);
-      BuildRule testRule = resolver.requireRule(testTarget);
+      BuildRule testRule = graphBuilder.requireRule(testTarget);
       return CalculateClassAbi.of(
           buildTarget,
           ruleFinder,
@@ -126,7 +126,7 @@ public class RobolectricTestDescription
                 .getJavacOptions(),
             buildTarget,
             projectFilesystem,
-            resolver,
+            graphBuilder,
             args);
 
     AndroidLibraryGraphEnhancer graphEnhancer =
@@ -135,7 +135,7 @@ public class RobolectricTestDescription
             projectFilesystem,
             ImmutableSortedSet.copyOf(
                 Iterables.concat(
-                    params.getBuildDeps(), resolver.getAllRules(args.getExportedDeps()))),
+                    params.getBuildDeps(), graphBuilder.getAllRules(args.getExportedDeps()))),
             JavacFactory.create(ruleFinder, javaBuckConfig, args),
             javacOptions,
             DependencyMode.TRANSITIVE,
@@ -148,7 +148,8 @@ public class RobolectricTestDescription
     ImmutableList<String> vmArgs = args.getVmArgs();
 
     Optional<DummyRDotJava> dummyRDotJava =
-        graphEnhancer.getBuildableForAndroidResources(resolver, /* createBuildableIfEmpty */ true);
+        graphEnhancer.getBuildableForAndroidResources(
+            graphBuilder, /* createBuildableIfEmpty */ true);
     RobolectricTestDescriptionArg testLibraryArgs = args;
 
     if (dummyRDotJava.isPresent()) {
@@ -171,7 +172,7 @@ public class RobolectricTestDescription
             params,
             args.getUseCxxLibraries(),
             args.getCxxLibraryWhitelist(),
-            resolver,
+            graphBuilder,
             ruleFinder,
             getCxxPlatform(args));
     params = cxxLibraryEnhancement.updatedParams;
@@ -181,13 +182,13 @@ public class RobolectricTestDescription
     CellPathResolver cellRoots = context.getCellPathResolver();
 
     JavaLibrary testsLibrary =
-        resolver.addToIndex(
+        graphBuilder.addToIndex(
             DefaultJavaLibrary.rulesBuilder(
                     testLibraryBuildTarget,
                     projectFilesystem,
                     context.getToolchainProvider(),
                     params,
-                    resolver,
+                    graphBuilder,
                     cellRoots,
                     compilerFactory.getCompiler(
                         args.getLanguage().orElse(AndroidLibraryDescription.JvmLanguage.JAVA)),
@@ -228,7 +229,7 @@ public class RobolectricTestDescription
             .orElse(javaBuckConfig.getDelegate().getDefaultTestRuleTimeoutMs()),
         args.getTestCaseTimeoutMs(),
         ImmutableMap.copyOf(
-            Maps.transformValues(args.getEnv(), x -> macrosConverter.convert(x, resolver))),
+            Maps.transformValues(args.getEnv(), x -> macrosConverter.convert(x, graphBuilder))),
         args.getRunTestSeparately(),
         args.getForkMode(),
         args.getStdOutLogLevel(),

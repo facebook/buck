@@ -22,8 +22,8 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.transformer.TargetNodeToBuildRuleTransformer;
 import com.google.common.collect.ImmutableSet;
 
@@ -46,10 +46,10 @@ public class FetchTargetNodeToBuildRuleTransformer implements TargetNodeToBuildR
   public <T, U extends DescriptionWithTargetGraph<T>> BuildRule transform(
       CellProvider cellProvider,
       TargetGraph targetGraph,
-      BuildRuleResolver ruleResolver,
+      ActionGraphBuilder graphBuilder,
       TargetNode<T, U> targetNode) {
     TargetNode<?, ?> node = substituteTargetNodeIfNecessary(targetNode);
-    return delegate.transform(cellProvider, targetGraph, ruleResolver, node);
+    return delegate.transform(cellProvider, targetGraph, graphBuilder, node);
   }
 
   public ImmutableSet<BuildTarget> getDownloadableTargets() {

@@ -25,8 +25,8 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.core.cell.resolver.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
-import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.rules.resolver.impl.TestBuildRuleResolver;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
@@ -53,22 +53,22 @@ public class MacroHandlerTest {
 
   private ProjectFilesystem filesystem;
   private BuildTarget target;
-  private BuildRuleResolver resolver;
+  private ActionGraphBuilder graphBuilder;
 
   @Before
   public void before() throws Exception {
     filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.newFolder().toPath());
     target = BuildTargetFactory.newInstance("//:test");
     JavaLibraryBuilder builder = JavaLibraryBuilder.createBuilder(target);
-    resolver = new TestBuildRuleResolver(TargetGraphFactory.newInstance(builder.build()));
-    builder.build(resolver, filesystem);
+    graphBuilder = new TestActionGraphBuilder(TargetGraphFactory.newInstance(builder.build()));
+    builder.build(graphBuilder, filesystem);
   }
 
   @Test
   public void noSuchMacro() {
     MacroHandler handler = new MacroHandler(ImmutableMap.of());
     try {
-      handler.expand(target, createCellRoots(filesystem), resolver, "$(badmacro hello)");
+      handler.expand(target, createCellRoots(filesystem), graphBuilder, "$(badmacro hello)");
     } catch (MacroException e) {
       assertTrue(e.getMessage().contains("no such macro \"badmacro\""));
     }
@@ -88,7 +88,7 @@ public class MacroHandlerTest {
   public void escapeMacro() throws MacroException {
     MacroHandler handler = new MacroHandler(ImmutableMap.of());
     String raw = "hello \\$(notamacro hello)";
-    String expanded = handler.expand(target, createCellRoots(filesystem), resolver, raw);
+    String expanded = handler.expand(target, createCellRoots(filesystem), graphBuilder, raw);
     assertEquals("hello $(notamacro hello)", expanded);
   }
 
@@ -98,7 +98,7 @@ public class MacroHandlerTest {
         new MacroHandler(
             ImmutableMap.of("foo", new StringExpander<>(Macro.class, StringArg.of("cake"))));
     String expanded =
-        handler.expand(target, createCellRoots(filesystem), resolver, "Hello $(@foo //:test)");
+        handler.expand(target, createCellRoots(filesystem), graphBuilder, "Hello $(@foo //:test)");
 
     assertTrue(expanded, expanded.startsWith("Hello @"));
   }
@@ -144,7 +144,7 @@ public class MacroHandlerTest {
           public String precomputeWorkFrom(
               BuildTarget target,
               CellPathResolver cellNames,
-              BuildRuleResolver resolver,
+              ActionGraphBuilder graphBuilder,
               String input) {
             expansionCount.incrementAndGet();
             return "Precomputed Work";
@@ -154,7 +154,7 @@ public class MacroHandlerTest {
           public Arg expandFrom(
               BuildTarget target,
               CellPathResolver cellNames,
-              BuildRuleResolver resolver,
+              ActionGraphBuilder graphBuilder,
               String input,
               String precomputedWork) {
             return StringArg.of(precomputedWork);
@@ -165,8 +165,8 @@ public class MacroHandlerTest {
     Map<MacroMatchResult, Object> cache = new HashMap<>();
     CellPathResolver cellRoots = createCellRoots(filesystem);
     String raw = "$(e)";
-    assertEquals("Precomputed Work", handler.expand(target, cellRoots, resolver, raw, cache));
-    assertEquals("Precomputed Work", handler.expand(target, cellRoots, resolver, raw, cache));
+    assertEquals("Precomputed Work", handler.expand(target, cellRoots, graphBuilder, raw, cache));
+    assertEquals("Precomputed Work", handler.expand(target, cellRoots, graphBuilder, raw, cache));
 
     // We should have only done work once, despite calling expand twice
     assertEquals(1, expansionCount.get());
@@ -175,18 +175,18 @@ public class MacroHandlerTest {
     assertThat(cache.values(), Matchers.contains("Precomputed Work"));
 
     // Let's check the other operations and ensure that the precomputed work stays cached.
-    handler.extractBuildTimeDeps(target, cellRoots, resolver, raw, cache);
-    handler.extractRuleKeyAppendables(target, cellRoots, resolver, raw, cache);
+    handler.extractBuildTimeDeps(target, cellRoots, graphBuilder, raw, cache);
+    handler.extractRuleKeyAppendables(target, cellRoots, graphBuilder, raw, cache);
 
     assertEquals(1, expansionCount.get());
 
     // Now call without the cache, and ensure that the work gets recomputed
-    assertEquals("Precomputed Work", handler.expand(target, cellRoots, resolver, raw));
+    assertEquals("Precomputed Work", handler.expand(target, cellRoots, graphBuilder, raw));
     assertEquals(2, expansionCount.get());
 
     // Now clear the cache, and ensure it's repopulated:
     cache.clear();
-    assertEquals("Precomputed Work", handler.expand(target, cellRoots, resolver, raw, cache));
+    assertEquals("Precomputed Work", handler.expand(target, cellRoots, graphBuilder, raw, cache));
     assertEquals(3, expansionCount.get());
     assertThat(cache.values(), Matchers.contains("Precomputed Work"));
   }

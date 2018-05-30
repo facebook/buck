@@ -27,8 +27,8 @@ import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
@@ -92,11 +92,11 @@ public class JavaBinaryDescription
       BuildRuleParams params,
       JavaBinaryDescriptionArg args) {
 
-    BuildRuleResolver resolver = context.getBuildRuleResolver();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     ImmutableMap<String, SourcePath> nativeLibraries =
         JavaLibraryRules.getNativeLibraries(
-            params.getBuildDeps(), getCxxPlatform(args), context.getBuildRuleResolver());
+            params.getBuildDeps(), getCxxPlatform(args), context.getActionGraphBuilder());
     BuildTarget binaryBuildTarget = buildTarget;
     BuildRuleParams binaryParams = params;
 
@@ -138,7 +138,7 @@ public class JavaBinaryDescription
     // up the original binary JAR and any required native libraries.
     if (!nativeLibraries.isEmpty()) {
       BuildRule innerJarRule = rule;
-      resolver.addToIndex(innerJarRule);
+      graphBuilder.addToIndex(innerJarRule);
       SourcePath innerJar = innerJarRule.getSourcePathToOutput();
       rule =
           new JarFattener(

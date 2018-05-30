@@ -20,7 +20,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
-import com.facebook.buck.core.rules.BuildRuleResolver;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -28,16 +28,16 @@ import com.google.common.cache.LoadingCache;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 
-/** Implementation of the metadata system for BuildRuleResolvers. */
-final class BuildRuleResolverMetadataCache {
-  private final BuildRuleResolver buildRuleResolver;
+/** Implementation of the metadata system for ActionGraphBuilders. */
+final class ActionGraphBuilderMetadataCache {
+  private final ActionGraphBuilder graphBuilder;
   private final TargetGraph targetGraph;
   private final LoadingCache<Pair<BuildTarget, Class<?>>, Optional<?>> metadataCache;
 
-  BuildRuleResolverMetadataCache(
-      BuildRuleResolver buildRuleResolver, TargetGraph targetGraph, int initialCapacity) {
-    // Precondition (not checked): buildRuleResolver has the same targetGraph as the one passed in
-    this.buildRuleResolver = buildRuleResolver;
+  ActionGraphBuilderMetadataCache(
+      ActionGraphBuilder graphBuilder, TargetGraph targetGraph, int initialCapacity) {
+    // Precondition (not checked): graphBuilder has the same targetGraph as the one passed in
+    this.graphBuilder = graphBuilder;
     this.targetGraph = targetGraph;
     this.metadataCache =
         CacheBuilder.newBuilder().initialCapacity(initialCapacity).build(new MetadataCacheLoader());
@@ -75,7 +75,7 @@ final class BuildRuleResolverMetadataCache {
           (MetadataProvidingDescription<T>) description;
       return metadataProvidingDescription.createMetadata(
           node.getBuildTarget(),
-          buildRuleResolver,
+          graphBuilder,
           node.getCellNames(),
           arg,
           node.getSelectedVersions(),

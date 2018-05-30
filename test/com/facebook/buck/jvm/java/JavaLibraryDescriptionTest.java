@@ -22,9 +22,9 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.rules.resolver.impl.TestBuildRuleResolver;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.testutil.AbiCompilationModeTest;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -37,7 +37,7 @@ import org.junit.Test;
 public class JavaLibraryDescriptionTest extends AbiCompilationModeTest {
 
   private BuildRule exportingRule;
-  private BuildRuleResolver resolver;
+  private ActionGraphBuilder graphBuilder;
   private BuildRule exportedRule;
   private JavaBuckConfig javaBuckConfig;
 
@@ -59,10 +59,10 @@ public class JavaLibraryDescriptionTest extends AbiCompilationModeTest {
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(exportedNode, exportingNode);
 
-    resolver = new TestBuildRuleResolver(targetGraph);
+    graphBuilder = new TestActionGraphBuilder(targetGraph);
 
-    exportedRule = resolver.requireRule(exportedNode.getBuildTarget());
-    exportingRule = resolver.requireRule(exportingNode.getBuildTarget());
+    exportedRule = graphBuilder.requireRule(exportedNode.getBuildTarget());
+    exportingRule = graphBuilder.requireRule(exportingNode.getBuildTarget());
   }
 
   @Test
@@ -71,11 +71,11 @@ public class JavaLibraryDescriptionTest extends AbiCompilationModeTest {
     BuildRule javaLibrary =
         JavaLibraryBuilder.createBuilder(target, javaBuckConfig)
             .addDep(exportingRule.getBuildTarget())
-            .build(resolver);
+            .build(graphBuilder);
 
     // First order deps should become CalculateAbi rules if we're compiling against ABIs
     if (compileAgainstAbis.equals(TRUE)) {
-      exportedRule = resolver.getRule(((JavaLibrary) exportedRule).getAbiJar().get());
+      exportedRule = graphBuilder.getRule(((JavaLibrary) exportedRule).getAbiJar().get());
     }
 
     assertThat(javaLibrary.getBuildDeps(), Matchers.hasItem(exportedRule));
@@ -87,11 +87,11 @@ public class JavaLibraryDescriptionTest extends AbiCompilationModeTest {
     BuildRule javaLibrary =
         JavaLibraryBuilder.createBuilder(target, javaBuckConfig)
             .addProvidedDep(exportingRule.getBuildTarget())
-            .build(resolver);
+            .build(graphBuilder);
 
     // First order deps should become CalculateAbi rules if we're compiling against ABIs
     if (compileAgainstAbis.equals(TRUE)) {
-      exportedRule = resolver.getRule(((JavaLibrary) exportedRule).getAbiJar().get());
+      exportedRule = graphBuilder.getRule(((JavaLibrary) exportedRule).getAbiJar().get());
     }
 
     assertThat(javaLibrary.getBuildDeps(), Matchers.hasItem(exportedRule));

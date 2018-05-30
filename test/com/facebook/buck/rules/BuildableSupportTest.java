@@ -22,10 +22,10 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.rules.resolver.impl.TestBuildRuleResolver;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -48,15 +48,15 @@ public class BuildableSupportTest {
   public void testDeriveDepsFromAddsToRuleKeys() {
     BuildTarget target = ImmutableBuildTarget.of(Paths.get("some"), "//some", "name");
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    BuildRuleResolver ruleResolver = new TestBuildRuleResolver();
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     BuildRule rule1 = makeRule(target, filesystem, "rule1");
     BuildRule rule2 = makeRule(target, filesystem, "rule2");
     BuildRule rule3 = makeRule(target, filesystem, "rule3");
     BuildRule rule4 = makeRule(target, filesystem, "rule4");
     BuildRule rule5 = makeRule(target, filesystem, "rule5");
     ImmutableSet<BuildRule> rules = ImmutableSet.of(rule1, rule2, rule3, rule4, rule5);
-    rules.forEach(ruleResolver::addToIndex);
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
+    rules.forEach(graphBuilder::addToIndex);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
 
     AddsToRuleKey rule =
         new AddsToRuleKey() {

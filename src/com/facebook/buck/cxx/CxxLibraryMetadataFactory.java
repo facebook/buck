@@ -19,7 +19,7 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.core.cell.resolver.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
-import com.facebook.buck.core.rules.BuildRuleResolver;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.HeaderMode;
@@ -39,7 +39,7 @@ public class CxxLibraryMetadataFactory {
 
   public <U> Optional<U> createMetadata(
       BuildTarget buildTarget,
-      BuildRuleResolver resolver,
+      ActionGraphBuilder graphBuilder,
       CellPathResolver cellRoots,
       CxxLibraryDescriptionArg args,
       Class<U> metadataClass) {
@@ -61,7 +61,7 @@ public class CxxLibraryMetadataFactory {
                 Optional.of(
                     CxxSymlinkTreeHeaders.from(
                         (HeaderSymlinkTree)
-                            resolver.requireRule(
+                            graphBuilder.requireRule(
                                 baseTarget
                                     .withoutFlavors(CxxLibraryDescription.LIBRARY_TYPE.getFlavors())
                                     .withAppendedFlavors(
@@ -110,13 +110,13 @@ public class CxxLibraryMetadataFactory {
                       platform.getValue()),
                   f ->
                       CxxDescriptionEnhancer.toStringWithMacrosArgs(
-                          buildTarget, cellRoots, resolver, platform.getValue(), f)));
+                          buildTarget, cellRoots, graphBuilder, platform.getValue(), f)));
           cxxPreprocessorInputBuilder.addAllFrameworks(args.getFrameworks());
 
           if (visibility.getValue() == HeaderVisibility.PRIVATE && !args.getHeaders().isEmpty()) {
             HeaderSymlinkTree symlinkTree =
                 (HeaderSymlinkTree)
-                    resolver.requireRule(
+                    graphBuilder.requireRule(
                         baseTarget.withAppendedFlavors(
                             platform.getKey(), CxxLibraryDescription.Type.HEADERS.getFlavor()));
             cxxPreprocessorInputBuilder.addIncludes(
@@ -127,10 +127,10 @@ public class CxxLibraryMetadataFactory {
 
             // Add platform-agnostic headers.
             queryMetadataCxxHeaders(
-                    resolver,
+                    graphBuilder,
                     baseTarget,
                     CxxDescriptionEnhancer.getHeaderModeForPlatform(
-                        resolver,
+                        graphBuilder,
                         platform.getValue(),
                         args.getXcodePublicHeadersSymlinks()
                             .orElse(platform.getValue().getPublicHeadersSymlinksEnabled())))
@@ -142,7 +142,7 @@ public class CxxLibraryMetadataFactory {
                 .isEmpty()) {
               HeaderSymlinkTree symlinkTree =
                   (HeaderSymlinkTree)
-                      resolver.requireRule(
+                      graphBuilder.requireRule(
                           baseTarget
                               .withoutFlavors(CxxLibraryDescription.LIBRARY_TYPE.getFlavors())
                               .withAppendedFlavors(
@@ -171,8 +171,8 @@ public class CxxLibraryMetadataFactory {
    * <p>Use this function instead of constructing the BuildTarget manually.
    */
   private static Optional<CxxHeaders> queryMetadataCxxHeaders(
-      BuildRuleResolver resolver, BuildTarget baseTarget, HeaderMode mode) {
-    return resolver.requireMetadata(
+      ActionGraphBuilder graphBuilder, BuildTarget baseTarget, HeaderMode mode) {
+    return graphBuilder.requireMetadata(
         baseTarget.withAppendedFlavors(
             CxxLibraryDescription.MetadataType.CXX_HEADERS.getFlavor(), mode.getFlavor()),
         CxxHeaders.class);

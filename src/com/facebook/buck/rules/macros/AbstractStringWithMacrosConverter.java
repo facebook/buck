@@ -21,7 +21,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import com.facebook.buck.core.cell.resolver.CellPathResolver;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.rules.BuildRuleResolver;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.model.macros.MacroException;
 import com.facebook.buck.rules.args.Arg;
@@ -87,7 +87,7 @@ abstract class AbstractStringWithMacrosConverter {
   }
 
   @SuppressWarnings("unchecked")
-  private <T extends Macro, P> Arg expand(T macro, BuildRuleResolver ruleResolver)
+  private <T extends Macro, P> Arg expand(T macro, ActionGraphBuilder ruleResolver)
       throws MacroException {
     AbstractMacroExpander<T, P> expander = getExpander(macro);
 
@@ -107,7 +107,7 @@ abstract class AbstractStringWithMacrosConverter {
    * Expand the input given for the this macro to some string, which is intended to be written to a
    * file.
    */
-  private Arg expand(MacroContainer macroContainer, BuildRuleResolver ruleResolver)
+  private Arg expand(MacroContainer macroContainer, ActionGraphBuilder ruleResolver)
       throws MacroException {
     Arg arg = expand(macroContainer.getMacro(), ruleResolver);
 
@@ -127,7 +127,7 @@ abstract class AbstractStringWithMacrosConverter {
     return arg;
   }
 
-  public Arg convert(StringWithMacros val, BuildRuleResolver ruleResolver) {
+  public Arg convert(StringWithMacros val, ActionGraphBuilder ruleResolver) {
     return CompositeArg.of(
         val.map(
             str ->

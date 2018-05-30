@@ -23,12 +23,12 @@ import com.facebook.buck.config.resources.ResourcesConfig;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.actiongraph.ActionGraphAndResolver;
+import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphCache;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetGraphAndTargets;
-import com.facebook.buck.core.rules.BuildRuleResolver;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.ide.intellij.aggregation.AggregationMode;
@@ -193,7 +193,7 @@ public class IjProjectCommandHelper {
     return runIntellijProjectGenerator(targetGraphAndTargets);
   }
 
-  private ActionGraphAndResolver getActionGraph(TargetGraph targetGraph) {
+  private ActionGraphAndBuilder getActionGraph(TargetGraph targetGraph) {
     try (CloseableMemoizedSupplier<ForkJoinPool> forkJoinPoolSupplier =
         CloseableMemoizedSupplier.of(
             () ->
@@ -256,10 +256,10 @@ public class IjProjectCommandHelper {
 
   private ImmutableSet<BuildTarget> writeProjectAndGetRequiredBuildTargets(
       TargetGraphAndTargets targetGraphAndTargets) throws IOException {
-    ActionGraphAndResolver result =
+    ActionGraphAndBuilder result =
         Preconditions.checkNotNull(getActionGraph(targetGraphAndTargets.getTargetGraph()));
 
-    BuildRuleResolver ruleResolver = result.getResolver();
+    ActionGraphBuilder graphBuilder = result.getActionGraphBuilder();
 
     JavacOptions javacOptions = buckConfig.getView(JavaBuckConfig.class).getDefaultJavacOptions();
 
@@ -268,7 +268,7 @@ public class IjProjectCommandHelper {
             targetGraphAndTargets,
             getJavaPackageFinder(buckConfig),
             JavaFileParser.createJavaFileParser(javacOptions),
-            ruleResolver,
+            graphBuilder,
             cell.getFilesystem(),
             projectConfig);
 

@@ -21,8 +21,8 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.core.description.BuildRuleParams;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.rules.resolver.impl.TestBuildRuleResolver;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.TestBuildRuleCreationContextFactory;
@@ -50,21 +50,20 @@ public class JavaAnnotationProcessorDescriptionTest {
             .setProcessorClass(Optional.of("Foo.Bar"))
             .build();
 
-    BuildRuleResolver buildRuleResolver = new TestBuildRuleResolver();
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
 
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:baz");
 
     BuildRuleParams params =
-        TestBuildRuleParams.create().withDeclaredDeps(buildRuleResolver.getAllRules(arg.getDeps()));
+        TestBuildRuleParams.create().withDeclaredDeps(graphBuilder.getAllRules(arg.getDeps()));
 
     // When
     JavaAnnotationProcessor javaAnnotationProcessor =
         (JavaAnnotationProcessor)
             new JavaAnnotationProcessorDescription()
                 .createBuildRule(
-                    TestBuildRuleCreationContextFactory.create(
-                        buildRuleResolver, projectFilesystem),
+                    TestBuildRuleCreationContextFactory.create(graphBuilder, projectFilesystem),
                     buildTarget,
                     params,
                     arg);
@@ -93,21 +92,20 @@ public class JavaAnnotationProcessorDescriptionTest {
             .setProcessorClasses(ImmutableSet.of("Foo.Bar", "Bar.Foo"))
             .build();
 
-    BuildRuleResolver buildRuleResolver = new TestBuildRuleResolver();
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
 
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:baz");
 
     BuildRuleParams params =
-        TestBuildRuleParams.create().withDeclaredDeps(buildRuleResolver.getAllRules(arg.getDeps()));
+        TestBuildRuleParams.create().withDeclaredDeps(graphBuilder.getAllRules(arg.getDeps()));
 
     // When
     JavaAnnotationProcessor javaAnnotationProcessor =
         (JavaAnnotationProcessor)
             new JavaAnnotationProcessorDescription()
                 .createBuildRule(
-                    TestBuildRuleCreationContextFactory.create(
-                        buildRuleResolver, projectFilesystem),
+                    TestBuildRuleCreationContextFactory.create(graphBuilder, projectFilesystem),
                     buildTarget,
                     params,
                     arg);
@@ -137,21 +135,20 @@ public class JavaAnnotationProcessorDescriptionTest {
             .setProcessorClasses(ImmutableSet.of("Foo.Bar", "Bar.Foo"))
             .build();
 
-    BuildRuleResolver buildRuleResolver = new TestBuildRuleResolver();
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
 
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:baz");
 
     BuildRuleParams params =
-        TestBuildRuleParams.create().withDeclaredDeps(buildRuleResolver.getAllRules(arg.getDeps()));
+        TestBuildRuleParams.create().withDeclaredDeps(graphBuilder.getAllRules(arg.getDeps()));
 
     // When
     JavaAnnotationProcessor javaAnnotationProcessor =
         (JavaAnnotationProcessor)
             new JavaAnnotationProcessorDescription()
                 .createBuildRule(
-                    TestBuildRuleCreationContextFactory.create(
-                        buildRuleResolver, projectFilesystem),
+                    TestBuildRuleCreationContextFactory.create(graphBuilder, projectFilesystem),
                     buildTarget,
                     params,
                     arg);
@@ -179,13 +176,13 @@ public class JavaAnnotationProcessorDescriptionTest {
             .setSupportsAbiGenerationFromSource(true)
             .build();
 
-    BuildRuleResolver buildRuleResolver = new TestBuildRuleResolver();
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
 
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:baz");
 
     BuildRuleParams params =
-        TestBuildRuleParams.create().withDeclaredDeps(buildRuleResolver.getAllRules(arg.getDeps()));
+        TestBuildRuleParams.create().withDeclaredDeps(graphBuilder.getAllRules(arg.getDeps()));
 
     // Verify
     thrown.expect(HumanReadableException.class);
@@ -194,7 +191,7 @@ public class JavaAnnotationProcessorDescriptionTest {
     // When
     new JavaAnnotationProcessorDescription()
         .createBuildRule(
-            TestBuildRuleCreationContextFactory.create(buildRuleResolver, projectFilesystem),
+            TestBuildRuleCreationContextFactory.create(graphBuilder, projectFilesystem),
             buildTarget,
             params,
             arg);

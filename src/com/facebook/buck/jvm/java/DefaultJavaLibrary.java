@@ -25,6 +25,7 @@ import com.facebook.buck.core.description.BuildRuleParams;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.attr.BuildOutputInitializer;
@@ -132,7 +133,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
       ProjectFilesystem projectFilesystem,
       ToolchainProvider toolchainProvider,
       BuildRuleParams params,
-      BuildRuleResolver buildRuleResolver,
+      ActionGraphBuilder graphBuilder,
       CellPathResolver cellPathResolver,
       ConfiguredCompilerFactory compilerFactory,
       @Nullable JavaBuckConfig javaBuckConfig,
@@ -142,7 +143,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
         projectFilesystem,
         toolchainProvider,
         params,
-        buildRuleResolver,
+        graphBuilder,
         cellPathResolver,
         compilerFactory,
         javaBuckConfig,

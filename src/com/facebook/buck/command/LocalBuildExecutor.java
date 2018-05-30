@@ -28,7 +28,7 @@ import com.facebook.buck.core.build.engine.impl.MetadataChecker;
 import com.facebook.buck.core.build.engine.type.BuildType;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.core.model.actiongraph.ActionGraphAndResolver;
+import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
@@ -68,7 +68,7 @@ import org.immutables.value.Value;
 
 /** Used to build a given set of targets on the local machine. */
 public class LocalBuildExecutor implements BuildExecutor {
-  private final ActionGraphAndResolver actionGraphAndResolver;
+  private final ActionGraphAndBuilder actionGraphAndBuilder;
   private final WeightedListeningExecutorService executorService;
   private final CachingBuildEngineDelegate cachingBuildEngineDelegate;
   private final BuildExecutorArgs args;
@@ -85,7 +85,7 @@ public class LocalBuildExecutor implements BuildExecutor {
   public LocalBuildExecutor(
       BuildExecutorArgs args,
       ExecutionContext executionContext,
-      ActionGraphAndResolver actionGraphAndResolver,
+      ActionGraphAndBuilder actionGraphAndBuilder,
       CachingBuildEngineDelegate cachingBuildEngineDelegate,
       WeightedListeningExecutorService executorService,
       boolean keepGoing,
@@ -95,7 +95,7 @@ public class LocalBuildExecutor implements BuildExecutor {
       Optional<BuildType> buildEngineMode,
       Optional<ThriftRuleKeyLogger> ruleKeyLogger,
       RemoteBuildRuleCompletionWaiter remoteBuildRuleCompletionWaiter) {
-    this.actionGraphAndResolver = actionGraphAndResolver;
+    this.actionGraphAndBuilder = actionGraphAndBuilder;
     this.executorService = executorService;
     this.args = args;
     this.cachingBuildEngineDelegate = cachingBuildEngineDelegate;
@@ -108,7 +108,7 @@ public class LocalBuildExecutor implements BuildExecutor {
     this.cachingBuildEngine = createCachingBuildEngine();
     this.build =
         new Build(
-            actionGraphAndResolver.getResolver(),
+            actionGraphAndBuilder.getActionGraphBuilder(),
             args.getRootCell(),
             cachingBuildEngine,
             args.getArtifactCacheFactory()
@@ -200,13 +200,13 @@ public class LocalBuildExecutor implements BuildExecutor {
     CachingBuildEngineBuckConfig engineConfig =
         args.getBuckConfig().getView(CachingBuildEngineBuckConfig.class);
     SourcePathRuleFinder sourcePathRuleFinder =
-        new SourcePathRuleFinder(actionGraphAndResolver.getResolver());
+        new SourcePathRuleFinder(actionGraphAndBuilder.getActionGraphBuilder());
 
     return new CachingBuildEngine(
         cachingBuildEngineDelegate,
         ModernBuildRuleBuilderFactory.getBuildStrategy(
             args.getBuckConfig().getView(ModernBuildRuleConfig.class),
-            actionGraphAndResolver.getResolver(),
+            actionGraphAndBuilder.getActionGraphBuilder(),
             args.getRootCell(),
             args.getBuckConfig().getCellPathResolver(),
             cachingBuildEngineDelegate.getFileHashCache(),
@@ -219,7 +219,7 @@ public class LocalBuildExecutor implements BuildExecutor {
         engineConfig.getBuildDepFiles(),
         engineConfig.getBuildMaxDepFileCacheEntries(),
         engineConfig.getBuildArtifactCacheSizeLimit(),
-        actionGraphAndResolver.getResolver(),
+        actionGraphAndBuilder.getActionGraphBuilder(),
         sourcePathRuleFinder,
         DefaultSourcePathResolver.from(sourcePathRuleFinder),
         args.getBuildInfoStoreManager(),
@@ -228,7 +228,7 @@ public class LocalBuildExecutor implements BuildExecutor {
         RuleKeyFactories.of(
             args.getRuleKeyConfiguration(),
             cachingBuildEngineDelegate.getFileHashCache(),
-            actionGraphAndResolver.getResolver(),
+            actionGraphAndBuilder.getActionGraphBuilder(),
             args.getBuckConfig().getBuildInputRuleKeyFileSizeLimit(),
             ruleKeyCacheScope.getCache(),
             ruleKeyLogger),

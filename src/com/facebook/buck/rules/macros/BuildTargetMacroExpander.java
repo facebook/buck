@@ -18,8 +18,8 @@ package com.facebook.buck.rules.macros;
 
 import com.facebook.buck.core.cell.resolver.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
@@ -44,8 +44,8 @@ public abstract class BuildTargetMacroExpander<M extends BuildTargetMacro>
   protected abstract Arg expand(SourcePathResolver resolver, M macro, BuildRule rule)
       throws MacroException;
 
-  protected BuildRule resolve(BuildRuleResolver resolver, M input) throws MacroException {
-    Optional<BuildRule> rule = resolver.getRuleOptional(input.getTarget());
+  protected BuildRule resolve(ActionGraphBuilder graphBuilder, M input) throws MacroException {
+    Optional<BuildRule> rule = graphBuilder.getRuleOptional(input.getTarget());
     if (!rule.isPresent()) {
       throw new MacroException(String.format("no rule %s", input.getTarget()));
     }
@@ -68,11 +68,11 @@ public abstract class BuildTargetMacroExpander<M extends BuildTargetMacro>
 
   @Override
   public Arg expandFrom(
-      BuildTarget target, CellPathResolver cellNames, BuildRuleResolver resolver, M input)
+      BuildTarget target, CellPathResolver cellNames, ActionGraphBuilder graphBuilder, M input)
       throws MacroException {
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
-    return expand(pathResolver, input, resolve(resolver, input));
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
+    return expand(pathResolver, input, resolve(graphBuilder, input));
   }
 
   @Override

@@ -30,9 +30,9 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.rules.resolver.impl.TestBuildRuleResolver;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
@@ -99,8 +99,8 @@ public class AppleBuildRulesTest {
     BuildTarget sandboxTarget =
         BuildTargetFactory.newInstance("//foo:xctest#iphoneos-i386")
             .withFlavors(CxxDescriptionEnhancer.SANDBOX_TREE_FLAVOR);
-    BuildRuleResolver resolver =
-        new TestBuildRuleResolver(
+    ActionGraphBuilder graphBuilder =
+        new TestActionGraphBuilder(
             TargetGraphFactory.newInstance(
                 new AppleTestBuilder(sandboxTarget)
                     .setInfoPlist(FakeSourcePath.of("Info.plist"))
@@ -116,7 +116,8 @@ public class AppleBuildRulesTest {
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(ImmutableSet.of(appleTestNode));
 
-    BuildRule testRule = appleTestBuilder.build(resolver, new FakeProjectFilesystem(), targetGraph);
+    BuildRule testRule =
+        appleTestBuilder.build(graphBuilder, new FakeProjectFilesystem(), targetGraph);
     assertTrue(AppleBuildRules.isXcodeTargetTestBuildRule(testRule));
   }
 
@@ -125,10 +126,10 @@ public class AppleBuildRulesTest {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:lib");
     BuildRuleParams params = TestBuildRuleParams.create();
-    BuildRuleResolver buildRuleResolver = new TestBuildRuleResolver();
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     BuildRule libraryRule =
         FakeAppleRuleDescriptions.LIBRARY_DESCRIPTION.createBuildRule(
-            TestBuildRuleCreationContextFactory.create(buildRuleResolver, projectFilesystem),
+            TestBuildRuleCreationContextFactory.create(graphBuilder, projectFilesystem),
             buildTarget,
             params,
             AppleLibraryDescriptionArg.builder().setName("lib").build());

@@ -21,8 +21,8 @@ import com.facebook.buck.core.description.BuildRuleParams;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorDomain;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
@@ -61,7 +61,7 @@ public class CxxBinaryFactory {
   public BuildRule createBuildRule(
       BuildTarget target,
       ProjectFilesystem projectFilesystem,
-      BuildRuleResolver resolver,
+      ActionGraphBuilder graphBuilder,
       CellPathResolver cellRoots,
       CxxBinaryDescriptionArg args,
       ImmutableSortedSet<BuildTarget> extraCxxDeps) {
@@ -84,7 +84,7 @@ public class CxxBinaryFactory {
       return createHeaderSymlinkTreeBuildRule(
           target.withoutFlavors(CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR),
           projectFilesystem,
-          resolver,
+          graphBuilder,
           cxxPlatform,
           args);
     }
@@ -94,7 +94,7 @@ public class CxxBinaryFactory {
           CxxDescriptionEnhancer.createBuildRulesForCxxBinaryDescriptionArg(
               target.withoutFlavors(CxxCompilationDatabase.COMPILATION_DATABASE),
               projectFilesystem,
-              resolver,
+              graphBuilder,
               cellRoots,
               cxxBuckConfig,
               cxxPlatform,
@@ -115,14 +115,14 @@ public class CxxBinaryFactory {
               : target.withAppendedFlavors(
                   cxxPlatformsProvider.getDefaultCxxPlatform().getFlavor()),
           projectFilesystem,
-          resolver);
+          graphBuilder);
     }
 
     if (CxxInferEnhancer.INFER_FLAVOR_DOMAIN.containsAnyOf(flavors)) {
       return CxxInferEnhancer.requireInferRule(
           target,
           projectFilesystem,
-          resolver,
+          graphBuilder,
           cellRoots,
           cxxBuckConfig,
           cxxPlatform,
@@ -132,14 +132,14 @@ public class CxxBinaryFactory {
 
     if (flavors.contains(CxxDescriptionEnhancer.SANDBOX_TREE_FLAVOR)) {
       return CxxDescriptionEnhancer.createSandboxTreeBuildRule(
-          resolver, args, cxxPlatform, target, projectFilesystem);
+          graphBuilder, args, cxxPlatform, target, projectFilesystem);
     }
 
     CxxLinkAndCompileRules cxxLinkAndCompileRules =
         CxxDescriptionEnhancer.createBuildRulesForCxxBinaryDescriptionArg(
             target,
             projectFilesystem,
-            resolver,
+            graphBuilder,
             cellRoots,
             cxxBuckConfig,
             cxxPlatform,
@@ -148,7 +148,7 @@ public class CxxBinaryFactory {
             flavoredStripStyle,
             flavoredLinkerMapMode);
 
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
 
     if (target.getFlavors().contains(CxxDescriptionEnhancer.CXX_LINK_MAP_FLAVOR)) {
       return CxxDescriptionEnhancer.createLinkMap(
@@ -196,19 +196,19 @@ public class CxxBinaryFactory {
   private static HeaderSymlinkTree createHeaderSymlinkTreeBuildRule(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      BuildRuleResolver resolver,
+      ActionGraphBuilder graphBuilder,
       CxxPlatform cxxPlatform,
       CxxBinaryDescriptionArg args) {
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     return CxxDescriptionEnhancer.createHeaderSymlinkTree(
         buildTarget,
         projectFilesystem,
         ruleFinder,
-        resolver,
+        graphBuilder,
         cxxPlatform,
         CxxDescriptionEnhancer.parseHeaders(
-            buildTarget, resolver, ruleFinder, pathResolver, Optional.of(cxxPlatform), args),
+            buildTarget, graphBuilder, ruleFinder, pathResolver, Optional.of(cxxPlatform), args),
         HeaderVisibility.PRIVATE,
         true);
   }

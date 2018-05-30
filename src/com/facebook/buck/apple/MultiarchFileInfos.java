@@ -23,8 +23,8 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorDomain;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.cxx.CxxCompilationDatabase;
@@ -141,10 +141,10 @@ public class MultiarchFileInfos {
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      BuildRuleResolver resolver,
+      ActionGraphBuilder graphBuilder,
       MultiarchFileInfo info,
       ImmutableSortedSet<BuildRule> thinRules) {
-    Optional<BuildRule> existingRule = resolver.getRuleOptional(info.getFatTarget());
+    Optional<BuildRule> existingRule = graphBuilder.getRuleOptional(info.getFatTarget());
     if (existingRule.isPresent()) {
       return existingRule.get();
     }
@@ -159,7 +159,7 @@ public class MultiarchFileInfos {
         FluentIterable.from(thinRules)
             .transform(BuildRule::getSourcePathToOutput)
             .toSortedSet(Ordering.natural());
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     MultiarchFile multiarchFile =
         new MultiarchFile(
             buildTarget,
@@ -169,7 +169,7 @@ public class MultiarchFileInfos {
             info.getRepresentativePlatform().getLipo(),
             inputs,
             BuildTargets.getGenPath(projectFilesystem, buildTarget, "%s"));
-    resolver.addToIndex(multiarchFile);
+    graphBuilder.addToIndex(multiarchFile);
     return multiarchFile;
   }
 

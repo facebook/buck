@@ -17,7 +17,7 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.core.model.actiongraph.ActionGraph;
-import com.facebook.buck.core.model.actiongraph.ActionGraphAndResolver;
+import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
 import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.event.ConsoleEvent;
@@ -71,7 +71,7 @@ public class AuditActionGraphCommand extends AbstractCommand {
               : unversionedTargetGraphAndBuildTargets;
 
       // Create the action graph.
-      ActionGraphAndResolver actionGraphAndResolver =
+      ActionGraphAndBuilder actionGraphAndBuilder =
           params
               .getActionGraphCache()
               .getActionGraph(
@@ -84,9 +84,9 @@ public class AuditActionGraphCommand extends AbstractCommand {
 
       // Dump the action graph.
       if (generateDotOutput) {
-        dumpAsDot(actionGraphAndResolver.getActionGraph(), params.getConsole().getStdOut());
+        dumpAsDot(actionGraphAndBuilder.getActionGraph(), params.getConsole().getStdOut());
       } else {
-        dumpAsJson(actionGraphAndResolver.getActionGraph(), params.getConsole().getStdOut());
+        dumpAsJson(actionGraphAndBuilder.getActionGraph(), params.getConsole().getStdOut());
       }
     } catch (BuildFileParseException | VersionException e) {
       // The exception should be logged with stack trace instead of only emitting the error.

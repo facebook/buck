@@ -16,25 +16,25 @@
 
 package com.facebook.buck.distributed.build_slave;
 
-import static com.facebook.buck.distributed.testutil.CustomBuildRuleResolverFactory.CACHABLE_A;
-import static com.facebook.buck.distributed.testutil.CustomBuildRuleResolverFactory.CACHABLE_B;
-import static com.facebook.buck.distributed.testutil.CustomBuildRuleResolverFactory.CACHABLE_C;
-import static com.facebook.buck.distributed.testutil.CustomBuildRuleResolverFactory.CHAIN_TOP_TARGET;
-import static com.facebook.buck.distributed.testutil.CustomBuildRuleResolverFactory.LEAF_TARGET;
-import static com.facebook.buck.distributed.testutil.CustomBuildRuleResolverFactory.LEFT_TARGET;
-import static com.facebook.buck.distributed.testutil.CustomBuildRuleResolverFactory.RIGHT_TARGET;
-import static com.facebook.buck.distributed.testutil.CustomBuildRuleResolverFactory.ROOT_TARGET;
-import static com.facebook.buck.distributed.testutil.CustomBuildRuleResolverFactory.UNCACHABLE_ROOT;
-import static com.facebook.buck.distributed.testutil.CustomBuildRuleResolverFactory.createBuildGraphWithInterleavedUncacheables;
-import static com.facebook.buck.distributed.testutil.CustomBuildRuleResolverFactory.createBuildGraphWithUncachableLeaf;
+import static com.facebook.buck.distributed.testutil.CustomActiongGraphBuilderFactory.CACHABLE_A;
+import static com.facebook.buck.distributed.testutil.CustomActiongGraphBuilderFactory.CACHABLE_B;
+import static com.facebook.buck.distributed.testutil.CustomActiongGraphBuilderFactory.CACHABLE_C;
+import static com.facebook.buck.distributed.testutil.CustomActiongGraphBuilderFactory.CHAIN_TOP_TARGET;
+import static com.facebook.buck.distributed.testutil.CustomActiongGraphBuilderFactory.LEAF_TARGET;
+import static com.facebook.buck.distributed.testutil.CustomActiongGraphBuilderFactory.LEFT_TARGET;
+import static com.facebook.buck.distributed.testutil.CustomActiongGraphBuilderFactory.RIGHT_TARGET;
+import static com.facebook.buck.distributed.testutil.CustomActiongGraphBuilderFactory.ROOT_TARGET;
+import static com.facebook.buck.distributed.testutil.CustomActiongGraphBuilderFactory.UNCACHABLE_ROOT;
+import static com.facebook.buck.distributed.testutil.CustomActiongGraphBuilderFactory.createBuildGraphWithInterleavedUncacheables;
+import static com.facebook.buck.distributed.testutil.CustomActiongGraphBuilderFactory.createBuildGraphWithUncachableLeaf;
 
 import com.facebook.buck.core.build.engine.impl.DefaultRuleDepsCache;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.rules.resolver.impl.TestBuildRuleResolver;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.distributed.ArtifactCacheByBuildRule;
 import com.facebook.buck.distributed.NoopArtifactCacheByBuildRule;
-import com.facebook.buck.distributed.testutil.CustomBuildRuleResolverFactory;
+import com.facebook.buck.distributed.testutil.CustomActiongGraphBuilderFactory;
 import com.facebook.buck.distributed.thrift.CoordinatorBuildProgress;
 import com.facebook.buck.distributed.thrift.WorkUnit;
 import com.facebook.buck.event.listener.NoOpCoordinatorBuildRuleEventsPublisher;
@@ -89,7 +89,7 @@ public class ReverseDepBuildTargetsQueueTest {
 
   @Test
   public void testResolverWithoutAnyTargets() {
-    BuildRuleResolver resolver = new TestBuildRuleResolver();
+    BuildRuleResolver resolver = new TestActionGraphBuilder();
     BuildTargetsQueue queue = createQueueWithoutRemoteCache(resolver, ImmutableList.of());
     List<WorkUnit> zeroDepTargets = dequeueNoFinishedTargets(queue);
     Assert.assertEquals(0, zeroDepTargets.size());
@@ -98,7 +98,7 @@ public class ReverseDepBuildTargetsQueueTest {
 
   @Test
   public void testResolverWithOnSingleTarget() throws NoSuchBuildTargetException {
-    BuildRuleResolver resolver = CustomBuildRuleResolverFactory.createSimpleResolver();
+    BuildRuleResolver resolver = CustomActiongGraphBuilderFactory.createSimpleBuilder();
     BuildTarget target = BuildTargetFactory.newInstance(ROOT_TARGET);
     BuildTargetsQueue queue = createQueueWithoutRemoteCache(resolver, ImmutableList.of(target));
     List<WorkUnit> zeroDepTargets = dequeueNoFinishedTargets(queue);
@@ -132,9 +132,9 @@ public class ReverseDepBuildTargetsQueueTest {
 
   @Test
   public void testResolverWithTargetThatHasRuntimeDep() throws NoSuchBuildTargetException {
-    BuildRuleResolver resolver = CustomBuildRuleResolverFactory.createSimpleRuntimeDepsResolver();
+    BuildRuleResolver resolver = CustomActiongGraphBuilderFactory.createSimpleRuntimeDepsResolver();
     BuildTarget target =
-        BuildTargetFactory.newInstance(CustomBuildRuleResolverFactory.HAS_RUNTIME_DEP_RULE);
+        BuildTargetFactory.newInstance(CustomActiongGraphBuilderFactory.HAS_RUNTIME_DEP_RULE);
     BuildTargetsQueue queue = createQueueWithoutRemoteCache(resolver, ImmutableList.of(target));
     List<WorkUnit> zeroDepTargets = dequeueNoFinishedTargets(queue);
     Assert.assertEquals(1, zeroDepTargets.size());
@@ -142,28 +142,28 @@ public class ReverseDepBuildTargetsQueueTest {
 
     // has_runtime_dep -> transitive_dep both form a chain, so should be returned as a work unit.
     Assert.assertEquals(
-        CustomBuildRuleResolverFactory.TRANSITIVE_DEP_RULE,
+        CustomActiongGraphBuilderFactory.TRANSITIVE_DEP_RULE,
         zeroDepTargets.get(0).getBuildTargets().get(0));
     Assert.assertEquals(
-        CustomBuildRuleResolverFactory.HAS_RUNTIME_DEP_RULE,
+        CustomActiongGraphBuilderFactory.HAS_RUNTIME_DEP_RULE,
         zeroDepTargets.get(0).getBuildTargets().get(1));
 
     List<WorkUnit> newZeroDepNodes =
         queue.dequeueZeroDependencyNodes(
-            ImmutableList.of(CustomBuildRuleResolverFactory.TRANSITIVE_DEP_RULE),
+            ImmutableList.of(CustomActiongGraphBuilderFactory.TRANSITIVE_DEP_RULE),
             MAX_UNITS_OF_WORK);
     Assert.assertEquals(0, newZeroDepNodes.size());
 
     List<WorkUnit> newZeroDepNodesTwo =
         queue.dequeueZeroDependencyNodes(
-            ImmutableList.of(CustomBuildRuleResolverFactory.HAS_RUNTIME_DEP_RULE),
+            ImmutableList.of(CustomActiongGraphBuilderFactory.HAS_RUNTIME_DEP_RULE),
             MAX_UNITS_OF_WORK);
     Assert.assertEquals(0, newZeroDepNodesTwo.size());
   }
 
   @Test
   public void testResolverWithDiamondDependencyTarget() throws NoSuchBuildTargetException {
-    BuildRuleResolver resolver = CustomBuildRuleResolverFactory.createDiamondDependencyResolver();
+    BuildRuleResolver resolver = CustomActiongGraphBuilderFactory.createDiamondDependencyGraph();
     BuildTarget target = BuildTargetFactory.newInstance(ROOT_TARGET);
     BuildTargetsQueue queue = createQueueWithoutRemoteCache(resolver, ImmutableList.of(target));
 
@@ -320,7 +320,7 @@ public class ReverseDepBuildTargetsQueueTest {
     //        \ left  /
 
     BuildRuleResolver resolver =
-        CustomBuildRuleResolverFactory.createDiamondDependencyResolverWithChainFromLeaf();
+        CustomActiongGraphBuilderFactory.createDiamondDependencyBuilderWithChainFromLeaf();
     BuildTarget target = BuildTargetFactory.newInstance(ROOT_TARGET);
     BuildTargetsQueue queue = createQueueWithoutRemoteCache(resolver, ImmutableList.of(target));
 
@@ -366,7 +366,7 @@ public class ReverseDepBuildTargetsQueueTest {
   public void testDeepBuildDoesNotUseRemoteCacheIfLocalIsNotProvided()
       throws NoSuchBuildTargetException {
     BuildRuleResolver resolver =
-        CustomBuildRuleResolverFactory.createDiamondDependencyResolverWithChainFromLeaf();
+        CustomActiongGraphBuilderFactory.createDiamondDependencyBuilderWithChainFromLeaf();
     BuildTarget rootTarget = BuildTargetFactory.newInstance(ROOT_TARGET);
 
     ArtifactCacheByBuildRule artifactCache = EasyMock.createMock(ArtifactCacheByBuildRule.class);
@@ -389,14 +389,14 @@ public class ReverseDepBuildTargetsQueueTest {
 
   public static BuildTargetsQueue createDiamondDependencyQueue() throws NoSuchBuildTargetException {
     return createQueueWithoutRemoteCache(
-        CustomBuildRuleResolverFactory.createDiamondDependencyResolver(),
+        CustomActiongGraphBuilderFactory.createDiamondDependencyGraph(),
         ImmutableList.of(BuildTargetFactory.newInstance(ROOT_TARGET)));
   }
 
   public static BuildTargetsQueue createDiamondDependencyQueueWithChainFromLeaf()
       throws NoSuchBuildTargetException {
     return createQueueWithoutRemoteCache(
-        CustomBuildRuleResolverFactory.createDiamondDependencyResolverWithChainFromLeaf(),
+        CustomActiongGraphBuilderFactory.createDiamondDependencyBuilderWithChainFromLeaf(),
         ImmutableList.of(BuildTargetFactory.newInstance(ROOT_TARGET)));
   }
 }

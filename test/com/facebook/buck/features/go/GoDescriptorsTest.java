@@ -21,9 +21,9 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.core.description.BuildRuleParams;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.rules.resolver.impl.TestBuildRuleResolver;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.features.go.GoListStep.FileType;
@@ -126,7 +126,7 @@ public class GoDescriptorsTest {
 
   @Test
   public void testBuildRuleAsSrcAddsRuleToDependencies() {
-    BuildRuleResolver resolver = new TestBuildRuleResolver();
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
 
     GoPlatform goPlatform = GoTestUtils.DEFAULT_PLATFORM.withGoArch("amd64").withGoOs("linux");
     ProjectFilesystem filesystem =
@@ -138,7 +138,7 @@ public class GoDescriptorsTest {
     GenruleBuilder.newGenruleBuilder(srcTarget)
         .setOut("out.go")
         .setCmd("echo 'test' > $OUT")
-        .build(resolver);
+        .build(graphBuilder);
 
     BuildRuleParams params = TestBuildRuleParams.create();
     GoBuckConfig goBuckConfig = new GoBuckConfig(FakeBuckConfig.builder().build());
@@ -148,7 +148,7 @@ public class GoDescriptorsTest {
             target,
             filesystem,
             params,
-            resolver,
+            graphBuilder,
             goBuckConfig,
             Paths.get("package"),
             ImmutableSet.of(
@@ -172,7 +172,7 @@ public class GoDescriptorsTest {
 
   @Test
   public void testBuildRuleAsSrcAddsRuleToDependenciesOfBinary() {
-    BuildRuleResolver resolver = new TestBuildRuleResolver();
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
 
     GoPlatform goPlatform = GoTestUtils.DEFAULT_PLATFORM;
     ProjectFilesystem filesystem =
@@ -184,7 +184,7 @@ public class GoDescriptorsTest {
     GenruleBuilder.newGenruleBuilder(srcTarget)
         .setOut("out.go")
         .setCmd("echo 'test' > $OUT")
-        .build(resolver);
+        .build(graphBuilder);
 
     BuildRuleParams params = TestBuildRuleParams.create();
     GoBuckConfig goBuckConfig = new GoBuckConfig(FakeBuckConfig.builder().build());
@@ -194,7 +194,7 @@ public class GoDescriptorsTest {
             target,
             filesystem,
             params,
-            resolver,
+            graphBuilder,
             goBuckConfig,
             ImmutableSet.of(
                 PathSourcePath.of(filesystem, Paths.get("not_build_target.go")),

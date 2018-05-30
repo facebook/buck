@@ -27,9 +27,9 @@ import com.facebook.buck.core.model.targetgraph.FakeTargetNodeBuilder.FakeDescri
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.rules.resolver.impl.TestBuildRuleResolver;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -62,7 +62,7 @@ public class QueryOutputsMacroExpanderTest {
 
   private QueryOutputsMacroExpander expander;
   private ProjectFilesystem filesystem;
-  private BuildRuleResolver ruleResolver;
+  private ActionGraphBuilder graphBuilder;
   private CellPathResolver cellNames;
   private BuildRule rule;
   private BuildRule dep;
@@ -98,12 +98,12 @@ public class QueryOutputsMacroExpanderTest {
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(depNode, ruleNode, noopNode2, noopNode1);
 
-    ruleResolver = new TestBuildRuleResolver(targetGraph, filesystem);
+    graphBuilder = new TestActionGraphBuilder(targetGraph, filesystem);
 
-    dep = ruleResolver.requireRule(depNode.getBuildTarget());
-    rule = ruleResolver.requireRule(ruleNode.getBuildTarget());
-    noopRule = ruleResolver.requireRule(noopNode1.getBuildTarget());
-    ruleResolver.requireRule(noopNode2.getBuildTarget());
+    dep = graphBuilder.requireRule(depNode.getBuildTarget());
+    rule = graphBuilder.requireRule(ruleNode.getBuildTarget());
+    noopRule = graphBuilder.requireRule(noopNode1.getBuildTarget());
+    graphBuilder.requireRule(noopNode2.getBuildTarget());
   }
 
   @Test
@@ -141,7 +141,7 @@ public class QueryOutputsMacroExpanderTest {
             .extractBuildTimeDeps(
                 dep.getBuildTarget(),
                 cellNames,
-                ruleResolver,
+                graphBuilder,
                 "$(query_outputs 'set(//exciting:dep)')"));
     assertEquals(
         ImmutableList.of(dep, rule),
@@ -149,7 +149,7 @@ public class QueryOutputsMacroExpanderTest {
             .extractBuildTimeDeps(
                 dep.getBuildTarget(),
                 cellNames,
-                ruleResolver,
+                graphBuilder,
                 "$(query_outputs 'classpath(//exciting:target)')"));
   }
 
@@ -160,7 +160,7 @@ public class QueryOutputsMacroExpanderTest {
         handler.extractBuildTimeDeps(
             dep.getBuildTarget(),
             cellNames,
-            ruleResolver,
+            graphBuilder,
             "$(query_outputs 'classpath(//exciting:target)')",
             cache));
     // Cache should be populated at this point
@@ -184,7 +184,7 @@ public class QueryOutputsMacroExpanderTest {
 
   private void assertExpandsTo(String input, BuildRule rule, String expected)
       throws MacroException {
-    String results = handler.expand(rule.getBuildTarget(), cellNames, ruleResolver, input, cache);
+    String results = handler.expand(rule.getBuildTarget(), cellNames, graphBuilder, input, cache);
     assertEquals(expected, results);
   }
 

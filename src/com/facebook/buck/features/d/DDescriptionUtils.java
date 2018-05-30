@@ -21,8 +21,8 @@ import com.facebook.buck.core.description.BuildRuleParams;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
@@ -98,7 +98,7 @@ abstract class DDescriptionUtils {
    *
    * @param cellPathResolver
    * @param params build parameters for the build target
-   * @param buildRuleResolver resolver for build rules
+   * @param graphBuilder graphBuilder for build rules
    * @param cxxPlatform the C++ platform to compile for
    * @param dBuckConfig the Buck configuration for D
    * @param compilerFlags flags to pass to the compiler
@@ -110,7 +110,7 @@ abstract class DDescriptionUtils {
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      BuildRuleResolver buildRuleResolver,
+      ActionGraphBuilder graphBuilder,
       CxxPlatform cxxPlatform,
       DBuckConfig dBuckConfig,
       CxxBuckConfig cxxBuckConfig,
@@ -119,7 +119,7 @@ abstract class DDescriptionUtils {
       ImmutableList<String> linkerFlags,
       DIncludes includes) {
 
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
     ImmutableList<SourcePath> sourcePaths =
@@ -127,7 +127,7 @@ abstract class DDescriptionUtils {
             buildTarget,
             projectFilesystem,
             params,
-            buildRuleResolver,
+            graphBuilder,
             sourcePathResolver,
             ruleFinder,
             cxxPlatform,
@@ -142,7 +142,7 @@ abstract class DDescriptionUtils {
         cxxBuckConfig,
         cxxPlatform,
         projectFilesystem,
-        buildRuleResolver,
+        graphBuilder,
         sourcePathResolver,
         ruleFinder,
         buildTarget,
@@ -210,7 +210,7 @@ abstract class DDescriptionUtils {
    * neccesary.
    *
    * @param baseParams build parameters for the rule
-   * @param buildRuleResolver BuildRuleResolver the rule should be in
+   * @param graphBuilder BuildRuleResolver the rule should be in
    * @param src the source file to be compiled
    * @param compilerFlags flags to pass to the compiler
    * @param compileTarget the target the rule should be for
@@ -222,7 +222,7 @@ abstract class DDescriptionUtils {
       BuildTarget baseBuildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams baseParams,
-      BuildRuleResolver buildRuleResolver,
+      ActionGraphBuilder graphBuilder,
       SourcePathRuleFinder ruleFinder,
       DBuckConfig dBuckConfig,
       ImmutableList<String> compilerFlags,
@@ -230,7 +230,7 @@ abstract class DDescriptionUtils {
       SourcePath src,
       DIncludes includes) {
     return (DCompileBuildRule)
-        buildRuleResolver.computeIfAbsent(
+        graphBuilder.computeIfAbsent(
             compileTarget,
             ignored -> {
               Tool compiler = dBuckConfig.getDCompiler();
@@ -272,8 +272,8 @@ abstract class DDescriptionUtils {
    * @param sources source files to compile
    * @param compilerFlags flags to pass to the compiler
    * @param baseParams build parameters for the compilation
-   * @param buildRuleResolver resolver for build rules
-   * @param sourcePathResolver resolver for source paths
+   * @param graphBuilder graphBuilder for build rules
+   * @param sourcePathResolver graphBuilder for source paths
    * @param cxxPlatform the C++ platform to compile for
    * @param dBuckConfig the Buck configuration for D
    * @return SourcePaths of the generated object files
@@ -282,7 +282,7 @@ abstract class DDescriptionUtils {
       BuildTarget baseBuildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams baseParams,
-      BuildRuleResolver buildRuleResolver,
+      ActionGraphBuilder graphBuilder,
       SourcePathResolver sourcePathResolver,
       SourcePathRuleFinder ruleFinder,
       CxxPlatform cxxPlatform,
@@ -301,7 +301,7 @@ abstract class DDescriptionUtils {
               baseBuildTarget,
               projectFilesystem,
               baseParams,
-              buildRuleResolver,
+              graphBuilder,
               ruleFinder,
               dBuckConfig,
               compilerFlags,

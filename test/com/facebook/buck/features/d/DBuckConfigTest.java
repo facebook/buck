@@ -26,7 +26,7 @@ import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.rules.resolver.impl.TestBuildRuleResolver;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.file.MostFiles;
@@ -169,7 +169,7 @@ public class DBuckConfigTest {
 
   /** Returns the path of a Tool. */
   private String toolPath(Tool tool) {
-    BuildRuleResolver resolver = new TestBuildRuleResolver();
+    BuildRuleResolver resolver = new TestActionGraphBuilder();
     return tool.getCommandPrefix(DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver)))
         .get(0);
   }

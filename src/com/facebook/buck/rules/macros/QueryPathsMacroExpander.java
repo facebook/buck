@@ -21,8 +21,8 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.query.QueryBuildTarget;
@@ -61,7 +61,7 @@ public class QueryPathsMacroExpander extends QueryMacroExpander<QueryPathsMacro>
   public Arg expandFrom(
       BuildTarget target,
       CellPathResolver cellNames,
-      BuildRuleResolver resolver,
+      ActionGraphBuilder graphBuilder,
       QueryPathsMacro input,
       QueryResults precomputedWork) {
     return new QueriedPathsArg(
@@ -73,7 +73,7 @@ public class QueryPathsMacroExpander extends QueryMacroExpander<QueryPathsMacro>
                   // What we do depends on the input.
                   if (QueryBuildTarget.class.isAssignableFrom(queryTarget.getClass())) {
                     BuildRule rule =
-                        resolver.getRule(((QueryBuildTarget) queryTarget).getBuildTarget());
+                        graphBuilder.getRule(((QueryBuildTarget) queryTarget).getBuildTarget());
                     return Optional.ofNullable(rule.getSourcePathToOutput()).orElse(null);
                   } else if (QueryFileTarget.class.isAssignableFrom(queryTarget.getClass())) {
                     return ((QueryFileTarget) queryTarget).getPath();

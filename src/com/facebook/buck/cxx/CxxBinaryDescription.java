@@ -29,8 +29,8 @@ import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.Flavored;
 import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.toolchain.CxxPlatforms;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
@@ -87,7 +87,7 @@ public class CxxBinaryDescription
     return cxxBinaryFactory.createBuildRule(
         buildTarget,
         context.getProjectFilesystem(),
-        context.getBuildRuleResolver(),
+        context.getActionGraphBuilder(),
         context.getCellPathResolver(),
         args,
         ImmutableSortedSet.of());
@@ -124,13 +124,13 @@ public class CxxBinaryDescription
   @Override
   public <U> Optional<U> createMetadata(
       BuildTarget buildTarget,
-      BuildRuleResolver resolver,
+      ActionGraphBuilder graphBuilder,
       CellPathResolver cellRoots,
       CxxBinaryDescriptionArg args,
       Optional<ImmutableMap<BuildTarget, Version>> selectedVersions,
       Class<U> metadataClass) {
     return cxxBinaryMetadataFactory.createMetadata(
-        buildTarget, resolver, args.getDeps(), metadataClass);
+        buildTarget, graphBuilder, args.getDeps(), metadataClass);
   }
 
   @Override

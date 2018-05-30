@@ -33,10 +33,10 @@ import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.targetgraph.AbstractNodeBuilder;
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.rules.resolver.impl.TestBuildRuleResolver;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
@@ -129,13 +129,14 @@ public class MultiarchFileTest {
         BuildTargetFactory.newInstance("//foo:thing#iphoneos-i386,iphoneos-x86_64");
     BuildTarget sandboxTarget =
         BuildTargetFactory.newInstance("//foo:thing#iphoneos-i386,iphoneos-x86_64,sandbox");
-    BuildRuleResolver resolver =
-        new TestBuildRuleResolver(
+    ActionGraphBuilder graphBuilder =
+        new TestActionGraphBuilder(
             TargetGraphFactory.newInstance(new AppleLibraryBuilder(sandboxTarget).build()));
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    BuildRule multiarchRule = nodeBuilderFactory.getNodeBuilder(target).build(resolver, filesystem);
+    BuildRule multiarchRule =
+        nodeBuilderFactory.getNodeBuilder(target).build(graphBuilder, filesystem);
 
     assertThat(multiarchRule, instanceOf(MultiarchFile.class));
 
@@ -160,13 +161,13 @@ public class MultiarchFileTest {
 
   @Test
   public void descriptionWithMultipleDifferentSdksShouldFail() throws Exception {
-    BuildRuleResolver resolver = new TestBuildRuleResolver();
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     HumanReadableException exception = null;
     try {
       nodeBuilderFactory
           .getNodeBuilder(
               BuildTargetFactory.newInstance("//foo:xctest#iphoneos-i386,macosx-x86_64"))
-          .build(resolver);
+          .build(graphBuilder);
     } catch (HumanReadableException e) {
       exception = e;
     }
@@ -179,7 +180,7 @@ public class MultiarchFileTest {
 
   @Test
   public void ruleWithSpecialBuildActionShouldFail() throws Exception {
-    BuildRuleResolver resolver = new TestBuildRuleResolver();
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     HumanReadableException exception = null;
     Iterable<Flavor> forbiddenFlavors =
         ImmutableList.<Flavor>builder()
@@ -193,7 +194,7 @@ public class MultiarchFileTest {
             .getNodeBuilder(
                 BuildTargetFactory.newInstance(
                     "//foo:xctest#" + "iphoneos-i386,iphoneos-x86_64," + flavor))
-            .build(resolver);
+            .build(graphBuilder);
       } catch (HumanReadableException e) {
         exception = e;
       }

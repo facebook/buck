@@ -26,10 +26,10 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.rules.resolver.impl.TestBuildRuleResolver;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.jvm.java.AnnotationProcessingParams;
 import com.facebook.buck.jvm.java.FakeJavaLibrary;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
@@ -70,7 +70,7 @@ public class AndroidLibraryGraphEnhancerTest {
 
     Optional<DummyRDotJava> result =
         graphEnhancer.getBuildableForAndroidResources(
-            new TestBuildRuleResolver(), /* createdBuildableIfEmptyDeps */ false);
+            new TestActionGraphBuilder(), /* createdBuildableIfEmptyDeps */ false);
     assertFalse(result.isPresent());
   }
 
@@ -91,23 +91,23 @@ public class AndroidLibraryGraphEnhancerTest {
             /* useOldStyleableFormat */ false,
             /* skipNonUnionRDotJava */ false);
 
-    BuildRuleResolver buildRuleResolver = new TestBuildRuleResolver();
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     Optional<DummyRDotJava> result =
         graphEnhancer.getBuildableForAndroidResources(
-            buildRuleResolver, /* createdBuildableIfEmptyDeps */ true);
+            graphBuilder, /* createdBuildableIfEmptyDeps */ true);
     Optional<DummyRDotJava> secondResult =
         graphEnhancer.getBuildableForAndroidResources(
-            buildRuleResolver, /* createdBuildableIfEmptyDeps */ true);
+            graphBuilder, /* createdBuildableIfEmptyDeps */ true);
     assertThat(result.get(), Matchers.sameInstance(secondResult.get()));
   }
 
   @Test
   public void testBuildableIsCreated() {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//java/com/example:library");
-    BuildRuleResolver ruleResolver = new TestBuildRuleResolver();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     BuildRule resourceRule1 =
-        ruleResolver.addToIndex(
+        graphBuilder.addToIndex(
             AndroidResourceRuleBuilder.newBuilder()
                 .setRuleFinder(ruleFinder)
                 .setBuildTarget(BuildTargetFactory.newInstance("//android_res/com/example:res1"))
@@ -115,7 +115,7 @@ public class AndroidLibraryGraphEnhancerTest {
                 .setRes(FakeSourcePath.of("android_res/com/example/res1"))
                 .build());
     BuildRule resourceRule2 =
-        ruleResolver.addToIndex(
+        graphBuilder.addToIndex(
             AndroidResourceRuleBuilder.newBuilder()
                 .setRuleFinder(ruleFinder)
                 .setBuildTarget(BuildTargetFactory.newInstance("//android_res/com/example:res2"))
@@ -139,7 +139,7 @@ public class AndroidLibraryGraphEnhancerTest {
 
     Optional<DummyRDotJava> dummyRDotJava =
         graphEnhancer.getBuildableForAndroidResources(
-            ruleResolver, /* createBuildableIfEmptyDeps */ false);
+            graphBuilder, /* createBuildableIfEmptyDeps */ false);
 
     assertTrue(dummyRDotJava.isPresent());
     assertEquals(
@@ -164,10 +164,10 @@ public class AndroidLibraryGraphEnhancerTest {
   @Test
   public void testCreatedBuildableHasOverriddenJavacConfig() {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//java/com/example:library");
-    BuildRuleResolver ruleResolver = new TestBuildRuleResolver();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     BuildRule resourceRule1 =
-        ruleResolver.addToIndex(
+        graphBuilder.addToIndex(
             AndroidResourceRuleBuilder.newBuilder()
                 .setRuleFinder(ruleFinder)
                 .setBuildTarget(BuildTargetFactory.newInstance("//android_res/com/example:res1"))
@@ -175,7 +175,7 @@ public class AndroidLibraryGraphEnhancerTest {
                 .setRes(FakeSourcePath.of("android_res/com/example/res1"))
                 .build());
     BuildRule resourceRule2 =
-        ruleResolver.addToIndex(
+        graphBuilder.addToIndex(
             AndroidResourceRuleBuilder.newBuilder()
                 .setRuleFinder(ruleFinder)
                 .setBuildTarget(BuildTargetFactory.newInstance("//android_res/com/example:res2"))
@@ -203,7 +203,7 @@ public class AndroidLibraryGraphEnhancerTest {
             /* skipNonUnionRDotJava */ false);
     Optional<DummyRDotJava> dummyRDotJava =
         graphEnhancer.getBuildableForAndroidResources(
-            ruleResolver, /* createBuildableIfEmptyDeps */ false);
+            graphBuilder, /* createBuildableIfEmptyDeps */ false);
 
     assertTrue(dummyRDotJava.isPresent());
     JavacOptions javacOptions =
@@ -214,12 +214,12 @@ public class AndroidLibraryGraphEnhancerTest {
 
   @Test
   public void testDummyRDotJavaRuleInheritsJavacOptionsDepsAndNoOthers() {
-    BuildRuleResolver resolver = new TestBuildRuleResolver();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     FakeBuildRule javacDep = new FakeJavaLibrary(BuildTargetFactory.newInstance("//:javac_dep"));
-    resolver.addToIndex(javacDep);
+    graphBuilder.addToIndex(javacDep);
     FakeBuildRule dep = new FakeJavaLibrary(BuildTargetFactory.newInstance("//:dep"));
-    resolver.addToIndex(dep);
+    graphBuilder.addToIndex(dep);
     JavaBuckConfig javaConfig =
         FakeBuckConfig.builder()
             .setSections(ImmutableMap.of("tools", ImmutableMap.of("javac_jar", "//:javac_dep")))
@@ -242,7 +242,7 @@ public class AndroidLibraryGraphEnhancerTest {
             /* skipNonUnionRDotJava */ false);
     Optional<DummyRDotJava> result =
         graphEnhancer.getBuildableForAndroidResources(
-            resolver, /* createdBuildableIfEmptyDeps */ true);
+            graphBuilder, /* createdBuildableIfEmptyDeps */ true);
     assertTrue(result.isPresent());
     assertThat(result.get().getBuildDeps(), Matchers.contains(javacDep));
   }

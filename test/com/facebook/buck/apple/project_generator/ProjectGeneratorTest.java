@@ -81,9 +81,10 @@ import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.rules.resolver.impl.TestBuildRuleResolver;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
@@ -4734,14 +4735,14 @@ public class ProjectGeneratorTest {
     ImmutableSet<TargetNode<?, ?>> nodes =
         ImmutableSet.of(frameworkBinaryNode, frameworkNode, resourceNode, binaryNode, bundleNode);
     TargetGraph targetGraph = TargetGraphFactory.newInstance(ImmutableSet.copyOf(nodes));
-    BuildRuleResolver resolver = new TestBuildRuleResolver(targetGraph);
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
     ProjectGenerator projectGenerator =
         createProjectGenerator(
             nodes,
             ProjectGeneratorOptions.builder().build(),
             input -> {
-              resolver.requireRule(input.getBuildTarget());
-              return resolver;
+              graphBuilder.requireRule(input.getBuildTarget());
+              return graphBuilder;
             });
     projectGenerator.createXcodeProjects();
     PBXTarget target =
@@ -5222,7 +5223,7 @@ public class ProjectGeneratorTest {
             FocusedModuleTargetMatcher.noFocus(),
             DEFAULT_PLATFORM,
             ImmutableSet.of(),
-            getBuildRuleResolverNodeFunction(targetGraph),
+            getActionGraphBuilderNodeFunction(targetGraph),
             getFakeBuckEventBus(),
             halideBuckConfig,
             cxxBuckConfig,
@@ -5267,7 +5268,7 @@ public class ProjectGeneratorTest {
             FocusedModuleTargetMatcher.noFocus(),
             DEFAULT_PLATFORM,
             ImmutableSet.of(),
-            getBuildRuleResolverNodeFunction(targetGraph),
+            getActionGraphBuilderNodeFunction(targetGraph),
             getFakeBuckEventBus(),
             halideBuckConfig,
             cxxBuckConfig,
@@ -5336,7 +5337,7 @@ public class ProjectGeneratorTest {
         initialTargetNodes,
         projectGeneratorOptions,
         appleCxxFlavors,
-        getBuildRuleResolverNodeFunction(targetGraph));
+        getActionGraphBuilderNodeFunction(targetGraph));
   }
 
   private ProjectGenerator createProjectGenerator(
@@ -5347,15 +5348,15 @@ public class ProjectGeneratorTest {
         allNodes,
         projectGeneratorOptions,
         ImmutableSet.of(),
-        getBuildRuleResolverNodeFunction(targetGraph));
+        getActionGraphBuilderNodeFunction(targetGraph));
   }
 
   private ProjectGenerator createProjectGenerator(
       Collection<TargetNode<?, ?>> allNodes,
       ProjectGeneratorOptions projectGeneratorOptions,
-      Function<? super TargetNode<?, ?>, BuildRuleResolver> buildRuleResolverForNode) {
+      Function<? super TargetNode<?, ?>, ActionGraphBuilder> actionGraphBuilderForNode) {
     return createProjectGenerator(
-        allNodes, allNodes, projectGeneratorOptions, ImmutableSet.of(), buildRuleResolverForNode);
+        allNodes, allNodes, projectGeneratorOptions, ImmutableSet.of(), actionGraphBuilderForNode);
   }
 
   private ProjectGenerator createProjectGenerator(
@@ -5363,7 +5364,7 @@ public class ProjectGeneratorTest {
       Collection<TargetNode<?, ?>> initialTargetNodes,
       ProjectGeneratorOptions projectGeneratorOptions,
       ImmutableSet<String> appleCxxFlavors,
-      Function<? super TargetNode<?, ?>, BuildRuleResolver> buildRuleResolverForNode) {
+      Function<? super TargetNode<?, ?>, ActionGraphBuilder> actionGraphBuilderForNode) {
     ImmutableSet<BuildTarget> initialBuildTargets =
         initialTargetNodes
             .stream()
@@ -5390,7 +5391,7 @@ public class ProjectGeneratorTest {
         FocusedModuleTargetMatcher.noFocus(),
         DEFAULT_PLATFORM,
         appleCxxFlavors,
-        buildRuleResolverForNode,
+        actionGraphBuilderForNode,
         getFakeBuckEventBus(),
         halideBuckConfig,
         cxxBuckConfig,
@@ -5398,16 +5399,16 @@ public class ProjectGeneratorTest {
         swiftBuckConfig);
   }
 
-  private Function<TargetNode<?, ?>, BuildRuleResolver> getBuildRuleResolverNodeFunction(
+  private Function<TargetNode<?, ?>, ActionGraphBuilder> getActionGraphBuilderNodeFunction(
       TargetGraph targetGraph) {
-    BuildRuleResolver resolver = new TestBuildRuleResolver(targetGraph);
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
     AbstractBottomUpTraversal<TargetNode<?, ?>, RuntimeException> bottomUpTraversal =
         new AbstractBottomUpTraversal<TargetNode<?, ?>, RuntimeException>(targetGraph) {
           @Override
           @SuppressWarnings("PMD.EmptyCatchBlock")
           public void visit(TargetNode<?, ?> node) {
             try {
-              resolver.requireRule(node.getBuildTarget());
+              graphBuilder.requireRule(node.getBuildTarget());
             } catch (Exception e) {
               // NOTE(agallagher): A large number of the tests appear to setup their target nodes
               // incorrectly, causing action graph creation to fail with lots of missing expected
@@ -5417,7 +5418,7 @@ public class ProjectGeneratorTest {
           }
         };
     bottomUpTraversal.traverse();
-    return input -> resolver;
+    return input -> graphBuilder;
   }
 
   private ImmutableSet<TargetNode<?, ?>> setupSimpleLibraryWithResources(
@@ -5626,7 +5627,7 @@ public class ProjectGeneratorTest {
   private Path getAbsoluteOutputForNode(
       TargetNode<?, ?> node, ImmutableSet<TargetNode<?, ?>> nodes) {
     TargetGraph targetGraph = TargetGraphFactory.newInstance(nodes);
-    BuildRuleResolver ruleResolver = getBuildRuleResolverNodeFunction(targetGraph).apply(node);
+    BuildRuleResolver ruleResolver = getActionGraphBuilderNodeFunction(targetGraph).apply(node);
     SourcePath nodeOutput = ruleResolver.getRule(node.getBuildTarget()).getSourcePathToOutput();
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
     SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(ruleFinder);

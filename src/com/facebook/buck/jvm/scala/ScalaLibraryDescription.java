@@ -123,7 +123,7 @@ public class ScalaLibraryDescription
                 .getJavacOptions(),
             buildTarget,
             context.getProjectFilesystem(),
-            context.getBuildRuleResolver(),
+            context.getActionGraphBuilder(),
             args);
 
     DefaultJavaLibraryRules scalaLibraryBuilder =
@@ -132,7 +132,7 @@ public class ScalaLibraryDescription
                 context.getProjectFilesystem(),
                 context.getToolchainProvider(),
                 rawParams,
-                context.getBuildRuleResolver(),
+                context.getActionGraphBuilder(),
                 context.getCellPathResolver(),
                 scalaBuckConfig,
                 javaBuckConfig,
@@ -149,7 +149,7 @@ public class ScalaLibraryDescription
     if (!flavors.contains(JavaLibrary.MAVEN_JAR)) {
       return defaultScalaLibrary;
     } else {
-      context.getBuildRuleResolver().addToIndex(defaultScalaLibrary);
+      context.getActionGraphBuilder().addToIndex(defaultScalaLibrary);
       return MavenUberJar.create(
           defaultScalaLibrary,
           buildTargetWithMavenFlavor,

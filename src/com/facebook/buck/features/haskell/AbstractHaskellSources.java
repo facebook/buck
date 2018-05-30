@@ -19,8 +19,8 @@ package com.facebook.buck.features.haskell;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
@@ -44,7 +44,7 @@ abstract class AbstractHaskellSources implements AddsToRuleKey {
 
   public static HaskellSources from(
       BuildTarget target,
-      BuildRuleResolver ruleResolver,
+      ActionGraphBuilder graphBuilder,
       SourcePathResolver pathResolver,
       SourcePathRuleFinder ruleFinder,
       HaskellPlatform platform,
@@ -56,7 +56,7 @@ abstract class AbstractHaskellSources implements AddsToRuleKey {
       builder.putModuleMap(
           ent.getKey().substring(0, ent.getKey().lastIndexOf('.')).replace(File.separatorChar, '.'),
           CxxGenruleDescription.fixupSourcePath(
-              ruleResolver, ruleFinder, platform.getCxxPlatform(), ent.getValue()));
+              graphBuilder, ruleFinder, platform.getCxxPlatform(), ent.getValue()));
     }
     return builder.build();
   }

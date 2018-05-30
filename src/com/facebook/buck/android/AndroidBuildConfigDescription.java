@@ -23,8 +23,8 @@ import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
@@ -67,11 +67,11 @@ public class AndroidBuildConfigDescription
       BuildTarget buildTarget,
       BuildRuleParams params,
       AndroidBuildConfigDescriptionArg args) {
-    BuildRuleResolver resolver = context.getBuildRuleResolver();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     if (HasJavaAbi.isClassAbiTarget(buildTarget)) {
       BuildTarget configTarget = HasJavaAbi.getLibraryTarget(buildTarget);
-      BuildRule configRule = resolver.requireRule(configTarget);
+      BuildRule configRule = graphBuilder.requireRule(configTarget);
       return CalculateClassAbi.of(
           buildTarget,
           ruleFinder,
@@ -93,7 +93,7 @@ public class AndroidBuildConfigDescription
             .getToolchainProvider()
             .getByName(JavacOptionsProvider.DEFAULT_NAME, JavacOptionsProvider.class)
             .getJavacOptions(),
-        resolver);
+        graphBuilder);
   }
 
   /**
@@ -101,8 +101,8 @@ public class AndroidBuildConfigDescription
    *     class. The values for fields can be overridden by values from the {@code valuesFile} file,
    *     if present.
    * @param valuesFile Path to a file with values to override those in {@code values}.
-   * @param ruleResolver Any intermediate rules introduced by this method will be added to this
-   *     {@link BuildRuleResolver}.
+   * @param graphBuilder Any intermediate rules introduced by this method will be added to this
+   *     {@link ActionGraphBuilder}.
    */
   static AndroidBuildConfigJavaLibrary createBuildRule(
       BuildTarget buildTarget,
@@ -114,7 +114,7 @@ public class AndroidBuildConfigDescription
       boolean useConstantExpressions,
       Javac javac,
       JavacOptions javacOptions,
-      BuildRuleResolver ruleResolver) {
+      ActionGraphBuilder graphBuilder) {
     // Normally, the build target for an intermediate rule is a flavored version of the target for
     // the original rule. For example, if the build target for an android_build_config() were
     // //foo:bar, then the build target for the intermediate AndroidBuildConfig rule created by this
@@ -131,7 +131,7 @@ public class AndroidBuildConfigDescription
     //
     // This fixes the issue, but deviates from the common pattern where a build rule has at most
     // one flavored version of itself for a given flavor.
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     BuildTarget buildConfigBuildTarget;
     if (!buildTarget.isFlavored()) {
@@ -161,7 +161,7 @@ public class AndroidBuildConfigDescription
             values,
             valuesFile,
             useConstantExpressions);
-    ruleResolver.addToIndex(androidBuildConfig);
+    graphBuilder.addToIndex(androidBuildConfig);
 
     // Create a second build rule to compile BuildConfig.java and expose it as a JavaLibrary.
     BuildRuleParams javaLibraryParams =
@@ -174,7 +174,7 @@ public class AndroidBuildConfigDescription
         ruleFinder,
         javac,
         javacOptions,
-        JavaLibraryRules.getAbiClasspath(ruleResolver, javaLibraryParams.getBuildDeps()),
+        JavaLibraryRules.getAbiClasspath(graphBuilder, javaLibraryParams.getBuildDeps()),
         androidBuildConfig);
   }
 

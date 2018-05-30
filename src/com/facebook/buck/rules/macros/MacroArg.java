@@ -21,7 +21,7 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.RuleKeyAppendable;
 import com.facebook.buck.core.rulekey.RuleKeyObjectSink;
-import com.facebook.buck.core.rules.BuildRuleResolver;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.model.macros.MacroException;
 import com.facebook.buck.model.macros.MacroMatchResult;
@@ -44,7 +44,7 @@ public class MacroArg implements Arg, RuleKeyAppendable {
   protected final MacroHandler expander;
   protected final BuildTarget target;
   protected final CellPathResolver cellNames;
-  protected final BuildRuleResolver resolver;
+  protected final ActionGraphBuilder graphBuilder;
   protected final String unexpanded;
 
   protected Map<MacroMatchResult, Object> precomputedWorkCache = new HashMap<>();
@@ -53,19 +53,19 @@ public class MacroArg implements Arg, RuleKeyAppendable {
       MacroHandler expander,
       BuildTarget target,
       CellPathResolver cellNames,
-      BuildRuleResolver resolver,
+      ActionGraphBuilder graphBuilder,
       String unexpanded) {
     this.expander = expander;
     this.target = target;
     this.cellNames = cellNames;
-    this.resolver = resolver;
+    this.graphBuilder = graphBuilder;
     this.unexpanded = unexpanded;
   }
 
   @Override
   public void appendToCommandLine(Consumer<String> consumer, SourcePathResolver pathResolver) {
     try {
-      consumer.accept(expander.expand(target, cellNames, resolver, unexpanded));
+      consumer.accept(expander.expand(target, cellNames, graphBuilder, unexpanded));
     } catch (MacroException e) {
       throw new HumanReadableException(e, "%s: %s", target, e.getMessage());
     }
@@ -78,7 +78,7 @@ public class MacroArg implements Arg, RuleKeyAppendable {
           .setReflectively(
               "macros",
               expander.extractRuleKeyAppendables(
-                  target, cellNames, resolver, unexpanded, precomputedWorkCache));
+                  target, cellNames, graphBuilder, unexpanded, precomputedWorkCache));
     } catch (MacroException e) {
       throw new HumanReadableException(e, "%s: %s", target, e.getMessage());
     }
@@ -111,12 +111,13 @@ public class MacroArg implements Arg, RuleKeyAppendable {
       MacroHandler handler,
       BuildTarget target,
       CellPathResolver cellNames,
-      BuildRuleResolver resolver) {
+      ActionGraphBuilder graphBuilder) {
     return unexpanded -> {
-      MacroArg arg = new MacroArg(handler, target, cellNames, resolver, unexpanded);
+      MacroArg arg = new MacroArg(handler, target, cellNames, graphBuilder, unexpanded);
       try {
         if (containsWorkerMacro(handler, unexpanded)) {
-          return WorkerMacroArg.fromMacroArg(arg, handler, target, cellNames, resolver, unexpanded);
+          return WorkerMacroArg.fromMacroArg(
+              arg, handler, target, cellNames, graphBuilder, unexpanded);
         }
       } catch (MacroException e) {
         throw new HumanReadableException(e, "%s: %s", target, e.getMessage());

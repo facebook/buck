@@ -23,9 +23,9 @@ import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.core.description.BuildRuleParams;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.rules.resolver.impl.TestBuildRuleResolver;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
@@ -65,25 +65,26 @@ public class WorkerToolDescriptionTest {
     return createWorkerTool(maxWorkers, (resolver, shBinary) -> shBinary.getBuildTarget());
   }
 
-  private static BuildTarget wrapExeInCommandAlias(BuildRuleResolver resolver, BuildRule shBinary) {
+  private static BuildTarget wrapExeInCommandAlias(
+      ActionGraphBuilder graphBuilder, BuildRule shBinary) {
     return new CommandAliasBuilder(BuildTargetFactory.newInstance("//:no_output"))
         .setExe(shBinary.getBuildTarget())
-        .build(resolver)
+        .build(graphBuilder)
         .getBuildTarget();
   }
 
   private static WorkerTool createWorkerTool(
-      int maxWorkers, BiFunction<BuildRuleResolver, BuildRule, BuildTarget> getExe)
+      int maxWorkers, BiFunction<ActionGraphBuilder, BuildRule, BuildTarget> getExe)
       throws NoSuchBuildTargetException {
     TargetGraph targetGraph = TargetGraph.EMPTY;
-    BuildRuleResolver resolver = new TestBuildRuleResolver(targetGraph);
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
 
     BuildRule shBinaryRule =
         new ShBinaryBuilder(BuildTargetFactory.newInstance("//:my_exe"))
             .setMain(FakeSourcePath.of("bin/exe"))
-            .build(resolver);
+            .build(graphBuilder);
 
-    BuildTarget exe = getExe.apply(resolver, shBinaryRule);
+    BuildTarget exe = getExe.apply(graphBuilder, shBinaryRule);
     WorkerToolDescriptionArg args =
         WorkerToolDescriptionArg.builder()
             .setName("target")
@@ -98,11 +99,12 @@ public class WorkerToolDescriptionTest {
     BuildRuleParams params =
         new BuildRuleParams(
             () -> ImmutableSortedSet.of(),
-            () -> ImmutableSortedSet.of(resolver.getRule(exe)),
+            () -> ImmutableSortedSet.of(graphBuilder.getRule(exe)),
             ImmutableSortedSet.of());
     return (WorkerTool)
         workerToolDescription.createBuildRule(
-            TestBuildRuleCreationContextFactory.create(targetGraph, resolver, projectFilesystem),
+            TestBuildRuleCreationContextFactory.create(
+                targetGraph, graphBuilder, projectFilesystem),
             buildTarget,
             params,
             args);

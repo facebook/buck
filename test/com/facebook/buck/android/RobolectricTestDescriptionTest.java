@@ -21,9 +21,9 @@ import static org.hamcrest.junit.MatcherAssert.assertThat;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.rules.resolver.impl.TestBuildRuleResolver;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
@@ -65,17 +65,17 @@ public class RobolectricTestDescriptionTest extends AbiCompilationModeTest {
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(exportedNode, exportingNode, robolectricTestNode);
 
-    BuildRuleResolver resolver =
-        new TestBuildRuleResolver(
+    ActionGraphBuilder graphBuilder =
+        new TestActionGraphBuilder(
             targetGraph, RobolectricTestBuilder.createToolchainProviderForRobolectricTest());
 
     RobolectricTest robolectricTest =
-        (RobolectricTest) resolver.requireRule(robolectricTestNode.getBuildTarget());
-    BuildRule exportedRule = resolver.requireRule(exportedNode.getBuildTarget());
+        (RobolectricTest) graphBuilder.requireRule(robolectricTestNode.getBuildTarget());
+    BuildRule exportedRule = graphBuilder.requireRule(exportedNode.getBuildTarget());
 
     // First order deps should become CalculateAbi rules if we're compiling against ABIs
     if (compileAgainstAbis.equals(TRUE)) {
-      exportedRule = resolver.getRule(((JavaLibrary) exportedRule).getAbiJar().get());
+      exportedRule = graphBuilder.getRule(((JavaLibrary) exportedRule).getAbiJar().get());
     }
 
     assertThat(
@@ -104,17 +104,17 @@ public class RobolectricTestDescriptionTest extends AbiCompilationModeTest {
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(exportedNode, exportingNode, robolectricTestNode);
 
-    BuildRuleResolver resolver =
-        new TestBuildRuleResolver(
+    ActionGraphBuilder graphBuilder =
+        new TestActionGraphBuilder(
             targetGraph, RobolectricTestBuilder.createToolchainProviderForRobolectricTest());
 
     RobolectricTest robolectricTest =
-        (RobolectricTest) resolver.requireRule(robolectricTestNode.getBuildTarget());
-    BuildRule exportedRule = resolver.requireRule(exportedNode.getBuildTarget());
+        (RobolectricTest) graphBuilder.requireRule(robolectricTestNode.getBuildTarget());
+    BuildRule exportedRule = graphBuilder.requireRule(exportedNode.getBuildTarget());
 
     // First order deps should become CalculateAbi rules if we're compiling against ABIs
     if (compileAgainstAbis.equals(TRUE)) {
-      exportedRule = resolver.getRule(((JavaLibrary) exportedRule).getAbiJar().get());
+      exportedRule = graphBuilder.getRule(((JavaLibrary) exportedRule).getAbiJar().get());
     }
 
     assertThat(

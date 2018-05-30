@@ -17,7 +17,7 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.rules.BuildRuleResolver;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
@@ -41,7 +41,7 @@ public interface CxxLibraryDescriptionDelegate {
    * public input.
    */
   Optional<CxxPreprocessorInput> getPreprocessorInput(
-      BuildTarget target, BuildRuleResolver resolver, CxxPlatform platform);
+      BuildTarget target, ActionGraphBuilder graphBuilder, CxxPlatform platform);
 
   /**
    * Defines an additional preprocessor input for the private interface exposed by a target. The
@@ -49,14 +49,14 @@ public interface CxxLibraryDescriptionDelegate {
    * private input.
    */
   Optional<CxxPreprocessorInput> getPrivatePreprocessorInput(
-      BuildTarget target, BuildRuleResolver resolver, CxxPlatform platform);
+      BuildTarget target, ActionGraphBuilder graphBuilder, CxxPlatform platform);
 
   /**
    * Defines an additional private {@link HeaderSymlinkTree} that will be used when compiling the
    * the library.
    */
   Optional<HeaderSymlinkTree> getPrivateHeaderSymlinkTree(
-      BuildTarget buildTarget, BuildRuleResolver ruleResolver, CxxPlatform cxxPlatform);
+      BuildTarget buildTarget, ActionGraphBuilder graphBuilder, CxxPlatform cxxPlatform);
 
   /**
    * Defines the paths to object files (i.e., .o files) that will be combined into the final product
@@ -65,18 +65,18 @@ public interface CxxLibraryDescriptionDelegate {
    * set up.
    */
   Optional<ImmutableList<SourcePath>> getObjectFilePaths(
-      BuildTarget target, BuildRuleResolver resolver, CxxPlatform platform);
+      BuildTarget target, ActionGraphBuilder graphBuilder, CxxPlatform platform);
 
   /**
    * Provides the ability for the plugin to provide additional {@link NativeLinkable}s that will be
    * exported.
    */
   Optional<ImmutableList<NativeLinkable>> getNativeLinkableExportedDeps(
-      BuildTarget target, BuildRuleResolver resolver, CxxPlatform platform);
+      BuildTarget target, ActionGraphBuilder graphBuilder, CxxPlatform platform);
 
   /** Provides the ability to inject additional exported linker flags. */
   ImmutableList<Arg> getAdditionalExportedLinkerFlags(
-      BuildTarget target, BuildRuleResolver resolver, CxxPlatform cxxPlatform);
+      BuildTarget target, ActionGraphBuilder graphBuilder, CxxPlatform cxxPlatform);
 
   /**
    * Specifies whether a library artifact (e.g., libName.a) should be produced. For example,
@@ -86,7 +86,7 @@ public interface CxxLibraryDescriptionDelegate {
    */
   boolean getShouldProduceLibraryArtifact(
       BuildTarget target,
-      BuildRuleResolver resolver,
+      ActionGraphBuilder graphBuilder,
       CxxPlatform cxxPlatform,
       Linker.LinkableDepType type,
       boolean forceLinkWhole);

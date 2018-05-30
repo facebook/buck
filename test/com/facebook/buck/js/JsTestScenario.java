@@ -21,8 +21,8 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
-import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.rules.resolver.impl.TestBuildRuleResolver;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -43,7 +43,7 @@ import javax.annotation.Nullable;
 
 public class JsTestScenario {
   public final TargetGraph targetGraph;
-  public final BuildRuleResolver resolver;
+  public final ActionGraphBuilder graphBuilder;
   public final BuildTarget workerTarget;
   public final ProjectFilesystem filesystem;
 
@@ -57,11 +57,11 @@ public class JsTestScenario {
 
   private JsTestScenario(
       TargetGraph targetGraph,
-      BuildRuleResolver resolver,
+      ActionGraphBuilder graphBuilder,
       BuildTarget workerTarget,
       ProjectFilesystem filesystem) {
     this.targetGraph = targetGraph;
-    this.resolver = resolver;
+    this.graphBuilder = graphBuilder;
     this.workerTarget = workerTarget;
     this.filesystem = filesystem;
   }
@@ -85,7 +85,7 @@ public class JsTestScenario {
         .apply(
             new JsBundleBuilder(
                 BuildTargetFactory.newInstance(target), workerTarget, entry, filesystem))
-        .build(resolver, targetGraph);
+        .build(graphBuilder, targetGraph);
   }
 
   public static class Builder {
@@ -184,11 +184,11 @@ public class JsTestScenario {
 
     public JsTestScenario build() {
       TargetGraph graph = TargetGraphFactory.newInstance(nodes);
-      BuildRuleResolver resolver = new TestBuildRuleResolver(graph);
+      ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(graph);
       for (TargetNode<?, ?> node : nodes) {
-        resolver.requireRule(node.getBuildTarget());
+        graphBuilder.requireRule(node.getBuildTarget());
       }
-      return new JsTestScenario(graph, resolver, workerTarget, filesystem);
+      return new JsTestScenario(graph, graphBuilder, workerTarget, filesystem);
     }
   }
 }

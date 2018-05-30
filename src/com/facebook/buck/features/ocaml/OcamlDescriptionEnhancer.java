@@ -18,7 +18,7 @@ package com.facebook.buck.features.ocaml;
 
 import com.facebook.buck.core.cell.resolver.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.rules.BuildRuleResolver;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.macros.ExecutableMacroExpander;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
@@ -33,7 +33,7 @@ public class OcamlDescriptionEnhancer {
   public static ImmutableList<Arg> toStringWithMacrosArgs(
       BuildTarget target,
       CellPathResolver cellPathResolver,
-      BuildRuleResolver resolver,
+      ActionGraphBuilder graphBuilder,
       Iterable<StringWithMacros> flags) {
     ImmutableList.Builder<Arg> args = ImmutableList.builder();
     StringWithMacrosConverter macrosConverter =
@@ -42,7 +42,7 @@ public class OcamlDescriptionEnhancer {
             cellPathResolver,
             ImmutableList.of(new LocationMacroExpander(), new ExecutableMacroExpander()));
     for (StringWithMacros flag : flags) {
-      args.add(macrosConverter.convert(flag, resolver));
+      args.add(macrosConverter.convert(flag, graphBuilder));
     }
     return args.build();
   }

@@ -19,7 +19,7 @@ package com.facebook.buck.cxx.toolchain.linker;
 import com.facebook.buck.core.description.BuildRuleParams;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
-import com.facebook.buck.core.rules.BuildRuleResolver;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
@@ -125,7 +125,7 @@ public class DarwinLinker extends DelegatingTool implements Linker, HasLinkerMap
   public ImmutableList<Arg> createUndefinedSymbolsLinkerArgs(
       ProjectFilesystem projectFilesystem,
       BuildRuleParams baseParams,
-      BuildRuleResolver ruleResolver,
+      ActionGraphBuilder graphBuilder,
       SourcePathRuleFinder ruleFinder,
       BuildTarget target,
       ImmutableList<? extends SourcePath> symbolFiles) {

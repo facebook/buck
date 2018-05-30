@@ -24,8 +24,8 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
-import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.rules.resolver.impl.TestBuildRuleResolver;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
@@ -58,12 +58,14 @@ public class OutputToFileExpanderUtilsTest {
     BuildTarget target = BuildTargetFactory.newInstance("//some:example");
     JavaLibraryBuilder builder = JavaLibraryBuilder.createBuilder(target);
     TargetNode<?, ?> node = builder.build();
-    BuildRuleResolver resolver = new TestBuildRuleResolver(TargetGraphFactory.newInstance(node));
-    builder.build(resolver, filesystem);
+    ActionGraphBuilder graphBuilder =
+        new TestActionGraphBuilder(TargetGraphFactory.newInstance(node));
+    builder.build(graphBuilder, filesystem);
 
     MacroHandler handler = new MacroHandler(ImmutableMap.of("@macro", source));
     String result =
-        handler.expand(target, createCellRoots(filesystem), resolver, "$(@macro totally ignored)");
+        handler.expand(
+            target, createCellRoots(filesystem), graphBuilder, "$(@macro totally ignored)");
 
     assertTrue(result, result.startsWith("@"));
     Path output = Paths.get(result.substring(1));

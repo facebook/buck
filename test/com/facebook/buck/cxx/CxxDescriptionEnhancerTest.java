@@ -24,9 +24,9 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.description.BuildRuleParams;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.rules.resolver.impl.TestBuildRuleResolver;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
@@ -54,7 +54,7 @@ public class CxxDescriptionEnhancerTest {
     BuildTarget testTarget = BuildTargetFactory.newInstance("//:test");
 
     BuildRuleParams libParams = TestBuildRuleParams.create();
-    BuildRuleResolver ruleResolver = new TestBuildRuleResolver();
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     FakeCxxLibrary libRule =
         new FakeCxxLibrary(
             libTarget,
@@ -77,13 +77,13 @@ public class CxxDescriptionEnhancerTest {
         CxxDescriptionEnhancer.collectCxxPreprocessorInput(
             testTarget,
             CxxPlatformUtils.DEFAULT_PLATFORM,
-            ruleResolver,
+            graphBuilder,
             deps,
             ImmutableMultimap.of(),
             ImmutableList.of(),
             ImmutableSet.of(),
             CxxPreprocessables.getTransitiveCxxPreprocessorInput(
-                CxxPlatformUtils.DEFAULT_PLATFORM, ruleResolver, deps),
+                CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder, deps),
             ImmutableList.of(),
             Optional.empty(),
             ImmutableSortedSet.of());
@@ -107,7 +107,7 @@ public class CxxDescriptionEnhancerTest {
     BuildTarget testTarget = BuildTargetFactory.newInstance("//:test");
 
     BuildRuleParams otherlibParams = TestBuildRuleParams.create();
-    BuildRuleResolver ruleResolver = new TestBuildRuleResolver();
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     FakeCxxLibrary otherlibRule =
         new FakeCxxLibrary(
             otherlibTarget,
@@ -148,13 +148,13 @@ public class CxxDescriptionEnhancerTest {
         CxxDescriptionEnhancer.collectCxxPreprocessorInput(
             testTarget,
             CxxPlatformUtils.DEFAULT_PLATFORM,
-            ruleResolver,
+            graphBuilder,
             deps,
             ImmutableMultimap.of(),
             ImmutableList.of(),
             ImmutableSet.of(),
             CxxPreprocessables.getTransitiveCxxPreprocessorInput(
-                CxxPlatformUtils.DEFAULT_PLATFORM, ruleResolver, deps),
+                CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder, deps),
             ImmutableList.of(),
             Optional.empty(),
             ImmutableSortedSet.of());
@@ -181,7 +181,7 @@ public class CxxDescriptionEnhancerTest {
     BuildTarget libTarget = BuildTargetFactory.newInstance("//:lib");
 
     BuildRuleParams libParams = TestBuildRuleParams.create();
-    BuildRuleResolver ruleResolver = new TestBuildRuleResolver();
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     FakeCxxLibrary libRule =
         new FakeCxxLibrary(
             libTarget,
@@ -205,13 +205,13 @@ public class CxxDescriptionEnhancerTest {
         CxxDescriptionEnhancer.collectCxxPreprocessorInput(
             otherLibDepTarget,
             CxxPlatformUtils.DEFAULT_PLATFORM,
-            ruleResolver,
+            graphBuilder,
             deps,
             ImmutableMultimap.of(),
             ImmutableList.of(),
             ImmutableSet.of(),
             CxxPreprocessables.getTransitiveCxxPreprocessorInput(
-                CxxPlatformUtils.DEFAULT_PLATFORM, ruleResolver, deps),
+                CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder, deps),
             ImmutableList.of(),
             Optional.empty(),
             ImmutableSortedSet.of());

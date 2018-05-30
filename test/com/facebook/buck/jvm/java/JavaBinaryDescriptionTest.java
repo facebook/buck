@@ -23,9 +23,9 @@ import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.rules.resolver.impl.TestBuildRuleResolver;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.cxx.PrebuiltCxxLibraryBuilder;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
@@ -42,13 +42,13 @@ public class JavaBinaryDescriptionTest {
 
   @Test
   public void rulesExportedFromDepsBecomeFirstOrderDeps() throws Exception {
-    BuildRuleResolver resolver = new TestBuildRuleResolver();
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
 
     FakeJavaLibrary transitiveLibrary =
-        resolver.addToIndex(
+        graphBuilder.addToIndex(
             new FakeJavaLibrary(BuildTargetFactory.newInstance("//:transitive_lib")));
     FakeJavaLibrary firstOrderLibrary =
-        resolver.addToIndex(
+        graphBuilder.addToIndex(
             new FakeJavaLibrary(
                 BuildTargetFactory.newInstance("//:first_order_lib"),
                 ImmutableSortedSet.of(transitiveLibrary)));
@@ -57,7 +57,7 @@ public class JavaBinaryDescriptionTest {
     BuildRule javaBinary =
         new JavaBinaryRuleBuilder(target)
             .setDeps(ImmutableSortedSet.of(firstOrderLibrary.getBuildTarget()))
-            .build(resolver);
+            .build(graphBuilder);
 
     assertThat(
         javaBinary.getBuildDeps(),
@@ -86,9 +86,9 @@ public class JavaBinaryDescriptionTest {
 
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(cxxLibBuilder.build(), javaBinBuilder.build());
-    BuildRuleResolver resolver = new TestBuildRuleResolver(targetGraph);
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
 
-    JarFattener javaBinary = (JarFattener) resolver.requireRule(javaBinBuilder.getTarget());
+    JarFattener javaBinary = (JarFattener) graphBuilder.requireRule(javaBinBuilder.getTarget());
 
     assertThat(javaBinary.getNativeLibraries().values(), Matchers.contains(lib));
   }

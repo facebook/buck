@@ -19,8 +19,8 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.core.cell.resolver.CellPathResolver;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -73,10 +73,13 @@ abstract class AbstractDeprecatedPrebuiltCxxLibraryPaths implements PrebuiltCxxL
   }
 
   private String expandMacros(
-      BuildRuleResolver resolver, CellPathResolver cellRoots, CxxPlatform cxxPlatform, String str) {
+      ActionGraphBuilder graphBuilder,
+      CellPathResolver cellRoots,
+      CxxPlatform cxxPlatform,
+      String str) {
     try {
       return getMacroHandler(Optional.of(cxxPlatform))
-          .expand(getTarget(), cellRoots, resolver, str);
+          .expand(getTarget(), cellRoots, graphBuilder, str);
     } catch (MacroException e) {
       throw new HumanReadableException(e, "%s: %s in \"%s\"", getTarget(), e.getMessage(), str);
     }
@@ -84,14 +87,14 @@ abstract class AbstractDeprecatedPrebuiltCxxLibraryPaths implements PrebuiltCxxL
 
   private SourcePath getSourcePath(
       ProjectFilesystem filesystem,
-      BuildRuleResolver resolver,
+      ActionGraphBuilder graphBuilder,
       CellPathResolver cellRoots,
       CxxPlatform cxxPlatform,
       String subPath,
       Optional<String> suffix) {
 
-    subPath = expandMacros(resolver, cellRoots, cxxPlatform, subPath);
-    suffix = suffix.map(s -> expandMacros(resolver, cellRoots, cxxPlatform, s));
+    subPath = expandMacros(graphBuilder, cellRoots, cxxPlatform, subPath);
+    suffix = suffix.map(s -> expandMacros(graphBuilder, cellRoots, cxxPlatform, s));
 
     // Check if we have a location macro that wraps a target.
     if (getLibDir().isPresent()) {
@@ -99,7 +102,8 @@ abstract class AbstractDeprecatedPrebuiltCxxLibraryPaths implements PrebuiltCxxL
       try {
         dep =
             getMacroHandler(Optional.of(cxxPlatform))
-                .extractBuildTimeDeps(getTarget(), cellRoots, resolver, getLibDir().orElse("lib"))
+                .extractBuildTimeDeps(
+                    getTarget(), cellRoots, graphBuilder, getLibDir().orElse("lib"))
                 .stream()
                 .findAny();
       } catch (MacroException e) {
@@ -127,14 +131,14 @@ abstract class AbstractDeprecatedPrebuiltCxxLibraryPaths implements PrebuiltCxxL
 
   private Optional<SourcePath> getLibrary(
       ProjectFilesystem filesystem,
-      BuildRuleResolver resolver,
+      ActionGraphBuilder graphBuilder,
       CellPathResolver cellRoots,
       CxxPlatform cxxPlatform,
       LibType type) {
     SourcePath sourcePath =
         getSourcePath(
             filesystem,
-            resolver,
+            graphBuilder,
             cellRoots,
             cxxPlatform,
             getLibDir().orElse("lib"),
@@ -158,57 +162,58 @@ abstract class AbstractDeprecatedPrebuiltCxxLibraryPaths implements PrebuiltCxxL
   @Override
   public Optional<SourcePath> getSharedLibrary(
       ProjectFilesystem filesystem,
-      BuildRuleResolver resolver,
+      ActionGraphBuilder graphBuilder,
       CellPathResolver cellRoots,
       CxxPlatform cxxPlatform,
       Optional<ImmutableMap<BuildTarget, Version>> selectedVersions) {
-    return getLibrary(filesystem, resolver, cellRoots, cxxPlatform, LibType.SHARED);
+    return getLibrary(filesystem, graphBuilder, cellRoots, cxxPlatform, LibType.SHARED);
   }
 
   @Override
   public Optional<SourcePath> getStaticLibrary(
       ProjectFilesystem filesystem,
-      BuildRuleResolver resolver,
+      ActionGraphBuilder graphBuilder,
       CellPathResolver cellRoots,
       CxxPlatform cxxPlatform,
       Optional<ImmutableMap<BuildTarget, Version>> selectedVersions) {
-    return getLibrary(filesystem, resolver, cellRoots, cxxPlatform, LibType.STATIC);
+    return getLibrary(filesystem, graphBuilder, cellRoots, cxxPlatform, LibType.STATIC);
   }
 
   @Override
   public Optional<SourcePath> getStaticPicLibrary(
       ProjectFilesystem filesystem,
-      BuildRuleResolver resolver,
+      ActionGraphBuilder graphBuilder,
       CellPathResolver cellRoots,
       CxxPlatform cxxPlatform,
       Optional<ImmutableMap<BuildTarget, Version>> selectedVersions) {
-    return getLibrary(filesystem, resolver, cellRoots, cxxPlatform, LibType.STATIC_PIC);
+    return getLibrary(filesystem, graphBuilder, cellRoots, cxxPlatform, LibType.STATIC_PIC);
   }
 
   @Override
   public ImmutableList<SourcePath> getIncludeDirs(
       ProjectFilesystem filesystem,
-      BuildRuleResolver resolver,
+      ActionGraphBuilder graphBuilder,
       CellPathResolver cellRoots,
       CxxPlatform cxxPlatform,
       Optional<ImmutableMap<BuildTarget, Version>> selectedVersions) {
     return RichStream.from(getIncludeDirs())
         .map(
             dir ->
-                getSourcePath(filesystem, resolver, cellRoots, cxxPlatform, dir, Optional.empty()))
+                getSourcePath(
+                    filesystem, graphBuilder, cellRoots, cxxPlatform, dir, Optional.empty()))
         .toImmutableList();
   }
 
   @Override
   public Optional<NativeLinkable.Linkage> getLinkage(
       ProjectFilesystem filesystem,
-      BuildRuleResolver resolver,
+      ActionGraphBuilder graphBuilder,
       CellPathResolver cellRoots,
       CxxPlatform cxxPlatform) {
     Optional<SourcePath> staticLibrary =
-        getLibrary(filesystem, resolver, cellRoots, cxxPlatform, LibType.STATIC);
+        getLibrary(filesystem, graphBuilder, cellRoots, cxxPlatform, LibType.STATIC);
     Optional<SourcePath> staticPicLibrary =
-        getLibrary(filesystem, resolver, cellRoots, cxxPlatform, LibType.STATIC_PIC);
+        getLibrary(filesystem, graphBuilder, cellRoots, cxxPlatform, LibType.STATIC_PIC);
     if (!staticLibrary.isPresent() && !staticPicLibrary.isPresent()) {
       return Optional.of(NativeLinkable.Linkage.SHARED);
     }

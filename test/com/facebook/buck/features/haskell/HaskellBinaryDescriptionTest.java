@@ -21,8 +21,8 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
-import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.rules.resolver.impl.TestBuildRuleResolver;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.query.Query;
@@ -39,13 +39,13 @@ public class HaskellBinaryDescriptionTest {
     String flag = "-compiler-flag";
     HaskellBinaryBuilder builder =
         new HaskellBinaryBuilder(target).setCompilerFlags(ImmutableList.of(flag));
-    BuildRuleResolver resolver =
-        new TestBuildRuleResolver(TargetGraphFactory.newInstance(builder.build()));
-    builder.build(resolver);
+    ActionGraphBuilder graphBuilder =
+        new TestActionGraphBuilder(TargetGraphFactory.newInstance(builder.build()));
+    builder.build(graphBuilder);
     BuildTarget compileTarget =
         HaskellDescriptionUtils.getCompileBuildTarget(
             target, HaskellTestUtils.DEFAULT_PLATFORM, Linker.LinkableDepType.STATIC, false);
-    HaskellCompileRule rule = resolver.getRuleWithType(compileTarget, HaskellCompileRule.class);
+    HaskellCompileRule rule = graphBuilder.getRuleWithType(compileTarget, HaskellCompileRule.class);
     assertThat(rule.getFlags(), Matchers.hasItem(flag));
   }
 
@@ -62,10 +62,10 @@ public class HaskellBinaryDescriptionTest {
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(
             transitiveDepBuilder.build(), depBuilder.build(), builder.build());
-    BuildRuleResolver resolver = new TestBuildRuleResolver(targetGraph);
-    HaskellLibrary transitiveDep = transitiveDepBuilder.build(resolver, targetGraph);
-    HaskellLibrary dep = depBuilder.build(resolver, targetGraph);
-    HaskellBinary binary = (HaskellBinary) builder.build(resolver, targetGraph);
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
+    HaskellLibrary transitiveDep = transitiveDepBuilder.build(graphBuilder, targetGraph);
+    HaskellLibrary dep = depBuilder.build(graphBuilder, targetGraph);
+    HaskellBinary binary = (HaskellBinary) builder.build(graphBuilder, targetGraph);
     assertThat(binary.getBinaryDeps(), Matchers.hasItem(transitiveDep));
     assertThat(binary.getBinaryDeps(), Matchers.not(Matchers.hasItem(dep)));
   }

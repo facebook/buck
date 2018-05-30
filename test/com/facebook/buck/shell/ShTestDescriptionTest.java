@@ -20,10 +20,10 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.rules.resolver.impl.TestBuildRuleResolver;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -44,13 +44,13 @@ public class ShTestDescriptionTest {
 
   @Test
   public void argsWithLocationMacro() throws Exception {
-    BuildRuleResolver resolver = new TestBuildRuleResolver();
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
     BuildRule dep =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
             .setOut("out")
-            .build(resolver);
+            .build(graphBuilder);
     ShTestBuilder shTestBuilder =
         new ShTestBuilder(BuildTargetFactory.newInstance("//:rule"))
             .setTest(FakeSourcePath.of("test.sh"))
@@ -58,7 +58,7 @@ public class ShTestDescriptionTest {
                 ImmutableList.of(
                     StringWithMacrosUtils.format("%s", LocationMacro.of(dep.getBuildTarget()))));
     assertThat(shTestBuilder.build().getParseDeps(), Matchers.hasItem(dep.getBuildTarget()));
-    ShTest shTest = shTestBuilder.build(resolver);
+    ShTest shTest = shTestBuilder.build(graphBuilder);
     assertThat(shTest.getBuildDeps(), Matchers.contains(dep));
     assertThat(
         Arg.stringify(shTest.getArgs(), pathResolver),
@@ -67,13 +67,13 @@ public class ShTestDescriptionTest {
 
   @Test
   public void envWithLocationMacro() throws Exception {
-    BuildRuleResolver resolver = new TestBuildRuleResolver();
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
     BuildRule dep =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
             .setOut("out")
-            .build(resolver);
+            .build(graphBuilder);
     ShTestBuilder shTestBuilder =
         new ShTestBuilder(BuildTargetFactory.newInstance("//:rule"))
             .setTest(FakeSourcePath.of("test.sh"))
@@ -82,7 +82,7 @@ public class ShTestDescriptionTest {
                     "LOC",
                     StringWithMacrosUtils.format("%s", LocationMacro.of(dep.getBuildTarget()))));
     assertThat(shTestBuilder.build().getParseDeps(), Matchers.hasItem(dep.getBuildTarget()));
-    ShTest shTest = shTestBuilder.build(resolver);
+    ShTest shTest = shTestBuilder.build(graphBuilder);
     assertThat(shTest.getBuildDeps(), Matchers.contains(dep));
     assertThat(
         Arg.stringify(shTest.getEnv(), pathResolver),

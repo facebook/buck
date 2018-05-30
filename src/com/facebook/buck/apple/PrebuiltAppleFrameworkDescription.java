@@ -28,8 +28,8 @@ import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.Flavored;
 import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
@@ -115,7 +115,7 @@ public class PrebuiltAppleFrameworkDescription
         buildTarget,
         context.getProjectFilesystem(),
         params,
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(context.getBuildRuleResolver())),
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(context.getActionGraphBuilder())),
         args.getFramework(),
         args.getPreferredLinkage(),
         args.getFrameworks(),
@@ -129,13 +129,13 @@ public class PrebuiltAppleFrameworkDescription
   @Override
   public <U> Optional<U> createMetadata(
       BuildTarget buildTarget,
-      BuildRuleResolver resolver,
+      ActionGraphBuilder graphBuilder,
       CellPathResolver cellRoots,
       PrebuiltAppleFrameworkDescriptionArg args,
       Optional<ImmutableMap<BuildTarget, Version>> selectedVersions,
       Class<U> metadataClass) {
     if (metadataClass.isAssignableFrom(FrameworkDependencies.class)) {
-      BuildRule buildRule = resolver.requireRule(buildTarget);
+      BuildRule buildRule = graphBuilder.requireRule(buildTarget);
       ImmutableSet<SourcePath> sourcePaths = ImmutableSet.of(buildRule.getSourcePathToOutput());
       return Optional.of(metadataClass.cast(FrameworkDependencies.of(sourcePaths)));
     }

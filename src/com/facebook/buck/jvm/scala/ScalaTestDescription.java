@@ -22,8 +22,8 @@ import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
@@ -76,8 +76,8 @@ public class ScalaTestDescription
       BuildTarget buildTarget,
       BuildRuleParams rawParams,
       ScalaTestDescriptionArg args) {
-    BuildRuleResolver resolver = context.getBuildRuleResolver();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
     JavaTestDescription.CxxLibraryEnhancement cxxLibraryEnhancement =
         new JavaTestDescription.CxxLibraryEnhancement(
@@ -86,7 +86,7 @@ public class ScalaTestDescription
             rawParams,
             args.getUseCxxLibraries(),
             args.getCxxLibraryWhitelist(),
-            resolver,
+            graphBuilder,
             ruleFinder,
             toolchainProvider
                 .getByName(CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class)
@@ -102,7 +102,7 @@ public class ScalaTestDescription
                 .getJavacOptions(),
             buildTarget,
             projectFilesystem,
-            resolver,
+            graphBuilder,
             args);
 
     CellPathResolver cellRoots = context.getCellPathResolver();
@@ -112,7 +112,7 @@ public class ScalaTestDescription
                 projectFilesystem,
                 context.getToolchainProvider(),
                 params,
-                resolver,
+                graphBuilder,
                 cellRoots,
                 config,
                 javaBuckConfig,
@@ -130,7 +130,7 @@ public class ScalaTestDescription
             .setCellPathResolver(cellRoots)
             .setExpanders(JavaTestDescription.MACRO_EXPANDERS)
             .build();
-    JavaLibrary testsLibrary = resolver.addToIndex(scalaLibraryBuilder.buildLibrary());
+    JavaLibrary testsLibrary = graphBuilder.addToIndex(scalaLibraryBuilder.buildLibrary());
 
     return new JavaTest(
         buildTarget,
@@ -152,7 +152,7 @@ public class ScalaTestDescription
             .orElse(javaBuckConfig.getDelegate().getDefaultTestRuleTimeoutMs()),
         args.getTestCaseTimeoutMs(),
         ImmutableMap.copyOf(
-            Maps.transformValues(args.getEnv(), x -> macrosConverter.convert(x, resolver))),
+            Maps.transformValues(args.getEnv(), x -> macrosConverter.convert(x, graphBuilder))),
         args.getRunTestSeparately(),
         args.getForkMode(),
         args.getStdOutLogLevel(),

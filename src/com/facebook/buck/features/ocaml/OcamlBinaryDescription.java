@@ -85,7 +85,7 @@ public class OcamlBinaryDescription
         OcamlRuleBuilder.getFlags(
             buildTarget,
             context.getCellPathResolver(),
-            context.getBuildRuleResolver(),
+            context.getActionGraphBuilder(),
             ocamlPlatform,
             args.getCompilerFlags(),
             args.getWarningsFlags());
@@ -93,7 +93,7 @@ public class OcamlBinaryDescription
     BuildTarget compileBuildTarget = OcamlRuleBuilder.createOcamlLinkTarget(buildTarget);
 
     ImmutableList<BuildRule> rules;
-    if (OcamlRuleBuilder.shouldUseFineGrainedRules(context.getBuildRuleResolver(), srcs)) {
+    if (OcamlRuleBuilder.shouldUseFineGrainedRules(context.getActionGraphBuilder(), srcs)) {
       OcamlGeneratedBuildRules result =
           OcamlRuleBuilder.createFineGrainedBuildRules(
               buildTarget,
@@ -101,8 +101,8 @@ public class OcamlBinaryDescription
               compileBuildTarget,
               context.getProjectFilesystem(),
               params,
-              context.getBuildRuleResolver(),
-              allDeps.get(context.getBuildRuleResolver(), ocamlPlatform.getCxxPlatform()),
+              context.getActionGraphBuilder(),
+              allDeps.get(context.getActionGraphBuilder(), ocamlPlatform.getCxxPlatform()),
               srcs,
               /* isLibrary */ false,
               args.getBytecodeOnly().orElse(false),
@@ -119,8 +119,8 @@ public class OcamlBinaryDescription
               compileBuildTarget,
               context.getProjectFilesystem(),
               params,
-              context.getBuildRuleResolver(),
-              allDeps.get(context.getBuildRuleResolver(), ocamlPlatform.getCxxPlatform()),
+              context.getActionGraphBuilder(),
+              allDeps.get(context.getActionGraphBuilder(), ocamlPlatform.getCxxPlatform()),
               srcs,
               /* isLibrary */ false,
               args.getBytecodeOnly().orElse(false),

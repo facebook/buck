@@ -20,9 +20,10 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.description.BuildRuleParams;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.rules.resolver.impl.TestBuildRuleResolver;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
@@ -98,9 +99,9 @@ public class CxxTestTest {
   public void runTests() {
     ImmutableList<String> command = ImmutableList.of("hello", "world");
 
-    BuildRuleResolver ruleResolver = new TestBuildRuleResolver();
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     FakeCxxTest cxxTest =
-        new FakeCxxTest(ruleResolver) {
+        new FakeCxxTest(graphBuilder) {
 
           @Override
           public SourcePath getSourcePathToOutput() {
@@ -149,9 +150,9 @@ public class CxxTestTest {
     Path expectedOutput = Paths.get("output");
     Path expectedResults = Paths.get("results");
 
-    BuildRuleResolver ruleResolver = new TestBuildRuleResolver();
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     FakeCxxTest cxxTest =
-        new FakeCxxTest(ruleResolver) {
+        new FakeCxxTest(graphBuilder) {
 
           @Override
           public SourcePath getSourcePathToOutput() {
@@ -182,13 +183,13 @@ public class CxxTestTest {
             return ImmutableList.of();
           }
         };
-    ruleResolver.addToIndex(cxxTest);
+    graphBuilder.addToIndex(cxxTest);
 
     ExecutionContext executionContext = TestExecutionContext.newInstance();
     Callable<TestResults> result =
         cxxTest.interpretTestResults(
             executionContext,
-            DefaultSourcePathResolver.from(new SourcePathRuleFinder(ruleResolver)),
+            DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder)),
             /* isUsingTestSelectors */ false);
     result.call();
   }

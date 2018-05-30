@@ -32,9 +32,10 @@ import com.facebook.buck.core.model.targetgraph.FakeTargetNodeBuilder.FakeDescri
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.rules.resolver.impl.SingleThreadedBuildRuleResolver;
+import com.facebook.buck.core.rules.resolver.impl.SingleThreadedActionGraphBuilder;
 import com.facebook.buck.core.rules.transformer.impl.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.FakeBuildRule;
@@ -48,7 +49,7 @@ public class IncrementalActionGraphGeneratorTest {
 
   private IncrementalActionGraphGenerator generator;
   private TargetGraph targetGraph;
-  private BuildRuleResolver ruleResolver;
+  private ActionGraphBuilder graphBuilder;
 
   @Before
   public void setUp() {
@@ -60,17 +61,17 @@ public class IncrementalActionGraphGeneratorTest {
     TargetNode<?, ?> node = createTargetNode("test1");
     setUpTargetGraphAndResolver(node);
 
-    generator.populateRuleResolverWithCachedRules(targetGraph, ruleResolver);
-    BuildRule buildRule = ruleResolver.requireRule(node.getBuildTarget());
+    generator.populateActionGraphBuilderWithCachedRules(targetGraph, graphBuilder);
+    BuildRule buildRule = graphBuilder.requireRule(node.getBuildTarget());
 
-    assertTrue(ruleResolver.getRuleOptional(node.getBuildTarget()).isPresent());
+    assertTrue(graphBuilder.getRuleOptional(node.getBuildTarget()).isPresent());
 
-    BuildRuleResolver newRuleResolver = createBuildRuleResolver(targetGraph);
-    generator.populateRuleResolverWithCachedRules(targetGraph, newRuleResolver);
-    newRuleResolver.requireRule(node.getBuildTarget());
+    ActionGraphBuilder newGraphBuilder = createActionGraphBuilder(targetGraph);
+    generator.populateActionGraphBuilderWithCachedRules(targetGraph, newGraphBuilder);
+    newGraphBuilder.requireRule(node.getBuildTarget());
 
-    assertTrue(newRuleResolver.getRuleOptional(node.getBuildTarget()).isPresent());
-    assertSame(buildRule, newRuleResolver.getRuleOptional(node.getBuildTarget()).get());
+    assertTrue(newGraphBuilder.getRuleOptional(node.getBuildTarget()).isPresent());
+    assertSame(buildRule, newGraphBuilder.getRuleOptional(node.getBuildTarget()).get());
   }
 
   @Test
@@ -78,17 +79,17 @@ public class IncrementalActionGraphGeneratorTest {
     TargetNode<?, ?> node = createUncacheableTargetNode("test1");
     setUpTargetGraphAndResolver(node);
 
-    generator.populateRuleResolverWithCachedRules(targetGraph, ruleResolver);
-    BuildRule buildRule = ruleResolver.requireRule(node.getBuildTarget());
+    generator.populateActionGraphBuilderWithCachedRules(targetGraph, graphBuilder);
+    BuildRule buildRule = graphBuilder.requireRule(node.getBuildTarget());
 
-    assertTrue(ruleResolver.getRuleOptional(node.getBuildTarget()).isPresent());
+    assertTrue(graphBuilder.getRuleOptional(node.getBuildTarget()).isPresent());
 
-    BuildRuleResolver newRuleResolver = createBuildRuleResolver(targetGraph);
-    generator.populateRuleResolverWithCachedRules(targetGraph, newRuleResolver);
-    newRuleResolver.requireRule(node.getBuildTarget());
+    ActionGraphBuilder newGraphBuilder = createActionGraphBuilder(targetGraph);
+    generator.populateActionGraphBuilderWithCachedRules(targetGraph, newGraphBuilder);
+    newGraphBuilder.requireRule(node.getBuildTarget());
 
-    assertTrue(newRuleResolver.getRuleOptional(node.getBuildTarget()).isPresent());
-    assertNotSame(buildRule, newRuleResolver.getRuleOptional(node.getBuildTarget()).get());
+    assertTrue(newGraphBuilder.getRuleOptional(node.getBuildTarget()).isPresent());
+    assertNotSame(buildRule, newGraphBuilder.getRuleOptional(node.getBuildTarget()).get());
   }
 
   @Test
@@ -97,24 +98,24 @@ public class IncrementalActionGraphGeneratorTest {
     TargetNode<?, ?> parentNode = createTargetNode("parent", childNode);
     setUpTargetGraphAndResolver(parentNode, childNode);
 
-    generator.populateRuleResolverWithCachedRules(targetGraph, ruleResolver);
-    BuildRule childBuildRule = ruleResolver.requireRule(childNode.getBuildTarget());
-    BuildRule parentBuildRule = ruleResolver.requireRule(parentNode.getBuildTarget());
+    generator.populateActionGraphBuilderWithCachedRules(targetGraph, graphBuilder);
+    BuildRule childBuildRule = graphBuilder.requireRule(childNode.getBuildTarget());
+    BuildRule parentBuildRule = graphBuilder.requireRule(parentNode.getBuildTarget());
 
-    assertTrue(ruleResolver.getRuleOptional(childNode.getBuildTarget()).isPresent());
-    assertTrue(ruleResolver.getRuleOptional(parentNode.getBuildTarget()).isPresent());
+    assertTrue(graphBuilder.getRuleOptional(childNode.getBuildTarget()).isPresent());
+    assertTrue(graphBuilder.getRuleOptional(parentNode.getBuildTarget()).isPresent());
 
-    BuildRuleResolver newRuleResolver = createBuildRuleResolver(targetGraph);
-    generator.populateRuleResolverWithCachedRules(targetGraph, newRuleResolver);
-    newRuleResolver.requireRule(childNode.getBuildTarget());
-    newRuleResolver.requireRule(parentNode.getBuildTarget());
+    ActionGraphBuilder newGraphBuilder = createActionGraphBuilder(targetGraph);
+    generator.populateActionGraphBuilderWithCachedRules(targetGraph, newGraphBuilder);
+    newGraphBuilder.requireRule(childNode.getBuildTarget());
+    newGraphBuilder.requireRule(parentNode.getBuildTarget());
 
-    assertTrue(newRuleResolver.getRuleOptional(childNode.getBuildTarget()).isPresent());
+    assertTrue(newGraphBuilder.getRuleOptional(childNode.getBuildTarget()).isPresent());
     assertNotSame(
-        childBuildRule, newRuleResolver.getRuleOptional(childNode.getBuildTarget()).get());
-    assertTrue(newRuleResolver.getRuleOptional(parentNode.getBuildTarget()).isPresent());
+        childBuildRule, newGraphBuilder.getRuleOptional(childNode.getBuildTarget()).get());
+    assertTrue(newGraphBuilder.getRuleOptional(parentNode.getBuildTarget()).isPresent());
     assertNotSame(
-        parentBuildRule, newRuleResolver.getRuleOptional(parentNode.getBuildTarget()).get());
+        parentBuildRule, newGraphBuilder.getRuleOptional(parentNode.getBuildTarget()).get());
   }
 
   @Test
@@ -122,19 +123,19 @@ public class IncrementalActionGraphGeneratorTest {
     TargetNode<?, ?> originalNode = createTargetNode("test1");
     setUpTargetGraphAndResolver(originalNode);
 
-    generator.populateRuleResolverWithCachedRules(targetGraph, ruleResolver);
-    BuildRule originalBuildRule = ruleResolver.requireRule(originalNode.getBuildTarget());
+    generator.populateActionGraphBuilderWithCachedRules(targetGraph, graphBuilder);
+    BuildRule originalBuildRule = graphBuilder.requireRule(originalNode.getBuildTarget());
 
     TargetNode<?, ?> newNode = createTargetNode("test1");
     assertEquals(originalNode, newNode);
     setUpTargetGraphAndResolver(newNode);
 
-    generator.populateRuleResolverWithCachedRules(targetGraph, ruleResolver);
-    BuildRule newBuildRule = ruleResolver.requireRule(newNode.getBuildTarget());
+    generator.populateActionGraphBuilderWithCachedRules(targetGraph, graphBuilder);
+    BuildRule newBuildRule = graphBuilder.requireRule(newNode.getBuildTarget());
 
     assertSame(originalBuildRule, newBuildRule);
-    assertTrue(ruleResolver.getRuleOptional(newNode.getBuildTarget()).isPresent());
-    assertSame(originalBuildRule, ruleResolver.getRule(newNode.getBuildTarget()));
+    assertTrue(graphBuilder.getRuleOptional(newNode.getBuildTarget()).isPresent());
+    assertSame(originalBuildRule, graphBuilder.getRule(newNode.getBuildTarget()));
   }
 
   @Test
@@ -142,19 +143,19 @@ public class IncrementalActionGraphGeneratorTest {
     TargetNode<?, ?> originalNode = createTargetNode("test1");
     setUpTargetGraphAndResolver(originalNode);
 
-    generator.populateRuleResolverWithCachedRules(targetGraph, ruleResolver);
-    BuildRule originalBuildRule = ruleResolver.requireRule(originalNode.getBuildTarget());
+    generator.populateActionGraphBuilderWithCachedRules(targetGraph, graphBuilder);
+    BuildRule originalBuildRule = graphBuilder.requireRule(originalNode.getBuildTarget());
 
     TargetNode<?, ?> depNode = createTargetNode("test2");
     TargetNode<?, ?> newNode = createTargetNode("test1", depNode);
     setUpTargetGraphAndResolver(newNode, depNode);
 
-    generator.populateRuleResolverWithCachedRules(targetGraph, ruleResolver);
-    BuildRule newBuildRule = ruleResolver.requireRule(newNode.getBuildTarget());
+    generator.populateActionGraphBuilderWithCachedRules(targetGraph, graphBuilder);
+    BuildRule newBuildRule = graphBuilder.requireRule(newNode.getBuildTarget());
 
     assertNotSame(originalBuildRule, newBuildRule);
-    assertTrue(ruleResolver.getRuleOptional(newNode.getBuildTarget()).isPresent());
-    assertNotSame(originalBuildRule, ruleResolver.getRule(newNode.getBuildTarget()));
+    assertTrue(graphBuilder.getRuleOptional(newNode.getBuildTarget()).isPresent());
+    assertNotSame(originalBuildRule, graphBuilder.getRule(newNode.getBuildTarget()));
   }
 
   @Test
@@ -164,30 +165,30 @@ public class IncrementalActionGraphGeneratorTest {
     TargetNode<?, ?> originalParentNode2 = createTargetNode("parent2", originalChildNode);
     setUpTargetGraphAndResolver(originalParentNode1, originalParentNode2, originalChildNode);
 
-    generator.populateRuleResolverWithCachedRules(targetGraph, ruleResolver);
-    ruleResolver.requireRule(originalChildNode.getBuildTarget());
+    generator.populateActionGraphBuilderWithCachedRules(targetGraph, graphBuilder);
+    graphBuilder.requireRule(originalChildNode.getBuildTarget());
     BuildRule originalParentBuildRule1 =
-        ruleResolver.requireRule(originalParentNode1.getBuildTarget());
+        graphBuilder.requireRule(originalParentNode1.getBuildTarget());
     BuildRule originalParentBuildRule2 =
-        ruleResolver.requireRule(originalParentNode2.getBuildTarget());
+        graphBuilder.requireRule(originalParentNode2.getBuildTarget());
 
     TargetNode<?, ?> newChildNode = createTargetNode("child", "new_label");
     TargetNode<?, ?> newParentNode1 = createTargetNode("parent1", newChildNode);
     TargetNode<?, ?> newParentNode2 = createTargetNode("parent2", newChildNode);
     setUpTargetGraphAndResolver(newParentNode1, newParentNode2, newChildNode);
 
-    BuildRuleResolver newRuleResolver = createBuildRuleResolver(targetGraph);
-    generator.populateRuleResolverWithCachedRules(targetGraph, newRuleResolver);
-    newRuleResolver.requireRule(newChildNode.getBuildTarget());
-    newRuleResolver.requireRule(newParentNode1.getBuildTarget());
-    newRuleResolver.requireRule(newParentNode2.getBuildTarget());
+    ActionGraphBuilder newGraphBuilder = createActionGraphBuilder(targetGraph);
+    generator.populateActionGraphBuilderWithCachedRules(targetGraph, newGraphBuilder);
+    newGraphBuilder.requireRule(newChildNode.getBuildTarget());
+    newGraphBuilder.requireRule(newParentNode1.getBuildTarget());
+    newGraphBuilder.requireRule(newParentNode2.getBuildTarget());
 
-    assertTrue(newRuleResolver.getRuleOptional(newParentNode1.getBuildTarget()).isPresent());
+    assertTrue(newGraphBuilder.getRuleOptional(newParentNode1.getBuildTarget()).isPresent());
     assertNotSame(
-        originalParentBuildRule1, newRuleResolver.getRule(newParentNode1.getBuildTarget()));
-    assertTrue(newRuleResolver.getRuleOptional(newParentNode2.getBuildTarget()).isPresent());
+        originalParentBuildRule1, newGraphBuilder.getRule(newParentNode1.getBuildTarget()));
+    assertTrue(newGraphBuilder.getRuleOptional(newParentNode2.getBuildTarget()).isPresent());
     assertNotSame(
-        originalParentBuildRule2, newRuleResolver.getRule(newParentNode2.getBuildTarget()));
+        originalParentBuildRule2, newGraphBuilder.getRule(newParentNode2.getBuildTarget()));
   }
 
   @Test
@@ -206,11 +207,11 @@ public class IncrementalActionGraphGeneratorTest {
                       FakeTargetNodeArg args) {
                     BuildRule child1 =
                         context
-                            .getBuildRuleResolver()
+                            .getActionGraphBuilder()
                             .computeIfAbsent(childTarget1, target -> new FakeBuildRule(target));
                     BuildRule child2 =
                         context
-                            .getBuildRuleResolver()
+                            .getActionGraphBuilder()
                             .computeIfAbsent(childTarget2, target -> new FakeBuildRule(target));
                     return new FakeBuildRule(parentTarget, child1, child2);
                   }
@@ -219,16 +220,16 @@ public class IncrementalActionGraphGeneratorTest {
             .build();
     setUpTargetGraphAndResolver(node);
 
-    generator.populateRuleResolverWithCachedRules(targetGraph, ruleResolver);
-    ruleResolver.requireRule(node.getBuildTarget());
+    generator.populateActionGraphBuilderWithCachedRules(targetGraph, graphBuilder);
+    graphBuilder.requireRule(node.getBuildTarget());
 
-    BuildRuleResolver newRuleResolver = createBuildRuleResolver(targetGraph);
-    generator.populateRuleResolverWithCachedRules(targetGraph, newRuleResolver);
-    newRuleResolver.requireRule(node.getBuildTarget());
+    ActionGraphBuilder newGraphBuilder = createActionGraphBuilder(targetGraph);
+    generator.populateActionGraphBuilderWithCachedRules(targetGraph, newGraphBuilder);
+    newGraphBuilder.requireRule(node.getBuildTarget());
 
-    assertTrue(newRuleResolver.getRuleOptional(parentTarget).isPresent());
-    assertTrue(newRuleResolver.getRuleOptional(childTarget1).isPresent());
-    assertTrue(newRuleResolver.getRuleOptional(childTarget2).isPresent());
+    assertTrue(newGraphBuilder.getRuleOptional(parentTarget).isPresent());
+    assertTrue(newGraphBuilder.getRuleOptional(childTarget1).isPresent());
+    assertTrue(newGraphBuilder.getRuleOptional(childTarget2).isPresent());
   }
 
   @Test
@@ -239,29 +240,29 @@ public class IncrementalActionGraphGeneratorTest {
         createTargetNode("parent", originalChildNode1, originalChildNode2);
     setUpTargetGraphAndResolver(originalParentNode, originalChildNode1, originalChildNode2);
 
-    generator.populateRuleResolverWithCachedRules(targetGraph, ruleResolver);
-    BuildRule originalChildRule1 = ruleResolver.requireRule(originalChildNode1.getBuildTarget());
-    BuildRule originalChildRule2 = ruleResolver.requireRule(originalChildNode2.getBuildTarget());
-    BuildRule originalParentRule = ruleResolver.requireRule(originalParentNode.getBuildTarget());
+    generator.populateActionGraphBuilderWithCachedRules(targetGraph, graphBuilder);
+    BuildRule originalChildRule1 = graphBuilder.requireRule(originalChildNode1.getBuildTarget());
+    BuildRule originalChildRule2 = graphBuilder.requireRule(originalChildNode2.getBuildTarget());
+    BuildRule originalParentRule = graphBuilder.requireRule(originalParentNode.getBuildTarget());
 
     TargetNode<?, ?> newChildNode1 = createTargetNode("child1", "new_label");
     TargetNode<?, ?> newChildNode2 = createTargetNode("child2");
     TargetNode<?, ?> newParentNode = createTargetNode("parent", newChildNode1, newChildNode2);
     setUpTargetGraphAndResolver(newParentNode, newChildNode1, newChildNode2);
 
-    generator.populateRuleResolverWithCachedRules(targetGraph, ruleResolver);
-    ruleResolver.requireRule(newChildNode1.getBuildTarget());
-    ruleResolver.requireRule(newChildNode2.getBuildTarget());
-    ruleResolver.requireRule(newParentNode.getBuildTarget());
+    generator.populateActionGraphBuilderWithCachedRules(targetGraph, graphBuilder);
+    graphBuilder.requireRule(newChildNode1.getBuildTarget());
+    graphBuilder.requireRule(newChildNode2.getBuildTarget());
+    graphBuilder.requireRule(newParentNode.getBuildTarget());
 
-    assertTrue(ruleResolver.getRuleOptional(newParentNode.getBuildTarget()).isPresent());
-    assertNotSame(originalParentRule, ruleResolver.getRule(newParentNode.getBuildTarget()));
+    assertTrue(graphBuilder.getRuleOptional(newParentNode.getBuildTarget()).isPresent());
+    assertNotSame(originalParentRule, graphBuilder.getRule(newParentNode.getBuildTarget()));
 
-    assertTrue(ruleResolver.getRuleOptional(newChildNode1.getBuildTarget()).isPresent());
-    assertNotSame(originalChildRule1, ruleResolver.getRule(newChildNode1.getBuildTarget()));
+    assertTrue(graphBuilder.getRuleOptional(newChildNode1.getBuildTarget()).isPresent());
+    assertNotSame(originalChildRule1, graphBuilder.getRule(newChildNode1.getBuildTarget()));
 
-    assertTrue(ruleResolver.getRuleOptional(newChildNode2.getBuildTarget()).isPresent());
-    assertSame(originalChildRule2, ruleResolver.getRule(newChildNode2.getBuildTarget()));
+    assertTrue(graphBuilder.getRuleOptional(newChildNode2.getBuildTarget()).isPresent());
+    assertSame(originalChildRule2, graphBuilder.getRule(newChildNode2.getBuildTarget()));
   }
 
   @Test
@@ -272,29 +273,29 @@ public class IncrementalActionGraphGeneratorTest {
         createTargetNode("parent", originalChildNode1, originalChildNode2);
     setUpTargetGraphAndResolver(originalParentNode, originalChildNode1, originalChildNode2);
 
-    generator.populateRuleResolverWithCachedRules(targetGraph, ruleResolver);
-    BuildRule originalChildRule1 = ruleResolver.requireRule(originalChildNode1.getBuildTarget());
-    BuildRule originalChildRule2 = ruleResolver.requireRule(originalChildNode2.getBuildTarget());
-    BuildRule originalParentRule = ruleResolver.requireRule(originalParentNode.getBuildTarget());
+    generator.populateActionGraphBuilderWithCachedRules(targetGraph, graphBuilder);
+    BuildRule originalChildRule1 = graphBuilder.requireRule(originalChildNode1.getBuildTarget());
+    BuildRule originalChildRule2 = graphBuilder.requireRule(originalChildNode2.getBuildTarget());
+    BuildRule originalParentRule = graphBuilder.requireRule(originalParentNode.getBuildTarget());
 
     TargetNode<?, ?> newChildNode1 = createUncacheableTargetNode("child1");
     TargetNode<?, ?> newChildNode2 = createTargetNode("child2");
     TargetNode<?, ?> newParentNode = createTargetNode("parent", newChildNode1, newChildNode2);
     setUpTargetGraphAndResolver(newParentNode, newChildNode1, newChildNode2);
 
-    generator.populateRuleResolverWithCachedRules(targetGraph, ruleResolver);
-    ruleResolver.requireRule(newChildNode1.getBuildTarget());
-    ruleResolver.requireRule(newChildNode2.getBuildTarget());
-    ruleResolver.requireRule(newParentNode.getBuildTarget());
+    generator.populateActionGraphBuilderWithCachedRules(targetGraph, graphBuilder);
+    graphBuilder.requireRule(newChildNode1.getBuildTarget());
+    graphBuilder.requireRule(newChildNode2.getBuildTarget());
+    graphBuilder.requireRule(newParentNode.getBuildTarget());
 
-    assertTrue(ruleResolver.getRuleOptional(newParentNode.getBuildTarget()).isPresent());
-    assertNotSame(originalParentRule, ruleResolver.getRule(newParentNode.getBuildTarget()));
+    assertTrue(graphBuilder.getRuleOptional(newParentNode.getBuildTarget()).isPresent());
+    assertNotSame(originalParentRule, graphBuilder.getRule(newParentNode.getBuildTarget()));
 
-    assertTrue(ruleResolver.getRuleOptional(newChildNode1.getBuildTarget()).isPresent());
-    assertNotSame(originalChildRule1, ruleResolver.getRule(newChildNode1.getBuildTarget()));
+    assertTrue(graphBuilder.getRuleOptional(newChildNode1.getBuildTarget()).isPresent());
+    assertNotSame(originalChildRule1, graphBuilder.getRule(newChildNode1.getBuildTarget()));
 
-    assertTrue(ruleResolver.getRuleOptional(newChildNode2.getBuildTarget()).isPresent());
-    assertSame(originalChildRule2, ruleResolver.getRule(newChildNode2.getBuildTarget()));
+    assertTrue(graphBuilder.getRuleOptional(newChildNode2.getBuildTarget()).isPresent());
+    assertSame(originalChildRule2, graphBuilder.getRule(newChildNode2.getBuildTarget()));
   }
 
   @Test
@@ -312,21 +313,21 @@ public class IncrementalActionGraphGeneratorTest {
     setUpTargetGraphAndResolver(
         parentNode, declaredChildNode, extraChildNode, targetGraphOnlyChildNode);
 
-    generator.populateRuleResolverWithCachedRules(targetGraph, ruleResolver);
-    ruleResolver.requireRule(declaredChildNode.getBuildTarget());
-    ruleResolver.requireRule(extraChildNode.getBuildTarget());
-    ruleResolver.requireRule(targetGraphOnlyChildNode.getBuildTarget());
-    ruleResolver.requireRule(parentNode.getBuildTarget());
+    generator.populateActionGraphBuilderWithCachedRules(targetGraph, graphBuilder);
+    graphBuilder.requireRule(declaredChildNode.getBuildTarget());
+    graphBuilder.requireRule(extraChildNode.getBuildTarget());
+    graphBuilder.requireRule(targetGraphOnlyChildNode.getBuildTarget());
+    graphBuilder.requireRule(parentNode.getBuildTarget());
 
     setUpTargetGraphAndResolver(
         parentNode, declaredChildNode, extraChildNode, targetGraphOnlyChildNode);
 
-    generator.populateRuleResolverWithCachedRules(targetGraph, ruleResolver);
-    ruleResolver.requireRule(parentNode.getBuildTarget());
+    generator.populateActionGraphBuilderWithCachedRules(targetGraph, graphBuilder);
+    graphBuilder.requireRule(parentNode.getBuildTarget());
 
-    assertTrue(ruleResolver.getRuleOptional(declaredChildNode.getBuildTarget()).isPresent());
-    assertTrue(ruleResolver.getRuleOptional(extraChildNode.getBuildTarget()).isPresent());
-    assertTrue(ruleResolver.getRuleOptional(targetGraphOnlyChildNode.getBuildTarget()).isPresent());
+    assertTrue(graphBuilder.getRuleOptional(declaredChildNode.getBuildTarget()).isPresent());
+    assertTrue(graphBuilder.getRuleOptional(extraChildNode.getBuildTarget()).isPresent());
+    assertTrue(graphBuilder.getRuleOptional(targetGraphOnlyChildNode.getBuildTarget()).isPresent());
   }
 
   @Test
@@ -343,7 +344,7 @@ public class IncrementalActionGraphGeneratorTest {
                       BuildRuleParams params,
                       FakeTargetNodeArg args) {
                     BuildRule child =
-                        ruleResolver.computeIfAbsent(
+                        graphBuilder.computeIfAbsent(
                             childTarget, target -> new FakeBuildRule(target));
                     FakeBuildRule parent = new FakeBuildRule(parentTarget);
                     parent.setRuntimeDeps(child);
@@ -354,20 +355,20 @@ public class IncrementalActionGraphGeneratorTest {
             .build();
     setUpTargetGraphAndResolver(node);
 
-    generator.populateRuleResolverWithCachedRules(targetGraph, ruleResolver);
-    BuildRule originalParentBuildRule = ruleResolver.requireRule(node.getBuildTarget());
-    BuildRule originalChildBuildRule = ruleResolver.getRule(childTarget);
+    generator.populateActionGraphBuilderWithCachedRules(targetGraph, graphBuilder);
+    BuildRule originalParentBuildRule = graphBuilder.requireRule(node.getBuildTarget());
+    BuildRule originalChildBuildRule = graphBuilder.getRule(childTarget);
 
     setUpTargetGraphAndResolver(node);
 
-    generator.populateRuleResolverWithCachedRules(targetGraph, ruleResolver);
-    ruleResolver.requireRule(node.getBuildTarget());
+    generator.populateActionGraphBuilderWithCachedRules(targetGraph, graphBuilder);
+    graphBuilder.requireRule(node.getBuildTarget());
 
-    assertTrue(ruleResolver.getRuleOptional(parentTarget).isPresent());
-    assertSame(originalParentBuildRule, ruleResolver.getRule(parentTarget));
+    assertTrue(graphBuilder.getRuleOptional(parentTarget).isPresent());
+    assertSame(originalParentBuildRule, graphBuilder.getRule(parentTarget));
 
-    assertTrue(ruleResolver.getRuleOptional(childTarget).isPresent());
-    assertSame(originalChildBuildRule, ruleResolver.getRule(childTarget));
+    assertTrue(graphBuilder.getRuleOptional(childTarget).isPresent());
+    assertSame(originalChildBuildRule, graphBuilder.getRule(childTarget));
   }
 
   @Test
@@ -386,11 +387,11 @@ public class IncrementalActionGraphGeneratorTest {
                       FakeTargetNodeArg args) {
                     BuildRule child1 =
                         context
-                            .getBuildRuleResolver()
+                            .getActionGraphBuilder()
                             .computeIfAbsent(childTarget1, target -> new FakeBuildRule(target));
                     BuildRule child2 =
                         context
-                            .getBuildRuleResolver()
+                            .getActionGraphBuilder()
                             .computeIfAbsent(childTarget2, target -> new FakeBuildRule(target));
                     return new FakeBuildRule(parentTarget, child1, child2);
                   }
@@ -399,18 +400,18 @@ public class IncrementalActionGraphGeneratorTest {
             .build();
     setUpTargetGraphAndResolver(node);
 
-    generator.populateRuleResolverWithCachedRules(targetGraph, ruleResolver);
-    FakeBuildRule parentBuildRule = (FakeBuildRule) ruleResolver.requireRule(node.getBuildTarget());
-    FakeBuildRule childBuildRule1 = (FakeBuildRule) ruleResolver.getRule(childTarget1);
-    FakeBuildRule childBuildRule2 = (FakeBuildRule) ruleResolver.getRule(childTarget2);
+    generator.populateActionGraphBuilderWithCachedRules(targetGraph, graphBuilder);
+    FakeBuildRule parentBuildRule = (FakeBuildRule) graphBuilder.requireRule(node.getBuildTarget());
+    FakeBuildRule childBuildRule1 = (FakeBuildRule) graphBuilder.getRule(childTarget1);
+    FakeBuildRule childBuildRule2 = (FakeBuildRule) graphBuilder.getRule(childTarget2);
 
-    BuildRuleResolver newRuleResolver = createBuildRuleResolver(targetGraph);
-    generator.populateRuleResolverWithCachedRules(targetGraph, newRuleResolver);
-    newRuleResolver.requireRule(node.getBuildTarget());
+    ActionGraphBuilder newGraphBuilder = createActionGraphBuilder(targetGraph);
+    generator.populateActionGraphBuilderWithCachedRules(targetGraph, newGraphBuilder);
+    newGraphBuilder.requireRule(node.getBuildTarget());
 
-    assertSame(newRuleResolver, parentBuildRule.getRuleResolver());
-    assertSame(newRuleResolver, childBuildRule1.getRuleResolver());
-    assertSame(newRuleResolver, childBuildRule2.getRuleResolver());
+    assertSame(newGraphBuilder, parentBuildRule.getRuleResolver());
+    assertSame(newGraphBuilder, childBuildRule1.getRuleResolver());
+    assertSame(newGraphBuilder, childBuildRule2.getRuleResolver());
   }
 
   @Test
@@ -429,11 +430,11 @@ public class IncrementalActionGraphGeneratorTest {
                       FakeTargetNodeArg args) {
                     BuildRule child1 =
                         context
-                            .getBuildRuleResolver()
+                            .getActionGraphBuilder()
                             .computeIfAbsent(childTarget1, target -> new FakeBuildRule(target));
                     BuildRule child2 =
                         context
-                            .getBuildRuleResolver()
+                            .getActionGraphBuilder()
                             .computeIfAbsent(childTarget2, target -> new FakeBuildRule(target));
                     return new FakeBuildRule(rootTarget1, child1, child2);
                   }
@@ -444,19 +445,19 @@ public class IncrementalActionGraphGeneratorTest {
     TargetNode<?, ?> node2 = FakeTargetNodeBuilder.newBuilder(rootTarget2).build();
     setUpTargetGraphAndResolver(node1, node2);
 
-    generator.populateRuleResolverWithCachedRules(targetGraph, ruleResolver);
-    FakeBuildRule rootBuildRule1 = (FakeBuildRule) ruleResolver.requireRule(node1.getBuildTarget());
-    FakeBuildRule childBuildRule1 = (FakeBuildRule) ruleResolver.getRule(childTarget1);
-    FakeBuildRule childBuildRule2 = (FakeBuildRule) ruleResolver.getRule(childTarget2);
-    ruleResolver.requireRule(node2.getBuildTarget());
+    generator.populateActionGraphBuilderWithCachedRules(targetGraph, graphBuilder);
+    FakeBuildRule rootBuildRule1 = (FakeBuildRule) graphBuilder.requireRule(node1.getBuildTarget());
+    FakeBuildRule childBuildRule1 = (FakeBuildRule) graphBuilder.getRule(childTarget1);
+    FakeBuildRule childBuildRule2 = (FakeBuildRule) graphBuilder.getRule(childTarget2);
+    graphBuilder.requireRule(node2.getBuildTarget());
 
-    BuildRuleResolver newRuleResolver = createBuildRuleResolver(targetGraph);
-    generator.populateRuleResolverWithCachedRules(targetGraph, newRuleResolver);
-    newRuleResolver.requireRule(node2.getBuildTarget());
+    ActionGraphBuilder newGraphBuilder = createActionGraphBuilder(targetGraph);
+    generator.populateActionGraphBuilderWithCachedRules(targetGraph, newGraphBuilder);
+    newGraphBuilder.requireRule(node2.getBuildTarget());
 
-    assertSame(newRuleResolver, rootBuildRule1.getRuleResolver());
-    assertSame(newRuleResolver, childBuildRule1.getRuleResolver());
-    assertSame(newRuleResolver, childBuildRule2.getRuleResolver());
+    assertSame(newGraphBuilder, rootBuildRule1.getRuleResolver());
+    assertSame(newGraphBuilder, childBuildRule1.getRuleResolver());
+    assertSame(newGraphBuilder, childBuildRule2.getRuleResolver());
   }
 
   @Test
@@ -466,14 +467,14 @@ public class IncrementalActionGraphGeneratorTest {
     TargetNode<?, ?> node = createTargetNode("node");
     setUpTargetGraphAndResolver(node);
 
-    generator.populateRuleResolverWithCachedRules(targetGraph, ruleResolver);
-    ruleResolver.requireRule(node.getBuildTarget());
+    generator.populateActionGraphBuilderWithCachedRules(targetGraph, graphBuilder);
+    graphBuilder.requireRule(node.getBuildTarget());
 
-    BuildRuleResolver oldRuleResolver = ruleResolver;
+    BuildRuleResolver oldRuleResolver = graphBuilder;
     setUpTargetGraphAndResolver(node);
 
-    generator.populateRuleResolverWithCachedRules(targetGraph, ruleResolver);
-    ruleResolver.requireRule(node.getBuildTarget());
+    generator.populateActionGraphBuilderWithCachedRules(targetGraph, graphBuilder);
+    graphBuilder.requireRule(node.getBuildTarget());
 
     oldRuleResolver.getRuleOptional(node.getBuildTarget());
   }
@@ -515,11 +516,11 @@ public class IncrementalActionGraphGeneratorTest {
 
   private void setUpTargetGraphAndResolver(TargetNode<?, ?>... nodes) {
     targetGraph = TargetGraphFactory.newInstance(nodes);
-    ruleResolver = createBuildRuleResolver(targetGraph);
+    graphBuilder = createActionGraphBuilder(targetGraph);
   }
 
-  private BuildRuleResolver createBuildRuleResolver(TargetGraph targetGraph) {
-    return new SingleThreadedBuildRuleResolver(
+  private ActionGraphBuilder createActionGraphBuilder(TargetGraph targetGraph) {
+    return new SingleThreadedActionGraphBuilder(
         targetGraph,
         new DefaultTargetNodeToBuildRuleTransformer(),
         new TestCellBuilder().build().getCellProvider());

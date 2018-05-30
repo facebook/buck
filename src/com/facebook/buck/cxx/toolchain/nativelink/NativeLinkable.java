@@ -17,6 +17,7 @@
 package com.facebook.buck.cxx.toolchain.nativelink;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -49,8 +50,8 @@ public interface NativeLinkable {
    */
   @SuppressWarnings("unused")
   default Iterable<? extends NativeLinkable> getNativeLinkableExportedDepsForPlatform(
-      CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
-    return getNativeLinkableExportedDeps(ruleResolver);
+      CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
+    return getNativeLinkableExportedDeps(graphBuilder);
   }
 
   /**
@@ -78,29 +79,29 @@ public interface NativeLinkable {
       Linker.LinkableDepType type,
       boolean forceLinkWhole,
       ImmutableSet<LanguageExtensions> languageExtensions,
-      BuildRuleResolver ruleResolver);
+      ActionGraphBuilder graphBuilder);
 
   /**
    * Return input that *dependents* should put on their link line when linking against this
    * linkable.
    */
   default NativeLinkableInput getNativeLinkableInput(
-      CxxPlatform cxxPlatform, Linker.LinkableDepType type, BuildRuleResolver ruleResolver) {
-    return getNativeLinkableInput(cxxPlatform, type, false, ImmutableSet.of(), ruleResolver);
+      CxxPlatform cxxPlatform, Linker.LinkableDepType type, ActionGraphBuilder graphBuilder) {
+    return getNativeLinkableInput(cxxPlatform, type, false, ImmutableSet.of(), graphBuilder);
   }
 
-  Linkage getPreferredLinkage(CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver);
+  Linkage getPreferredLinkage(CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder);
 
   /**
    * @return a map of shared library SONAME to shared library path for the given {@link
    *     CxxPlatform}.
    */
   ImmutableMap<String, SourcePath> getSharedLibraries(
-      CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver);
+      CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder);
 
   /** @return whether this {@link NativeLinkable} supports omnibus linking. */
   @SuppressWarnings("unused")
-  default boolean supportsOmnibusLinking(CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
+  default boolean supportsOmnibusLinking(CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
     return true;
   }
 

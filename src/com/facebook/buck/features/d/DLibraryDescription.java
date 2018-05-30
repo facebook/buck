@@ -24,8 +24,8 @@ import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -76,8 +76,8 @@ public class DLibraryDescription
       BuildTarget buildTarget,
       BuildRuleParams params,
       DLibraryDescriptionArg args) {
-    BuildRuleResolver buildRuleResolver = context.getBuildRuleResolver();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
+    ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
 
@@ -95,12 +95,12 @@ public class DLibraryDescription
             .build();
 
     if (buildTarget.getFlavors().contains(CxxDescriptionEnhancer.STATIC_FLAVOR)) {
-      buildRuleResolver.requireRule(sourceTreeTarget);
+      graphBuilder.requireRule(sourceTreeTarget);
       return createStaticLibraryBuildRule(
           buildTarget,
           projectFilesystem,
           params,
-          buildRuleResolver,
+          graphBuilder,
           pathResolver,
           ruleFinder,
           /* compilerFlags */ ImmutableList.of(),
@@ -109,7 +109,7 @@ public class DLibraryDescription
           PicType.PDC);
     }
 
-    return new DLibrary(buildTarget, projectFilesystem, params, buildRuleResolver, dIncludes);
+    return new DLibrary(buildTarget, projectFilesystem, params, graphBuilder, dIncludes);
   }
 
   /** @return a BuildRule that creates a static library. */
@@ -117,7 +117,7 @@ public class DLibraryDescription
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      BuildRuleResolver ruleResolver,
+      ActionGraphBuilder graphBuilder,
       SourcePathResolver pathResolver,
       SourcePathRuleFinder ruleFinder,
       ImmutableList<String> compilerFlags,
@@ -132,7 +132,7 @@ public class DLibraryDescription
             buildTarget,
             projectFilesystem,
             params,
-            ruleResolver,
+            graphBuilder,
             pathResolver,
             ruleFinder,
             cxxPlatform,
@@ -159,7 +159,7 @@ public class DLibraryDescription
     return Archive.from(
         staticTarget,
         projectFilesystem,
-        ruleResolver,
+        graphBuilder,
         ruleFinder,
         cxxPlatform,
         cxxBuckConfig.getArchiveContents(),

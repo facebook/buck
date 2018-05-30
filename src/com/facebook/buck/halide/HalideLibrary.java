@@ -18,6 +18,7 @@ package com.facebook.buck.halide;
 
 import com.facebook.buck.core.description.BuildRuleParams;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -48,7 +49,7 @@ import java.util.regex.Pattern;
 public class HalideLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
     implements CxxPreprocessorDep, NativeLinkable {
 
-  private final BuildRuleResolver ruleResolver;
+  private final ActionGraphBuilder graphBuilder;
   private final Optional<Pattern> supportedPlatformsRegex;
 
   private final TransitiveCxxPreprocessorInputCache transitiveCxxPreprocessorInputCache =
@@ -58,10 +59,10 @@ public class HalideLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      BuildRuleResolver ruleResolver,
+      ActionGraphBuilder graphBuilder,
       Optional<Pattern> supportedPlatformsRegex) {
     super(buildTarget, projectFilesystem, params);
-    this.ruleResolver = ruleResolver;
+    this.graphBuilder = graphBuilder;
     this.supportedPlatformsRegex = supportedPlatformsRegex;
   }
 
@@ -81,13 +82,13 @@ public class HalideLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public CxxPreprocessorInput getCxxPreprocessorInput(
-      CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
+      CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
     if (!isPlatformSupported(cxxPlatform)) {
       return CxxPreprocessorInput.of();
     }
     return CxxPreprocessables.getCxxPreprocessorInput(
         getBuildTarget(),
-        ruleResolver,
+        graphBuilder,
         /* hasHeaderSymlinkTree */ true,
         cxxPlatform,
         HeaderVisibility.PUBLIC,
@@ -98,8 +99,8 @@ public class HalideLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public ImmutableMap<BuildTarget, CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(
-      CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
-    return transitiveCxxPreprocessorInputCache.getUnchecked(cxxPlatform, ruleResolver);
+      CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
+    return transitiveCxxPreprocessorInputCache.getUnchecked(cxxPlatform, graphBuilder);
   }
 
   @Override
@@ -123,7 +124,7 @@ public class HalideLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
 
   private Arg requireLibraryArg(CxxPlatform cxxPlatform, Linker.LinkableDepType type) {
     BuildRule rule =
-        ruleResolver.requireRule(
+        graphBuilder.requireRule(
             getBuildTarget()
                 .withFlavors(
                     CxxDescriptionEnhancer.flavorForLinkableDepType(type),
@@ -141,7 +142,7 @@ public class HalideLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
       Linker.LinkableDepType type,
       boolean forceLinkWhole,
       ImmutableSet<LanguageExtensions> languageExtensions,
-      BuildRuleResolver ruleResolver) {
+      ActionGraphBuilder graphBuilder) {
     if (!isPlatformSupported(cxxPlatform)) {
       return NativeLinkableInput.of();
     }
@@ -153,13 +154,13 @@ public class HalideLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public NativeLinkable.Linkage getPreferredLinkage(
-      CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
+      CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
     return NativeLinkable.Linkage.STATIC;
   }
 
   @Override
   public ImmutableMap<String, SourcePath> getSharedLibraries(
-      CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
+      CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
     return ImmutableMap.of();
   }
 }

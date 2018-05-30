@@ -39,14 +39,14 @@ import com.facebook.buck.core.build.engine.type.BuildType;
 import com.facebook.buck.core.build.event.BuildEvent;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.actiongraph.ActionGraphAndResolver;
+import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
 import com.facebook.buck.core.model.graph.ActionAndTargetGraphs;
 import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rulekey.calculator.ParallelRuleKeyCalculator;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
@@ -509,7 +509,7 @@ public class BuildCommand extends AbstractCommand {
         ActionAndTargetGraphs.getTargetGraphForLocalBuild(
             unversionedTargetGraph, versionedTargetGraph);
     checkSingleBuildTargetSpecifiedForOutBuildMode(targetGraphForLocalBuild);
-    ActionGraphAndResolver actionGraph =
+    ActionGraphAndBuilder actionGraph =
         createActionGraphAndResolver(params, targetGraphForLocalBuild, ruleKeyLogger);
 
     ImmutableSet<BuildTarget> buildTargets =
@@ -519,7 +519,7 @@ public class BuildCommand extends AbstractCommand {
         ActionAndTargetGraphs.builder()
             .setUnversionedTargetGraph(unversionedTargetGraph)
             .setVersionedTargetGraph(versionedTargetGraph)
-            .setActionGraphAndResolver(actionGraph)
+            .setActionGraphAndBuilder(actionGraph)
             .build();
 
     return ImmutableGraphsAndBuildTargets.of(actionAndTargetGraphs, buildTargets);
@@ -560,7 +560,7 @@ public class BuildCommand extends AbstractCommand {
 
       try (RuleKeyCacheScope<RuleKey> ruleKeyCacheScope =
           getDefaultRuleKeyCacheScope(
-              params, graphsAndBuildTargets.getGraphs().getActionGraphAndResolver())) {
+              params, graphsAndBuildTargets.getGraphs().getActionGraphAndBuilder())) {
         try {
           exitCode =
               executeDistBuild(
@@ -597,7 +597,7 @@ public class BuildCommand extends AbstractCommand {
                 params, commandThreadManager.getListeningExecutorService(), optionalRuleKeyLogger);
         try (RuleKeyCacheScope<RuleKey> ruleKeyCacheScope =
             getDefaultRuleKeyCacheScope(
-                params, graphsAndBuildTargets.getGraphs().getActionGraphAndResolver())) {
+                params, graphsAndBuildTargets.getGraphs().getActionGraphAndBuilder())) {
           exitCode =
               executeLocalBuild(
                   params,
@@ -646,7 +646,8 @@ public class BuildCommand extends AbstractCommand {
     if (outputPathForSingleBuildTarget != null) {
       BuildTarget loneTarget =
           Iterables.getOnlyElement(graphs.getTargetGraphForLocalBuild().getBuildTargets());
-      BuildRule rule = graphs.getActionGraphAndResolver().getResolver().getRule(loneTarget);
+      BuildRule rule =
+          graphs.getActionGraphAndBuilder().getActionGraphBuilder().getRule(loneTarget);
       if (!rule.outputFileCanBeCopied()) {
         params
             .getConsole()
@@ -666,7 +667,8 @@ public class BuildCommand extends AbstractCommand {
         ProjectFilesystem projectFilesystem = rule.getProjectFilesystem();
         SourcePathResolver pathResolver =
             DefaultSourcePathResolver.from(
-                new SourcePathRuleFinder(graphs.getActionGraphAndResolver().getResolver()));
+                new SourcePathRuleFinder(
+                    graphs.getActionGraphAndBuilder().getActionGraphBuilder()));
         projectFilesystem.copyFile(
             pathResolver.getAbsolutePath(output), outputPathForSingleBuildTarget);
       }
@@ -703,13 +705,13 @@ public class BuildCommand extends AbstractCommand {
     MostFiles.deleteRecursivelyIfExists(lastOutputDirPath);
     Files.createDirectories(lastOutputDirPath);
 
-    BuildRuleResolver ruleResolver =
-        graphsAndBuildTargets.getGraphs().getActionGraphAndResolver().getResolver();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
+    ActionGraphBuilder graphBuilder =
+        graphsAndBuildTargets.getGraphs().getActionGraphAndBuilder().getActionGraphBuilder();
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
     for (BuildTarget buildTarget : graphsAndBuildTargets.getBuildTargets()) {
-      BuildRule rule = ruleResolver.requireRule(buildTarget);
+      BuildRule rule = graphBuilder.requireRule(buildTarget);
       // If it's an apple bundle, we'd like to also link the dSYM file over here.
       if (rule instanceof AppleBundle) {
         AppleBundle bundle = (AppleBundle) rule;
@@ -731,16 +733,16 @@ public class BuildCommand extends AbstractCommand {
     DistBuildCellIndexer cellIndexer = new DistBuildCellIndexer(params.getCell());
 
     // Compute the file hashes.
-    ActionGraphAndResolver actionGraphAndResolver =
-        graphsAndBuildTargets.getGraphs().getActionGraphAndResolver();
+    ActionGraphAndBuilder actionGraphAndBuilder =
+        graphsAndBuildTargets.getGraphs().getActionGraphAndBuilder();
     SourcePathRuleFinder ruleFinder =
-        new SourcePathRuleFinder(actionGraphAndResolver.getResolver());
+        new SourcePathRuleFinder(actionGraphAndBuilder.getActionGraphBuilder());
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
     clientStatsTracker.ifPresent(tracker -> tracker.startTimer(LOCAL_FILE_HASH_COMPUTATION));
     DistBuildFileHashes distributedBuildFileHashes =
         new DistBuildFileHashes(
-            actionGraphAndResolver.getActionGraph(),
+            actionGraphAndBuilder.getActionGraph(),
             pathResolver,
             ruleFinder,
             params.getFileHashCache(),
@@ -1221,9 +1223,9 @@ public class BuildCommand extends AbstractCommand {
       throws IOException {
     TreeMap<String, String> sortedJsonOutputs = new TreeMap<String, String>();
     Optional<DefaultRuleKeyFactory> ruleKeyFactory = Optional.empty();
-    BuildRuleResolver ruleResolver =
-        graphsAndBuildTargets.getGraphs().getActionGraphAndResolver().getResolver();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
+    ActionGraphBuilder graphBuilder =
+        graphsAndBuildTargets.getGraphs().getActionGraphAndBuilder().getActionGraphBuilder();
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     if (showRuleKey) {
       RuleKeyFieldLoader fieldLoader = new RuleKeyFieldLoader(params.getRuleKeyConfiguration());
@@ -1238,7 +1240,7 @@ public class BuildCommand extends AbstractCommand {
                   Optional.empty()));
     }
     for (BuildTarget buildTarget : graphsAndBuildTargets.getBuildTargets()) {
-      BuildRule rule = ruleResolver.requireRule(buildTarget);
+      BuildRule rule = graphBuilder.requireRule(buildTarget);
       Optional<Path> outputPath =
           TargetsCommand.getUserFacingOutputPath(
                   pathResolver, rule, params.getBuckConfig().getBuckOutCompatLink())
@@ -1295,11 +1297,11 @@ public class BuildCommand extends AbstractCommand {
     }
   }
 
-  private static ActionGraphAndResolver createActionGraphAndResolver(
+  private static ActionGraphAndBuilder createActionGraphAndResolver(
       CommandRunnerParams params,
       TargetGraphAndBuildTargets targetGraphAndBuildTargets,
       Optional<ThriftRuleKeyLogger> ruleKeyLogger) {
-    ActionGraphAndResolver actionGraphAndResolver =
+    ActionGraphAndBuilder actionGraphAndBuilder =
         params
             .getActionGraphCache()
             .getActionGraph(
@@ -1310,12 +1312,12 @@ public class BuildCommand extends AbstractCommand {
                 params.getRuleKeyConfiguration(),
                 ruleKeyLogger,
                 params.getPoolSupplier());
-    return actionGraphAndResolver;
+    return actionGraphAndBuilder;
   }
 
   private static ImmutableSet<BuildTarget> getBuildTargets(
       CommandRunnerParams params,
-      ActionGraphAndResolver actionGraphAndResolver,
+      ActionGraphAndBuilder actionGraphAndBuilder,
       TargetGraphAndBuildTargets targetGraph,
       @Nullable String justBuildTarget)
       throws ActionGraphCreationException {
@@ -1331,7 +1333,7 @@ public class BuildCommand extends AbstractCommand {
             BuildTargetPatternParser.fullyQualified(),
             params.getCell().getCellPathResolver());
     Iterable<BuildRule> actionGraphRules =
-        Preconditions.checkNotNull(actionGraphAndResolver.getActionGraph().getNodes());
+        Preconditions.checkNotNull(actionGraphAndBuilder.getActionGraph().getNodes());
     ImmutableSet<BuildTarget> actionGraphTargets =
         ImmutableSet.copyOf(Iterables.transform(actionGraphRules, BuildRule::getBuildTarget));
     if (!actionGraphTargets.contains(explicitTarget)) {
@@ -1353,13 +1355,13 @@ public class BuildCommand extends AbstractCommand {
       AtomicReference<Build> buildReference)
       throws IOException, InterruptedException {
 
-    ActionGraphAndResolver actionGraphAndResolver =
-        graphsAndBuildTargets.getGraphs().getActionGraphAndResolver();
+    ActionGraphAndBuilder actionGraphAndBuilder =
+        graphsAndBuildTargets.getGraphs().getActionGraphAndBuilder();
     LocalBuildExecutor builder =
         new LocalBuildExecutor(
             params.createBuilderArgs(),
             getExecutionContext(),
-            actionGraphAndResolver,
+            actionGraphAndBuilder,
             new LocalCachingBuildEngineDelegate(params.getFileHashCache()),
             executor,
             isKeepGoing(),
@@ -1391,11 +1393,11 @@ public class BuildCommand extends AbstractCommand {
   }
 
   RuleKeyCacheScope<RuleKey> getDefaultRuleKeyCacheScope(
-      CommandRunnerParams params, ActionGraphAndResolver actionGraphAndResolver) {
+      CommandRunnerParams params, ActionGraphAndBuilder actionGraphAndBuilder) {
     return getDefaultRuleKeyCacheScope(
         params,
         new RuleKeyCacheRecycler.SettingsAffectingCache(
-            params.getBuckConfig().getKeySeed(), actionGraphAndResolver.getActionGraph()));
+            params.getBuckConfig().getKeySeed(), actionGraphAndBuilder.getActionGraph()));
   }
 
   @Override

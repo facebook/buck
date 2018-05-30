@@ -23,7 +23,7 @@ import com.facebook.buck.core.build.engine.impl.DefaultRuleDepsCache;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.distributed.NoopArtifactCacheByBuildRule;
-import com.facebook.buck.distributed.testutil.CustomBuildRuleResolverFactory;
+import com.facebook.buck.distributed.testutil.CustomActiongGraphBuilderFactory;
 import com.facebook.buck.distributed.thrift.MinionType;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.distributed.thrift.WorkUnit;
@@ -45,7 +45,8 @@ public class MinionWorkloadAllocatorTest {
   private static final StampedeId STAMPEDE_ID = new StampedeId().setId("DUMMY_ID");
 
   private BuildTargetsQueue createQueueUsingResolver(BuildRuleResolver resolver) {
-    BuildTarget target = BuildTargetFactory.newInstance(CustomBuildRuleResolverFactory.ROOT_TARGET);
+    BuildTarget target =
+        BuildTargetFactory.newInstance(CustomActiongGraphBuilderFactory.ROOT_TARGET);
     BuildTargetsQueue queue =
         new CacheOptimizedBuildTargetsQueueFactory(
                 resolver,
@@ -66,7 +67,7 @@ public class MinionWorkloadAllocatorTest {
     MinionWorkloadAllocator allocator =
         new MinionWorkloadAllocator(
             createQueueUsingResolver(
-                CustomBuildRuleResolverFactory.createDiamondDependencyResolverWithChainFromLeaf()),
+                CustomActiongGraphBuilderFactory.createDiamondDependencyBuilderWithChainFromLeaf()),
             new DistBuildTraceTracker(STAMPEDE_ID));
 
     // Allocate work unit with 2 targets to low-speced minion one
@@ -77,8 +78,8 @@ public class MinionWorkloadAllocatorTest {
         ImmutableList.of(),
         ImmutableList.of(
             ImmutableList.of(
-                CustomBuildRuleResolverFactory.LEAF_TARGET,
-                CustomBuildRuleResolverFactory.CHAIN_TOP_TARGET)));
+                CustomActiongGraphBuilderFactory.LEAF_TARGET,
+                CustomActiongGraphBuilderFactory.CHAIN_TOP_TARGET)));
 
     // Simulate failure of minion one
     simulateAndAssertMinionFailure(allocator, MINION_ONE);
@@ -95,8 +96,8 @@ public class MinionWorkloadAllocatorTest {
         ImmutableList.of(),
         ImmutableList.of(
             ImmutableList.of(
-                CustomBuildRuleResolverFactory.LEAF_TARGET,
-                CustomBuildRuleResolverFactory.CHAIN_TOP_TARGET)));
+                CustomActiongGraphBuilderFactory.LEAF_TARGET,
+                CustomActiongGraphBuilderFactory.CHAIN_TOP_TARGET)));
 
     // Minion 3 completes nodes and gets more work
     List<WorkUnit> minionTwoWorkFromRequestTwo =
@@ -104,8 +105,8 @@ public class MinionWorkloadAllocatorTest {
             MINION_THREE,
             STANDARD_SPEC,
             ImmutableList.of(
-                CustomBuildRuleResolverFactory.LEAF_TARGET,
-                CustomBuildRuleResolverFactory.CHAIN_TOP_TARGET),
+                CustomActiongGraphBuilderFactory.LEAF_TARGET,
+                CustomActiongGraphBuilderFactory.CHAIN_TOP_TARGET),
             MAX_WORK_UNITS);
     Assert.assertEquals(2, minionTwoWorkFromRequestTwo.size());
   }
@@ -115,7 +116,7 @@ public class MinionWorkloadAllocatorTest {
     MinionWorkloadAllocator allocator =
         new MinionWorkloadAllocator(
             createQueueUsingResolver(
-                CustomBuildRuleResolverFactory.createDiamondDependencyResolverWithChainFromLeaf()),
+                CustomActiongGraphBuilderFactory.createDiamondDependencyBuilderWithChainFromLeaf()),
             new DistBuildTraceTracker(STAMPEDE_ID));
 
     // Allocate work unit with 2 targets to minion one
@@ -126,8 +127,8 @@ public class MinionWorkloadAllocatorTest {
         ImmutableList.of(),
         ImmutableList.of(
             ImmutableList.of(
-                CustomBuildRuleResolverFactory.LEAF_TARGET,
-                CustomBuildRuleResolverFactory.CHAIN_TOP_TARGET)));
+                CustomActiongGraphBuilderFactory.LEAF_TARGET,
+                CustomActiongGraphBuilderFactory.CHAIN_TOP_TARGET)));
 
     // Simulate failure of minion one
     simulateAndAssertMinionFailure(allocator, MINION_ONE);
@@ -140,15 +141,15 @@ public class MinionWorkloadAllocatorTest {
         ImmutableList.of(),
         ImmutableList.of(
             ImmutableList.of(
-                CustomBuildRuleResolverFactory.LEAF_TARGET,
-                CustomBuildRuleResolverFactory.CHAIN_TOP_TARGET)));
+                CustomActiongGraphBuilderFactory.LEAF_TARGET,
+                CustomActiongGraphBuilderFactory.CHAIN_TOP_TARGET)));
 
     // Minion 2 completes the first item in the work unit it was given. Doesn't get anything new
     allocateWorkAndAssert(
         allocator,
         MINION_TWO,
         STANDARD_SPEC,
-        ImmutableList.of(CustomBuildRuleResolverFactory.LEAF_TARGET),
+        ImmutableList.of(CustomActiongGraphBuilderFactory.LEAF_TARGET),
         ImmutableList.of());
 
     // Simulate failure of minion two.
@@ -160,14 +161,14 @@ public class MinionWorkloadAllocatorTest {
         MINION_THREE,
         STANDARD_SPEC,
         ImmutableList.of(),
-        ImmutableList.of(ImmutableList.of(CustomBuildRuleResolverFactory.CHAIN_TOP_TARGET)));
+        ImmutableList.of(ImmutableList.of(CustomActiongGraphBuilderFactory.CHAIN_TOP_TARGET)));
 
     // Minion three completes node at top of chain, and now gets two more work units, left and right
     List<WorkUnit> minionThreeWorkFromRequestTwo =
         allocator.dequeueZeroDependencyNodes(
             MINION_THREE,
             STANDARD_SPEC,
-            ImmutableList.of(CustomBuildRuleResolverFactory.CHAIN_TOP_TARGET),
+            ImmutableList.of(CustomActiongGraphBuilderFactory.CHAIN_TOP_TARGET),
             MAX_WORK_UNITS);
     Assert.assertEquals(2, minionThreeWorkFromRequestTwo.size());
 
@@ -176,7 +177,7 @@ public class MinionWorkloadAllocatorTest {
         allocator,
         MINION_THREE,
         STANDARD_SPEC,
-        ImmutableList.of(CustomBuildRuleResolverFactory.LEFT_TARGET),
+        ImmutableList.of(CustomActiongGraphBuilderFactory.LEFT_TARGET),
         ImmutableList.of());
 
     // Minion three fails.
@@ -188,22 +189,22 @@ public class MinionWorkloadAllocatorTest {
         MINION_FOUR,
         STANDARD_SPEC,
         ImmutableList.of(),
-        ImmutableList.of(ImmutableList.of(CustomBuildRuleResolverFactory.RIGHT_TARGET)));
+        ImmutableList.of(ImmutableList.of(CustomActiongGraphBuilderFactory.RIGHT_TARGET)));
 
     // Minion four completes right node. gets final root node back
     allocateWorkAndAssert(
         allocator,
         MINION_FOUR,
         STANDARD_SPEC,
-        ImmutableList.of(CustomBuildRuleResolverFactory.RIGHT_TARGET),
-        ImmutableList.of(ImmutableList.of(CustomBuildRuleResolverFactory.ROOT_TARGET)));
+        ImmutableList.of(CustomActiongGraphBuilderFactory.RIGHT_TARGET),
+        ImmutableList.of(ImmutableList.of(CustomActiongGraphBuilderFactory.ROOT_TARGET)));
 
     // Minion four completes the build
     List<WorkUnit> minionFourWorkFromRequestThree =
         allocator.dequeueZeroDependencyNodes(
             MINION_FOUR,
             STANDARD_SPEC,
-            ImmutableList.of(CustomBuildRuleResolverFactory.ROOT_TARGET),
+            ImmutableList.of(CustomActiongGraphBuilderFactory.ROOT_TARGET),
             MAX_WORK_UNITS);
     Assert.assertEquals(0, minionFourWorkFromRequestThree.size());
     Assert.assertTrue(allocator.isBuildFinished());
@@ -214,7 +215,7 @@ public class MinionWorkloadAllocatorTest {
     MinionWorkloadAllocator allocator =
         new MinionWorkloadAllocator(
             createQueueUsingResolver(
-                CustomBuildRuleResolverFactory.createDiamondDependencyResolver()),
+                CustomActiongGraphBuilderFactory.createDiamondDependencyGraph()),
             new DistBuildTraceTracker(STAMPEDE_ID));
     Assert.assertFalse(allocator.isBuildFinished());
 
@@ -228,7 +229,7 @@ public class MinionWorkloadAllocatorTest {
         allocator.dequeueZeroDependencyNodes(
             MINION_ONE,
             STANDARD_SPEC,
-            ImmutableList.of(CustomBuildRuleResolverFactory.LEAF_TARGET),
+            ImmutableList.of(CustomActiongGraphBuilderFactory.LEAF_TARGET),
             MAX_WORK_UNITS);
     Assert.assertEquals(2, secondTargets.size());
     Assert.assertFalse(allocator.isBuildFinished());
@@ -238,8 +239,8 @@ public class MinionWorkloadAllocatorTest {
             MINION_ONE,
             STANDARD_SPEC,
             ImmutableList.of(
-                CustomBuildRuleResolverFactory.LEFT_TARGET,
-                CustomBuildRuleResolverFactory.RIGHT_TARGET),
+                CustomActiongGraphBuilderFactory.LEFT_TARGET,
+                CustomActiongGraphBuilderFactory.RIGHT_TARGET),
             MAX_WORK_UNITS);
     Assert.assertEquals(1, thirdTargets.size());
     Assert.assertFalse(allocator.isBuildFinished());
@@ -248,7 +249,7 @@ public class MinionWorkloadAllocatorTest {
         allocator.dequeueZeroDependencyNodes(
             MINION_ONE,
             STANDARD_SPEC,
-            ImmutableList.of(CustomBuildRuleResolverFactory.ROOT_TARGET),
+            ImmutableList.of(CustomActiongGraphBuilderFactory.ROOT_TARGET),
             MAX_WORK_UNITS);
     Assert.assertEquals(0, fourthTargets.size());
     Assert.assertTrue(allocator.isBuildFinished());

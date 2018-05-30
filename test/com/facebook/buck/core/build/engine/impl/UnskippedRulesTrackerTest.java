@@ -26,11 +26,11 @@ import com.facebook.buck.core.build.engine.RuleDepsCache;
 import com.facebook.buck.core.build.event.BuildEvent;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
-import com.facebook.buck.core.rules.resolver.impl.TestBuildRuleResolver;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
@@ -66,9 +66,9 @@ public class UnskippedRulesTrackerTest {
 
   @Before
   public void setUp() {
-    BuildRuleResolver resolver = new TestBuildRuleResolver();
-    RuleDepsCache depsCache = new DefaultRuleDepsCache(resolver);
-    unskippedRulesTracker = new UnskippedRulesTracker(depsCache, resolver);
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
+    RuleDepsCache depsCache = new DefaultRuleDepsCache(graphBuilder);
+    unskippedRulesTracker = new UnskippedRulesTracker(depsCache, graphBuilder);
     eventBus = new DefaultBuckEventBus(FakeClock.doNotCare(), new BuildId());
     eventBus.register(
         new Object() {
@@ -77,14 +77,15 @@ public class UnskippedRulesTrackerTest {
             events.add(event);
           }
         });
-    ruleH = resolver.addToIndex(createRule("//:h"));
-    ruleG = resolver.addToIndex(createRule("//:g"));
-    ruleF = resolver.addToIndex(createRule("//:f"));
-    ruleE = resolver.addToIndex(createRule("//:e", ImmutableSet.of(ruleG, ruleH)));
-    ruleD = resolver.addToIndex(createRule("//:d", ImmutableSet.of(ruleG), ImmutableSet.of(ruleF)));
-    ruleC = resolver.addToIndex(createRule("//:c", ImmutableSet.of(ruleD, ruleE)));
-    ruleB = resolver.addToIndex(createRule("//:b", ImmutableSet.of(), ImmutableSet.of(ruleD)));
-    ruleA = resolver.addToIndex(createRule("//:a", ImmutableSet.of(ruleD)));
+    ruleH = graphBuilder.addToIndex(createRule("//:h"));
+    ruleG = graphBuilder.addToIndex(createRule("//:g"));
+    ruleF = graphBuilder.addToIndex(createRule("//:f"));
+    ruleE = graphBuilder.addToIndex(createRule("//:e", ImmutableSet.of(ruleG, ruleH)));
+    ruleD =
+        graphBuilder.addToIndex(createRule("//:d", ImmutableSet.of(ruleG), ImmutableSet.of(ruleF)));
+    ruleC = graphBuilder.addToIndex(createRule("//:c", ImmutableSet.of(ruleD, ruleE)));
+    ruleB = graphBuilder.addToIndex(createRule("//:b", ImmutableSet.of(), ImmutableSet.of(ruleD)));
+    ruleA = graphBuilder.addToIndex(createRule("//:a", ImmutableSet.of(ruleD)));
   }
 
   @After

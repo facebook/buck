@@ -20,10 +20,10 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.rules.resolver.impl.TestBuildRuleResolver;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
@@ -134,7 +134,7 @@ public class Jsr199JavacIntegrationTest {
             .newBuildInvocation(
                 javacExecutionContext,
                 DefaultSourcePathResolver.from(
-                    new SourcePathRuleFinder(new TestBuildRuleResolver())),
+                    new SourcePathRuleFinder(new TestActionGraphBuilder())),
                 BuildTargetFactory.newInstance("//some:example"),
                 ImmutableList.of(),
                 ImmutableList.of(),
@@ -165,9 +165,9 @@ public class Jsr199JavacIntegrationTest {
   @Test
   public void shouldWriteResolvedBuildTargetSourcePathsToClassesFile()
       throws IOException, InterruptedException {
-    BuildRuleResolver resolver = new TestBuildRuleResolver();
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     BuildRule rule = new FakeBuildRule("//:fake");
-    resolver.addToIndex(rule);
+    graphBuilder.addToIndex(rule);
 
     Jsr199Javac javac = createJavac(/* withSyntaxError */ false);
     ExecutionContext executionContext = TestExecutionContext.newInstance();
@@ -189,7 +189,7 @@ public class Jsr199JavacIntegrationTest {
             .newBuildInvocation(
                 javacExecutionContext,
                 DefaultSourcePathResolver.from(
-                    new SourcePathRuleFinder(new TestBuildRuleResolver())),
+                    new SourcePathRuleFinder(new TestActionGraphBuilder())),
                 BuildTargetFactory.newInstance("//some:example"),
                 ImmutableList.of(),
                 ImmutableList.of(),
@@ -254,9 +254,9 @@ public class Jsr199JavacIntegrationTest {
 
   @Test
   public void shouldUseSpecifiedJavacJar() throws Exception {
-    BuildRuleResolver resolver = new TestBuildRuleResolver();
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     BuildRule rule = new FakeBuildRule("//:fake");
-    resolver.addToIndex(rule);
+    graphBuilder.addToIndex(rule);
 
     Path fakeJavacJar = Paths.get("ae036e57-77a7-4356-a79c-0f85b1a3290d", "fakeJavac.jar");
     ExecutionContext executionContext = TestExecutionContext.newInstance();
@@ -292,7 +292,8 @@ public class Jsr199JavacIntegrationTest {
       javac
           .newBuildInvocation(
               javacExecutionContext,
-              DefaultSourcePathResolver.from(new SourcePathRuleFinder(new TestBuildRuleResolver())),
+              DefaultSourcePathResolver.from(
+                  new SourcePathRuleFinder(new TestActionGraphBuilder())),
               BuildTargetFactory.newInstance("//some:example"),
               ImmutableList.of(),
               ImmutableList.of(),
@@ -381,7 +382,7 @@ public class Jsr199JavacIntegrationTest {
     Invocation buildInvocation =
         javac.newBuildInvocation(
             javacExecutionContext,
-            DefaultSourcePathResolver.from(new SourcePathRuleFinder(new TestBuildRuleResolver())),
+            DefaultSourcePathResolver.from(new SourcePathRuleFinder(new TestActionGraphBuilder())),
             BuildTargetFactory.newInstance("//some:example"),
             ImmutableList.of(),
             ImmutableList.of(),

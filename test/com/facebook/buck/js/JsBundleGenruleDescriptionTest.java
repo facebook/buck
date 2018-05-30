@@ -34,10 +34,11 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.rules.resolver.impl.TestBuildRuleResolver;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.io.BuildCellRelativePath;
@@ -126,14 +127,14 @@ public class JsBundleGenruleDescriptionTest {
     JsTestScenario scenario = JsTestScenario.builder().arbitraryRule(defaultBundleTarget).build();
 
     new JsBundleGenruleBuilder(genruleTarget, defaultBundleTarget, scenario.filesystem)
-        .build(scenario.resolver, scenario.filesystem);
+        .build(scenario.graphBuilder, scenario.filesystem);
   }
 
   @Test
   public void underlyingJsBundleIsARuntimeDep() {
     assertArrayEquals(
         new BuildTarget[] {defaultBundleTarget},
-        setup.genrule().getRuntimeDeps(new SourcePathRuleFinder(setup.resolver())).toArray());
+        setup.genrule().getRuntimeDeps(new SourcePathRuleFinder(setup.graphBuilder())).toArray());
   }
 
   @Test
@@ -160,7 +161,7 @@ public class JsBundleGenruleDescriptionTest {
   public void exposesReleaseFlavorAsEnvironmentVariable() {
     setUp(JsFlavors.RELEASE);
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(setup.resolver()));
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(setup.graphBuilder()));
     ImmutableMap.Builder<String, String> env = ImmutableMap.builder();
     setup.genrule().addEnvironmentVariables(pathResolver, env);
     assertThat(env.build(), hasEntry("RELEASE", "1"));
@@ -169,7 +170,7 @@ public class JsBundleGenruleDescriptionTest {
   @Test
   public void withoutReleaseFlavorEnvVariableIsEmpty() {
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(setup.resolver()));
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(setup.graphBuilder()));
     ImmutableMap.Builder<String, String> env = ImmutableMap.builder();
     setup.genrule().addEnvironmentVariables(pathResolver, env);
     assertThat(env.build(), hasEntry("RELEASE", ""));
@@ -179,7 +180,7 @@ public class JsBundleGenruleDescriptionTest {
   public void exposesAndroidFlavorAsEnvironmentVariable() {
     setUp(JsFlavors.ANDROID);
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(setup.resolver()));
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(setup.graphBuilder()));
     ImmutableMap.Builder<String, String> env = ImmutableMap.builder();
     setup.genrule().addEnvironmentVariables(pathResolver, env);
     assertThat(env.build(), hasEntry("PLATFORM", "android"));
@@ -189,7 +190,7 @@ public class JsBundleGenruleDescriptionTest {
   public void exposesIosFlavorAsEnvironmentVariable() {
     setUp(JsFlavors.IOS);
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(setup.resolver()));
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(setup.graphBuilder()));
     ImmutableMap.Builder<String, String> env = ImmutableMap.builder();
     setup.genrule().addEnvironmentVariables(pathResolver, env);
     assertThat(env.build(), hasEntry("PLATFORM", "ios"));
@@ -198,7 +199,7 @@ public class JsBundleGenruleDescriptionTest {
   @Test
   public void withoutPlatformFlavorEnvVariableIsEmpty() {
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(setup.resolver()));
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(setup.graphBuilder()));
     ImmutableMap.Builder<String, String> env = ImmutableMap.builder();
     setup.genrule().addEnvironmentVariables(pathResolver, env);
     assertThat(env.build(), hasEntry("PLATFORM", ""));
@@ -245,7 +246,7 @@ public class JsBundleGenruleDescriptionTest {
     setUp(defaultBundleTarget.withAppendedFlavors(JsFlavors.ANDROID));
 
     JsBundleAndroid jsBundleAndroid = setup.jsBundleAndroid();
-    BuildRuleResolver ruleResolver = new TestBuildRuleResolver();
+    BuildRuleResolver ruleResolver = new TestActionGraphBuilder();
     assertEquals(
         jsBundleAndroid.getRequiredPackageables(ruleResolver),
         setup.genrule().getRequiredPackageables(ruleResolver));
@@ -260,7 +261,7 @@ public class JsBundleGenruleDescriptionTest {
     setupWithSkipResources(JsFlavors.ANDROID);
 
     assertEquals(
-        ImmutableList.of(), setup.genrule().getRequiredPackageables(new TestBuildRuleResolver()));
+        ImmutableList.of(), setup.genrule().getRequiredPackageables(new TestActionGraphBuilder()));
     AndroidPackageableCollector collector = packageableCollectorMock(setup);
     setup.genrule().addToCollector(collector);
     verify(collector);
@@ -269,7 +270,7 @@ public class JsBundleGenruleDescriptionTest {
   @Test
   public void returnsNothingIfUnderlyingBundleIsNotForAndroid() {
     assertEquals(
-        ImmutableList.of(), setup.genrule().getRequiredPackageables(new TestBuildRuleResolver()));
+        ImmutableList.of(), setup.genrule().getRequiredPackageables(new TestActionGraphBuilder()));
   }
 
   @Test
@@ -281,7 +282,7 @@ public class JsBundleGenruleDescriptionTest {
             genruleBuilder,
             setup.targetNode(),
             setup.rule().getProjectFilesystem(),
-            setup.resolver());
+            setup.graphBuilder());
 
     AppleBundleResources expected =
         AppleBundleResources.builder()
@@ -303,7 +304,7 @@ public class JsBundleGenruleDescriptionTest {
             genruleBuilder,
             setup.targetNode(),
             setup.rule().getProjectFilesystem(),
-            setup.resolver());
+            setup.graphBuilder());
 
     AppleBundleResources expected = AppleBundleResources.builder().build();
     assertEquals(expected, genruleBuilder.build());
@@ -385,8 +386,8 @@ public class JsBundleGenruleDescriptionTest {
                     StringWithMacrosUtils.format("%s", LocationMacro.of(locationTarget))))
             .build();
 
-    BuildRule buildRule = scenario.resolver.requireRule(genruleTarget);
-    assertThat(buildRule.getBuildDeps(), hasItem(scenario.resolver.getRule(locationTarget)));
+    BuildRule buildRule = scenario.graphBuilder.requireRule(genruleTarget);
+    assertThat(buildRule.getBuildDeps(), hasItem(scenario.graphBuilder.getRule(locationTarget)));
   }
 
   @Test
@@ -590,7 +591,7 @@ public class JsBundleGenruleDescriptionTest {
   }
 
   private DefaultSourcePathResolver sourcePathResolver() {
-    return DefaultSourcePathResolver.from(new SourcePathRuleFinder(setup.resolver()));
+    return DefaultSourcePathResolver.from(new SourcePathRuleFinder(setup.graphBuilder()));
   }
 
   private static class TestSetup {
@@ -605,12 +606,12 @@ public class JsBundleGenruleDescriptionTest {
     }
 
     BuildRule rule() {
-      return scenario.resolver.requireRule(target);
+      return scenario.graphBuilder.requireRule(target);
     }
 
     JsBundleGenrule genrule() {
       return (JsBundleGenrule)
-          scenario.resolver.requireRule(
+          scenario.graphBuilder.requireRule(
               target.withoutFlavors(
                   JsFlavors.DEPENDENCY_FILE, JsFlavors.SOURCE_MAP, JsFlavors.MISC));
     }
@@ -623,19 +624,20 @@ public class JsBundleGenruleDescriptionTest {
 
     JsBundleOutputs jsBundle(Flavor... extraFlavors) {
       return (JsBundleOutputs)
-          resolver().requireRule(bundleTarget.withAppendedFlavors(extraFlavors));
+          graphBuilder().requireRule(bundleTarget.withAppendedFlavors(extraFlavors));
     }
 
     JsBundleAndroid jsBundleAndroid() {
-      return resolver().getRuleWithType(bundleTarget, JsBundleAndroid.class);
+      return graphBuilder().getRuleWithType(bundleTarget, JsBundleAndroid.class);
     }
 
     BuildRule jsBundleDepsFile() {
-      return resolver().requireRule(bundleTarget.withAppendedFlavors(JsFlavors.DEPENDENCY_FILE));
+      return graphBuilder()
+          .requireRule(bundleTarget.withAppendedFlavors(JsFlavors.DEPENDENCY_FILE));
     }
 
-    BuildRuleResolver resolver() {
-      return scenario.resolver;
+    ActionGraphBuilder graphBuilder() {
+      return scenario.graphBuilder;
     }
   }
 

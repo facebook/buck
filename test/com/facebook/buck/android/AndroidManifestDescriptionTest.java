@@ -20,9 +20,9 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.description.BuildRuleParams;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.rules.resolver.impl.TestBuildRuleResolver;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -39,7 +39,7 @@ public class AndroidManifestDescriptionTest {
 
   @Test
   public void testGeneratedSkeletonAppearsInDeps() {
-    BuildRuleResolver buildRuleResolver = new TestBuildRuleResolver();
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
 
     BuildRule ruleWithOutput =
         new FakeBuildRule(BuildTargetFactory.newInstance("//foo:bar")) {
@@ -50,7 +50,7 @@ public class AndroidManifestDescriptionTest {
           }
         };
     SourcePath skeleton = ruleWithOutput.getSourcePathToOutput();
-    buildRuleResolver.addToIndex(ruleWithOutput);
+    graphBuilder.addToIndex(ruleWithOutput);
 
     AndroidManifestDescriptionArg arg =
         AndroidManifestDescriptionArg.builder().setName("baz").setSkeleton(skeleton).build();
@@ -58,11 +58,11 @@ public class AndroidManifestDescriptionTest {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:baz");
     BuildRuleParams params =
-        TestBuildRuleParams.create().withDeclaredDeps(buildRuleResolver.getAllRules(arg.getDeps()));
+        TestBuildRuleParams.create().withDeclaredDeps(graphBuilder.getAllRules(arg.getDeps()));
     BuildRule androidManifest =
         new AndroidManifestDescription(new AndroidManifestFactory())
             .createBuildRule(
-                TestBuildRuleCreationContextFactory.create(buildRuleResolver, projectFilesystem),
+                TestBuildRuleCreationContextFactory.create(graphBuilder, projectFilesystem),
                 buildTarget,
                 params,
                 arg);

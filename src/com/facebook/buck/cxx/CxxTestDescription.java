@@ -28,6 +28,7 @@ import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.Flavored;
 import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
@@ -160,8 +161,8 @@ public class CxxTestDescription
     BuildTarget buildTarget = inputBuildTarget;
 
     CxxPlatform cxxPlatform = getCxxPlatform(buildTarget, args);
-    BuildRuleResolver resolver = context.getBuildRuleResolver();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
     CellPathResolver cellRoots = context.getCellPathResolver();
 
@@ -170,7 +171,7 @@ public class CxxTestDescription
           CxxDescriptionEnhancer.createBuildRulesForCxxBinaryDescriptionArg(
               buildTarget.withoutFlavors(CxxCompilationDatabase.COMPILATION_DATABASE),
               projectFilesystem,
-              resolver,
+              graphBuilder,
               cellRoots,
               cxxBuckConfig,
               cxxPlatform,
@@ -188,12 +189,12 @@ public class CxxTestDescription
               ? buildTarget
               : buildTarget.withAppendedFlavors(cxxPlatform.getFlavor()),
           projectFilesystem,
-          resolver);
+          graphBuilder);
     }
 
     if (buildTarget.getFlavors().contains(CxxDescriptionEnhancer.SANDBOX_TREE_FLAVOR)) {
       return CxxDescriptionEnhancer.createSandboxTreeBuildRule(
-          resolver, args, cxxPlatform, buildTarget, projectFilesystem);
+          graphBuilder, args, cxxPlatform, buildTarget, projectFilesystem);
     }
 
     // Generate the link rule that builds the test binary.
@@ -201,7 +202,7 @@ public class CxxTestDescription
         CxxDescriptionEnhancer.createBuildRulesForCxxBinaryDescriptionArg(
             buildTarget,
             projectFilesystem,
-            resolver,
+            graphBuilder,
             cellRoots,
             cxxBuckConfig,
             cxxPlatform,
@@ -232,12 +233,12 @@ public class CxxTestDescription
     // Supplier which expands macros in the passed in test environment.
     ImmutableMap<String, Arg> testEnv =
         ImmutableMap.copyOf(
-            Maps.transformValues(args.getEnv(), x -> macrosConverter.convert(x, resolver)));
+            Maps.transformValues(args.getEnv(), x -> macrosConverter.convert(x, graphBuilder)));
 
     ImmutableList<Arg> testArgs =
         args.getArgs()
             .stream()
-            .map(x -> macrosConverter.convert(x, resolver))
+            .map(x -> macrosConverter.convert(x, graphBuilder))
             .collect(ImmutableList.toImmutableList());
 
     BiFunction<BuildRuleResolver, SourcePathRuleFinder, ImmutableSortedSet<BuildRule>>
@@ -255,9 +256,12 @@ public class CxxTestDescription
               // Add any build-time from any macros embedded in the `env` or `args` parameter.
               for (StringWithMacros part :
                   Iterables.concat(args.getArgs(), args.getEnv().values())) {
+                // TODO(cjhopman): I feel so bad about this. MacrosConverter needs to be updated to
+                // only take a BuildRuleResolver.
                 deps.addAll(
                     BuildableSupport.getDepsCollection(
-                        macrosConverter.convert(part, ruleResolverInner), ruleFinderInner));
+                        macrosConverter.convert(part, (ActionGraphBuilder) ruleResolverInner),
+                        ruleFinderInner));
               }
 
               return deps.build();
@@ -274,7 +278,7 @@ public class CxxTestDescription
                   testBuildTarget,
                   projectFilesystem,
                   testParams,
-                  resolver,
+                  graphBuilder,
                   cxxLinkAndCompileRules.getBinaryRule(),
                   cxxLinkAndCompileRules.executable,
                   testEnv,
@@ -300,7 +304,7 @@ public class CxxTestDescription
                   testBuildTarget,
                   projectFilesystem,
                   testParams,
-                  resolver,
+                  graphBuilder,
                   cxxLinkAndCompileRules.getBinaryRule(),
                   cxxLinkAndCompileRules.executable,
                   testEnv,
@@ -385,13 +389,13 @@ public class CxxTestDescription
   @Override
   public <U> Optional<U> createMetadata(
       BuildTarget buildTarget,
-      BuildRuleResolver resolver,
+      ActionGraphBuilder graphBuilder,
       CellPathResolver cellRoots,
       CxxTestDescriptionArg args,
       Optional<ImmutableMap<BuildTarget, Version>> selectedVersions,
       Class<U> metadataClass) {
     return cxxBinaryMetadataFactory.createMetadata(
-        buildTarget, resolver, args.getDeps(), metadataClass);
+        buildTarget, graphBuilder, args.getDeps(), metadataClass);
   }
 
   @Override

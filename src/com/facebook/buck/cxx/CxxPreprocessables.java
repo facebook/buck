@@ -17,8 +17,8 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
@@ -112,7 +112,7 @@ public class CxxPreprocessables {
    */
   public static Collection<CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(
       CxxPlatform cxxPlatform,
-      BuildRuleResolver ruleResolver,
+      ActionGraphBuilder graphBuilder,
       Iterable<? extends BuildRule> inputs,
       Predicate<Object> traverse) {
 
@@ -127,7 +127,7 @@ public class CxxPreprocessables {
       public Iterable<BuildRule> visit(BuildRule rule) {
         if (rule instanceof CxxPreprocessorDep) {
           CxxPreprocessorDep dep = (CxxPreprocessorDep) rule;
-          deps.putAll(dep.getTransitiveCxxPreprocessorInput(cxxPlatform, ruleResolver));
+          deps.putAll(dep.getTransitiveCxxPreprocessorInput(cxxPlatform, graphBuilder));
           return ImmutableSet.of();
         }
         return traverse.test(rule) ? rule.getBuildDeps() : ImmutableSet.of();
@@ -140,9 +140,9 @@ public class CxxPreprocessables {
 
   public static Collection<CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(
       CxxPlatform cxxPlatform,
-      BuildRuleResolver ruleResolver,
+      ActionGraphBuilder graphBuilder,
       Iterable<? extends BuildRule> inputs) {
-    return getTransitiveCxxPreprocessorInput(cxxPlatform, ruleResolver, inputs, x -> true);
+    return getTransitiveCxxPreprocessorInput(cxxPlatform, graphBuilder, inputs, x -> true);
   }
 
   /**
@@ -177,12 +177,12 @@ public class CxxPreprocessables {
   public static CxxPreprocessorInput.Builder addHeaderSymlinkTree(
       CxxPreprocessorInput.Builder builder,
       BuildTarget target,
-      BuildRuleResolver ruleResolver,
+      ActionGraphBuilder graphBuilder,
       CxxPlatform platform,
       HeaderVisibility headerVisibility,
       IncludeType includeType) {
     BuildRule rule =
-        ruleResolver.requireRule(
+        graphBuilder.requireRule(
             target.withAppendedFlavors(
                 platform.getFlavor(),
                 CxxDescriptionEnhancer.getHeaderSymlinkTreeFlavor(headerVisibility)));
@@ -201,7 +201,7 @@ public class CxxPreprocessables {
   /** Builds a {@link CxxPreprocessorInput} for a rule. */
   public static CxxPreprocessorInput getCxxPreprocessorInput(
       BuildTarget buildTarget,
-      BuildRuleResolver ruleResolver,
+      ActionGraphBuilder graphBuilder,
       boolean hasHeaderSymlinkTree,
       CxxPlatform platform,
       HeaderVisibility headerVisibility,
@@ -211,7 +211,7 @@ public class CxxPreprocessables {
     CxxPreprocessorInput.Builder builder = CxxPreprocessorInput.builder();
     if (hasHeaderSymlinkTree) {
       addHeaderSymlinkTree(
-          builder, buildTarget, ruleResolver, platform, headerVisibility, includeType);
+          builder, buildTarget, graphBuilder, platform, headerVisibility, includeType);
     }
     return builder
         .putAllPreprocessorFlags(

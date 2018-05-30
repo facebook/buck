@@ -17,6 +17,7 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
@@ -39,12 +40,12 @@ public interface CxxPreprocessorDep {
    * includes any exported preprocessor flags, headers, etc.
    */
   CxxPreprocessorInput getCxxPreprocessorInput(
-      CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver);
+      CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder);
 
   /**
    * Returns all transitive preprocessor inputs for this library. This includes public headers (and
    * exported preprocessor flags) of all exported dependencies.
    */
   ImmutableMap<BuildTarget, CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(
-      CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver);
+      CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder);
 }

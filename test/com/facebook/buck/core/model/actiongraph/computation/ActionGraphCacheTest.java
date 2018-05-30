@@ -31,7 +31,7 @@ import com.facebook.buck.config.ActionGraphParallelizationMode;
 import com.facebook.buck.config.IncrementalActionGraphMode;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.actiongraph.ActionGraphAndResolver;
+import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
 import com.facebook.buck.core.model.targetgraph.FakeTargetNodeBuilder;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
@@ -140,7 +140,7 @@ public class ActionGraphCacheTest {
   public void hitOnCache() {
     ActionGraphCache cache = new ActionGraphCache(1);
 
-    ActionGraphAndResolver resultRun1 =
+    ActionGraphAndBuilder resultRun1 =
         cache.getActionGraph(
             eventBus,
             CHECK_GRAPHS, /* skipActionGraphCache */
@@ -157,7 +157,7 @@ public class ActionGraphCacheTest {
     assertEquals(countEventsOf(ActionGraphEvent.Cache.Hit.class), 0);
     assertEquals(countEventsOf(ActionGraphEvent.Cache.Miss.class), 1);
 
-    ActionGraphAndResolver resultRun2 =
+    ActionGraphAndBuilder resultRun2 =
         cache.getActionGraph(
             eventBus,
             CHECK_GRAPHS, /* skipActionGraphCache */
@@ -176,9 +176,11 @@ public class ActionGraphCacheTest {
 
     // Check all the RuleKeys are the same between the 2 ActionGraphs.
     Map<BuildRule, RuleKey> resultRun1RuleKeys =
-        getRuleKeysFromBuildRules(resultRun1.getActionGraph().getNodes(), resultRun1.getResolver());
+        getRuleKeysFromBuildRules(
+            resultRun1.getActionGraph().getNodes(), resultRun1.getActionGraphBuilder());
     Map<BuildRule, RuleKey> resultRun2RuleKeys =
-        getRuleKeysFromBuildRules(resultRun2.getActionGraph().getNodes(), resultRun2.getResolver());
+        getRuleKeysFromBuildRules(
+            resultRun2.getActionGraph().getNodes(), resultRun2.getActionGraphBuilder());
 
     assertThat(resultRun1RuleKeys, equalTo(resultRun2RuleKeys));
   }
@@ -253,7 +255,7 @@ public class ActionGraphCacheTest {
   @Test
   public void missOnCache() {
     ActionGraphCache cache = new ActionGraphCache(1);
-    ActionGraphAndResolver resultRun1 =
+    ActionGraphAndBuilder resultRun1 =
         cache.getActionGraph(
             eventBus,
             CHECK_GRAPHS, /* skipActionGraphCache */
@@ -271,7 +273,7 @@ public class ActionGraphCacheTest {
     assertEquals(1, countEventsOf(ActionGraphEvent.Cache.Miss.class));
 
     trackedEvents.clear();
-    ActionGraphAndResolver resultRun2 =
+    ActionGraphAndBuilder resultRun2 =
         cache.getActionGraph(
             eventBus,
             CHECK_GRAPHS,
@@ -289,7 +291,7 @@ public class ActionGraphCacheTest {
     assertEquals(1, countEventsOf(ActionGraphEvent.Cache.MissWithTargetGraphDifference.class));
 
     trackedEvents.clear();
-    ActionGraphAndResolver resultRun3 =
+    ActionGraphAndBuilder resultRun3 =
         cache.getActionGraph(
             eventBus,
             CHECK_GRAPHS, /* skipActionGraphCache */
@@ -307,11 +309,14 @@ public class ActionGraphCacheTest {
 
     // Run1 and Run2 should not match, but Run1 and Run3 should
     Map<BuildRule, RuleKey> resultRun1RuleKeys =
-        getRuleKeysFromBuildRules(resultRun1.getActionGraph().getNodes(), resultRun1.getResolver());
+        getRuleKeysFromBuildRules(
+            resultRun1.getActionGraph().getNodes(), resultRun1.getActionGraphBuilder());
     Map<BuildRule, RuleKey> resultRun2RuleKeys =
-        getRuleKeysFromBuildRules(resultRun2.getActionGraph().getNodes(), resultRun2.getResolver());
+        getRuleKeysFromBuildRules(
+            resultRun2.getActionGraph().getNodes(), resultRun2.getActionGraphBuilder());
     Map<BuildRule, RuleKey> resultRun3RuleKeys =
-        getRuleKeysFromBuildRules(resultRun3.getActionGraph().getNodes(), resultRun3.getResolver());
+        getRuleKeysFromBuildRules(
+            resultRun3.getActionGraph().getNodes(), resultRun3.getActionGraphBuilder());
 
     // Run2 is done in a subgraph and it should not have the same ActionGraph.
     assertThat(resultRun1RuleKeys, Matchers.not(equalTo(resultRun2RuleKeys)));
@@ -323,7 +328,7 @@ public class ActionGraphCacheTest {
   @Test
   public void compareActionGraphsBasedOnRuleKeys() {
     ActionGraphCache actionGraphCache = new ActionGraphCache(1);
-    ActionGraphAndResolver resultRun1 =
+    ActionGraphAndBuilder resultRun1 =
         actionGraphCache.getFreshActionGraph(
             eventBus,
             new DefaultTargetNodeToBuildRuleTransformer(),
@@ -333,7 +338,7 @@ public class ActionGraphCacheTest {
             false,
             fakePoolSupplier);
 
-    ActionGraphAndResolver resultRun2 =
+    ActionGraphAndBuilder resultRun2 =
         actionGraphCache.getFreshActionGraph(
             eventBus,
             new DefaultTargetNodeToBuildRuleTransformer(),
@@ -345,9 +350,11 @@ public class ActionGraphCacheTest {
 
     // Check all the RuleKeys are the same between the 2 ActionGraphs.
     Map<BuildRule, RuleKey> resultRun1RuleKeys =
-        getRuleKeysFromBuildRules(resultRun1.getActionGraph().getNodes(), resultRun1.getResolver());
+        getRuleKeysFromBuildRules(
+            resultRun1.getActionGraph().getNodes(), resultRun1.getActionGraphBuilder());
     Map<BuildRule, RuleKey> resultRun2RuleKeys =
-        getRuleKeysFromBuildRules(resultRun2.getActionGraph().getNodes(), resultRun2.getResolver());
+        getRuleKeysFromBuildRules(
+            resultRun2.getActionGraph().getNodes(), resultRun2.getActionGraphBuilder());
 
     assertThat(resultRun1RuleKeys, equalTo(resultRun2RuleKeys));
   }
@@ -522,7 +529,7 @@ public class ActionGraphCacheTest {
     TargetNode<?, ?> originalNode1 = createCacheableTargetNode("A", originalNode2);
     targetGraph1 = TargetGraphFactory.newInstance(originalNode1, originalNode2, originalNode3);
 
-    ActionGraphAndResolver originalResult =
+    ActionGraphAndBuilder originalResult =
         cache.getActionGraph(
             eventBus,
             NOT_CHECK_GRAPHS,
@@ -537,11 +544,11 @@ public class ActionGraphCacheTest {
             poolSupplier);
 
     BuildRule originalBuildRule1 =
-        originalResult.getResolver().getRule(originalNode1.getBuildTarget());
+        originalResult.getActionGraphBuilder().getRule(originalNode1.getBuildTarget());
     BuildRule originalBuildRule2 =
-        originalResult.getResolver().getRule(originalNode2.getBuildTarget());
+        originalResult.getActionGraphBuilder().getRule(originalNode2.getBuildTarget());
     BuildRule originalBuildRule3 =
-        originalResult.getResolver().getRule(originalNode3.getBuildTarget());
+        originalResult.getActionGraphBuilder().getRule(originalNode3.getBuildTarget());
 
     TargetNode<?, ?> newNode4 = createCacheableTargetNode("D");
     TargetNode<?, ?> newNode3 = createCacheableTargetNode("C");
@@ -549,7 +556,7 @@ public class ActionGraphCacheTest {
     TargetNode<?, ?> newNode1 = createCacheableTargetNode("A", newNode2, newNode4);
     targetGraph2 = TargetGraphFactory.newInstance(newNode1, newNode2, newNode3, newNode4);
 
-    ActionGraphAndResolver newResult =
+    ActionGraphAndBuilder newResult =
         cache.getActionGraph(
             eventBus,
             NOT_CHECK_GRAPHS,
@@ -563,9 +570,12 @@ public class ActionGraphCacheTest {
             ImmutableMap.of(),
             poolSupplier);
 
-    assertNotSame(originalBuildRule1, newResult.getResolver().getRule(newNode1.getBuildTarget()));
-    assertSame(originalBuildRule2, newResult.getResolver().getRule(newNode2.getBuildTarget()));
-    assertSame(originalBuildRule3, newResult.getResolver().getRule(newNode3.getBuildTarget()));
+    assertNotSame(
+        originalBuildRule1, newResult.getActionGraphBuilder().getRule(newNode1.getBuildTarget()));
+    assertSame(
+        originalBuildRule2, newResult.getActionGraphBuilder().getRule(newNode2.getBuildTarget()));
+    assertSame(
+        originalBuildRule3, newResult.getActionGraphBuilder().getRule(newNode3.getBuildTarget()));
   }
 
   private TargetNode<?, ?> createCacheableTargetNode(String name, TargetNode<?, ?>... deps) {

@@ -23,8 +23,8 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
@@ -56,7 +56,7 @@ public class OcamlBuildRulesGenerator {
   private final BuildTarget buildTarget;
   private final ProjectFilesystem projectFilesystem;
   private final BuildRuleParams params;
-  private final BuildRuleResolver resolver;
+  private final ActionGraphBuilder graphBuilder;
   private final SourcePathRuleFinder ruleFinder;
   private final SourcePathResolver pathResolver;
   private final OcamlBuildContext ocamlContext;
@@ -76,7 +76,7 @@ public class OcamlBuildRulesGenerator {
       BuildRuleParams params,
       SourcePathResolver pathResolver,
       SourcePathRuleFinder ruleFinder,
-      BuildRuleResolver resolver,
+      ActionGraphBuilder graphBuilder,
       OcamlBuildContext ocamlContext,
       ImmutableMap<Path, ImmutableList<Path>> mlInput,
       ImmutableList<SourcePath> cInput,
@@ -89,7 +89,7 @@ public class OcamlBuildRulesGenerator {
     this.params = params;
     this.pathResolver = pathResolver;
     this.ruleFinder = ruleFinder;
-    this.resolver = resolver;
+    this.graphBuilder = graphBuilder;
     this.ocamlContext = ocamlContext;
     this.mlInput = mlInput;
     this.cInput = cInput;
@@ -185,7 +185,7 @@ public class OcamlBuildRulesGenerator {
                       // Depend on the rule that generates the sources and headers we're compiling.
                       .addAll(ruleFinder.filterBuildRuleInputs(cSrc))
                       // Add any deps from the C/C++ preprocessor input.
-                      .addAll(cxxPreprocessorInput.getDeps(resolver, ruleFinder))
+                      .addAll(cxxPreprocessorInput.getDeps(graphBuilder, ruleFinder))
                       // Add the clean rule, to ensure that any shared output folders shared with
                       // OCaml build artifacts are properly cleaned.
                       .add(this.cleanRule)
@@ -213,7 +213,7 @@ public class OcamlBuildRulesGenerator {
                   cSrc,
                   cCompileFlags.build(),
                   cxxPreprocessorInput.getIncludes()));
-      resolver.addToIndex(compileRule);
+      graphBuilder.addToIndex(compileRule);
       objects.add(compileRule.getSourcePathToOutput());
     }
     return objects.build();
@@ -229,7 +229,7 @@ public class OcamlBuildRulesGenerator {
             InternalFlavor.of(String.format("clean-%s", buildTarget.getShortName())));
 
     BuildRule cleanRule = new OcamlClean(cleanTarget, projectFilesystem, params, ocamlContext);
-    resolver.addToIndex(cleanRule);
+    graphBuilder.addToIndex(cleanRule);
     return cleanRule;
   }
 
@@ -250,7 +250,7 @@ public class OcamlBuildRulesGenerator {
                 ocamlContext.getBytecodeOutput(),
                 ocamlContext.getTransitiveBytecodeIncludes(),
                 ocamlContext.getBytecodeIncludeFlags()));
-    resolver.addToIndex(debugLauncher);
+    graphBuilder.addToIndex(debugLauncher);
     return debugLauncher;
   }
 
@@ -301,7 +301,7 @@ public class OcamlBuildRulesGenerator {
             ocamlContext.isLibrary(),
             /* isBytecode */ false,
             buildNativePlugin);
-    resolver.addToIndex(link);
+    graphBuilder.addToIndex(link);
     return link;
   }
 
@@ -352,7 +352,7 @@ public class OcamlBuildRulesGenerator {
             ocamlContext.isLibrary(),
             /* isBytecode */ true,
             /* buildNativePlugin */ false);
-    resolver.addToIndex(link);
+    graphBuilder.addToIndex(link);
     return link;
   }
 
@@ -500,7 +500,7 @@ public class OcamlBuildRulesGenerator {
                 outputPath,
                 mlSource,
                 compileFlags));
-    resolver.addToIndex(compile);
+    graphBuilder.addToIndex(compile);
     sourceToRule.put(
         mlSource, ImmutableSortedSet.<BuildRule>naturalOrder().add(compile).addAll(deps).build());
     if (!outputFileName.endsWith(OcamlCompilables.OCAML_CMI)) {
@@ -580,7 +580,7 @@ public class OcamlBuildRulesGenerator {
                 outputPath,
                 mlSource,
                 compileFlags));
-    resolver.addToIndex(compileBytecode);
+    graphBuilder.addToIndex(compileBytecode);
     sourceToRule.put(
         mlSource,
         ImmutableSortedSet.<BuildRule>naturalOrder().add(compileBytecode).addAll(deps).build());

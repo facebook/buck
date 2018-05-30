@@ -20,14 +20,14 @@ import com.facebook.buck.core.cell.CellProvider;
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 
 public interface TargetNodeToBuildRuleTransformer {
 
   <T, U extends DescriptionWithTargetGraph<T>> BuildRule transform(
       CellProvider cellProvider,
       TargetGraph targetGraph,
-      BuildRuleResolver ruleResolver,
+      ActionGraphBuilder graphBuilder,
       TargetNode<T, U> targetNode);
 }

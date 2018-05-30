@@ -157,7 +157,7 @@ public class PublishCommand extends BuildCommand {
     ImmutableSet.Builder<MavenPublishable> publishables = ImmutableSet.builder();
     boolean success = true;
     for (BuildTarget buildTarget : buildTargets) {
-      BuildRule buildRule = getBuild().getRuleResolver().requireRule(buildTarget);
+      BuildRule buildRule = getBuild().getGraphBuilder().requireRule(buildTarget);
       Preconditions.checkNotNull(buildRule);
 
       if (!(buildRule instanceof MavenPublishable)) {
@@ -199,7 +199,7 @@ public class PublishCommand extends BuildCommand {
       ImmutableSet<DeployResult> deployResults =
           publisher.publish(
               DefaultSourcePathResolver.from(
-                  new SourcePathRuleFinder(getBuild().getRuleResolver())),
+                  new SourcePathRuleFinder(getBuild().getGraphBuilder())),
               publishables.build());
       for (DeployResult deployResult : deployResults) {
         printArtifactsInformation(params, deployResult);

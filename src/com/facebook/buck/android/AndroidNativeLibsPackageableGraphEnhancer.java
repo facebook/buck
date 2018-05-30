@@ -31,8 +31,8 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
@@ -73,7 +73,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
   private final ProjectFilesystem projectFilesystem;
   private final BuildTarget originalBuildTarget;
   private final BuildRuleParams buildRuleParams;
-  private final BuildRuleResolver ruleResolver;
+  private final ActionGraphBuilder graphBuilder;
   private final SourcePathResolver pathResolver;
   private final SourcePathRuleFinder ruleFinder;
   private final ImmutableSet<TargetCpuType> cpuFilters;
@@ -90,7 +90,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
   public AndroidNativeLibsPackageableGraphEnhancer(
       ToolchainProvider toolchainProvider,
       CellPathResolver cellPathResolver,
-      BuildRuleResolver ruleResolver,
+      ActionGraphBuilder graphBuilder,
       BuildTarget originalBuildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams originalParams,
@@ -106,11 +106,11 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
     this.cellPathResolver = cellPathResolver;
     this.projectFilesystem = projectFilesystem;
     this.originalBuildTarget = originalBuildTarget;
-    this.ruleFinder = new SourcePathRuleFinder(ruleResolver);
+    this.ruleFinder = new SourcePathRuleFinder(graphBuilder);
     this.nativeLibraryMergeLocalizedSymbols = nativeLibraryMergeLocalizedSymbols;
     this.pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     this.buildRuleParams = originalParams;
-    this.ruleResolver = ruleResolver;
+    this.graphBuilder = graphBuilder;
     this.cpuFilters = cpuFilters;
     this.cxxBuckConfig = cxxBuckConfig;
     this.nativeLibraryMergeMap = nativeLibraryMergeMap;
@@ -146,10 +146,10 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
 
     for (Map.Entry<APKModule, NativeLinkable> linkableEntry : linkables.entries()) {
       NativeLinkable nativeLinkable = linkableEntry.getValue();
-      if (nativeLinkable.getPreferredLinkage(platform.getCxxPlatform(), ruleResolver)
+      if (nativeLinkable.getPreferredLinkage(platform.getCxxPlatform(), graphBuilder)
           != NativeLinkable.Linkage.STATIC) {
         ImmutableMap<String, SourcePath> solibs =
-            nativeLinkable.getSharedLibraries(platform.getCxxPlatform(), ruleResolver);
+            nativeLinkable.getSharedLibraries(platform.getCxxPlatform(), graphBuilder);
         for (Map.Entry<String, SourcePath> entry : solibs.entrySet()) {
           AndroidLinkableMetadata metadata =
               AndroidLinkableMetadata.builder()
@@ -203,7 +203,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
           NativeLibraryMergeEnhancer.enhance(
               cellPathResolver,
               cxxBuckConfig,
-              ruleResolver,
+              graphBuilder,
               pathResolver,
               ruleFinder,
               originalBuildTarget,
@@ -294,7 +294,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
       nativeLinkableLibs = relinker.getRelinkedLibs();
       nativeLinkableLibsAssets = relinker.getRelinkedLibsAssets();
       for (BuildRule rule : relinker.getRules()) {
-        ruleResolver.addToIndex(rule);
+        graphBuilder.addToIndex(rule);
       }
     }
 
@@ -440,7 +440,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
           requireStripLinkable(
               projectFilesystem,
               ruleFinder,
-              ruleResolver,
+              graphBuilder,
               sourcePath,
               targetCpuType,
               platform,
@@ -463,7 +463,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
   private static StripLinkable requireStripLinkable(
       ProjectFilesystem projectFilesystem,
       SourcePathRuleFinder ruleFinder,
-      BuildRuleResolver ruleResolver,
+      ActionGraphBuilder graphBuilder,
       SourcePath sourcePath,
       TargetCpuType targetCpuType,
       NdkCxxPlatform platform,
@@ -476,7 +476,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
             InternalFlavor.of(Flavor.replaceInvalidCharacters(targetCpuType.name())));
 
     return (StripLinkable)
-        ruleResolver.computeIfAbsent(
+        graphBuilder.computeIfAbsent(
             targetForStripRule,
             (buildTarget) ->
                 new StripLinkable(

@@ -16,17 +16,17 @@
 
 package com.facebook.buck.core.model.actiongraph;
 
-import com.facebook.buck.core.rules.BuildRuleResolver;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import org.immutables.value.Value;
 
 /** Holds an ActionGraph with the BuildRuleResolver that created it. */
 @Value.Immutable
 @BuckStyleImmutable
-interface AbstractActionGraphAndResolver {
+interface AbstractActionGraphAndBuilder {
   @Value.Parameter
   ActionGraph getActionGraph();
 
   @Value.Parameter
-  BuildRuleResolver getResolver();
+  ActionGraphBuilder getActionGraphBuilder();
 }

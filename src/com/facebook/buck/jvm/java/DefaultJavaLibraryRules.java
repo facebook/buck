@@ -19,6 +19,7 @@ package com.facebook.buck.jvm.java;
 import com.facebook.buck.core.cell.resolver.CellPathResolver;
 import com.facebook.buck.core.description.BuildRuleParams;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
@@ -95,14 +96,14 @@ public abstract class DefaultJavaLibraryRules {
   abstract BuildRuleParams getInitialParams();
 
   @org.immutables.builder.Builder.Parameter
-  abstract BuildRuleResolver getBuildRuleResolver();
+  abstract ActionGraphBuilder getActionGraphBuilder();
 
   @org.immutables.builder.Builder.Parameter
   abstract CellPathResolver getCellPathResolver();
 
   @Value.Lazy
   SourcePathRuleFinder getSourcePathRuleFinder() {
-    return new SourcePathRuleFinder(getBuildRuleResolver());
+    return new SourcePathRuleFinder(getActionGraphBuilder());
   }
 
   @Value.Lazy
@@ -172,13 +173,13 @@ public abstract class DefaultJavaLibraryRules {
   public DefaultJavaLibrary buildLibrary() {
     buildAllRules();
 
-    return (DefaultJavaLibrary) getBuildRuleResolver().getRule(getLibraryTarget());
+    return (DefaultJavaLibrary) getActionGraphBuilder().getRule(getLibraryTarget());
   }
 
   public BuildRule buildAbi() {
     buildAllRules();
 
-    return getBuildRuleResolver().getRule(getInitialBuildTarget());
+    return getActionGraphBuilder().getRule(getInitialBuildTarget());
   }
 
   private void buildAllRules() {
@@ -195,8 +196,8 @@ public abstract class DefaultJavaLibraryRules {
       rootmostTarget = HasJavaAbi.getClassAbiJar(rootmostTarget);
     }
 
-    BuildRuleResolver buildRuleResolver = getBuildRuleResolver();
-    buildRuleResolver.computeIfAbsent(
+    ActionGraphBuilder graphBuilder = getActionGraphBuilder();
+    graphBuilder.computeIfAbsent(
         rootmostTarget,
         target -> {
           CalculateSourceAbi sourceOnlyAbiRule = buildSourceOnlyAbiRule();
@@ -232,7 +233,7 @@ public abstract class DefaultJavaLibraryRules {
     Preconditions.checkNotNull(experimentalAbi);
 
     BuildTarget compareAbisTarget = HasJavaAbi.getVerifiedSourceAbiJar(getLibraryTarget());
-    return getBuildRuleResolver()
+    return getActionGraphBuilder()
         .addToIndex(
             new CompareAbis(
                 compareAbisTarget,
@@ -387,7 +388,7 @@ public abstract class DefaultJavaLibraryRules {
       ProjectFilesystem projectFilesystem = getProjectFilesystem();
       BuildTarget buildTarget = getLibraryTarget();
       SourcePathResolver sourcePathResolver = getSourcePathResolver();
-      BuildRuleResolver buildRuleResolver = getBuildRuleResolver();
+      BuildRuleResolver buildRuleResolver = getActionGraphBuilder();
 
       unusedDependenciesFinderFactory =
           Optional.of(
@@ -428,7 +429,7 @@ public abstract class DefaultJavaLibraryRules {
       libraryRule.setSourceAbi(sourceAbiRule);
     }
 
-    getBuildRuleResolver().addToIndex(libraryRule);
+    getActionGraphBuilder().addToIndex(libraryRule);
     return libraryRule;
   }
 
@@ -457,7 +458,7 @@ public abstract class DefaultJavaLibraryRules {
     JarBuildStepsFactory jarBuildStepsFactory = getJarBuildStepsFactoryForSourceOnlyAbi();
 
     BuildTarget sourceAbiTarget = HasJavaAbi.getSourceOnlyAbiJar(getLibraryTarget());
-    return getBuildRuleResolver()
+    return getActionGraphBuilder()
         .addToIndex(
             new CalculateSourceAbi(
                 sourceAbiTarget,
@@ -477,7 +478,7 @@ public abstract class DefaultJavaLibraryRules {
     JarBuildStepsFactory jarBuildStepsFactory = getJarBuildStepsFactory();
 
     BuildTarget sourceAbiTarget = HasJavaAbi.getSourceAbiJar(getLibraryTarget());
-    return getBuildRuleResolver()
+    return getActionGraphBuilder()
         .addToIndex(
             new CalculateSourceAbi(
                 sourceAbiTarget,
@@ -494,7 +495,7 @@ public abstract class DefaultJavaLibraryRules {
     }
 
     BuildTarget classAbiTarget = HasJavaAbi.getClassAbiJar(getLibraryTarget());
-    return getBuildRuleResolver()
+    return getActionGraphBuilder()
         .addToIndex(
             CalculateClassAbi.of(
                 classAbiTarget,
@@ -518,7 +519,7 @@ public abstract class DefaultJavaLibraryRules {
 
   @Value.Lazy
   DefaultJavaLibraryClasspaths getClasspaths() {
-    return DefaultJavaLibraryClasspaths.builder(getBuildRuleResolver())
+    return DefaultJavaLibraryClasspaths.builder(getActionGraphBuilder())
         .setBuildRuleParams(getInitialParams())
         .setConfiguredCompiler(getConfiguredCompiler())
         .setDeps(Preconditions.checkNotNull(getDeps()))
@@ -543,7 +544,7 @@ public abstract class DefaultJavaLibraryRules {
             getProjectFilesystem(),
             getArgs(),
             getJavacOptions(),
-            getBuildRuleResolver(),
+            getActionGraphBuilder(),
             getToolchainProvider());
   }
 
@@ -556,7 +557,7 @@ public abstract class DefaultJavaLibraryRules {
             getProjectFilesystem(),
             getArgs(),
             getJavacOptionsForSourceOnlyAbi(),
-            getBuildRuleResolver(),
+            getActionGraphBuilder(),
             getToolchainProvider());
   }
 
@@ -693,7 +694,7 @@ public abstract class DefaultJavaLibraryRules {
         ProjectFilesystem projectFilesystem,
         ToolchainProvider toolchainProvider,
         BuildRuleParams initialParams,
-        BuildRuleResolver buildRuleResolver,
+        ActionGraphBuilder graphBuilder,
         CellPathResolver cellPathResolver,
         ConfiguredCompilerFactory configuredCompilerFactory,
         @Nullable JavaBuckConfig javaBuckConfig,
@@ -703,14 +704,14 @@ public abstract class DefaultJavaLibraryRules {
           projectFilesystem,
           toolchainProvider,
           initialParams,
-          buildRuleResolver,
+          graphBuilder,
           cellPathResolver,
           configuredCompilerFactory,
           getUnusedDependenciesAction(javaBuckConfig, args),
           javaBuckConfig,
           args);
 
-      this.buildRuleResolver = buildRuleResolver;
+      this.actionGraphBuilder = graphBuilder;
 
       if (args != null) {
         setSrcs(args.getSrcs())
@@ -718,7 +719,7 @@ public abstract class DefaultJavaLibraryRules {
             .setResourcesRoot(args.getResourcesRoot())
             .setProguardConfig(args.getProguardConfig())
             .setPostprocessClassesCommands(args.getPostprocessClassesCommands())
-            .setDeps(JavaLibraryDeps.newInstance(args, buildRuleResolver))
+            .setDeps(JavaLibraryDeps.newInstance(args, graphBuilder))
             .setTests(args.getTests())
             .setManifestFile(args.getManifestFile())
             .setMavenCoords(args.getMavenCoords())

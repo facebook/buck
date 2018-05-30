@@ -52,8 +52,8 @@ import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphCache;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.knowntypes.DefaultKnownBuildRuleTypesFactory;
 import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypesProvider;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
@@ -344,10 +344,10 @@ public class DefaultParserTest {
 
     TargetGraph targetGraph =
         parser.buildTargetGraph(eventBus, cell, false, executorService, buildTargets);
-    BuildRuleResolver resolver = buildActionGraph(eventBus, targetGraph, cell);
-    BuildRule fooRule = resolver.requireRule(fooTarget);
+    ActionGraphBuilder graphBuilder = buildActionGraph(eventBus, targetGraph, cell);
+    BuildRule fooRule = graphBuilder.requireRule(fooTarget);
     assertNotNull(fooRule);
-    BuildRule barRule = resolver.requireRule(barTarget);
+    BuildRule barRule = graphBuilder.requireRule(barTarget);
     assertNotNull(barRule);
 
     Iterable<ParseEvent> events = Iterables.filter(listener.getEvents(), ParseEvent.class);
@@ -1871,9 +1871,9 @@ public class DefaultParserTest {
     {
       TargetGraph targetGraph =
           parser.buildTargetGraph(eventBus, cell, false, executorService, buildTargets);
-      BuildRuleResolver resolver = buildActionGraph(eventBus, targetGraph, cell);
+      ActionGraphBuilder graphBuilder = buildActionGraph(eventBus, targetGraph, cell);
 
-      JavaLibrary libRule = (JavaLibrary) resolver.requireRule(libTarget);
+      JavaLibrary libRule = (JavaLibrary) graphBuilder.requireRule(libTarget);
       assertEquals(
           ImmutableSortedSet.of(PathSourcePath.of(filesystem, Paths.get("foo/bar/Bar.java"))),
           libRule.getJavaSrcs());
@@ -1888,9 +1888,9 @@ public class DefaultParserTest {
     {
       TargetGraph targetGraph =
           parser.buildTargetGraph(eventBus, cell, false, executorService, buildTargets);
-      BuildRuleResolver resolver = buildActionGraph(eventBus, targetGraph, cell);
+      ActionGraphBuilder graphBuilder = buildActionGraph(eventBus, targetGraph, cell);
 
-      JavaLibrary libRule = (JavaLibrary) resolver.requireRule(libTarget);
+      JavaLibrary libRule = (JavaLibrary) graphBuilder.requireRule(libTarget);
       assertEquals(
           ImmutableSet.of(
               PathSourcePath.of(filesystem, Paths.get("foo/bar/Bar.java")),
@@ -1923,9 +1923,9 @@ public class DefaultParserTest {
     {
       TargetGraph targetGraph =
           parser.buildTargetGraph(eventBus, cell, false, executorService, buildTargets);
-      BuildRuleResolver resolver = buildActionGraph(eventBus, targetGraph, cell);
+      ActionGraphBuilder graphBuilder = buildActionGraph(eventBus, targetGraph, cell);
 
-      JavaLibrary libRule = (JavaLibrary) resolver.requireRule(libTarget);
+      JavaLibrary libRule = (JavaLibrary) graphBuilder.requireRule(libTarget);
 
       assertEquals(
           ImmutableSortedSet.of(
@@ -1943,9 +1943,9 @@ public class DefaultParserTest {
     {
       TargetGraph targetGraph =
           parser.buildTargetGraph(eventBus, cell, false, executorService, buildTargets);
-      BuildRuleResolver resolver = buildActionGraph(eventBus, targetGraph, cell);
+      ActionGraphBuilder graphBuilder = buildActionGraph(eventBus, targetGraph, cell);
 
-      JavaLibrary libRule = (JavaLibrary) resolver.requireRule(libTarget);
+      JavaLibrary libRule = (JavaLibrary) graphBuilder.requireRule(libTarget);
       assertEquals(
           ImmutableSortedSet.of(PathSourcePath.of(filesystem, Paths.get("foo/bar/Bar.java"))),
           libRule.getJavaSrcs());
@@ -2627,7 +2627,7 @@ public class DefaultParserTest {
     assertEquals(targetNodes.iterator().next().getBuildTarget().getShortName(), "string");
   }
 
-  private BuildRuleResolver buildActionGraph(
+  private ActionGraphBuilder buildActionGraph(
       BuckEventBus eventBus, TargetGraph targetGraph, Cell cell) {
     return Preconditions.checkNotNull(
             new ActionGraphCache(1)
@@ -2643,7 +2643,7 @@ public class DefaultParserTest {
                               "should not use parallel executor for action graph construction in test");
                         },
                         ignored -> {})))
-        .getResolver();
+        .getActionGraphBuilder();
   }
 
   /**

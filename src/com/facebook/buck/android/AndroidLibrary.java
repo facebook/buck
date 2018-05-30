@@ -22,8 +22,8 @@ import com.facebook.buck.core.cell.resolver.CellPathResolver;
 import com.facebook.buck.core.description.BuildRuleParams;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
@@ -63,7 +63,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
       ProjectFilesystem projectFilesystem,
       ToolchainProvider toolchainProvider,
       BuildRuleParams params,
-      BuildRuleResolver buildRuleResolver,
+      ActionGraphBuilder graphBuilder,
       CellPathResolver cellPathResolver,
       JavaBuckConfig javaBuckConfig,
       JavacOptions javacOptions,
@@ -74,7 +74,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
         projectFilesystem,
         toolchainProvider,
         params,
-        buildRuleResolver,
+        graphBuilder,
         cellPathResolver,
         javaBuckConfig,
         javacOptions,
@@ -134,7 +134,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
   }
 
   public static class Builder {
-    private final BuildRuleResolver buildRuleResolver;
+    private final ActionGraphBuilder graphBuilder;
     private final DefaultJavaLibraryRules delegate;
     private final AndroidLibraryGraphEnhancer graphEnhancer;
 
@@ -143,20 +143,20 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
         ProjectFilesystem projectFilesystem,
         ToolchainProvider toolchainProvider,
         BuildRuleParams params,
-        BuildRuleResolver buildRuleResolver,
+        ActionGraphBuilder graphBuilder,
         CellPathResolver cellPathResolver,
         JavaBuckConfig javaBuckConfig,
         JavacOptions javacOptions,
         AndroidLibraryDescription.CoreArg args,
         ConfiguredCompilerFactory compilerFactory) {
-      this.buildRuleResolver = buildRuleResolver;
+      this.graphBuilder = graphBuilder;
       DefaultJavaLibraryRules.Builder delegateBuilder =
           new DefaultJavaLibraryRules.Builder(
               buildTarget,
               projectFilesystem,
               toolchainProvider,
               params,
-              buildRuleResolver,
+              graphBuilder,
               cellPathResolver,
               compilerFactory,
               javaBuckConfig,
@@ -216,8 +216,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
               libraryTarget,
               projectFilesystem,
               ImmutableSortedSet.copyOf(Iterables.concat(deps.getDeps(), deps.getProvidedDeps())),
-              JavacFactory.create(
-                  new SourcePathRuleFinder(buildRuleResolver), javaBuckConfig, args),
+              JavacFactory.create(new SourcePathRuleFinder(graphBuilder), javaBuckConfig, args),
               javacOptions,
               DependencyMode.FIRST_ORDER,
               /* forceFinalResourceIds */ false,
@@ -230,8 +229,8 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
           .ifPresent(
               dummyRDotJava -> {
                 delegateBuilder.setDeps(
-                    new JavaLibraryDeps.Builder(buildRuleResolver)
-                        .from(JavaLibraryDeps.newInstance(args, buildRuleResolver))
+                    new JavaLibraryDeps.Builder(graphBuilder)
+                        .from(JavaLibraryDeps.newInstance(args, graphBuilder))
                         .addDepTargets(dummyRDotJava.getBuildTarget())
                         .build());
               });
@@ -248,11 +247,11 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
     }
 
     public DummyRDotJava buildDummyRDotJava() {
-      return graphEnhancer.getBuildableForAndroidResources(buildRuleResolver, true).get();
+      return graphEnhancer.getBuildableForAndroidResources(graphBuilder, true).get();
     }
 
     public Optional<DummyRDotJava> getDummyRDotJava() {
-      return graphEnhancer.getBuildableForAndroidResources(buildRuleResolver, false);
+      return graphEnhancer.getBuildableForAndroidResources(graphBuilder, false);
     }
   }
 }
