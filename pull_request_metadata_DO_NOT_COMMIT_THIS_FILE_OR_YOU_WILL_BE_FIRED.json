@@ -1,0 +1,16 @@
+{
+    "_README_WHAT_IS_THIS_DIFF_": "This diff is temporary, and will be replaced once the \"convert-pull-request-to-internal-diff\" sandcastle job finishes. For more details, see https:\/\/fburl.com\/pr-import-on-sandcastle",
+    "@nocommit": "This temporary diff should not be landed.",
+    "repository": {
+        "fbid": 184700698365387,
+        "name": "facebook\/buck"
+    },
+    "pull_request": {
+        "fbid": 2072251689713262,
+        "number": 1870,
+        "name": "Use a non blocking executor for dir artifact cleanup",
+        "author": "kageiit",
+        "initiator": "sbalabanov"
+    },
+    "head_sha": "85cd147bee6eb0e1247c741cb32d8d00504d7533"
+}
