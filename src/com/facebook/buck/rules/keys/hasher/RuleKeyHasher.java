@@ -65,6 +65,7 @@ public interface RuleKeyHasher<HASH> {
   enum Wrapper {
     SUPPLIER,
     OPTIONAL,
+    OPTIONAL_INT,
     EITHER_LEFT,
     EITHER_RIGHT,
     BUILD_RULE,

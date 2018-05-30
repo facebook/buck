@@ -56,6 +56,8 @@ public class RuleKeyHasherTypes {
         return (byte) 'S';
       case OPTIONAL:
         return (byte) 'O';
+      case OPTIONAL_INT:
+        return (byte) 'I';
       case EITHER_LEFT:
         return (byte) 'L';
       case EITHER_RIGHT:
