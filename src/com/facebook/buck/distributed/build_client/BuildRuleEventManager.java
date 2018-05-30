@@ -110,8 +110,10 @@ public class BuildRuleEventManager {
           "flushAllPendingBuildRuleFinishedEvents(..) called without first receiving ALL_BUILD_RULES_FINISHED_EVENT");
     }
 
-    if (pendingBuildRuleFinishedEvent.size() == 0) {
-      return;
+    synchronized (this) {
+      if (pendingBuildRuleFinishedEvent.size() == 0) {
+        return;
+      }
     }
 
     List<TimestampedBuildRuleFinishedEvent> eventsToPublish = Lists.newArrayList();
@@ -145,8 +147,10 @@ public class BuildRuleEventManager {
    * Publishes results of pending BuildRuleFinishedEvent that have already synchronized with cache.
    */
   public void publishCacheSynchronizedBuildRuleFinishedEvents() {
-    if (pendingBuildRuleFinishedEvent.size() == 0) {
-      return;
+    synchronized (this) {
+      if (pendingBuildRuleFinishedEvent.size() == 0) {
+        return;
+      }
     }
 
     List<TimestampedBuildRuleFinishedEvent> eventsToPublish = Lists.newArrayList();
@@ -165,6 +169,7 @@ public class BuildRuleEventManager {
     Thread.sleep(millis);
   }
 
+  @GuardedBy("this")
   private void findAllCacheSynchronizedBuildRules(
       List<TimestampedBuildRuleFinishedEvent> eventsToPublish) {
     long currentTimeMillis = clock.currentTimeMillis();
