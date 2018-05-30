@@ -145,6 +145,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
     Path genOutput =
         BuildTargets.getGenPath(
             projectFilesystem, invokingRule, "__%s_gen_sources__/generated" + SRC_ZIP);
+    boolean generatingCode = !javacOptions.getAnnotationProcessingParams().isEmpty();
 
     // Only invoke kotlinc if we have kotlin files.
     if (sourceFilePaths.stream().anyMatch(PathMatchers.KOTLIN_PATH_MATCHER::matches)) {
@@ -172,7 +173,6 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
               .addAll(kotlinHomeLibraries)
               .build();
 
-      boolean generatingCode = !javacOptions.getAnnotationProcessingParams().isEmpty();
       if (generatingCode) {
 
         addAnnotationGenFolderStep(
@@ -233,8 +233,14 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
               Optional.of(parameters.getWorkingDirectory())));
     }
 
-    ImmutableSortedSet<Path> sources =
-        ImmutableSortedSet.<Path>naturalOrder().add(genOutput).addAll(sourceFilePaths).build();
+    ImmutableSortedSet.Builder<Path> sourceBuilder =
+        ImmutableSortedSet.<Path>naturalOrder().addAll(sourceFilePaths);
+
+    if (generatingCode) {
+      sourceBuilder.add(genOutput);
+    }
+
+    ImmutableSortedSet<Path> sources = sourceBuilder.build();
 
     ImmutableSortedSet<Path> javaSourceFiles =
         ImmutableSortedSet.copyOf(
