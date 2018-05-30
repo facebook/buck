@@ -91,6 +91,15 @@ public class AndroidLibraryIntegrationTest extends AbiCompilationModeTest {
     result.assertSuccess();
   }
 
+  @Test
+  public void testAndroidKotlinLibraryNoKotlinSourcesCompilation() throws Exception {
+    AssumeAndroidPlatform.assumeSdkIsAvailable();
+    KotlinTestAssumptions.assumeCompilerAvailable(workspace.asCell().getBuckConfig());
+    ProcessResult result =
+        workspace.runBuckBuild("//kotlin/com/sample/lib:lib_mixed_no_kotlin_sources");
+    result.assertSuccess();
+  }
+
   @Test(timeout = (3 * 60 * 1000))
   public void testAndroidScalaLibraryDoesNotUseTransitiveResources()
       throws InterruptedException, IOException {
