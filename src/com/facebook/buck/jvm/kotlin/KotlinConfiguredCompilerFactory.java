@@ -48,7 +48,6 @@ public class KotlinConfiguredCompilerFactory extends ConfiguredCompilerFactory {
       KotlinBuckConfig kotlinBuckConfig,
       JavaBuckConfig javaBuckConfig,
       Function<ToolchainProvider, ExtraClasspathProvider> extraClasspathProviderSupplier) {
-    super();
     this.kotlinBuckConfig = kotlinBuckConfig;
     this.javaBuckConfig = javaBuckConfig;
     this.extraClasspathProviderSupplier = extraClasspathProviderSupplier;

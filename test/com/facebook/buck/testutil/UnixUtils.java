@@ -27,9 +27,7 @@ public abstract class UnixUtils extends PlatformUtils {
           .toAbsolutePath()
           .toString();
 
-  protected UnixUtils() {
-    super();
-  }
+  protected UnixUtils() {}
 
   /** Returns a command builder for a unix platform */
   @Override

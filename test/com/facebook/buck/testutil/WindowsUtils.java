@@ -34,9 +34,7 @@ public class WindowsUtils extends PlatformUtils {
     return VS_TOOLCHAIN_DIRS;
   }
 
-  public WindowsUtils() {
-    super();
-  }
+  public WindowsUtils() {}
 
   /** Returns the flavor of build rules for Windows */
   @Override

@@ -22,9 +22,7 @@ import java.util.Optional;
 public class LinuxUtils extends UnixUtils {
   private static final String OBJCOPY = "objcopy";
 
-  public LinuxUtils() {
-    super();
-  }
+  public LinuxUtils() {}
 
   @Override
   public Optional<String> getObjcopy() {

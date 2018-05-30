@@ -18,7 +18,5 @@ package com.facebook.buck.testutil;
 
 /** An implementation of {@link UnixUtils} for MacOS platforms */
 public class MacOSUtils extends UnixUtils {
-  public MacOSUtils() {
-    super();
-  }
+  public MacOSUtils() {}
 }
