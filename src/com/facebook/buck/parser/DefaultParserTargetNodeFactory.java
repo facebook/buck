@@ -41,6 +41,7 @@ import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.ParamInfoException;
 import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
 import com.facebook.buck.rules.visibility.VisibilityPattern;
+import com.facebook.buck.rules.visibility.VisibilityPatternFactory;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.cache.LoadingCache;
@@ -67,6 +68,7 @@ public class DefaultParserTargetNodeFactory
   private final Optional<LoadingCache<Cell, BuildFileTree>> buildFileTrees;
   private final TargetNodeListener<TargetNode<?, ?>> nodeListener;
   private final TargetNodeFactory targetNodeFactory;
+  private final VisibilityPatternFactory visibilityPatternFactory;
   private final RuleKeyConfiguration ruleKeyConfiguration;
 
   private DefaultParserTargetNodeFactory(
@@ -74,11 +76,13 @@ public class DefaultParserTargetNodeFactory
       Optional<LoadingCache<Cell, BuildFileTree>> buildFileTrees,
       TargetNodeListener<TargetNode<?, ?>> nodeListener,
       TargetNodeFactory targetNodeFactory,
+      VisibilityPatternFactory visibilityPatternFactory,
       RuleKeyConfiguration ruleKeyConfiguration) {
     this.marshaller = marshaller;
     this.buildFileTrees = buildFileTrees;
     this.nodeListener = nodeListener;
     this.targetNodeFactory = targetNodeFactory;
+    this.visibilityPatternFactory = visibilityPatternFactory;
     this.ruleKeyConfiguration = ruleKeyConfiguration;
   }
 
@@ -87,18 +91,21 @@ public class DefaultParserTargetNodeFactory
       LoadingCache<Cell, BuildFileTree> buildFileTrees,
       TargetNodeListener<TargetNode<?, ?>> nodeListener,
       TargetNodeFactory targetNodeFactory,
+      VisibilityPatternFactory visibilityPatternFactory,
       RuleKeyConfiguration ruleKeyConfiguration) {
     return new DefaultParserTargetNodeFactory(
         marshaller,
         Optional.of(buildFileTrees),
         nodeListener,
         targetNodeFactory,
+        visibilityPatternFactory,
         ruleKeyConfiguration);
   }
 
   public static ParserTargetNodeFactory<Map<String, Object>> createForDistributedBuild(
       ConstructorArgMarshaller marshaller,
       TargetNodeFactory targetNodeFactory,
+      VisibilityPatternFactory visibilityPatternFactory,
       RuleKeyConfiguration ruleKeyConfiguration) {
     return new DefaultParserTargetNodeFactory(
         marshaller,
@@ -107,6 +114,7 @@ public class DefaultParserTargetNodeFactory
           // No-op.
         },
         targetNodeFactory,
+        visibilityPatternFactory,
         ruleKeyConfiguration);
   }
 
@@ -142,10 +150,10 @@ public class DefaultParserTargetNodeFactory
                 declaredDeps,
                 rawNode);
         visibilityPatterns =
-            ConstructorArgMarshaller.populateVisibilityPatterns(
+            visibilityPatternFactory.createFromStringList(
                 cell.getCellPathResolver(), "visibility", rawNode.get("visibility"), target);
         withinViewPatterns =
-            ConstructorArgMarshaller.populateVisibilityPatterns(
+            visibilityPatternFactory.createFromStringList(
                 cell.getCellPathResolver(), "within_view", rawNode.get("within_view"), target);
       }
 

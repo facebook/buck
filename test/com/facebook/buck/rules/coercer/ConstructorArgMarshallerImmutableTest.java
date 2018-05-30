@@ -556,12 +556,6 @@ public class ConstructorArgMarshallerImmutableTest {
         observedValues);
   }
 
-  @Test(expected = HumanReadableException.class)
-  public void bogusVisibilityGivesFriendlyError() {
-    ConstructorArgMarshaller.populateVisibilityPatterns(
-        createCellRoots(filesystem), "visibility", ImmutableList.of(":marmosets"), TARGET);
-  }
-
   @Test
   public void derivedMethodsAreIgnored() throws Exception {
     DtoWithDerivedAndOrdinaryMethods built =

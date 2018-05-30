@@ -23,6 +23,7 @@ import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypesProvider;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
+import com.facebook.buck.rules.visibility.VisibilityPatternFactory;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 
@@ -71,6 +72,7 @@ public class PerBuildStateFactory {
                 daemonicParserState.getBuildFileTrees(),
                 symlinkCheckers,
                 new TargetNodeFactory(typeCoercerFactory),
+                new VisibilityPatternFactory(),
                 rootCell.getRuleKeyConfiguration()),
             parserConfig.getEnableParallelParsing()
                 ? executorService

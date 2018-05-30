@@ -17,12 +17,9 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.resolver.CellPathResolver;
-import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.rules.visibility.VisibilityPattern;
-import com.facebook.buck.rules.visibility.VisibilityPatternParser;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -33,7 +30,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import javax.annotation.CheckReturnValue;
-import javax.annotation.Nullable;
 
 /**
  * Used to derive information from the constructor args returned by {@link
@@ -109,35 +105,5 @@ public class ConstructorArgMarshaller {
           dto);
     }
     return dto;
-  }
-
-  @SuppressWarnings("unchecked")
-  public static ImmutableSet<VisibilityPattern> populateVisibilityPatterns(
-      CellPathResolver cellNames, String paramName, @Nullable Object value, BuildTarget target) {
-    if (value == null) {
-      return ImmutableSet.of();
-    }
-    if (!(value instanceof List)) {
-      throw new RuntimeException(
-          String.format("Expected an array for %s but was %s", paramName, value));
-    }
-    ImmutableSet.Builder<VisibilityPattern> patterns = new ImmutableSet.Builder<>();
-    VisibilityPatternParser parser = new VisibilityPatternParser();
-    for (String visibility : (List<String>) value) {
-      try {
-        patterns.add(parser.parse(cellNames, visibility));
-      } catch (IllegalArgumentException e) {
-        throw new HumanReadableException(
-            e,
-            "Bad visibility expression: %s listed %s in its %s argument, but only %s "
-                + "or fully qualified target patterns are allowed (i.e. those starting with "
-                + "// or a cell).",
-            target.getFullyQualifiedName(),
-            visibility,
-            paramName,
-            VisibilityPatternParser.VISIBILITY_PUBLIC);
-      }
-    }
-    return patterns.build();
   }
 }

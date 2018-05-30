@@ -1,0 +1,12 @@
+load("//tools/build_rules:java_rules.bzl", "java_test")
+
+java_test(
+    name = "visibility",
+    srcs = glob(["*Test.java"]),
+    deps = [
+        "//src/com/facebook/buck/rules/visibility:visibility",
+        "//test/com/facebook/buck/core/cell:testutil",
+        "//test/com/facebook/buck/model:testutil",
+        "//third-party/java/junit:junit",
+    ],
+)
