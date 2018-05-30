@@ -18,7 +18,7 @@ package com.facebook.buck.skylark.function;
 
 import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.packages.Info;
-import com.google.devtools.build.lib.packages.NativeProvider;
+import com.google.devtools.build.lib.packages.NativeProvider.StructProvider;
 import com.google.devtools.build.lib.skylarkbuildapi.StructApi;
 import com.google.devtools.build.lib.skylarkinterface.Param;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkSignature;
@@ -44,7 +44,7 @@ public class SkylarkExtensionFunctions {
     extraKeywords = @Param(name = "kwargs", doc = "the struct attributes."),
     useLocation = true
   )
-  private static final NativeProvider<?> struct = NativeProvider.STRUCT;
+  private static final StructProvider struct = StructProvider.STRUCT;
 
   @SkylarkSignature(
     name = "to_json",

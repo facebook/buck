@@ -20,7 +20,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.devtools.build.lib.events.Location;
-import com.google.devtools.build.lib.packages.NativeProvider;
+import com.google.devtools.build.lib.packages.NativeProvider.StructProvider;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.Runtime;
 import com.google.devtools.build.lib.syntax.SkylarkList;
@@ -42,7 +42,7 @@ public class JsonPrinterTest {
   public void structIsPrintedAsObject() throws Exception {
     assertEquals(
         "{\"foo\":\"bar\"}",
-        print(NativeProvider.STRUCT.create(ImmutableMap.of("foo", "bar"), "")));
+        print(StructProvider.STRUCT.create(ImmutableMap.of("foo", "bar"), "")));
   }
 
   @Test
@@ -50,9 +50,9 @@ public class JsonPrinterTest {
     assertEquals(
         "{\"foo\":{\"key\":\"value\"}}",
         print(
-            NativeProvider.STRUCT.create(
+            StructProvider.STRUCT.create(
                 ImmutableMap.of(
-                    "foo", NativeProvider.STRUCT.create(ImmutableMap.of("key", "value"), "")),
+                    "foo", StructProvider.STRUCT.create(ImmutableMap.of("key", "value"), "")),
                 "")));
   }
 

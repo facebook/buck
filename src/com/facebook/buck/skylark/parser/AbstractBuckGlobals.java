@@ -27,7 +27,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.devtools.build.lib.packages.BazelLibrary;
-import com.google.devtools.build.lib.packages.NativeProvider;
+import com.google.devtools.build.lib.packages.NativeProvider.StructProvider;
 import com.google.devtools.build.lib.syntax.BuiltinFunction;
 import com.google.devtools.build.lib.syntax.ClassObject;
 import com.google.devtools.build.lib.syntax.Environment;
@@ -109,7 +109,7 @@ abstract class AbstractBuckGlobals {
     builder.put("host_info", HostInfo.create());
     BuiltinFunction repositoryName = SkylarkNativeModule.repositoryName;
     builder.put(repositoryName.getName(), repositoryName);
-    return NativeProvider.STRUCT.create(builder.build(), "no native function or rule '%s'");
+    return StructProvider.STRUCT.create(builder.build(), "no native function or rule '%s'");
   }
 
   /**

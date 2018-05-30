@@ -20,7 +20,7 @@ import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableMap;
 import com.google.devtools.build.lib.packages.Info;
-import com.google.devtools.build.lib.packages.NativeProvider;
+import com.google.devtools.build.lib.packages.NativeProvider.StructProvider;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkSignature;
 import com.google.devtools.build.lib.syntax.BuiltinFunction;
 import com.google.devtools.build.lib.syntax.SkylarkSignatureProcessor;
@@ -60,12 +60,12 @@ public class HostInfo {
             .put("is_unknown", hostArchitecture == Architecture.UNKNOWN)
             .put("is_x86_64", hostArchitecture == Architecture.X86_64)
             .build();
-    return NativeProvider.STRUCT.create(
+    return StructProvider.STRUCT.create(
         ImmutableMap.of(
             "os",
-            NativeProvider.STRUCT.create(os, "no such property on os struct: '%s'"),
+            StructProvider.STRUCT.create(os, "no such property on os struct: '%s'"),
             "arch",
-            NativeProvider.STRUCT.create(arch, "no such property on arch struct: '%s'")),
+            StructProvider.STRUCT.create(arch, "no such property on arch struct: '%s'")),
         "no such property on host_info struct: '%s'");
   }
 
