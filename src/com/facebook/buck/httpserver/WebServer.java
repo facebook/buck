@@ -137,8 +137,7 @@ public class WebServer {
     if (port.isPresent()) {
       LOG.debug("Web server is started on port %d.", port.get());
       // announce web server by creating a file in buck-out
-      Path filePath =
-          this.projectFilesystem.getBuckPaths().getConfiguredBuckOut().resolve(HTTP_PORT_FILE);
+      Path filePath = this.projectFilesystem.getBuckPaths().getBuckOut().resolve(HTTP_PORT_FILE);
       try {
         Files.write(filePath, String.valueOf(port.get()).getBytes(StandardCharsets.UTF_8));
       } catch (IOException e) {
