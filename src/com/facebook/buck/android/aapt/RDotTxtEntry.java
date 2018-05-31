@@ -57,6 +57,7 @@ public class RDotTxtEntry implements Comparable<RDotTxtEntry> {
     INTERPOLATOR,
     LAYOUT,
     MENU,
+    NAVIGATION,
     MIPMAP,
     PLURALS,
     RAW,
