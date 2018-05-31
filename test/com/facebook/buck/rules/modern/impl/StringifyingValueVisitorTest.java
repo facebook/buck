@@ -74,6 +74,13 @@ public class StringifyingValueVisitorTest extends AbstractValueVisitorTest {
         stringify(new WithOptional()));
   }
 
+  @Test
+  @Override
+  public void optionalInt() {
+    assertEquals(
+        "present:boolean(true)integer(7)\nempty:boolean(false)", stringify(new WithOptionalInt()));
+  }
+
   @Override
   @Test
   public void simple() {

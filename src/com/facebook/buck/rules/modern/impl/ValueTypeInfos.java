@@ -26,6 +26,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.primitives.Primitives;
 import java.lang.reflect.Type;
 import java.util.Optional;
+import java.util.OptionalInt;
 
 class ValueTypeInfos {
   static ValueTypeInfo<?> forSimpleType(Type type) {
@@ -49,6 +50,8 @@ class ValueTypeInfos {
       return FloatValueTypeInfo.INSTANCE;
     } else if (rawClass == Double.class) {
       return DoubleValueTypeInfo.INSTANCE;
+    } else if (rawClass == OptionalInt.class) {
+      return OptionalIntValueTypeInfo.INSTANCE;
     }
     throw new RuntimeException();
   }

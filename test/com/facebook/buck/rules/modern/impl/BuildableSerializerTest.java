@@ -198,6 +198,12 @@ public class BuildableSerializerTest extends AbstractValueVisitorTest {
 
   @Test
   @Override
+  public void optionalInt() throws Exception {
+    test(new WithOptionalInt());
+  }
+
+  @Test
+  @Override
   public void simple() throws IOException {
     test(new Simple());
   }

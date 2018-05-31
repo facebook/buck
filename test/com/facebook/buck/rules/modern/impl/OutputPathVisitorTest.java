@@ -150,6 +150,11 @@ public class OutputPathVisitorTest extends AbstractValueVisitorTest {
   }
 
   @Override
+  public void optionalInt() {
+    MoreAsserts.assertIterablesEquals(ImmutableList.of(), getOutputs(new WithOptionalInt()));
+  }
+
+  @Override
   @Test
   public void simple() {
     MoreAsserts.assertIterablesEquals(ImmutableList.of(), getOutputs(new Simple()));

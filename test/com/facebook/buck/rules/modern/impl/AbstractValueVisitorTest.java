@@ -45,6 +45,7 @@ import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Paths;
 import java.util.Optional;
+import java.util.OptionalInt;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
 import javax.annotation.Nullable;
@@ -79,6 +80,9 @@ public abstract class AbstractValueVisitorTest {
 
   @Test
   public abstract void optional() throws Exception;
+
+  @Test
+  public abstract void optionalInt() throws Exception;
 
   @Test
   public abstract void simple() throws Exception;
@@ -231,6 +235,11 @@ public abstract class AbstractValueVisitorTest {
   public static class WithOptional implements FakeBuildable {
     @AddToRuleKey private final Optional<String> present = Optional.of("hello");
     @AddToRuleKey private final Optional<Integer> empty = Optional.empty();
+  }
+
+  public static class WithOptionalInt implements FakeBuildable {
+    @AddToRuleKey private final OptionalInt present = OptionalInt.of(7);
+    @AddToRuleKey private final OptionalInt empty = OptionalInt.empty();
   }
 
   public static class Simple implements FakeBuildable {

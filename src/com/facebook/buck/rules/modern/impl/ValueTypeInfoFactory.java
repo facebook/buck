@@ -43,6 +43,7 @@ import java.lang.reflect.TypeVariable;
 import java.lang.reflect.WildcardType;
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.OptionalInt;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
@@ -96,7 +97,8 @@ public class ValueTypeInfoFactory {
           || rawClass.equals(Integer.class)
           || rawClass.equals(Long.class)
           || rawClass.equals(Float.class)
-          || rawClass.equals(Double.class);
+          || rawClass.equals(Double.class)
+          || rawClass.equals(OptionalInt.class);
     } else if (type instanceof WildcardType) {
       WildcardType wildcardType = (WildcardType) type;
       Type[] upperBounds = wildcardType.getUpperBounds();
