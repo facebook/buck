@@ -20,7 +20,7 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.ide.intellij.model.IjModule;
 import com.google.common.base.Ascii;
-import java.util.Optional;
+import java.util.OptionalInt;
 
 /** Indicates how to aggregate {@link TargetNode}s into {@link IjModule}s. */
 public class AggregationMode {
@@ -31,10 +31,10 @@ public class AggregationMode {
   public static final AggregationMode NONE = new AggregationMode(Integer.MAX_VALUE);
   public static final AggregationMode SHALLOW = new AggregationMode(SHALLOW_MAX_PATH_LENGTH);
 
-  private Optional<Integer> minimumDepth;
+  private OptionalInt minimumDepth;
 
   AggregationMode() {
-    minimumDepth = Optional.empty();
+    minimumDepth = OptionalInt.empty();
   }
 
   AggregationMode(int minimumDepth) {
@@ -43,7 +43,7 @@ public class AggregationMode {
           "Aggregation level must be a positive integer (got " + minimumDepth + ")");
     }
 
-    this.minimumDepth = Optional.of(minimumDepth);
+    this.minimumDepth = OptionalInt.of(minimumDepth);
   }
 
   public int getGraphMinimumDepth(int graphSize) {

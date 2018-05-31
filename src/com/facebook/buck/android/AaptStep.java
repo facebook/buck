@@ -148,15 +148,17 @@ public class AaptStep extends ShellStep {
     builder.add("--ignore-assets", IGNORE_ASSETS_PATTERN);
 
     if (manifestEntries.getMinSdkVersion().isPresent()) {
-      builder.add("--min-sdk-version", manifestEntries.getMinSdkVersion().get().toString());
+      builder.add(
+          "--min-sdk-version", String.valueOf(manifestEntries.getMinSdkVersion().getAsInt()));
     }
 
     if (manifestEntries.getTargetSdkVersion().isPresent()) {
-      builder.add("--target-sdk-version", manifestEntries.getTargetSdkVersion().get().toString());
+      builder.add(
+          "--target-sdk-version", String.valueOf(manifestEntries.getTargetSdkVersion().getAsInt()));
     }
 
     if (manifestEntries.getVersionCode().isPresent()) {
-      builder.add("--version-code", manifestEntries.getVersionCode().get().toString());
+      builder.add("--version-code", String.valueOf(manifestEntries.getVersionCode().getAsInt()));
     }
 
     if (manifestEntries.getVersionName().isPresent()) {

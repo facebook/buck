@@ -23,6 +23,7 @@ import com.facebook.buck.core.rulekey.RuleKeyObjectSink;
 import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.OptionalInt;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.annotation.Nullable;
 import org.junit.Test;
@@ -60,15 +61,15 @@ public class ManifestEntriesTest {
           @Override
           public RuleKeyObjectSink setReflectively(String key, @Nullable Object val) {
             if ("minSdkVersion".equals(key)) {
-              assertEquals(Optional.of(5), val);
+              assertEquals(OptionalInt.of(5), val);
               minSdkVersionSet.set(true);
               return this;
             } else if ("targetSdkVersion".equals(key)) {
-              assertEquals(Optional.of(7), val);
+              assertEquals(OptionalInt.of(7), val);
               targetSdkVersionSet.set(true);
               return this;
             } else if ("versionCode".equals(key)) {
-              assertEquals(Optional.of(11), val);
+              assertEquals(OptionalInt.of(11), val);
               versionCodeSet.set(true);
               return this;
             } else if ("versionName".equals(key)) {

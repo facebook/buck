@@ -73,6 +73,7 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.OptionalInt;
 import java.util.SortedSet;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -123,7 +124,7 @@ public class AndroidBinaryGraphEnhancer {
   private final EnumSet<ExopackageMode> exopackageModes;
   private final BuildConfigFields buildConfigValues;
   private final Optional<SourcePath> buildConfigValuesFile;
-  private final Optional<Integer> xzCompressionLevel;
+  private final OptionalInt xzCompressionLevel;
   private final AndroidNativeLibsPackageableGraphEnhancer nativeLibsEnhancer;
   private final APKModuleGraph apkModuleGraph;
   private final Optional<BuildTarget> nativeLibraryProguardConfigGenerator;
@@ -171,7 +172,7 @@ public class AndroidBinaryGraphEnhancer {
       EnumSet<ExopackageMode> exopackageModes,
       BuildConfigFields buildConfigValues,
       Optional<SourcePath> buildConfigValuesFile,
-      Optional<Integer> xzCompressionLevel,
+      OptionalInt xzCompressionLevel,
       boolean trimResourceIds,
       Optional<String> keepResourcePattern,
       boolean ignoreAaptProguardConfig,
@@ -688,7 +689,7 @@ public class AndroidBinaryGraphEnhancer {
   private NonPreDexedDexBuildable createNonPredexedDexBuildable(
       DexSplitMode dexSplitMode,
       ImmutableSortedSet<JavaLibrary> rulesToExcludeFromDex,
-      Optional<Integer> xzCompressionLevel,
+      OptionalInt xzCompressionLevel,
       Optional<SourcePath> aaptGeneratedProguardConfigFile,
       ImmutableList<SourcePath> proguardConfigs,
       AndroidPackageableCollection packageableCollection,

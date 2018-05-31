@@ -119,7 +119,8 @@ public class ClientStatsTrackerTest {
     DistBuildClientStats stats = tracker.generateStats();
 
     Assert.assertEquals(STAMPEDE_ID_ONE, stats.stampedeId());
-    Assert.assertEquals(DISTRIBUTED_BUILD_EXIT_CODE, (long) stats.distributedBuildExitCode().get());
+    Assert.assertEquals(
+        DISTRIBUTED_BUILD_EXIT_CODE, (long) stats.distributedBuildExitCode().getAsInt());
     Assert.assertEquals(IS_LOCAL_FALLBACK_BUILD_ENABLED, stats.isLocalFallbackBuildEnabled().get());
     Assert.assertEquals(BUCK_CLIENT_ERROR_MESSAGE, stats.buckClientErrorMessage().get());
     Assert.assertEquals(BUILD_LABEL, stats.buildLabel());
@@ -153,7 +154,7 @@ public class ClientStatsTrackerTest {
 
     Assert.assertTrue(stats.performedLocalBuild());
     Assert.assertTrue(stats.localBuildExitCode().isPresent());
-    Assert.assertEquals(LOCAL_BUILD_EXIT_CODE, (long) stats.localBuildExitCode().get());
+    Assert.assertEquals(LOCAL_BUILD_EXIT_CODE, (long) stats.localBuildExitCode().getAsInt());
     Assert.assertEquals(PERFORM_LOCAL_BUILD_DURATION, (long) stats.localBuildDurationMs().get());
     Assert.assertEquals(
         POST_BUILD_ANALYSIS_DURATION_MS, (long) stats.postBuildAnalysisDurationMs().get());
@@ -212,7 +213,8 @@ public class ClientStatsTrackerTest {
   private void assertCommonStats(DistBuildClientStats stats) {
     Assert.assertEquals(STAMPEDE_ID_ONE, stats.stampedeId());
     Assert.assertEquals(IS_LOCAL_FALLBACK_BUILD_ENABLED, stats.isLocalFallbackBuildEnabled().get());
-    Assert.assertEquals(DISTRIBUTED_BUILD_EXIT_CODE, (long) stats.distributedBuildExitCode().get());
+    Assert.assertEquals(
+        DISTRIBUTED_BUILD_EXIT_CODE, (long) stats.distributedBuildExitCode().getAsInt());
     Assert.assertEquals(
         LOCAL_GRAPH_CONSTRUCTION_DURATION, (long) stats.localGraphConstructionDurationMs().get());
     Assert.assertEquals(

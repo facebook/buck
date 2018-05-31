@@ -60,9 +60,9 @@ public class ManifestEntriesTypeCoercerTest {
             createCellRoots(filesystem), filesystem, basePath, /* object */ inputMap);
 
     assertTrue(result.getDebugMode().get());
-    assertEquals(Integer.valueOf(3), result.getMinSdkVersion().get());
-    assertEquals(Integer.valueOf(5), result.getTargetSdkVersion().get());
-    assertEquals(Integer.valueOf(7), result.getVersionCode().get());
+    assertEquals(3, result.getMinSdkVersion().getAsInt());
+    assertEquals(5, result.getTargetSdkVersion().getAsInt());
+    assertEquals(7, result.getVersionCode().getAsInt());
     assertEquals("eleven", result.getVersionName().get());
   }
 
@@ -89,8 +89,8 @@ public class ManifestEntriesTypeCoercerTest {
             createCellRoots(filesystem), filesystem, basePath, /* object */ inputMap);
 
     assertTrue(result.getDebugMode().get());
-    assertEquals(Integer.valueOf(3), result.getMinSdkVersion().get());
-    assertEquals(Integer.valueOf(5), result.getTargetSdkVersion().get());
+    assertEquals(3, result.getMinSdkVersion().getAsInt());
+    assertEquals(5, result.getTargetSdkVersion().getAsInt());
     assertFalse(result.getVersionCode().isPresent());
     assertFalse(result.getVersionName().isPresent());
   }

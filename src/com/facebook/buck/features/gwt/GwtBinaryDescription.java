@@ -38,6 +38,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
+import java.util.OptionalInt;
 import org.immutables.value.Value;
 
 public class GwtBinaryDescription implements DescriptionWithTargetGraph<GwtBinaryDescriptionArg> {
@@ -177,10 +178,10 @@ public class GwtBinaryDescription implements DescriptionWithTargetGraph<GwtBinar
     Optional<Boolean> getDraftCompile();
 
     /** This will be passed to the GWT Compiler's {@code -optimize} flag. */
-    Optional<Integer> getOptimize();
+    OptionalInt getOptimize();
 
     /** This will be passed to the GWT Compiler's {@code -localWorkers} flag. */
-    Optional<Integer> getLocalWorkers();
+    OptionalInt getLocalWorkers();
 
     /** If {@code true}, the GWT Compiler's {@code -strict} flag will be set. */
     Optional<Boolean> getStrict();

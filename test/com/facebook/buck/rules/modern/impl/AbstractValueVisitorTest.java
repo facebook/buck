@@ -234,7 +234,7 @@ public abstract class AbstractValueVisitorTest {
 
   public static class WithOptional implements FakeBuildable {
     @AddToRuleKey private final Optional<String> present = Optional.of("hello");
-    @AddToRuleKey private final Optional<Integer> empty = Optional.empty();
+    @AddToRuleKey private final Optional<String> empty = Optional.empty();
   }
 
   public static class WithOptionalInt implements FakeBuildable {

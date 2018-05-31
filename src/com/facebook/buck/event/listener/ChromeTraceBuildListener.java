@@ -85,6 +85,7 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.OptionalInt;
 import java.util.Set;
 import java.util.TimeZone;
 import java.util.concurrent.ExecutionException;
@@ -221,7 +222,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
               "build.*.trace",
               PathListing.GET_PATH_MODIFIED_TIME,
               PathListing.FilterMode.EXCLUDE,
-              Optional.of(config.getMaxTraces()),
+              OptionalInt.of(config.getMaxTraces()),
               Optional.empty())) {
         projectFilesystem.deleteFileAtPath(path);
       }

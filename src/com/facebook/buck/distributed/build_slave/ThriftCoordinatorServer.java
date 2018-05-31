@@ -42,7 +42,6 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.nio.file.Path;
 import java.util.HashSet;
-import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -215,7 +214,7 @@ public class ThriftCoordinatorServer implements Closeable {
       }
     }
 
-    Optional<Integer> totalMinionCount = minionCountProvider.getTotalMinionCount();
+    OptionalInt totalMinionCount = minionCountProvider.getTotalMinionCount();
     totalMinionCount.ifPresent(
         count -> {
           int deadMinionCount = minionHealthStatus.getDeadMinions().size();

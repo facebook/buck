@@ -62,6 +62,7 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.EnumSet;
 import java.util.Optional;
+import java.util.OptionalInt;
 import java.util.function.Supplier;
 
 class AndroidBinaryBuildable implements AddsToRuleKey {
@@ -96,7 +97,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
   // TODO(cjhopman): Redex shouldn't do that, or this list should be constructed more carefully.
   private final ImmutableList<SourcePath> additionalRedexInputs;
 
-  @AddToRuleKey private final Optional<Integer> xzCompressionLevel;
+  @AddToRuleKey private final OptionalInt xzCompressionLevel;
 
   @AddToRuleKey private final SourcePath keystorePath;
   @AddToRuleKey private final SourcePath keystorePropertiesPath;
@@ -129,7 +130,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
       Optional<RedexOptions> redexOptions,
       ImmutableList<SourcePath> additionalRedexInputs,
       EnumSet<ExopackageMode> exopackageModes,
-      Optional<Integer> xzCompressionLevel,
+      OptionalInt xzCompressionLevel,
       boolean packageAssetLibraries,
       boolean compressAssetLibraries,
       Tool javaRuntimeLauncher,
@@ -416,7 +417,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
       // Concat and xz compress.
       Path libOutputBlob = libSubdirectory.resolve("libraries.blob");
       steps.add(new ConcatStep(getProjectFilesystem(), outputAssetLibrariesBuilder, libOutputBlob));
-      int compressionLevel = xzCompressionLevel.orElse(XzStep.DEFAULT_COMPRESSION_LEVEL).intValue();
+      int compressionLevel = xzCompressionLevel.orElse(XzStep.DEFAULT_COMPRESSION_LEVEL);
       steps.add(
           new XzStep(
               getProjectFilesystem(),

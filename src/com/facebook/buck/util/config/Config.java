@@ -40,6 +40,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.OptionalInt;
 import java.util.Stack;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
@@ -243,9 +244,9 @@ public class Config {
     return value.isPresent() ? Optional.of(Long.valueOf(value.get())) : Optional.empty();
   }
 
-  public Optional<Integer> getInteger(String sectionName, String propertyName) {
+  public OptionalInt getInteger(String sectionName, String propertyName) {
     Optional<String> value = getValue(sectionName, propertyName);
-    return value.isPresent() ? Optional.of(Integer.valueOf(value.get())) : Optional.empty();
+    return value.isPresent() ? OptionalInt.of(Integer.parseInt(value.get())) : OptionalInt.empty();
   }
 
   public Optional<Float> getFloat(String sectionName, String propertyName) {

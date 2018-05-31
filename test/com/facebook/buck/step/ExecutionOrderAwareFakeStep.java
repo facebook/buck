@@ -18,7 +18,7 @@ package com.facebook.buck.step;
 
 import com.google.common.base.Preconditions;
 import java.io.IOException;
-import java.util.Optional;
+import java.util.OptionalInt;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -30,8 +30,8 @@ public class ExecutionOrderAwareFakeStep implements Step {
   private final String description;
   private final int exitCode;
   private final AtomicInteger atomicExecutionOrder;
-  private Optional<Integer> executionBeginOrder;
-  private Optional<Integer> executionEndOrder;
+  private OptionalInt executionBeginOrder;
+  private OptionalInt executionEndOrder;
 
   public ExecutionOrderAwareFakeStep(
       String shortName, String description, int exitCode, AtomicInteger atomicExecutionOrder) {
@@ -39,8 +39,8 @@ public class ExecutionOrderAwareFakeStep implements Step {
     this.description = description;
     this.exitCode = exitCode;
     this.atomicExecutionOrder = atomicExecutionOrder;
-    this.executionBeginOrder = Optional.empty();
-    this.executionEndOrder = Optional.empty();
+    this.executionBeginOrder = OptionalInt.empty();
+    this.executionEndOrder = OptionalInt.empty();
   }
 
   @Override
@@ -48,14 +48,14 @@ public class ExecutionOrderAwareFakeStep implements Step {
       throws IOException, InterruptedException {
     Preconditions.checkState(!executionBeginOrder.isPresent());
     Preconditions.checkState(!executionEndOrder.isPresent());
-    executionBeginOrder = Optional.of(atomicExecutionOrder.getAndIncrement());
+    executionBeginOrder = OptionalInt.of(atomicExecutionOrder.getAndIncrement());
 
     // Let any other threads execute so we can test running multiple
     // of these steps in a test which should never run in parallel and
     // confirm their execution order.
     Thread.yield();
 
-    executionEndOrder = Optional.of(atomicExecutionOrder.getAndIncrement());
+    executionEndOrder = OptionalInt.of(atomicExecutionOrder.getAndIncrement());
 
     return StepExecutionResult.of(exitCode);
   }
@@ -70,11 +70,11 @@ public class ExecutionOrderAwareFakeStep implements Step {
     return description;
   }
 
-  public Optional<Integer> getExecutionBeginOrder() {
+  public OptionalInt getExecutionBeginOrder() {
     return executionBeginOrder;
   }
 
-  public Optional<Integer> getExecutionEndOrder() {
+  public OptionalInt getExecutionEndOrder() {
     return executionEndOrder;
   }
 }

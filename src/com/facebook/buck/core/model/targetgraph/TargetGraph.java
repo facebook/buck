@@ -29,6 +29,7 @@ import com.google.common.collect.Iterables;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.OptionalInt;
 import javax.annotation.Nullable;
 
 /** Represents the graph of {@link TargetNode}s constructed by parsing the build files. */
@@ -39,7 +40,7 @@ public class TargetGraph extends DirectedAcyclicGraph<TargetNode<?, ?>> {
 
   private final ImmutableMap<BuildTarget, TargetNode<?, ?>> targetsToNodes;
 
-  private Optional<Integer> cachedHashCode = Optional.empty();
+  private OptionalInt cachedHashCode = OptionalInt.empty();
 
   public TargetGraph(
       MutableDirectedGraph<TargetNode<?, ?>> graph,
@@ -107,7 +108,7 @@ public class TargetGraph extends DirectedAcyclicGraph<TargetNode<?, ?>> {
     TargetGraph other = (TargetGraph) obj;
     if (cachedHashCode.isPresent()
         && other.cachedHashCode.isPresent()
-        && !cachedHashCode.get().equals(other.cachedHashCode.get())) {
+        && cachedHashCode.getAsInt() != other.cachedHashCode.getAsInt()) {
       return false;
     }
 
@@ -117,10 +118,11 @@ public class TargetGraph extends DirectedAcyclicGraph<TargetNode<?, ?>> {
   @Override
   public int hashCode() {
     if (cachedHashCode.isPresent()) {
-      return cachedHashCode.get();
+      return cachedHashCode.getAsInt();
     }
-    cachedHashCode = Optional.of(targetsToNodes.hashCode());
-    return cachedHashCode.get();
+    int hashCode = targetsToNodes.hashCode();
+    cachedHashCode = OptionalInt.of(hashCode);
+    return hashCode;
   }
 
   /**

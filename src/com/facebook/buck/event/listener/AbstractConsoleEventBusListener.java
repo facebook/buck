@@ -70,6 +70,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.OptionalInt;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -148,7 +149,7 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
 
   @Nullable protected volatile HttpArtifactCacheEvent.Shutdown httpShutdownEvent;
 
-  protected volatile Optional<Integer> ruleCount = Optional.empty();
+  protected volatile OptionalInt ruleCount = OptionalInt.empty();
   protected Optional<String> publicAnnouncements = Optional.empty();
 
   protected final AtomicInteger numRulesCompleted = new AtomicInteger();
@@ -633,14 +634,14 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
 
   @Subscribe
   public void ruleCountCalculated(BuildEvent.RuleCountCalculated calculated) {
-    ruleCount = Optional.of(calculated.getNumRules());
+    ruleCount = OptionalInt.of(calculated.getNumRules());
     progressEstimator.ifPresent(estimator -> estimator.setNumberOfRules(calculated.getNumRules()));
     cacheRateStatsKeeper.ruleCountCalculated(calculated);
   }
 
   @Subscribe
   public void ruleCountUpdated(BuildEvent.UnskippedRuleCountUpdated updated) {
-    ruleCount = Optional.of(updated.getNumRules());
+    ruleCount = OptionalInt.of(updated.getNumRules());
     progressEstimator.ifPresent(estimator -> estimator.setNumberOfRules(updated.getNumRules()));
     cacheRateStatsKeeper.ruleCountUpdated(updated);
   }
@@ -655,7 +656,7 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
               locale,
               "%d/%d " + convertToAllCapsIfNeeded("jobs"),
               numRulesCompleted.get(),
-              ruleCount.get()));
+              ruleCount.getAsInt()));
       CacheRateStatsKeeper.CacheRateStatsUpdateEvent cacheRateStats =
           cacheRateStatsKeeper.getStats();
       columns.add(

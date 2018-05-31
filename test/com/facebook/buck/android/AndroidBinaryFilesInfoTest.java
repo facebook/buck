@@ -41,6 +41,7 @@ import java.nio.file.Paths;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.OptionalInt;
 import java.util.stream.Stream;
 import org.hamcrest.Matchers;
 import org.junit.Assert;
@@ -122,7 +123,7 @@ public class AndroidBinaryFilesInfoTest {
           ImmutableMultimap.of(),
           null,
           MoreExecutors.newDirectExecutorService(),
-          Optional.empty(),
+          OptionalInt.empty(),
           Optional.empty(),
           "dx");
     }

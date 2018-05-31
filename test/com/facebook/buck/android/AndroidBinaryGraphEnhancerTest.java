@@ -76,6 +76,7 @@ import com.google.common.util.concurrent.MoreExecutors;
 import java.nio.file.Paths;
 import java.util.EnumSet;
 import java.util.Optional;
+import java.util.OptionalInt;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
@@ -164,7 +165,7 @@ public class AndroidBinaryGraphEnhancerTest {
             EnumSet.noneOf(ExopackageMode.class),
             /* buildConfigValues */ BuildConfigFields.of(),
             /* buildConfigValuesFile */ Optional.empty(),
-            /* xzCompressionLevel */ Optional.empty(),
+            /* xzCompressionLevel */ OptionalInt.empty(),
             /* trimResourceIds */ false,
             /* keepResourcePattern */ Optional.empty(),
             false,
@@ -329,7 +330,7 @@ public class AndroidBinaryGraphEnhancerTest {
             EnumSet.of(ExopackageMode.SECONDARY_DEX),
             /* buildConfigValues */ BuildConfigFields.of(),
             /* buildConfigValuesFiles */ Optional.empty(),
-            /* xzCompressionLevel */ Optional.empty(),
+            /* xzCompressionLevel */ OptionalInt.empty(),
             /* trimResourceIds */ false,
             /* keepResourcePattern */ Optional.empty(),
             false,
@@ -462,7 +463,7 @@ public class AndroidBinaryGraphEnhancerTest {
             EnumSet.of(ExopackageMode.SECONDARY_DEX),
             /* buildConfigValues */ BuildConfigFields.of(),
             /* buildConfigValuesFiles */ Optional.empty(),
-            /* xzCompressionLevel */ Optional.empty(),
+            /* xzCompressionLevel */ OptionalInt.empty(),
             /* trimResourceIds */ false,
             /* keepResourcePattern */ Optional.empty(),
             false,
@@ -539,7 +540,7 @@ public class AndroidBinaryGraphEnhancerTest {
             EnumSet.of(ExopackageMode.SECONDARY_DEX),
             /* buildConfigValues */ BuildConfigFields.of(),
             /* buildConfigValuesFiles */ Optional.empty(),
-            /* xzCompressionLevel */ Optional.empty(),
+            /* xzCompressionLevel */ OptionalInt.empty(),
             /* trimResourceIds */ false,
             /* keepResourcePattern */ Optional.empty(),
             false,
@@ -645,7 +646,7 @@ public class AndroidBinaryGraphEnhancerTest {
             EnumSet.of(ExopackageMode.SECONDARY_DEX),
             /* buildConfigValues */ BuildConfigFields.of(),
             /* buildConfigValuesFiles */ Optional.empty(),
-            /* xzCompressionLevel */ Optional.empty(),
+            /* xzCompressionLevel */ OptionalInt.empty(),
             /* trimResourceIds */ false,
             /* keepResourcePattern */ Optional.empty(),
             false,

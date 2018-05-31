@@ -161,7 +161,7 @@ public class FakeListeningProcessExecutor extends ListeningProcessExecutor {
           processTimeNanos += stateWaitTime;
           break;
         case EXIT:
-          exitCode = state.getExitCode().get();
+          exitCode = state.getExitCode().getAsInt();
           ByteBuffer empty = ByteBuffer.allocate(0);
           listener.onStdout(empty, true);
           listener.onStderr(empty, true);

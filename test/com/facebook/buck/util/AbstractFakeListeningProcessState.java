@@ -20,6 +20,7 @@ import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
+import java.util.OptionalInt;
 import org.immutables.value.Value;
 
 @Value.Immutable
@@ -74,5 +75,5 @@ abstract class AbstractFakeListeningProcessState {
 
   public abstract Optional<Long> getWaitNanos();
 
-  public abstract Optional<Integer> getExitCode();
+  public abstract OptionalInt getExitCode();
 }

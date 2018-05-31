@@ -32,6 +32,7 @@ import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.OptionalInt;
 import java.util.concurrent.TimeUnit;
 import okhttp3.OkHttpClient;
 
@@ -224,7 +225,7 @@ public class DistBuildConfig {
     return buckConfig.getValue(STAMPEDE_SECTION, TAKS_ID_ENVIRONMENT_VARIABLE);
   }
 
-  public Optional<Integer> getSourceFileMultiFetchMaxBufferSize() {
+  public OptionalInt getSourceFileMultiFetchMaxBufferSize() {
     return buckConfig.getInteger(STAMPEDE_SECTION, SOURCE_FILE_MULTI_FETCH_MAX_BUFFER_SIZE);
   }
 

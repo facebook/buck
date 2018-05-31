@@ -23,6 +23,7 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TestConsole;
 import java.io.IOException;
 import java.util.Optional;
+import java.util.OptionalInt;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -30,7 +31,7 @@ public class ServerStatusCommandTest {
 
   private TestConsole console;
   private CommandRunnerParams params;
-  private Optional<Integer> webServerPort;
+  private OptionalInt webServerPort;
 
   @Before
   public void setUp() throws IOException, InterruptedException {
@@ -38,7 +39,7 @@ public class ServerStatusCommandTest {
     WebServer webServer =
         new WebServer(0, new FakeProjectFilesystem()) {
           @Override
-          public Optional<Integer> getPort() {
+          public OptionalInt getPort() {
             return webServerPort;
           }
         };
@@ -51,7 +52,7 @@ public class ServerStatusCommandTest {
 
   @Test
   public void testWhenHttpserverRunning() throws IOException, InterruptedException {
-    webServerPort = Optional.of(9000);
+    webServerPort = OptionalInt.of(9000);
 
     ServerStatusCommand command = new ServerStatusCommand();
     command.enableShowHttpserverPort();
@@ -61,7 +62,7 @@ public class ServerStatusCommandTest {
 
   @Test
   public void testWhenHttpserverNotRunning() throws IOException, InterruptedException {
-    webServerPort = Optional.empty();
+    webServerPort = OptionalInt.empty();
 
     ServerStatusCommand command = new ServerStatusCommand();
     command.enableShowHttpserverPort();
@@ -71,7 +72,7 @@ public class ServerStatusCommandTest {
 
   @Test
   public void testPrintJson() throws IOException, InterruptedException {
-    webServerPort = Optional.of(9000);
+    webServerPort = OptionalInt.of(9000);
 
     ServerStatusCommand command = new ServerStatusCommand();
     command.enableShowHttpserverPort();

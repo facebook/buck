@@ -17,7 +17,7 @@
 package com.facebook.buck.log;
 
 import com.facebook.buck.util.concurrent.MostExecutors;
-import java.util.Optional;
+import java.util.OptionalInt;
 import java.util.concurrent.ThreadFactory;
 import javax.annotation.Nullable;
 
@@ -30,21 +30,21 @@ public class CommandThreadFactory implements ThreadFactory {
   private final ThreadFactory threadFactory;
   private final CommonThreadFactoryState state;
   @Nullable private final String commandId;
-  private final Optional<Integer> optionalPriority;
+  private final OptionalInt optionalPriority;
 
   public CommandThreadFactory(String threadName, int threadPriority) {
-    this(new MostExecutors.NamedThreadFactory(threadName), Optional.of(threadPriority));
+    this(new MostExecutors.NamedThreadFactory(threadName), OptionalInt.of(threadPriority));
   }
 
   public CommandThreadFactory(String threadName) {
-    this(new MostExecutors.NamedThreadFactory(threadName), Optional.empty());
+    this(new MostExecutors.NamedThreadFactory(threadName), OptionalInt.empty());
   }
 
   public CommandThreadFactory(ThreadFactory threadFactory) {
-    this(threadFactory, Optional.empty());
+    this(threadFactory, OptionalInt.empty());
   }
 
-  public CommandThreadFactory(ThreadFactory threadFactory, Optional<Integer> optionalPriority) {
+  public CommandThreadFactory(ThreadFactory threadFactory, OptionalInt optionalPriority) {
     this.threadFactory = threadFactory;
     this.state = GlobalStateManager.singleton().getThreadToCommandRegister();
 
@@ -57,7 +57,7 @@ public class CommandThreadFactory implements ThreadFactory {
   public Thread newThread(Runnable r) {
     Thread newThread = threadFactory.newThread(r);
     if (optionalPriority.isPresent()) {
-      newThread.setPriority(optionalPriority.get());
+      newThread.setPriority(optionalPriority.getAsInt());
     }
 
     if (commandId != null) {

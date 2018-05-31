@@ -47,6 +47,7 @@ import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Optional;
+import java.util.OptionalInt;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 import org.junit.Rule;
@@ -85,7 +86,7 @@ public class SmartDexingStepTest {
             outputFile.toPath(),
             outputHashFile,
             EnumSet.of(DxStep.Option.NO_OPTIMIZE),
-            Optional.empty(),
+            OptionalInt.empty(),
             Optional.empty(),
             DxStep.DX);
     assertFalse("'dummy' is not a matching input hash", rule.checkIsCached());
@@ -118,7 +119,7 @@ public class SmartDexingStepTest {
         filesToDex,
         outputPath,
         dxOptions,
-        Optional.empty(),
+        OptionalInt.empty(),
         Optional.empty(),
         DxStep.DX);
 
@@ -161,7 +162,7 @@ public class SmartDexingStepTest {
         filesToDex,
         outputPath,
         dxOptions,
-        Optional.of(9),
+        OptionalInt.of(9),
         Optional.empty(),
         DxStep.DX);
 
@@ -204,7 +205,7 @@ public class SmartDexingStepTest {
         filesToDex,
         outputPath,
         dxOptions,
-        Optional.empty(),
+        OptionalInt.empty(),
         Optional.empty(),
         DxStep.DX);
 
@@ -241,7 +242,7 @@ public class SmartDexingStepTest {
         filesToDex,
         outputPath,
         dxOptions,
-        Optional.empty(),
+        OptionalInt.empty(),
         Optional.empty(),
         DxStep.DX);
 
@@ -282,7 +283,7 @@ public class SmartDexingStepTest {
         filesToDex,
         outputPath,
         dxOptions,
-        Optional.empty(),
+        OptionalInt.empty(),
         Optional.empty(),
         DxStep.DX);
   }

@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.config.BuckConfig;
 import java.util.Optional;
+import java.util.OptionalInt;
 
 public class DxConfig {
 
@@ -37,12 +38,12 @@ public class DxConfig {
    *     hardware capabilities of running host and capped with {@code max_threads} parameter, if
    *     specified
    */
-  public Optional<Integer> getDxThreadCount() {
+  public OptionalInt getDxThreadCount() {
     return delegate.getInteger("dx", "threads");
   }
 
   /** @return The dx maximum allowed thread count. */
-  public Optional<Integer> getDxMaxThreadCount() {
+  public OptionalInt getDxMaxThreadCount() {
     return delegate.getInteger("dx", "max_threads");
   }
 }

@@ -37,6 +37,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
+import java.util.OptionalInt;
 import java.util.function.Supplier;
 import java.util.logging.Level;
 
@@ -214,7 +215,7 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
     return delegate.getBooleanValue(SECTION, "cache_binaries", true);
   }
 
-  public Optional<Integer> getDxThreadCount() {
+  public OptionalInt getDxThreadCount() {
     return delegate.getInteger(SECTION, "dx_threads");
   }
 

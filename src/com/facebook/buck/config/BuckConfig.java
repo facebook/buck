@@ -62,6 +62,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.OptionalInt;
 import java.util.Set;
 import java.util.regex.Pattern;
 
@@ -627,7 +628,7 @@ public class BuckConfig implements ConfigPathGetter {
     return config.get(sectionName, propertyName);
   }
 
-  public Optional<Integer> getInteger(String sectionName, String propertyName) {
+  public OptionalInt getInteger(String sectionName, String propertyName) {
     return config.getInteger(sectionName, propertyName);
   }
 

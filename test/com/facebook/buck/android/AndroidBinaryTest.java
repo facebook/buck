@@ -61,6 +61,7 @@ import java.nio.file.Paths;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.OptionalInt;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -166,7 +167,7 @@ public class AndroidBinaryTest {
             proguardConfig.getFilesystem().resolve(proguardConfig.getRelativePath()),
             proguardConfig.getFilesystem().resolve(aaptProguardDir.resolve("proguard.txt"))),
         ProGuardObfuscateStep.SdkProguardType.NONE,
-        /* optimizationPasses */ Optional.empty(),
+        /* optimizationPasses */ OptionalInt.empty(),
         /* proguardJvmArgs */ Optional.empty(),
         ImmutableMap.of(
             BuildTargets.getGenPath(

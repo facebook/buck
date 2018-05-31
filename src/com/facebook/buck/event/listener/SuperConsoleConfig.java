@@ -21,6 +21,7 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.environment.Platform;
 import java.util.Optional;
+import java.util.OptionalInt;
 
 public class SuperConsoleConfig {
 
@@ -82,21 +83,21 @@ public class SuperConsoleConfig {
     return delegate.getBooleanValue(SECTION_NAME, "show_slow_rules_in_console", false);
   }
 
-  public Optional<Integer> getThreadLineOutputMaxColumns() {
+  public OptionalInt getThreadLineOutputMaxColumns() {
     return delegate.getInteger(SECTION_NAME, "thread_line_output_max_columns");
   }
 
-  private Optional<Integer> getPositiveInt(String sectionName, String propertyName) {
+  private OptionalInt getPositiveInt(String sectionName, String propertyName) {
     Optional<Long> optional = delegate.getLong(sectionName, propertyName);
     if (!optional.isPresent()) {
-      return Optional.empty();
+      return OptionalInt.empty();
     }
     long value = optional.get();
     if (value <= 0 || value > Integer.MAX_VALUE) {
       throw new HumanReadableException(
           "Configuration %s:%s contains value out of range: %s.", sectionName, propertyName, value);
     }
-    return Optional.of((int) value);
+    return OptionalInt.of((int) value);
   }
 
   /**

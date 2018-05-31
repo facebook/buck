@@ -31,7 +31,7 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.network.hostname.HostnameFetching;
 import com.google.common.base.Preconditions;
 import java.io.IOException;
-import java.util.Optional;
+import java.util.OptionalInt;
 
 /** Listener to events from the Coordinator. */
 public class CoordinatorEventListener
@@ -41,7 +41,7 @@ public class CoordinatorEventListener
   private final StampedeId stampedeId;
   private final MinionQueueProvider minionQueueProvider;
   private boolean islocalMinionAlsoRunning;
-  private volatile Optional<Integer> totalMinionCount = Optional.empty();
+  private volatile OptionalInt totalMinionCount = OptionalInt.empty();
 
   public CoordinatorEventListener(
       DistBuildService service,
@@ -76,7 +76,7 @@ public class CoordinatorEventListener
     }
 
     totalMinionCount =
-        Optional.of(DistBuildUtil.countMinions(buildModeInfo.getMinionRequirements()));
+        OptionalInt.of(DistBuildUtil.countMinions(buildModeInfo.getMinionRequirements()));
 
     Preconditions.checkArgument(buildModeInfo.getMinionRequirements().isSetRequirements());
     for (MinionRequirement requirement : buildModeInfo.getMinionRequirements().getRequirements()) {
@@ -112,7 +112,7 @@ public class CoordinatorEventListener
   }
 
   @Override
-  public Optional<Integer> getTotalMinionCount() {
+  public OptionalInt getTotalMinionCount() {
     return totalMinionCount;
   }
 }

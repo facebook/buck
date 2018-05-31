@@ -41,6 +41,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
+import java.util.OptionalInt;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import org.junit.Before;
@@ -122,7 +123,7 @@ public class ProGuardObfuscateStepTest {
         Optional.empty(),
         /* customProguardConfigs */ ImmutableSet.of(),
         ProGuardObfuscateStep.SdkProguardType.DEFAULT,
-        /* optimizationPasses */ Optional.empty(),
+        /* optimizationPasses */ OptionalInt.empty(),
         /* proguardJvmArgs */ Optional.empty(),
         /* inputAndOutputEntries */ ImmutableMap.of(),
         /* additionalLibraryJarsForProguard */ ImmutableSet.of(
@@ -157,7 +158,7 @@ public class ProGuardObfuscateStepTest {
         Optional.empty(),
         /* customProguardConfigs */ ImmutableSet.of(),
         ProGuardObfuscateStep.SdkProguardType.DEFAULT,
-        /* optimizationPasses */ Optional.empty(),
+        /* optimizationPasses */ OptionalInt.empty(),
         Optional.of(proguardJvmArgs),
         /* inputAndOutputEntries */ ImmutableMap.of(),
         /* additionalLibraryJarsForProguard */ ImmutableSet.of(
@@ -190,7 +191,7 @@ public class ProGuardObfuscateStepTest {
         proguardAgentPath,
         /* customProguardConfigs */ ImmutableSet.of(),
         sdkProguardConfig,
-        /* optimizationPasses */ Optional.empty(),
+        /* optimizationPasses */ OptionalInt.empty(),
         /* proguardJvmArgs */ Optional.empty(),
         /* inputAndOutputEntries */ ImmutableMap.of(),
         /* additionalLibraryJarsForProguard */ ImmutableSet.of(),

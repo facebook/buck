@@ -35,15 +35,16 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 public class SortedSetsTest {
-  private ImmutableSortedSet<String> empty = ImmutableSortedSet.of();
-  private ImmutableSortedSet<String> abc = ImmutableSortedSet.of("a", "b", "c");
-  private ImmutableSortedSet<String> def = ImmutableSortedSet.of("d", "e", "f");
-  private ImmutableSortedSet<String> ace = ImmutableSortedSet.of("a", "c", "e");
-  private ImmutableSortedSet<String> bdf = ImmutableSortedSet.of("b", "d", "f");
-  private ImmutableSortedSet<String> abcdef = ImmutableSortedSet.of("a", "b", "c", "d", "e", "f");
-  private ImmutableSortedSet<String> cd = ImmutableSortedSet.of("c", "d");
+  private final ImmutableSortedSet<String> empty = ImmutableSortedSet.of();
+  private final ImmutableSortedSet<String> abc = ImmutableSortedSet.of("a", "b", "c");
+  private final ImmutableSortedSet<String> def = ImmutableSortedSet.of("d", "e", "f");
+  private final ImmutableSortedSet<String> ace = ImmutableSortedSet.of("a", "c", "e");
+  private final ImmutableSortedSet<String> bdf = ImmutableSortedSet.of("b", "d", "f");
+  private final ImmutableSortedSet<String> abcdef =
+      ImmutableSortedSet.of("a", "b", "c", "d", "e", "f");
+  private final ImmutableSortedSet<String> cd = ImmutableSortedSet.of("c", "d");
 
-  private ImmutableSortedSet<String> cba =
+  private final ImmutableSortedSet<String> cba =
       new ImmutableSortedSet.Builder<String>(Ordering.natural().reverse())
           .add("a")
           .add("b")
@@ -220,7 +221,8 @@ public class SortedSetsTest {
 
   @Test
   @SuppressWarnings(
-      "PMD.UseAssertEqualsInsteadOfAssertTrue") // The exact call and ordering matters here, so explicity call equals rather than assertEquals.
+      "PMD.UseAssertEqualsInsteadOfAssertTrue") // The exact call and ordering matters here, so
+  // explicity call equals rather than assertEquals.
   public void equals() {
     assertTrue(abc.equals(SortedSets.union(abc, empty)));
     assertTrue(abc.equals(SortedSets.union(empty, abc)));

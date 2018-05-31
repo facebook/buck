@@ -15,11 +15,11 @@
  */
 package com.facebook.buck.distributed.build_slave;
 
-import java.util.Optional;
+import java.util.OptionalInt;
 
 /** Provides count of total minions taking part in the current Stampede build. */
 public interface MinionCountProvider {
 
   /** @return total requested minions for this build, once this information is known. */
-  Optional<Integer> getTotalMinionCount();
+  OptionalInt getTotalMinionCount();
 }

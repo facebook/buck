@@ -30,6 +30,7 @@ import java.io.SequenceInputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.OptionalInt;
 import java.util.logging.Handler;
 import java.util.logging.LogManager;
 import java.util.logging.Logger; // NOPMD
@@ -166,7 +167,7 @@ public class LogConfig {
             logConfigSetup.getLogFilePrefix() + "*.log*",
             PathListing.GET_PATH_MODIFIED_TIME,
             PathListing.FilterMode.EXCLUDE,
-            Optional.empty(),
+            OptionalInt.empty(),
             Optional.of(logConfigSetup.getMaxLogSizeBytes()))) {
       Files.deleteIfExists(path);
     }

@@ -29,6 +29,7 @@ import com.facebook.buck.util.RichStream;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.EnumSet;
 import java.util.Optional;
+import java.util.OptionalInt;
 import java.util.stream.Stream;
 
 /**
@@ -85,7 +86,7 @@ public class AndroidInstrumentationApk extends AndroidBinary {
         EnumSet.noneOf(ExopackageMode.class),
         rulesToExcludeFromDex,
         enhancementResult,
-        Optional.empty(),
+        OptionalInt.empty(),
         false,
         false,
         apkUnderTest.getManifestEntries(),

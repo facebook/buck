@@ -260,7 +260,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
 
     int outputMaxColumns = 80;
     if (config.getThreadLineOutputMaxColumns().isPresent()) {
-      outputMaxColumns = config.getThreadLineOutputMaxColumns().get();
+      outputMaxColumns = config.getThreadLineOutputMaxColumns().getAsInt();
     } else {
       Optional<String> columnsStr = executionEnvironment.getenv("BUCK_TERM_COLUMNS");
       if (columnsStr.isPresent()) {

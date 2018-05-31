@@ -284,7 +284,7 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
 
     String jobsInfo = "";
     if (ruleCount.isPresent()) {
-      jobsInfo = String.format(locale, "%d/%d JOBS", numRulesCompleted.get(), ruleCount.get());
+      jobsInfo = String.format(locale, "%d/%d JOBS", numRulesCompleted.get(), ruleCount.getAsInt());
     }
     String line =
         String.format(

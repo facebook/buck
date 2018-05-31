@@ -54,6 +54,7 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.OptionalInt;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -152,18 +153,18 @@ final class Daemon implements Closeable {
 
   private static Optional<WebServer> createWebServer(
       BuckConfig config, ProjectFilesystem filesystem) {
-    Optional<Integer> port = getValidWebServerPort(config);
+    OptionalInt port = getValidWebServerPort(config);
     if (!port.isPresent()) {
       return Optional.empty();
     }
-    return Optional.of(new WebServer(port.get(), filesystem));
+    return Optional.of(new WebServer(port.getAsInt(), filesystem));
   }
 
   /**
    * If the return value is not absent, then the port is a nonnegative integer. This means that
    * specifying a port of -1 effectively disables the WebServer.
    */
-  static Optional<Integer> getValidWebServerPort(BuckConfig config) {
+  static OptionalInt getValidWebServerPort(BuckConfig config) {
     // Enable the web httpserver if it is given by command line parameter or specified in
     // .buckconfig. The presence of a nonnegative port number is sufficient.
     Optional<String> serverPort = Optional.ofNullable(System.getProperty("buck.httpserver.port"));
@@ -172,7 +173,7 @@ final class Daemon implements Closeable {
     }
 
     if (!serverPort.isPresent() || serverPort.get().isEmpty()) {
-      return Optional.empty();
+      return OptionalInt.empty();
     }
 
     String rawPort = serverPort.get();
@@ -181,10 +182,10 @@ final class Daemon implements Closeable {
       port = Integer.parseInt(rawPort, 10);
     } catch (NumberFormatException e) {
       LOG.error("Could not parse port for httpserver: %s.", rawPort);
-      return Optional.empty();
+      return OptionalInt.empty();
     }
 
-    return port >= 0 ? Optional.of(port) : Optional.empty();
+    return port >= 0 ? OptionalInt.of(port) : OptionalInt.empty();
   }
 
   Optional<WebServer> getWebServer() {

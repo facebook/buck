@@ -23,6 +23,7 @@ import java.net.InetSocketAddress;
 import java.net.PasswordAuthentication;
 import java.net.Proxy;
 import java.util.Optional;
+import java.util.OptionalInt;
 
 public class DownloadConfig {
   private static final Logger LOG = Logger.get(DownloadConfig.class);
@@ -78,7 +79,7 @@ public class DownloadConfig {
     return Optional.of(new PasswordAuthentication(user.get(), password.get().toCharArray()));
   }
 
-  public Optional<Integer> getMaxNumberOfRetries() {
+  public OptionalInt getMaxNumberOfRetries() {
     return delegate.getInteger("download", "max_number_of_retries");
   }
 }

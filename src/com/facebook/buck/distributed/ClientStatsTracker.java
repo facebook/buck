@@ -38,6 +38,7 @@ import com.google.common.base.Stopwatch;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.OptionalInt;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.concurrent.GuardedBy;
 
@@ -72,7 +73,7 @@ public class ClientStatsTracker {
 
   private volatile String stampedeId = PENDING_STAMPEDE_ID;
 
-  private volatile Optional<Integer> distributedBuildExitCode = Optional.empty();
+  private volatile OptionalInt distributedBuildExitCode = OptionalInt.empty();
 
   private volatile Optional<Boolean> isLocalFallbackBuildEnabled = Optional.empty();
 
@@ -84,7 +85,7 @@ public class ClientStatsTracker {
 
   private volatile boolean buckClientError = false;
 
-  private volatile Optional<Integer> localBuildExitCode = Optional.empty();
+  private volatile OptionalInt localBuildExitCode = OptionalInt.empty();
 
   private volatile Optional<Long> missingFilesUploadedCount = Optional.empty();
 
@@ -201,7 +202,7 @@ public class ClientStatsTracker {
   }
 
   public void setLocalBuildExitCode(int localBuildExitCode) {
-    this.localBuildExitCode = Optional.of(localBuildExitCode);
+    this.localBuildExitCode = OptionalInt.of(localBuildExitCode);
   }
 
   public void setStampedeId(String stampedeId) {
@@ -209,7 +210,7 @@ public class ClientStatsTracker {
   }
 
   public synchronized void setDistributedBuildExitCode(int distributedBuildExitCode) {
-    this.distributedBuildExitCode = Optional.of(distributedBuildExitCode);
+    this.distributedBuildExitCode = OptionalInt.of(distributedBuildExitCode);
   }
 
   public void setIsLocalFallbackBuildEnabled(boolean isLocalFallbackBuildEnabled) {

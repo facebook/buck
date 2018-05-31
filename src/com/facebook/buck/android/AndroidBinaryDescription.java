@@ -84,6 +84,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.OptionalInt;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -325,7 +326,7 @@ public class AndroidBinaryDescription
             exopackageModes,
             args.getBuildConfigValues(),
             args.getBuildConfigValuesFile(),
-            Optional.empty(),
+            OptionalInt.empty(),
             args.isTrimResourceIds(),
             args.getKeepResourcePattern(),
             args.isIgnoreAaptProguardConfig(),
@@ -587,7 +588,7 @@ public class AndroidBinaryDescription
 
     Optional<ProGuardObfuscateStep.SdkProguardType> getAndroidSdkProguardConfig();
 
-    Optional<Integer> getOptimizationPasses();
+    OptionalInt getOptimizationPasses();
 
     List<String> getProguardJvmArgs();
 
@@ -728,7 +729,7 @@ public class AndroidBinaryDescription
 
     Optional<SourcePath> getDexReorderDataDumpFile();
 
-    Optional<Integer> getXzCompressionLevel();
+    OptionalInt getXzCompressionLevel();
 
     @Value.Default
     default boolean isPackageAssetLibraries() {

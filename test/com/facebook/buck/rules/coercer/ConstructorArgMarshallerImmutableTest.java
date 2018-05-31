@@ -43,6 +43,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.OptionalInt;
 import java.util.Set;
 import java.util.SortedSet;
 import org.immutables.value.Value;
@@ -425,7 +426,7 @@ public class ConstructorArgMarshallerImmutableTest {
             DtoWithOptionalInteger.class,
             ImmutableSet.builder(),
             ImmutableMap.<String, Object>of("number", 0));
-    assertEquals(Optional.of(0), built.getNumber());
+    assertEquals(OptionalInt.of(0), built.getNumber());
   }
 
   @Test
@@ -683,7 +684,7 @@ public class ConstructorArgMarshallerImmutableTest {
   @BuckStyleImmutable
   @Value.Immutable
   abstract static class AbstractDtoWithOptionalInteger {
-    abstract Optional<Integer> getNumber();
+    abstract OptionalInt getNumber();
   }
 
   @BuckStyleImmutable

@@ -55,6 +55,7 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
+import java.util.OptionalInt;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ScheduledExecutorService;
@@ -111,7 +112,7 @@ public class DistBuildSlaveEventBusListener
 
   private volatile @Nullable CoordinatorBuildProgress coordinatorBuildProgress = null;
   private volatile @Nullable DistBuildService distBuildService;
-  private volatile Optional<Integer> exitCode = Optional.empty();
+  private volatile OptionalInt exitCode = OptionalInt.empty();
   private volatile boolean sentFinishedStatsToServer;
   private volatile Optional<String> buildLabel = Optional.empty();
   private volatile String minionType = MinionType.STANDARD_SPEC.name();
@@ -212,7 +213,7 @@ public class DistBuildSlaveEventBusListener
     Preconditions.checkState(
         exitCode.isPresent(),
         "BuildSlaveFinishedStats can only be generated after we are finished building.");
-    finishedStats.setExitCode(exitCode.get());
+    finishedStats.setExitCode(exitCode.getAsInt());
     return finishedStats;
   }
 
@@ -326,7 +327,7 @@ public class DistBuildSlaveEventBusListener
 
   /** Publishes events from slave back to client that kicked off build (via frontend) */
   public void sendFinalServerUpdates(int exitCode) {
-    this.exitCode = Optional.of(exitCode);
+    this.exitCode = OptionalInt.of(exitCode);
     stopScheduledUpdates();
     sendAllRulesFinishedEvent();
     sendFinishedStatsToFrontend(createBuildSlaveFinishedStats());

@@ -74,6 +74,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.OptionalInt;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.function.Consumer;
@@ -100,7 +101,7 @@ class NonPreDexedDexBuildable extends AbstractBuildRule {
   private final Optional<ImmutableSortedMap<APKModule, ImmutableList<SourcePath>>>
       moduleMappedClasspathEntriesToDex;
 
-  @AddToRuleKey private final Optional<Integer> optimizationPasses;
+  @AddToRuleKey private final OptionalInt optimizationPasses;
   @AddToRuleKey private final boolean shouldProguard;
   @AddToRuleKey private final Optional<Arg> preprocessJavaClassesBash;
   @AddToRuleKey private final Optional<String> proguardAgentPath;
@@ -113,7 +114,7 @@ class NonPreDexedDexBuildable extends AbstractBuildRule {
   @AddToRuleKey private final APKModule rootAPKModule;
   @AddToRuleKey private final ProGuardObfuscateStep.SdkProguardType sdkProguardConfig;
   @AddToRuleKey private final boolean skipProguard;
-  @AddToRuleKey private final Optional<Integer> xzCompressionLevel;
+  @AddToRuleKey private final OptionalInt xzCompressionLevel;
   @AddToRuleKey private final boolean shouldSplitDex;
   @AddToRuleKey private final String dexTool;
 
@@ -144,7 +145,7 @@ class NonPreDexedDexBuildable extends AbstractBuildRule {
 
     ProGuardObfuscateStep.SdkProguardType getSdkProguardConfig();
 
-    Optional<Integer> getOptimizationPasses();
+    OptionalInt getOptimizationPasses();
 
     Optional<List<String>> getProguardJvmArgs();
 
@@ -169,7 +170,7 @@ class NonPreDexedDexBuildable extends AbstractBuildRule {
           moduleMappedClasspathEntriesToDex,
       ImmutableList<SourcePath> proguardConfigs,
       APKModule rootAPKModule,
-      Optional<Integer> xzCompressionLevel,
+      OptionalInt xzCompressionLevel,
       boolean shouldSplitDex,
       NonPredexedDexBuildableArgs args,
       ProjectFilesystem filesystem,

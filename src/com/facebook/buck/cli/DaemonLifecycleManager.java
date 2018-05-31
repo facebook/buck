@@ -26,6 +26,7 @@ import com.facebook.buck.util.Console;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.OptionalInt;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.ThreadSafe;
 
@@ -114,9 +115,9 @@ class DaemonLifecycleManager {
     if (newCell == null || daemon == null) {
       return false;
     }
-    Optional<Integer> portFromOldConfig =
+    OptionalInt portFromOldConfig =
         Daemon.getValidWebServerPort(daemon.getRootCell().getBuckConfig());
-    Optional<Integer> portFromUpdatedConfig = Daemon.getValidWebServerPort(newCell.getBuckConfig());
+    OptionalInt portFromUpdatedConfig = Daemon.getValidWebServerPort(newCell.getBuckConfig());
 
     return portFromOldConfig.equals(portFromUpdatedConfig);
   }

@@ -17,7 +17,7 @@
 package com.facebook.buck.test;
 
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import java.util.Optional;
+import java.util.OptionalInt;
 import org.immutables.value.Value;
 
 @Value.Immutable
@@ -29,5 +29,5 @@ interface AbstractTestResultSummaryVerbosity {
   @Value.Parameter
   boolean getIncludeStdOut();
 
-  Optional<Integer> getMaxDebugLogLines();
+  OptionalInt getMaxDebugLogLines();
 }

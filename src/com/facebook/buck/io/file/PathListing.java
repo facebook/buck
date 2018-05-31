@@ -28,6 +28,7 @@ import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.attribute.FileTime;
 import java.util.Optional;
+import java.util.OptionalInt;
 
 /** Utility class to list files which match a pattern, applying ordering and filtering. */
 public class PathListing {
@@ -58,7 +59,7 @@ public class PathListing {
         globPattern,
         pathModifiedTimeFetcher,
         FilterMode.INCLUDE,
-        Optional.empty(),
+        OptionalInt.empty(),
         Optional.empty());
   }
 
@@ -71,7 +72,7 @@ public class PathListing {
       String globPattern,
       PathModifiedTimeFetcher pathModifiedTimeFetcher,
       FilterMode filterMode,
-      Optional<Integer> maxPathsFilter,
+      OptionalInt maxPathsFilter,
       Optional<Long> totalSizeFilter)
       throws IOException {
 
@@ -93,7 +94,8 @@ public class PathListing {
     ImmutableSortedSet<Path> paths =
         ImmutableSortedSet.copyOf(
             Ordering.natural()
-                // Order the keys of the map (the paths) by their values (the file modification times).
+                // Order the keys of the map (the paths) by their values (the file modification
+                // times).
                 .onResultOf(Functions.forMap(pathFileTimes))
                 // If two keys of the map have the same value, fall back to key order.
                 .compound(Ordering.natural())
@@ -107,9 +109,9 @@ public class PathListing {
   }
 
   private static ImmutableSortedSet<Path> applyNumPathsFilter(
-      ImmutableSortedSet<Path> paths, FilterMode filterMode, Optional<Integer> maxPathsFilter) {
+      ImmutableSortedSet<Path> paths, FilterMode filterMode, OptionalInt maxPathsFilter) {
     if (maxPathsFilter.isPresent()) {
-      int limitIndex = Math.min(maxPathsFilter.get(), paths.size());
+      int limitIndex = Math.min(maxPathsFilter.getAsInt(), paths.size());
       paths = subSet(paths, filterMode, limitIndex);
     }
     return paths;
