@@ -24,7 +24,7 @@
     rule_key_logger_enabled = True
 # [cache]
 #   ; Disable the default directory cache.
-#   mode = 
+#   mode =
 [build]
     metadata_storage = sqlite
 [download]
