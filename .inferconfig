@@ -10,5 +10,13 @@
     "src/com/facebook/buck/testrunner",
     "src-gen"
   ],
+  "external-java-packages": [
+    "com.dd.",
+    "com.google.",
+    "com.sun.",
+    "java.",
+    "javax.",
+    "org."
+  ],
   "skip-duplicated-types": false
 }
