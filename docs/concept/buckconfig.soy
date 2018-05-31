@@ -237,9 +237,8 @@ $ buck targets --resolve-alias app#src_jar
   {param example_value: '/Library/Android/sdk' /}
   {param description}
     This specifies the absolute path to the Android SDK that all Android code in the project should
-    be built against.  This is equivalent to setting the environment variable
-    <code>ANDROID_SDK=/Library/Android/sdk</code>. The environment variables
-    <code>ANDROID_SDK</code> and <code>ANDROID_HOME</code> both supersede the buckconfig setting.
+    be built against.  This is equivalent to setting the environment variable <code>ANDROID_SDK=/Library/Android/sdk</code>. 
+    The environment variables <code>ANDROID_SDK</code> and <code>ANDROID_HOME</code> both supersede the buckconfig setting.
     The default is empty.
   {/param}
 {/call}
@@ -628,6 +627,7 @@ osx_toolchains_override = tools.stable,tools.swift40,tools.common
 {/call}
 
 {call buckconfig.entry}
+  {param section: 'apple' /}
   {param name: 'codesign_timeout' /}
   {param example_value: '600' /}
   {param description}
