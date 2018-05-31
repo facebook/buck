@@ -37,11 +37,11 @@ import org.immutables.value.Value.Style.ImplementationVisibility;
 
 /**
  * Context information used for construction of ActionGraph in {@link
- * com.facebook.buck.graph.transformationengine.AsyncTransformationEngine}.
+ * com.facebook.buck.core.graph.transformation.AsyncTransformationEngine}.
  *
  * <p>This wraps the {@link BuildRuleCreationContext} needed for constructing {@link BuildRule}s
  * with {@link TransformationEnvironment} from the {@link
- * com.facebook.buck.graph.transformationengine.AsyncTransformationEngine}.
+ * com.facebook.buck.core.graph.transformation.AsyncTransformationEngine}.
  *
  * <p>Access to the {@link TransformationEnvironment} is limited to restrict access of BuildRule
  * construction logic to {@link BuildRule}s. Construction phase can only access information to
@@ -52,11 +52,11 @@ import org.immutables.value.Value.Style.ImplementationVisibility;
  * should not be part of the identifier of what {@link BuildRule} to compute.
  *
  * <p>Instances should only be created in {@link
- * com.facebook.buck.graph.transformationengine.AsyncTransformer#transform(Object,
+ * com.facebook.buck.core.graph.transformation.AsyncTransformer#transform(Object,
  * TransformationEnvironment)} implementation for ActionGraph construction. Hence, we have
  * package-private implementation which hides constructor.
  */
-@Value.Immutable(builder = false, copy = false, prehash = false)
+@Value.Immutable(builder = false, copy = false)
 @Value.Style(visibility = ImplementationVisibility.PACKAGE)
 public abstract class BuildRuleContextWithEnvironment {
 
@@ -132,9 +132,7 @@ public abstract class BuildRuleContextWithEnvironment {
     return getEnv()
         .evaluate(
             depKey,
-            depBuildRule -> {
-              return createBuildRuleWithDep.apply(depBuildRule.getProviderCollection());
-            });
+            depBuildRule -> createBuildRuleWithDep.apply(depBuildRule.getProviderCollection()));
   }
 
   /**
@@ -157,10 +155,10 @@ public abstract class BuildRuleContextWithEnvironment {
     return getEnv()
         .evaluateAll(
             depKeys,
-            depBuildRules -> {
-              return createBuildRuleWithDeps.apply(
-                  ImmutableMap.copyOf(
-                      Maps.transformValues(depBuildRules, rule -> rule.getProviderCollection())));
-            });
+            depBuildRules ->
+                createBuildRuleWithDeps.apply(
+                    ImmutableMap.copyOf(
+                        Maps.transformValues(
+                            depBuildRules, rule -> rule.getProviderCollection()))));
   }
 }

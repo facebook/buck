@@ -24,7 +24,7 @@ import org.immutables.value.Value;
 
 /**
  * An Immutable Key to a {@link BuildRule} for computation in {@link
- * com.facebook.buck.graph.transformationengine.AsyncTransformationEngine}. The Key is used to
+ * com.facebook.buck.core.graph.transformation.AsyncTransformationEngine}. The Key is used to
  * represent what {@link BuildRule} subgraph we are attempting to compute.
  *
  * <p>The {@link BuildRule} subgraph is identified by:
