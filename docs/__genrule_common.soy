@@ -31,10 +31,19 @@
       to prior to running the command.</dd>
 
       <dt><code>OUT</code></dt>
-      <dd>The output file for the <code>genrule()</code>. The file
-      specified by this variable must always be written by this
-      command. If not, the execution of this rule will be considered a
-      failure, halting the build process.</dd>
+      <dd>
+      <p>
+      The output file or directory for the <code>genrule()</code>.  
+      This variable will have whatever value is specified by the <code>out</code> argument.  
+      The value should be a valid filepath. The semantics of the shell command
+      determine whether this filepath is treated as a file or a directory. 
+      If the filepath is a directory, then the shell command needs to create it.
+      </p>
+      <p>
+      The file or directory specified by this variable must always be written by this command. 
+      If not, the execution of this rule will be considered a failure, halting the build process.
+      </p>
+      </dd>
 
       <dt><code>TMP</code></dt>
       <dd>A temporary directory which can be used for intermediate results and will not be
