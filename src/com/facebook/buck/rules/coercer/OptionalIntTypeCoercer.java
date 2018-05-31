@@ -42,6 +42,17 @@ public class OptionalIntTypeCoercer extends LeafTypeCoercer<OptionalInt> {
     if (object instanceof Integer) {
       return OptionalInt.of((int) object);
     }
+    if (object instanceof Long) {
+      Long longValue = (Long) object;
+      if (longValue > Integer.MAX_VALUE) {
+        throw CoerceFailedException.simple(
+            object,
+            getOutputClass(),
+            String.format(
+                "%s is greater than the maximum integer value %s", longValue, Integer.MAX_VALUE));
+      }
+      return OptionalInt.of(longValue.intValue());
+    }
     throw CoerceFailedException.simple(object, getOutputClass());
   }
 }

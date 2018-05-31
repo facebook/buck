@@ -25,14 +25,17 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import java.nio.file.Path;
 import java.util.OptionalInt;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
-public class OptionalIntCoercerTest {
+public class OptionalIntTypeCoercerTest {
 
   private final Path basePath = MorePaths.EMPTY_PATH;
   private final ProjectFilesystem filesystem = new FakeProjectFilesystem();
   private final OptionalIntTypeCoercer coercer = new OptionalIntTypeCoercer();
-  private CellPathResolver cellRoots = TestCellBuilder.createCellRoots(filesystem);
+  private final CellPathResolver cellRoots = TestCellBuilder.createCellRoots(filesystem);
+  @Rule public final ExpectedException thrown = ExpectedException.none();
 
   @Test
   public void canCoerceNullToEmptyOptionalInt() throws Exception {
@@ -42,6 +45,20 @@ public class OptionalIntCoercerTest {
   @Test
   public void canCoerceIntegerToNonEmptyOptionalInt() throws Exception {
     assertEquals(OptionalInt.of(777), coerce(777));
+  }
+
+  @Test
+  public void canCoerceLongToNonEmptyOptionalIntIfItDoesNotExceedMaxInt() throws Exception {
+    assertEquals(OptionalInt.of(777), coerce(777L));
+  }
+
+  @Test
+  public void canNotCoerceLongThatExceedsMaxIntToOptionalInt() throws Exception {
+    thrown.expect(CoerceFailedException.class);
+    thrown.expectMessage(
+        "cannot coerce '2147483648' to class java.util.OptionalInt, "
+            + "2147483648 is greater than the maximum integer value 2147483647");
+    coerce(((long) Integer.MAX_VALUE) + 1);
   }
 
   private OptionalInt coerce(Object object) throws CoerceFailedException {
