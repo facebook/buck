@@ -822,6 +822,16 @@ public final class Main {
               GlobalStateManager.singleton()
                   .setupLoggers(invocationInfo, console.getStdErr(), stdErr, verbosity);
           DefaultBuckEventBus buildEventBus = new DefaultBuckEventBus(clock, buildId);
+          // We use a new executor service beyond client connection lifetime since it can take a
+          // long time to stat and cleanup large disk artifact cache directories
+          // See https://github.com/facebook/buck/issues/1842
+          // TODO(buck_team) switch this to delayed tasks framework
+          ThrowingCloseableWrapper<ExecutorService, InterruptedException>
+              dirArtifactExecutorService =
+                  getExecutorWrapper(
+                      MostExecutors.newSingleThreadExecutor("Dir Artifact"),
+                      "Dir Artifact",
+                      EXECUTOR_SERVICES_TIMEOUT_SECONDS);
           ) {
 
         try (ThrowingCloseableWrapper<ExecutorService, InterruptedException> diskIoExecutorService =
@@ -931,7 +941,7 @@ public final class Main {
                     httpWriteExecutorService.get(),
                     httpFetchExecutorService.get(),
                     stampedeSyncBuildHttpFetchExecutorService.get(),
-                    diskIoExecutorService.get());
+                    dirArtifactExecutorService.get());
 
             // Once command completes it should be safe to not wait for executors and other stateful
             // objects to terminate and release semaphore right away. It will help to retry
