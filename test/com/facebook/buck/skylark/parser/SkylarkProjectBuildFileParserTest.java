@@ -941,6 +941,26 @@ public class SkylarkProjectBuildFileParserTest {
   }
 
   @Test
+  public void ruleDoesNotExistIfNotDefinedWhenUsedFromExtensionFile() throws Exception {
+    Path directory = projectFilesystem.resolve("src").resolve("test");
+    Files.createDirectories(directory);
+    Path buildFile = directory.resolve("BUCK");
+    Path extensionFile = directory.resolve("build_rules.bzl");
+    Path extensionExtensionFile = directory.resolve("extension_rules.bzl");
+    Files.write(
+        buildFile,
+        Arrays.asList(
+            "load('//src/test:build_rules.bzl', 'get_name')",
+            "prebuilt_jar(name='foo', binary_jar=get_name())"));
+    Files.write(
+        extensionExtensionFile,
+        Arrays.asList("def get_name():", "  return str(native.rule_exists('does_not_exist'))"));
+    Files.write(extensionFile, Arrays.asList("load('//src/test:extension_rules.bzl', 'get_name')"));
+    Map<String, Object> rule = getSingleRule(buildFile);
+    assertThat(rule.get("binaryJar"), equalTo("False"));
+  }
+
+  @Test
   public void ruleExistsIfDefined() throws Exception {
     Path buildFile = projectFilesystem.resolve("pkg").resolve("BUCK");
     Files.createDirectories(buildFile.getParent());
@@ -953,6 +973,30 @@ public class SkylarkProjectBuildFileParserTest {
     assertThat(buildFileManifest.getTargets(), Matchers.hasSize(2));
     Map<String, Object> rule = buildFileManifest.getTargets().get(1);
     assertThat(rule.get("name"), equalTo("True"));
+  }
+
+  @Test
+  public void ruleExistsIfDefinedWhenUsedFromExtensionFile() throws Exception {
+    Path directory = projectFilesystem.resolve("src").resolve("test");
+    Files.createDirectories(directory);
+    Path buildFile = directory.resolve("BUCK");
+    Path extensionFile = directory.resolve("build_rules.bzl");
+    Path extensionExtensionFile = directory.resolve("extension_rules.bzl");
+    Files.write(
+        buildFile,
+        Arrays.asList(
+            "load('//src/test:build_rules.bzl', 'get_name')",
+            "prebuilt_jar(name='exists', binary_jar='binary.jar')",
+            "prebuilt_jar(name='foo', binary_jar=get_name())"));
+    Files.write(
+        extensionExtensionFile,
+        Arrays.asList("def get_name():", "  return str(native.rule_exists('exists'))"));
+    Files.write(extensionFile, Arrays.asList("load('//src/test:extension_rules.bzl', 'get_name')"));
+    BuildFileManifest buildFileManifest = parser.getBuildFileManifest(buildFile, new AtomicLong());
+    assertThat(buildFileManifest.getTargets(), Matchers.hasSize(2));
+    Map<String, Object> rule = buildFileManifest.getTargets().get(0);
+    assertThat(rule.get("name"), is("foo"));
+    assertThat(rule.get("binaryJar"), equalTo("True"));
   }
 
   private Map<String, Object> getSingleRule(Path buildFile)

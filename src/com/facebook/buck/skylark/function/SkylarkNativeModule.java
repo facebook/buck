@@ -19,10 +19,9 @@ package com.facebook.buck.skylark.function;
 import com.facebook.buck.skylark.parser.context.ParseContext;
 import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.skylarkinterface.Param;
+import com.google.devtools.build.lib.skylarkinterface.SkylarkCallable;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkModule;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkModuleCategory;
-import com.google.devtools.build.lib.skylarkinterface.SkylarkSignature;
-import com.google.devtools.build.lib.syntax.BuiltinFunction;
 import com.google.devtools.build.lib.syntax.Environment;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.FuncallExpression;
@@ -44,10 +43,8 @@ import com.google.devtools.build.lib.syntax.SkylarkSignatureProcessor;
 )
 public class SkylarkNativeModule {
 
-  @SkylarkSignature(
+  @SkylarkCallable(
     name = "package_name",
-    objectType = SkylarkNativeModule.class,
-    returnType = String.class,
     doc =
         "The name of the package being evaluated. "
             + "For example, in the build file <code>some/package/BUCK</code>, its value "
@@ -59,24 +56,18 @@ public class SkylarkNativeModule {
     useAst = true,
     useEnvironment = true
   )
-  public static final BuiltinFunction packageName =
-      new BuiltinFunction("package_name") {
-        @SuppressWarnings("unused")
-        public String invoke(FuncallExpression ast, Environment env) throws EvalException {
-          env.checkLoadingPhase("native.package_name", ast.getLocation());
-          ParseContext parseContext = ParseContext.getParseContext(env, ast);
-          return parseContext
-              .getPackageContext()
-              .getPackageIdentifier()
-              .getPackageFragment()
-              .getPathString();
-        }
-      };
+  public String packageName(FuncallExpression ast, Environment env) throws EvalException {
+    env.checkLoadingPhase("native.package_name", ast.getLocation());
+    ParseContext parseContext = ParseContext.getParseContext(env, ast);
+    return parseContext
+        .getPackageContext()
+        .getPackageIdentifier()
+        .getPackageFragment()
+        .getPathString();
+  }
 
-  @SkylarkSignature(
+  @SkylarkCallable(
     name = "repository_name",
-    objectType = SkylarkNativeModule.class,
-    returnType = String.class,
     doc =
         "The name of the repository the rule or build extension is called from. "
             + "For example, in packages that are called into existence inside of the cell "
@@ -87,37 +78,28 @@ public class SkylarkNativeModule {
     useAst = true,
     useEnvironment = true
   )
-  public static final BuiltinFunction repositoryName =
-      new BuiltinFunction("repository_name") {
-        @SuppressWarnings("unused")
-        public String invoke(Location location, FuncallExpression ast, Environment env)
-            throws EvalException {
-          env.checkLoadingPhase("native.repository_name", location);
-          ParseContext parseContext = ParseContext.getParseContext(env, ast);
-          return parseContext.getPackageContext().getPackageIdentifier().getRepository().getName();
-        }
-      };
+  public String repositoryName(Location location, FuncallExpression ast, Environment env)
+      throws EvalException {
+    env.checkLoadingPhase("native.repository_name", location);
+    ParseContext parseContext = ParseContext.getParseContext(env, ast);
+    return parseContext.getPackageContext().getPackageIdentifier().getRepository().getName();
+  }
 
-  @SkylarkSignature(
+  @SkylarkCallable(
     name = "rule_exists",
     doc =
         "Returns True if there is a previously defined rule with provided name, "
             + "or False if the rule with such name does not exist.",
     parameters = {@Param(name = "name", type = String.class, doc = "The name of the rule.")},
-    returnType = Boolean.class,
     useAst = true,
     useEnvironment = true
   )
-  public static final BuiltinFunction ruleExists =
-      new BuiltinFunction("rule_exists") {
-        @SuppressWarnings("unused")
-        public Boolean invoke(String name, FuncallExpression ast, Environment env)
-            throws EvalException {
-          env.checkLoadingOrWorkspacePhase("native.rule_exists", ast.getLocation());
-          ParseContext parseContext = ParseContext.getParseContext(env, ast);
-          return parseContext.hasRule(name);
-        }
-      };
+  public Boolean ruleExists(String name, FuncallExpression ast, Environment env)
+      throws EvalException {
+    env.checkLoadingOrWorkspacePhase("native.rule_exists", ast.getLocation());
+    ParseContext parseContext = ParseContext.getParseContext(env, ast);
+    return parseContext.hasRule(name);
+  }
 
   public static final SkylarkNativeModule NATIVE_MODULE = new SkylarkNativeModule();
 

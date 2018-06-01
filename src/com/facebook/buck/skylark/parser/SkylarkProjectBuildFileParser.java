@@ -46,6 +46,7 @@ import com.google.devtools.build.lib.events.EventHandler;
 import com.google.devtools.build.lib.syntax.BuildFileAST;
 import com.google.devtools.build.lib.syntax.Environment;
 import com.google.devtools.build.lib.syntax.Environment.Extension;
+import com.google.devtools.build.lib.syntax.FuncallExpression;
 import com.google.devtools.build.lib.syntax.Mutability;
 import com.google.devtools.build.lib.syntax.ParserInputSource;
 import com.google.devtools.build.lib.syntax.Runtime;
@@ -237,8 +238,11 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
     parseContext.setup(env);
     env.setup("glob", Glob.create());
     Runtime.setupModuleGlobals(env, SkylarkNativeModule.class);
-    env.setup("package_name", SkylarkNativeModule.packageName);
-    env.setup("repository_name", SkylarkNativeModule.repositoryName);
+    for (String nativeFunction : FuncallExpression.getMethodNames(SkylarkNativeModule.class)) {
+      env.setup(
+          nativeFunction,
+          FuncallExpression.getBuiltinCallable(SkylarkNativeModule.NATIVE_MODULE, nativeFunction));
+    }
 
     return EnvironmentData.builder()
         .setEnvironment(env)

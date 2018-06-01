@@ -34,6 +34,7 @@ import com.google.devtools.build.lib.packages.BazelLibrary;
 import com.google.devtools.build.lib.syntax.BuildFileAST;
 import com.google.devtools.build.lib.syntax.Environment;
 import com.google.devtools.build.lib.syntax.Environment.Phase;
+import com.google.devtools.build.lib.syntax.FuncallExpression;
 import com.google.devtools.build.lib.syntax.Mutability;
 import com.google.devtools.build.lib.syntax.ParserInputSource;
 import com.google.devtools.build.lib.vfs.FileSystemUtils;
@@ -100,7 +101,9 @@ public class SkylarkNativeModuleTest {
                 .setEventHandler(eventHandler)
                 .build())
         .setup(env);
-    env.setup("package_name", SkylarkNativeModule.packageName);
+    env.setup(
+        "package_name",
+        FuncallExpression.getBuiltinCallable(SkylarkNativeModule.NATIVE_MODULE, "package_name"));
     boolean exec = buildFileAst.exec(env, eventHandler);
     if (!exec) {
       Assert.fail("Build file evaluation must have succeeded");

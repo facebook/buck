@@ -31,6 +31,7 @@ import com.google.devtools.build.lib.packages.NativeProvider.StructProvider;
 import com.google.devtools.build.lib.syntax.BuiltinFunction;
 import com.google.devtools.build.lib.syntax.ClassObject;
 import com.google.devtools.build.lib.syntax.Environment;
+import com.google.devtools.build.lib.syntax.FuncallExpression;
 import com.google.devtools.build.lib.syntax.Mutability;
 import com.google.devtools.build.lib.syntax.Runtime;
 import org.immutables.value.Value;
@@ -99,18 +100,17 @@ abstract class AbstractBuckGlobals {
   @Lazy
   ClassObject getNativeModule() {
     ImmutableMap.Builder<String, Object> builder = new ImmutableMap.Builder<>();
-    BuiltinFunction packageName = SkylarkNativeModule.packageName;
-    builder.put(packageName.getName(), packageName);
     BuiltinFunction glob = Glob.create();
     builder.put(glob.getName(), glob);
     for (BuiltinFunction ruleFunction : getBuckRuleFunctions()) {
       builder.put(ruleFunction.getName(), ruleFunction);
     }
     builder.put("host_info", HostInfo.create());
-    BuiltinFunction repositoryName = SkylarkNativeModule.repositoryName;
-    builder.put(repositoryName.getName(), repositoryName);
-    BuiltinFunction existingRule = SkylarkNativeModule.ruleExists;
-    builder.put(existingRule.getName(), existingRule);
+    for (String nativeFunction : FuncallExpression.getMethodNames(SkylarkNativeModule.class)) {
+      builder.put(
+          nativeFunction,
+          FuncallExpression.getBuiltinCallable(SkylarkNativeModule.NATIVE_MODULE, nativeFunction));
+    }
     return StructProvider.STRUCT.create(builder.build(), "no native function or rule '%s'");
   }
 
