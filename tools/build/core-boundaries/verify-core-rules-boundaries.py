@@ -6,7 +6,7 @@ import platform
 import subprocess
 import sys
 
-CORE_QUERY = 'deps(//src/com/facebook/buck/rules:rules) - //third-party/... - //src-gen/...'
+CORE_QUERY = 'deps(//src/com/facebook/buck/core/...) - //third-party/... - //src-gen/...'
 
 
 def find_repo_root(cwd):
