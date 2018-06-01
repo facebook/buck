@@ -46,7 +46,7 @@ import org.immutables.value.Value;
  *
  * <p>Should only be constructed by {@link CellProvider}.
  */
-@Value.Immutable(prehash = true)
+@Value.Immutable(builder = false, prehash = true)
 @BuckStyleTuple
 abstract class AbstractCell {
   /** Whether or not the cell has changed significantly enough to invalidate caches */
