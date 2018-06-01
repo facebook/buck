@@ -577,7 +577,9 @@ public class ChromeTraceBuildListener implements BuckEventListener {
         "buck",
         started.getCategory(),
         ChromeTraceEvent.Phase.BEGIN,
-        ImmutableMap.of("rule_key", Joiner.on(", ").join(started.getRuleKeys())),
+        ImmutableMap.of(
+            "rule_key", Joiner.on(", ").join(started.getRuleKeys()),
+            "rule", started.getTarget().orElse("unknown")),
         started);
   }
 
@@ -586,7 +588,8 @@ public class ChromeTraceBuildListener implements BuckEventListener {
     ImmutableMap.Builder<String, String> argumentsBuilder =
         ImmutableMap.<String, String>builder()
             .put("success", Boolean.toString(finished.isSuccess()))
-            .put("rule_key", Joiner.on(", ").join(finished.getRuleKeys()));
+            .put("rule_key", Joiner.on(", ").join(finished.getRuleKeys()))
+            .put("rule", finished.getTarget().orElse("unknown"));
     Optionals.putIfPresent(
         finished.getCacheResult().map(Object::toString), "cache_result", argumentsBuilder);
 

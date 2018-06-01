@@ -475,7 +475,9 @@ public class ChromeTraceBuildListenerTest {
         resultListCopy,
         "http_artifact_fetch",
         ChromeTraceEvent.Phase.BEGIN,
-        ImmutableMap.of("rule_key", "abc123"));
+        ImmutableMap.of(
+            "rule_key", "abc123",
+            "rule", "//fake:rule"));
 
     assertNextResult(
         resultListCopy,
@@ -483,6 +485,7 @@ public class ChromeTraceBuildListenerTest {
         ChromeTraceEvent.Phase.END,
         ImmutableMap.of(
             "rule_key", "abc123",
+            "rule", "//fake:rule",
             "success", "true",
             "cache_result", "HTTP_HIT"));
 
@@ -517,7 +520,9 @@ public class ChromeTraceBuildListenerTest {
         resultListCopy,
         "http_artifact_store",
         ChromeTraceEvent.Phase.BEGIN,
-        ImmutableMap.of("rule_key", "abc123"));
+        ImmutableMap.of(
+            "rule_key", "abc123",
+            "rule", "TARGET_ONE"));
 
     assertNextResult(
         resultListCopy,
@@ -525,7 +530,8 @@ public class ChromeTraceBuildListenerTest {
         ChromeTraceEvent.Phase.END,
         ImmutableMap.of(
             "success", "true",
-            "rule_key", "abc123"));
+            "rule_key", "abc123",
+            "rule", "TARGET_ONE"));
 
     assertNextResult(resultListCopy, "processingPartOne", ChromeTraceEvent.Phase.BEGIN, emptyArgs);
 
