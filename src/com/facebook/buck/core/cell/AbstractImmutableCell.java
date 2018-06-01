@@ -16,7 +16,6 @@
 
 package com.facebook.buck.core.cell;
 
-import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.core.cell.resolver.CellPathResolver;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
@@ -40,67 +39,40 @@ import java.util.Optional;
 import java.util.Set;
 import org.immutables.value.Value;
 
-/**
- * Represents a single checkout of a code base. Two cells model the same code base if their
- * underlying {@link ProjectFilesystem}s are equal.
- *
- * <p>Should only be constructed by {@link CellProvider}.
- */
 @Value.Immutable(builder = false, prehash = true)
 @BuckStyleTuple
-abstract class AbstractCell {
-  /** Whether or not the cell has changed significantly enough to invalidate caches */
-  public enum IsCompatibleForCaching {
-    IS_COMPATIBLE,
-    FILESYSTEM_CHANGED,
-    BUCK_CONFIG_CHANGED,
-    TOOLCHAINS_INCOMPATIBLE;
+abstract class AbstractImmutableCell implements Cell {
 
-    /**
-     * Returns a human readable reason for why the cache needs invalidated (or "" if the cache does
-     * not need invalidated)
-     */
-    public String toHumanReasonableError() {
-      switch (this) {
-        case IS_COMPATIBLE:
-          return "";
-        case FILESYSTEM_CHANGED:
-          return "The project directory changed between invocations";
-        case BUCK_CONFIG_CHANGED:
-          return "Buck configuration options changed between invocations";
-        case TOOLCHAINS_INCOMPATIBLE:
-          return "Available / configured toolchains changed between invocations";
-      }
-      return "";
-    }
-  }
-
+  @Override
   @Value.Auxiliary
-  abstract ImmutableSet<Path> getKnownRoots();
+  public abstract ImmutableSet<Path> getKnownRoots();
 
+  @Override
   @Value.Auxiliary
-  abstract Optional<String> getCanonicalName();
+  public abstract Optional<String> getCanonicalName();
 
-  abstract ProjectFilesystem getFilesystem();
-
+  @Override
   @Value.Auxiliary
-  abstract Watchman getWatchman();
+  public abstract Watchman getWatchman();
 
-  abstract BuckConfig getBuckConfig();
-
+  @Override
   @Value.Auxiliary
-  abstract CellProvider getCellProvider();
+  public abstract CellProvider getCellProvider();
 
+  @Override
   @Value.Auxiliary
-  abstract ToolchainProvider getToolchainProvider();
+  public abstract ToolchainProvider getToolchainProvider();
 
+  @Override
   public Path getRoot() {
     return getFilesystem().getRootPath();
   }
 
+  @Override
   @Value.Auxiliary
-  abstract RuleKeyConfiguration getRuleKeyConfiguration();
+  public abstract RuleKeyConfiguration getRuleKeyConfiguration();
 
+  @Override
   public IsCompatibleForCaching isCompatibleForCaching(Cell other) {
     if (!getFilesystem().equals(other.getFilesystem())) {
       return IsCompatibleForCaching.FILESYSTEM_CHANGED;
@@ -202,15 +174,12 @@ abstract class AbstractCell {
     }
   }
 
+  @Override
   public String getBuildFileName() {
     return getBuckConfig().getView(ParserConfig.class).getBuildFileName();
   }
 
-  /**
-   * Whether the cell is enforcing buck package boundaries for the package at the passed path.
-   *
-   * @param path Path of package (or file in a package) relative to the cell root.
-   */
+  @Override
   public boolean isEnforcingBuckPackageBoundaries(Path path) {
     ParserConfig configView = getBuckConfig().getView(ParserConfig.class);
     if (!configView.getEnforceBuckPackageBoundary()) {
@@ -228,10 +197,12 @@ abstract class AbstractCell {
     return true;
   }
 
+  @Override
   public Cell getCellIgnoringVisibilityCheck(Path cellPath) {
     return getCellProvider().getCellByPath(cellPath);
   }
 
+  @Override
   public Cell getCell(Path cellPath) {
     if (!getKnownRoots().contains(cellPath)) {
       throw new HumanReadableException(
@@ -241,10 +212,12 @@ abstract class AbstractCell {
     return getCellIgnoringVisibilityCheck(cellPath);
   }
 
+  @Override
   public Cell getCell(BuildTarget target) {
     return getCell(target.getCellPath());
   }
 
+  @Override
   public Optional<Cell> getCellIfKnown(BuildTarget target) {
     if (getKnownRoots().contains(target.getCellPath())) {
       return Optional.of(getCell(target));
@@ -252,11 +225,7 @@ abstract class AbstractCell {
     return Optional.empty();
   }
 
-  /**
-   * Returns a list of all cells, including this cell. If this cell is the root, getAllCells will
-   * necessarily return all possible cells that this build may interact with, since the root cell is
-   * required to declare a mapping for all cell names.
-   */
+  @Override
   public ImmutableList<Cell> getAllCells() {
     return RichStream.from(getKnownRoots())
         .concat(RichStream.of(getRoot()))
@@ -265,24 +234,19 @@ abstract class AbstractCell {
         .toImmutableList();
   }
 
-  /** @return all loaded {@link Cell}s that are children of this {@link Cell}. */
+  @Override
   public ImmutableMap<Path, Cell> getLoadedCells() {
     return getCellProvider().getLoadedCells();
   }
 
-  /**
-   * For use in performance-sensitive code or if you don't care if the build file actually exists,
-   * otherwise prefer {@link #getAbsolutePathToBuildFile(BuildTarget)}.
-   *
-   * @param target target to look up
-   * @return path which may or may not exist.
-   */
+  @Override
   public Path getAbsolutePathToBuildFileUnsafe(BuildTarget target) {
     Cell targetCell = getCell(target);
     ProjectFilesystem targetFilesystem = targetCell.getFilesystem();
     return targetFilesystem.resolve(target.getBasePath()).resolve(targetCell.getBuildFileName());
   }
 
+  @Override
   public Path getAbsolutePathToBuildFile(BuildTarget target) throws MissingBuildFileException {
     Path buildFile = getAbsolutePathToBuildFileUnsafe(target);
     Cell cell = getCell(target);
@@ -297,6 +261,7 @@ abstract class AbstractCell {
     return buildFile;
   }
 
+  @Override
   public CellPathResolver getCellPathResolver() {
     return getBuckConfig().getCellPathResolver();
   }

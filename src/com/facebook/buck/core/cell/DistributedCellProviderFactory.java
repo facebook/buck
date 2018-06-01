@@ -82,17 +82,17 @@ public class DistributedCellProviderFactory {
                           cellParam.getExecutableFinder(),
                           ruleKeyConfiguration);
 
-                  return Cell.of(
+                  return ImmutableCell.of(
                       cellParams.keySet(),
                       // Distributed builds don't care about cell names, use a sentinel value that
                       // will show up if it actually does care about them.
                       cellParam.getCanonicalName(),
-                      cellParam.getFilesystem(),
                       WatchmanFactory.NULL_WATCHMAN,
-                      configWithResolver,
                       cellProvider,
                       toolchainProvider,
-                      ruleKeyConfiguration);
+                      ruleKeyConfiguration,
+                      cellParam.getFilesystem(),
+                      configWithResolver);
                 }),
         cellProvider ->
             RootCellFactory.create(

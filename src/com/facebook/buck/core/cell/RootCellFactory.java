@@ -67,15 +67,15 @@ class RootCellFactory {
             processExecutor,
             executableFinder,
             ruleKeyConfiguration);
-    return Cell.of(
+    return ImmutableCell.of(
         rootCellCellPathResolver.getKnownRoots(),
         Optional.empty(),
-        rootFilesystem,
         watchman,
-        rootConfig,
         cellProvider,
         toolchainProvider,
-        ruleKeyConfiguration);
+        ruleKeyConfiguration,
+        rootFilesystem,
+        rootConfig);
   }
 
   static Cell create(
@@ -93,14 +93,14 @@ class RootCellFactory {
         ConfigRuleKeyConfigurationFactory.create(rootConfig, moduleManager);
     ToolchainProvider toolchainProvider =
         toolchainProviderFactory.create(rootConfig, rootFilesystem, ruleKeyConfiguration);
-    return Cell.of(
+    return ImmutableCell.of(
         rootCellCellPathResolver.getKnownRoots(),
         Optional.empty(),
-        rootFilesystem,
         watchman,
-        rootConfig,
         cellProvider,
         toolchainProvider,
-        ruleKeyConfiguration);
+        ruleKeyConfiguration,
+        rootFilesystem,
+        rootConfig);
   }
 }

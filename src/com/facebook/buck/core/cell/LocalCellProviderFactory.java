@@ -144,15 +144,15 @@ public class LocalCellProviderFactory {
 
                 // TODO(13777679): cells in other watchman roots do not work correctly.
 
-                return Cell.of(
+                return ImmutableCell.of(
                     cellPathResolver.getKnownRoots(),
                     canonicalCellName,
-                    cellFilesystem,
                     watchman,
-                    buckConfig,
                     cellProvider,
                     toolchainProvider,
-                    ruleKeyConfiguration);
+                    ruleKeyConfiguration,
+                    cellFilesystem,
+                    buckConfig);
               }
             },
         cellProvider ->
