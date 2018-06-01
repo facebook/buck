@@ -150,7 +150,7 @@ public class PertTimesEventListenerTest {
 
     fakeClock.setCurrentTimeMillis(4000);
     HttpArtifactCacheEvent.Started fetchStarted =
-        HttpArtifactCacheEvent.newFetchStartedEvent(ruleKey);
+        HttpArtifactCacheEvent.newFetchStartedEvent(buildRule.getBuildTarget(), ruleKey);
     eventBus.post(fetchStarted);
 
     fakeClock.setCurrentTimeMillis(4500);

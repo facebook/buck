@@ -303,7 +303,7 @@ public class SuperConsoleEventBusListenerTest {
 
     // Test a remote cache request.
     HttpArtifactCacheEvent.Started remoteFetchStarted =
-        HttpArtifactCacheEvent.newFetchStartedEvent(remoteCachedRuleKey);
+        HttpArtifactCacheEvent.newFetchStartedEvent(null, remoteCachedRuleKey);
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
             remoteFetchStarted, 745L, TimeUnit.MILLISECONDS, /* threadId */ 0L));

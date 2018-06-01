@@ -95,7 +95,7 @@ public abstract class AbstractNetworkCache extends AbstractAsynchronousCache {
     @Override
     public FetchRequestEvents fetchStarted(@Nullable BuildTarget target, RuleKey ruleKey) {
       HttpArtifactCacheEvent.Started startedEvent =
-          HttpArtifactCacheEvent.newFetchStartedEvent(ruleKey);
+          HttpArtifactCacheEvent.newFetchStartedEvent(target, ruleKey);
       HttpArtifactCacheEvent.Finished.Builder eventBuilder =
           HttpArtifactCacheEvent.newFinishedEventBuilder(startedEvent);
       eventBuilder.getFetchBuilder().setRequestedRuleKey(ruleKey);
@@ -103,7 +103,9 @@ public abstract class AbstractNetworkCache extends AbstractAsynchronousCache {
       return new FetchRequestEvents() {
         @Override
         public void finished(FetchResult fetchResult) {
-          eventBuilder.setTarget(fetchResult.getBuildTarget());
+          if (!startedEvent.getTarget().isPresent()) {
+            eventBuilder.setTarget(fetchResult.getBuildTarget());
+          }
           eventBuilder
               .getFetchBuilder()
               .setAssociatedRuleKeys(fetchResult.getAssociatedRuleKeys().orElse(ImmutableSet.of()))
@@ -129,7 +131,7 @@ public abstract class AbstractNetworkCache extends AbstractAsynchronousCache {
       Joiner ruleKeysStr = Joiner.on(", ");
       LOG.debug("multiFetchStarted for <%s>.", ruleKeysStr.join(ruleKeys));
       HttpArtifactCacheEvent.MultiFetchStarted startedEvent =
-          HttpArtifactCacheEvent.newMultiFetchStartedEvent(ruleKeys);
+          HttpArtifactCacheEvent.newMultiFetchStartedEvent(targets, ruleKeys);
       HttpArtifactCacheEvent.Finished.Builder eventBuilder =
           HttpArtifactCacheEvent.newFinishedEventBuilder(startedEvent);
       dispatcher.post(startedEvent);

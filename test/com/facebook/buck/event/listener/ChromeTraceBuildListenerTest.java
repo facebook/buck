@@ -326,7 +326,7 @@ public class ChromeTraceBuildListenerTest {
     eventBus.post(buildEventStarted);
 
     HttpArtifactCacheEvent.Started artifactCacheEventStarted =
-        ArtifactCacheTestUtils.newFetchStartedEvent(ruleKey);
+        ArtifactCacheTestUtils.newFetchStartedEvent(rule.getBuildTarget(), ruleKey);
     eventBus.post(artifactCacheEventStarted);
     eventBus.post(
         ArtifactCacheTestUtils.newFetchFinishedEvent(

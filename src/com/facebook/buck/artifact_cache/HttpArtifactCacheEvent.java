@@ -17,6 +17,7 @@
 package com.facebook.buck.artifact_cache;
 
 import com.facebook.buck.core.model.BuildId;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.event.AbstractBuckEvent;
@@ -28,6 +29,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import java.util.Optional;
+import javax.annotation.Nullable;
 import org.immutables.value.Value;
 
 /** Event produced for HttpArtifactCache operations containing different stats. */
@@ -45,9 +47,12 @@ public abstract class HttpArtifactCacheEvent extends ArtifactCacheEvent {
     super(eventKey, CACHE_MODE, operation, target, ruleKeys, invocationType, storeType);
   }
 
-  public static Started newFetchStartedEvent(RuleKey ruleKey) {
+  public static Started newFetchStartedEvent(@Nullable BuildTarget target, RuleKey ruleKey) {
     return new Started(
-        ArtifactCacheEvent.Operation.FETCH, ImmutableSet.of(ruleKey), StoreType.NOT_APPLICABLE);
+        ArtifactCacheEvent.Operation.FETCH,
+        target != null ? ImmutableSet.of(target) : ImmutableSet.of(),
+        ImmutableSet.of(ruleKey),
+        StoreType.NOT_APPLICABLE);
   }
 
   public static Started newStoreStartedEvent(Scheduled scheduled) {
@@ -68,8 +73,8 @@ public abstract class HttpArtifactCacheEvent extends ArtifactCacheEvent {
   }
 
   public static HttpArtifactCacheEvent.MultiFetchStarted newMultiFetchStartedEvent(
-      ImmutableList<RuleKey> ruleKeys) {
-    return new MultiFetchStarted(ImmutableSet.copyOf(ruleKeys));
+      ImmutableList<BuildTarget> targets, ImmutableList<RuleKey> ruleKeys) {
+    return new MultiFetchStarted(ImmutableSet.copyOf(targets), ImmutableSet.copyOf(ruleKeys));
   }
 
   public static class Scheduled extends HttpArtifactCacheEvent {
@@ -108,13 +113,16 @@ public abstract class HttpArtifactCacheEvent extends ArtifactCacheEvent {
 
     public Started(
         ArtifactCacheEvent.Operation operation,
+        ImmutableSet<BuildTarget> targets,
         ImmutableSet<RuleKey> ruleKeys,
         StoreType storeType) {
       super(
           EventKey.unique(),
           CACHE_MODE,
           operation,
-          Optional.empty(),
+          targets.size() == 1
+              ? Optional.of(targets.iterator().next().getFullyQualifiedName())
+              : Optional.empty(),
           ruleKeys,
           ArtifactCacheEvent.InvocationType.SYNCHRONOUS,
           storeType);
@@ -229,7 +237,7 @@ public abstract class HttpArtifactCacheEvent extends ArtifactCacheEvent {
         this.startedEvent = event;
         this.storeDataBuilder = HttpArtifactCacheEventStoreData.builder();
         this.fetchDataBuilder = HttpArtifactCacheEventFetchData.builder();
-        this.target = Optional.empty();
+        this.target = event.getTarget();
       }
 
       public HttpArtifactCacheEvent.Finished build() {
@@ -303,8 +311,8 @@ public abstract class HttpArtifactCacheEvent extends ArtifactCacheEvent {
   }
 
   static class MultiFetchStarted extends Started {
-    public MultiFetchStarted(ImmutableSet<RuleKey> ruleKeys) {
-      super(Operation.MULTI_FETCH, ruleKeys, StoreType.NOT_APPLICABLE);
+    public MultiFetchStarted(ImmutableSet<BuildTarget> targets, ImmutableSet<RuleKey> ruleKeys) {
+      super(Operation.MULTI_FETCH, targets, ruleKeys, StoreType.NOT_APPLICABLE);
     }
   }
 }
