@@ -86,9 +86,9 @@ public class ParseContext {
     return rawRules.values().stream().collect(ImmutableList.toImmutableList());
   }
 
-  /** @return A raw rule with requested name defined in currently parsed package. */
-  public Optional<ImmutableMap<String, Object>> getRawRule(String name) {
-    return Optional.ofNullable(rawRules.get(name));
+  /** @return {@code true} if the rule with provided name exists, {@code false} otherwise. */
+  public boolean hasRule(String name) {
+    return rawRules.containsKey(name);
   }
 
   public ImmutableMap<String, ImmutableMap<String, Optional<String>>>

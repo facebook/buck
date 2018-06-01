@@ -18,6 +18,7 @@ package com.facebook.buck.skylark.function;
 
 import com.facebook.buck.skylark.parser.context.ParseContext;
 import com.google.devtools.build.lib.events.Location;
+import com.google.devtools.build.lib.skylarkinterface.Param;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkModule;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkModuleCategory;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkSignature;
@@ -94,6 +95,27 @@ public class SkylarkNativeModule {
           env.checkLoadingPhase("native.repository_name", location);
           ParseContext parseContext = ParseContext.getParseContext(env, ast);
           return parseContext.getPackageContext().getPackageIdentifier().getRepository().getName();
+        }
+      };
+
+  @SkylarkSignature(
+    name = "rule_exists",
+    doc =
+        "Returns True if there is a previously defined rule with provided name, "
+            + "or False if the rule with such name does not exist.",
+    parameters = {@Param(name = "name", type = String.class, doc = "The name of the rule.")},
+    returnType = Boolean.class,
+    useAst = true,
+    useEnvironment = true
+  )
+  public static final BuiltinFunction ruleExists =
+      new BuiltinFunction("rule_exists") {
+        @SuppressWarnings("unused")
+        public Boolean invoke(String name, FuncallExpression ast, Environment env)
+            throws EvalException {
+          env.checkLoadingOrWorkspacePhase("native.rule_exists", ast.getLocation());
+          ParseContext parseContext = ParseContext.getParseContext(env, ast);
+          return parseContext.hasRule(name);
         }
       };
 

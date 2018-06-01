@@ -930,6 +930,31 @@ public class SkylarkProjectBuildFileParserTest {
     }
   }
 
+  @Test
+  public void ruleDoesNotExistIfNotDefined() throws Exception {
+    Path buildFile = projectFilesystem.resolve("pkg").resolve("BUCK");
+    Files.createDirectories(buildFile.getParent());
+    Files.write(
+        buildFile, Arrays.asList("prebuilt_jar(name=str(rule_exists('r')), binary_jar='foo')"));
+    Map<String, Object> rule = getSingleRule(buildFile);
+    assertThat(rule.get("name"), equalTo("False"));
+  }
+
+  @Test
+  public void ruleExistsIfDefined() throws Exception {
+    Path buildFile = projectFilesystem.resolve("pkg").resolve("BUCK");
+    Files.createDirectories(buildFile.getParent());
+    Files.write(
+        buildFile,
+        Arrays.asList(
+            "prebuilt_jar(name='foo', binary_jar='binary.jar')",
+            "prebuilt_jar(name=str(rule_exists('foo')), binary_jar='foo')"));
+    BuildFileManifest buildFileManifest = parser.getBuildFileManifest(buildFile, new AtomicLong());
+    assertThat(buildFileManifest.getTargets(), Matchers.hasSize(2));
+    Map<String, Object> rule = buildFileManifest.getTargets().get(1);
+    assertThat(rule.get("name"), equalTo("True"));
+  }
+
   private Map<String, Object> getSingleRule(Path buildFile)
       throws BuildFileParseException, InterruptedException, IOException {
     BuildFileManifest buildFileManifest = parser.getBuildFileManifest(buildFile, new AtomicLong());

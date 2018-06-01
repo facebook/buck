@@ -109,6 +109,8 @@ abstract class AbstractBuckGlobals {
     builder.put("host_info", HostInfo.create());
     BuiltinFunction repositoryName = SkylarkNativeModule.repositoryName;
     builder.put(repositoryName.getName(), repositoryName);
+    BuiltinFunction existingRule = SkylarkNativeModule.ruleExists;
+    builder.put(existingRule.getName(), existingRule);
     return StructProvider.STRUCT.create(builder.build(), "no native function or rule '%s'");
   }
 
