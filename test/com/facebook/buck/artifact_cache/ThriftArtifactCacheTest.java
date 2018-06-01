@@ -275,10 +275,14 @@ public class ThriftArtifactCacheTest {
         new com.facebook.buck.core.rulekey.RuleKey(HashCode.fromInt(3));
     ImmutableList<AbstractAsynchronousCache.FetchRequest> requests =
         ImmutableList.of(
-            new AbstractAsynchronousCache.FetchRequest(key0, LazyPath.ofInstance(output0), future),
-            new AbstractAsynchronousCache.FetchRequest(key1, LazyPath.ofInstance(output1), future),
-            new AbstractAsynchronousCache.FetchRequest(key2, LazyPath.ofInstance(output2), future),
-            new AbstractAsynchronousCache.FetchRequest(key3, LazyPath.ofInstance(output3), future));
+            new AbstractAsynchronousCache.FetchRequest(
+                null, key0, LazyPath.ofInstance(output0), future),
+            new AbstractAsynchronousCache.FetchRequest(
+                null, key1, LazyPath.ofInstance(output1), future),
+            new AbstractAsynchronousCache.FetchRequest(
+                null, key2, LazyPath.ofInstance(output2), future),
+            new AbstractAsynchronousCache.FetchRequest(
+                null, key3, LazyPath.ofInstance(output3), future));
 
     String payload1 = "payload1";
     String payload3 = "bigger payload3";

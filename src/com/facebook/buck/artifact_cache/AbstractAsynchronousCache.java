@@ -39,6 +39,7 @@ import com.google.common.util.concurrent.SettableFuture;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -130,6 +131,11 @@ public abstract class AbstractAsynchronousCache implements ArtifactCache {
         eventListener.multiFetchStarted(
             requests
                 .stream()
+                .map(r -> r.getRequest().getBuildTarget())
+                .filter(Objects::nonNull)
+                .collect(ImmutableList.toImmutableList()),
+            requests
+                .stream()
                 .map(r -> r.getRequest().getRuleKey())
                 .collect(ImmutableList.toImmutableList()))) {
       try {
@@ -211,7 +217,7 @@ public abstract class AbstractAsynchronousCache implements ArtifactCache {
   private void doFetch(FetchRequest request) {
     CacheResult result;
     CacheEventListener.FetchRequestEvents requestEvents =
-        eventListener.fetchStarted(request.getRuleKey());
+        eventListener.fetchStarted(request.getBuildTarget(), request.getRuleKey());
     try {
       FetchResult fetchResult = fetchImpl(request.getRuleKey(), request.getOutput());
       result = fetchResult.getCacheResult();
@@ -341,7 +347,7 @@ public abstract class AbstractAsynchronousCache implements ArtifactCache {
   public final ListenableFuture<CacheResult> fetchAsync(
       @Nullable BuildTarget target, RuleKey ruleKey, LazyPath output) {
     SettableFuture<CacheResult> future = SettableFuture.create();
-    addFetchRequest(new FetchRequest(ruleKey, output, future));
+    addFetchRequest(new FetchRequest(target, ruleKey, output, future));
     return future;
   }
 
@@ -447,7 +453,7 @@ public abstract class AbstractAsynchronousCache implements ArtifactCache {
 
     void fetchScheduled(RuleKey ruleKey);
 
-    FetchRequestEvents fetchStarted(RuleKey ruleKey);
+    FetchRequestEvents fetchStarted(BuildTarget target, RuleKey ruleKey);
 
     interface FetchRequestEvents {
       void finished(FetchResult result);
@@ -455,7 +461,8 @@ public abstract class AbstractAsynchronousCache implements ArtifactCache {
       void failed(IOException e, String errorMessage, CacheResult result);
     }
 
-    MultiFetchRequestEvents multiFetchStarted(ImmutableList<RuleKey> keys);
+    MultiFetchRequestEvents multiFetchStarted(
+        ImmutableList<BuildTarget> targets, ImmutableList<RuleKey> keys);
 
     interface MultiFetchRequestEvents extends Scope {
       void skipped(int keyIndex);
@@ -477,15 +484,26 @@ public abstract class AbstractAsynchronousCache implements ArtifactCache {
   }
 
   protected static class FetchRequest {
+    @Nullable private final BuildTarget target;
     private final RuleKey ruleKey;
     private final LazyPath output;
     private final SettableFuture<CacheResult> future;
 
     @VisibleForTesting
-    protected FetchRequest(RuleKey ruleKey, LazyPath output, SettableFuture<CacheResult> future) {
+    protected FetchRequest(
+        @Nullable BuildTarget target,
+        RuleKey ruleKey,
+        LazyPath output,
+        SettableFuture<CacheResult> future) {
+      this.target = target;
       this.ruleKey = ruleKey;
       this.output = output;
       this.future = future;
+    }
+
+    @Nullable
+    public BuildTarget getBuildTarget() {
+      return target;
     }
 
     public RuleKey getRuleKey() {

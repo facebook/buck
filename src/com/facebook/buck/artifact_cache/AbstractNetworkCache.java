@@ -17,6 +17,7 @@
 package com.facebook.buck.artifact_cache;
 
 import com.facebook.buck.artifact_cache.ArtifactCacheEvent.StoreType;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.EventDispatcher;
@@ -30,6 +31,7 @@ import com.google.common.collect.Maps;
 import java.io.IOException;
 import java.util.Map;
 import java.util.regex.Matcher;
+import javax.annotation.Nullable;
 
 public abstract class AbstractNetworkCache extends AbstractAsynchronousCache {
 
@@ -91,7 +93,7 @@ public abstract class AbstractNetworkCache extends AbstractAsynchronousCache {
     }
 
     @Override
-    public FetchRequestEvents fetchStarted(RuleKey ruleKey) {
+    public FetchRequestEvents fetchStarted(@Nullable BuildTarget target, RuleKey ruleKey) {
       HttpArtifactCacheEvent.Started startedEvent =
           HttpArtifactCacheEvent.newFetchStartedEvent(ruleKey);
       HttpArtifactCacheEvent.Finished.Builder eventBuilder =
@@ -122,7 +124,8 @@ public abstract class AbstractNetworkCache extends AbstractAsynchronousCache {
     }
 
     @Override
-    public MultiFetchRequestEvents multiFetchStarted(ImmutableList<RuleKey> ruleKeys) {
+    public MultiFetchRequestEvents multiFetchStarted(
+        ImmutableList<BuildTarget> targets, ImmutableList<RuleKey> ruleKeys) {
       Joiner ruleKeysStr = Joiner.on(", ");
       LOG.debug("multiFetchStarted for <%s>.", ruleKeysStr.join(ruleKeys));
       HttpArtifactCacheEvent.MultiFetchStarted startedEvent =

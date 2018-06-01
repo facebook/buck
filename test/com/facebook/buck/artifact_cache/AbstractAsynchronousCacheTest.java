@@ -22,6 +22,7 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.artifact_cache.AbstractAsynchronousCache.CacheEventListener;
 import com.facebook.buck.artifact_cache.config.ArtifactCacheMode;
 import com.facebook.buck.artifact_cache.config.CacheReadMode;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.io.file.LazyPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -162,7 +163,7 @@ public class AbstractAsynchronousCacheTest {
     public void fetchScheduled(RuleKey ruleKey) {}
 
     @Override
-    public CacheEventListener.FetchRequestEvents fetchStarted(RuleKey ruleKey) {
+    public CacheEventListener.FetchRequestEvents fetchStarted(BuildTarget target, RuleKey ruleKey) {
       return new FetchRequestEvents() {
         @Override
         public void finished(FetchResult result) {}
@@ -174,7 +175,7 @@ public class AbstractAsynchronousCacheTest {
 
     @Override
     public CacheEventListener.MultiFetchRequestEvents multiFetchStarted(
-        ImmutableList<RuleKey> keys) {
+        ImmutableList<BuildTarget> targets, ImmutableList<RuleKey> keys) {
       return new MultiFetchRequestEvents() {
         @Override
         public void skipped(int keyIndex) {}
