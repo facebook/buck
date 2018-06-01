@@ -41,23 +41,29 @@ public class ParseContext {
   // remove parse state from rules and as such makes rules reusable across parse invocations
   private static final String PARSE_CONTEXT = "$parse_context";
 
-  private final ImmutableMap.Builder<String, ImmutableMap<String, Object>> rawRuleBuilder;
+  private final Map<String, ImmutableMap<String, Object>> rawRules;
   // stores every accessed configuration option while parsing the build file.
   // the schema is: section->key->value
   private final Map<String, Map<String, Optional<String>>> readConfigOptions;
   private final PackageContext packageContext;
 
   public ParseContext(PackageContext packageContext) {
-    this.rawRuleBuilder = ImmutableMap.builder();
+    this.rawRules = new HashMap<>();
     this.readConfigOptions = new ConcurrentHashMap<>();
     this.packageContext = packageContext;
   }
 
   /** Records the parsed {@code rawRule}. */
-  public void recordRule(ImmutableMap<String, Object> rawRule) {
+  public void recordRule(ImmutableMap<String, Object> rawRule, FuncallExpression ast)
+      throws EvalException {
     String name =
         Preconditions.checkNotNull((String) rawRule.get("name"), "Every target must have a name.");
-    rawRuleBuilder.put(name, rawRule);
+    if (rawRules.containsKey(name)) {
+      throw new EvalException(
+          ast.getLocation(),
+          String.format("Cannot register rule %s with content %s again.", name, rawRule));
+    }
+    rawRules.put(name, rawRule);
   }
 
   /**
@@ -77,7 +83,12 @@ public class ParseContext {
    *     map with attributes as keys and parameters as values.
    */
   public ImmutableList<ImmutableMap<String, Object>> getRecordedRules() {
-    return rawRuleBuilder.build().values().stream().collect(ImmutableList.toImmutableList());
+    return rawRules.values().stream().collect(ImmutableList.toImmutableList());
+  }
+
+  /** @return A raw rule with requested name defined in currently parsed package. */
+  public Optional<ImmutableMap<String, Object>> getRawRule(String name) {
+    return Optional.ofNullable(rawRules.get(name));
   }
 
   public ImmutableMap<String, ImmutableMap<String, Optional<String>>>

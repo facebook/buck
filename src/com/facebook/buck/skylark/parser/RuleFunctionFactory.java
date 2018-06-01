@@ -91,7 +91,7 @@ public class RuleFunctionFactory {
                 typeCoercerFactory, ruleClass.getConstructorArgType());
         populateAttributes(kwargs, builder, allParamInfo);
         throwOnMissingRequiredAttribute(kwargs, allParamInfo, getName(), ast);
-        parseContext.recordRule(builder.build());
+        parseContext.recordRule(builder.build(), ast);
         return Runtime.NONE;
       }
     };

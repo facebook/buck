@@ -48,6 +48,7 @@ import com.facebook.buck.util.DefaultProcessExecutor;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import com.google.devtools.build.lib.events.Event;
 import com.google.devtools.build.lib.events.EventCollector;
 import com.google.devtools.build.lib.events.EventHandler;
@@ -152,6 +153,8 @@ public class SkylarkProjectBuildFileParserTest {
 
   @Test
   public void detectsDuplicateRuleDefinition() throws Exception {
+    EventCollector eventCollector = new EventCollector(EnumSet.allOf(EventKind.class));
+    parser = createParser(eventCollector);
     Path buildFile = projectFilesystem.resolve("src").resolve("BUCK");
     Files.createDirectories(buildFile.getParent());
     Files.write(
@@ -159,13 +162,17 @@ public class SkylarkProjectBuildFileParserTest {
         Arrays.asList(
             "prebuilt_jar(name='guava', binary_jar='guava.jar')",
             "prebuilt_jar(name='guava', binary_jar='guava.jar')"));
-
-    thrown.expectMessage(
-        "Multiple entries with same key: "
-            + "guava={buck.base_path=src, buck.type=prebuilt_jar, name=guava, binaryJar=guava.jar}"
-            + " and "
-            + "guava={buck.base_path=src, buck.type=prebuilt_jar, name=guava, binaryJar=guava.jar}");
-    parser.getBuildFileManifest(buildFile, new AtomicLong());
+    try {
+      parser.getBuildFileManifest(buildFile, new AtomicLong());
+      fail();
+    } catch (BuildFileParseException e) {
+      Event event = Iterables.getOnlyElement(eventCollector);
+      assertThat(event.getKind(), is(EventKind.ERROR));
+      assertThat(
+          event.getMessage(),
+          is(
+              "Cannot register rule guava with content {buck.base_path=src, buck.type=prebuilt_jar, name=guava, binaryJar=guava.jar} again."));
+    }
   }
 
   @Test
