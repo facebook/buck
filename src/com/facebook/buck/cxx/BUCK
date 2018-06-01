@@ -29,6 +29,7 @@ java_library_with_plugins(
     deps = [
         "//src/com/facebook/buck/apple/clang:clang",
         "//src/com/facebook/buck/core/cell/resolver:resolver",
+        "//src/com/facebook/buck/core/rules/common:common",
         "//src/com/facebook/buck/core/sourcepath/resolver/impl:impl",
         "//src/com/facebook/buck/core/toolchain/tool/impl:impl",
         "//src/com/facebook/buck/cxx/toolchain:toolchain",

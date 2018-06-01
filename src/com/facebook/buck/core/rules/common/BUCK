@@ -1,0 +1,17 @@
+java_library(
+    name = "common",
+    srcs = glob(["*.java"]),
+    exported_deps = [
+        "//src/com/facebook/buck/core/rules:rules",
+        "//src/com/facebook/buck/core/rules/attr:attr",
+        "//src/com/facebook/buck/core/rules/modern:modern",
+        "//src/com/facebook/buck/graph:graph",
+        "//src/com/facebook/buck/rules/keys:keys",
+    ],
+    visibility = ["PUBLIC"],
+    deps = [
+        "//src/com/facebook/buck/util:util",
+        "//third-party/java/guava:guava",
+        "//third-party/java/jsr:jsr305",
+    ],
+)

@@ -19,10 +19,10 @@ package com.facebook.buck.shell;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.rules.ActionGraphBuilder;
+import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;

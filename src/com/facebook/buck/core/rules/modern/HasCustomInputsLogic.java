@@ -23,10 +23,11 @@ import com.facebook.buck.util.function.ThrowingConsumer;
 /**
  * Deriving inputs directly from the @{@link AddToRuleKey} annotated fields of some objects doesn't
  * work correctly or is too slow. When deriving inputs from an object that implements
- * HasCustomInputsLogic, the framework ({@link com.facebook.buck.rules.BuildableSupport}/{@link
- * com.facebook.buck.rules.modern.ModernBuildRule}) will call computeInputs() instead of deriving
- * from @AddToRuleKey fields.
+ * HasCustomInputsLogic, the framework ({@link com.facebook.buck.core.rules.common.BuildableSupport}
+ * / {@link com.facebook.buck.rules.modern.ModernBuildRule}) will call computeInputs() instead of
+ * deriving from @AddToRuleKey fields.
  */
 public interface HasCustomInputsLogic {
+
   <E extends Exception> void computeInputs(ThrowingConsumer<SourcePath, E> consumer) throws E;
 }

@@ -8,7 +8,6 @@ java_immutables_library(
     srcs = [
         "AbstractBuildRule.java",
         "AbstractBuildRuleWithProviders.java",
-        "BuildDeps.java",
         "BuildRuleCreationContext.java",
         "DependencyAggregation.java",
         "SourceRoot.java",
@@ -70,10 +69,6 @@ java_immutables_library(
         "AbstractBuildRuleWithProviders.java",
         "AbstractBuildRuleWithResolver.java",
         "BuckPyFunction.java",
-        "BuildRuleDependencyVisitors.java",
-        "BuildRules.java",
-        "BuildableSupport.java",
-        "InstallTrigger.java",
         "NoopBuildRule.java",
         "NoopBuildRuleWithDeclaredAndExtraDeps.java",
         "SymlinkTree.java",
