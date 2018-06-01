@@ -655,6 +655,17 @@ def repository_name(build_env=None):
     return "@" + build_env.cell_name
 
 
+@provide_as_native_rule
+def rule_exists(name, build_env=None):
+    """
+    :param name: name of the build rule
+    :param build_env: current build environment
+    :return: True if a rule with provided name has already been defined in
+      current file.
+    """
+    return name in build_env.rules
+
+
 def flatten_list_of_dicts(list_of_dicts):
     """Flatten the given list of dictionaries by merging l[1:] onto
     l[0], one at a time. Key/Value pairs which appear in later list entries
