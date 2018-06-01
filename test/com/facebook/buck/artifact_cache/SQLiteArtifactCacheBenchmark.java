@@ -171,7 +171,7 @@ public class SQLiteArtifactCacheBenchmark {
   @Benchmark
   private void benchMetadataFetch() {
     for (RuleKey key : ruleKeys) {
-      Futures.getUnchecked(artifactCache.fetchAsync(key, output));
+      Futures.getUnchecked(artifactCache.fetchAsync(null, key, output));
     }
   }
 
@@ -189,7 +189,7 @@ public class SQLiteArtifactCacheBenchmark {
   @Benchmark
   private void benchArtifactFetch() {
     for (RuleKey key : ruleKeys) {
-      Futures.getUnchecked(artifactCache.fetchAsync(key, output));
+      Futures.getUnchecked(artifactCache.fetchAsync(null, key, output));
     }
   }
 }

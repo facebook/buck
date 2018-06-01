@@ -16,6 +16,7 @@
 package com.facebook.buck.artifact_cache;
 
 import com.facebook.buck.artifact_cache.config.CacheReadMode;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.file.BorrowablePath;
@@ -26,6 +27,7 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.util.List;
+import javax.annotation.Nullable;
 
 /**
  * Decorator for wrapping a {@link ArtifactCache} to log a {@link ArtifactCacheEvent} for the start
@@ -44,11 +46,12 @@ public class LoggingArtifactCacheDecorator implements ArtifactCache, CacheDecora
   }
 
   @Override
-  public ListenableFuture<CacheResult> fetchAsync(RuleKey ruleKey, LazyPath output) {
+  public ListenableFuture<CacheResult> fetchAsync(
+      @Nullable BuildTarget target, RuleKey ruleKey, LazyPath output) {
     ArtifactCacheEvent.Started started =
         eventFactory.newFetchStartedEvent(ImmutableSet.of(ruleKey));
     eventBus.post(started);
-    CacheResult fetchResult = Futures.getUnchecked(delegate.fetchAsync(ruleKey, output));
+    CacheResult fetchResult = Futures.getUnchecked(delegate.fetchAsync(target, ruleKey, output));
     eventBus.post(eventFactory.newFetchFinishedEvent(started, fetchResult));
     return Futures.immediateFuture(fetchResult);
   }

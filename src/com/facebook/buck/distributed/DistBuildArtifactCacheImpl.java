@@ -161,7 +161,12 @@ public class DistBuildArtifactCacheImpl implements ArtifactCacheByBuildRule {
           Futures.transformAsync(
               asyncRuleKey,
               ruleKey ->
-                  localCache.get().fetchAsync(ruleKey, LazyPath.ofInstance(tempFile.get().get())),
+                  localCache
+                      .get()
+                      .fetchAsync(
+                          rule.getBuildTarget(),
+                          ruleKey,
+                          LazyPath.ofInstance(tempFile.get().get())),
               // We should already have computed the rulekey before calling this method, so using
               // DirectExecutor here is fine.
               MoreExecutors.directExecutor());

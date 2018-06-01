@@ -18,6 +18,7 @@ package com.facebook.buck.artifact_cache;
 
 import com.facebook.buck.artifact_cache.config.CacheReadMode;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.counters.CounterRegistry;
 import com.facebook.buck.counters.IntegerCounter;
@@ -43,6 +44,7 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import javax.annotation.Nullable;
 
 /**
  * The {@link DirArtifactCache} and {@link HttpArtifactCache} caches use a straightforward rulekey
@@ -117,9 +119,10 @@ public class TwoLevelArtifactCacheDecorator implements ArtifactCache, CacheDecor
   }
 
   @Override
-  public ListenableFuture<CacheResult> fetchAsync(RuleKey ruleKey, LazyPath output) {
+  public ListenableFuture<CacheResult> fetchAsync(
+      @Nullable BuildTarget target, RuleKey ruleKey, LazyPath output) {
     return Futures.transformAsync(
-        delegate.fetchAsync(ruleKey, output),
+        delegate.fetchAsync(target, ruleKey, output),
         (CacheResult fetchResult) -> {
           if (!fetchResult.getType().isSuccess()) {
             LOG.verbose("Missed first-level lookup.");
@@ -132,7 +135,7 @@ public class TwoLevelArtifactCacheDecorator implements ArtifactCache, CacheDecor
 
           String contentHashKey = fetchResult.getMetadata().get(METADATA_KEY);
           ListenableFuture<CacheResult> outputFileFetchResultFuture =
-              delegate.fetchAsync(new RuleKey(contentHashKey), output);
+              delegate.fetchAsync(target, new RuleKey(contentHashKey), output);
 
           return Futures.transformAsync(
               outputFileFetchResultFuture,

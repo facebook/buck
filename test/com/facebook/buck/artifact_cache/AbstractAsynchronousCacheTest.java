@@ -57,7 +57,8 @@ public class AbstractAsynchronousCacheTest {
       for (int i = 0; i < 10; i++) {
         RuleKey key = new RuleKey(HashCode.fromInt(i));
         keys.add(key);
-        results.add(cache.fetchAsync(key, LazyPath.ofInstance(filesystem.getPath("path" + i))));
+        results.add(
+            cache.fetchAsync(null, key, LazyPath.ofInstance(filesystem.getPath("path" + i))));
       }
 
       service.run();
@@ -109,6 +110,7 @@ public class AbstractAsynchronousCacheTest {
       // Make an async fetch request and allow it to run on the Executor
       ListenableFuture<CacheResult> fetchRequestOne =
           cache.fetchAsync(
+              null,
               new RuleKey(HashCode.fromInt(1)),
               LazyPath.ofInstance(filesystem.getPath("path_one")));
 
@@ -120,6 +122,7 @@ public class AbstractAsynchronousCacheTest {
       // run the request on the Executor => it should be skipped
       ListenableFuture<CacheResult> fetchRequestTwo =
           cache.fetchAsync(
+              null,
               new RuleKey(HashCode.fromInt(2)),
               LazyPath.ofInstance(filesystem.getPath("path_two")));
       cache.skipPendingAndFutureAsyncFetches();
@@ -131,6 +134,7 @@ public class AbstractAsynchronousCacheTest {
       // Make a further request and ensure it also gets skipped.
       ListenableFuture<CacheResult> fetchRequestThree =
           cache.fetchAsync(
+              null,
               new RuleKey(HashCode.fromInt(3)),
               LazyPath.ofInstance(filesystem.getPath("path_three")));
 

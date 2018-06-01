@@ -134,7 +134,7 @@ public class BuildCacheArtifactFetcher {
   public ListenableFuture<CacheResult> fetch(
       ArtifactCache artifactCache, RuleKey ruleKey, LazyPath outputPath) {
     return Futures.transform(
-        artifactCache.fetchAsync(ruleKey, outputPath),
+        artifactCache.fetchAsync(rule.getBuildTarget(), ruleKey, outputPath),
         (CacheResult cacheResult) -> {
           try (Scope ignored = buildRuleScope()) {
             if (cacheResult.getType() != CacheResultType.HIT) {

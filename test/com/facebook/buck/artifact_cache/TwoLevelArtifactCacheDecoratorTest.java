@@ -57,14 +57,14 @@ public class TwoLevelArtifactCacheDecoratorTest {
       LazyPath dummyFile = LazyPath.ofInstance(tmp.newFile());
 
       assertThat(
-          Futures.getUnchecked(twoLevelCache.fetchAsync(dummyRuleKey, dummyFile)).getType(),
+          Futures.getUnchecked(twoLevelCache.fetchAsync(null, dummyRuleKey, dummyFile)).getType(),
           Matchers.equalTo(CacheResultType.MISS));
 
       twoLevelCache.store(
           ArtifactInfo.builder().addRuleKeys(dummyRuleKey).build(),
           BorrowablePath.notBorrowablePath(dummyFile.get()));
       assertThat(
-          Futures.getUnchecked(twoLevelCache.fetchAsync(dummyRuleKey, dummyFile)).getType(),
+          Futures.getUnchecked(twoLevelCache.fetchAsync(null, dummyRuleKey, dummyFile)).getType(),
           Matchers.equalTo(CacheResultType.HIT));
 
       twoLevelCache.store(
@@ -72,7 +72,7 @@ public class TwoLevelArtifactCacheDecoratorTest {
           BorrowablePath.notBorrowablePath(dummyFile.get()));
 
       assertThat(
-          Futures.getUnchecked(twoLevelCache.fetchAsync(dummyRuleKey2, dummyFile)).getType(),
+          Futures.getUnchecked(twoLevelCache.fetchAsync(null, dummyRuleKey2, dummyFile)).getType(),
           Matchers.equalTo(CacheResultType.HIT));
       assertThat(inMemoryArtifactCache.getArtifactCount(), Matchers.equalTo(3));
     }
@@ -94,7 +94,7 @@ public class TwoLevelArtifactCacheDecoratorTest {
           ArtifactInfo.builder().addRuleKeys(dummyRuleKey).build(),
           BorrowablePath.notBorrowablePath(dummyFile.get()));
       CacheResult cacheResult =
-          Futures.getUnchecked(twoLevelCache.fetchAsync(dummyRuleKey, dummyFile));
+          Futures.getUnchecked(twoLevelCache.fetchAsync(null, dummyRuleKey, dummyFile));
       assertThat(cacheResult.getType(), Matchers.equalTo(CacheResultType.HIT));
       assertThat(
           cacheResult.getMetadata().keySet(),
@@ -167,8 +167,10 @@ public class TwoLevelArtifactCacheDecoratorTest {
               .build(),
           BorrowablePath.notBorrowablePath(dummyFile.get()));
 
-      CacheResult fetch1 = Futures.getUnchecked(twoLevelCache.fetchAsync(dummyRuleKey, dummyFile));
-      CacheResult fetch2 = Futures.getUnchecked(twoLevelCache.fetchAsync(dummyRuleKey2, dummyFile));
+      CacheResult fetch1 =
+          Futures.getUnchecked(twoLevelCache.fetchAsync(null, dummyRuleKey, dummyFile));
+      CacheResult fetch2 =
+          Futures.getUnchecked(twoLevelCache.fetchAsync(null, dummyRuleKey2, dummyFile));
       // The metadata shouldn't be shared
       assertNotEquals(
           fetch1.getMetadata().get(testMetadataKey), fetch2.getMetadata().get(testMetadataKey));
@@ -202,7 +204,8 @@ public class TwoLevelArtifactCacheDecoratorTest {
       assertThat(inMemoryArtifactCache.getArtifactCount(), Matchers.equalTo(2));
 
       assertThat(
-          Futures.getUnchecked(twoLevelCacheNoStore.fetchAsync(dummyRuleKey, dummyFile)).getType(),
+          Futures.getUnchecked(twoLevelCacheNoStore.fetchAsync(null, dummyRuleKey, dummyFile))
+              .getType(),
           Matchers.equalTo(CacheResultType.HIT));
     }
   }

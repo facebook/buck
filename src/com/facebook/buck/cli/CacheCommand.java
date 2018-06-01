@@ -389,7 +389,7 @@ public class CacheCommand extends AbstractCommand {
       // TODO(skotch): don't use intermediate files, that just slows us down
       // instead, unzip from the ~/buck-cache/ directly
       CacheResult success =
-          Futures.getUnchecked(cache.fetchAsync(ruleKey, LazyPath.ofInstance(artifact)));
+          Futures.getUnchecked(cache.fetchAsync(null, ruleKey, LazyPath.ofInstance(artifact)));
       cacheResult = cacheResultToString(success);
       cacheResultType = success.getType();
       cacheResultMode = success.cacheMode();

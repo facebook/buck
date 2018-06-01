@@ -570,7 +570,9 @@ public class CachingBuildEngineTest {
               HashCode.fromInt(123).toString());
       expect(
               artifactCache.fetchAsync(
-                  eq(defaultRuleKeyFactory.build(buildRule)), isA(LazyPath.class)))
+                  eq(buildRule.getBuildTarget()),
+                  eq(defaultRuleKeyFactory.build(buildRule)),
+                  isA(LazyPath.class)))
           .andDelegateTo(new FakeArtifactCacheThatWritesAZipFile(desiredZipEntries, metadata));
 
       BuildEngineBuildContext buildContext =
@@ -659,7 +661,9 @@ public class CachingBuildEngineTest {
               "Imagine this is the contents of a valid JAR file.");
       expect(
               artifactCache.fetchAsync(
-                  eq(defaultRuleKeyFactory.build(buildRule)), isA(LazyPath.class)))
+                  eq(buildRule.getBuildTarget()),
+                  eq(defaultRuleKeyFactory.build(buildRule)),
+                  isA(LazyPath.class)))
           .andDelegateTo(new FakeArtifactCacheThatWritesAZipFile(desiredZipEntries, metadata));
 
       BuildEngineBuildContext buildContext =
@@ -1197,7 +1201,8 @@ public class CachingBuildEngineTest {
       ArtifactCache cache =
           new NoopArtifactCache() {
             @Override
-            public ListenableFuture<CacheResult> fetchAsync(RuleKey ruleKey, LazyPath output) {
+            public ListenableFuture<CacheResult> fetchAsync(
+                BuildTarget target, RuleKey ruleKey, LazyPath output) {
               return Futures.immediateFuture(
                   CacheResult.error("cache", ArtifactCacheMode.dir, "error"));
             }
@@ -1838,7 +1843,7 @@ public class CachingBuildEngineTest {
         LazyPath fetchedArtifact = LazyPath.ofInstance(tmp.newFile("fetched_artifact.zip"));
         assertThat(
             Futures.getUnchecked(
-                    cache.fetchAsync(defaultRuleKeyFactory.build(rule), fetchedArtifact))
+                    cache.fetchAsync(null, defaultRuleKeyFactory.build(rule), fetchedArtifact))
                 .getType(),
             equalTo(CacheResultType.MISS));
       }
@@ -1921,7 +1926,9 @@ public class CachingBuildEngineTest {
         assertThat(
             Futures.getUnchecked(
                     cache.fetchAsync(
-                        defaultRuleKeyFactory.build(rule), LazyPath.ofInstance(fetchedArtifact)))
+                        null,
+                        defaultRuleKeyFactory.build(rule),
+                        LazyPath.ofInstance(fetchedArtifact)))
                 .getType(),
             equalTo(CacheResultType.HIT));
         assertEquals(
@@ -2255,7 +2262,7 @@ public class CachingBuildEngineTest {
       CacheResult cacheResult =
           Futures.getUnchecked(
               cache.fetchAsync(
-                  defaultRuleKeyFactory.build(rule), LazyPath.ofInstance(fetchedArtifact)));
+                  null, defaultRuleKeyFactory.build(rule), LazyPath.ofInstance(fetchedArtifact)));
       assertThat(cacheResult.getType(), equalTo(CacheResultType.HIT));
       assertThat(
           cacheResult.getMetadata().get(BuildInfo.MetadataKey.DEP_FILE_RULE_KEY),
@@ -2806,6 +2813,7 @@ public class CachingBuildEngineTest {
       CacheResult cacheResult =
           Futures.getUnchecked(
               cache.fetchAsync(
+                  null,
                   getManifestRuleKeyForTest(cachingBuildEngine, rule, buildContext.getEventBus())
                       .get(),
                   LazyPath.ofInstance(fetchedManifest)));
@@ -2825,7 +2833,7 @@ public class CachingBuildEngineTest {
       Path fetchedArtifact = tmp.newFile("artifact");
       cacheResult =
           Futures.getUnchecked(
-              cache.fetchAsync(depFileRuleKey, LazyPath.ofInstance(fetchedArtifact)));
+              cache.fetchAsync(null, depFileRuleKey, LazyPath.ofInstance(fetchedArtifact)));
       assertThat(cacheResult.getType(), equalTo(CacheResultType.HIT));
     }
 
@@ -2929,6 +2937,7 @@ public class CachingBuildEngineTest {
       CacheResult cacheResult =
           Futures.getUnchecked(
               cache.fetchAsync(
+                  null,
                   getManifestRuleKeyForTest(cachingBuildEngine, rule, buildContext.getEventBus())
                       .get(),
                   LazyPath.ofInstance(fetchedManifest)));
@@ -2947,7 +2956,7 @@ public class CachingBuildEngineTest {
       Path fetchedArtifact = tmp.newFile("artifact");
       cacheResult =
           Futures.getUnchecked(
-              cache.fetchAsync(depFileRuleKey, LazyPath.ofInstance(fetchedArtifact)));
+              cache.fetchAsync(null, depFileRuleKey, LazyPath.ofInstance(fetchedArtifact)));
       assertThat(cacheResult.getType(), equalTo(CacheResultType.HIT));
     }
 
@@ -3053,6 +3062,7 @@ public class CachingBuildEngineTest {
       CacheResult cacheResult =
           Futures.getUnchecked(
               cache.fetchAsync(
+                  null,
                   getManifestRuleKeyForTest(cachingBuildEngine, rule, buildContext.getEventBus())
                       .get(),
                   LazyPath.ofInstance(fetchedManifest)));
@@ -3198,7 +3208,8 @@ public class CachingBuildEngineTest {
       // Verify that the result has been re-written to the cache with the expected meta-data.
       for (RuleKey key : ImmutableSet.of(ruleKey, depFileKey.getRuleKey())) {
         LazyPath fetchedArtifact = LazyPath.ofInstance(tmp.newFile("fetched_artifact.zip"));
-        CacheResult cacheResult = Futures.getUnchecked(cache.fetchAsync(key, fetchedArtifact));
+        CacheResult cacheResult =
+            Futures.getUnchecked(cache.fetchAsync(null, key, fetchedArtifact));
         assertThat(cacheResult.getType(), equalTo(CacheResultType.HIT));
         assertThat(
             cacheResult.getMetadata().get(BuildInfo.MetadataKey.RULE_KEY),
@@ -3304,7 +3315,7 @@ public class CachingBuildEngineTest {
       CacheResult cacheResult =
           Futures.getUnchecked(
               cache.fetchAsync(
-                  depFilefactory.buildManifestKey(rule).getRuleKey(), fetchedManifest));
+                  null, depFilefactory.buildManifestKey(rule).getRuleKey(), fetchedManifest));
       assertTrue(cacheResult.getType().isSuccess());
       Manifest cachedManifest = loadManifest(fetchedManifest.get());
       assertThat(
@@ -4496,7 +4507,8 @@ public class CachingBuildEngineTest {
     }
 
     @Override
-    public ListenableFuture<CacheResult> fetchAsync(RuleKey ruleKey, LazyPath output) {
+    public ListenableFuture<CacheResult> fetchAsync(
+        BuildTarget target, RuleKey ruleKey, LazyPath output) {
       try {
         writeEntriesToZip(output.get(), ImmutableMap.copyOf(desiredEntries), ImmutableList.of());
       } catch (IOException e) {

@@ -101,7 +101,8 @@ public class ArtifactCacheHandler extends AbstractHandler {
           projectFilesystem.createTempFile(
               projectFilesystem.getBuckPaths().getScratchDir(), "outgoing_rulekey", ".tmp");
       CacheResult fetchResult =
-          Futures.getUnchecked(artifactCache.get().fetchAsync(ruleKey, LazyPath.ofInstance(temp)));
+          Futures.getUnchecked(
+              artifactCache.get().fetchAsync(null, ruleKey, LazyPath.ofInstance(temp)));
       if (!fetchResult.getType().isSuccess()) {
         return HttpServletResponse.SC_NOT_FOUND;
       }

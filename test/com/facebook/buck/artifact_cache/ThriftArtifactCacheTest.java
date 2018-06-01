@@ -143,6 +143,7 @@ public class ThriftArtifactCacheTest {
       CacheResult result =
           Futures.getUnchecked(
               cache.fetchAsync(
+                  null,
                   new com.facebook.buck.core.rulekey.RuleKey(HashCode.fromInt(42)),
                   LazyPath.ofInstance(artifactPath)));
       assertEquals(CacheResultType.ERROR, result.getType());

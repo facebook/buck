@@ -147,7 +147,7 @@ public class DistBuildArtifactCacheImplTest {
         .atLeastOnce();
 
     Capture<LazyPath> fetchPath = EasyMock.newCapture();
-    expect(localCache.fetchAsync(eq(ruleKey), capture(fetchPath)))
+    expect(localCache.fetchAsync(eq(rootRule.getBuildTarget()), eq(ruleKey), capture(fetchPath)))
         .andReturn(Futures.immediateFuture(CacheResult.hit("", ArtifactCacheMode.dir)))
         .once();
 

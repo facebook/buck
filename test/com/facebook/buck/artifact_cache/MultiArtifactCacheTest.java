@@ -22,6 +22,7 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.artifact_cache.config.ArtifactCacheMode;
 import com.facebook.buck.artifact_cache.config.CacheReadMode;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.io.file.BorrowablePath;
 import com.facebook.buck.io.file.LazyPath;
@@ -61,7 +62,8 @@ public class MultiArtifactCacheTest {
   // An cache which always returns errors from fetching.
   class ErroringArtifactCache extends NoopArtifactCache {
     @Override
-    public ListenableFuture<CacheResult> fetchAsync(RuleKey ruleKey, LazyPath output) {
+    public ListenableFuture<CacheResult> fetchAsync(
+        BuildTarget target, RuleKey ruleKey, LazyPath output) {
       return Futures.immediateFuture(CacheResult.error("cache", ArtifactCacheMode.http, "error"));
     }
   }
@@ -76,7 +78,8 @@ public class MultiArtifactCacheTest {
     assertEquals(
         "Fetch should fail",
         CacheResultType.MISS,
-        Futures.getUnchecked(multiArtifactCache.fetchAsync(dummyRuleKey, dummyFile)).getType());
+        Futures.getUnchecked(multiArtifactCache.fetchAsync(null, dummyRuleKey, dummyFile))
+            .getType());
 
     dummyArtifactCache1.store(
         ArtifactInfo.builder().addRuleKeys(dummyRuleKey).build(),
@@ -84,7 +87,8 @@ public class MultiArtifactCacheTest {
     assertEquals(
         "Fetch should succeed after store",
         CacheResultType.HIT,
-        Futures.getUnchecked(multiArtifactCache.fetchAsync(dummyRuleKey, dummyFile)).getType());
+        Futures.getUnchecked(multiArtifactCache.fetchAsync(null, dummyRuleKey, dummyFile))
+            .getType());
 
     dummyArtifactCache1.reset();
     dummyArtifactCache2.reset();
@@ -94,7 +98,8 @@ public class MultiArtifactCacheTest {
     assertEquals(
         "Fetch should succeed after store",
         CacheResultType.HIT,
-        Futures.getUnchecked(multiArtifactCache.fetchAsync(dummyRuleKey, dummyFile)).getType());
+        Futures.getUnchecked(multiArtifactCache.fetchAsync(null, dummyRuleKey, dummyFile))
+            .getType());
 
     multiArtifactCache.close();
   }
@@ -185,10 +190,12 @@ public class MultiArtifactCacheTest {
     assertEquals(
         "This cache is PASSTHROUGH, store on the mulit-cache should not write to it",
         CacheResultType.MISS,
-        Futures.getUnchecked(dummyArtifactCache1.fetchAsync(dummyRuleKey, dummyFile)).getType());
+        Futures.getUnchecked(dummyArtifactCache1.fetchAsync(null, dummyRuleKey, dummyFile))
+            .getType());
     assertEquals(
         CacheResultType.HIT,
-        Futures.getUnchecked(dummyArtifactCache2.fetchAsync(dummyRuleKey, dummyFile)).getType());
+        Futures.getUnchecked(dummyArtifactCache2.fetchAsync(null, dummyRuleKey, dummyFile))
+            .getType());
 
     multiArtifactCache.close();
   }
@@ -216,11 +223,13 @@ public class MultiArtifactCacheTest {
     assertEquals(
         "Fetch should find artifact that's present in one of the caches.",
         CacheResultType.HIT,
-        Futures.getUnchecked(multiArtifactCache.fetchAsync(dummyRuleKey, dummyFile)).getType());
+        Futures.getUnchecked(multiArtifactCache.fetchAsync(null, dummyRuleKey, dummyFile))
+            .getType());
     assertEquals(
         "Fetch should have propagated the artifact.",
         CacheResultType.HIT,
-        Futures.getUnchecked(dummyArtifactCache1.fetchAsync(dummyRuleKey, dummyFile)).getType());
+        Futures.getUnchecked(dummyArtifactCache1.fetchAsync(null, dummyRuleKey, dummyFile))
+            .getType());
 
     multiArtifactCache.close();
   }
@@ -258,7 +267,8 @@ public class MultiArtifactCacheTest {
     }
 
     @Override
-    public ListenableFuture<CacheResult> fetchAsync(RuleKey ruleKey, LazyPath output) {
+    public ListenableFuture<CacheResult> fetchAsync(
+        BuildTarget target, RuleKey ruleKey, LazyPath output) {
       return Futures.immediateFuture(fetch(ruleKey, output));
     }
 
@@ -339,7 +349,7 @@ public class MultiArtifactCacheTest {
     fakeReadOnlyCache.storedKey.set(dummyRuleKey);
 
     Futures.getUnchecked(
-        multiArtifactCache.fetchAsync(dummyRuleKey, LazyPath.ofInstance(fetchFile)));
+        multiArtifactCache.fetchAsync(null, dummyRuleKey, LazyPath.ofInstance(fetchFile)));
 
     assertThat(
         "The .get() call should not delete the path it's fetching.",
@@ -353,7 +363,7 @@ public class MultiArtifactCacheTest {
   public void preserveErrorsFromInnerCache() {
     ErroringArtifactCache inner = new ErroringArtifactCache();
     MultiArtifactCache cache = new MultiArtifactCache(ImmutableList.of(inner));
-    CacheResult result = Futures.getUnchecked(cache.fetchAsync(dummyRuleKey, dummyFile));
+    CacheResult result = Futures.getUnchecked(cache.fetchAsync(null, dummyRuleKey, dummyFile));
     assertThat(result.cacheMode(), Matchers.equalTo(Optional.of(ArtifactCacheMode.http)));
     assertSame(result.getType(), CacheResultType.ERROR);
     cache.close();
@@ -372,9 +382,9 @@ public class MultiArtifactCacheTest {
     cache2.store(
         ArtifactInfo.builder().addRuleKeys(dummyRuleKey).setMetadata(metadata).build(),
         new byte[0]);
-    Futures.getUnchecked(multiArtifactCache.fetchAsync(dummyRuleKey, output));
+    Futures.getUnchecked(multiArtifactCache.fetchAsync(null, dummyRuleKey, output));
 
-    CacheResult result = Futures.getUnchecked(cache1.fetchAsync(dummyRuleKey, output));
+    CacheResult result = Futures.getUnchecked(cache1.fetchAsync(null, dummyRuleKey, output));
     assertThat(result.getType(), Matchers.equalTo(CacheResultType.HIT));
     assertThat(result.cacheMode(), Matchers.equalTo(Optional.of(ArtifactCacheMode.dir)));
     assertThat(result.getMetadata(), Matchers.equalTo(metadata));
@@ -395,9 +405,9 @@ public class MultiArtifactCacheTest {
     cache2.store(
         ArtifactInfo.builder().addRuleKeys(dummyRuleKey).setMetadata(metadata).build(),
         new byte[0]);
-    multiArtifactCache.fetchAsync(dummyRuleKey, output).get();
+    multiArtifactCache.fetchAsync(null, dummyRuleKey, output).get();
 
-    CacheResult result = Futures.getUnchecked(cache1.fetchAsync(dummyRuleKey, output));
+    CacheResult result = Futures.getUnchecked(cache1.fetchAsync(null, dummyRuleKey, output));
     assertThat(result.getType(), Matchers.equalTo(CacheResultType.HIT));
     assertThat(result.cacheMode(), Matchers.equalTo(Optional.of(ArtifactCacheMode.dir)));
     assertThat(result.getMetadata(), Matchers.equalTo(metadata));

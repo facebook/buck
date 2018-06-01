@@ -18,6 +18,7 @@ package com.facebook.buck.artifact_cache;
 
 import com.facebook.buck.artifact_cache.config.ArtifactCacheMode;
 import com.facebook.buck.artifact_cache.config.CacheReadMode;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.facebook.buck.io.file.BorrowablePath;
@@ -337,8 +338,8 @@ public abstract class AbstractAsynchronousCache implements ArtifactCache {
   }
 
   @Override
-  public final ListenableFuture<CacheResult> fetchAsync(RuleKey ruleKey, LazyPath output) {
-    eventListener.fetchScheduled(ruleKey);
+  public final ListenableFuture<CacheResult> fetchAsync(
+      @Nullable BuildTarget target, RuleKey ruleKey, LazyPath output) {
     SettableFuture<CacheResult> future = SettableFuture.create();
     addFetchRequest(new FetchRequest(ruleKey, output, future));
     return future;

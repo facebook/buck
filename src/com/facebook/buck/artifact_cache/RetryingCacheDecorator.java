@@ -18,6 +18,7 @@ package com.facebook.buck.artifact_cache;
 
 import com.facebook.buck.artifact_cache.config.ArtifactCacheMode;
 import com.facebook.buck.artifact_cache.config.CacheReadMode;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
@@ -32,6 +33,7 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import java.util.ArrayList;
 import java.util.List;
+import javax.annotation.Nullable;
 
 public class RetryingCacheDecorator implements ArtifactCache, CacheDecorator {
 
@@ -56,9 +58,10 @@ public class RetryingCacheDecorator implements ArtifactCache, CacheDecorator {
   }
 
   @Override
-  public ListenableFuture<CacheResult> fetchAsync(RuleKey ruleKey, LazyPath output) {
+  public ListenableFuture<CacheResult> fetchAsync(
+      @Nullable BuildTarget target, RuleKey ruleKey, LazyPath output) {
     List<String> allCacheErrors = new ArrayList<>();
-    ListenableFuture<CacheResult> resultFuture = delegate.fetchAsync(ruleKey, output);
+    ListenableFuture<CacheResult> resultFuture = delegate.fetchAsync(target, ruleKey, output);
     for (int retryCount = 1; retryCount < maxFetchRetries; retryCount++) {
       int retryCountForLambda = retryCount;
       resultFuture =
@@ -72,7 +75,7 @@ public class RetryingCacheDecorator implements ArtifactCache, CacheDecorator {
                 LOG.info(
                     "Failed to fetch %s after %d/%d attempts, exception: %s",
                     ruleKey, retryCountForLambda + 1, maxFetchRetries, result.cacheError());
-                return delegate.fetchAsync(ruleKey, output);
+                return delegate.fetchAsync(target, ruleKey, output);
               });
     }
     return Futures.transform(

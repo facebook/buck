@@ -147,7 +147,8 @@ public class SQLiteArtifactCacheTest {
     artifactCache = cache(Optional.of(0L));
     assertEquals(
         CacheResultType.MISS,
-        Futures.getUnchecked(artifactCache.fetchAsync(ruleKeyA, LazyPath.ofInstance(emptyFile)))
+        Futures.getUnchecked(
+                artifactCache.fetchAsync(null, ruleKeyA, LazyPath.ofInstance(emptyFile)))
             .getType());
   }
 
@@ -156,7 +157,8 @@ public class SQLiteArtifactCacheTest {
     artifactCache = cache(Optional.of(0L));
     assertEquals(
         CacheResultType.MISS,
-        Futures.getUnchecked(artifactCache.fetchAsync(contentHashA, LazyPath.ofInstance(fileA)))
+        Futures.getUnchecked(
+                artifactCache.fetchAsync(null, contentHashA, LazyPath.ofInstance(fileA)))
             .getType());
   }
 
@@ -173,7 +175,7 @@ public class SQLiteArtifactCacheTest {
 
     assertThat(artifactCache.metadataRuleKeys(), Matchers.contains(ruleKeyA));
 
-    CacheResult result = Futures.getUnchecked(artifactCache.fetchAsync(ruleKeyA, output));
+    CacheResult result = Futures.getUnchecked(artifactCache.fetchAsync(null, ruleKeyA, output));
     assertEquals(CacheResultType.HIT, result.getType());
     assertThat(result.getMetadata(), Matchers.hasKey(METADATA_KEY));
     assertEquals(contentHashA.toString(), result.getMetadata().get(METADATA_KEY));
@@ -201,7 +203,7 @@ public class SQLiteArtifactCacheTest {
 
     assertThat(artifactCache.metadataRuleKeys(), Matchers.contains(ruleKeyA));
 
-    CacheResult result = Futures.getUnchecked(artifactCache.fetchAsync(ruleKeyA, output));
+    CacheResult result = Futures.getUnchecked(artifactCache.fetchAsync(null, ruleKeyA, output));
     assertEquals(CacheResultType.HIT, result.getType());
     assertThat(result.getMetadata(), Matchers.hasKey(METADATA_KEY));
     assertEquals(contentHashB.toString(), result.getMetadata().get(METADATA_KEY));
@@ -216,7 +218,7 @@ public class SQLiteArtifactCacheTest {
 
     assertThat(artifactCache.inlinedArtifactContentHashes(), Matchers.contains(contentHashA));
 
-    CacheResult result = Futures.getUnchecked(artifactCache.fetchAsync(contentHashA, output));
+    CacheResult result = Futures.getUnchecked(artifactCache.fetchAsync(null, contentHashA, output));
     assertEquals(CacheResultType.HIT, result.getType());
     assertThat(result.getMetadata(), Matchers.anEmptyMap());
     assertEquals(filesystem.getFileSize(fileA), result.getArtifactSizeBytes());
@@ -231,7 +233,7 @@ public class SQLiteArtifactCacheTest {
 
     assertThat(artifactCache.directoryFileContentHashes(), Matchers.contains(contentHashA));
 
-    CacheResult result = Futures.getUnchecked(artifactCache.fetchAsync(contentHashA, output));
+    CacheResult result = Futures.getUnchecked(artifactCache.fetchAsync(null, contentHashA, output));
     assertEquals(CacheResultType.HIT, result.getType());
     assertThat(result.getMetadata(), Matchers.anEmptyMap());
     assertEquals(filesystem.getFileSize(fileA), result.getArtifactSizeBytes());
@@ -248,7 +250,7 @@ public class SQLiteArtifactCacheTest {
 
     assertThat(artifactCache.inlinedArtifactContentHashes(), Matchers.contains(contentHashA));
 
-    CacheResult result = Futures.getUnchecked(artifactCache.fetchAsync(contentHashA, output));
+    CacheResult result = Futures.getUnchecked(artifactCache.fetchAsync(null, contentHashA, output));
     assertEquals(CacheResultType.HIT, result.getType());
     assertThat(result.getMetadata(), Matchers.anEmptyMap());
     assertEquals(filesystem.getFileSize(fileA), result.getArtifactSizeBytes());
@@ -396,17 +398,17 @@ public class SQLiteArtifactCacheTest {
             .build(),
         BorrowablePath.notBorrowablePath(emptyFile));
 
-    CacheResult resultA = Futures.getUnchecked(artifactCache.fetchAsync(ruleKeyA, output));
+    CacheResult resultA = Futures.getUnchecked(artifactCache.fetchAsync(null, ruleKeyA, output));
     assertEquals(CacheResultType.HIT, resultA.getType());
     assertThat(resultA.getMetadata(), Matchers.hasKey(METADATA_KEY));
     assertEquals(contentHashA.toString(), resultA.getMetadata().get(METADATA_KEY));
 
-    CacheResult resultB = Futures.getUnchecked(artifactCache.fetchAsync(ruleKeyB, output));
+    CacheResult resultB = Futures.getUnchecked(artifactCache.fetchAsync(null, ruleKeyB, output));
     assertEquals(CacheResultType.HIT, resultB.getType());
     assertThat(resultB.getMetadata(), Matchers.hasKey(METADATA_KEY));
     assertEquals(contentHashA.toString(), resultB.getMetadata().get(METADATA_KEY));
 
-    CacheResult resultC = Futures.getUnchecked(artifactCache.fetchAsync(ruleKeyA, output));
+    CacheResult resultC = Futures.getUnchecked(artifactCache.fetchAsync(null, ruleKeyA, output));
     assertEquals(CacheResultType.HIT, resultC.getType());
     assertThat(resultC.getMetadata(), Matchers.hasKey(METADATA_KEY));
     assertEquals(contentHashA.toString(), resultC.getMetadata().get(METADATA_KEY));
@@ -424,7 +426,7 @@ public class SQLiteArtifactCacheTest {
             .build(),
         BorrowablePath.notBorrowablePath(fileA));
 
-    CacheResult result = Futures.getUnchecked(artifactCache.fetchAsync(ruleKeyA, output));
+    CacheResult result = Futures.getUnchecked(artifactCache.fetchAsync(null, ruleKeyA, output));
     assertEquals(CacheResultType.HIT, result.getType());
     assertThat(result.getMetadata(), Matchers.hasKey(BuildInfo.MetadataKey.TARGET));
     assertEquals(result.getMetadata().get(BuildInfo.MetadataKey.TARGET), "foo");

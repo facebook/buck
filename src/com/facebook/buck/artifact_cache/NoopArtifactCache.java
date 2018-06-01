@@ -18,6 +18,7 @@ package com.facebook.buck.artifact_cache;
 
 import com.facebook.buck.artifact_cache.config.CacheReadMode;
 import com.facebook.buck.config.BuckConfig;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.io.file.BorrowablePath;
 import com.facebook.buck.io.file.LazyPath;
@@ -28,10 +29,12 @@ import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import java.util.List;
+import javax.annotation.Nullable;
 
 public class NoopArtifactCache implements ArtifactCache {
   @Override
-  public ListenableFuture<CacheResult> fetchAsync(RuleKey ruleKey, LazyPath output) {
+  public ListenableFuture<CacheResult> fetchAsync(
+      @Nullable BuildTarget target, RuleKey ruleKey, LazyPath output) {
     // Do nothing.
     return Futures.immediateFuture(CacheResult.miss());
   }

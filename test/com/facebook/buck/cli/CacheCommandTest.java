@@ -26,6 +26,7 @@ import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.artifact_cache.NoopArtifactCache;
 import com.facebook.buck.artifact_cache.config.ArtifactCacheMode;
 import com.facebook.buck.config.FakeBuckConfig;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.listener.SuperConsoleConfig;
@@ -221,7 +222,8 @@ public class CacheCommandTest {
     }
 
     @Override
-    public ListenableFuture<CacheResult> fetchAsync(RuleKey ruleKey, LazyPath output) {
+    public ListenableFuture<CacheResult> fetchAsync(
+        BuildTarget target, RuleKey ruleKey, LazyPath output) {
       if (ruleKey.equals(this.ruleKey)) {
         return Futures.immediateFuture(cacheResult);
       }
