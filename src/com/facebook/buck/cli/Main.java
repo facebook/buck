@@ -822,7 +822,16 @@ public final class Main {
               GlobalStateManager.singleton()
                   .setupLoggers(invocationInfo, console.getStdErr(), stdErr, verbosity);
           DefaultBuckEventBus buildEventBus = new DefaultBuckEventBus(clock, buildId);
-          ) {
+          // We use a new executor service beyond client connection lifetime since it can take a
+          // long time
+          // to stat and cleanup large disk artifact cache directories
+          // See https://github.com/facebook/buck/issues/1842
+          ThrowingCloseableWrapper<ExecutorService, InterruptedException>
+              dirArtifactExecutorService =
+                  getExecutorWrapper(
+                      MostExecutors.newSingleThreadExecutor("Dir Artifact"),
+                      "Dir Artifact",
+                      EXECUTOR_SERVICES_TIMEOUT_SECONDS); ) {
 
         try (ThrowingCloseableWrapper<ExecutorService, InterruptedException> diskIoExecutorService =
                 getExecutorWrapper(
@@ -931,7 +940,7 @@ public final class Main {
                     httpWriteExecutorService.get(),
                     httpFetchExecutorService.get(),
                     stampedeSyncBuildHttpFetchExecutorService.get(),
-                    diskIoExecutorService.get());
+                    dirArtifactExecutorService.get());
 
             // Once command completes it should be safe to not wait for executors and other stateful
             // objects to terminate and release semaphore right away. It will help to retry
@@ -982,9 +991,7 @@ public final class Main {
           }
 
           BuildEnvironmentDescription buildEnvironmentDescription =
-              getBuildEnvironmentDescription(
-                  executionEnvironment,
-                  buckConfig);
+              getBuildEnvironmentDescription(executionEnvironment, buckConfig);
 
           Iterable<BuckEventListener> commandEventListeners =
               command.getSubcommand().isPresent()
@@ -1005,8 +1012,7 @@ public final class Main {
                   clock,
                   consoleListener,
                   counterRegistry,
-                  commandEventListeners
-                  );
+                  commandEventListeners);
 
           if (buckConfig.isBuckConfigLocalWarningEnabled() && !console.getVerbosity().isSilent()) {
             ImmutableList<Path> localConfigFiles =
@@ -1047,7 +1053,6 @@ public final class Main {
             LOG.debug("new Buck daemon");
             buildEventBus.post(DaemonEvent.newDaemonInstance());
           }
-
 
           VersionControlBuckConfig vcBuckConfig = new VersionControlBuckConfig(buckConfig);
           VersionControlStatsGenerator vcStatsGenerator =
@@ -1613,7 +1618,6 @@ public final class Main {
         });
   }
 
-
   @SuppressWarnings("PMD.PrematureDeclaration")
   private ImmutableList<BuckEventListener> addEventListeners(
       BuckEventBus buckEventBus,
@@ -1625,8 +1629,7 @@ public final class Main {
       Clock clock,
       AbstractConsoleEventBusListener consoleEventBusListener,
       CounterRegistry counterRegistry,
-      Iterable<BuckEventListener> commandSpecificEventListeners
-      ) {
+      Iterable<BuckEventListener> commandSpecificEventListeners) {
     ImmutableList.Builder<BuckEventListener> eventListenersBuilder =
         ImmutableList.<BuckEventListener>builder()
             .add(consoleEventBusListener)
@@ -1656,7 +1659,6 @@ public final class Main {
 
     loadListenersFromBuckConfig(eventListenersBuilder, projectFilesystem, buckConfig);
     ArtifactCacheBuckConfig artifactCacheConfig = new ArtifactCacheBuckConfig(buckConfig);
-
 
     eventListenersBuilder.add(
         new LogUploaderListener(
@@ -1694,7 +1696,6 @@ public final class Main {
 
     eventListenersBuilder.add(new ParserProfilerLoggerListener(invocationInfo, projectFilesystem));
 
-
     eventListenersBuilder.add(new LoadBalancerEventsListener(counterRegistry));
     eventListenersBuilder.add(new CacheRateStatsListener(buckEventBus));
     eventListenersBuilder.add(new WatchmanDiagnosticEventListener(buckEventBus));
@@ -1708,8 +1709,7 @@ public final class Main {
   }
 
   private BuildEnvironmentDescription getBuildEnvironmentDescription(
-      ExecutionEnvironment executionEnvironment,
-      BuckConfig buckConfig) {
+      ExecutionEnvironment executionEnvironment, BuckConfig buckConfig) {
     ImmutableMap.Builder<String, String> environmentExtraData = ImmutableMap.builder();
 
     return BuildEnvironmentDescription.of(
