@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright 2018-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -14,8 +14,10 @@
  * under the License.
  */
 
-package com.facebook.buck.core.cell;
+package com.facebook.buck.core.cell.impl;
 
+import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.CellProvider;
 import com.facebook.buck.core.cell.resolver.CellPathResolver;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;

@@ -14,9 +14,11 @@
  * under the License.
  */
 
-package com.facebook.buck.core.cell;
+package com.facebook.buck.core.cell.impl;
 
 import com.facebook.buck.config.BuckConfig;
+import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.CellProvider;
 import com.facebook.buck.core.cell.resolver.CellPathResolver;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.Watchman;

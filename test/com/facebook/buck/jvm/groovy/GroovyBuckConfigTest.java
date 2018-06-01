@@ -20,7 +20,7 @@ import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.config.BuckConfig;
-import com.facebook.buck.core.cell.DefaultCellPathResolver;
+import com.facebook.buck.core.cell.impl.DefaultCellPathResolver;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;

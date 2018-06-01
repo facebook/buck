@@ -39,7 +39,7 @@ public final class CellProvider {
    * <p>The indirection for passing in CellProvider allows cells to reference the current
    * CellProvider object.
    */
-  CellProvider(
+  public CellProvider(
       Function<CellProvider, CacheLoader<Path, Cell>> cellCacheLoader,
       @Nullable Function<CellProvider, Cell> rootCellLoader) {
     this.cells = CacheBuilder.newBuilder().build(cellCacheLoader.apply(this));

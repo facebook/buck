@@ -8,6 +8,7 @@ standard_java_test(
         ":testutil",
         "//src/com/facebook/buck/android/toolchain/impl:impl",
         "//src/com/facebook/buck/config:config",
+        "//src/com/facebook/buck/core/cell/impl:impl",
         "//src/com/facebook/buck/core/cell/name:name",
         "//src/com/facebook/buck/cxx/toolchain/impl:impl",
         "//src/com/facebook/buck/parser:rule_pattern",
@@ -43,7 +44,7 @@ java_library(
         "//test/...",
     ],
     deps = [
-        "//src/com/facebook/buck/core/cell:cell",
+        "//src/com/facebook/buck/core/cell/impl:impl",
         "//src/com/facebook/buck/util/environment:platform",
         "//test/com/facebook/buck/io/filesystem:testutil",
         "//test/com/facebook/buck/testutil:testutil",
@@ -66,6 +67,7 @@ java_library(
     ],
     deps = [
         "//src/com/facebook/buck/core/cell:cell",
+        "//src/com/facebook/buck/core/cell/impl:impl",
         "//src/com/facebook/buck/util/environment:platform",
         "//test/com/facebook/buck/io/filesystem:testutil",
         "//test/com/facebook/buck/testutil:testutil",

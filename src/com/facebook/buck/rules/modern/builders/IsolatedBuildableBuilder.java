@@ -18,7 +18,7 @@ package com.facebook.buck.rules.modern.builders;
 
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.core.build.context.BuildContext;
-import com.facebook.buck.core.cell.DefaultCellPathResolver;
+import com.facebook.buck.core.cell.impl.DefaultCellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;

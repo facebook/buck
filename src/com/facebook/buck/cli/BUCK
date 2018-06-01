@@ -54,6 +54,7 @@ java_immutables_library(
         "//src/com/facebook/buck/android:steps",
         "//src/com/facebook/buck/core/build/event:event",
         "//src/com/facebook/buck/apple/device:device",
+        "//src/com/facebook/buck/core/cell/impl:impl",
         "//src/com/facebook/buck/sandbox:sandbox",
         "//src/com/facebook/buck/sandbox/impl:impl",
         "//src/com/facebook/buck/apple/project_generator:project_generator",

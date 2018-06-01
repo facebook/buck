@@ -18,7 +18,7 @@ package com.facebook.buck.distributed;
 
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.core.cell.Cell;
-import com.facebook.buck.core.cell.DefaultCellPathResolver;
+import com.facebook.buck.core.cell.impl.DefaultCellPathResolver;
 import com.facebook.buck.distributed.thrift.BuildJobStateBuckConfig;
 import com.facebook.buck.distributed.thrift.BuildJobStateCell;
 import com.facebook.buck.distributed.thrift.OrderedStringMapEntry;

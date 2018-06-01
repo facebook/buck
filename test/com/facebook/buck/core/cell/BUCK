@@ -21,7 +21,7 @@ java_library(
         exclude = ["*Test.java"],
     ),
     exported_deps = [
-        "//src/com/facebook/buck/core/cell:cell",
+        "//src/com/facebook/buck/core/cell/impl:impl",
         "//src/com/facebook/buck/io/filesystem/impl:impl",
         "//src/com/facebook/buck/module:module",
         "//src/com/facebook/buck/plugin/impl:impl",

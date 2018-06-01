@@ -1,0 +1,14 @@
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library", "java_test")
+
+java_test(
+    name = "impl",
+    srcs = glob(["*Test.java"]),
+    deps = [
+        "//src/com/facebook/buck/core/cell/impl:impl",
+        "//src/com/facebook/buck/core/cell/name:name",
+        "//test/com/facebook/buck/util/config:testutil",
+        "//third-party/java/guava:guava",
+        "//third-party/java/jimfs:jimfs",
+        "//third-party/java/junit:junit",
+    ],
+)
