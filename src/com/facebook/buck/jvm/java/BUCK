@@ -188,6 +188,7 @@ java_immutables_library(
     deps = [
         "//src/com/facebook/buck/android:utils",
         "//src/com/facebook/buck/config:config",
+        "//src/com/facebook/buck/core/description:description",
         "//src/com/facebook/buck/core/rules/common:common",
         "//src/com/facebook/buck/core/toolchain/tool/impl:impl",
         "//src/com/facebook/buck/core/util/immutables:immutables",
@@ -541,8 +542,8 @@ java_library(
     ],
     deps = [
         ":support",
+        "//src/com/facebook/buck/core/rules/impl:impl",
         "//src/com/facebook/buck/log:api",
-        "//src/com/facebook/buck/rules:build_rule",
         "//third-party/java/eclipse:eclipse_jdt",
         "//third-party/java/guava:guava",
         "//third-party/java/jsr:jsr305",

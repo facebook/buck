@@ -2,7 +2,7 @@ java_library(
     name = "delegate",
     srcs = glob(["*.java"]),
     exported_deps = [
-        "//src/com/facebook/buck/rules:build_rule",
+        "//src/com/facebook/buck/core/rules/impl:impl",
         "//src/com/facebook/buck/util/cache:cache",
     ],
     visibility = [

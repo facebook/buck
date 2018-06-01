@@ -10,7 +10,7 @@ java_immutables_library(
         "//src/com/facebook/buck/config:config",
         "//src/com/facebook/buck/config/resources:resources",
         "//src/com/facebook/buck/core/build/engine/type:type",
-        "//src/com/facebook/buck/rules:build_rule",
+        "//src/com/facebook/buck/core/rules/impl:impl",
     ],
     visibility = [
         "PUBLIC",

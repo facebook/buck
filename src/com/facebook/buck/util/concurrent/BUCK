@@ -21,6 +21,7 @@ java_library(
     srcs = ["MostExecutors.java"],
     visibility = [
         "//src/com/facebook/buck/testrunner:junit",
+        "//test/...",
     ],
     deps = [
         # IMPORTANT! This list is to remain empty. See src/com/facebook/buck/testrunner/BUCK.

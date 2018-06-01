@@ -20,6 +20,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.rules.impl.SymlinkTree;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.HeaderMode;
@@ -171,8 +172,8 @@ public class CxxPreprocessables {
   }
 
   /**
-   * @return adds a the header {@link com.facebook.buck.rules.SymlinkTree} for the given rule to the
-   *     {@link CxxPreprocessorInput}.
+   * @return adds a the header {@link SymlinkTree} for the given rule to the {@link
+   *     CxxPreprocessorInput}.
    */
   public static CxxPreprocessorInput.Builder addHeaderSymlinkTree(
       CxxPreprocessorInput.Builder builder,

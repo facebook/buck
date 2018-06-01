@@ -28,6 +28,7 @@ java_test(
         "//src/com/facebook/buck/core/rules/transformer/impl:impl",
         "//src/com/facebook/buck/jvm/java:rules",
         "//src/com/facebook/buck/rules:rules",
+        "//src/com/facebook/buck/util/concurrent:concurrent_for_junit_runner",
         "//test/com/facebook/buck/core/cell:testutil",
         "//test/com/facebook/buck/core/model/targetgraph:testutil",
         "//test/com/facebook/buck/jvm/java:testutil",

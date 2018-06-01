@@ -5,8 +5,8 @@ java_library(
         "//src/com/facebook/buck/core/build/engine:engine",
         "//src/com/facebook/buck/core/model:model",
         "//src/com/facebook/buck/core/rulekey:rulekey",
+        "//src/com/facebook/buck/core/rules/impl:impl",
         "//src/com/facebook/buck/event:interfaces",
-        "//src/com/facebook/buck/rules:build_rule",
         "//src/com/facebook/buck/rules/keys:keys",
     ],
     visibility = [

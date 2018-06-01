@@ -20,9 +20,9 @@ import com.facebook.buck.core.description.BuildRuleParams;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.attr.SupportsInputBasedRuleKey;
+import com.facebook.buck.core.rules.impl.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.rules.NoopBuildRuleWithDeclaredAndExtraDeps;
 
 public class JavaAnnotationProcessor extends NoopBuildRuleWithDeclaredAndExtraDeps
     implements SupportsInputBasedRuleKey {

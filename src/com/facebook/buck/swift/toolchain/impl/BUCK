@@ -12,8 +12,8 @@ java_library_with_plugins(
     deps = [
         "//src/com/facebook/buck/apple/platform_type:type",
         "//src/com/facebook/buck/apple/toolchain:toolchain",
+        "//src/com/facebook/buck/core/rules/impl:impl",
         "//src/com/facebook/buck/model:model",
-        "//src/com/facebook/buck/rules:build_rule",
         "//src/com/facebook/buck/swift/toolchain:toolchain",
         "//third-party/java/guava:guava",
     ],

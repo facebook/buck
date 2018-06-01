@@ -171,7 +171,8 @@ java_library(
     ],
     visibility = ["PUBLIC"],
     deps = [
-        "//src/com/facebook/buck/rules:build_rule",
+        "//src/com/facebook/buck/core/rules/impl:impl",
+        "//src/com/facebook/buck/core/toolchain/tool:tool",
         "//third-party/java/guava:guava",
     ],
 )

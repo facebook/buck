@@ -20,7 +20,7 @@ import com.facebook.buck.core.description.BuildRuleParams;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
-import com.facebook.buck.rules.NoopBuildRuleWithDeclaredAndExtraDeps;
+import com.facebook.buck.core.rules.impl.NoopBuildRuleWithDeclaredAndExtraDeps;
 
 /**
  * Description for an xcode_postbuild_script rule which runs a shell script after the 'copy

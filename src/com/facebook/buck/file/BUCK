@@ -61,10 +61,10 @@ java_library(
     ],
     visibility = ["PUBLIC"],
     deps = [
+        "//src/com/facebook/buck/core/rules/impl:impl",
         "//src/com/facebook/buck/io:io",
         "//src/com/facebook/buck/io/filesystem:filesystem",
         "//src/com/facebook/buck/model:model",
-        "//src/com/facebook/buck/rules:rules",
         "//src/com/facebook/buck/step:step",
         "//src/com/facebook/buck/step/fs:fs",
         "//third-party/java/guava:guava",

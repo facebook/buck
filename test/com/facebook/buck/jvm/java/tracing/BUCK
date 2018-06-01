@@ -28,7 +28,7 @@ java_test(
         "//src/com/facebook/buck/model:model",
         "//src/com/facebook/buck/parser:rule_pattern",
         "//src/com/facebook/buck/rules/coercer:interface",
-        "//src/com/facebook/buck/rules:build_rule",
+        "//src/com/facebook/buck/core/rules/impl:impl",
         "//src/com/facebook/buck/core/cell/resolver:resolver",
         "//src/com/facebook/buck/core/rulekey:rulekey",
         "//src/com/facebook/buck/core/cell/name:name",

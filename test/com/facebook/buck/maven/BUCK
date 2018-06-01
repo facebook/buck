@@ -195,7 +195,7 @@ java_test(
         "//src/com/facebook/buck/rules/macros:macros",
         "//src/com/facebook/buck/rules/macros:types",
         "//src/com/facebook/buck/rules/query:types",
-        "//src/com/facebook/buck/rules:build_rule",
+        "//src/com/facebook/buck/core/rules/impl:impl",
         "//src/com/facebook/buck/rules:rules",
         "//src/com/facebook/buck/core/cell:cell",
         "//src/com/facebook/buck/shell:rules",

@@ -5,6 +5,6 @@ java_library(
         "PUBLIC",
     ],
     deps = [
-        "//src/com/facebook/buck/rules:build_rule",
+        "//src/com/facebook/buck/core/rules/impl:impl",
     ],
 )

@@ -1,80 +1,11 @@
 load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
 
-# Ideally, BuildRule.java would require only a handful of other source files
-# in order to compile it. Because BuildContext is referenced in the BuildRule
-# interface, its dependencies are much broader than desired.
-java_immutables_library(
-    name = "build_rule",
-    srcs = [
-        "AbstractBuildRule.java",
-        "AbstractBuildRuleWithProviders.java",
-        "BuildRuleCreationContext.java",
-        "DependencyAggregation.java",
-    ],
-    exported_deps = [
-        "//src/com/facebook/buck/core/build/buildable/context:context",
-        "//src/com/facebook/buck/core/build/context:context",
-        "//src/com/facebook/buck/core/description:description",
-        "//src/com/facebook/buck/core/rulekey:rulekey",
-        "//src/com/facebook/buck/core/rules:rules",
-        "//src/com/facebook/buck/core/rules/provider:provider",
-        "//src/com/facebook/buck/core/rules/type:type",
-        "//src/com/facebook/buck/core/sourcepath:sourcepath",
-        "//src/com/facebook/buck/core/toolchain/tool:tool",
-        "//src/com/facebook/buck/graph:graph",
-        "//src/com/facebook/buck/rules/visibility:visibility",
-        "//src/com/facebook/buck/sandbox:sandbox",
-        "//src/com/facebook/buck/toolchain:toolchain",
-        "//src/com/facebook/buck/util/concurrent:concurrent",
-    ],
-    resources = [
-        "BuckPyFunction.stg",
-    ],
-    tests = [
-        "//test/com/facebook/buck/rules:rules",
-        "//test/com/facebook/buck/rules/coercer:coercer",
-    ],
-    visibility = [
-        "PUBLIC",
-    ],
-    deps = [
-        "//src/com/facebook/buck/core/cell/resolver:resolver",
-        "//src/com/facebook/buck/core/rules/type/impl:impl",
-        "//src/com/facebook/buck/event:interfaces",
-        "//src/com/facebook/buck/graph:graph",
-        "//src/com/facebook/buck/io:io",
-        "//src/com/facebook/buck/io/file:file",
-        "//src/com/facebook/buck/log/views:views",
-        "//src/com/facebook/buck/model:model",
-        "//src/com/facebook/buck/rules/coercer:interface",
-        "//src/com/facebook/buck/step:step",
-        "//src/com/facebook/buck/util:exceptions",
-        "//src/com/facebook/buck/util:util",
-        "//src/com/facebook/buck/util/collect:collect",
-        "//src/com/facebook/buck/util/concurrent:concurrent",
-        "//src/com/facebook/buck/versions:types",
-        "//third-party/java/infer-annotations:infer-annotations",
-        "//third-party/java/jackson:jackson-annotations",
-        "//third-party/java/jackson:jackson-databind",
-        "//third-party/java/stringtemplate:stringtemplate",
-    ],
-)
-
 java_immutables_library(
     name = "rules",
     srcs = [
-        "AbstractBuildRule.java",
-        "AbstractBuildRuleWithDeclaredAndExtraDeps.java",
-        "AbstractBuildRuleWithProviders.java",
-        "AbstractBuildRuleWithResolver.java",
         "BuckPyFunction.java",
-        "NoopBuildRule.java",
-        "NoopBuildRuleWithDeclaredAndExtraDeps.java",
-        "SymlinkTree.java",
-        "WriteStringTemplateRule.java",
     ],
     exported_deps = [
-        ":build_rule",
         "//src/com/facebook/buck/core/cell:cell",
         "//src/com/facebook/buck/core/cell/name:name",
         "//src/com/facebook/buck/core/cell/resolver:resolver",
@@ -84,6 +15,9 @@ java_immutables_library(
         "//src/com/facebook/buck/core/sourcepath:sourcepath",
         "//src/com/facebook/buck/sandbox:sandbox",
         "//third-party/java/pf4j:pf4j",
+    ],
+    resources = [
+        "BuckPyFunction.stg",
     ],
     tests = [
         "//test/com/facebook/buck/rules:rules",

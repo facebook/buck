@@ -11,6 +11,7 @@ java_immutables_library(
     deps = [
         "//src/com/facebook/buck/android:steps",
         "//src/com/facebook/buck/core/rules/common:common",
+        "//src/com/facebook/buck/core/rules/impl:impl",
         "//src/com/facebook/buck/core/sourcepath/resolver:resolver",
         "//src/com/facebook/buck/event:event",
         "//src/com/facebook/buck/event:interfaces",
@@ -18,7 +19,6 @@ java_immutables_library(
         "//src/com/facebook/buck/io:io",
         "//src/com/facebook/buck/log:api",
         "//src/com/facebook/buck/model:model",
-        "//src/com/facebook/buck/rules:build_rule",
         "//src/com/facebook/buck/rules:rules",
         "//src/com/facebook/buck/shell:steps",
         "//src/com/facebook/buck/step:step",

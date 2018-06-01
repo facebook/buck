@@ -5,8 +5,9 @@ java_library_with_plugins(
     srcs = glob(["*.java"]),
     exported_provided_deps = [
         "//src/com/facebook/buck/model:model",
-        "//src/com/facebook/buck/rules:build_rule",
+        "//src/com/facebook/buck/core/rules/impl:impl",
         "//src/com/facebook/buck/toolchain:toolchain",
+        "//src/com/facebook/buck/core/toolchain/tool:tool",
     ],
     provided_deps = [
         "//src/com/facebook/buck/core/sourcepath/resolver:resolver",

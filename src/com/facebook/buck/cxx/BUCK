@@ -69,6 +69,7 @@ java_library_with_plugins(
         "//src/com/facebook/buck/util:io",
         "//src/com/facebook/buck/util:process_executor",
         "//src/com/facebook/buck/util:util",
+        "//src/com/facebook/buck/util/concurrent:concurrent",
         "//src/com/facebook/buck/util/environment:platform",
         "//src/com/facebook/buck/util/json:json",
         "//src/com/facebook/buck/util/xml:xml",
