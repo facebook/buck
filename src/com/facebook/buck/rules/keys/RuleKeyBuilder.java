@@ -38,7 +38,6 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.log.thrift.ThriftRuleKeyLogger;
 import com.facebook.buck.log.thrift.rulekeys.FullRuleKey;
-import com.facebook.buck.rules.SourceRoot;
 import com.facebook.buck.rules.keys.hasher.CountingRuleKeyHasher;
 import com.facebook.buck.rules.keys.hasher.ForwardingRuleKeyHasher;
 import com.facebook.buck.rules.keys.hasher.GuavaRuleKeyHasher;

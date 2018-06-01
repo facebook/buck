@@ -35,7 +35,7 @@ import com.facebook.buck.log.thrift.rulekeys.RuleKeyHash;
 import com.facebook.buck.log.thrift.rulekeys.Sha1;
 import com.facebook.buck.log.thrift.rulekeys.TargetPath;
 import com.facebook.buck.log.thrift.rulekeys.Value;
-import com.facebook.buck.rules.SourceRoot;
+import com.facebook.buck.rules.keys.SourceRoot;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.hash.HashCode;
 import java.nio.file.Path;

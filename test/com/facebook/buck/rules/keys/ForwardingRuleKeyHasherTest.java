@@ -28,7 +28,6 @@ import com.facebook.buck.core.rules.type.BuildRuleType;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.SourceRoot;
 import com.facebook.buck.rules.keys.hasher.ForwardingRuleKeyHasher;
 import com.facebook.buck.rules.keys.hasher.RuleKeyHasher;
 import com.facebook.buck.util.sha1.Sha1HashCode;
