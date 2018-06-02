@@ -1,18 +1,18 @@
-From 08ba713b4ad4688b8b7822edaf9bd579880b9fc9 Mon Sep 17 00:00:00 2001
+From 506507731ef4dc39b5f0459209e3662a24c9b804 Mon Sep 17 00:00:00 2001
 From: Taras Tsugrii <ttsugrii@fb.com>
 Date: Sat, 12 May 2018 20:21:17 -0700
 Subject: [PATCH] [Buck] Patch Skylark build file for Buck.
 
 ---
- .../java/com/google/devtools/build/lib/BUILD  |   46 +-
- .../build/lib/packages/Attribute.java         | 2364 +----------------
- 2 files changed, 42 insertions(+), 2368 deletions(-)
+ .../java/com/google/devtools/build/lib/BUILD  |   48 +-
+ .../build/lib/packages/Attribute.java         | 2359 +----------------
+ 2 files changed, 44 insertions(+), 2363 deletions(-)
 
 diff --git a/src/main/java/com/google/devtools/build/lib/BUILD b/src/main/java/com/google/devtools/build/lib/BUILD
-index 9f193c82de..d4ea0c9310 100644
+index 27f1e62f8a..d2692cfd0f 100644
 --- a/src/main/java/com/google/devtools/build/lib/BUILD
 +++ b/src/main/java/com/google/devtools/build/lib/BUILD
-@@ -304,16 +304,52 @@ java_library(
+@@ -312,16 +312,54 @@ java_library(
  #
  # IMPORTANT:  NOT A PUBLIC INTERFACE. TARGETS SHOULDN'T DEPEND ON THIS.
  #
@@ -26,6 +26,7 @@ index 9f193c82de..d4ea0c9310 100644
 +    ]) + [
 +        "packages/Attribute.java",
 +        "packages/BazelLibrary.java",
++        "packages/BuiltinProvider.java",
 +        "packages/Info.java",
 +        "packages/NativeProvider.java",
 +        "packages/Provider.java",
@@ -34,6 +35,7 @@ index 9f193c82de..d4ea0c9310 100644
 +        "packages/SkylarkInfo.java",
 +        "packages/SkylarkProvider.java",
 +        "packages/SkylarkProviderIdentifier.java",
++        "packages/StructProvider.java",
 +    ],
      visibility = ["//visibility:public"],
 -    exports = [
@@ -71,10 +73,10 @@ index 9f193c82de..d4ea0c9310 100644
  )
  
 diff --git a/src/main/java/com/google/devtools/build/lib/packages/Attribute.java b/src/main/java/com/google/devtools/build/lib/packages/Attribute.java
-index 933790f253..c7afa8a21d 100644
+index b22a3d69bc..c7afa8a21d 100644
 --- a/src/main/java/com/google/devtools/build/lib/packages/Attribute.java
 +++ b/src/main/java/com/google/devtools/build/lib/packages/Attribute.java
-@@ -14,53 +14,7 @@
+@@ -14,55 +14,7 @@
  
  package com.google.devtools.build.lib.packages;
  
@@ -95,6 +97,7 @@ index 933790f253..c7afa8a21d 100644
 -import com.google.devtools.build.lib.analysis.TransitiveInfoProvider;
 -import com.google.devtools.build.lib.analysis.config.transitions.ConfigurationTransition;
 -import com.google.devtools.build.lib.analysis.config.transitions.NoTransition;
+-import com.google.devtools.build.lib.analysis.config.transitions.PatchTransition;
 -import com.google.devtools.build.lib.analysis.config.transitions.SplitTransition;
 -import com.google.devtools.build.lib.cmdline.Label;
 -import com.google.devtools.build.lib.events.EventHandler;
@@ -102,6 +105,7 @@ index 933790f253..c7afa8a21d 100644
 -import com.google.devtools.build.lib.packages.RuleClass.Builder.RuleClassNamePredicate;
  import com.google.devtools.build.lib.skyframe.serialization.autocodec.AutoCodec;
 -import com.google.devtools.build.lib.skyframe.serialization.autocodec.AutoCodec.VisibleForSerialization;
+-import com.google.devtools.build.lib.skylarkbuildapi.SplitTransitionProviderApi;
 -import com.google.devtools.build.lib.syntax.ClassObject;
 -import com.google.devtools.build.lib.syntax.EvalException;
 -import com.google.devtools.build.lib.syntax.EvalUtils;
@@ -128,7 +132,7 @@ index 933790f253..c7afa8a21d 100644
  import javax.annotation.concurrent.Immutable;
  
  /**
-@@ -71,2244 +25,8 @@ import javax.annotation.concurrent.Immutable;
+@@ -73,2237 +25,8 @@ import javax.annotation.concurrent.Immutable;
   */
  @Immutable
  @AutoCodec
@@ -338,7 +342,7 @@ index 933790f253..c7afa8a21d 100644
 -   * based on attributes of that rule. For instance, a split transition on a rule's deps may differ
 -   * depending on the 'platform' attribute of the rule.
 -   */
--  public interface SplitTransitionProvider {
+-  public interface SplitTransitionProvider extends SplitTransitionProviderApi {
 -    /**
 -     * Returns the {@link SplitTransition} given the attribute mapper of the originating rule.
 -     */
@@ -664,22 +668,15 @@ index 933790f253..c7afa8a21d 100644
 -    }
 -
 -    /**
--     * Defines the configuration transition for this attribute. Defaults to
--     * {@code NONE}.
--     */
--    public Builder<TYPE> cfg(SplitTransition configTransition) {
--      return cfg(new BasicSplitTransitionProvider(Preconditions.checkNotNull(configTransition)));
--    }
--
--    /**
--     * Defines the configuration transition for this attribute. Defaults to
--     * {@code NONE}.
+-     * Defines the configuration transition for this attribute (e.g. a {@link PatchTransition} or
+-     * {@link SplitTransition}). Defaults to {@code NONE}.
 -     */
 -    public Builder<TYPE> cfg(ConfigurationTransition configTransition) {
+-      Preconditions.checkNotNull(configTransition);
 -      Preconditions.checkState(this.configTransition == NoTransition.INSTANCE,
 -          "the configuration transition is already set");
 -      if (configTransition instanceof SplitTransition) {
--        return cfg((SplitTransition) configTransition);
+-        return cfg(new BasicSplitTransitionProvider((SplitTransition) configTransition));
 -      } else {
 -        this.configTransition = configTransition;
 -        return this;
@@ -1575,7 +1572,7 @@ index 933790f253..c7afa8a21d 100644
 -    private Object invokeCallback(EventHandler eventHandler, Map<String, Object> attrValues)
 -        throws EvalException, InterruptedException {
 -      ClassObject attrs =
--          NativeProvider.STRUCT.create(
+-          StructProvider.STRUCT.create(
 -              attrValues, "No such regular (non computed) attribute '%s'.");
 -      Object result = callback.call(eventHandler, attrs);
 -      try {
@@ -2374,7 +2371,7 @@ index 933790f253..c7afa8a21d 100644
  
    /**
     * Returns if an attribute with the given name is an implicit dependency according to the
-@@ -2318,14 +36,6 @@ public final class Attribute implements Comparable<Attribute> {
+@@ -2313,14 +36,6 @@ public final class Attribute implements Comparable<Attribute> {
      return name.startsWith("$");
    }
  
@@ -2389,7 +2386,7 @@ index 933790f253..c7afa8a21d 100644
    /**
     * Returns if an attribute with the given name is late-bound according to the naming policy
     * that designates late-bound attributes.
-@@ -2350,76 +60,4 @@ public final class Attribute implements Comparable<Attribute> {
+@@ -2345,76 +60,4 @@ public final class Attribute implements Comparable<Attribute> {
      }
      return nativeAttrName;
    }

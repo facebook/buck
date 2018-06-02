@@ -25,7 +25,6 @@ import com.google.devtools.build.lib.syntax.BuiltinFunction;
 import com.google.devtools.build.lib.syntax.Environment;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.FuncallExpression;
-import com.google.devtools.build.lib.syntax.GlobList;
 import com.google.devtools.build.lib.syntax.SkylarkList;
 import com.google.devtools.build.lib.syntax.SkylarkSignatureProcessor;
 import com.google.devtools.build.lib.syntax.Type;
@@ -120,19 +119,16 @@ public class Glob {
           try {
             return SkylarkList.MutableList.copyOf(
                 env,
-                GlobList.captureResults(
-                    include,
-                    exclude,
-                    parseContext
-                        .getPackageContext()
-                        .getGlobber()
-                        .run(
-                            Type.STRING_LIST.convert(include, "'glob' include"),
-                            Type.STRING_LIST.convert(exclude, "'glob' exclude"),
-                            excludeDirectories)
-                        .stream()
-                        .sorted()
-                        .collect(ImmutableList.toImmutableList())));
+                parseContext
+                    .getPackageContext()
+                    .getGlobber()
+                    .run(
+                        Type.STRING_LIST.convert(include, "'glob' include"),
+                        Type.STRING_LIST.convert(exclude, "'glob' exclude"),
+                        excludeDirectories)
+                    .stream()
+                    .sorted()
+                    .collect(ImmutableList.toImmutableList()));
           } catch (FileNotFoundException fnfe) {
             throw new EvalException(ast.getLocation(), "Cannot find " + fnfe.getMessage());
           }
