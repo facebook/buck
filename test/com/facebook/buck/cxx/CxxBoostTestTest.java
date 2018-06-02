@@ -75,7 +75,6 @@ public class CxxBoostTestTest {
             target,
             projectFilesystem,
             TestBuildRuleParams.create(),
-            ruleResolver,
             new CxxLink(
                 linkTarget,
                 new FakeProjectFilesystem(),
@@ -94,7 +93,7 @@ public class CxxBoostTestTest {
             ImmutableList.of(),
             ImmutableSortedSet.of(),
             ImmutableSet.of(),
-            (unused1, unused2) -> ImmutableSortedSet.of(),
+            unused -> ImmutableSortedSet.of(),
             ImmutableSet.of(),
             ImmutableSet.of(),
             /* runTestSeparately */ false,

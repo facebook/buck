@@ -30,7 +30,6 @@ import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTarg
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
@@ -64,7 +63,7 @@ import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
 import java.nio.file.Path;
 import java.util.Optional;
-import java.util.function.BiFunction;
+import java.util.function.Function;
 import org.immutables.value.Value;
 
 public class CxxTestDescription
@@ -241,31 +240,23 @@ public class CxxTestDescription
             .map(x -> macrosConverter.convert(x, graphBuilder))
             .collect(ImmutableList.toImmutableList());
 
-    BiFunction<BuildRuleResolver, SourcePathRuleFinder, ImmutableSortedSet<BuildRule>>
-        additionalDeps =
-            (ruleResolverInner, ruleFinderInner) -> {
-              ImmutableSortedSet.Builder<BuildRule> deps = ImmutableSortedSet.naturalOrder();
+    Function<SourcePathRuleFinder, ImmutableSortedSet<BuildRule>> additionalDeps =
+        ruleFinderInner -> {
+          ImmutableSortedSet.Builder<BuildRule> deps = ImmutableSortedSet.naturalOrder();
 
-              // It's not uncommon for users to add dependencies onto other binaries that they run
-              // during the test, so make sure to add them as runtime deps.
-              deps.addAll(
-                  Sets.difference(
-                      params.getBuildDeps(),
-                      cxxLinkAndCompileRules.getBinaryRule().getBuildDeps()));
+          // It's not uncommon for users to add dependencies onto other binaries that they run
+          // during the test, so make sure to add them as runtime deps.
+          deps.addAll(
+              Sets.difference(
+                  params.getBuildDeps(), cxxLinkAndCompileRules.getBinaryRule().getBuildDeps()));
 
-              // Add any build-time from any macros embedded in the `env` or `args` parameter.
-              for (StringWithMacros part :
-                  Iterables.concat(args.getArgs(), args.getEnv().values())) {
-                // TODO(cjhopman): I feel so bad about this. MacrosConverter needs to be updated to
-                // only take a BuildRuleResolver.
-                deps.addAll(
-                    BuildableSupport.getDepsCollection(
-                        macrosConverter.convert(part, (ActionGraphBuilder) ruleResolverInner),
-                        ruleFinderInner));
-              }
+          // Add any build-time from any macros embedded in the `env` or `args` parameter.
+          for (Arg part : Iterables.concat(testArgs, testEnv.values())) {
+            deps.addAll(BuildableSupport.getDepsCollection(part, ruleFinderInner));
+          }
 
-              return deps.build();
-            };
+          return deps.build();
+        };
 
     CxxTest test;
 
@@ -278,7 +269,6 @@ public class CxxTestDescription
                   testBuildTarget,
                   projectFilesystem,
                   testParams,
-                  graphBuilder,
                   cxxLinkAndCompileRules.getBinaryRule(),
                   cxxLinkAndCompileRules.executable,
                   testEnv,
@@ -304,7 +294,6 @@ public class CxxTestDescription
                   testBuildTarget,
                   projectFilesystem,
                   testParams,
-                  graphBuilder,
                   cxxLinkAndCompileRules.getBinaryRule(),
                   cxxLinkAndCompileRules.executable,
                   testEnv,

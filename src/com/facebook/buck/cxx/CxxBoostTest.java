@@ -20,7 +20,6 @@ import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.description.BuildRuleParams;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
 import com.facebook.buck.core.rules.common.BuildableSupport;
@@ -53,7 +52,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Stack;
-import java.util.function.BiFunction;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
@@ -80,15 +79,13 @@ class CxxBoostTest extends CxxTest implements HasRuntimeDeps, ExternalTestRunner
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      BuildRuleResolver ruleResolver,
       BuildRule binary,
       Tool executable,
       ImmutableMap<String, Arg> env,
       ImmutableList<Arg> args,
       ImmutableSortedSet<? extends SourcePath> resources,
       ImmutableSet<SourcePath> additionalCoverageTargets,
-      BiFunction<BuildRuleResolver, SourcePathRuleFinder, ImmutableSortedSet<BuildRule>>
-          additionalDeps,
+      Function<SourcePathRuleFinder, ImmutableSortedSet<BuildRule>> additionalDeps,
       ImmutableSet<String> labels,
       ImmutableSet<String> contacts,
       boolean runTestSeparately,
@@ -97,7 +94,6 @@ class CxxBoostTest extends CxxTest implements HasRuntimeDeps, ExternalTestRunner
         buildTarget,
         projectFilesystem,
         params,
-        ruleResolver,
         executable,
         env,
         args,

@@ -21,7 +21,6 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.core.description.BuildRuleParams;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
@@ -65,18 +64,17 @@ public class CxxTestTest {
       return TestBuildRuleParams.create();
     }
 
-    public FakeCxxTest(BuildRuleResolver ruleResolver) {
+    public FakeCxxTest() {
       super(
           buildTarget,
           new FakeProjectFilesystem(),
           createBuildParams(),
-          ruleResolver,
           new CommandTool.Builder().build(),
           ImmutableMap.of(),
           ImmutableList.of(),
           ImmutableSortedSet.of(),
           ImmutableSet.of(),
-          (unused1, unused2) -> ImmutableSortedSet.of(),
+          unused2 -> ImmutableSortedSet.of(),
           ImmutableSet.of(),
           ImmutableSet.of(),
           /* runTestSeparately */ false,
@@ -99,9 +97,8 @@ public class CxxTestTest {
   public void runTests() {
     ImmutableList<String> command = ImmutableList.of("hello", "world");
 
-    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     FakeCxxTest cxxTest =
-        new FakeCxxTest(graphBuilder) {
+        new FakeCxxTest() {
 
           @Override
           public SourcePath getSourcePathToOutput() {
@@ -152,7 +149,7 @@ public class CxxTestTest {
 
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     FakeCxxTest cxxTest =
-        new FakeCxxTest(graphBuilder) {
+        new FakeCxxTest() {
 
           @Override
           public SourcePath getSourcePathToOutput() {

@@ -95,7 +95,6 @@ public class CxxGtestTestTest {
             target,
             filesystem,
             TestBuildRuleParams.create(),
-            ruleResolver,
             new CxxLink(
                 linkTarget,
                 filesystem,
@@ -114,7 +113,7 @@ public class CxxGtestTestTest {
             ImmutableList.of(),
             ImmutableSortedSet.of(),
             ImmutableSet.of(),
-            (unused1, unused2) -> ImmutableSortedSet.of(),
+            unused -> ImmutableSortedSet.of(),
             ImmutableSet.of(),
             ImmutableSet.of(),
             /* runTestSeparately */ false,

@@ -22,7 +22,6 @@ import com.facebook.buck.core.description.BuildRuleParams;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
 import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
@@ -56,7 +55,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.concurrent.Callable;
-import java.util.function.BiFunction;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 /** A no-op {@link BuildRule} which houses the logic to run and form the results for C/C++ tests. */
@@ -72,7 +71,7 @@ public abstract class CxxTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final ImmutableSortedSet<? extends SourcePath> resources;
 
   private final ImmutableSet<SourcePath> additionalCoverageTargets;
-  private final BiFunction<BuildRuleResolver, SourcePathRuleFinder, ImmutableSortedSet<BuildRule>>
+  private final Function<SourcePathRuleFinder, ImmutableSortedSet<BuildRule>>
       additionalDepsSupplier;
   private final Memoizer<ImmutableSortedSet<BuildRule>> additionalDeps = new Memoizer<>();
   private final ImmutableSet<String> labels;
@@ -80,26 +79,21 @@ public abstract class CxxTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final boolean runTestSeparately;
   private final Optional<Long> testRuleTimeoutMs;
 
-  private BuildRuleResolver ruleResolver;
-
   public CxxTest(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      BuildRuleResolver ruleResolver,
       Tool executable,
       ImmutableMap<String, Arg> env,
       ImmutableList<Arg> args,
       ImmutableSortedSet<? extends SourcePath> resources,
       ImmutableSet<SourcePath> additionalCoverageTargets,
-      BiFunction<BuildRuleResolver, SourcePathRuleFinder, ImmutableSortedSet<BuildRule>>
-          additionalDepsSupplier,
+      Function<SourcePathRuleFinder, ImmutableSortedSet<BuildRule>> additionalDepsSupplier,
       ImmutableSet<String> labels,
       ImmutableSet<String> contacts,
       boolean runTestSeparately,
       Optional<Long> testRuleTimeoutMs) {
     super(buildTarget, projectFilesystem, params);
-    this.ruleResolver = ruleResolver;
     this.executable = executable;
     this.env = env;
     this.args = args;
@@ -268,7 +262,7 @@ public abstract class CxxTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @Override
   public Stream<BuildTarget> getRuntimeDeps(SourcePathRuleFinder ruleFinder) {
     return additionalDeps
-        .get(() -> additionalDepsSupplier.apply(ruleResolver, ruleFinder))
+        .get(() -> additionalDepsSupplier.apply(ruleFinder))
         .stream()
         .map(BuildRule::getBuildTarget);
   }
@@ -282,13 +276,5 @@ public abstract class CxxTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   protected ImmutableList<Arg> getArgs() {
     return args;
-  }
-
-  @Override
-  public void updateBuildRuleResolver(
-      BuildRuleResolver ruleResolver,
-      SourcePathRuleFinder ruleFinder,
-      SourcePathResolver pathResolver) {
-    this.ruleResolver = ruleResolver;
   }
 }
