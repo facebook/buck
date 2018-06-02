@@ -67,6 +67,7 @@ import com.facebook.buck.cxx.HasAppleDebugSymbolDeps;
 import com.facebook.buck.cxx.HeaderSymlinkTreeWithHeaderMap;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
+import com.facebook.buck.cxx.toolchain.HeaderMode;
 import com.facebook.buck.cxx.toolchain.HeaderSymlinkTree;
 import com.facebook.buck.cxx.toolchain.HeaderVisibility;
 import com.facebook.buck.cxx.toolchain.LinkerMapMode;
@@ -90,10 +91,14 @@ import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 import java.util.SortedSet;
@@ -301,7 +306,7 @@ public class AppleLibraryDescription
                         () ->
                             AppleLibraryDescriptionSwiftEnhancer
                                 .getPreprocessorInputsForAppleLibrary(
-                                    buildTarget, graphBuilder, cxxPlatform));
+                                    buildTarget, graphBuilder, cxxPlatform, args));
 
             return Optional.of(
                 AppleLibraryDescriptionSwiftEnhancer.createSwiftCompileRule(
@@ -601,6 +606,19 @@ public class AppleLibraryDescription
       unstrippedTarget = unstrippedTarget.withoutFlavors(LinkerMapMode.NO_LINKER_MAP.getFlavor());
     }
 
+    Optional<CxxPlatform> platform =
+        getCxxPlatformsProvider().getCxxPlatforms().getValue(buildTarget);
+    Optional<Type> libType = LIBRARY_TYPE.getValue(buildTarget);
+    Optional<HeaderMode> headerMode = CxxLibraryDescription.HEADER_MODE.getValue(buildTarget);
+    if (platform.isPresent()
+        && libType.isPresent()
+        && libType.get().equals(Type.EXPORTED_HEADERS)
+        && headerMode.isPresent()
+        && headerMode.get().equals(HeaderMode.SYMLINK_TREE_WITH_MODULEMAP)) {
+      return createExportedModuleSymlinkTreeBuildRule(
+          buildTarget, context.getProjectFilesystem(), graphBuilder, platform.get(), args);
+    }
+
     return graphBuilder.computeIfAbsent(
         unstrippedTarget,
         unstrippedTarget1 -> {
@@ -634,6 +652,41 @@ public class AppleLibraryDescription
     return AppleDebuggableBinary.isBuildRuleDebuggable(buildRule);
   }
 
+  /** @return a {@link HeaderSymlinkTree} for the exported headers of this C/C++ library. */
+  private HeaderSymlinkTree createExportedModuleSymlinkTreeBuildRule(
+      BuildTarget buildTarget,
+      ProjectFilesystem projectFilesystem,
+      ActionGraphBuilder graphBuilder,
+      CxxPlatform cxxPlatform,
+      AppleNativeTargetDescriptionArg args) {
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+
+    Path headerPathPrefix = AppleDescriptions.getHeaderPathPrefix(args, buildTarget);
+    ImmutableSortedMap.Builder<Path, SourcePath> headers = ImmutableSortedMap.naturalOrder();
+    headers.putAll(
+        CxxPreprocessables.resolveHeaderMap(
+            Paths.get(""),
+            AppleDescriptions.parseAppleHeadersForUseFromOtherTargets(
+                buildTarget,
+                pathResolver::getRelativePath,
+                headerPathPrefix,
+                args.getExportedHeaders())));
+    if (targetContainsSwift(buildTarget, graphBuilder)) {
+      headers.putAll(
+          AppleLibraryDescriptionSwiftEnhancer.getObjCGeneratedHeader(
+              buildTarget, graphBuilder, cxxPlatform, HeaderVisibility.PUBLIC));
+    }
+
+    return CxxDescriptionEnhancer.createHeaderSymlinkTree(
+        buildTarget,
+        projectFilesystem,
+        ruleFinder,
+        HeaderMode.SYMLINK_TREE_WITH_MODULEMAP,
+        headers.build(),
+        HeaderVisibility.PUBLIC);
+  }
+
   <U> Optional<U> createMetadataForLibrary(
       BuildTarget buildTarget,
       ActionGraphBuilder graphBuilder,
@@ -644,13 +697,27 @@ public class AppleLibraryDescription
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
 
-    // Forward to C/C++ library description.
     if (CxxLibraryDescription.METADATA_TYPE.containsAnyOf(buildTarget.getFlavors())) {
-      CxxLibraryDescriptionArg.Builder delegateArg = CxxLibraryDescriptionArg.builder().from(args);
-      AppleDescriptions.populateCxxLibraryDescriptionArg(
-          pathResolver, delegateArg, args, buildTarget);
-      return cxxLibraryMetadataFactory.createMetadata(
-          buildTarget, graphBuilder, cellRoots, delegateArg.build(), metadataClass);
+      // Modules are always platform specific so we need to only have one platform specific
+      // headersymlinktree with a modulemap. We cannot forward the metadata to a cxxlibrary
+      // description as it makes an optimization of having multiple header symlinktrees (platform
+      // specific and general). This also gives us more control over exposing the correct swift
+      // header modularly for mixed targets
+      if (args.isModular()) {
+        Map.Entry<Flavor, CxxLibraryDescription.MetadataType> cxxMetaDataType =
+            CxxLibraryDescription.METADATA_TYPE.getFlavorAndValue(buildTarget).get();
+        switch (cxxMetaDataType.getValue()) {
+          case CXX_PREPROCESSOR_INPUT:
+            return createCxxPreprocessorInputMetadata(
+                buildTarget, graphBuilder, cellRoots, args, metadataClass, cxxMetaDataType);
+          case CXX_HEADERS:
+            throw new IllegalStateException(
+                "Modular apple_library should provide a unified modular CXX_PREPROCESSOR_INPUT and not pass individual CXX_HEADERS");
+        }
+      } else {
+        return forwardMetadataToCxxLibraryDescription(
+            buildTarget, graphBuilder, cellRoots, args, metadataClass, pathResolver);
+      }
     }
 
     if (metadataClass.isAssignableFrom(FrameworkDependencies.class)
@@ -683,7 +750,6 @@ public class AppleLibraryDescription
 
     Optional<Map.Entry<Flavor, MetadataType>> metaType =
         METADATA_TYPE.getFlavorAndValue(buildTarget);
-
     if (metaType.isPresent()) {
       BuildTarget baseTarget = buildTarget.withoutFlavors(metaType.get().getKey());
       switch (metaType.get().getValue()) {
@@ -770,6 +836,64 @@ public class AppleLibraryDescription
     }
 
     return Optional.empty();
+  }
+
+  private <U> Optional<U> createCxxPreprocessorInputMetadata(
+      BuildTarget buildTarget,
+      ActionGraphBuilder graphBuilder,
+      CellPathResolver cellRoots,
+      AppleNativeTargetDescriptionArg args,
+      Class<U> metadataClass,
+      Entry<Flavor, CxxLibraryDescription.MetadataType> cxxMetaDataType) {
+    Entry<Flavor, CxxPlatform> platform =
+        getCxxPlatformsProvider()
+            .getCxxPlatforms()
+            .getFlavorAndValue(buildTarget)
+            .orElseThrow(IllegalArgumentException::new);
+    Entry<Flavor, HeaderVisibility> visibility =
+        CxxLibraryDescription.HEADER_VISIBILITY
+            .getFlavorAndValue(buildTarget)
+            .orElseThrow(IllegalArgumentException::new);
+    BuildTarget baseTarget =
+        buildTarget.withoutFlavors(
+            cxxMetaDataType.getKey(), platform.getKey(), visibility.getKey());
+
+    CxxPreprocessorInput.Builder cxxPreprocessorInputBuilder = CxxPreprocessorInput.builder();
+    CxxLibraryMetadataFactory.addCxxPreprocessorInputFromArgs(
+        cxxPreprocessorInputBuilder,
+        args,
+        platform,
+        f ->
+            CxxDescriptionEnhancer.toStringWithMacrosArgs(
+                buildTarget, cellRoots, graphBuilder, platform.getValue(), f));
+
+    HeaderSymlinkTree symlinkTree =
+        (HeaderSymlinkTree)
+            graphBuilder.requireRule(
+                baseTarget
+                    .withoutFlavors(LIBRARY_TYPE.getFlavors())
+                    .withAppendedFlavors(
+                        CxxLibraryDescription.Type.EXPORTED_HEADERS.getFlavor(),
+                        platform.getKey(),
+                        HeaderMode.SYMLINK_TREE_WITH_MODULEMAP.getFlavor()));
+    cxxPreprocessorInputBuilder.addIncludes(
+        CxxSymlinkTreeHeaders.from(symlinkTree, CxxPreprocessables.IncludeType.LOCAL));
+    CxxPreprocessorInput cxxPreprocessorInput = cxxPreprocessorInputBuilder.build();
+    return Optional.of(cxxPreprocessorInput).map(metadataClass::cast);
+  }
+
+  private <U> Optional<U> forwardMetadataToCxxLibraryDescription(
+      BuildTarget buildTarget,
+      ActionGraphBuilder graphBuilder,
+      CellPathResolver cellRoots,
+      AppleNativeTargetDescriptionArg args,
+      Class<U> metadataClass,
+      SourcePathResolver pathResolver) {
+    CxxLibraryDescriptionArg.Builder delegateArg = CxxLibraryDescriptionArg.builder().from(args);
+    AppleDescriptions.populateCxxLibraryDescriptionArg(
+        pathResolver, delegateArg, args, buildTarget);
+    return cxxLibraryMetadataFactory.createMetadata(
+        buildTarget, graphBuilder, cellRoots, delegateArg.build(), metadataClass);
   }
 
   @Override

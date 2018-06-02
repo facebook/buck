@@ -20,14 +20,20 @@ import com.facebook.buck.core.cell.resolver.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
+import com.facebook.buck.cxx.CxxLibraryDescription.CommonArg;
+import com.facebook.buck.cxx.CxxPreprocessorInput.Builder;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.HeaderMode;
 import com.facebook.buck.cxx.toolchain.HeaderSymlinkTree;
 import com.facebook.buck.cxx.toolchain.HeaderVisibility;
+import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.toolchain.ToolchainProvider;
+import com.google.common.base.Function;
 import com.google.common.collect.Multimaps;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 
 public class CxxLibraryMetadataFactory {
@@ -101,17 +107,13 @@ public class CxxLibraryMetadataFactory {
 
           // TODO(agallagher): We currently always add exported flags and frameworks to the
           // preprocessor input to mimic existing behavior, but this should likely be fixed.
-          cxxPreprocessorInputBuilder.putAllPreprocessorFlags(
-              Multimaps.transformValues(
-                  CxxFlags.getLanguageFlagsWithMacros(
-                      args.getExportedPreprocessorFlags(),
-                      args.getExportedPlatformPreprocessorFlags(),
-                      args.getExportedLangPreprocessorFlags(),
-                      platform.getValue()),
-                  f ->
-                      CxxDescriptionEnhancer.toStringWithMacrosArgs(
-                          buildTarget, cellRoots, graphBuilder, platform.getValue(), f)));
-          cxxPreprocessorInputBuilder.addAllFrameworks(args.getFrameworks());
+          addCxxPreprocessorInputFromArgs(
+              cxxPreprocessorInputBuilder,
+              args,
+              platform,
+              f ->
+                  CxxDescriptionEnhancer.toStringWithMacrosArgs(
+                      buildTarget, cellRoots, graphBuilder, platform.getValue(), f));
 
           if (visibility.getValue() == HeaderVisibility.PRIVATE && !args.getHeaders().isEmpty()) {
             HeaderSymlinkTree symlinkTree =
@@ -163,6 +165,22 @@ public class CxxLibraryMetadataFactory {
     }
 
     throw new IllegalStateException(String.format("unhandled metadata type: %s", type.getValue()));
+  }
+
+  public static void addCxxPreprocessorInputFromArgs(
+      Builder cxxPreprocessorInputBuilder,
+      CommonArg args,
+      Entry<Flavor, CxxPlatform> platform,
+      Function<StringWithMacros, Arg> stringWithMacrosArgFunction) {
+    cxxPreprocessorInputBuilder.putAllPreprocessorFlags(
+        Multimaps.transformValues(
+            CxxFlags.getLanguageFlagsWithMacros(
+                args.getExportedPreprocessorFlags(),
+                args.getExportedPlatformPreprocessorFlags(),
+                args.getExportedLangPreprocessorFlags(),
+                platform.getValue()),
+            stringWithMacrosArgFunction));
+    cxxPreprocessorInputBuilder.addAllFrameworks(args.getFrameworks());
   }
 
   /**

@@ -106,7 +106,10 @@ public class AppleLibraryDescriptionSwiftEnhancer {
    * CxxLibrary.
    */
   public static ImmutableSet<CxxPreprocessorInput> getPreprocessorInputsForAppleLibrary(
-      BuildTarget target, ActionGraphBuilder graphBuilder, CxxPlatform platform) {
+      BuildTarget target,
+      ActionGraphBuilder graphBuilder,
+      CxxPlatform platform,
+      AppleNativeTargetDescriptionArg arg) {
     CxxLibrary lib = (CxxLibrary) graphBuilder.requireRule(target.withFlavors());
     ImmutableMap<BuildTarget, CxxPreprocessorInput> transitiveMap =
         TransitiveCxxPreprocessorInputCache.computeTransitiveCxxToPreprocessorInputMap(
@@ -114,7 +117,11 @@ public class AppleLibraryDescriptionSwiftEnhancer {
 
     ImmutableSet.Builder<CxxPreprocessorInput> builder = ImmutableSet.builder();
     builder.addAll(transitiveMap.values());
-    builder.add(lib.getPublicCxxPreprocessorInputExcludingDelegate(platform, graphBuilder));
+    if (arg.isModular()) { // NOPMD PMD.EmptyIfStmt till stacked PR lands
+      // TODO(robbert): Need to query for objc_module headers here
+    } else {
+      builder.add(lib.getPublicCxxPreprocessorInputExcludingDelegate(platform, graphBuilder));
+    }
 
     return builder.build();
   }
@@ -126,6 +133,22 @@ public class AppleLibraryDescriptionSwiftEnhancer {
       ActionGraphBuilder graphBuilder,
       CxxPlatform cxxPlatform,
       HeaderVisibility headerVisibility) {
+    ImmutableMap<Path, SourcePath> headers =
+        getObjCGeneratedHeader(buildTarget, graphBuilder, cxxPlatform, headerVisibility);
+
+    Path outputPath = BuildTargets.getGenPath(projectFilesystem, buildTarget, "%s");
+    HeaderSymlinkTreeWithHeaderMap headerMapRule =
+        HeaderSymlinkTreeWithHeaderMap.create(
+            buildTarget, projectFilesystem, outputPath, headers, ruleFinder);
+
+    return headerMapRule;
+  }
+
+  public static ImmutableMap<Path, SourcePath> getObjCGeneratedHeader(
+      BuildTarget buildTarget,
+      ActionGraphBuilder graphBuilder,
+      CxxPlatform cxxPlatform,
+      HeaderVisibility headerVisibility) {
     BuildTarget swiftCompileTarget = createBuildTargetForSwiftCompile(buildTarget, cxxPlatform);
     SwiftCompile compile = (SwiftCompile) graphBuilder.requireRule(swiftCompileTarget);
 
@@ -134,13 +157,7 @@ public class AppleLibraryDescriptionSwiftEnhancer {
 
     ImmutableMap.Builder<Path, SourcePath> headerLinks = ImmutableMap.builder();
     headerLinks.put(objCImportPath, objCGeneratedPath);
-
-    Path outputPath = BuildTargets.getGenPath(projectFilesystem, buildTarget, "%s");
-    HeaderSymlinkTreeWithHeaderMap headerMapRule =
-        HeaderSymlinkTreeWithHeaderMap.create(
-            buildTarget, projectFilesystem, outputPath, headerLinks.build(), ruleFinder);
-
-    return headerMapRule;
+    return headerLinks.build();
   }
 
   private static Path getObjCGeneratedHeaderSourceIncludePath(
