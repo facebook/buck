@@ -118,10 +118,10 @@ public class CxxLibraryDescription
   public static final FlavorDomain<MetadataType> METADATA_TYPE =
       FlavorDomain.from("C/C++ Metadata Type", MetadataType.class);
 
-  static final FlavorDomain<HeaderVisibility> HEADER_VISIBILITY =
+  public static final FlavorDomain<HeaderVisibility> HEADER_VISIBILITY =
       FlavorDomain.from("C/C++ Header Visibility", HeaderVisibility.class);
 
-  static final FlavorDomain<HeaderMode> HEADER_MODE =
+  public static final FlavorDomain<HeaderMode> HEADER_MODE =
       FlavorDomain.from("C/C++ Header Mode", HeaderMode.class);
 
   private final CxxLibraryImplicitFlavors cxxLibraryImplicitFlavors;
