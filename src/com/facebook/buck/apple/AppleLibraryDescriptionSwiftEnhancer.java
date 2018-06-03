@@ -47,6 +47,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 
 public class AppleLibraryDescriptionSwiftEnhancer {
   @SuppressWarnings("unused")
@@ -86,6 +87,9 @@ public class AppleLibraryDescriptionSwiftEnhancer {
     inputs.forEach(input -> flagsBuilder.addAllFrameworkPaths(input.getFrameworks()));
     PreprocessorFlags preprocessorFlags = flagsBuilder.build();
 
+    Optional<CxxPreprocessorInput> underlyingModule =
+        AppleLibraryDescription.underlyingModuleCxxPreprocessorInput(target, graphBuilder, platform);
+
     return SwiftLibraryDescription.createSwiftCompileRule(
         platform,
         applePlatform.getSwiftPlatform().get(),
@@ -98,7 +102,8 @@ public class AppleLibraryDescriptionSwiftEnhancer {
         filesystem,
         swiftArgs,
         preprocessor,
-        preprocessorFlags);
+        preprocessorFlags,
+        underlyingModule.isPresent());
   }
 
   /**
@@ -117,8 +122,11 @@ public class AppleLibraryDescriptionSwiftEnhancer {
 
     ImmutableSet.Builder<CxxPreprocessorInput> builder = ImmutableSet.builder();
     builder.addAll(transitiveMap.values());
-    if (arg.isModular()) { // NOPMD PMD.EmptyIfStmt till stacked PR lands
-      // TODO(robbert): Need to query for objc_module headers here
+    if (arg.isModular()) {
+      Optional<CxxPreprocessorInput> underlyingModule =
+          AppleLibraryDescription.underlyingModuleCxxPreprocessorInput(
+              target, graphBuilder, platform);
+      underlyingModule.ifPresent(builder::add);
     } else {
       builder.add(lib.getPublicCxxPreprocessorInputExcludingDelegate(platform, graphBuilder));
     }
