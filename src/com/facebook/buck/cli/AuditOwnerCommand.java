@@ -24,6 +24,7 @@ import com.facebook.buck.parser.SpeculativeParsing;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.MoreExceptions;
+import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -79,7 +80,12 @@ public class AuditOwnerCommand extends AbstractCommand {
           BuckQueryEnvironment.from(
               params, parserState, pool.getListeningExecutorService(), getEnableParserProfiling());
       return QueryCommand.runMultipleQuery(
-          params, env, "owner('%s')", getArguments(), shouldGenerateJsonOutput());
+          params,
+          env,
+          "owner('%s')",
+          getArguments(),
+          shouldGenerateJsonOutput(),
+          ImmutableSet.of());
     } catch (Exception e) {
       if (e.getCause() instanceof InterruptedException) {
         throw (InterruptedException) e.getCause();

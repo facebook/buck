@@ -126,7 +126,8 @@ public class AuditDependenciesCommand extends AbstractCommand {
           QueryCommand.getAuditDependenciesQueryFormat(
               shouldShowTransitiveDependencies(), shouldIncludeTests()),
           getArgumentsFormattedAsBuildTargets(params.getBuckConfig()),
-          shouldGenerateJsonOutput());
+          shouldGenerateJsonOutput(),
+          ImmutableSet.of());
     } catch (Exception e) {
       if (e.getCause() instanceof InterruptedException) {
         throw (InterruptedException) e.getCause();

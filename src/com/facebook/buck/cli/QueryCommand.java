@@ -54,6 +54,7 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -194,7 +195,8 @@ public class QueryCommand extends AbstractCommand {
       return runSingleQueryWithSet(params, env, queryFormat, formatArgs);
     }
     if (queryFormat.contains("%s")) {
-      return runMultipleQuery(params, env, queryFormat, formatArgs, shouldGenerateJsonOutput());
+      return runMultipleQuery(
+          params, env, queryFormat, formatArgs, shouldGenerateJsonOutput(), outputAttributes.get());
     }
     if (formatArgs.size() > 0) {
       // TODO: buck_team: return ExitCode.COMMANDLINE_ERROR
@@ -252,7 +254,8 @@ public class QueryCommand extends AbstractCommand {
       BuckQueryEnvironment env,
       String queryFormat,
       List<String> inputsFormattedAsBuildTargets,
-      boolean generateJsonOutput)
+      boolean generateJsonOutput,
+      ImmutableSet<String> attributesFilter)
       throws IOException, InterruptedException, QueryException {
     if (inputsFormattedAsBuildTargets.isEmpty()) {
       throw new CommandLineException(
@@ -279,7 +282,19 @@ public class QueryCommand extends AbstractCommand {
     }
 
     LOG.debug("Printing out the following targets: " + queryResultMap);
-    if (generateJsonOutput) {
+
+    if (attributesFilter.size() > 0) {
+      collectAndPrintAttributesAsJson(
+          params,
+          env,
+          queryResultMap
+              .asMap()
+              .values()
+              .stream()
+              .flatMap(Collection::stream)
+              .collect(ImmutableSet.toImmutableSet()),
+          attributesFilter);
+    } else if (generateJsonOutput) {
       CommandHelper.printJSON(params, queryResultMap);
     } else {
       CommandHelper.printToConsole(params, queryResultMap);
@@ -297,7 +312,7 @@ public class QueryCommand extends AbstractCommand {
     } else if (shouldGenerateDotOutput()) {
       printDotOutput(params, env, queryResult);
     } else if (shouldOutputAttributes()) {
-      collectAndPrintAttributesAsJson(params, env, queryResult);
+      collectAndPrintAttributesAsJson(params, env, queryResult, outputAttributes.get());
     } else if (shouldGenerateJsonOutput()) {
       CommandHelper.printJSON(params, queryResult);
     } else {
@@ -457,15 +472,18 @@ public class QueryCommand extends AbstractCommand {
     return ranks;
   }
 
-  private void collectAndPrintAttributesAsJson(
-      CommandRunnerParams params, BuckQueryEnvironment env, Set<QueryTarget> queryResult)
+  private static void collectAndPrintAttributesAsJson(
+      CommandRunnerParams params,
+      BuckQueryEnvironment env,
+      Set<QueryTarget> queryResult,
+      ImmutableSet<String> attributes)
       throws QueryException {
     ImmutableSortedMap<String, SortedMap<String, Object>> result =
-        collectAttributes(params, env, queryResult);
+        collectAttributes(params, env, queryResult, attributes);
     printAttributesAsJson(result, params.getConsole().getStdOut());
   }
 
-  private <T extends SortedMap<String, Object>> void printAttributesAsJson(
+  private static <T extends SortedMap<String, Object>> void printAttributesAsJson(
       ImmutableSortedMap<String, T> result, PrintStream outputStream) {
     StringWriter stringWriter = new StringWriter();
     try {
@@ -478,10 +496,13 @@ public class QueryCommand extends AbstractCommand {
     outputStream.println(output);
   }
 
-  private ImmutableSortedMap<String, SortedMap<String, Object>> collectAttributes(
-      CommandRunnerParams params, BuckQueryEnvironment env, Set<QueryTarget> queryResult)
+  private static ImmutableSortedMap<String, SortedMap<String, Object>> collectAttributes(
+      CommandRunnerParams params,
+      BuckQueryEnvironment env,
+      Set<QueryTarget> queryResult,
+      ImmutableSet<String> attrs)
       throws QueryException {
-    PatternsMatcher patternsMatcher = new PatternsMatcher(outputAttributes.get());
+    PatternsMatcher patternsMatcher = new PatternsMatcher(attrs);
     // use HashMap instead of ImmutableSortedMap.Builder to allow duplicates
     // TODO(buckteam): figure out if duplicates should actually be allowed. It seems like the only
     // reason why duplicates may occur is because TargetNode's unflavored name is used as a key,
@@ -513,7 +534,7 @@ public class QueryCommand extends AbstractCommand {
         .build();
   }
 
-  private Optional<SortedMap<String, Object>> getAttributes(
+  private static Optional<SortedMap<String, Object>> getAttributes(
       CommandRunnerParams params,
       BuckQueryEnvironment env,
       PatternsMatcher patternsMatcher,
@@ -539,7 +560,7 @@ public class QueryCommand extends AbstractCommand {
     return Optional.of(attributes);
   }
 
-  private String toPresentationForm(TargetNode<?, ?> node) {
+  private static String toPresentationForm(TargetNode<?, ?> node) {
     return node.getBuildTarget().getUnflavoredBuildTarget().getFullyQualifiedName();
   }
 
