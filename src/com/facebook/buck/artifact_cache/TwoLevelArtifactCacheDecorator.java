@@ -198,7 +198,8 @@ public class TwoLevelArtifactCacheDecorator implements ArtifactCache, CacheDecor
             return Futures.immediateFuture(null);
           }
           return delegate.store(info, output);
-        });
+        },
+        MoreExecutors.directExecutor());
   }
 
   /**
@@ -259,7 +260,8 @@ public class TwoLevelArtifactCacheDecorator implements ArtifactCache, CacheDecor
                 BorrowablePath.notBorrowablePath(emptyFilePath)),
             delegate.store(
                 ArtifactInfo.builder().addRuleKeys(new RuleKey(hashCode)).build(), output)),
-        Functions.constant(true));
+        Functions.constant(true),
+        MoreExecutors.directExecutor());
   }
 
   @Nonnull
