@@ -520,6 +520,26 @@ public class QueryCommandIntegrationTest {
   }
 
   @Test
+  public void testOutputAttribute() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "query_command", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "query",
+            "//example:one + //example:four",
+            "--output-attribute",
+            "name",
+            "--output-attribute",
+            "deps");
+    result.assertSuccess();
+    assertThat(
+        parseJSON(result.getStdout()),
+        is(equalTo(parseJSON(workspace.getFileContents("stdout-name-deps-multi-attr-out.json")))));
+  }
+
+  @Test
   public void testResolveAliasOutputAttributes() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "query_command", tmp);
@@ -979,7 +999,7 @@ public class QueryCommandIntegrationTest {
   }
 
   @Test
-  public void testQueryWorksWithOutputAttribute() throws IOException {
+  public void testMultiQueryWorksWithOutputAttributes() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "query_command", tmp);
     workspace.setUp();
@@ -999,6 +1019,35 @@ public class QueryCommandIntegrationTest {
             "name",
             "--output-attributes",
             "srcs");
+    result.assertSuccess();
+
+    JsonNode jsonNode = new ObjectMapper().readTree(result.getStdout());
+
+    assertEquals(expectedNode, jsonNode);
+  }
+
+  @Test
+  public void testMultiQueryWorksWithOutputAttribute() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "query_command", tmp);
+    workspace.setUp();
+
+    String expectedString =
+        workspace.getFileContents("stdout-output-attributes-and-multi-query.json");
+
+    JsonNode expectedNode = new ObjectMapper().readTree(expectedString);
+
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "query",
+            "--output-attribute",
+            "name",
+            "--output-attribute",
+            "srcs",
+            "deps(%s)",
+            "//example:",
+            "//example:one",
+            "//example:two");
     result.assertSuccess();
 
     JsonNode jsonNode = new ObjectMapper().readTree(result.getStdout());

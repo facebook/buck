@@ -42,6 +42,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -118,13 +119,37 @@ public class QueryCommand extends AbstractCommand {
   @Option(
     name = "--output-attributes",
     usage =
-        "List of attributes to output, --output-attributes attr1 att2 ... attrN. "
-            + "Attributes can be regular expressions. ",
-    handler = StringSetOptionHandler.class
+        "Deprecated: List of attributes to output, --output-attributes attr1 att2 ... attrN. "
+            + "Attributes can be regular expressions. The preferred replacement is "
+            + "--output-attribute.",
+    handler = StringSetOptionHandler.class,
+    forbids = {"--output-attribute"}
   )
   @SuppressFieldNotInitialized
   @VisibleForTesting
-  Supplier<ImmutableSet<String>> outputAttributes;
+  Supplier<ImmutableSet<String>> outputAttributesDeprecated =
+      Suppliers.ofInstance(ImmutableSet.of());
+
+  // Two options are kept to not break the UI and scripts
+  @Option(
+    name = "--output-attribute",
+    usage =
+        "List of attributes to output, --output-attributes attr1. Attributes can be "
+            + "regular expressions. Multiple attributes may be selected by specifying this option "
+            + "multiple times.",
+    handler = SingleStringSetOptionHandler.class,
+    forbids = {"--output-attributes"}
+  )
+  @SuppressFieldNotInitialized
+  @VisibleForTesting
+  Supplier<ImmutableSet<String>> outputAttributesSane = Suppliers.ofInstance(ImmutableSet.of());
+
+  private ImmutableSet<String> outputAttributes() {
+    // There's no easy way apparently to ensure that an option has not been set
+    ImmutableSet<String> deprecated = outputAttributesDeprecated.get();
+    ImmutableSet<String> sane = outputAttributesSane.get();
+    return sane.size() > deprecated.size() ? sane : deprecated;
+  }
 
   public boolean shouldGenerateJsonOutput() {
     return generateJsonOutput;
@@ -143,7 +168,7 @@ public class QueryCommand extends AbstractCommand {
   }
 
   public boolean shouldOutputAttributes() {
-    return !outputAttributes.get().isEmpty();
+    return !outputAttributes().isEmpty();
   }
 
   @Argument(handler = QueryMultiSetOptionHandler.class)
@@ -196,7 +221,7 @@ public class QueryCommand extends AbstractCommand {
     }
     if (queryFormat.contains("%s")) {
       return runMultipleQuery(
-          params, env, queryFormat, formatArgs, shouldGenerateJsonOutput(), outputAttributes.get());
+          params, env, queryFormat, formatArgs, shouldGenerateJsonOutput(), outputAttributes());
     }
     if (formatArgs.size() > 0) {
       // TODO: buck_team: return ExitCode.COMMANDLINE_ERROR
@@ -312,7 +337,7 @@ public class QueryCommand extends AbstractCommand {
     } else if (shouldGenerateDotOutput()) {
       printDotOutput(params, env, queryResult);
     } else if (shouldOutputAttributes()) {
-      collectAndPrintAttributesAsJson(params, env, queryResult, outputAttributes.get());
+      collectAndPrintAttributesAsJson(params, env, queryResult, outputAttributes());
     } else if (shouldGenerateJsonOutput()) {
       CommandHelper.printJSON(params, queryResult);
     } else {
@@ -331,7 +356,7 @@ public class QueryCommand extends AbstractCommand {
             .setNodeToTypeName(targetNode -> targetNode.getBuildRuleType().getName())
             .setBfsSorted(shouldGenerateBFSOutput());
     if (shouldOutputAttributes()) {
-      PatternsMatcher patternsMatcher = new PatternsMatcher(outputAttributes.get());
+      PatternsMatcher patternsMatcher = new PatternsMatcher(outputAttributes());
       dotBuilder.setNodeToAttributes(
           node ->
               getAttributes(params, env, patternsMatcher, node)
@@ -402,7 +427,7 @@ public class QueryCommand extends AbstractCommand {
           BuckQueryEnvironment env,
           OutputFormat outputFormat,
           Set<Entry<TargetNode<?, ?>, Integer>> rankEntries) {
-    PatternsMatcher patternsMatcher = new PatternsMatcher(outputAttributes.get());
+    PatternsMatcher patternsMatcher = new PatternsMatcher(outputAttributes());
     // since some nodes differ in their flavors but ultimately have the same attributes, immutable
     // resulting map is created only after duplicates are merged by using regular HashMap
     Map<String, Integer> rankIndex =

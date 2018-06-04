@@ -939,7 +939,7 @@ a command such as the following:
 <p>
 <pre>
 {literal}
-buck query : --output-attributes buck.type
+buck query : --output-attribute buck.type
 {/literal}
 </pre>
 </p>
@@ -947,7 +947,7 @@ buck query : --output-attributes buck.type
 <p>
 which prints all the rule types in the build file in the current
 directory (<code>:</code>)&mdash;in JSON format. 
-See <code>--output-attributes</code> described in the <b>Parameters</b> section 
+See <code>--output-attribute</code> described in the <b>Parameters</b> section 
 below for more information.
 </p>
 
@@ -1409,7 +1409,13 @@ $ dot -Tpng graph.dot -o graph.png
   dictionary mapping the specified attributes to their values for the build
   target. Attributes are regular expressions (e.g. '.*' matches all attributes).
   If an attribute (e.g. <code>srcs</code>) is not defined for a build target,
-  it is not present in the output. Example:
+  it is not present in the output.
+  <br /> 
+  <br /> 
+  NOTE: There is ambiguity when using this option with '%s' style queries.
+        It is suggested to use <code>--output-attribute</code> instead.
+
+  Example:
   </p>
 
 <p><pre class="prettyprint lang-py">
@@ -1434,7 +1440,57 @@ $ buck query '//example/...' --output-attributes buck.type name srcs
 
   {/param}
 {/call}
+
+{call buck.param}
+  {param name: 'output-attribute <attribute>' /}
+  {param desc}
+  <div id="output-attributes">
+  <p>
+  Outputs the results as a JSON dictionary
+  {sp}<code>build target -> attributes map</code>. The attributes map is a
+  dictionary mapping the specified attributes to their values for the build
+  target. Attributes are regular expressions (e.g. '.*' matches all attributes).
+  If an attribute (e.g. <code>srcs</code>) is not defined for a build target,
+  it is not present in the output.
+  
+  <br /> 
+  <br /> 
+  Multiple attributes may be specified by providing the --output-attribute
+  option multiple times.
+
+  <br /> 
+  <br /> 
+  NOTE: The primary difference between this and --output-attributes is that
+        --output-attribute works correctly with other multiple-argument
+        queries.
+
+  Example:
+  </p>
+
+<p><pre class="prettyprint lang-py">
+{literal}
+$ buck query '//example/...' --output-attribute buck.type --output-attribute name --output-attribute srcs
+{
+  "//example/foo:bar" : {
+    "buck.type" : "cxx_library",
+    "name" : "foobar",
+    "srcs" : [ "example/foo/bar.cc", "example/foo/lib/lib.cc" ]
+  }
+  "//example/foo:main" : {
+    "buck.type" : "cxx_binary",
+    "name" : "main"
+  }
+}
+{/literal}
+</pre>
+</p>
+
+</div>
+
+  {/param}
+{/call}
 {/param}
+
 
 {param examples}
 
