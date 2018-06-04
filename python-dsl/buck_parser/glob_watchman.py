@@ -104,6 +104,10 @@ def glob_watchman(includes, excludes, include_dotfiles, base_path, watchman_watc
     try:
         res = watchman_client.query(*query)
     except pywatchman.SocketTimeout:
+        # If we just timed out, we might end up getting results eventually
+        # in a different query that were bound for this one. Call close
+        # here, and we'll reconnect if we try to query again
+        watchman_client.close()
         # Watchman timeouts are not fatal.  Fall back on the normal glob flow.
         return None
     error_message = res.get('error')
