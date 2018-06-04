@@ -26,6 +26,7 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.matchesPattern;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
@@ -72,6 +73,7 @@ import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
+import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.TestBuildRuleParams;
 import com.facebook.buck.rules.args.SourcePathArg;
@@ -1144,6 +1146,52 @@ public class AppleCxxPlatformsTest {
             .getBytes(Charsets.UTF_8));
     AppleCxxPlatforms.XcodeBuildVersionCache cache = new AppleCxxPlatforms.XcodeBuildVersionCache();
     assertEquals(Optional.of("9F9999"), cache.lookup(developerDir));
+  }
+
+  @Test
+  public void testXcodeToolVersionOverride() {
+    AppleCxxPlatform appleCxxPlatform1 =
+        buildAppleCxxPlatform(
+            projectFilesystem.getPath("/Developer1"), FakeBuckConfig.builder().build());
+
+    AppleCxxPlatform appleCxxPlatform2 =
+        buildAppleCxxPlatform(
+            projectFilesystem.getPath("/Developer2"),
+            FakeBuckConfig.builder()
+                .setSections("[apple]", "ibtool_version_override = custom_ibtool_version")
+                .build());
+
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestActionGraphBuilder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    FakeFileHashCache hashCache = FakeFileHashCache.createFromStrings(ImmutableMap.of());
+
+    RuleKey actoolRuleKey1 =
+        new TestDefaultRuleKeyFactory(hashCache, pathResolver, ruleFinder)
+            .newBuilderForTesting(new FakeBuildRule("//:test"))
+            .setReflectively("tool", appleCxxPlatform1.getActool())
+            .build(RuleKey::new);
+
+    RuleKey actoolRuleKey2 =
+        new TestDefaultRuleKeyFactory(hashCache, pathResolver, ruleFinder)
+            .newBuilderForTesting(new FakeBuildRule("//:test"))
+            .setReflectively("tool", appleCxxPlatform2.getActool())
+            .build(RuleKey::new);
+
+    assertEquals(actoolRuleKey1, actoolRuleKey2);
+
+    RuleKey ibtoolRuleKey1 =
+        new TestDefaultRuleKeyFactory(hashCache, pathResolver, ruleFinder)
+            .newBuilderForTesting(new FakeBuildRule("//:test"))
+            .setReflectively("tool", appleCxxPlatform1.getIbtool())
+            .build(RuleKey::new);
+
+    RuleKey ibtoolRuleKey2 =
+        new TestDefaultRuleKeyFactory(hashCache, pathResolver, ruleFinder)
+            .newBuilderForTesting(new FakeBuildRule("//:test"))
+            .setReflectively("tool", appleCxxPlatform2.getIbtool())
+            .build(RuleKey::new);
+
+    assertNotEquals(ibtoolRuleKey1, ibtoolRuleKey2);
   }
 
   private AppleCxxPlatform buildAppleCxxPlatformWithSwiftToolchain(boolean useDefaultSwift)

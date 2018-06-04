@@ -628,6 +628,24 @@ osx_toolchains_override = tools.stable,tools.swift40,tools.common
 
 {call buckconfig.entry}
   {param section: 'apple' /}
+  {param name: '*_version_override' /}
+  {param description}
+    Specify version string to use for Xcode tool.
+    By default, Xcode tool's version value is calculated automatically from its container SDK and Toolchain.
+    But in some cases (e.g. when tools are overrided by <code>apple.*_replacement</code>), it needs to be
+    manually overrided in order to prevent rule key collision.
+  {/param}
+  {param raw_example}
+{literal}<pre class="prettyprint lang-ini">
+[apple]
+    actool_replacement=/some/path/to/custum/actool
+    actool_version_override=custom_actool_1.0
+</pre>{/literal}
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'apple' /}
   {param name: 'codesign_timeout' /}
   {param example_value: '600' /}
   {param description}

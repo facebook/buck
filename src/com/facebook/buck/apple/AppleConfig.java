@@ -403,6 +403,12 @@ public class AppleConfig implements ConfigView<BuckConfig> {
         .orElse(toolName);
   }
 
+  public String getXcodeToolVersion(String toolName, String defaultToolVersion) {
+    return delegate
+        .getValue(APPLE_SECTION, toolName + "_version_override")
+        .orElse(defaultToolVersion);
+  }
+
   @Value.Immutable
   @BuckStyleTuple
   interface AbstractApplePackageConfig {
