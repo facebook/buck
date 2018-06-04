@@ -15,9 +15,12 @@ python_test(
     ':python_lib',
   ],
   needed_coverage = [
-    (0, ':python_lib', 'simple.py'),
+    (0.0, ':python_lib', 'simple.py'),
     (.75, ':python_lib'),
-    (1, ':python_lib', 'also_simple.py'),
+    (1.0, ':python_lib', 'also_simple.py'),
+    (0, ':python_lib', 'simple.py'),
+    (75, ':python_lib'),
+    (100, ':python_lib', 'also_simple.py'),
   ],
 )
 

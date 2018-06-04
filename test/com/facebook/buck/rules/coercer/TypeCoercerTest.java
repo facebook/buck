@@ -421,7 +421,10 @@ public class TypeCoercerTest {
         ImmutableList.of(
             ImmutableList.of(0.0, "//some:build-target"),
             ImmutableList.of(0.9, "//other/build:target"),
-            ImmutableList.of(1.0, "//:target", "some/path.py"));
+            ImmutableList.of(1.0, "//:target", "some/path.py"),
+            ImmutableList.of(0, "//some:build-target"),
+            ImmutableList.of(90, "//other/build:target"),
+            ImmutableList.of(100, "//:target", "some/path.py"));
     Object result = coercer.coerce(cellRoots, filesystem, Paths.get(""), input);
     ImmutableList<NeededCoverageSpec> expectedResult =
         ImmutableList.of(
@@ -430,8 +433,59 @@ public class TypeCoercerTest {
             NeededCoverageSpec.of(
                 0.9f, BuildTargetFactory.newInstance("//other/build:target"), Optional.empty()),
             NeededCoverageSpec.of(
-                1.0f, BuildTargetFactory.newInstance("//:target"), Optional.of("some/path.py")));
+                1.0f, BuildTargetFactory.newInstance("//:target"), Optional.of("some/path.py")),
+            NeededCoverageSpec.of(
+                0.0f, BuildTargetFactory.newInstance("//some:build-target"), Optional.empty()),
+            NeededCoverageSpec.of(
+                90.0f, BuildTargetFactory.newInstance("//other/build:target"), Optional.empty()),
+            NeededCoverageSpec.of(
+                100.0f, BuildTargetFactory.newInstance("//:target"), Optional.of("some/path.py")));
     assertEquals(expectedResult, result);
+  }
+
+  @Test
+  public void invalidCoverageResultsInError() throws NoSuchFieldException {
+    Type type = TestFields.class.getField("listOfNeededCoverageSpecs").getGenericType();
+    TypeCoercer<?> coercer = typeCoercerFactory.typeCoercerForType(type);
+
+    try {
+      coercer.coerce(
+          cellRoots,
+          filesystem,
+          Paths.get(""),
+          ImmutableList.of(ImmutableList.of(-0.5f, "//some:build-target")));
+      fail(String.format("%s should not be convertable to a spec", -0.5f));
+    } catch (CoerceFailedException e) {
+      assertThat(
+          e.getMessage(),
+          Matchers.endsWith("the needed coverage ratio should be in range [0, 100]"));
+    }
+
+    try {
+      coercer.coerce(
+          cellRoots,
+          filesystem,
+          Paths.get(""),
+          ImmutableList.of(ImmutableList.of(101.0f, "//some:build-target")));
+      fail(String.format("%s should not be convertable to a spec", 101.0f));
+    } catch (CoerceFailedException e) {
+      assertThat(
+          e.getMessage(),
+          Matchers.endsWith("the needed coverage ratio should be in range [0, 100]"));
+    }
+
+    try {
+      coercer.coerce(
+          cellRoots,
+          filesystem,
+          Paths.get(""),
+          ImmutableList.of(ImmutableList.of(50.5f, "//some:build-target")));
+      fail(String.format("%s should not be convertable to a spec", 50.5f));
+    } catch (CoerceFailedException e) {
+      assertThat(
+          e.getMessage(),
+          Matchers.endsWith("the needed coverage ratio should be an integral number"));
+    }
   }
 
   @Test

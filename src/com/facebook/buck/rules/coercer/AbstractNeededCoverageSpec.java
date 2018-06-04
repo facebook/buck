@@ -30,7 +30,20 @@ import org.immutables.value.Value;
 @BuckStyleTuple
 abstract class AbstractNeededCoverageSpec implements TargetTranslatable<NeededCoverageSpec> {
 
-  public abstract float getNeededCoverageRatio();
+  /**
+   * Gets the coverage ratio that is required for a test
+   *
+   * <p>If the float is a value between 0.0 and 1.0, it will be considered to be a ratio. If it is
+   * between (1.0, 100.0], it will be a raw percentage (2% - 100%), and must end in .0. This is
+   * transition logic to migrate to this being an integer in skylark. Floats will not be supported
+   * in the future.
+   *
+   * <p>The second form will eventually be the only one supported, but both are required for a
+   * transition period
+   *
+   * @return The coverage ratio required for the build target
+   */
+  public abstract Float getNeededCoverageRatio();
 
   public abstract BuildTarget getBuildTarget();
 
@@ -48,5 +61,16 @@ abstract class AbstractNeededCoverageSpec implements TargetTranslatable<NeededCo
     }
     return Optional.of(
         NeededCoverageSpec.of(getNeededCoverageRatio(), newBuildTarget.get(), getPathName()));
+  }
+
+  /**
+   * Converts {@code getNeededCoverageRatio()} to a floating point representation in [0.0f, 1.0f]
+   *
+   * @return Returns either the 0.0-1.0 coverage ratio that would normally be expected, OR converts
+   *     the 0-100 integer value to an approximate 0.0-1.0 ratio (caveats around floats apply)
+   */
+  public float getNormalizedNeededCoverageRatio() {
+    Float ratio = getNeededCoverageRatio();
+    return ratio <= 1.0 ? ratio : ratio / 100.0f;
   }
 }

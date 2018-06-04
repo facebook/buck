@@ -23,6 +23,7 @@ import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Optional;
+import javax.annotation.Nonnull;
 
 /** A type coercer to handle needed coverage specification for python_test. */
 public class NeededCoverageSpecTypeCoercer implements TypeCoercer<NeededCoverageSpec> {
@@ -76,12 +77,9 @@ public class NeededCoverageSpecTypeCoercer implements TypeCoercer<NeededCoverage
       Collection<?> collection = (Collection<?>) object;
       if (collection.size() == 2 || collection.size() == 3) {
         Iterator<?> iter = collection.iterator();
-        Float neededRatio =
-            floatTypeCoercer.coerce(cellRoots, filesystem, pathRelativeToProjectRoot, iter.next());
-        if (neededRatio < 0 || neededRatio > 1) {
-          throw CoerceFailedException.simple(
-              object, getOutputClass(), "the needed coverage ratio should be in range [0; 1]");
-        }
+        float neededRatio =
+            coerceNeededRatio(
+                cellRoots, filesystem, pathRelativeToProjectRoot, object, iter.next());
         BuildTarget buildTarget =
             buildTargetTypeCoercer.coerce(
                 cellRoots, filesystem, pathRelativeToProjectRoot, iter.next());
@@ -100,5 +98,31 @@ public class NeededCoverageSpecTypeCoercer implements TypeCoercer<NeededCoverage
         object,
         getOutputClass(),
         "input should be a tuple of needed coverage ratio, a build target, and optionally a path");
+  }
+
+  @Nonnull
+  private float coerceNeededRatio(
+      CellPathResolver cellRoots,
+      ProjectFilesystem filesystem,
+      Path pathRelativeToProjectRoot,
+      Object originalObject,
+      Object object)
+      throws CoerceFailedException {
+    float floatValue =
+        floatTypeCoercer.coerce(cellRoots, filesystem, pathRelativeToProjectRoot, object);
+
+    if (floatValue < 0 || floatValue > 100) {
+      throw CoerceFailedException.simple(
+          originalObject,
+          getOutputClass(),
+          "the needed coverage ratio should be in range [0, 100]");
+    }
+    if (floatValue > 1.0 && floatValue != Math.floor(floatValue)) {
+      throw CoerceFailedException.simple(
+          originalObject,
+          getOutputClass(),
+          "the needed coverage ratio should be an integral number");
+    }
+    return floatValue;
   }
 }
