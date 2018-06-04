@@ -184,6 +184,11 @@ public class JsTestScenario {
       return this;
     }
 
+    public Builder exportFile(BuildTarget target, SourcePath source) {
+      nodes.add(new ExportFileBuilder(target).setSrc(source).build());
+      return this;
+    }
+
     public Builder appleLibraryWithDeps(BuildTarget target, BuildTarget... deps) {
       nodes.add(
           AppleLibraryBuilder.createBuilder(target)

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.js;
 
+import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.everyItem;
 import static org.hamcrest.Matchers.in;
 import static org.hamcrest.Matchers.not;
@@ -24,14 +25,24 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
+import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.sourcepath.PathSourcePath;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
+import com.facebook.buck.rules.FakeSourcePath;
+import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
+import com.facebook.buck.rules.macros.LocationMacro;
+import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.util.RichStream;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.hash.HashCode;
 import java.util.Collection;
 import java.util.List;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.junit.Before;
@@ -181,6 +192,45 @@ public class JsBundleDescriptionTest {
             .collect(Collectors.toList());
 
     assertThat(expectedLibDeps, everyItem(in(dependencyTargets(jsBundle))));
+  }
+
+  @Test
+  public void rulesReferencedFromLocationMacrosInfluenceRuleKey() {
+    BuildTarget referencedTarget = BuildTargetFactory.newInstance("//:ref");
+    PathSourcePath referencedSource = FakeSourcePath.of("referenced/file");
+
+    JsTestScenario scenario =
+        JsTestScenario.builder().exportFile(referencedTarget, referencedSource).build();
+    JsBundle bundle =
+        scenario.createBundle(
+            "//:bundle",
+            builder -> builder.setExtraJson("[\"1 %s 2\"]", LocationMacro.of(referencedTarget)));
+
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(scenario.graphBuilder);
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+
+    Function<HashCode, RuleKey> calc =
+        (refHash) ->
+            new TestDefaultRuleKeyFactory(
+                    new FakeFileHashCache(
+                        ImmutableMap.of(pathResolver.getAbsolutePath(referencedSource), refHash)),
+                    pathResolver,
+                    ruleFinder)
+                .build(bundle);
+
+    assertThat(
+        calc.apply(HashCode.fromInt(12345)), not(equalTo(calc.apply(HashCode.fromInt(67890)))));
+  }
+
+  @Test
+  public void locationMacrosInExtraJsonAddBuildDeps() {
+    BuildTarget referencedTarget = BuildTargetFactory.newInstance("//:ref");
+    JsTestScenario scenario = JsTestScenario.builder().arbitraryRule(referencedTarget).build();
+    JsBundle bundle =
+        scenario.createBundle(
+            "//:bundle",
+            builder -> builder.setExtraJson("[\"%s\"]", LocationMacro.of(referencedTarget)));
+    assertThat(scenario.graphBuilder.getRule(referencedTarget), in(bundle.getBuildDeps()));
   }
 
   private static Collection<BuildTarget> dependencyTargets(BuildRule rule) {

@@ -159,17 +159,16 @@ public class JsBundleDescription
           args.getAndroidPackage());
     }
 
-    // Flavors are propagated from js_bundle targets to their js_library dependencies
-    // for that reason, dependencies of libraries are handled manually, and as a first step,
-    // all dependencies to libraries are removed
-    params = JsUtil.paramsWithDeps(params, graphBuilder.getRule(args.getWorker()));
-
     Either<ImmutableSet<String>, String> entryPoint = args.getEntry();
     TransitiveLibraryDependencies libsResolver =
         new TransitiveLibraryDependencies(buildTarget, context.getTargetGraph(), graphBuilder);
     ImmutableSortedSet<JsLibrary> libraryDeps = libsResolver.collect(args.getDeps());
 
-    BuildRuleParams paramsWithLibraries = params.copyAppendingExtraDeps(libraryDeps);
+    // Flavors are propagated from js_bundle targets to their js_library dependencies
+    // for that reason, dependencies of libraries are handled manually, and as a first step,
+    // all dependencies to libraries are removed
+    BuildRuleParams paramsWithFlavoredLibraries =
+        params.withoutDeclaredDeps().copyAppendingExtraDeps(libraryDeps);
     ImmutableSortedSet<SourcePath> libraries =
         libraryDeps
             .stream()
@@ -187,7 +186,7 @@ public class JsBundleDescription
       return new JsDependenciesFile(
           buildTarget,
           projectFilesystem,
-          paramsWithLibraries,
+          paramsWithFlavoredLibraries,
           libraries,
           entryPoints,
           extraJson,
@@ -213,7 +212,7 @@ public class JsBundleDescription
     return new JsBundle(
         buildTarget,
         projectFilesystem,
-        paramsWithLibraries,
+        paramsWithFlavoredLibraries,
         libraries,
         entryPoints,
         extraJson,
