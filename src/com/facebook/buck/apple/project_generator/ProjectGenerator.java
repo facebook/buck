@@ -80,6 +80,7 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
+import com.facebook.buck.core.model.targetgraph.NoSuchNodeException;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -920,7 +921,7 @@ public class ProjectGenerator {
                 actionGraphBuilderForNode.apply(targetGraph.get(locationMacroTarget));
             try {
               builderFromNode.requireRule(locationMacroTarget);
-            } catch (TargetGraph.NoSuchNodeException e) {
+            } catch (NoSuchNodeException e) {
               throw new MacroException(
                   String.format(
                       "couldn't find rule referenced by location macro: %s", e.getMessage()),

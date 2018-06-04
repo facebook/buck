@@ -31,6 +31,7 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
+import com.facebook.buck.core.model.targetgraph.NoSuchNodeException;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetGraphAndTargets;
@@ -231,7 +232,7 @@ public class XCodeProjectCommandHelper {
               isWithDependenciesTests(buckConfig),
               passedInTargetsSet.isEmpty(),
               executor);
-    } catch (BuildFileParseException | TargetGraph.NoSuchNodeException | VersionException e) {
+    } catch (BuildFileParseException | NoSuchNodeException | VersionException e) {
       buckEventBus.post(ConsoleEvent.severe(MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
       return ExitCode.PARSE_ERROR;
     } catch (HumanReadableException e) {

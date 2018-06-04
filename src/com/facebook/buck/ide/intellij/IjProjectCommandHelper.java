@@ -25,6 +25,7 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphCache;
+import com.facebook.buck.core.model.targetgraph.NoSuchNodeException;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetGraphAndTargets;
@@ -174,7 +175,7 @@ public class IjProjectCommandHelper {
     try {
       targetGraphAndTargets =
           createTargetGraph(projectGraph, graphRoots, passedInTargetsSet.isEmpty(), executor);
-    } catch (BuildFileParseException | TargetGraph.NoSuchNodeException | VersionException e) {
+    } catch (BuildFileParseException | NoSuchNodeException | VersionException e) {
       buckEventBus.post(ConsoleEvent.severe(MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
       return ExitCode.PARSE_ERROR;
     } catch (HumanReadableException e) {

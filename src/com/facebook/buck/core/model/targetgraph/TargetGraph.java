@@ -16,7 +16,6 @@
 
 package com.facebook.buck.core.model.targetgraph;
 
-import com.facebook.buck.core.exceptions.ExceptionWithHumanReadableMessage;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.graph.DirectedAcyclicGraph;
@@ -161,21 +160,5 @@ public class TargetGraph extends DirectedAcyclicGraph<TargetNode<?, ?>> {
 
   public int getSize() {
     return getNodes().size();
-  }
-
-  public static class NoSuchNodeException extends RuntimeException
-      implements ExceptionWithHumanReadableMessage {
-
-    public NoSuchNodeException(BuildTarget buildTarget) {
-      super(
-          String.format(
-              "Required target for rule '%s' was not found in the target graph.",
-              buildTarget.getFullyQualifiedName()));
-    }
-
-    @Override
-    public String getHumanReadableErrorMessage() {
-      return getMessage();
-    }
   }
 }
