@@ -42,8 +42,8 @@ public class JsLibraryBuilder
     return this;
   }
 
-  JsLibraryBuilder setDepsQuery(Query query) {
-    getArgForPopulating().setDepsQuery(query);
+  JsLibraryBuilder setDepsQuery(@Nullable Query query) {
+    getArgForPopulating().setDepsQuery(Optional.ofNullable(query));
     return this;
   }
 

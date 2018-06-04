@@ -35,6 +35,8 @@ import com.facebook.buck.util.types.Either;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Ordering;
+import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.function.Function;
@@ -117,38 +119,41 @@ public class JsTestScenario {
     }
 
     public Builder library(BuildTarget target, BuildTarget... libraryDependencies) {
-      nodes.add(
-          new JsLibraryBuilder(target, filesystem)
-              .setDeps(ImmutableSortedSet.copyOf(libraryDependencies))
-              .setWorker(workerTarget)
-              .build());
+      addLibrary(target, null, Stream.of(libraryDependencies), null, Stream.of());
       return this;
     }
 
     public Builder library(
         BuildTarget target, Query libraryDependenciesQuery, BuildTarget... libraryDependencies) {
-      nodes.add(
-          new JsLibraryBuilder(target, filesystem)
-              .setDepsQuery(libraryDependenciesQuery)
-              .setDeps(ImmutableSortedSet.copyOf(libraryDependencies))
-              .setWorker(workerTarget)
-              .build());
+      addLibrary(
+          target, null, Stream.of(libraryDependencies), libraryDependenciesQuery, Stream.of());
       return this;
     }
 
     public Builder library(BuildTarget target, SourcePath first, SourcePath... sources) {
       addLibrary(
-          target, null, Stream.concat(Stream.of(first), Stream.of(sources)).map(Either::ofLeft));
+          target,
+          null,
+          Stream.of(),
+          null,
+          Stream.concat(Stream.of(first), Stream.of(sources)).map(Either::ofLeft));
       return this;
     }
 
     public Builder library(BuildTarget target, String basePath, SourcePath... sources) {
-      addLibrary(target, basePath, Stream.of(sources).map(Either::ofLeft));
+      addLibrary(target, basePath, Stream.of(), null, Stream.of(sources).map(Either::ofLeft));
       return this;
     }
 
-    public Builder library(BuildTarget target, String basePath, Pair<SourcePath, String> source) {
-      addLibrary(target, basePath, Stream.of(source).map(Either::ofRight));
+    public Builder library(
+        BuildTarget target, String basePath, Pair<SourcePath, String>... sources) {
+      addLibrary(target, basePath, Stream.of(), null, Stream.of(sources).map(Either::ofRight));
+      return this;
+    }
+
+    public Builder library(
+        BuildTarget target, Collection<BuildTarget> libDeps, Collection<SourcePath> sources) {
+      addLibrary(target, null, libDeps.stream(), null, sources.stream().map(Either::ofLeft));
       return this;
     }
 
@@ -160,10 +165,15 @@ public class JsTestScenario {
     private void addLibrary(
         BuildTarget target,
         @Nullable String basePath,
+        Stream<BuildTarget> libraries,
+        @Nullable Query libraryDependenciesQuery,
         Stream<Either<SourcePath, Pair<SourcePath, String>>> sources) {
       nodes.add(
           new JsLibraryBuilder(target, filesystem)
               .setBasePath(basePath)
+              .setDeps(
+                  libraries.collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())))
+              .setDepsQuery(libraryDependenciesQuery)
               .setSrcs(sources.collect(ImmutableSet.toImmutableSet()))
               .setWorker(workerTarget)
               .build());

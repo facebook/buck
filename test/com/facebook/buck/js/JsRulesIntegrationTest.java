@@ -17,6 +17,7 @@
 package com.facebook.buck.js;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assume.assumeFalse;
 import static org.junit.Assume.assumeTrue;
 
@@ -34,6 +35,7 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableMap;
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -67,6 +69,24 @@ public class JsRulesIntegrationTest {
     workspace.runBuckBuild("//js:fruit").assertSuccess();
 
     workspace.verify(Paths.get("simple_library_build.expected"), genPath);
+  }
+
+  @Test
+  public void librariesDoNotMaterializeGeneratedDeps() throws IOException, InterruptedException {
+    workspace.enableDirCache();
+    workspace.runBuckBuild("//js:node_modules").assertSuccess();
+
+    workspace.runBuckCommand("clean", "--keep-cache");
+    workspace.runBuckBuild("--shallow", "//js:node_modules").assertSuccess();
+
+    String[] bits =
+        workspace
+            .runBuckCommand("targets", "--show-full-output", "//external:node-modules-installation")
+            .assertSuccess()
+            .getStdout()
+            .split("\\s+");
+    File generated = Paths.get(bits[1]).toFile();
+    assertFalse(generated.exists());
   }
 
   @Test
@@ -299,5 +319,11 @@ public class JsRulesIntegrationTest {
   public void genruleAllowsToRewriteMiscDir() throws IOException {
     workspace.runBuckBuild("//js:misc-genrule").assertSuccess();
     workspace.verify(Paths.get("misc_genrule.expected"), genPath);
+  }
+
+  private Path getGenPath(String filename) {
+    return projectFilesystem
+        .getPathForRelativePath(projectFilesystem.getBuckPaths().getGenDir())
+        .resolve(filename);
   }
 }
