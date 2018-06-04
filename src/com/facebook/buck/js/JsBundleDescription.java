@@ -162,7 +162,7 @@ public class JsBundleDescription
     // Flavors are propagated from js_bundle targets to their js_library dependencies
     // for that reason, dependencies of libraries are handled manually, and as a first step,
     // all dependencies to libraries are removed
-    params = JsUtil.withWorkerDependencyOnly(params, graphBuilder, args.getWorker());
+    params = JsUtil.paramsWithDeps(params, graphBuilder.getRule(args.getWorker()));
 
     Either<ImmutableSet<String>, String> entryPoint = args.getEntry();
     TransitiveLibraryDependencies libsResolver =

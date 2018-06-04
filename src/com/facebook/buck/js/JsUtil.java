@@ -24,7 +24,6 @@ import com.facebook.buck.core.model.UserFlavor;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
@@ -129,13 +128,7 @@ public class JsUtil {
     return targetGraph.get(target).getDescription() instanceof JsLibraryDescription;
   }
 
-  static BuildRuleParams withWorkerDependencyOnly(
-      BuildRuleParams params, BuildRuleResolver resolver, BuildTarget worker) {
-    BuildRule workerRule = resolver.getRule(worker);
-    return copyParamsWithDependencies(params, workerRule);
-  }
-
-  static BuildRuleParams copyParamsWithDependencies(BuildRuleParams params, BuildRule... rules) {
+  static BuildRuleParams paramsWithDeps(BuildRuleParams params, BuildRule... rules) {
     return params.withoutDeclaredDeps().withExtraDeps(ImmutableSortedSet.copyOf(rules));
   }
 
