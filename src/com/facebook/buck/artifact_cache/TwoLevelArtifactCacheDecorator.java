@@ -35,7 +35,6 @@ import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.util.concurrent.AsyncFunction;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -44,6 +43,7 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 /**
@@ -223,44 +223,52 @@ public class TwoLevelArtifactCacheDecorator implements ArtifactCache, CacheDecor
   }
 
   private ListenableFuture<Boolean> attemptTwoLevelStore(ArtifactInfo info, BorrowablePath output) {
+    try {
+      long fileSize = projectFilesystem.getFileSize(output.getPath());
 
-    return Futures.transformAsync(
-        Futures.immediateFuture(null),
-        (AsyncFunction<Void, Boolean>)
-            input -> {
-              long fileSize = projectFilesystem.getFileSize(output.getPath());
+      if (!performTwoLevelStores
+          || fileSize < minimumTwoLevelStoredArtifactSize
+          || (maximumTwoLevelStoredArtifactSize.isPresent()
+              && fileSize > maximumTwoLevelStoredArtifactSize.get())) {
+        return Futures.immediateFuture(false);
+      }
+    } catch (IOException e) {
+      throw new RuntimeException("Cannot get file size of " + output.getPath());
+    }
 
-              if (!performTwoLevelStores
-                  || fileSize < minimumTwoLevelStoredArtifactSize
-                  || (maximumTwoLevelStoredArtifactSize.isPresent()
-                      && fileSize > maximumTwoLevelStoredArtifactSize.get())) {
-                return Futures.immediateFuture(false);
-              }
+    String hashCode;
+    try {
+      hashCode = computeSha1(output);
+    } catch (IOException e) {
+      throw new RuntimeException("Cannot compute SHA1 of " + output.getPath());
+    }
 
-              long hashComputationStart = System.currentTimeMillis();
-              String hashCode = projectFilesystem.computeSha1(output.getPath()) + "2c00";
-              long hashComputationEnd = System.currentTimeMillis();
-              secondLevelHashComputationTimeMs.addSample(hashComputationEnd - hashComputationStart);
+    ImmutableMap<String, String> metadataWithCacheKey =
+        ImmutableMap.<String, String>builder()
+            .putAll(info.getMetadata())
+            .put(METADATA_KEY, hashCode)
+            .build();
 
-              ImmutableMap<String, String> metadataWithCacheKey =
-                  ImmutableMap.<String, String>builder()
-                      .putAll(info.getMetadata())
-                      .put(METADATA_KEY, hashCode)
-                      .build();
+    return Futures.transform(
+        Futures.allAsList(
+            delegate.store(
+                ArtifactInfo.builder()
+                    .setRuleKeys(info.getRuleKeys())
+                    .setMetadata(metadataWithCacheKey)
+                    .build(),
+                BorrowablePath.notBorrowablePath(emptyFilePath)),
+            delegate.store(
+                ArtifactInfo.builder().addRuleKeys(new RuleKey(hashCode)).build(), output)),
+        Functions.constant(true));
+  }
 
-              return Futures.transform(
-                  Futures.allAsList(
-                      delegate.store(
-                          ArtifactInfo.builder()
-                              .setRuleKeys(info.getRuleKeys())
-                              .setMetadata(metadataWithCacheKey)
-                              .build(),
-                          BorrowablePath.notBorrowablePath(emptyFilePath)),
-                      delegate.store(
-                          ArtifactInfo.builder().addRuleKeys(new RuleKey(hashCode)).build(),
-                          output)),
-                  Functions.constant(true));
-            });
+  @Nonnull
+  private String computeSha1(BorrowablePath output) throws IOException {
+    long hashComputationStart = System.currentTimeMillis();
+    String hashCode = projectFilesystem.computeSha1(output.getPath()) + "2c00";
+    long hashComputationEnd = System.currentTimeMillis();
+    secondLevelHashComputationTimeMs.addSample(hashComputationEnd - hashComputationStart);
+    return hashCode;
   }
 
   @Override
