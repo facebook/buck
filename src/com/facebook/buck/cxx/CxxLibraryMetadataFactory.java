@@ -63,6 +63,7 @@ public class CxxLibraryMetadataFactory {
           if (!args.getExportedHeaders().isEmpty()) {
             HeaderMode mode = CxxLibraryDescription.HEADER_MODE.getRequiredValue(buildTarget);
             baseTarget = baseTarget.withoutFlavors(mode.getFlavor());
+            CxxPreprocessables.IncludeType includeType = args.isSystemInclude().orElse(false) ? CxxPreprocessables.IncludeType.SYSTEM : CxxPreprocessables.IncludeType.LOCAL;
             symlinkTree =
                 Optional.of(
                     CxxSymlinkTreeHeaders.from(
@@ -73,7 +74,7 @@ public class CxxLibraryMetadataFactory {
                                     .withAppendedFlavors(
                                         CxxLibraryDescription.Type.EXPORTED_HEADERS.getFlavor(),
                                         mode.getFlavor())),
-                        CxxPreprocessables.IncludeType.LOCAL));
+                        includeType));
           }
           return symlinkTree.map(metadataClass::cast);
         }

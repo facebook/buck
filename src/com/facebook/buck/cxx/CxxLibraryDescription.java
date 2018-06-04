@@ -467,6 +467,11 @@ public class CxxLibraryDescription
     Optional<Boolean> isReexportAllHeaderDependencies();
 
     /**
+     * Whether consumers should include this target's headers with -isystem instead of -I.
+     */
+    Optional<Boolean> isSystemInclude();
+
+    /**
      * These fields are passed through to SwiftLibrary for mixed C/Swift targets; they are not used
      * otherwise.
      */
