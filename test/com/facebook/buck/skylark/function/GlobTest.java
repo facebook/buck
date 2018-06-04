@@ -39,6 +39,7 @@ import com.google.devtools.build.lib.events.EventKind;
 import com.google.devtools.build.lib.packages.BazelLibrary;
 import com.google.devtools.build.lib.syntax.BuildFileAST;
 import com.google.devtools.build.lib.syntax.Environment;
+import com.google.devtools.build.lib.syntax.FuncallExpression;
 import com.google.devtools.build.lib.syntax.Mutability;
 import com.google.devtools.build.lib.syntax.ParserInputSource;
 import com.google.devtools.build.lib.syntax.SkylarkList;
@@ -186,7 +187,8 @@ public class GlobTest {
                 .setEventHandler(eventHandler)
                 .build())
         .setup(env);
-    env.setup("glob", Glob.create());
+    env.setup(
+        "glob", FuncallExpression.getBuiltinCallable(SkylarkNativeModule.NATIVE_MODULE, "glob"));
     return new Pair<>(buildFileAst.exec(env, eventHandler), env);
   }
 }

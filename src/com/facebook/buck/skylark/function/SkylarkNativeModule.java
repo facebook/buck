@@ -17,6 +17,8 @@
 package com.facebook.buck.skylark.function;
 
 import com.facebook.buck.skylark.parser.context.ParseContext;
+import com.google.common.collect.ImmutableList;
+import com.google.devtools.build.lib.events.Event;
 import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.skylarkinterface.Param;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkCallable;
@@ -25,7 +27,11 @@ import com.google.devtools.build.lib.skylarkinterface.SkylarkModuleCategory;
 import com.google.devtools.build.lib.syntax.Environment;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.FuncallExpression;
+import com.google.devtools.build.lib.syntax.SkylarkList;
 import com.google.devtools.build.lib.syntax.SkylarkSignatureProcessor;
+import com.google.devtools.build.lib.syntax.Type;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 
 /**
  * A class for the Skylark native module. It includes all functions provided natively by Buck and
@@ -99,6 +105,76 @@ public class SkylarkNativeModule {
     env.checkLoadingOrWorkspacePhase("native.rule_exists", ast.getLocation());
     ParseContext parseContext = ParseContext.getParseContext(env, ast);
     return parseContext.hasRule(name);
+  }
+
+  @SkylarkCallable(
+    name = "glob",
+    doc = "Returns a list of files that match glob search pattern.",
+    parameters = {
+      @Param(
+        name = "include",
+        type = SkylarkList.class,
+        generic1 = String.class,
+        doc = "a list of strings specifying patterns of files to include."
+      ),
+      @Param(
+        name = "exclude",
+        type = SkylarkList.class,
+        generic1 = String.class,
+        defaultValue = "[]",
+        positional = false,
+        named = true,
+        doc = "a list of strings specifying patterns of files to exclude."
+      ),
+      @Param(
+        name = "exclude_directories",
+        type = Boolean.class,
+        defaultValue = "True",
+        positional = false,
+        named = true,
+        doc = "True indicates directories should not be matched."
+      ),
+    },
+    documented = false,
+    useAst = true,
+    useEnvironment = true
+  )
+  public SkylarkList<String> glob(
+      SkylarkList<String> include,
+      SkylarkList<String> exclude,
+      Boolean excludeDirectories,
+      FuncallExpression ast,
+      Environment env)
+      throws EvalException, IOException, InterruptedException {
+    ParseContext parseContext = ParseContext.getParseContext(env, ast);
+    if (include.isEmpty()) {
+      parseContext
+          .getPackageContext()
+          .getEventHandler()
+          .handle(
+              Event.warn(
+                  ast.getLocation(),
+                  "glob's 'include' attribute is empty. "
+                      + "Such calls are expensive and unnecessary. "
+                      + "Please use an empty list ([]) instead."));
+      return SkylarkList.MutableList.empty();
+    }
+    try {
+      return SkylarkList.MutableList.copyOf(
+          env,
+          parseContext
+              .getPackageContext()
+              .getGlobber()
+              .run(
+                  Type.STRING_LIST.convert(include, "'glob' include"),
+                  Type.STRING_LIST.convert(exclude, "'glob' exclude"),
+                  excludeDirectories)
+              .stream()
+              .sorted()
+              .collect(ImmutableList.toImmutableList()));
+    } catch (FileNotFoundException e) {
+      throw new EvalException(ast.getLocation(), "Cannot find " + e.getMessage());
+    }
   }
 
   public static final SkylarkNativeModule NATIVE_MODULE = new SkylarkNativeModule();

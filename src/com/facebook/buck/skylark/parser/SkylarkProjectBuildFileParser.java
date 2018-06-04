@@ -25,7 +25,6 @@ import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.events.ParseBuckFileEvent;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.options.ProjectBuildFileParserOptions;
-import com.facebook.buck.skylark.function.Glob;
 import com.facebook.buck.skylark.function.SkylarkNativeModule;
 import com.facebook.buck.skylark.io.GlobberFactory;
 import com.facebook.buck.skylark.packages.PackageContext;
@@ -236,7 +235,6 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
             .build();
 
     parseContext.setup(env);
-    env.setup("glob", Glob.create());
     Runtime.setupModuleGlobals(env, SkylarkNativeModule.class);
     for (String nativeFunction : FuncallExpression.getMethodNames(SkylarkNativeModule.class)) {
       env.setup(
