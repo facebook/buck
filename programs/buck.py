@@ -3,8 +3,8 @@
 from __future__ import print_function
 import sys
 import threading
+import time
 from Queue import Queue
-from time import time
 
 
 class ExitCode(object):
