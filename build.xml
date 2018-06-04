@@ -746,7 +746,7 @@
         <include name="com/facebook/buck/maven/build-file.st"/>
         <include name="com/facebook/buck/python/*.py"/>
         <include name="com/facebook/buck/python/run_inplace.py.in"/>
-        <include name="com/facebook/buck/rules/BuckPyFunction.stg"/>
+        <include name="com/facebook/buck/parser/function/BuckPyFunction.stg"/>
         <include name="com/facebook/buck/shell/sh_binary_template"/>
         <include name="com/facebook/buck/jvm/java/FatJar.java" />
         <include name="com/facebook/buck/jvm/java/FatJarMain.java" />

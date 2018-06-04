@@ -1,4 +1,4 @@
-load("//tools/build_rules:java_rules.bzl", "java_test")
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library", "java_test")
 
 # This test is huge, so we run it by itself.
 PARSER_TEST_SRCS = [
@@ -26,6 +26,7 @@ java_test(
         "//src/com/facebook/buck/config:config",
         "//src/com/facebook/buck/core/cell:cell",
         "//src/com/facebook/buck/core/model/actiongraph/computation:computation",
+        "//src/com/facebook/buck/core/rules:rules",
         "//src/com/facebook/buck/core/rules/impl:impl",
         "//src/com/facebook/buck/core/rules/knowntypes:knowntypes",
         "//src/com/facebook/buck/core/util/immutables:immutables",
@@ -67,7 +68,6 @@ java_test(
         "//src/com/facebook/buck/parser/exceptions:exceptions",
         "//src/com/facebook/buck/plugin/impl:impl",
         "//src/com/facebook/buck/query:query",
-        "//src/com/facebook/buck/rules:rules",
         "//src/com/facebook/buck/rules/args:args",
         "//src/com/facebook/buck/rules/coercer:coercer",
         "//src/com/facebook/buck/rules/coercer:interface",
@@ -154,6 +154,7 @@ java_test(
         ["*Test.java"],
         exclude = PARSER_TEST_SRCS + ["*IntegrationTest.java"],
     ),
+    has_immutable_types = True,
     deps = [
         "//src-gen:thrift",
         "//src/com/facebook/buck/android:helpers",
@@ -170,6 +171,7 @@ java_test(
         "//src/com/facebook/buck/config:config",
         "//src/com/facebook/buck/core/cell:cell",
         "//src/com/facebook/buck/core/model/targetgraph/impl:impl",
+        "//src/com/facebook/buck/core/rules:rules",
         "//src/com/facebook/buck/core/rules/knowntypes:knowntypes",
         "//src/com/facebook/buck/core/util/immutables:immutables",
         "//src/com/facebook/buck/counters:counters",
@@ -207,10 +209,10 @@ java_test(
         "//src/com/facebook/buck/parser:rule_pattern",
         "//src/com/facebook/buck/parser/api:api",
         "//src/com/facebook/buck/parser/exceptions:exceptions",
+        "//src/com/facebook/buck/parser/function:function",
         "//src/com/facebook/buck/parser/options:options",
         "//src/com/facebook/buck/plugin/impl:impl",
         "//src/com/facebook/buck/query:query",
-        "//src/com/facebook/buck/rules:rules",
         "//src/com/facebook/buck/rules/args:args",
         "//src/com/facebook/buck/rules/coercer:coercer",
         "//src/com/facebook/buck/rules/coercer:interface",
@@ -317,6 +319,7 @@ java_test(
         "//src/com/facebook/buck/artifact_cache:artifact_cache",
         "//src/com/facebook/buck/config:config",
         "//src/com/facebook/buck/core/cell:cell",
+        "//src/com/facebook/buck/core/rules:rules",
         "//src/com/facebook/buck/core/rules/impl:impl",
         "//src/com/facebook/buck/core/util/immutables:immutables",
         "//src/com/facebook/buck/counters:counters",
@@ -354,7 +357,6 @@ java_test(
         "//src/com/facebook/buck/parser:parser",
         "//src/com/facebook/buck/parser:rule_pattern",
         "//src/com/facebook/buck/query:query",
-        "//src/com/facebook/buck/rules:rules",
         "//src/com/facebook/buck/rules/args:args",
         "//src/com/facebook/buck/rules/coercer:coercer",
         "//src/com/facebook/buck/rules/coercer:interface",
@@ -439,6 +441,7 @@ java_library(
         "//src/com/facebook/buck/artifact_cache:artifact_cache",
         "//src/com/facebook/buck/config:config",
         "//src/com/facebook/buck/core/cell:cell",
+        "//src/com/facebook/buck/core/rules:rules",
         "//src/com/facebook/buck/core/rules/impl:impl",
         "//src/com/facebook/buck/core/rules/knowntypes:knowntypes",
         "//src/com/facebook/buck/core/util/immutables:immutables",
@@ -477,7 +480,6 @@ java_library(
         "//src/com/facebook/buck/parser/exceptions:exceptions",
         "//src/com/facebook/buck/plugin/impl:impl",
         "//src/com/facebook/buck/query:query",
-        "//src/com/facebook/buck/rules:rules",
         "//src/com/facebook/buck/rules/args:args",
         "//src/com/facebook/buck/rules/coercer:coercer",
         "//src/com/facebook/buck/rules/coercer:interface",

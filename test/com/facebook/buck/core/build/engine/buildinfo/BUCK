@@ -8,9 +8,9 @@ java_test(
     deps = [
         "//src/com/facebook/buck/core/build/engine/buildinfo:buildinfo",
         "//src/com/facebook/buck/core/build/engine/impl:impl",
+        "//src/com/facebook/buck/core/rules:rules",
         "//src/com/facebook/buck/event:event",
         "//src/com/facebook/buck/io/file:file",
-        "//src/com/facebook/buck/rules:rules",
         "//src/com/facebook/buck/util/cache/impl:impl",
         "//test/com/facebook/buck/artifact_cache:testutil",
         "//test/com/facebook/buck/io/file:testutil",

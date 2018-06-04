@@ -4,7 +4,7 @@ buck_module(
     name = "ocaml",
     srcs = glob(["*.java"]),
     exported_provided_deps = [
-        "//src/com/facebook/buck/rules:rules",
+        "//src/com/facebook/buck/core/rules:rules",
     ],
     provided_deps = [
         "//src/com/facebook/buck/config:config",

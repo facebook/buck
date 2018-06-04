@@ -7,8 +7,8 @@ java_test(
     ),
     deps = [
         ":testutil",
+        "//src/com/facebook/buck/core/rules:rules",
         "//src/com/facebook/buck/core/sourcepath/resolver/impl:impl",
-        "//src/com/facebook/buck/rules:rules",
         "//src/com/facebook/buck/util/timing:timing",
         "//test/com/facebook/buck/core/rules/resolver/impl:testutil",
         "//test/com/facebook/buck/rules:testutil",

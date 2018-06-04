@@ -1,0 +1,22 @@
+java_library(
+    name = "function",
+    srcs = [
+        "BuckPyFunction.java",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/core/rules/type:type",
+        "//src/com/facebook/buck/rules/coercer:interface",
+    ],
+    resources = [
+        "BuckPyFunction.stg",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//src/com/facebook/buck/core/exceptions:exceptions",
+        "//src/com/facebook/buck/util:util",
+        "//third-party/java/guava:guava",
+        "//third-party/java/stringtemplate:stringtemplate",
+    ],
+)

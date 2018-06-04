@@ -72,7 +72,7 @@ java_immutables_library(
         "//src/com/facebook/buck/parser:config",
         "//src/com/facebook/buck/parser:parser",
         "//src/com/facebook/buck/parser/events:events",
-        "//src/com/facebook/buck/rules:rules",
+        "//src/com/facebook/buck/core/rules:rules",
         "//src/com/facebook/buck/rules/keys:keys",
         "//src/com/facebook/buck/slb:slb",
         "//src/com/facebook/buck/core/test/event:event",

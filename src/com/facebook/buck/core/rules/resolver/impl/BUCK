@@ -17,7 +17,7 @@ java_library(
         "PUBLIC",
     ],
     deps = [
-        "//src/com/facebook/buck/rules:rules",
+        "//src/com/facebook/buck/core/rules:rules",
         "//src/com/facebook/buck/util:util",
         "//src/com/facebook/buck/util/concurrent:concurrent",
         "//src/com/facebook/buck/util/types:types",

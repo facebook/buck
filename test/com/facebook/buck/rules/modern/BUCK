@@ -7,12 +7,12 @@ java_test(
     deps = [
         "//src/com/facebook/buck/cli:cli",
         "//src/com/facebook/buck/core/description/arg:arg",
+        "//src/com/facebook/buck/core/rules:rules",
         "//src/com/facebook/buck/core/rules/knowntypes:knowntypes",
         "//src/com/facebook/buck/core/util/immutables:immutables",
         "//src/com/facebook/buck/io:io",
         "//src/com/facebook/buck/io/file:file",
         "//src/com/facebook/buck/model:model",
-        "//src/com/facebook/buck/rules:rules",
         "//src/com/facebook/buck/rules/keys:keys",
         "//src/com/facebook/buck/rules/modern:modern",
         "//src/com/facebook/buck/rules/modern/builders/grpc/server:server",

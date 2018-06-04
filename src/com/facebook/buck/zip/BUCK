@@ -9,11 +9,11 @@ java_immutables_library(
     visibility = [
         "//src/com/facebook/buck/android/...",
         "//src/com/facebook/buck/apple:apple",
+        "//src/com/facebook/buck/core/rules:rules",
         "//src/com/facebook/buck/features/...",
         "//src/com/facebook/buck/file:file",
         "//src/com/facebook/buck/jvm/java:rules",
         "//src/com/facebook/buck/jvm/kotlin:kotlin",
-        "//src/com/facebook/buck/rules:rules",
         "//src/com/facebook/buck/shell:rules",
         "//test/com/facebook/buck/android:integration1",
         "//test/com/facebook/buck/android:integration2",

@@ -9,9 +9,9 @@ java_immutables_library(
         "//test/...",
     ],
     deps = [
+        "//src/com/facebook/buck/core/rules:rules",
         "//src/com/facebook/buck/core/sourcepath:sourcepath",
         "//src/com/facebook/buck/features/filegroup:filegroup",
-        "//src/com/facebook/buck/rules:rules",
         "//src/com/facebook/buck/rules/modern:modern",
         "//test/com/facebook/buck/core/model/targetgraph:testutil",
         "//test/com/facebook/buck/rules:testutil",

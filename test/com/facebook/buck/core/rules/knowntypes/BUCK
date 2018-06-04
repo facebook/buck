@@ -37,10 +37,10 @@ java_library(
     ),
     exported_deps = [
         "//src/com/facebook/buck/config:config",
+        "//src/com/facebook/buck/core/rules:rules",
         "//src/com/facebook/buck/core/rules/knowntypes:knowntypes",
         "//src/com/facebook/buck/model:model",
         "//src/com/facebook/buck/plugin/impl:impl",
-        "//src/com/facebook/buck/rules:rules",
         "//src/com/facebook/buck/step:step",
         "//test/com/facebook/buck/util:testutil",
     ],
