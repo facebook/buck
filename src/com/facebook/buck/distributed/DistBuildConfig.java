@@ -29,8 +29,10 @@ import com.facebook.buck.util.config.Configs;
 import com.facebook.buck.util.config.RawConfig;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.concurrent.TimeUnit;
@@ -61,6 +63,13 @@ public class DistBuildConfig {
 
   private static final String NUMBER_OF_MINIONS = "number_of_minions";
   private static final Integer NUMBER_OF_MINIONS_DEFAULT_VALUE = 2;
+
+  // List of top-level projects to be attempted to run with Stampede.
+  private static final String AUTO_STAMPEDE_PROJECT_WHITELIST = "auto_stampede_project_whitelist";
+
+  // Users on this list will not get automatic Stampede builds, even if building a target
+  // that is part of a whitelisted proejct.
+  private static final String AUTO_STAMPEDE_USER_BLACKLIST = "auto_stampede_user_blacklist";
 
   private static final String NUMBER_OF_LOW_SPEC_MINIONS = "number_of_low_spec_minions";
 
@@ -168,7 +177,8 @@ public class DistBuildConfig {
    * configure whether we want auto-stampede conversion for all builds, no builds, or some builds.
    * See {@link AutoStampedeMode}.
    */
-  private static final String AUTO_STAMPEDE_BUILD_ENABLED = "auto_stampede_build_enabled";
+  private static final String AUTO_STAMPEDE_EXPERIMENTS_ENABLED =
+      "auto_stampede_experiments_enabled";
 
   private static final String EXPERIMENTS_SECTION = "experiments";
   private static final String STAMPEDE_BETA_TEST = "stampede_beta_test";
@@ -453,7 +463,21 @@ public class DistBuildConfig {
   }
 
   /** Whether a non-distributed build should be automatically turned into a distributed one. */
-  public boolean shouldUseDistributedBuild(BuildId buildId) {
+  public boolean shouldUseDistributedBuild(
+      BuildId buildId, String username, List<String> commandArguments) {
+    if (isAutoStampedeBlacklistedUser(username)) {
+      return false; // Blacklisted users never get auto Stampede builds
+    }
+
+    if (DistBuildUtil.doTargetsMatchProjectWhitelist(
+        commandArguments, getAutoStampedeProjectWhitelist(), buckConfig)) {
+      // Builds of enabled projects always get auto Stampede builds
+      LOG.info("Running auto Stampede build as targets matched project whitelist");
+      return true;
+    }
+
+    // All other users get builds depending on in they are in an experiment control group,
+    // and the current experiment setting resolves to true.
     boolean userInAutoStampedeControlGroup =
         buckConfig.getBooleanValue(
             EXPERIMENTS_SECTION, STAMPEDE_BETA_TEST, DEFAULT_STAMPEDE_BETA_TEST);
@@ -463,7 +487,7 @@ public class DistBuildConfig {
 
     AutoStampedeMode enabled =
         buckConfig
-            .getEnum(STAMPEDE_SECTION, AUTO_STAMPEDE_BUILD_ENABLED, AutoStampedeMode.class)
+            .getEnum(STAMPEDE_SECTION, AUTO_STAMPEDE_EXPERIMENTS_ENABLED, AutoStampedeMode.class)
             .orElse(AutoStampedeMode.DEFAULT)
             .resolveExperiment(buildId);
 
@@ -533,5 +557,24 @@ public class DistBuildConfig {
         getSchedulingEnvironmentType(),
         getNumberOfMinions(),
         getNumberOfLowSpecMinions());
+  }
+
+  /** @return ImmutableSet of all projects that are white-listed for auto Stampede builds */
+  public ImmutableSet<String> getAutoStampedeProjectWhitelist() {
+    Optional<ImmutableList<String>> optionalListWithoutComments =
+        buckConfig.getOptionalListWithoutComments(
+            STAMPEDE_SECTION, AUTO_STAMPEDE_PROJECT_WHITELIST);
+
+    return optionalListWithoutComments.isPresent()
+        ? ImmutableSet.copyOf(optionalListWithoutComments.get())
+        : ImmutableSet.of();
+  }
+
+  /** Checks if the given user is black-listed for auto Stampede builds */
+  public boolean isAutoStampedeBlacklistedUser(String user) {
+    Optional<ImmutableList<String>> optionalBlackListUsers =
+        buckConfig.getOptionalListWithoutComments(STAMPEDE_SECTION, AUTO_STAMPEDE_USER_BLACKLIST);
+
+    return optionalBlackListUsers.isPresent() && optionalBlackListUsers.get().contains(user);
   }
 }

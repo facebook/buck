@@ -19,11 +19,22 @@ package com.facebook.buck.distributed;
 import com.facebook.buck.distributed.thrift.BuildSlaveEvent;
 import com.facebook.buck.distributed.thrift.ConsoleEventSeverity;
 import com.facebook.buck.event.ConsoleEvent;
+import com.google.common.collect.ImmutableSet;
 import java.util.logging.Level;
 import org.junit.Assert;
 import org.junit.Test;
 
 public class DistBuildUtilTest {
+  private static final ImmutableSet<String> PROJECT_WHITELIST =
+      ImmutableSet.of("//projectOne", "//projectTwo");
+
+  private static final String PROJECT_ONE_LIB_ONE = "//projectOne:libOne";
+  private static final String PROJECT_ONE_LIB_TWO = "//projectOne/subdir:libOne";
+  private static final String PROJECT_TWO_LIB_ONE = "//projectTwo:libOne";
+
+  // Example target that is not enabled for Stampede
+  private static final String PROJECT_THREE_LIB_ONE = "//projectThree:libOne";
+
   @Test
   public void regularConsoleEventToDistBuildSlaveConsoleEvent() {
     ConsoleEvent fineEvent = ConsoleEvent.fine("fine message");
@@ -79,5 +90,60 @@ public class DistBuildUtilTest {
     Assert.assertTrue(
         consoleEvent.getMessage().endsWith(slaveConsoleEvent.getConsoleEvent().getMessage()));
     Assert.assertEquals(consoleEvent.getLevel(), Level.SEVERE);
+  }
+
+  @Test
+  public void testSingleTargetThatDoesNotMatchWhiteList() {
+    Assert.assertFalse(
+        DistBuildUtil.doTargetsMatchProjectWhitelist(
+            ImmutableSet.of(PROJECT_THREE_LIB_ONE), PROJECT_WHITELIST));
+  }
+
+  @Test
+  public void testSingleTargetThatMatchesWhiteList() {
+    Assert.assertTrue(
+        DistBuildUtil.doTargetsMatchProjectWhitelist(
+            ImmutableSet.of(PROJECT_TWO_LIB_ONE), PROJECT_WHITELIST));
+  }
+
+  @Test
+  public void testMultiTargetsSomeMatchingSomeMismatching() {
+    Assert.assertFalse(
+        DistBuildUtil.doTargetsMatchProjectWhitelist(
+            ImmutableSet.of(PROJECT_ONE_LIB_ONE, PROJECT_THREE_LIB_ONE), PROJECT_WHITELIST));
+  }
+
+  @Test
+  public void testMultipleMatchingTargetsFromDifferentEnabledProjects() {
+    Assert.assertTrue(
+        DistBuildUtil.doTargetsMatchProjectWhitelist(
+            ImmutableSet.of(PROJECT_ONE_LIB_ONE, PROJECT_TWO_LIB_ONE), PROJECT_WHITELIST));
+  }
+
+  @Test
+  public void testMultiplTargetsWhereOneMatchesAndOneDoesNotMatch() {
+    Assert.assertFalse(
+        DistBuildUtil.doTargetsMatchProjectWhitelist(
+            ImmutableSet.of(PROJECT_ONE_LIB_ONE, PROJECT_THREE_LIB_ONE), PROJECT_WHITELIST));
+  }
+
+  @Test
+  public void testMultipleMatchingTargetsFromSameProjects() {
+    Assert.assertTrue(
+        DistBuildUtil.doTargetsMatchProjectWhitelist(
+            ImmutableSet.of(PROJECT_ONE_LIB_ONE, PROJECT_ONE_LIB_TWO), PROJECT_WHITELIST));
+  }
+
+  @Test
+  public void testWithEmptyTargetList() {
+    Assert.assertFalse(
+        DistBuildUtil.doTargetsMatchProjectWhitelist(ImmutableSet.of(), PROJECT_WHITELIST));
+  }
+
+  @Test
+  public void testWithEmptyProjectWhiteList() {
+    Assert.assertFalse(
+        DistBuildUtil.doTargetsMatchProjectWhitelist(
+            ImmutableSet.of(PROJECT_TWO_LIB_ONE), ImmutableSet.of()));
   }
 }

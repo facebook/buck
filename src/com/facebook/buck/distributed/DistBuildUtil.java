@@ -18,6 +18,7 @@ package com.facebook.buck.distributed;
 
 import static com.facebook.buck.util.BuckConstant.DIST_BUILD_SLAVE_BUCK_OUT_LOG_DIR_NAME;
 
+import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.distributed.thrift.BuildMode;
 import com.facebook.buck.distributed.thrift.BuildSlaveConsoleEvent;
 import com.facebook.buck.distributed.thrift.BuildSlaveEvent;
@@ -31,6 +32,7 @@ import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.BuckConstant;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -38,10 +40,16 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.logging.Level;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class DistBuildUtil {
+
   private static final Logger LOG = Logger.get(ConsoleEvent.class);
   private static final DateFormat DATE_FORMAT = new SimpleDateFormat("[yyyy-MM-dd HH:mm:ss.SSS]");
+
+  // Converts '//project/subdir:target' or '//project:target' into '//project'
+  private static final String TARGET_TO_PROJECT_REGREX = "(//.*?)[/|:].*";
 
   private DistBuildUtil() {}
 
@@ -156,6 +164,55 @@ public class DistBuildUtil {
                 consoleEvent.getSeverity().getValue()));
         return ConsoleEvent.create(Level.SEVERE, timestampPrefix + consoleEvent.getMessage());
     }
+  }
+
+  /** Checks whether the given target command line arguments match the Stampede project whitelist */
+  public static boolean doTargetsMatchProjectWhitelist(
+      List<String> commandArgs, ImmutableSet<String> projectWhitelist, BuckConfig buckConfig) {
+    ImmutableSet.Builder<String> buildTargets = new ImmutableSet.Builder<>();
+    for (String commandArg : commandArgs) {
+      ImmutableSet<String> buildTargetForAliasAsString =
+          buckConfig.getBuildTargetForAliasAsString(commandArg);
+      if (buildTargetForAliasAsString.size() > 0) {
+        buildTargets.addAll(buildTargetForAliasAsString);
+      } else {
+        // Target was not an alias
+        if (!commandArg.startsWith("//")) {
+          commandArg = "//" + commandArg;
+        }
+
+        buildTargets.add(commandArg);
+      }
+    }
+
+    return doTargetsMatchProjectWhitelist(buildTargets.build(), projectWhitelist);
+  }
+
+  /** Checks whether the given targets match the Stampede project whitelist */
+  protected static boolean doTargetsMatchProjectWhitelist(
+      ImmutableSet<String> buildTargets, ImmutableSet<String> projectWhitelist) {
+    if (buildTargets.size() == 0) {
+      return false;
+    }
+    boolean mismatchFound = false;
+    for (String buildTarget : buildTargets) {
+      Pattern pattern = Pattern.compile(TARGET_TO_PROJECT_REGREX);
+      Matcher matcher = pattern.matcher(buildTarget);
+
+      if (matcher.find()) {
+        // Check the project for the given target is whitelisted
+        String projectForTarget = matcher.group(1);
+        mismatchFound = !projectWhitelist.contains(projectForTarget);
+      } else {
+        mismatchFound = true;
+      }
+
+      if (mismatchFound) {
+        break;
+      }
+    }
+
+    return !mismatchFound;
   }
 
   private static Path getLogDirForRunId(String runId, Path logDirectoryPath) {

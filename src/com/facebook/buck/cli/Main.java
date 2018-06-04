@@ -618,11 +618,16 @@ public final class Main {
       DistBuildConfig distBuildConfig = new DistBuildConfig(buckConfig);
       boolean isUsingDistributedBuild = false;
 
+      ExecutionEnvironment executionEnvironment =
+          new DefaultExecutionEnvironment(clientEnvironment, System.getProperties());
+
       // Automatically use distributed build for supported repositories and users.
       if (command.subcommand instanceof BuildCommand) {
         BuildCommand subcommand = (BuildCommand) command.subcommand;
         isUsingDistributedBuild = subcommand.isUsingDistributedBuild();
-        if (!isUsingDistributedBuild && distBuildConfig.shouldUseDistributedBuild(buildId)) {
+        if (!isUsingDistributedBuild
+            && (distBuildConfig.shouldUseDistributedBuild(
+                buildId, executionEnvironment.getUsername(), subcommand.getArguments()))) {
           isUsingDistributedBuild = subcommand.tryConvertingToStampede(distBuildConfig);
         }
       }
@@ -739,8 +744,6 @@ public final class Main {
       }
 
       ImmutableList<BuckEventListener> eventListeners = ImmutableList.of();
-      ExecutionEnvironment executionEnvironment =
-          new DefaultExecutionEnvironment(clientEnvironment, System.getProperties());
 
       ImmutableList.Builder<ProjectFileHashCache> allCaches = ImmutableList.builder();
 
