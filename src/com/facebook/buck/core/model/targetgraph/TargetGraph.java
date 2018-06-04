@@ -78,7 +78,7 @@ public class TargetGraph extends DirectedAcyclicGraph<TargetNode<?, ?>> {
   public TargetNode<?, ?> get(BuildTarget target) {
     TargetNode<?, ?> node = getInternal(target);
     if (node == null) {
-      throw new NoSuchNodeException(target);
+      throw new NoSuchTargetException(target);
     }
     return node;
   }

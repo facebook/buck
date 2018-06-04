@@ -19,10 +19,10 @@ package com.facebook.buck.core.model.targetgraph;
 import com.facebook.buck.core.exceptions.ExceptionWithHumanReadableMessage;
 import com.facebook.buck.core.model.BuildTarget;
 
-public class NoSuchNodeException extends RuntimeException
+public class NoSuchTargetException extends RuntimeException
     implements ExceptionWithHumanReadableMessage {
 
-  public NoSuchNodeException(BuildTarget buildTarget) {
+  public NoSuchTargetException(BuildTarget buildTarget) {
     super(
         String.format(
             "Required target for rule '%s' was not found in the target graph.",
