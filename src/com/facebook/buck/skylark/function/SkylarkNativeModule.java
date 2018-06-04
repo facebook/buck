@@ -28,7 +28,6 @@ import com.google.devtools.build.lib.syntax.Environment;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.FuncallExpression;
 import com.google.devtools.build.lib.syntax.SkylarkList;
-import com.google.devtools.build.lib.syntax.SkylarkSignatureProcessor;
 import com.google.devtools.build.lib.syntax.Type;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -178,8 +177,4 @@ public class SkylarkNativeModule {
   }
 
   public static final SkylarkNativeModule NATIVE_MODULE = new SkylarkNativeModule();
-
-  static {
-    SkylarkSignatureProcessor.configureSkylarkFunctions(SkylarkNativeModule.class);
-  }
 }
