@@ -20,7 +20,6 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.BuildRule;
-import org.immutables.value.Value;
 
 /**
  * An Immutable Key to a {@link BuildRule} for computation in {@link
@@ -34,24 +33,11 @@ import org.immutables.value.Value;
  *       about the desired {@link BuildTarget}, including flavour information, and cell path, etc.
  * </ul>
  */
-@Value.Immutable(builder = false, copy = false, prehash = true)
-public abstract class BuildRuleKey {
+public interface BuildRuleKey {
 
-  @Value.Parameter
-  @Value.Auxiliary
-  public abstract BuildTarget getBuildTarget();
+  BuildTarget getBuildTarget();
 
-  @Value.Derived
-  protected TargetNodeWrapper getTargetNodeWrapper() {
-    return TargetNodeWrapper.of(
-        getBuildRuleCreationContext().getTargetGraph().get(getBuildTarget()));
-  }
+  TargetNode<?, ?> getTargetNode();
 
-  public TargetNode<?, ?> getTargetNode() {
-    return getTargetNodeWrapper().getTargetNode();
-  }
-
-  @Value.Parameter
-  @Value.Auxiliary
-  public abstract BuildRuleCreationContextWithTargetGraph getBuildRuleCreationContext();
+  BuildRuleCreationContextWithTargetGraph getBuildRuleCreationContext();
 }

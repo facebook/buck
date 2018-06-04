@@ -44,6 +44,7 @@
   "//src/com/facebook/buck/core/rules/build/strategy:strategy",
   "//src/com/facebook/buck/core/rules/common:common",
   "//src/com/facebook/buck/core/rules/graphbuilder:graphbuilder",
+  "//src/com/facebook/buck/core/rules/graphbuilder/impl:impl",
   "//src/com/facebook/buck/core/rules/impl:impl",
   "//src/com/facebook/buck/core/rules/knowntypes:knowntypes",
   "//src/com/facebook/buck/core/rules/pipeline:pipeline",

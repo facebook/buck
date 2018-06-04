@@ -14,9 +14,11 @@
  * under the License.
  */
 
-package com.facebook.buck.core.rules.graphbuilder;
+
+package com.facebook.buck.core.rules.graphbuilder.impl;
 
 import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.rules.graphbuilder.BuildRuleKey;
 import javax.annotation.concurrent.Immutable;
 
 /**

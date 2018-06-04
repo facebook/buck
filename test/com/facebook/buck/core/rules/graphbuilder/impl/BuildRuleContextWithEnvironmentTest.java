@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.core.rules.graphbuilder;
+package com.facebook.buck.core.rules.graphbuilder.impl;
 
 import static org.junit.Assert.assertEquals;
 
@@ -29,6 +29,8 @@ import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.graphbuilder.BuildRuleContextWithEnvironment;
+import com.facebook.buck.core.rules.graphbuilder.BuildRuleKey;
 import com.facebook.buck.core.rules.provider.BuildRuleInfoProviderCollection;
 import com.facebook.buck.core.rules.provider.DefaultBuildRuleInfoProvider;
 import com.facebook.buck.core.rules.provider.FakeBuildRuleInfoProvider;
@@ -94,7 +96,7 @@ public class BuildRuleContextWithEnvironmentTest {
     mutableTargetGraph.addNode(fakeTargetNode);
 
     BuildRuleKey key =
-        ImmutableBuildRuleKey.of(
+        ImmutableDefaultBuildRuleKey.of(
             fakeKeyTarget,
             ImmutableBuildRuleCreationContextWithTargetGraph.of(
                 new TargetGraph(mutableTargetGraph, ImmutableMap.of(fakeKeyTarget, fakeTargetNode)),
@@ -119,7 +121,7 @@ public class BuildRuleContextWithEnvironmentTest {
         };
 
     BuildRuleContextWithEnvironment context =
-        ImmutableBuildRuleContextWithEnvironment.of(key, environment);
+        ImmutableDefaultBuildRuleContextWithEnvironment.of(key, environment);
     assertEquals(
         expectedRule,
         Futures.getUnchecked(
@@ -149,13 +151,13 @@ public class BuildRuleContextWithEnvironmentTest {
             ImmutableMap.of(fakeKeyTarget1, fakeTargetNode1, fakeKeyTarget2, fakeTargetNode2));
 
     BuildRuleKey key1 =
-        ImmutableBuildRuleKey.of(
+        ImmutableDefaultBuildRuleKey.of(
             fakeKeyTarget1,
             ImmutableBuildRuleCreationContextWithTargetGraph.of(
                 targetGraph, graphBuilder, projectFilesystem, cellPathResolver, toolchainProvider));
 
     BuildRuleKey key2 =
-        ImmutableBuildRuleKey.of(
+        ImmutableDefaultBuildRuleKey.of(
             fakeKeyTarget2,
             ImmutableBuildRuleCreationContextWithTargetGraph.of(
                 targetGraph, graphBuilder, projectFilesystem, cellPathResolver, toolchainProvider));
@@ -182,7 +184,7 @@ public class BuildRuleContextWithEnvironmentTest {
         };
 
     BuildRuleContextWithEnvironment context =
-        ImmutableBuildRuleContextWithEnvironment.of(key1, environment);
+        ImmutableDefaultBuildRuleContextWithEnvironment.of(key1, environment);
     assertEquals(
         expectedRule,
         Futures.getUnchecked(

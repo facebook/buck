@@ -29,11 +29,8 @@ import com.facebook.buck.toolchain.ToolchainProvider;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Maps;
 import java.util.concurrent.CompletionStage;
 import java.util.function.Function;
-import org.immutables.value.Value;
-import org.immutables.value.Value.Style.ImplementationVisibility;
 
 /**
  * Context information used for construction of ActionGraph in {@link
@@ -56,36 +53,13 @@ import org.immutables.value.Value.Style.ImplementationVisibility;
  * TransformationEnvironment)} implementation for ActionGraph construction. Hence, we have
  * package-private implementation which hides constructor.
  */
-@Value.Immutable(builder = false, copy = false)
-@Value.Style(visibility = ImplementationVisibility.PACKAGE)
-public abstract class BuildRuleContextWithEnvironment {
+public interface BuildRuleContextWithEnvironment {
 
-  @Value.Parameter
-  protected abstract BuildRuleKey getKey();
+  ProjectFilesystem getProjectFilesystem();
 
-  protected BuildRuleCreationContext getCreationContext() {
-    return getKey().getBuildRuleCreationContext();
-  }
+  CellPathResolver getCellPathResolver();
 
-  /** @return the {@link TargetNode} of the current desired {@link BuildRule} */
-  protected TargetNode<?, ?> getCurrentNode() {
-    return getKey().getTargetNode();
-  }
-
-  @Value.Parameter
-  protected abstract TransformationEnvironment<BuildRuleKey, BuildRule> getEnv();
-
-  public ProjectFilesystem getProjectFilesystem() {
-    return getCreationContext().getProjectFilesystem();
-  }
-
-  public CellPathResolver getCellPathResolver() {
-    return getCreationContext().getCellPathResolver();
-  }
-
-  public ToolchainProvider getToolchainProvider() {
-    return getCreationContext().getToolchainProvider();
-  }
+  ToolchainProvider getToolchainProvider();
 
   /**
    * Access to {@link TargetGraph} and {@link TargetNode} is limited during ActionGraph
@@ -94,19 +68,13 @@ public abstract class BuildRuleContextWithEnvironment {
    */
 
   /** @return The {@link TargetNode#getDeclaredDeps()} */
-  public ImmutableSet<BuildTarget> getDeclaredDeps() {
-    return getCurrentNode().getDeclaredDeps();
-  }
+  ImmutableSet<BuildTarget> getDeclaredDeps();
 
   /** @return The {@link TargetNode#getExtraDeps()} */
-  public ImmutableSortedSet<BuildTarget> getExtraDeps() {
-    return getCurrentNode().getExtraDeps();
-  }
+  ImmutableSortedSet<BuildTarget> getExtraDeps();
 
   /** @return The {@link TargetNode#getTargetGraphOnlyDeps()} ()} */
-  public ImmutableSortedSet<BuildTarget> getTargetGraphOnlyDeps() {
-    return getCurrentNode().getTargetGraphOnlyDeps();
-  }
+  ImmutableSortedSet<BuildTarget> getTargetGraphOnlyDeps();
 
   /**
    * Access to {@link TransformationEnvironment} and dependencies as {@link BuildRule}s is limited.
@@ -126,14 +94,9 @@ public abstract class BuildRuleContextWithEnvironment {
    *     {@link BuildRule}
    * @return a future of the {@link BuildRule} to be created
    */
-  public CompletionStage<BuildRule> getProviderCollectionForDep(
+  CompletionStage<BuildRule> getProviderCollectionForDep(
       BuildRuleKey depKey,
-      Function<BuildRuleInfoProviderCollection, BuildRule> createBuildRuleWithDep) {
-    return getEnv()
-        .evaluate(
-            depKey,
-            depBuildRule -> createBuildRuleWithDep.apply(depBuildRule.getProviderCollection()));
-  }
+      Function<BuildRuleInfoProviderCollection, BuildRule> createBuildRuleWithDep);
 
   /**
    * A method for Action Graph construction phase to access information from many dependencies by
@@ -148,17 +111,8 @@ public abstract class BuildRuleContextWithEnvironment {
    *     {@link BuildRule}
    * @return a future of the {@link BuildRule} to be created
    */
-  public CompletionStage<BuildRule> getProviderCollectionForDeps(
+  CompletionStage<BuildRule> getProviderCollectionForDeps(
       Iterable<BuildRuleKey> depKeys,
       Function<ImmutableMap<BuildRuleKey, BuildRuleInfoProviderCollection>, BuildRule>
-          createBuildRuleWithDeps) {
-    return getEnv()
-        .evaluateAll(
-            depKeys,
-            depBuildRules ->
-                createBuildRuleWithDeps.apply(
-                    ImmutableMap.copyOf(
-                        Maps.transformValues(
-                            depBuildRules, rule -> rule.getProviderCollection()))));
-  }
+          createBuildRuleWithDeps);
 }
