@@ -786,8 +786,10 @@ class BuildFileProcessor(object):
         self._install_builtins(native_globals, force_native_rules=True)
         assert 'glob' not in native_globals
         assert 'host_info' not in native_globals
+        assert 'read_config' not in native_globals
         native_globals['glob'] = self._glob
         native_globals['host_info'] = self._host_info
+        native_globals['read_config'] = self._read_config
         native_module_type = collections.namedtuple('native', native_globals.keys())
         return native_module_type(**native_globals)
 
