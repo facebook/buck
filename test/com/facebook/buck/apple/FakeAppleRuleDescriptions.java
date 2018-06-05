@@ -177,8 +177,7 @@ public class FakeAppleRuleDescriptions {
           DEFAULT_IPHONEOS_SDK_PATHS,
           DEFAULT_BUCK_CONFIG,
           new XcodeToolFinder(DEFAULT_BUCK_CONFIG.getView(AppleConfig.class)),
-          FAKE_XCODE_BUILD_VERSION_CACHE,
-          Optional.empty());
+          FAKE_XCODE_BUILD_VERSION_CACHE);
 
   public static final AppleCxxPlatform DEFAULT_IPHONEOS_X86_64_PLATFORM =
       AppleCxxPlatforms.buildWithXcodeToolFinder(
@@ -189,8 +188,7 @@ public class FakeAppleRuleDescriptions {
           DEFAULT_IPHONEOS_SDK_PATHS,
           DEFAULT_BUCK_CONFIG,
           new XcodeToolFinder(DEFAULT_BUCK_CONFIG.getView(AppleConfig.class)),
-          FAKE_XCODE_BUILD_VERSION_CACHE,
-          Optional.empty());
+          FAKE_XCODE_BUILD_VERSION_CACHE);
 
   public static final AppleCxxPlatform DEFAULT_WATCHOS_ARMV7K_PLATFORM =
       AppleCxxPlatforms.buildWithXcodeToolFinder(
@@ -201,8 +199,7 @@ public class FakeAppleRuleDescriptions {
           DEFAULT_IPHONEOS_SDK_PATHS,
           DEFAULT_BUCK_CONFIG,
           new XcodeToolFinder(DEFAULT_BUCK_CONFIG.getView(AppleConfig.class)),
-          FAKE_XCODE_BUILD_VERSION_CACHE,
-          Optional.empty());
+          FAKE_XCODE_BUILD_VERSION_CACHE);
 
   public static final AppleCxxPlatform DEFAULT_MACOSX_X86_64_PLATFORM =
       AppleCxxPlatforms.buildWithXcodeToolFinder(
@@ -213,8 +210,7 @@ public class FakeAppleRuleDescriptions {
           DEFAULT_MACOSX_SDK_PATHS,
           DEFAULT_BUCK_CONFIG,
           new XcodeToolFinder(DEFAULT_BUCK_CONFIG.getView(AppleConfig.class)),
-          FAKE_XCODE_BUILD_VERSION_CACHE,
-          Optional.empty());
+          FAKE_XCODE_BUILD_VERSION_CACHE);
 
   public static final CxxPlatform DEFAULT_PLATFORM =
       DefaultCxxPlatforms.build(Platform.MACOS, new CxxBuckConfig(DEFAULT_BUCK_CONFIG));
