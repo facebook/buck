@@ -2,7 +2,6 @@ apple_library(
     name = "TestLibrary",
     srcs = ["lib.c"],
     exported_headers = ["lib.h"],
-    info_plist = "Info.plist",
     visibility = ["//Apps/..."],
 )
 

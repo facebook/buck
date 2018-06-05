@@ -918,11 +918,7 @@ public class AppleLibraryDescription
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractAppleLibraryDescriptionArg extends AppleNativeTargetDescriptionArg {
-    Optional<SourcePath> getInfoPlist();
-
-    ImmutableMap<String, String> getInfoPlistSubstitutions();
-  }
+  interface AbstractAppleLibraryDescriptionArg extends AppleNativeTargetDescriptionArg {}
 
   // CxxLibraryDescriptionDelegate
 
