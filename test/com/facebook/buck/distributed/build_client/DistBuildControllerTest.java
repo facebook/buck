@@ -48,6 +48,7 @@ import com.facebook.buck.distributed.DistBuildCreatedEvent;
 import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.DistBuildService.DistBuildRejectedException;
 import com.facebook.buck.distributed.DistBuildStatusEvent;
+import com.facebook.buck.distributed.DistLocalBuildMode;
 import com.facebook.buck.distributed.ExitCode;
 import com.facebook.buck.distributed.thrift.BuckVersion;
 import com.facebook.buck.distributed.thrift.BuildJob;
@@ -212,6 +213,7 @@ public class DistBuildControllerTest {
         fakeFileHashCache,
         invocationInfo,
         BuildMode.REMOTE_BUILD,
+        DistLocalBuildMode.WAIT_FOR_REMOTE,
         new MinionRequirements(),
         REPOSITORY,
         TENANT_ID,

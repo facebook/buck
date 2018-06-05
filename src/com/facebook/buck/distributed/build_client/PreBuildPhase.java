@@ -111,7 +111,7 @@ public class PreBuildPhase {
     List<String> buildTargets =
         topLevelTargets
             .stream()
-            .map(x -> x.getFullyQualifiedName())
+            .map(BuildTarget::getFullyQualifiedName)
             .sorted()
             .collect(Collectors.toList());
     BuildJob job =

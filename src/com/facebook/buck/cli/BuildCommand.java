@@ -984,6 +984,7 @@ public class BuildCommand extends AbstractCommand {
               .setFileHashCache(fileHashCache)
               .setInvocationInfo(params.getInvocationInfo().get())
               .setBuildMode(distBuildConfig.getBuildMode())
+              .setDistLocalBuildMode(distBuildConfig.getLocalBuildMode())
               .setMinionRequirements(distBuildConfig.getMinionRequirements())
               .setRepository(distBuildConfig.getRepository())
               .setTenantId(distBuildConfig.getTenantId())
@@ -1016,13 +1017,10 @@ public class BuildCommand extends AbstractCommand {
       // Perform either a single phase build that waits for all remote artifacts before proceeding,
       // or a two stage build where local build first races against remote, and depending on
       // progress either completes first or falls back to build that waits for remote artifacts.
-      DistLocalBuildMode localMode = distBuildConfig.getLocalBuildMode();
-      boolean skipRacingBuild = localMode == DistLocalBuildMode.WAIT_FOR_REMOTE;
-
-      // Perform a build
       int localExitCode =
           stampedeBuildClient.build(
-              skipRacingBuild, distBuildConfig.isSlowLocalBuildFallbackModeEnabled());
+              distBuildConfig.getLocalBuildMode(),
+              distBuildConfig.isSlowLocalBuildFallbackModeEnabled());
 
       // All local/distributed build steps are now finished.
       StampedeId stampedeId = stampedeBuildClient.getStampedeId();
@@ -1034,7 +1032,6 @@ public class BuildCommand extends AbstractCommand {
       distBuildClientStats.setPerformedLocalBuild(true);
       distBuildClientStats.stopTimer(PERFORM_LOCAL_BUILD);
       distBuildClientStats.setLocalBuildExitCode(localExitCode);
-
       // If local build finished before hashing was complete, it's important to cancel
       // related Futures to avoid this operation blocking forever.
       asyncJobState.cancel(true);
@@ -1050,36 +1047,69 @@ public class BuildCommand extends AbstractCommand {
           ("Stampede local build executor service still running after build finished"
               + " and timeout elapsed. Terminating.."));
 
-      // Publish details about all default rule keys that were cache misses.
-      // A non-zero value suggests a problem that needs investigating.
-      if (distBuildConfig.isCacheMissAnalysisEnabled()) {
-        performCacheMissAnalysis(params, distBuildConfig, distBuildService);
-      }
-
-      boolean ruleKeyConsistencyChecksPassedOrSkipped =
-          performStampedePostBuildAnalysisAndRuleKeyConsistencyChecks(
-              params,
-              distBuildConfig,
-              filesystem,
-              distBuildClientStats,
-              stampedeId,
-              distributedBuildExitCode,
-              localExitCode,
-              distBuildLogStateTracker);
-
-      int finalExitCode = localExitCode;
-      if (!ruleKeyConsistencyChecksPassedOrSkipped) {
+      int finalExitCode;
+      if (distBuildControllerInvocationArgs
+          .getDistLocalBuildMode()
+          .equals(DistLocalBuildMode.FIRE_AND_FORGET)) {
+        finalExitCode = localExitCode;
+      } else {
         finalExitCode =
-            com.facebook.buck.distributed.ExitCode.RULE_KEY_CONSISTENCY_CHECK_FAILED.getCode();
-      }
-
-      // Post distributed build phase starts POST_DISTRIBUTED_BUILD_LOCAL_STEPS counter internally.
-      if (distributedBuildExitCode == 0) {
-        distBuildClientStats.stopTimer(POST_DISTRIBUTED_BUILD_LOCAL_STEPS);
+            performPostBuild(
+                params,
+                distBuildConfig,
+                filesystem,
+                distBuildClientStats,
+                stampedeId,
+                distributedBuildExitCode,
+                localExitCode,
+                distBuildService,
+                distBuildLogStateTracker);
       }
 
       return ExitCode.map(finalExitCode);
     }
+  }
+
+  private int performPostBuild(
+      CommandRunnerParams params,
+      DistBuildConfig distBuildConfig,
+      ProjectFilesystem filesystem,
+      ClientStatsTracker distBuildClientStats,
+      StampedeId stampedeId,
+      int distributedBuildExitCode,
+      int localExitCode,
+      DistBuildService distBuildService,
+      LogStateTracker distBuildLogStateTracker)
+      throws IOException {
+    // Publish details about all default rule keys that were cache misses.
+    // A non-zero value suggests a problem that needs investigating.
+    if (distBuildConfig.isCacheMissAnalysisEnabled()) {
+      performCacheMissAnalysis(params, distBuildConfig, distBuildService);
+    }
+
+    boolean ruleKeyConsistencyChecksPassedOrSkipped =
+        performStampedePostBuildAnalysisAndRuleKeyConsistencyChecks(
+            params,
+            distBuildConfig,
+            filesystem,
+            distBuildClientStats,
+            stampedeId,
+            distributedBuildExitCode,
+            localExitCode,
+            distBuildLogStateTracker);
+
+    int finalExitCode = localExitCode;
+    if (!ruleKeyConsistencyChecksPassedOrSkipped) {
+      finalExitCode =
+          com.facebook.buck.distributed.ExitCode.RULE_KEY_CONSISTENCY_CHECK_FAILED.getCode();
+    }
+
+    // Post distributed build phase starts POST_DISTRIBUTED_BUILD_LOCAL_STEPS counter internally.
+    if (distributedBuildExitCode == 0) {
+      distBuildClientStats.stopTimer(POST_DISTRIBUTED_BUILD_LOCAL_STEPS);
+    }
+
+    return finalExitCode;
   }
 
   private void performCacheMissAnalysis(

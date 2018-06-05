@@ -33,6 +33,7 @@ import com.facebook.buck.distributed.ClientStatsTracker;
 import com.facebook.buck.distributed.DistBuildConfig;
 import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.DistBuildUtil;
+import com.facebook.buck.distributed.DistLocalBuildMode;
 import com.facebook.buck.distributed.build_slave.CoordinatorBuildRuleEventsPublisher;
 import com.facebook.buck.distributed.build_slave.CoordinatorModeRunner;
 import com.facebook.buck.distributed.build_slave.DelegateAndGraphs;
@@ -283,14 +284,21 @@ public class BuildPhase {
       ListeningExecutorService executorService,
       StampedeId stampedeId,
       BuildMode buildMode,
+      DistLocalBuildMode distLocalBuildMode,
       InvocationInfo invocationInfo,
       ListenableFuture<ParallelRuleKeyCalculator<RuleKey>> localRuleKeyCalculator)
       throws IOException, InterruptedException {
     distBuildClientStats.startTimer(PERFORM_DISTRIBUTED_BUILD);
+
     BuildJob job =
         distBuildService.startBuild(
             stampedeId, !buildMode.equals(DISTRIBUTED_BUILD_WITH_LOCAL_COORDINATOR));
     LOG.info("Started job. Build status: " + job.getStatus());
+
+    if (distLocalBuildMode.equals(DistLocalBuildMode.FIRE_AND_FORGET)) {
+      LOG.info("Fire-and-forget mode: returning after build status is:started. " + job.getStatus());
+      return new BuildResult(job, ImmutableList.of());
+    }
 
     nextEventIdBySlaveRunId.clear();
     ScheduledFuture<?> distBuildStatusUpdatingFuture =
