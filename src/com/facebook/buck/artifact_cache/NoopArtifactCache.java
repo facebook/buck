@@ -22,6 +22,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.io.file.BorrowablePath;
 import com.facebook.buck.io.file.LazyPath;
+import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -46,6 +47,11 @@ public class NoopArtifactCache implements ArtifactCache {
 
   @Override
   public ListenableFuture<Void> store(ArtifactInfo info, BorrowablePath output) {
+    return Futures.immediateFuture(null);
+  }
+
+  @Override
+  public ListenableFuture<Void> store(ImmutableList<Pair<ArtifactInfo, BorrowablePath>> artifacts) {
     return Futures.immediateFuture(null);
   }
 

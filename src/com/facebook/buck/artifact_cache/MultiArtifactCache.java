@@ -21,6 +21,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.io.file.BorrowablePath;
 import com.facebook.buck.io.file.LazyPath;
+import com.facebook.buck.util.types.Pair;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableList;
@@ -128,6 +129,30 @@ public class MultiArtifactCache implements ArtifactCache {
   @Override
   public ListenableFuture<Void> store(ArtifactInfo info, BorrowablePath output) {
     return storeToCaches(writableArtifactCaches, info, output);
+  }
+
+  @Override
+  public ListenableFuture<Void> store(ImmutableList<Pair<ArtifactInfo, BorrowablePath>> artifacts) {
+    if (writableArtifactCaches.size() != 1) {
+      ImmutableList.Builder<Pair<ArtifactInfo, BorrowablePath>> artifactTemporaryPaths =
+          ImmutableList.builderWithExpectedSize(artifacts.size());
+      for (int i = 0; i < artifacts.size(); i++) {
+        artifactTemporaryPaths.add(
+            new Pair<>(
+                artifacts.get(i).getFirst(),
+                BorrowablePath.notBorrowablePath(artifacts.get(i).getSecond().getPath())));
+      }
+      artifacts = artifactTemporaryPaths.build();
+    }
+
+    List<ListenableFuture<Void>> storeFutures =
+        Lists.newArrayListWithExpectedSize(writableArtifactCaches.size());
+    for (ArtifactCache artifactCache : writableArtifactCaches) {
+      storeFutures.add(artifactCache.store(artifacts));
+    }
+
+    // Aggregate future to ensure all store operations have completed.
+    return Futures.transform(Futures.allAsList(storeFutures), Functions.constant(null));
   }
 
   @Override

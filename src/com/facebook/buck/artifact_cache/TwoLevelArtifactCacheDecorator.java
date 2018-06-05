@@ -30,6 +30,7 @@ import com.facebook.buck.io.file.LazyPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.RichStream;
+import com.facebook.buck.util.types.Pair;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableList;
@@ -249,17 +250,27 @@ public class TwoLevelArtifactCacheDecorator implements ArtifactCache, CacheDecor
             .putAll(info.getMetadata())
             .put(METADATA_KEY, hashCode)
             .build();
+    // We need to upload artifacts in this order to prevent race condition. If we would do
+    // it concurrently it is possible that we upload metadata before the file. Then other
+    // builder read metadata, but cannot find a file (which is still being uploaded), and
+    // decide that we have to re-upload it. With enough machines building the same target
+    // we end up with constant re-uploading and rebuilding flow. The following issue is
+    // only in case when output hash changes between builds.
+    Pair<ArtifactInfo, BorrowablePath> artifact =
+        new Pair<>(ArtifactInfo.builder().addRuleKeys(new RuleKey(hashCode)).build(), output);
+    Pair<ArtifactInfo, BorrowablePath> metadata =
+        new Pair<>(
+            ArtifactInfo.builder()
+                .setRuleKeys(info.getRuleKeys())
+                .setMetadata(metadataWithCacheKey)
+                .build(),
+            BorrowablePath.notBorrowablePath(emptyFilePath));
 
     return Futures.transform(
-        Futures.allAsList(
-            delegate.store(
-                ArtifactInfo.builder()
-                    .setRuleKeys(info.getRuleKeys())
-                    .setMetadata(metadataWithCacheKey)
-                    .build(),
-                BorrowablePath.notBorrowablePath(emptyFilePath)),
-            delegate.store(
-                ArtifactInfo.builder().addRuleKeys(new RuleKey(hashCode)).build(), output)),
+        // This relies on the fact that delegate stores artifacts in sequential way in the order
+        // they are being passed. If we store them internally in consecutive way, there is a
+        // possibility of race condition.
+        delegate.store(ImmutableList.of(artifact, metadata)),
         Functions.constant(true),
         MoreExecutors.directExecutor());
   }
