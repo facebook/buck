@@ -822,4 +822,21 @@ public class TargetsCommandIntegrationTest {
         foundNonTransitiveTargetsAndHashes.get("//bar:main"),
         foundTransitiveTargetsAndHashes.get("//bar:main"));
   }
+
+  @Test
+  public void printsBothOutputAndFiltersType() throws IOException, InterruptedException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "output_path_and_type", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckCommand("targets", "--show-output", "//:", "--type", "export_file");
+    result.assertSuccess();
+
+    String expected =
+        String.format(
+            "//:exported.txt %s\n",
+            workspace.getBuckPaths().getGenDir().resolve("exported.txt").resolve("exported.txt"));
+    assertEquals(expected, result.getStdout());
+  }
 }
