@@ -49,8 +49,6 @@ public class JsBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps implemen
 
   @AddToRuleKey private final ImmutableSortedSet<SourcePath> libraries;
 
-  @AddToRuleKey private final ImmutableList<ImmutableSet<SourcePath>> libraryPathGroups;
-
   @AddToRuleKey private final Optional<Arg> extraJson;
 
   @AddToRuleKey private final WorkerTool worker;
@@ -67,14 +65,12 @@ public class JsBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps implemen
       ImmutableSortedSet<SourcePath> libraries,
       ImmutableSet<String> entryPoints,
       Optional<Arg> extraJson,
-      ImmutableList<ImmutableSet<SourcePath>> libraryPathGroups,
       String bundleName,
       WorkerTool worker) {
     super(buildTarget, projectFilesystem, params);
     this.extraJson = extraJson;
     this.bundleName = bundleName;
     this.entryPoints = entryPoints;
-    this.libraryPathGroups = libraryPathGroups;
     this.libraries = libraries;
     this.worker = worker;
   }
@@ -147,18 +143,6 @@ public class JsBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps implemen
             String.format("%s/%s", sourcePathResolver.getAbsolutePath(jsOutputDir), bundleName))
         .addString("command", "bundle")
         .addArray("entryPoints", entryPoints.stream().collect(JsonBuilder.toArrayOfStrings()))
-        .addArray(
-            "libraryGroups",
-            libraryPathGroups
-                .stream()
-                .map(
-                    sourcePaths ->
-                        sourcePaths
-                            .stream()
-                            .map(sourcePathResolver::getAbsolutePath)
-                            .map(Path::toString)
-                            .collect(JsonBuilder.toArrayOfStrings()))
-                .collect(JsonBuilder.toArrayOfArrays()))
         .addArray(
             "libraries",
             libraries
