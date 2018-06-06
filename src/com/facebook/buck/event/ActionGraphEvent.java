@@ -78,6 +78,25 @@ public abstract class ActionGraphEvent extends AbstractBuckEvent
     }
   }
 
+  /** Event for incremental action graph construction. * */
+  public static class IncrementalLoad extends ActionGraphEvent {
+    public int reusedNodeCount;
+
+    public IncrementalLoad(int reusedNodeCount) {
+      super(EventKey.unique());
+      this.reusedNodeCount = reusedNodeCount;
+    }
+
+    @Override
+    public String getEventName() {
+      return "ActionGraphIncrementalLoad";
+    }
+
+    public int getReusedNodeCount() {
+      return reusedNodeCount;
+    }
+  }
+
   public static class Cache extends ActionGraphEvent implements BuckEvent {
     private final String eventName;
 

@@ -25,6 +25,8 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
+import com.facebook.buck.event.ActionGraphEvent;
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.log.Logger;
 import com.google.common.base.Preconditions;
 import java.util.HashMap;
@@ -52,7 +54,8 @@ public class IncrementalActionGraphGenerator {
    * walk.
    */
   public void populateActionGraphBuilderWithCachedRules(
-      TargetGraph targetGraph, ActionGraphBuilder graphBuilder) {
+      BuckEventBus eventBus, TargetGraph targetGraph, ActionGraphBuilder graphBuilder) {
+    int reusedRuleCount = 0;
     if (lastActionGraphBuilder != null) {
       // We figure out which build rules we can reuse from the last action graph by performing an
       // invalidation walk over the new target graph.
@@ -64,7 +67,7 @@ public class IncrementalActionGraphGenerator {
 
       // Now we can load in all build rules whose unflavored targets weren't invalidated for
       // incremental action graph generation.
-      addValidRulesToActionGraphBuilder(graphBuilder, validTargets);
+      reusedRuleCount = addValidRulesToActionGraphBuilder(graphBuilder, validTargets);
 
       // Invalidate the previous {@see ActionGraphBuilder}, which we no longer need, to make sure
       // nobody unexpectedly accesses it after this point.
@@ -73,14 +76,15 @@ public class IncrementalActionGraphGenerator {
 
     lastTargetGraph = targetGraph;
     lastActionGraphBuilder = graphBuilder;
+    eventBus.post(new ActionGraphEvent.IncrementalLoad(reusedRuleCount));
   }
 
-  private void addValidRulesToActionGraphBuilder(
+  private int addValidRulesToActionGraphBuilder(
       ActionGraphBuilder graphBuilder, Set<UnflavoredBuildTarget> validTargets) {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     int totalRuleCount = 0;
-    int loadedRuleCount = 0;
+    int reusedRuleCount = 0;
     for (BuildRule buildRule : lastActionGraphBuilder.getBuildRules()) {
       if (validTargets.contains(buildRule.getBuildTarget().getUnflavoredBuildTarget())) {
         graphBuilder.addToIndex(buildRule);
@@ -90,11 +94,13 @@ public class IncrementalActionGraphGenerator {
         // we didn't update them, we'd leak previous action graphs.
         buildRule.updateBuildRuleResolver(graphBuilder, ruleFinder, pathResolver);
 
-        loadedRuleCount++;
+        reusedRuleCount++;
       }
       totalRuleCount++;
     }
-    LOG.debug("loaded %d out of %d build rules incrementally", loadedRuleCount, totalRuleCount);
+
+    LOG.debug("reused %d of %d build rules", reusedRuleCount, totalRuleCount);
+    return reusedRuleCount;
   }
 
   private boolean invalidateChangedTargets(
