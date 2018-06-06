@@ -30,26 +30,35 @@ import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.types.Either;
 import com.google.common.collect.ImmutableList;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import org.hamcrest.Matchers;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 
 public class JavacSpecTest {
   private ActionGraphBuilder graphBuilder;
+  private SourcePathResolver sourcePathResolver;
   private SourcePathRuleFinder ruleFinder;
   private JavacSpec.Builder specBuilder;
+
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   @Before
   public void setUp() {
     graphBuilder = new TestActionGraphBuilder();
     ruleFinder = new SourcePathRuleFinder(graphBuilder);
+    sourcePathResolver = DefaultSourcePathResolver.from(ruleFinder);
     specBuilder = JavacSpec.builder();
   }
 
@@ -70,33 +79,33 @@ public class JavacSpecTest {
   }
 
   @Test
-  public void returnsExternalCompilerIfJavacPathPresent() {
-    Path externalPath = Paths.get("/foo/bar/path/to/javac");
-    SourcePath javacPath = FakeSourcePath.of(externalPath);
+  public void returnsExternalCompilerIfJavacPathPresent() throws IOException {
+    Path externalPath = tmp.newExecutableFile();
 
+    SourcePath javacPath = FakeSourcePath.of(externalPath);
     specBuilder.setJavacPath(Either.ofRight(javacPath));
     ExternalJavac javac = (ExternalJavac) getJavac();
-    assertTrue(javac.getActualPath().isLeft());
-    assertEquals(javacPath, javac.getActualPath().getLeft());
+
+    assertEquals(
+        ImmutableList.of(externalPath.toString()), javac.getCommandPrefix(sourcePathResolver));
   }
 
   @Test
-  public void returnsExternalCompilerIfCompilerArgHasPath() {
-    Path externalJavac = Paths.get("/foo/bar/javac.exe").toAbsolutePath();
+  public void returnsExternalCompilerIfCompilerArgHasPath() throws IOException {
+    Path externalJavac = tmp.newExecutableFile();
     SourcePath sourcePath = FakeSourcePath.of(externalJavac.toString());
     Either<BuiltInJavac, SourcePath> either = Either.ofRight(sourcePath);
 
     specBuilder.setCompiler(either);
     ExternalJavac javac = (ExternalJavac) getJavac();
 
-    assertTrue(javac.getActualPath().isLeft());
-    PathSourcePath actualPath = javac.getActualPath().getLeft();
-    assertEquals(sourcePath, actualPath);
+    assertEquals(
+        ImmutableList.of(externalJavac.toString()), javac.getCommandPrefix(sourcePathResolver));
   }
 
   @Test
-  public void compilerArgTakesPrecedenceOverJavacPathArg() {
-    Path externalJavacPath = Paths.get("/foo/bar/javac.exe").toAbsolutePath();
+  public void compilerArgTakesPrecedenceOverJavacPathArg() throws IOException {
+    Path externalJavacPath = tmp.newExecutableFile();
     SourcePath sourcePath = FakeSourcePath.of(externalJavacPath.toString());
     Either<BuiltInJavac, SourcePath> either = Either.ofRight(sourcePath);
 
@@ -105,8 +114,8 @@ public class JavacSpecTest {
         .setJavacPath(Either.ofLeft(FakeSourcePath.of("does-not-exist")));
     ExternalJavac javac = (ExternalJavac) getJavac();
 
-    assertTrue(javac.getActualPath().isLeft());
-    assertEquals(sourcePath, javac.getActualPath().getLeft());
+    assertEquals(
+        ImmutableList.of(externalJavacPath.toString()), javac.getCommandPrefix(sourcePathResolver));
   }
 
   @Test

@@ -58,14 +58,12 @@ import javax.annotation.Nullable;
 /** javac implemented in a separate binary. */
 public class ExternalJavac implements Javac {
   @AddToRuleKey private final Supplier<Tool> javac;
-  private final Either<PathSourcePath, BuildTargetSourcePath> actualPath;
   private final String shortName;
 
   public ExternalJavac(final Either<PathSourcePath, SourcePath> pathToJavac) {
     if (pathToJavac.isRight() && pathToJavac.getRight() instanceof BuildTargetSourcePath) {
       BuildTargetSourcePath buildTargetPath = (BuildTargetSourcePath) pathToJavac.getRight();
       this.shortName = buildTargetPath.getTarget().toString();
-      this.actualPath = Either.ofRight(buildTargetPath);
       this.javac =
           MoreSuppliers.memoize(
               () ->
@@ -89,7 +87,6 @@ public class ExternalJavac implements Javac {
     } else {
       PathSourcePath actualPath =
           pathToJavac.transform(path -> path, path -> (PathSourcePath) path);
-      this.actualPath = Either.ofLeft(actualPath);
       this.shortName = actualPath.toString();
       this.javac =
           MoreSuppliers.memoize(
@@ -115,11 +112,6 @@ public class ExternalJavac implements Javac {
                 return VersionedTool.of(actualPath, "external_javac", version);
               });
     }
-  }
-
-  @VisibleForTesting
-  Either<PathSourcePath, BuildTargetSourcePath> getActualPath() {
-    return actualPath;
   }
 
   @Override
@@ -198,9 +190,7 @@ public class ExternalJavac implements Javac {
             abiGenerationMode == AbiGenerationMode.CLASS,
             "Cannot compile ABI jars with external javac");
         ImmutableList.Builder<String> command = ImmutableList.builder();
-        command.add(
-            actualPath.transform(
-                Object::toString, path -> sourcePathResolver.getAbsolutePath(path).toString()));
+        command.addAll(javac.get().getCommandPrefix(sourcePathResolver));
         ImmutableList<Path> expandedSources;
         try {
           expandedSources =
