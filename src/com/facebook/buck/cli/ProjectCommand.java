@@ -368,7 +368,8 @@ public class ProjectCommand extends BuildCommand {
             break;
           default:
             // unreachable
-            throw new IllegalStateException("'ide' should always be of type 'INTELLIJ' or 'XCODE' or 'GOLAND'");
+            throw new IllegalStateException(
+                "'ide' should always be of type 'INTELLIJ' or 'XCODE' or 'GOLAND'");
         }
         rc = runPostprocessScriptIfNeeded(params, projectIde);
         if (rc != 0) {
