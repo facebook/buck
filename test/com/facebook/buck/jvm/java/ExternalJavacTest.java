@@ -36,7 +36,6 @@ import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.FakeProcess;
 import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
-import com.facebook.buck.util.types.Either;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -108,8 +107,7 @@ public class ExternalJavacTest extends EasyMockSupport {
             .build();
     FakeProcess javacProc = new FakeProcess(0, "", "");
     FakeProcessExecutor executor = new FakeProcessExecutor(ImmutableMap.of(javacExe, javacProc));
-    ExternalJavac compiler =
-        new ExternalJavacFactory(executor).create(Either.ofLeft(FakeSourcePath.of(javac)));
+    ExternalJavac compiler = new ExternalJavacFactory(executor).create(FakeSourcePath.of(javac));
     RuleKeyObjectSink sink = createMock(RuleKeyObjectSink.class);
     Capture<Supplier<Tool>> identifier = new Capture<>();
     expect(sink.setReflectively(eq(".class"), anyObject())).andReturn(sink);
@@ -137,8 +135,7 @@ public class ExternalJavacTest extends EasyMockSupport {
     FakeProcess javacProc = new FakeProcess(0, "", reportedJavacVersion);
     FakeProcessExecutor executor = new FakeProcessExecutor(ImmutableMap.of(javacExe, javacProc));
 
-    ExternalJavac compiler =
-        new ExternalJavacFactory(executor).create(Either.ofLeft(FakeSourcePath.of(javac)));
+    ExternalJavac compiler = new ExternalJavacFactory(executor).create(FakeSourcePath.of(javac));
 
     RuleKeyObjectSink sink = createMock(RuleKeyObjectSink.class);
     Capture<Supplier<Tool>> identifier = new Capture<>();
@@ -160,7 +157,6 @@ public class ExternalJavacTest extends EasyMockSupport {
 
   private ExternalJavac createTestStep() {
     Path fakeJavac = Paths.get("fakeJavac");
-    return new ExternalJavacFactory()
-        .create(Either.ofLeft(FakeSourcePath.of(filesystem, fakeJavac)));
+    return new ExternalJavacFactory().create(FakeSourcePath.of(filesystem, fakeJavac));
   }
 }

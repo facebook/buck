@@ -20,13 +20,13 @@ import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.ConfigView;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
 import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.util.MoreSuppliers;
-import com.facebook.buck.util.types.Either;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -63,11 +63,8 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
         MoreSuppliers.memoize(
             () ->
                 JavacSpec.builder()
-                    .setJavacPath(
-                        getJavacPath().isPresent()
-                            ? Optional.of(Either.ofLeft(getJavacPath().get()))
-                            : Optional.empty())
-                    .setJavacJarPath(delegate.getSourcePath("tools", "javac_jar"))
+                    .setJavacPath(getJavacPath())
+                    .setJavacJarPath(getJavacJarPath())
                     .setCompilerClassName(delegate.getValue("tools", "compiler_class_name"))
                     .build());
   }
@@ -168,6 +165,10 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
   @VisibleForTesting
   Optional<PathSourcePath> getJavacPath() {
     return getPathToExecutable("javac").map(delegate::getPathSourcePath);
+  }
+
+  private Optional<SourcePath> getJavacJarPath() {
+    return delegate.getSourcePath("tools", "javac_jar");
   }
 
   private Optional<Path> getPathToExecutable(String executableName) {

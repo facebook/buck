@@ -29,7 +29,6 @@ import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor.Result;
 import com.facebook.buck.util.ProcessExecutorParams;
-import com.facebook.buck.util.types.Either;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
@@ -51,16 +50,15 @@ public class ExternalJavacFactory {
   }
 
   /** Creates an ExternalJavac. */
-  public ExternalJavac create(final Either<PathSourcePath, SourcePath> pathToJavac) {
-    if (pathToJavac.isRight() && pathToJavac.getRight() instanceof BuildTargetSourcePath) {
-      BuildTargetSourcePath buildTargetPath = (BuildTargetSourcePath) pathToJavac.getRight();
+  public ExternalJavac create(final SourcePath pathToJavac) {
+    if (pathToJavac instanceof BuildTargetSourcePath) {
+      BuildTargetSourcePath buildTargetPath = (BuildTargetSourcePath) pathToJavac;
       return new ExternalJavac(
           () -> createNonHashingSourcePathJavac(buildTargetPath),
           buildTargetPath.getTarget().toString());
     } else {
-      PathSourcePath actualPath =
-          pathToJavac.transform(path -> path, path -> (PathSourcePath) path);
-      return new ExternalJavac(() -> createVersionedJavac(actualPath), actualPath.toString());
+      return new ExternalJavac(
+          () -> createVersionedJavac((PathSourcePath) pathToJavac), pathToJavac.toString());
     }
   }
 

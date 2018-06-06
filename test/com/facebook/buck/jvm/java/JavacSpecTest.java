@@ -87,7 +87,7 @@ public class JavacSpecTest {
     Path externalPath = tmp.newExecutableFile();
 
     SourcePath javacPath = FakeSourcePath.of(externalPath);
-    specBuilder.setJavacPath(Either.ofRight(javacPath));
+    specBuilder.setJavacPath(javacPath);
     ExternalJavac javac = (ExternalJavac) getJavac();
 
     assertEquals(
@@ -117,9 +117,7 @@ public class JavacSpecTest {
     SourcePath sourcePath = FakeSourcePath.of(externalJavacPath.toString());
     Either<BuiltInJavac, SourcePath> either = Either.ofRight(sourcePath);
 
-    specBuilder
-        .setCompiler(either)
-        .setJavacPath(Either.ofLeft(FakeSourcePath.of("does-not-exist")));
+    specBuilder.setCompiler(either).setJavacPath(FakeSourcePath.of("does-not-exist"));
     ExternalJavac javac = (ExternalJavac) getJavac();
 
     assertEquals(
@@ -189,7 +187,7 @@ public class JavacSpecTest {
   @Test(expected = HumanReadableException.class)
   public void mayOnlyPassOneOfJavacOrJavacJar() {
     PathSourcePath sourcePath = FakeSourcePath.of("path");
-    specBuilder.setJavacPath(Either.ofRight(sourcePath)).setJavacJarPath(sourcePath);
+    specBuilder.setJavacPath(sourcePath).setJavacJarPath(sourcePath);
 
     getJavac();
   }

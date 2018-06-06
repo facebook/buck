@@ -20,7 +20,6 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaBuckConfig.SourceAbiVerificationMode;
@@ -83,10 +82,7 @@ public interface JvmLibraryArg extends CommonDescriptionArg, MaybeRequiredForSou
 
     return JavacSpec.builder()
         .setCompiler(getCompiler())
-        .setJavacPath(
-            getJavac().isPresent()
-                ? Optional.of(Either.ofLeft((PathSourcePath) getJavac().get()))
-                : Optional.empty())
+        .setJavacPath(getJavac())
         .setJavacJarPath(getJavacJar())
         .setCompilerClassName(getCompilerClassName())
         .build();

@@ -23,7 +23,6 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.jvm.core.JavaLibrary;
-import com.facebook.buck.util.types.Either;
 import com.google.common.base.Preconditions;
 import java.util.Optional;
 import javax.annotation.Nullable;
@@ -61,7 +60,7 @@ public class ExternalOrJarBackedJavacProvider implements JavacProvider, AddsToRu
             new JarBackedJavacProvider(javacJarPath, Preconditions.checkNotNull(compilerClassName))
                 .resolve(ruleFinder);
       } else {
-        javac = new ExternalJavacFactory().create(Either.ofRight(compiler));
+        javac = new ExternalJavacFactory().create(compiler);
       }
     }
 
