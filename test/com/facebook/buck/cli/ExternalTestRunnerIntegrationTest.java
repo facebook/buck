@@ -72,9 +72,6 @@ public class ExternalTestRunnerIntegrationTest {
             equalTo(
                 "[[0.0, [u'dir/simple.py']], "
                     + "[0.75, [u'dir/also_simple.py', u'dir/simple.py']], "
-                    + "[1.0, [u'dir/also_simple.py']], "
-                    + "[0.0, [u'dir/simple.py']], "
-                    + "[0.75, [u'dir/also_simple.py', u'dir/simple.py']], "
                     + "[1.0, [u'dir/also_simple.py']]]\n")));
   }
 
