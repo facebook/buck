@@ -16,33 +16,26 @@
 
 package com.facebook.buck.jvm.java;
 
-import static com.facebook.buck.jvm.java.BuiltInJavac.DEFAULT;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
-import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
-import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.FakeSourcePath;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.environment.Platform;
-import com.facebook.buck.util.types.Either;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
@@ -72,15 +65,6 @@ public class JavacSpecTest {
   }
 
   @Test
-  public void returnsBuiltInJavacWhenCompilerArgHasDefault() {
-    Either<BuiltInJavac, SourcePath> either = Either.ofLeft(DEFAULT);
-    specBuilder.setCompiler(either);
-
-    Javac javac = getJavac();
-    assertTrue(javac instanceof JdkProvidedInMemoryJavac);
-  }
-
-  @Test
   public void returnsExternalCompilerIfJavacPathPresent() throws IOException {
     // newExecutableFile cannot be executed on windows.
     assumeTrue(Platform.detect() != Platform.WINDOWS);
@@ -95,36 +79,6 @@ public class JavacSpecTest {
   }
 
   @Test
-  public void returnsExternalCompilerIfCompilerArgHasPath() throws IOException {
-    // newExecutableFile cannot be executed on windows.
-    assumeTrue(Platform.detect() != Platform.WINDOWS);
-    Path externalJavac = tmp.newExecutableFile();
-    SourcePath sourcePath = FakeSourcePath.of(externalJavac.toString());
-    Either<BuiltInJavac, SourcePath> either = Either.ofRight(sourcePath);
-
-    specBuilder.setCompiler(either);
-    ExternalJavac javac = (ExternalJavac) getJavac();
-
-    assertEquals(
-        ImmutableList.of(externalJavac.toString()), javac.getCommandPrefix(sourcePathResolver));
-  }
-
-  @Test
-  public void compilerArgTakesPrecedenceOverJavacPathArg() throws IOException {
-    // newExecutableFile cannot be executed on windows.
-    assumeTrue(Platform.detect() != Platform.WINDOWS);
-    Path externalJavacPath = tmp.newExecutableFile();
-    SourcePath sourcePath = FakeSourcePath.of(externalJavacPath.toString());
-    Either<BuiltInJavac, SourcePath> either = Either.ofRight(sourcePath);
-
-    specBuilder.setCompiler(either).setJavacPath(FakeSourcePath.of("does-not-exist"));
-    ExternalJavac javac = (ExternalJavac) getJavac();
-
-    assertEquals(
-        ImmutableList.of(externalJavacPath.toString()), javac.getCommandPrefix(sourcePathResolver));
-  }
-
-  @Test
   public void returnsJarBackedJavacWhenJarPathPresent() {
     SourcePath javacJarPath = FakeSourcePath.of("path/to/javac.jar");
 
@@ -134,43 +88,6 @@ public class JavacSpecTest {
     assertThat(
         BuildableSupport.deriveInputs(javac).collect(ImmutableList.toImmutableList()),
         Matchers.contains(javacJarPath));
-  }
-
-  @Test
-  public void returnsJarBackedJavacWhenCompilerArgIsPrebuiltJar() {
-    Path javacJarPath = Paths.get("langtools").resolve("javac.jar");
-    BuildTarget target = BuildTargetFactory.newInstance("//langtools:javac");
-    PrebuiltJar prebuiltJar =
-        PrebuiltJarBuilder.createBuilder(target).setBinaryJar(javacJarPath).build(graphBuilder);
-    SourcePath sourcePath = DefaultBuildTargetSourcePath.of(target);
-    Either<BuiltInJavac, SourcePath> either = Either.ofRight(sourcePath);
-
-    specBuilder.setCompiler(either);
-    JarBackedJavac javac = (JarBackedJavac) getJavac();
-
-    assertThat(
-        BuildableSupport.deriveInputs(javac).collect(ImmutableList.toImmutableList()),
-        Matchers.contains(prebuiltJar.getSourcePathToOutput()));
-  }
-
-  @Test
-  public void compilerArgTakesPrecedenceOverJavacJarArg() {
-    Path javacJarPath = Paths.get("langtools").resolve("javac.jar");
-    BuildTarget target = BuildTargetFactory.newInstance("//langtools:javac");
-    PrebuiltJar prebuiltJar =
-        PrebuiltJarBuilder.createBuilder(target).setBinaryJar(javacJarPath).build(graphBuilder);
-    SourcePath sourcePath = DefaultBuildTargetSourcePath.of(target);
-    Either<BuiltInJavac, SourcePath> either = Either.ofRight(sourcePath);
-
-    specBuilder
-        .setCompiler(either)
-        .setJavacJarPath(
-            PathSourcePath.of(new FakeProjectFilesystem(), Paths.get("does-not-exist")));
-    JarBackedJavac javac = (JarBackedJavac) getJavac();
-
-    assertThat(
-        BuildableSupport.deriveInputs(javac).collect(ImmutableList.toImmutableList()),
-        Matchers.contains(prebuiltJar.getSourcePathToOutput()));
   }
 
   @Test

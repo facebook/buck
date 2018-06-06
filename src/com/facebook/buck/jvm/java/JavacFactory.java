@@ -31,7 +31,7 @@ public final class JavacFactory {
     JavacSpec spec = null;
 
     if (args != null) {
-      spec = args.getJavacSpec();
+      spec = args.getJavacSpec(ruleFinder);
     }
 
     if (spec == null) {

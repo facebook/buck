@@ -19,31 +19,53 @@ package com.facebook.buck.jvm.java;
 import static com.facebook.buck.jvm.java.BuiltInJavac.DEFAULT;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.core.rules.BuildRuleResolver;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
+import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
+import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
+import com.facebook.buck.core.sourcepath.PathSourcePath;
+import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.testutil.TemporaryPaths;
+import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.types.Either;
+import com.google.common.collect.ImmutableList;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Optional;
+import org.hamcrest.Matchers;
 import org.immutables.value.Value;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 
 public class JvmLibraryArgInterpreterTest {
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
   private JavacOptions defaults;
-  private BuildRuleResolver ruleResolver;
+  private ActionGraphBuilder graphBuilder;
+  private SourcePathRuleFinder ruleFinder;
+  private SourcePathResolver sourcePathResolver;
 
   @Before
   public void createHelpers() {
     defaults = JavacOptions.builder().setSourceLevel("8").setTargetLevel("8").build();
-
-    ruleResolver = new TestActionGraphBuilder();
+    graphBuilder = new TestActionGraphBuilder();
+    ruleFinder = new SourcePathRuleFinder(graphBuilder);
+    sourcePathResolver = DefaultSourcePathResolver.from(ruleFinder);
   }
 
   @Test
@@ -96,14 +118,6 @@ public class JvmLibraryArgInterpreterTest {
   }
 
   @Test
-  public void compilerArgIsSet() {
-    JvmLibraryArg arg =
-        ExampleJvmLibraryArg.builder().setName("foo").setCompiler(Either.ofLeft(DEFAULT)).build();
-
-    assertEquals(arg.getCompiler(), arg.getJavacSpec().getCompiler());
-  }
-
-  @Test
   public void javacArgIsSet() {
     JvmLibraryArg arg =
         ExampleJvmLibraryArg.builder()
@@ -111,8 +125,7 @@ public class JvmLibraryArgInterpreterTest {
             .setJavac(FakeSourcePath.of("does-not-exist"))
             .build();
 
-    assertEquals(
-        Optional.of(Either.ofLeft(arg.getJavac().get())), arg.getJavacSpec().getJavacPath());
+    assertEquals(Optional.of(arg.getJavac().get()), arg.getJavacSpec(ruleFinder).getJavacPath());
   }
 
   @Test
@@ -123,7 +136,7 @@ public class JvmLibraryArgInterpreterTest {
             .setJavacJar(FakeSourcePath.of("does-not-exist"))
             .build();
 
-    assertEquals(arg.getJavacJar(), arg.getJavacSpec().getJavacJarPath());
+    assertEquals(arg.getJavacJar(), arg.getJavacSpec(ruleFinder).getJavacJarPath());
   }
 
   @Test
@@ -135,13 +148,104 @@ public class JvmLibraryArgInterpreterTest {
             .setCompilerClassName("compiler")
             .build();
 
-    assertEquals(arg.getCompilerClassName(), arg.getJavacSpec().getCompilerClassName());
+    assertEquals(arg.getCompilerClassName(), arg.getJavacSpec(ruleFinder).getCompilerClassName());
+  }
+
+  @Test
+  public void returnsBuiltInJavacWhenCompilerArgHasDefault() {
+    JvmLibraryArg arg =
+        ExampleJvmLibraryArg.builder().setName("foo").setCompiler(Either.ofLeft(DEFAULT)).build();
+
+    Javac javac = arg.getJavacSpec(ruleFinder).getJavacProvider().resolve(ruleFinder);
+    assertTrue(javac instanceof JdkProvidedInMemoryJavac);
+  }
+
+  @Test
+  public void returnsExternalCompilerIfCompilerArgHasPath() throws IOException {
+    // newExecutableFile cannot be executed on windows.
+    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    Path externalJavac = tmp.newExecutableFile();
+    SourcePath sourcePath = FakeSourcePath.of(externalJavac.toString());
+    Either<BuiltInJavac, SourcePath> either = Either.ofRight(sourcePath);
+
+    JvmLibraryArg arg = ExampleJvmLibraryArg.builder().setName("foo").setCompiler(either).build();
+
+    ExternalJavac javac =
+        (ExternalJavac) arg.getJavacSpec(ruleFinder).getJavacProvider().resolve(ruleFinder);
+
+    assertEquals(
+        ImmutableList.of(externalJavac.toString()), javac.getCommandPrefix(sourcePathResolver));
+  }
+
+  @Test
+  public void compilerArgTakesPrecedenceOverJavacPathArg() throws IOException {
+    // newExecutableFile cannot be executed on windows.
+    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    Path externalJavacPath = tmp.newExecutableFile();
+    SourcePath sourcePath = FakeSourcePath.of(externalJavacPath.toString());
+    Either<BuiltInJavac, SourcePath> either = Either.ofRight(sourcePath);
+
+    JvmLibraryArg arg =
+        ExampleJvmLibraryArg.builder()
+            .setName("foo")
+            .setCompiler(either)
+            .setJavac(FakeSourcePath.of("does-not-exist"))
+            .build();
+
+    ExternalJavac javac =
+        (ExternalJavac) arg.getJavacSpec(ruleFinder).getJavacProvider().resolve(ruleFinder);
+
+    assertEquals(
+        ImmutableList.of(externalJavacPath.toString()), javac.getCommandPrefix(sourcePathResolver));
+  }
+
+  @Test
+  public void returnsJarBackedJavacWhenCompilerArgIsPrebuiltJar() {
+    Path javacJarPath = Paths.get("langtools").resolve("javac.jar");
+    BuildTarget target = BuildTargetFactory.newInstance("//langtools:javac");
+    PrebuiltJarBuilder.createBuilder(target).setBinaryJar(javacJarPath).build(graphBuilder);
+    SourcePath sourcePath = DefaultBuildTargetSourcePath.of(target);
+    Either<BuiltInJavac, SourcePath> either = Either.ofRight(sourcePath);
+
+    JvmLibraryArg arg = ExampleJvmLibraryArg.builder().setName("foo").setCompiler(either).build();
+
+    JarBackedJavac javac =
+        (JarBackedJavac) arg.getJavacSpec(ruleFinder).getJavacProvider().resolve(ruleFinder);
+
+    ImmutableList<SourcePath> inputs =
+        BuildableSupport.deriveInputs(javac).collect(ImmutableList.toImmutableList());
+    assertThat(inputs, Matchers.hasItem(DefaultBuildTargetSourcePath.of(target)));
+  }
+
+  @Test
+  public void compilerArgTakesPrecedenceOverJavacJarArg() {
+    Path javacJarPath = Paths.get("langtools").resolve("javac.jar");
+    BuildTarget target = BuildTargetFactory.newInstance("//langtools:javac");
+    PrebuiltJar prebuiltJar =
+        PrebuiltJarBuilder.createBuilder(target).setBinaryJar(javacJarPath).build(graphBuilder);
+    SourcePath sourcePath = DefaultBuildTargetSourcePath.of(target);
+    Either<BuiltInJavac, SourcePath> either = Either.ofRight(sourcePath);
+
+    JvmLibraryArg arg =
+        ExampleJvmLibraryArg.builder()
+            .setName("foo")
+            .setCompiler(either)
+            .setJavacJar(
+                PathSourcePath.of(new FakeProjectFilesystem(), Paths.get("does-not-exist")))
+            .build();
+
+    JarBackedJavac javac =
+        (JarBackedJavac) arg.getJavacSpec(ruleFinder).getJavacProvider().resolve(ruleFinder);
+
+    assertThat(
+        BuildableSupport.deriveInputs(javac).collect(ImmutableList.toImmutableList()),
+        Matchers.hasItem(prebuiltJar.getSourcePathToOutput()));
   }
 
   @Test
   public void testNoJavacSpecIfNoJavacArg() {
     JvmLibraryArg arg = ExampleJvmLibraryArg.builder().setName("foo").build();
-    assertNull(arg.getJavacSpec());
+    assertNull(arg.getJavacSpec(ruleFinder));
   }
 
   private JavacOptions createJavacOptions(JvmLibraryArg arg) {
@@ -149,7 +253,7 @@ public class JvmLibraryArgInterpreterTest {
         defaults,
         BuildTargetFactory.newInstance("//not:real"),
         new FakeProjectFilesystem(),
-        ruleResolver,
+        graphBuilder,
         arg);
   }
 

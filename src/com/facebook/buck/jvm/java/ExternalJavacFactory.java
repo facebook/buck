@@ -54,13 +54,6 @@ public class ExternalJavacFactory {
 
   /** Creates a JavacProvider based on a spec. */
   public static JavacProvider getProviderForSpec(JavacSpec spec) {
-    if (spec.getCompiler().isPresent() && spec.getCompiler().get().isRight()) {
-      return new ExternalOrJarBackedJavacProvider(
-          spec.getCompiler().get().getRight(),
-          // compiler_class_name has no effect when compiler is specified
-          COM_SUN_TOOLS_JAVAC_API_JAVAC_TOOL);
-    }
-
     String compilerClassName =
         spec.getCompilerClassName().orElse(COM_SUN_TOOLS_JAVAC_API_JAVAC_TOOL);
     Javac.Source javacSource = spec.getJavacSource();

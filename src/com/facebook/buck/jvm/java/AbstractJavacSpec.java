@@ -19,16 +19,12 @@ package com.facebook.buck.jvm.java;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import com.facebook.buck.util.types.Either;
 import java.util.Optional;
 import org.immutables.value.Value;
 
 @Value.Immutable(copy = true)
 @BuckStyleImmutable
 abstract class AbstractJavacSpec {
-
-  protected abstract Optional<Either<BuiltInJavac, SourcePath>> getCompiler();
-
   protected abstract Optional<SourcePath> getJavacPath();
 
   protected abstract Optional<SourcePath> getJavacJarPath();
