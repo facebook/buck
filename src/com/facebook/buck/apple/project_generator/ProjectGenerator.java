@@ -267,6 +267,7 @@ public class ProjectGenerator {
       ImmutableList.builder();
   private final ImmutableList.Builder<SourcePath> genruleFiles = ImmutableList.builder();
   private final ImmutableSet.Builder<SourcePath> filesAddedBuilder = ImmutableSet.builder();
+  private final Set<UnflavoredBuildTarget> generatedTargets = new HashSet<>();
 
   public ProjectGenerator(
       TargetGraph targetGraph,
@@ -498,6 +499,12 @@ public class ProjectGenerator {
     Preconditions.checkState(
         isBuiltByCurrentProject(targetNode.getBuildTarget()),
         "should not generate rule if it shouldn't be built by current project");
+
+    if (generatedTargets.contains(targetNode.getBuildTarget().getUnflavoredBuildTarget())) {
+      return Optional.empty();
+    }
+    generatedTargets.add(targetNode.getBuildTarget().getUnflavoredBuildTarget());
+
     Optional<PBXTarget> result = Optional.empty();
     if (targetNode.getDescription() instanceof AppleLibraryDescription) {
       result =
