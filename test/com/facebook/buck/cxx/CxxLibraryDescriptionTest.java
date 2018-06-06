@@ -354,9 +354,7 @@ public class CxxLibraryDescriptionTest {
             .setSystemInclude(true);
 
     // Build target graph.
-    TargetGraph targetGraph =
-        TargetGraphFactory.newInstance(
-            cxxLibraryBuilder.build());
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(cxxLibraryBuilder.build());
 
     // Construct C/C++ library build rules.
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);

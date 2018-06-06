@@ -466,9 +466,7 @@ public class CxxLibraryDescription
      */
     Optional<Boolean> isReexportAllHeaderDependencies();
 
-    /**
-     * Whether consumers should include this target's headers with -isystem instead of -I.
-     */
+    /** Whether consumers should include this target's headers with -isystem instead of -I. */
     Optional<Boolean> isSystemInclude();
 
     /**
