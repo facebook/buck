@@ -103,6 +103,11 @@ public class CxxLibraryBuilder
     return this;
   }
 
+  public CxxLibraryBuilder setSystemInclude(boolean systemInclude) {
+    getArgForPopulating().setSystemInclude(systemInclude);
+    return this;
+  }
+
   public CxxLibraryBuilder setExportedPreprocessorFlags(
       ImmutableList<String> exportedPreprocessorFlags) {
     getArgForPopulating()

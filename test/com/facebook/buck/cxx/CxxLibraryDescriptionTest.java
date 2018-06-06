@@ -340,6 +340,35 @@ public class CxxLibraryDescriptionTest {
   }
 
   @Test
+  public void systemInclude() {
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+    CxxPlatform cxxPlatform = CxxPlatformUtils.DEFAULT_PLATFORM;
+
+    // Setup the build params we'll pass to description when generating the build rules.
+    BuildTarget target = BuildTargetFactory.newInstance("//:rule");
+
+    CxxLibraryBuilder cxxLibraryBuilder =
+        new CxxLibraryBuilder(target, cxxBuckConfig)
+            .setExportedHeaders(
+                SourceList.ofUnnamedSources(ImmutableSortedSet.of(FakeSourcePath.of("foo.h"))))
+            .setSystemInclude(true);
+
+    // Build target graph.
+    TargetGraph targetGraph =
+        TargetGraphFactory.newInstance(
+            cxxLibraryBuilder.build());
+
+    // Construct C/C++ library build rules.
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
+    CxxLibrary rule = (CxxLibrary) cxxLibraryBuilder.build(graphBuilder, filesystem, targetGraph);
+
+    // Verify the C/C++ include flags are set correctly.
+    CxxPreprocessorInput publicInput = rule.getCxxPreprocessorInput(cxxPlatform, graphBuilder);
+    CxxSymlinkTreeHeaders publicHeaders = (CxxSymlinkTreeHeaders) publicInput.getIncludes().get(0);
+    assertThat(publicHeaders.getIncludeType(), equalTo(CxxPreprocessables.IncludeType.SYSTEM));
+  }
+
+  @Test
   public void overrideSoname() {
 
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
