@@ -62,7 +62,7 @@ public class DistributedCellProviderFactory {
                   Preconditions.checkState(!currentCellRoot.equals(rootCellPath));
                   CellPathResolver currentCellResolver = rootCellResolver;
                   // The CellPathResolverView is required because it makes the
-                  // [RootPath<->CanonicalName] graphBuilder methods non-symmetrical to handle the
+                  // [RootPath<->CanonicalName] resolver methods non-symmetrical to handle the
                   // fact
                   // that relative main cell from inside a secondary cell resolves actually to
                   // secondary cell. If the DefaultCellPathResolver is used, then it would return

@@ -25,8 +25,8 @@ public interface InputRuleResolver {
   Optional<BuildRule> resolve(SourcePath path);
 
   /**
-   * Provides access to internal implementation details of the graphBuilder. This should almost
-   * never be used.
+   * Provides access to internal implementation details of the resolver. This should almost never be
+   * used.
    */
   UnsafeInternals unsafe();
 

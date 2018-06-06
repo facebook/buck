@@ -495,7 +495,7 @@ public class RustCompileUtils {
    * Given a list of sources, return the one which is the root based on the defaults and user
    * parameters.
    *
-   * @param resolver Source path graphBuilder for rule
+   * @param resolver SourcePathResolver for rule
    * @param crate Name of crate
    * @param defaults Default names for this rule (library, binary, etc)
    * @param sources List of sources

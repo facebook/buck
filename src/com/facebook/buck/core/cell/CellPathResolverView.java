@@ -25,7 +25,7 @@ import java.nio.file.Path;
 import java.util.Optional;
 
 /**
- * View of a subset of cells of a cell path graphBuilder.
+ * View of a subset of cells of a cell path resolver.
  *
  * <p>Views are used for non-root cells, to ensure that only the subset of cell names that the cell
  * declares are visible within that cell.

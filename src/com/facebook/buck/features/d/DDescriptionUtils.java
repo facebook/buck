@@ -273,7 +273,7 @@ abstract class DDescriptionUtils {
    * @param compilerFlags flags to pass to the compiler
    * @param baseParams build parameters for the compilation
    * @param graphBuilder graphBuilder for build rules
-   * @param sourcePathResolver graphBuilder for source paths
+   * @param sourcePathResolver resolver for source paths
    * @param cxxPlatform the C++ platform to compile for
    * @param dBuckConfig the Buck configuration for D
    * @return SourcePaths of the generated object files

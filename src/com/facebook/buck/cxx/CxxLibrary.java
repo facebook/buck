@@ -474,12 +474,10 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
     // `CxxLibrary` rules themselves are noop meta rules, they shouldn't add any unnecessary
     // overhead.
     return RichStream.from(getDeclaredDeps().stream())
-        // Make sure to use the rule graphBuilder that's passed in rather than the field we're
-        // holding,
-        // since we need to access nodes already created by the previous build rule graphBuilder in
-        // the
-        // incremental action graph scenario, and {@see #updateBuildRuleResolver} may already have
-        // been called.
+        // Make sure to use the rule ruleFinder that's passed in rather than the field we're
+        // holding, since we need to access nodes already created by the previous build rule
+        // ruleFinder in the incremental action graph scenario, and {@see #updateBuildRuleResolver}
+        // may already have been called.
         .concat(exportedDeps.getForAllPlatforms(ruleFinder.getRuleResolver()).stream())
         .map(BuildRule::getBuildTarget);
   }

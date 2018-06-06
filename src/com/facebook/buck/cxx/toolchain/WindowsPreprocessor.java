@@ -67,7 +67,7 @@ public class WindowsPreprocessor extends DelegatingTool implements Preprocessor 
     // "Forced Include": https://msdn.microsoft.com/en-us/library/8c5ztk84.aspx
     // Space is allowed between flag and its pathname argument.
     // E.g. something like this (space allowed between flag and its argument):
-    // return ImmutableList.of("/FI", graphBuilder.getAbsolutePath(prefixHeader).toString());
+    // return ImmutableList.of("/FI", resolver.getAbsolutePath(prefixHeader).toString());
   }
 
   @Override

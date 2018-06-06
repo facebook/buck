@@ -30,7 +30,7 @@ import java.util.Map;
 import java.util.Optional;
 
 /**
- * A fast constraint graphBuilder which selects versions using pre-defined version universes.
+ * A fast constraint resolver which selects versions using pre-defined version universes.
  *
  * <p>TODO(agallagher): Validate version constraints.
  */

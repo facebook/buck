@@ -153,7 +153,7 @@ public class AndroidPrebuiltAarDescription
           buildTarget,
           projectFilesystem,
           /* params */ buildRuleParams,
-          /* graphBuilder */ pathResolver,
+          pathResolver,
           /* binaryJar */ ExplicitBuildTargetSourcePath.of(
               unzipAar.getBuildTarget(), unzipAar.getPathToClassesJar()),
           /* sourceJar */ Optional.empty(),
@@ -203,7 +203,7 @@ public class AndroidPrebuiltAarDescription
         buildTarget,
         projectFilesystem,
         androidLibraryParams,
-        /* graphBuilder */ pathResolver,
+        pathResolver,
         ruleFinder,
         /* proguardConfig */ ExplicitBuildTargetSourcePath.of(
             unzipAar.getBuildTarget(), unzipAar.getProguardConfig()),

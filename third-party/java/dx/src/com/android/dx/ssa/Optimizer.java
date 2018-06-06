@@ -183,7 +183,7 @@ public class Optimizer {
             needsDeadCodeRemover = false;
         }
 
-        // dead code remover must be run before phi type graphBuilder
+        // dead code remover must be run before phi type resolver
         if (needsDeadCodeRemover) {
             DeadCodeRemover.process(ssaMeth);
         }

@@ -42,7 +42,7 @@ public class ModuleExoHelper {
   private final List<ExopackageInfo.DexInfo> dexInfoForModules;
 
   /**
-   * @param pathResolver a graphBuilder for finding the output SourcePaths on disk
+   * @param pathResolver a SourcePathResolver for finding the output SourcePaths on disk
    * @param projectFilesystem the filesystem owning buck-out
    * @param dexInfoForModules a list of metadata/dex-output-dirs for the modules that we want to
    *     exo-install

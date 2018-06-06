@@ -80,8 +80,8 @@ public final class DefaultClassUsageFileWriter implements ClassUsageFileWriter {
    * where the first directory element is the cell name. For example, if the absolute path is <code>
    * /foo/bar/buck-out/gen/baz/a.jar</code> and there exists a cell in the config <code>
    * cell2 = /foo/bar</code> then the path returned will be <code>/cell2/buck-out/gen/baz/a.jar
-   * </code>. If the given absolute path is not relative to any of the cell roots in the
-   * graphBuilder, Optional.empty() is returned.
+   * </code>. If the given absolute path is not relative to any of the cell roots in the resolver,
+   * Optional.empty() is returned.
    */
   private static Optional<Path> getCrossCellPath(Path jarAbsolutePath, CellPathResolver resolver) {
     for (Map.Entry<String, Path> cellEntry : resolver.getCellPaths().entrySet()) {
