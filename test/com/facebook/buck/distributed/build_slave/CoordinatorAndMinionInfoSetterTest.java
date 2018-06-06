@@ -35,6 +35,7 @@ public class CoordinatorAndMinionInfoSetterTest {
   private static final String STANDARD_MINION_QUEUE = "super_minion_queue";
   private static final String LOW_SPEC_MINION_QUEUE = "low_spec_minion_queue";
   private static final StampedeId STAMPEDE_ID = new StampedeId().setId("topspin");
+  private static final String BUILD_LABEL = "super-cool-build";
 
   private DistBuildService service;
 
@@ -107,6 +108,7 @@ public class CoordinatorAndMinionInfoSetterTest {
       int expectedNumberOfMinions, String minionQueue, MinionType minionType) throws IOException {
     service.enqueueMinions(
         EasyMock.eq(STAMPEDE_ID),
+        EasyMock.eq(BUILD_LABEL),
         EasyMock.eq(expectedNumberOfMinions),
         EasyMock.eq(minionQueue),
         EasyMock.eq(minionType));
@@ -125,7 +127,7 @@ public class CoordinatorAndMinionInfoSetterTest {
 
     CoordinatorEventListener eventListener =
         new CoordinatorEventListener(
-            service, STAMPEDE_ID, minionQueueProvider, isLocalMinionAlsoRunning);
+            service, STAMPEDE_ID, BUILD_LABEL, minionQueueProvider, isLocalMinionAlsoRunning);
     Assert.assertNotNull(eventListener);
     int port = 33;
     String address = "hidden.but.cool.address";

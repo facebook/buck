@@ -15,6 +15,7 @@ public class EnqueueMinionsRequest implements org.apache.thrift.TBase<EnqueueMin
   private static final org.apache.thrift.protocol.TField MINION_QUEUE_FIELD_DESC = new org.apache.thrift.protocol.TField("minionQueue", org.apache.thrift.protocol.TType.STRING, (short)2);
   private static final org.apache.thrift.protocol.TField NUMBER_OF_MINIONS_FIELD_DESC = new org.apache.thrift.protocol.TField("numberOfMinions", org.apache.thrift.protocol.TType.I32, (short)3);
   private static final org.apache.thrift.protocol.TField MINION_TYPE_FIELD_DESC = new org.apache.thrift.protocol.TField("minionType", org.apache.thrift.protocol.TType.I32, (short)4);
+  private static final org.apache.thrift.protocol.TField BUILD_LABEL_FIELD_DESC = new org.apache.thrift.protocol.TField("buildLabel", org.apache.thrift.protocol.TType.STRING, (short)5);
 
   private static final org.apache.thrift.scheme.SchemeFactory STANDARD_SCHEME_FACTORY = new EnqueueMinionsRequestStandardSchemeFactory();
   private static final org.apache.thrift.scheme.SchemeFactory TUPLE_SCHEME_FACTORY = new EnqueueMinionsRequestTupleSchemeFactory();
@@ -27,6 +28,7 @@ public class EnqueueMinionsRequest implements org.apache.thrift.TBase<EnqueueMin
    * @see MinionType
    */
   public MinionType minionType; // optional
+  public java.lang.String buildLabel; // optional
 
   /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
   public enum _Fields implements org.apache.thrift.TFieldIdEnum {
@@ -37,7 +39,8 @@ public class EnqueueMinionsRequest implements org.apache.thrift.TBase<EnqueueMin
      * 
      * @see MinionType
      */
-    MINION_TYPE((short)4, "minionType");
+    MINION_TYPE((short)4, "minionType"),
+    BUILD_LABEL((short)5, "buildLabel");
 
     private static final java.util.Map<java.lang.String, _Fields> byName = new java.util.HashMap<java.lang.String, _Fields>();
 
@@ -60,6 +63,8 @@ public class EnqueueMinionsRequest implements org.apache.thrift.TBase<EnqueueMin
           return NUMBER_OF_MINIONS;
         case 4: // MINION_TYPE
           return MINION_TYPE;
+        case 5: // BUILD_LABEL
+          return BUILD_LABEL;
         default:
           return null;
       }
@@ -102,7 +107,7 @@ public class EnqueueMinionsRequest implements org.apache.thrift.TBase<EnqueueMin
   // isset id assignments
   private static final int __NUMBEROFMINIONS_ISSET_ID = 0;
   private byte __isset_bitfield = 0;
-  private static final _Fields optionals[] = {_Fields.STAMPEDE_ID,_Fields.MINION_QUEUE,_Fields.NUMBER_OF_MINIONS,_Fields.MINION_TYPE};
+  private static final _Fields optionals[] = {_Fields.STAMPEDE_ID,_Fields.MINION_QUEUE,_Fields.NUMBER_OF_MINIONS,_Fields.MINION_TYPE,_Fields.BUILD_LABEL};
   public static final java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
   static {
     java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new java.util.EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
@@ -114,6 +119,8 @@ public class EnqueueMinionsRequest implements org.apache.thrift.TBase<EnqueueMin
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I32)));
     tmpMap.put(_Fields.MINION_TYPE, new org.apache.thrift.meta_data.FieldMetaData("minionType", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
         new org.apache.thrift.meta_data.EnumMetaData(org.apache.thrift.protocol.TType.ENUM, MinionType.class)));
+    tmpMap.put(_Fields.BUILD_LABEL, new org.apache.thrift.meta_data.FieldMetaData("buildLabel", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
+        new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
     metaDataMap = java.util.Collections.unmodifiableMap(tmpMap);
     org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(EnqueueMinionsRequest.class, metaDataMap);
   }
@@ -136,6 +143,9 @@ public class EnqueueMinionsRequest implements org.apache.thrift.TBase<EnqueueMin
     if (other.isSetMinionType()) {
       this.minionType = other.minionType;
     }
+    if (other.isSetBuildLabel()) {
+      this.buildLabel = other.buildLabel;
+    }
   }
 
   public EnqueueMinionsRequest deepCopy() {
@@ -149,6 +159,7 @@ public class EnqueueMinionsRequest implements org.apache.thrift.TBase<EnqueueMin
     setNumberOfMinionsIsSet(false);
     this.numberOfMinions = 0;
     this.minionType = null;
+    this.buildLabel = null;
   }
 
   public StampedeId getStampedeId() {
@@ -254,6 +265,30 @@ public class EnqueueMinionsRequest implements org.apache.thrift.TBase<EnqueueMin
     }
   }
 
+  public java.lang.String getBuildLabel() {
+    return this.buildLabel;
+  }
+
+  public EnqueueMinionsRequest setBuildLabel(java.lang.String buildLabel) {
+    this.buildLabel = buildLabel;
+    return this;
+  }
+
+  public void unsetBuildLabel() {
+    this.buildLabel = null;
+  }
+
+  /** Returns true if field buildLabel is set (has been assigned a value) and false otherwise */
+  public boolean isSetBuildLabel() {
+    return this.buildLabel != null;
+  }
+
+  public void setBuildLabelIsSet(boolean value) {
+    if (!value) {
+      this.buildLabel = null;
+    }
+  }
+
   public void setFieldValue(_Fields field, java.lang.Object value) {
     switch (field) {
     case STAMPEDE_ID:
@@ -288,6 +323,14 @@ public class EnqueueMinionsRequest implements org.apache.thrift.TBase<EnqueueMin
       }
       break;
 
+    case BUILD_LABEL:
+      if (value == null) {
+        unsetBuildLabel();
+      } else {
+        setBuildLabel((java.lang.String)value);
+      }
+      break;
+
     }
   }
 
@@ -304,6 +347,9 @@ public class EnqueueMinionsRequest implements org.apache.thrift.TBase<EnqueueMin
 
     case MINION_TYPE:
       return getMinionType();
+
+    case BUILD_LABEL:
+      return getBuildLabel();
 
     }
     throw new java.lang.IllegalStateException();
@@ -324,6 +370,8 @@ public class EnqueueMinionsRequest implements org.apache.thrift.TBase<EnqueueMin
       return isSetNumberOfMinions();
     case MINION_TYPE:
       return isSetMinionType();
+    case BUILD_LABEL:
+      return isSetBuildLabel();
     }
     throw new java.lang.IllegalStateException();
   }
@@ -379,6 +427,15 @@ public class EnqueueMinionsRequest implements org.apache.thrift.TBase<EnqueueMin
         return false;
     }
 
+    boolean this_present_buildLabel = true && this.isSetBuildLabel();
+    boolean that_present_buildLabel = true && that.isSetBuildLabel();
+    if (this_present_buildLabel || that_present_buildLabel) {
+      if (!(this_present_buildLabel && that_present_buildLabel))
+        return false;
+      if (!this.buildLabel.equals(that.buildLabel))
+        return false;
+    }
+
     return true;
   }
 
@@ -401,6 +458,10 @@ public class EnqueueMinionsRequest implements org.apache.thrift.TBase<EnqueueMin
     hashCode = hashCode * 8191 + ((isSetMinionType()) ? 131071 : 524287);
     if (isSetMinionType())
       hashCode = hashCode * 8191 + minionType.getValue();
+
+    hashCode = hashCode * 8191 + ((isSetBuildLabel()) ? 131071 : 524287);
+    if (isSetBuildLabel())
+      hashCode = hashCode * 8191 + buildLabel.hashCode();
 
     return hashCode;
   }
@@ -449,6 +510,16 @@ public class EnqueueMinionsRequest implements org.apache.thrift.TBase<EnqueueMin
     }
     if (isSetMinionType()) {
       lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.minionType, other.minionType);
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+    }
+    lastComparison = java.lang.Boolean.valueOf(isSetBuildLabel()).compareTo(other.isSetBuildLabel());
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    if (isSetBuildLabel()) {
+      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.buildLabel, other.buildLabel);
       if (lastComparison != 0) {
         return lastComparison;
       }
@@ -505,6 +576,16 @@ public class EnqueueMinionsRequest implements org.apache.thrift.TBase<EnqueueMin
         sb.append("null");
       } else {
         sb.append(this.minionType);
+      }
+      first = false;
+    }
+    if (isSetBuildLabel()) {
+      if (!first) sb.append(", ");
+      sb.append("buildLabel:");
+      if (this.buildLabel == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.buildLabel);
       }
       first = false;
     }
@@ -589,6 +670,14 @@ public class EnqueueMinionsRequest implements org.apache.thrift.TBase<EnqueueMin
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
             break;
+          case 5: // BUILD_LABEL
+            if (schemeField.type == org.apache.thrift.protocol.TType.STRING) {
+              struct.buildLabel = iprot.readString();
+              struct.setBuildLabelIsSet(true);
+            } else { 
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+            }
+            break;
           default:
             org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
         }
@@ -630,6 +719,13 @@ public class EnqueueMinionsRequest implements org.apache.thrift.TBase<EnqueueMin
           oprot.writeFieldEnd();
         }
       }
+      if (struct.buildLabel != null) {
+        if (struct.isSetBuildLabel()) {
+          oprot.writeFieldBegin(BUILD_LABEL_FIELD_DESC);
+          oprot.writeString(struct.buildLabel);
+          oprot.writeFieldEnd();
+        }
+      }
       oprot.writeFieldStop();
       oprot.writeStructEnd();
     }
@@ -660,7 +756,10 @@ public class EnqueueMinionsRequest implements org.apache.thrift.TBase<EnqueueMin
       if (struct.isSetMinionType()) {
         optionals.set(3);
       }
-      oprot.writeBitSet(optionals, 4);
+      if (struct.isSetBuildLabel()) {
+        optionals.set(4);
+      }
+      oprot.writeBitSet(optionals, 5);
       if (struct.isSetStampedeId()) {
         struct.stampedeId.write(oprot);
       }
@@ -673,12 +772,15 @@ public class EnqueueMinionsRequest implements org.apache.thrift.TBase<EnqueueMin
       if (struct.isSetMinionType()) {
         oprot.writeI32(struct.minionType.getValue());
       }
+      if (struct.isSetBuildLabel()) {
+        oprot.writeString(struct.buildLabel);
+      }
     }
 
     @Override
     public void read(org.apache.thrift.protocol.TProtocol prot, EnqueueMinionsRequest struct) throws org.apache.thrift.TException {
       org.apache.thrift.protocol.TTupleProtocol iprot = (org.apache.thrift.protocol.TTupleProtocol) prot;
-      java.util.BitSet incoming = iprot.readBitSet(4);
+      java.util.BitSet incoming = iprot.readBitSet(5);
       if (incoming.get(0)) {
         struct.stampedeId = new StampedeId();
         struct.stampedeId.read(iprot);
@@ -695,6 +797,10 @@ public class EnqueueMinionsRequest implements org.apache.thrift.TBase<EnqueueMin
       if (incoming.get(3)) {
         struct.minionType = com.facebook.buck.distributed.thrift.MinionType.findByValue(iprot.readI32());
         struct.setMinionTypeIsSet(true);
+      }
+      if (incoming.get(4)) {
+        struct.buildLabel = iprot.readString();
+        struct.setBuildLabelIsSet(true);
       }
     }
   }

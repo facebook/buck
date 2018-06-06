@@ -39,6 +39,7 @@ public class CoordinatorEventListener
   private static final Logger LOG = Logger.get(CoordinatorEventListener.class);
   private final DistBuildService service;
   private final StampedeId stampedeId;
+  private final String buildLabel;
   private final MinionQueueProvider minionQueueProvider;
   private boolean islocalMinionAlsoRunning;
   private volatile OptionalInt totalMinionCount = OptionalInt.empty();
@@ -46,10 +47,12 @@ public class CoordinatorEventListener
   public CoordinatorEventListener(
       DistBuildService service,
       StampedeId stampedeId,
+      String buildLabel,
       MinionQueueProvider minionQueueProvider,
       boolean islocalMinionAlsoRunning) {
     this.service = service;
     this.stampedeId = stampedeId;
+    this.buildLabel = buildLabel;
     this.minionQueueProvider = minionQueueProvider;
     this.islocalMinionAlsoRunning = islocalMinionAlsoRunning;
   }
@@ -88,7 +91,7 @@ public class CoordinatorEventListener
 
       String minionQueue = minionQueueProvider.getMinionQueue(minionType);
       LOG.info("Requesting [%d] minions of type [%s]", requiredCount, minionType.name());
-      service.enqueueMinions(stampedeId, requiredCount, minionQueue, minionType);
+      service.enqueueMinions(stampedeId, buildLabel, requiredCount, minionQueue, minionType);
     }
   }
 

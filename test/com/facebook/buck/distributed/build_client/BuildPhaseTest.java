@@ -262,7 +262,11 @@ public class BuildPhaseTest {
         .once();
 
     mockDistBuildService.enqueueMinions(
-        stampedeId, NUM_MINIONS, MINION_QUEUE_NAME, MinionType.STANDARD_SPEC);
+        eq(stampedeId),
+        anyString(),
+        eq(NUM_MINIONS),
+        eq(MINION_QUEUE_NAME),
+        eq(MinionType.STANDARD_SPEC));
     expectLastCall()
         .andAnswer(
             () -> {
