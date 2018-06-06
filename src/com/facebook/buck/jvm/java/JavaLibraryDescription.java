@@ -65,9 +65,11 @@ public class JavaLibraryDescription
           HasJavaAbi.VERIFIED_SOURCE_ABI_FLAVOR);
 
   private final JavaBuckConfig javaBuckConfig;
+  private final JavacFactory javacFactory;
 
-  public JavaLibraryDescription(JavaBuckConfig javaBuckConfig) {
+  public JavaLibraryDescription(JavaBuckConfig javaBuckConfig, JavacFactory javacFactory) {
     this.javaBuckConfig = javaBuckConfig;
+    this.javacFactory = javacFactory;
   }
 
   @Override
@@ -188,7 +190,7 @@ public class JavaLibraryDescription
                 params,
                 graphBuilder,
                 context.getCellPathResolver(),
-                new JavaConfiguredCompilerFactory(javaBuckConfig),
+                new JavaConfiguredCompilerFactory(javaBuckConfig, javacFactory),
                 javaBuckConfig,
                 args)
             .setJavacOptions(javacOptions)

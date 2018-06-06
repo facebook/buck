@@ -65,18 +65,21 @@ public class AndroidInstrumentationApkDescription
   private final CxxBuckConfig cxxBuckConfig;
   private final DxConfig dxConfig;
   private final ApkConfig apkConfig;
+  private final JavacFactory javacFactory;
 
   public AndroidInstrumentationApkDescription(
       JavaBuckConfig javaBuckConfig,
       ProGuardConfig proGuardConfig,
       CxxBuckConfig cxxBuckConfig,
       DxConfig dxConfig,
-      ApkConfig apkConfig) {
+      ApkConfig apkConfig,
+      JavacFactory javacFactory) {
     this.javaBuckConfig = javaBuckConfig;
     this.proGuardConfig = proGuardConfig;
     this.cxxBuckConfig = cxxBuckConfig;
     this.dxConfig = dxConfig;
     this.apkConfig = apkConfig;
+    this.javacFactory = javacFactory;
   }
 
   @Override
@@ -189,7 +192,7 @@ public class AndroidInstrumentationApkDescription
             /* noVersionTransitionsResources */ false,
             /* noAutoAddOverlayResources */ false,
             javaBuckConfig,
-            JavacFactory.create(ruleFinder, javaBuckConfig, null),
+            javacFactory,
             toolchainProvider
                 .getByName(JavacOptionsProvider.DEFAULT_NAME, JavacOptionsProvider.class)
                 .getJavacOptions(),

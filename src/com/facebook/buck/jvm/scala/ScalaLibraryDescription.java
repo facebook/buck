@@ -33,6 +33,7 @@ import com.facebook.buck.jvm.java.DefaultJavaLibraryRules;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.jvm.java.JavaSourceJar;
+import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacOptionsFactory;
 import com.facebook.buck.jvm.java.MavenUberJar;
@@ -59,14 +60,17 @@ public class ScalaLibraryDescription
   private final ToolchainProvider toolchainProvider;
   private final ScalaBuckConfig scalaBuckConfig;
   private final JavaBuckConfig javaBuckConfig;
+  private final JavacFactory javacFactory;
 
   public ScalaLibraryDescription(
       ToolchainProvider toolchainProvider,
       ScalaBuckConfig scalaBuckConfig,
-      JavaBuckConfig javaBuckConfig) {
+      JavaBuckConfig javaBuckConfig,
+      JavacFactory javacFactory) {
     this.toolchainProvider = toolchainProvider;
     this.scalaBuckConfig = scalaBuckConfig;
     this.javaBuckConfig = javaBuckConfig;
+    this.javacFactory = javacFactory;
   }
 
   @Override
@@ -136,7 +140,8 @@ public class ScalaLibraryDescription
                 context.getCellPathResolver(),
                 scalaBuckConfig,
                 javaBuckConfig,
-                args)
+                args,
+                javacFactory)
             .setJavacOptions(javacOptions)
             .build();
 

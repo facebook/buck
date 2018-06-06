@@ -232,7 +232,7 @@ public class AndroidLibraryGraphEnhancerTest {
             target,
             new FakeProjectFilesystem(),
             ImmutableSortedSet.of(dep),
-            JavacFactory.create(ruleFinder, javaConfig, null),
+            new JavacFactory(javaConfig).create(ruleFinder, null),
             options,
             DependencyMode.FIRST_ORDER,
             /* forceFinalResourceIds */ false,

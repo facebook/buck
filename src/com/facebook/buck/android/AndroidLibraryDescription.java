@@ -36,6 +36,7 @@ import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.jvm.java.JavaSourceJar;
+import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacOptionsFactory;
 import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
@@ -63,12 +64,16 @@ public class AndroidLibraryDescription
   }
 
   private final JavaBuckConfig javaBuckConfig;
+  private final JavacFactory javacFactory;
   private final AndroidLibraryCompilerFactory compilerFactory;
 
   public AndroidLibraryDescription(
-      JavaBuckConfig javaBuckConfig, AndroidLibraryCompilerFactory compilerFactory) {
+      JavaBuckConfig javaBuckConfig,
+      AndroidLibraryCompilerFactory compilerFactory,
+      JavacFactory javacFactory) {
     this.javaBuckConfig = javaBuckConfig;
     this.compilerFactory = compilerFactory;
+    this.javacFactory = javacFactory;
   }
 
   @Override
@@ -114,9 +119,10 @@ public class AndroidLibraryDescription
             context.getActionGraphBuilder(),
             context.getCellPathResolver(),
             javaBuckConfig,
+            javacFactory,
             javacOptions,
             args,
-            compilerFactory.getCompiler(args.getLanguage().orElse(JvmLanguage.JAVA)));
+            compilerFactory.getCompiler(args.getLanguage().orElse(JvmLanguage.JAVA), javacFactory));
 
     if (hasDummyRDotJavaFlavor) {
       return androidLibraryBuilder.buildDummyRDotJava();
@@ -145,7 +151,7 @@ public class AndroidLibraryDescription
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     compilerFactory
-        .getCompiler(constructorArg.getLanguage().orElse(JvmLanguage.JAVA))
+        .getCompiler(constructorArg.getLanguage().orElse(JvmLanguage.JAVA), javacFactory)
         .addTargetDeps(extraDepsBuilder, targetGraphOnlyDepsBuilder);
   }
 

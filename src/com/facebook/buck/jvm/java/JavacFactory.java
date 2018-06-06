@@ -20,10 +20,14 @@ import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import javax.annotation.Nullable;
 
 public final class JavacFactory {
-  private JavacFactory() {}
+  private final JavaBuckConfig config;
 
-  public static Javac create(
-      SourcePathRuleFinder ruleFinder, JavaBuckConfig config, @Nullable JvmLibraryArg args) {
+  public JavacFactory(JavaBuckConfig config) {
+    this.config = config;
+  }
+
+  /** Returns either the defautl javac or one created from the provided args. */
+  public Javac create(SourcePathRuleFinder ruleFinder, @Nullable JvmLibraryArg args) {
     JavacSpec spec = null;
 
     if (args != null) {

@@ -23,7 +23,6 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.ConfiguredCompiler;
 import com.facebook.buck.jvm.java.ConfiguredCompilerFactory;
 import com.facebook.buck.jvm.java.ExtraClasspathProvider;
-import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.Javac;
 import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.JavacOptions;
@@ -36,21 +35,22 @@ import javax.annotation.Nullable;
 public class KotlinConfiguredCompilerFactory extends ConfiguredCompilerFactory {
 
   private final KotlinBuckConfig kotlinBuckConfig;
-  private final JavaBuckConfig javaBuckConfig;
   private final Function<ToolchainProvider, ExtraClasspathProvider> extraClasspathProviderSupplier;
+  private final JavacFactory javacFactory;
 
   public KotlinConfiguredCompilerFactory(
-      KotlinBuckConfig kotlinBuckConfig, JavaBuckConfig javaBuckConfig) {
-    this(kotlinBuckConfig, javaBuckConfig, (toolchainProvider) -> ExtraClasspathProvider.EMPTY);
+      KotlinBuckConfig kotlinBuckConfig, JavacFactory javacFactory) {
+    this(kotlinBuckConfig, (toolchainProvider) -> ExtraClasspathProvider.EMPTY, javacFactory);
   }
 
   public KotlinConfiguredCompilerFactory(
       KotlinBuckConfig kotlinBuckConfig,
-      JavaBuckConfig javaBuckConfig,
-      Function<ToolchainProvider, ExtraClasspathProvider> extraClasspathProviderSupplier) {
+      Function<ToolchainProvider, ExtraClasspathProvider> extraClasspathProviderSupplier,
+      JavacFactory javacFactory) {
+    super();
     this.kotlinBuckConfig = kotlinBuckConfig;
-    this.javaBuckConfig = javaBuckConfig;
     this.extraClasspathProviderSupplier = extraClasspathProviderSupplier;
+    this.javacFactory = javacFactory;
   }
 
   @Override
@@ -76,6 +76,6 @@ public class KotlinConfiguredCompilerFactory extends ConfiguredCompilerFactory {
   }
 
   private Javac getJavac(BuildRuleResolver resolver, @Nullable JvmLibraryArg arg) {
-    return JavacFactory.create(new SourcePathRuleFinder(resolver), javaBuckConfig, arg);
+    return javacFactory.create(new SourcePathRuleFinder(resolver), arg);
   }
 }

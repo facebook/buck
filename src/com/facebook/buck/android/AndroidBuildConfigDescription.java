@@ -33,7 +33,6 @@ import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.HasJavaAbi;
 import com.facebook.buck.jvm.java.CalculateClassAbi;
-import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibraryRules;
 import com.facebook.buck.jvm.java.Javac;
 import com.facebook.buck.jvm.java.JavacFactory;
@@ -50,10 +49,10 @@ public class AndroidBuildConfigDescription
 
   private static final Flavor GEN_JAVA_FLAVOR = InternalFlavor.of("gen_java_android_build_config");
 
-  private final JavaBuckConfig javaBuckConfig;
+  private final JavacFactory javacFactory;
 
-  public AndroidBuildConfigDescription(JavaBuckConfig javaBuckConfig) {
-    this.javaBuckConfig = javaBuckConfig;
+  public AndroidBuildConfigDescription(JavacFactory javacFactory) {
+    this.javacFactory = javacFactory;
   }
 
   @Override
@@ -88,7 +87,7 @@ public class AndroidBuildConfigDescription
         args.getValues(),
         args.getValuesFile(),
         /* useConstantExpressions */ false,
-        JavacFactory.create(ruleFinder, javaBuckConfig, null),
+        javacFactory.create(ruleFinder, null),
         context
             .getToolchainProvider()
             .getByName(JavacOptionsProvider.DEFAULT_NAME, JavacOptionsProvider.class)

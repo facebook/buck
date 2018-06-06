@@ -30,6 +30,7 @@ import com.facebook.buck.jvm.java.DefaultJavaLibraryRules;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaTest;
 import com.facebook.buck.jvm.java.JavaTestDescription;
+import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacOptionsFactory;
 import com.facebook.buck.jvm.java.TestType;
@@ -50,14 +51,17 @@ public class KotlinTestDescription implements DescriptionWithTargetGraph<KotlinT
   private final ToolchainProvider toolchainProvider;
   private final KotlinBuckConfig kotlinBuckConfig;
   private final JavaBuckConfig javaBuckConfig;
+  private final JavacFactory javacFactory;
 
   public KotlinTestDescription(
       ToolchainProvider toolchainProvider,
       KotlinBuckConfig kotlinBuckConfig,
-      JavaBuckConfig javaBuckConfig) {
+      JavaBuckConfig javaBuckConfig,
+      JavacFactory javacFactory) {
     this.toolchainProvider = toolchainProvider;
     this.kotlinBuckConfig = kotlinBuckConfig;
     this.javaBuckConfig = javaBuckConfig;
+    this.javacFactory = javacFactory;
   }
 
   @Override
@@ -96,7 +100,8 @@ public class KotlinTestDescription implements DescriptionWithTargetGraph<KotlinT
                 context.getCellPathResolver(),
                 kotlinBuckConfig,
                 javaBuckConfig,
-                args)
+                args,
+                javacFactory)
             .setJavacOptions(javacOptions)
             .build();
 

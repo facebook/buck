@@ -22,6 +22,7 @@ import com.facebook.buck.core.model.targetgraph.DescriptionProvider;
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
+import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.kotlin.KotlinBuckConfig;
 import com.facebook.buck.jvm.scala.ScalaBuckConfig;
 import com.facebook.buck.sandbox.SandboxExecutionStrategy;
@@ -53,22 +54,23 @@ public class AndroidDescriptionsProvider implements DescriptionProvider {
         new DefaultAndroidLibraryCompilerFactory(javaConfig, scalaConfig, kotlinBuckConfig);
 
     AndroidManifestFactory androidManifestFactory = new AndroidManifestFactory();
+    JavacFactory javacFactory = new JavacFactory(javaConfig);
 
     return Arrays.asList(
-        new AndroidAarDescription(androidManifestFactory, cxxBuckConfig, javaConfig),
+        new AndroidAarDescription(androidManifestFactory, cxxBuckConfig, javacFactory),
         new AndroidManifestDescription(androidManifestFactory),
         new AndroidAppModularityDescription(),
         new AndroidBinaryDescription(
-            javaConfig, proGuardConfig, config, cxxBuckConfig, dxConfig, apkConfig),
-        new AndroidBuildConfigDescription(javaConfig),
+            javaConfig, proGuardConfig, config, cxxBuckConfig, dxConfig, apkConfig, javacFactory),
+        new AndroidBuildConfigDescription(javacFactory),
         new AndroidInstrumentationApkDescription(
-            javaConfig, proGuardConfig, cxxBuckConfig, dxConfig, apkConfig),
+            javaConfig, proGuardConfig, cxxBuckConfig, dxConfig, apkConfig, javacFactory),
         new AndroidInstrumentationTestDescription(config),
-        new AndroidLibraryDescription(javaConfig, defaultAndroidCompilerFactory),
-        new AndroidPrebuiltAarDescription(javaConfig),
+        new AndroidLibraryDescription(javaConfig, defaultAndroidCompilerFactory, javacFactory),
+        new AndroidPrebuiltAarDescription(javacFactory),
         new AndroidResourceDescription(androidBuckConfig),
         new RobolectricTestDescription(
-            toolchainProvider, javaConfig, defaultAndroidCompilerFactory),
+            toolchainProvider, javaConfig, defaultAndroidCompilerFactory, javacFactory),
         new PrebuiltNativeLibraryDescription(),
         new NdkLibraryDescription(),
         new GenAidlDescription(),

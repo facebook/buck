@@ -53,7 +53,8 @@ public class JavaTestBuilder
                     JavaOptionsProvider.DEFAULT_NAME,
                     JavaOptionsProvider.of(DEFAULT_JAVA_OPTIONS, DEFAULT_JAVA_OPTIONS))
                 .build(),
-            javaBuckConfig),
+            javaBuckConfig,
+            new JavacFactory(javaBuckConfig)),
         target);
   }
 

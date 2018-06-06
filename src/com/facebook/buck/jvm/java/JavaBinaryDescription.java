@@ -61,10 +61,15 @@ public class JavaBinaryDescription
 
   private final ToolchainProvider toolchainProvider;
   private final JavaBuckConfig javaBuckConfig;
+  private final JavacFactory javacFactory;
 
-  public JavaBinaryDescription(ToolchainProvider toolchainProvider, JavaBuckConfig javaBuckConfig) {
+  public JavaBinaryDescription(
+      ToolchainProvider toolchainProvider,
+      JavaBuckConfig javaBuckConfig,
+      JavacFactory javacFactory) {
     this.toolchainProvider = toolchainProvider;
     this.javaBuckConfig = javaBuckConfig;
+    this.javacFactory = javacFactory;
   }
 
   @Override
@@ -152,7 +157,7 @@ public class JavaBinaryDescription
                               .add(innerJar)
                               .addAll(nativeLibraries.values())
                               .build()))),
-              JavacFactory.create(ruleFinder, javaBuckConfig, null),
+              javacFactory.create(ruleFinder, null),
               toolchainProvider
                   .getByName(JavacOptionsProvider.DEFAULT_NAME, JavacOptionsProvider.class)
                   .getJavacOptions(),

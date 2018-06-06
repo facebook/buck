@@ -34,13 +34,14 @@ public class JavaDescriptionsProvider implements DescriptionProvider {
     ToolchainProvider toolchainProvider = context.getToolchainProvider();
     BuckConfig config = context.getBuckConfig();
     JavaBuckConfig javaConfig = config.getView(JavaBuckConfig.class);
+    JavacFactory javacFactory = new JavacFactory(javaConfig);
 
     return Arrays.asList(
         new JarGenruleDescription(toolchainProvider, context.getSandboxExecutionStrategy()),
-        new JavaBinaryDescription(toolchainProvider, javaConfig),
+        new JavaBinaryDescription(toolchainProvider, javaConfig, javacFactory),
         new JavaAnnotationProcessorDescription(),
-        new JavaLibraryDescription(javaConfig),
-        new JavaTestDescription(toolchainProvider, javaConfig),
+        new JavaLibraryDescription(javaConfig, javacFactory),
+        new JavaTestDescription(toolchainProvider, javaConfig, javacFactory),
         new KeystoreDescription());
   }
 }

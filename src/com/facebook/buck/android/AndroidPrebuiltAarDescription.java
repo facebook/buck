@@ -37,7 +37,6 @@ import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.HasJavaAbi;
 import com.facebook.buck.jvm.java.CalculateClassAbi;
-import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibraryRules;
 import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.JavacToJarStepFactory;
@@ -80,10 +79,10 @@ public class AndroidPrebuiltAarDescription
     return Sets.difference(flavors, KNOWN_FLAVORS).isEmpty();
   }
 
-  private final JavaBuckConfig javaBuckConfig;
+  private final JavacFactory javacFactory;
 
-  public AndroidPrebuiltAarDescription(JavaBuckConfig javaBuckConfig) {
-    this.javaBuckConfig = javaBuckConfig;
+  public AndroidPrebuiltAarDescription(JavacFactory javacFactory) {
+    this.javacFactory = javacFactory;
   }
 
   @Override
@@ -216,7 +215,7 @@ public class AndroidPrebuiltAarDescription
             pathResolver,
             ruleFinder,
             projectFilesystem,
-            JavacFactory.create(ruleFinder, javaBuckConfig, null),
+            javacFactory.create(ruleFinder, null),
             toolchainProvider
                 .getByName(JavacOptionsProvider.DEFAULT_NAME, JavacOptionsProvider.class)
                 .getJavacOptions(),

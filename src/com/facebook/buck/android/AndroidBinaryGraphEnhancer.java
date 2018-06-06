@@ -47,6 +47,7 @@ import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaConfiguredCompilerFactory;
 import com.facebook.buck.jvm.java.JavaLibraryDeps;
 import com.facebook.buck.jvm.java.Javac;
+import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
@@ -120,6 +121,7 @@ public class AndroidBinaryGraphEnhancer {
   private final ImmutableSet<BuildTarget> resourcesToExclude;
   private final JavaBuckConfig javaBuckConfig;
   private final Javac javac;
+  private final JavacFactory javacFactory;
   private final JavacOptions javacOptions;
   private final EnumSet<ExopackageMode> exopackageModes;
   private final BuildConfigFields buildConfigValues;
@@ -167,7 +169,7 @@ public class AndroidBinaryGraphEnhancer {
       boolean noVersionTransitionsResources,
       boolean noAutoAddOverlayResources,
       JavaBuckConfig javaBuckConfig,
-      Javac javac,
+      JavacFactory javacFactory,
       JavacOptions javacOptions,
       EnumSet<ExopackageMode> exopackageModes,
       BuildConfigFields buildConfigValues,
@@ -209,7 +211,6 @@ public class AndroidBinaryGraphEnhancer {
     this.buildTargetsToExcludeFromDex = buildTargetsToExcludeFromDex;
     this.resourcesToExclude = resourcesToExclude;
     this.javaBuckConfig = javaBuckConfig;
-    this.javac = javac;
     this.javacOptions = javacOptions;
     this.exopackageModes = exopackageModes;
     this.buildConfigValues = buildConfigValues;
@@ -270,6 +271,8 @@ public class AndroidBinaryGraphEnhancer {
     this.nonPreDexedDexBuildableArgs = nonPreDexedDexBuildableArgs;
     this.rulesToExcludeFromDex = rulesToExcludeFromDex;
     this.dexTool = dexTool;
+    this.javacFactory = javacFactory;
+    this.javac = javacFactory.create(ruleFinder, null);
   }
 
   AndroidGraphEnhancementResult createAdditionalBuildables() {
@@ -345,7 +348,7 @@ public class AndroidBinaryGraphEnhancer {
                   paramsForCompileGenCode,
                   graphBuilder,
                   cellPathResolver,
-                  new JavaConfiguredCompilerFactory(javaBuckConfig),
+                  new JavaConfiguredCompilerFactory(javaBuckConfig, javacFactory),
                   javaBuckConfig,
                   null)
               // Kind of a hack: override language level to 7 to allow string switch.
@@ -434,7 +437,7 @@ public class AndroidBinaryGraphEnhancer {
                 paramsForCompileUberRDotJava,
                 graphBuilder,
                 cellPathResolver,
-                new JavaConfiguredCompilerFactory(javaBuckConfig),
+                new JavaConfiguredCompilerFactory(javaBuckConfig, javacFactory),
                 javaBuckConfig,
                 null)
             .setJavacOptions(javacOptions.withSourceLevel("7").withTargetLevel("7"))

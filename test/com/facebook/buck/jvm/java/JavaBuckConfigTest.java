@@ -267,7 +267,7 @@ public class JavaBuckConfigTest {
     BuckConfig buckConfig = FakeBuckConfig.builder().build();
     JavaBuckConfig javaConfig = buckConfig.getView(JavaBuckConfig.class);
 
-    Javac javac = JavacFactory.create(null, javaConfig, null);
+    Javac javac = new JavacFactory(javaConfig).create(null, null);
     assertTrue(javac.getClass().toString(), javac instanceof Jsr199Javac);
   }
 
@@ -282,7 +282,7 @@ public class JavaBuckConfigTest {
         FakeBuckConfig.builder().setFilesystem(defaultFilesystem).setSections(sections).build();
     JavaBuckConfig javaConfig = buckConfig.getView(JavaBuckConfig.class);
 
-    assertEquals(javac, JavacFactory.create(null, javaConfig, null).getShortName());
+    assertEquals(javac, new JavacFactory(javaConfig).create(null, null).getShortName());
   }
 
   @Test

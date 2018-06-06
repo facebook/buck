@@ -32,6 +32,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.AbstractNodeBuilder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
+import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.toolchain.JavaOptionsProvider;
 import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.rules.macros.StringWithMacros;
@@ -58,7 +59,8 @@ public class AndroidBinaryBuilder
             FakeBuckConfig.builder().build(),
             CxxPlatformUtils.DEFAULT_CONFIG,
             new DxConfig(FakeBuckConfig.builder().build()),
-            new ApkConfig(FakeBuckConfig.builder().build())),
+            new ApkConfig(FakeBuckConfig.builder().build()),
+            new JavacFactory(DEFAULT_JAVA_CONFIG)),
         target,
         new FakeProjectFilesystem(),
         createToolchainProviderForAndroidBinary(),

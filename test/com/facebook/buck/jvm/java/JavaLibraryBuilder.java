@@ -46,7 +46,7 @@ public class JavaLibraryBuilder
   protected JavaLibraryBuilder(
       BuildTarget target, ProjectFilesystem projectFilesystem, HashCode hashCode) {
     super(
-        new JavaLibraryDescription(DEFAULT_JAVA_CONFIG),
+        new JavaLibraryDescription(DEFAULT_JAVA_CONFIG, new JavacFactory(DEFAULT_JAVA_CONFIG)),
         target,
         projectFilesystem,
         createToolchainProviderForJavaLibrary(),
@@ -60,7 +60,7 @@ public class JavaLibraryBuilder
       ProjectFilesystem projectFilesystem,
       HashCode hashCode) {
     super(
-        new JavaLibraryDescription(javaBuckConfig),
+        new JavaLibraryDescription(javaBuckConfig, new JavacFactory(DEFAULT_JAVA_CONFIG)),
         target,
         projectFilesystem,
         createToolchainProviderForJavaLibrary(),

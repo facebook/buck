@@ -38,7 +38,6 @@ import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaLibrary;
-import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
@@ -77,15 +76,15 @@ public class AndroidAarDescription implements DescriptionWithTargetGraph<Android
 
   private final AndroidManifestFactory androidManifestFactory;
   private final CxxBuckConfig cxxBuckConfig;
-  private final JavaBuckConfig javaBuckConfig;
+  private final JavacFactory javacFactory;
 
   public AndroidAarDescription(
       AndroidManifestFactory androidManifestFactory,
       CxxBuckConfig cxxBuckConfig,
-      JavaBuckConfig javaBuckConfig) {
+      JavacFactory javacFactory) {
     this.androidManifestFactory = androidManifestFactory;
     this.cxxBuckConfig = cxxBuckConfig;
-    this.javaBuckConfig = javaBuckConfig;
+    this.javacFactory = javacFactory;
   }
 
   @Override
@@ -211,7 +210,7 @@ public class AndroidAarDescription implements DescriptionWithTargetGraph<Android
               args.getBuildConfigValues(),
               Optional.empty(),
               graphBuilder,
-              JavacFactory.create(ruleFinder, javaBuckConfig, args),
+              javacFactory.create(ruleFinder, args),
               toolchainProvider
                   .getByName(JavacOptionsProvider.DEFAULT_NAME, JavacOptionsProvider.class)
                   .getJavacOptions(),

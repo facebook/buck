@@ -20,6 +20,7 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.jvm.java.ConfiguredCompilerFactory;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaConfiguredCompilerFactory;
+import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.kotlin.KotlinBuckConfig;
 import com.facebook.buck.jvm.kotlin.KotlinConfiguredCompilerFactory;
 import com.facebook.buck.jvm.scala.ScalaBuckConfig;
@@ -38,16 +39,18 @@ public class DefaultAndroidLibraryCompilerFactory implements AndroidLibraryCompi
   }
 
   @Override
-  public ConfiguredCompilerFactory getCompiler(AndroidLibraryDescription.JvmLanguage language) {
+  public ConfiguredCompilerFactory getCompiler(
+      AndroidLibraryDescription.JvmLanguage language, JavacFactory javacFactory) {
     switch (language) {
       case JAVA:
-        return new JavaConfiguredCompilerFactory(javaConfig, AndroidClasspathProvider::new);
+        return new JavaConfiguredCompilerFactory(
+            javaConfig, AndroidClasspathProvider::new, javacFactory);
       case SCALA:
         return new ScalaConfiguredCompilerFactory(
-            scalaConfig, javaConfig, AndroidClasspathProvider::new);
+            scalaConfig, AndroidClasspathProvider::new, javacFactory);
       case KOTLIN:
         return new KotlinConfiguredCompilerFactory(
-            kotlinBuckConfig, javaConfig, AndroidClasspathProvider::new);
+            kotlinBuckConfig, AndroidClasspathProvider::new, javacFactory);
     }
     throw new HumanReadableException("Unsupported `language` parameter value: %s", language);
   }

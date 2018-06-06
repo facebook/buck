@@ -27,6 +27,7 @@ import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.TestCxxPlatformsProviderFactory;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
+import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.toolchain.JavaCxxPlatformProvider;
 import com.facebook.buck.jvm.java.toolchain.JavaOptionsProvider;
 import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
@@ -51,7 +52,8 @@ public class RobolectricTestBuilder
         new RobolectricTestDescription(
             createToolchainProviderForRobolectricTest(),
             javaBuckConfig,
-            DEFAULT_ANDROID_COMPILER_FACTORY),
+            DEFAULT_ANDROID_COMPILER_FACTORY,
+            new JavacFactory(javaBuckConfig)),
         target);
   }
 
@@ -60,7 +62,8 @@ public class RobolectricTestBuilder
         new RobolectricTestDescription(
             createToolchainProviderForRobolectricTest(),
             DEFAULT_JAVA_CONFIG,
-            DEFAULT_ANDROID_COMPILER_FACTORY),
+            DEFAULT_ANDROID_COMPILER_FACTORY,
+            new JavacFactory(DEFAULT_JAVA_CONFIG)),
         target,
         filesystem);
   }
@@ -71,7 +74,8 @@ public class RobolectricTestBuilder
         new RobolectricTestDescription(
             createToolchainProviderForRobolectricTest(),
             javaBuckConfig,
-            DEFAULT_ANDROID_COMPILER_FACTORY),
+            DEFAULT_ANDROID_COMPILER_FACTORY,
+            new JavacFactory(javaBuckConfig)),
         target,
         filesystem);
   }

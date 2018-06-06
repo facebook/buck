@@ -61,7 +61,8 @@ public class JavaBinaryRuleBuilder
                 .withToolchain(
                     JavacOptionsProvider.DEFAULT_NAME, JavacOptionsProvider.of(javacOptions))
                 .build(),
-            javaBuckConfig),
+            javaBuckConfig,
+            new JavacFactory(javaBuckConfig)),
         target);
   }
 
