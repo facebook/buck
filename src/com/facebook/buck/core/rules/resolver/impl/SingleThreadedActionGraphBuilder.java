@@ -22,6 +22,7 @@ import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.transformer.TargetNodeToBuildRuleTransformer;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.concurrent.Parallelizer;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -39,7 +40,7 @@ public class SingleThreadedActionGraphBuilder extends AbstractActionGraphBuilder
   private boolean isValid = true;
   private final TargetGraph targetGraph;
   private final TargetNodeToBuildRuleTransformer buildRuleGenerator;
-  private final CellProvider cellProvider;
+  private final Function<BuildTarget, ToolchainProvider> toolchainProviderResolver;
 
   private final ConcurrentHashMap<BuildTarget, BuildRule> buildRuleIndex;
   private final ActionGraphBuilderMetadataCache metadataCache;
@@ -50,7 +51,6 @@ public class SingleThreadedActionGraphBuilder extends AbstractActionGraphBuilder
       CellProvider cellProvider) {
     this.targetGraph = targetGraph;
     this.buildRuleGenerator = buildRuleGenerator;
-    this.cellProvider = cellProvider;
 
     // We preallocate our maps to have this amount of slots to get rid of re-allocations
     int initialCapacity = (int) (targetGraph.getNodes().size() * 5 * 1.1);
@@ -58,6 +58,8 @@ public class SingleThreadedActionGraphBuilder extends AbstractActionGraphBuilder
     this.buildRuleIndex = new ConcurrentHashMap<>(initialCapacity);
     this.metadataCache =
         new ActionGraphBuilderMetadataCache(this, this.targetGraph, initialCapacity);
+    this.toolchainProviderResolver =
+        target -> cellProvider.getBuildTargetCell(target).getToolchainProvider();
   }
 
   @Override
@@ -108,7 +110,9 @@ public class SingleThreadedActionGraphBuilder extends AbstractActionGraphBuilder
         target,
         (ignored) -> {
           TargetNode<?, ?> node = targetGraph.get(target);
-          BuildRule rule = buildRuleGenerator.transform(cellProvider, targetGraph, this, node);
+          BuildRule rule =
+              buildRuleGenerator.transform(
+                  toolchainProviderResolver.apply(target), targetGraph, this, node);
           Preconditions.checkState(
               // TODO(jakubzika): This should hold for flavored build targets as well.
               rule.getBuildTarget()

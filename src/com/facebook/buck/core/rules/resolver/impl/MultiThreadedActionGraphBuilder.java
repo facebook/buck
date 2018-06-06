@@ -21,6 +21,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.transformer.TargetNodeToBuildRuleTransformer;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.Scope;
 import com.facebook.buck.util.concurrent.Parallelizer;
 import com.facebook.buck.util.concurrent.WorkThreadTrackingFuture;
@@ -54,7 +55,7 @@ public class MultiThreadedActionGraphBuilder extends AbstractActionGraphBuilder 
 
   private final TargetGraph targetGraph;
   private final TargetNodeToBuildRuleTransformer buildRuleGenerator;
-  private final CellProvider cellProvider;
+  private final Function<BuildTarget, ToolchainProvider> toolchainProviderResolver;
 
   private final ActionGraphBuilderMetadataCache metadataCache;
   private final ConcurrentHashMap<BuildTarget, Task<BuildRule>> buildRuleIndex;
@@ -67,12 +68,13 @@ public class MultiThreadedActionGraphBuilder extends AbstractActionGraphBuilder 
     this.forkJoinPool = forkJoinPool;
     this.targetGraph = targetGraph;
     this.buildRuleGenerator = buildRuleGenerator;
-    this.cellProvider = cellProvider;
 
     int initialCapacity = (int) (targetGraph.getNodes().size() * 5 * 1.1);
     this.buildRuleIndex = new ConcurrentHashMap<>(initialCapacity);
     this.metadataCache =
         new ActionGraphBuilderMetadataCache(this, this.targetGraph, initialCapacity);
+    this.toolchainProviderResolver =
+        target -> cellProvider.getBuildTargetCell(target).getToolchainProvider();
   }
 
   @Override
@@ -118,7 +120,10 @@ public class MultiThreadedActionGraphBuilder extends AbstractActionGraphBuilder 
             wrap(
                 key ->
                     buildRuleGenerator.transform(
-                        cellProvider, targetGraph, this, targetGraph.get(target)))));
+                        toolchainProviderResolver.apply(target),
+                        targetGraph,
+                        this,
+                        targetGraph.get(target)))));
   }
 
   /** Please use {@code computeIfAbsent} instead */
