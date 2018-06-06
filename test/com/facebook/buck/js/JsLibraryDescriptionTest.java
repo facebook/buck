@@ -40,6 +40,7 @@ import com.facebook.buck.js.JsFile.JsFileDev;
 import com.facebook.buck.js.JsLibrary.Files;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.FakeSourcePath;
+import com.facebook.buck.rules.macros.LocationMacro;
 import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.types.Pair;
@@ -369,7 +370,10 @@ public class JsLibraryDescriptionTest {
             .appleLibraryWithDeps(l, a, c)
             .bundleWithDeps(x, l)
             .bundleWithDeps(BuildTargetFactory.newInstance("//query-deps:bundle"))
-            .library(target, Query.of(String.format("deps(%s)", x)))
+            .library(
+                target,
+                Query.of(String.format("deps(%s)", x)),
+                FakeSourcePath.of("arbitrary/source"))
             .build();
 
     TargetNode<?, ?> node = scenario.targetGraph.get(target);
@@ -386,6 +390,10 @@ public class JsLibraryDescriptionTest {
         lib.getLibraryDependencies());
 
     assertThat(deps, everyItem(not(in(internalFileRule(scenario.graphBuilder).getBuildDeps()))));
+    findJsFileRules(scenario.graphBuilder)
+        .peek(jsFile -> assertThat(deps, everyItem(not(in(jsFile.getBuildDeps())))))
+        .findAny()
+        .orElseThrow(() -> new IllegalStateException("No JsFile dependencies found for " + target));
   }
 
   @Test
@@ -426,6 +434,30 @@ public class JsLibraryDescriptionTest {
 
     BuildRule libRule = scenario.graphBuilder.getRule(target);
     assertThat(generatedSourcesRules, everyItem(not(in(libRule.getBuildDeps()))));
+  }
+
+  @Test
+  public void locationMacrosInExtraJsonAddBuildDeps() {
+    BuildTarget referencedTarget = BuildTargetFactory.newInstance("//:ref");
+    JsTestScenario scenario =
+        scenarioBuilder
+            .arbitraryRule(referencedTarget)
+            .library(
+                target,
+                ImmutableList.of(FakeSourcePath.of("a/file"), FakeSourcePath.of("another/file")),
+                "[\"%s\"]",
+                LocationMacro.of(referencedTarget))
+            .build();
+
+    BuildRule referenced = scenario.graphBuilder.getRule(referencedTarget);
+
+    assertThat(referenced, in(scenario.graphBuilder.getRule(target).getBuildDeps()));
+
+    RichStream<JsFile> jsFileRules = findJsFileRules(scenario.graphBuilder);
+    jsFileRules
+        .peek(jsFile -> assertThat(referenced, in(jsFile.getBuildDeps())))
+        .findAny()
+        .orElseThrow(() -> new IllegalStateException("No JsFile dependencies found for " + target));
   }
 
   private JsTestScenario buildScenario(String basePath, SourcePath source) {
