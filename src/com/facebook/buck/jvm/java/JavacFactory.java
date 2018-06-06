@@ -28,9 +28,6 @@ public final class JavacFactory {
 
     if (args != null) {
       spec = args.getJavacSpec();
-      if (spec != null) {
-        spec = spec.withJavacLocation(config.getJavacSpec().getJavacLocation());
-      }
     }
 
     if (spec == null) {

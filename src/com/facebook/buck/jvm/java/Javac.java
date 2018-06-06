@@ -61,12 +61,6 @@ public interface Javac extends Tool {
 
   String getShortName();
 
-  // TODO(cjhopman): Delete this.
-  enum Location {
-    /** Perform compilation inside main process. */
-    IN_PROCESS,
-  }
-
   enum Source {
     /** Shell out to the javac in the JDK */
     EXTERNAL,

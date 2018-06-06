@@ -359,21 +359,6 @@ public class JavaBuckConfigTest {
   }
 
   @Test
-  public void testJavaLocationInProcessByDefault() throws IOException, NoSuchBuildTargetException {
-    JavaBuckConfig config = createWithDefaultFilesystem(new StringReader(""));
-    assertThat(
-        config.getJavacSpec().getJavacLocation(), Matchers.equalTo(Javac.Location.IN_PROCESS));
-  }
-
-  @Test
-  public void testJavaLocationInProcess() throws IOException, NoSuchBuildTargetException {
-    String content = Joiner.on('\n').join("[java]", "    location = IN_PROCESS");
-    JavaBuckConfig config = createWithDefaultFilesystem(new StringReader(content));
-    assertThat(
-        config.getJavacSpec().getJavacLocation(), Matchers.equalTo(Javac.Location.IN_PROCESS));
-  }
-
-  @Test
   public void testCompileFullJarsByDefault() throws IOException {
     JavaBuckConfig config = createWithDefaultFilesystem(new StringReader(""));
     assertThat(config.getAbiGenerationMode(), Matchers.equalTo(AbiGenerationMode.CLASS));

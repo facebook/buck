@@ -44,28 +44,20 @@ abstract class AbstractJavacSpec {
       return new ExternalOrJarBackedJavacProvider(
           getCompiler().get().getRight(),
           // compiler_class_name has no effect when compiler is specified
-          COM_SUN_TOOLS_JAVAC_API_JAVAC_TOOL,
-          getJavacLocation());
+          COM_SUN_TOOLS_JAVAC_API_JAVAC_TOOL);
     }
 
     String compilerClassName = getCompilerClassName().orElse(COM_SUN_TOOLS_JAVAC_API_JAVAC_TOOL);
     Javac.Source javacSource = getJavacSource();
-    Javac.Location javacLocation = getJavacLocation();
     switch (javacSource) {
       case EXTERNAL:
         return new ConstantJavacProvider(ExternalJavac.createJavac(getJavacPath().get()));
       case JAR:
-        return new JarBackedJavacProvider(
-            getJavacJarPath().get(), compilerClassName, javacLocation);
+        return new JarBackedJavacProvider(getJavacJarPath().get(), compilerClassName);
       case JDK:
-        switch (javacLocation) {
-          case IN_PROCESS:
-            return new ConstantJavacProvider(new JdkProvidedInMemoryJavac());
-        }
-        break;
+        return new ConstantJavacProvider(new JdkProvidedInMemoryJavac());
     }
-    throw new AssertionError(
-        "Unknown javac source/javac location pair: " + javacSource + "/" + javacLocation);
+    throw new AssertionError("Unknown javac source: " + javacSource);
   }
 
   public Javac.Source getJavacSource() {
@@ -80,10 +72,5 @@ abstract class AbstractJavacSpec {
     } else {
       return Javac.Source.JDK;
     }
-  }
-
-  @Value.Default
-  public Javac.Location getJavacLocation() {
-    return Javac.Location.IN_PROCESS;
   }
 }

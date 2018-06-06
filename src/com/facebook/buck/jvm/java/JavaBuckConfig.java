@@ -68,10 +68,6 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
                             ? Optional.of(Either.ofLeft(getJavacPath().get()))
                             : Optional.empty())
                     .setJavacJarPath(delegate.getSourcePath("tools", "javac_jar"))
-                    .setJavacLocation(
-                        delegate
-                            .getEnum(SECTION, "location", Javac.Location.class)
-                            .orElse(Javac.Location.IN_PROCESS))
                     .setCompilerClassName(delegate.getValue("tools", "compiler_class_name"))
                     .build());
   }
