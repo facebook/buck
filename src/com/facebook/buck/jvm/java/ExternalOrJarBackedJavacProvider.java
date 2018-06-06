@@ -61,7 +61,7 @@ public class ExternalOrJarBackedJavacProvider implements JavacProvider, AddsToRu
             new JarBackedJavacProvider(javacJarPath, Preconditions.checkNotNull(compilerClassName))
                 .resolve(ruleFinder);
       } else {
-        javac = new ExternalJavac(Either.ofRight(compiler));
+        javac = new ExternalJavacFactory().create(Either.ofRight(compiler));
       }
     }
 

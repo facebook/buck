@@ -51,7 +51,7 @@ abstract class AbstractJavacSpec {
     Javac.Source javacSource = getJavacSource();
     switch (javacSource) {
       case EXTERNAL:
-        return new ConstantJavacProvider(ExternalJavac.createJavac(getJavacPath().get()));
+        return new ConstantJavacProvider(new ExternalJavacFactory().create(getJavacPath().get()));
       case JAR:
         return new JarBackedJavacProvider(getJavacJarPath().get(), compilerClassName);
       case JDK:

@@ -20,6 +20,7 @@ import static com.facebook.buck.jvm.java.BuiltInJavac.DEFAULT;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
@@ -36,6 +37,7 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TemporaryPaths;
+import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.types.Either;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
@@ -80,6 +82,8 @@ public class JavacSpecTest {
 
   @Test
   public void returnsExternalCompilerIfJavacPathPresent() throws IOException {
+    // newExecutableFile cannot be executed on windows.
+    assumeTrue(Platform.detect() != Platform.WINDOWS);
     Path externalPath = tmp.newExecutableFile();
 
     SourcePath javacPath = FakeSourcePath.of(externalPath);
@@ -92,6 +96,8 @@ public class JavacSpecTest {
 
   @Test
   public void returnsExternalCompilerIfCompilerArgHasPath() throws IOException {
+    // newExecutableFile cannot be executed on windows.
+    assumeTrue(Platform.detect() != Platform.WINDOWS);
     Path externalJavac = tmp.newExecutableFile();
     SourcePath sourcePath = FakeSourcePath.of(externalJavac.toString());
     Either<BuiltInJavac, SourcePath> either = Either.ofRight(sourcePath);
@@ -105,6 +111,8 @@ public class JavacSpecTest {
 
   @Test
   public void compilerArgTakesPrecedenceOverJavacPathArg() throws IOException {
+    // newExecutableFile cannot be executed on windows.
+    assumeTrue(Platform.detect() != Platform.WINDOWS);
     Path externalJavacPath = tmp.newExecutableFile();
     SourcePath sourcePath = FakeSourcePath.of(externalJavacPath.toString());
     Either<BuiltInJavac, SourcePath> either = Either.ofRight(sourcePath);
