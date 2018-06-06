@@ -235,11 +235,8 @@ public class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
         this.srcs
             .stream()
             .map(
-                input ->
-                    Files.getNameWithoutExtension(
-                            resolver.getAbsolutePath(input).getFileName().toString())
-                        + ".bc")
-            .map(outputPath::resolve)
+                input -> getBitcodePath(resolver.getAbsolutePath(input).getFileName().toString())
+            )
             .forEach(
                 x -> {
                   compilerCommand.add("-o");
@@ -469,5 +466,10 @@ public class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
    */
   public SourcePath getOutputPath() {
     return ExplicitBuildTargetSourcePath.of(getBuildTarget(), outputPath);
+  }
+
+  public Path getBitcodePath(String filename) {
+    String bitcodeFilename = Files.getNameWithoutExtension(filename) + ".bc";
+    return outputPath.resolve(bitcodeFilename);
   }
 }

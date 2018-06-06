@@ -23,8 +23,8 @@ public class SwiftBitcodeCompile extends AbstractBuildRuleWithDeclaredAndExtraDe
 
   private Path outputPath;
   private Tool swiftCompiler;
-  private SwiftCompile moduleRule;
-  private String filename;
+  private String moduleName;
+  private Path bitcodePath;
 
   public SwiftBitcodeCompile(
       BuildTarget buildTarget,
@@ -40,8 +40,8 @@ public class SwiftBitcodeCompile extends AbstractBuildRuleWithDeclaredAndExtraDe
             ImmutableSortedSet::of,
             ImmutableSortedSet.of()));
     this.swiftCompiler = swiftCompiler;
-    this.moduleRule = moduleRule;
-    this.filename = filename;
+    this.moduleName = moduleRule.getModuleName();
+    this.bitcodePath = moduleRule.getBitcodePath(filename);
     this.outputPath =
         BuildTargets.getGenPath(projectFilesystem, buildTarget, "%s").resolve(filename + ".o");
   }
@@ -53,13 +53,9 @@ public class SwiftBitcodeCompile extends AbstractBuildRuleWithDeclaredAndExtraDe
     compilerCommand.addAll(swiftCompiler.getCommandPrefix(context.getSourcePathResolver()));
     compilerCommand.add(
         "-module-name",
-        this.moduleRule.getModuleName(),
+        this.moduleName,
         "-c",
-        context
-                .getSourcePathResolver()
-                .getAbsolutePath(moduleRule.getOutputPath())
-                .resolve(filename)
-            + ".bc",
+        this.bitcodePath.toString(),
         "-o",
         this.outputPath.toString());
 
