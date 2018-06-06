@@ -24,7 +24,6 @@ import com.facebook.buck.cli.parameter_extractors.ProjectGeneratorParameters;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.event.ProjectGenerationEvent;
 import com.facebook.buck.ide.intellij.IjProjectBuckConfig;
 import com.facebook.buck.ide.intellij.IjProjectCommandHelper;
@@ -331,12 +330,10 @@ public class ProjectCommand extends BuildCommand {
                     params.getEnvironment(),
                     params.getExecutors().get(ExecutorPool.PROJECT),
                     getArguments(),
-                    appleCxxPlatformsProvider
-                        .getAppleCxxPlatforms()
-                        .getFlavors()
-                        .stream()
-                        .map(Flavor::toString)
-                        .collect(ImmutableSet.toImmutableSet()),
+                    appleCxxPlatformsProvider.getAppleCxxPlatforms().getFlavors(),
+                    // .stream()
+                    // .map(Flavor::toString)
+                    // .collect(ImmutableSet.toImmutableSet()),
                     getEnableParserProfiling(),
                     withTests,
                     withoutTests,

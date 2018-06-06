@@ -285,9 +285,15 @@ public class ProjectGeneratorTest {
             .setInfoPlist(FakeSourcePath.of(("Info.plist")))
             .build();
 
+    ImmutableSet<TargetNode<?, ?>> nodes =
+        ImmutableSet.of(libraryNode, bundleNode, libraryWithFlavorNode, bundleWithFlavorNode);
     ProjectGenerator projectGenerator =
         createProjectGenerator(
-            ImmutableSet.of(libraryNode, bundleNode, libraryWithFlavorNode, bundleWithFlavorNode));
+            nodes,
+            nodes,
+            ProjectGeneratorOptions.builder().build(),
+            ImmutableSet.of(
+                InternalFlavor.of("iphonesimulator-x86_64"), InternalFlavor.of("macosx-x86_64")));
 
     projectGenerator.createXcodeProjects();
 
@@ -2250,7 +2256,8 @@ public class ProjectGeneratorTest {
             ImmutableSet.of(node),
             ImmutableSet.of(node),
             ProjectGeneratorOptions.builder().build(),
-            ImmutableSet.of("iphonesimulator-x86_64", "macosx-x86_64"));
+            ImmutableSet.of(
+                InternalFlavor.of("iphonesimulator-x86_64"), InternalFlavor.of("macosx-x86_64")));
 
     projectGenerator.createXcodeProjects();
 
@@ -2367,7 +2374,8 @@ public class ProjectGeneratorTest {
             ImmutableSet.of(node, dependentNode),
             ImmutableSet.of(node, dependentNode),
             ProjectGeneratorOptions.builder().build(),
-            ImmutableSet.of("iphonesimulator-x86_64", "macosx-x86_64"));
+            ImmutableSet.of(
+                InternalFlavor.of("iphonesimulator-x86_64"), InternalFlavor.of("macosx-x86_64")));
 
     projectGenerator.createXcodeProjects();
 
@@ -5378,7 +5386,7 @@ public class ProjectGeneratorTest {
       Collection<TargetNode<?, ?>> allNodes,
       Collection<TargetNode<?, ?>> initialTargetNodes,
       ProjectGeneratorOptions projectGeneratorOptions,
-      ImmutableSet<String> appleCxxFlavors) {
+      ImmutableSet<Flavor> appleCxxFlavors) {
     TargetGraph targetGraph = TargetGraphFactory.newInstance(ImmutableSet.copyOf(allNodes));
     return createProjectGenerator(
         allNodes,
@@ -5411,7 +5419,7 @@ public class ProjectGeneratorTest {
       Collection<TargetNode<?, ?>> allNodes,
       Collection<TargetNode<?, ?>> initialTargetNodes,
       ProjectGeneratorOptions projectGeneratorOptions,
-      ImmutableSet<String> appleCxxFlavors,
+      ImmutableSet<Flavor> appleCxxFlavors,
       Function<? super TargetNode<?, ?>, ActionGraphBuilder> actionGraphBuilderForNode) {
     ImmutableSet<BuildTarget> initialBuildTargets =
         initialTargetNodes
