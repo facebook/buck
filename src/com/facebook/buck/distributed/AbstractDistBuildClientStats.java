@@ -27,7 +27,7 @@ abstract class AbstractDistBuildClientStats {
 
   abstract boolean buckClientError();
 
-  abstract String buildLabel();
+  abstract String userOrInferredBuildLabel();
 
   abstract String minionType();
 

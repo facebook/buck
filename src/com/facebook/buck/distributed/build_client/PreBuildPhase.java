@@ -69,7 +69,7 @@ public class PreBuildPhase {
   private final BuildExecutorArgs buildExecutorArgs;
   private final ImmutableSet<BuildTarget> topLevelTargets;
   private final ActionAndTargetGraphs actionAndTargetGraphs;
-  private final String buildLabel;
+  private volatile String buildLabel;
 
   public PreBuildPhase(
       DistBuildService distBuildService,
@@ -118,6 +118,12 @@ public class PreBuildPhase {
         distBuildService.createBuild(
             buildId, buildMode, minionRequirements, repository, tenantId, buildTargets, buildLabel);
     distBuildClientStats.stopTimer(CREATE_DISTRIBUTED_BUILD);
+
+    if (job.getBuildLabel() != null) {
+      // Override the build label with the server-side inferred label.
+      this.buildLabel = job.getBuildLabel();
+      distBuildClientStats.setUserOrInferredBuildLabel(buildLabel);
+    }
 
     StampedeId stampedeId = job.getStampedeId();
     eventBus.post(new DistBuildCreatedEvent(stampedeId));

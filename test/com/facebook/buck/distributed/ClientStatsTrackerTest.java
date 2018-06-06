@@ -84,6 +84,16 @@ public class ClientStatsTrackerTest {
     assertCommonStats(stats);
   }
 
+  @Test
+  public void testBuildLabelOverrideWorks() {
+    ClientStatsTracker tracker = new ClientStatsTracker(BUILD_LABEL, MINION_TYPE);
+    String newLabel = "this-label-is-better";
+    tracker.setUserOrInferredBuildLabel(newLabel);
+    initializeCommonStats(tracker);
+    DistBuildClientStats stats = tracker.generateStats();
+    Assert.assertEquals(newLabel, stats.userOrInferredBuildLabel());
+  }
+
   @Test(expected = java.lang.IllegalArgumentException.class)
   public void testGenerateFailsWhenLocalBuildButMissingLocalBuildFields() {
     ClientStatsTracker tracker = new ClientStatsTracker(BUILD_LABEL, MINION_TYPE);
@@ -123,7 +133,7 @@ public class ClientStatsTrackerTest {
         DISTRIBUTED_BUILD_EXIT_CODE, (long) stats.distributedBuildExitCode().getAsInt());
     Assert.assertEquals(IS_LOCAL_FALLBACK_BUILD_ENABLED, stats.isLocalFallbackBuildEnabled().get());
     Assert.assertEquals(BUCK_CLIENT_ERROR_MESSAGE, stats.buckClientErrorMessage().get());
-    Assert.assertEquals(BUILD_LABEL, stats.buildLabel());
+    Assert.assertEquals(BUILD_LABEL, stats.userOrInferredBuildLabel());
     Assert.assertEquals(MINION_TYPE, stats.minionType());
     Assert.assertTrue(stats.buckClientError());
 
