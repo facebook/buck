@@ -25,6 +25,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
 import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
 import com.facebook.buck.jvm.java.abi.source.api.SourceOnlyAbiRuleInfo;
+import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.unarchive.ArchiveFormat;
@@ -48,7 +49,7 @@ public class ExternalJavac implements Javac {
   private final String shortName;
 
   public ExternalJavac(Supplier<Tool> javac, String shortName) {
-    this.javac = javac;
+    this.javac = MoreSuppliers.memoize(javac);
     this.shortName = shortName;
   }
 

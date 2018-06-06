@@ -26,7 +26,6 @@ import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.tool.impl.VersionedTool;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultProcessExecutor;
-import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor.Result;
 import com.facebook.buck.util.ProcessExecutorParams;
@@ -56,13 +55,12 @@ public class ExternalJavacFactory {
     if (pathToJavac.isRight() && pathToJavac.getRight() instanceof BuildTargetSourcePath) {
       BuildTargetSourcePath buildTargetPath = (BuildTargetSourcePath) pathToJavac.getRight();
       return new ExternalJavac(
-          MoreSuppliers.memoize(() -> createNonHashingSourcePathJavac(buildTargetPath)),
+          () -> createNonHashingSourcePathJavac(buildTargetPath),
           buildTargetPath.getTarget().toString());
     } else {
       PathSourcePath actualPath =
           pathToJavac.transform(path -> path, path -> (PathSourcePath) path);
-      return new ExternalJavac(
-          MoreSuppliers.memoize(() -> createVersionedJavac(actualPath)), actualPath.toString());
+      return new ExternalJavac(() -> createVersionedJavac(actualPath), actualPath.toString());
     }
   }
 
