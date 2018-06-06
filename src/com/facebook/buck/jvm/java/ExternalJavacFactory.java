@@ -40,6 +40,9 @@ import java.util.Optional;
 public class ExternalJavacFactory {
   private final ProcessExecutor processExecutor;
 
+  public static final String COM_SUN_TOOLS_JAVAC_API_JAVAC_TOOL =
+      "com.sun.tools.javac.api.JavacTool";
+
   @VisibleForTesting
   ExternalJavacFactory(ProcessExecutor processExecutor) {
     this.processExecutor = processExecutor;
@@ -47,6 +50,30 @@ public class ExternalJavacFactory {
 
   public ExternalJavacFactory() {
     this(new DefaultProcessExecutor(Console.createNullConsole()));
+  }
+
+  /** Creates a JavacProvider based on a spec. */
+  public static JavacProvider getProviderForSpec(JavacSpec spec) {
+    if (spec.getCompiler().isPresent() && spec.getCompiler().get().isRight()) {
+      return new ExternalOrJarBackedJavacProvider(
+          spec.getCompiler().get().getRight(),
+          // compiler_class_name has no effect when compiler is specified
+          COM_SUN_TOOLS_JAVAC_API_JAVAC_TOOL);
+    }
+
+    String compilerClassName =
+        spec.getCompilerClassName().orElse(COM_SUN_TOOLS_JAVAC_API_JAVAC_TOOL);
+    Javac.Source javacSource = spec.getJavacSource();
+    switch (javacSource) {
+      case EXTERNAL:
+        return new ConstantJavacProvider(
+            new ExternalJavacFactory().create(spec.getJavacPath().get()));
+      case JAR:
+        return new JarBackedJavacProvider(spec.getJavacJarPath().get(), compilerClassName);
+      case JDK:
+        return new ConstantJavacProvider(new JdkProvidedInMemoryJavac());
+    }
+    throw new AssertionError("Unknown javac source: " + javacSource);
   }
 
   /** Creates an ExternalJavac. */

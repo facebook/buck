@@ -263,7 +263,8 @@ public class Jsr199JavacIntegrationTest {
     MockClassLoader mockClassLoader =
         new MockClassLoader(
             ClassLoader.getSystemClassLoader(),
-            ImmutableMap.of(JavacSpec.COM_SUN_TOOLS_JAVAC_API_JAVAC_TOOL, MockJavac.class));
+            ImmutableMap.of(
+                ExternalJavacFactory.COM_SUN_TOOLS_JAVAC_API_JAVAC_TOOL, MockJavac.class));
     executionContext
         .getClassLoaderCache()
         .injectClassLoader(
@@ -335,7 +336,7 @@ public class Jsr199JavacIntegrationTest {
     Optional<SourcePath> jar = javacJar.map(p -> PathSourcePath.of(new FakeProjectFilesystem(), p));
     if (jar.isPresent()) {
       return new JarBackedJavac(
-          JavacSpec.COM_SUN_TOOLS_JAVAC_API_JAVAC_TOOL, ImmutableSet.of(jar.get()));
+          ExternalJavacFactory.COM_SUN_TOOLS_JAVAC_API_JAVAC_TOOL, ImmutableSet.of(jar.get()));
     }
 
     return new JdkProvidedInMemoryJavac();

@@ -26,8 +26,6 @@ import org.immutables.value.Value;
 @Value.Immutable(copy = true)
 @BuckStyleImmutable
 abstract class AbstractJavacSpec {
-  public static final String COM_SUN_TOOLS_JAVAC_API_JAVAC_TOOL =
-      "com.sun.tools.javac.api.JavacTool";
 
   protected abstract Optional<Either<BuiltInJavac, SourcePath>> getCompiler();
 
@@ -39,24 +37,7 @@ abstract class AbstractJavacSpec {
 
   @Value.Lazy
   public JavacProvider getJavacProvider() {
-    if (getCompiler().isPresent() && getCompiler().get().isRight()) {
-      return new ExternalOrJarBackedJavacProvider(
-          getCompiler().get().getRight(),
-          // compiler_class_name has no effect when compiler is specified
-          COM_SUN_TOOLS_JAVAC_API_JAVAC_TOOL);
-    }
-
-    String compilerClassName = getCompilerClassName().orElse(COM_SUN_TOOLS_JAVAC_API_JAVAC_TOOL);
-    Javac.Source javacSource = getJavacSource();
-    switch (javacSource) {
-      case EXTERNAL:
-        return new ConstantJavacProvider(new ExternalJavacFactory().create(getJavacPath().get()));
-      case JAR:
-        return new JarBackedJavacProvider(getJavacJarPath().get(), compilerClassName);
-      case JDK:
-        return new ConstantJavacProvider(new JdkProvidedInMemoryJavac());
-    }
-    throw new AssertionError("Unknown javac source: " + javacSource);
+    return ExternalJavacFactory.getProviderForSpec((JavacSpec) this);
   }
 
   public Javac.Source getJavacSource() {
