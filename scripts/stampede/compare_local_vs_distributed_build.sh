@@ -23,10 +23,10 @@ LOCAL_BUILD_TEMP_DIR="$TEMP_DIR/local_buck_out"
 DIST_BUILD_TEMP_DIR="$TEMP_DIR/dist_buck_out"
 
 rm -rf ./buck-out
-buck build "$TARGET" --config=cache.mode=dir --deep
+buck build "$TARGET" --config=cache.mode=dir --deep -c stampede.log_materialization_enabled=true
 mv "$BUCK_OUT_DIR" "$LOCAL_BUILD_TEMP_DIR"
 
-buck build "$TARGET" --distributed --deep
+buck build "$TARGET" --distributed --deep -c stampede.log_materialization_enabled=true
 mv "$BUCK_OUT_DIR" "$DIST_BUILD_TEMP_DIR"
 
 echo Moved local buck-out to "$LOCAL_BUILD_TEMP_DIR"
