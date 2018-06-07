@@ -338,11 +338,7 @@ func (t *testFuncs) load(filename, pkg string, doImport, seen *bool) error {
 			}
 			t.TestMain = &testFunc{pkg, name, "", false}
 			*doImport, *seen = true, true
-		case isTest(name, "Test"):
-			err := checkTestFunc(n, "T")
-			if err != nil {
-				return err
-			}
+		case isTest(name, "Test") && isTestFunc(n, "T"):
 			t.Tests = append(t.Tests, testFunc{pkg, name, "", false})
 			*doImport, *seen = true, true
 		case isTest(name, "Benchmark"):

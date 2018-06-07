@@ -179,6 +179,12 @@ public class GoTestIntegrationTest {
     result.assertSuccess();
   }
 
+  @Test
+  public void testFuncWithPrefixTest() throws IOException {
+    ProcessResult result = workspace.runBuckCommand("test", "//:test-scores");
+    result.assertSuccess();
+  }
+
   private static void assertIsSymbolicLink(Path link, Path target) throws IOException {
     assertTrue(Files.isSymbolicLink(link));
     assertTrue(Files.isSameFile(target, Files.readSymbolicLink(link)));
