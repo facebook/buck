@@ -34,7 +34,10 @@ import com.facebook.buck.util.cache.ProjectFileHashCache;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.hash.HashCode;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
+import com.google.common.util.concurrent.SettableFuture;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -463,6 +466,123 @@ public class MaterializerDummyFileHashCacheTest {
   public void testMaterializeSymlinkWithDifferentHashCodeThrowsException()
       throws InterruptedException, IOException {
     testSymlinkToFileWithinExternalDirectory(THROWING_GET, false);
+  }
+
+  @Test
+  @SuppressWarnings("PMD.EmptyCatchBlock")
+  public void testPreloadAllFilesThrowsExceptionOnTimeOut() throws Exception {
+    ListenableFuture<Boolean> future = Futures.immediateFailedFuture(new TimeoutException());
+    FileContentsProvider mockFileProvider = EasyMock.createMock(FileContentsProvider.class);
+    expect(
+            mockFileProvider.materializeFileContentsAsync(
+                EasyMock.anyObject(), EasyMock.anyObject()))
+        .andReturn(future);
+    replay(mockFileProvider);
+
+    ProjectFilesystem projectFilesystem =
+        TestProjectFilesystems.createProjectFilesystem(projectDir.getRoot().toPath());
+
+    ProjectFileHashCache mockFileHashCache = EasyMock.createNiceMock(ProjectFileHashCache.class);
+    expect(mockFileHashCache.getFilesystem()).andReturn(projectFilesystem).atLeastOnce();
+    replay(mockFileHashCache);
+
+    BuildJobStateFileHashEntry fileHashEntry = new BuildJobStateFileHashEntry();
+    fileHashEntry.setPath(unixPath(Paths.get("realfile")));
+    BuildJobStateFileHashes fileHashes = new BuildJobStateFileHashes();
+    fileHashes.addToEntries(fileHashEntry);
+
+    MaterializerDummyFileHashCache fileMaterializer =
+        new MaterializerDummyFileHashCache(
+            mockFileHashCache,
+            fileHashes,
+            mockFileProvider,
+            MoreExecutors.newDirectExecutorService());
+
+    try {
+      fileMaterializer.preloadAllFiles(true);
+      Assert.fail("Preload should have thrown because of materialization error.");
+    } catch (RuntimeException e) {
+      // expected
+    }
+  }
+
+  @Test
+  @SuppressWarnings("PMD.EmptyCatchBlock")
+  public void testPreloadAllFilesThrowsExceptionOnInterrupt() throws Exception {
+    SettableFuture<Boolean> future = SettableFuture.create();
+    FileContentsProvider mockFileProvider = EasyMock.createMock(FileContentsProvider.class);
+    expect(
+            mockFileProvider.materializeFileContentsAsync(
+                EasyMock.anyObject(), EasyMock.anyObject()))
+        .andReturn(future);
+    replay(mockFileProvider);
+
+    ProjectFilesystem projectFilesystem =
+        TestProjectFilesystems.createProjectFilesystem(projectDir.getRoot().toPath());
+
+    ProjectFileHashCache mockFileHashCache = EasyMock.createNiceMock(ProjectFileHashCache.class);
+    expect(mockFileHashCache.getFilesystem()).andReturn(projectFilesystem).atLeastOnce();
+    replay(mockFileHashCache);
+
+    BuildJobStateFileHashEntry fileHashEntry = new BuildJobStateFileHashEntry();
+    fileHashEntry.setPath(unixPath(Paths.get("realfile")));
+    BuildJobStateFileHashes fileHashes = new BuildJobStateFileHashes();
+    fileHashes.addToEntries(fileHashEntry);
+
+    MaterializerDummyFileHashCache fileMaterializer =
+        new MaterializerDummyFileHashCache(
+            mockFileHashCache,
+            fileHashes,
+            mockFileProvider,
+            MoreExecutors.newDirectExecutorService());
+
+    try {
+      Thread.currentThread().interrupt();
+      fileMaterializer.preloadAllFiles(true);
+      Assert.fail("Preload should have thrown because of materialization error.");
+    } catch (RuntimeException e) {
+      // expected
+    }
+  }
+
+  @Test
+  @SuppressWarnings("PMD.EmptyCatchBlock")
+  public void testPreloadAllFilesThrowsException() throws IOException {
+    SettableFuture<Boolean> failingFuture = SettableFuture.create();
+    failingFuture.setException(new RuntimeException());
+
+    FileContentsProvider mockFileProvider = EasyMock.createMock(FileContentsProvider.class);
+    expect(
+            mockFileProvider.materializeFileContentsAsync(
+                EasyMock.anyObject(), EasyMock.anyObject()))
+        .andReturn(failingFuture);
+    replay(mockFileProvider);
+
+    ProjectFilesystem projectFilesystem =
+        TestProjectFilesystems.createProjectFilesystem(projectDir.getRoot().toPath());
+
+    ProjectFileHashCache mockFileHashCache = EasyMock.createNiceMock(ProjectFileHashCache.class);
+    expect(mockFileHashCache.getFilesystem()).andReturn(projectFilesystem).atLeastOnce();
+    replay(mockFileHashCache);
+
+    BuildJobStateFileHashEntry fileHashEntry = new BuildJobStateFileHashEntry();
+    fileHashEntry.setPath(unixPath(Paths.get("realfile")));
+    BuildJobStateFileHashes fileHashes = new BuildJobStateFileHashes();
+    fileHashes.addToEntries(fileHashEntry);
+
+    MaterializerDummyFileHashCache fileMaterializer =
+        new MaterializerDummyFileHashCache(
+            mockFileHashCache,
+            fileHashes,
+            mockFileProvider,
+            MoreExecutors.newDirectExecutorService());
+
+    try {
+      fileMaterializer.preloadAllFiles(true);
+      Assert.fail("Preload should have thrown because of materialization error.");
+    } catch (RuntimeException e) {
+      // expected
+    }
   }
 
   private static PathWithUnixSeparators unixPath(Path path) {
