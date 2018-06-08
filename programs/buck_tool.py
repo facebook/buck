@@ -637,10 +637,9 @@ class BuckTool(object):
                         cwd=self._buck_project.root) as c:
                     c.send_command('ng-stats')
             except NailgunException as e:
-                if e.code == NailgunException.CONNECT_FAILED:
-                    return False
-                else:
-                    raise
+                if e.code != NailgunException.CONNECT_FAILED:
+                    logging.warning('Unexpected NailgunException code ' + str(e.code))
+                return False
             return True
 
     def _get_java_args(self, version_uid, extra_default_options=None):
