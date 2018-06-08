@@ -1130,24 +1130,22 @@ public class AppleLibraryDescription
               .getSwiftSources()
               .stream()
               .map(sourceWithFlags -> sourceWithFlags.getSourcePath())
+              .map(input -> pathResolver.getRelativePath(input))
               .map(
-                  input ->
-                      pathResolver.getAbsolutePath(input).getFileName().toString())
-              .map(
-                  filename ->
+                  path ->
                       graphBuilder.computeIfAbsent(
                           target.withAppendedFlavors(
                               cxxPlatform.getFlavor(),
                               InternalFlavor.of(
                                   String.format("bc-compile-%s",
-                                      CxxFlavorSanitizer.sanitize(filename + ".o")))),
+                                      CxxFlavorSanitizer.sanitize(path.getFileName() + ".o")))),
                           target1 ->
                               new SwiftBitcodeCompile(
                                   target1,
                                   filesystem,
                                   swiftPlatform.getSwiftc(),
                                   moduleRule,
-                                  filename)))
+                                  moduleRule.getBitcodePath(path))))
               .map(rule -> rule.getSourcePathToOutput())
               .collect(ImmutableList.toImmutableList()));
 

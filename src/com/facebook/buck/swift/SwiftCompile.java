@@ -174,7 +174,21 @@ public class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
         !buildTarget.getFlavors().contains(CxxDescriptionEnhancer.SHARED_FLAVOR));
   }
 
-  private SwiftCompileStep makeCompileStep(SourcePathResolver resolver) {
+  private ImmutableList<Path> getCompilerOutputs(SourcePathResolver resolver) {
+    if (swiftBuckConfig.shouldSplitSwiftModuleGeneration() && moduleOnly) {
+      ImmutableList.Builder<Path> outputPathBuilder = ImmutableList.builder();
+      for (SourcePath src : this.srcs) {
+        outputPathBuilder.add(getBitcodePath(resolver.getRelativePath(src)));
+      }
+      return outputPathBuilder.build();
+    } else {
+      return ImmutableList.of(objectFilePath);
+    }
+  }
+
+  private SwiftCompileStep makeCompileStep(
+      SourcePathResolver resolver,
+      ImmutableList<Path> outputs) {
     ImmutableList.Builder<String> compilerCommand = ImmutableList.builder();
     compilerCommand.addAll(swiftCompiler.getCommandPrefix(resolver));
 
@@ -232,18 +246,8 @@ public class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
       if (moduleOnly) {
         compilerCommand.add("-emit-bc");
         compilerCommand.add("-num-threads", "1");
-        this.srcs
-            .stream()
-            .map(
-                input -> getBitcodePath(resolver.getAbsolutePath(input).getFileName().toString())
-            )
-            .forEach(
-                x -> {
-                  compilerCommand.add("-o");
-                  compilerCommand.add(x.toString());
-                });
       } else {
-        compilerCommand.add("-c", "-emit-object", "-o", objectFilePath.toString());
+        compilerCommand.add("-c", "-emit-object");
       }
     } else {
       compilerCommand.add(
@@ -252,9 +256,11 @@ public class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
           "-emit-module-path",
           modulePath.toString(),
           "-emit-objc-header-path",
-          headerPath.toString(),
-          "-o",
-          objectFilePath.toString());
+          headerPath.toString());
+    }
+
+    for (Path outputPath : outputs) {
+      compilerCommand.add("-o", outputPath.toString());
     }
 
     // Do not use swiftBuckConfig's version by definition
@@ -323,17 +329,24 @@ public class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
       BuildContext context, BuildableContext buildableContext) {
     buildableContext.recordArtifact(outputPath);
 
+    SourcePathResolver resolver = context.getSourcePathResolver();
+    ImmutableList<Path> compilerOutputs = getCompilerOutputs(resolver);
     Builder<Step> steps = ImmutableList.builder();
     steps.add(
         MkdirStep.of(
             BuildCellRelativePath.fromCellRelativePath(
                 context.getBuildCellRootPath(), getProjectFilesystem(), outputPath)));
-    swiftFileListPath.map(
-        path -> steps.add(makeFileListStep(context.getSourcePathResolver(), path)));
-    steps.add(makeCompileStep(context.getSourcePathResolver()));
+    for (Path outputPath : compilerOutputs) {
+      steps.add(
+          MkdirStep.of(
+              BuildCellRelativePath.fromCellRelativePath(
+                  context.getBuildCellRootPath(), getProjectFilesystem(), outputPath.getParent())));
+    }
+    swiftFileListPath.map(path -> steps.add(makeFileListStep(resolver, path)));
+    steps.add(makeCompileStep(resolver, compilerOutputs));
 
     if (swiftBuckConfig.getUseModulewrap()) {
-      steps.add(makeModulewrapStep(context.getSourcePathResolver()));
+      steps.add(makeModulewrapStep(resolver));
     }
 
     return steps.build();
@@ -468,8 +481,8 @@ public class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     return ExplicitBuildTargetSourcePath.of(getBuildTarget(), outputPath);
   }
 
-  public Path getBitcodePath(String filename) {
-    String bitcodeFilename = Files.getNameWithoutExtension(filename) + ".bc";
-    return outputPath.resolve(bitcodeFilename);
+  public Path getBitcodePath(Path relativePath) {
+    Path projectPath = getBuildTarget().getBasePath().relativize(relativePath);
+    return outputPath.resolve(projectPath + ".bc");
   }
 }

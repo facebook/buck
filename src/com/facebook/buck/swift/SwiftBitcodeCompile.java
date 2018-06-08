@@ -16,6 +16,7 @@ import com.facebook.buck.step.fs.MkdirStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.io.Files;
 import java.nio.file.Path;
 import javax.annotation.Nullable;
 
@@ -31,7 +32,7 @@ public class SwiftBitcodeCompile extends AbstractBuildRuleWithDeclaredAndExtraDe
       ProjectFilesystem projectFilesystem,
       Tool swiftCompiler,
       SwiftCompile moduleRule,
-      String filename) {
+      Path bitcodePath) {
     super(
         buildTarget,
         projectFilesystem,
@@ -41,9 +42,10 @@ public class SwiftBitcodeCompile extends AbstractBuildRuleWithDeclaredAndExtraDe
             ImmutableSortedSet.of()));
     this.swiftCompiler = swiftCompiler;
     this.moduleName = moduleRule.getModuleName();
-    this.bitcodePath = moduleRule.getBitcodePath(filename);
-    this.outputPath =
-        BuildTargets.getGenPath(projectFilesystem, buildTarget, "%s").resolve(filename + ".o");
+    this.bitcodePath = bitcodePath;
+    this.outputPath = BuildTargets
+        .getGenPath(projectFilesystem, buildTarget, "%s")
+        .resolve(Files.getNameWithoutExtension(bitcodePath.toString()) + ".o");
   }
 
   @Override

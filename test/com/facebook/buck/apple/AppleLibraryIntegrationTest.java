@@ -969,8 +969,8 @@ public class AppleLibraryIntegrationTest {
     assertTrue(Files.exists(moduleOutput));
 
     // Verify that bitcode files were generated for each source file
-    Path bitcodeFile1 = moduleOutput.getParent().resolve("Foo1.bc");
-    Path bitcodeFile2 = moduleOutput.getParent().resolve("Foo2.bc");
+    Path bitcodeFile1 = moduleOutput.getParent().resolve("Foo1.swift.bc");
+    Path bitcodeFile2 = moduleOutput.getParent().resolve("Foo2.swift.bc");
     assertTrue(Files.exists(bitcodeFile1));
     assertTrue(Files.exists(bitcodeFile2));
 
