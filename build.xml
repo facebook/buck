@@ -170,7 +170,7 @@
     <include name="icu4j/icu4j-54.1.1.jar" />
     <include name="immutables/builder-2.5.7-SNAPSHOT.jar" />
     <include name="immutables/value-2.5.7-SNAPSHOT.jar" />
-    <include name="infer-annotations/infer-annotations-4.1.jar" />
+    <include name="infer-annotations/infer-annotations-4.2.jar" />
     <include name="jacoco/org.jacoco.core-0.8.0.jar" />
     <include name="jacoco/org.jacoco.report-0.8.0.jar" />
     <include name="jdom/jdom-2.0.6.jar" />
