@@ -39,6 +39,7 @@ import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
@@ -49,10 +50,10 @@ public class AndroidBuildConfigDescription
 
   private static final Flavor GEN_JAVA_FLAVOR = InternalFlavor.of("gen_java_android_build_config");
 
-  private final JavacFactory javacFactory;
+  private final ToolchainProvider toolchainProvider;
 
-  public AndroidBuildConfigDescription(JavacFactory javacFactory) {
-    this.javacFactory = javacFactory;
+  public AndroidBuildConfigDescription(ToolchainProvider toolchainProvider) {
+    this.toolchainProvider = toolchainProvider;
   }
 
   @Override
@@ -87,7 +88,7 @@ public class AndroidBuildConfigDescription
         args.getValues(),
         args.getValuesFile(),
         /* useConstantExpressions */ false,
-        javacFactory.create(ruleFinder, null),
+        JavacFactory.getDefault(toolchainProvider).create(ruleFinder, null),
         context
             .getToolchainProvider()
             .getByName(JavacOptionsProvider.DEFAULT_NAME, JavacOptionsProvider.class)

@@ -54,7 +54,7 @@ import com.facebook.buck.jvm.core.HasJavaClassHashes;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.FakeJavac;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
-import com.facebook.buck.jvm.java.JavacFactory;
+import com.facebook.buck.jvm.java.JavacFactoryHelper;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.FakeBuildRule;
@@ -161,7 +161,7 @@ public class AndroidBinaryGraphEnhancerTest {
             /* noVersionTransitionsResources */ false,
             /* noAutoAddOverlayResources */ false,
             DEFAULT_JAVA_CONFIG,
-            new JavacFactory(DEFAULT_JAVA_CONFIG),
+            JavacFactoryHelper.createJavacFactory(DEFAULT_JAVA_CONFIG),
             ANDROID_JAVAC_OPTIONS,
             EnumSet.noneOf(ExopackageMode.class),
             /* buildConfigValues */ BuildConfigFields.of(),
@@ -326,7 +326,7 @@ public class AndroidBinaryGraphEnhancerTest {
             /* noVersionTransitionsResources */ false,
             /* noAutoAddOverlayResources */ false,
             DEFAULT_JAVA_CONFIG,
-            new JavacFactory(DEFAULT_JAVA_CONFIG),
+            JavacFactoryHelper.createJavacFactory(DEFAULT_JAVA_CONFIG),
             ANDROID_JAVAC_OPTIONS,
             EnumSet.of(ExopackageMode.SECONDARY_DEX),
             /* buildConfigValues */ BuildConfigFields.of(),
@@ -459,7 +459,7 @@ public class AndroidBinaryGraphEnhancerTest {
             /* noVersionTransitionsResources */ false,
             /* noAutoAddOverlayResources */ false,
             DEFAULT_JAVA_CONFIG,
-            new JavacFactory(DEFAULT_JAVA_CONFIG),
+            JavacFactoryHelper.createJavacFactory(DEFAULT_JAVA_CONFIG),
             ANDROID_JAVAC_OPTIONS,
             EnumSet.of(ExopackageMode.SECONDARY_DEX),
             /* buildConfigValues */ BuildConfigFields.of(),
@@ -536,7 +536,7 @@ public class AndroidBinaryGraphEnhancerTest {
             /* noVersionTransitionsResources */ false,
             /* noAutoAddOverlayResources */ false,
             DEFAULT_JAVA_CONFIG,
-            new JavacFactory(DEFAULT_JAVA_CONFIG),
+            JavacFactoryHelper.createJavacFactory(DEFAULT_JAVA_CONFIG),
             ANDROID_JAVAC_OPTIONS,
             EnumSet.of(ExopackageMode.SECONDARY_DEX),
             /* buildConfigValues */ BuildConfigFields.of(),
@@ -642,7 +642,7 @@ public class AndroidBinaryGraphEnhancerTest {
             /* noVersionTransitionsResources */ false,
             /* noAutoAddOverlayResources */ false,
             DEFAULT_JAVA_CONFIG,
-            new JavacFactory(DEFAULT_JAVA_CONFIG),
+            JavacFactoryHelper.createJavacFactory(DEFAULT_JAVA_CONFIG),
             ANDROID_JAVAC_OPTIONS,
             EnumSet.of(ExopackageMode.SECONDARY_DEX),
             /* buildConfigValues */ BuildConfigFields.of(),

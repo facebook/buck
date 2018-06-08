@@ -65,7 +65,7 @@ public class AndroidInstrumentationApkDescription
   private final CxxBuckConfig cxxBuckConfig;
   private final DxConfig dxConfig;
   private final ApkConfig apkConfig;
-  private final JavacFactory javacFactory;
+  private final ToolchainProvider toolchainProvider;
 
   public AndroidInstrumentationApkDescription(
       JavaBuckConfig javaBuckConfig,
@@ -73,13 +73,13 @@ public class AndroidInstrumentationApkDescription
       CxxBuckConfig cxxBuckConfig,
       DxConfig dxConfig,
       ApkConfig apkConfig,
-      JavacFactory javacFactory) {
+      ToolchainProvider toolchainProvider) {
     this.javaBuckConfig = javaBuckConfig;
     this.proGuardConfig = proGuardConfig;
     this.cxxBuckConfig = cxxBuckConfig;
     this.dxConfig = dxConfig;
     this.apkConfig = apkConfig;
-    this.javacFactory = javacFactory;
+    this.toolchainProvider = toolchainProvider;
   }
 
   @Override
@@ -120,7 +120,6 @@ public class AndroidInstrumentationApkDescription
                 resourceDetails.getResourcesWithNonEmptyResDir(),
                 resourceDetails.getResourcesWithEmptyResButNonEmptyAssetsDir()));
 
-    ToolchainProvider toolchainProvider = context.getToolchainProvider();
     ListeningExecutorService dxExecutorService =
         toolchainProvider
             .getByName(DxToolchain.DEFAULT_NAME, DxToolchain.class)
@@ -192,7 +191,7 @@ public class AndroidInstrumentationApkDescription
             /* noVersionTransitionsResources */ false,
             /* noAutoAddOverlayResources */ false,
             javaBuckConfig,
-            javacFactory,
+            JavacFactory.getDefault(toolchainProvider),
             toolchainProvider
                 .getByName(JavacOptionsProvider.DEFAULT_NAME, JavacOptionsProvider.class)
                 .getJavacOptions(),

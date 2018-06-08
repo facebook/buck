@@ -26,7 +26,8 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.AbstractNodeBuilder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
-import com.facebook.buck.jvm.java.JavacFactory;
+import com.facebook.buck.jvm.java.JavaCompilationConstants;
+import com.facebook.buck.jvm.java.toolchain.JavaToolchain;
 import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.toolchain.ToolchainProvider;
@@ -46,7 +47,7 @@ public class AndroidInstrumentationApkBuilder
             new CxxBuckConfig(new FakeBuckConfig.Builder().build()),
             new DxConfig(FakeBuckConfig.builder().build()),
             new ApkConfig(FakeBuckConfig.builder().build()),
-            new JavacFactory(DEFAULT_JAVA_CONFIG)),
+            createToolchainProviderForAndroidInstrumentationApk()),
         target,
         new FakeProjectFilesystem(),
         createToolchainProviderForAndroidInstrumentationApk(),
@@ -60,6 +61,7 @@ public class AndroidInstrumentationApkBuilder
             DxToolchain.DEFAULT_NAME, DxToolchain.of(MoreExecutors.newDirectExecutorService()))
         .withToolchain(
             JavacOptionsProvider.DEFAULT_NAME, JavacOptionsProvider.of(ANDROID_JAVAC_OPTIONS))
+        .withToolchain(JavaToolchain.DEFAULT_NAME, JavaCompilationConstants.DEFAULT_JAVA_TOOLCHAIN)
         .build();
   }
 

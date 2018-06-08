@@ -33,7 +33,6 @@ import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.FakeJavaLibrary;
-import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.KeystoreBuilder;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
@@ -41,6 +40,7 @@ import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.TestBuildRuleCreationContextFactory;
 import com.facebook.buck.rules.TestBuildRuleParams;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import org.junit.Test;
@@ -120,6 +120,8 @@ public class AndroidInstrumentationApkTest {
         TestBuildRuleParams.create()
             .withDeclaredDeps(graphBuilder.getAllRules(apkOriginalDepsTargets))
             .withExtraDeps(ImmutableSortedSet.of(androidBinary));
+    ToolchainProvider toolchainProvider =
+        AndroidInstrumentationApkBuilder.createToolchainProviderForAndroidInstrumentationApk();
     AndroidInstrumentationApk androidInstrumentationApk =
         (AndroidInstrumentationApk)
             new AndroidInstrumentationApkDescription(
@@ -128,13 +130,10 @@ public class AndroidInstrumentationApkTest {
                     CxxPlatformUtils.DEFAULT_CONFIG,
                     new DxConfig(FakeBuckConfig.builder().build()),
                     new ApkConfig(FakeBuckConfig.builder().build()),
-                    new JavacFactory(DEFAULT_JAVA_CONFIG))
+                    toolchainProvider)
                 .createBuildRule(
                     TestBuildRuleCreationContextFactory.create(
-                        graphBuilder,
-                        projectFilesystem,
-                        AndroidInstrumentationApkBuilder
-                            .createToolchainProviderForAndroidInstrumentationApk()),
+                        graphBuilder, projectFilesystem, toolchainProvider),
                     buildTarget,
                     params,
                     arg);

@@ -40,6 +40,7 @@ import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.maven.aether.AetherUtil;
 import com.facebook.buck.model.ImmutableBuildTarget;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.versions.VersionPropagator;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -64,12 +65,13 @@ public class JavaLibraryDescription
           HasJavaAbi.SOURCE_ONLY_ABI_FLAVOR,
           HasJavaAbi.VERIFIED_SOURCE_ABI_FLAVOR);
 
+  private final ToolchainProvider toolchainProvider;
   private final JavaBuckConfig javaBuckConfig;
-  private final JavacFactory javacFactory;
 
-  public JavaLibraryDescription(JavaBuckConfig javaBuckConfig, JavacFactory javacFactory) {
+  public JavaLibraryDescription(
+      ToolchainProvider toolchainProvider, JavaBuckConfig javaBuckConfig) {
+    this.toolchainProvider = toolchainProvider;
     this.javaBuckConfig = javaBuckConfig;
-    this.javacFactory = javacFactory;
   }
 
   @Override
@@ -190,7 +192,8 @@ public class JavaLibraryDescription
                 params,
                 graphBuilder,
                 context.getCellPathResolver(),
-                new JavaConfiguredCompilerFactory(javaBuckConfig, javacFactory),
+                new JavaConfiguredCompilerFactory(
+                    javaBuckConfig, JavacFactory.getDefault(toolchainProvider)),
                 javaBuckConfig,
                 args)
             .setJavacOptions(javacOptions)

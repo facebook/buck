@@ -33,7 +33,7 @@ import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.jvm.java.AnnotationProcessingParams;
 import com.facebook.buck.jvm.java.FakeJavaLibrary;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
-import com.facebook.buck.jvm.java.JavacFactory;
+import com.facebook.buck.jvm.java.JavacFactoryHelper;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacToJarStepFactory;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -232,7 +232,7 @@ public class AndroidLibraryGraphEnhancerTest {
             target,
             new FakeProjectFilesystem(),
             ImmutableSortedSet.of(dep),
-            new JavacFactory(javaConfig).create(ruleFinder, null),
+            JavacFactoryHelper.createJavacFactory(javaConfig).create(ruleFinder, null),
             options,
             DependencyMode.FIRST_ORDER,
             /* forceFinalResourceIds */ false,

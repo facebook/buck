@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.java.toolchain.impl;
 
 import com.facebook.buck.jvm.java.toolchain.JavaCxxPlatformProvider;
 import com.facebook.buck.jvm.java.toolchain.JavaOptionsProvider;
+import com.facebook.buck.jvm.java.toolchain.JavaToolchain;
 import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.toolchain.ToolchainDescriptor;
 import com.facebook.buck.toolchain.ToolchainSupplier;
@@ -27,7 +28,6 @@ import org.pf4j.Extension;
 
 @Extension
 public class JavaToolchainsSupplier implements ToolchainSupplier {
-
   @Override
   public Collection<ToolchainDescriptor<?>> getToolchainDescriptor() {
     return Arrays.asList(
@@ -42,6 +42,8 @@ public class JavaToolchainsSupplier implements ToolchainSupplier {
         ToolchainDescriptor.of(
             JavaOptionsProvider.DEFAULT_NAME,
             JavaOptionsProvider.class,
-            JavaOptionsProviderFactory.class));
+            JavaOptionsProviderFactory.class),
+        ToolchainDescriptor.of(
+            JavaToolchain.DEFAULT_NAME, JavaToolchain.class, JavaToolchainFactory.class));
   }
 }

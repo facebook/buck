@@ -60,17 +60,14 @@ public class ScalaLibraryDescription
   private final ToolchainProvider toolchainProvider;
   private final ScalaBuckConfig scalaBuckConfig;
   private final JavaBuckConfig javaBuckConfig;
-  private final JavacFactory javacFactory;
 
   public ScalaLibraryDescription(
       ToolchainProvider toolchainProvider,
       ScalaBuckConfig scalaBuckConfig,
-      JavaBuckConfig javaBuckConfig,
-      JavacFactory javacFactory) {
+      JavaBuckConfig javaBuckConfig) {
     this.toolchainProvider = toolchainProvider;
     this.scalaBuckConfig = scalaBuckConfig;
     this.javaBuckConfig = javaBuckConfig;
-    this.javacFactory = javacFactory;
   }
 
   @Override
@@ -141,7 +138,7 @@ public class ScalaLibraryDescription
                 scalaBuckConfig,
                 javaBuckConfig,
                 args,
-                javacFactory)
+                JavacFactory.getDefault(toolchainProvider))
             .setJavacOptions(javacOptions)
             .build();
 

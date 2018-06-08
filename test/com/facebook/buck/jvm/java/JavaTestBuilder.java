@@ -27,6 +27,7 @@ import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.TestCxxPlatformsProviderFactory;
 import com.facebook.buck.jvm.java.toolchain.JavaCxxPlatformProvider;
 import com.facebook.buck.jvm.java.toolchain.JavaOptionsProvider;
+import com.facebook.buck.jvm.java.toolchain.JavaToolchain;
 import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
@@ -52,9 +53,10 @@ public class JavaTestBuilder
                 .withToolchain(
                     JavaOptionsProvider.DEFAULT_NAME,
                     JavaOptionsProvider.of(DEFAULT_JAVA_OPTIONS, DEFAULT_JAVA_OPTIONS))
+                .withToolchain(
+                    JavaToolchain.DEFAULT_NAME, JavaCompilationConstants.DEFAULT_JAVA_TOOLCHAIN)
                 .build(),
-            javaBuckConfig,
-            new JavacFactory(javaBuckConfig)),
+            javaBuckConfig),
         target);
   }
 

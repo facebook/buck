@@ -58,17 +58,12 @@ public class ScalaTestDescription
   private final ToolchainProvider toolchainProvider;
   private final ScalaBuckConfig config;
   private final JavaBuckConfig javaBuckConfig;
-  private final JavacFactory javacFactory;
 
   public ScalaTestDescription(
-      ToolchainProvider toolchainProvider,
-      ScalaBuckConfig config,
-      JavaBuckConfig javaBuckConfig,
-      JavacFactory javacFactory) {
+      ToolchainProvider toolchainProvider, ScalaBuckConfig config, JavaBuckConfig javaBuckConfig) {
     this.toolchainProvider = toolchainProvider;
     this.config = config;
     this.javaBuckConfig = javaBuckConfig;
-    this.javacFactory = javacFactory;
   }
 
   @Override
@@ -123,7 +118,7 @@ public class ScalaTestDescription
                 config,
                 javaBuckConfig,
                 args,
-                javacFactory)
+                JavacFactory.getDefault(toolchainProvider))
             .setJavacOptions(javacOptions)
             .build();
 

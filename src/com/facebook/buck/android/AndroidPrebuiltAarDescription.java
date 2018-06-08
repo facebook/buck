@@ -79,10 +79,10 @@ public class AndroidPrebuiltAarDescription
     return Sets.difference(flavors, KNOWN_FLAVORS).isEmpty();
   }
 
-  private final JavacFactory javacFactory;
+  private final ToolchainProvider toolchainProvider;
 
-  public AndroidPrebuiltAarDescription(JavacFactory javacFactory) {
-    this.javacFactory = javacFactory;
+  public AndroidPrebuiltAarDescription(ToolchainProvider toolchainProvider) {
+    this.toolchainProvider = toolchainProvider;
   }
 
   @Override
@@ -164,7 +164,6 @@ public class AndroidPrebuiltAarDescription
           args.getRequiredForSourceOnlyAbi());
     }
 
-    ToolchainProvider toolchainProvider = context.getToolchainProvider();
     if (flavors.contains(AndroidResourceDescription.AAPT2_COMPILE_FLAVOR)) {
       AndroidPlatformTarget androidPlatformTarget =
           toolchainProvider.getByName(
@@ -215,7 +214,7 @@ public class AndroidPrebuiltAarDescription
             pathResolver,
             ruleFinder,
             projectFilesystem,
-            javacFactory.create(ruleFinder, null),
+            JavacFactory.getDefault(toolchainProvider).create(ruleFinder, null),
             toolchainProvider
                 .getByName(JavacOptionsProvider.DEFAULT_NAME, JavacOptionsProvider.class)
                 .getJavacOptions(),

@@ -21,7 +21,6 @@ import com.facebook.buck.core.description.DescriptionCreationContext;
 import com.facebook.buck.core.model.targetgraph.DescriptionProvider;
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
-import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import java.util.Arrays;
 import java.util.Collection;
@@ -37,10 +36,9 @@ public class KotlinDescriptionsProvider implements DescriptionProvider {
     BuckConfig config = context.getBuckConfig();
     KotlinBuckConfig kotlinBuckConfig = new KotlinBuckConfig(config);
     JavaBuckConfig javaConfig = config.getView(JavaBuckConfig.class);
-    JavacFactory javacFactory = new JavacFactory(javaConfig);
 
     return Arrays.asList(
-        new KotlinLibraryDescription(toolchainProvider, kotlinBuckConfig, javaConfig, javacFactory),
-        new KotlinTestDescription(toolchainProvider, kotlinBuckConfig, javaConfig, javacFactory));
+        new KotlinLibraryDescription(toolchainProvider, kotlinBuckConfig, javaConfig),
+        new KotlinTestDescription(toolchainProvider, kotlinBuckConfig, javaConfig));
   }
 }

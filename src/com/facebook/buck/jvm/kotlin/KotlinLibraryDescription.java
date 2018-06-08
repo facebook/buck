@@ -55,17 +55,14 @@ public class KotlinLibraryDescription
   private final ToolchainProvider toolchainProvider;
   private final KotlinBuckConfig kotlinBuckConfig;
   private final JavaBuckConfig javaBuckConfig;
-  private final JavacFactory javacFactory;
 
   public KotlinLibraryDescription(
       ToolchainProvider toolchainProvider,
       KotlinBuckConfig kotlinBuckConfig,
-      JavaBuckConfig javaBuckConfig,
-      JavacFactory javacFactory) {
+      JavaBuckConfig javaBuckConfig) {
     this.toolchainProvider = toolchainProvider;
     this.kotlinBuckConfig = kotlinBuckConfig;
     this.javaBuckConfig = javaBuckConfig;
-    this.javacFactory = javacFactory;
   }
 
   @Override
@@ -139,7 +136,7 @@ public class KotlinLibraryDescription
                 kotlinBuckConfig,
                 javaBuckConfig,
                 args,
-                javacFactory)
+                JavacFactory.getDefault(toolchainProvider))
             .setJavacOptions(javacOptions)
             .build();
 

@@ -68,17 +68,14 @@ public class RobolectricTestDescription
   private final ToolchainProvider toolchainProvider;
   private final JavaBuckConfig javaBuckConfig;
   private final AndroidLibraryCompilerFactory compilerFactory;
-  private final JavacFactory javacFactory;
 
   public RobolectricTestDescription(
       ToolchainProvider toolchainProvider,
       JavaBuckConfig javaBuckConfig,
-      AndroidLibraryCompilerFactory compilerFactory,
-      JavacFactory javacFactory) {
+      AndroidLibraryCompilerFactory compilerFactory) {
     this.toolchainProvider = toolchainProvider;
     this.javaBuckConfig = javaBuckConfig;
     this.compilerFactory = compilerFactory;
-    this.javacFactory = javacFactory;
   }
 
   @Override
@@ -139,7 +136,7 @@ public class RobolectricTestDescription
             ImmutableSortedSet.copyOf(
                 Iterables.concat(
                     params.getBuildDeps(), graphBuilder.getAllRules(args.getExportedDeps()))),
-            javacFactory.create(ruleFinder, args),
+            JavacFactory.getDefault(toolchainProvider).create(ruleFinder, args),
             javacOptions,
             DependencyMode.TRANSITIVE,
             args.isForceFinalResourceIds(),
@@ -195,7 +192,7 @@ public class RobolectricTestDescription
                     cellRoots,
                     compilerFactory.getCompiler(
                         args.getLanguage().orElse(AndroidLibraryDescription.JvmLanguage.JAVA),
-                        javacFactory),
+                        JavacFactory.getDefault(toolchainProvider)),
                     javaBuckConfig,
                     testLibraryArgs)
                 .setJavacOptions(javacOptions)

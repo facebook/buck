@@ -27,9 +27,10 @@ import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.TestCxxPlatformsProviderFactory;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
-import com.facebook.buck.jvm.java.JavacFactory;
+import com.facebook.buck.jvm.java.JavaCompilationConstants;
 import com.facebook.buck.jvm.java.toolchain.JavaCxxPlatformProvider;
 import com.facebook.buck.jvm.java.toolchain.JavaOptionsProvider;
+import com.facebook.buck.jvm.java.toolchain.JavaToolchain;
 import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.jvm.kotlin.KotlinBuckConfig;
 import com.facebook.buck.jvm.scala.ScalaBuckConfig;
@@ -52,8 +53,7 @@ public class RobolectricTestBuilder
         new RobolectricTestDescription(
             createToolchainProviderForRobolectricTest(),
             javaBuckConfig,
-            DEFAULT_ANDROID_COMPILER_FACTORY,
-            new JavacFactory(javaBuckConfig)),
+            DEFAULT_ANDROID_COMPILER_FACTORY),
         target);
   }
 
@@ -62,8 +62,7 @@ public class RobolectricTestBuilder
         new RobolectricTestDescription(
             createToolchainProviderForRobolectricTest(),
             DEFAULT_JAVA_CONFIG,
-            DEFAULT_ANDROID_COMPILER_FACTORY,
-            new JavacFactory(DEFAULT_JAVA_CONFIG)),
+            DEFAULT_ANDROID_COMPILER_FACTORY),
         target,
         filesystem);
   }
@@ -74,8 +73,7 @@ public class RobolectricTestBuilder
         new RobolectricTestDescription(
             createToolchainProviderForRobolectricTest(),
             javaBuckConfig,
-            DEFAULT_ANDROID_COMPILER_FACTORY,
-            new JavacFactory(javaBuckConfig)),
+            DEFAULT_ANDROID_COMPILER_FACTORY),
         target,
         filesystem);
   }
@@ -91,6 +89,7 @@ public class RobolectricTestBuilder
         .withToolchain(
             JavaOptionsProvider.DEFAULT_NAME,
             JavaOptionsProvider.of(DEFAULT_JAVA_OPTIONS, DEFAULT_JAVA_OPTIONS))
+        .withToolchain(JavaToolchain.DEFAULT_NAME, JavaCompilationConstants.DEFAULT_JAVA_TOOLCHAIN)
         .build();
   }
 

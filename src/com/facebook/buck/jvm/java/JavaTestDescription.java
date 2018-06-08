@@ -72,15 +72,10 @@ public class JavaTestDescription
 
   private final ToolchainProvider toolchainProvider;
   private final JavaBuckConfig javaBuckConfig;
-  private final JavacFactory javacFactory;
 
-  public JavaTestDescription(
-      ToolchainProvider toolchainProvider,
-      JavaBuckConfig javaBuckConfig,
-      JavacFactory javacFactory) {
+  public JavaTestDescription(ToolchainProvider toolchainProvider, JavaBuckConfig javaBuckConfig) {
     this.toolchainProvider = toolchainProvider;
     this.javaBuckConfig = javaBuckConfig;
-    this.javacFactory = javacFactory;
   }
 
   @Override
@@ -141,7 +136,8 @@ public class JavaTestDescription
                 params,
                 graphBuilder,
                 cellRoots,
-                new JavaConfiguredCompilerFactory(javaBuckConfig, javacFactory),
+                new JavaConfiguredCompilerFactory(
+                    javaBuckConfig, JavacFactory.getDefault(toolchainProvider)),
                 javaBuckConfig,
                 args)
             .setJavacOptions(javacOptions)

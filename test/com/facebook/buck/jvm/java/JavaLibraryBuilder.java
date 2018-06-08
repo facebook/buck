@@ -25,6 +25,7 @@ import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.jvm.java.toolchain.JavaToolchain;
 import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -46,7 +47,7 @@ public class JavaLibraryBuilder
   protected JavaLibraryBuilder(
       BuildTarget target, ProjectFilesystem projectFilesystem, HashCode hashCode) {
     super(
-        new JavaLibraryDescription(DEFAULT_JAVA_CONFIG, new JavacFactory(DEFAULT_JAVA_CONFIG)),
+        new JavaLibraryDescription(createToolchainProviderForJavaLibrary(), DEFAULT_JAVA_CONFIG),
         target,
         projectFilesystem,
         createToolchainProviderForJavaLibrary(),
@@ -60,7 +61,7 @@ public class JavaLibraryBuilder
       ProjectFilesystem projectFilesystem,
       HashCode hashCode) {
     super(
-        new JavaLibraryDescription(javaBuckConfig, new JavacFactory(DEFAULT_JAVA_CONFIG)),
+        new JavaLibraryDescription(createToolchainProviderForJavaLibrary(), javaBuckConfig),
         target,
         projectFilesystem,
         createToolchainProviderForJavaLibrary(),
@@ -178,6 +179,7 @@ public class JavaLibraryBuilder
     return new ToolchainProviderBuilder()
         .withToolchain(
             JavacOptionsProvider.DEFAULT_NAME, JavacOptionsProvider.of(DEFAULT_JAVAC_OPTIONS))
+        .withToolchain(JavaToolchain.DEFAULT_NAME, JavaCompilationConstants.DEFAULT_JAVA_TOOLCHAIN)
         .build();
   }
 }

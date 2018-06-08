@@ -24,7 +24,6 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
@@ -48,8 +47,7 @@ public class FauxScalaLibraryBuilder
                     JavacOptionsProvider.of(DEFAULT_JAVAC_OPTIONS))
                 .build(),
             null,
-            null,
-            new JavacFactory(null)),
+            null),
         target,
         projectFilesystem,
         hashCode);

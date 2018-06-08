@@ -64,16 +64,16 @@ public class AndroidLibraryDescription
   }
 
   private final JavaBuckConfig javaBuckConfig;
-  private final JavacFactory javacFactory;
+  private final ToolchainProvider toolchainProvider;
   private final AndroidLibraryCompilerFactory compilerFactory;
 
   public AndroidLibraryDescription(
       JavaBuckConfig javaBuckConfig,
       AndroidLibraryCompilerFactory compilerFactory,
-      JavacFactory javacFactory) {
+      ToolchainProvider toolchainProvider) {
     this.javaBuckConfig = javaBuckConfig;
     this.compilerFactory = compilerFactory;
-    this.javacFactory = javacFactory;
+    this.toolchainProvider = toolchainProvider;
   }
 
   @Override
@@ -110,6 +110,7 @@ public class AndroidLibraryDescription
             projectFilesystem,
             context.getActionGraphBuilder(),
             args);
+    JavacFactory javacFactory = JavacFactory.getDefault(toolchainProvider);
     AndroidLibrary.Builder androidLibraryBuilder =
         AndroidLibrary.builder(
             buildTarget,
@@ -151,7 +152,9 @@ public class AndroidLibraryDescription
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     compilerFactory
-        .getCompiler(constructorArg.getLanguage().orElse(JvmLanguage.JAVA), javacFactory)
+        .getCompiler(
+            constructorArg.getLanguage().orElse(JvmLanguage.JAVA),
+            JavacFactory.getDefault(toolchainProvider))
         .addTargetDeps(extraDepsBuilder, targetGraphOnlyDepsBuilder);
   }
 

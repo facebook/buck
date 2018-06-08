@@ -29,6 +29,7 @@ import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.jvm.java.toolchain.JavaCxxPlatformProvider;
 import com.facebook.buck.jvm.java.toolchain.JavaOptionsProvider;
+import com.facebook.buck.jvm.java.toolchain.JavaToolchain;
 import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import com.google.common.collect.ImmutableSortedSet;
@@ -60,9 +61,10 @@ public class JavaBinaryRuleBuilder
                     JavaOptionsProvider.of(javaOptions, javaOptions))
                 .withToolchain(
                     JavacOptionsProvider.DEFAULT_NAME, JavacOptionsProvider.of(javacOptions))
+                .withToolchain(
+                    JavaToolchain.DEFAULT_NAME, JavaCompilationConstants.DEFAULT_JAVA_TOOLCHAIN)
                 .build(),
-            javaBuckConfig,
-            new JavacFactory(javaBuckConfig)),
+            javaBuckConfig),
         target);
   }
 

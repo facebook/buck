@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
+import com.facebook.buck.jvm.java.toolchain.JavaToolchain;
 import com.google.common.collect.ImmutableList;
 
 public class JavaCompilationConstants {
@@ -37,6 +38,10 @@ public class JavaCompilationConstants {
       JavacOptions.builderForUseInJavaBuckConfig().setSourceLevel("7").setTargetLevel("6").build();
 
   public static final Javac DEFAULT_JAVAC = new JdkProvidedInMemoryJavac();
+  public static final JavaToolchain DEFAULT_JAVA_TOOLCHAIN =
+      JavaToolchain.builder()
+          .setJavacProvider(DEFAULT_JAVA_CONFIG.getJavacSpec().getJavacProvider())
+          .build();
 
   private JavaCompilationConstants() {
     // Thou shalt not instantiate utility classes.

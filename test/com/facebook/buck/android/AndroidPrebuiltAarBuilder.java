@@ -20,8 +20,10 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.AbstractNodeBuilder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.jvm.java.JavaCompilationConstants;
-import com.facebook.buck.jvm.java.JavacFactory;
+import com.facebook.buck.jvm.java.toolchain.JavaToolchain;
 import com.facebook.buck.rules.FakeSourcePath;
+import com.facebook.buck.toolchain.ToolchainProvider;
+import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import java.nio.file.Path;
 import java.util.Optional;
 
@@ -32,13 +34,17 @@ public class AndroidPrebuiltAarBuilder
 
   private AndroidPrebuiltAarBuilder(BuildTarget target) {
     super(
-        new AndroidPrebuiltAarDescription(
-            new JavacFactory(JavaCompilationConstants.DEFAULT_JAVA_CONFIG)),
-        target);
+        new AndroidPrebuiltAarDescription(createToolchainProviderForAndroidPrebuiltAar()), target);
   }
 
   public static AndroidPrebuiltAarBuilder createBuilder(BuildTarget target) {
     return new AndroidPrebuiltAarBuilder(target);
+  }
+
+  public static ToolchainProvider createToolchainProviderForAndroidPrebuiltAar() {
+    return new ToolchainProviderBuilder()
+        .withToolchain(JavaToolchain.DEFAULT_NAME, JavaCompilationConstants.DEFAULT_JAVA_TOOLCHAIN)
+        .build();
   }
 
   public AndroidPrebuiltAarBuilder setBinaryAar(SourcePath binaryAar) {

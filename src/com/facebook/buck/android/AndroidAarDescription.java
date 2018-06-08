@@ -76,15 +76,15 @@ public class AndroidAarDescription implements DescriptionWithTargetGraph<Android
 
   private final AndroidManifestFactory androidManifestFactory;
   private final CxxBuckConfig cxxBuckConfig;
-  private final JavacFactory javacFactory;
+  private final ToolchainProvider toolchainProvider;
 
   public AndroidAarDescription(
       AndroidManifestFactory androidManifestFactory,
       CxxBuckConfig cxxBuckConfig,
-      JavacFactory javacFactory) {
+      ToolchainProvider toolchainProvider) {
     this.androidManifestFactory = androidManifestFactory;
     this.cxxBuckConfig = cxxBuckConfig;
-    this.javacFactory = javacFactory;
+    this.toolchainProvider = toolchainProvider;
   }
 
   @Override
@@ -199,7 +199,6 @@ public class AndroidAarDescription implements DescriptionWithTargetGraph<Android
               + "BuildConfig class in the final .aar or do not specify build config values.",
           buildTarget);
     }
-    ToolchainProvider toolchainProvider = context.getToolchainProvider();
     if (args.getIncludeBuildConfigClass()) {
       ImmutableSortedSet<JavaLibrary> buildConfigRules =
           AndroidBinaryGraphEnhancer.addBuildConfigDeps(
@@ -210,7 +209,7 @@ public class AndroidAarDescription implements DescriptionWithTargetGraph<Android
               args.getBuildConfigValues(),
               Optional.empty(),
               graphBuilder,
-              javacFactory.create(ruleFinder, args),
+              JavacFactory.getDefault(toolchainProvider).create(ruleFinder, args),
               toolchainProvider
                   .getByName(JavacOptionsProvider.DEFAULT_NAME, JavacOptionsProvider.class)
                   .getJavacOptions(),
