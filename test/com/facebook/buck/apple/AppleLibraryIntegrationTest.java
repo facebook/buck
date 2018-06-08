@@ -975,14 +975,14 @@ public class AppleLibraryIntegrationTest {
     assertTrue(Files.exists(bitcodeFile2));
 
     // Verify separate object files for each bitcode input
-    List<String> objectFileNames = List.of("Foo1", "Foo2");
+    List<String> objectFileNames = List.of("Foo1.swift", "Foo2.swift");
     for (String name : objectFileNames) {
       BuildTarget objectTarget = workspace
           .newBuildTarget("//:Foo#macosx-x86_64")
           .withAppendedFlavors(
               InternalFlavor.of(
                   String.format("bc-compile-%s",
-                      CxxFlavorSanitizer.sanitize(name))));
+                      CxxFlavorSanitizer.sanitize(name + ".o"))));
       Path objectFileOutput = workspace.getPath(
           BuildTargets.getGenPath(filesystem, objectTarget, "%s/" + name + ".o"));
       assertTrue(Files.exists(objectFileOutput));

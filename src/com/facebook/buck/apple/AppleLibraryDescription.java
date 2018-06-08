@@ -1132,23 +1132,22 @@ public class AppleLibraryDescription
               .map(sourceWithFlags -> sourceWithFlags.getSourcePath())
               .map(
                   input ->
-                      Files.getNameWithoutExtension(
-                          pathResolver.getAbsolutePath(input).getFileName().toString()))
+                      pathResolver.getAbsolutePath(input).getFileName().toString())
               .map(
-                  name ->
+                  filename ->
                       graphBuilder.computeIfAbsent(
                           target.withAppendedFlavors(
                               cxxPlatform.getFlavor(),
                               InternalFlavor.of(
                                   String.format("bc-compile-%s",
-                                      CxxFlavorSanitizer.sanitize(name)))),
+                                      CxxFlavorSanitizer.sanitize(filename + ".o")))),
                           target1 ->
                               new SwiftBitcodeCompile(
                                   target1,
                                   filesystem,
                                   swiftPlatform.getSwiftc(),
                                   moduleRule,
-                                  name)))
+                                  filename)))
               .map(rule -> rule.getSourcePathToOutput())
               .collect(ImmutableList.toImmutableList()));
 
