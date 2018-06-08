@@ -35,9 +35,12 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
+import java.io.BufferedWriter;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.io.PrintStream;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
@@ -80,6 +83,14 @@ public class DxStep extends ShellStep {
   public static final String DX = "dx";
 
   public static final String D8 = "d8";
+
+  /**
+   * this is nothing more than a heuristic based on looking around for ARG_MAX values. a proper way
+   * might be to determine this value from the OS somehow (like sysconf(_SC_ARG_MAX)), but I haven't
+   * found an easy way to do it from java. This particular value is based on Windows'
+   * CreateProcess() limit of 32768 *characters*, which seems to be the smallest.
+   */
+  private static final int ARG_MAX = 32768;
 
   private final ProjectFilesystem filesystem;
   private final AndroidPlatformTarget androidPlatformTarget;
@@ -179,7 +190,7 @@ public class DxStep extends ShellStep {
 
   @Override
   protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
-    ImmutableList.Builder<String> builder = ImmutableList.builder();
+    CharsCountingStringList commandArgs = new CharsCountingStringList(10 + filesToDex.size());
 
     String dx = androidPlatformTarget.getDxExecutable().toString();
 
@@ -188,42 +199,64 @@ public class DxStep extends ShellStep {
       dx = customDx != null ? customDx : dx;
     }
 
-    builder.add(dx);
+    commandArgs.add(dx);
 
     // Add the Xmx override, but not for in-process dexing, since the dexer won't understand it.
     // Also, if DX works in-process, it probably wouldn't need an enlarged Xmx.
     if (maxHeapSize.isPresent() && !options.contains(Option.RUN_IN_PROCESS)) {
-      builder.add(String.format("-JXmx%s", maxHeapSize.get()));
+      commandArgs.add(String.format("-JXmx%s", maxHeapSize.get()));
     }
 
-    builder.add("--dex");
+    commandArgs.add("--dex");
 
     // --statistics flag, if appropriate.
     if (context.getVerbosity().shouldPrintSelectCommandOutput()) {
-      builder.add("--statistics");
+      commandArgs.add("--statistics");
     }
 
     if (options.contains(Option.NO_OPTIMIZE)) {
-      builder.add("--no-optimize");
+      commandArgs.add("--no-optimize");
     }
 
     if (options.contains(Option.FORCE_JUMBO)) {
-      builder.add("--force-jumbo");
+      commandArgs.add("--force-jumbo");
     }
 
     // --no-locals flag, if appropriate.
     if (options.contains(Option.NO_LOCALS)) {
-      builder.add("--no-locals");
+      commandArgs.add("--no-locals");
     }
 
     // verbose flag, if appropriate.
     if (context.getVerbosity().shouldUseVerbosityFlagIfAvailable()) {
-      builder.add("--verbose");
+      commandArgs.add("--verbose");
     }
 
-    builder.add("--output", filesystem.resolve(outputDexFile).toString());
+    commandArgs.add("--output");
+    commandArgs.add(filesystem.resolve(outputDexFile).toString());
+
+    final int splitPoint = commandArgs.size();
+
     for (Path fileToDex : filesToDex) {
-      builder.add(filesystem.resolve(fileToDex).toString());
+      commandArgs.add(filesystem.resolve(fileToDex).toString());
+    }
+
+    ImmutableList.Builder<String> builder = new ImmutableList.Builder<>();
+    if (!isRunningInProc()
+        && splitPoint < commandArgs.size()
+        && isOverArgMax(commandArgs.getCharCount(), commandArgs.size())) {
+      builder.addAll(commandArgs.subList(0, splitPoint));
+      String inputListFile;
+      try {
+        inputListFile =
+            writeFileToDexArgsToFile(commandArgs.subList(splitPoint, commandArgs.size()));
+      } catch (IOException e) {
+        throw new RuntimeException("failed to create argument list file", e);
+      }
+      builder.add("--input-list");
+      builder.add(inputListFile);
+    } else {
+      builder.addAll(commandArgs);
     }
 
     return builder.build();
@@ -232,7 +265,7 @@ public class DxStep extends ShellStep {
   @Override
   public StepExecutionResult execute(ExecutionContext context)
       throws IOException, InterruptedException {
-    if (options.contains(Option.RUN_IN_PROCESS) || D8.equals(dexTool)) { // D8 runs in process only
+    if (isRunningInProc()) {
       return StepExecutionResult.of(executeInProcess(context));
     } else {
       return super.execute(context);
@@ -361,6 +394,27 @@ public class DxStep extends ShellStep {
     return resourcesReferencedInCode;
   }
 
+  private boolean isOverArgMax(int charsCount, int argsCount) {
+    return charsCount * 2 + argsCount - 1 >= ARG_MAX;
+  }
+
+  private boolean isRunningInProc() {
+    // D8 runs in process only
+    return options.contains(Option.RUN_IN_PROCESS) || D8.equals(dexTool);
+  }
+
+  private String writeFileToDexArgsToFile(List<String> items) throws IOException {
+    Path path = filesystem.createTempFile("dx_input_list", "");
+    try (BufferedWriter writer =
+        new BufferedWriter(new OutputStreamWriter(new FileOutputStream(path.toFile())))) {
+      for (String item : items) {
+        writer.write(item);
+        writer.write("\n");
+      }
+    }
+    return path.toAbsolutePath().toString();
+  }
+
   private static class D8DiagnosticsHandler implements DiagnosticsHandler {
 
     private final List<Diagnostic> diagnostics = new ArrayList<>();
@@ -372,5 +426,26 @@ public class DxStep extends ShellStep {
 
     @Override
     public void info(Diagnostic info) {}
+  }
+
+  private static class CharsCountingStringList extends ArrayList<String> {
+    private int mCharCounter = 0;
+
+    public CharsCountingStringList(int initialSize) {
+      super(initialSize);
+    }
+
+    @Override
+    public boolean add(@Nullable String e) {
+      if (e == null) {
+        throw new NullPointerException("argument may not be null");
+      }
+      mCharCounter += e.length();
+      return super.add(e);
+    }
+
+    public int getCharCount() {
+      return mCharCounter;
+    }
   }
 }
