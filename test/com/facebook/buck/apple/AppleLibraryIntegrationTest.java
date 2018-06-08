@@ -30,6 +30,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxStrip;
+import com.facebook.buck.cxx.toolchain.CxxFlavorSanitizer;
 import com.facebook.buck.cxx.toolchain.HeaderMode;
 import com.facebook.buck.cxx.toolchain.StripStyle;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -44,6 +45,7 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.Platform;
+import com.sun.tools.javac.util.List;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -948,29 +950,43 @@ public class AppleLibraryIntegrationTest {
     workspace.addBuckConfigLocalOption("swift", "split_swift_module_generation", "true");
 
     BuildTarget swiftCompileTarget =
-        workspace
-            .newBuildTarget(String.format("//:Bar#macosx-x86_64"))
-            .withAppendedFlavors(Type.SWIFT_COMPILE.getFlavor());
+        workspace.newBuildTarget("//:App#macosx-x86_64");
     ProcessResult result =
         workspace.runBuckCommand("build", swiftCompileTarget.getFullyQualifiedName());
     result.assertSuccess();
 
+    // Verify the swiftmodule file was generated
     ProjectFilesystem filesystem =
         TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
     BuildTarget swiftModuleTarget =
         workspace
-            .newBuildTarget(String.format("//:Foo#macosx-x86_64"))
+            .newBuildTarget("//:Foo#macosx-x86_64")
             .withAppendedFlavors(Type.SWIFT_MODULE.getFlavor());
     String swiftModulePathFormat = "%s/" + String.format("%s.swiftmodule", "Foo");
-    Path binaryOutput =
+    Path moduleOutput =
         workspace.getPath(
             BuildTargets.getGenPath(filesystem, swiftModuleTarget, swiftModulePathFormat));
-    assertThat(Files.exists(binaryOutput), is(true));
+    assertTrue(Files.exists(moduleOutput));
 
-    // Verify that we build the object files & the swiftmodule for the dependency.
-    BuckBuildLog log = workspace.getBuildLog();
-    log.assertTargetBuiltLocally("//:Bar#apple-swift-compile,macosx-x86_64");
-    log.assertTargetBuiltLocally("//:Foo#apple-swift-module,macosx-x86_64");
+    // Verify that bitcode files were generated for each source file
+    Path bitcodeFile1 = moduleOutput.getParent().resolve("Foo1.bc");
+    Path bitcodeFile2 = moduleOutput.getParent().resolve("Foo2.bc");
+    assertTrue(Files.exists(bitcodeFile1));
+    assertTrue(Files.exists(bitcodeFile2));
+
+    // Verify separate object files for each bitcode input
+    List<String> objectFileNames = List.of("Foo1", "Foo2");
+    for (String name : objectFileNames) {
+      BuildTarget objectTarget = workspace
+          .newBuildTarget("//:Foo#macosx-x86_64")
+          .withAppendedFlavors(
+              InternalFlavor.of(
+                  String.format("bc-compile-%s",
+                      CxxFlavorSanitizer.sanitize(name))));
+      Path objectFileOutput = workspace.getPath(
+          BuildTargets.getGenPath(filesystem, objectTarget, "%s/" + name + ".o"));
+      assertTrue(Files.exists(objectFileOutput));
+    }
   }
 
   private static void assertIsSymbolicLink(Path link, Path target) throws IOException {

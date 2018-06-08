@@ -1140,7 +1140,8 @@ public class AppleLibraryDescription
                           target.withAppendedFlavors(
                               cxxPlatform.getFlavor(),
                               InternalFlavor.of(
-                                  String.format("bc-%s", CxxFlavorSanitizer.sanitize(name)))),
+                                  String.format("bc-compile-%s",
+                                      CxxFlavorSanitizer.sanitize(name)))),
                           target1 ->
                               new SwiftBitcodeCompile(
                                   target1,

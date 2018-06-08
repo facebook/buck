@@ -1,4 +1,3 @@
-import Foo
 
 class Bar {
   func bar() {
