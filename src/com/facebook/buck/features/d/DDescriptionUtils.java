@@ -35,6 +35,7 @@ import com.facebook.buck.cxx.CxxLinkOptions;
 import com.facebook.buck.cxx.CxxLinkableEnhancer;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
@@ -45,6 +46,7 @@ import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.SourceList;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.MoreMaps;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
@@ -168,6 +170,16 @@ abstract class DDescriptionUtils {
 
   public static BuildTarget getSymlinkTreeTarget(BuildTarget baseTarget) {
     return baseTarget.withAppendedFlavors(SOURCE_LINK_TREE);
+  }
+
+  static CxxPlatform getCxxPlatform(ToolchainProvider toolchainProvider, DBuckConfig dBuckConfig) {
+    CxxPlatformsProvider cxxPlatformsProviderFactory =
+        toolchainProvider.getByName(CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class);
+    return dBuckConfig
+        .getDefaultCxxPlatform()
+        .map(InternalFlavor::of)
+        .map(cxxPlatformsProviderFactory.getCxxPlatforms()::getValue)
+        .orElse(cxxPlatformsProviderFactory.getDefaultCxxPlatform());
   }
 
   public static SymlinkTree createSourceSymlinkTree(
