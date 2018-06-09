@@ -53,7 +53,7 @@ tools/ideabuck/src/com/facebook/buck/intellij/ideabuck/lang/Buck.flex
         If you don't want to install the Grammar-Kit plugin you can run
         {literal}
           <pre>
-python tools/ideabuck/scripts/intellij/generate_grammar_kit.py
+python tools/ideabuck/scripts/generate_grammar_kit.py
           </pre>
         {/literal}
         <p>
@@ -63,12 +63,13 @@ python tools/ideabuck/scripts/intellij/generate_grammar_kit.py
       </li>
     </ul>
   </li>
-
   <li>
     <a href="https://www.jetbrains.com/idea/help/configuring-intellij-platform-plugin-sdk.html">
     Configure the Intellij Platform Plugin SDK</a> and set it as the{sp}
-    <a href="https://www.jetbrains.com/idea/help/configuring-global-project-and-module-sdks.html">
-    plugin's module sdk</a>.
+    <a href="https://www.jetbrains.com/help/idea/sdk.html#change-module-sdk">
+    SDK of ideabuck module</a>. If you don't see "ideabuck" in the <code>Project Settings/Modules</code>, you need to
+    first import ideabuck module by right clicking on <code>tools/ideabuck/ideabuck.iml</code> and
+    choose <code>Import "ideabuck" Module</code>
   </li>
   <li>
     Remove the Buck Intellij Plugin, <code>tools/ideabuck</code> from{sp}
