@@ -35,6 +35,7 @@ java_test(
         "//test/com/facebook/buck/core/cell:testutil",
         "//test/com/facebook/buck/core/model/targetgraph:testutil",
         "//test/com/facebook/buck/cxx:testutil",
+        "//test/com/facebook/buck/cxx/toolchain:testutil",
         "//test/com/facebook/buck/event:testutil",
         "//test/com/facebook/buck/features/filegroup:testutil",
         "//test/com/facebook/buck/features/lua:testutil",

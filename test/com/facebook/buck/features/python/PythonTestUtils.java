@@ -34,7 +34,7 @@ public class PythonTestUtils {
 
   public static final PythonPlatform PYTHON_PLATFORM =
       new TestPythonPlatform(
-          InternalFlavor.of("default"),
+          InternalFlavor.of("default-py-platform"),
           new PythonEnvironment(Paths.get("python"), PythonVersion.of("CPython", "2.6")),
           Optional.empty());
 

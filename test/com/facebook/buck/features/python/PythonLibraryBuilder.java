@@ -33,10 +33,12 @@ import java.util.Optional;
 
 public class PythonLibraryBuilder
     extends AbstractNodeBuilder<
-        PythonLibraryDescriptionArg.Builder, PythonLibraryDescriptionArg, PythonLibraryDescription,
+        PythonLibraryDescriptionArg.Builder,
+        PythonLibraryDescriptionArg,
+        PythonLibraryDescription,
         PythonLibrary> {
 
-  PythonLibraryBuilder(
+  public PythonLibraryBuilder(
       BuildTarget target,
       FlavorDomain<PythonPlatform> pythonPlatforms,
       FlavorDomain<CxxPlatform> cxxPlatforms) {

@@ -123,7 +123,9 @@ public class PythonUtil {
                     pathResolver,
                     "platform" + CaseFormat.LOWER_HYPHEN.to(CaseFormat.UPPER_CAMEL, parameter),
                     baseModule,
-                    platformItems.getMatchingValues(pythonPlatform.getFlavor().toString())))
+                    Iterables.concat(
+                        platformItems.getMatchingValues(pythonPlatform.getFlavor().toString()),
+                        platformItems.getMatchingValues(cxxPlatform.getFlavor().toString()))))
             .putAll(
                 PythonUtil.toModuleMap(
                     target,
