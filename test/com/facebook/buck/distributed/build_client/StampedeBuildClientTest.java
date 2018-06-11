@@ -475,6 +475,28 @@ public class StampedeBuildClientTest {
   }
 
   @Test
+  public void fireAndForgetBuildSchedulesRemoteAndExits()
+      throws InterruptedException, IOException, ExecutionException {
+    // Summary:
+    // One phase: No fallback. Local build schedules remote build and exits.
+    createStampedBuildClient(INITIALIZED_STAMPEDE_ID);
+
+    distBuildControllerInvokerLatch.countDown();
+    expect(mockDistBuildControllerInvoker.runDistBuildAndReturnExitCode()).andReturn(SUCCESS_CODE);
+
+    EasyMock.expectLastCall();
+    replayAllMocks();
+
+    // Run the build client in another thread
+    Future<Integer> buildClientFuture =
+        buildClientExecutor.submit(
+            () -> buildClient.build(DistLocalBuildMode.FIRE_AND_FORGET, FALLBACK_ENABLED));
+
+    assertLocalAndDistributedExitCodes(buildClientFuture, SUCCESS_CODE, SUCCESS_CODE);
+    verifyAllMocks();
+  }
+
+  @Test
   public void remoteBuildFailsAndThenRacingBuildKilledAsNoLocalFallback()
       throws InterruptedException, IOException, ExecutionException {
     // Summary:

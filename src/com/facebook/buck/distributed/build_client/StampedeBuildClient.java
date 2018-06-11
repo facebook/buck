@@ -144,7 +144,7 @@ public class StampedeBuildClient {
   /**
    * Kicks off distributed build, then runs a multi-phase local build which.
    *
-   * @throws InterruptedException
+   * @throws InterruptedException if proceedToLocalSynchronizedBuildPhase gets interrupted.
    */
   public int build(DistLocalBuildMode distLocalBuildMode, boolean localBuildFallbackEnabled)
       throws InterruptedException {
@@ -155,7 +155,7 @@ public class StampedeBuildClient {
 
     if (distLocalBuildMode.equals(DistLocalBuildMode.FIRE_AND_FORGET)) {
       distBuildRunner.runDistBuildSync();
-      eventBus.post(ConsoleEvent.info("Fire and forget was scheduled."));
+      eventBus.post(ConsoleEvent.info("Fire and forget build was scheduled."));
       LOG.info("Stampede build in fire-and-forget mode started remotely. Exiting local client.");
       return ExitCode.SUCCESSFUL.getCode();
     } else {
@@ -163,9 +163,6 @@ public class StampedeBuildClient {
       distBuildRunner.runDistBuildAsync();
     }
 
-    // boolean proceedToLocalSynchronizedBuildPhase = skipRacingPhase;
-    // if (!skipRacingPhase) {
-    // proceedToLocalSynchronizedBuildPhase = true = WAI
     boolean proceedToLocalSynchronizedBuildPhase =
         distLocalBuildMode.equals(DistLocalBuildMode.WAIT_FOR_REMOTE);
     if (distLocalBuildMode.equals(DistLocalBuildMode.NO_WAIT_FOR_REMOTE)) {

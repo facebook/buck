@@ -125,7 +125,7 @@ public class BuildPhase {
   private final int waitForAllWorkerFinalStatusTimeoutMillis;
   private final int waitForAllBuildEventsTimeoutMillis;
 
-  private volatile long firstFinishedBuildStatusReceviedTs = -1;
+  private volatile long firstFinishedBuildStatusReceivedTs = -1;
 
   @VisibleForTesting
   protected BuildPhase(
@@ -549,12 +549,12 @@ public class BuildPhase {
     if (BuildStatusUtil.isTerminalBuildStatus(job.getStatus())) {
       // Make a record of the first time we received terminal build job status, so that
       // if we still need to fetch more events, we have a reference point for timeouts.
-      if (firstFinishedBuildStatusReceviedTs == -1) {
-        firstFinishedBuildStatusReceviedTs = currentTimeMillis;
+      if (firstFinishedBuildStatusReceivedTs == -1) {
+        firstFinishedBuildStatusReceivedTs = currentTimeMillis;
       }
 
       long elapseMillisSinceFirstFinishedStatus =
-          currentTimeMillis - firstFinishedBuildStatusReceviedTs;
+          currentTimeMillis - firstFinishedBuildStatusReceivedTs;
 
       // Top level build was set to finished status, however individual slaves might not yet
       // have marked themselves finished, so wait for this to happen before returning.
@@ -656,7 +656,7 @@ public class BuildPhase {
             slaveStatusList
                 .stream()
                 .filter(Optional::isPresent)
-                .map(x -> x.get())
+                .map(Optional::get)
                 .collect(Collectors.toList()),
         MoreExecutors.directExecutor());
   }
