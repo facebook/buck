@@ -42,9 +42,9 @@ public class BgProcessKiller {
   public static synchronized void init() {
     NativeLibrary libcLibrary = NativeLibrary.getInstance(Platform.C_LIBRARY_NAME);
 
-    // We kill subprocesses by sending SIGHUP to our process group; we want our subprocesses to die
-    // on SIGHUP while we ourselves stay around.  We can't just set SIGHUP to SIG_IGN, because
-    // subprocesses would inherit the SIG_IGN signal disposition and be immune to the SIGHUP we
+    // We kill subprocesses by sending SIGINT to our process group; we want our subprocesses to die
+    // on SIGINT while we ourselves stay around.  We can't just set SIGINT to SIG_IGN, because
+    // subprocesses would inherit the SIG_IGN signal disposition and be immune to the SIGINT we
     // direct toward the process group.  We need _some_ signal handler that does nothing --- i.e.,
     // acts like SIG_IGN --- but that doesn't kill its host process.  When we spawn a subprocess,
     // the kernel replaces any signal handler that is not SIG_IGN with SIG_DFL, automatically
@@ -73,7 +73,7 @@ public class BgProcessKiller {
     // [1] Win32 32-bit x86 stdcall is an exception to this general rule --- because the callee
     //      cleans up its stack --- but we don't run this code on Windows.
     //
-    Libc.INSTANCE.signal(Libc.Constants.SIGHUP, libcLibrary.getFunction("getpid"));
+    Libc.INSTANCE.signal(Libc.Constants.SIGINT, libcLibrary.getFunction("getpid"));
     initialized = true;
   }
 
