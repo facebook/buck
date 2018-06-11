@@ -25,7 +25,6 @@ import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.google.common.base.Suppliers;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import org.junit.Test;
@@ -59,12 +58,9 @@ public class PathSourcePathTest {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem(root);
     Path relativePath1 = Paths.get("some/relative/path1");
     Path relativePath2 = Paths.get("some/relative/path2");
-    PathSourcePath clonedPathA1 =
-        PathSourcePath.of(projectFilesystem, Suppliers.ofInstance(relativePath1));
-    PathSourcePath pathA1 =
-        PathSourcePath.of(projectFilesystem, Suppliers.ofInstance(relativePath1));
-    PathSourcePath pathA2 =
-        PathSourcePath.of(projectFilesystem, Suppliers.ofInstance(relativePath2));
+    PathSourcePath clonedPathA1 = PathSourcePath.of(projectFilesystem, relativePath1);
+    PathSourcePath pathA1 = PathSourcePath.of(projectFilesystem, relativePath1);
+    PathSourcePath pathA2 = PathSourcePath.of(projectFilesystem, relativePath2);
 
     // check relative paths
     assertEquals(relativePath1, pathA1.getRelativePath());

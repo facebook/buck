@@ -19,7 +19,6 @@ package com.facebook.buck.rules;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.google.common.base.Suppliers;
 import java.nio.file.Path;
 
 public final class FakeSourcePath {
@@ -37,6 +36,6 @@ public final class FakeSourcePath {
   }
 
   public static PathSourcePath of(ProjectFilesystem filesystem, Path path) {
-    return PathSourcePath.of(filesystem, Suppliers.ofInstance(path));
+    return PathSourcePath.of(filesystem, path);
   }
 }

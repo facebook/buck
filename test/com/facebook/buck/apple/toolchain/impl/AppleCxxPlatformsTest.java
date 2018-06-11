@@ -1097,7 +1097,7 @@ public class AppleCxxPlatformsTest {
     assertEquals(projectFilesystem, path.getFilesystem());
     assertEquals(
         "/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc",
-        path.getRelativePathName());
+        path.getRelativePath().toString());
 
     assertThat(swiftPlatformOptional.get().getSwiftRuntimePaths(), Matchers.empty());
   }
@@ -1110,7 +1110,7 @@ public class AppleCxxPlatformsTest {
     Tool swiftcTool = swiftPlatformOptional.get().getSwiftc();
     PathSourcePath path = ((VersionedTool) swiftcTool).getPath();
     assertEquals(projectFilesystem, path.getFilesystem());
-    assertEquals("/TEMP_ROOT/usr/bin/swiftc", path.getRelativePathName());
+    assertEquals("/TEMP_ROOT/usr/bin/swiftc", path.getRelativePath().toString());
 
     assertThat(
         swiftPlatformOptional.get().getSwiftRuntimePaths(),
