@@ -87,6 +87,7 @@ public class GoAssembleStep extends ShellStep {
         .putAll(environment)
         .put("GOOS", platform.getGoOs())
         .put("GOARCH", platform.getGoArch())
+        .put("GOARM", platform.getGoArm())
         .build();
   }
 

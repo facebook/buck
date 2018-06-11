@@ -38,6 +38,9 @@ abstract class AbstractGoPlatform implements FlavorConvertible, AddsToRuleKey {
   @AddToRuleKey
   abstract String getGoArch();
 
+  @AddToRuleKey
+  abstract String getGoArm();
+
   @Override
   public abstract Flavor getFlavor();
 
