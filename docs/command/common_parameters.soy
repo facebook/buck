@@ -6,7 +6,7 @@
     {param title: 'Common Parameters' /}
     {param navid: 'command_common_parameters' /}
     {param description}
-      Command line parameters that affect all commands.
+      Command-line parameters that affect all commands.
     {/param}
     {param content}
 
@@ -14,11 +14,11 @@
 {call buck.command}
 {param overview}
 
-<p>Some command line parameters affect the operation of Buck itself, regardless
-of which subcommand is being run.
-
-<pre>buck targets --verbose 10</pre>
+<p>
+Some command-line parameters affect the operation of Buck itself,
+regardless of which subcommand is being run.
 </p>
+
 {/param}
 
 {param params}
@@ -26,29 +26,78 @@ of which subcommand is being run.
 {call buck.param}
   {param name: 'verbose' /}
   {param desc}
-Sets the verbosity level of the console output.
+  <p>
+  Sets the verbosity level of the console output. For example:
+  </p>
+
+<p>
+<pre>
+{literal}
+buck targets --verbose 10
+{/literal}
+</pre>
+</p>
+
   {/param}
 {/call}
 
 {call buck.param}
   {param name: 'no-cache' /}
   {param desc}
-Disables the build artifact cache.
+  <p>
+  Disables the build artifact cache.
+  </p>
   {/param}
 {/call}
 
 {call buck.param}
   {param name: 'config' /}
   {param desc}
-Overrides settings specified in {call buck.concept_buckconfig /}.
+
+  <p>
+  Overrides settings specified in {call buck.concept_buckconfig /}.
+  For example:
+  </p>
+
 <p>
-<pre>buck build --config cache.mode=dir ...</pre>
+<pre>
+{literal}
+buck build --config cache.mode=dir ...
+{/literal}
+</pre>
 </p>
 
-<p>Note that overriding values of <code>.buckconfig</code> from the command line
-makes reproducing the build very hard. The preferred method of overriding values
-of <code>.buckconfig</code> is via <code>.buckconfig.local</code>.
+<p>
+The <code>--config</code> parameter can be specified multiple times on
+the same command line. Note, however, that if the same configuration 
+option is specified more than once, Buck uses the last value specified 
+("last write wins"). For example, the following invocation 
+of <code>buck build</code> builds 
+the <code><literal>//:prod</literal></code> target, 
+rather than the <code><literal>//:dev</literal></code> target, 
+which was specified earlier on the command line.
 </p>
+
+<p>
+<pre>
+{literal}
+#
+# Build for development? 
+#
+# No, build for production.
+#
+buck build --config 'alias.main=//:dev' --config 'alias.main=//:prod' main
+{/literal}
+</pre>
+</p>
+
+<p>
+The preferred method of overriding values in <code>.buckconfig</code> is
+by using a <code>.buckconfig.local</code> file.
+Overriding values of <code>.buckconfig</code> from the command line makes 
+reproducing builds difficult. 
+</p>
+
   {/param}
 {/call}
 
@@ -56,55 +105,109 @@ of <code>.buckconfig</code> is via <code>.buckconfig.local</code>.
   {param name: 'num-threads' /}
   {param desc}
 
+  <p>
   The number of threads that buck should use when executing jobs.
   This defaults to 1.25 times the number of processors in the
-  system (on systems with hyperthreading, this means that each core is
-  counted twice). The number of threads to use for building can also
+  system; on systems with hyperthreading, this means that each core is
+  counted twice. The number of threads to use for building can also
   be set by adding a "<code>threads</code>" key to the{sp}
   "<code>build</code>" section of the <code>.buckconfig</code> file.
+  </p>
 
-  The order of precedence for setting the number of builds threads
-  (from highest to lowest) is: command line option,{sp}
-  <code>.buckconfig</code> setting, default value.
+  <p>
+  The order of precedence for setting the number of build threads
+  (from highest to lowest) is: 
 
+  <ol>
+    <li>
+      command-line option
+    </li>
+    <li>
+      <code>.buckconfig</code> setting
+    </li>
+    <li>
+      default value
+    </li>
+  </ol>
+
+  </p>
+
+  <p>
   The number of active threads may not always be equal to this
   argument.
+  </p>
  {/param}
 {/call}
 
 {call buck.param}
-  {param name: '@/path/to/commandline-args' /}
+  {param name: '--flagfile /path/to/commandline-args or @/path/to/commandline-args' /}
   {param nodash: true /}
   {param desc}
-Additional command line arguments can be stored in external files, one argument per line.
-These arguments can also be <code>@</code> arguments, which will include a second file's
-contents as arguments.
 
-{literal}<pre class = "prettyprint lang-ini">
+  <p>
+  Additional command-line arguments can be stored in external files
+  (<em>flag files</em>), one argument per line. The arguments in these 
+  files can themselves be <code>--flagfile</code> or <code>@</code> arguments, 
+  which would then include a second file's contents as arguments.
+  </p>
+
+<p>
+<pre class = "prettyprint lang-ini">
+{literal}
 # File config/common
 --verbose
+{/literal}
+</pre>
+</p>
 
+<p>
+<pre class = "prettyprint lang-ini">
+{literal}
 # File config/gcc
 @config/common
 --config
 cxx.cxx=/usr/bin/g++
 ...
+{/literal}
+</pre>
+</p>
 
+<p>
+<pre class = "prettyprint lang-ini">
+{literal}
 # File config/clang
 @config/common
 --config
 cxx.cxx=/usr/bin/clang++
 ...
-
-buck build @config/gcc foo/bar:
-buck build @config/clang foo/bar:
-</pre>{/literal}
+{/literal}
+</pre>
+</p>
 
 <p>
-If Buck is regularly invoked with different sets of arguments, this is the 
-preferred approach, as argument files can be stored in source control, making builds
-more reproducible.
+<pre class = "prettyprint lang-ini">
+{literal}
+buck build @config/gcc foo/bar:
+buck build @config/clang foo/bar:
+{/literal}
+</pre>
 </p>
+
+<p>
+Lines in flag files must not have any leading or trailing white space.
+</p>
+
+<p>
+We recommend that you use <code>--flagfile</code> rather than 
+the <code>@</code> symbol as it is more self-describing.
+</p>
+
+<p>
+If Buck is regularly invoked with different sets of arguments, we
+recommend that you use flag files, as they can be stored in source
+control, making builds more reproducible.
+</p>
+
   {/param}
 {/call}
 
