@@ -32,14 +32,16 @@ public abstract class AbstractPathSourcePath implements SourcePath {
   protected abstract ProjectFilesystem getFilesystem();
 
   // A name for the path.  Used for equality, hashcode, and comparisons.
-  protected abstract String getRelativePathName();
+  @Value.Derived
+  protected String getRelativePathName() {
+    return getRelativePath().toString();
+  }
 
   // A supplier providing the path.  Used to resolve to `Path` used to access the file.
   protected abstract Supplier<Path> getRelativePathSupplier();
 
   public static PathSourcePath of(ProjectFilesystem filesystem, Path relativePath) {
-    return PathSourcePath.of(
-        filesystem, relativePath.toString(), Suppliers.ofInstance(relativePath));
+    return PathSourcePath.of(filesystem, Suppliers.ofInstance(relativePath));
   }
 
   @Override

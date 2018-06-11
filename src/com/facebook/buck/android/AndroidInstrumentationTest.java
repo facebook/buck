@@ -264,10 +264,7 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
   }
 
   private String getPathForResourceJar(PackagedResource packagedResource) {
-    return PathSourcePath.of(
-            this.getProjectFilesystem(),
-            AndroidInstrumentationTest.class + "/" + packagedResource.getFilenamePath(),
-            packagedResource)
+    return PathSourcePath.of(this.getProjectFilesystem(), packagedResource)
         .getRelativePath()
         .toString();
   }

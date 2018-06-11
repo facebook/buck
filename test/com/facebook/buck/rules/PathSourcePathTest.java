@@ -54,41 +54,29 @@ public class PathSourcePathTest {
   }
 
   @Test
-  public void testExplicitlySpecifiedName() {
+  public void testComparisonAndHashcode() {
     Path root = Paths.get("/root/");
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem(root);
     Path relativePath1 = Paths.get("some/relative/path1");
     Path relativePath2 = Paths.get("some/relative/path2");
-    String nameA = "nameA";
-    String nameB = "nameB";
     PathSourcePath clonedPathA1 =
-        PathSourcePath.of(projectFilesystem, nameA, Suppliers.ofInstance(relativePath1));
+        PathSourcePath.of(projectFilesystem, Suppliers.ofInstance(relativePath1));
     PathSourcePath pathA1 =
-        PathSourcePath.of(projectFilesystem, nameA, Suppliers.ofInstance(relativePath1));
+        PathSourcePath.of(projectFilesystem, Suppliers.ofInstance(relativePath1));
     PathSourcePath pathA2 =
-        PathSourcePath.of(projectFilesystem, nameA, Suppliers.ofInstance(relativePath2));
-    PathSourcePath pathB1 =
-        PathSourcePath.of(projectFilesystem, nameB, Suppliers.ofInstance(relativePath1));
-    PathSourcePath pathB2 =
-        PathSourcePath.of(projectFilesystem, nameB, Suppliers.ofInstance(relativePath2));
+        PathSourcePath.of(projectFilesystem, Suppliers.ofInstance(relativePath2));
 
     // check relative paths
     assertEquals(relativePath1, pathA1.getRelativePath());
     assertEquals(relativePath2, pathA2.getRelativePath());
-    assertEquals(relativePath1, pathB1.getRelativePath());
-    assertEquals(relativePath2, pathB2.getRelativePath());
 
     // different instances, but everything is the same
     assertEquals(pathA1.hashCode(), clonedPathA1.hashCode());
     assertEquals(pathA1, clonedPathA1);
     assertEquals(0, pathA1.compareTo(clonedPathA1));
-    // even though the underlying relative paths are different, their names are the same
-    assertEquals(pathA1.hashCode(), pathA2.hashCode());
-    assertEquals(pathA1, pathA2);
-    assertEquals(0, pathA1.compareTo(pathA2));
     // even though the underlying relative paths are the same, their names are not
-    assertNotEquals(pathA1.hashCode(), pathB1.hashCode());
-    assertNotEquals(pathA1, pathB1);
-    assertNotEquals(0, pathA1.compareTo(pathB1));
+    assertNotEquals(pathA1.hashCode(), pathA2.hashCode());
+    assertNotEquals(pathA1, pathA2);
+    assertNotEquals(0, pathA1.compareTo(pathA2));
   }
 }
