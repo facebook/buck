@@ -49,7 +49,7 @@ public interface FileHashCacheEngine {
   HashCode get(ArchiveMemberPath archiveMemberPath) throws IOException;
 
   @Nullable
-  HashCodeAndFileType getIfPresent(Path path);
+  HashCode getIfPresent(Path path);
 
   @Nullable
   Long getSizeIfPresent(Path path);

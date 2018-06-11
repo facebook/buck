@@ -106,8 +106,9 @@ class FileSystemMapFileHashCache implements FileHashCacheEngine {
 
   @Override
   @Nullable
-  public HashCodeAndFileType getIfPresent(Path path) {
-    return loadingCache.getIfPresent(path);
+  public HashCode getIfPresent(Path path) {
+    HashCodeAndFileType hashCodeAndFileType = loadingCache.getIfPresent(path);
+    return hashCodeAndFileType == null ? null : hashCodeAndFileType.getHashCode();
   }
 
   @Override

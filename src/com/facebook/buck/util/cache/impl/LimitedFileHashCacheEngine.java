@@ -32,7 +32,6 @@ import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import javax.annotation.Nullable;
@@ -49,126 +48,125 @@ import javax.annotation.Nullable;
 class LimitedFileHashCacheEngine implements FileHashCacheEngine {
 
   // Use constants instead of enums to save memory on data object
-
   static final byte FILE_TYPE_FILE = 0;
   static final byte FILE_TYPE_SYMLINK = 1;
   static final byte FILE_TYPE_DIRECTORY = 2;
+
+  static final byte ARCHIVE_TYPE_UNDEFINED = 0;
+  static final byte ARCHIVE_TYPE_NOT_ARCHIVE = 1;
+  static final byte ARCHIVE_TYPE_JAR = 2;
 
   // TODO(cjhopman): Should we make these recycleable? We only ever need one per path, so we could
   // just hold on to them and reuse them. Might be nice if the FileSystemMap closes/notifies them
   // so that we can drop reference to data.
   // (sergeyb): Please do not add any more fields to this data structure or at least make sure they
   // are optimized for memory footprint
-  private final class Data {
-    private final Path path;
-
+  private static final class Data {
     // One of FILE_TYPE consts
-    private final byte fileType;
-
+    private volatile byte fileType;
+    // One of ARCHIVE_TYPE consts
+    private volatile byte archiveType = ARCHIVE_TYPE_UNDEFINED;
     private @Nullable ImmutableMap<Path, HashCode> jarContentsHashes = null;
-    private volatile @Nullable HashCodeAndFileType hashCodeAndFileType = null;
+    private volatile @Nullable HashCode hashCode = null;
     private volatile long size = -1;
 
-    private Data(Path path) {
-      this.fileType = loadType(path);
-      this.path = path;
-    }
-
-    private ImmutableMap<Path, HashCode> loadJarContentsHashes() {
-      try {
-        return new DefaultJarContentHasher(filesystem, path)
-            .getContentHashes()
-            .entrySet()
-            .stream()
-            .collect(
-                ImmutableMap.toImmutableMap(
-                    entry -> entry.getKey(), entry -> entry.getValue().getHashCode()));
-      } catch (IOException e) {
-        throw new RuntimeException(e);
-      }
-    }
-
-    private HashCodeAndFileType loadHashCodeAndFileType() {
-      switch (fileType) {
-        case FILE_TYPE_FILE:
-        case FILE_TYPE_SYMLINK:
-          HashCode loadedValue = fileHashLoader.load(path);
-          if (isArchive(path)) {
-            return JarHashCodeAndFileType.ofArchive(
-                loadedValue, new DefaultJarContentHasher(filesystem, path));
-          }
-          return HashCodeAndFileType.ofFile(loadedValue);
-        case FILE_TYPE_DIRECTORY:
-          HashCodeAndFileType loadedDirValue = dirHashLoader.load(path);
-          Preconditions.checkState(loadedDirValue.getType() == HashCodeAndFileType.TYPE_DIRECTORY);
-          return loadedDirValue;
-      }
-      throw new RuntimeException();
-    }
-
-    private long loadSize() {
-      return sizeLoader.load(path);
-    }
-
-    public void set(HashCodeAndFileType value) {
-      // TODO(cjhopman): should this verify filetype?
-      this.hashCodeAndFileType = value;
-    }
-
-    public void setSize(long size) {
-      this.size = size;
-    }
-
-    public long getSize() {
-      if (!isCacheableFileType() || size == -1) {
-        size = loadSize();
-      }
-      return size;
-    }
-
-    private boolean isCacheableFileType() {
-      return fileType == FILE_TYPE_FILE;
-    }
-
-    HashCodeAndFileType getHashCodeAndFileType() {
-      if (hashCodeAndFileType == null) {
-        HashCodeAndFileType codeAndType = loadHashCodeAndFileType();
-        if (!isCacheableFileType()) {
-          return codeAndType;
-        }
-        hashCodeAndFileType = codeAndType;
-      }
-      return hashCodeAndFileType;
-    }
-
-    ImmutableMap<Path, HashCode> getJarContentsHashes() {
-      if (jarContentsHashes == null) {
-        ImmutableMap<Path, HashCode> jarCaches = loadJarContentsHashes();
-        if (!isCacheableFileType()) {
-          return jarCaches;
-        }
-        jarContentsHashes = jarCaches;
-      }
-      return jarContentsHashes;
+    private Data(byte fileType) {
+      this.fileType = fileType;
     }
   }
 
   private final ProjectFilesystem filesystem;
   private final ValueLoader<HashCode> fileHashLoader;
-  private final ValueLoader<HashCodeAndFileType> dirHashLoader;
+  private final ValueLoader<HashCode> dirHashLoader;
   private final ValueLoader<Long> sizeLoader;
   private final FileSystemMap<Data> fileSystemMap;
 
   public LimitedFileHashCacheEngine(
       ProjectFilesystem filesystem,
       ValueLoader<HashCode> fileHashLoader,
-      ValueLoader<HashCodeAndFileType> dirHashLoader,
+      ValueLoader<HashCode> dirHashLoader,
       ValueLoader<Long> sizeLoader) {
     this.filesystem = filesystem;
     this.fileHashLoader = fileHashLoader;
     this.dirHashLoader = dirHashLoader;
     this.sizeLoader = sizeLoader;
-    this.fileSystemMap = new FileSystemMap<>(Data::new, filesystem);
+    this.fileSystemMap = new FileSystemMap<>(path -> new Data(loadType(path)), filesystem);
+  }
+
+  private ImmutableMap<Path, HashCode> loadJarContentsHashes(Path path) {
+    try {
+      return new DefaultJarContentHasher(filesystem, path)
+          .getContentHashes()
+          .entrySet()
+          .stream()
+          .collect(
+              ImmutableMap.toImmutableMap(
+                  entry -> entry.getKey(), entry -> entry.getValue().getHashCode()));
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  private long getSizeWithLoad(Path path, Data data) {
+    if (data.size == -1) {
+      long size = sizeLoader.load(path);
+      if (!isCacheableFileType(data)) {
+        return size;
+      }
+      data.size = size;
+    }
+    return data.size;
+  }
+
+  private ImmutableMap<Path, HashCode> getJarContentsHashesWithLoad(Path path, Data data) {
+    if (data.jarContentsHashes == null) {
+      ImmutableMap<Path, HashCode> jarCaches = loadJarContentsHashes(path);
+      if (!isCacheableFileType(data)) {
+        return jarCaches;
+      }
+      data.jarContentsHashes = jarCaches;
+    }
+    return data.jarContentsHashes;
+  }
+
+  private HashCodeAndFileType getHashCodeAndFileTypeWithLoad(Path path, Data data) {
+    HashCode hashCode = getHashCodeWithLoad(path, data);
+
+    if (data.fileType == FILE_TYPE_DIRECTORY) {
+      return HashCodeAndFileType.ofDirectory(hashCode);
+    }
+    // Load archive type lazily the first time the function is called for that path
+    // this avoids expensive calls to isArchive() which uses Path translation
+    if (data.archiveType == ARCHIVE_TYPE_UNDEFINED) {
+      data.archiveType = isArchive(path) ? ARCHIVE_TYPE_JAR : ARCHIVE_TYPE_NOT_ARCHIVE;
+    }
+    if (data.archiveType == ARCHIVE_TYPE_JAR) {
+      return JarHashCodeAndFileType.ofArchive(
+          hashCode, new DefaultJarContentHasher(filesystem, path));
+    }
+    return HashCodeAndFileType.ofFile(hashCode);
+  }
+
+  private HashCode getHashCodeWithLoad(Path path, Data data) {
+    HashCode code = data.hashCode;
+    if (code == null) {
+      code = loadHashCode(path, data);
+      if (isCacheableFileType(data)) {
+        data.hashCode = code;
+      }
+    }
+    return code;
+  }
+
+  private boolean isCacheableFileType(Data data) {
+    return data.fileType == FILE_TYPE_FILE;
+  }
+
+  private HashCode loadHashCode(Path path, Data data) {
+    if (data.fileType == FILE_TYPE_DIRECTORY) {
+      return dirHashLoader.load(path);
+    }
+    return fileHashLoader.load(path);
   }
 
   private byte loadType(Path path) {
@@ -189,12 +187,14 @@ class LimitedFileHashCacheEngine implements FileHashCacheEngine {
 
   @Override
   public void put(Path path, HashCodeAndFileType value) {
-    fileSystemMap.get(path).set(value);
+    Data data = fileSystemMap.get(path);
+    data.hashCode = value.getHashCode();
+    data.fileType = value.getType();
   }
 
   @Override
   public void putSize(Path path, long value) {
-    fileSystemMap.get(path).setSize(value);
+    fileSystemMap.get(path).size = value;
   }
 
   @Override
@@ -209,7 +209,7 @@ class LimitedFileHashCacheEngine implements FileHashCacheEngine {
 
   @Override
   public HashCode get(Path path) throws IOException {
-    return fileSystemMap.get(path).getHashCodeAndFileType().getHashCode();
+    return getHashCodeWithLoad(path, fileSystemMap.get(path));
   }
 
   @Override
@@ -218,7 +218,7 @@ class LimitedFileHashCacheEngine implements FileHashCacheEngine {
     Preconditions.checkState(isArchive(relativeFilePath), relativeFilePath + " is not an archive.");
     Data data = fileSystemMap.get(relativeFilePath);
     Path memberPath = archiveMemberPath.getMemberPath();
-    HashCode hashCode = data.getJarContentsHashes().get(memberPath);
+    HashCode hashCode = getJarContentsHashesWithLoad(relativeFilePath, data).get(memberPath);
     if (hashCode == null) {
       throw new NoSuchFileException(archiveMemberPath.toString());
     }
@@ -231,7 +231,7 @@ class LimitedFileHashCacheEngine implements FileHashCacheEngine {
 
   @Override
   public long getSize(Path relativePath) throws IOException {
-    return fileSystemMap.get(relativePath).getSize();
+    return getSizeWithLoad(relativePath, fileSystemMap.get(relativePath));
   }
 
   @Override
@@ -241,25 +241,29 @@ class LimitedFileHashCacheEngine implements FileHashCacheEngine {
 
   @Override
   @Nullable
-  public HashCodeAndFileType getIfPresent(Path path) {
-    return Optional.ofNullable(fileSystemMap.getIfPresent(path))
-        .map(Data::getHashCodeAndFileType)
-        .orElse(null);
+  public HashCode getIfPresent(Path path) {
+    Data data = fileSystemMap.getIfPresent(path);
+    if (data == null) {
+      return null;
+    }
+    return getHashCodeWithLoad(path, data);
   }
 
   @Override
   @Nullable
   public Long getSizeIfPresent(Path path) {
-    return Optional.ofNullable(fileSystemMap.getIfPresent(path))
-        .map(data -> data.getSize())
-        .orElse(null);
+    Data data = fileSystemMap.getIfPresent(path);
+    if (data == null) {
+      return null;
+    }
+    return getSizeWithLoad(path, data);
   }
 
   @Override
   public ConcurrentMap<Path, HashCodeAndFileType> asMap() {
     return new ConcurrentHashMap<>(
-        Maps.transformValues(
-            fileSystemMap.asMap(), v -> Preconditions.checkNotNull(v).getHashCodeAndFileType()));
+        Maps.transformEntries(
+            fileSystemMap.asMap(), (k, v) -> getHashCodeAndFileTypeWithLoad(k, v)));
   }
 
   @Override

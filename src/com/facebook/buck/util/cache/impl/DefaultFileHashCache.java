@@ -88,7 +88,7 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
           }
         };
 
-    FileHashCacheEngine.ValueLoader<HashCodeAndFileType> dirHashLoader =
+    FileHashCacheEngine.ValueLoader<HashCode> dirHashLoader =
         (path) -> {
           try {
             return getDirHashCode(path);
@@ -195,8 +195,10 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
 
   private HashCodeAndFileType getHashCodeAndFileType(Path path) throws IOException {
     if (projectFilesystem.isDirectory(path)) {
-      return getDirHashCode(path);
-    } else if (path.toString().endsWith(".jar")) {
+      return HashCodeAndFileType.ofDirectory(getDirHashCode(path));
+    }
+
+    if (path.toString().endsWith(".jar")) {
       return JarHashCodeAndFileType.ofArchive(
           getFileHashCode(path), new DefaultJarContentHasher(projectFilesystem, path));
     }
@@ -216,10 +218,10 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
     return size;
   }
 
-  private HashCodeAndFileType getDirHashCode(Path path) throws IOException {
+  private HashCode getDirHashCode(Path path) throws IOException {
     Hasher hasher = Hashing.sha1().newHasher();
     PathHashing.hashPath(hasher, this, projectFilesystem, path);
-    return HashCodeAndFileType.ofDirectory(hasher.hash());
+    return hasher.hash();
   }
 
   @Override
@@ -271,8 +273,7 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
   public Optional<HashCode> getIfPresent(Path relativePath) {
     Preconditions.checkArgument(!relativePath.isAbsolute());
     checkNotIgnored(relativePath);
-    return Optional.ofNullable(fileHashCacheEngine.getIfPresent(relativePath))
-        .map(HashCodeAndFileType::getHashCode);
+    return Optional.ofNullable(fileHashCacheEngine.getIfPresent(relativePath));
   }
 
   @Override
