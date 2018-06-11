@@ -119,8 +119,8 @@ class ComboFileHashCache implements FileHashCacheEngine {
   }
 
   @Override
-  public HashCode getIfPresent(Path path) {
-    List<HashCode> hashes =
+  public HashCodeAndFileType getIfPresent(Path path) {
+    List<HashCodeAndFileType> hashes =
         fileHashCacheEngines
             .stream()
             .map(fhc -> fhc.getIfPresent(path))
