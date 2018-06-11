@@ -43,9 +43,10 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Objects;
 import com.google.common.base.Predicates;
 import com.google.common.base.Splitter;
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.LinkedHashMultimap;
@@ -88,7 +89,7 @@ public class BuckConfig implements ConfigPathGetter {
 
   private final Config config;
 
-  private final ImmutableSetMultimap<String, BuildTarget> aliasToBuildTargetMap;
+  private final Supplier<ImmutableSetMultimap<String, BuildTarget>> aliasToBuildTargetMap;
 
   private final ProjectFilesystem projectFilesystem;
 
@@ -134,13 +135,12 @@ public class BuckConfig implements ConfigPathGetter {
     this.projectFilesystem = projectFilesystem;
     this.architecture = architecture;
 
-    // We could create this Map on demand; however, in practice, it is almost always needed when
-    // BuckConfig is needed because CommandLineBuildTargetNormalizer needs it.
-    this.aliasToBuildTargetMap =
-        createAliasToBuildTargetMap(this.getEntriesForSection(ALIAS_SECTION_HEADER));
-
     this.platform = platform;
     this.environment = environment;
+
+    this.aliasToBuildTargetMap =
+        Suppliers.memoize(
+            () -> createAliasToBuildTargetMap(getEntriesForSection(ALIAS_SECTION_HEADER)));
   }
 
   /** Returns a clone of the current config with a the argument CellPathResolver. */
@@ -265,7 +265,7 @@ public class BuckConfig implements ConfigPathGetter {
   }
 
   public ImmutableSet<BuildTarget> getBuildTargetsForAlias(String unflavoredAlias) {
-    return aliasToBuildTargetMap.get(unflavoredAlias);
+    return getAliases().get(unflavoredAlias);
   }
 
   public BuildTarget getBuildTargetForFullyQualifiedTarget(String target) {
@@ -415,7 +415,7 @@ public class BuckConfig implements ConfigPathGetter {
     // Build up the Map with an ordinary HashMap because we need to be able to check whether the Map
     // already contains the key before inserting.
     Map<Path, String> basePathToAlias = new HashMap<>();
-    for (Map.Entry<String, BuildTarget> entry : aliasToBuildTargetMap.entries()) {
+    for (Map.Entry<String, BuildTarget> entry : getAliases().entries()) {
       String alias = entry.getKey();
       BuildTarget buildTarget = entry.getValue();
 
@@ -427,8 +427,8 @@ public class BuckConfig implements ConfigPathGetter {
     return ImmutableMap.copyOf(basePathToAlias);
   }
 
-  public ImmutableMultimap<String, BuildTarget> getAliases() {
-    return this.aliasToBuildTargetMap;
+  public ImmutableSetMultimap<String, BuildTarget> getAliases() {
+    return aliasToBuildTargetMap.get();
   }
 
   public long getDefaultTestTimeoutMillis() {
