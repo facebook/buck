@@ -105,6 +105,7 @@ import java.util.SortedMap;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 import javax.annotation.Nullable;
 import org.immutables.value.Value;
 import org.kohsuke.args4j.Argument;
@@ -371,8 +372,8 @@ public class TargetsCommand extends AbstractCommand {
     if (shouldUseJsonFormat()) {
       ImmutableSortedSet.Builder<BuildTarget> keysBuilder = ImmutableSortedSet.naturalOrder();
       keysBuilder.addAll(showRulesResult.keySet());
-      Iterable<TargetNode<?, ?>> matchingNodes =
-          targetGraphAndBuildTargetsForShowRules.getTargetGraph().getAll(keysBuilder.build());
+      Stream<TargetNode<?, ?>> matchingNodes =
+          targetGraphAndBuildTargetsForShowRules.getTargetGraph().streamAll(keysBuilder.build());
       printJsonForTargets(params, executor, matchingNodes, showRulesResult, outputAttributes.get());
     } else {
       printShowRules(showRulesResult, params);
@@ -523,7 +524,11 @@ public class TargetsCommand extends AbstractCommand {
       throws BuildFileParseException {
     if (shouldUseJsonFormat()) {
       printJsonForTargets(
-          params, executor, matchingNodes.values(), ImmutableMap.of(), outputAttributes.get());
+          params,
+          executor,
+          matchingNodes.values().stream(),
+          ImmutableMap.of(),
+          outputAttributes.get());
     } else if (print0) {
       printNullDelimitedTargets(matchingNodes.keySet(), params.getConsole().getStdOut());
     } else {
@@ -763,7 +768,7 @@ public class TargetsCommand extends AbstractCommand {
   void printJsonForTargets(
       CommandRunnerParams params,
       ListeningExecutorService executor,
-      Iterable<TargetNode<?, ?>> targetNodes,
+      Stream<TargetNode<?, ?>> targetNodes,
       ImmutableMap<BuildTarget, TargetResult> targetResults,
       ImmutableSet<String> outputAttributes)
       throws BuildFileParseException {
