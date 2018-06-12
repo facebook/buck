@@ -98,6 +98,16 @@ public class DistBuildRunner {
     runDistributedBuildFuture = executor.submit(this::performStampedeDistributedBuild);
   }
 
+  /** Launches dist build synchronously */
+  public synchronized void runDistBuildSync() {
+    runDistributedBuildFuture = executor.submit(this::performStampedeDistributedBuild);
+    try {
+      runDistributedBuildFuture.get();
+    } catch (ExecutionException | InterruptedException e) {
+      LOG.error(e, "Stampede distributed build failed with exception");
+    }
+  }
+
   private void performStampedeDistributedBuild() {
     // If finally {} block is reached without an exit code being set, there was an exception
     int exitCode = ExitCode.DISTRIBUTED_BUILD_STEP_LOCAL_EXCEPTION.getCode();

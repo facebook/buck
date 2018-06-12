@@ -106,15 +106,20 @@ public class PythonLibraryDescriptionTest {
   public void platformSrcs() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildTarget target = BuildTargetFactory.newInstance("//foo:lib");
-    SourcePath matchedSource = FakeSourcePath.of("foo/a.py");
-    SourcePath unmatchedSource = FakeSourcePath.of("foo/b.py");
+    SourcePath pyPlatformMatchedSource = FakeSourcePath.of("foo/a.py");
+    SourcePath cxxPlatformMatchedSource = FakeSourcePath.of("foo/b.py");
+    SourcePath unmatchedSource = FakeSourcePath.of("foo/c.py");
     PythonLibraryBuilder builder =
         new PythonLibraryBuilder(target)
             .setPlatformSrcs(
                 PatternMatchedCollection.<SourceList>builder()
                     .add(
-                        Pattern.compile(PythonTestUtils.PYTHON_PLATFORM.getFlavor().toString()),
-                        SourceList.ofUnnamedSources(ImmutableSortedSet.of(matchedSource)))
+                        Pattern.compile("^" + PythonTestUtils.PYTHON_PLATFORM.getFlavor() + "$"),
+                        SourceList.ofUnnamedSources(ImmutableSortedSet.of(pyPlatformMatchedSource)))
+                    .add(
+                        Pattern.compile("^" + CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor() + "$"),
+                        SourceList.ofUnnamedSources(
+                            ImmutableSortedSet.of(cxxPlatformMatchedSource)))
                     .add(
                         Pattern.compile("won't match anything"),
                         SourceList.ofUnnamedSources(ImmutableSortedSet.of(unmatchedSource)))
@@ -128,22 +133,27 @@ public class PythonLibraryDescriptionTest {
                 PythonTestUtils.PYTHON_PLATFORM, CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder)
             .getModules()
             .values(),
-        Matchers.contains(matchedSource));
+        Matchers.contains(pyPlatformMatchedSource, cxxPlatformMatchedSource));
   }
 
   @Test
   public void platformResources() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildTarget target = BuildTargetFactory.newInstance("//foo:lib");
-    SourcePath matchedSource = FakeSourcePath.of("foo/a.dat");
-    SourcePath unmatchedSource = FakeSourcePath.of("foo/b.dat");
+    SourcePath pyPlatformMatchedSource = FakeSourcePath.of("foo/a.dat");
+    SourcePath cxxPlatformMatchedSource = FakeSourcePath.of("foo/b.dat");
+    SourcePath unmatchedSource = FakeSourcePath.of("foo/c.dat");
     PythonLibraryBuilder builder =
         new PythonLibraryBuilder(target)
             .setPlatformResources(
                 PatternMatchedCollection.<SourceList>builder()
                     .add(
-                        Pattern.compile(PythonTestUtils.PYTHON_PLATFORM.getFlavor().toString()),
-                        SourceList.ofUnnamedSources(ImmutableSortedSet.of(matchedSource)))
+                        Pattern.compile("^" + PythonTestUtils.PYTHON_PLATFORM.getFlavor() + "$"),
+                        SourceList.ofUnnamedSources(ImmutableSortedSet.of(pyPlatformMatchedSource)))
+                    .add(
+                        Pattern.compile("^" + CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor() + "$"),
+                        SourceList.ofUnnamedSources(
+                            ImmutableSortedSet.of(cxxPlatformMatchedSource)))
                     .add(
                         Pattern.compile("won't match anything"),
                         SourceList.ofUnnamedSources(ImmutableSortedSet.of(unmatchedSource)))
@@ -157,7 +167,7 @@ public class PythonLibraryDescriptionTest {
                 PythonTestUtils.PYTHON_PLATFORM, CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder)
             .getResources()
             .values(),
-        Matchers.contains(matchedSource));
+        Matchers.contains(pyPlatformMatchedSource, cxxPlatformMatchedSource));
   }
 
   @Test

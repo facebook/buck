@@ -78,6 +78,7 @@ import com.facebook.buck.core.cell.resolver.CellPathResolver;
 import com.facebook.buck.core.description.arg.HasTests;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.NoSuchTargetException;
@@ -253,7 +254,7 @@ public class ProjectGenerator {
   private final ImmutableSet.Builder<String> targetConfigNamesBuilder;
 
   private final GidGenerator gidGenerator;
-  private final ImmutableSet<String> appleCxxFlavors;
+  private final ImmutableSet<Flavor> appleCxxFlavors;
   private final HalideBuckConfig halideBuckConfig;
   private final CxxBuckConfig cxxBuckConfig;
   private final SwiftBuckConfig swiftBuckConfig;
@@ -267,6 +268,7 @@ public class ProjectGenerator {
       ImmutableList.builder();
   private final ImmutableList.Builder<SourcePath> genruleFiles = ImmutableList.builder();
   private final ImmutableSet.Builder<SourcePath> filesAddedBuilder = ImmutableSet.builder();
+  private final Set<BuildTarget> generatedTargets = new HashSet<>();
 
   public ProjectGenerator(
       TargetGraph targetGraph,
@@ -284,7 +286,7 @@ public class ProjectGenerator {
       ImmutableSet<BuildTarget> targetsInRequiredProjects,
       FocusedModuleTargetMatcher focusModules,
       CxxPlatform defaultCxxPlatform,
-      ImmutableSet<String> appleCxxFlavors,
+      ImmutableSet<Flavor> appleCxxFlavors,
       Function<? super TargetNode<?, ?>, ActionGraphBuilder> actionGraphBuilderForNode,
       BuckEventBus buckEventBus,
       HalideBuckConfig halideBuckConfig,
@@ -498,6 +500,14 @@ public class ProjectGenerator {
     Preconditions.checkState(
         isBuiltByCurrentProject(targetNode.getBuildTarget()),
         "should not generate rule if it shouldn't be built by current project");
+
+    BuildTarget targetWithoutAppleCxxFlavors =
+        targetNode.getBuildTarget().withoutFlavors(appleCxxFlavors);
+    if (generatedTargets.contains(targetWithoutAppleCxxFlavors)) {
+      return Optional.empty();
+    }
+    generatedTargets.add(targetWithoutAppleCxxFlavors);
+
     Optional<PBXTarget> result = Optional.empty();
     if (targetNode.getDescription() instanceof AppleLibraryDescription) {
       result =
@@ -960,7 +970,8 @@ public class ProjectGenerator {
         ImmutableMultimap.builder();
 
     for (PatternMatchedCollection<ImmutableList<StringWithMacros>> matcher : matchers) {
-      for (String platform : appleCxxFlavors) {
+      for (Flavor flavor : appleCxxFlavors) {
+        String platform = flavor.toString();
         for (ImmutableList<StringWithMacros> flags : matcher.getMatchingValues(platform)) {
           flagsBuilder.put(platform, convertStringWithMacros(node, flags));
         }

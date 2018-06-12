@@ -147,4 +147,9 @@ public class DBuckConfig {
 
     return new ExecutableFinder().getExecutable(compilerPath, delegate.getEnvironment());
   }
+
+  /** @return the name of the C/C++ platform to build against by default. */
+  Optional<String> getDefaultCxxPlatform() {
+    return delegate.getValue("d", "default_cxx_platform");
+  }
 }

@@ -93,12 +93,17 @@ public class ClientStatsTracker {
 
   private volatile Optional<String> buckClientErrorMessage = Optional.empty();
 
-  private final String buildLabel;
+  private volatile String userOrInferredBuildLabel;
+
   private final String minionType;
 
-  public ClientStatsTracker(String buildLabel, String minionType) {
-    this.buildLabel = buildLabel;
+  public ClientStatsTracker(String userOrInferredBuildLabel, String minionType) {
+    this.userOrInferredBuildLabel = userOrInferredBuildLabel;
     this.minionType = minionType;
+  }
+
+  public void setUserOrInferredBuildLabel(String userOrInferredBuildLabel) {
+    this.userOrInferredBuildLabel = userOrInferredBuildLabel;
   }
 
   @GuardedBy("this")
@@ -139,7 +144,7 @@ public class ClientStatsTracker {
             .setStampedeId(stampedeId)
             .setPerformedLocalBuild(performedLocalBuild)
             .setBuckClientError(buckClientError)
-            .setBuildLabel(buildLabel)
+            .setUserOrInferredBuildLabel(userOrInferredBuildLabel)
             .setMinionType(minionType);
 
     builder.setDistributedBuildExitCode(distributedBuildExitCode);

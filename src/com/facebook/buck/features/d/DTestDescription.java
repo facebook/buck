@@ -38,7 +38,6 @@ import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatforms;
-import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.toolchain.ToolchainProvider;
@@ -89,7 +88,7 @@ public class DTestDescription
     SymlinkTree sourceTree =
         (SymlinkTree) graphBuilder.requireRule(DDescriptionUtils.getSymlinkTreeTarget(buildTarget));
 
-    CxxPlatform cxxPlatform = getCxxPlatform();
+    CxxPlatform cxxPlatform = DDescriptionUtils.getCxxPlatform(toolchainProvider, dBuckConfig);
 
     // Create a helper rule to build the test binary.
     // The rule needs its own target so that we can depend on it without creating cycles.
@@ -135,13 +134,9 @@ public class DTestDescription
       AbstractDTestDescriptionArg constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
-    extraDepsBuilder.addAll(CxxPlatforms.getParseTimeDeps(getCxxPlatform()));
-  }
-
-  private CxxPlatform getCxxPlatform() {
-    CxxPlatformsProvider cxxPlatformsProviderFactory =
-        toolchainProvider.getByName(CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class);
-    return cxxPlatformsProviderFactory.getDefaultCxxPlatform();
+    extraDepsBuilder.addAll(
+        CxxPlatforms.getParseTimeDeps(
+            DDescriptionUtils.getCxxPlatform(toolchainProvider, dBuckConfig)));
   }
 
   @BuckStyleImmutable

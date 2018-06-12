@@ -26,6 +26,7 @@ import com.facebook.buck.io.file.LazyPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.Scope;
+import com.facebook.buck.util.types.Pair;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -399,6 +400,84 @@ public abstract class AbstractAsynchronousCache implements ArtifactCache {
             requestEvents.failed(e, msg);
             throw new RuntimeException(e);
           }
+        });
+  }
+
+  @Override
+  public final ListenableFuture<Void> store(
+      ImmutableList<Pair<ArtifactInfo, BorrowablePath>> artifacts) {
+    if (!getCacheReadMode().isWritable()) {
+      return Futures.immediateFuture(null);
+    }
+
+    ImmutableList.Builder<Pair<ArtifactInfo, Path>> matchedArtifactsBuilder =
+        ImmutableList.builderWithExpectedSize(artifacts.size());
+    ImmutableList.Builder<Long> artifactSizesInBytesBuilder =
+        ImmutableList.builderWithExpectedSize(artifacts.size());
+
+    for (int i = 0; i < artifacts.size(); i++) {
+      BorrowablePath output = artifacts.get(i).getSecond();
+      ArtifactInfo info = artifacts.get(i).getFirst();
+      long artifactSizeBytes = getFileSize(output.getPath());
+      if (artifactExceedsMaximumSize(artifactSizeBytes)) {
+        LOG.info(
+            "Artifact too big so not storing it in the %s cache. file=[%s] buildTarget=[%s]",
+            name, output.getPath(), info.getBuildTarget());
+        continue;
+      }
+
+      Path tmp;
+      try {
+        tmp = getPathForArtifact(output);
+      } catch (IOException e) {
+        LOG.error(e, "Failed to store artifact in temp file: " + output.getPath());
+        continue;
+      }
+
+      matchedArtifactsBuilder.add(new Pair<>(info, tmp));
+      artifactSizesInBytesBuilder.add(artifactSizeBytes);
+    }
+
+    ImmutableList<Pair<ArtifactInfo, Path>> matchedArtifacts = matchedArtifactsBuilder.build();
+
+    if (matchedArtifacts.isEmpty()) {
+      return Futures.immediateFuture(null);
+    }
+
+    ImmutableList<Long> artifactSizesInBytes = artifactSizesInBytesBuilder.build();
+
+    ImmutableList.Builder<StoreEvents> eventsBuilder =
+        ImmutableList.builderWithExpectedSize(artifactSizesInBytes.size());
+    for (int i = 0; i < artifactSizesInBytes.size(); i++) {
+      eventsBuilder.add(
+          eventListener.storeScheduled(
+              matchedArtifacts.get(i).getFirst(), artifactSizesInBytes.get(i)));
+    }
+
+    ImmutableList<StoreEvents> events = eventsBuilder.build();
+
+    return storeExecutorService.submit(
+        () -> {
+          for (int i = 0; i < matchedArtifacts.size(); i++) {
+            StoreEvents.StoreRequestEvents requestEvents = events.get(i).started();
+            try {
+              StoreResult result =
+                  storeImpl(
+                      matchedArtifacts.get(i).getFirst(), matchedArtifacts.get(i).getSecond());
+              requestEvents.finished(result);
+            } catch (IOException e) {
+              String msg =
+                  String.format(
+                      "store(%s): %s: %s",
+                      matchedArtifacts.get(i).getFirst().getRuleKeys(),
+                      e.getClass().getName(),
+                      e.getMessage());
+              requestEvents.failed(e, msg);
+              throw new RuntimeException(e);
+            }
+          }
+
+          return null;
         });
   }
 

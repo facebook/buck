@@ -193,20 +193,6 @@ public class JsBundleDescription
           graphBuilder.getRuleWithType(args.getWorker(), WorkerTool.class));
     }
 
-    ImmutableList<ImmutableSet<SourcePath>> libraryPathGroups =
-        args.getLibraryGroups()
-            .stream()
-            .map(
-                group ->
-                    group
-                        .stream()
-                        .map(
-                            lib ->
-                                (SourcePath)
-                                    libsResolver.requireLibrary(lib).getSourcePathToOutput())
-                        .collect(ImmutableSet.toImmutableSet()))
-            .collect(ImmutableList.toImmutableList());
-
     String bundleName = getBundleName(args, buildTarget.getFlavors());
 
     return new JsBundle(
@@ -216,7 +202,6 @@ public class JsBundleDescription
         libraries,
         entryPoints,
         extraJson,
-        libraryPathGroups,
         bundleName,
         graphBuilder.getRuleWithType(args.getWorker(), WorkerTool.class));
   }
@@ -344,12 +329,6 @@ public class JsBundleDescription
 
     /** For R.java */
     Optional<String> getAndroidPackage();
-
-    /**
-     * Get the ordered list of library groups that should be bundled together, in the case of
-     * "bundle splitting".
-     */
-    ImmutableList<ImmutableSet<BuildTarget>> getLibraryGroups();
   }
 
   private static String getBundleName(

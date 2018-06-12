@@ -1087,7 +1087,7 @@ public class AppleCxxPlatformsTest {
     assertEquals(projectFilesystem, path.getFilesystem());
     assertEquals(
         "/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc",
-        path.getRelativePathName());
+        path.getRelativePath().toString());
 
     assertThat(swiftPlatformOptional.get().getSwiftRuntimePaths(), Matchers.empty());
   }

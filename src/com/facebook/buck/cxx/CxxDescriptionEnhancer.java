@@ -755,7 +755,7 @@ public class CxxDescriptionEnhancer {
   private static class FrameworkPathToSearchPathFunction
       implements RuleKeyAppendableFunction<FrameworkPath, Path> {
     @AddToRuleKey private final RuleKeyAppendableFunction<String, String> translateMacrosFn;
-    // TODO(cjhopman): This should be refactored to accept the graphBuilder as an argument.
+    // TODO(cjhopman): This should be refactored to accept the resolver as an argument.
     @CustomFieldBehavior(SourcePathResolverSerialization.class)
     private final SourcePathResolver resolver;
 

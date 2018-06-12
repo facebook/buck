@@ -39,6 +39,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
+import javax.annotation.Nullable;
 
 class LoadingCacheFileHashCache implements FileHashCacheEngine {
 
@@ -205,9 +206,11 @@ class LoadingCacheFileHashCache implements FileHashCacheEngine {
     return loadingCache.asMap();
   }
 
+  @Nullable
   @Override
-  public HashCodeAndFileType getIfPresent(Path path) {
-    return loadingCache.getIfPresent(path);
+  public HashCode getIfPresent(Path path) {
+    HashCodeAndFileType hashCodeAndFileType = loadingCache.getIfPresent(path);
+    return hashCodeAndFileType == null ? null : hashCodeAndFileType.getHashCode();
   }
 
   @Override

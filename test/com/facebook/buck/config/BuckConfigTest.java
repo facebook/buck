@@ -104,10 +104,12 @@ public class BuckConfigTest {
   }
 
   @Test
-  public void testConstructorThrowsForMalformedBuildTarget() throws IOException {
+  public void testGetAliasesThrowsForMalformedBuildTarget() throws IOException {
     Reader reader = new StringReader(Joiner.on('\n').join("[alias]", "fb4a   = :fb4a"));
+    BuckConfig buckConfig =
+        BuckConfigTestUtils.createWithDefaultFilesystem(temporaryFolder, reader);
     try {
-      BuckConfigTestUtils.createWithDefaultFilesystem(temporaryFolder, reader);
+      buckConfig.getAliases();
       fail("Should have thrown HumanReadableException.");
     } catch (HumanReadableException e) {
       assertEquals("Path in :fb4a must start with //", e.getHumanReadableErrorMessage());
@@ -268,8 +270,10 @@ public class BuckConfigTest {
     Reader reader =
         new StringReader(
             Joiner.on('\n').join("[alias]", "foo = //java/com/example:foo", "bar = food"));
+    BuckConfig buckConfig =
+        BuckConfigTestUtils.createWithDefaultFilesystem(temporaryFolder, reader);
     try {
-      BuckConfigTestUtils.createWithDefaultFilesystem(temporaryFolder, reader);
+      buckConfig.getAliases();
       fail("Should have thrown HumanReadableException.");
     } catch (HumanReadableException e) {
       assertEquals("No alias for: food.", e.getHumanReadableErrorMessage());

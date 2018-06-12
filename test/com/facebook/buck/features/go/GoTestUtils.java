@@ -27,6 +27,7 @@ public class GoTestUtils {
           .setFlavor(CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor())
           .setGoOs("linux")
           .setGoArch("amd64")
+          .setGoArm("")
           .setGoRoot(Paths.get("/root"))
           .setCompiler(new CommandTool.Builder().build())
           .setAssembler(new CommandTool.Builder().build())

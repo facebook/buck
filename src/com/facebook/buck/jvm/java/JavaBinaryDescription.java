@@ -152,7 +152,7 @@ public class JavaBinaryDescription
                               .add(innerJar)
                               .addAll(nativeLibraries.values())
                               .build()))),
-              JavacFactory.create(ruleFinder, javaBuckConfig, null),
+              JavacFactory.getDefault(toolchainProvider).create(ruleFinder, null),
               toolchainProvider
                   .getByName(JavacOptionsProvider.DEFAULT_NAME, JavacOptionsProvider.class)
                   .getJavacOptions(),

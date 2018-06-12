@@ -1,5 +1,11 @@
 # example/BUCK
 
+keystore(
+  name = "debug_keystore",
+  properties = "debug.keystore.properties",
+  store = "debug.keystore",
+)
+
 genrule(
   name = "example",
   bash = "cat $SRCS > $OUT",
@@ -9,11 +15,5 @@ genrule(
     "bar.txt",
     "//fake:rule",
   ],
-)
-
-keystore(
-  name = "debug_keystore",
-  properties = "debug.keystore.properties",
-  store = "debug.keystore",
 )
 

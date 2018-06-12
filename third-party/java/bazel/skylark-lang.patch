@@ -1,18 +1,18 @@
-From 506507731ef4dc39b5f0459209e3662a24c9b804 Mon Sep 17 00:00:00 2001
+From 50120d0edba6cd07013ee6872e015f9a26b8c80a Mon Sep 17 00:00:00 2001
 From: Taras Tsugrii <ttsugrii@fb.com>
 Date: Sat, 12 May 2018 20:21:17 -0700
 Subject: [PATCH] [Buck] Patch Skylark build file for Buck.
 
 ---
- .../java/com/google/devtools/build/lib/BUILD  |   48 +-
+ .../java/com/google/devtools/build/lib/BUILD  |   49 +-
  .../build/lib/packages/Attribute.java         | 2359 +----------------
- 2 files changed, 44 insertions(+), 2363 deletions(-)
+ 2 files changed, 45 insertions(+), 2363 deletions(-)
 
 diff --git a/src/main/java/com/google/devtools/build/lib/BUILD b/src/main/java/com/google/devtools/build/lib/BUILD
-index 27f1e62f8a..d2692cfd0f 100644
+index 27f1e62f8a..8e69be6949 100644
 --- a/src/main/java/com/google/devtools/build/lib/BUILD
 +++ b/src/main/java/com/google/devtools/build/lib/BUILD
-@@ -312,16 +312,54 @@ java_library(
+@@ -312,16 +312,55 @@ java_library(
  #
  # IMPORTANT:  NOT A PUBLIC INTERFACE. TARGETS SHOULDN'T DEPEND ON THIS.
  #
@@ -27,6 +27,7 @@ index 27f1e62f8a..d2692cfd0f 100644
 +        "packages/Attribute.java",
 +        "packages/BazelLibrary.java",
 +        "packages/BuiltinProvider.java",
++        "packages/Globber.java",
 +        "packages/Info.java",
 +        "packages/NativeProvider.java",
 +        "packages/Provider.java",

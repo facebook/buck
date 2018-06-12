@@ -783,6 +783,32 @@ class BuckTest(unittest.TestCase):
                 build_file.root, build_file.prefix, build_file.path, diagnostics)
             self.assertEqual(rules[0].get('srcs'), ['BUCK', 'ext.bzl'])
 
+    def test_can_access_read_config_via_native_module(self):
+        extension_file = ProjectFile(
+            self.project_root,
+            path='ext.bzl',
+            contents=(
+                'def get_name():'
+                '  return native.read_config("foo", "bar", "baz")',
+            )
+        )
+        build_file = ProjectFile(
+            self.project_root,
+            path='BUCK',
+            contents=(
+                'load("//:ext.bzl", "get_name")',
+                'foo_rule(',
+                '  name=get_name(),'
+                ')'
+            ))
+        self.write_files(extension_file, build_file)
+        build_file_processor = self.create_build_file_processor(extra_funcs=[foo_rule])
+        diagnostics = []
+        with build_file_processor.with_builtins(__builtin__.__dict__):
+            rules = build_file_processor.process(
+                build_file.root, build_file.prefix, build_file.path, diagnostics)
+            self.assertEqual(rules[0].get('name'), 'baz')
+
     def test_rule_does_not_exist_if_not_defined(self):
         package_dir = os.path.join(self.project_root, 'pkg')
         os.makedirs(package_dir)

@@ -16,6 +16,8 @@
 
 package com.facebook.buck.event;
 
+import com.facebook.buck.core.model.actiongraph.ActionGraph;
+import java.util.Optional;
 import java.util.OptionalInt;
 
 /** Base class for events about building up the action graph from the target graph. */
@@ -41,11 +43,15 @@ public abstract class ActionGraphEvent extends AbstractBuckEvent
   }
 
   public static Finished finished(Started started) {
-    return new Finished(started, OptionalInt.empty());
+    return new Finished(started, OptionalInt.empty(), Optional.empty());
   }
 
   public static Finished finished(Started started, int count) {
-    return new Finished(started, OptionalInt.of(count));
+    return new Finished(started, OptionalInt.of(count), Optional.empty());
+  }
+
+  public static Finished finished(Started started, int count, ActionGraph actionGraph) {
+    return new Finished(started, OptionalInt.of(count), Optional.of(actionGraph));
   }
 
   public static class Started extends ActionGraphEvent {
@@ -62,10 +68,12 @@ public abstract class ActionGraphEvent extends AbstractBuckEvent
 
   public static class Finished extends ActionGraphEvent {
     private OptionalInt nodeCount;
+    private Optional<ActionGraph> actionGraph;
 
-    public Finished(Started started, OptionalInt count) {
+    public Finished(Started started, OptionalInt count, Optional<ActionGraph> graph) {
       super(started.getEventKey());
       nodeCount = count;
+      actionGraph = graph;
     }
 
     @Override
@@ -75,6 +83,29 @@ public abstract class ActionGraphEvent extends AbstractBuckEvent
 
     public OptionalInt getNodeCount() {
       return nodeCount;
+    }
+
+    public Optional<ActionGraph> getActionGraph() {
+      return actionGraph;
+    }
+  }
+
+  /** Event for incremental action graph construction. * */
+  public static class IncrementalLoad extends ActionGraphEvent {
+    public int reusedNodeCount;
+
+    public IncrementalLoad(int reusedNodeCount) {
+      super(EventKey.unique());
+      this.reusedNodeCount = reusedNodeCount;
+    }
+
+    @Override
+    public String getEventName() {
+      return "ActionGraphIncrementalLoad";
+    }
+
+    public int getReusedNodeCount() {
+      return reusedNodeCount;
     }
   }
 

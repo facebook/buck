@@ -419,9 +419,6 @@ public class TypeCoercerTest {
 
     ImmutableList<?> input =
         ImmutableList.of(
-            ImmutableList.of(0.0, "//some:build-target"),
-            ImmutableList.of(0.9, "//other/build:target"),
-            ImmutableList.of(1.0, "//:target", "some/path.py"),
             ImmutableList.of(0, "//some:build-target"),
             ImmutableList.of(90, "//other/build:target"),
             ImmutableList.of(100, "//:target", "some/path.py"));
@@ -429,17 +426,11 @@ public class TypeCoercerTest {
     ImmutableList<NeededCoverageSpec> expectedResult =
         ImmutableList.of(
             NeededCoverageSpec.of(
-                0.0f, BuildTargetFactory.newInstance("//some:build-target"), Optional.empty()),
+                0, BuildTargetFactory.newInstance("//some:build-target"), Optional.empty()),
             NeededCoverageSpec.of(
-                0.9f, BuildTargetFactory.newInstance("//other/build:target"), Optional.empty()),
+                90, BuildTargetFactory.newInstance("//other/build:target"), Optional.empty()),
             NeededCoverageSpec.of(
-                1.0f, BuildTargetFactory.newInstance("//:target"), Optional.of("some/path.py")),
-            NeededCoverageSpec.of(
-                0.0f, BuildTargetFactory.newInstance("//some:build-target"), Optional.empty()),
-            NeededCoverageSpec.of(
-                90.0f, BuildTargetFactory.newInstance("//other/build:target"), Optional.empty()),
-            NeededCoverageSpec.of(
-                100.0f, BuildTargetFactory.newInstance("//:target"), Optional.of("some/path.py")));
+                100, BuildTargetFactory.newInstance("//:target"), Optional.of("some/path.py")));
     assertEquals(expectedResult, result);
   }
 
@@ -453,8 +444,8 @@ public class TypeCoercerTest {
           cellRoots,
           filesystem,
           Paths.get(""),
-          ImmutableList.of(ImmutableList.of(-0.5f, "//some:build-target")));
-      fail(String.format("%s should not be convertable to a spec", -0.5f));
+          ImmutableList.of(ImmutableList.of(-5, "//some:build-target")));
+      fail(String.format("%d should not be convertable to a spec", -5));
     } catch (CoerceFailedException e) {
       assertThat(
           e.getMessage(),
@@ -466,8 +457,8 @@ public class TypeCoercerTest {
           cellRoots,
           filesystem,
           Paths.get(""),
-          ImmutableList.of(ImmutableList.of(101.0f, "//some:build-target")));
-      fail(String.format("%s should not be convertable to a spec", 101.0f));
+          ImmutableList.of(ImmutableList.of(101, "//some:build-target")));
+      fail(String.format("%d should not be convertable to a spec", 101));
     } catch (CoerceFailedException e) {
       assertThat(
           e.getMessage(),
@@ -480,7 +471,20 @@ public class TypeCoercerTest {
           filesystem,
           Paths.get(""),
           ImmutableList.of(ImmutableList.of(50.5f, "//some:build-target")));
-      fail(String.format("%s should not be convertable to a spec", 50.5f));
+      fail(String.format("%f should not be convertable to a spec", 50.5f));
+    } catch (CoerceFailedException e) {
+      assertThat(
+          e.getMessage(),
+          Matchers.endsWith("the needed coverage ratio should be an integral number"));
+    }
+
+    try {
+      coercer.coerce(
+          cellRoots,
+          filesystem,
+          Paths.get(""),
+          ImmutableList.of(ImmutableList.of(0.3f, "//some:build-target")));
+      fail(String.format("%f should not be convertable to a spec", 0.3f));
     } catch (CoerceFailedException e) {
       assertThat(
           e.getMessage(),

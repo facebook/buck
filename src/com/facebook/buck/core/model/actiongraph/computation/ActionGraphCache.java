@@ -239,11 +239,12 @@ public class ActionGraphCache {
                     poolSupplier));
         out = freshActionGraph.getSecond();
         if (!skipActionGraphCache) {
-          LOG.info("ActionGraph cache assignment. skipActionGraphCache? %s", skipActionGraphCache);
+          LOG.info("ActionGraph cache assignment.");
           previousActionGraphs.put(freshActionGraph.getFirst(), freshActionGraph.getSecond());
         }
       }
-      finished = ActionGraphEvent.finished(started, out.getActionGraph().getSize());
+      finished =
+          ActionGraphEvent.finished(started, out.getActionGraph().getSize(), out.getActionGraph());
       return out;
     } finally {
       eventBus.post(finished);
@@ -311,7 +312,9 @@ public class ActionGraphCache {
             ImmutableMap.of(),
             poolSupplier);
 
-    eventBus.post(ActionGraphEvent.finished(started, actionGraph.getActionGraph().getSize()));
+    eventBus.post(
+        ActionGraphEvent.finished(
+            started, actionGraph.getActionGraph().getSize(), actionGraph.getActionGraph()));
     return actionGraph;
   }
 
@@ -366,7 +369,12 @@ public class ActionGraphCache {
     switch (parallelizationMode) {
       case ENABLED:
         return createActionGraphInParallel(
-            transformer, targetGraph, cellProvider, incrementalActionGraphMode, poolSupplier.get());
+            eventBus,
+            transformer,
+            targetGraph,
+            cellProvider,
+            incrementalActionGraphMode,
+            poolSupplier.get());
       case DISABLED:
         return createActionGraphSerially(
             eventBus,
@@ -384,6 +392,7 @@ public class ActionGraphCache {
   }
 
   private ActionGraphAndBuilder createActionGraphInParallel(
+      BuckEventBus eventBus,
       TargetNodeToBuildRuleTransformer transformer,
       TargetGraph targetGraph,
       CellProvider cellProvider,
@@ -403,7 +412,7 @@ public class ActionGraphCache {
       // rule
       // graphBuilder for incremental action graph generation.
       incrementalActionGraphGenerator.populateActionGraphBuilderWithCachedRules(
-          targetGraph, graphBuilder);
+          eventBus, targetGraph, graphBuilder);
     }
 
     LOG.debug("start target graph walk");
@@ -462,7 +471,7 @@ public class ActionGraphCache {
       // Populate the new build rule graphBuilder with all of the usable rules from the last build
       // rule graphBuilder for incremental action graph generation.
       incrementalActionGraphGenerator.populateActionGraphBuilderWithCachedRules(
-          targetGraph, graphBuilder);
+          eventBus, targetGraph, graphBuilder);
     }
 
     LOG.debug("start target graph walk");

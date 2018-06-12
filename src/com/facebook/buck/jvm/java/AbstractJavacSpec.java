@@ -17,22 +17,15 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import com.facebook.buck.util.types.Either;
 import java.util.Optional;
 import org.immutables.value.Value;
 
 @Value.Immutable(copy = true)
 @BuckStyleImmutable
 abstract class AbstractJavacSpec {
-  public static final String COM_SUN_TOOLS_JAVAC_API_JAVAC_TOOL =
-      "com.sun.tools.javac.api.JavacTool";
-
-  protected abstract Optional<Either<BuiltInJavac, SourcePath>> getCompiler();
-
-  protected abstract Optional<Either<PathSourcePath, SourcePath>> getJavacPath();
+  protected abstract Optional<SourcePath> getJavacPath();
 
   protected abstract Optional<SourcePath> getJavacJarPath();
 
@@ -40,32 +33,7 @@ abstract class AbstractJavacSpec {
 
   @Value.Lazy
   public JavacProvider getJavacProvider() {
-    if (getCompiler().isPresent() && getCompiler().get().isRight()) {
-      return new ExternalOrJarBackedJavacProvider(
-          getCompiler().get().getRight(),
-          // compiler_class_name has no effect when compiler is specified
-          COM_SUN_TOOLS_JAVAC_API_JAVAC_TOOL,
-          getJavacLocation());
-    }
-
-    String compilerClassName = getCompilerClassName().orElse(COM_SUN_TOOLS_JAVAC_API_JAVAC_TOOL);
-    Javac.Source javacSource = getJavacSource();
-    Javac.Location javacLocation = getJavacLocation();
-    switch (javacSource) {
-      case EXTERNAL:
-        return new ConstantJavacProvider(ExternalJavac.createJavac(getJavacPath().get()));
-      case JAR:
-        return new JarBackedJavacProvider(
-            getJavacJarPath().get(), compilerClassName, javacLocation);
-      case JDK:
-        switch (javacLocation) {
-          case IN_PROCESS:
-            return new ConstantJavacProvider(new JdkProvidedInMemoryJavac());
-        }
-        break;
-    }
-    throw new AssertionError(
-        "Unknown javac source/javac location pair: " + javacSource + "/" + javacLocation);
+    return ExternalJavacFactory.getProviderForSpec((JavacSpec) this);
   }
 
   public Javac.Source getJavacSource() {
@@ -80,10 +48,5 @@ abstract class AbstractJavacSpec {
     } else {
       return Javac.Source.JDK;
     }
-  }
-
-  @Value.Default
-  public Javac.Location getJavacLocation() {
-    return Javac.Location.IN_PROCESS;
   }
 }

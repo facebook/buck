@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright 2018-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -17,26 +17,33 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.jvm.java.toolchain.JavaToolchain;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import javax.annotation.Nullable;
 
 public final class JavacFactory {
-  private JavacFactory() {}
+  private final JavacProvider javacProvider;
 
-  public static Javac create(
-      SourcePathRuleFinder ruleFinder, JavaBuckConfig config, @Nullable JvmLibraryArg args) {
-    JavacSpec spec = null;
+  public JavacFactory(JavacProvider javacProvider) {
+    this.javacProvider = javacProvider;
+  }
 
+  /** Returns either the defautl javac or one created from the provided args. */
+  public Javac create(SourcePathRuleFinder ruleFinder, @Nullable JvmLibraryArg args) {
     if (args != null) {
-      spec = args.getJavacSpec();
+      JavacSpec spec = args.getJavacSpec(ruleFinder);
       if (spec != null) {
-        spec = spec.withJavacLocation(config.getJavacSpec().getJavacLocation());
+        return spec.getJavacProvider().resolve(ruleFinder);
       }
     }
+    return javacProvider.resolve(ruleFinder);
+  }
 
-    if (spec == null) {
-      spec = config.getJavacSpec();
-    }
-
-    return spec.getJavacProvider().resolve(ruleFinder);
+  /** Creates a JavacFactory for the default Java toolchain. */
+  public static JavacFactory getDefault(ToolchainProvider toolchainProvider) {
+    return new JavacFactory(
+        toolchainProvider
+            .getByName(JavaToolchain.DEFAULT_NAME, JavaToolchain.class)
+            .getJavacProvider());
   }
 }

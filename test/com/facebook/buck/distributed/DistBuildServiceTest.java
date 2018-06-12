@@ -720,13 +720,15 @@ public class DistBuildServiceTest {
     EasyMock.replay(frontendService);
 
     StampedeId stampedeId = createStampedeId("minions, here I come");
+    String buildLabel = "behold-my-glory";
     int minionCount = 21;
     String minionQueueName = "a_happy_place_indeed";
     distBuildService.enqueueMinions(
-        stampedeId, minionCount, minionQueueName, MinionType.STANDARD_SPEC);
+        stampedeId, buildLabel, minionCount, minionQueueName, MinionType.STANDARD_SPEC);
     Assert.assertEquals(FrontendRequestType.ENQUEUE_MINIONS, request.getValue().getType());
     EnqueueMinionsRequest minionsRequest = request.getValue().getEnqueueMinionsRequest();
     Assert.assertEquals(stampedeId, minionsRequest.getStampedeId());
+    Assert.assertEquals(buildLabel, minionsRequest.getBuildLabel());
     Assert.assertEquals(minionCount, minionsRequest.getNumberOfMinions());
     Assert.assertEquals(minionQueueName, minionsRequest.getMinionQueue());
     EasyMock.verify(frontendService);

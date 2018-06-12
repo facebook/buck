@@ -37,7 +37,6 @@ import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.HasJavaAbi;
 import com.facebook.buck.jvm.java.CalculateClassAbi;
-import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibraryRules;
 import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.JavacToJarStepFactory;
@@ -80,10 +79,10 @@ public class AndroidPrebuiltAarDescription
     return Sets.difference(flavors, KNOWN_FLAVORS).isEmpty();
   }
 
-  private final JavaBuckConfig javaBuckConfig;
+  private final ToolchainProvider toolchainProvider;
 
-  public AndroidPrebuiltAarDescription(JavaBuckConfig javaBuckConfig) {
-    this.javaBuckConfig = javaBuckConfig;
+  public AndroidPrebuiltAarDescription(ToolchainProvider toolchainProvider) {
+    this.toolchainProvider = toolchainProvider;
   }
 
   @Override
@@ -154,7 +153,7 @@ public class AndroidPrebuiltAarDescription
           buildTarget,
           projectFilesystem,
           /* params */ buildRuleParams,
-          /* graphBuilder */ pathResolver,
+          pathResolver,
           /* binaryJar */ ExplicitBuildTargetSourcePath.of(
               unzipAar.getBuildTarget(), unzipAar.getPathToClassesJar()),
           /* sourceJar */ Optional.empty(),
@@ -165,7 +164,6 @@ public class AndroidPrebuiltAarDescription
           args.getRequiredForSourceOnlyAbi());
     }
 
-    ToolchainProvider toolchainProvider = context.getToolchainProvider();
     if (flavors.contains(AndroidResourceDescription.AAPT2_COMPILE_FLAVOR)) {
       AndroidPlatformTarget androidPlatformTarget =
           toolchainProvider.getByName(
@@ -204,7 +202,7 @@ public class AndroidPrebuiltAarDescription
         buildTarget,
         projectFilesystem,
         androidLibraryParams,
-        /* graphBuilder */ pathResolver,
+        pathResolver,
         ruleFinder,
         /* proguardConfig */ ExplicitBuildTargetSourcePath.of(
             unzipAar.getBuildTarget(), unzipAar.getProguardConfig()),
@@ -216,7 +214,7 @@ public class AndroidPrebuiltAarDescription
             pathResolver,
             ruleFinder,
             projectFilesystem,
-            JavacFactory.create(ruleFinder, javaBuckConfig, null),
+            JavacFactory.getDefault(toolchainProvider).create(ruleFinder, null),
             toolchainProvider
                 .getByName(JavacOptionsProvider.DEFAULT_NAME, JavacOptionsProvider.class)
                 .getJavacOptions(),

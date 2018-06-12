@@ -488,15 +488,47 @@ public class TargetsCommand extends AbstractCommand {
           .setBuildTargets(buildTargets)
           .build();
     } else {
-      return params
-          .getParser()
-          .buildTargetGraphForTargetNodeSpecs(
-              params.getBuckEventBus(),
-              params.getCell(),
-              getEnableParserProfiling(),
-              executor,
-              parseArgumentsAsTargetNodeSpecs(params.getBuckConfig(), getArguments()));
+      return filterTargetGraphAndBuildTargetsByType(
+          params
+              .getParser()
+              .buildTargetGraphForTargetNodeSpecs(
+                  params.getBuckEventBus(),
+                  params.getCell(),
+                  getEnableParserProfiling(),
+                  executor,
+                  parseArgumentsAsTargetNodeSpecs(params.getBuckConfig(), getArguments())),
+          descriptionClasses);
     }
+  }
+
+  /**
+   * Filters a TargetGraphAndBuildTargets' build targets by description class. Each of the {@link
+   * BuildTarget}s must exist in the {@link TargetGraph}
+   *
+   * @param targetGraphAndBuildTargets The object to filter
+   * @param descriptionClasses The classes to accept. If not present, or empty, all classes are
+   *     accepted
+   * @return The filtered TargetGraphAndBuildTargets
+   */
+  private TargetGraphAndBuildTargets filterTargetGraphAndBuildTargetsByType(
+      TargetGraphAndBuildTargets targetGraphAndBuildTargets,
+      Optional<ImmutableSet<Class<? extends DescriptionWithTargetGraph<?>>>> descriptionClasses) {
+    if (!descriptionClasses.isPresent() || descriptionClasses.get().size() == 0) {
+      return targetGraphAndBuildTargets;
+    }
+
+    TargetGraph targetGraph = targetGraphAndBuildTargets.getTargetGraph();
+    return TargetGraphAndBuildTargets.of(
+        targetGraph,
+        targetGraphAndBuildTargets
+            .getBuildTargets()
+            .stream()
+            .filter(
+                f ->
+                    descriptionClasses
+                        .get()
+                        .contains(targetGraph.get(f).getDescription().getClass()))
+            .collect(ImmutableSet.toImmutableSet()));
   }
 
   /** Print out matching targets in alphabetical order. */

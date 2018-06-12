@@ -18,11 +18,9 @@ package com.facebook.buck.core.sourcepath;
 
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ComparisonChain;
 import java.nio.file.Path;
 import java.util.Objects;
-import java.util.function.Supplier;
 import org.immutables.value.Value;
 
 @BuckStyleTuple
@@ -31,20 +29,11 @@ public abstract class AbstractPathSourcePath implements SourcePath {
 
   protected abstract ProjectFilesystem getFilesystem();
 
-  // A name for the path.  Used for equality, hashcode, and comparisons.
-  protected abstract String getRelativePathName();
-
-  // A supplier providing the path.  Used to resolve to `Path` used to access the file.
-  protected abstract Supplier<Path> getRelativePathSupplier();
-
-  public static PathSourcePath of(ProjectFilesystem filesystem, Path relativePath) {
-    return PathSourcePath.of(
-        filesystem, relativePath.toString(), Suppliers.ofInstance(relativePath));
-  }
+  public abstract Path getRelativePath();
 
   @Override
   public int hashCode() {
-    return Objects.hash(getFilesystem().getRootPath(), getRelativePathName());
+    return Objects.hash(getFilesystem().getRootPath(), getRelativePath());
   }
 
   @Override
@@ -56,13 +45,13 @@ public abstract class AbstractPathSourcePath implements SourcePath {
       return false;
     }
     AbstractPathSourcePath that = (AbstractPathSourcePath) other;
-    return getRelativePathName().equals(that.getRelativePathName())
+    return getRelativePath().equals(that.getRelativePath())
         && getFilesystem().getRootPath().equals(that.getFilesystem().getRootPath());
   }
 
   @Override
   public String toString() {
-    return getFilesystem().getRootPath().resolve(getRelativePathName()).toString();
+    return getFilesystem().getRootPath().resolve(getRelativePath().toString()).toString();
   }
 
   @Override
@@ -80,11 +69,7 @@ public abstract class AbstractPathSourcePath implements SourcePath {
 
     return ComparisonChain.start()
         .compare(getFilesystem().getRootPath(), that.getFilesystem().getRootPath())
-        .compare(getRelativePathName(), that.getRelativePathName())
+        .compare(getRelativePath(), that.getRelativePath())
         .result();
-  }
-
-  public Path getRelativePath() {
-    return getRelativePathSupplier().get();
   }
 }

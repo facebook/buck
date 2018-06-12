@@ -22,39 +22,20 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.core.description.BuildRuleParams;
-import com.facebook.buck.core.description.DescriptionCache;
 import com.facebook.buck.core.description.arg.CommonDescriptionArg;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
-import com.facebook.buck.core.rulekey.RuleKey;
-import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.io.ExecutableFinder;
-import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
-import com.facebook.buck.jvm.java.DefaultJavaLibrary;
-import com.facebook.buck.jvm.java.JavaLibraryBuilder;
-import com.facebook.buck.jvm.java.JavaLibraryDescription;
-import com.facebook.buck.jvm.java.JavaLibraryDescriptionArg;
-import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.plugin.impl.BuckPluginManagerFactory;
-import com.facebook.buck.rules.TestBuildRuleCreationContextFactory;
-import com.facebook.buck.rules.TestBuildRuleParams;
-import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
-import com.facebook.buck.testutil.FakeFileHashCache;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.toolchain.Toolchain;
 import com.facebook.buck.toolchain.impl.DefaultToolchainProvider;
@@ -62,18 +43,14 @@ import com.facebook.buck.util.FakeProcess;
 import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
-import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.hash.Hashing;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 import org.hamcrest.Matchers;
 import org.immutables.value.Value;
-import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -89,9 +66,6 @@ public class KnownBuildRuleTypesTest {
   private static final ImmutableMap<String, String> environment =
       ImmutableMap.copyOf(System.getenv());
 
-  private static BuildTarget buildTarget;
-  private static ProjectFilesystem projectFilesystem;
-  private static BuildRuleParams buildRuleParams;
   private ExecutableFinder executableFinder = new ExecutableFinder();
 
   static class KnownRuleTestDescription
@@ -124,83 +98,6 @@ public class KnownBuildRuleTypesTest {
         KnownRuleTestDescriptionArg args) {
       return null;
     }
-  }
-
-  @BeforeClass
-  public static void setupBuildParams() {
-    projectFilesystem = new FakeProjectFilesystem();
-    buildTarget = BuildTargetFactory.newInstance("//:foo");
-    buildRuleParams = TestBuildRuleParams.create();
-  }
-
-  private DefaultJavaLibrary createJavaLibrary(KnownBuildRuleTypes buildRuleTypes)
-      throws NoSuchBuildTargetException {
-    JavaLibraryDescription description =
-        (JavaLibraryDescription)
-            buildRuleTypes.getDescription(
-                DescriptionCache.getBuildRuleType(JavaLibraryDescription.class));
-
-    JavaLibraryDescriptionArg arg = JavaLibraryDescriptionArg.builder().setName("foo").build();
-    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    return (DefaultJavaLibrary)
-        description.createBuildRule(
-            TestBuildRuleCreationContextFactory.create(
-                graphBuilder,
-                projectFilesystem,
-                JavaLibraryBuilder.createToolchainProviderForJavaLibrary()),
-            buildTarget,
-            buildRuleParams,
-            arg);
-  }
-
-  @Test
-  public void whenJavacIsSetInBuckConfigConfiguredRulesCreateJavaLibraryRuleWithDifferentRuleKey()
-      throws Exception {
-    Path javac;
-    if (Platform.detect() == Platform.WINDOWS) {
-      javac = Paths.get("C:/Windows/system32/rundll32.exe");
-    } else {
-      javac = temporaryFolder.newExecutableFile();
-    }
-
-    ProjectFilesystem filesystem =
-        TestProjectFilesystems.createProjectFilesystem(temporaryFolder.getRoot());
-    ImmutableMap<String, ImmutableMap<String, String>> sections =
-        ImmutableMap.of("tools", ImmutableMap.of("javac", javac.toString()));
-    BuckConfig buckConfig =
-        FakeBuckConfig.builder().setFilesystem(filesystem).setSections(sections).build();
-
-    DefaultToolchainProvider toolchainProvider =
-        new DefaultToolchainProvider(
-            BuckPluginManagerFactory.createPluginManager(),
-            environment,
-            buckConfig,
-            filesystem,
-            createExecutor(),
-            executableFinder,
-            TestRuleKeyConfigurationFactory.create());
-
-    KnownBuildRuleTypes buildRuleTypes =
-        KnownBuildRuleTypesTestUtil.getDefaultKnownBuildRuleTypes(
-            filesystem, toolchainProvider, environment);
-    DefaultJavaLibrary libraryRule = createJavaLibrary(buildRuleTypes);
-
-    ProcessExecutor processExecutor = createExecutor(javac.toString(), "fakeVersion 0.1");
-    KnownBuildRuleTypes configuredBuildRuleTypes =
-        KnownBuildRuleTypesTestUtil.createInstance(buckConfig, toolchainProvider, processExecutor);
-    DefaultJavaLibrary configuredRule = createJavaLibrary(configuredBuildRuleTypes);
-
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestActionGraphBuilder());
-    SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
-    FakeFileHashCache hashCache =
-        new FakeFileHashCache(
-            ImmutableMap.of(javac, MorePaths.asByteSource(javac).hash(Hashing.sha1())));
-    RuleKey configuredKey =
-        new TestDefaultRuleKeyFactory(hashCache, resolver, ruleFinder).build(configuredRule);
-    RuleKey libraryKey =
-        new TestDefaultRuleKeyFactory(hashCache, resolver, ruleFinder).build(libraryRule);
-
-    assertNotEquals(libraryKey, configuredKey);
   }
 
   @Test(expected = IllegalStateException.class)

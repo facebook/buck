@@ -23,6 +23,7 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.DefaultJavaLibraryRules;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
+import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.toolchain.ToolchainProvider;
 
 final class KotlinLibraryBuilder {
@@ -37,7 +38,8 @@ final class KotlinLibraryBuilder {
       CellPathResolver cellPathResolver,
       KotlinBuckConfig kotlinBuckConfig,
       JavaBuckConfig javaBuckConfig,
-      KotlinLibraryDescription.CoreArg args) {
+      KotlinLibraryDescription.CoreArg args,
+      JavacFactory javacFactory) {
     return new DefaultJavaLibraryRules.Builder(
         buildTarget,
         projectFilesystem,
@@ -45,7 +47,7 @@ final class KotlinLibraryBuilder {
         params,
         graphBuilder,
         cellPathResolver,
-        new KotlinConfiguredCompilerFactory(kotlinBuckConfig, javaBuckConfig),
+        new KotlinConfiguredCompilerFactory(kotlinBuckConfig, javacFactory),
         javaBuckConfig,
         args);
   }

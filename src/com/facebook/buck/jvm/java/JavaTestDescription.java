@@ -136,7 +136,8 @@ public class JavaTestDescription
                 params,
                 graphBuilder,
                 cellRoots,
-                new JavaConfiguredCompilerFactory(javaBuckConfig),
+                new JavaConfiguredCompilerFactory(
+                    javaBuckConfig, JavacFactory.getDefault(toolchainProvider)),
                 javaBuckConfig,
                 args)
             .setJavacOptions(javacOptions)

@@ -128,7 +128,11 @@ public class MultiSlaveBuildModeRunnerFactory {
 
     CoordinatorEventListener listenerAndMinionCountProvider =
         new CoordinatorEventListener(
-            distBuildService, stampedeId, minionQueueProvider, isLocalMinionAlsoRunning);
+            distBuildService,
+            stampedeId,
+            distBuildConfig.getBuildLabel(),
+            minionQueueProvider,
+            isLocalMinionAlsoRunning);
     MinionHealthTracker minionHealthTracker =
         new MinionHealthTracker(
             new DefaultClock(),

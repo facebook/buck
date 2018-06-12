@@ -40,6 +40,7 @@ import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.TestBuildRuleCreationContextFactory;
 import com.facebook.buck.rules.TestBuildRuleParams;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import org.junit.Test;
@@ -119,6 +120,8 @@ public class AndroidInstrumentationApkTest {
         TestBuildRuleParams.create()
             .withDeclaredDeps(graphBuilder.getAllRules(apkOriginalDepsTargets))
             .withExtraDeps(ImmutableSortedSet.of(androidBinary));
+    ToolchainProvider toolchainProvider =
+        AndroidInstrumentationApkBuilder.createToolchainProviderForAndroidInstrumentationApk();
     AndroidInstrumentationApk androidInstrumentationApk =
         (AndroidInstrumentationApk)
             new AndroidInstrumentationApkDescription(
@@ -126,13 +129,11 @@ public class AndroidInstrumentationApkTest {
                     new ProGuardConfig(FakeBuckConfig.builder().build()),
                     CxxPlatformUtils.DEFAULT_CONFIG,
                     new DxConfig(FakeBuckConfig.builder().build()),
-                    new ApkConfig(FakeBuckConfig.builder().build()))
+                    new ApkConfig(FakeBuckConfig.builder().build()),
+                    toolchainProvider)
                 .createBuildRule(
                     TestBuildRuleCreationContextFactory.create(
-                        graphBuilder,
-                        projectFilesystem,
-                        AndroidInstrumentationApkBuilder
-                            .createToolchainProviderForAndroidInstrumentationApk()),
+                        graphBuilder, projectFilesystem, toolchainProvider),
                     buildTarget,
                     params,
                     arg);

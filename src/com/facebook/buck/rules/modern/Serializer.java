@@ -211,7 +211,7 @@ public class Serializer {
         stream.writeBoolean(false);
         writeValue(
             getCellName(pathSourcePath.getFilesystem()), new TypeToken<Optional<String>>() {});
-        writeString(pathSourcePath.getRelativePathName());
+        writeString(pathSourcePath.getRelativePath().toString());
       } else {
         throw new IllegalStateException(
             String.format("Cannot serialize SourcePath of type %s.", value.getClass().getName()));

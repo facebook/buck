@@ -20,11 +20,13 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.sourcepath.PathSourcePath;
+import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaBuckConfig.SourceAbiVerificationMode;
 import com.facebook.buck.jvm.java.JavaBuckConfig.UnusedDependenciesAction;
+import com.facebook.buck.jvm.java.JavacSpec.Builder;
 import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
 import com.facebook.buck.util.types.Either;
 import com.google.common.collect.ImmutableList;
@@ -49,6 +51,8 @@ public interface JvmLibraryArg extends CommonDescriptionArg, MaybeRequiredForSou
 
   Optional<String> getCompilerClassName();
 
+  // TODO(cjhopman): Remove the compiler argument. It's behavior is an odd mix of javac and
+  // javac_jar.
   Optional<Either<BuiltInJavac, SourcePath>> getCompiler();
 
   ImmutableList<String> getExtraArguments();
@@ -74,22 +78,55 @@ public interface JvmLibraryArg extends CommonDescriptionArg, MaybeRequiredForSou
 
   Optional<UnusedDependenciesAction> getOnUnusedDependencies();
 
+  /** Verifies some preconditions on the arguments. */
+  @Value.Check
+  default void verify() {
+    boolean javacJarIsSet = getJavacJar().isPresent();
+    boolean javacIsSet = getJavac().isPresent();
+
+    if (javacIsSet && javacJarIsSet) {
+      throw new HumanReadableException("Can only set one of javac/javac_jar.");
+    }
+  }
+
   @Value.Derived
   @Nullable
-  default JavacSpec getJavacSpec() {
+  default JavacSpec getJavacSpec(SourcePathRuleFinder ruleFinder) {
     if (!getCompiler().isPresent() && !getJavac().isPresent() && !getJavacJar().isPresent()) {
       return null;
     }
 
-    return JavacSpec.builder()
-        .setCompiler(getCompiler())
-        .setJavacPath(
-            getJavac().isPresent()
-                ? Optional.of(Either.ofLeft((PathSourcePath) getJavac().get()))
-                : Optional.empty())
-        .setJavacJarPath(getJavacJar())
-        .setCompilerClassName(getCompilerClassName())
-        .build();
+    Builder builder = JavacSpec.builder();
+    builder.setCompilerClassName(getCompilerClassName());
+
+    if (getCompiler().isPresent()) {
+      if (getCompiler().get().isRight()) {
+        SourcePath sourcePath = getCompiler().get().getRight();
+        if (isValidJavacJar(sourcePath, ruleFinder.getRule(sourcePath))) {
+          builder.setJavacJarPath(sourcePath);
+        } else {
+          builder.setJavacPath(sourcePath);
+        }
+      }
+      // compiler's left case is handled as just an empty spec.
+    } else {
+      builder.setJavacPath(getJavac());
+      builder.setJavacJarPath(getJavacJar());
+    }
+    return builder.build();
+  }
+
+  default boolean isValidJavacJar(SourcePath sourcePath, Optional<BuildRule> possibleRule) {
+    if (!possibleRule.isPresent() || !(possibleRule.get() instanceof JavaLibrary)) {
+      return false;
+    }
+    SourcePath javacJarPath = possibleRule.get().getSourcePathToOutput();
+    if (javacJarPath == null) {
+      throw new HumanReadableException(
+          String.format(
+              "%s isn't a valid value for compiler because it isn't a java library", sourcePath));
+    }
+    return true;
   }
 
   @Value.Derived

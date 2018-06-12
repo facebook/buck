@@ -136,7 +136,7 @@ public class RobolectricTestDescription
             ImmutableSortedSet.copyOf(
                 Iterables.concat(
                     params.getBuildDeps(), graphBuilder.getAllRules(args.getExportedDeps()))),
-            JavacFactory.create(ruleFinder, javaBuckConfig, args),
+            JavacFactory.getDefault(toolchainProvider).create(ruleFinder, args),
             javacOptions,
             DependencyMode.TRANSITIVE,
             args.isForceFinalResourceIds(),
@@ -191,7 +191,8 @@ public class RobolectricTestDescription
                     graphBuilder,
                     cellRoots,
                     compilerFactory.getCompiler(
-                        args.getLanguage().orElse(AndroidLibraryDescription.JvmLanguage.JAVA)),
+                        args.getLanguage().orElse(AndroidLibraryDescription.JvmLanguage.JAVA),
+                        JavacFactory.getDefault(toolchainProvider)),
                     javaBuckConfig,
                     testLibraryArgs)
                 .setJavacOptions(javacOptions)

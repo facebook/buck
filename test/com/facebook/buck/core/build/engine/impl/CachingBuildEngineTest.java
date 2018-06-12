@@ -160,6 +160,7 @@ import com.facebook.buck.util.exceptions.ExceptionWithContext;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.facebook.buck.util.timing.DefaultClock;
 import com.facebook.buck.util.timing.IncrementingFakeClock;
+import com.facebook.buck.util.types.Pair;
 import com.facebook.buck.util.zip.CustomZipEntry;
 import com.facebook.buck.util.zip.CustomZipOutputStream;
 import com.facebook.buck.util.zip.ZipConstants;
@@ -4525,6 +4526,12 @@ public class CachingBuildEngineTest {
 
     @Override
     public ListenableFuture<Void> store(ArtifactInfo info, BorrowablePath output) {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public ListenableFuture<Void> store(
+        ImmutableList<Pair<ArtifactInfo, BorrowablePath>> artifacts) {
       throw new UnsupportedOperationException();
     }
 

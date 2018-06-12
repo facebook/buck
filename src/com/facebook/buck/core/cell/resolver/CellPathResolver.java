@@ -49,7 +49,7 @@ public interface CellPathResolver {
    */
   Path getCellPathOrThrow(UnflavoredBuildTarget buildTarget);
 
-  /** @return absolute paths to all cells this graphBuilder knows about. */
+  /** @return absolute paths to all cells this resolver knows about. */
   ImmutableMap<String, Path> getCellPaths();
 
   /**
@@ -61,10 +61,10 @@ public interface CellPathResolver {
    * <p>Note: this is not the inverse of {@link #getCellPath(Optional)}, which returns the current,
    * rather than the root, cell path if the cell name is empty.
    *
-   * @throws IllegalArgumentException if cell path is not known to the cell path graphBuilder.
+   * @throws IllegalArgumentException if cell path is not known to the CellPathResolver.
    */
   Optional<String> getCanonicalCellName(Path cellPath);
 
-  /** @return paths to roots of all cells known to this graphBuilder. */
+  /** @return paths to roots of all cells known to this resolver. */
   ImmutableSet<Path> getKnownRoots();
 }

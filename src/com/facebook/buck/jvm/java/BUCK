@@ -139,7 +139,7 @@ java_immutables_library(
         "DiagnosticCleaner.java",
         "DiagnosticPrettyPrinter.java",
         "ExternalJavac.java",
-        "ExternalOrJarBackedJavacProvider.java",
+        "ExternalJavacFactory.java",
         "ExtraClasspathProvider.java",
         "FileManagerListener.java",
         "ForwardingStandardJavaFileManager.java",

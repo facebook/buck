@@ -27,15 +27,15 @@ import javax.annotation.Nonnull;
 
 /** A type coercer to handle needed coverage specification for python_test. */
 public class NeededCoverageSpecTypeCoercer implements TypeCoercer<NeededCoverageSpec> {
-  private final TypeCoercer<Float> floatTypeCoercer;
+  private final TypeCoercer<Integer> intTypeCoercer;
   private final TypeCoercer<BuildTarget> buildTargetTypeCoercer;
   private final TypeCoercer<String> pathNameTypeCoercer;
 
   NeededCoverageSpecTypeCoercer(
-      TypeCoercer<Float> floatTypeCoercer,
+      TypeCoercer<Integer> intTypeCoercer,
       TypeCoercer<BuildTarget> buildTargetTypeCoercer,
       TypeCoercer<String> pathNameTypeCoercer) {
-    this.floatTypeCoercer = floatTypeCoercer;
+    this.intTypeCoercer = intTypeCoercer;
     this.buildTargetTypeCoercer = buildTargetTypeCoercer;
     this.pathNameTypeCoercer = pathNameTypeCoercer;
   }
@@ -47,14 +47,14 @@ public class NeededCoverageSpecTypeCoercer implements TypeCoercer<NeededCoverage
 
   @Override
   public boolean hasElementClass(Class<?>... types) {
-    return floatTypeCoercer.hasElementClass(types)
+    return intTypeCoercer.hasElementClass(types)
         || buildTargetTypeCoercer.hasElementClass(types)
         || pathNameTypeCoercer.hasElementClass(types);
   }
 
   @Override
   public void traverse(CellPathResolver cellRoots, NeededCoverageSpec object, Traversal traversal) {
-    floatTypeCoercer.traverse(cellRoots, object.getNeededCoverageRatio(), traversal);
+    intTypeCoercer.traverse(cellRoots, object.getNeededCoverageRatioPercentage(), traversal);
     buildTargetTypeCoercer.traverse(cellRoots, object.getBuildTarget(), traversal);
     Optional<String> pathName = object.getPathName();
     if (pathName.isPresent()) {
@@ -77,7 +77,7 @@ public class NeededCoverageSpecTypeCoercer implements TypeCoercer<NeededCoverage
       Collection<?> collection = (Collection<?>) object;
       if (collection.size() == 2 || collection.size() == 3) {
         Iterator<?> iter = collection.iterator();
-        float neededRatio =
+        int neededRatioPercentage =
             coerceNeededRatio(
                 cellRoots, filesystem, pathRelativeToProjectRoot, object, iter.next());
         BuildTarget buildTarget =
@@ -90,7 +90,7 @@ public class NeededCoverageSpecTypeCoercer implements TypeCoercer<NeededCoverage
                   pathNameTypeCoercer.coerce(
                       cellRoots, filesystem, pathRelativeToProjectRoot, iter.next()));
         }
-        return NeededCoverageSpec.of(neededRatio, buildTarget, pathName);
+        return NeededCoverageSpec.of(neededRatioPercentage, buildTarget, pathName);
       }
     }
 
@@ -101,28 +101,33 @@ public class NeededCoverageSpecTypeCoercer implements TypeCoercer<NeededCoverage
   }
 
   @Nonnull
-  private float coerceNeededRatio(
+  private int coerceNeededRatio(
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
       Path pathRelativeToProjectRoot,
       Object originalObject,
       Object object)
       throws CoerceFailedException {
-    float floatValue =
-        floatTypeCoercer.coerce(cellRoots, filesystem, pathRelativeToProjectRoot, object);
 
-    if (floatValue < 0 || floatValue > 100) {
-      throw CoerceFailedException.simple(
-          originalObject,
-          getOutputClass(),
-          "the needed coverage ratio should be in range [0, 100]");
-    }
-    if (floatValue > 1.0 && floatValue != Math.floor(floatValue)) {
+    // Because TypeCoercer<Integer> handles float without throwing any exception, here we want to
+    // explicitly throw an exception if non-integral numbers are used for coverage ratio to avoid
+    // misuse of the data types
+    if (!(object instanceof Integer || object instanceof Long || object instanceof Short)) {
       throw CoerceFailedException.simple(
           originalObject,
           getOutputClass(),
           "the needed coverage ratio should be an integral number");
     }
-    return floatValue;
+
+    int intValue = intTypeCoercer.coerce(cellRoots, filesystem, pathRelativeToProjectRoot, object);
+
+    if (intValue < 0 || intValue > 100) {
+      throw CoerceFailedException.simple(
+          originalObject,
+          getOutputClass(),
+          "the needed coverage ratio should be in range [0, 100]");
+    }
+
+    return intValue;
   }
 }

@@ -25,7 +25,6 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.ConfiguredCompiler;
 import com.facebook.buck.jvm.java.ConfiguredCompilerFactory;
 import com.facebook.buck.jvm.java.ExtraClasspathProvider;
-import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.Javac;
 import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.JavacOptions;
@@ -39,21 +38,21 @@ import javax.annotation.Nullable;
 
 public class ScalaConfiguredCompilerFactory extends ConfiguredCompilerFactory {
   private final ScalaBuckConfig scalaBuckConfig;
-  private final JavaBuckConfig javaBuckConfig;
   private final Function<ToolchainProvider, ExtraClasspathProvider> extraClasspathProviderSupplier;
   private @Nullable Tool scalac;
+  private final JavacFactory javacFactory;
 
-  public ScalaConfiguredCompilerFactory(ScalaBuckConfig config, JavaBuckConfig javaBuckConfig) {
-    this(config, javaBuckConfig, (toolchainProvider) -> ExtraClasspathProvider.EMPTY);
+  public ScalaConfiguredCompilerFactory(ScalaBuckConfig config, JavacFactory javacFactory) {
+    this(config, (toolchainProvider) -> ExtraClasspathProvider.EMPTY, javacFactory);
   }
 
   public ScalaConfiguredCompilerFactory(
       ScalaBuckConfig config,
-      JavaBuckConfig javaBuckConfig,
-      Function<ToolchainProvider, ExtraClasspathProvider> extraClasspathProviderSupplier) {
+      Function<ToolchainProvider, ExtraClasspathProvider> extraClasspathProviderSupplier,
+      JavacFactory javacFactory) {
     this.scalaBuckConfig = config;
-    this.javaBuckConfig = javaBuckConfig;
     this.extraClasspathProviderSupplier = extraClasspathProviderSupplier;
+    this.javacFactory = javacFactory;
   }
 
   private Tool getScalac(BuildRuleResolver resolver) {
@@ -99,6 +98,6 @@ public class ScalaConfiguredCompilerFactory extends ConfiguredCompilerFactory {
   }
 
   private Javac getJavac(BuildRuleResolver resolver, @Nullable JvmLibraryArg arg) {
-    return JavacFactory.create(new SourcePathRuleFinder(resolver), javaBuckConfig, arg);
+    return javacFactory.create(new SourcePathRuleFinder(resolver), arg);
   }
 }

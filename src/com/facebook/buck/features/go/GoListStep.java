@@ -90,6 +90,7 @@ public class GoListStep extends ShellStep {
         .put("GOROOT", platform.getGoRoot().toString())
         .put("GOOS", platform.getGoOs())
         .put("GOARCH", platform.getGoArch())
+        .put("GOARM", platform.getGoArm())
         .build();
   }
 

@@ -52,6 +52,7 @@ import com.facebook.buck.distributed.ClientStatsTracker;
 import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.DistBuildStatusEvent;
 import com.facebook.buck.distributed.DistBuildUtil;
+import com.facebook.buck.distributed.DistLocalBuildMode;
 import com.facebook.buck.distributed.testutil.CustomActiongGraphBuilderFactory;
 import com.facebook.buck.distributed.thrift.BuckVersion;
 import com.facebook.buck.distributed.thrift.BuildJob;
@@ -261,7 +262,11 @@ public class BuildPhaseTest {
         .once();
 
     mockDistBuildService.enqueueMinions(
-        stampedeId, NUM_MINIONS, MINION_QUEUE_NAME, MinionType.STANDARD_SPEC);
+        eq(stampedeId),
+        anyString(),
+        eq(NUM_MINIONS),
+        eq(MINION_QUEUE_NAME),
+        eq(MinionType.STANDARD_SPEC));
     expectLastCall()
         .andAnswer(
             () -> {
@@ -283,6 +288,7 @@ public class BuildPhaseTest {
         directExecutor,
         stampedeId,
         BuildMode.DISTRIBUTED_BUILD_WITH_LOCAL_COORDINATOR,
+        DistLocalBuildMode.WAIT_FOR_REMOTE,
         FakeInvocationInfoFactory.create(),
         Futures.immediateFuture(
             new ParallelRuleKeyCalculator<RuleKey>(

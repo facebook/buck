@@ -65,6 +65,7 @@ public class CGoGenerateImportStep extends ShellStep {
         .putAll(context.getEnvironment())
         .put("GOOS", platform.getGoOs())
         .put("GOARCH", platform.getGoArch())
+        .put("GOARM", platform.getGoArm())
         .build();
   }
 

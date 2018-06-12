@@ -396,7 +396,7 @@ public class PythonTestDescription
                       .keySet());
         }
         neededCoverageBuilder.add(
-            new Pair<>(coverageSpec.getNormalizedNeededCoverageRatio(), paths));
+            new Pair<>(coverageSpec.getNeededCoverageRatioPercentage() / 100.f, paths));
       } else {
         throw new HumanReadableException(
             "%s: needed_coverage requires a python library dependency. Found %s instead",

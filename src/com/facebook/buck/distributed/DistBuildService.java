@@ -847,6 +847,7 @@ public class DistBuildService implements Closeable {
    */
   public void enqueueMinions(
       StampedeId stampedeId,
+      String buildLabel,
       int totalNumberOfMinions,
       String minionQueueName,
       MinionType minionType)
@@ -856,7 +857,8 @@ public class DistBuildService implements Closeable {
             .setMinionQueue(minionQueueName)
             .setNumberOfMinions(totalNumberOfMinions)
             .setMinionType(minionType)
-            .setStampedeId(stampedeId);
+            .setStampedeId(stampedeId)
+            .setBuildLabel(buildLabel);
 
     FrontendRequest frontendRequest = new FrontendRequest();
     frontendRequest.setType(FrontendRequestType.ENQUEUE_MINIONS);

@@ -31,6 +31,7 @@ import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.description.arg.HasTests;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -90,7 +91,7 @@ public class WorkspaceAndProjectGenerator {
   private final boolean combinedProject;
   private final boolean parallelizeBuild;
   private final CxxPlatform defaultCxxPlatform;
-  private final ImmutableSet<String> appleCxxFlavors;
+  private final ImmutableSet<Flavor> appleCxxFlavors;
 
   private Optional<ProjectGenerator> combinedProjectGenerator;
   private final Map<String, SchemeGenerator> schemeGenerators = new HashMap<>();
@@ -120,7 +121,7 @@ public class WorkspaceAndProjectGenerator {
       FocusedModuleTargetMatcher focusModules,
       boolean parallelizeBuild,
       CxxPlatform defaultCxxPlatform,
-      ImmutableSet<String> appleCxxFlavors,
+      ImmutableSet<Flavor> appleCxxFlavors,
       String buildFileName,
       Function<TargetNode<?, ?>, ActionGraphBuilder> graphBuilderForNode,
       BuckEventBus buckEventBus,

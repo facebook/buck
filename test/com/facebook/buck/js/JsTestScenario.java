@@ -27,6 +27,9 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
+import com.facebook.buck.rules.macros.Macro;
+import com.facebook.buck.rules.macros.StringWithMacros;
+import com.facebook.buck.rules.macros.StringWithMacrosUtils;
 import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.shell.ExportFileBuilder;
 import com.facebook.buck.shell.FakeWorkerBuilder;
@@ -38,6 +41,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 import java.util.Collection;
 import java.util.LinkedHashSet;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -119,14 +123,31 @@ public class JsTestScenario {
     }
 
     public Builder library(BuildTarget target, BuildTarget... libraryDependencies) {
-      addLibrary(target, null, Stream.of(libraryDependencies), null, Stream.of());
+      addLibrary(target, null, Stream.of(libraryDependencies), null, Stream.of(), null);
       return this;
     }
 
     public Builder library(
         BuildTarget target, Query libraryDependenciesQuery, BuildTarget... libraryDependencies) {
       addLibrary(
-          target, null, Stream.of(libraryDependencies), libraryDependenciesQuery, Stream.of());
+          target,
+          null,
+          Stream.of(libraryDependencies),
+          libraryDependenciesQuery,
+          Stream.of(),
+          null);
+      return this;
+    }
+
+    public Builder library(
+        BuildTarget target, Query libraryDependenciesQuery, SourcePath... sources) {
+      addLibrary(
+          target,
+          null,
+          Stream.of(),
+          libraryDependenciesQuery,
+          Stream.of(sources).map(Either::ofLeft),
+          null);
       return this;
     }
 
@@ -136,24 +157,38 @@ public class JsTestScenario {
           null,
           Stream.of(),
           null,
-          Stream.concat(Stream.of(first), Stream.of(sources)).map(Either::ofLeft));
+          Stream.concat(Stream.of(first), Stream.of(sources)).map(Either::ofLeft),
+          null);
       return this;
     }
 
     public Builder library(BuildTarget target, String basePath, SourcePath... sources) {
-      addLibrary(target, basePath, Stream.of(), null, Stream.of(sources).map(Either::ofLeft));
+      addLibrary(target, basePath, Stream.of(), null, Stream.of(sources).map(Either::ofLeft), null);
       return this;
     }
 
     public Builder library(
         BuildTarget target, String basePath, Pair<SourcePath, String>... sources) {
-      addLibrary(target, basePath, Stream.of(), null, Stream.of(sources).map(Either::ofRight));
+      addLibrary(
+          target, basePath, Stream.of(), null, Stream.of(sources).map(Either::ofRight), null);
       return this;
     }
 
     public Builder library(
         BuildTarget target, Collection<BuildTarget> libDeps, Collection<SourcePath> sources) {
-      addLibrary(target, null, libDeps.stream(), null, sources.stream().map(Either::ofLeft));
+      addLibrary(target, null, libDeps.stream(), null, sources.stream().map(Either::ofLeft), null);
+      return this;
+    }
+
+    public Builder library(
+        BuildTarget target, Collection<SourcePath> sources, String macroFormat, Macro... macros) {
+      addLibrary(
+          target,
+          null,
+          Stream.of(),
+          null,
+          sources.stream().map(Either::ofLeft),
+          StringWithMacrosUtils.format(macroFormat, macros));
       return this;
     }
 
@@ -167,13 +202,15 @@ public class JsTestScenario {
         @Nullable String basePath,
         Stream<BuildTarget> libraries,
         @Nullable Query libraryDependenciesQuery,
-        Stream<Either<SourcePath, Pair<SourcePath, String>>> sources) {
+        Stream<Either<SourcePath, Pair<SourcePath, String>>> sources,
+        @Nullable StringWithMacros extraJson) {
       nodes.add(
           new JsLibraryBuilder(target, filesystem)
               .setBasePath(basePath)
               .setDeps(
                   libraries.collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())))
               .setDepsQuery(libraryDependenciesQuery)
+              .setExtraJson(Optional.ofNullable(extraJson))
               .setSrcs(sources.collect(ImmutableSet.toImmutableSet()))
               .setWorker(workerTarget)
               .build());

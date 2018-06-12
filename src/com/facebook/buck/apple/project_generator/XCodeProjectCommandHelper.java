@@ -29,6 +29,7 @@ import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.CellProvider;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.NoSuchTargetException;
@@ -104,7 +105,7 @@ public class XCodeProjectCommandHelper {
   private final InstrumentedVersionedTargetGraphCache versionedTargetGraphCache;
   private final TypeCoercerFactory typeCoercerFactory;
   private final Cell cell;
-  private final ImmutableSet<String> appleCxxFlavors;
+  private final ImmutableSet<Flavor> appleCxxFlavors;
   private final RuleKeyConfiguration ruleKeyConfiguration;
   private final Console console;
   private final Optional<ProcessManager> processManager;
@@ -137,7 +138,7 @@ public class XCodeProjectCommandHelper {
       ImmutableMap<String, String> environment,
       ListeningExecutorService executorService,
       List<String> arguments,
-      ImmutableSet<String> appleCxxFlavors,
+      ImmutableSet<Flavor> appleCxxFlavors,
       boolean enableParserProfiling,
       boolean withTests,
       boolean withoutTests,
@@ -389,7 +390,7 @@ public class XCodeProjectCommandHelper {
       TargetGraphAndTargets targetGraphAndTargets,
       ImmutableSet<BuildTarget> passedInTargetsSet,
       ProjectGeneratorOptions options,
-      ImmutableSet<String> appleCxxFlavors,
+      ImmutableSet<Flavor> appleCxxFlavors,
       FocusedModuleTargetMatcher focusModules,
       Map<Path, ProjectGenerator> projectGenerators,
       boolean combinedProject,

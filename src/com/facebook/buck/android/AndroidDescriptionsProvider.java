@@ -55,17 +55,23 @@ public class AndroidDescriptionsProvider implements DescriptionProvider {
     AndroidManifestFactory androidManifestFactory = new AndroidManifestFactory();
 
     return Arrays.asList(
-        new AndroidAarDescription(androidManifestFactory, cxxBuckConfig, javaConfig),
+        new AndroidAarDescription(androidManifestFactory, cxxBuckConfig, toolchainProvider),
         new AndroidManifestDescription(androidManifestFactory),
         new AndroidAppModularityDescription(),
         new AndroidBinaryDescription(
-            javaConfig, proGuardConfig, config, cxxBuckConfig, dxConfig, apkConfig),
-        new AndroidBuildConfigDescription(javaConfig),
+            javaConfig,
+            proGuardConfig,
+            config,
+            cxxBuckConfig,
+            dxConfig,
+            apkConfig,
+            toolchainProvider),
+        new AndroidBuildConfigDescription(toolchainProvider),
         new AndroidInstrumentationApkDescription(
-            javaConfig, proGuardConfig, cxxBuckConfig, dxConfig, apkConfig),
+            javaConfig, proGuardConfig, cxxBuckConfig, dxConfig, apkConfig, toolchainProvider),
         new AndroidInstrumentationTestDescription(config),
-        new AndroidLibraryDescription(javaConfig, defaultAndroidCompilerFactory),
-        new AndroidPrebuiltAarDescription(javaConfig),
+        new AndroidLibraryDescription(javaConfig, defaultAndroidCompilerFactory, toolchainProvider),
+        new AndroidPrebuiltAarDescription(toolchainProvider),
         new AndroidResourceDescription(androidBuckConfig),
         new RobolectricTestDescription(
             toolchainProvider, javaConfig, defaultAndroidCompilerFactory),

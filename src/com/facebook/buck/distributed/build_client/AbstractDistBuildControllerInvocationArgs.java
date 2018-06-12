@@ -19,6 +19,7 @@ package com.facebook.buck.distributed.build_client;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rulekey.calculator.ParallelRuleKeyCalculator;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.distributed.DistLocalBuildMode;
 import com.facebook.buck.distributed.thrift.BuildMode;
 import com.facebook.buck.distributed.thrift.MinionRequirements;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -41,6 +42,8 @@ abstract class AbstractDistBuildControllerInvocationArgs {
   abstract InvocationInfo getInvocationInfo();
 
   abstract BuildMode getBuildMode();
+
+  abstract DistLocalBuildMode getDistLocalBuildMode();
 
   abstract MinionRequirements getMinionRequirements();
 

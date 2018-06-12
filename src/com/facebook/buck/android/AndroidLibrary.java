@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.android.AndroidLibraryDescription.CoreArg;
 import com.facebook.buck.android.packageable.AndroidPackageable;
 import com.facebook.buck.android.packageable.AndroidPackageableCollector;
 import com.facebook.buck.core.cell.resolver.CellPathResolver;
@@ -66,8 +67,9 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
       ActionGraphBuilder graphBuilder,
       CellPathResolver cellPathResolver,
       JavaBuckConfig javaBuckConfig,
+      JavacFactory javacFactory,
       JavacOptions javacOptions,
-      AndroidLibraryDescription.CoreArg args,
+      CoreArg args,
       ConfiguredCompilerFactory compilerFactory) {
     return new Builder(
         buildTarget,
@@ -77,6 +79,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
         graphBuilder,
         cellPathResolver,
         javaBuckConfig,
+        javacFactory,
         javacOptions,
         args,
         compilerFactory);
@@ -146,8 +149,9 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
         ActionGraphBuilder graphBuilder,
         CellPathResolver cellPathResolver,
         JavaBuckConfig javaBuckConfig,
+        JavacFactory javacFactory,
         JavacOptions javacOptions,
-        AndroidLibraryDescription.CoreArg args,
+        CoreArg args,
         ConfiguredCompilerFactory compilerFactory) {
       this.graphBuilder = graphBuilder;
       DefaultJavaLibraryRules.Builder delegateBuilder =
@@ -216,7 +220,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
               libraryTarget,
               projectFilesystem,
               ImmutableSortedSet.copyOf(Iterables.concat(deps.getDeps(), deps.getProvidedDeps())),
-              JavacFactory.create(new SourcePathRuleFinder(graphBuilder), javaBuckConfig, args),
+              javacFactory.create(new SourcePathRuleFinder(graphBuilder), args),
               javacOptions,
               DependencyMode.FIRST_ORDER,
               /* forceFinalResourceIds */ false,

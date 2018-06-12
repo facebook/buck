@@ -37,7 +37,6 @@ import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatforms;
-import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.PicType;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.coercer.SourceList;
@@ -125,7 +124,7 @@ public class DLibraryDescription
       DIncludes dIncludes,
       PicType pic) {
 
-    CxxPlatform cxxPlatform = getCxxPlatform();
+    CxxPlatform cxxPlatform = DDescriptionUtils.getCxxPlatform(toolchainProvider, dBuckConfig);
 
     ImmutableList<SourcePath> compiledSources =
         DDescriptionUtils.sourcePathsForCompiledSources(
@@ -175,13 +174,9 @@ public class DLibraryDescription
       DLibraryDescriptionArg constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
-    extraDepsBuilder.addAll(CxxPlatforms.getParseTimeDeps(getCxxPlatform()));
-  }
-
-  private CxxPlatform getCxxPlatform() {
-    CxxPlatformsProvider cxxPlatformsProviderFactory =
-        toolchainProvider.getByName(CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class);
-    return cxxPlatformsProviderFactory.getDefaultCxxPlatform();
+    extraDepsBuilder.addAll(
+        CxxPlatforms.getParseTimeDeps(
+            DDescriptionUtils.getCxxPlatform(toolchainProvider, dBuckConfig)));
   }
 
   @BuckStyleImmutable

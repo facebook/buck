@@ -39,7 +39,7 @@ public class JavaDescriptionsProvider implements DescriptionProvider {
         new JarGenruleDescription(toolchainProvider, context.getSandboxExecutionStrategy()),
         new JavaBinaryDescription(toolchainProvider, javaConfig),
         new JavaAnnotationProcessorDescription(),
-        new JavaLibraryDescription(javaConfig),
+        new JavaLibraryDescription(toolchainProvider, javaConfig),
         new JavaTestDescription(toolchainProvider, javaConfig),
         new KeystoreDescription());
   }

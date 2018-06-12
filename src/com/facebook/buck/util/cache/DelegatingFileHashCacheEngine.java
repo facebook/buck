@@ -64,7 +64,7 @@ public class DelegatingFileHashCacheEngine implements FileHashCacheEngine {
 
   @Nullable
   @Override
-  public HashCodeAndFileType getIfPresent(Path path) {
+  public HashCode getIfPresent(Path path) {
     return delegate.getIfPresent(path);
   }
 

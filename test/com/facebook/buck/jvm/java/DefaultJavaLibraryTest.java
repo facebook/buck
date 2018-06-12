@@ -1233,7 +1233,8 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
                 buildRuleParams,
                 graphBuilder,
                 TestCellBuilder.createCellRoots(filesystem),
-                new JavaConfiguredCompilerFactory(testJavaBuckConfig),
+                new JavaConfiguredCompilerFactory(
+                    testJavaBuckConfig, JavacFactoryHelper.createJavacFactory(testJavaBuckConfig)),
                 testJavaBuckConfig,
                 null)
             .setJavacOptions(javacOptions)
@@ -1525,7 +1526,9 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
                   buildRuleParams,
                   graphBuilder,
                   TestCellBuilder.createCellRoots(projectFilesystem),
-                  new JavaConfiguredCompilerFactory(testJavaBuckConfig),
+                  new JavaConfiguredCompilerFactory(
+                      testJavaBuckConfig,
+                      JavacFactoryHelper.createJavacFactory(testJavaBuckConfig)),
                   testJavaBuckConfig,
                   null)
               .setJavacOptions(options)

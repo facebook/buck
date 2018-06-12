@@ -25,7 +25,6 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeNoException;
 
-import com.facebook.buck.core.cell.CellProvider;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
@@ -45,6 +44,7 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.TestBuildRuleParams;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.concurrent.MostExecutors;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.util.Arrays;
@@ -237,7 +237,7 @@ public class ActionGraphBuilderTest {
             new TargetNodeToBuildRuleTransformer() {
               @Override
               public <T, U extends DescriptionWithTargetGraph<T>> BuildRule transform(
-                  CellProvider cellProvider,
+                  ToolchainProvider toolchainProvider,
                   TargetGraph targetGraph,
                   ActionGraphBuilder graphBuilder,
                   TargetNode<T, U> targetNode) {
@@ -270,7 +270,7 @@ public class ActionGraphBuilderTest {
             new TargetNodeToBuildRuleTransformer() {
               @Override
               public <T, U extends DescriptionWithTargetGraph<T>> BuildRule transform(
-                  CellProvider cellProvider,
+                  ToolchainProvider toolchainProvider,
                   TargetGraph targetGraph,
                   ActionGraphBuilder graphBuilder,
                   TargetNode<T, U> targetNode) {
@@ -359,7 +359,7 @@ public class ActionGraphBuilderTest {
               new TargetNodeToBuildRuleTransformer() {
                 @Override
                 public <T, U extends DescriptionWithTargetGraph<T>> BuildRule transform(
-                    CellProvider cellProvider,
+                    ToolchainProvider toolchainProvider,
                     TargetGraph targetGraph,
                     ActionGraphBuilder graphBuilder,
                     TargetNode<T, U> targetNode) {

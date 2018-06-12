@@ -20,8 +20,11 @@ import com.facebook.buck.core.build.distributed.synchronization.impl.RemoteBuild
 import com.facebook.buck.core.build.event.BuildEvent;
 import com.facebook.buck.distributed.ClientStatsTracker;
 import com.facebook.buck.distributed.DistBuildService;
+import com.facebook.buck.distributed.DistLocalBuildMode;
+import com.facebook.buck.distributed.ExitCode;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.log.Logger;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -67,7 +70,7 @@ public class StampedeBuildClient {
       boolean waitGracefullyForDistributedBuildThreadToFinish,
       long distributedBuildThreadKillTimeoutSeconds,
       Optional<StampedeId> stampedeId) {
-    stampedeId.ifPresent(id -> this.stampedeIdReference.set(id));
+    stampedeId.ifPresent(this.stampedeIdReference::set);
     this.eventBus = eventBus;
     this.clientStatsTracker = clientStatsTracker;
     this.remoteBuildRuleSynchronizer = remoteBuildRuleSynchronizer;
@@ -141,20 +144,28 @@ public class StampedeBuildClient {
   /**
    * Kicks off distributed build, then runs a multi-phase local build which.
    *
-   * @throws InterruptedException
+   * @throws InterruptedException if proceedToLocalSynchronizedBuildPhase gets interrupted.
    */
-  public int build(boolean skipRacingPhase, boolean localBuildFallbackEnabled)
+  public int build(DistLocalBuildMode distLocalBuildMode, boolean localBuildFallbackEnabled)
       throws InterruptedException {
     LOG.info(
         String.format(
-            "Stampede build client starting. skipRacingPhase=[%s], localBuildFallbackEnabled=[%s].",
-            skipRacingPhase, localBuildFallbackEnabled));
+            "Stampede build client starting. distLocalBuildMode=[%s], localBuildFallbackEnabled=[%s].",
+            distLocalBuildMode, localBuildFallbackEnabled));
 
-    // Kick off the distributed build
-    distBuildRunner.runDistBuildAsync();
+    if (distLocalBuildMode.equals(DistLocalBuildMode.FIRE_AND_FORGET)) {
+      distBuildRunner.runDistBuildSync();
+      eventBus.post(ConsoleEvent.info("Fire and forget build was scheduled."));
+      LOG.info("Stampede build in fire-and-forget mode started remotely. Exiting local client.");
+      return ExitCode.SUCCESSFUL.getCode();
+    } else {
+      // Kick off the distributed build
+      distBuildRunner.runDistBuildAsync();
+    }
 
-    boolean proceedToLocalSynchronizedBuildPhase = skipRacingPhase;
-    if (!skipRacingPhase) {
+    boolean proceedToLocalSynchronizedBuildPhase =
+        distLocalBuildMode.equals(DistLocalBuildMode.WAIT_FOR_REMOTE);
+    if (distLocalBuildMode.equals(DistLocalBuildMode.NO_WAIT_FOR_REMOTE)) {
       clientStatsTracker.setPerformedRacingBuild(true);
       proceedToLocalSynchronizedBuildPhase =
           !RacingBuildPhase.run(
@@ -257,6 +268,7 @@ public class StampedeBuildClient {
               distBuildControllerInvocationArgs.getFileHashCache(),
               distBuildControllerInvocationArgs.getInvocationInfo(),
               distBuildControllerInvocationArgs.getBuildMode(),
+              distBuildControllerInvocationArgs.getDistLocalBuildMode(),
               distBuildControllerInvocationArgs.getMinionRequirements(),
               distBuildControllerInvocationArgs.getRepository(),
               distBuildControllerInvocationArgs.getTenantId(),

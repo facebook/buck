@@ -200,6 +200,7 @@ struct BuildJob {
   // The user that created the build.
   12: optional string username;
   13: optional list<BuildSlaveInfo> buildSlaves;
+  14: optional string buildLabel;
 }
 
 struct Announcement {
@@ -495,6 +496,7 @@ struct EnqueueMinionsRequest {
   2: optional string minionQueue;
   3: optional i32 numberOfMinions;
   4: optional MinionType minionType;
+  5: optional string buildLabel;
 }
 
 struct EnqueueMinionsResponse {

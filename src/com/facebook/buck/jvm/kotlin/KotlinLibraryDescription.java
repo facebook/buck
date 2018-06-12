@@ -33,6 +33,7 @@ import com.facebook.buck.jvm.java.DefaultJavaLibraryRules;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.jvm.java.JavaSourceJar;
+import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacOptionsFactory;
 import com.facebook.buck.jvm.java.MavenUberJar;
@@ -48,13 +49,12 @@ import org.immutables.value.Value;
 
 public class KotlinLibraryDescription
     implements DescriptionWithTargetGraph<KotlinLibraryDescriptionArg>, Flavored {
+  public static final ImmutableSet<Flavor> SUPPORTED_FLAVORS =
+      ImmutableSet.of(JavaLibrary.SRC_JAR, JavaLibrary.MAVEN_JAR);
 
   private final ToolchainProvider toolchainProvider;
   private final KotlinBuckConfig kotlinBuckConfig;
   private final JavaBuckConfig javaBuckConfig;
-
-  public static final ImmutableSet<Flavor> SUPPORTED_FLAVORS =
-      ImmutableSet.of(JavaLibrary.SRC_JAR, JavaLibrary.MAVEN_JAR);
 
   public KotlinLibraryDescription(
       ToolchainProvider toolchainProvider,
@@ -135,7 +135,8 @@ public class KotlinLibraryDescription
                 context.getCellPathResolver(),
                 kotlinBuckConfig,
                 javaBuckConfig,
-                args)
+                args,
+                JavacFactory.getDefault(toolchainProvider))
             .setJavacOptions(javacOptions)
             .build();
 

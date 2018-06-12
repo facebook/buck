@@ -120,10 +120,10 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
             sourcePathTypeCoercer, new ListTypeCoercer<>(stringTypeCoercer));
     TypeCoercer<OcamlSource> ocamlSourceTypeCoercer =
         new OcamlSourceTypeCoercer(sourcePathTypeCoercer);
-    TypeCoercer<Float> floatTypeCoercer = new NumberTypeCoercer<>(Float.class);
+    TypeCoercer<Integer> intTypeCoercer = new NumberTypeCoercer<>(Integer.class);
     TypeCoercer<NeededCoverageSpec> neededCoverageSpecTypeCoercer =
         new NeededCoverageSpecTypeCoercer(
-            floatTypeCoercer, buildTargetTypeCoercer, stringTypeCoercer);
+            intTypeCoercer, buildTargetTypeCoercer, stringTypeCoercer);
     TypeCoercer<Query> queryTypeCoercer = new QueryCoercer();
     TypeCoercer<ImmutableList<BuildTarget>> buildTargetsTypeCoercer =
         new ListTypeCoercer<>(buildTargetTypeCoercer);
@@ -141,9 +141,9 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
           new IdentityTypeCoercer<>(Boolean.class),
 
           // numeric
-          new NumberTypeCoercer<>(Integer.class),
+          intTypeCoercer,
           new NumberTypeCoercer<>(Double.class),
-          floatTypeCoercer,
+          new NumberTypeCoercer<>(Float.class),
           new NumberTypeCoercer<>(Long.class),
           new NumberTypeCoercer<>(Short.class),
           new NumberTypeCoercer<>(Byte.class),

@@ -131,16 +131,24 @@ class MaterializerDummyFileHashCache implements ProjectFileHashCache {
       getMaterializationFuturesAsList()
           .get(DEFAULT_PRELOAD_FILE_MATERIALIZATION_TIMEOUT_SECONDS, TimeUnit.SECONDS);
     } catch (ExecutionException e) {
-      LOG.error(e, "Preload file materialization failed with exception: [%s].", e.getMessage());
+      String msg =
+          String.format(
+              "Preload file materialization failed with exception: [%s].", e.getMessage());
+      LOG.error(e, msg);
+      throw new RuntimeException(msg);
     } catch (InterruptedException e) {
-      LOG.error(e, "Preload file materialization was interrupted.");
+      Thread.currentThread().interrupt();
+      String msg = "Preload file materialization was interrupted.";
+      LOG.error(e, msg);
+      throw new RuntimeException(msg);
     } catch (TimeoutException e) {
-      LOG.error(
-          e,
-          "Preload materialization timed out after [%d] seconds.",
-          DEFAULT_PRELOAD_FILE_MATERIALIZATION_TIMEOUT_SECONDS);
-
       printMissingFiles();
+      String msg =
+          String.format(
+              "Preload materialization timed out after [%d] seconds.",
+              DEFAULT_PRELOAD_FILE_MATERIALIZATION_TIMEOUT_SECONDS);
+      LOG.error(e, msg);
+      throw new RuntimeException(msg);
     }
   }
 

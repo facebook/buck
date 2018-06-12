@@ -103,6 +103,8 @@ abstract class AbstractBuckGlobals {
       builder.put(ruleFunction.getName(), ruleFunction);
     }
     builder.put("host_info", HostInfo.create());
+    // TODO(T30129174): move read_config to SkylarkNativeModule
+    builder.put("read_config", ReadConfig.create());
     for (String nativeFunction : FuncallExpression.getMethodNames(SkylarkNativeModule.class)) {
       builder.put(
           nativeFunction,

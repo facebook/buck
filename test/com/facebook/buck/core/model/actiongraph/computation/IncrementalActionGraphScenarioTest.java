@@ -60,6 +60,7 @@ import com.facebook.buck.cxx.CxxTestUtils;
 import com.facebook.buck.cxx.SharedLibraryInterfacePlatforms;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.linker.Linker.LinkableDepType;
 import com.facebook.buck.event.BuckEventBus;
@@ -587,7 +588,7 @@ public class IncrementalActionGraphScenarioTest {
   public void testPythonBinaryAndLibraryLoadedFromCache() {
     BuildTarget libraryTarget = BuildTargetFactory.newInstance("//:python_library");
     PythonLibraryBuilder libraryBuilder =
-        new PythonLibraryBuilder(libraryTarget)
+        new PythonLibraryBuilder(libraryTarget, pythonPlatforms, CxxPlatformUtils.DEFAULT_PLATFORMS)
             .setSrcs(
                 SourceList.ofUnnamedSources(
                     ImmutableSortedSet.of(FakeSourcePath.of("something.py"))));
@@ -614,7 +615,7 @@ public class IncrementalActionGraphScenarioTest {
   public void testChangedPythonBinaryOnlyLibraryLoadedFromCache() {
     BuildTarget libraryTarget = BuildTargetFactory.newInstance("//:python_library");
     PythonLibraryBuilder libraryBuilder =
-        new PythonLibraryBuilder(libraryTarget)
+        new PythonLibraryBuilder(libraryTarget, pythonPlatforms, CxxPlatformUtils.DEFAULT_PLATFORMS)
             .setSrcs(
                 SourceList.ofUnnamedSources(
                     ImmutableSortedSet.of(FakeSourcePath.of("something.py"))));
@@ -644,7 +645,7 @@ public class IncrementalActionGraphScenarioTest {
   public void testChangedPythonLibraryNotLoadedFromCache() {
     BuildTarget libraryTarget = BuildTargetFactory.newInstance("//:python_library");
     PythonLibraryBuilder libraryBuilder =
-        new PythonLibraryBuilder(libraryTarget)
+        new PythonLibraryBuilder(libraryTarget, pythonPlatforms, CxxPlatformUtils.DEFAULT_PLATFORMS)
             .setSrcs(
                 SourceList.ofUnnamedSources(
                     ImmutableSortedSet.of(FakeSourcePath.of("something.py"))));
@@ -659,7 +660,7 @@ public class IncrementalActionGraphScenarioTest {
     ActionGraphAndBuilder result = createActionGraph(binaryBuilder, libraryBuilder);
     queryTransitiveDeps(result);
     PythonLibraryBuilder newLibraryBuilder =
-        new PythonLibraryBuilder(libraryTarget)
+        new PythonLibraryBuilder(libraryTarget, pythonPlatforms, CxxPlatformUtils.DEFAULT_PLATFORMS)
             .setSrcs(
                 SourceList.ofUnnamedSources(
                     ImmutableSortedSet.of(

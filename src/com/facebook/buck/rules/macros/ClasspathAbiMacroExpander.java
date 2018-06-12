@@ -74,7 +74,6 @@ public class ClasspathAbiMacroExpander extends BuildTargetMacroExpander<Classpat
    * Get the class abi jar if present for the rule otherwise return the rule's output
    *
    * @param rule The rule whose jar path needs to be returned
-   * @param graphBuilder ActionGraphBuilder
    * @return class abi jar or output jar if not found
    */
   @Nullable

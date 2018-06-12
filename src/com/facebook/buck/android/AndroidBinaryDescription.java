@@ -131,6 +131,7 @@ public class AndroidBinaryDescription
   private final DxConfig dxConfig;
   private final AndroidInstallConfig androidInstallConfig;
   private final ApkConfig apkConfig;
+  private final ToolchainProvider toolchainProvider;
 
   public AndroidBinaryDescription(
       JavaBuckConfig javaBuckConfig,
@@ -138,7 +139,8 @@ public class AndroidBinaryDescription
       BuckConfig buckConfig,
       CxxBuckConfig cxxBuckConfig,
       DxConfig dxConfig,
-      ApkConfig apkConfig) {
+      ApkConfig apkConfig,
+      ToolchainProvider toolchainProvider) {
     this.javaBuckConfig = javaBuckConfig;
     this.proGuardConfig = proGuardConfig;
     this.buckConfig = buckConfig;
@@ -146,6 +148,7 @@ public class AndroidBinaryDescription
     this.dxConfig = dxConfig;
     this.androidInstallConfig = new AndroidInstallConfig(buckConfig);
     this.apkConfig = apkConfig;
+    this.toolchainProvider = toolchainProvider;
   }
 
   @Override
@@ -245,7 +248,6 @@ public class AndroidBinaryDescription
             .filter(JavaLibrary.class)
             .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
 
-    ToolchainProvider toolchainProvider = context.getToolchainProvider();
     ListeningExecutorService dxExecutorService =
         toolchainProvider
             .getByName(DxToolchain.DEFAULT_NAME, DxToolchain.class)
@@ -319,7 +321,7 @@ public class AndroidBinaryDescription
             args.isNoVersionTransitionsResources(),
             args.isNoAutoAddOverlayResources(),
             javaBuckConfig,
-            JavacFactory.create(ruleFinder, javaBuckConfig, null),
+            JavacFactory.getDefault(toolchainProvider),
             toolchainProvider
                 .getByName(JavacOptionsProvider.DEFAULT_NAME, JavacOptionsProvider.class)
                 .getJavacOptions(),

@@ -267,7 +267,7 @@ public class JavaBuckConfigTest {
     BuckConfig buckConfig = FakeBuckConfig.builder().build();
     JavaBuckConfig javaConfig = buckConfig.getView(JavaBuckConfig.class);
 
-    Javac javac = JavacFactory.create(null, javaConfig, null);
+    Javac javac = JavacFactoryHelper.createJavacFactory(javaConfig).create(null, null);
     assertTrue(javac.getClass().toString(), javac instanceof Jsr199Javac);
   }
 
@@ -282,7 +282,8 @@ public class JavaBuckConfigTest {
         FakeBuckConfig.builder().setFilesystem(defaultFilesystem).setSections(sections).build();
     JavaBuckConfig javaConfig = buckConfig.getView(JavaBuckConfig.class);
 
-    assertEquals(javac, JavacFactory.create(null, javaConfig, null).getShortName());
+    assertEquals(
+        javac, JavacFactoryHelper.createJavacFactory(javaConfig).create(null, null).getShortName());
   }
 
   @Test
@@ -356,21 +357,6 @@ public class JavaBuckConfigTest {
     assumeThat(config.getJavacSpec().getJavacSource(), is(Javac.Source.JDK));
 
     assertTrue(config.trackClassUsage());
-  }
-
-  @Test
-  public void testJavaLocationInProcessByDefault() throws IOException, NoSuchBuildTargetException {
-    JavaBuckConfig config = createWithDefaultFilesystem(new StringReader(""));
-    assertThat(
-        config.getJavacSpec().getJavacLocation(), Matchers.equalTo(Javac.Location.IN_PROCESS));
-  }
-
-  @Test
-  public void testJavaLocationInProcess() throws IOException, NoSuchBuildTargetException {
-    String content = Joiner.on('\n').join("[java]", "    location = IN_PROCESS");
-    JavaBuckConfig config = createWithDefaultFilesystem(new StringReader(content));
-    assertThat(
-        config.getJavacSpec().getJavacLocation(), Matchers.equalTo(Javac.Location.IN_PROCESS));
   }
 
   @Test

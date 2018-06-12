@@ -16,7 +16,6 @@
 
 package com.facebook.buck.features.python;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.cell.TestCellPathResolver;
@@ -30,7 +29,6 @@ import com.facebook.buck.rules.coercer.NeededCoverageSpec;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.versions.FixedTargetNodeTranslator;
 import com.facebook.buck.versions.TargetNodeTranslator;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.util.Optional;
 import org.hamcrest.Matchers;
@@ -50,7 +48,7 @@ public class NeededCoverageSpecTest {
     TargetNodeTranslator translator =
         new FixedTargetNodeTranslator(
             new DefaultTypeCoercerFactory(), ImmutableMap.of(target, newTarget));
-    NeededCoverageSpec spec = NeededCoverageSpec.of(1.0f, target, Optional.empty());
+    NeededCoverageSpec spec = NeededCoverageSpec.of(100, target, Optional.empty());
     assertThat(
         translator.translate(CELL_PATH_RESOLVER, PATTERN, spec),
         Matchers.equalTo(Optional.of(spec.withBuildTarget(newTarget))));
@@ -61,31 +59,9 @@ public class NeededCoverageSpecTest {
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     TargetNodeTranslator translator =
         new FixedTargetNodeTranslator(new DefaultTypeCoercerFactory(), ImmutableMap.of());
-    NeededCoverageSpec spec = NeededCoverageSpec.of(1.0f, target, Optional.empty());
+    NeededCoverageSpec spec = NeededCoverageSpec.of(100, target, Optional.empty());
     assertThat(
         translator.translate(CELL_PATH_RESOLVER, PATTERN, spec),
         Matchers.equalTo(Optional.empty()));
-  }
-
-  @Test
-  public void sanitizedCoverageRatio() {
-    BuildTarget target = BuildTargetFactory.newInstance("//:rule");
-    ImmutableList<Float> expected = ImmutableList.of(0.0f, 0.5f, 1.0f, 0.05f, 0.50f, 1.0f);
-
-    ImmutableList<NeededCoverageSpec> actual =
-        ImmutableList.of(
-            NeededCoverageSpec.of(0.0f, target, Optional.empty()),
-            NeededCoverageSpec.of(0.5f, target, Optional.empty()),
-            NeededCoverageSpec.of(1.0f, target, Optional.empty()),
-            NeededCoverageSpec.of(5.0f, target, Optional.empty()),
-            NeededCoverageSpec.of(50.0f, target, Optional.empty()),
-            NeededCoverageSpec.of(100.0f, target, Optional.empty()));
-
-    assertEquals(
-        expected,
-        actual
-            .stream()
-            .map(NeededCoverageSpec::getNormalizedNeededCoverageRatio)
-            .collect(ImmutableList.toImmutableList()));
   }
 }

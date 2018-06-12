@@ -29,6 +29,7 @@ import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
@@ -251,6 +252,59 @@ public class ProjectGeneratorTest {
     Iterable<String> childNames =
         Iterables.transform(sourcesGroup.getChildren(), PBXReference::getName);
     assertThat(childNames, hasItem("Info.plist"));
+  }
+
+  @Test
+  public void testProjectStructureWithDuplicateBundle() throws IOException {
+    BuildTarget libraryTarget = BuildTargetFactory.newInstance(rootPath, "//foo:lib");
+    BuildTarget bundleTarget = BuildTargetFactory.newInstance(rootPath, "//foo:bundle");
+    BuildTarget libraryWithFlavorTarget =
+        BuildTargetFactory.newInstance(rootPath, "//foo:lib#iphonesimulator-x86_64");
+    BuildTarget bundleWithFlavorTarget =
+        BuildTargetFactory.newInstance(rootPath, "//foo:bundle#iphonesimulator-x86_64");
+
+    TargetNode<?, ?> libraryNode =
+        AppleLibraryBuilder.createBuilder(libraryTarget)
+            .setExportedHeaders(ImmutableSortedSet.of(FakeSourcePath.of("foo.h")))
+            .build();
+    TargetNode<?, ?> bundleNode =
+        AppleBundleBuilder.createBuilder(bundleTarget)
+            .setBinary(libraryTarget)
+            .setExtension(Either.ofLeft(AppleBundleExtension.FRAMEWORK))
+            .setInfoPlist(FakeSourcePath.of(("Info.plist")))
+            .build();
+
+    TargetNode<?, ?> libraryWithFlavorNode =
+        AppleLibraryBuilder.createBuilder(libraryWithFlavorTarget)
+            .setExportedHeaders(ImmutableSortedSet.of(FakeSourcePath.of("foo.h")))
+            .build();
+    TargetNode<?, ?> bundleWithFlavorNode =
+        AppleBundleBuilder.createBuilder(bundleWithFlavorTarget)
+            .setBinary(libraryTarget)
+            .setExtension(Either.ofLeft(AppleBundleExtension.FRAMEWORK))
+            .setInfoPlist(FakeSourcePath.of(("Info.plist")))
+            .build();
+
+    ImmutableSet<TargetNode<?, ?>> nodes =
+        ImmutableSet.of(libraryNode, bundleNode, libraryWithFlavorNode, bundleWithFlavorNode);
+    ProjectGenerator projectGenerator =
+        createProjectGenerator(
+            nodes,
+            nodes,
+            ProjectGeneratorOptions.builder().build(),
+            ImmutableSet.of(
+                InternalFlavor.of("iphonesimulator-x86_64"), InternalFlavor.of("macosx-x86_64")));
+
+    projectGenerator.createXcodeProjects();
+
+    int count = 0;
+    PBXProject project = projectGenerator.getGeneratedProject();
+    for (PBXTarget target : project.getTargets()) {
+      if (target.getProductName().equals("bundle")) {
+        count++;
+      }
+    }
+    assertSame(count, 1);
   }
 
   @Test
@@ -2202,7 +2256,8 @@ public class ProjectGeneratorTest {
             ImmutableSet.of(node),
             ImmutableSet.of(node),
             ProjectGeneratorOptions.builder().build(),
-            ImmutableSet.of("iphonesimulator-x86_64", "macosx-x86_64"));
+            ImmutableSet.of(
+                InternalFlavor.of("iphonesimulator-x86_64"), InternalFlavor.of("macosx-x86_64")));
 
     projectGenerator.createXcodeProjects();
 
@@ -2319,7 +2374,8 @@ public class ProjectGeneratorTest {
             ImmutableSet.of(node, dependentNode),
             ImmutableSet.of(node, dependentNode),
             ProjectGeneratorOptions.builder().build(),
-            ImmutableSet.of("iphonesimulator-x86_64", "macosx-x86_64"));
+            ImmutableSet.of(
+                InternalFlavor.of("iphonesimulator-x86_64"), InternalFlavor.of("macosx-x86_64")));
 
     projectGenerator.createXcodeProjects();
 
@@ -5330,7 +5386,7 @@ public class ProjectGeneratorTest {
       Collection<TargetNode<?, ?>> allNodes,
       Collection<TargetNode<?, ?>> initialTargetNodes,
       ProjectGeneratorOptions projectGeneratorOptions,
-      ImmutableSet<String> appleCxxFlavors) {
+      ImmutableSet<Flavor> appleCxxFlavors) {
     TargetGraph targetGraph = TargetGraphFactory.newInstance(ImmutableSet.copyOf(allNodes));
     return createProjectGenerator(
         allNodes,
@@ -5363,7 +5419,7 @@ public class ProjectGeneratorTest {
       Collection<TargetNode<?, ?>> allNodes,
       Collection<TargetNode<?, ?>> initialTargetNodes,
       ProjectGeneratorOptions projectGeneratorOptions,
-      ImmutableSet<String> appleCxxFlavors,
+      ImmutableSet<Flavor> appleCxxFlavors,
       Function<? super TargetNode<?, ?>, ActionGraphBuilder> actionGraphBuilderForNode) {
     ImmutableSet<BuildTarget> initialBuildTargets =
         initialTargetNodes

@@ -135,4 +135,18 @@ public class AuditRulesCommandIntegrationTest {
         MoreStringsForTests.equalToIgnoringPlatformNewlines(
             workspace.getFileContents("stdout.all")));
   }
+
+  @Test
+  public void testBuckAuditRulesSortsBasedOnName() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "audit_rules", tmp);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckCommand("audit", "rules", "unsorted/BUCK");
+    result.assertSuccess();
+    assertThat(
+        result.getStdout(),
+        MoreStringsForTests.equalToIgnoringPlatformNewlines(
+            workspace.getFileContents("stdout.sorted")));
+  }
 }
