@@ -469,7 +469,6 @@ public class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   }
 
   public Path getBitcodePath(String filename) {
-    String bitcodeFilename = Files.getNameWithoutExtension(filename) + ".bc";
-    return outputPath.resolve(bitcodeFilename);
+    return outputPath.resolve(filename + ".bc");
   }
 }
