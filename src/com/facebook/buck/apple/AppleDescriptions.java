@@ -93,7 +93,6 @@ import java.util.stream.Stream;
 /** Common logic for a {@link DescriptionWithTargetGraph} that creates Apple target rules. */
 public class AppleDescriptions {
 
-  public static final Flavor FRAMEWORK_FLAVOR = InternalFlavor.of("framework");
   public static final Flavor SWIFT_COMPILE_FLAVOR = InternalFlavor.of("apple-swift-compile");
   public static final Flavor SWIFT_EXPORTED_OBJC_GENERATED_HEADER_SYMLINK_TREE_FLAVOR =
       InternalFlavor.of("apple-swift-objc-generated-header");
@@ -614,9 +613,7 @@ public class AppleDescriptions {
         Optional<FrameworkDependencies> frameworkDependencies =
             graphBuilder.requireMetadata(
                 dep.withAppendedFlavors(
-                    FRAMEWORK_FLAVOR,
-                    NO_INCLUDE_FRAMEWORKS_FLAVOR,
-                    appleCxxPlatform.getCxxPlatform().getFlavor()),
+                    NO_INCLUDE_FRAMEWORKS_FLAVOR, appleCxxPlatform.getCxxPlatform().getFlavor()),
                 FrameworkDependencies.class);
         if (frameworkDependencies.isPresent()) {
           frameworksBuilder.addAll(frameworkDependencies.get().getSourcePaths());
@@ -873,20 +870,9 @@ public class AppleDescriptions {
       return graphBuilder.requireRule(binary);
     }
 
-    // Cxx targets must have one Platform Flavor set otherwise nothing gets compiled.
-    if (flavors.contains(AppleDescriptions.FRAMEWORK_FLAVOR)) {
-      flavors =
-          ImmutableSet.<Flavor>builder()
-              .addAll(flavors)
-              .add(CxxDescriptionEnhancer.SHARED_FLAVOR)
-              .build();
-    }
     flavors =
         ImmutableSet.copyOf(
-            Sets.difference(
-                flavors,
-                ImmutableSet.of(
-                    AppleDescriptions.FRAMEWORK_FLAVOR, AppleBinaryDescription.APP_FLAVOR)));
+            Sets.difference(flavors, ImmutableSet.of(AppleBinaryDescription.APP_FLAVOR)));
     if (!cxxPlatformFlavorDomain.containsAnyOf(flavors)) {
       flavors = new ImmutableSet.Builder<Flavor>().addAll(flavors).add(defaultCxxFlavor).build();
     }

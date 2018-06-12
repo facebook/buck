@@ -1,8 +1,0 @@
-apple_library(
-    name = "TestLibraryTransitiveDep",
-    srcs = ["TestClassTransitiveDep.m"],
-    exported_headers = ["TestClassTransitiveDep.h"],
-    info_plist = "Info.plist",
-    linker_flags = ["-lobjc"],
-    visibility = ["PUBLIC"],
-)

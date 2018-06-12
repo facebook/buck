@@ -5,6 +5,5 @@ apple_library(
         "platform": "iphoneos-arm64",
         "type": "shared",
     },
-    info_plist = "Info.plist",
     linker_flags = ["-lobjc"],
 )
