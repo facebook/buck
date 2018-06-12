@@ -55,6 +55,7 @@ import com.facebook.buck.event.DaemonEvent;
 import com.facebook.buck.event.DefaultBuckEventBus;
 import com.facebook.buck.event.chrome_trace.ChromeTraceBuckConfig;
 import com.facebook.buck.event.listener.AbstractConsoleEventBusListener;
+import com.facebook.buck.event.listener.BuildTargetDurationListener;
 import com.facebook.buck.event.listener.CacheRateStatsListener;
 import com.facebook.buck.event.listener.ChromeTraceBuildListener;
 import com.facebook.buck.event.listener.FileSerializationEventBusListener;
@@ -1711,7 +1712,14 @@ public final class Main {
     eventListenersBuilder.add(new LoadBalancerEventsListener(counterRegistry));
     eventListenersBuilder.add(new CacheRateStatsListener(buckEventBus));
     eventListenersBuilder.add(new WatchmanDiagnosticEventListener(buckEventBus));
-
+    if (buckConfig.isCriticalPathAnalysisEnabled()) {
+      eventListenersBuilder.add(
+          new BuildTargetDurationListener(
+              invocationInfo,
+              projectFilesystem,
+              MostExecutors.newSingleThreadExecutor(
+                  new CommandThreadFactory(BuildTargetDurationListener.class.getName()))));
+    }
     eventListenersBuilder.addAll(commandSpecificEventListeners);
 
     ImmutableList<BuckEventListener> eventListeners = eventListenersBuilder.build();

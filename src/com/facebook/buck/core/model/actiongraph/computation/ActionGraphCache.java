@@ -243,7 +243,8 @@ public class ActionGraphCache {
           previousActionGraphs.put(freshActionGraph.getFirst(), freshActionGraph.getSecond());
         }
       }
-      finished = ActionGraphEvent.finished(started, out.getActionGraph().getSize());
+      finished =
+          ActionGraphEvent.finished(started, out.getActionGraph().getSize(), out.getActionGraph());
       return out;
     } finally {
       eventBus.post(finished);
@@ -311,7 +312,9 @@ public class ActionGraphCache {
             ImmutableMap.of(),
             poolSupplier);
 
-    eventBus.post(ActionGraphEvent.finished(started, actionGraph.getActionGraph().getSize()));
+    eventBus.post(
+        ActionGraphEvent.finished(
+            started, actionGraph.getActionGraph().getSize(), actionGraph.getActionGraph()));
     return actionGraph;
   }
 

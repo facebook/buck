@@ -467,6 +467,10 @@ public class BuckConfig implements ConfigPathGetter {
     return getBooleanValue(LOG_SECTION, "machine_readable_logger_enabled", true);
   }
 
+  public boolean isCriticalPathAnalysisEnabled() {
+    return getBooleanValue(LOG_SECTION, "critical_path_analysis_enabled", false);
+  }
+
   public boolean isBuckConfigLocalWarningEnabled() {
     return getBooleanValue(LOG_SECTION, "buckconfig_local_warning_enabled", false);
   }
