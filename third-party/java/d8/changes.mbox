@@ -1,4 +1,4 @@
-From 2ecb11692fd831fc13e1da81d32c7dc27b382813 Mon Sep 17 00:00:00 2001
+From 1d82a18089498283441b221f0d18918602d0b9fc Mon Sep 17 00:00:00 2001
 From: Gautam Korlam <gkorlam@uber.com>
 Date: Tue, 21 Nov 2017 22:52:39 -0800
 Subject: [PATCH] Compute referenced resources in D8 and bypass default
@@ -8,18 +8,18 @@ Subject: [PATCH] Compute referenced resources in D8 and bypass default
 - Default interface method desugaring requires classpaths available during dexing which is not possible with buck currently.
 - Set default min sdk for D8 to Api level J
 ---
- src/main/java/com/android/tools/r8/D8Command.java        |  8 +++++++-
- .../java/com/android/tools/r8/graph/DexItemFactory.java  | 14 ++++++++++++++
- .../com/android/tools/r8/ir/desugar/ClassProcessor.java  | 16 ++++------------
- .../java/com/android/tools/r8/utils/AndroidApiLevel.java |  3 ++-
+ .../java/com/android/tools/r8/D8Command.java     |  8 +++++++-
+ .../android/tools/r8/graph/DexItemFactory.java   | 14 ++++++++++++++
+ .../tools/r8/ir/desugar/ClassProcessor.java      | 16 ++++------------
+ .../android/tools/r8/utils/AndroidApiLevel.java  |  3 ++-
  4 files changed, 27 insertions(+), 14 deletions(-)
 
 diff --git a/src/main/java/com/android/tools/r8/D8Command.java b/src/main/java/com/android/tools/r8/D8Command.java
-index 394805d4..d017b388 100644
+index 8c6c02bb..e889fe8b 100644
 --- a/src/main/java/com/android/tools/r8/D8Command.java
 +++ b/src/main/java/com/android/tools/r8/D8Command.java
-@@ -179,6 +179,11 @@ public class D8Command extends BaseCompilerCommand {
-       "  --help                  # Print this message."));
+@@ -150,6 +150,11 @@ public final class D8Command extends BaseCompilerCommand {
+   static final String USAGE_MESSAGE = D8CommandParser.USAGE_MESSAGE;
  
    private boolean intermediate = false;
 +  private DexItemFactory dexItemFactory;
@@ -30,7 +30,7 @@ index 394805d4..d017b388 100644
  
    public static Builder builder() {
      return new Builder();
-@@ -321,7 +326,8 @@ public class D8Command extends BaseCompilerCommand {
+@@ -217,7 +222,8 @@ public final class D8Command extends BaseCompilerCommand {
  
    @Override
    InternalOptions getInternalOptions() {
@@ -41,10 +41,10 @@ index 394805d4..d017b388 100644
      internal.debug = getMode() == CompilationMode.DEBUG;
      internal.programConsumer = getProgramConsumer();
 diff --git a/src/main/java/com/android/tools/r8/graph/DexItemFactory.java b/src/main/java/com/android/tools/r8/graph/DexItemFactory.java
-index 75f2ee83..a946eb06 100644
+index 4e4a78f2..8ed2a725 100644
 --- a/src/main/java/com/android/tools/r8/graph/DexItemFactory.java
 +++ b/src/main/java/com/android/tools/r8/graph/DexItemFactory.java
-@@ -27,6 +27,7 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+@@ -26,6 +26,7 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
  import java.util.ArrayList;
  import java.util.Collection;
  import java.util.HashMap;
@@ -52,9 +52,9 @@ index 75f2ee83..a946eb06 100644
  import java.util.IdentityHashMap;
  import java.util.List;
  import java.util.Map;
-@@ -672,4 +673,17 @@ public class DexItemFactory {
-   synchronized public void forAllTypes(Consumer<DexType> f) {
-     new ArrayList<>(types.values()).forEach(f);
+@@ -815,4 +816,17 @@ public class DexItemFactory {
+   synchronized public void forAllCallSites(Consumer<DexCallSite> f) {
+     new ArrayList<>(callSites).forEach(f);
    }
 +
 +  // Facebook addition: compute the resources referenced by this dex file.
@@ -71,10 +71,10 @@ index 75f2ee83..a946eb06 100644
 +  }
  }
 diff --git a/src/main/java/com/android/tools/r8/ir/desugar/ClassProcessor.java b/src/main/java/com/android/tools/r8/ir/desugar/ClassProcessor.java
-index 2152364b..fc42fc16 100644
+index c75456d6..ae3c8329 100644
 --- a/src/main/java/com/android/tools/r8/ir/desugar/ClassProcessor.java
 +++ b/src/main/java/com/android/tools/r8/ir/desugar/ClassProcessor.java
-@@ -164,18 +164,10 @@ final class ClassProcessor {
+@@ -166,18 +166,10 @@ final class ClassProcessor {
          if (superClass != null) {
            current = superClass;
          } else {
@@ -112,5 +112,5 @@ index 127debef..45793dad 100644
  
    public DexVersion getDexVersion() {
 -- 
-2.16.2
+2.17.0
 
