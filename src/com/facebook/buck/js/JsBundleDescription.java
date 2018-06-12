@@ -59,7 +59,10 @@ import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 import java.util.Collection;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Function;
+import java.util.stream.Stream;
 import org.immutables.value.Value;
 
 public class JsBundleDescription
@@ -109,6 +112,7 @@ public class JsBundleDescription
     ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
     ImmutableSortedSet<Flavor> flavors = buildTarget.getFlavors();
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
 
     // Source maps are exposed individually using a special flavor
     if (flavors.contains(JsFlavors.SOURCE_MAP)) {
@@ -120,7 +124,7 @@ public class JsBundleDescription
       return new ExportFile(
           buildTarget,
           projectFilesystem,
-          new SourcePathRuleFinder(graphBuilder),
+          ruleFinder,
           bundleOutputs.getBundleName() + ".map",
           ExportFileDescription.Mode.REFERENCE,
           bundleOutputs.getSourcePathToSourceMap(),
@@ -136,7 +140,7 @@ public class JsBundleDescription
       return new ExportFile(
           buildTarget,
           projectFilesystem,
-          new SourcePathRuleFinder(graphBuilder),
+          ruleFinder,
           bundleOutputs.getBundleName() + "-misc",
           ExportFileDescription.Mode.REFERENCE,
           bundleOutputs.getSourcePathToMisc(),
@@ -156,21 +160,29 @@ public class JsBundleDescription
           buildTarget,
           projectFilesystem,
           graphBuilder,
+          ruleFinder,
           args.getAndroidPackage());
     }
 
     Either<ImmutableSet<String>, String> entryPoint = args.getEntry();
     TransitiveLibraryDependencies libsResolver =
-        new TransitiveLibraryDependencies(buildTarget, context.getTargetGraph(), graphBuilder);
-    ImmutableSortedSet<JsLibrary> libraryDeps = libsResolver.collect(args.getDeps());
+        new TransitiveLibraryDependencies(
+            buildTarget, context.getTargetGraph(), graphBuilder, ruleFinder);
+    ImmutableSet<JsLibrary> flavoredLibraryDeps = libsResolver.collect(args.getDeps());
+    Stream<BuildRule> generatedDeps =
+        findGeneratedSources(ruleFinder, flavoredLibraryDeps.stream())
+            .map(graphBuilder::requireRule);
 
     // Flavors are propagated from js_bundle targets to their js_library dependencies
     // for that reason, dependencies of libraries are handled manually, and as a first step,
-    // all dependencies to libraries are removed
+    // all dependencies to libraries are replaced with dependencies to flavored library targets.
     BuildRuleParams paramsWithFlavoredLibraries =
-        params.withoutDeclaredDeps().copyAppendingExtraDeps(libraryDeps);
+        params
+            .withoutDeclaredDeps()
+            .copyAppendingExtraDeps(
+                Stream.concat(flavoredLibraryDeps.stream(), generatedDeps)::iterator);
     ImmutableSortedSet<SourcePath> libraries =
-        libraryDeps
+        flavoredLibraryDeps
             .stream()
             .map(JsLibrary::getSourcePathToOutput)
             .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
@@ -211,6 +223,7 @@ public class JsBundleDescription
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       ActionGraphBuilder graphBuilder,
+      SourcePathRuleFinder ruleFinder,
       Optional<String> rDotJavaPackage) {
     BuildTarget bundleTarget =
         buildTarget
@@ -228,7 +241,7 @@ public class JsBundleDescription
                       "Specify `android_package` when building %s for Android.",
                       buildTarget.getUnflavoredBuildTarget()));
       return createAndroidResources(
-          toolchainProvider, buildTarget, projectFilesystem, graphBuilder, jsBundle, rDot);
+          toolchainProvider, buildTarget, projectFilesystem, ruleFinder, jsBundle, rDot);
     } else {
       return createAndroidBundle(buildTarget, projectFilesystem, graphBuilder, jsBundle);
     }
@@ -258,7 +271,7 @@ public class JsBundleDescription
       ToolchainProvider toolchainProvider,
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      BuildRuleResolver resolver,
+      SourcePathRuleFinder ruleFinder,
       JsBundle jsBundle,
       String rDotJavaPackage) {
     if (buildTarget.getFlavors().contains(AndroidResourceDescription.AAPT2_COMPILE_FLAVOR)) {
@@ -283,7 +296,7 @@ public class JsBundleDescription
         buildTarget,
         projectFilesystem,
         params,
-        new SourcePathRuleFinder(resolver),
+        ruleFinder,
         ImmutableSortedSet.of(), // deps
         jsBundle.getSourcePathToResources(),
         ImmutableSortedMap.of(), // resSrcs
@@ -292,6 +305,19 @@ public class JsBundleDescription
         ImmutableSortedMap.of(),
         null,
         false);
+  }
+
+  /**
+   * Finds all build targets that are inputs to any transitive JsFile dependency of any of the
+   * passed in JsLibrary instances.
+   */
+  private static Stream<BuildTarget> findGeneratedSources(
+      SourcePathRuleFinder ruleFinder, Stream<JsLibrary> libraries) {
+    return libraries
+        .map(lib -> lib.getJsFiles(ruleFinder))
+        .flatMap(Function.identity())
+        .map(jsFile -> jsFile.getSourceBuildTarget(ruleFinder))
+        .filter(Objects::nonNull);
   }
 
   @Override
@@ -348,9 +374,13 @@ public class JsBundleDescription
     private final TargetGraph targetGraph;
 
     private TransitiveLibraryDependencies(
-        BuildTarget bundleTarget, TargetGraph targetGraph, ActionGraphBuilder graphBuilder) {
+        BuildTarget bundleTarget,
+        TargetGraph targetGraph,
+        ActionGraphBuilder graphBuilder,
+        SourcePathRuleFinder ruleFinder) {
       this.targetGraph = targetGraph;
       this.graphBuilder = graphBuilder;
+      this.ruleFinder = ruleFinder;
 
       ImmutableSortedSet<Flavor> bundleFlavors = bundleTarget.getFlavors();
       extraFlavors =
@@ -362,11 +392,10 @@ public class JsBundleDescription
                           .stream()
                           .anyMatch(domain -> domain.contains(flavor)))
               .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
-      ruleFinder = new SourcePathRuleFinder(graphBuilder);
     }
 
-    ImmutableSortedSet<JsLibrary> collect(Collection<BuildTarget> deps) {
-      ImmutableSortedSet.Builder<JsLibrary> jsLibraries = ImmutableSortedSet.naturalOrder();
+    ImmutableSet<JsLibrary> collect(Collection<BuildTarget> deps) {
+      ImmutableSet.Builder<JsLibrary> jsLibraries = ImmutableSet.builder();
 
       new AbstractBreadthFirstTraversal<BuildTarget>(deps) {
         @Override

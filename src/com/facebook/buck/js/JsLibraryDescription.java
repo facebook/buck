@@ -270,7 +270,7 @@ public class JsLibraryDescription
           baseParams.copyAppendingExtraDeps(jsFileRules),
           jsFileRules
               .stream()
-              .map(BuildRule::getSourcePathToOutput)
+              .map(JsFile::getSourcePathToOutput)
               .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())),
           worker);
     }
@@ -319,7 +319,7 @@ public class JsLibraryDescription
           graphBuilder.getRuleWithType(filesTarget, JsLibrary.Files.class).getSourcePathToOutput(),
           libraryDependencies
               .stream()
-              .map(BuildRule::getSourcePathToOutput)
+              .map(JsLibrary::getSourcePathToOutput)
               .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())),
           worker);
     }

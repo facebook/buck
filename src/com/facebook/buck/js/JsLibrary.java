@@ -22,6 +22,8 @@ import com.facebook.buck.core.description.BuildRuleParams;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
@@ -38,12 +40,13 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.function.BiFunction;
+import java.util.stream.Stream;
 
 public class JsLibrary extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 
   @AddToRuleKey private final ImmutableSortedSet<SourcePath> libraryDependencies;
 
-  @AddToRuleKey private final SourcePath filesDependency;
+  @AddToRuleKey private final BuildTargetSourcePath filesDependency;
 
   @AddToRuleKey private final WorkerTool worker;
 
@@ -51,7 +54,7 @@ public class JsLibrary extends AbstractBuildRuleWithDeclaredAndExtraDeps {
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      SourcePath filesDependency,
+      BuildTargetSourcePath filesDependency,
       ImmutableSortedSet<SourcePath> libraryDependencies,
       WorkerTool worker) {
     super(buildTarget, projectFilesystem, params);
@@ -104,13 +107,24 @@ public class JsLibrary extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     return libraryDependencies;
   }
 
+  Stream<JsFile> getJsFiles(SourcePathRuleFinder ruleFinder) {
+    BuildRule fileRule = ruleFinder.getRule(filesDependency);
+    if (fileRule instanceof Files) {
+      return ((Files) fileRule).getJsFiles(ruleFinder);
+    }
+    throw new IllegalStateException(
+        String.format(
+            "JsLibrary rule %s was set up with 'filesDependency' that is not an instance of 'JsLibrary.Files'",
+            getBuildTarget()));
+  }
+
   /**
    * An internal rule type to make he aggregation result of {@link JsFile} dependencies cacheable
    * independently of {@link JsLibrary} dependencies.
    */
   public static class Files extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 
-    @AddToRuleKey private final ImmutableSortedSet<SourcePath> sources;
+    @AddToRuleKey private final ImmutableSortedSet<BuildTargetSourcePath> sources;
 
     @AddToRuleKey private final WorkerTool worker;
 
@@ -118,7 +132,7 @@ public class JsLibrary extends AbstractBuildRuleWithDeclaredAndExtraDeps {
         BuildTarget target,
         ProjectFilesystem filesystem,
         BuildRuleParams params,
-        ImmutableSortedSet<SourcePath> sources,
+        ImmutableSortedSet<BuildTargetSourcePath> sources,
         WorkerTool worker) {
       super(target, filesystem, params);
       this.sources = sources;
@@ -161,6 +175,20 @@ public class JsLibrary extends AbstractBuildRuleWithDeclaredAndExtraDeps {
       return ExplicitBuildTargetSourcePath.of(
           getBuildTarget(),
           BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s.jslib"));
+    }
+
+    Stream<JsFile> getJsFiles(SourcePathRuleFinder ruleFinder) {
+      return sources.stream().map(ruleFinder::getRule).map(this::buildRuleAsJsFile);
+    }
+
+    private JsFile buildRuleAsJsFile(BuildRule x) {
+      if (x instanceof JsFile) {
+        return (JsFile) x;
+      }
+      throw new IllegalStateException(
+          String.format(
+              "JsLibrary.Files rule %s has a source that is not a JsFile instance: %s",
+              getBuildTarget(), x.getBuildTarget()));
     }
   }
 

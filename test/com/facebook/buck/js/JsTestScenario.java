@@ -162,12 +162,28 @@ public class JsTestScenario {
       return this;
     }
 
+    @SafeVarargs
+    public final Builder library(
+        BuildTarget target,
+        Either<SourcePath, Pair<SourcePath, String>> first,
+        Either<SourcePath, Pair<SourcePath, String>>... sources) {
+      addLibrary(
+          target,
+          null,
+          Stream.of(),
+          null,
+          Stream.concat(Stream.of(first), Stream.of(sources)),
+          null);
+      return this;
+    }
+
     public Builder library(BuildTarget target, String basePath, SourcePath... sources) {
       addLibrary(target, basePath, Stream.of(), null, Stream.of(sources).map(Either::ofLeft), null);
       return this;
     }
 
-    public Builder library(
+    @SafeVarargs
+    public final Builder library(
         BuildTarget target, String basePath, Pair<SourcePath, String>... sources) {
       addLibrary(
           target, basePath, Stream.of(), null, Stream.of(sources).map(Either::ofRight), null);

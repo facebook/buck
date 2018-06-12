@@ -21,7 +21,9 @@ import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.description.BuildRuleParams;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
+import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
@@ -38,6 +40,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 import java.util.Optional;
+import javax.annotation.Nullable;
 
 public abstract class JsFile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 
@@ -61,7 +64,7 @@ public abstract class JsFile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   }
 
   @Override
-  public SourcePath getSourcePathToOutput() {
+  public BuildTargetSourcePath getSourcePathToOutput() {
     return ExplicitBuildTargetSourcePath.of(
         getBuildTarget(),
         BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s.jsfile"));
@@ -74,6 +77,9 @@ public abstract class JsFile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   public Optional<String> getExtraArgs() {
     return extraArgs;
   }
+
+  @Nullable
+  abstract BuildTarget getSourceBuildTarget(SourcePathRuleFinder ruleFinder);
 
   ImmutableList<Step> getBuildSteps(BuildContext context, String jobArgs, Path outputPath) {
     return ImmutableList.of(
@@ -114,6 +120,14 @@ public abstract class JsFile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
       this.src = src;
       this.subPath = subPath;
       this.virtualPath = virtualPath.map(MorePaths::pathWithUnixSeparators);
+    }
+
+    @Nullable
+    @Override
+    BuildTarget getSourceBuildTarget(SourcePathRuleFinder ruleFinder) {
+      return src instanceof BuildTargetSourcePath
+          ? ((BuildTargetSourcePath) src).getTarget()
+          : null;
     }
 
     @Override
@@ -157,13 +171,13 @@ public abstract class JsFile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 
   static class JsFileRelease extends JsFile {
 
-    @AddToRuleKey private final SourcePath devFile;
+    @AddToRuleKey private final BuildTargetSourcePath devFile;
 
     JsFileRelease(
         BuildTarget buildTarget,
         ProjectFilesystem projectFilesystem,
         BuildRuleParams buildRuleParams,
-        SourcePath devFile,
+        BuildTargetSourcePath devFile,
         Optional<Arg> extraJson,
         Optional<String> extraArgs,
         WorkerTool worker) {
@@ -190,6 +204,13 @@ public abstract class JsFile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
               .toString();
 
       return getBuildSteps(context, jobArgs, outputPath);
+    }
+
+    @Override
+    @Nullable
+    BuildTarget getSourceBuildTarget(SourcePathRuleFinder ruleFinder) {
+      JsFileDev devRule = (JsFileDev) ruleFinder.getRule(devFile);
+      return devRule.getSourceBuildTarget(ruleFinder);
     }
   }
 }

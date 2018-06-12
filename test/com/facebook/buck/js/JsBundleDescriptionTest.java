@@ -29,6 +29,7 @@ import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
@@ -40,7 +41,10 @@ import com.facebook.buck.rules.macros.LocationMacro;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.types.Pair;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.HashCode;
 import java.util.Collection;
 import java.util.List;
@@ -246,6 +250,33 @@ public class JsBundleDescriptionTest {
               "//:bundle",
               builder -> builder.setExtraJson("[\"%s\"]", LocationMacro.of(referencedTarget)));
       assertThat(scenario.graphBuilder.getRule(referencedTarget), in(bundle.getBuildDeps()));
+    }
+
+    @Test
+    public void bundleRulesDependOnGeneratedSources() {
+      BuildTarget a = BuildTargetFactory.newInstance("//:node_modules");
+      BuildTarget b = BuildTargetFactory.newInstance("//generated:dep");
+      BuildTarget libA = BuildTargetFactory.newInstance("//:node-modules-library");
+      BuildTarget libB = BuildTargetFactory.newInstance("//generated:lib");
+
+      JsTestScenario scenario =
+          JsTestScenario.builder()
+              .arbitraryRule(a)
+              .arbitraryRule(b)
+              .library(libA, null, new Pair<>(DefaultBuildTargetSourcePath.of(a), "left-pad.js"))
+              .library(
+                  libB,
+                  ImmutableList.of(libA),
+                  ImmutableList.of(DefaultBuildTargetSourcePath.of(b)))
+              .bundle(bundleTarget, ImmutableSortedSet.of(libB))
+              .build();
+
+      BuildRule bundle = scenario.graphBuilder.getRule(bundleTarget);
+
+      ImmutableSortedSet<BuildRule> generatedSourcesRules =
+          scenario.graphBuilder.getAllRules(ImmutableList.of(a, b));
+
+      assertThat(generatedSourcesRules, everyItem(in(bundle.getBuildDeps())));
     }
   }
 

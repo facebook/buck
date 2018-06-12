@@ -66,6 +66,13 @@ js_library(
     worker = ":packager_worker",
 )
 
+js_library(
+    name = "lib-depending-on-lib-with-generated-sources",
+    srcs = ["apple.js"],
+    worker = ":packager_worker",
+    deps = [":node_modules"],
+)
+
 js_bundle(
     name = "fruit-salad-in-a-bundle",
     android_package = "com.sample",
@@ -111,6 +118,16 @@ js_bundle(
     entry = "arbitrary",
     worker = ":packager_worker",
     deps = [":a-genrule"],
+)
+
+js_bundle(
+    name = "bundle-with-generated-sources",
+    entry = "arbitrary",
+    worker = ":packager_worker",
+    deps = [
+        ":build-target-output",
+        ":node_modules",
+    ],
 )
 
 android_library(
