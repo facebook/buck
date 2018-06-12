@@ -117,27 +117,24 @@ public class TargetsCommand extends AbstractCommand {
   // TODO(mbolin): Use org.kohsuke.args4j.spi.PathOptionHandler. Currently, we resolve paths
   // manually, which is likely the path to madness.
   @Option(
-    name = "--referenced-file",
-    aliases = {"--referenced_file"},
-    usage = "The referenced file list, --referenced-file file1 file2  ... fileN --other_option",
-    handler = StringSetOptionHandler.class
-  )
+      name = "--referenced-file",
+      aliases = {"--referenced_file"},
+      usage = "The referenced file list, --referenced-file file1 file2  ... fileN --other_option",
+      handler = StringSetOptionHandler.class)
   @SuppressFieldNotInitialized
   private Supplier<ImmutableSet<String>> referencedFiles;
 
   @Option(
-    name = "--detect-test-changes",
-    usage =
-        "Modifies the --referenced-file and --show-target-hash flags to pretend that "
-            + "targets depend on their tests (experimental)"
-  )
+      name = "--detect-test-changes",
+      usage =
+          "Modifies the --referenced-file and --show-target-hash flags to pretend that "
+              + "targets depend on their tests (experimental)")
   private boolean isDetectTestChanges;
 
   @Option(
-    name = "--type",
-    usage = "The types of target to filter by, --type type1 type2 ... typeN --other_option",
-    handler = StringSetOptionHandler.class
-  )
+      name = "--type",
+      usage = "The types of target to filter by, --type type1 type2 ... typeN --other_option",
+      handler = StringSetOptionHandler.class)
   @SuppressFieldNotInitialized
   private Supplier<ImmutableSet<String>> types;
 
@@ -145,76 +142,67 @@ public class TargetsCommand extends AbstractCommand {
   private boolean json;
 
   @Option(
-    name = "--dot",
-    usage =
-        "Output rule keys in DOT format, only works with both --show-rulekey and --show-transitive-rulekeys"
-  )
+      name = "--dot",
+      usage =
+          "Output rule keys in DOT format, only works with both --show-rulekey and --show-transitive-rulekeys")
   private boolean dot;
 
   @Option(name = "--print0", usage = "Delimit targets using the ASCII NUL character.")
   private boolean print0;
 
   @Option(
-    name = "--resolve-alias",
-    aliases = {"--resolvealias"},
-    usage = "Print the fully-qualified build target for the specified alias[es]"
-  )
+      name = "--resolve-alias",
+      aliases = {"--resolvealias"},
+      usage = "Print the fully-qualified build target for the specified alias[es]")
   private boolean isResolveAlias;
 
   @Option(
-    name = "--show-cell-path",
-    aliases = {"--show_cell_path"},
-    usage = "Print the absolute path of the cell for each rule after the rule name."
-  )
+      name = "--show-cell-path",
+      aliases = {"--show_cell_path"},
+      usage = "Print the absolute path of the cell for each rule after the rule name.")
   private boolean isShowCellPath;
 
   @Option(
-    name = "--show-output",
-    aliases = {"--show_output"},
-    usage =
-        "Print the path to the output, relative to the cell path, for each rule after the "
-            + "rule name. Use '--show-full-output' to obtain the full absolute path."
-  )
+      name = "--show-output",
+      aliases = {"--show_output"},
+      usage =
+          "Print the path to the output, relative to the cell path, for each rule after the "
+              + "rule name. Use '--show-full-output' to obtain the full absolute path.")
   private boolean isShowOutput;
 
   @Option(
-    name = "--show-full-output",
-    aliases = {"--show_full_output"},
-    usage = "Print the absolute path to the output, for each rule after the rule name."
-  )
+      name = "--show-full-output",
+      aliases = {"--show_full_output"},
+      usage = "Print the absolute path to the output, for each rule after the rule name.")
   private boolean isShowFullOutput;
 
   @Option(
-    name = "--show-rulekey",
-    aliases = {"--show_rulekey"},
-    forbids = {"--show-target-hash"},
-    usage =
-        "Print the RuleKey of each rule after the rule name. "
-            + "Incompatible with '--show-target-hash'."
-  )
+      name = "--show-rulekey",
+      aliases = {"--show_rulekey"},
+      forbids = {"--show-target-hash"},
+      usage =
+          "Print the RuleKey of each rule after the rule name. "
+              + "Incompatible with '--show-target-hash'.")
   private boolean isShowRuleKey;
 
   @Option(
-    name = "--show-transitive-rulekeys",
-    aliases = {"--show-transitive-rulekeys"},
-    usage = "Show rule keys of transitive deps as well."
-  )
+      name = "--show-transitive-rulekeys",
+      aliases = {"--show-transitive-rulekeys"},
+      usage = "Show rule keys of transitive deps as well.")
   private boolean isShowTransitiveRuleKeys;
 
   @Option(
-    name = "--show-target-hash",
-    forbids = {"--show-rulekey"},
-    usage =
-        "Print a stable hash of each target after the target name. "
-            + "Incompatible with '--show-rulekey'."
-  )
+      name = "--show-target-hash",
+      forbids = {"--show-rulekey"},
+      usage =
+          "Print a stable hash of each target after the target name. "
+              + "Incompatible with '--show-rulekey'.")
   private boolean isShowTargetHash;
 
   @Option(
-    name = "--show-transitive-target-hashes",
-    aliases = {"--show-transitive-target-hashes"},
-    usage = "Show target hashes of transitive deps as well."
-  )
+      name = "--show-transitive-target-hashes",
+      aliases = {"--show-transitive-target-hashes"},
+      usage = "Show target hashes of transitive deps as well.")
   private boolean isShowTransitiveTargetHashes;
 
   private enum TargetHashFileMode {
@@ -223,43 +211,39 @@ public class TargetsCommand extends AbstractCommand {
   }
 
   @Option(
-    name = "--target-hash-file-mode",
-    usage =
-        "Modifies computation of target hashes. If set to PATHS_AND_CONTENTS (the "
-            + "default), the contents of all files referenced from the targets will be used to "
-            + "compute the target hash. If set to PATHS_ONLY, only files' paths contribute to the "
-            + "hash. See also --target-hash-modified-paths."
-  )
+      name = "--target-hash-file-mode",
+      usage =
+          "Modifies computation of target hashes. If set to PATHS_AND_CONTENTS (the "
+              + "default), the contents of all files referenced from the targets will be used to "
+              + "compute the target hash. If set to PATHS_ONLY, only files' paths contribute to the "
+              + "hash. See also --target-hash-modified-paths.")
   private TargetHashFileMode targetHashFileMode = TargetHashFileMode.PATHS_AND_CONTENTS;
 
   @Option(
-    name = "--target-hash-modified-paths",
-    usage =
-        "Modifies computation of target hashes. Only effective when "
-            + "--target-hash-file-mode is set to PATHS_ONLY. If a target or its dependencies "
-            + "reference a file from this set, the target's hash will be different than if this "
-            + "option was omitted. Otherwise, the target's hash will be the same as if this option "
-            + "was omitted.",
-    handler = StringSetOptionHandler.class
-  )
+      name = "--target-hash-modified-paths",
+      usage =
+          "Modifies computation of target hashes. Only effective when "
+              + "--target-hash-file-mode is set to PATHS_ONLY. If a target or its dependencies "
+              + "reference a file from this set, the target's hash will be different than if this "
+              + "option was omitted. Otherwise, the target's hash will be the same as if this option "
+              + "was omitted.",
+      handler = StringSetOptionHandler.class)
   @SuppressFieldNotInitialized
   private Supplier<ImmutableSet<String>> targetHashModifiedPaths;
 
   @Option(
-    name = "--output-attributes",
-    usage =
-        "List of attributes to output, --output-attributes attr1 att2 ... attrN. "
-            + "Attributes can be regular expressions. ",
-    handler = StringSetOptionHandler.class
-  )
+      name = "--output-attributes",
+      usage =
+          "List of attributes to output, --output-attributes attr1 att2 ... attrN. "
+              + "Attributes can be regular expressions. ",
+      handler = StringSetOptionHandler.class)
   @SuppressFieldNotInitialized
   private Supplier<ImmutableSet<String>> outputAttributes;
 
   @Nullable
   @Option(
-    name = "--rulekeys-log-path",
-    usage = "If set, log a binary representation of rulekeys to this file."
-  )
+      name = "--rulekeys-log-path",
+      usage = "If set, log a binary representation of rulekeys to this file.")
   private String ruleKeyLogPath = null;
 
   @Argument private List<String> arguments = new ArrayList<>();
@@ -807,6 +791,7 @@ public class TargetsCommand extends AbstractCommand {
 
       while (targetNodeIterator.hasNext()) {
         TargetNode<?, ?> targetNode = targetNodeIterator.next();
+        @Nullable
         Map<String, Object> targetNodeAttributes =
             params.getParser().getTargetNodeRawAttributes(state, params.getCell(), targetNode);
         if (targetNodeAttributes == null) {
@@ -819,7 +804,7 @@ public class TargetsCommand extends AbstractCommand {
           continue;
         }
 
-        TargetResult targetResult = targetResults.get(targetNode.getBuildTarget());
+        @Nullable TargetResult targetResult = targetResults.get(targetNode.getBuildTarget());
         if (targetResult != null) {
           for (TargetResultFieldName field : TargetResultFieldName.values()) {
             field
