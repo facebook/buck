@@ -83,12 +83,7 @@ public class SingleThreadedActionGraphBuilder extends AbstractActionGraphBuilder
       return rule;
     }
     rule = mappingFunction.apply(target);
-    Preconditions.checkState(
-        // TODO(jakubzika): This should hold for flavored build targets as well.
-        rule.getBuildTarget().getUnflavoredBuildTarget().equals(target.getUnflavoredBuildTarget()),
-        "Computed rule for '%s' instead of '%s'.",
-        rule.getBuildTarget(),
-        target);
+    checkRuleIsBuiltForCorrectTarget(target, rule);
     BuildRule oldRule = buildRuleIndex.put(target, rule);
     Preconditions.checkState(
         // TODO(jakubzika): Eventually we should be able to remove the oldRule == rule part.

@@ -185,8 +185,15 @@ public class MultiThreadedActionGraphBuilder extends AbstractActionGraphBuilder 
    * Convert a function returning a value to a function that returns a forked, work-thread-tracked
    * ForkJoinTask that runs the function.
    */
-  private <K, V> Function<K, Task<V>> wrap(Function<K, V> function) {
-    return arg -> forkOrSubmit(new Task<>(() -> function.apply(arg)));
+  private Function<BuildTarget, Task<BuildRule>> wrap(Function<BuildTarget, BuildRule> function) {
+    return arg ->
+        forkOrSubmit(
+            new Task<>(
+                () -> {
+                  BuildRule rule = function.apply(arg);
+                  checkRuleIsBuiltForCorrectTarget(arg, rule);
+                  return rule;
+                }));
   }
 
   private <T> Task<T> forkOrSubmit(Task<T> task) {

@@ -21,6 +21,7 @@ import com.facebook.buck.core.rules.AbstractBuildRuleResolver;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.util.RichStream;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Comparator;
 
@@ -32,5 +33,14 @@ public abstract class AbstractActionGraphBuilder extends AbstractBuildRuleResolv
     return RichStream.from(buildTargets)
         .map(this::requireRule)
         .toImmutableSortedSet(Comparator.naturalOrder());
+  }
+
+  protected void checkRuleIsBuiltForCorrectTarget(BuildTarget arg, BuildRule rule) {
+    Preconditions.checkState(
+        // TODO: This should hold for flavored build targets as well.
+        rule.getBuildTarget().getUnflavoredBuildTarget().equals(arg.getUnflavoredBuildTarget()),
+        "Computed rule for '%s' instead of '%s'.",
+        rule.getBuildTarget(),
+        arg);
   }
 }
