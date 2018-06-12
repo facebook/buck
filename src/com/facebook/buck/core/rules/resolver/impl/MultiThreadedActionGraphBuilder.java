@@ -219,7 +219,12 @@ public class MultiThreadedActionGraphBuilder extends AbstractActionGraphBuilder 
         workThread = Thread.currentThread();
         // The work function should only be invoked while the task is not complete.
         // This condition should be guaranteed by the ForkJoin framework.
-        return Preconditions.checkNotNull(work).get();
+        V result = Preconditions.checkNotNull(work).get();
+        Preconditions.checkState(
+            getRawResult() == null || getRawResult() == result,
+            "A value for this task has already been created: %s",
+            getRawResult());
+        return result;
       } catch (RuntimeException e) {
         throw e;
       } catch (Exception e) {
@@ -236,6 +241,10 @@ public class MultiThreadedActionGraphBuilder extends AbstractActionGraphBuilder 
 
     @Override
     public void complete(V value) {
+      Preconditions.checkState(
+          getRawResult() == null || getRawResult() == value,
+          "A value for this task has already been created: %s",
+          getRawResult());
       super.complete(value);
       workThread = null;
       work = null;
