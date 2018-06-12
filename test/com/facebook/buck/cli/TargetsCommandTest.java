@@ -17,6 +17,7 @@
 package com.facebook.buck.cli;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
@@ -37,6 +38,7 @@ import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
+import com.facebook.buck.event.BuckEventBusForTests.CapturingConsoleEventListener;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
@@ -90,6 +92,7 @@ public class TargetsCommandTest {
   private CommandRunnerParams params;
   private ProjectFilesystem filesystem;
   private ListeningExecutorService executor;
+  private CapturingConsoleEventListener capturingConsoleEventListener;
 
   private Iterable<TargetNode<?, ?>> buildTargetNodes(
       ProjectFilesystem filesystem, String buildTarget) {
@@ -114,6 +117,8 @@ public class TargetsCommandTest {
     Cell cell = new TestCellBuilder().setFilesystem(filesystem).build();
     ArtifactCache artifactCache = new NoopArtifactCache();
     BuckEventBus eventBus = BuckEventBusForTests.newInstance();
+    capturingConsoleEventListener = new CapturingConsoleEventListener();
+    eventBus.register(capturingConsoleEventListener);
 
     targetsCommand = new TargetsCommand();
     params =
@@ -214,8 +219,9 @@ public class TargetsCommandTest {
 
     String output = console.getTextWrittenToStdOut();
     assertEquals("[\n]\n", output);
-    assertEquals(
-        "unable to find rule for target //:nonexistent\n", console.getTextWrittenToStdErr());
+    assertThat(
+        capturingConsoleEventListener.getLogMessages(),
+        contains("unable to find rule for target //:nonexistent"));
   }
 
   @Test
