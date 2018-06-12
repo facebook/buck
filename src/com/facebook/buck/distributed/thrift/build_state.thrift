@@ -22,7 +22,7 @@ struct BuildJobStateBuckConfig {
   2: optional map<string, list<OrderedStringMapEntry>> rawBuckConfig;
   3: optional string architecture;
   4: optional string platform;
-  5: optional map<string, i32> cellAliasToIndex;
+  // 5: deprecated
 }
 
 struct PathWithUnixSeparators {

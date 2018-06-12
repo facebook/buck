@@ -124,8 +124,6 @@ public class DistBuildCellIndexer {
     jobState.setRawBuckConfig(rawConfig);
     jobState.setArchitecture(buckConfig.getArchitecture().name());
     jobState.setPlatform(buckConfig.getPlatform().name());
-    jobState.setCellAliasToIndex(
-        Maps.transformValues(buckConfig.getCellPathResolver().getCellPaths(), this::getCellIndex));
 
     return jobState;
   }
