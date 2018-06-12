@@ -21,15 +21,12 @@ import static com.facebook.buck.swift.SwiftLibraryDescription.isSwiftTarget;
 
 import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
 import com.facebook.buck.apple.toolchain.AppleCxxPlatformsProvider;
-import com.facebook.buck.apple.toolchain.CodeSignIdentityStore;
-import com.facebook.buck.apple.toolchain.ProvisioningProfileStore;
 import com.facebook.buck.core.cell.resolver.CellPathResolver;
 import com.facebook.buck.core.description.BuildRuleParams;
 import com.facebook.buck.core.description.DescriptionCache;
 import com.facebook.buck.core.description.MetadataProvidingDescription;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.description.attr.ImplicitFlavorsInferringDescription;
-import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorConvertible;
@@ -38,7 +35,6 @@ import com.facebook.buck.core.model.Flavored;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
-import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
@@ -85,7 +81,6 @@ import com.facebook.buck.swift.SwiftRuntimeNativeLinkable;
 import com.facebook.buck.swift.toolchain.SwiftPlatform;
 import com.facebook.buck.swift.toolchain.SwiftPlatformsProvider;
 import com.facebook.buck.toolchain.ToolchainProvider;
-import com.facebook.buck.util.types.Either;
 import com.facebook.buck.versions.Version;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -124,7 +119,6 @@ public class AppleLibraryDescription
           CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR,
           CxxDescriptionEnhancer.STATIC_FLAVOR,
           CxxDescriptionEnhancer.SHARED_FLAVOR,
-          AppleDescriptions.FRAMEWORK_FLAVOR,
           AppleDebugFormat.DWARF_AND_DSYM.getFlavor(),
           AppleDebugFormat.DWARF.getFlavor(),
           AppleDebugFormat.NONE.getFlavor(),
@@ -142,7 +136,6 @@ public class AppleLibraryDescription
     STATIC_PIC(CxxDescriptionEnhancer.STATIC_PIC_FLAVOR),
     STATIC(CxxDescriptionEnhancer.STATIC_FLAVOR),
     MACH_O_BUNDLE(CxxDescriptionEnhancer.MACH_O_BUNDLE_FLAVOR),
-    FRAMEWORK(AppleDescriptions.FRAMEWORK_FLAVOR),
     SWIFT_COMPILE(AppleDescriptions.SWIFT_COMPILE_FLAVOR),
     SWIFT_OBJC_GENERATED_HEADER(AppleDescriptions.SWIFT_OBJC_GENERATED_HEADER_SYMLINK_TREE_FLAVOR),
     SWIFT_EXPORTED_OBJC_GENERATED_HEADER(
@@ -341,13 +334,7 @@ public class AppleLibraryDescription
       BuildTarget buildTarget,
       BuildRuleParams params,
       AppleLibraryDescriptionArg args) {
-    TargetGraph targetGraph = context.getTargetGraph();
     ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
-    Optional<Map.Entry<Flavor, Type>> type = LIBRARY_TYPE.getFlavorAndValue(buildTarget);
-    if (type.isPresent() && type.get().getValue().equals(Type.FRAMEWORK)) {
-      return createFrameworkBundleBuildRule(
-          targetGraph, buildTarget, context.getProjectFilesystem(), params, graphBuilder, args);
-    }
 
     Optional<BuildRule> swiftRule =
         createSwiftBuildRule(
@@ -374,66 +361,6 @@ public class AppleLibraryDescription
         ImmutableSet.of(),
         ImmutableSortedSet.of(),
         CxxLibraryDescription.TransitiveCxxPreprocessorInputFunction.fromLibraryRule());
-  }
-
-  private <A extends AbstractAppleLibraryDescriptionArg> BuildRule createFrameworkBundleBuildRule(
-      TargetGraph targetGraph,
-      BuildTarget buildTarget,
-      ProjectFilesystem projectFilesystem,
-      BuildRuleParams params,
-      ActionGraphBuilder graphBuilder,
-      AppleLibraryDescriptionArg args) {
-    if (!args.getInfoPlist().isPresent()) {
-      throw new HumanReadableException(
-          "Cannot create framework for apple_library '%s':\n"
-              + "No value specified for 'info_plist' attribute.",
-          buildTarget.getUnflavoredBuildTarget());
-    }
-    if (!AppleDescriptions.INCLUDE_FRAMEWORKS.getValue(buildTarget).isPresent()) {
-      return graphBuilder.requireRule(
-          buildTarget.withAppendedFlavors(AppleDescriptions.INCLUDE_FRAMEWORKS_FLAVOR));
-    }
-    AppleDebugFormat debugFormat =
-        AppleDebugFormat.FLAVOR_DOMAIN
-            .getValue(buildTarget)
-            .orElse(appleConfig.getDefaultDebugInfoFormatForLibraries());
-    if (!buildTarget.getFlavors().contains(debugFormat.getFlavor())) {
-      return graphBuilder.requireRule(buildTarget.withAppendedFlavors(debugFormat.getFlavor()));
-    }
-
-    CxxPlatformsProvider cxxPlatformsProvider = getCxxPlatformsProvider();
-
-    return AppleDescriptions.createAppleBundle(
-        cxxPlatformsProvider.getCxxPlatforms(),
-        cxxPlatformsProvider.getDefaultCxxPlatform().getFlavor(),
-        getAppleCxxPlatformDomain(),
-        targetGraph,
-        buildTarget,
-        projectFilesystem,
-        params,
-        graphBuilder,
-        toolchainProvider.getByName(
-            CodeSignIdentityStore.DEFAULT_NAME, CodeSignIdentityStore.class),
-        toolchainProvider.getByName(
-            ProvisioningProfileStore.DEFAULT_NAME, ProvisioningProfileStore.class),
-        Optional.of(buildTarget),
-        Optional.empty(),
-        Either.ofLeft(AppleBundleExtension.FRAMEWORK),
-        Optional.empty(),
-        args.getInfoPlist().get(),
-        args.getInfoPlistSubstitutions(),
-        args.getDeps(),
-        args.getTests(),
-        debugFormat,
-        appleConfig.useDryRunCodeSigning(),
-        appleConfig.cacheBundlesAndPackages(),
-        appleConfig.shouldVerifyBundleResources(),
-        appleConfig.assetCatalogValidation(),
-        AppleAssetCatalogsCompilationOptions.builder().build(),
-        ImmutableList.of(),
-        Optional.empty(),
-        Optional.empty(),
-        appleConfig.getCodesignTimeout());
   }
 
   /**
@@ -761,8 +688,7 @@ public class AppleLibraryDescription
       }
     }
 
-    if (metadataClass.isAssignableFrom(FrameworkDependencies.class)
-        && buildTarget.getFlavors().contains(AppleDescriptions.FRAMEWORK_FLAVOR)) {
+    if (metadataClass.isAssignableFrom(FrameworkDependencies.class)) {
       Optional<Flavor> cxxPlatformFlavor =
           getCxxPlatformsProvider().getCxxPlatforms().getFlavor(buildTarget);
       Preconditions.checkState(
@@ -771,21 +697,13 @@ public class AppleLibraryDescription
           Joiner.on(", ").join(buildTarget.getFlavors()));
       ImmutableSet.Builder<SourcePath> sourcePaths = ImmutableSet.builder();
       for (BuildTarget dep : args.getDeps()) {
-        Optional<FrameworkDependencies> frameworks =
-            graphBuilder.requireMetadata(
+        graphBuilder
+            .requireMetadata(
                 dep.withAppendedFlavors(
-                    AppleDescriptions.FRAMEWORK_FLAVOR,
-                    AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR,
-                    cxxPlatformFlavor.get()),
-                FrameworkDependencies.class);
-        if (frameworks.isPresent()) {
-          sourcePaths.addAll(frameworks.get().getSourcePaths());
-        }
+                    AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR, cxxPlatformFlavor.get()),
+                FrameworkDependencies.class)
+            .ifPresent(s -> sourcePaths.addAll(s.getSourcePaths()));
       }
-      // Not all parts of Buck use require yet, so require the rule here so it's available in the
-      // graphBuilder for the parts that don't.
-      BuildRule buildRule = graphBuilder.requireRule(buildTarget);
-      sourcePaths.add(buildRule.getSourcePathToOutput());
       return Optional.of(metadataClass.cast(FrameworkDependencies.of(sourcePaths.build())));
     }
 
@@ -1000,11 +918,7 @@ public class AppleLibraryDescription
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractAppleLibraryDescriptionArg extends AppleNativeTargetDescriptionArg {
-    Optional<SourcePath> getInfoPlist();
-
-    ImmutableMap<String, String> getInfoPlistSubstitutions();
-  }
+  interface AbstractAppleLibraryDescriptionArg extends AppleNativeTargetDescriptionArg {}
 
   // CxxLibraryDescriptionDelegate
 

@@ -1,9 +1,0 @@
-apple_library(
-    name = "TestLibraryDep",
-    srcs = ["TestClassDep.m"],
-    exported_headers = ["TestClassDep.h"],
-    info_plist = "Info.plist",
-    linker_flags = ["-lobjc"],
-    visibility = ["PUBLIC"],
-    deps = ["//Libraries/TestLibraryTransitiveDep:TestLibraryTransitiveDep"],
-)
