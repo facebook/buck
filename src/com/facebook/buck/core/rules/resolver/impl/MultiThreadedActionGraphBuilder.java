@@ -106,9 +106,15 @@ public class MultiThreadedActionGraphBuilder extends AbstractActionGraphBuilder 
         isInForkJoinPool(), "Should only be called while executing in the pool");
 
     Task<BuildRule> future = buildRuleIndex.computeIfAbsent(target, wrap(mappingFunction));
-    return future.isBeingWorkedOnByCurrentThread()
-        ? mappingFunction.apply(target)
-        : Futures.getUnchecked(future);
+
+    if (future.isBeingWorkedOnByCurrentThread()) {
+
+      BuildRule rule = mappingFunction.apply(target);
+      future.complete(rule);
+      return rule;
+    } else {
+      return Futures.getUnchecked(future);
+    }
   }
 
   @Override
