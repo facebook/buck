@@ -49,7 +49,11 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 import java.util.Arrays;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.stream.Collector;
+import java.util.stream.Collector.Characteristics;
 import java.util.stream.Stream;
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
@@ -218,9 +222,7 @@ public class JsLibraryDescriptionTest {
 
     findJsFileRules(scenario.graphBuilder)
         .map(JsLibraryDescriptionTest::getBuildDepsAsTargets)
-        .peek(deps -> assertThat(libDeps, everyItem(not(in(deps)))))
-        .findAny()
-        .orElseThrow(() -> new IllegalStateException("No JsFile dependencies found for " + target));
+        .collect(countAssertions(deps -> assertThat(libDeps, everyItem(not(in(deps))))));
   }
 
   @Test
@@ -320,16 +322,15 @@ public class JsLibraryDescriptionTest {
 
     findJsFileRules(scenario.graphBuilder)
         .map(JsFile::getBuildTarget)
-        .peek(
-            depTarget ->
-                assertThat(
-                    String.format(
-                        "JsFile dependency `%s` of JsLibrary `%s` must have flavors `%s`",
-                        depTarget, target, flavors),
-                    flavors,
-                    everyItem(in(depTarget.getFlavors()))))
-        .findAny()
-        .orElseThrow(() -> new IllegalStateException("No JsFile dependencies found for " + target));
+        .collect(
+            countAssertions(
+                depTarget ->
+                    assertThat(
+                        String.format(
+                            "JsFile dependency `%s` of JsLibrary `%s` must have flavors `%s`",
+                            depTarget, target, flavors),
+                        flavors,
+                        everyItem(in(depTarget.getFlavors())))));
   }
 
   @Test
@@ -343,15 +344,14 @@ public class JsLibraryDescriptionTest {
 
     findJsFileRules(scenario.graphBuilder)
         .map(JsFile::getBuildTarget)
-        .peek(
-            fileTarget ->
-                assertFalse(
-                    String.format(
-                        "JsFile dependency `%s` of JsLibrary `%s` must not have flavor `%s`",
-                        fileTarget, withPlatformFlavor, platformFlavor),
-                    fileTarget.getFlavors().contains(platformFlavor)))
-        .findAny()
-        .orElseThrow(() -> new IllegalStateException("No JsFile dependencies found for " + target));
+        .collect(
+            countAssertions(
+                fileTarget ->
+                    assertFalse(
+                        String.format(
+                            "JsFile dependency `%s` of JsLibrary `%s` must not have flavor `%s`",
+                            fileTarget, withPlatformFlavor, platformFlavor),
+                        fileTarget.getFlavors().contains(platformFlavor))));
   }
 
   @Test
@@ -391,9 +391,8 @@ public class JsLibraryDescriptionTest {
 
     assertThat(deps, everyItem(not(in(internalFileRule(scenario.graphBuilder).getBuildDeps()))));
     findJsFileRules(scenario.graphBuilder)
-        .peek(jsFile -> assertThat(deps, everyItem(not(in(jsFile.getBuildDeps())))))
-        .findAny()
-        .orElseThrow(() -> new IllegalStateException("No JsFile dependencies found for " + target));
+        .collect(
+            countAssertions(jsFile -> assertThat(deps, everyItem(not(in(jsFile.getBuildDeps()))))));
   }
 
   @Test
@@ -454,10 +453,8 @@ public class JsLibraryDescriptionTest {
     assertThat(referenced, in(scenario.graphBuilder.getRule(target).getBuildDeps()));
 
     RichStream<JsFile> jsFileRules = findJsFileRules(scenario.graphBuilder);
-    jsFileRules
-        .peek(jsFile -> assertThat(referenced, in(jsFile.getBuildDeps())))
-        .findAny()
-        .orElseThrow(() -> new IllegalStateException("No JsFile dependencies found for " + target));
+    jsFileRules.collect(
+        countAssertions(jsFile -> assertThat(referenced, in(jsFile.getBuildDeps()))));
   }
 
   private JsTestScenario buildScenario(String basePath, SourcePath source) {
@@ -486,6 +483,29 @@ public class JsLibraryDescriptionTest {
         .stream()
         .map(BuildRule::getBuildTarget)
         .collect(ImmutableList.toImmutableList());
+  }
+
+  private static <T> Collector<T, AtomicLong, Long> countAssertions(Consumer<T> assertion) {
+    /**
+     * Collects a stream by running the passed-in assertion on all stream items. The collection also
+     * asserts that the stream is non-empty, to avoid false positives when accidentally producing
+     * empty streams, e.g. by filtering.
+     */
+    return Collector.of(
+        AtomicLong::new,
+        (count, t) -> {
+          count.incrementAndGet();
+          assertion.accept(t);
+        },
+        (a, b) -> new AtomicLong(a.get() + b.get()),
+        count -> {
+          long value = count.get();
+          if (value == 0) {
+            throw new IllegalStateException("Stream was empty, did not assert anything.");
+          }
+          return value;
+        },
+        Characteristics.UNORDERED);
   }
 
   private static class JsFileMatcher extends BaseMatcher<BuildRule> {
