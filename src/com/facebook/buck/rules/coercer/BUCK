@@ -13,6 +13,9 @@ INTERFACE_SRCS = [
 java_library(
     name = "interface",
     srcs = INTERFACE_SRCS,
+    exported_deps = [
+        "//src/com/facebook/buck/rules/coercer/concat:concat",
+    ],
     visibility = ["PUBLIC"],
     deps = [
         "//src/com/facebook/buck/core/cell/resolver:resolver",

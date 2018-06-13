@@ -18,6 +18,7 @@ package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.resolver.CellPathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.rules.coercer.concat.Concatable;
 import java.nio.file.Path;
 
 /**
@@ -28,7 +29,7 @@ import java.nio.file.Path;
  *
  * @param <T> resulting type
  */
-public interface TypeCoercer<T> {
+public interface TypeCoercer<T> extends Concatable<T> {
 
   Class<T> getOutputClass();
 
@@ -53,6 +54,15 @@ public interface TypeCoercer<T> {
       Path pathRelativeToProjectRoot,
       Object object)
       throws CoerceFailedException;
+
+  /**
+   * Implementation of concatenation for this type. <code>null</code> indicates that concatenation
+   * isn't supported by the type.
+   */
+  @Override
+  default T concat(Iterable<T> elements) {
+    return null;
+  }
 
   interface Traversal {
     void traverse(Object object);

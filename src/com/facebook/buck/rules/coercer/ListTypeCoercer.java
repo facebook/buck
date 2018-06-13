@@ -18,10 +18,16 @@ package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.resolver.CellPathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.rules.coercer.concat.Concatable;
+import com.facebook.buck.rules.coercer.concat.ImmutableListConcatable;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 
-public class ListTypeCoercer<T> extends CollectionTypeCoercer<ImmutableList<T>, T> {
+public class ListTypeCoercer<T> extends CollectionTypeCoercer<ImmutableList<T>, T>
+    implements Concatable<ImmutableList<T>> {
+
+  private final ImmutableListConcatable<T> concatable = new ImmutableListConcatable<>();
+
   ListTypeCoercer(TypeCoercer<T> elementTypeCoercer) {
     super(elementTypeCoercer);
   }
@@ -42,5 +48,10 @@ public class ListTypeCoercer<T> extends CollectionTypeCoercer<ImmutableList<T>, 
     ImmutableList.Builder<T> builder = ImmutableList.builder();
     fill(cellRoots, filesystem, pathRelativeToProjectRoot, builder, object);
     return builder.build();
+  }
+
+  @Override
+  public ImmutableList<T> concat(Iterable<ImmutableList<T>> elements) {
+    return concatable.concat(elements);
   }
 }

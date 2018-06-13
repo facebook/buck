@@ -24,7 +24,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.List;
 
-public class SourceListTypeCoercer implements TypeCoercer<SourceList> {
+public class SourceListTypeCoercer extends SourceListConcatable implements TypeCoercer<SourceList> {
   private final TypeCoercer<ImmutableSortedSet<SourcePath>> unnamedHeadersTypeCoercer;
   private final TypeCoercer<ImmutableSortedMap<String, SourcePath>> namedHeadersTypeCoercer;
 

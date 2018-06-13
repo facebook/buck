@@ -32,6 +32,8 @@ import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Map;
 import java.util.Optional;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import org.immutables.value.Value;
@@ -150,5 +152,51 @@ abstract class AbstractSourceList implements TargetTranslatable<SourceList> {
     builder.setNamedSources(namedSources.orElse(getNamedSources()));
     builder.setUnnamedSources(unNamedSources.orElse(getUnnamedSources()));
     return Optional.of(builder.build());
+  }
+
+  /** Concatenates elements of the given lists into a single list. */
+  public static SourceList concat(Iterable<SourceList> elements) {
+    Type type = findType(elements);
+
+    if (type == Type.UNNAMED) {
+      return concatUnnamed(elements);
+    } else {
+      return concatNamed(elements);
+    }
+  }
+
+  private static Type findType(Iterable<SourceList> elements) {
+    if (!elements.iterator().hasNext()) {
+      return Type.UNNAMED;
+    }
+    return elements.iterator().next().getType();
+  }
+
+  private static SourceList concatUnnamed(Iterable<SourceList> elements) {
+    SortedSet<SourcePath> unnamedSources = new TreeSet<>();
+
+    for (SourceList element : elements) {
+      Preconditions.checkState(
+          element.getType().equals(Type.UNNAMED),
+          "Expected unnamed source list, got: %s",
+          element.getType());
+      element.getUnnamedSources().ifPresent(unnamedSources::addAll);
+    }
+
+    return ofUnnamedSources(ImmutableSortedSet.copyOf(unnamedSources));
+  }
+
+  private static SourceList concatNamed(Iterable<SourceList> elements) {
+    ImmutableSortedMap.Builder<String, SourcePath> namedSources = ImmutableSortedMap.naturalOrder();
+
+    for (SourceList element : elements) {
+      Preconditions.checkState(
+          element.getType().equals(Type.NAMED),
+          "Expected named source list, got: %s",
+          element.getType());
+      element.getNamedSources().ifPresent(namedSources::putAll);
+    }
+
+    return ofNamedSources(namedSources.build());
   }
 }

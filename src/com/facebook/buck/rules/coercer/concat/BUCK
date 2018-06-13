@@ -1,0 +1,8 @@
+java_library(
+    name = "concat",
+    srcs = glob(["*.java"]),
+    exported_deps = [
+        "//third-party/java/guava:guava",
+    ],
+    visibility = ["PUBLIC"],
+)
