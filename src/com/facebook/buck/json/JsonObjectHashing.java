@@ -19,8 +19,11 @@ package com.facebook.buck.json;
 import com.facebook.buck.util.hashing.StringHashing;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.hash.Hasher;
+import com.google.devtools.build.lib.syntax.SelectorList;
+import com.google.devtools.build.lib.syntax.SelectorValue;
 import com.google.devtools.build.lib.syntax.SkylarkNestedSet;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import javax.annotation.Nullable;
@@ -37,7 +40,9 @@ public class JsonObjectHashing {
     SHORT,
     STRING,
     MAP,
-    NULL
+    SELECTOR_LIST,
+    SELECTOR_VALUE,
+    NULL,
   }
 
   // Utility class; do not instantiate.
@@ -105,6 +110,19 @@ public class JsonObjectHashing {
       }
     } else if (obj instanceof Void || obj == null) {
       hasher.putInt(HashedObjectType.NULL.ordinal());
+    } else if (obj instanceof SelectorList) {
+      SelectorList selectorList = (SelectorList) obj;
+      hasher.putInt(HashedObjectType.SELECTOR_LIST.ordinal());
+      List<Object> elements = selectorList.getElements();
+      hasher.putInt(elements.size());
+      for (Object collectionEntry : elements) {
+        hashJsonObject(hasher, collectionEntry);
+      }
+    } else if (obj instanceof SelectorValue) {
+      SelectorValue selectorValue = (SelectorValue) obj;
+      hasher.putInt(HashedObjectType.SELECTOR_VALUE.ordinal());
+      hashJsonObject(hasher, selectorValue.getDictionary());
+      hashJsonObject(hasher, selectorValue.getNoMatchError());
     } else {
       throw new RuntimeException(
           String.format("Unsupported object %s (class %s)", obj, obj.getClass()));
