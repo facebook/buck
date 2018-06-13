@@ -16,6 +16,13 @@
 
 package com.facebook.buck.worker;
 
+import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.both;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.greaterThan;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.lessThanOrEqualTo;
+import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.util.Threads;
@@ -38,7 +45,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.atomic.AtomicReference;
-import org.hamcrest.Matchers;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -69,7 +75,7 @@ public class WorkerProcessPoolTest {
     }
     testThreads.join(WAIT_FOR_TEST_THREADS_TIMEOUT);
 
-    assertThat(createdWorkers.size(), Matchers.is(maxWorkers));
+    assertThat(createdWorkers.size(), is(maxWorkers));
   }
 
   @Test
@@ -85,11 +91,9 @@ public class WorkerProcessPoolTest {
 
     testThreads.join();
 
-    assertThat(usedWorkers.keySet(), Matchers.equalTo(testThreads.threads()));
+    assertThat(usedWorkers.keySet(), equalTo(testThreads.threads()));
     assertThat(
-        countDistinct(usedWorkers),
-        Matchers.is(
-            Matchers.both(Matchers.greaterThan(0)).and(Matchers.lessThanOrEqualTo(maxWorkers))));
+        countDistinct(usedWorkers), is(both(greaterThan(0)).and(lessThanOrEqualTo(maxWorkers))));
   }
 
   @Test
@@ -104,7 +108,7 @@ public class WorkerProcessPoolTest {
 
     testThreads.join();
 
-    assertThat(createdWorkers.size(), Matchers.is(numThreads));
+    assertThat(createdWorkers.size(), is(numThreads));
   }
 
   @Test
@@ -125,9 +129,7 @@ public class WorkerProcessPoolTest {
 
     testThreads.join();
 
-    assertThat(
-        countDistinct(usedWorkers),
-        Matchers.allOf(Matchers.greaterThan(0), Matchers.lessThanOrEqualTo(numThreads)));
+    assertThat(countDistinct(usedWorkers), allOf(greaterThan(0), lessThanOrEqualTo(numThreads)));
   }
 
   @Test
@@ -136,13 +138,13 @@ public class WorkerProcessPoolTest {
     ConcurrentHashMap<Thread, WorkerProcess> usedWorkers = new ConcurrentHashMap<>();
 
     testThreads.startThread(borrowAndReturnWorkerProcess(pool, usedWorkers)).join();
-    assertThat(usedWorkers.size(), Matchers.is(1));
+    assertThat(usedWorkers.size(), is(1));
 
     testThreads.startThread(borrowAndKillWorkerProcess(pool, usedWorkers)).join();
     testThreads.startThread(borrowAndReturnWorkerProcess(pool, usedWorkers)).join();
 
-    assertThat(usedWorkers.size(), Matchers.is(3));
-    assertThat(countDistinct(usedWorkers), Matchers.is(2));
+    assertThat(usedWorkers.size(), is(3));
+    assertThat(countDistinct(usedWorkers), is(2));
   }
 
   @Test
@@ -153,15 +155,15 @@ public class WorkerProcessPoolTest {
 
     Threads.interruptCurrentThread();
     pool.returnWorkerProcess(process);
-    assertThat(Thread.interrupted(), Matchers.is(true));
+    assertThat(Thread.interrupted(), is(true));
 
     WorkerProcess process2 = pool.borrowWorkerProcess();
     process2.ensureLaunchAndHandshake();
-    assertThat(process2, Matchers.is(process));
+    assertThat(process2, is(process));
 
     Threads.interruptCurrentThread();
     pool.destroyWorkerProcess(process2);
-    assertThat(Thread.interrupted(), Matchers.is(true));
+    assertThat(Thread.interrupted(), is(true));
   }
 
   @Test
@@ -174,7 +176,7 @@ public class WorkerProcessPoolTest {
 
     WorkerProcess process2 = pool.borrowWorkerProcess();
     process2.ensureLaunchAndHandshake();
-    assertThat(process2, Matchers.is(Matchers.not(process)));
+    assertThat(process2, is(not(process)));
     pool.returnWorkerProcess(process2);
   }
 
@@ -204,7 +206,7 @@ public class WorkerProcessPoolTest {
 
     // here, the second thread has finished running, and has thus added the worker it borrowed to
     // `createdWorkers`.
-    assertThat(createdWorkers, Matchers.equalTo(ImmutableSet.of(worker)));
+    assertThat(createdWorkers, equalTo(ImmutableSet.of(worker)));
   }
 
   @Test
@@ -246,7 +248,7 @@ public class WorkerProcessPoolTest {
     firstThread.join(WAIT_FOR_TEST_THREADS_TIMEOUT);
     // here, thread 1 has borrowed a worker two times, or is blocked returning the first worker.
 
-    assertThat(secondBorrowedWorker.get(), Matchers.is(firstBorrowedWorker.get()));
+    assertThat(secondBorrowedWorker.get(), is(firstBorrowedWorker.get()));
   }
 
   private static WorkerProcessPool createPool(
