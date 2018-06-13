@@ -49,6 +49,7 @@ public class SwiftBitcodeCompile extends AbstractBuildRuleWithDeclaredAndExtraDe
   @Override
   public ImmutableList<? extends Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
+    buildableContext.recordArtifact(outputPath);
     ImmutableList.Builder<String> compilerCommand = ImmutableList.builder();
     compilerCommand.addAll(swiftCompiler.getCommandPrefix(context.getSourcePathResolver()));
     compilerCommand.add(
