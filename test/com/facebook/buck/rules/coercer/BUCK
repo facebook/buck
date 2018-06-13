@@ -16,6 +16,7 @@ standard_java_test(
         "//src/com/facebook/buck/config:config",
         "//src/com/facebook/buck/core/cell:cell",
         "//src/com/facebook/buck/core/rules:rules",
+        "//src/com/facebook/buck/core/select/impl:impl",
         "//src/com/facebook/buck/core/util/immutables:immutables",
         "//src/com/facebook/buck/cxx:rules",
         "//src/com/facebook/buck/event:event",

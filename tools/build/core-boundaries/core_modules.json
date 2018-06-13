@@ -58,6 +58,8 @@
   "//src/com/facebook/buck/core/rules/modern/annotations:annotations",
   "//src/com/facebook/buck/core/rules/modern:modern",
   "//src/com/facebook/buck/core/rules/provider:provider",
+  "//src/com/facebook/buck/core/select:select",
+  "//src/com/facebook/buck/core/select/impl:impl",
   "//src/com/facebook/buck/core/sourcepath:sourcepath",
   "//src/com/facebook/buck/core/sourcepath/resolver:resolver",
   "//src/com/facebook/buck/core/sourcepath/resolver/impl:impl",

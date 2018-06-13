@@ -28,7 +28,7 @@ public class ListTypeCoercer<T> extends CollectionTypeCoercer<ImmutableList<T>, 
 
   private final ImmutableListConcatable<T> concatable = new ImmutableListConcatable<>();
 
-  ListTypeCoercer(TypeCoercer<T> elementTypeCoercer) {
+  public ListTypeCoercer(TypeCoercer<T> elementTypeCoercer) {
     super(elementTypeCoercer);
   }
 

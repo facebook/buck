@@ -1,0 +1,14 @@
+java_library(
+    name = "select",
+    srcs = glob(["*.java"]),
+    exported_deps = [
+        "//src/com/facebook/buck/rules/coercer/concat:concat",
+    ],
+    visibility = ["PUBLIC"],
+    deps = [
+        "//src/com/facebook/buck/model:model",
+        "//src/com/facebook/buck/parser:rule_pattern",
+        "//third-party/java/bazel:skylark-lang",
+        "//third-party/java/jsr:jsr305",
+    ],
+)

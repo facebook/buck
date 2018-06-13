@@ -19,6 +19,9 @@ package com.facebook.buck.rules.coercer;
 import com.facebook.buck.core.cell.resolver.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
+import com.facebook.buck.core.select.SelectorList;
+import com.facebook.buck.core.select.impl.SelectorFactory;
+import com.facebook.buck.core.select.impl.SelectorListFactory;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
@@ -378,6 +381,11 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
       } else if (rawClass.isAssignableFrom(Optional.class)) {
         return new OptionalTypeCoercer<>(
             typeCoercerForType(getSingletonTypeParameter(parameterizedType)));
+      } else if (rawClass.isAssignableFrom(SelectorList.class)) {
+        return new SelectorListCoercer<>(
+            new BuildTargetTypeCoercer(),
+            typeCoercerForType(getSingletonTypeParameter(parameterizedType)),
+            new SelectorListFactory(new SelectorFactory()));
       } else {
         throw new IllegalArgumentException("Unhandled type: " + type);
       }
