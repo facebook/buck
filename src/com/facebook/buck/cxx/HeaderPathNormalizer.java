@@ -116,20 +116,19 @@ class HeaderPathNormalizer {
       this.pathResolver = pathResolver;
     }
 
-    private <V> void put(Map<Path, V> map, Path key, V value) {
-      Preconditions.checkArgument(key.isAbsolute());
-      key = MorePaths.normalize(key);
+    private <V> void put(Map<Path, V> map, Path normalizedKey, V value) {
+      Preconditions.checkArgument(normalizedKey.isAbsolute());
 
       // Hack: Using dropInternalCaches here because `toString` is called on caches by
       // PathShortener, and many Paths are constructed and stored due to HeaderPathNormalizer
       // containing exported headers of all transitive dependencies of a library. This amounts to
       // large memory usage. See t15541313. Once that is fixed, this hack can be deleted.
-      V previous = map.put(MorePaths.dropInternalCaches(key), value);
+      V previous = map.put(MorePaths.dropInternalCaches(normalizedKey), value);
       Preconditions.checkState(
           previous == null || previous.equals(value),
           "Expected header path to be consistent but key %s mapped to different values: "
               + "(old: %s, new: %s)",
-          key,
+          normalizedKey,
           previous,
           value);
     }
@@ -171,19 +170,20 @@ class HeaderPathNormalizer {
     }
 
     public Builder addHeader(SourcePath sourcePath, Path... unnormalizedPaths) {
+      Path absolutePath = MorePaths.normalize(pathResolver.getAbsolutePath(sourcePath));
 
       // Map the relative path of the header path to the header, as we serialize the source path
       // using it's relative path.
-      put(headers, pathResolver.getAbsolutePath(sourcePath), sourcePath);
+      put(headers, absolutePath, sourcePath);
 
       // Add a normalization mapping for the absolute path.
       // We need it for prefix headers and in some rare cases, regular headers will also end up
       // with an absolute path in the depfile for a reason we ignore.
-      put(normalized, pathResolver.getAbsolutePath(sourcePath), sourcePath);
+      put(normalized, absolutePath, sourcePath);
 
       // Add a normalization mapping for any unnormalized paths passed in.
       for (Path unnormalizedPath : unnormalizedPaths) {
-        put(normalized, unnormalizedPath, sourcePath);
+        put(normalized, MorePaths.normalize(unnormalizedPath), sourcePath);
       }
 
       return this;
