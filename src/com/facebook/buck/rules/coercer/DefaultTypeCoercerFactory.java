@@ -314,83 +314,79 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
       }
     } else if (type instanceof ParameterizedType) {
       ParameterizedType parameterizedType = (ParameterizedType) type;
-
-      Type rawType = parameterizedType.getRawType();
-      if (!(rawType instanceof Class<?>)) {
-        throw new RuntimeException(
-            "expected getRawType() to return a class for type: " + parameterizedType);
-      }
-
-      Class<?> rawClass = (Class<?>) rawType;
-      if (rawClass.equals(Either.class)) {
-        Preconditions.checkState(
-            parameterizedType.getActualTypeArguments().length == 2,
-            "expected type '%s' to have two parameters",
-            parameterizedType);
-        return new EitherTypeCoercer<>(
-            typeCoercerForType(parameterizedType.getActualTypeArguments()[0]),
-            typeCoercerForType(parameterizedType.getActualTypeArguments()[1]));
-      } else if (rawClass.equals(Pair.class)) {
-        Preconditions.checkState(
-            parameterizedType.getActualTypeArguments().length == 2,
-            "expected type '%s' to have two parameters",
-            parameterizedType);
-        return new PairTypeCoercer<>(
-            typeCoercerForType(parameterizedType.getActualTypeArguments()[0]),
-            typeCoercerForType(parameterizedType.getActualTypeArguments()[1]));
-      } else if (rawClass.isAssignableFrom(ImmutableList.class)) {
-        return new ListTypeCoercer<>(
-            typeCoercerForType(getSingletonTypeParameter(parameterizedType)));
-      } else if (rawClass.isAssignableFrom(ImmutableSet.class)) {
-        return new SetTypeCoercer<>(
-            typeCoercerForType(getSingletonTypeParameter(parameterizedType)));
-      } else if (rawClass.isAssignableFrom(ImmutableSortedSet.class)) {
-        // SortedSet is tested second because it is a subclass of Set, and therefore can
-        // be assigned to something of type Set, but not vice versa.
-        Type elementType = getSingletonTypeParameter(parameterizedType);
-        @SuppressWarnings({"rawtypes", "unchecked"})
-        SortedSetTypeCoercer<?> sortedSetTypeCoercer =
-            new SortedSetTypeCoercer(typeCoercerForComparableType(elementType));
-        return sortedSetTypeCoercer;
-      } else if (rawClass.isAssignableFrom(ImmutableMap.class)) {
-        Preconditions.checkState(
-            parameterizedType.getActualTypeArguments().length == 2,
-            "expected type '%s' to have two parameters",
-            parameterizedType);
-        return new MapTypeCoercer<>(
-            typeCoercerForType(parameterizedType.getActualTypeArguments()[0]),
-            typeCoercerForType(parameterizedType.getActualTypeArguments()[1]));
-      } else if (rawClass.isAssignableFrom(ImmutableSortedMap.class)) {
-        Preconditions.checkState(
-            parameterizedType.getActualTypeArguments().length == 2,
-            "expected type '%s' to have two parameters",
-            parameterizedType);
-        @SuppressWarnings({"rawtypes", "unchecked"})
-        SortedMapTypeCoercer<?, ?> sortedMapTypeCoercer =
-            new SortedMapTypeCoercer(
-                typeCoercerForComparableType(parameterizedType.getActualTypeArguments()[0]),
-                typeCoercerForType(parameterizedType.getActualTypeArguments()[1]));
-        return sortedMapTypeCoercer;
-      } else if (rawClass.isAssignableFrom(PatternMatchedCollection.class)) {
-        return new PatternMatchedCollectionTypeCoercer<>(
-            patternTypeCoercer, typeCoercerForType(getSingletonTypeParameter(parameterizedType)));
-      } else if (rawClass.isAssignableFrom(VersionMatchedCollection.class)) {
-        return new VersionMatchedCollectionTypeCoercer<>(
-            new MapTypeCoercer<>(new BuildTargetTypeCoercer(), new VersionTypeCoercer()),
-            typeCoercerForType(getSingletonTypeParameter(parameterizedType)));
-      } else if (rawClass.isAssignableFrom(Optional.class)) {
-        return new OptionalTypeCoercer<>(
-            typeCoercerForType(getSingletonTypeParameter(parameterizedType)));
-      } else if (rawClass.isAssignableFrom(SelectorList.class)) {
-        return new SelectorListCoercer<>(
-            new BuildTargetTypeCoercer(),
-            typeCoercerForType(getSingletonTypeParameter(parameterizedType)),
-            new SelectorListFactory(new SelectorFactory()));
-      } else {
-        throw new IllegalArgumentException("Unhandled type: " + type);
-      }
+      return typeCoercerForParameterizedType(
+          type.toString(),
+          parameterizedType.getRawType(),
+          parameterizedType.getActualTypeArguments());
     } else {
       throw new IllegalArgumentException("Cannot create type coercer for type: " + type);
+    }
+  }
+
+  @Override
+  public TypeCoercer<?> typeCoercerForParameterizedType(
+      String typeName, Type rawType, Type[] actualTypeArguments) {
+    if (!(rawType instanceof Class<?>)) {
+      throw new RuntimeException("expected raw type to be a class for type: " + typeName);
+    }
+
+    Class<?> rawClass = (Class<?>) rawType;
+    if (rawClass.equals(Either.class)) {
+      Preconditions.checkState(
+          actualTypeArguments.length == 2, "expected type '%s' to have two parameters", typeName);
+      return new EitherTypeCoercer<>(
+          typeCoercerForType(actualTypeArguments[0]), typeCoercerForType(actualTypeArguments[1]));
+    } else if (rawClass.equals(Pair.class)) {
+      Preconditions.checkState(
+          actualTypeArguments.length == 2, "expected type '%s' to have two parameters", typeName);
+      return new PairTypeCoercer<>(
+          typeCoercerForType(actualTypeArguments[0]), typeCoercerForType(actualTypeArguments[1]));
+    } else if (rawClass.isAssignableFrom(ImmutableList.class)) {
+      return new ListTypeCoercer<>(
+          typeCoercerForType(getSingletonTypeParameter(typeName, actualTypeArguments)));
+    } else if (rawClass.isAssignableFrom(ImmutableSet.class)) {
+      return new SetTypeCoercer<>(
+          typeCoercerForType(getSingletonTypeParameter(typeName, actualTypeArguments)));
+    } else if (rawClass.isAssignableFrom(ImmutableSortedSet.class)) {
+      // SortedSet is tested second because it is a subclass of Set, and therefore can
+      // be assigned to something of type Set, but not vice versa.
+      Type elementType = getSingletonTypeParameter(typeName, actualTypeArguments);
+      @SuppressWarnings({"rawtypes", "unchecked"})
+      SortedSetTypeCoercer<?> sortedSetTypeCoercer =
+          new SortedSetTypeCoercer(typeCoercerForComparableType(elementType));
+      return sortedSetTypeCoercer;
+    } else if (rawClass.isAssignableFrom(ImmutableMap.class)) {
+      Preconditions.checkState(
+          actualTypeArguments.length == 2, "expected type '%s' to have two parameters", typeName);
+      return new MapTypeCoercer<>(
+          typeCoercerForType(actualTypeArguments[0]), typeCoercerForType(actualTypeArguments[1]));
+    } else if (rawClass.isAssignableFrom(ImmutableSortedMap.class)) {
+      Preconditions.checkState(
+          actualTypeArguments.length == 2, "expected type '%s' to have two parameters", typeName);
+      @SuppressWarnings({"rawtypes", "unchecked"})
+      SortedMapTypeCoercer<?, ?> sortedMapTypeCoercer =
+          new SortedMapTypeCoercer(
+              typeCoercerForComparableType(actualTypeArguments[0]),
+              typeCoercerForType(actualTypeArguments[1]));
+      return sortedMapTypeCoercer;
+    } else if (rawClass.isAssignableFrom(PatternMatchedCollection.class)) {
+      return new PatternMatchedCollectionTypeCoercer<>(
+          patternTypeCoercer,
+          typeCoercerForType(getSingletonTypeParameter(typeName, actualTypeArguments)));
+    } else if (rawClass.isAssignableFrom(VersionMatchedCollection.class)) {
+      return new VersionMatchedCollectionTypeCoercer<>(
+          new MapTypeCoercer<>(new BuildTargetTypeCoercer(), new VersionTypeCoercer()),
+          typeCoercerForType(getSingletonTypeParameter(typeName, actualTypeArguments)));
+    } else if (rawClass.isAssignableFrom(Optional.class)) {
+      return new OptionalTypeCoercer<>(
+          typeCoercerForType(getSingletonTypeParameter(typeName, actualTypeArguments)));
+    } else if (rawClass.isAssignableFrom(SelectorList.class)) {
+      return new SelectorListCoercer<>(
+          new BuildTargetTypeCoercer(),
+          typeCoercerForType(getSingletonTypeParameter(typeName, actualTypeArguments)),
+          new SelectorListFactory(new SelectorFactory()));
+    } else {
+      throw new IllegalArgumentException("Unhandled type: " + typeName);
     }
   }
 
@@ -405,12 +401,10 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
     return typeCoercer;
   }
 
-  private static Type getSingletonTypeParameter(ParameterizedType type) {
+  private static Type getSingletonTypeParameter(String typeName, Type[] actualTypeArguments) {
     Preconditions.checkState(
-        type.getActualTypeArguments().length == 1,
-        "expected type '%s' to have one parameter",
-        type);
-    return type.getActualTypeArguments()[0];
+        actualTypeArguments.length == 1, "expected type '%s' to have one parameter", typeName);
+    return actualTypeArguments[0];
   }
 
   @Override

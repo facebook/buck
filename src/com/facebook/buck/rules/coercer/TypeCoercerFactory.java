@@ -21,4 +21,16 @@ import java.lang.reflect.Type;
 public interface TypeCoercerFactory {
 
   TypeCoercer<?> typeCoercerForType(Type type);
+
+  /**
+   * Returns {@link TypeCoercer} for a {@link java.lang.reflect.ParameterizedType} that have the
+   * given raw type and type arguments.
+   *
+   * @param typeName name of the {@link java.lang.reflect.ParameterizedType}. Used for reporting
+   *     only.
+   * @param rawType raw type of the {@link java.lang.reflect.ParameterizedType}
+   * @param actualTypeArguments type arguments of {@link java.lang.reflect.ParameterizedType}
+   */
+  TypeCoercer<?> typeCoercerForParameterizedType(
+      String typeName, Type rawType, Type[] actualTypeArguments);
 }
