@@ -346,6 +346,7 @@ public class CxxPreprocessAndCompileTest {
     // Setup some dummy values for inputs to the CxxPreprocessAndCompile.
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestActionGraphBuilder());
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    BuildContext context = FakeBuildContext.withSourcePathResolver(pathResolver);
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     CxxToolFlags flags =
         CxxToolFlags.explicitBuilder()
@@ -378,7 +379,7 @@ public class CxxPreprocessAndCompileTest {
             .add(input.toString())
             .build();
     ImmutableList<String> actualCompileCommand =
-        buildRule.makeMainStep(pathResolver, false).getCommand();
+        buildRule.makeMainStep(context, false).getCommand();
     assertEquals(expectedCompileCommand, actualCompileCommand);
   }
 
@@ -450,6 +451,7 @@ public class CxxPreprocessAndCompileTest {
   public void usesColorFlagForCompilationWhenRequested() {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestActionGraphBuilder());
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    BuildContext context = FakeBuildContext.withSourcePathResolver(pathResolver);
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     String output = "test.o";
     Path input = Paths.get("test.ii");
@@ -472,15 +474,11 @@ public class CxxPreprocessAndCompileTest {
             CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER);
 
     ImmutableList<String> command =
-        buildRule
-            .makeMainStep(pathResolver, false)
-            .getArguments(/* allowColorsInDiagnostics */ false);
+        buildRule.makeMainStep(context, false).getArguments(/* allowColorsInDiagnostics */ false);
     assertThat(command, not(hasItem(CompilerWithColorSupport.COLOR_FLAG)));
 
     command =
-        buildRule
-            .makeMainStep(pathResolver, false)
-            .getArguments(/* allowColorsInDiagnostics */ true);
+        buildRule.makeMainStep(context, false).getArguments(/* allowColorsInDiagnostics */ true);
     assertThat(command, hasItem(CompilerWithColorSupport.COLOR_FLAG));
   }
 
@@ -488,6 +486,7 @@ public class CxxPreprocessAndCompileTest {
   public void usesColorFlagForPreprocessingWhenRequested() {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestActionGraphBuilder());
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    BuildContext context = FakeBuildContext.withSourcePathResolver(pathResolver);
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     String output = "test.ii";
     Path input = Paths.get("test.cpp");
@@ -517,15 +516,11 @@ public class CxxPreprocessAndCompileTest {
             CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER);
 
     ImmutableList<String> command =
-        buildRule
-            .makeMainStep(pathResolver, false)
-            .getArguments(/* allowColorsInDiagnostics */ false);
+        buildRule.makeMainStep(context, false).getArguments(/* allowColorsInDiagnostics */ false);
     assertThat(command, not(hasItem(PreprocessorWithColorSupport.COLOR_FLAG)));
 
     command =
-        buildRule
-            .makeMainStep(pathResolver, false)
-            .getArguments(/* allowColorsInDiagnostics */ true);
+        buildRule.makeMainStep(context, false).getArguments(/* allowColorsInDiagnostics */ true);
     assertThat(command, hasItem(CompilerWithColorSupport.COLOR_FLAG));
   }
 

@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 
 import com.facebook.buck.config.FakeBuckConfig;
+import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
@@ -36,6 +37,7 @@ import com.facebook.buck.cxx.toolchain.MungingDebugPathSanitizer;
 import com.facebook.buck.cxx.toolchain.PicType;
 import com.facebook.buck.cxx.toolchain.PreprocessorProvider;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -106,13 +108,15 @@ public class PrecompiledHeaderFeatureTest {
                   "foo.c", preconfiguredCxxSourceBuilder().build());
       boolean hasPchFlag =
           commandLineContainsPchFlag(
-              DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder)),
+              FakeBuildContext.withSourcePathResolver(
+                  DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder))),
               rule,
               toolType,
               headerFilename);
       boolean hasPrefixFlag =
           commandLineContainsPrefixFlag(
-              DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder)),
+              FakeBuildContext.withSourcePathResolver(
+                  DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder))),
               rule,
               toolType,
               headerFilename);
@@ -301,12 +305,12 @@ public class PrecompiledHeaderFeatureTest {
    * <p>This serves as an indicator that the file is being compiled with PCH enabled.
    */
   private static boolean commandLineContainsPchFlag(
-      SourcePathResolver resolver,
+      BuildContext context,
       CxxPreprocessAndCompile rule,
       CxxToolProvider.Type toolType,
       String headerFilename) {
 
-    ImmutableList<String> flags = rule.makeMainStep(resolver, false).getCommand();
+    ImmutableList<String> flags = rule.makeMainStep(context, false).getCommand();
 
     switch (toolType) {
       case CLANG:
@@ -338,12 +342,12 @@ public class PrecompiledHeaderFeatureTest {
   }
 
   private static boolean commandLineContainsPrefixFlag(
-      SourcePathResolver resolver,
+      BuildContext context,
       CxxPreprocessAndCompile rule,
       CxxToolProvider.Type toolType,
       String headerFilename) {
 
-    ImmutableList<String> flags = rule.makeMainStep(resolver, false).getCommand();
+    ImmutableList<String> flags = rule.makeMainStep(context, false).getCommand();
 
     switch (toolType) {
       case CLANG:

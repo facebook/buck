@@ -187,7 +187,7 @@ class CxxInferCapture extends AbstractBuildRule implements SupportsDependencyFil
           Depfiles.parseAndVerifyDependencies(
               context.getEventBus(),
               getProjectFilesystem(),
-              preprocessorDelegate.getHeaderPathNormalizer(context.getSourcePathResolver()),
+              preprocessorDelegate.getHeaderPathNormalizer(context),
               preprocessorDelegate.getHeaderVerification(),
               getDepFilePath(),
               context.getSourcePathResolver().getRelativePath(input),
@@ -200,9 +200,7 @@ class CxxInferCapture extends AbstractBuildRule implements SupportsDependencyFil
     ImmutableList.Builder<SourcePath> inputs = ImmutableList.builder();
 
     // include all inputs coming from the preprocessor tool.
-    inputs.addAll(
-        preprocessorDelegate.getInputsAfterBuildingLocally(
-            dependencies, context.getSourcePathResolver()));
+    inputs.addAll(preprocessorDelegate.getInputsAfterBuildingLocally(dependencies, context));
 
     // Add the input.
     inputs.add(input);

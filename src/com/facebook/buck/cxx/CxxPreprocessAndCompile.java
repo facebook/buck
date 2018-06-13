@@ -177,9 +177,9 @@ public class CxxPreprocessAndCompile extends ModernBuildRule<CxxPreprocessAndCom
   }
 
   /** Returns the compilation command (used for compdb). */
-  public ImmutableList<String> getCommand(SourcePathResolver resolver) {
+  public ImmutableList<String> getCommand(BuildContext context) {
     return getBuildable()
-        .makeMainStep(resolver, getProjectFilesystem(), getOutputPathResolver(), false)
+        .makeMainStep(context, getProjectFilesystem(), getOutputPathResolver(), false)
         .getCommand();
   }
 
@@ -211,16 +211,16 @@ public class CxxPreprocessAndCompile extends ModernBuildRule<CxxPreprocessAndCom
   }
 
   // see com.facebook.buck.cxx.AbstractCxxSourceRuleFactory.getSandboxedCxxSource()
-  private SourcePath getOriginalInput(SourcePathResolver sourcePathResolver) {
+  private SourcePath getOriginalInput(BuildContext context) {
     // The current logic of handling depfiles for cxx requires that all headers files and source
     // files are "deciphered' from links from symlink tree to original locations.
     // It already happens in Depfiles.parseAndOutputBuckCompatibleDepfile via header normalizer.
     // This special case is for applying the same logic for an input cxx file in the case
     // when cxx.sandbox_sources=true.
     if (getPreprocessorDelegate().isPresent()) {
-      Path absPath = sourcePathResolver.getAbsolutePath(getInput());
+      Path absPath = context.getSourcePathResolver().getAbsolutePath(getInput());
       HeaderPathNormalizer headerPathNormalizer =
-          getPreprocessorDelegate().get().getHeaderPathNormalizer(sourcePathResolver);
+          getPreprocessorDelegate().get().getHeaderPathNormalizer(context);
       Optional<Path> original = headerPathNormalizer.getAbsolutePathForUnnormalizedPath(absPath);
       if (original.isPresent()) {
         return headerPathNormalizer.getSourcePathForAbsolutePath(original.get());
@@ -244,7 +244,7 @@ public class CxxPreprocessAndCompile extends ModernBuildRule<CxxPreprocessAndCom
             Depfiles.parseAndVerifyDependencies(
                 context.getEventBus(),
                 getProjectFilesystem(),
-                preprocessorDelegate.getHeaderPathNormalizer(context.getSourcePathResolver()),
+                preprocessorDelegate.getHeaderPathNormalizer(context),
                 preprocessorDelegate.getHeaderVerification(),
                 getDepFilePath(),
                 getRelativeInputPath(context.getSourcePathResolver()),
@@ -254,9 +254,7 @@ public class CxxPreprocessAndCompile extends ModernBuildRule<CxxPreprocessAndCom
         throw new HumanReadableException(e);
       }
 
-      inputs.addAll(
-          preprocessorDelegate.getInputsAfterBuildingLocally(
-              dependencies, context.getSourcePathResolver()));
+      inputs.addAll(preprocessorDelegate.getInputsAfterBuildingLocally(dependencies, context));
     }
 
     // If present, include all inputs coming from the compiler tool.
@@ -268,14 +266,14 @@ public class CxxPreprocessAndCompile extends ModernBuildRule<CxxPreprocessAndCom
     }
 
     // Add the input.
-    inputs.add(getOriginalInput(context.getSourcePathResolver()));
+    inputs.add(getOriginalInput(context));
 
     return inputs.build();
   }
 
-  public CxxPreprocessAndCompileStep makeMainStep(SourcePathResolver resolver, boolean useArgFile) {
+  public CxxPreprocessAndCompileStep makeMainStep(BuildContext context, boolean useArgFile) {
     return getBuildable()
-        .makeMainStep(resolver, getProjectFilesystem(), getOutputPathResolver(), useArgFile);
+        .makeMainStep(context, getProjectFilesystem(), getOutputPathResolver(), useArgFile);
   }
 
   /** Buildable implementation for CxxPreprocessAndCompile. */
@@ -312,14 +310,15 @@ public class CxxPreprocessAndCompile extends ModernBuildRule<CxxPreprocessAndCom
     }
 
     CxxPreprocessAndCompileStep makeMainStep(
-        SourcePathResolver resolver,
+        BuildContext context,
         ProjectFilesystem filesystem,
         OutputPathResolver outputPathResolver,
         boolean useArgfile) {
+      SourcePathResolver resolver = context.getSourcePathResolver();
       // If we're compiling, this will just be empty.
       HeaderPathNormalizer headerPathNormalizer =
           preprocessDelegate
-              .map(x -> x.getHeaderPathNormalizer(resolver))
+              .map(x -> x.getHeaderPathNormalizer(context))
               .orElseGet(() -> HeaderPathNormalizer.empty(resolver));
 
       CxxToolFlags preprocessorDelegateFlags =
@@ -382,10 +381,7 @@ public class CxxPreprocessAndCompile extends ModernBuildRule<CxxPreprocessAndCom
                       context.getBuildCellRootPath(), filesystem, resolvedOutput.getParent())))
           .add(
               makeMainStep(
-                  context.getSourcePathResolver(),
-                  filesystem,
-                  outputPathResolver,
-                  compilerDelegate.isArgFileSupported()))
+                  context, filesystem, outputPathResolver, compilerDelegate.isArgFileSupported()))
           .build();
     }
   }

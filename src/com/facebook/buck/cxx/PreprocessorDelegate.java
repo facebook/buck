@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -36,6 +37,7 @@ import com.facebook.buck.cxx.toolchain.DebugPathSanitizer;
 import com.facebook.buck.cxx.toolchain.HeaderVerification;
 import com.facebook.buck.cxx.toolchain.PathShortener;
 import com.facebook.buck.cxx.toolchain.Preprocessor;
+import com.facebook.buck.event.LeafEvents;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.RuleKeyAppendableFunction;
 import com.facebook.buck.rules.args.StringArg;
@@ -46,6 +48,7 @@ import com.facebook.buck.rules.modern.ValueTypeInfo;
 import com.facebook.buck.rules.modern.ValueVisitor;
 import com.facebook.buck.rules.modern.impl.ValueTypeInfoFactory;
 import com.facebook.buck.util.RichStream;
+import com.facebook.buck.util.Scope;
 import com.facebook.buck.util.WeakMemoizer;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
@@ -134,31 +137,34 @@ final class PreprocessorDelegate implements RuleKeyAppendable, HasCustomDepsLogi
     return preprocessor;
   }
 
-  public HeaderPathNormalizer getHeaderPathNormalizer(SourcePathResolver pathResolver) {
+  public HeaderPathNormalizer getHeaderPathNormalizer(BuildContext context) {
     return headerPathNormalizer.get(
         () -> {
-          // Cache the value using the first SourcePathResolver that we're called with. We expect
-          // this whole object to be recreated in cases where this computation would produce
-          // different results.
-          HeaderPathNormalizer.Builder builder = new HeaderPathNormalizer.Builder(pathResolver);
-          for (CxxHeaders include : preprocessorFlags.getIncludes()) {
-            include.addToHeaderPathNormalizer(builder);
+          try (Scope ignored = LeafEvents.scope(context.getEventBus(), "header_path_normalizer")) {
+            // Cache the value using the first SourcePathResolver that we're called with. We expect
+            // this whole object to be recreated in cases where this computation would produce
+            // different results.
+            HeaderPathNormalizer.Builder builder =
+                new HeaderPathNormalizer.Builder(context.getSourcePathResolver());
+            for (CxxHeaders include : preprocessorFlags.getIncludes()) {
+              include.addToHeaderPathNormalizer(builder);
+            }
+            for (FrameworkPath frameworkPath : preprocessorFlags.getFrameworkPaths()) {
+              frameworkPath.getSourcePath().ifPresent(builder::addHeaderDir);
+            }
+            if (preprocessorFlags.getPrefixHeader().isPresent()) {
+              SourcePath headerPath = preprocessorFlags.getPrefixHeader().get();
+              builder.addPrefixHeader(headerPath);
+            }
+            if (sandbox.isPresent()) {
+              ExplicitBuildTargetSourcePath root =
+                  ExplicitBuildTargetSourcePath.of(
+                      sandbox.get().getBuildTarget(),
+                      sandbox.get().getProjectFilesystem().relativize(sandbox.get().getRoot()));
+              builder.addSymlinkTree(root, sandbox.get().getLinks());
+            }
+            return builder.build();
           }
-          for (FrameworkPath frameworkPath : preprocessorFlags.getFrameworkPaths()) {
-            frameworkPath.getSourcePath().ifPresent(builder::addHeaderDir);
-          }
-          if (preprocessorFlags.getPrefixHeader().isPresent()) {
-            SourcePath headerPath = preprocessorFlags.getPrefixHeader().get();
-            builder.addPrefixHeader(headerPath);
-          }
-          if (sandbox.isPresent()) {
-            ExplicitBuildTargetSourcePath root =
-                ExplicitBuildTargetSourcePath.of(
-                    sandbox.get().getBuildTarget(),
-                    sandbox.get().getProjectFilesystem().relativize(sandbox.get().getRoot()));
-            builder.addSymlinkTree(root, sandbox.get().getLinks());
-          }
-          return builder.build();
         });
   }
 
@@ -260,7 +266,7 @@ final class PreprocessorDelegate implements RuleKeyAppendable, HasCustomDepsLogi
 
   /** @see SupportsDependencyFileRuleKey */
   public ImmutableList<SourcePath> getInputsAfterBuildingLocally(
-      Iterable<Path> dependencies, SourcePathResolver pathResolver) {
+      Iterable<Path> dependencies, BuildContext context) {
     Stream.Builder<SourcePath> inputsBuilder = Stream.builder();
 
     // Add inputs that we always use.
@@ -284,7 +290,7 @@ final class PreprocessorDelegate implements RuleKeyAppendable, HasCustomDepsLogi
     // correct (e.g. there may be two `SourcePath` includes with the same relative path, but
     // coming from different cells).  Favor correctness in this case and just add *all*
     // `SourcePath`s that have relative paths matching those specific in the dep file.
-    HeaderPathNormalizer headerPathNormalizer = getHeaderPathNormalizer(pathResolver);
+    HeaderPathNormalizer headerPathNormalizer = getHeaderPathNormalizer(context);
     for (Path absolutePath : dependencies) {
       Preconditions.checkState(absolutePath.isAbsolute());
       inputsBuilder.add(headerPathNormalizer.getSourcePathForAbsolutePath(absolutePath));

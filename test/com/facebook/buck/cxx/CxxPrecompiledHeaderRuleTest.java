@@ -26,6 +26,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.config.FakeBuckConfig;
+import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.engine.BuildRuleSuccessType;
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.description.BuildRuleParams;
@@ -134,6 +135,7 @@ public class CxxPrecompiledHeaderRuleTest {
   public final ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(transformer);
   public final SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
   public final SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+  public final BuildContext context = FakeBuildContext.withSourcePathResolver(pathResolver);
 
   public final Compiler compiler = CxxPlatformUtils.DEFAULT_PLATFORM.getCxx().resolve(graphBuilder);
 
@@ -262,7 +264,7 @@ public class CxxPrecompiledHeaderRuleTest {
     CxxPreprocessAndCompile lib1 =
         factory1.requirePreprocessAndCompileBuildRule("lib1.cpp", newSource("lib1.cpp"));
     graphBuilder.addToIndex(lib1);
-    ImmutableList<String> cmd1 = lib1.makeMainStep(pathResolver, false).getCommand();
+    ImmutableList<String> cmd1 = lib1.makeMainStep(context, false).getCommand();
 
     BuildTarget lib2Target = newTarget("//test:lib2");
     CxxSourceRuleFactory factory2 =
@@ -272,7 +274,7 @@ public class CxxPrecompiledHeaderRuleTest {
     CxxPreprocessAndCompile lib2 =
         factory2.requirePreprocessAndCompileBuildRule("lib2.cpp", newSource("lib2.cpp"));
     graphBuilder.addToIndex(lib2);
-    ImmutableList<String> cmd2 = lib2.makeMainStep(pathResolver, false).getCommand();
+    ImmutableList<String> cmd2 = lib2.makeMainStep(context, false).getCommand();
 
     BuildTarget lib3Target = newTarget("//test:lib3");
     CxxSourceRuleFactory factory3 =
@@ -282,7 +284,7 @@ public class CxxPrecompiledHeaderRuleTest {
     CxxPreprocessAndCompile lib3 =
         factory3.requirePreprocessAndCompileBuildRule("lib3.cpp", newSource("lib3.cpp"));
     graphBuilder.addToIndex(lib3);
-    ImmutableList<String> cmd3 = lib3.makeMainStep(pathResolver, false).getCommand();
+    ImmutableList<String> cmd3 = lib3.makeMainStep(context, false).getCommand();
 
     assertTrue(seek(cmd1, "-frtti").size() > 0);
     assertTrue(seek(cmd2, "-frtti").size() > 0);
@@ -327,7 +329,7 @@ public class CxxPrecompiledHeaderRuleTest {
                 .setFlags(ImmutableList.of("-flag-for-source"))
                 .build());
     graphBuilder.addToIndex(lib);
-    ImmutableList<String> libCmd = lib.makeMainStep(pathResolver, false).getCommand();
+    ImmutableList<String> libCmd = lib.makeMainStep(context, false).getCommand();
     assertTrue(seek(libCmd, "-flag-for-source").size() > 0);
     assertTrue(seek(libCmd, "-flag-for-factory").size() > 0);
 
@@ -339,7 +341,7 @@ public class CxxPrecompiledHeaderRuleTest {
     }
     assertNotNull(pchInstance);
     ImmutableList<String> pchCmd =
-        pchInstance.makeMainStep(pathResolver, Paths.get("/tmp/x")).getCommand();
+        pchInstance.makeMainStep(context, Paths.get("/tmp/x")).getCommand();
 
     assertTrue(seek(pchCmd, "-flag-for-source").size() > 0);
     assertTrue(seek(pchCmd, "-flag-for-factory").size() > 0);
@@ -489,8 +491,7 @@ public class CxxPrecompiledHeaderRuleTest {
             .requirePreprocessAndCompileBuildRule("lib.cpp", newSource("lib.cpp"));
 
     graphBuilder.addToIndex(compileLibRule);
-    ImmutableList<String> compileLibCmd =
-        compileLibRule.makeMainStep(pathResolver, false).getCommand();
+    ImmutableList<String> compileLibCmd = compileLibRule.makeMainStep(context, false).getCommand();
 
     assertSame(seek(compileLibCmd, "-include-pch").size(), 0);
 
@@ -517,7 +518,7 @@ public class CxxPrecompiledHeaderRuleTest {
         lib1Factory.requirePreprocessAndCompileBuildRule("lib1.cpp", newSource("lib1.cpp"));
     graphBuilder.addToIndex(lib1);
 
-    ImmutableList<String> lib1Cmd = lib1.makeMainStep(pathResolver, false).getCommand();
+    ImmutableList<String> lib1Cmd = lib1.makeMainStep(context, false).getCommand();
 
     BuildTarget pchTarget = newTarget("//test:pch");
     CxxPrecompiledHeaderTemplate pch =
@@ -532,7 +533,7 @@ public class CxxPrecompiledHeaderRuleTest {
     CxxPreprocessAndCompile lib2 =
         lib2Factory.requirePreprocessAndCompileBuildRule("lib2.cpp", newSource("lib2.cpp"));
     graphBuilder.addToIndex(lib2);
-    ImmutableList<String> lib2Cmd = lib2.makeMainStep(pathResolver, false).getCommand();
+    ImmutableList<String> lib2Cmd = lib2.makeMainStep(context, false).getCommand();
 
     CxxPrecompiledHeader pchInstance = null;
     for (BuildRule dep : lib2.getBuildDeps()) {
@@ -542,7 +543,7 @@ public class CxxPrecompiledHeaderRuleTest {
     }
     assertNotNull(pchInstance);
     ImmutableList<String> pchCmd =
-        pchInstance.makeMainStep(pathResolver, Paths.get("/tmp/z")).getCommand();
+        pchInstance.makeMainStep(context, Paths.get("/tmp/z")).getCommand();
 
     // (pretend that) lib1 has a dep resulting in adding this dir to the include path flags
     assertContains(lib1Cmd, ImmutableList.of("-isystem", "/tmp/sys"));
