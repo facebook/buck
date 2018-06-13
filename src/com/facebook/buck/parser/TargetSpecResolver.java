@@ -19,7 +19,7 @@ package com.facebook.buck.parser;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.model.HasBuildTarget;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
@@ -54,12 +54,13 @@ public class TargetSpecResolver {
    * @return a list of sets of build targets where each set contains all build targets that match a
    *     corresponding {@link TargetNodeSpec}.
    */
-  public ImmutableList<ImmutableSet<BuildTarget>> resolveTargetSpecs(
-      PerBuildState state,
+  public <T extends HasBuildTarget> ImmutableList<ImmutableSet<BuildTarget>> resolveTargetSpecs(
       BuckEventBus eventBus,
       Cell rootCell,
       Iterable<? extends TargetNodeSpec> specs,
-      FlavorEnhancer flavorEnhancer)
+      FlavorEnhancer<T> flavorEnhancer,
+      TargetNodeProviderForSpecResolver<T> targetNodeProvider,
+      TargetNodeFilterForSpecResolver<T> targetNodeFilter)
       throws BuildFileParseException, InterruptedException, IOException {
 
     ParserConfig parserConfig = rootCell.getBuckConfig().getView(ParserConfig.class);
@@ -108,10 +109,11 @@ public class TargetSpecResolver {
           BuildTargetSpec buildTargetSpec = (BuildTargetSpec) spec;
           targetFutures.add(
               Futures.transform(
-                  state.getTargetNodeJob(buildTargetSpec.getBuildTarget()),
+                  targetNodeProvider.getTargetNodeJob(buildTargetSpec.getBuildTarget()),
                   node -> {
                     ImmutableSet<BuildTarget> buildTargets =
-                        applySpecFilter(spec, ImmutableSet.of(node), flavorEnhancer);
+                        applySpecFilter(
+                            spec, ImmutableSet.of(node), flavorEnhancer, targetNodeFilter);
                     Preconditions.checkState(
                         buildTargets.size() == 1,
                         "BuildTargetSpec %s filter discarded target %s, but was not supposed to.",
@@ -124,10 +126,10 @@ public class TargetSpecResolver {
           // Build up a list of all target nodes from the build file.
           targetFutures.add(
               Futures.transform(
-                  state.getAllTargetNodesJob(cell, buildFile),
+                  targetNodeProvider.getAllTargetNodesJob(cell, buildFile),
                   nodes ->
                       new AbstractMap.SimpleEntry<>(
-                          index, applySpecFilter(spec, nodes, flavorEnhancer)),
+                          index, applySpecFilter(spec, nodes, flavorEnhancer, targetNodeFilter)),
                   MoreExecutors.directExecutor()));
         }
       }
@@ -160,14 +162,15 @@ public class TargetSpecResolver {
     return targets.build();
   }
 
-  private ImmutableSet<BuildTarget> applySpecFilter(
+  private <T extends HasBuildTarget> ImmutableSet<BuildTarget> applySpecFilter(
       TargetNodeSpec spec,
-      ImmutableSet<TargetNode<?, ?>> targetNodes,
-      FlavorEnhancer flavorEnhancer) {
+      ImmutableSet<T> targetNodes,
+      FlavorEnhancer<T> flavorEnhancer,
+      TargetNodeFilterForSpecResolver<T> targetNodeFilter) {
     ImmutableSet.Builder<BuildTarget> targets = ImmutableSet.builder();
-    ImmutableMap<BuildTarget, Optional<TargetNode<?, ?>>> partialTargets = spec.filter(targetNodes);
-    for (Map.Entry<BuildTarget, Optional<TargetNode<?, ?>>> partialTarget :
-        partialTargets.entrySet()) {
+    ImmutableMap<BuildTarget, Optional<T>> partialTargets =
+        targetNodeFilter.filter(spec, targetNodes);
+    for (Map.Entry<BuildTarget, Optional<T>> partialTarget : partialTargets.entrySet()) {
       BuildTarget target =
           flavorEnhancer.enhanceFlavors(
               partialTarget.getKey(), partialTarget.getValue(), spec.getTargetType());
@@ -177,10 +180,21 @@ public class TargetSpecResolver {
   }
 
   /** Allows to change flavors of some targets while performing the resolution. */
-  public interface FlavorEnhancer {
+  public interface FlavorEnhancer<T extends HasBuildTarget> {
     BuildTarget enhanceFlavors(
-        BuildTarget target,
-        Optional<TargetNode<?, ?>> targetNode,
-        TargetNodeSpec.TargetType targetType);
+        BuildTarget target, Optional<T> targetNode, TargetNodeSpec.TargetType targetType);
+  }
+
+  /** Provides target nodes of a given type. */
+  public interface TargetNodeProviderForSpecResolver<T extends HasBuildTarget> {
+    ListenableFuture<T> getTargetNodeJob(BuildTarget target) throws BuildTargetException;
+
+    ListenableFuture<ImmutableSet<T>> getAllTargetNodesJob(Cell cell, Path buildFile)
+        throws BuildTargetException;
+  }
+
+  /** Performs filtering of target nodes using a given {@link TargetNodeSpec}. */
+  public interface TargetNodeFilterForSpecResolver<T extends HasBuildTarget> {
+    ImmutableMap<BuildTarget, Optional<T>> filter(TargetNodeSpec spec, Iterable<T> nodes);
   }
 }

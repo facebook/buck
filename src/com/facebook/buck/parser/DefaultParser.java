@@ -412,13 +412,14 @@ public class DefaultParser implements Parser {
           ImmutableSet.copyOf(
               Iterables.concat(
                   targetSpecResolver.resolveTargetSpecs(
-                      state,
                       eventBus,
                       rootCell,
                       targetNodeSpecs,
                       (buildTarget, targetNode, targetType) ->
                           applyDefaultFlavors(
-                              buildTarget, targetNode, targetType, applyDefaultFlavorsMode))));
+                              buildTarget, targetNode, targetType, applyDefaultFlavorsMode),
+                      state.getTargetNodeProviderForSpecResolver(),
+                      (spec, nodes) -> spec.filter(nodes))));
       TargetGraph graph = buildTargetGraph(state, eventBus, buildTargets);
 
       return TargetGraphAndBuildTargets.builder()
@@ -457,12 +458,13 @@ public class DefaultParser implements Parser {
             enableProfiling,
             speculativeParsing)) {
       return targetSpecResolver.resolveTargetSpecs(
-          state,
           eventBus,
           rootCell,
           specs,
           (buildTarget, targetNode, targetType) ->
-              applyDefaultFlavors(buildTarget, targetNode, targetType, applyDefaultFlavorsMode));
+              applyDefaultFlavors(buildTarget, targetNode, targetType, applyDefaultFlavorsMode),
+          state.getTargetNodeProviderForSpecResolver(),
+          (spec, nodes) -> spec.filter(nodes));
     }
   }
 

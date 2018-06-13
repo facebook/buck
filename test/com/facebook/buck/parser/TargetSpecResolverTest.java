@@ -24,6 +24,7 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.knowntypes.DefaultKnownBuildRuleTypesFactory;
 import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypesProvider;
 import com.facebook.buck.event.BuckEventBus;
@@ -78,7 +79,7 @@ public class TargetSpecResolverTest {
   private KnownBuildRuleTypesProvider knownBuildRuleTypesProvider;
   private ListeningExecutorService executorService;
   private TargetSpecResolver targetNodeTargetSpecResolver;
-  private FlavorEnhancer flavorEnhancer;
+  private FlavorEnhancer<TargetNode<?, ?>> flavorEnhancer;
 
   @Before
   public void setUp() throws Exception {
@@ -207,6 +208,11 @@ public class TargetSpecResolverTest {
             false,
             SpeculativeParsing.DISABLED);
     return targetNodeTargetSpecResolver.resolveTargetSpecs(
-        state, eventBus, cell, specs, flavorEnhancer);
+        eventBus,
+        cell,
+        specs,
+        flavorEnhancer,
+        state.getTargetNodeProviderForSpecResolver(),
+        (spec, nodes) -> spec.filter(nodes));
   }
 }

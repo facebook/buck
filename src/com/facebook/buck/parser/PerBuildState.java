@@ -20,6 +20,7 @@ import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypesProvider;
+import com.facebook.buck.parser.TargetSpecResolver.TargetNodeProviderForSpecResolver;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.google.common.base.Preconditions;
@@ -37,6 +38,22 @@ public class PerBuildState implements AutoCloseable {
   private final CellManager cellManager;
   private final RawNodeParsePipeline rawNodeParsePipeline;
   private final TargetNodeParsePipeline targetNodeParsePipeline;
+
+  private final TargetNodeProviderForSpecResolver<TargetNode<?, ?>>
+      targetNodeProviderForSpecResolver =
+          new TargetNodeProviderForSpecResolver<TargetNode<?, ?>>() {
+            @Override
+            public ListenableFuture<TargetNode<?, ?>> getTargetNodeJob(BuildTarget target)
+                throws BuildTargetException {
+              return PerBuildState.this.getTargetNodeJob(target);
+            }
+
+            @Override
+            public ListenableFuture<ImmutableSet<TargetNode<?, ?>>> getAllTargetNodesJob(
+                Cell cell, Path buildFile) throws BuildTargetException {
+              return PerBuildState.this.getAllTargetNodesJob(cell, buildFile);
+            }
+          };
 
   PerBuildState(
       KnownBuildRuleTypesProvider knownBuildRuleTypesProvider,
@@ -91,6 +108,10 @@ public class PerBuildState implements AutoCloseable {
 
   long getParseProcessedBytes() {
     return parseProcessedBytes.get();
+  }
+
+  TargetNodeProviderForSpecResolver<TargetNode<?, ?>> getTargetNodeProviderForSpecResolver() {
+    return targetNodeProviderForSpecResolver;
   }
 
   @Override

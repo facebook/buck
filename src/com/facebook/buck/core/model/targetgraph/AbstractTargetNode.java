@@ -21,6 +21,7 @@ import com.facebook.buck.core.description.DescriptionCache;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
+import com.facebook.buck.core.model.HasBuildTarget;
 import com.facebook.buck.core.rules.type.BuildRuleType;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -48,7 +49,7 @@ import org.immutables.value.Value;
 @BuckStyleImmutable
 @Value.Immutable(builder = false, prehash = true)
 abstract class AbstractTargetNode<T, U extends DescriptionWithTargetGraph<T>>
-    implements Comparable<TargetNode<?, ?>>, ObeysVisibility {
+    implements Comparable<TargetNode<?, ?>>, ObeysVisibility, HasBuildTarget {
 
   @Value.Parameter
   @Override
