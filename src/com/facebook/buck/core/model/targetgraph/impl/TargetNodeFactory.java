@@ -179,6 +179,7 @@ public class TargetNodeFactory implements NodeCopier {
       if (e.getCause() instanceof NoSuchBuildTargetException) {
         throw (NoSuchBuildTargetException) e.getCause();
       }
+      throw e;
     }
   }
 
