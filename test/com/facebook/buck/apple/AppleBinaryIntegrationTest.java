@@ -303,7 +303,7 @@ public class AppleBinaryIntegrationTest {
             BuildTargets.getGenPath(
                 filesystem,
                 BuildTargetFactory.newInstance("//Apps/TestApp:TestApp#macosx-x86_64")
-                    .withAppendedFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
+                    .withAppendedFlavors(AppleDescriptions.INCLUDE_FRAMEWORKS_FLAVOR),
                 "%s"));
     assertThat(Files.isDirectory(Paths.get(outputPath + "-lto")), is(true));
 
@@ -313,7 +313,7 @@ public class AppleBinaryIntegrationTest {
                 filesystem,
                 target.withAppendedFlavors(
                     AppleDebugFormat.DWARF_AND_DSYM.getFlavor(),
-                    AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
+                    AppleDescriptions.INCLUDE_FRAMEWORKS_FLAVOR),
                 "%s/TestApp.app"));
     assertThat(Files.exists(bundlePath), is(true));
     Path binaryPath = bundlePath.resolve("Contents/MacOS/TestApp");
@@ -321,6 +321,14 @@ public class AppleBinaryIntegrationTest {
     assertThat(
         workspace.runCommand("file", binaryPath.toString()).getStdout().get(),
         containsString("executable"));
+
+    Path frameworkBundlePath = bundlePath.resolve("Contents/Frameworks/TestLibrary.framework");
+    assertThat(Files.exists(frameworkBundlePath), is(true));
+    Path frameworkBinaryPath = frameworkBundlePath.resolve("TestLibrary");
+    assertThat(Files.exists(frameworkBinaryPath), is(true));
+    assertThat(
+        workspace.runCommand("file", frameworkBinaryPath.toString()).getStdout().get(),
+        containsString("dynamically linked shared library"));
   }
 
   @Test
@@ -483,7 +491,7 @@ public class AppleBinaryIntegrationTest {
                 filesystem,
                 target.withAppendedFlavors(
                     AppleDebugFormat.DWARF_AND_DSYM.getFlavor(),
-                    AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
+                    AppleDescriptions.INCLUDE_FRAMEWORKS_FLAVOR),
                 "%s/TestApp.app"));
     assertThat(Files.exists(bundlePath), is(true));
     Path binaryPath = bundlePath.resolve("Contents/MacOS/TestApp");
@@ -491,6 +499,13 @@ public class AppleBinaryIntegrationTest {
     assertThat(
         workspace.runCommand("file", binaryPath.toString()).getStdout().get(),
         containsString("executable"));
+    Path frameworkBundlePath = bundlePath.resolve("Contents/Frameworks/TestLibrary.framework");
+    assertThat(Files.exists(frameworkBundlePath), is(true));
+    Path frameworkBinaryPath = frameworkBundlePath.resolve("TestLibrary");
+    assertThat(Files.exists(frameworkBinaryPath), is(true));
+    assertThat(
+        workspace.runCommand("file", frameworkBinaryPath.toString()).getStdout().get(),
+        containsString("dynamically linked shared library"));
   }
 
   @Test

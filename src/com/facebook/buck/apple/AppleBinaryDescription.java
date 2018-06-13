@@ -337,15 +337,28 @@ public class AppleBinaryDescription
       return graphBuilder.requireRule(
           buildTarget.withAppendedFlavors(flavoredDebugFormat.getFlavor()));
     }
+    CxxPlatformsProvider cxxPlatformsProvider = getCxxPlatformsProvider();
+    FlavorDomain<CxxPlatform> cxxPlatforms = cxxPlatformsProvider.getCxxPlatforms();
+    Flavor defaultCxxFlavor = cxxPlatformsProvider.getDefaultCxxPlatform().getFlavor();
     if (!AppleDescriptions.INCLUDE_FRAMEWORKS.getValue(buildTarget).isPresent()) {
+      CxxPlatform cxxPlatform =
+          cxxPlatforms.getValue(buildTarget).orElse(cxxPlatforms.getValue(defaultCxxFlavor));
+      ApplePlatform applePlatform =
+          appleCxxPlatformsFlavorDomain
+              .getValue(cxxPlatform.getFlavor())
+              .getAppleSdk()
+              .getApplePlatform();
+      if (applePlatform.getAppIncludesFrameworks()) {
+        return graphBuilder.requireRule(
+            buildTarget.withAppendedFlavors(AppleDescriptions.INCLUDE_FRAMEWORKS_FLAVOR));
+      }
       return graphBuilder.requireRule(
           buildTarget.withAppendedFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR));
     }
     BuildTarget binaryTarget = buildTarget.withoutFlavors(APP_FLAVOR);
-    CxxPlatformsProvider cxxPlatformsProvider = getCxxPlatformsProvider();
     return AppleDescriptions.createAppleBundle(
-        cxxPlatformsProvider.getCxxPlatforms(),
-        cxxPlatformsProvider.getDefaultCxxPlatform().getFlavor(),
+        cxxPlatforms,
+        defaultCxxFlavor,
         appleCxxPlatformsFlavorDomain,
         targetGraph,
         buildTarget,

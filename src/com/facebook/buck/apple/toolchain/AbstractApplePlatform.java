@@ -80,6 +80,7 @@ abstract class AbstractApplePlatform implements Comparable<AbstractApplePlatform
       ApplePlatform.builder()
           .setName("macosx")
           .setArchitectures(ImmutableList.of("i386", "x86_64"))
+          .setAppIncludesFrameworks(true)
           .build();
 
   /** The full name of the platform. For example: {@code macosx}. */
@@ -110,6 +111,11 @@ abstract class AbstractApplePlatform implements Comparable<AbstractApplePlatform
   }
 
   public abstract Optional<String> getStubBinaryPath();
+
+  @Value.Default
+  public boolean getAppIncludesFrameworks() {
+    return false;
+  }
 
   public ApplePlatformType getType() {
     return ApplePlatformType.of(getName());
