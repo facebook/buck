@@ -110,10 +110,7 @@ public class TestCommand extends BuildCommand {
 
   private static final Logger LOG = Logger.get(TestCommand.class);
 
-  @Option(
-      name = "--all",
-      usage =
-          "Whether all of the tests should be run. " + "If no targets are given, --all is implied")
+  @Option(name = "--all", usage = "Whether all of the tests should be run. ")
   private boolean all = false;
 
   @Option(name = "--code-coverage", usage = "Whether code coverage information will be generated.")
@@ -447,8 +444,20 @@ public class TestCommand extends BuildCommand {
   }
 
   @Override
+  protected void assertArguments(CommandRunnerParams params) {
+    // If the person said to run everything, run everything.
+    if (all) {
+      return;
+    }
+    super.assertArguments(params);
+  }
+
+  @Override
   public ExitCode runWithoutHelp(CommandRunnerParams params)
       throws IOException, InterruptedException {
+
+    assertArguments(params);
+
     LOG.debug("Running with arguments %s", getArguments());
 
     try (CommandThreadManager pool =

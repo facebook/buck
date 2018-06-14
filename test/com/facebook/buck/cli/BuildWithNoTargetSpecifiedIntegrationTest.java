@@ -42,12 +42,13 @@ public class BuildWithNoTargetSpecifiedIntegrationTest {
     workspace.setUp();
 
     ProcessResult result = workspace.runBuckCommand("build");
-    result.assertExitCode("buck build should exit with an error.", ExitCode.COMMANDLINE_ERROR);
+    result.assertExitCode("buck build should exit with an error. ", ExitCode.COMMANDLINE_ERROR);
 
     assertThat(
         "`buck build` should display an error message if no targets are provided.",
         result.getStderr(),
-        containsString("Must specify at least one build target.\n"));
+        containsString(
+            "Must specify at least one build target. See https://buckbuild.com/concept/build_target_pattern.html\n"));
   }
 
   @Test
@@ -66,7 +67,7 @@ public class BuildWithNoTargetSpecifiedIntegrationTest {
         containsString(
             Joiner.on('\n')
                     .join(
-                        "Must specify at least one build target.",
+                        "Must specify at least one build target. See https://buckbuild.com/concept/build_target_pattern.html",
                         "Try building one of the following targets:",
                         "myapp")
                 + '\n'));
@@ -95,7 +96,7 @@ public class BuildWithNoTargetSpecifiedIntegrationTest {
         containsString(
             Joiner.on('\n')
                     .join(
-                        "Must specify at least one build target.",
+                        "Must specify at least one build target. See https://buckbuild.com/concept/build_target_pattern.html",
                         "Try building one of the following targets:",
                         "myapp my_app mi_app mon_app mein_app")
                 + '\n'));
@@ -124,7 +125,7 @@ public class BuildWithNoTargetSpecifiedIntegrationTest {
         containsString(
             Joiner.on('\n')
                     .join(
-                        "Must specify at least one build target.",
+                        "Must specify at least one build target. See https://buckbuild.com/concept/build_target_pattern.html",
                         "Try building one of the following targets:",
                         "myapp my_app mi_app mon_app mein_app alias0 alias1 alias2 alias3 alias4")
                 + '\n'));

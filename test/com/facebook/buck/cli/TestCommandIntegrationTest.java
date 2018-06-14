@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cli;
 
+import static org.hamcrest.junit.MatcherAssert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.testutil.ProcessResult;
@@ -23,11 +24,16 @@ import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.PropertySaver;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.ExitCode;
 import com.google.common.collect.ImmutableMap;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
+import java.util.regex.Pattern;
+import org.hamcrest.Matchers;
+import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -115,5 +121,38 @@ public class TestCommandIntegrationTest {
     }
 
     assertTrue(Files.exists(workspace.getPath(CODE_COVERAGE_SUBPATH).resolve("coverage.xml")));
+  }
+
+  @Test
+  public void testFailsIfNoTestsProvided() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "test_coverage", tmp);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckCommand("test");
+    result.assertExitCode(null, ExitCode.COMMANDLINE_ERROR);
+    assertThat(
+        result.getStderr(),
+        Matchers.containsString(
+            "Must specify at least one build target. See https://buckbuild.com/concept/build_target_pattern.html"));
+  }
+
+  @Test
+  public void testRunsEverythingIfAllRequested() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "test_coverage", tmp);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckCommand("test", "--all");
+    result.assertSuccess();
+    Assert.assertThat(
+        result.getStderr(),
+        Matchers.matchesPattern(
+            Pattern.compile(".*PASS.*?MockTest\n.*", Pattern.MULTILINE | Pattern.DOTALL)));
+    Assert.assertThat(
+        result.getStderr(),
+        Matchers.matchesPattern(
+            Pattern.compile(".*PASS.*?MockTest2\n.*", Pattern.MULTILINE | Pattern.DOTALL)));
+    Assert.assertThat(result.getStderr(), Matchers.containsString("TESTS PASSED"));
   }
 }

@@ -36,6 +36,7 @@ import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.ThriftRuleKeyDeserializer;
 import com.facebook.buck.util.environment.Platform;
 import java.io.IOException;
@@ -46,6 +47,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.apache.thrift.TException;
 import org.hamcrest.Matchers;
+import org.hamcrest.junit.MatcherAssert;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -288,5 +290,19 @@ public class BuildCommandIntegrationTest {
 
     assertFalse(Files.exists(workspace.getPath("cxx/buck-out")));
     assertFalse(Files.exists(workspace.getPath("java/buck-out")));
+  }
+
+  @Test
+  public void testFailsIfNoTargetsProvided() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "just_build", tmp);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckCommand("build");
+    result.assertExitCode(null, ExitCode.COMMANDLINE_ERROR);
+    MatcherAssert.assertThat(
+        result.getStderr(),
+        Matchers.containsString(
+            "Must specify at least one build target. See https://buckbuild.com/concept/build_target_pattern.html"));
   }
 }

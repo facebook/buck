@@ -436,7 +436,8 @@ public class BuildCommand extends AbstractCommand {
     if (!getArguments().isEmpty()) {
       return;
     }
-    String message = "Must specify at least one build target.";
+    String message =
+        "Must specify at least one build target. See https://buckbuild.com/concept/build_target_pattern.html";
     ImmutableSet<String> aliases = params.getBuckConfig().getAliases().keySet();
     if (!aliases.isEmpty()) {
       // If there are aliases defined in .buckconfig, suggest that the user
