@@ -19,6 +19,7 @@ package com.facebook.buck.core.model.targetgraph.impl;
 import com.facebook.buck.core.cell.resolver.CellPathResolver;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.description.attr.ImplicitInputsInferringDescription;
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
@@ -108,6 +109,7 @@ public class TargetNodeFactory implements NodeCopier {
           && info.hasElementTypes(BuildTarget.class, SourcePath.class, Path.class)
           && !info.getName().equals("deps")) {
         detectBuildTargetsAndPathsForConstructorArg(
+            buildTarget,
             cellRoots,
             info.isTargetGraphOnlyDep() ? targetGraphOnlyDepsBuilder : extraDepsBuilder,
             pathsBuilder,
@@ -152,6 +154,7 @@ public class TargetNodeFactory implements NodeCopier {
   }
 
   private static void detectBuildTargetsAndPathsForConstructorArg(
+      BuildTarget buildTarget,
       CellPathResolver cellRoots,
       ImmutableSet.Builder<BuildTarget> depsBuilder,
       ImmutableSet.Builder<Path> pathsBuilder,
@@ -179,7 +182,8 @@ public class TargetNodeFactory implements NodeCopier {
       if (e.getCause() instanceof NoSuchBuildTargetException) {
         throw (NoSuchBuildTargetException) e.getCause();
       }
-      throw e;
+      throw new HumanReadableException(
+          e, "Cannot traverse attribute %s of %s: %s", info.getName(), buildTarget, e.getMessage());
     }
   }
 

@@ -20,6 +20,7 @@ import static com.facebook.buck.core.cell.TestCellBuilder.createCellRoots;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
@@ -27,6 +28,7 @@ import com.facebook.buck.core.description.BuildRuleParams;
 import com.facebook.buck.core.description.arg.CommonDescriptionArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.description.arg.Hint;
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
 import com.facebook.buck.core.rules.BuildRule;
@@ -40,6 +42,7 @@ import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.ParamInfoException;
+import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -132,6 +135,20 @@ public class TargetNodeTest {
     assertThat(isVisible, is(false));
   }
 
+  @Test
+  public void invalidArgumentsThrowAnException() {
+    ImmutableMap<String, Object> rawNode =
+        ImmutableMap.of("name", TARGET_THREE.getShortName(), "cmd", "$(query_outputs '123')");
+
+    try {
+      createTargetNode(TARGET_THREE, ImmutableSet.of(), rawNode);
+    } catch (HumanReadableException e) {
+      assertEquals(
+          "Cannot traverse attribute cmd of //example/path:three: Error parsing query: 123",
+          e.getHumanReadableErrorMessage());
+    }
+  }
+
   @BuckStyleImmutable
   @Value.Immutable
   interface AbstractExampleDescriptionArg extends CommonDescriptionArg, HasDeclaredDeps {
@@ -146,6 +163,8 @@ public class TargetNodeTest {
 
     @Hint(isDep = false)
     Optional<BuildTarget> getTarget();
+
+    Optional<StringWithMacros> getCmd();
   }
 
   public static class ExampleDescription
