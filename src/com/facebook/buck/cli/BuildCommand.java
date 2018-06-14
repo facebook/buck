@@ -185,50 +185,44 @@ public class BuildCommand extends AbstractCommand {
 
   @Nullable
   @Option(
-    name = JUST_BUILD_LONG_ARG,
-    usage = "For debugging, limits the build to a specific target in the action graph.",
-    hidden = true
-  )
+      name = JUST_BUILD_LONG_ARG,
+      usage = "For debugging, limits the build to a specific target in the action graph.",
+      hidden = true)
   private String justBuildTarget = null;
 
   @Option(
-    name = DEEP_LONG_ARG,
-    usage =
-        "Perform a \"deep\" build, which makes the output of all transitive dependencies"
-            + " available.",
-    forbids = SHALLOW_LONG_ARG
-  )
+      name = DEEP_LONG_ARG,
+      usage =
+          "Perform a \"deep\" build, which makes the output of all transitive dependencies"
+              + " available.",
+      forbids = SHALLOW_LONG_ARG)
   private boolean deepBuild = false;
 
   @Option(
-    name = POPULATE_CACHE_LONG_ARG,
-    usage =
-        "Performs a cache population, which makes the output of all unchanged "
-            + "transitive dependencies available (if these outputs are available "
-            + "in the remote cache). Does not build changed or unavailable dependencies locally.",
-    forbids = {SHALLOW_LONG_ARG, DEEP_LONG_ARG}
-  )
+      name = POPULATE_CACHE_LONG_ARG,
+      usage =
+          "Performs a cache population, which makes the output of all unchanged "
+              + "transitive dependencies available (if these outputs are available "
+              + "in the remote cache). Does not build changed or unavailable dependencies locally.",
+      forbids = {SHALLOW_LONG_ARG, DEEP_LONG_ARG})
   private boolean populateCacheOnly = false;
 
   @Option(
-    name = SHALLOW_LONG_ARG,
-    usage =
-        "Perform a \"shallow\" build, which only makes the output of all explicitly listed"
-            + " targets available.",
-    forbids = DEEP_LONG_ARG
-  )
+      name = SHALLOW_LONG_ARG,
+      usage =
+          "Perform a \"shallow\" build, which only makes the output of all explicitly listed"
+              + " targets available.",
+      forbids = DEEP_LONG_ARG)
   private boolean shallowBuild = false;
 
   @Option(
-    name = REPORT_ABSOLUTE_PATHS,
-    usage = "Reports errors using absolute paths to the source files instead of relative paths."
-  )
+      name = REPORT_ABSOLUTE_PATHS,
+      usage = "Reports errors using absolute paths to the source files instead of relative paths.")
   private boolean shouldReportAbsolutePaths = false;
 
   @Option(
-    name = SHOW_OUTPUT_LONG_ARG,
-    usage = "Print the path to the output for each of the built rules relative to the cell."
-  )
+      name = SHOW_OUTPUT_LONG_ARG,
+      usage = "Print the path to the output for each of the built rules relative to the cell.")
   private boolean showOutput;
 
   @Option(name = OUT_LONG_ARG, usage = "Copies the output of the lone build target to this path.")
@@ -236,9 +230,8 @@ public class BuildCommand extends AbstractCommand {
   private Path outputPathForSingleBuildTarget;
 
   @Option(
-    name = SHOW_FULL_OUTPUT_LONG_ARG,
-    usage = "Print the absolute path to the output for each of the built rules."
-  )
+      name = SHOW_FULL_OUTPUT_LONG_ARG,
+      usage = "Print the absolute path to the output for each of the built rules.")
   private boolean showFullOutput;
 
   @Option(name = SHOW_JSON_OUTPUT_LONG_ARG, usage = "Show output in JSON format.")
@@ -251,16 +244,14 @@ public class BuildCommand extends AbstractCommand {
   private boolean showRuleKey;
 
   @Option(
-    name = LOCAL_BUILD_LONG_ARG,
-    usage = "Disable distributed build (overrides --distributed)."
-  )
+      name = LOCAL_BUILD_LONG_ARG,
+      usage = "Disable distributed build (overrides --distributed).")
   private boolean forceDisableDistributedBuild = false;
 
   @Option(
-    name = DISTRIBUTED_LONG_ARG,
-    usage = "Whether to run in distributed build mode. (experimental)",
-    hidden = true
-  )
+      name = DISTRIBUTED_LONG_ARG,
+      usage = "Whether to run in distributed build mode. (experimental)",
+      hidden = true)
   private boolean useDistributedBuild = false; // Must be accessed via the getter method.
 
   private boolean autoDistBuild = false;
@@ -268,25 +259,22 @@ public class BuildCommand extends AbstractCommand {
 
   @Nullable
   @Option(
-    name = DistBuildRunCommand.BUILD_STATE_FILE_ARG_NAME,
-    usage = DistBuildRunCommand.BUILD_STATE_FILE_ARG_USAGE,
-    hidden = true
-  )
+      name = DistBuildRunCommand.BUILD_STATE_FILE_ARG_NAME,
+      usage = DistBuildRunCommand.BUILD_STATE_FILE_ARG_USAGE,
+      hidden = true)
   private String distributedBuildStateFile = null;
 
   @Nullable
   @Option(
-    name = BUCK_BINARY_STRING_ARG,
-    usage = "Buck binary to use on a distributed build instead of the current git version.",
-    hidden = true
-  )
+      name = BUCK_BINARY_STRING_ARG,
+      usage = "Buck binary to use on a distributed build instead of the current git version.",
+      hidden = true)
   private String buckBinary = null;
 
   @Nullable
   @Option(
-    name = RULEKEY_LOG_PATH_LONG_ARG,
-    usage = "If set, log a binary representation of rulekeys to this file."
-  )
+      name = RULEKEY_LOG_PATH_LONG_ARG,
+      usage = "If set, log a binary representation of rulekeys to this file.")
   private String ruleKeyLogPath = null;
 
   @Argument private List<String> arguments = new ArrayList<>();

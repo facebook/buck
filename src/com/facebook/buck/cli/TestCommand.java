@@ -111,19 +111,18 @@ public class TestCommand extends BuildCommand {
   private static final Logger LOG = Logger.get(TestCommand.class);
 
   @Option(
-    name = "--all",
-    usage = "Whether all of the tests should be run. " + "If no targets are given, --all is implied"
-  )
+      name = "--all",
+      usage =
+          "Whether all of the tests should be run. " + "If no targets are given, --all is implied")
   private boolean all = false;
 
   @Option(name = "--code-coverage", usage = "Whether code coverage information will be generated.")
   private boolean isCodeCoverageEnabled = false;
 
   @Option(
-    name = "--code-coverage-format",
-    usage = "Comma separated Formats to be used for coverage",
-    handler = CoverageReportFormatsHandler.class
-  )
+      name = "--code-coverage-format",
+      usage = "Comma separated Formats to be used for coverage",
+      handler = CoverageReportFormatsHandler.class)
   private CoverageReportFormat[] coverageReportFormats =
       new CoverageReportFormat[] {CoverageReportFormat.HTML};
 
@@ -131,9 +130,8 @@ public class TestCommand extends BuildCommand {
   private String coverageReportTitle = "Code-Coverage Analysis";
 
   @Option(
-    name = "--debug",
-    usage = "Whether the test will start suspended with a JDWP debug port of 5005"
-  )
+      name = "--debug",
+      usage = "Whether the test will start suspended with a JDWP debug port of 5005")
   private boolean isDebugEnabled = false;
 
   @Option(name = "--xml", usage = "Where to write test output as XML.")
@@ -141,9 +139,8 @@ public class TestCommand extends BuildCommand {
   private String pathToXmlTestOutput = null;
 
   @Option(
-    name = "--run-with-java-agent",
-    usage = "Whether the test will start a java profiling agent"
-  )
+      name = "--run-with-java-agent",
+      usage = "Whether the test will start a java profiling agent")
   @Nullable
   private String pathToJavaAgent = null;
 
@@ -154,37 +151,33 @@ public class TestCommand extends BuildCommand {
   // TODO(#9061229): See if we can remove this option entirely. For now, the
   // underlying code has been removed, and this option is ignored.
   @Option(
-    name = "--ignore-when-dependencies-fail",
-    aliases = {"-i"},
-    usage = "Deprecated option (ignored).",
-    hidden = true
-  )
+      name = "--ignore-when-dependencies-fail",
+      aliases = {"-i"},
+      usage = "Deprecated option (ignored).",
+      hidden = true)
   @SuppressWarnings("PMD.UnusedPrivateField")
   private boolean isIgnoreFailingDependencies;
 
   @Option(
-    name = "--shuffle",
-    usage =
-        "Randomize the order in which test classes are executed."
-            + "WARNING: only works for Java tests!"
-  )
+      name = "--shuffle",
+      usage =
+          "Randomize the order in which test classes are executed."
+              + "WARNING: only works for Java tests!")
   private boolean isShufflingTests;
 
   @Option(
-    name = "--exclude-transitive-tests",
-    usage =
-        "Only run the tests targets that were specified on the command line (without adding "
-            + "more tests by following dependencies)."
-  )
+      name = "--exclude-transitive-tests",
+      usage =
+          "Only run the tests targets that were specified on the command line (without adding "
+              + "more tests by following dependencies).")
   private boolean shouldExcludeTransitiveTests;
 
   @Option(
-    name = "--test-runner-env",
-    usage =
-        "Add or override an environment variable passed to the test runner. Later occurrences "
-            + "override earlier occurrences. Currently this only support Apple(ios/osx) tests.",
-    handler = EnvironmentOverrideOptionHandler.class
-  )
+      name = "--test-runner-env",
+      usage =
+          "Add or override an environment variable passed to the test runner. Later occurrences "
+              + "override earlier occurrences. Currently this only support Apple(ios/osx) tests.",
+      handler = EnvironmentOverrideOptionHandler.class)
   private Map<String, String> environmentOverrides = new HashMap<>();
 
   @AdditionalOptions @SuppressFieldNotInitialized private AdbCommandLineOptions adbOptions;
@@ -197,14 +190,13 @@ public class TestCommand extends BuildCommand {
   @AdditionalOptions @SuppressFieldNotInitialized private TestLabelOptions testLabelOptions;
 
   @Option(
-    name = "--",
-    usage =
-        "When an external test runner is specified to be used (in the .buckconfig file), "
-            + "all options specified after -- get forwarded directly to the external test runner. "
-            + "Available options after -- are specific to that particular test runner and you may "
-            + "also want to consult its help pages.",
-    handler = ConsumeAllOptionsHandler.class
-  )
+      name = "--",
+      usage =
+          "When an external test runner is specified to be used (in the .buckconfig file), "
+              + "all options specified after -- get forwarded directly to the external test runner. "
+              + "Available options after -- are specific to that particular test runner and you may "
+              + "also want to consult its help pages.",
+      handler = ConsumeAllOptionsHandler.class)
   private List<String> withDashArguments = new ArrayList<>();
 
   public boolean isRunAllTests() {
