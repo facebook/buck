@@ -41,6 +41,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.LinkedHashSet;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
 
@@ -160,6 +161,11 @@ public class DarwinLinker extends DelegatingTool implements Linker, HasLinkerMap
   @Override
   public SharedLibraryLoadingType getSharedLibraryLoadingType() {
     return SharedLibraryLoadingType.RPATH;
+  }
+
+  @Override
+  public Optional<ExtraOutputsDeriver> getExtraOutputsDeriver() {
+    return Optional.empty();
   }
 
   /**

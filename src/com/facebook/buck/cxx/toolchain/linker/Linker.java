@@ -29,6 +29,7 @@ import com.facebook.buck.rules.args.Arg;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
+import java.util.Optional;
 
 /**
  * An object wrapping a linker, providing its source path and an interface to decorate arguments
@@ -118,6 +119,14 @@ public interface Linker extends Tool {
   boolean hasFilePathSizeLimitations();
 
   SharedLibraryLoadingType getSharedLibraryLoadingType();
+
+  Optional<ExtraOutputsDeriver> getExtraOutputsDeriver();
+
+  /** Derives extra outputs from linker args */
+  interface ExtraOutputsDeriver {
+    ImmutableMap<String, Path> deriveExtraOutputsFromArgs(
+        ImmutableList<String> linkerArgs, Path output);
+  }
 
   /** The various ways to link an output file. */
   enum LinkType {

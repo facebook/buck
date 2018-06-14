@@ -24,6 +24,7 @@ import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.LinkerMapMode;
@@ -31,6 +32,7 @@ import com.facebook.buck.cxx.toolchain.linker.HasImportLibrary;
 import com.facebook.buck.cxx.toolchain.linker.HasLinkerMap;
 import com.facebook.buck.cxx.toolchain.linker.HasThinLTO;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
+import com.facebook.buck.cxx.toolchain.linker.Linker.ExtraOutputsDeriver;
 import com.facebook.buck.cxx.toolchain.linker.Linker.LinkableDepType;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
@@ -114,6 +116,25 @@ public class CxxLinkableEnhancer {
     // Add all arguments needed to link in the C/C++ platform runtime.
     argsBuilder.addAll(StringArg.from(cxxPlatform.getRuntimeLdflags().get(runtimeDepType)));
 
+    ImmutableList<Arg> ldArgs = argsBuilder.build();
+    ImmutableMap<String, Path> allExtraOutputs = extraOutputs;
+
+    Optional<ExtraOutputsDeriver> extraOutputsDeriver = linker.getExtraOutputsDeriver();
+    if (extraOutputsDeriver.isPresent()) {
+      ImmutableMap<String, Path> derivedExtraOutputs =
+          extraOutputsDeriver
+              .get()
+              .deriveExtraOutputsFromArgs(
+                  Arg.stringify(ldArgs, DefaultSourcePathResolver.from(ruleFinder)), output);
+      if (!derivedExtraOutputs.isEmpty()) {
+        allExtraOutputs =
+            ImmutableMap.<String, Path>builder()
+                .putAll(extraOutputs)
+                .putAll(derivedExtraOutputs)
+                .build();
+      }
+    }
+
     return new CxxLink(
         target,
         projectFilesystem,
@@ -121,8 +142,8 @@ public class CxxLinkableEnhancer {
         cellPathResolver,
         linker,
         output,
-        extraOutputs,
-        argsBuilder.build(),
+        allExtraOutputs,
+        ldArgs,
         postprocessor,
         cxxBuckConfig.getLinkScheduleInfo(),
         cxxBuckConfig.shouldCacheLinks(),

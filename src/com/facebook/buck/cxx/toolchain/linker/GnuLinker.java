@@ -50,6 +50,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 /** A specialization of {@link Linker} containing information specific to the GNU implementation. */
@@ -160,6 +161,11 @@ public class GnuLinker extends DelegatingTool implements Linker {
   @Override
   public SharedLibraryLoadingType getSharedLibraryLoadingType() {
     return SharedLibraryLoadingType.RPATH;
+  }
+
+  @Override
+  public Optional<ExtraOutputsDeriver> getExtraOutputsDeriver() {
+    return Optional.empty();
   }
 
   // Write all symbols to a linker script, using the `EXTERN` command to mark them as undefined

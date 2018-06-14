@@ -24,6 +24,7 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.tool.DelegatingTool;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.file.FileScrubber;
+import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.StringArg;
@@ -31,11 +32,28 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 
 /**
  * A specialization of {@link Linker} containing information specific to the Windows implementation.
  */
 public class WindowsLinker extends DelegatingTool implements Linker, HasImportLibrary {
+
+  private ExtraOutputsDeriver WINDOWS_EXTRA_OUTPUTS_DERIVER =
+      new ExtraOutputsDeriver() {
+        @Override
+        public ImmutableMap<String, Path> deriveExtraOutputsFromArgs(
+            ImmutableList<String> linkerArgs, Path output) {
+          boolean isPdbGenerated = linkerArgs.stream().anyMatch("/DEBUG"::equals);
+          if (isPdbGenerated) {
+            String pdbFilename = MorePaths.getNameWithoutExtension(output) + ".pdb";
+            Path pdbOutput = output.getParent().resolve(pdbFilename);
+            return ImmutableMap.of("pdb", pdbOutput);
+          }
+          return ImmutableMap.of();
+        }
+      };
+
   public WindowsLinker(Tool tool) {
     super(tool);
   }
@@ -123,6 +141,11 @@ public class WindowsLinker extends DelegatingTool implements Linker, HasImportLi
   @Override
   public SharedLibraryLoadingType getSharedLibraryLoadingType() {
     return SharedLibraryLoadingType.THE_SAME_DIRECTORY;
+  }
+
+  @Override
+  public Optional<ExtraOutputsDeriver> getExtraOutputsDeriver() {
+    return Optional.of(WINDOWS_EXTRA_OUTPUTS_DERIVER);
   }
 
   @Override

@@ -5,6 +5,18 @@ cxx_binary(
     deps = ["//implib:implib"],
 )
 
+cxx_binary(
+    name = "app_debug",
+    srcs = ["MathClient.cpp"],
+    compiler_flags = ["/Z7"],
+    link_style = "shared",
+    linker_flags = [
+        "/DEBUG",
+        "/INCREMENTAL:NO",
+    ],
+    deps = ["//implib:implib_debug"],
+)
+
 genrule(
     name = "log",
     out = "log.txt",

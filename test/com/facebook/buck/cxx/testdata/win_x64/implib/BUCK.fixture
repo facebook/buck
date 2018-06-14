@@ -12,3 +12,26 @@ cxx_library(
     preferred_linkage = "shared",
     visibility = ["PUBLIC"],
 )
+
+cxx_library(
+    name = "implib_debug",
+    srcs = [
+        "MathLibrary.cpp",
+    ],
+    compiler_flags = [
+        "/DMATHLIBRARY_EXPORTS",
+        "/Z7",
+    ],
+    exported_headers = [
+        "MathLibrary.h",
+    ],
+    header_namespace = "",
+    link_style = "shared",
+    linker_flags = [
+        "/DEBUG",
+        "/INCREMENTAL:NO",
+    ],
+    preferred_linkage = "shared",
+    soname = "implib_debug.dll",
+    visibility = ["PUBLIC"],
+)

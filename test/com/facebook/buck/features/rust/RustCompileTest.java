@@ -178,6 +178,11 @@ public class RustCompileTest {
       }
 
       @Override
+      public Optional<ExtraOutputsDeriver> getExtraOutputsDeriver() {
+        return Optional.empty();
+      }
+
+      @Override
       public ImmutableList<String> getCommandPrefix(SourcePathResolver resolver) {
         return ImmutableList.of();
       }
