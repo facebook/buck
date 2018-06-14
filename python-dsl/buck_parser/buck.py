@@ -1481,9 +1481,9 @@ def process_with_diagnostics(build_file_query, build_file_processor, to_parent,
             project_prefix,
             build_file,
             diagnostics=diagnostics)
-    except Exception as e:
-        # Control-C and sys.exit() don't emit diagnostics.
-        if not (e is KeyboardInterrupt or e is SystemExit):
+    except BaseException as e:
+        # sys.exit() don't emit diagnostics.
+        if e is not SystemExit:
             if isinstance(e, WatchmanError):
                 source = 'watchman'
                 message = e.msg
