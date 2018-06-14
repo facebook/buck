@@ -31,8 +31,10 @@ import java.nio.file.Path;
 
 public class AndroidResourceBuilder
     extends AbstractNodeBuilder<
-        AndroidResourceDescriptionArg.Builder, AndroidResourceDescriptionArg,
-        AndroidResourceDescription, AndroidResource> {
+        AndroidResourceDescriptionArg.Builder,
+        AndroidResourceDescriptionArg,
+        AndroidResourceDescription,
+        AndroidResource> {
 
   private AndroidResourceBuilder(BuildTarget target, ProjectFilesystem filesystem) {
     super(

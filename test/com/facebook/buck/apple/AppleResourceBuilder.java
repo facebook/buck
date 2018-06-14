@@ -24,7 +24,9 @@ import java.util.Set;
 
 public class AppleResourceBuilder
     extends AbstractNodeBuilder<
-        AppleResourceDescriptionArg.Builder, AppleResourceDescriptionArg, AppleResourceDescription,
+        AppleResourceDescriptionArg.Builder,
+        AppleResourceDescriptionArg,
+        AppleResourceDescription,
         BuildRule> {
 
   protected AppleResourceBuilder(BuildTarget target) {

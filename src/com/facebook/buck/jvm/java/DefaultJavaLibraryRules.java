@@ -49,10 +49,9 @@ import org.immutables.value.Value;
 
 @Value.Immutable
 @Value.Style(
-  overshadowImplementation = true,
-  init = "set*",
-  visibility = Value.Style.ImplementationVisibility.PACKAGE
-)
+    overshadowImplementation = true,
+    init = "set*",
+    visibility = Value.Style.ImplementationVisibility.PACKAGE)
 public abstract class DefaultJavaLibraryRules {
   public interface DefaultJavaLibraryConstructor {
     DefaultJavaLibrary newInstance(

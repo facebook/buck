@@ -17,14 +17,12 @@
 package com.example;
 
 import com.google.common.collect.ForwardingBlockingDeque;
-import org.kohsuke.args4j.Argument;
-
 import java.util.ArrayList;
 import java.util.List;
+import org.kohsuke.args4j.Argument;
 
 public class Foo {
-  @Argument
-  private List<String> arguments = new ArrayList();
+  @Argument private List<String> arguments = new ArrayList();
 
   ForwardingBlockingDeque<String> BANG;
 }

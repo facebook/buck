@@ -34,10 +34,9 @@ import org.immutables.value.Value;
  */
 @Value.Immutable
 @Value.Style(
-  overshadowImplementation = true,
-  init = "set*",
-  visibility = Value.Style.ImplementationVisibility.PACKAGE
-)
+    overshadowImplementation = true,
+    init = "set*",
+    visibility = Value.Style.ImplementationVisibility.PACKAGE)
 public abstract class JavaLibraryDeps {
   public static JavaLibraryDeps newInstance(
       JavaLibraryDescription.CoreArg args, BuildRuleResolver resolver) {

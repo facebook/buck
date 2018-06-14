@@ -18,5 +18,6 @@ package com.facebook.sample;
 
 public class Sample3 {
   private Sample3() {}
+
   public static String myString = "__FIND_ME_HERE__content=1__GOODBYE__";
 }

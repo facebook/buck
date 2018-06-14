@@ -28,8 +28,10 @@ import java.util.Optional;
 
 public class XcodeWorkspaceConfigBuilder
     extends AbstractNodeBuilder<
-        XcodeWorkspaceConfigDescriptionArg.Builder, XcodeWorkspaceConfigDescriptionArg,
-        XcodeWorkspaceConfigDescription, BuildRule> {
+        XcodeWorkspaceConfigDescriptionArg.Builder,
+        XcodeWorkspaceConfigDescriptionArg,
+        XcodeWorkspaceConfigDescription,
+        BuildRule> {
 
   protected XcodeWorkspaceConfigBuilder(BuildTarget target) {
     super(new XcodeWorkspaceConfigDescription(), target);

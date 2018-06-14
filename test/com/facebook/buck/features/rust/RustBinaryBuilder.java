@@ -27,7 +27,9 @@ import com.google.common.collect.ImmutableSortedSet;
 
 public class RustBinaryBuilder
     extends AbstractNodeBuilder<
-        RustBinaryDescriptionArg.Builder, RustBinaryDescriptionArg, RustBinaryDescription,
+        RustBinaryDescriptionArg.Builder,
+        RustBinaryDescriptionArg,
+        RustBinaryDescription,
         BuildRule> {
 
   private RustBinaryBuilder(RustBinaryDescription description, BuildTarget target) {

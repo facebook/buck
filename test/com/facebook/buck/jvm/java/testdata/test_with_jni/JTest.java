@@ -1,9 +1,9 @@
 package jlib;
 
-import org.junit.Test;
-
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.assertThat;
+
+import org.junit.Test;
 
 public class JTest {
   @Test
@@ -11,4 +11,3 @@ public class JTest {
     assertThat(JLib.getValue(), equalTo(3));
   }
 }
-

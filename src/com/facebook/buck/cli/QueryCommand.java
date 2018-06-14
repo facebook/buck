@@ -107,24 +107,22 @@ public class QueryCommand extends AbstractCommand {
   }
 
   @Option(
-    name = "--output",
-    usage =
-        "Output format (default: label). "
-            + "minrank/maxrank: Sort the output in rank order and output the ranks "
-            + "according to the length of the shortest or longest path from a root node, "
-            + "respectively. This does not apply to --dot or --json."
-  )
+      name = "--output",
+      usage =
+          "Output format (default: label). "
+              + "minrank/maxrank: Sort the output in rank order and output the ranks "
+              + "according to the length of the shortest or longest path from a root node, "
+              + "respectively. This does not apply to --dot or --json.")
   private OutputFormat outputFormat = OutputFormat.LABEL;
 
   @Option(
-    name = "--output-attributes",
-    usage =
-        "Deprecated: List of attributes to output, --output-attributes attr1 att2 ... attrN. "
-            + "Attributes can be regular expressions. The preferred replacement is "
-            + "--output-attribute.",
-    handler = StringSetOptionHandler.class,
-    forbids = {"--output-attribute"}
-  )
+      name = "--output-attributes",
+      usage =
+          "Deprecated: List of attributes to output, --output-attributes attr1 att2 ... attrN. "
+              + "Attributes can be regular expressions. The preferred replacement is "
+              + "--output-attribute.",
+      handler = StringSetOptionHandler.class,
+      forbids = {"--output-attribute"})
   @SuppressFieldNotInitialized
   @VisibleForTesting
   Supplier<ImmutableSet<String>> outputAttributesDeprecated =
@@ -132,14 +130,13 @@ public class QueryCommand extends AbstractCommand {
 
   // Two options are kept to not break the UI and scripts
   @Option(
-    name = "--output-attribute",
-    usage =
-        "List of attributes to output, --output-attributes attr1. Attributes can be "
-            + "regular expressions. Multiple attributes may be selected by specifying this option "
-            + "multiple times.",
-    handler = SingleStringSetOptionHandler.class,
-    forbids = {"--output-attributes"}
-  )
+      name = "--output-attribute",
+      usage =
+          "List of attributes to output, --output-attributes attr1. Attributes can be "
+              + "regular expressions. Multiple attributes may be selected by specifying this option "
+              + "multiple times.",
+      handler = SingleStringSetOptionHandler.class,
+      forbids = {"--output-attributes"})
   @SuppressFieldNotInitialized
   @VisibleForTesting
   Supplier<ImmutableSet<String>> outputAttributesSane = Suppliers.ofInstance(ImmutableSet.of());

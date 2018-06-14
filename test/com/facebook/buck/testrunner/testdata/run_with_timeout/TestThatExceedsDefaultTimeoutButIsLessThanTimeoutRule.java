@@ -24,13 +24,12 @@ import org.junit.runner.RunWith;
 @RunWith(NotBuckBlockJUnit4ClassRunner.class)
 public class TestThatExceedsDefaultTimeoutButIsLessThanTimeoutRule {
 
-  @Rule
-  public Timeout timeout = new Timeout(/* millis */ 7000);
+  @Rule public Timeout timeout = new Timeout(/* millis */ 7000);
 
   /**
-   * This test should take 5 seconds, which is longer than the default timeout specified in
-   * {@code .buckconfig}, which is 3 seconds. However, the timeout specified by the {@link Timeout}
-   * (7 seconds) should take precedence, so this test should pass.
+   * This test should take 5 seconds, which is longer than the default timeout specified in {@code
+   * .buckconfig}, which is 3 seconds. However, the timeout specified by the {@link Timeout} (7
+   * seconds) should take precedence, so this test should pass.
    */
   @Test
   public void testThatRunsForMoreThanThreeSecondsButForLessThanSevenSeconds() {
@@ -40,5 +39,4 @@ public class TestThatExceedsDefaultTimeoutButIsLessThanTimeoutRule {
       // Ignore.
     }
   }
-
 }

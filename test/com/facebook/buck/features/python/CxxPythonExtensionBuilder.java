@@ -40,8 +40,10 @@ import java.util.Optional;
 
 public class CxxPythonExtensionBuilder
     extends AbstractNodeBuilder<
-        CxxPythonExtensionDescriptionArg.Builder, CxxPythonExtensionDescriptionArg,
-        CxxPythonExtensionDescription, CxxPythonExtension> {
+        CxxPythonExtensionDescriptionArg.Builder,
+        CxxPythonExtensionDescriptionArg,
+        CxxPythonExtensionDescription,
+        CxxPythonExtension> {
 
   public CxxPythonExtensionBuilder(
       BuildTarget target,

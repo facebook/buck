@@ -25,7 +25,9 @@ import java.nio.file.Path;
 
 public class PrebuiltJarBuilder
     extends AbstractNodeBuilder<
-        PrebuiltJarDescriptionArg.Builder, PrebuiltJarDescriptionArg, PrebuiltJarDescription,
+        PrebuiltJarDescriptionArg.Builder,
+        PrebuiltJarDescriptionArg,
+        PrebuiltJarDescription,
         PrebuiltJar> {
 
   private PrebuiltJarBuilder(BuildTarget target) {

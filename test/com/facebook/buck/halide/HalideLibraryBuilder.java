@@ -48,7 +48,9 @@ import java.util.regex.Pattern;
 
 public class HalideLibraryBuilder
     extends AbstractNodeBuilder<
-        HalideLibraryDescriptionArg.Builder, HalideLibraryDescriptionArg, HalideLibraryDescription,
+        HalideLibraryDescriptionArg.Builder,
+        HalideLibraryDescriptionArg,
+        HalideLibraryDescription,
         BuildRule> {
   public HalideLibraryBuilder(
       BuildTarget target,

@@ -1,4 +1,3 @@
 package com.facebook.foo;
 
-public interface DependencyInterface<T> {
-}
+public interface DependencyInterface<T> {}

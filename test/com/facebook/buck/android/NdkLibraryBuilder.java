@@ -39,7 +39,9 @@ import java.nio.file.Paths;
 
 public class NdkLibraryBuilder
     extends AbstractNodeBuilder<
-        NdkLibraryDescriptionArg.Builder, NdkLibraryDescriptionArg, NdkLibraryDescription,
+        NdkLibraryDescriptionArg.Builder,
+        NdkLibraryDescriptionArg,
+        NdkLibraryDescription,
         NdkLibrary> {
 
   private static final NdkCxxPlatform DEFAULT_NDK_PLATFORM =

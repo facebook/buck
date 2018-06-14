@@ -31,7 +31,9 @@ import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 
 public class CxxGenruleBuilder
     extends AbstractNodeBuilder<
-        CxxGenruleDescriptionArg.Builder, CxxGenruleDescriptionArg, CxxGenruleDescription,
+        CxxGenruleDescriptionArg.Builder,
+        CxxGenruleDescriptionArg,
+        CxxGenruleDescription,
         BuildRule> {
 
   public CxxGenruleBuilder(BuildTarget target, FlavorDomain<CxxPlatform> cxxPlatforms) {

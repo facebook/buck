@@ -243,8 +243,8 @@ public class JavaTestIntegrationTest {
     result1.assertSuccess();
 
     workspace.replaceFileContents("BUCK", "\"//:jlib-native\",  #delete-1", "");
-    workspace.replaceFileContents("JTestWithoutPernicious.java", "@Test//getValue", "");
-    workspace.replaceFileContents("JTestWithoutPernicious.java", "//@Test//noTestLib", "@Test");
+    workspace.replaceFileContents("JTestWithoutPernicious.java", "@Test // getValue", "");
+    workspace.replaceFileContents("JTestWithoutPernicious.java", "// @Test//noTestLib", "@Test");
 
     ProcessResult result2 =
         workspace.runBuckCommand("test", "//:jtest-pernicious", "//:jtest-symlink");

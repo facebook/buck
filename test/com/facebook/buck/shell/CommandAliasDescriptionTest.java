@@ -586,7 +586,9 @@ public class CommandAliasDescriptionTest {
 
   private static class TestBinaryBuilder
       extends AbstractNodeBuilder<
-          CommandAliasDescriptionArg.Builder, CommandAliasDescriptionArg, TestBinaryDescription,
+          CommandAliasDescriptionArg.Builder,
+          CommandAliasDescriptionArg,
+          TestBinaryDescription,
           TestBinary> {
     public TestBinaryBuilder(BuildTarget target, String arg, String env) {
       super(new TestBinaryDescription(arg, env), target);

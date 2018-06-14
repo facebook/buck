@@ -22,9 +22,8 @@ import java.io.InputStreamReader;
 public class LibraryClass {
 
   public String loadStringFromResource() throws Exception {
-    BufferedReader reader = new BufferedReader(new InputStreamReader(getClass().getResourceAsStream("/resource.txt")));
+    BufferedReader reader =
+        new BufferedReader(new InputStreamReader(getClass().getResourceAsStream("/resource.txt")));
     return reader.readLine();
   }
-
 }
-

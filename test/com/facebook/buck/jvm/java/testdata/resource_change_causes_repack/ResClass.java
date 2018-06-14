@@ -21,5 +21,4 @@ public class ResClass {
   public void doSomething() {
     System.out.println("This will change later without changing the ABI");
   }
-
 }

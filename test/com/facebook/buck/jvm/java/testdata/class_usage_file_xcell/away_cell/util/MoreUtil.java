@@ -25,5 +25,5 @@ public class MoreUtil {
     System.out.println("Better Hello World!");
   }
 
-  //public_method public void foo() {}
+  // public_method public void foo() {}
 }

@@ -37,10 +37,9 @@ import java.util.Set;
 import org.immutables.value.Value;
 
 @JsonAutoDetect(
-  fieldVisibility = JsonAutoDetect.Visibility.NONE,
-  getterVisibility = JsonAutoDetect.Visibility.NONE,
-  setterVisibility = JsonAutoDetect.Visibility.NONE
-)
+    fieldVisibility = JsonAutoDetect.Visibility.NONE,
+    getterVisibility = JsonAutoDetect.Visibility.NONE,
+    setterVisibility = JsonAutoDetect.Visibility.NONE)
 @BuckStyleTuple
 @Value.Immutable(prehash = true, builder = false)
 abstract class AbstractImmutableBuildTarget extends AbstractBuildTarget {

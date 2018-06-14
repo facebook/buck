@@ -32,9 +32,8 @@ import org.kohsuke.args4j.Option;
 public class Sha1Command implements Command {
 
   @Option(
-    name = "mount",
-    aliases = {"-m"}
-  )
+      name = "mount",
+      aliases = {"-m"})
   private String mountPoint;
 
   @Argument private List<String> paths = new ArrayList<>();

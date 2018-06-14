@@ -16,5 +16,4 @@
 
 package com.example;
 
-public class HelloWorld {
-}
+public class HelloWorld {}

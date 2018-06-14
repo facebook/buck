@@ -15,6 +15,4 @@
  */
 package test;
 
-public class DirectDep {
-
-}
+public class DirectDep {}

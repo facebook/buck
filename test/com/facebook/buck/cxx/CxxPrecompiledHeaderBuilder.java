@@ -22,8 +22,10 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 
 public class CxxPrecompiledHeaderBuilder
     extends AbstractNodeBuilder<
-        CxxPrecompiledHeaderDescriptionArg.Builder, CxxPrecompiledHeaderDescriptionArg,
-        CxxPrecompiledHeaderDescription, CxxPrecompiledHeaderTemplate> {
+        CxxPrecompiledHeaderDescriptionArg.Builder,
+        CxxPrecompiledHeaderDescriptionArg,
+        CxxPrecompiledHeaderDescription,
+        CxxPrecompiledHeaderTemplate> {
 
   protected CxxPrecompiledHeaderBuilder(BuildTarget target) {
     super(new CxxPrecompiledHeaderDescription(), target);

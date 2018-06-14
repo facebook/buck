@@ -53,10 +53,9 @@ public class UninstallCommand extends AbstractCommand {
     @VisibleForTesting static final String KEEP_SHORT_ARG = "-k";
 
     @Option(
-      name = KEEP_LONG_ARG,
-      aliases = {KEEP_SHORT_ARG},
-      usage = "Keep user data when uninstalling."
-    )
+        name = KEEP_LONG_ARG,
+        aliases = {KEEP_SHORT_ARG},
+        usage = "Keep user data when uninstalling.")
     private boolean keepData = false;
 
     public boolean shouldKeepUserData() {

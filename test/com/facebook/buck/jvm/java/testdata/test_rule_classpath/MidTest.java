@@ -15,6 +15,4 @@
  */
 package test;
 
-public class MidTest {
-
-}
+public class MidTest {}

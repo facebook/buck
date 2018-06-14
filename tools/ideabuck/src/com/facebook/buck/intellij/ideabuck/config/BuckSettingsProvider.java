@@ -34,9 +34,8 @@ import org.jetbrains.annotations.Nullable;
 
 /** Load and save buck setting states across IDE restarts. */
 @State(
-  name = "BuckOptionsProvider",
-  storages = {@Storage(file = StoragePathMacros.APP_CONFIG + "/buck.xml")}
-)
+    name = "BuckOptionsProvider",
+    storages = {@Storage(file = StoragePathMacros.APP_CONFIG + "/buck.xml")})
 public class BuckSettingsProvider
     implements PersistentStateComponent<BuckSettingsProvider.State>,
         ExportableApplicationComponent {

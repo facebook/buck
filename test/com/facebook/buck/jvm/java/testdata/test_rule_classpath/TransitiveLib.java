@@ -15,6 +15,4 @@
  */
 package test;
 
-public class TransitiveLib {
-
-}
+public class TransitiveLib {}

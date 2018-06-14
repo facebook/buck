@@ -164,7 +164,7 @@ public class ChooseTargetContributor implements ChooseByNameContributor {
           Collections.singletonList(
               "//" + appendSuffixIfNotEmpty(buildDir, BUILD_DIR_SEPARATOR) + file.getName()));
     } else if (file.getName().equals(BuckFileUtil.getBuildFileName(project.getBasePath()))) {
-      //if the file is a buck file  we parse it and add its target names to the list
+      // if the file is a buck file  we parse it and add its target names to the list
       return getBuildTargetFromBuildProjectFile(project, buildDir);
     }
     return Collections.emptyList();

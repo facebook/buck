@@ -12,18 +12,18 @@ import javax.tools.JavaFileObject;
 @SupportedAnnotationTypes("*")
 public class AnnotationProcessor extends AbstractProcessor {
   private boolean generated = false;
+
   @Override
-  public boolean process(
-      Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
-      try {
-          crash();
-	  return true;
-      } catch (RuntimeException e) {
-          throw new RuntimeException(e);
-      }
+  public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
+    try {
+      crash();
+      return true;
+    } catch (RuntimeException e) {
+      throw new RuntimeException(e);
+    }
   }
 
-    private void crash() {
-        throw new IllegalArgumentException("Test crash!");
-    }
+  private void crash() {
+    throw new IllegalArgumentException("Test crash!");
+  }
 }

@@ -104,7 +104,7 @@ final class QueryParser {
       StringBuilder buf = new StringBuilder("syntax error at '");
       String sep = "";
       for (int index = tokens.indexOf(token),
-                  max = Math.min(tokens.size() - 1, index + 3); // 3 tokens of context
+              max = Math.min(tokens.size() - 1, index + 3); // 3 tokens of context
           index < max;
           ++index) {
         buf.append(sep).append(tokens.get(index));
@@ -308,7 +308,7 @@ final class QueryParser {
             return TargetSetExpression.of(targets.build());
           }
         }
-        //$CASES-OMITTED$
+        // $CASES-OMITTED$
       default:
         throw syntaxError(token);
     }

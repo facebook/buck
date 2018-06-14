@@ -22,7 +22,5 @@ public class UsesNullable {
 
   @Nullable private String foobar;
 
-  public void testSomethingMagical() {
-
-  }
+  public void testSomethingMagical() {}
 }

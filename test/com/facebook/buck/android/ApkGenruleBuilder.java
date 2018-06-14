@@ -25,7 +25,9 @@ import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 
 public class ApkGenruleBuilder
     extends AbstractNodeBuilder<
-        ApkGenruleDescriptionArg.Builder, ApkGenruleDescriptionArg, ApkGenruleDescription,
+        ApkGenruleDescriptionArg.Builder,
+        ApkGenruleDescriptionArg,
+        ApkGenruleDescription,
         ApkGenrule> {
 
   private ApkGenruleBuilder(BuildTarget target) {

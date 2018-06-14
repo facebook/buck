@@ -14,16 +14,14 @@
  * under the License.
  */
 
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-
-import org.junit.Test;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import org.junit.Test;
 
 public class EnvTest {
 
@@ -37,5 +35,4 @@ public class EnvTest {
     assertEquals("File should have one string inside", 1, strings.size());
     assertEquals("location works", strings.get(0));
   }
-
 }

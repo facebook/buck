@@ -35,7 +35,9 @@ import java.util.Optional;
 
 public class AppleBinaryBuilder
     extends AbstractNodeBuilder<
-        AppleBinaryDescriptionArg.Builder, AppleBinaryDescriptionArg, AppleBinaryDescription,
+        AppleBinaryDescriptionArg.Builder,
+        AppleBinaryDescriptionArg,
+        AppleBinaryDescription,
         BuildRule> {
 
   protected AppleBinaryBuilder(BuildTarget target) {

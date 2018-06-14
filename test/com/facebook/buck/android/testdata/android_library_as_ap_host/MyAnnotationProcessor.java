@@ -16,12 +16,10 @@
 
 package com.facebook.example;
 
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
-
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.Filer;
 import javax.annotation.processing.Messager;
@@ -36,8 +34,8 @@ import javax.tools.Diagnostic;
 import javax.tools.FileObject;
 import javax.tools.StandardLocation;
 
-@SupportedAnnotationTypes( "com.facebook.example.MyAnnotation" )
-@SupportedSourceVersion( SourceVersion.RELEASE_7 )
+@SupportedAnnotationTypes("com.facebook.example.MyAnnotation")
+@SupportedSourceVersion(SourceVersion.RELEASE_7)
 public class MyAnnotationProcessor extends AbstractProcessor {
   private Filer mFiler;
   private Elements mElementUtils;
@@ -54,7 +52,8 @@ public class MyAnnotationProcessor extends AbstractProcessor {
   }
 
   @Override
-  public boolean process(final Set< ? extends TypeElement > annotations, final RoundEnvironment roundEnv) {
+  public boolean process(
+      final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
     if (runCount > 0) {
       return false;
     }
@@ -62,19 +61,22 @@ public class MyAnnotationProcessor extends AbstractProcessor {
       List<String> required_configs = Arrays.asList("res1.json");
       List<String> maybe_configs = Arrays.asList("res2.json");
 
-      OutputStream outputStream = mFiler.createResource(
-          StandardLocation.CLASS_OUTPUT,
-          "com.facebook.example.config",
-          "collected_configs.json",
-          mElementUtils.getTypeElement("com.facebook.example.MyAnnotationProcessor"))
-          .openOutputStream();
+      OutputStream outputStream =
+          mFiler
+              .createResource(
+                  StandardLocation.CLASS_OUTPUT,
+                  "com.facebook.example.config",
+                  "collected_configs.json",
+                  mElementUtils.getTypeElement("com.facebook.example.MyAnnotationProcessor"))
+              .openOutputStream();
 
       StringBuilder sb = new StringBuilder();
       sb.append("{\n");
       byte[] buffer = new byte[1024];
       for (String config : required_configs) {
         try {
-          FileObject inputFile = mFiler.getResource(StandardLocation.CLASS_PATH, "", "META-INF/" + config);
+          FileObject inputFile =
+              mFiler.getResource(StandardLocation.CLASS_PATH, "", "META-INF/" + config);
           int len = inputFile.openInputStream().read(buffer);
           String contents = new String(buffer, 0, len);
           sb.append("    \"").append(config).append("\": ");
@@ -88,7 +90,8 @@ public class MyAnnotationProcessor extends AbstractProcessor {
       }
       for (String config : maybe_configs) {
         try {
-          FileObject inputFile = mFiler.getResource(StandardLocation.CLASS_PATH, "", "META-INF/" + config);
+          FileObject inputFile =
+              mFiler.getResource(StandardLocation.CLASS_PATH, "", "META-INF/" + config);
           int len = inputFile.openInputStream().read(buffer);
           String contents = new String(buffer, 0, len);
           sb.append("    \"").append(config).append("\": ");

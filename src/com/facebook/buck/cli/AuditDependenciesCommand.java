@@ -44,18 +44,16 @@ public class AuditDependenciesCommand extends AbstractCommand {
   }
 
   @Option(
-    name = "--include-tests",
-    usage =
-        "Includes a target's tests with its dependencies. With the transitive flag, this "
-            + "prints the dependencies of the tests as well"
-  )
+      name = "--include-tests",
+      usage =
+          "Includes a target's tests with its dependencies. With the transitive flag, this "
+              + "prints the dependencies of the tests as well")
   private boolean includeTests = false;
 
   @Option(
-    name = "--transitive",
-    aliases = {"-t"},
-    usage = "Whether to include transitive dependencies in the output"
-  )
+      name = "--transitive",
+      aliases = {"-t"},
+      usage = "Whether to include transitive dependencies in the output")
   private boolean transitive = false;
 
   @Argument private List<String> arguments = new ArrayList<>();

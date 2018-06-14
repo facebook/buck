@@ -24,15 +24,14 @@ import com.google.devtools.build.lib.syntax.SkylarkList;
 public class DummyFunction {
 
   @SkylarkSignature(
-    name = "dummy",
-    returnType = SkylarkList.class,
-    doc = "Returns a dummy list of strings.",
-    parameters = {
-      @Param(name = "seed", type = String.class, doc = "the first element of the returned list."),
-    },
-    documented = false,
-    useAst = true,
-    useEnvironment = true
-  )
+      name = "dummy",
+      returnType = SkylarkList.class,
+      doc = "Returns a dummy list of strings.",
+      parameters = {
+        @Param(name = "seed", type = String.class, doc = "the first element of the returned list."),
+      },
+      documented = false,
+      useAst = true,
+      useEnvironment = true)
   private static final BuiltinFunction dummy = new BuiltinFunction("dummy");
 }

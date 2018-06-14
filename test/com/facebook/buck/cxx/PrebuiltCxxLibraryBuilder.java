@@ -36,8 +36,10 @@ import java.util.regex.Pattern;
 
 public class PrebuiltCxxLibraryBuilder
     extends AbstractNodeBuilder<
-        PrebuiltCxxLibraryDescriptionArg.Builder, PrebuiltCxxLibraryDescriptionArg,
-        PrebuiltCxxLibraryDescription, BuildRule> {
+        PrebuiltCxxLibraryDescriptionArg.Builder,
+        PrebuiltCxxLibraryDescriptionArg,
+        PrebuiltCxxLibraryDescription,
+        BuildRule> {
 
   public PrebuiltCxxLibraryBuilder(BuildTarget target, FlavorDomain<CxxPlatform> cxxPlatforms) {
     super(

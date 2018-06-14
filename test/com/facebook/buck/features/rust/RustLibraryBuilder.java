@@ -26,7 +26,9 @@ import com.google.common.collect.ImmutableSortedSet;
 
 public class RustLibraryBuilder
     extends AbstractNodeBuilder<
-        RustLibraryDescriptionArg.Builder, RustLibraryDescriptionArg, RustLibraryDescription,
+        RustLibraryDescriptionArg.Builder,
+        RustLibraryDescriptionArg,
+        RustLibraryDescription,
         RustLibrary> {
 
   private RustLibraryBuilder(RustLibraryDescription description, BuildTarget target) {

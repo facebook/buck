@@ -37,7 +37,9 @@ import java.util.Optional;
 
 public class JavaBinaryRuleBuilder
     extends AbstractNodeBuilder<
-        JavaBinaryDescriptionArg.Builder, JavaBinaryDescriptionArg, JavaBinaryDescription,
+        JavaBinaryDescriptionArg.Builder,
+        JavaBinaryDescriptionArg,
+        JavaBinaryDescription,
         JavaBinary> {
 
   private JavaBinaryRuleBuilder(

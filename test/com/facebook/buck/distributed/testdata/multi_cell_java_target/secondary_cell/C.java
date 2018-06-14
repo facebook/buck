@@ -15,6 +15,4 @@
  */
 package secondary_cell;
 
-public class C {
-
-}
+public class C {}

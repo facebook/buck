@@ -14,5 +14,4 @@
  * under the License.
  */
 
-class Example {
-}
+class Example {}

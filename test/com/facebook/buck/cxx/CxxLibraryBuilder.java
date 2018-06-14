@@ -45,7 +45,9 @@ import java.util.regex.Pattern;
 
 public class CxxLibraryBuilder
     extends AbstractNodeBuilder<
-        CxxLibraryDescriptionArg.Builder, CxxLibraryDescriptionArg, CxxLibraryDescription,
+        CxxLibraryDescriptionArg.Builder,
+        CxxLibraryDescriptionArg,
+        CxxLibraryDescription,
         BuildRule> {
 
   private static CxxLibraryDescription createCxxLibraryDescription(

@@ -14,7 +14,6 @@
  * under the License.
  */
 
-
 package com.facebook.buck.rules.visibility;
 
 import com.facebook.buck.core.cell.resolver.CellPathResolver;

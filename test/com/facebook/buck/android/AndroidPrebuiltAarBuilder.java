@@ -29,8 +29,10 @@ import java.util.Optional;
 
 public class AndroidPrebuiltAarBuilder
     extends AbstractNodeBuilder<
-        AndroidPrebuiltAarDescriptionArg.Builder, AndroidPrebuiltAarDescriptionArg,
-        AndroidPrebuiltAarDescription, AndroidPrebuiltAar> {
+        AndroidPrebuiltAarDescriptionArg.Builder,
+        AndroidPrebuiltAarDescriptionArg,
+        AndroidPrebuiltAarDescription,
+        AndroidPrebuiltAar> {
 
   private AndroidPrebuiltAarBuilder(BuildTarget target) {
     super(

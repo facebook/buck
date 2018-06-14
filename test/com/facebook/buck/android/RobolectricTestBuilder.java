@@ -39,8 +39,10 @@ import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 
 public class RobolectricTestBuilder
     extends AbstractNodeBuilder<
-        RobolectricTestDescriptionArg.Builder, RobolectricTestDescriptionArg,
-        RobolectricTestDescription, RobolectricTest> {
+        RobolectricTestDescriptionArg.Builder,
+        RobolectricTestDescriptionArg,
+        RobolectricTestDescription,
+        RobolectricTest> {
 
   public static final AndroidLibraryCompilerFactory DEFAULT_ANDROID_COMPILER_FACTORY =
       new DefaultAndroidLibraryCompilerFactory(

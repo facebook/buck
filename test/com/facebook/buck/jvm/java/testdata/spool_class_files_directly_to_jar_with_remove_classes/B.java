@@ -17,7 +17,5 @@
 package test.pkg;
 
 public class B {
-  public class removableB {
-
-  }
+  public class removableB {}
 }

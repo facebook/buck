@@ -26,5 +26,4 @@ public class FailingSubtest {
   public void shouldFailWithinSuite() {
     fail();
   }
-
 }

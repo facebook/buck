@@ -1,4 +1,3 @@
 package com.example.buck;
 
-public class Dep {
-}
+public class Dep {}

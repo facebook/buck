@@ -15,9 +15,8 @@ public class AnnotationProcessor extends AbstractProcessor {
   private boolean generated = false;
 
   @Override
-  public boolean process(
-      Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
-    if (!roundEnv.processingOver() && ! generated) {
+  public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
+    if (!roundEnv.processingOver() && !generated) {
       try {
         Filer filer = processingEnv.getFiler();
 
@@ -31,10 +30,8 @@ public class AnnotationProcessor extends AbstractProcessor {
           outputStream.write("public class RemovableD { }".getBytes());
         }
 
-        FileObject dResource = filer.createResource(
-            StandardLocation.CLASS_OUTPUT,
-            "",
-            "RemovableD");
+        FileObject dResource =
+            filer.createResource(StandardLocation.CLASS_OUTPUT, "", "RemovableD");
         try (OutputStream outputStream = dResource.openOutputStream()) {
           outputStream.write("foo".getBytes());
         }

@@ -33,20 +33,19 @@ public class TimeoutChangesBehaviorTest {
 
   @Test
   public void testTimeoutDictatesTheSuccessOfThisTest() throws InterruptedException {
-    assertTrue("Database should have an open transaction due to setUp().",
-        database.isInTransaction());
+    assertTrue(
+        "Database should have an open transaction due to setUp().", database.isInTransaction());
   }
 
   private static class Database {
-    /**
-     * This fake database is designed such that there is only one Transaction per thread.
-     */
-    private static ThreadLocal<Transaction> TX = new ThreadLocal<Transaction>() {
-      @Override
-      protected Transaction initialValue() {
-        return new Transaction();
-      }
-    };
+    /** This fake database is designed such that there is only one Transaction per thread. */
+    private static ThreadLocal<Transaction> TX =
+        new ThreadLocal<Transaction>() {
+          @Override
+          protected Transaction initialValue() {
+            return new Transaction();
+          }
+        };
 
     public void beginTransaction() {
       TX.get().beginTransaction();
@@ -68,6 +67,5 @@ public class TimeoutChangesBehaviorTest {
     public boolean isInTransaction() {
       return isInTransaction;
     }
-
   }
 }

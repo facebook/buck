@@ -33,36 +33,34 @@ import org.kohsuke.args4j.spi.Setter;
 public class TestSelectorOptions {
 
   @Option(
-    name = "--test-selectors",
-    aliases = {"--filter", "-f"},
-    usage =
-        "Select tests to run using <class>, #<method> or <class>#<method>.  "
-            + "Selectors are interpreted as java.util.regex regular expressions.  "
-            + "Not every language supports these selectors. Notably, C++ and python do "
-            + "not respect these filters. Note also that if an external test runner is used, "
-            + "this filter also ignored. "
-            + "If the class (or method) part is omitted, all classes (or methods) will match.  "
-            + "If both the class and method is omitted (the string '#') then all tests will match.  "
-            + "Prefix a selector with '!' to exclude a class or method.  "
-            + "If multiple selectors are given, the first matching selector is used "
-            + "to include (or exclude) a test.  "
-            + "By default, all tests are excluded unless a selector includes them.  "
-            + "However, if all selectors are exclusive then the default is to include.  "
-            + "Use the format ':/path/to/file' to load selectors, one per line, from a file.  "
-            + "Examples: 'com.example.MyTest' to run all tests in MyTest; "
-            + "'com.example.MyTest#testFoo' or 'MyTest#Foo' to just run the testFoo test; "
-            + "'!MyTest#Foo' to run everything except the testFoo test; "
-            + "'#Important !TestA !TestC #' to only run the important tests in TestA and TestC "
-            + "and run everything else.)",
-    handler = TestSelectorsOptionHandler.class
-  )
+      name = "--test-selectors",
+      aliases = {"--filter", "-f"},
+      usage =
+          "Select tests to run using <class>, #<method> or <class>#<method>.  "
+              + "Selectors are interpreted as java.util.regex regular expressions.  "
+              + "Not every language supports these selectors. Notably, C++ and python do "
+              + "not respect these filters. Note also that if an external test runner is used, "
+              + "this filter also ignored. "
+              + "If the class (or method) part is omitted, all classes (or methods) will match.  "
+              + "If both the class and method is omitted (the string '#') then all tests will match.  "
+              + "Prefix a selector with '!' to exclude a class or method.  "
+              + "If multiple selectors are given, the first matching selector is used "
+              + "to include (or exclude) a test.  "
+              + "By default, all tests are excluded unless a selector includes them.  "
+              + "However, if all selectors are exclusive then the default is to include.  "
+              + "Use the format ':/path/to/file' to load selectors, one per line, from a file.  "
+              + "Examples: 'com.example.MyTest' to run all tests in MyTest; "
+              + "'com.example.MyTest#testFoo' or 'MyTest#Foo' to just run the testFoo test; "
+              + "'!MyTest#Foo' to run everything except the testFoo test; "
+              + "'#Important !TestA !TestC #' to only run the important tests in TestA and TestC "
+              + "and run everything else.)",
+      handler = TestSelectorsOptionHandler.class)
   @SuppressFieldNotInitialized
   public Supplier<TestSelectorList> testSelectorListSupplier;
 
   @Option(
-    name = "--explain-test-selectors",
-    usage = "Buck will say how it interpreted your test selectors before running tests."
-  )
+      name = "--explain-test-selectors",
+      usage = "Buck will say how it interpreted your test selectors before running tests.")
   private boolean shouldExplain = false;
 
   public TestSelectorList getTestSelectorList() {

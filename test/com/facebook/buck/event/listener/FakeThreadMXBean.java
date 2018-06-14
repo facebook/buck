@@ -14,7 +14,6 @@
  * under the License.
  */
 
-
 package com.facebook.buck.event.listener;
 
 import java.lang.management.ThreadInfo;

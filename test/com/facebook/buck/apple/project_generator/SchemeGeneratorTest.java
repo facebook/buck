@@ -883,7 +883,9 @@ public class SchemeGeneratorTest {
         schemeActions =
             ImmutableMap.of(
                 SchemeActionType.LAUNCH,
-                ImmutableMap.of(XCScheme.AdditionalActions.PRE_SCHEME_ACTIONS, ImmutableList.of("echo takeoff")));
+                ImmutableMap.of(
+                    XCScheme.AdditionalActions.PRE_SCHEME_ACTIONS,
+                    ImmutableList.of("echo takeoff")));
 
     SchemeGenerator schemeGenerator =
         new SchemeGenerator(

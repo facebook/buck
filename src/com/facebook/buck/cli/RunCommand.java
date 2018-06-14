@@ -64,11 +64,10 @@ public final class RunCommand extends AbstractCommand {
 
   @Nullable
   @Option(
-    name = "--command-args-file",
-    usage =
-        "Serialize the command, args, and environment for running the target to this file, for consumption by the python wrapper.",
-    hidden = true
-  )
+      name = "--command-args-file",
+      usage =
+          "Serialize the command, args, and environment for running the target to this file, for consumption by the python wrapper.",
+      hidden = true)
   private String commandArgsFile;
 
   @Option(name = "--", handler = ConsumeAllOptionsHandler.class)

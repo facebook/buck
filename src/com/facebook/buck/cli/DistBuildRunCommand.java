@@ -84,15 +84,13 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
   private String buildStateFile;
 
   @Option(
-    name = "--coordinator-port",
-    usage = "Port of the remote build coordinator. (only used in MINION mode)."
-  )
+      name = "--coordinator-port",
+      usage = "Port of the remote build coordinator. (only used in MINION mode).")
   private int coordinatorPort = -1;
 
   @Option(
-    name = "--coordinator-address",
-    usage = "Address of the remote build coordinator. (only used in MINION mode)."
-  )
+      name = "--coordinator-address",
+      usage = "Address of the remote build coordinator. (only used in MINION mode).")
   private String coordinatorAddress = "localhost";
 
   @Nullable
@@ -101,9 +99,8 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
 
   @Nullable
   @Option(
-    name = "--global-cache-dir",
-    usage = "Full path to an existing directory that will contain a global cache across builds."
-  )
+      name = "--global-cache-dir",
+      usage = "Full path to an existing directory that will contain a global cache across builds.")
   private Path globalCacheDir;
 
   private static final String RUN_ID_ARG_NAME = "--buildslave-run-id";

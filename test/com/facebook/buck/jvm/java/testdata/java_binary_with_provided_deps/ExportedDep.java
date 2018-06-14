@@ -1,4 +1,3 @@
 package com.example.buck;
 
-public class ExportedDep {
-}
+public class ExportedDep {}

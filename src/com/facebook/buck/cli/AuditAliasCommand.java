@@ -29,9 +29,8 @@ public class AuditAliasCommand extends AbstractCommand {
   private boolean listAliases = false;
 
   @Option(
-    name = "--list-map",
-    usage = "List known build target aliases with their mappings to build targets."
-  )
+      name = "--list-map",
+      usage = "List known build target aliases with their mappings to build targets.")
   private boolean listAliasesMap = false;
 
   @Override

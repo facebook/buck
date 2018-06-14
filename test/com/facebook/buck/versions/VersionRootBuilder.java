@@ -37,8 +37,10 @@ import org.immutables.value.Value;
 
 public class VersionRootBuilder
     extends AbstractNodeBuilder<
-        VersionRootDescriptionArg.Builder, VersionRootDescriptionArg,
-        VersionRootBuilder.VersionRootDescription, BuildRule> {
+        VersionRootDescriptionArg.Builder,
+        VersionRootDescriptionArg,
+        VersionRootBuilder.VersionRootDescription,
+        BuildRule> {
 
   public VersionRootBuilder(BuildTarget target) {
     super(new VersionRootDescription(), target);

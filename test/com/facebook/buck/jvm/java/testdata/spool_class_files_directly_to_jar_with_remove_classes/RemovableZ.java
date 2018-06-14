@@ -16,4 +16,4 @@
 
 package test.pkg;
 
-class RemovableZ { }
+class RemovableZ {}

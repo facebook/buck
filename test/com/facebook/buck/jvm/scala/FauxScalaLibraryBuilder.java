@@ -32,7 +32,9 @@ import java.nio.file.Path;
 
 public class FauxScalaLibraryBuilder
     extends AbstractNodeBuilder<
-        ScalaLibraryDescriptionArg.Builder, ScalaLibraryDescriptionArg, ScalaLibraryDescription,
+        ScalaLibraryDescriptionArg.Builder,
+        ScalaLibraryDescriptionArg,
+        ScalaLibraryDescription,
         BuildRule> {
 
   private final ProjectFilesystem projectFilesystem;

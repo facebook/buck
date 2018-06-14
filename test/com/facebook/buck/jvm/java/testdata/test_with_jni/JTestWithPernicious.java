@@ -1,11 +1,9 @@
 package jlib;
 
-import org.junit.Test;
-
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.assertThat;
 
-import junit.framework.Assert;
+import org.junit.Test;
 
 public class JTestWithPernicious {
   @Test

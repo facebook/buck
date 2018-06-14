@@ -25,5 +25,5 @@ public class Util {
     System.out.println("Hello World!");
   }
 
-  //public_method public void foo() {}
+  // public_method public void foo() {}
 }

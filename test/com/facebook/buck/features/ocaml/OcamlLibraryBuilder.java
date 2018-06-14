@@ -25,7 +25,9 @@ import com.google.common.collect.ImmutableSortedSet;
 
 public class OcamlLibraryBuilder
     extends AbstractNodeBuilder<
-        OcamlLibraryDescriptionArg.Builder, OcamlLibraryDescriptionArg, OcamlLibraryDescription,
+        OcamlLibraryDescriptionArg.Builder,
+        OcamlLibraryDescriptionArg,
+        OcamlLibraryDescription,
         OcamlLibrary> {
 
   public OcamlLibraryBuilder(

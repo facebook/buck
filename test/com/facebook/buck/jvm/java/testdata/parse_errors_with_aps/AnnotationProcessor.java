@@ -12,15 +12,17 @@ import javax.tools.JavaFileObject;
 @SupportedAnnotationTypes("*")
 public class AnnotationProcessor extends AbstractProcessor {
   private boolean generated = false;
+
   @Override
-  public boolean process(
-      Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
+  public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
     if (!generated) {
       try {
-        JavaFileObject sourceFile = processingEnv.getFiler().createSourceFile("com.facebook.buck.Generated");
+        JavaFileObject sourceFile =
+            processingEnv.getFiler().createSourceFile("com.facebook.buck.Generated");
         try (OutputStream outputStream = sourceFile.openOutputStream()) {
           outputStream.write(
-              "package com.facebook.buck;\npublic class Generated { public static final int Foo = 3; }".getBytes());
+              "package com.facebook.buck;\npublic class Generated { public static final int Foo = 3; }"
+                  .getBytes());
         }
         generated = true;
       } catch (IOException e) {

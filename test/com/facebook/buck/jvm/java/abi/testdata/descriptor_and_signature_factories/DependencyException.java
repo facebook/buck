@@ -1,4 +1,3 @@
 package com.facebook.foo;
 
-public class DependencyException extends Exception {
-}
+public class DependencyException extends Exception {}

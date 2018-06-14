@@ -37,7 +37,9 @@ import java.util.Optional;
 
 public class AppleLibraryBuilder
     extends AbstractNodeBuilder<
-        AppleLibraryDescriptionArg.Builder, AppleLibraryDescriptionArg, AppleLibraryDescription,
+        AppleLibraryDescriptionArg.Builder,
+        AppleLibraryDescriptionArg,
+        AppleLibraryDescription,
         BuildRule> {
 
   protected AppleLibraryBuilder(BuildTarget target) {

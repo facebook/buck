@@ -79,7 +79,7 @@ public class BuckDeps {
   static int[] findTargetInBuckFileContents(String contents, String target) {
     int nameOffset = contents.indexOf("'" + target + "'");
     if (nameOffset == -1) {
-      return null; //target not found
+      return null; // target not found
     }
     // March backwards to figure out where the rule starts
     int targetStart = nameOffset;

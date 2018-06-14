@@ -76,160 +76,141 @@ public class ProjectCommand extends BuildCommand {
   private static final boolean DEFAULT_READ_ONLY_VALUE = false;
 
   @Option(
-    name = "--combined-project",
-    usage = "Generate an xcode project of a target and its dependencies."
-  )
+      name = "--combined-project",
+      usage = "Generate an xcode project of a target and its dependencies.")
   private boolean combinedProject;
 
   @Option(
-    name = "--build-with-buck",
-    usage = "Use Buck to build the generated project instead of delegating the build to the IDE."
-  )
+      name = "--build-with-buck",
+      usage = "Use Buck to build the generated project instead of delegating the build to the IDE.")
   boolean buildWithBuck;
 
   @Option(name = "--process-annotations", usage = "Enable annotation processing")
   private boolean processAnnotations;
 
   @Option(
-    name = "--without-tests",
-    usage = "When generating a project slice, exclude tests that test the code in that slice"
-  )
+      name = "--without-tests",
+      usage = "When generating a project slice, exclude tests that test the code in that slice")
   private boolean withoutTests = false;
 
   @Option(
-    name = "--with-tests",
-    usage = "When generating a project slice, generate with all the tests"
-  )
+      name = "--with-tests",
+      usage = "When generating a project slice, generate with all the tests")
   private boolean withTests = false;
 
   @Option(
-    name = "--without-dependencies-tests",
-    usage =
-        "When generating a project slice, includes tests that test code in main target, "
-            + "but exclude tests that test dependencies"
-  )
+      name = "--without-dependencies-tests",
+      usage =
+          "When generating a project slice, includes tests that test code in main target, "
+              + "but exclude tests that test dependencies")
   private boolean withoutDependenciesTests = false;
 
   @Option(
-    name = "--ide",
-    usage =
-        "The type of IDE for which to generate a project. You may specify it in the "
-            + ".buckconfig file. Please refer to https://buckbuild.com/concept/buckconfig.html#project"
-  )
+      name = "--ide",
+      usage =
+          "The type of IDE for which to generate a project. You may specify it in the "
+              + ".buckconfig file. Please refer to https://buckbuild.com/concept/buckconfig.html#project")
   @Nullable
   private Ide ide = null;
 
   @Option(
-    name = "--read-only",
-    usage =
-        "If true, generate project files read-only. Defaults to '"
-            + DEFAULT_READ_ONLY_VALUE
-            + "' if not specified in .buckconfig. (Only "
-            + "applies to generated Xcode projects.)"
-  )
+      name = "--read-only",
+      usage =
+          "If true, generate project files read-only. Defaults to '"
+              + DEFAULT_READ_ONLY_VALUE
+              + "' if not specified in .buckconfig. (Only "
+              + "applies to generated Xcode projects.)")
   private boolean readOnly = DEFAULT_READ_ONLY_VALUE;
 
   @Option(
-    name = "--dry-run",
-    usage =
-        "Instead of actually generating the project, only print out the targets that "
-            + "would be included."
-  )
+      name = "--dry-run",
+      usage =
+          "Instead of actually generating the project, only print out the targets that "
+              + "would be included.")
   private boolean dryRun = false;
 
   @Option(
-    name = "--intellij-aggregation-mode",
-    handler = AggregationModeOptionHandler.class,
-    usage =
-        "Changes how modules are aggregated. Valid options are 'none' (no aggregation), "
-            + "'shallow' (Minimum of 3 directory levels deep), 'auto' (based on project size), or an "
-            + "integer to specify the minimum directory depth modules should be aggregated to (e.g."
-            + "specifying 3 would aggrgate modules to a/b/c from lower levels where possible). "
-            + "Defaults to 'auto' if not specified in .buckconfig."
-  )
+      name = "--intellij-aggregation-mode",
+      handler = AggregationModeOptionHandler.class,
+      usage =
+          "Changes how modules are aggregated. Valid options are 'none' (no aggregation), "
+              + "'shallow' (Minimum of 3 directory levels deep), 'auto' (based on project size), or an "
+              + "integer to specify the minimum directory depth modules should be aggregated to (e.g."
+              + "specifying 3 would aggrgate modules to a/b/c from lower levels where possible). "
+              + "Defaults to 'auto' if not specified in .buckconfig.")
   @Nullable
   private AggregationMode intellijAggregationMode = null;
 
   @Option(
-    name = "--run-ij-cleaner",
-    usage =
-        "After generating an IntelliJ project using --experimental-ij-generation, start a "
-            + "cleaner which removes any .iml files which weren't generated as part of the project."
-  )
+      name = "--run-ij-cleaner",
+      usage =
+          "After generating an IntelliJ project using --experimental-ij-generation, start a "
+              + "cleaner which removes any .iml files which weren't generated as part of the project.")
   private boolean runIjCleaner = false;
 
   @Option(
-    name = "--remove-unused-ij-libraries",
-    usage =
-        "After generating an IntelliJ project remove all IntelliJ libraries that are not "
-            + "used in the project."
-  )
+      name = "--remove-unused-ij-libraries",
+      usage =
+          "After generating an IntelliJ project remove all IntelliJ libraries that are not "
+              + "used in the project.")
   private boolean removeUnusedLibraries = false;
 
   @Option(
-    name = "--exclude-artifacts",
-    usage =
-        "Don't include references to the artifacts created by compiling a target in "
-            + "the module representing that target."
-  )
+      name = "--exclude-artifacts",
+      usage =
+          "Don't include references to the artifacts created by compiling a target in "
+              + "the module representing that target.")
   private boolean excludeArtifacts = false;
 
   @Option(
-    name = "--skip-build",
-    usage = "Don't try to build any of the targets for the generated project."
-  )
+      name = "--skip-build",
+      usage = "Don't try to build any of the targets for the generated project.")
   private boolean skipBuild = false;
 
   @Option(name = "--build", usage = "Also build all the targets in the project.")
   private boolean build = true;
 
   @Option(
-    name = "--focus",
-    usage =
-        "Space separated list of build target full qualified names that should be part of "
-            + "focused project. "
-            + "For example, //Libs/CommonLibs:BaseLib //Libs/ImportantLib:ImportantLib"
-  )
+      name = "--focus",
+      usage =
+          "Space separated list of build target full qualified names that should be part of "
+              + "focused project. "
+              + "For example, //Libs/CommonLibs:BaseLib //Libs/ImportantLib:ImportantLib")
   @Nullable
   private String modulesToFocusOn = null;
 
   @Option(
-    name = "--intellij-project-root",
-    usage =
-        "Generate an Intellij project at specified folder.  Buck targets under this folder "
-            + "are considered modules, and targets outside this folder are considered libraries."
-  )
+      name = "--intellij-project-root",
+      usage =
+          "Generate an Intellij project at specified folder.  Buck targets under this folder "
+              + "are considered modules, and targets outside this folder are considered libraries.")
   @Nonnull
   private String projectRoot = "";
 
   @Option(
-    name = "--intellij-include-transitive-dependencies",
-    usage = "Include transitive dependencies as RUNTIME library for Intellij project."
-  )
+      name = "--intellij-include-transitive-dependencies",
+      usage = "Include transitive dependencies as RUNTIME library for Intellij project.")
   @Nonnull
   private boolean includeTransitiveDependencies = false;
 
   @Option(
-    name = "--intellij-module-group-name",
-    usage = "Specify Intellij module group name when grouping modules into a module group."
-  )
+      name = "--intellij-module-group-name",
+      usage = "Specify Intellij module group name when grouping modules into a module group.")
   private String moduleGroupName = null;
 
   @Option(
-    name = "--file-with-list-of-generated-files",
-    usage =
-        "If present, forces command to save the list of generated file names to a provided"
-            + " file"
-  )
+      name = "--file-with-list-of-generated-files",
+      usage =
+          "If present, forces command to save the list of generated file names to a provided"
+              + " file")
   @Nullable
   private String generatedFilesListFilename = null;
 
   @Option(
-    name = "--update",
-    usage =
-        "Instead of generating a whole project, only regenerate the module files for the "
-            + "given targets, possibly updating the top-level modules list."
-  )
+      name = "--update",
+      usage =
+          "Instead of generating a whole project, only regenerate the module files for the "
+              + "given targets, possibly updating the top-level modules list.")
   private boolean updateOnly = false;
 
   private Optional<String> getPathToPreProcessScript(BuckConfig buckConfig) {

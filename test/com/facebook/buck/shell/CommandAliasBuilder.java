@@ -46,7 +46,9 @@ import java.util.stream.Stream;
 
 public class CommandAliasBuilder
     extends AbstractNodeBuilder<
-        CommandAliasDescriptionArg.Builder, CommandAliasDescriptionArg, CommandAliasDescription,
+        CommandAliasDescriptionArg.Builder,
+        CommandAliasDescriptionArg,
+        CommandAliasDescription,
         CommandAlias> {
 
   private static final CommandAliasDescription aliasBinaryDescription =

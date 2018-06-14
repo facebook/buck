@@ -1,4 +1,3 @@
 package com.facebook.sample;
 
-public class ExportedDep {
-}
+public class ExportedDep {}

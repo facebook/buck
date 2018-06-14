@@ -29,7 +29,9 @@ import java.util.Optional;
 
 public class HaskellBinaryBuilder
     extends AbstractNodeBuilder<
-        HaskellBinaryDescriptionArg.Builder, HaskellBinaryDescriptionArg, HaskellBinaryDescription,
+        HaskellBinaryDescriptionArg.Builder,
+        HaskellBinaryDescriptionArg,
+        HaskellBinaryDescription,
         BuildRule> {
 
   public HaskellBinaryBuilder(

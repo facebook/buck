@@ -16,8 +16,6 @@
 
 package bar;
 
-import bar.Bar;
-
 public class BarTest {
 
   public void bar() {

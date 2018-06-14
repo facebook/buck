@@ -21,10 +21,8 @@ import org.junit.runners.Suite;
 
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
-    Subtest1.class,
-    Subtest2.class,
-    FailingSubtest.class,
+  Subtest1.class,
+  Subtest2.class,
+  FailingSubtest.class,
 })
-public class FailingSuiteTest {
-
-}
+public class FailingSuiteTest {}

@@ -118,10 +118,9 @@ public class InstallCommand extends BuildCommand {
   @VisibleForTesting static final String UNINSTALL_SHORT_ARG = "-u";
 
   @Option(
-    name = UNINSTALL_LONG_ARG,
-    aliases = {UNINSTALL_SHORT_ARG},
-    usage = "Uninstall the existing version before installing."
-  )
+      name = UNINSTALL_LONG_ARG,
+      aliases = {UNINSTALL_SHORT_ARG},
+      usage = "Uninstall the existing version before installing.")
   private boolean uninstallFirst = false;
 
   @AdditionalOptions @SuppressFieldNotInitialized private UninstallOptions uninstallOptions;
@@ -132,49 +131,43 @@ public class InstallCommand extends BuildCommand {
   private TargetDeviceCommandLineOptions deviceOptions;
 
   @Option(
-    name = "--",
-    usage = "Arguments passed when running with -r. Only valid for Apple targets.",
-    handler = ConsumeAllOptionsHandler.class,
-    depends = "-r"
-  )
+      name = "--",
+      usage = "Arguments passed when running with -r. Only valid for Apple targets.",
+      handler = ConsumeAllOptionsHandler.class,
+      depends = "-r")
   private List<String> runArgs = new ArrayList<>();
 
   @Option(
-    name = RUN_LONG_ARG,
-    aliases = {RUN_SHORT_ARG},
-    usage = "Run an activity (the default activity for package unless -a is specified)."
-  )
+      name = RUN_LONG_ARG,
+      aliases = {RUN_SHORT_ARG},
+      usage = "Run an activity (the default activity for package unless -a is specified).")
   private boolean run = false;
 
   @Option(
-    name = WAIT_FOR_DEBUGGER_LONG_ARG,
-    aliases = {WAIT_FOR_DEBUGGER_SHORT_ARG},
-    usage = "Have the launched process wait for the debugger"
-  )
+      name = WAIT_FOR_DEBUGGER_LONG_ARG,
+      aliases = {WAIT_FOR_DEBUGGER_SHORT_ARG},
+      usage = "Have the launched process wait for the debugger")
   private boolean waitForDebugger = false;
 
   @Option(
-    name = INSTALL_VIA_SD_LONG_ARG,
-    aliases = {INSTALL_VIA_SD_SHORT_ARG},
-    usage = "Copy package to external storage (SD) instead of /data/local/tmp before installing."
-  )
+      name = INSTALL_VIA_SD_LONG_ARG,
+      aliases = {INSTALL_VIA_SD_SHORT_ARG},
+      usage = "Copy package to external storage (SD) instead of /data/local/tmp before installing.")
   private boolean installViaSd = false;
 
   @Option(
-    name = ACTIVITY_LONG_ARG,
-    aliases = {ACTIVITY_SHORT_ARG},
-    metaVar = "<pkg/activity>",
-    usage = "Activity to launch e.g. com.facebook.katana/.LoginActivity. Implies -r."
-  )
+      name = ACTIVITY_LONG_ARG,
+      aliases = {ACTIVITY_SHORT_ARG},
+      metaVar = "<pkg/activity>",
+      usage = "Activity to launch e.g. com.facebook.katana/.LoginActivity. Implies -r.")
   @Nullable
   private String activity = null;
 
   @Option(
-    name = PROCESS_LONG_ARG,
-    aliases = {PROCESS_SHORT_ARG},
-    metaVar = "<pkg:process>",
-    usage = "Process to kill after install e.g. com.facebook.katana[:proc1]. Implies -r."
-  )
+      name = PROCESS_LONG_ARG,
+      aliases = {PROCESS_SHORT_ARG},
+      metaVar = "<pkg:process>",
+      usage = "Process to kill after install e.g. com.facebook.katana[:proc1]. Implies -r.")
   @Nullable
   private String process = null;
 

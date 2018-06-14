@@ -16,8 +16,6 @@
 
 package com.example;
 
-import com.example.B;
-
 public class A {
 
   private B testField;
@@ -25,5 +23,4 @@ public class A {
   public B getB() {
     return new B();
   }
-
 }

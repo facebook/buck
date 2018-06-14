@@ -27,7 +27,9 @@ import java.util.Optional;
 
 public class LuaLibraryBuilder
     extends AbstractNodeBuilder<
-        LuaLibraryDescriptionArg.Builder, LuaLibraryDescriptionArg, LuaLibraryDescription,
+        LuaLibraryDescriptionArg.Builder,
+        LuaLibraryDescriptionArg,
+        LuaLibraryDescription,
         LuaLibrary> {
 
   public LuaLibraryBuilder(LuaLibraryDescription description, BuildTarget target) {

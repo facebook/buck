@@ -43,7 +43,9 @@ import java.util.Optional;
 
 public class PythonBinaryBuilder
     extends AbstractNodeBuilder<
-        PythonBinaryDescriptionArg.Builder, PythonBinaryDescriptionArg, PythonBinaryDescription,
+        PythonBinaryDescriptionArg.Builder,
+        PythonBinaryDescriptionArg,
+        PythonBinaryDescription,
         PythonBinary> {
 
   private PythonBinaryBuilder(

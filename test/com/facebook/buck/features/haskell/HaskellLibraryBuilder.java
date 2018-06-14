@@ -30,8 +30,10 @@ import com.google.common.collect.ImmutableSortedSet;
 
 public class HaskellLibraryBuilder
     extends AbstractNodeBuilder<
-        HaskellLibraryDescriptionArg.Builder, HaskellLibraryDescriptionArg,
-        HaskellLibraryDescription, HaskellLibrary> {
+        HaskellLibraryDescriptionArg.Builder,
+        HaskellLibraryDescriptionArg,
+        HaskellLibraryDescription,
+        HaskellLibrary> {
 
   public HaskellLibraryBuilder(
       BuildTarget target,

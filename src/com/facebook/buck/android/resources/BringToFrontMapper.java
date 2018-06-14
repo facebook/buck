@@ -58,8 +58,8 @@ public class BringToFrontMapper implements ReferenceMapper {
             maxRef = Math.max(maxRef, id);
           }
           int[] newMapping = IntStream.range(0, maxRef + 1).toArray();
-          // rewrite() does swaps iterating forward through ids. Doing those swaps in reverse will give
-          // us a mapping of the new ids.
+          // rewrite() does swaps iterating forward through ids. Doing those swaps in reverse will
+          // give us a mapping of the new ids.
           for (int i = ids.length - 1; i >= 0; i--) {
             // Since ids is sorted, it's guaranteed that newMapping[i] == i;
             int id = ids[i];

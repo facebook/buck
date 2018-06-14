@@ -49,7 +49,9 @@ import java.util.Set;
 
 public class AndroidBinaryBuilder
     extends AbstractNodeBuilder<
-        AndroidBinaryDescriptionArg.Builder, AndroidBinaryDescriptionArg, AndroidBinaryDescription,
+        AndroidBinaryDescriptionArg.Builder,
+        AndroidBinaryDescriptionArg,
+        AndroidBinaryDescription,
         AndroidBinary> {
 
   private AndroidBinaryBuilder(BuildTarget target) {

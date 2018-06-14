@@ -23,8 +23,10 @@ import java.util.SortedSet;
 
 public class AppleAssetCatalogBuilder
     extends AbstractNodeBuilder<
-        AppleAssetCatalogDescriptionArg.Builder, AppleAssetCatalogDescriptionArg,
-        AppleAssetCatalogDescription, AppleAssetCatalog> {
+        AppleAssetCatalogDescriptionArg.Builder,
+        AppleAssetCatalogDescriptionArg,
+        AppleAssetCatalogDescription,
+        AppleAssetCatalog> {
 
   protected AppleAssetCatalogBuilder(BuildTarget target) {
     super(new AppleAssetCatalogDescription(), target);

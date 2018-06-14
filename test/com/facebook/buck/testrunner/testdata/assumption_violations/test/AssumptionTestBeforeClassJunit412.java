@@ -23,15 +23,15 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 public class AssumptionTestBeforeClassJunit412 {
-  @Rule
-  public ExpectedException expectedException = ExpectedException.none();
+  @Rule public ExpectedException expectedException = ExpectedException.none();
 
   @BeforeClass
   public static void setUpOnce() {
     Assume.assumeTrue("False is true!", false);
   }
 
-  @Test public void test3() throws Exception {
+  @Test
+  public void test3() throws Exception {
     throw new Exception("we should never get here!");
   }
 }

@@ -32,7 +32,9 @@ import java.nio.file.Path;
 
 public class GroovyLibraryBuilder
     extends AbstractNodeBuilder<
-        GroovyLibraryDescriptionArg.Builder, GroovyLibraryDescriptionArg, GroovyLibraryDescription,
+        GroovyLibraryDescriptionArg.Builder,
+        GroovyLibraryDescriptionArg,
+        GroovyLibraryDescription,
         BuildRule> {
 
   private final ProjectFilesystem projectFilesystem;

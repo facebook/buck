@@ -27,8 +27,10 @@ import java.util.Map;
 
 public class VersionedAliasBuilder
     extends AbstractNodeBuilder<
-        VersionedAliasDescriptionArg.Builder, VersionedAliasDescriptionArg,
-        AbstractVersionedAliasDescription, BuildRule> {
+        VersionedAliasDescriptionArg.Builder,
+        VersionedAliasDescriptionArg,
+        AbstractVersionedAliasDescription,
+        BuildRule> {
 
   public VersionedAliasBuilder(AbstractVersionedAliasDescription description, BuildTarget target) {
     super(description, target);

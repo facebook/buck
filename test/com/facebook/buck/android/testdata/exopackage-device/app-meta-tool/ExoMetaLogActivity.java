@@ -29,22 +29,22 @@ import android.util.Log;
 /**
  * This activity logs information found in the exo test app's AndroidManifest.xml.
  *
- * It will try to load that app's icon, label, and some <meta-data/> fields. It
- * does some validation itself (like comparing the icon against Android's
- * default icon) and then logs information about the values to be checked by
- * the test script.
+ * <p>It will try to load that app's icon, label, and some <meta-data/> fields. It does some
+ * validation itself (like comparing the icon against Android's default icon) and then logs
+ * information about the values to be checked by the test script.
  */
 public class ExoMetaLogActivity extends Activity {
   @Override
   public void onCreate(Bundle bundle) {
     super.onCreate(bundle);
     try {
-      ApplicationInfo appInfo = getPackageManager()
-        .getApplicationInfo("buck.exotest", PackageManager.GET_META_DATA);
+      ApplicationInfo appInfo =
+          getPackageManager().getApplicationInfo("buck.exotest", PackageManager.GET_META_DATA);
 
       Bitmap icon = getIcon(appInfo);
-      Bitmap defaultIcon = ((BitmapDrawable) getPackageManager()
-          .getApplicationIcon(getApplicationInfo())).getBitmap();
+      Bitmap defaultIcon =
+          ((BitmapDrawable) getPackageManager().getApplicationIcon(getApplicationInfo()))
+              .getBitmap();
       if (icon == null) {
         Log.i("EXOPACKAGE_TEST_META", "Found no icon");
       } else if (icon.sameAs(defaultIcon)) {
@@ -96,8 +96,9 @@ public class ExoMetaLogActivity extends Activity {
 
   public String[] getMeta(ApplicationInfo appInfo) {
     try {
-      return getPackageManager().getResourcesForApplication(appInfo)
-        .getStringArray(appInfo.metaData.getInt("app_meta"));
+      return getPackageManager()
+          .getResourcesForApplication(appInfo)
+          .getStringArray(appInfo.metaData.getInt("app_meta"));
     } catch (Exception e) {
       Log.i("EXOPACKAGE_TEST_META_DEBUG", "getMeta threw exception", e);
       return null;

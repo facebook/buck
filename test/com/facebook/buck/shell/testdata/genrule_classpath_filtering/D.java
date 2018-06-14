@@ -16,5 +16,4 @@
 
 package com.example;
 
-class D {
-}
+class D {}

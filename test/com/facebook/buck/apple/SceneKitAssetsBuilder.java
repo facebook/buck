@@ -22,7 +22,9 @@ import java.nio.file.Path;
 
 public class SceneKitAssetsBuilder
     extends AbstractNodeBuilder<
-        AppleWrapperResourceArg.Builder, AppleWrapperResourceArg, SceneKitAssetsDescription,
+        AppleWrapperResourceArg.Builder,
+        AppleWrapperResourceArg,
+        SceneKitAssetsDescription,
         SceneKitAssets> {
 
   protected SceneKitAssetsBuilder(BuildTarget target) {

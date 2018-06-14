@@ -666,7 +666,7 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
 
     // Edit the file not used by the local target and assert we get a dep file hit
     workspace.replaceFileContents(
-        crossCellRoot.resolve("util/MoreUtil.java").toString(), "//public_method", "");
+        crossCellRoot.resolve("util/MoreUtil.java").toString(), "// public_method", "");
     workspace.runBuckBuild(bizTarget.getFullyQualifiedName()).assertSuccess();
 
     BuckBuildLog depFileHitLog = workspace.getBuildLog();
@@ -675,7 +675,7 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
 
     // Now edit the file not used by the local target and assert we don't get a false cache hit
     workspace.replaceFileContents(
-        crossCellRoot.resolve("util/Util.java").toString(), "//public_method", "");
+        crossCellRoot.resolve("util/Util.java").toString(), "// public_method", "");
     workspace.runBuckBuild(bizTarget.getFullyQualifiedName()).assertSuccess();
 
     BuckBuildLog depFileMissLog = workspace.getBuildLog();

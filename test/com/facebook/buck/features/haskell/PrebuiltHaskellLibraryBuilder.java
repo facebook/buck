@@ -25,8 +25,10 @@ import com.google.common.collect.ImmutableSortedSet;
 
 public class PrebuiltHaskellLibraryBuilder
     extends AbstractNodeBuilder<
-        HaskellPrebuiltLibraryDescriptionArg.Builder, HaskellPrebuiltLibraryDescriptionArg,
-        HaskellPrebuiltLibraryDescription, PrebuiltHaskellLibrary> {
+        HaskellPrebuiltLibraryDescriptionArg.Builder,
+        HaskellPrebuiltLibraryDescriptionArg,
+        HaskellPrebuiltLibraryDescription,
+        PrebuiltHaskellLibrary> {
 
   public PrebuiltHaskellLibraryBuilder(BuildTarget target) {
     super(new HaskellPrebuiltLibraryDescription(), target);

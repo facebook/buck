@@ -16,5 +16,4 @@
 
 package buck;
 
-class JavaLib1 {
-}
+class JavaLib1 {}

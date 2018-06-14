@@ -25,8 +25,10 @@ import com.google.common.collect.ImmutableSortedSet;
 
 public class PrebuiltRustLibraryBuilder
     extends AbstractNodeBuilder<
-        PrebuiltRustLibraryDescriptionArg.Builder, PrebuiltRustLibraryDescriptionArg,
-        PrebuiltRustLibraryDescription, PrebuiltRustLibrary> {
+        PrebuiltRustLibraryDescriptionArg.Builder,
+        PrebuiltRustLibraryDescriptionArg,
+        PrebuiltRustLibraryDescription,
+        PrebuiltRustLibrary> {
 
   private PrebuiltRustLibraryBuilder(
       PrebuiltRustLibraryDescription description, BuildTarget target) {

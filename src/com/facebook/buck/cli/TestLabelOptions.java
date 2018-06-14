@@ -54,33 +54,30 @@ class TestLabelOptions {
   public static final String LABEL_SEPERATOR = "+";
 
   @Option(
-    name = "--exclude",
-    usage = "Labels to ignore when running tests, --exclude L1 L2 ... LN.",
-    handler = LabelsOptionHandler.class
-  )
+      name = "--exclude",
+      usage = "Labels to ignore when running tests, --exclude L1 L2 ... LN.",
+      handler = LabelsOptionHandler.class)
   @SuppressFieldNotInitialized
   private Map<Integer, LabelSelector> excludedLabelSets;
 
   @Option(
-    name = "--labels",
-    aliases = {"--include"},
-    usage =
-        "Labels to include (or exclude, when prefixed with '!') when running test rules.  "
-            + "The first matching statement is used to decide whether to "
-            + "include or exclude a test rule.",
-    handler = LabelsOptionHandler.class
-  )
+      name = "--labels",
+      aliases = {"--include"},
+      usage =
+          "Labels to include (or exclude, when prefixed with '!') when running test rules.  "
+              + "The first matching statement is used to decide whether to "
+              + "include or exclude a test rule.",
+      handler = LabelsOptionHandler.class)
   @SuppressFieldNotInitialized
   private Map<Integer, LabelSelector> includedLabelSets;
 
   @Option(
-    name = "--always-exclude",
-    aliases = {"--always_exclude"},
-    usage =
-        "If set, an exclude filter will win over a target on the command line, so tests "
-            + "that were both specified to run on the command line and are excluded through either "
-            + "the '--exclude' option or in the .buckconfig will not run."
-  )
+      name = "--always-exclude",
+      aliases = {"--always_exclude"},
+      usage =
+          "If set, an exclude filter will win over a target on the command line, so tests "
+              + "that were both specified to run on the command line and are excluded through either "
+              + "the '--exclude' option or in the .buckconfig will not run.")
   private boolean alwaysExclude;
 
   private Supplier<ImmutableList<LabelSelector>> supplier =

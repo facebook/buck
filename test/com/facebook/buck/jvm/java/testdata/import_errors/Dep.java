@@ -1,4 +1,3 @@
 package com.example.buck.library.dep;
 
-public class Dep extends Super {
-}
+public class Dep extends Super {}

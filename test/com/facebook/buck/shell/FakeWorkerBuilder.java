@@ -37,8 +37,10 @@ import org.immutables.value.Value;
 
 public class FakeWorkerBuilder
     extends AbstractNodeBuilder<
-        FakeWorkerDescriptionArg.Builder, FakeWorkerDescriptionArg,
-        FakeWorkerBuilder.FakeWorkerDescription, FakeWorkerBuilder.FakeWorkerTool> {
+        FakeWorkerDescriptionArg.Builder,
+        FakeWorkerDescriptionArg,
+        FakeWorkerBuilder.FakeWorkerDescription,
+        FakeWorkerBuilder.FakeWorkerTool> {
 
   public FakeWorkerBuilder(BuildTarget target) {
     super(new FakeWorkerDescription(), target);

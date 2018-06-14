@@ -52,9 +52,8 @@ public class DistBuildSourceFilesCommand extends AbstractDistBuildCommand {
   private static final String OUTPUT_FILENAME = "stampede_build_source_files.txt";
 
   @Option(
-    name = "--output-file",
-    usage = "File where stampede source file dependencies will be saved to."
-  )
+      name = "--output-file",
+      usage = "File where stampede source file dependencies will be saved to.")
   private String outputFilename = OUTPUT_FILENAME;
 
   /**

@@ -115,8 +115,8 @@ public class PostEnterTaskListenerTest {
                   Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
                 if (roundEnv.processingOver()) {
                   Filer filer = processingEnv.getFiler();
-                  // We wait until the last possible momemt to generate Foo; if the callback is able to
-                  // get an element for it, that means it ran after the enter phase
+                  // We wait until the last possible moment to generate Foo; if the callback is able
+                  // to get an element for it, that means it ran after the enter phase
                   try (OutputStream outputStream =
                       filer.createSourceFile("Foo").openOutputStream()) {
                     outputStream.write("class Foo { }".getBytes());

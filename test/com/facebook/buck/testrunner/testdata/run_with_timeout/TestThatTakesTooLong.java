@@ -23,8 +23,8 @@ import org.junit.runner.RunWith;
 public class TestThatTakesTooLong {
 
   /**
-   * If the default timeout in {@code .buckconfig} is set to 500 milliseconds, as expected, then this test
-   * should fail due to a timeout.
+   * If the default timeout in {@code .buckconfig} is set to 500 milliseconds, as expected, then
+   * this test should fail due to a timeout.
    */
   @Test
   public void testShouldBlockForSixSeconds() {
@@ -34,5 +34,4 @@ public class TestThatTakesTooLong {
       // Ignore.
     }
   }
-
 }

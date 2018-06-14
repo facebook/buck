@@ -38,29 +38,27 @@ import java.io.IOException;
  * files.
  */
 @SkylarkModule(
-  name = "native",
-  namespace = true,
-  category = SkylarkModuleCategory.BUILTIN,
-  doc =
-      "A built-in module providing native rules and other package helper functions. "
-          + "All native rules appear as functions in this module, e.g. "
-          + "<code>native.cxx_library</code>."
-)
+    name = "native",
+    namespace = true,
+    category = SkylarkModuleCategory.BUILTIN,
+    doc =
+        "A built-in module providing native rules and other package helper functions. "
+            + "All native rules appear as functions in this module, e.g. "
+            + "<code>native.cxx_library</code>.")
 public class SkylarkNativeModule {
 
   @SkylarkCallable(
-    name = "package_name",
-    doc =
-        "The name of the package being evaluated. "
-            + "For example, in the build file <code>some/package/BUCK</code>, its value "
-            + "will be <code>some/package</code>. "
-            + "If the BUCK file calls a function defined in a .bzl file, "
-            + "<code>package_name()</code> will match the caller BUCK file package. "
-            + "This function is equivalent to the deprecated variable <code>PACKAGE_NAME</code>.",
-    parameters = {},
-    useAst = true,
-    useEnvironment = true
-  )
+      name = "package_name",
+      doc =
+          "The name of the package being evaluated. "
+              + "For example, in the build file <code>some/package/BUCK</code>, its value "
+              + "will be <code>some/package</code>. "
+              + "If the BUCK file calls a function defined in a .bzl file, "
+              + "<code>package_name()</code> will match the caller BUCK file package. "
+              + "This function is equivalent to the deprecated variable <code>PACKAGE_NAME</code>.",
+      parameters = {},
+      useAst = true,
+      useEnvironment = true)
   public String packageName(FuncallExpression ast, Environment env) throws EvalException {
     env.checkLoadingPhase("native.package_name", ast.getLocation());
     ParseContext parseContext = ParseContext.getParseContext(env, ast);
@@ -72,17 +70,16 @@ public class SkylarkNativeModule {
   }
 
   @SkylarkCallable(
-    name = "repository_name",
-    doc =
-        "The name of the repository the rule or build extension is called from. "
-            + "For example, in packages that are called into existence inside of the cell "
-            + "<code>foo</code> it will return <code>@foo</code>. In packages in the main "
-            + "repository (or standalone project), it will be set to <code>@</code>.",
-    parameters = {},
-    useLocation = true,
-    useAst = true,
-    useEnvironment = true
-  )
+      name = "repository_name",
+      doc =
+          "The name of the repository the rule or build extension is called from. "
+              + "For example, in packages that are called into existence inside of the cell "
+              + "<code>foo</code> it will return <code>@foo</code>. In packages in the main "
+              + "repository (or standalone project), it will be set to <code>@</code>.",
+      parameters = {},
+      useLocation = true,
+      useAst = true,
+      useEnvironment = true)
   public String repositoryName(Location location, FuncallExpression ast, Environment env)
       throws EvalException {
     env.checkLoadingPhase("native.repository_name", location);
@@ -91,14 +88,13 @@ public class SkylarkNativeModule {
   }
 
   @SkylarkCallable(
-    name = "rule_exists",
-    doc =
-        "Returns True if there is a previously defined rule with provided name, "
-            + "or False if the rule with such name does not exist.",
-    parameters = {@Param(name = "name", type = String.class, doc = "The name of the rule.")},
-    useAst = true,
-    useEnvironment = true
-  )
+      name = "rule_exists",
+      doc =
+          "Returns True if there is a previously defined rule with provided name, "
+              + "or False if the rule with such name does not exist.",
+      parameters = {@Param(name = "name", type = String.class, doc = "The name of the rule.")},
+      useAst = true,
+      useEnvironment = true)
   public Boolean ruleExists(String name, FuncallExpression ast, Environment env)
       throws EvalException {
     env.checkLoadingOrWorkspacePhase("native.rule_exists", ast.getLocation());
@@ -107,37 +103,33 @@ public class SkylarkNativeModule {
   }
 
   @SkylarkCallable(
-    name = "glob",
-    doc = "Returns a list of files that match glob search pattern.",
-    parameters = {
-      @Param(
-        name = "include",
-        type = SkylarkList.class,
-        generic1 = String.class,
-        doc = "a list of strings specifying patterns of files to include."
-      ),
-      @Param(
-        name = "exclude",
-        type = SkylarkList.class,
-        generic1 = String.class,
-        defaultValue = "[]",
-        positional = false,
-        named = true,
-        doc = "a list of strings specifying patterns of files to exclude."
-      ),
-      @Param(
-        name = "exclude_directories",
-        type = Boolean.class,
-        defaultValue = "True",
-        positional = false,
-        named = true,
-        doc = "True indicates directories should not be matched."
-      ),
-    },
-    documented = false,
-    useAst = true,
-    useEnvironment = true
-  )
+      name = "glob",
+      doc = "Returns a list of files that match glob search pattern.",
+      parameters = {
+        @Param(
+            name = "include",
+            type = SkylarkList.class,
+            generic1 = String.class,
+            doc = "a list of strings specifying patterns of files to include."),
+        @Param(
+            name = "exclude",
+            type = SkylarkList.class,
+            generic1 = String.class,
+            defaultValue = "[]",
+            positional = false,
+            named = true,
+            doc = "a list of strings specifying patterns of files to exclude."),
+        @Param(
+            name = "exclude_directories",
+            type = Boolean.class,
+            defaultValue = "True",
+            positional = false,
+            named = true,
+            doc = "True indicates directories should not be matched."),
+      },
+      documented = false,
+      useAst = true,
+      useEnvironment = true)
   public SkylarkList<String> glob(
       SkylarkList<String> include,
       SkylarkList<String> exclude,

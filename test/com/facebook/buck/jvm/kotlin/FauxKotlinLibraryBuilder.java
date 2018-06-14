@@ -32,7 +32,9 @@ import java.nio.file.Path;
 
 public class FauxKotlinLibraryBuilder
     extends AbstractNodeBuilder<
-        KotlinLibraryDescriptionArg.Builder, KotlinLibraryDescriptionArg, KotlinLibraryDescription,
+        KotlinLibraryDescriptionArg.Builder,
+        KotlinLibraryDescriptionArg,
+        KotlinLibraryDescription,
         BuildRule> {
 
   private final ProjectFilesystem projectFilesystem;

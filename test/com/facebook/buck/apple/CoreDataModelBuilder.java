@@ -22,7 +22,9 @@ import java.nio.file.Path;
 
 public class CoreDataModelBuilder
     extends AbstractNodeBuilder<
-        AppleWrapperResourceArg.Builder, AppleWrapperResourceArg, CoreDataModelDescription,
+        AppleWrapperResourceArg.Builder,
+        AppleWrapperResourceArg,
+        CoreDataModelDescription,
         CoreDataModel> {
 
   protected CoreDataModelBuilder(BuildTarget target) {

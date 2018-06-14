@@ -16,6 +16,4 @@
 
 package buck;
 
-class JavaLib2 {
-}
-
+class JavaLib2 {}

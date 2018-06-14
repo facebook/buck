@@ -26,8 +26,10 @@ import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 
 public class JsBundleGenruleBuilder
     extends AbstractNodeBuilder<
-        JsBundleGenruleDescriptionArg.Builder, JsBundleGenruleDescriptionArg,
-        JsBundleGenruleDescription, JsBundleGenrule> {
+        JsBundleGenruleDescriptionArg.Builder,
+        JsBundleGenruleDescriptionArg,
+        JsBundleGenruleDescription,
+        JsBundleGenrule> {
   private static final JsBundleGenruleDescription genruleDescription =
       new JsBundleGenruleDescription(createToolchainProvider(), new NoSandboxExecutionStrategy());
 

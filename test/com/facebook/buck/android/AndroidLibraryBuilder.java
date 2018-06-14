@@ -38,8 +38,10 @@ import java.util.Optional;
 
 public class AndroidLibraryBuilder
     extends AbstractNodeBuilder<
-        AndroidLibraryDescriptionArg.Builder, AndroidLibraryDescriptionArg,
-        AndroidLibraryDescription, AndroidLibrary> {
+        AndroidLibraryDescriptionArg.Builder,
+        AndroidLibraryDescriptionArg,
+        AndroidLibraryDescription,
+        AndroidLibrary> {
 
   private static final AndroidLibraryCompilerFactory JAVA_ONLY_COMPILER_FACTORY =
       (language, factory) ->

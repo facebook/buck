@@ -55,32 +55,34 @@ public class Zip {
     return out.toString();
   }
 
-  private static final String MAIN_JAVA = join(
-    "package com.example;",
-    "",
-    "public class Main {",
-    "",
-    "  public static void main(String... args) {",
-    "    Yin yin = new Yin();",
-    "    Yang yang = new Yang();",
-    "    yin.setYang(yang);",
-    "    yang.setYin(yin);",
-    "  }",
-    "}");
+  private static final String MAIN_JAVA =
+      join(
+          "package com.example;",
+          "",
+          "public class Main {",
+          "",
+          "  public static void main(String... args) {",
+          "    Yin yin = new Yin();",
+          "    Yang yang = new Yang();",
+          "    yin.setYang(yang);",
+          "    yang.setYin(yin);",
+          "  }",
+          "}");
 
-  private static final String YANG_JAVA = join(
-    "package com.example;",
-    "",
-    "public class Yang {",
-    "",
-    "  private Yin yin;",
-    "",
-    "  public void setYin(Yin yin) {",
-    "    this.yin = yin;",
-    "  }",
-    "",
-    "  public Yin getYin() {",
-    "    return yin;",
-    "  }",
-    "}");
+  private static final String YANG_JAVA =
+      join(
+          "package com.example;",
+          "",
+          "public class Yang {",
+          "",
+          "  private Yin yin;",
+          "",
+          "  public void setYin(Yin yin) {",
+          "    this.yin = yin;",
+          "  }",
+          "",
+          "  public Yin getYin() {",
+          "    return yin;",
+          "  }",
+          "}");
 }

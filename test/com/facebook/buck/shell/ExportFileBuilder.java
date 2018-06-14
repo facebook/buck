@@ -26,7 +26,9 @@ import javax.annotation.Nullable;
 
 public class ExportFileBuilder
     extends AbstractNodeBuilder<
-        ExportFileDescriptionArg.Builder, ExportFileDescriptionArg, ExportFileDescription,
+        ExportFileDescriptionArg.Builder,
+        ExportFileDescriptionArg,
+        ExportFileDescription,
         ExportFile> {
   public ExportFileBuilder(BuildTarget target) {
     super(new ExportFileDescription(FakeBuckConfig.builder().build()), target);

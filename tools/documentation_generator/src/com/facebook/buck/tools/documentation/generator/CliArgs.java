@@ -26,9 +26,8 @@ public class CliArgs {
   boolean showHelp = false;
 
   @Option(
-    name = "--destination_directory",
-    usage = "Destination directory for generated template files."
-  )
+      name = "--destination_directory",
+      usage = "Destination directory for generated template files.")
   File destinationDirectory;
 
   @Option(name = "--skylark_package", usage = "Java package where Skylark functions are defined.")

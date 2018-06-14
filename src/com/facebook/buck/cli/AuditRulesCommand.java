@@ -73,10 +73,9 @@ public class AuditRulesCommand extends AbstractCommand {
   private static final ImmutableSet<String> LAST_PROPERTIES = ImmutableSet.of("deps", "visibility");
 
   @Option(
-    name = "--type",
-    aliases = {"-t"},
-    usage = "The types of rule to filter by"
-  )
+      name = "--type",
+      aliases = {"-t"},
+      usage = "The types of rule to filter by")
   @Nullable
   private List<String> types = null;
 

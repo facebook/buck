@@ -23,9 +23,8 @@ public class LibJvmArgs {
 
   public static void main(String[] args) {
     RuntimeMXBean runtimeMxBean = ManagementFactory.getRuntimeMXBean();
-    for(String arg: runtimeMxBean.getInputArguments()) {
+    for (String arg : runtimeMxBean.getInputArguments()) {
       System.out.println(arg);
     }
   }
-
 }

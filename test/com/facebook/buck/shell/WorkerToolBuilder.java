@@ -26,7 +26,9 @@ import com.google.common.collect.ImmutableMap;
 
 public class WorkerToolBuilder
     extends AbstractNodeBuilder<
-        WorkerToolDescriptionArg.Builder, WorkerToolDescriptionArg, WorkerToolDescription,
+        WorkerToolDescriptionArg.Builder,
+        WorkerToolDescriptionArg,
+        WorkerToolDescription,
         DefaultWorkerTool> {
   private WorkerToolBuilder(BuildTarget target) {
     super(new WorkerToolDescription(FakeBuckConfig.builder().build()), target);

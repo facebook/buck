@@ -39,7 +39,9 @@ import java.util.Optional;
 
 public class JavaLibraryBuilder
     extends AbstractNodeBuilder<
-        JavaLibraryDescriptionArg.Builder, JavaLibraryDescriptionArg, JavaLibraryDescription,
+        JavaLibraryDescriptionArg.Builder,
+        JavaLibraryDescriptionArg,
+        JavaLibraryDescription,
         DefaultJavaLibrary> {
 
   private final ProjectFilesystem projectFilesystem;

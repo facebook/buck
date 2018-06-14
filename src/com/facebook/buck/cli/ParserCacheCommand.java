@@ -53,15 +53,14 @@ public class ParserCacheCommand extends AbstractCommand {
   private String loadFilename = null;
 
   @Option(
-    name = "--changes",
-    usage =
-        "File containing a JSON formatted list of changed files "
-            + "that might invalidate the parser cache. The format of the file is an array of "
-            + "objects with two keys: \"path\" and \"status\". "
-            + "The path is relative to the root cell. "
-            + "The status is the same as the one reported by \"hg status\" or \"git status\". "
-            + "For example: \"A\", \"?\", \"R\", \"!\" or \"M\"."
-  )
+      name = "--changes",
+      usage =
+          "File containing a JSON formatted list of changed files "
+              + "that might invalidate the parser cache. The format of the file is an array of "
+              + "objects with two keys: \"path\" and \"status\". "
+              + "The path is relative to the root cell. "
+              + "The status is the same as the one reported by \"hg status\" or \"git status\". "
+              + "For example: \"A\", \"?\", \"R\", \"!\" or \"M\".")
   @Nullable
   private String changesPath = null;
 

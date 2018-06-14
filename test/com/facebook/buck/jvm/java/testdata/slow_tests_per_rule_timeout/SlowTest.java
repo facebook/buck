@@ -22,5 +22,4 @@ public class SlowTest {
   public void test() throws InterruptedException {
     Thread.sleep(500);
   }
-
 }

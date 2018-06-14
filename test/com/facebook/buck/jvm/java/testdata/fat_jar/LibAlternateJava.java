@@ -21,6 +21,4 @@ public class LibAlternateJava {
   public static void main(String[] args) {
     System.out.println("Running inner jar");
   }
-
 }
-

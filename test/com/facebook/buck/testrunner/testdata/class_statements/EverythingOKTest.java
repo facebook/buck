@@ -20,9 +20,12 @@ import org.junit.Test;
 
 public class EverythingOKTest {
 
-  @Test public void shouldA() {}
+  @Test
+  public void shouldA() {}
 
-  @Test public void shouldB() {}
+  @Test
+  public void shouldB() {}
 
-  @Test public void shouldC() {}
+  @Test
+  public void shouldC() {}
 }

@@ -29,20 +29,18 @@ public class TargetDeviceCommandLineOptions {
   @VisibleForTesting static final String EMULATOR_MODE_LONG_ARG = "--emulator";
 
   @Option(
-    name = EMULATOR_MODE_LONG_ARG,
-    aliases = {EMULATOR_MODE_SHORT_ARG},
-    usage = "Use this option to use emulators only."
-  )
+      name = EMULATOR_MODE_LONG_ARG,
+      aliases = {EMULATOR_MODE_SHORT_ARG},
+      usage = "Use this option to use emulators only.")
   private boolean useEmulatorsOnlyMode;
 
   @VisibleForTesting static final String DEVICE_MODE_SHORT_ARG = "-d";
   @VisibleForTesting static final String DEVICE_MODE_LONG_ARG = "--device";
 
   @Option(
-    name = DEVICE_MODE_LONG_ARG,
-    aliases = {DEVICE_MODE_SHORT_ARG},
-    usage = "Use this option to use real devices only."
-  )
+      name = DEVICE_MODE_LONG_ARG,
+      aliases = {DEVICE_MODE_SHORT_ARG},
+      usage = "Use this option to use real devices only.")
   private boolean useRealDevicesOnlyMode;
 
   @VisibleForTesting static final String SERIAL_NUMBER_SHORT_ARG = "-s";
@@ -50,12 +48,11 @@ public class TargetDeviceCommandLineOptions {
   static final String UDID_ARG = "--udid";
 
   @Option(
-    name = SERIAL_NUMBER_LONG_ARG,
-    aliases = {SERIAL_NUMBER_SHORT_ARG, UDID_ARG},
-    forbids = SIMULATOR_NAME_LONG_ARG,
-    metaVar = "<serial-number>",
-    usage = "Use device or emulator with specific serial or UDID number."
-  )
+      name = SERIAL_NUMBER_LONG_ARG,
+      aliases = {SERIAL_NUMBER_SHORT_ARG, UDID_ARG},
+      forbids = SIMULATOR_NAME_LONG_ARG,
+      metaVar = "<serial-number>",
+      usage = "Use device or emulator with specific serial or UDID number.")
   @Nullable
   private String serialNumber;
 
@@ -63,12 +60,11 @@ public class TargetDeviceCommandLineOptions {
   static final String SIMULATOR_NAME_LONG_ARG = "--simulator-name";
 
   @Option(
-    name = SIMULATOR_NAME_LONG_ARG,
-    aliases = {SIMULATOR_NAME_SHORT_ARG},
-    forbids = SERIAL_NUMBER_LONG_ARG,
-    metaVar = "<name>",
-    usage = "Use simulator with specific name (Apple only)."
-  )
+      name = SIMULATOR_NAME_LONG_ARG,
+      aliases = {SIMULATOR_NAME_SHORT_ARG},
+      forbids = SERIAL_NUMBER_LONG_ARG,
+      metaVar = "<name>",
+      usage = "Use simulator with specific name (Apple only).")
   @Nullable
   private String simulatorName;
 

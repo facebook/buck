@@ -14,7 +14,6 @@
  * under the License.
  */
 
-
 package com.facebook.buck.rules.coercer;
 
 import static org.junit.Assert.assertEquals;

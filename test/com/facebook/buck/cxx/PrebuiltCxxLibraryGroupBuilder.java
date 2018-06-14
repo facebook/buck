@@ -28,8 +28,10 @@ import java.util.regex.Pattern;
 
 public class PrebuiltCxxLibraryGroupBuilder
     extends AbstractNodeBuilder<
-        PrebuiltCxxLibraryGroupDescriptionArg.Builder, PrebuiltCxxLibraryGroupDescriptionArg,
-        PrebuiltCxxLibraryGroupDescription, BuildRule> {
+        PrebuiltCxxLibraryGroupDescriptionArg.Builder,
+        PrebuiltCxxLibraryGroupDescriptionArg,
+        PrebuiltCxxLibraryGroupDescription,
+        BuildRule> {
 
   public PrebuiltCxxLibraryGroupBuilder(BuildTarget target) {
     super(PrebuiltCxxLibraryGroupDescription.of(), target);

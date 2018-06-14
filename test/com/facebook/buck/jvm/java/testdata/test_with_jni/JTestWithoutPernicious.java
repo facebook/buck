@@ -1,14 +1,13 @@
 package jlib;
 
-import org.junit.Test;
-
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.assertThat;
 
 import junit.framework.Assert;
+import org.junit.Test;
 
 public class JTestWithoutPernicious {
-  @Test//getValue
+  @Test // getValue
   public void testGetValue() {
     assertThat(JLib.getValue(), equalTo(3));
   }
@@ -23,7 +22,7 @@ public class JTestWithoutPernicious {
     }
   }
 
-  //@Test//noTestLib
+  // @Test//noTestLib
   public void testNoTestLib() {
     try {
       JLib.getValue();

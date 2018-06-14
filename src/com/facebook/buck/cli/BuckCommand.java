@@ -64,10 +64,9 @@ public class BuckCommand extends AbstractContainerCommand {
 
   // --version is handled in python, but leave it here for --help
   @Option(
-    name = "--version",
-    aliases = {"-V"},
-    usage = "Show version number."
-  )
+      name = "--version",
+      aliases = {"-V"},
+      usage = "Show version number.")
   private boolean version;
 
   @Override

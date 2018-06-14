@@ -17,4 +17,3 @@
 package org.example.tip;
 
 public class Tip {}
-

@@ -16,7 +16,6 @@
 
 package com.facebook.buck.jvm.java;
 
-
 import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
@@ -29,5 +28,4 @@ public class JavaTestFork1Test {
     assertEquals(null, System.getProperty("fork2"));
     System.setProperty("fork1", "testFork1PropertyWasHere");
   }
-
 }

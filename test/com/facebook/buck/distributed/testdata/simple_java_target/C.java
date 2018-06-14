@@ -15,6 +15,4 @@
  */
 package foo;
 
-public class C {
-
-}
+public class C {}

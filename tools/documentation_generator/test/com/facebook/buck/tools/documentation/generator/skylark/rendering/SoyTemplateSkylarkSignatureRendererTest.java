@@ -35,38 +35,35 @@ import org.junit.Test;
 public class SoyTemplateSkylarkSignatureRendererTest {
 
   @SkylarkSignature(
-    name = "dummy",
-    returnType = SkylarkList.class,
-    doc = "Returns a dummy list of strings.",
-    parameters = {
-      @Param(name = "seed", type = String.class, doc = "the first element of the returned list."),
-    },
-    documented = false,
-    useAst = true,
-    useEnvironment = true
-  )
+      name = "dummy",
+      returnType = SkylarkList.class,
+      doc = "Returns a dummy list of strings.",
+      parameters = {
+        @Param(name = "seed", type = String.class, doc = "the first element of the returned list."),
+      },
+      documented = false,
+      useAst = true,
+      useEnvironment = true)
   private static final BuiltinFunction dummy = new BuiltinFunction("dummy");
 
   @SkylarkSignature(
-    name = "dummy",
-    returnType = SkylarkList.class,
-    doc = "Returns a dummy list of strings.",
-    parameters = {},
-    documented = false,
-    useAst = true,
-    useEnvironment = true
-  )
+      name = "dummy",
+      returnType = SkylarkList.class,
+      doc = "Returns a dummy list of strings.",
+      parameters = {},
+      documented = false,
+      useAst = true,
+      useEnvironment = true)
   private static final BuiltinFunction dummyWithoutArgs = new BuiltinFunction("dummy");
 
   @SkylarkSignature(
-    name = "dummy",
-    returnType = SkylarkList.class,
-    doc = "Returns a dummy list of strings.",
-    extraKeywords = @Param(name = "kwargs", doc = "the dummy attributes."),
-    documented = false,
-    useAst = true,
-    useEnvironment = true
-  )
+      name = "dummy",
+      returnType = SkylarkList.class,
+      doc = "Returns a dummy list of strings.",
+      extraKeywords = @Param(name = "kwargs", doc = "the dummy attributes."),
+      documented = false,
+      useAst = true,
+      useEnvironment = true)
   private static final BuiltinFunction dummyWithKwargs = new BuiltinFunction("dummy");
 
   @Before

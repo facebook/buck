@@ -108,10 +108,9 @@ public abstract class AbstractCommand implements Command {
    * field so that {@code --verbose} is universally available to all commands.
    */
   @Option(
-    name = VerbosityParser.VERBOSE_LONG_ARG,
-    aliases = {VerbosityParser.VERBOSE_SHORT_ARG},
-    usage = "Specify a number between 0 and 8. '-v 1' is default, '-v 8' is most verbose."
-  )
+      name = VerbosityParser.VERBOSE_LONG_ARG,
+      aliases = {VerbosityParser.VERBOSE_SHORT_ARG},
+      usage = "Specify a number between 0 and 8. '-v 1' is default, '-v 8' is most verbose.")
   @SuppressWarnings("PMD.UnusedPrivateField")
   private int verbosityLevel = -1;
 
@@ -122,21 +121,19 @@ public abstract class AbstractCommand implements Command {
   private Integer numThreads = null;
 
   @Option(
-    name = CONFIG_LONG_ARG,
-    aliases = {"-c"},
-    usage = "Override .buckconfig option",
-    metaVar = "section.option=value"
-  )
+      name = CONFIG_LONG_ARG,
+      aliases = {"-c"},
+      usage = "Override .buckconfig option",
+      metaVar = "section.option=value")
   private Map<String, String> configOverrides = new LinkedHashMap<>();
 
   @Option(
-    name = SKYLARK_PROFILE_LONG_ARG,
-    usage =
-        "Experimental. Path to a file where Skylark profile information should be written into."
-            + " The output is in a binary format and can be converted into textual form using Bazel's "
-            + "analyze-profile command",
-    metaVar = "PATH"
-  )
+      name = SKYLARK_PROFILE_LONG_ARG,
+      usage =
+          "Experimental. Path to a file where Skylark profile information should be written into."
+              + " The output is in a binary format and can be converted into textual form using Bazel's "
+              + "analyze-profile command",
+      metaVar = "PATH")
   @Nullable
   private String skylarkProfile;
 
@@ -204,27 +201,24 @@ public abstract class AbstractCommand implements Command {
   }
 
   @Option(
-    name = NO_CACHE_LONG_ARG,
-    usage = "Whether to ignore the remote & local cache declared in .buckconfig."
-  )
+      name = NO_CACHE_LONG_ARG,
+      usage = "Whether to ignore the remote & local cache declared in .buckconfig.")
   private boolean noCache = false;
 
   @Nullable
   @Option(
-    name = OUTPUT_TEST_EVENTS_TO_FILE_LONG_ARG,
-    aliases = {"--output-events-to-file"},
-    usage =
-        "Serialize test-related event-bus events to the given file "
-            + "as line-oriented JSON objects."
-  )
+      name = OUTPUT_TEST_EVENTS_TO_FILE_LONG_ARG,
+      aliases = {"--output-events-to-file"},
+      usage =
+          "Serialize test-related event-bus events to the given file "
+              + "as line-oriented JSON objects.")
   private String eventsOutputPath = null;
 
   @Option(
-    name = PROFILE_PARSER_LONG_ARG,
-    usage =
-        "Enable profiling of buck.py internals (not the target being compiled) in the debug"
-            + "log and trace."
-  )
+      name = PROFILE_PARSER_LONG_ARG,
+      usage =
+          "Enable profiling of buck.py internals (not the target being compiled) in the debug"
+              + "log and trace.")
   private boolean enableParserProfiling = false;
 
   @Option(name = HELP_LONG_ARG, usage = "Prints the available options and exits.")

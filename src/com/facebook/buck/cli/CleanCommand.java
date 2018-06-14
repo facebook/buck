@@ -41,9 +41,8 @@ public class CleanCommand extends AbstractCommand {
   private boolean keepCache = false;
 
   @Option(
-    name = DRY_RUN_ARG,
-    usage = "Performs a dry-run and prints the paths that would be removed."
-  )
+      name = DRY_RUN_ARG,
+      usage = "Performs a dry-run and prints the paths that would be removed.")
   private boolean dryRun = false;
 
   private void cleanCell(CommandRunnerParams params, Cell cell) {

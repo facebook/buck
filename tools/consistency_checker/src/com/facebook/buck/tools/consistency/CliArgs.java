@@ -44,36 +44,32 @@ public class CliArgs extends CliCommand {
     }
 
     @Argument(
-      metaVar = "log file",
-      usage = "Log file containing thrift serialized rulekeys",
-      index = 0,
-      required = true
-    )
+        metaVar = "log file",
+        usage = "Log file containing thrift serialized rulekeys",
+        index = 0,
+        required = true)
     String logFile;
 
     @Option(
-      name = "--limit",
-      usage = "If specified, stop printing after this many rules have been printed",
-      required = false
-    )
+        name = "--limit",
+        usage = "If specified, stop printing after this many rules have been printed",
+        required = false)
     int limit = Integer.MAX_VALUE;
 
     @Option(
-      name = "--name-filter",
-      usage =
-          "If specified, only print rules whose names match this regular expression. Mutually exclusive with --key-filter",
-      required = false,
-      forbids = "--key-filter"
-    )
+        name = "--name-filter",
+        usage =
+            "If specified, only print rules whose names match this regular expression. Mutually exclusive with --key-filter",
+        required = false,
+        forbids = "--key-filter")
     String nameFilter = null;
 
     @Option(
-      name = "--key-filter",
-      usage =
-          "If specified, only print rules whose keys match this regular expression. Mutually exclusive with --name-filter",
-      required = false,
-      forbids = "--name-filter"
-    )
+        name = "--key-filter",
+        usage =
+            "If specified, only print rules whose keys match this regular expression. Mutually exclusive with --name-filter",
+        required = false,
+        forbids = "--name-filter")
     String keysFilter = null;
   }
 
@@ -85,41 +81,37 @@ public class CliArgs extends CliCommand {
     }
 
     @Argument(
-      metaVar = "original log file",
-      usage = "The original log file containing thrift serialized rulekeys",
-      required = true,
-      index = 0
-    )
+        metaVar = "original log file",
+        usage = "The original log file containing thrift serialized rulekeys",
+        required = true,
+        index = 0)
     String originalLogFile;
 
     @Argument(
-      metaVar = "new log file",
-      usage = "The new log file containing thrift serialized rulekeys after a change has been made",
-      required = true,
-      index = 1
-    )
+        metaVar = "new log file",
+        usage =
+            "The new log file containing thrift serialized rulekeys after a change has been made",
+        required = true,
+        index = 1)
     String newLogFile;
 
     @Argument(
-      metaVar = "target name",
-      usage = "The root target to traverse from in each file",
-      required = true
-    )
+        metaVar = "target name",
+        usage = "The root target to traverse from in each file",
+        required = true)
     List<String> targetNames;
 
     @Option(
-      name = "--color",
-      handler = ExplicitBooleanOptionHandler.class,
-      usage = "Color the output"
-    )
+        name = "--color",
+        handler = ExplicitBooleanOptionHandler.class,
+        usage = "Color the output")
     boolean useColor = true;
 
     @Option(
-      name = "--max-differences",
-      usage =
-          "The maximum number of differences to print. Any more will "
-              + "result in a non-zero exit code"
-    )
+        name = "--max-differences",
+        usage =
+            "The maximum number of differences to print. Any more will "
+                + "result in a non-zero exit code")
     int maxDifferences = DifferState.INFINITE_DIFFERENCES;
   }
 
@@ -132,34 +124,30 @@ public class CliArgs extends CliCommand {
     }
 
     @Argument(
-      metaVar = "original log file",
-      usage = "The original log file containing target names and hashes",
-      required = true,
-      index = 0
-    )
+        metaVar = "original log file",
+        usage = "The original log file containing target names and hashes",
+        required = true,
+        index = 0)
     String originalLogFile;
 
     @Argument(
-      metaVar = "new log file",
-      usage = "The new log file containing target names and hashes",
-      required = true,
-      index = 1
-    )
+        metaVar = "new log file",
+        usage = "The new log file containing target names and hashes",
+        required = true,
+        index = 1)
     String newLogFile;
 
     @Option(
-      name = "--color",
-      handler = ExplicitBooleanOptionHandler.class,
-      usage = "Color the output"
-    )
+        name = "--color",
+        handler = ExplicitBooleanOptionHandler.class,
+        usage = "Color the output")
     boolean useColor = true;
 
     @Option(
-      name = "--max-differences",
-      usage =
-          "The maximum number of differences to print. Any more will "
-              + "result in a non-zero exit code"
-    )
+        name = "--max-differences",
+        usage =
+            "The maximum number of differences to print. Any more will "
+                + "result in a non-zero exit code")
     int maxDifferences = DifferState.INFINITE_DIFFERENCES;
   }
 
@@ -177,42 +165,36 @@ public class CliArgs extends CliCommand {
     int runCount = 5;
 
     @Option(
-      name = "--buck-args",
-      usage = "Arguments to send to buck when invoked. Can be specified multiple times"
-    )
+        name = "--buck-args",
+        usage = "Arguments to send to buck when invoked. Can be specified multiple times")
     List<String> buckArgs = new ArrayList<>();
 
     @Option(
-      name = "--max-differences",
-      usage = "After this number of differences, stop doing comparisons of the target graphs"
-    )
+        name = "--max-differences",
+        usage = "After this number of differences, stop doing comparisons of the target graphs")
     int maxDifferences = DifferState.INFINITE_DIFFERENCES;
 
     @Option(
-      name = "--color",
-      handler = ExplicitBooleanOptionHandler.class,
-      usage = "Color the output"
-    )
+        name = "--color",
+        handler = ExplicitBooleanOptionHandler.class,
+        usage = "Color the output")
     boolean useColor = true;
 
     @Option(
-      name = "--keep-temp-files",
-      handler = ExplicitBooleanOptionHandler.class,
-      usage = "If set, do not delete temp files after completion"
-    )
+        name = "--keep-temp-files",
+        handler = ExplicitBooleanOptionHandler.class,
+        usage = "If set, do not delete temp files after completion")
     boolean keepTempFiles = false;
 
     @Option(
-      name = "--repository-directory",
-      usage = "If given, run buck commands from this directory"
-    )
+        name = "--repository-directory",
+        usage = "If given, run buck commands from this directory")
     String repositoryDirectory = null;
 
     @Argument(
-      metaVar = "target names",
-      usage = "The targets that should have their hash (and all dependencies' hashes) checked",
-      required = true
-    )
+        metaVar = "target names",
+        usage = "The targets that should have their hash (and all dependencies' hashes) checked",
+        required = true)
     List<String> targets;
   }
 
@@ -229,52 +211,45 @@ public class CliArgs extends CliCommand {
     int runCount = 5;
 
     @Option(
-      name = "--buck-args",
-      usage = "Arguments to send to buck when invoked. Can be specified multiple times"
-    )
+        name = "--buck-args",
+        usage = "Arguments to send to buck when invoked. Can be specified multiple times")
     List<String> buckArgs = new ArrayList<>();
 
     @Option(
-      name = "--max-differences",
-      usage = "After this number of differences, stop doing comparisons of the action graphs"
-    )
+        name = "--max-differences",
+        usage = "After this number of differences, stop doing comparisons of the action graphs")
     int maxDifferences = DifferState.INFINITE_DIFFERENCES;
 
     @Option(
-      name = "--color",
-      handler = ExplicitBooleanOptionHandler.class,
-      usage = "Color the output"
-    )
+        name = "--color",
+        handler = ExplicitBooleanOptionHandler.class,
+        usage = "Color the output")
     boolean useColor = true;
 
     @Option(
-      name = "--keep-temp-files",
-      handler = ExplicitBooleanOptionHandler.class,
-      usage = "If set, do not delete temp files after completion"
-    )
+        name = "--keep-temp-files",
+        handler = ExplicitBooleanOptionHandler.class,
+        usage = "If set, do not delete temp files after completion")
     boolean keepTempFiles = false;
 
     @Option(
-      name = "--repository-directory",
-      usage = "If given, run buck commands from this directory"
-    )
+        name = "--repository-directory",
+        usage = "If given, run buck commands from this directory")
     String repositoryDirectory = null;
 
     @Argument(
-      metaVar = "target names",
-      usage =
-          "The targets that should have their rule keys (and all dependencies' rule keys) checked",
-      required = true
-    )
+        metaVar = "target names",
+        usage =
+            "The targets that should have their rule keys (and all dependencies' rule keys) checked",
+        required = true)
     List<String> targets;
   }
 
   @Argument(
-    handler = SubCommandHandler.class,
-    required = true,
-    metaVar = "subcommand",
-    usage = "The subcommand to run"
-  )
+      handler = SubCommandHandler.class,
+      required = true,
+      metaVar = "subcommand",
+      usage = "The subcommand to run")
   @SubCommands({
     @SubCommand(name = "print", impl = PrintCliCommand.class),
     @SubCommand(name = "rule_key_diff", impl = RuleKeyDiffCommand.class),

@@ -35,8 +35,10 @@ import java.util.Optional;
 
 public class CxxLuaExtensionBuilder
     extends AbstractNodeBuilder<
-        CxxLuaExtensionDescriptionArg.Builder, CxxLuaExtensionDescriptionArg,
-        CxxLuaExtensionDescription, CxxLuaExtension> {
+        CxxLuaExtensionDescriptionArg.Builder,
+        CxxLuaExtensionDescriptionArg,
+        CxxLuaExtensionDescription,
+        CxxLuaExtension> {
 
   public CxxLuaExtensionBuilder(CxxLuaExtensionDescription description, BuildTarget target) {
     super(description, target);

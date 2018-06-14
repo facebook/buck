@@ -26,7 +26,9 @@ import java.util.Optional;
 
 public class AppleBundleBuilder
     extends AbstractNodeBuilder<
-        AppleBundleDescriptionArg.Builder, AppleBundleDescriptionArg, AppleBundleDescription,
+        AppleBundleDescriptionArg.Builder,
+        AppleBundleDescriptionArg,
+        AppleBundleDescription,
         AppleBundle> {
 
   protected AppleBundleBuilder(BuildTarget target) {

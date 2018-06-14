@@ -22,8 +22,7 @@ import android.os.Bundle;
 public class SmallWithInnerClass extends Activity {
 
   public class Inner {
-    public Inner() {
-    }
+    public Inner() {}
   }
 
   @Override

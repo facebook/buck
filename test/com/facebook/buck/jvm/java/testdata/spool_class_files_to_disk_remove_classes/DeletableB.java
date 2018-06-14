@@ -14,6 +14,4 @@
  * under the License.
  */
 
-class DeletableB {
-
-}
+class DeletableB {}

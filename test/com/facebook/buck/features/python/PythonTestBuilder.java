@@ -46,7 +46,9 @@ import java.util.Optional;
 
 public class PythonTestBuilder
     extends AbstractNodeBuilder<
-        PythonTestDescriptionArg.Builder, PythonTestDescriptionArg, PythonTestDescription,
+        PythonTestDescriptionArg.Builder,
+        PythonTestDescriptionArg,
+        PythonTestDescription,
         PythonTest> {
 
   private PythonTestBuilder(

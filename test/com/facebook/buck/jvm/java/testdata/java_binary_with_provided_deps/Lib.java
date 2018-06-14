@@ -1,4 +1,3 @@
 package com.example.buck;
 
-public class Lib {
-}
+public class Lib {}
