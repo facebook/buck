@@ -73,13 +73,13 @@ public class MainIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "includes_override", tmp);
     workspace.setUp();
     workspace
-        .runBuckCommand("targets", "--config", "buildfile.includes=//includes.py")
+        .runBuckCommand("targets", "--config", "buildfile.includes=//includes.py", "//...")
         .assertSuccess();
     workspace
-        .runBuckCommand("targets", "--config", "//buildfile.includes=//includes.py")
+        .runBuckCommand("targets", "--config", "//buildfile.includes=//includes.py", "//...")
         .assertSuccess();
     workspace
-        .runBuckCommand("targets", "--config", "repo//buildfile.includes=//includes.py")
+        .runBuckCommand("targets", "--config", "repo//buildfile.includes=//includes.py", "//...")
         .assertSuccess();
   }
 

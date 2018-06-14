@@ -65,6 +65,7 @@ import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.RuleKeyCacheRecycler;
 import com.facebook.buck.rules.keys.RuleKeyCacheScope;
 import com.facebook.buck.rules.keys.RuleKeyFieldLoader;
+import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.MoreExceptions;
 import com.facebook.buck.util.PatternsMatcher;
@@ -297,6 +298,8 @@ public class TargetsCommand extends AbstractCommand {
   @Override
   public ExitCode runWithoutHelp(CommandRunnerParams params)
       throws IOException, InterruptedException {
+    assertArguments();
+
     try (CommandThreadManager pool =
         new CommandThreadManager("Targets", getConcurrencyLimit(params.getBuckConfig())); ) {
       ListeningExecutorService executor = pool.getListeningExecutorService();
@@ -314,6 +317,16 @@ public class TargetsCommand extends AbstractCommand {
           .getBuckEventBus()
           .post(ConsoleEvent.severe(MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
       return ExitCode.PARSE_ERROR;
+    }
+  }
+
+  private void assertArguments() {
+    // referencedFiles can try to find targets based on a file, so make sure at least
+    // /something/ is provided. We don't want people accidentally crawling a whole repo
+    // when they didn't intend to.
+    if (getArguments().size() == 0 && this.referencedFiles.get().size() == 0) {
+      throw new CommandLineException(
+          "Must specify at least one build target pattern. See https://buckbuild.com/concept/build_target_pattern.html");
     }
   }
 

@@ -140,7 +140,9 @@ public class DaemonIntegrationTest {
             createRunnableCommand(ExitCode.SUCCESS, "build", "//:sleep"), 0, TimeUnit.MILLISECONDS);
     Future<?> secondThread =
         executorService.schedule(
-            createRunnableCommand(ExitCode.SUCCESS, "targets"), 500L, TimeUnit.MILLISECONDS);
+            createRunnableCommand(ExitCode.SUCCESS, "targets", "//..."),
+            500L,
+            TimeUnit.MILLISECONDS);
     firstThread.get();
     secondThread.get();
   }
