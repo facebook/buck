@@ -146,6 +146,10 @@ public class DistBuildConfig {
   private static final String MAX_MINION_SILENCE_MILLIS = "max_minion_silence_millis";
   private static final long DEFAULT_MAX_MINION_SILENCE_MILLIS = TimeUnit.SECONDS.toMillis(30);
 
+  private static final String MAX_CONSECUTIVE_SLOW_DEAD_MINION_CHECKS =
+      "max_consecutive_slow_dead_minion_checks";
+  private static final int DEFAULT_MAX_CONSECUTIVE_SLOW_DEAD_MINION_CHECKS = 3;
+
   private static final String ENABLE_DEEP_REMOTE_BUILD = "enable_deep_remote_build";
   private static final boolean DEFAULT_ENABLE_DEEP_REMOTE_BUILD = false;
 
@@ -402,6 +406,12 @@ public class DistBuildConfig {
     return buckConfig
         .getLong(STAMPEDE_SECTION, MAX_MINION_SILENCE_MILLIS)
         .orElse(DEFAULT_MAX_MINION_SILENCE_MILLIS);
+  }
+
+  public int getMaxConsecutiveSlowDeadMinionChecks() {
+    return buckConfig
+        .getInteger(STAMPEDE_SECTION, MAX_CONSECUTIVE_SLOW_DEAD_MINION_CHECKS)
+        .orElse(DEFAULT_MAX_CONSECUTIVE_SLOW_DEAD_MINION_CHECKS);
   }
 
   public int getFrontendRequestMaxRetries() {
