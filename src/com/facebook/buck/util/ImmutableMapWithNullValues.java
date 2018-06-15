@@ -37,8 +37,11 @@ public final class ImmutableMapWithNullValues<K, V> extends AbstractMap<K, V> {
   private static final Object NULL = new Object();
   private final Map<K, Object> delegate;
 
+  private final int hashCode;
+
   private ImmutableMapWithNullValues(Map<K, Object> delegate) {
     this.delegate = delegate;
+    this.hashCode = computeHashCode();
   }
 
   @Override
@@ -86,11 +89,18 @@ public final class ImmutableMapWithNullValues<K, V> extends AbstractMap<K, V> {
     if (!(other instanceof Map)) {
       return false;
     }
+    if (this.hashCode != other.hashCode()) {
+      return false;
+    }
     return entrySet().equals(((Map<K, V>) other).entrySet());
   }
 
   @Override
   public int hashCode() {
+    return hashCode;
+  }
+
+  private int computeHashCode() {
     return entrySet().hashCode();
   }
 
