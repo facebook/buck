@@ -25,13 +25,10 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
 public class AndroidBuckConfig {
-  private static final String APP_PLATFORM_KEY_PREFIX = "app_platform-";
-
   private final BuckConfig delegate;
   private final Platform platform;
 
@@ -68,8 +65,12 @@ public class AndroidBuckConfig {
     return delegate.getValue("ndk", "ndk_repository_path");
   }
 
-  public Optional<String> getNdkCpuAbiAgnosticAppPlatform() {
+  public Optional<String> getNdkCpuAbiFallbackAppPlatform() {
     return delegate.getValue("ndk", "app_platform");
+  }
+
+  public ImmutableMap<String, String> getNdkCpuAbiAppPlatformMap() {
+    return delegate.getMap("ndk", "app_platform_per_cpu_abi");
   }
 
   public Optional<Set<String>> getNdkCpuAbis() {
@@ -109,27 +110,16 @@ public class AndroidBuckConfig {
   }
 
   /**
-   * Returns the CPU specific app platform, or the agnostic one if set. If neither are set, returns
+   * Returns the CPU specific app platform, or the fallback one if set. If neither are set, returns
    * `Optional.empty` instead of a default value so callers can determine the difference between
    * user-set and buck defaults.
    */
   public Optional<String> getNdkAppPlatformForCpuAbi(String cpuAbi) {
-    ImmutableMap<String, String> platformMap = getNdkAppPlatformMap();
+    ImmutableMap<String, String> platformMap = getNdkCpuAbiAppPlatformMap();
     Optional<String> specificAppPlatform = Optional.ofNullable(platformMap.get(cpuAbi));
     return specificAppPlatform.isPresent()
         ? specificAppPlatform
-        : getNdkCpuAbiAgnosticAppPlatform();
-  }
-
-  private ImmutableMap<String, String> getNdkAppPlatformMap() {
-    ImmutableMap<String, String> allEntries = delegate.getEntriesForSection("ndk");
-    ImmutableMap.Builder<String, String> platforms = ImmutableMap.builder();
-    for (Map.Entry<String, String> entry : allEntries.entrySet()) {
-      if (entry.getKey().startsWith(APP_PLATFORM_KEY_PREFIX)) {
-        platforms.put(entry.getKey().substring(APP_PLATFORM_KEY_PREFIX.length()), entry.getValue());
-      }
-    }
-    return platforms.build();
+        : getNdkCpuAbiFallbackAppPlatform();
   }
 
   /**

@@ -25,12 +25,12 @@ import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatform;
 import com.facebook.buck.android.toolchain.ndk.impl.AndroidNdkHelper;
 import com.facebook.buck.android.toolchain.ndk.impl.AndroidNdkHelper.SymbolGetter;
 import com.facebook.buck.android.toolchain.ndk.impl.AndroidNdkHelper.SymbolsAndDtNeeded;
-import com.facebook.buck.core.rules.resolver.impl.TestBuildRuleResolver;
+import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
-import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.TestConsole;
@@ -127,7 +127,7 @@ public class NdkLibraryIntegrationTest {
     workspace.replaceFileContents(
         ".buckconfig",
         "#app_platform",
-        "app_platform = android-16\n  app_platform-armv7 = android-19");
+        "app_platform = android-16\n  app_platform_per_cpu_abi = armv7 => android-19");
     Path apkPath = workspace.buildAndReturnOutput("//apps/sample:app_cxx_lib_app_platform");
 
     SymbolsAndDtNeeded info;
@@ -157,7 +157,7 @@ public class NdkLibraryIntegrationTest {
     workspace.replaceFileContents(
         ".buckconfig",
         "#app_platform",
-        "app_platform-x86 = android-18\n  app_platform-armv7 = android-19");
+        "app_platform_per_cpu_abi = x86 => android-18, armv7 => android-19");
     Path apkPath = workspace.buildAndReturnOutput("//apps/sample:app_cxx_lib_app_platform");
 
     SymbolsAndDtNeeded info;
@@ -182,7 +182,7 @@ public class NdkLibraryIntegrationTest {
       throws IOException, InterruptedException {
     NdkCxxPlatform platform = AndroidNdkHelper.getNdkCxxPlatform(filesystem);
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(new TestBuildRuleResolver()));
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(new TestActionGraphBuilder()));
     Path tmpDir = tempLocation.newFolder("symbols_tmp");
     return new SymbolGetter(
         new DefaultProcessExecutor(new TestConsole()), tmpDir, platform.getObjdump(), pathResolver);

@@ -24,7 +24,7 @@ The root of your project must contain a configuration file
 named <code>.buckconfig</code>. If present, Buck will read this file
 before executing its business logic so that any customizations specified
 in <code>.buckconfig</code> will take effect. This file uses the
-{sp}<a href="http://en.wikipedia.org/wiki/INI_file">INI file format</a> with 
+{sp}<a href="http://en.wikipedia.org/wiki/INI_file">INI file format</a> with
 a few extensions discussed below.
 </p>
 
@@ -237,7 +237,7 @@ $ buck targets --resolve-alias app#src_jar
   {param example_value: '/Library/Android/sdk' /}
   {param description}
     This specifies the absolute path to the Android SDK that all Android code in the project should
-    be built against.  This is equivalent to setting the environment variable <code>ANDROID_SDK=/Library/Android/sdk</code>. 
+    be built against.  This is equivalent to setting the environment variable <code>ANDROID_SDK=/Library/Android/sdk</code>.
     The environment variables <code>ANDROID_SDK</code> and <code>ANDROID_HOME</code> both supersede the buckconfig setting.
     The default is empty.
   {/param}
@@ -618,7 +618,7 @@ osx_toolchains_override = tools.stable,tools.swift40,tools.common
   {param raw_example}
 {literal}<pre class="prettyprint lang-ini">
 [apple]
-    # Use (my_clang|my_actool) executable which exists in one of the 
+    # Use (my_clang|my_actool) executable which exists in one of the
     # imported SDKs and toolchains, instead of the defaults.
     clang_xcode_tool_name_override=my_clang
     actool_xcode_tool_name_override=my_actool
@@ -837,7 +837,7 @@ osx_toolchains_override = tools.stable,tools.swift40,tools.common
   {param name: 'name' /}
   {param example_value: 'BUILD' /}
   {param description}
-    The name of {call buck.build_file /}s within a project. 
+    The name of {call buck.build_file /}s within a project.
     This defaults to <code>BUCK</code>.
     We recommend that you use the default name. However, you could
     specify a different name&mdash;such as <code>BUILD</code> shown
@@ -2629,7 +2629,7 @@ cxx_library(
   {param description}
     The maximum number of threads allowed to run the dexing steps with. Since the dexing steps can
     use a lot of memory, it might be useful to set this to a lower value to avoid out-of-memory
-    on systems that have a lot of CPU cores. This parameter is mostly useful 
+    on systems that have a lot of CPU cores. This parameter is mostly useful
     when {call buckconfig.dx_threads /} is not specified and the number of threads is obtained based on
     hardware.
   {/param}
@@ -2890,23 +2890,27 @@ your <code>.buckjavaargs</code> file</a>:
 {call buckconfig.entry}
   {param section: 'ndk' /}
   {param name: 'app_platform' /}
+  {param example_value: 'android-21' /}
   {param description}
-  <p>
     The android platform libraries that the code is targeting.  This is equivalent to the{sp}
     <code>APP_TARGET</code> in the NDK build system.  The default is <code>android-16</code>.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'ndk' /}
+  {param name: 'app_platform_per_cpu_abi' /}
+  {param example_value: 'arm64 => android-19, i386 => android-22' /}
+  {param description}
+  <p>
+    The android platform libraries that the code is targeting, set on a{sp}
+    per-CPU ABI basis. This is equivalent to the <code>APP_TARGET</code> in{sp}
+    the NDK build system.
   </p>
   <p>
-  This setting can also be set on a per-CPU ABI basis. Each key should begin with the{sp}
-  prefix <code>app_platform-</code>, followed by the CPU ABI name. ABI-specific values{sp}
-  have higher precedence.
+    If no value is set for a particular CPU ABI, the value from{sp}
+    <a href="#ndk.app_platform"><code>app_platform</code></a> is used as a fallback.
   </p>
-  {/param}
-  {param raw_example}
-{literal}<pre class="prettyprint lang-ini">
-[ndk]
-  app_platform = android-19
-  app_platform-arm64 = android-21
-</pre>{/literal}
   {/param}
 {/call}
 
@@ -3918,19 +3922,19 @@ your <code>.buckjavaargs</code> file</a>:
   </p>
   <p>
   Specifies a comma-separated list of mappings from regular expressions
-  (regexes) to message strings. 
+  (regexes) to message strings.
   </p>
   <p>
   If the text of a Buck parser error
   matches one of the specified regexes, the corresponding message string
   is appended to the error. You can use the message string to provide
-  additional helpful information to the user. 
+  additional helpful information to the user.
   </p>
   <p>
   If the regex contains unescaped parentheses, <code>()</code>, the text
-  that the parentheses enclose is captured. You can then insert this captured text 
-  in the appended string by using <code>$1</code> for the first captured text 
-  string, <code>$2</code> for the second, and so on. This works exactly like 
+  that the parentheses enclose is captured. You can then insert this captured text
+  in the appended string by using <code>$1</code> for the first captured text
+  string, <code>$2</code> for the second, and so on. This works exactly like
   Java regex replacement strings.
   </p>
   {/param}
@@ -3979,7 +3983,7 @@ your <code>.buckjavaargs</code> file</a>:
   {param description}
     Whether the super console is enabled. If so, a more reactive UI will be shown.
     Valid values are ENABLED, DISABLED, and AUTO. By default, this is set to AUTO
-    which will take OS, terminal settings and other things into account. In most 
+    which will take OS, terminal settings and other things into account. In most
     interactive cases, it will be enabled.
   {/param}
 {/call}
