@@ -85,7 +85,7 @@ public class DiffRuleKeysScriptIntegrationTest {
             .join(
                 "Change details for [//:java_lib_1->jarBuildStepsFactory]",
                 "  (srcs):",
-                "    -[path(JavaLib1.java:e3506ff7c11f638458d08120d54f186dc79ddada)]",
+                "    -[path(JavaLib1.java:fc76b6367ddddc08ff2fb46d8f22676c09c95be5)]",
                 "    +[path(JavaLib1.java:7d82c86f964af479abefa21da1f19b1030649314)]",
                 "");
     assertThat(runRuleKeyDiffer(workspace), Matchers.equalTo(expectedResult));
@@ -239,7 +239,7 @@ public class DiffRuleKeysScriptIntegrationTest {
             Matchers.containsString(
                 "Change details for [//:java_lib_1->jarBuildStepsFactory]\n"
                     + "  (srcs):\n"
-                    + "    -[path(JavaLib1.java:e3506ff7c11f638458d08120d54f186dc79ddada)]\n"
+                    + "    -[path(JavaLib1.java:fc76b6367ddddc08ff2fb46d8f22676c09c95be5)]\n"
                     + "    +[path(JavaLib1.java:7d82c86f964af479abefa21da1f19b1030649314)]")));
   }
 
