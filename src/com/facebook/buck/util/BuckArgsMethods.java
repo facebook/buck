@@ -88,7 +88,7 @@ public class BuckArgsMethods {
    * option.
    *
    * @param args original args array
-   * @param projectRoot path against which any {@code @args} path arguments will be resolved.
+   * @param cellMapping a map from cell names to their roots
    * @return args array with AT-files expanded.
    */
   public static ImmutableList<String> expandAtFiles(
