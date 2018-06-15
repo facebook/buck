@@ -20,6 +20,7 @@ import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.both;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.greaterThan;
+import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.lessThanOrEqualTo;
 import static org.hamcrest.Matchers.not;
@@ -43,6 +44,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.concurrent.Phaser;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.After;
@@ -64,18 +66,52 @@ public class WorkerProcessPoolTest {
     testThreads.close();
   }
 
-  @Test
+  @Test(timeout = WAIT_FOR_TEST_THREADS_TIMEOUT)
   public void testProvidesWorkersAccordingToCapacityThenBlocks() throws InterruptedException {
     int maxWorkers = 3;
     WorkerProcessPool pool = createPool(maxWorkers);
     Set<WorkerProcess> createdWorkers = concurrentSet();
 
-    for (int i = 0; i < maxWorkers; i++) {
-      testThreads.startThread(borrowWorkerProcessWithoutReturning(pool, createdWorkers));
-    }
-    testThreads.join(WAIT_FOR_TEST_THREADS_TIMEOUT);
+    Phaser phaser = new Phaser(maxWorkers + 1); // +1 for main test thread
+    UnsafeRunnable borrowNoReturn = borrowWorkerProcessWithoutReturning(pool, createdWorkers);
+    UnsafeRunnable borrowAndWait =
+        () -> {
+          borrowNoReturn.run();
+          phaser.arriveAndDeregister();
+        };
 
+    // starts `maxWorkers` threads that exhaust the pool
+    for (int i = 0; i < maxWorkers; i++) {
+      testThreads.startThread(borrowAndWait);
+    }
+
+    // wait for three threads to start spawning a worker
+    phaser.arriveAndAwaitAdvance();
+    // try to take another worker
+    Thread stallingThread =
+        testThreads.startThread(borrowWorkerProcessWithoutReturning(pool, createdWorkers));
+
+    // give the extra thread a chance to take a worker (which would make the test fail)
+    stallingThread.join(50);
+
+    // Register the exception handler with the test phaser.
+    // The will transition to 2 parties, as the test main thread is still registered after calling
+    // `arriveAndAwaitAdvance()`. The previously running pool clients deregistered themselves.
+    phaser.register();
+    Throwable throwable[] = {null};
+    stallingThread.setUncaughtExceptionHandler(
+        (t, e) -> {
+          throwable[0] = e;
+          phaser.arriveAndDeregister();
+        });
+    stallingThread.interrupt();
+    phaser.awaitAdvance(phaser.arriveAndDeregister());
+
+    // no more workers than `capacity` were spawned
     assertThat(createdWorkers.size(), is(maxWorkers));
+
+    // the fourth thread was actually interrupted
+    assertThat(throwable[0].getCause(), instanceOf(InterruptedException.class));
   }
 
   @Test
