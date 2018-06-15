@@ -76,3 +76,12 @@ go_test(
     ],
     coverage_mode = "set",
 )
+
+go_test(
+    name = "test-scores",
+    package_name = "lib",
+    srcs = [
+        "test_scores.go",
+        "test_scores_test.go",
+    ],
+)
