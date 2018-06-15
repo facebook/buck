@@ -19,6 +19,7 @@ package com.facebook.buck.shell;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.core.description.BuildRuleParams;
 import com.facebook.buck.core.model.BuildTarget;
@@ -34,9 +35,17 @@ import com.facebook.buck.rules.TestBuildRuleCreationContextFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.function.BiFunction;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 public class WorkerToolDescriptionTest {
+  private static BuckConfig BUCK_CONFIG;
+
+  @BeforeClass
+  public static void setUp() {
+    BUCK_CONFIG = FakeBuckConfig.builder().build();
+  }
+
   @Test
   public void testGetMaxWorkersWhenSet() throws NoSuchBuildTargetException {
     int maxWorkers = 14;
@@ -47,13 +56,13 @@ public class WorkerToolDescriptionTest {
   @Test
   public void testGetMaxWorkersWhenSetToZero() throws NoSuchBuildTargetException {
     WorkerTool workerTool = createWorkerTool(0);
-    assertThat(workerTool.getMaxWorkers(), equalTo(Integer.MAX_VALUE));
+    assertThat(workerTool.getMaxWorkers(), equalTo(BUCK_CONFIG.getNumThreads()));
   }
 
   @Test
   public void testGetMaxWorkersWhenSetToNegativeInt() throws NoSuchBuildTargetException {
     WorkerTool workerTool = createWorkerTool(-2);
-    assertThat(workerTool.getMaxWorkers(), equalTo(Integer.MAX_VALUE));
+    assertThat(workerTool.getMaxWorkers(), equalTo(BUCK_CONFIG.getNumThreads()));
   }
 
   @Test
@@ -92,13 +101,12 @@ public class WorkerToolDescriptionTest {
             .setMaxWorkers(maxWorkers)
             .build();
 
-    WorkerToolDescription workerToolDescription =
-        new WorkerToolDescription(FakeBuckConfig.builder().build());
+    WorkerToolDescription workerToolDescription = new WorkerToolDescription(BUCK_CONFIG);
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//arbitrary:target");
     BuildRuleParams params =
         new BuildRuleParams(
-            () -> ImmutableSortedSet.of(),
+            ImmutableSortedSet::of,
             () -> ImmutableSortedSet.of(graphBuilder.getRule(exe)),
             ImmutableSortedSet.of());
     return (WorkerTool)

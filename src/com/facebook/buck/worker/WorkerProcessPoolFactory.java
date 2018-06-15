@@ -114,16 +114,16 @@ public class WorkerProcessPoolFactory {
     AtomicInteger workerNumber = new AtomicInteger(0);
 
     WorkerProcessPool newPool =
-        new WorkerProcessPool(paramsToUse.getMaxWorkers(), workerHash) {
-          @Override
-          protected WorkerProcess startWorkerProcess() throws IOException {
-            Path tmpDir = workerTmpDir.resolve(Integer.toString(workerNumber.getAndIncrement()));
-            filesystem.mkdirs(tmpDir);
-            WorkerProcess process = createWorkerProcess(processParams, context, tmpDir);
-            process.ensureLaunchAndHandshake();
-            return process;
-          }
-        };
+        new WorkerProcessPool(
+            paramsToUse.getMaxWorkers(),
+            workerHash,
+            () -> {
+              Path tmpDir = workerTmpDir.resolve(Integer.toString(workerNumber.getAndIncrement()));
+              filesystem.mkdirs(tmpDir);
+              WorkerProcess process = createWorkerProcess(processParams, context, tmpDir);
+              process.ensureLaunchAndHandshake();
+              return process;
+            });
     WorkerProcessPool previousPool = processPoolMap.putIfAbsent(key, newPool);
     // If putIfAbsent does not return null, then that means another thread beat this thread
     // into putting an WorkerProcessPool in the map for this key. If that's the case, then we

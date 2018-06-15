@@ -130,7 +130,7 @@ public class WorkerToolDescription implements DescriptionWithTargetGraph<WorkerT
     }
 
     // negative or zero: unlimited number of worker processes
-    int maxWorkers = args.getMaxWorkers() < 1 ? Integer.MAX_VALUE : args.getMaxWorkers();
+    int maxWorkers = args.getMaxWorkers() < 1 ? buckConfig.getNumThreads() : args.getMaxWorkers();
 
     CommandTool tool = builder.build();
     return new DefaultWorkerTool(

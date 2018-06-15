@@ -140,12 +140,9 @@ public class WorkerShellStepTest {
       ImmutableMap<String, WorkerJobResult> jobArgs, int poolCapacity) {
     WorkerProcessPool workerProcessPool =
         new WorkerProcessPool(
-            poolCapacity, Hashing.sha1().hashString(fakeWorkerStartupCommand, Charsets.UTF_8)) {
-          @Override
-          protected WorkerProcess startWorkerProcess() throws IOException {
-            return new FakeWorkerProcess(jobArgs);
-          }
-        };
+            poolCapacity,
+            Hashing.sha1().hashString(fakeWorkerStartupCommand, Charsets.UTF_8),
+            () -> new FakeWorkerProcess(jobArgs));
 
     ConcurrentHashMap<String, WorkerProcessPool> workerProcessMap = new ConcurrentHashMap<>();
     workerProcessMap.put(fakeWorkerStartupCommand, workerProcessPool);
@@ -153,12 +150,8 @@ public class WorkerShellStepTest {
     WorkerProcessPool persistentWorkerProcessPool =
         new WorkerProcessPool(
             poolCapacity,
-            Hashing.sha1().hashString(fakePersistentWorkerStartupCommand, Charsets.UTF_8)) {
-          @Override
-          protected WorkerProcess startWorkerProcess() throws IOException {
-            return new FakeWorkerProcess(jobArgs);
-          }
-        };
+            Hashing.sha1().hashString(fakePersistentWorkerStartupCommand, Charsets.UTF_8),
+            () -> new FakeWorkerProcess(jobArgs));
     ConcurrentHashMap<String, WorkerProcessPool> persistentWorkerProcessMap =
         new ConcurrentHashMap<>();
     persistentWorkerProcessMap.put(persistentWorkerKey, persistentWorkerProcessPool);
