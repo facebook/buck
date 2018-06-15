@@ -150,6 +150,62 @@ public class BuckArgsMethodsTest {
   }
 
   @Test
+  public void nestedFlagFileIsSupported() throws Exception {
+    Path arg = tmp.newFile("argsfile");
+    Files.write(arg, ImmutableList.of("arg1", "--flagfile", "flagfile"));
+    Path nestedFlagFile = tmp.newFile("flagfile");
+    Files.write(nestedFlagFile, ImmutableList.of("arg2"));
+
+    assertThat(
+        BuckArgsMethods.expandAtFiles(
+            ImmutableList.of("arg0", "--flagfile", arg.toString()),
+            ImmutableMap.of(RelativeCellName.ROOT_CELL_NAME, tmp.getRoot())),
+        Matchers.contains("arg0", "arg1", "arg2"));
+  }
+
+  @Test
+  public void nestedAtFileIsSupported() throws Exception {
+    Path arg = tmp.newFile("argsfile");
+    Files.write(arg, ImmutableList.of("arg1", "@flagfile"));
+    Path nestedFlagFile = tmp.newFile("flagfile");
+    Files.write(nestedFlagFile, ImmutableList.of("arg2"));
+
+    assertThat(
+        BuckArgsMethods.expandAtFiles(
+            ImmutableList.of("arg0", "--flagfile", arg.toString()),
+            ImmutableMap.of(RelativeCellName.ROOT_CELL_NAME, tmp.getRoot())),
+        Matchers.contains("arg0", "arg1", "arg2"));
+  }
+
+  @Test
+  public void nestedFlagFileExpansionLoopDetected() throws Exception {
+    Path arg = tmp.newFile("argsfile");
+    Files.write(arg, ImmutableList.of("--flagfile", "flagfile"));
+    Path flagFile = tmp.newFile("flagfile");
+    Files.write(flagFile, ImmutableList.of("--flagfile", "argsfile"));
+
+    thrown.expectMessage("Expansion loop detected:");
+    thrown.expectMessage("argsfile -> flagfile -> argsfile");
+    BuckArgsMethods.expandAtFiles(
+        ImmutableList.of("arg0", "--flagfile", arg.toString()),
+        ImmutableMap.of(RelativeCellName.ROOT_CELL_NAME, tmp.getRoot()));
+  }
+
+  @Test
+  public void mixOfAtAndFlagFileExpansionLoopIsDetected() throws Exception {
+    Path arg = tmp.newFile("argsfile");
+    Files.write(arg, ImmutableList.of("--flagfile", "flagfile"));
+    Path flagFile = tmp.newFile("flagfile");
+    Files.write(flagFile, ImmutableList.of("@argsfile"));
+
+    thrown.expectMessage("Expansion loop detected:");
+    thrown.expectMessage("argsfile -> flagfile -> argsfile");
+    BuckArgsMethods.expandAtFiles(
+        ImmutableList.of("arg0", "--flagfile", arg.toString()),
+        ImmutableMap.of(RelativeCellName.ROOT_CELL_NAME, tmp.getRoot()));
+  }
+
+  @Test
   public void bothAtFileSyntaxAreSupported() throws Exception {
     Path argsfile = tmp.newFile("argsfile");
     Files.write(argsfile, ImmutableList.of("arg2", "arg3"));
