@@ -29,7 +29,6 @@ import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.nio.file.Path;
 import org.hamcrest.Matchers;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -54,7 +53,6 @@ public class ExternalJavacIntegrationTest {
   }
 
   @Test
-  @Ignore("Disabled due to badness t4689997")
   public void whenExternalSrcZipUsedCompilationSucceeds() throws IOException {
     assumeTrue(Platform.detect() != Platform.WINDOWS);
 
