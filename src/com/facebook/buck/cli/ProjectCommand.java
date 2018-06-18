@@ -59,7 +59,8 @@ public class ProjectCommand extends BuildCommand {
 
   public enum Ide {
     INTELLIJ,
-    XCODE;
+    XCODE,
+    GOLAND;
 
     public static Ide fromString(String string) {
       switch (Ascii.toLowerCase(string)) {
@@ -67,6 +68,8 @@ public class ProjectCommand extends BuildCommand {
           return Ide.INTELLIJ;
         case "xcode":
           return Ide.XCODE;
+        case "goland":
+          return Ide.GOLAND;
         default:
           throw new HumanReadableException("Invalid ide value %s.", string);
       }
@@ -337,9 +340,14 @@ public class ProjectCommand extends BuildCommand {
                     });
             result = xcodeProjectCommandHelper.parseTargetsAndRunXCodeGenerator(executor);
             break;
+          case GOLAND:
+            // Only running pre- and post-processing scripts for now
+            result = ExitCode.SUCCESS;
+            break;
           default:
             // unreachable
-            throw new IllegalStateException("'ide' should always be of type 'INTELLIJ' or 'XCODE'");
+            throw new IllegalStateException(
+                "'ide' should always be of type 'INTELLIJ' or 'XCODE' or 'GOLAND'");
         }
         rc = runPostprocessScriptIfNeeded(params, projectIde);
         if (rc != 0) {
