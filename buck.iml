@@ -125,5 +125,6 @@
     <orderEntry type="library" name="googleapis" level="project" />
     <orderEntry type="library" name="netty-all-4.1.24.Final" level="project" />
     <orderEntry type="library" name="guava-20.0" level="project" />
+    <orderEntry type="library" name="bundle" level="project" />
   </component>
 </module>

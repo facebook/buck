@@ -1,0 +1,47 @@
+syntax = "proto3";
+
+package android.bundle;
+
+option java_package = "com.android.bundle";
+
+message BundleConfig {
+  Bundletool bundletool = 1;
+  Optimizations optimizations = 2;
+  Compression compression = 3;
+}
+
+message Bundletool {
+  reserved 1;
+  // Version of BundleTool used to build the Bundle.
+  string version = 2;
+}
+
+message Compression {
+  // Glob matching the list of files to leave uncompressed in the APKs.
+  // The matching is done against the path of files in the APK, thus excluding
+  // the name of the modules, and using forward slash ("/") as a name separator.
+  // Examples: "res/raw/**", "assets/**/*.uncompressed", etc.
+  repeated string uncompressed_glob = 1;
+}
+
+message Optimizations {
+  SplitsConfig splits_config = 1;
+}
+
+message SplitsConfig {
+  repeated SplitDimension split_dimension = 1;
+}
+
+message SplitDimension {
+  enum Value {
+    UNSPECIFIED_VALUE = 0;
+    ABI = 1;
+    SCREEN_DENSITY = 2;
+    LANGUAGE = 3;
+  }
+  Value value = 1;
+
+  // If set to 'true', indicates that APKs should *not* be split by this
+  // dimension.
+  bool negate = 2;
+}

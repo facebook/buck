@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="bundle">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/third-party/java/bundletool/bundle.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

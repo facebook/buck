@@ -1,0 +1,4 @@
+This is the .proto file needed to generate java class files for GenerateConfigStep.java 
+to create BundleConfig.pb file. 
+
+Acquired from https://github.com/google/bundletool/blob/master/src/main/proto/config.proto

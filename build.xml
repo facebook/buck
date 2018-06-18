@@ -136,6 +136,7 @@
     <include name="aopalliance/aopalliance.jar" />
     <include name="asm/asm*-6.0.jar" />
     <include name="bazel/skylark-lang_deploy.jar" />
+    <include name="bundletool/bundle.jar" />
     <include name="closure-templates/soy-excluding-deps.jar" />
     <include name="commons-compress/commons-compress-1.8.1.jar" />
     <include name="commons-logging/commons-logging-1.2.jar" />
