@@ -20,6 +20,7 @@ import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verify;
 import static org.hamcrest.Matchers.any;
+import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.not;
@@ -55,9 +56,9 @@ import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMap.Builder;
 import com.google.common.collect.ImmutableSortedSet;
 import org.easymock.EasyMock;
-import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -122,7 +123,7 @@ public class JsBundleGenruleDescriptionTest {
   public void failsForNonJsBundleTargets() {
     thrown.expect(HumanReadableException.class);
     thrown.expectMessage(
-        Matchers.equalTo(
+        equalTo(
             "The 'js_bundle' argument of //:bundle-genrule, //js:bundle, must correspond to a js_bundle() rule."));
     JsTestScenario scenario = JsTestScenario.builder().arbitraryRule(defaultBundleTarget).build();
 
@@ -155,6 +156,21 @@ public class JsBundleGenruleDescriptionTest {
             "JS_DIR",
             pathResolver.getAbsolutePath(setup.jsBundle().getSourcePathToOutput()).toString()));
     assertThat(env, hasEntry("JS_BUNDLE_NAME", setup.jsBundle().getBundleName()));
+    assertThat(env, hasEntry("JS_BUNDLE_NAME_OUT", setup.jsBundle().getBundleName()));
+  }
+
+  @Test
+  public void allowsBundleRenaming() {
+    String renamedBundle = "bundle-renamed.abc";
+    setUpWithOptions(builderOptions().bundleName(renamedBundle));
+
+    Builder<String, String> builder = ImmutableMap.builder();
+    setup.genrule().addEnvironmentVariables(sourcePathResolver(), builder);
+    ImmutableMap<String, String> env = builder.build();
+
+    assertThat(setup.genrule().getBundleName(), equalTo(renamedBundle));
+    assertThat(env, hasEntry("JS_BUNDLE_NAME", setup.jsBundle().getBundleName()));
+    assertThat(env, hasEntry("JS_BUNDLE_NAME_OUT", renamedBundle));
   }
 
   @Test

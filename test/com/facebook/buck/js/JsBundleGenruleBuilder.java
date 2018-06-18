@@ -23,6 +23,7 @@ import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.sandbox.NoSandboxExecutionStrategy;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
+import javax.annotation.Nullable;
 
 public class JsBundleGenruleBuilder
     extends AbstractNodeBuilder<
@@ -58,6 +59,9 @@ public class JsBundleGenruleBuilder
     if (options.cmd != null) {
       getArgForPopulating().setCmd(options.cmd);
     }
+    if (options.bundleName != null) {
+      getArgForPopulating().setBundleName(options.bundleName);
+    }
   }
 
   public static class Options {
@@ -66,7 +70,8 @@ public class JsBundleGenruleBuilder
     boolean rewriteSourcemap = false;
     boolean rewriteMisc = false;
     boolean skipResources = false;
-    public StringWithMacros cmd = null;
+    @Nullable public StringWithMacros cmd = null;
+    @Nullable private String bundleName;
 
     public static Options of(BuildTarget genruleTarget, BuildTarget jsBundle) {
       return new Options(genruleTarget, jsBundle);
@@ -95,6 +100,11 @@ public class JsBundleGenruleBuilder
     private Options(BuildTarget genruleTarget, BuildTarget jsBundle) {
       this.genruleTarget = genruleTarget;
       this.jsBundle = jsBundle;
+    }
+
+    public Options bundleName(String bundleName) {
+      this.bundleName = bundleName;
+      return this;
     }
   }
 }

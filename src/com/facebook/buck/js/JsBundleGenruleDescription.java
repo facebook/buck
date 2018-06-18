@@ -203,6 +203,8 @@ public class JsBundleGenruleDescription
       return false;
     }
 
+    Optional<String> getBundleName();
+
     @Override
     default Optional<String> getType() {
       return Optional.of("js_bundle");

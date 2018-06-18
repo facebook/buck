@@ -54,6 +54,7 @@ public class JsBundleGenrule extends Genrule
   @AddToRuleKey final boolean rewriteSourcemap;
   @AddToRuleKey final boolean rewriteMisc;
   @AddToRuleKey final boolean skipResources;
+  @AddToRuleKey private final String bundleName;
   private final JsBundleOutputs jsBundle;
 
   public JsBundleGenrule(
@@ -95,6 +96,7 @@ public class JsBundleGenrule extends Genrule
     this.rewriteSourcemap = args.getRewriteSourcemap();
     this.rewriteMisc = args.getRewriteMisc();
     this.skipResources = args.getSkipResources();
+    bundleName = args.getBundleName().orElseGet(jsBundle::getBundleName);
   }
 
   @Override
@@ -105,6 +107,7 @@ public class JsBundleGenrule extends Genrule
     environmentVariablesBuilder
         .put("JS_DIR", pathResolver.getAbsolutePath(jsBundle.getSourcePathToOutput()).toString())
         .put("JS_BUNDLE_NAME", jsBundle.getBundleName())
+        .put("JS_BUNDLE_NAME_OUT", bundleName)
         .put("MISC_DIR", pathResolver.getAbsolutePath(jsBundle.getSourcePathToMisc()).toString())
         .put(
             "PLATFORM",
@@ -223,7 +226,7 @@ public class JsBundleGenrule extends Genrule
 
   @Override
   public String getBundleName() {
-    return jsBundle.getBundleName();
+    return bundleName;
   }
 
   @Override
