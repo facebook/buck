@@ -6,7 +6,7 @@
   {param name: 'srcs' /}
   {param default : '[]' /}
   {param desc}
-  The set of <code>.py</code> files included in this library.
+  The set of Python (<code>.py</code>) files to include in this library.
   {/param}
 {/call}
 {/template}
@@ -17,10 +17,12 @@
   {param name : 'platform_srcs' /}
   {param default : '[]' /}
   {param desc}
-  Python-platform-specific source files. These should be specified as a list of pairs where the first
-  element is an un-anchored regex (in java.util.regex.Pattern syntax) against which the platform name
-  is matched (as defined in the `python#name` section of `.buckconfig`), and the second element is
-  a list of source files.
+  Python-platform-specific source files. These should be specified as a 
+  list of pairs where the first element in each pair is an un-anchored 
+  regex against which the platform name is matched, and the second element 
+  is a list of source files. The regex should use <code>java.util.regex.Pattern</code> syntax.  
+  The platform name is defined as an alternate <code>[python]</code> section 
+  in <code>.buckconfig</code>.
   {/param}
 {/call}
 {/template}
@@ -31,8 +33,10 @@
   {param name: 'resources' /}
   {param default : '[]' /}
   {param desc}
-  Static files to be packaged along with the python sources. These resources can be
-  accessed at runtime using the <a href="http://setuptools.readthedocs.io/en/latest/pkg_resources.html">pkg_resources</a> API.
+  Static files to be packaged along with the Python sources. 
+  These resources can be accessed at runtime using 
+  the <a href="http://setuptools.readthedocs.io/en/latest/pkg_resources.html">pkg_resources</a> module distributed 
+  with Python's setuptools.
   {/param}
 {/call}
 {/template}
@@ -43,10 +47,12 @@
   {param name : 'platform_resources' /}
   {param default : '[]' /}
   {param desc}
-  Python-platform-specific resource files. These should be specified as a list of pairs where the first
-  element is an un-anchored regex (in java.util.regex.Pattern syntax) against which the platform name
-  is matched (as defined in the `python#name` section of `.buckconfig`), and the second element is a
-  list of resource files.
+  Python-platform-specific resource files. These should be specified as a 
+  list of pairs where the first element in each pair is an un-anchored 
+  regex against which the platform name is matched, and the second element 
+  is a list of resource files. The regex should use <code>java.util.regex.Pattern</code> syntax.  
+  The platform name is defined as an alternate <code>[python]</code> section 
+  in <code>.buckconfig</code>.
   {/param}
 {/call}
 {/template}
@@ -57,9 +63,9 @@
   {param name: 'base_module' /}
   {param default : 'None' /}
   {param desc}
-  The package for which the given specified sources and resources should reside in their final
-  location in the top-level binary. If unset, the project relative directory that houses the
-  BUCK file is used.
+  The package in which the specified source files and resources should reside in their final
+  location in the top-level binary. If unset, Buck uses the project-relative directory 
+  that contains the BUCK file.
   {/param}
 {/call}
 {/template}
@@ -70,7 +76,8 @@
   {param name : 'platform' /}
   {param default : 'None' /}
   {param desc}
-  The name of the Python platform to build against by default (as defined in the `python#name` section of `.buckconfig`).
+  The name of the Python platform to build against by default as defined 
+  in <code>.buckconfig</code>.
   {/param}
 {/call}
 {/template}
@@ -81,10 +88,11 @@
   {param name : 'linker_flags' /}
   {param default : '[]' /}
   {param desc}
-  Additional linker flags that should be applied to any links which are specific to this rule.
-  Note that whether these flags are used are dependent on the native link strategy selected in
-  `.buckconfig` and currently only applies to the `MERGED` link strategy, as the `SEPARATE` link
-  strategy pulls in shared libraries linked in the context of their owning rule (e.g. `cxx_library`).
+  Additional linker flags that should be applied to any linking which is specific to this rule.
+  Note that whether these flags are used is dependent on the native link strategy selected in
+  <code>.buckconfig</code> and currently applies only to the <code>merged</code> <code>{call buckconfig.python_native_link_strategy /}</code>;
+  the <code>separate</code> link strategy pulls in shared libraries that are linked in the 
+  context of the rules that own them, such as {call buck.ruleLink}{param name : 'cxx_library' /}{/call}.
   {/param}
 {/call}
 {/template}
@@ -95,7 +103,7 @@
   {param name : 'package_style' /}
   {param default : 'None' /}
   {param desc}
-  Used to override the global packaging style set with {call buckconfig.python_package_style /}.
+  Used to override the global packaging style that is set in <code>[{call buckconfig.python_package_style /}]</code>.
   {/param}
 {/call}
 {/template}
@@ -106,8 +114,9 @@
   {param name : 'preload_deps' /}
   {param default : '[]' /}
   {param desc}
-  A list of C/C++ library dependencies that need to be loaded before any other libraries when the
-  python binary starts up.  This requires dynamic loader support found on most systems (e.g. `LD_PRELOAD`).
+  A list of C/C++ library dependencies that need to be loaded before any 
+  other libraries when the PEX starts up. This requires dynamic loader support, 
+  such as <code>LD_PRELOAD</code>, found on most systems.
   {/param}
 {/call}
 {/template}
@@ -118,7 +127,7 @@
   {param name : 'exclude_deps_from_merged_linking' /}
   {param default : 'False' /}
   {param desc}
-  When linking the top-level binary with a <code>merged</code> <code>native_link_style</code>,
+  When linking the top-level binary with a <code>merged</code> <code>{call buckconfig.python_native_link_strategy /}</code>,
   do not merge or re-link any native transitive deps of this library.  This is useful if
   this library wraps prebuilt native extensions which cannot be re-linked as part of
   library merging.

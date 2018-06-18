@@ -15,8 +15,9 @@
 {call buck.rule}
 {param status: 'UNFROZEN' /}
 {param overview}
-A <code>python_library()</code> rule is used to group together Python sources
-and resources to be packaged into a top-level {call buck.python_binary /} rule.
+A <code>python_library()</code> rule is used to group together Python
+source files and resources to package them into a PEX using a 
+top-level {call buck.python_binary /} rule.
 {/param}
 
 {param args}
@@ -42,7 +43,7 @@ and resources to be packaged into a top-level {call buck.python_binary /} rule.
   {param name: 'deps' /}
   {param default : '[]' /}
   {param desc}
-  Other <code>python_library()</code> rules which lists <code>srcs</code> from
+  Other <code>python_library()</code> rules that list <code>srcs</code> from
   which this rule imports modules.
   {/param}
 {/call}
@@ -53,8 +54,14 @@ and resources to be packaged into a top-level {call buck.python_binary /} rule.
 
 {param examples}
 
+<p>
+Include Python source files and resource files.
+</p>
+
 {literal}<pre class="prettyprint lang-py">
-# A rule that includes a single .py file.
+# BUCK 
+
+# A rule that includes a single Python file.
 python_library(
   name = 'fileutil',
   srcs = ['fileutil.py'],
@@ -63,9 +70,9 @@ python_library(
   ],
 )
 
-# A rule that uses glob() to include all sources in the directory which the
-# rule is defined.  It also lists a resource file that gets packaged with
-# the sources in this rule.
+# A rule that uses glob() to include all Python source files in the
+# directory in which the rule is defined. The rule also specifies a 
+# resource file that gets packaged with the source file.
 python_library(
   name = 'testutil',
   srcs = glob(['testutil/**/*.py']),
@@ -75,20 +82,23 @@ python_library(
 )
 </pre>{/literal}
 <p>
-Here is an example of using the `platform_srcs` and `platform_resources`
-parameters to pull in sources/resources only when building for a specific
-Python platform:
+Use the <code>platform_srcs</code> and <code>platform_resources</code> arguments 
+to pull in source files and resources only when building for a specific Python platform.
 </p>
+
 {literal}<pre class="prettyprint lang-ini">
 ; .buckconfig
+
 [python#py2]
   interpreter = /usr/bin/python2.7
+
 [python#py3]
   interpreter = /usr/bin/python3.4
 </pre>{/literal}
 
 {literal}<pre class="prettyprint lang-py">
 # BUCK
+
 python_library(
   name = 'utils',
   platform_srcs = [
