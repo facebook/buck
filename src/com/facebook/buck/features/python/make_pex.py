@@ -28,7 +28,6 @@ if not zipfile.is_zipfile(sys.argv[0]):
 
 import pkg_resources
 
-from pex.common import safe_mkdtemp
 from pex.pex_builder import PEXBuilder
 from pex.interpreter import PythonInterpreter, PythonIdentity
 
@@ -84,26 +83,6 @@ def copy_package(pex_builder, package, resource='', prefix=''):
                     os.path.join(prefix, target_path))
 
 
-def _sanitize_output_files(root):
-    for root, dirs, files in os.walk(root):
-        for file in files:
-            if file.endswith(".pyc"):
-                _remove_timestamp_from_pyc(os.path.join(root, file))
-
-
-def _remove_timestamp_from_pyc(pycFile):
-    if os.path.getsize(pycFile) < 8:
-        # Magic (4) + Timestamp (4)
-        return
-
-    fh = open(pycFile, "r+b")
-    # Skip magic
-    fh.seek(4)
-    # Override timestamp using the const value same as in ZipConstants
-    fh.write(bytes(172032000))
-    fh.close()
-
-
 def main():
     parser = optparse.OptionParser(usage="usage: %prog [options] output")
     parser.add_option('--entry-point', default='__main__')
@@ -146,10 +125,8 @@ def main():
         identity,
         extras={})
 
-    compile_folder = safe_mkdtemp()
-
     pex_builder = PEXBuilder(
-        path=output if options.directory else compile_folder,
+        path=output if options.directory else None,
         interpreter=interpreter,
     )
 
@@ -194,9 +171,6 @@ def main():
     if options.directory:
         pex_builder.freeze(code_hash=False, bytecode_compile=False)
     else:
-        # Freeze method will compile the sources
-        pex_builder.freeze()
-        _sanitize_output_files(compile_folder)
         pex_builder.build(output)
 
 

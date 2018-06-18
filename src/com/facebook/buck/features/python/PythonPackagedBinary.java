@@ -136,13 +136,12 @@ public class PythonPackagedBinary extends PythonBinary implements HasRuntimeDeps
                 context.getBuildCellRootPath(), getProjectFilesystem(), workingDirectory)));
 
     SourcePathResolver resolver = context.getSourcePathResolver();
-    ProjectFilesystem projectFilesystem = getProjectFilesystem();
 
     // Generate and return the PEX build step.
     steps.add(
         new PexStep(
             getBuildTarget(),
-            projectFilesystem,
+            getProjectFilesystem(),
             builder.getEnvironment(resolver),
             ImmutableList.<String>builder()
                 .addAll(builder.getCommandPrefix(resolver))
@@ -165,8 +164,6 @@ public class PythonPackagedBinary extends PythonBinary implements HasRuntimeDeps
                         Entry::getKey, e -> resolver.getAbsolutePath(e.getValue()))),
             preloadLibraries,
             getComponents().isZipSafe().orElse(true)));
-
-    steps.add(PexScrubberStep.of(projectFilesystem.resolve(binPath), projectFilesystem));
 
     // Record the executable package for caching.
     buildableContext.recordArtifact(binPath);

@@ -21,10 +21,8 @@ import static org.hamcrest.Matchers.endsWith;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.everyItem;
 import static org.hamcrest.Matchers.not;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeThat;
 import static org.junit.Assume.assumeTrue;
 
@@ -39,7 +37,6 @@ import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkStrategy;
 import com.facebook.buck.features.python.PythonBuckConfig.PackageStyle;
 import com.facebook.buck.features.python.toolchain.impl.PythonInterpreterFromConfig;
 import com.facebook.buck.io.ExecutableFinder;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -55,17 +52,12 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Ordering;
-import com.google.common.hash.HashCode;
-import com.google.common.hash.Hasher;
-import com.google.common.hash.Hashing;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
-import java.util.List;
 import java.util.Optional;
 import org.hamcrest.Matchers;
 import org.junit.Before;
@@ -186,39 +178,6 @@ public class PythonBinaryIntegrationTest {
     } else {
       assertTrue(output.isFile());
     }
-  }
-
-  @Test
-  public void testDeterministicOutput() throws IOException {
-    ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
-    Path output = workspace.getPath("buck-out/gen/bin.pex");
-    workspace.runBuckBuild("//:bin").assertSuccess();
-    HashCode sha1 =
-        pexDirectory
-            ? this.computeSha1HashCodeForDirectory(filesystem, output)
-            : filesystem.computeSha1(output).asHashCode();
-    workspace.runBuckCommand("clean");
-    if (filesystem.exists(output)) {
-      fail("File still exists");
-    }
-    workspace.runBuckBuild("//:bin").assertSuccess();
-    HashCode sha2 =
-        pexDirectory
-            ? this.computeSha1HashCodeForDirectory(filesystem, output)
-            : filesystem.computeSha1(output).asHashCode();
-    assertEquals("Build .pex files are not the same.", sha1.toString(), sha2.toString());
-  }
-
-  private HashCode computeSha1HashCodeForDirectory(ProjectFilesystem filesystem, Path root)
-      throws IOException {
-    assertTrue("Root is not a folder", filesystem.isDirectory(root));
-    Hasher hasher = Hashing.sha1().newHasher();
-    List<Path> files = Ordering.natural().sortedCopy(filesystem.getFilesUnderPath(root).asList());
-    for (Path file : files) {
-      Path absolutePath = tmp.getRoot().resolve(file);
-      filesystem.computeSha1(absolutePath).update(hasher);
-    }
-    return hasher.hash();
   }
 
   @Test
