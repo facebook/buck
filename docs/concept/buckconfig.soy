@@ -73,7 +73,7 @@ spaces, <code>flags=-foo "-bar \u0429"</code> will result in two
 strings: <q>foo</q> and <q>-bar &#1065;</q>.
 
 <p>
-Finally, other fields' values can be interpolated by including <code>$(config &lt;section&gt;.&lt;field&gt;)</code> inside of a value. For example, if you want to use the go vendor path in a custom setting, you can use:
+Other fields' values can be interpolated by including <code>$(config &lt;section&gt;.&lt;field&gt;)</code> inside a value. For example, to use the go vendor path in a custom setting:
 </p>
 
 <p>
@@ -83,6 +83,12 @@ custom_value = $(config go.vendor_path)
 </pre>
 {/literal}
 </p>
+
+<p>
+Finally, you can use the pound sign (<code>#</code>), in addition to the 
+semicolon (<code>;</code>), as a comment character in <code>.buckconfig</code>.
+</p>
+
 
 <h2>.buckconfig.local</h2>
 
@@ -3303,22 +3309,44 @@ your <code>.buckjavaargs</code> file</a>:
   {param name: 'python' /}
   {param description}
     <p>
-      This section may define settings relevant to <code>python_*</code> rules.
+      This section defines settings relevant to <code>python_*</code> rules.
     </p>
+
+    <h4>Alternative python section in .buckconfig</h4>
+    <p>
+      Adding a section with the header 
+    </p>
+
+<p>
+<pre class="prettyprint">
+{literal}
+[python#<i>flavor</i>]
+{/literal}
+</pre>
+</p>
 
     <p>
-      Adding a section with the header [python#<i>flavor</i>] to the .buckconfig will add
-      an alternate python section.  This python section will be used instead of{sp}
-      <code>[python]</code> if the compilation flavor is invoked by appending <i>#version</i> to a
-      {sp}{call buck.build_target /}.  This can be useful if you have Python 2 and Python 3 code in
-      your project and need to differentiate accordingly (namely by changing the value of{sp}
-      {call buckconfig.python_interpreter /}.  On the command line, to build with{sp}
-      <code>[python#py3]</code> rather than <code>[python]</code>:
+      to <code>.buckconfig</code> adds an <em>alternate</em> python section.  
+      Buck uses the values in this section instead of those in {sp}<code>[python]</code> if 
+      it is invoked with the specified flavor appended to the {sp}{call buck.build_target /}.  
+      For example, to build with the values in {sp}<code>[python#py3]</code> instead 
+      of <code>[python]</code>:
     </p>
 
-    {literal}<pre class="prettyprint">
-    $ buck build app#py3
-    </pre>{/literal}
+<p>
+<pre class="prettyprint">
+{literal}
+$ buck build app#py3
+{/literal}
+</pre>
+</p>
+
+    <p>
+      This is useful if you have both Python 2 and Python 3 code in
+      your project and need to differentiate between them by changing the
+      value of the {sp}{call buckconfig.python_interpreter /}. 
+    </p>
+
   {/param}
 {/call}
 
@@ -3344,20 +3372,22 @@ your <code>.buckjavaargs</code> file</a>:
 
 {call buckconfig.entry}
   {param section: 'python' /}
-  {param name: 'path_to_pex_executor' /}
-  {param example_value: '/bin/sh' /}
+  {param name: 'native_link_strategy' /}
+  {param example_value: 'separate' /}
   {param description}
-    The path to the tool used to run executable Python packages.  For self-executing packages, this
-    should just by the shell.
-  {/param}
-{/call}
-
-{call buckconfig.entry}
-  {param section: 'python' /}
-  {param name: 'pex_extension' /}
-  {param example_value: '.pex' /}
-  {param description}
-    The extension to use for executable Python packages.
+    The strategy used for pulling in native dependencies:
+    <ul>
+        <li>
+          <code>merged</code>: Native dependencies which are first-order dependencies of{sp}
+          <code>python_*</code> rules are linked as full, separate, shared libraries.  Transitive
+          native dependencies are statically linked into a single monolithic shared library.  This
+          is preferred to reduce the native code size and shared library count.
+        </li>
+        <li>
+          <code>separate</code> (default): Transitive native dependencies are linked as full,
+          separate, shared libraries.  This is preferred for faster build-time speed.
+        </li>
+    </ul>
   {/param}
 {/call}
 
@@ -3384,24 +3414,82 @@ your <code>.buckjavaargs</code> file</a>:
 
 {call buckconfig.entry}
   {param section: 'python' /}
-  {param name: 'native_link_strategy' /}
-  {param example_value: 'separate' /}
+  {param name: 'path_to_pex_executor' /}
+  {param example_value: '/bin/sh' /}
   {param description}
-    The strategy used for pulling in native dependencies:
-    <ul>
-        <li>
-          <code>merged</code>: Native dependencies which are first-order dependencies of{sp}
-          <code>python_*</code> rules are linked as full, separate, shared libraries.  Transitive
-          native dependencies are statically linked into a single monolithic shared library.  This
-          is preferred to reduce the native code size and shared library count.
-        </li>
-        <li>
-          <code>separate</code> (default): Transitive native dependencies are linked as full,
-          separate, shared libraries.  This is preferred for faster build-time speed.
-        </li>
-    </ul>
+    The path to the tool used to run executable Python packages.  For self-executing packages, this
+    should just by the shell.
   {/param}
 {/call}
+
+{call buckconfig.entry}
+  {param section: 'python' /}
+  {param name: 'pex_extension' /}
+  {param example_value: '.pex' /}
+  {param description}
+    The extension to use for executable Python packages.
+  {/param}
+{/call}
+
+
+{call buckconfig.entry}
+  {param section: 'python' /}
+  {param name: 'version' /}
+  {param example_value: 'CPython 2.7' /}
+  {param description}
+    <p>
+      The implementation and version of the Python interpreter. The syntax is:
+    </p>
+<p>
+<pre>
+{literal}
+&lt;interpreter implementation> &lt;interpreter version>
+{/literal}
+</pre>
+</p>
+
+    <p>
+      The implementation and version should be separated by a space.
+    </p>
+
+    <p>
+      The version should comprise only numerals and periods; it should
+      not contain characters such as <code>+</code>, although some
+      Python versions use such characters.
+    </p>
+
+    <p>
+      To obtain the implementation, you can use the following command,
+      invoked using the relevant Python interpreter:
+    </p>
+
+<p>
+<pre>
+{literal}
+python -c "import platform; print( platform.python_implementation() )"
+{/literal}
+</pre>
+</p>
+
+    <p>
+      Similarly, to obtain the version, use:
+    </p>
+
+<p>
+<pre>
+{literal}
+python -c "import platform; print( platform.python_version() )"
+{/literal}
+</pre>
+</p>
+
+    <p>
+      Example:
+    </p>
+
+  {/param}
+{/call}
+
 
 {call buckconfig.section}
   {param name: 'resources' /}
