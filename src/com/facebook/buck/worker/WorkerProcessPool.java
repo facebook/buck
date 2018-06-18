@@ -27,7 +27,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Optional;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.ThreadSafe;
@@ -69,6 +71,13 @@ public class WorkerProcessPool implements Closeable {
    */
   public BorrowedWorkerProcess borrowWorkerProcess() throws InterruptedException {
     return new BorrowedWorkerProcess(availableWorkers.take());
+  }
+
+  @VisibleForTesting
+  Optional<BorrowedWorkerProcess> borrowWorkerProcess(int timeout, TimeUnit unit)
+      throws InterruptedException {
+    return Optional.ofNullable(availableWorkers.poll(timeout, unit))
+        .map(BorrowedWorkerProcess::new);
   }
 
   @Override
