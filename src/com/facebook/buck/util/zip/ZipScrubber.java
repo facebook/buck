@@ -30,6 +30,8 @@ import java.util.zip.ZipEntry;
 public class ZipScrubber {
   private ZipScrubber() {}
 
+  private static final long ZIP64_ENDSIG = 0x06064b50L;
+
   private static final int EXTENDED_TIMESTAMP_ID = 0x5455;
 
   private static void check(boolean expression, String msg) throws IOException {
@@ -51,10 +53,20 @@ public class ZipScrubber {
         eocdOffset--;
       }
 
-      int cdEntries = map.getShort(eocdOffset + ZipEntry.ENDTOT);
-      int cdOffset = map.getInt(eocdOffset + ZipEntry.ENDOFF);
+      long cdEntries = Short.toUnsignedLong(map.getShort(eocdOffset + ZipEntry.ENDTOT));
+      if ((cdEntries & 0xffff) == 0xffff) {
+        // It's ZIP64 format and number of entries is stored in a different
+        // field: https://pkware.cachefly.net/webdocs/casestudies/APPNOTE.TXT
+        int zip64eocdOffset = eocdOffset;
+        while (map.getInt(zip64eocdOffset) != ZIP64_ENDSIG) {
+          zip64eocdOffset--;
+        }
+        // 32 = 4 + 8 + 2 + 2 + 4 + 4 + 8
+        cdEntries = map.getLong(zip64eocdOffset + 32);
+      }
 
-      for (int idx = 0; idx < cdEntries; idx++) {
+      int cdOffset = map.getInt(eocdOffset + ZipEntry.ENDOFF);
+      for (long idx = 0; idx < cdEntries; idx++) {
         // Wrap the central directory header and zero out it's timestamp.
         ByteBuffer entry = slice(map, cdOffset);
         check(entry.getInt(0) == ZipEntry.CENSIG, "expected central directory header signature");
