@@ -60,18 +60,19 @@ public class JsBundleGenrule extends Genrule
   public JsBundleGenrule(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      SandboxExecutionStrategy sandboxExecutionStrategy,
       BuildRuleResolver resolver,
       BuildRuleParams params,
+      SandboxExecutionStrategy sandboxExecutionStrategy,
       JsBundleGenruleDescriptionArg args,
       Optional<Arg> cmd,
       Optional<Arg> bash,
       Optional<Arg> cmdExe,
-      JsBundleOutputs jsBundle,
       Optional<String> environmentExpansionSeparator,
       Optional<AndroidPlatformTarget> androidPlatformTarget,
       Optional<AndroidNdk> androidNdk,
-      Optional<AndroidSdkLocation> androidSdkLocation) {
+      Optional<AndroidSdkLocation> androidSdkLocation,
+      JsBundleOutputs jsBundle,
+      String bundleName) {
     super(
         buildTarget,
         projectFilesystem,
@@ -96,7 +97,7 @@ public class JsBundleGenrule extends Genrule
     this.rewriteSourcemap = args.getRewriteSourcemap();
     this.rewriteMisc = args.getRewriteMisc();
     this.skipResources = args.getSkipResources();
-    bundleName = args.getBundleName().orElseGet(jsBundle::getBundleName);
+    this.bundleName = bundleName;
   }
 
   @Override

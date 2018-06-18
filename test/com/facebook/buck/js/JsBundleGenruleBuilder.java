@@ -17,12 +17,15 @@
 package com.facebook.buck.js;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.targetgraph.AbstractNodeBuilder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.sandbox.NoSandboxExecutionStrategy;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
+import com.facebook.buck.util.types.Pair;
+import com.google.common.collect.ImmutableList;
 import javax.annotation.Nullable;
 
 public class JsBundleGenruleBuilder
@@ -62,6 +65,9 @@ public class JsBundleGenruleBuilder
     if (options.bundleName != null) {
       getArgForPopulating().setBundleName(options.bundleName);
     }
+    if (options.bundleNameForFlavor != null) {
+      getArgForPopulating().setBundleNameForFlavor(options.bundleNameForFlavor);
+    }
   }
 
   public static class Options {
@@ -72,6 +78,7 @@ public class JsBundleGenruleBuilder
     boolean skipResources = false;
     @Nullable public StringWithMacros cmd = null;
     @Nullable private String bundleName;
+    @Nullable private ImmutableList<Pair<Flavor, String>> bundleNameForFlavor;
 
     public static Options of(BuildTarget genruleTarget, BuildTarget jsBundle) {
       return new Options(genruleTarget, jsBundle);
@@ -104,6 +111,11 @@ public class JsBundleGenruleBuilder
 
     public Options bundleName(String bundleName) {
       this.bundleName = bundleName;
+      return this;
+    }
+
+    public Options bundleNameForFlavor(ImmutableList<Pair<Flavor, String>> bundleNameForFlavor) {
+      this.bundleNameForFlavor = bundleNameForFlavor;
       return this;
     }
   }

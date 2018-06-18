@@ -34,6 +34,7 @@ import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
+import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
@@ -54,6 +55,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
+import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMap.Builder;
@@ -169,6 +171,64 @@ public class JsBundleGenruleDescriptionTest {
     ImmutableMap<String, String> env = builder.build();
 
     assertThat(setup.genrule().getBundleName(), equalTo(renamedBundle));
+    assertThat(env, hasEntry("JS_BUNDLE_NAME", setup.jsBundle().getBundleName()));
+    assertThat(env, hasEntry("JS_BUNDLE_NAME_OUT", renamedBundle));
+  }
+
+  @Test
+  public void allowsFlavorDependentRenaming() {
+    String releaseFlavorBundleName = "release.bundle";
+    ImmutableList<Pair<Flavor, String>> bundleNamesForFlavors =
+        ImmutableList.of(
+            new Pair<>(InternalFlavor.of("android"), "android.bundle"),
+            new Pair<>(InternalFlavor.of("release"), releaseFlavorBundleName));
+
+    setUpWithOptions(builderOptions().bundleNameForFlavor(bundleNamesForFlavors));
+
+    Builder<String, String> builder = ImmutableMap.builder();
+    JsBundleGenrule bundleGenrule = setup.genrule(JsFlavors.RELEASE);
+    bundleGenrule.addEnvironmentVariables(sourcePathResolver(), builder);
+    ImmutableMap<String, String> env = builder.build();
+
+    assertThat(bundleGenrule.getBundleName(), equalTo(releaseFlavorBundleName));
+    assertThat(env, hasEntry("JS_BUNDLE_NAME", setup.jsBundle().getBundleName()));
+    assertThat(env, hasEntry("JS_BUNDLE_NAME_OUT", releaseFlavorBundleName));
+  }
+
+  @Test
+  public void flavorDependentNamesFallBackToNameOfUnderlyingBundle() {
+    ImmutableList<Pair<Flavor, String>> bundleNamesForFlavors =
+        ImmutableList.of(
+            new Pair<>(InternalFlavor.of("android"), "android.bundle"),
+            new Pair<>(InternalFlavor.of("release"), "release.bundle"));
+    setUpWithOptions(builderOptions().bundleNameForFlavor(bundleNamesForFlavors));
+
+    Builder<String, String> builder = ImmutableMap.builder();
+    JsBundleGenrule bundleGenrule = setup.genrule(JsFlavors.IOS);
+    bundleGenrule.addEnvironmentVariables(sourcePathResolver(), builder);
+    ImmutableMap<String, String> env = builder.build();
+
+    assertThat(bundleGenrule.getBundleName(), equalTo(setup.jsBundle().getBundleName()));
+    assertThat(env, hasEntry("JS_BUNDLE_NAME", setup.jsBundle().getBundleName()));
+    assertThat(env, hasEntry("JS_BUNDLE_NAME_OUT", setup.jsBundle().getBundleName()));
+  }
+
+  @Test
+  public void flavorDependentNamesFallBackToSpecifiedBundleName() {
+    String renamedBundle = "bundle-renamed.abc";
+    ImmutableList<Pair<Flavor, String>> bundleNamesForFlavors =
+        ImmutableList.of(
+            new Pair<>(InternalFlavor.of("android"), "android.bundle"),
+            new Pair<>(InternalFlavor.of("release"), "release.bundle"));
+    setUpWithOptions(
+        builderOptions().bundleName(renamedBundle).bundleNameForFlavor(bundleNamesForFlavors));
+
+    Builder<String, String> builder = ImmutableMap.builder();
+    JsBundleGenrule bundleGenrule = setup.genrule(JsFlavors.IOS);
+    bundleGenrule.addEnvironmentVariables(sourcePathResolver(), builder);
+    ImmutableMap<String, String> env = builder.build();
+
+    assertThat(bundleGenrule.getBundleName(), equalTo(renamedBundle));
     assertThat(env, hasEntry("JS_BUNDLE_NAME", setup.jsBundle().getBundleName()));
     assertThat(env, hasEntry("JS_BUNDLE_NAME_OUT", renamedBundle));
   }
@@ -625,11 +685,12 @@ public class JsBundleGenruleDescriptionTest {
       return scenario.graphBuilder.requireRule(target);
     }
 
-    JsBundleGenrule genrule() {
+    JsBundleGenrule genrule(Flavor... flavors) {
       return (JsBundleGenrule)
           scenario.graphBuilder.requireRule(
-              target.withoutFlavors(
-                  JsFlavors.DEPENDENCY_FILE, JsFlavors.SOURCE_MAP, JsFlavors.MISC));
+              target
+                  .withoutFlavors(JsFlavors.DEPENDENCY_FILE, JsFlavors.SOURCE_MAP, JsFlavors.MISC)
+                  .withAppendedFlavors(flavors));
     }
 
     @SuppressWarnings("unchecked")

@@ -51,7 +51,6 @@ import com.facebook.buck.shell.ExportFileDirectoryAction;
 import com.facebook.buck.shell.WorkerTool;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.types.Either;
-import com.facebook.buck.util.types.Pair;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -205,7 +204,8 @@ public class JsBundleDescription
           graphBuilder.getRuleWithType(args.getWorker(), WorkerTool.class));
     }
 
-    String bundleName = getBundleName(args, buildTarget.getFlavors());
+    String bundleName =
+        args.computeBundleName(buildTarget.getFlavors(), () -> args.getName() + ".js");
 
     return new JsBundle(
         buildTarget,
@@ -340,31 +340,14 @@ public class JsBundleDescription
   @BuckStyleImmutable
   @Value.Immutable
   interface AbstractJsBundleDescriptionArg
-      extends CommonDescriptionArg, HasDeclaredDeps, HasExtraJson {
+      extends CommonDescriptionArg, HasDeclaredDeps, HasExtraJson, HasBundleName {
 
     Either<ImmutableSet<String>, String> getEntry();
-
-    @Value.Default
-    default String getBundleName() {
-      return getName() + ".js";
-    }
-
-    ImmutableList<Pair<Flavor, String>> getBundleNameForFlavor();
 
     BuildTarget getWorker();
 
     /** For R.java */
     Optional<String> getAndroidPackage();
-  }
-
-  private static String getBundleName(
-      JsBundleDescriptionArg args, ImmutableSortedSet<Flavor> flavors) {
-    for (Pair<Flavor, String> nameForFlavor : args.getBundleNameForFlavor()) {
-      if (flavors.contains(nameForFlavor.getFirst())) {
-        return nameForFlavor.getSecond();
-      }
-    }
-    return args.getBundleName();
   }
 
   private static class TransitiveLibraryDependencies {

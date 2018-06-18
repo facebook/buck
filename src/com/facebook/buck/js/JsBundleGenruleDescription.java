@@ -131,10 +131,10 @@ public class JsBundleGenruleDescription
     }
 
     Supplier<? extends SortedSet<BuildRule>> originalExtraDeps = params.getExtraDeps();
+    JsBundleOutputs bundleOutputs = (JsBundleOutputs) jsBundle;
     return new JsBundleGenrule(
         buildTarget,
         projectFilesystem,
-        sandboxExecutionStrategy,
         graphBuilder,
         params.withExtraDeps(
             MoreSuppliers.memoize(
@@ -143,17 +143,19 @@ public class JsBundleGenruleDescription
                         .addAll(originalExtraDeps.get())
                         .add(jsBundle)
                         .build())),
+        sandboxExecutionStrategy,
         args,
         cmd,
         bash,
         cmdExe,
-        (JsBundleOutputs) jsBundle,
         args.getEnvironmentExpansionSeparator(),
         toolchainProvider.getByNameIfPresent(
             AndroidPlatformTarget.DEFAULT_NAME, AndroidPlatformTarget.class),
         toolchainProvider.getByNameIfPresent(AndroidNdk.DEFAULT_NAME, AndroidNdk.class),
         toolchainProvider.getByNameIfPresent(
-            AndroidSdkLocation.DEFAULT_NAME, AndroidSdkLocation.class));
+            AndroidSdkLocation.DEFAULT_NAME, AndroidSdkLocation.class),
+        bundleOutputs,
+        args.computeBundleName(buildTarget.getFlavors(), bundleOutputs::getBundleName));
   }
 
   @Override
@@ -181,7 +183,8 @@ public class JsBundleGenruleDescription
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractJsBundleGenruleDescriptionArg extends AbstractGenruleDescription.CommonArg {
+  interface AbstractJsBundleGenruleDescriptionArg
+      extends AbstractGenruleDescription.CommonArg, HasBundleName {
     BuildTarget getJsBundle();
 
     default String getOut() {
@@ -202,8 +205,6 @@ public class JsBundleGenruleDescription
     default boolean getSkipResources() {
       return false;
     }
-
-    Optional<String> getBundleName();
 
     @Override
     default Optional<String> getType() {
