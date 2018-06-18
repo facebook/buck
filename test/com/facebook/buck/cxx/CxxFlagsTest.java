@@ -32,6 +32,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import java.util.regex.Pattern;
+import org.hamcrest.Matchers;
 import org.junit.Test;
 
 /** Tests for {@link CxxConstructorArg}. */
@@ -97,6 +98,25 @@ public class CxxFlagsTest {
     assertThat(
         ImmutableList.of("common", "quux", "xyzzy"), equalTo(flags.get(CxxSource.Type.OBJC)));
     assertThat(ImmutableList.of("common"), equalTo(flags.get(CxxSource.Type.OBJCXX)));
+  }
+
+  @Test
+  public void getLanguageFlagsWithLangPlatformFlags() {
+    ImmutableMultimap<CxxSource.Type, StringWithMacros> flags =
+        CxxFlags.getLanguageFlagsWithMacros(
+            ImmutableList.of(),
+            PatternMatchedCollection.of(),
+            ImmutableMap.of(),
+            ImmutableMap.of(
+                CxxSource.Type.C,
+                PatternMatchedCollection.<ImmutableList<StringWithMacros>>builder()
+                    .add(
+                        Pattern.compile(CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor().getName()),
+                        ImmutableList.of(StringWithMacrosUtils.format("foo")))
+                    .build()),
+            CxxPlatformUtils.DEFAULT_PLATFORM);
+    assertThat(flags.get(CxxSource.Type.C), Matchers.contains(StringWithMacrosUtils.format("foo")));
+    assertThat(flags.get(CxxSource.Type.CXX), empty());
   }
 
   @Test

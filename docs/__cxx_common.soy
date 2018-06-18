@@ -143,6 +143,78 @@
 {/template}
 
 /***/
+{template .lang_preprocessor_flags_arg}
+{call buck.arg}
+  {param name : 'lang_preprocessor_flags' /}
+  {{param default : '{}' /}}
+  {param desc}
+  Language-specific preprocessor flags. These should be specified as a map of C-family language short
+  names to lists of flags and is used to target flags to sources files for a specific language in the
+  C-family (C, C++, assembler, etc.).  The keys in the map can be:
+  <ul>
+    <li>
+      <code>c</code> for C
+    </li>
+    <li>
+      <code>c++</code> for C++
+    </li>
+    <li>
+      <code>objective-c</code> for Objective-C
+    </li>
+    <li>
+      <code>objective-c++</code> for Objective-C++
+    </li>
+    <li>
+      <code>cuda</code> for Cuda
+    </li>
+    <li>
+      <code>assembler-with-cpp</code> for Assembly
+    </li>
+    <li>
+      <code>asm-with-cpp</code> for ASM
+    </li>
+  </ul>
+  {/param}
+{/call}
+{/template}
+
+/***/
+{template .exported_lang_preprocessor_flags_arg}
+{call buck.arg}
+  {param name : 'exported_lang_preprocessor_flags' /}
+  {{param default : '{}' /}}
+  {param desc}
+  Just as <code>lang_preprocessor_flags</code>, but these flags also apply to
+  rules that transitively depend on this rule.
+  {/param}
+{/call}
+{/template}
+
+/***/
+{template .lang_platform_preprocessor_flags_arg}
+{call buck.arg}
+  {param name : 'lang_platform_preprocessor_flags' /}
+  {{param default : '{}' /}}
+  {param desc}
+  Language- and platform-specific preprocessor flags. These should be specified as a map of C-family language short
+  names, as described in <code>lang_preprocessor_flags</code>, to lists of pairs, as described in <code>platform_preprocessor_flags</code>.
+  {/param}
+{/call}
+{/template}
+
+/***/
+{template .exported_lang_platform_preprocessor_flags_arg}
+{call buck.arg}
+  {param name : 'exported_lang_platform_preprocessor_flags' /}
+  {{param default : '{}' /}}
+  {param desc}
+  Just as <code>lang_platform_preprocessor_flags</code>, but these flags also apply to
+  rules that transitively depend on this rule.
+  {/param}
+{/call}
+{/template}
+
+/***/
 {template .platform_preprocessor_flags_arg}
 {call buck.arg}
   {param name : 'platform_preprocessor_flags' /}
@@ -206,6 +278,54 @@
   element is an un-anchored regex (in java.util.regex.Pattern syntax) against which the platform
   name is matched, and the second element is a list of flags to use when compiling the target's
   sources. See <code>compiler_flags</code> for more information.
+  {/param}
+{/call}
+{/template}
+
+/***/
+{template .lang_compiler_flags_arg}
+{call buck.arg}
+  {param name : 'lang_compiler_flags' /}
+  {{param default : '{}' /}}
+  {param desc}
+  Language-specific compiler flags. These should be specified as a map of C-family language short
+  names to lists of flags and is used to target flags to sources files for a specific language in the
+  C-family (C, C++, assembler, etc.).  The keys in the map can be:
+  <ul>
+    <li>
+      <code>cpp-output</code> for C
+    </li>
+    <li>
+      <code>c++-cpp-output</code> for C++
+    </li>
+    <li>
+      <code>objective-c-cpp-output</code> for Objective-C
+    </li>
+    <li>
+      <code>objective-c++-cpp-output</code> for Objective-C++
+    </li>
+    <li>
+      <code>cuda-cpp-output</code> for Cuda
+    </li>
+    <li>
+      <code>assembler</code> for Assembly
+    </li>
+    <li>
+      <code>asm</code> for ASM
+    </li>
+  </ul>
+  {/param}
+{/call}
+{/template}
+
+/***/
+{template .lang_platform_compiler_flags_arg}
+{call buck.arg}
+  {param name : 'lang_platform_compiler_flags' /}
+  {{param default : '{}' /}}
+  {param desc}
+  Language- and platform-specific compiler flags. These should be specified as a map of C-family language short
+  names, as described in <code>lang_compiler_flags</code>, to lists of pairs, as described in <code>platform_compiler_flags</code>.
   {/param}
 {/call}
 {/template}

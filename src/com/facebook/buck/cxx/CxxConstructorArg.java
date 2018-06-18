@@ -98,6 +98,9 @@ public interface CxxConstructorArg
 
   ImmutableMap<CxxSource.Type, ImmutableList<StringWithMacros>> getLangCompilerFlags();
 
+  ImmutableMap<CxxSource.Type, PatternMatchedCollection<ImmutableList<StringWithMacros>>>
+      getLangPlatformCompilerFlags();
+
   @Value.Default
   default PatternMatchedCollection<ImmutableList<StringWithMacros>> getPlatformCompilerFlags() {
     return PatternMatchedCollection.of();
@@ -111,6 +114,9 @@ public interface CxxConstructorArg
   }
 
   ImmutableMap<CxxSource.Type, ImmutableList<StringWithMacros>> getLangPreprocessorFlags();
+
+  ImmutableMap<CxxSource.Type, PatternMatchedCollection<ImmutableList<StringWithMacros>>>
+      getLangPlatformPreprocessorFlags();
 
   ImmutableList<StringWithMacros> getLinkerFlags();
 

@@ -840,11 +840,13 @@ public class CxxDescriptionEnhancer {
         args.getPreprocessorFlags(),
         args.getPlatformPreprocessorFlags(),
         args.getLangPreprocessorFlags(),
+        args.getLangPlatformPreprocessorFlags(),
         args.getFrameworks(),
         args.getLibraries(),
         args.getCompilerFlags(),
         args.getLangCompilerFlags(),
         args.getPlatformCompilerFlags(),
+        args.getLangPlatformCompilerFlags(),
         args.getPrefixHeader(),
         args.getPrecompiledHeader(),
         args.getLinkerFlags(),
@@ -873,11 +875,15 @@ public class CxxDescriptionEnhancer {
       ImmutableList<StringWithMacros> preprocessorFlags,
       PatternMatchedCollection<ImmutableList<StringWithMacros>> platformPreprocessorFlags,
       ImmutableMap<Type, ImmutableList<StringWithMacros>> langPreprocessorFlags,
+      ImmutableMap<Type, PatternMatchedCollection<ImmutableList<StringWithMacros>>>
+          langPlatformPreprocessorFlags,
       ImmutableSortedSet<FrameworkPath> frameworks,
       ImmutableSortedSet<FrameworkPath> libraries,
       ImmutableList<StringWithMacros> compilerFlags,
       ImmutableMap<Type, ImmutableList<StringWithMacros>> langCompilerFlags,
       PatternMatchedCollection<ImmutableList<StringWithMacros>> platformCompilerFlags,
+      ImmutableMap<Type, PatternMatchedCollection<ImmutableList<StringWithMacros>>>
+          langPlatformCompilerFlags,
       Optional<SourcePath> prefixHeader,
       Optional<SourcePath> precompiledHeader,
       ImmutableList<StringWithMacros> linkerFlags,
@@ -933,6 +939,7 @@ public class CxxDescriptionEnhancer {
                         preprocessorFlags,
                         platformPreprocessorFlags,
                         langPreprocessorFlags,
+                        langPlatformPreprocessorFlags,
                         cxxPlatform),
                     f -> toStringWithMacrosArgs(target, cellRoots, graphBuilder, cxxPlatform, f))),
             ImmutableList.of(headerSymlinkTree),
@@ -952,7 +959,11 @@ public class CxxDescriptionEnhancer {
     allCompilerFlagsBuilder.putAll(
         Multimaps.transformValues(
             CxxFlags.getLanguageFlagsWithMacros(
-                compilerFlags, platformCompilerFlags, langCompilerFlags, cxxPlatform),
+                compilerFlags,
+                platformCompilerFlags,
+                langCompilerFlags,
+                langPlatformCompilerFlags,
+                cxxPlatform),
             f -> toStringWithMacrosArgs(target, cellRoots, graphBuilder, cxxPlatform, f)));
     if (linkOptions.getThinLto()) {
       allCompilerFlagsBuilder.putAll(CxxFlags.toLanguageFlags(StringArg.from("-flto=thin")));

@@ -116,6 +116,8 @@ public class CxxFlags {
       ImmutableList<StringWithMacros> flags,
       PatternMatchedCollection<ImmutableList<StringWithMacros>> platformFlags,
       ImmutableMap<CxxSource.Type, ImmutableList<StringWithMacros>> languageFlags,
+      ImmutableMap<CxxSource.Type, PatternMatchedCollection<ImmutableList<StringWithMacros>>>
+          languagePlatformFlags,
       CxxPlatform platform) {
 
     ImmutableListMultimap.Builder<CxxSource.Type, StringWithMacros> langFlags =
@@ -133,6 +135,12 @@ public class CxxFlags {
       langFlags.putAll(
           entry.getKey(),
           entry.getValue().stream().map(s -> s.mapStrings(translateMacrosFn))::iterator);
+    }
+
+    for (ImmutableMap.Entry<
+            CxxSource.Type, PatternMatchedCollection<ImmutableList<StringWithMacros>>>
+        entry : languagePlatformFlags.entrySet()) {
+      langFlags.putAll(entry.getKey(), getFlags(ImmutableList.of(), entry.getValue(), platform));
     }
 
     return langFlags.build();

@@ -178,6 +178,7 @@ public class CxxLibraryMetadataFactory {
                 args.getExportedPreprocessorFlags(),
                 args.getExportedPlatformPreprocessorFlags(),
                 args.getExportedLangPreprocessorFlags(),
+                args.getExportedLangPlatformPreprocessorFlags(),
                 platform.getValue()),
             stringWithMacrosArgFunction));
     cxxPreprocessorInputBuilder.addAllFrameworks(args.getFrameworks());

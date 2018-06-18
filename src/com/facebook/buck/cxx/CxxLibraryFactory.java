@@ -490,6 +490,7 @@ public class CxxLibraryFactory {
                     args.getCompilerFlags(),
                     args.getPlatformCompilerFlags(),
                     args.getLangCompilerFlags(),
+                    args.getLangPlatformCompilerFlags(),
                     cxxPlatform),
                 f ->
                     CxxDescriptionEnhancer.toStringWithMacrosArgs(

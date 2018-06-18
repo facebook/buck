@@ -203,6 +203,7 @@ public class CxxPythonExtensionDescription
                         args.getPreprocessorFlags(),
                         args.getPlatformPreprocessorFlags(),
                         args.getLangPreprocessorFlags(),
+                        args.getLangPlatformPreprocessorFlags(),
                         cxxPlatform),
                     f ->
                         CxxDescriptionEnhancer.toStringWithMacrosArgs(
@@ -222,6 +223,7 @@ public class CxxPythonExtensionDescription
                     args.getCompilerFlags(),
                     args.getPlatformCompilerFlags(),
                     args.getLangCompilerFlags(),
+                    args.getLangPlatformCompilerFlags(),
                     cxxPlatform),
                 f ->
                     CxxDescriptionEnhancer.toStringWithMacrosArgs(
