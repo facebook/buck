@@ -77,8 +77,8 @@ class StructTest(unittest.TestCase):
         self.assertEqual("default", getattr(x, "does_not_exist", "default"))
 
     def testRepr(self):
-        x = struct.struct(foo="bar")
-        self.assertEqual("struct(foo='bar')", repr(x))
+        x = struct.struct(foo="bar", bar="baz")
+        self.assertEqual("struct(foo='bar',bar='baz')", repr(x))
 
     def testNestedRepr(self):
         x = struct.struct(foo="bar")

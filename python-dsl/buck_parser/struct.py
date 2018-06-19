@@ -61,7 +61,7 @@ class Struct(object):
         return isinstance(other, Struct) and self._get_kwargs() == other._get_kwargs()
 
     def __repr__(self):
-        return "struct(" + ".".join(
+        return "struct(" + ",".join(
             [str(key) + "=" + repr(value) for key, value in self._get_kwargs().iteritems()]
         ) + ")"
 
