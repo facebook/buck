@@ -71,6 +71,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.SortedSet;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 
 public class CxxLibraryFactory {
 
@@ -120,11 +121,13 @@ public class CxxLibraryFactory {
     Optional<CxxPlatform> platform = cxxPlatforms.getValue(buildTarget);
     CxxDeps cxxDeps = CxxDeps.builder().addDeps(args.getCxxDeps()).addDeps(extraDeps).build();
 
+    Supplier<CxxPlatform> cxxPlatformOrDefaultSupplier =
+        () ->
+            platform.orElse(
+                cxxPlatforms.getValue(args.getDefaultPlatform().orElse(defaultCxxFlavor)));
     if (buildTarget.getFlavors().contains(CxxCompilationDatabase.COMPILATION_DATABASE)) {
+      CxxPlatform cxxPlatformOrDefault = cxxPlatformOrDefaultSupplier.get();
       // XXX: This needs bundleLoader for tests..
-      CxxPlatform cxxPlatform =
-          platform.orElse(
-              cxxPlatforms.getValue(args.getDefaultPlatform().orElse(defaultCxxFlavor)));
       SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
       SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(ruleFinder);
       // TODO(T21900763): We should be using `requireObjects` instead but those would not
@@ -138,10 +141,10 @@ public class CxxLibraryFactory {
               ruleFinder,
               cellRoots,
               cxxBuckConfig,
-              cxxPlatform,
+              cxxPlatformOrDefault,
               PicType.PIC,
               args,
-              cxxDeps.get(graphBuilder, cxxPlatform),
+              cxxDeps.get(graphBuilder, cxxPlatformOrDefault),
               transitiveCxxPreprocessorInputFunction,
               delegate);
       return CxxCompilationDatabase.createCompilationDatabase(
@@ -162,7 +165,7 @@ public class CxxLibraryFactory {
           graphBuilder,
           cellRoots,
           cxxBuckConfig,
-          platform.orElse(cxxPlatforms.getValue(defaultCxxFlavor)),
+          cxxPlatformOrDefaultSupplier.get(),
           args,
           inferBuckConfig);
     } else if (type.isPresent() && !platform.isPresent()) {
@@ -354,19 +357,18 @@ public class CxxLibraryFactory {
     FlavorDomain<CxxPlatform> cxxPlatforms = cxxPlatformsProvider.getCxxPlatforms();
     Flavor defaultCxxFlavor = cxxPlatformsProvider.getDefaultCxxPlatform().getFlavor();
     Optional<CxxPlatform> platform = cxxPlatforms.getValue(buildTarget);
-    if (buildTarget.getFlavors().contains(CxxCompilationDatabase.COMPILATION_DATABASE)) {
-      CxxPlatform cxxPlatform =
+    if (buildTarget.getFlavors().contains(CxxCompilationDatabase.COMPILATION_DATABASE)
+        || CxxInferEnhancer.INFER_FLAVOR_DOMAIN.containsAnyOf(buildTarget.getFlavors())) {
+      CxxPlatform cxxPlatformOrDefault =
           platform.orElse(
               cxxPlatforms.getValue(args.getDefaultPlatform().orElse(defaultCxxFlavor)));
-      return cxxPlatform.getFlavor();
+      return cxxPlatformOrDefault.getFlavor();
     } else if (buildTarget
         .getFlavors()
         .contains(CxxCompilationDatabase.UBER_COMPILATION_DATABASE)) {
       return platform.isPresent()
           ? platform.get().getFlavor()
           : args.getDefaultPlatform().orElse(defaultCxxFlavor);
-    } else if (CxxInferEnhancer.INFER_FLAVOR_DOMAIN.containsAnyOf(buildTarget.getFlavors())) {
-      return platform.orElse(cxxPlatforms.getValue(defaultCxxFlavor)).getFlavor();
     } else {
       throw new IllegalArgumentException(
           String.format(
