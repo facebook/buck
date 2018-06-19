@@ -1157,10 +1157,14 @@ public class AppleBundleIntegrationTest {
                 .resolve(target.getShortName() + ".app"));
 
     String resourceName = "Resource.plist";
-    assertFalse(Files.exists(appPath.resolve(resourceName)));
+    assertFalse(
+        "The resource should be absent in the app bundle.",
+        Files.exists(appPath.resolve(resourceName)));
 
     Path frameworkPath = appPath.resolve("Frameworks/TestFramework.framework");
-    assertTrue(Files.exists(frameworkPath.resolve(resourceName)));
+    assertTrue(
+        "The resource should be present in the embedded framework.",
+        Files.exists(frameworkPath.resolve(resourceName)));
   }
 
   @Test

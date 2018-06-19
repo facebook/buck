@@ -7,8 +7,18 @@ apple_resource(
 apple_library(
     name = "TestLib",
     srcs = ["lib.c"],
+    # TestLib2 is going to be in the same dylib as TestLib, but it's listed in
+    # exported_deps instead of deps. The binary should not TestLib2's resource
+    # dependencies.
+    exported_deps = [":TestLib2"],
     exported_headers = ["lib.h"],
     preferred_linkage = "shared",
+    deps = [":Resources"],
+)
+
+apple_library(
+    name = "TestLib2",
+    srcs = ["lib.c"],
     deps = [":Resources"],
 )
 
@@ -20,7 +30,7 @@ apple_bundle(
 )
 
 apple_library(
-    name = "BinaryLib",
+    name = "LibUsedInBinary",
     srcs = ["binlib.c"],
     deps = [":TestLib#headers"],
 )
@@ -29,7 +39,7 @@ apple_binary(
     name = "DemoAppBinary",
     srcs = ["main.c"],
     deps = [
-        ":BinaryLib",
+        ":LibUsedInBinary",
         ":TestLib",
     ],
 )
