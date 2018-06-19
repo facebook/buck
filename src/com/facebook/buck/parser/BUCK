@@ -33,6 +33,8 @@ java_immutables_library(
         "DefaultParser.java",
         "DefaultParserTargetNodeFactory.java",
         "DefaultProjectBuildFileParserFactory.java",
+        "NoopPackageBoundaryChecker.java",
+        "PackageBoundaryChecker.java",
         "ParseEvent.java",
         "ParsePipeline.java",
         "Parser.java",
@@ -52,6 +54,7 @@ java_immutables_library(
         "TargetNodeParsePipeline.java",
         "TargetNodeSpec.java",
         "TargetSpecResolver.java",
+        "ThrowingPackageBoundaryChecker.java",
         "UnexpectedFlavorException.java",
     ],
     tests = [

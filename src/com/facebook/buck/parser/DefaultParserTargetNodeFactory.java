@@ -52,7 +52,6 @@ import com.google.common.hash.Hashing;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Map;
-import java.util.Optional;
 import java.util.function.Function;
 
 /**
@@ -65,7 +64,7 @@ public class DefaultParserTargetNodeFactory
   private static final Logger LOG = Logger.get(DefaultParserTargetNodeFactory.class);
 
   private final ConstructorArgMarshaller marshaller;
-  private final Optional<LoadingCache<Cell, BuildFileTree>> buildFileTrees;
+  private final PackageBoundaryChecker packageBoundaryChecker;
   private final TargetNodeListener<TargetNode<?, ?>> nodeListener;
   private final TargetNodeFactory targetNodeFactory;
   private final VisibilityPatternFactory visibilityPatternFactory;
@@ -73,13 +72,13 @@ public class DefaultParserTargetNodeFactory
 
   private DefaultParserTargetNodeFactory(
       ConstructorArgMarshaller marshaller,
-      Optional<LoadingCache<Cell, BuildFileTree>> buildFileTrees,
+      PackageBoundaryChecker packageBoundaryChecker,
       TargetNodeListener<TargetNode<?, ?>> nodeListener,
       TargetNodeFactory targetNodeFactory,
       VisibilityPatternFactory visibilityPatternFactory,
       RuleKeyConfiguration ruleKeyConfiguration) {
     this.marshaller = marshaller;
-    this.buildFileTrees = buildFileTrees;
+    this.packageBoundaryChecker = packageBoundaryChecker;
     this.nodeListener = nodeListener;
     this.targetNodeFactory = targetNodeFactory;
     this.visibilityPatternFactory = visibilityPatternFactory;
@@ -95,7 +94,7 @@ public class DefaultParserTargetNodeFactory
       RuleKeyConfiguration ruleKeyConfiguration) {
     return new DefaultParserTargetNodeFactory(
         marshaller,
-        Optional.of(buildFileTrees),
+        new ThrowingPackageBoundaryChecker(buildFileTrees),
         nodeListener,
         targetNodeFactory,
         visibilityPatternFactory,
@@ -109,7 +108,7 @@ public class DefaultParserTargetNodeFactory
       RuleKeyConfiguration ruleKeyConfiguration) {
     return new DefaultParserTargetNodeFactory(
         marshaller,
-        Optional.empty(),
+        new NoopPackageBoundaryChecker(),
         (buildFile, node) -> {
           // No-op.
         },
@@ -248,11 +247,7 @@ public class DefaultParserTargetNodeFactory
               visibilityPatterns,
               withinViewPatterns,
               cell.getCellPathResolver());
-      if (buildFileTrees.isPresent()
-          && cell.isEnforcingBuckPackageBoundaries(target.getBasePath())) {
-        enforceBuckPackageBoundaries(
-            cell, target, buildFileTrees.get().getUnchecked(cell), node.getInputs());
-      }
+      packageBoundaryChecker.enforceBuckPackageBoundaries(cell, target, node.getInputs());
       nodeListener.onCreate(buildFile, node);
       return node;
     }
@@ -263,49 +258,6 @@ public class DefaultParserTargetNodeFactory
     hasher.putString(ruleKeyConfiguration.getCoreKey(), UTF_8);
     JsonObjectHashing.hashJsonObject(hasher, rawNode);
     return hasher.hash();
-  }
-
-  protected void enforceBuckPackageBoundaries(
-      Cell targetCell, BuildTarget target, BuildFileTree buildFileTree, ImmutableSet<Path> paths) {
-    Path basePath = target.getBasePath();
-
-    for (Path path : paths) {
-      if (!basePath.toString().isEmpty() && !path.startsWith(basePath)) {
-        throw new HumanReadableException(
-            "'%s' in '%s' refers to a parent directory.", basePath.relativize(path), target);
-      }
-
-      Optional<Path> ancestor = buildFileTree.getBasePathOfAncestorTarget(path);
-      // It should not be possible for us to ever get an Optional.empty() for this because that
-      // would require one of two conditions:
-      // 1) The source path references parent directories, which we check for above.
-      // 2) You don't have a build file above this file, which is impossible if it is referenced in
-      //    a build file *unless* you happen to be referencing something that is ignored.
-      if (!ancestor.isPresent()) {
-        throw new IllegalStateException(
-            String.format(
-                "Target '%s' refers to file '%s', which doesn't belong to any package",
-                target, path));
-      }
-      if (!ancestor.get().equals(basePath)) {
-        String buildFileName = targetCell.getBuildFileName();
-        Path buckFile = ancestor.get().resolve(buildFileName);
-        // TODO(cjhopman): If we want to manually split error message lines ourselves, we should
-        // have a utility to do it correctly after formatting instead of doing it manually.
-        throw new HumanReadableException(
-            "The target '%1$s' tried to reference '%2$s'.\n"
-                + "This is not allowed because '%2$s' can only be referenced from '%3$s' \n"
-                + "which is its closest parent '%4$s' file.\n"
-                + "\n"
-                + "You should find or create the rule in '%3$s' that references\n"
-                + "'%2$s' and use that in '%1$s'\n"
-                + "instead of directly referencing '%2$s'.\n"
-                + "\n"
-                + "This may also be due to a bug in buckd's caching.\n"
-                + "Please check whether using `buck kill` will resolve it.",
-            target, path, buckFile, buildFileName);
-      }
-    }
   }
 
   private static BuildRuleType parseBuildRuleTypeFromRawRule(
