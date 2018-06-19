@@ -62,7 +62,7 @@ public class DistBuildConfig {
   private static final BuildMode BUILD_MODE_DEFAULT_VALUE = BuildMode.REMOTE_BUILD;
 
   private static final String NUMBER_OF_MINIONS = "number_of_minions";
-  private static final Integer NUMBER_OF_MINIONS_DEFAULT_VALUE = 2;
+  private static final Integer NUMBER_OF_MINIONS_DEFAULT_VALUE = 0;
 
   // List of top-level projects to be attempted to run with Stampede.
   private static final String AUTO_STAMPEDE_PROJECT_WHITELIST = "auto_stampede_project_whitelist";
@@ -562,11 +562,16 @@ public class DistBuildConfig {
   }
 
   public MinionRequirements getMinionRequirements() {
+    int totalMinions = getNumberOfMinions();
+    int lowSpecMinions = getNumberOfLowSpecMinions();
+
+    if (totalMinions <= 0 && lowSpecMinions <= totalMinions) {
+      LOG.info("No specific minion requirements. Using empty specification.");
+      return new MinionRequirements();
+    }
+
     return DistBuildUtil.createMinionRequirements(
-        getBuildMode(),
-        getSchedulingEnvironmentType(),
-        getNumberOfMinions(),
-        getNumberOfLowSpecMinions());
+        getBuildMode(), getSchedulingEnvironmentType(), totalMinions, lowSpecMinions);
   }
 
   /** @return ImmutableSet of all projects that are white-listed for auto Stampede builds */
