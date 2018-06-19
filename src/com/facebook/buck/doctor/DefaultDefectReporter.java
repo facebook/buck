@@ -160,22 +160,25 @@ public class DefaultDefectReporter implements DefectReporter {
       throws IOException {
     try (BufferedOutputStream baseOut = new BufferedOutputStream(outputStream);
         CustomZipOutputStream out = ZipOutputStreams.newOutputStream(baseOut, APPEND_TO_ZIP)) {
-      if (defectReport.getSourceControlInfo().isPresent()
-          && defectReport.getSourceControlInfo().get().getDiff().isPresent()) {
-        addNamedFilesToArchive(
-            out,
-            ImmutableMap.of(
-                DIFF_FILE_NAME, defectReport.getSourceControlInfo().get().getDiff().get()));
+
+      try {
+        if (defectReport.getSourceControlInfo().isPresent()
+            && defectReport.getSourceControlInfo().get().getDiff().isPresent()) {
+          addNamedFilesToArchive(
+              out,
+              ImmutableMap.of(
+                  DIFF_FILE_NAME, defectReport.getSourceControlInfo().get().getDiff().get()));
+        }
+      } catch (VersionControlCommandFailedException | InterruptedException e) {
+        // log the exceptions thrown from VersionControlSupplier<InputStream> when generating diff
+        LOG.warn(
+            e,
+            "Failed to gather diff from source control. Some diff information may be missing from the report");
       }
       addFilesToArchive(out, defectReport.getIncludedPaths());
 
       out.putNextEntry(new CustomZipEntry(REPORT_FILE_NAME));
       ObjectMappers.WRITER.writeValue(out, defectReport);
-    } catch (VersionControlCommandFailedException | InterruptedException e) {
-      // log the exceptions thrown from VersionControlSupplier<InputStream> when generating diff
-      LOG.warn(
-          e,
-          "Failed to gather diff from source control. Some diff information may be missing from the report");
     }
   }
 
