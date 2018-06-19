@@ -311,8 +311,7 @@ public class AppleBinaryDescription
         strippedBinaryRule,
         unstrippedBinaryRule,
         AppleDebugFormat.FLAVOR_DOMAIN.getRequiredValue(buildTarget),
-        cxxPlatformsProvider.getCxxPlatforms(),
-        cxxPlatformsProvider.getDefaultCxxPlatform().getFlavor(),
+        cxxPlatformsProvider,
         appleCxxPlatformsFlavorDomain);
   }
 
@@ -357,8 +356,7 @@ public class AppleBinaryDescription
     }
     BuildTarget binaryTarget = buildTarget.withoutFlavors(APP_FLAVOR);
     return AppleDescriptions.createAppleBundle(
-        cxxPlatforms,
-        defaultCxxFlavor,
+        getCxxPlatformsProvider(),
         appleCxxPlatformsFlavorDomain,
         targetGraph,
         buildTarget,

@@ -19,10 +19,10 @@ package com.facebook.buck.apple;
 import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.FlavorDomainException;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import java.util.Optional;
 
 public class ApplePlatforms {
@@ -31,17 +31,15 @@ public class ApplePlatforms {
 
   /** Only works with thin binaries. */
   static CxxPlatform getCxxPlatformForBuildTarget(
-      FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain,
-      Flavor defaultCxxFlavor,
-      BuildTarget target) {
-    return cxxPlatformFlavorDomain
+      CxxPlatformsProvider cxxPlatformsProvider, BuildTarget target) {
+    return cxxPlatformsProvider
+        .getCxxPlatforms()
         .getValue(target)
-        .orElse(cxxPlatformFlavorDomain.getValue(defaultCxxFlavor));
+        .orElse(cxxPlatformsProvider.getDefaultCxxPlatform());
   }
 
   public static AppleCxxPlatform getAppleCxxPlatformForBuildTarget(
-      FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain,
-      Flavor defaultCxxFlavor,
+      CxxPlatformsProvider cxxPlatformsProvider,
       FlavorDomain<AppleCxxPlatform> appleCxxPlatformFlavorDomain,
       BuildTarget target,
       Optional<MultiarchFileInfo> fatBinaryInfo) {
@@ -49,8 +47,7 @@ public class ApplePlatforms {
     if (fatBinaryInfo.isPresent()) {
       appleCxxPlatform = fatBinaryInfo.get().getRepresentativePlatform();
     } else {
-      CxxPlatform cxxPlatform =
-          getCxxPlatformForBuildTarget(cxxPlatformFlavorDomain, defaultCxxFlavor, target);
+      CxxPlatform cxxPlatform = getCxxPlatformForBuildTarget(cxxPlatformsProvider, target);
       try {
         appleCxxPlatform = appleCxxPlatformFlavorDomain.getValue(cxxPlatform.getFlavor());
       } catch (FlavorDomainException e) {
