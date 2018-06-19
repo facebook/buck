@@ -307,7 +307,7 @@ public class NdkCxxPlatforms {
     // ARM64 Platform
     if (cpuAbis.contains("arm64")) {
       NdkCxxPlatformTargetConfiguration targetConfiguration =
-          getTargetConfiguration(TargetCpuType.ARM64, compiler, androidPlatform);
+          getTargetConfiguration(TargetCpuType.ARM64, compiler, getAndroidPlatformForX64(androidPlatform));
       NdkCxxPlatform arm64 =
           build(
               config,
@@ -345,7 +345,7 @@ public class NdkCxxPlatforms {
     // x86_64 Platform
     if (cpuAbis.contains("x86_64")) {
       NdkCxxPlatformTargetConfiguration targetConfiguration =
-          getTargetConfiguration(TargetCpuType.X86_64, compiler, androidPlatform);
+          getTargetConfiguration(TargetCpuType.X86_64, compiler, getAndroidPlatformForX64(androidPlatform));
       // CHECKSTYLE.OFF: LocalVariableName
 
       NdkCxxPlatform x86_64 =
@@ -365,6 +365,16 @@ public class NdkCxxPlatforms {
     }
 
     return ndkCxxPlatformBuilder.build();
+  }
+
+  @VisibleForTesting
+  static String getAndroidPlatformForX64(String androidPlatform) {
+    String androidPlatform_Fix = androidPlatform;
+    int i = Integer.valueOf(androidPlatform.replace("android-", ""));
+    if (i < 21) {
+      androidPlatform_Fix = "android-21";
+    }
+    return androidPlatform_Fix;
   }
 
   @VisibleForTesting
