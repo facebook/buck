@@ -28,12 +28,16 @@ import com.facebook.buck.graph.TraversableGraph;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.InvocationInfo;
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.util.json.ObjectMappers;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Charsets;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Queues;
 import com.google.common.collect.Sets;
 import com.google.common.eventbus.Subscribe;
 import com.google.common.util.concurrent.SimpleTimeLimiter;
@@ -41,17 +45,18 @@ import java.io.BufferedOutputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Deque;
 import java.util.Map;
 import java.util.Optional;
-import java.util.OptionalLong;
 import java.util.Set;
-import java.util.Stack;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
+import org.immutables.value.Value;
 
 /**
  * Listens {@link ActionGraphEvent.Finished} to get {@link ActionGraph}, {@link BuildRuleEvent} to
@@ -61,7 +66,6 @@ public class BuildTargetDurationListener implements BuckEventListener {
 
   private static final Logger LOG = Logger.get(BuildTargetDurationListener.class);
 
-  private static final byte[] NEWLINE = "\n".getBytes(Charsets.UTF_8);
   private static final int SHUTDOWN_TIMEOUT_SECONDS = 60;
 
   private final InvocationInfo info;
@@ -144,7 +148,26 @@ public class BuildTargetDurationListener implements BuckEventListener {
   }
 
   private Path getLogFilePath() {
-    return filesystem.resolve(info.getLogDirectoryPath()).resolve("critical-path");
+    return filesystem.resolve(info.getBuckLogDir()).resolve("critical-path");
+  }
+
+  @VisibleForTesting
+  static ImmutableBuildRuleCriticalPath constructBuildRuleCriticalPath(
+      BuildRuleInfo buildRuleInfo) {
+    Deque<BuildRuleInfo> criticalPath = stackOfCriticalPath(Optional.of(buildRuleInfo));
+    ImmutableList.Builder<CriticalPathEntry> builder = ImmutableList.builder();
+    for (BuildRuleInfo ruleInfoInPath : criticalPath) {
+      builder.add(
+          ImmutableCriticalPathEntry.of(
+              ruleInfoInPath.ruleName,
+              ruleInfoInPath.startEpochMillis,
+              ruleInfoInPath.finishEpochMillis));
+    }
+    return ImmutableBuildRuleCriticalPath.of(
+        buildRuleInfo.ruleName,
+        buildRuleInfo.getWholeTargetDuration(),
+        builder.build(),
+        buildRuleInfo.longestDependencyChainMillis);
   }
 
   @Override
@@ -157,64 +180,42 @@ public class BuildTargetDurationListener implements BuckEventListener {
                 new BufferedOutputStream(new FileOutputStream(getLogFilePath().toFile()))) {
               LOG.info("Starting critical path calculation for %s", info);
               LOG.info("Writing critical path to %s", getLogFilePath().toString());
+              ArrayList<BuildRuleCriticalPath> criticalPaths = new ArrayList<>();
               if (actionGraph.isPresent()) {
                 updateBuildRuleInfosWithDependents();
-                Optional<BuildRuleInfo> criticalPathLast =
-                    computeCriticalPathUsingGraphTraversal(buildRuleInfos);
-                OptionalLong firstStartEpochMillis = OptionalLong.empty();
-                Stack<BuildRuleInfo> criticalPath = stackOfCriticalPath(criticalPathLast);
-                while (!criticalPath.empty()) {
-                  BuildRuleInfo buildRuleInfo = criticalPath.pop();
-                  if (!firstStartEpochMillis.isPresent()) {
-                    firstStartEpochMillis = OptionalLong.of(buildRuleInfo.startEpochMillis);
+
+                computeCriticalPathsUsingGraphTraversal(buildRuleInfos);
+
+                // Compute critical path for the test targets only
+                for (TestRule testRule :
+                    Iterables.filter(actionGraph.get().getNodes(), TestRule.class)) {
+                  final String testRuleName = testRule.getFullyQualifiedName();
+                  BuildRuleInfo testRuleInfo = buildRuleInfos.get(testRuleName);
+                  if (testRuleInfo != null) {
+                    criticalPaths.add(constructBuildRuleCriticalPath(testRuleInfo));
+                  } else {
+                    LOG.warn(
+                        "Missing the test target %s in the list of BuildRuleEvent.Started.",
+                        testRuleName);
                   }
-                  outputStream.write(buildRuleInfo.ruleName.getBytes(Charsets.UTF_8));
-                  outputStream.write(
-                      (" start="
-                              + (buildRuleInfo.startEpochMillis
-                                  - firstStartEpochMillis.getAsLong()))
-                          .getBytes(Charsets.UTF_8));
-                  outputStream.write(
-                      (" finish="
-                              + (buildRuleInfo.finishEpochMillis
-                                  - firstStartEpochMillis.getAsLong()))
-                          .getBytes(Charsets.UTF_8));
-                  outputStream.write(
-                      (" all=" + buildRuleInfo.longestDependencyChainMillis)
-                          .getBytes(Charsets.UTF_8));
-                  outputStream.write(NEWLINE);
                 }
 
-                outputStream.write(
-                    "\n====== TEST TARGET DURATIONS =======\n".getBytes(Charsets.UTF_8));
-                Iterable<TestRule> testRules =
-                    Iterables.filter(actionGraph.get().getNodes(), TestRule.class);
-                for (TestRule testRule : testRules) {
-                  BuildRuleInfo ruleInfo = buildRuleInfos.get(testRule.getFullyQualifiedName());
-                  outputStream.write(testRule.getFullyQualifiedName().getBytes(Charsets.UTF_8));
-                  if (ruleInfo != null) {
-                    outputStream.write(
-                        (" getDuration=" + ruleInfo.getWholeTargetDuration())
-                            .getBytes(Charsets.UTF_8));
-                  }
-                  outputStream.write(NEWLINE);
-                }
+                ObjectMappers.WRITER.writeValue(outputStream, criticalPaths);
                 LOG.info("Critical path written successfully.");
               } else {
-                outputStream.write("NO ACTION GRAPH\n".getBytes(Charsets.UTF_8));
+                ObjectMappers.WRITER.writeValue(outputStream, criticalPaths);
                 LOG.warn("There was no action graph, computation is skipped.");
               }
-
             } catch (IOException e) {
-              LOG.warn(e, "Could not complete IO Request");
+              LOG.warn(e, "Could not complete IO Request.");
             }
           },
           SHUTDOWN_TIMEOUT_SECONDS,
           TimeUnit.SECONDS);
     } catch (InterruptedException | TimeoutException e) {
-      LOG.error(e, "Could not complete all jobs within timeout during shutdown");
+      LOG.error(e, "Could not complete all jobs within timeout during shutdown.");
     } catch (AssertionError e) {
-      LOG.error(e.getCause(), "An exception occurred during execution of task");
+      LOG.error(e.getCause(), "An exception occurred during execution of task.");
     } finally {
       executor.shutdownNow();
     }
@@ -240,16 +241,20 @@ public class BuildTargetDurationListener implements BuckEventListener {
     }
   }
 
-  /** Compute critical path using {@link TraversableGraph} interface. */
+  /**
+   * Modifies {@link BuildRuleInfo#longestDependencyChainMillis} and /* {@link
+   * BuildRuleInfo#previousRuleInLongestDependencyChain} to save the longest path.
+   */
   @VisibleForTesting
-  static Optional<BuildRuleInfo> computeCriticalPathUsingGraphTraversal(
+  static BuildRuleInfoGraph computeCriticalPathsUsingGraphTraversal(
       Map<String, BuildRuleInfo> buildRuleInfos) throws IOException {
     BuildRuleInfoGraph graph = new BuildRuleInfoGraph(buildRuleInfos);
     new BuildRuleInfoGraphTraversal(graph).traverse();
-    return findCriticalNode(graph.getBuildRuleInfos());
+    return graph;
   }
 
-  private static Optional<BuildRuleInfo> findCriticalNode(Iterable<BuildRuleInfo> allRules) {
+  @VisibleForTesting
+  static Optional<BuildRuleInfo> findCriticalNode(Iterable<BuildRuleInfo> allRules) {
     Optional<BuildRuleInfo> lastNodeOfCriticalPath = Optional.empty();
     long timeOfLastNodeOfCriticalPath = 0;
     for (BuildRuleInfo buildRuleInfo : allRules) {
@@ -263,10 +268,9 @@ public class BuildTargetDurationListener implements BuckEventListener {
   }
 
   /** Construct critical path. */
-  @VisibleForTesting
-  static Stack<BuildRuleInfo> stackOfCriticalPath(
+  private static Deque<BuildRuleInfo> stackOfCriticalPath(
       Optional<BuildRuleInfo> lastCriticalPathBuildRuleInfo) {
-    Stack<BuildRuleInfo> criticalPath = new Stack<>();
+    Deque<BuildRuleInfo> criticalPath = Queues.newArrayDeque();
     while (lastCriticalPathBuildRuleInfo.isPresent()) {
       criticalPath.push(lastCriticalPathBuildRuleInfo.get());
       lastCriticalPathBuildRuleInfo =
@@ -356,6 +360,44 @@ public class BuildTargetDurationListener implements BuckEventListener {
     private Collection<BuildRuleInfo> getBuildRuleInfos() {
       return buildRuleInfos.values();
     }
+  }
+
+  /** An entry in the critical path of the target. */
+  @Value.Immutable(copy = false, builder = false)
+  @JsonSerialize(as = ImmutableCriticalPathEntry.class)
+  interface CriticalPathEntry {
+    @JsonProperty("rule-name")
+    @Value.Parameter
+    String ruleName();
+
+    @JsonProperty("start")
+    @Value.Parameter
+    long startTimestamp();
+
+    @JsonProperty("finish")
+    @Value.Parameter
+    long finishTimestamp();
+  }
+
+  /** Used to keep critical path information for each test target, and serialize as json. */
+  @Value.Immutable(copy = false, builder = false)
+  @JsonSerialize(as = ImmutableBuildRuleCriticalPath.class)
+  interface BuildRuleCriticalPath {
+    @JsonProperty("target-name")
+    @Value.Parameter
+    String targetName();
+
+    @JsonProperty("target-duration")
+    @Value.Parameter
+    long targetDuration();
+
+    @JsonProperty("critical-path")
+    @Value.Parameter
+    ImmutableList<CriticalPathEntry> criticalPath();
+
+    @JsonProperty("critical-path-duration")
+    @Value.Parameter
+    long criticalPathDuration();
   }
 
   /**

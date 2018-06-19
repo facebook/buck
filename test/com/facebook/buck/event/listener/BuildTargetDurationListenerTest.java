@@ -16,13 +16,20 @@
 
 package com.facebook.buck.event.listener;
 
-import static com.facebook.buck.event.listener.BuildTargetDurationListener.computeCriticalPathUsingGraphTraversal;
+import static com.facebook.buck.event.listener.BuildTargetDurationListener.computeCriticalPathsUsingGraphTraversal;
+import static com.facebook.buck.event.listener.BuildTargetDurationListener.findCriticalNode;
 
+import com.facebook.buck.event.listener.BuildTargetDurationListener.BuildRuleCriticalPath;
 import com.facebook.buck.event.listener.BuildTargetDurationListener.BuildRuleInfo;
+import com.facebook.buck.util.json.ObjectMappers;
 import com.google.common.collect.Maps;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
-import java.util.Stack;
 import java.util.concurrent.ConcurrentMap;
+import java.util.stream.Collectors;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -63,6 +70,23 @@ import org.junit.Test;
 public class BuildTargetDurationListenerTest {
 
   private ConcurrentMap<String, BuildRuleInfo> buildRuleInfos;
+
+  private static final String EXPECTED_JSON_OUTPUT =
+      "[{\"target-name\":\"a\","
+          + "\"target-duration\":8,"
+          + "\"critical-path\":"
+          + "[{\"rule-name\":\"l\",\"start\":0,\"finish\":6},"
+          + "{\"rule-name\":\"e\",\"start\":6,\"finish\":8},"
+          + "{\"rule-name\":\"b\",\"start\":8,\"finish\":12},"
+          + "{\"rule-name\":\"a\",\"start\":12,\"finish\":20}],"
+          + "\"critical-path-duration\":20},"
+          + "{\"target-name\":\"c\","
+          + "\"target-duration\":2,"
+          + "\"critical-path\":"
+          + "[{\"rule-name\":\"m\",\"start\":0,\"finish\":8},"
+          + "{\"rule-name\":\"f\",\"start\":8,\"finish\":9},"
+          + "{\"rule-name\":\"c\",\"start\":9,\"finish\":11}],"
+          + "\"critical-path-duration\":11}]";
 
   @Before
   public void setUp() {
@@ -138,15 +162,6 @@ public class BuildTargetDurationListenerTest {
     buildRuleInfos.put("m", m);
   }
 
-  @SuppressWarnings("unused")
-  private void printCriticalPath(Optional<BuildRuleInfo> critical) {
-    Stack<BuildRuleInfo> criticalPath = BuildTargetDurationListener.stackOfCriticalPath(critical);
-    while (!criticalPath.empty()) {
-      BuildRuleInfo buildRuleInfo = criticalPath.pop();
-      System.out.println(buildRuleInfo.ruleName);
-    }
-  }
-
   private void checkCriticalPath(Optional<BuildRuleInfo> critical) {
     Assert.assertEquals("a", critical.get().ruleName);
     // Critical path
@@ -175,8 +190,24 @@ public class BuildTargetDurationListenerTest {
   }
 
   @Test
-  public void testTraversalGraphInterface() throws Exception {
-    Optional<BuildRuleInfo> critical = computeCriticalPathUsingGraphTraversal(buildRuleInfos);
-    checkCriticalPath(critical);
+  public void testTraversalGraphInterface() throws IOException {
+    computeCriticalPathsUsingGraphTraversal(buildRuleInfos);
+    checkCriticalPath(findCriticalNode(buildRuleInfos.values()));
+  }
+
+  @Test
+  public void testOutputTrace() throws IOException {
+    computeCriticalPathsUsingGraphTraversal(buildRuleInfos);
+    BuildRuleInfo[] targets =
+        new BuildRuleInfo[] {buildRuleInfos.get("a"), buildRuleInfos.get("c")};
+
+    List<BuildRuleCriticalPath> criticalPaths =
+        Arrays.stream(targets)
+            .map(BuildTargetDurationListener::constructBuildRuleCriticalPath)
+            .collect(Collectors.toList());
+    try (ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
+      ObjectMappers.WRITER.writeValue(bos, criticalPaths);
+      Assert.assertTrue(bos.toString().equals(EXPECTED_JSON_OUTPUT));
+    }
   }
 }
