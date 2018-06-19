@@ -49,13 +49,9 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
-import java.nio.file.Path;
-import java.util.Collection;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 public class JsUtil {
   private static final ImmutableList<AbstractMacroExpanderWithoutPrecomputedWork<? extends Macro>>
@@ -111,17 +107,6 @@ public class JsUtil {
         Optional.empty(),
         Optional.empty(),
         new WorkerProcessPoolFactory(projectFilesystem));
-  }
-
-  static String resolveMapJoin(
-      Collection<SourcePath> items,
-      SourcePathResolver sourcePathResolver,
-      Function<Path, String> mapper) {
-    return items
-        .stream()
-        .map(sourcePathResolver::getAbsolutePath)
-        .map(mapper)
-        .collect(Collectors.joining(" "));
   }
 
   static boolean isJsLibraryTarget(BuildTarget target, TargetGraph targetGraph) {
