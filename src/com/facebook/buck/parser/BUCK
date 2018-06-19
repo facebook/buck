@@ -25,6 +25,7 @@ java_immutables_library(
         "AbstractBuildTargetSpec.java",
         "AbstractTargetNodePredicateSpec.java",
         "BuildTargetPatternTargetNodeParser.java",
+        "BuiltTargetVerifier.java",
         "CellManager.java",
         "ConcurrentMapCache.java",
         "ConvertingPipeline.java",

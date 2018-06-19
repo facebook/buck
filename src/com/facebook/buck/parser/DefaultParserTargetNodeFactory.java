@@ -21,9 +21,6 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.Flavor;
-import com.facebook.buck.core.model.Flavored;
-import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
@@ -32,7 +29,6 @@ import com.facebook.buck.core.rules.type.BuildRuleType;
 import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.json.JsonObjectHashing;
-import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
@@ -42,7 +38,6 @@ import com.facebook.buck.rules.coercer.ParamInfoException;
 import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
 import com.facebook.buck.rules.visibility.VisibilityPattern;
 import com.facebook.buck.rules.visibility.VisibilityPatternFactory;
-import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableSet;
@@ -61,14 +56,13 @@ import java.util.function.Function;
 public class DefaultParserTargetNodeFactory
     implements ParserTargetNodeFactory<Map<String, Object>> {
 
-  private static final Logger LOG = Logger.get(DefaultParserTargetNodeFactory.class);
-
   private final ConstructorArgMarshaller marshaller;
   private final PackageBoundaryChecker packageBoundaryChecker;
   private final TargetNodeListener<TargetNode<?, ?>> nodeListener;
   private final TargetNodeFactory targetNodeFactory;
   private final VisibilityPatternFactory visibilityPatternFactory;
   private final RuleKeyConfiguration ruleKeyConfiguration;
+  private final BuiltTargetVerifier builtTargetVerifier;
 
   private DefaultParserTargetNodeFactory(
       ConstructorArgMarshaller marshaller,
@@ -76,13 +70,15 @@ public class DefaultParserTargetNodeFactory
       TargetNodeListener<TargetNode<?, ?>> nodeListener,
       TargetNodeFactory targetNodeFactory,
       VisibilityPatternFactory visibilityPatternFactory,
-      RuleKeyConfiguration ruleKeyConfiguration) {
+      RuleKeyConfiguration ruleKeyConfiguration,
+      BuiltTargetVerifier builtTargetVerifier) {
     this.marshaller = marshaller;
     this.packageBoundaryChecker = packageBoundaryChecker;
     this.nodeListener = nodeListener;
     this.targetNodeFactory = targetNodeFactory;
     this.visibilityPatternFactory = visibilityPatternFactory;
     this.ruleKeyConfiguration = ruleKeyConfiguration;
+    this.builtTargetVerifier = builtTargetVerifier;
   }
 
   public static ParserTargetNodeFactory<Map<String, Object>> createForParser(
@@ -98,7 +94,8 @@ public class DefaultParserTargetNodeFactory
         nodeListener,
         targetNodeFactory,
         visibilityPatternFactory,
-        ruleKeyConfiguration);
+        ruleKeyConfiguration,
+        new BuiltTargetVerifier());
   }
 
   public static ParserTargetNodeFactory<Map<String, Object>> createForDistributedBuild(
@@ -114,7 +111,8 @@ public class DefaultParserTargetNodeFactory
         },
         targetNodeFactory,
         visibilityPatternFactory,
-        ruleKeyConfiguration);
+        ruleKeyConfiguration,
+        new BuiltTargetVerifier());
   }
 
   @Override
@@ -130,7 +128,8 @@ public class DefaultParserTargetNodeFactory
     // Because of the way that the parser works, we know this can never return null.
     DescriptionWithTargetGraph<?> description = knownBuildRuleTypes.getDescription(buildRuleType);
 
-    verifyUnflavoredBuildTarget(cell, buildRuleType, buildFile, target, description, rawNode);
+    builtTargetVerifier.verifyBuildTarget(
+        cell, buildRuleType, buildFile, target, description, rawNode);
 
     Preconditions.checkState(cell.equals(cell.getCell(target)));
     Object constructorArg;
@@ -173,53 +172,6 @@ public class DefaultParserTargetNodeFactory
       throw new HumanReadableException(e, "%s: %s", target, e.getMessage());
     } catch (IOException e) {
       throw new HumanReadableException(e.getMessage(), e);
-    }
-  }
-
-  private static void verifyUnflavoredBuildTarget(
-      Cell cell,
-      BuildRuleType buildRuleType,
-      Path buildFile,
-      BuildTarget target,
-      DescriptionWithTargetGraph<?> description,
-      Map<String, Object> rawNode) {
-    UnflavoredBuildTarget unflavoredBuildTarget = target.getUnflavoredBuildTarget();
-    if (target.isFlavored()) {
-      if (description instanceof Flavored) {
-        if (!((Flavored) description).hasFlavors(ImmutableSet.copyOf(target.getFlavors()))) {
-          throw UnexpectedFlavorException.createWithSuggestions(
-              (Flavored) description, cell, target);
-        }
-      } else {
-        LOG.warn(
-            "Target %s (type %s) must implement the Flavored interface "
-                + "before we can check if it supports flavors: %s",
-            unflavoredBuildTarget, buildRuleType, target.getFlavors());
-        ImmutableSet<String> invalidFlavorsStr =
-            target
-                .getFlavors()
-                .stream()
-                .map(Flavor::toString)
-                .collect(ImmutableSet.toImmutableSet());
-        String invalidFlavorsDisplayStr = String.join(", ", invalidFlavorsStr);
-        throw new HumanReadableException(
-            "The following flavor(s) are not supported on target %s:\n"
-                + "%s.\n\n"
-                + "Please try to remove them when referencing this target.",
-            unflavoredBuildTarget, invalidFlavorsDisplayStr);
-      }
-    }
-
-    UnflavoredBuildTarget unflavoredBuildTargetFromRawData =
-        RawNodeParsePipeline.parseBuildTargetFromRawRule(
-            cell.getRoot(), cell.getCanonicalName(), rawNode, buildFile);
-    if (!unflavoredBuildTarget.equals(unflavoredBuildTargetFromRawData)) {
-      throw new IllegalStateException(
-          String.format(
-              "Inconsistent internal state, target from data: %s, expected: %s, raw data: %s",
-              unflavoredBuildTargetFromRawData,
-              unflavoredBuildTarget,
-              Joiner.on(',').withKeyValueSeparator("->").join(rawNode)));
     }
   }
 
