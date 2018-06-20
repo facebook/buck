@@ -37,6 +37,10 @@ else:
     def to_bytes(s): return bytes(s, "utf-8")
     from io import UnsupportedOperation
 
+def str_to_bytes(string):
+    """Version independent way of converting strings to bytes."""
+    return string if is_py2 else string.encode("utf-8")
+
 # @author <a href="http://www.martiansoftware.com/contact.html">Marty Lamb</a>
 # @author Pete Kirkham (Win32 port)
 # @author Sergey Balabanov, Ben Hamilton (Python port)
@@ -569,8 +573,7 @@ class NailgunConnection(object):
                 self.buf,
                 bytes_to_read)
             if dest_file:
-                data = self.buf[:bytes_received].decode("utf-8")
-                dest_file.write(data)
+                dest_file.write(str_to_bytes(self.buf[:bytes_received]))
             bytes_read += bytes_received
 
 
