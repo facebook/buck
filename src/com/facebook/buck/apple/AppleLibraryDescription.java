@@ -76,6 +76,7 @@ import com.facebook.buck.cxx.toolchain.StripStyle;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.swift.SwiftBuckConfig;
@@ -383,6 +384,11 @@ public class AppleLibraryDescription
       BuildRuleParams params,
       ActionGraphBuilder graphBuilder,
       AppleLibraryDescriptionArg args) {
+    if (appleConfig.getDeprecateFrameworksFlavors()) {
+      throw new HumanReadableException(
+          "Refusing to create framework for %s based on config %s.%s",
+          buildTarget, AppleConfig.APPLE_SECTION, AppleConfig.DEPRECATE_FRAMEWORKS_FLAVORS);
+    }
     if (!args.getInfoPlist().isPresent()) {
       throw new HumanReadableException(
           "Cannot create framework for apple_library '%s':\n"
@@ -1004,6 +1010,19 @@ public class AppleLibraryDescription
     Optional<SourcePath> getInfoPlist();
 
     ImmutableMap<String, String> getInfoPlistSubstitutions();
+
+    @Value.Check
+    default void warnIfFrameworkFieldsAreSet() {
+      if (getInfoPlist().isPresent() || !getInfoPlistSubstitutions().isEmpty()) {
+        Logger.get(AbstractAppleLibraryDescriptionArg.class)
+            .error(
+                "info_plist and info_plist_substitutions on apple_library (%s) are deprecated and "
+                    + "will be removed in a future version of buck. Please remove these parameters "
+                    + "and try building with config %s.%s set to true to validate you do not "
+                    + "use them for building frameworks with the framework flavor.",
+                getName(), AppleConfig.APPLE_SECTION, AppleConfig.DEPRECATE_FRAMEWORKS_FLAVORS);
+      }
+    }
   }
 
   // CxxLibraryDescriptionDelegate

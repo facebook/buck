@@ -65,6 +65,7 @@ public class AppleConfig implements ConfigView<BuckConfig> {
   private static final String FORCE_LOAD_LINK_WHOLE_LIBRARY_ENABLED =
       "force_load_link_whole_library";
   private static final String FORCE_LOAD_LIBRARY_PATH = "force_load_library_path";
+  public static final String DEPRECATE_FRAMEWORKS_FLAVORS = "deprecate_frameworks_flavors";
 
   private final BuckConfig delegate;
 
@@ -407,6 +408,16 @@ public class AppleConfig implements ConfigView<BuckConfig> {
     return delegate
         .getValue(APPLE_SECTION, toolName + "_version_override")
         .orElse(defaultToolVersion);
+  }
+
+  /**
+   * For removing #framework and #(no)-include-frameworks flavors from apple_library
+   *
+   * <p>When set to true throw an exception when the rule is created as result of the #framework
+   * flavor being used.
+   */
+  public boolean getDeprecateFrameworksFlavors() {
+    return delegate.getBooleanValue(APPLE_SECTION, DEPRECATE_FRAMEWORKS_FLAVORS, false);
   }
 
   @Value.Immutable
