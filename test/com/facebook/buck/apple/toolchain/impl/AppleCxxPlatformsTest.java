@@ -199,8 +199,7 @@ public class AppleCxxPlatformsTest {
             appleSdkPaths,
             buckConfig,
             new XcodeToolFinder(buckConfig.getView(AppleConfig.class)),
-            new AppleCxxPlatforms.XcodeBuildVersionCache(),
-            Optional.empty());
+            new AppleCxxPlatforms.XcodeBuildVersionCache());
 
     CxxPlatform cxxPlatform = appleCxxPlatform.getCxxPlatform();
 
@@ -296,8 +295,7 @@ public class AppleCxxPlatformsTest {
             appleSdkPaths,
             buckConfig,
             new XcodeToolFinder(buckConfig.getView(AppleConfig.class)),
-            new AppleCxxPlatforms.XcodeBuildVersionCache(),
-            Optional.empty());
+            new AppleCxxPlatforms.XcodeBuildVersionCache());
 
     CxxPlatform cxxPlatform = appleCxxPlatform.getCxxPlatform();
 
@@ -389,8 +387,7 @@ public class AppleCxxPlatformsTest {
             appleSdkPaths,
             buckConfig,
             new XcodeToolFinder(buckConfig.getView(AppleConfig.class)),
-            new AppleCxxPlatforms.XcodeBuildVersionCache(),
-            Optional.empty());
+            new AppleCxxPlatforms.XcodeBuildVersionCache());
 
     CxxPlatform cxxPlatform = appleCxxPlatform.getCxxPlatform();
 
@@ -483,8 +480,7 @@ public class AppleCxxPlatformsTest {
             appleSdkPaths,
             buckConfig,
             new XcodeToolFinder(buckConfig.getView(AppleConfig.class)),
-            new AppleCxxPlatforms.XcodeBuildVersionCache(),
-            Optional.empty());
+            new AppleCxxPlatforms.XcodeBuildVersionCache());
 
     assertEquals(
         InternalFlavor.of("__in__va_id_-cha_rs"), appleCxxPlatform.getCxxPlatform().getFlavor());
@@ -546,8 +542,7 @@ public class AppleCxxPlatformsTest {
             appleSdkPaths,
             buckConfig,
             new XcodeToolFinder(buckConfig.getView(AppleConfig.class)),
-            new AppleCxxPlatforms.XcodeBuildVersionCache(),
-            Optional.empty());
+            new AppleCxxPlatforms.XcodeBuildVersionCache());
 
     CxxPlatform cxxPlatform = appleCxxPlatform.getCxxPlatform();
 
@@ -594,8 +589,7 @@ public class AppleCxxPlatformsTest {
         appleSdkPaths,
         buckConfig,
         new XcodeToolFinder(buckConfig.getView(AppleConfig.class)),
-        new AppleCxxPlatforms.XcodeBuildVersionCache(),
-        Optional.empty());
+        new AppleCxxPlatforms.XcodeBuildVersionCache());
   }
 
   @Test
@@ -644,8 +638,7 @@ public class AppleCxxPlatformsTest {
             appleSdkPaths,
             buckConfig,
             new XcodeToolFinder(buckConfig.getView(AppleConfig.class)),
-            new AppleCxxPlatforms.XcodeBuildVersionCache(),
-            Optional.empty());
+            new AppleCxxPlatforms.XcodeBuildVersionCache());
 
     CxxPlatform cxxPlatform = appleCxxPlatform.getCxxPlatform();
 
@@ -699,8 +692,7 @@ public class AppleCxxPlatformsTest {
             appleSdkPaths,
             buckConfig,
             new XcodeToolFinder(buckConfig.getView(AppleConfig.class)),
-            new AppleCxxPlatforms.XcodeBuildVersionCache(),
-            Optional.empty());
+            new AppleCxxPlatforms.XcodeBuildVersionCache());
 
     CxxPlatform cxxPlatform = appleCxxPlatform.getCxxPlatform();
 
@@ -755,8 +747,7 @@ public class AppleCxxPlatformsTest {
             appleSdkPaths,
             buckConfig,
             new XcodeToolFinder(buckConfig.getView(AppleConfig.class)),
-            new AppleCxxPlatforms.XcodeBuildVersionCache(),
-            Optional.empty());
+            new AppleCxxPlatforms.XcodeBuildVersionCache());
 
     CxxPlatform cxxPlatform = appleCxxPlatform.getCxxPlatform();
 
@@ -906,8 +897,7 @@ public class AppleCxxPlatformsTest {
         appleSdkPaths,
         config,
         new XcodeToolFinder(config.getView(AppleConfig.class)),
-        FakeAppleRuleDescriptions.FAKE_XCODE_BUILD_VERSION_CACHE,
-        Optional.empty());
+        FakeAppleRuleDescriptions.FAKE_XCODE_BUILD_VERSION_CACHE);
   }
 
   private AppleCxxPlatform buildAppleCxxPlatform(Path root) {
@@ -1088,7 +1078,7 @@ public class AppleCxxPlatformsTest {
   @Test
   public void appleCxxPlatformWhenNoSwiftToolchainPreferredShouldUseDefaultSwift()
       throws IOException {
-    AppleCxxPlatform platformWithDefaultSwift = buildAppleCxxPlatformWithSwiftToolchain(true);
+    AppleCxxPlatform platformWithDefaultSwift = buildAppleCxxPlatformWithSwiftToolchain();
     Optional<SwiftPlatform> swiftPlatformOptional = platformWithDefaultSwift.getSwiftPlatform();
     assertThat(swiftPlatformOptional.isPresent(), is(true));
     Tool swiftcTool = swiftPlatformOptional.get().getSwiftc();
@@ -1103,23 +1093,8 @@ public class AppleCxxPlatformsTest {
   }
 
   @Test
-  public void appleCxxPlatformShouldUsePreferredSwiftVersion() throws IOException {
-    AppleCxxPlatform platformWithConfiguredSwift = buildAppleCxxPlatformWithSwiftToolchain(false);
-    Optional<SwiftPlatform> swiftPlatformOptional = platformWithConfiguredSwift.getSwiftPlatform();
-    assertThat(swiftPlatformOptional.isPresent(), is(true));
-    Tool swiftcTool = swiftPlatformOptional.get().getSwiftc();
-    PathSourcePath path = ((VersionedTool) swiftcTool).getPath();
-    assertEquals(projectFilesystem, path.getFilesystem());
-    assertEquals("/TEMP_ROOT/usr/bin/swiftc", path.getRelativePath().toString());
-
-    assertThat(
-        swiftPlatformOptional.get().getSwiftRuntimePaths(),
-        equalTo(ImmutableSet.of(projectFilesystem.getPath("/TEMP_ROOT/usr/lib/swift/iphoneos"))));
-  }
-
-  @Test
-  public void checkSwiftPlatformUsesCorrectMinTargetSdk() throws IOException {
-    AppleCxxPlatform platformWithConfiguredSwift = buildAppleCxxPlatformWithSwiftToolchain(true);
+  public void checkSwiftPlatformUsesCorrectMinTargetSdk() {
+    AppleCxxPlatform platformWithConfiguredSwift = buildAppleCxxPlatformWithSwiftToolchain();
     Tool swiftc = platformWithConfiguredSwift.getSwiftPlatform().get().getSwiftc();
     assertThat(swiftc, notNullValue());
     assertThat(swiftc, instanceOf(VersionedTool.class));
@@ -1194,21 +1169,7 @@ public class AppleCxxPlatformsTest {
     assertNotEquals(ibtoolRuleKey1, ibtoolRuleKey2);
   }
 
-  private AppleCxxPlatform buildAppleCxxPlatformWithSwiftToolchain(boolean useDefaultSwift)
-      throws IOException {
-    Path tempRoot = projectFilesystem.getPath("/TEMP_ROOT");
-    AppleToolchain swiftToolchain =
-        AppleToolchain.builder()
-            .setIdentifier("com.apple.dt.XcodeDefault")
-            .setPath(tempRoot)
-            .setVersion("1")
-            .build();
-    touchFile(tempRoot.resolve("usr/bin/swiftc"));
-    touchFile(tempRoot.resolve("usr/bin/swift-stdlib-tool"));
-    Files.createDirectories(tempRoot.resolve("usr/lib/swift/iphoneos"));
-    Files.createDirectories(tempRoot.resolve("usr/lib/swift_static/iphoneos"));
-    Optional<AppleToolchain> selectedSwiftToolChain =
-        useDefaultSwift ? Optional.empty() : Optional.of(swiftToolchain);
+  private AppleCxxPlatform buildAppleCxxPlatformWithSwiftToolchain() {
     ImmutableSet<Path> knownPaths =
         ImmutableSet.<Path>builder()
             .addAll(getCommonKnownPaths(developerDir))
@@ -1235,7 +1196,6 @@ public class AppleCxxPlatformsTest {
             .build(),
         buckConfig,
         new XcodeToolFinder(buckConfig.getView(AppleConfig.class)),
-        FakeAppleRuleDescriptions.FAKE_XCODE_BUILD_VERSION_CACHE,
-        selectedSwiftToolChain);
+        FakeAppleRuleDescriptions.FAKE_XCODE_BUILD_VERSION_CACHE);
   }
 }
