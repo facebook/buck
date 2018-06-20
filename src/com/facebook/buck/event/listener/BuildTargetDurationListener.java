@@ -170,7 +170,8 @@ public class BuildTargetDurationListener implements BuckEventListener {
           ImmutableCriticalPathEntry.of(
               ruleInfoInPath.ruleName,
               ruleInfoInPath.startEpochMillis,
-              ruleInfoInPath.finishEpochMillis));
+              ruleInfoInPath.finishEpochMillis,
+              ruleInfoInPath.getDuration()));
     }
     return ImmutableBuildRuleCriticalPath.of(
         buildRuleInfo.ruleName,
@@ -467,6 +468,10 @@ public class BuildTargetDurationListener implements BuckEventListener {
     @JsonProperty("finish")
     @Value.Parameter
     long finishTimestamp();
+
+    @JsonProperty("duration")
+    @Value.Parameter
+    long duration();
   }
 
   /** Used to keep critical path information for each test target, and serialize as json. */
