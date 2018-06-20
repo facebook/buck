@@ -374,6 +374,10 @@ public class HaskellHaddockLibRule extends AbstractBuildRuleWithDeclaredAndExtra
     }
   }
 
+  public HaskellPlatform getPlatform() {
+    return platform;
+  }
+
   public enum Type {
     HTML,
     HOOGLE

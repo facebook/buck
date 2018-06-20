@@ -17,6 +17,7 @@
 package com.facebook.buck.features.haskell;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.targetgraph.AbstractNodeBuilder;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
@@ -87,6 +88,11 @@ public class HaskellLibraryBuilder
   public HaskellLibraryBuilder setPlatformDeps(
       PatternMatchedCollection<ImmutableSortedSet<BuildTarget>> platformDeps) {
     getArgForPopulating().setPlatformDeps(platformDeps);
+    return this;
+  }
+
+  public HaskellLibraryBuilder setPlatform(Flavor platform) {
+    getArgForPopulating().setPlatform(platform);
     return this;
   }
 }

@@ -652,12 +652,19 @@ public class HaskellLibraryDescription
   }
 
   private HaskellPlatform getPlatform(
-      HaskellPlatformsProvider haskellPlatformsProvider, BuildTarget buildTarget) {
+      HaskellPlatformsProvider haskellPlatformsProvider,
+      BuildTarget buildTarget,
+      HaskellLibraryDescriptionArg args) {
     Optional<HaskellPlatform> platform =
         haskellPlatformsProvider.getHaskellPlatforms().getValue(buildTarget);
     if (platform.isPresent()) {
       return platform.get();
     }
+
+    if (args.getPlatform().isPresent()) {
+      return haskellPlatformsProvider.getHaskellPlatforms().getValue(args.getPlatform().get());
+    }
+
     return haskellPlatformsProvider.getDefaultHaskellPlatform();
   }
 
@@ -680,7 +687,7 @@ public class HaskellLibraryDescription
     // See if we're building a particular "type" and "platform" of this library, and if so, extract
     // them from the flavors attached to the build target.
     Optional<Map.Entry<Flavor, Type>> type = LIBRARY_TYPE.getFlavorAndValue(buildTarget);
-    HaskellPlatform platform = getPlatform(haskellPlatformsProvider, buildTarget);
+    HaskellPlatform platform = getPlatform(haskellPlatformsProvider, buildTarget, args);
     if (type.isPresent()) {
       // Get the base build, without any flavors referring to the library type or platform.
       BuildTarget baseTarget =
@@ -1076,5 +1083,7 @@ public class HaskellLibraryDescription
     default PatternMatchedCollection<ImmutableSortedSet<BuildTarget>> getGhciPlatformPreloadDeps() {
       return PatternMatchedCollection.of();
     }
+
+    Optional<Flavor> getPlatform();
   }
 }

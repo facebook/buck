@@ -28,7 +28,7 @@ import java.util.Optional;
 import java.util.function.Supplier;
 import org.immutables.value.Value;
 
-@Value.Immutable
+@Value.Immutable(copy = true)
 @BuckStyleImmutable
 abstract class AbstractHaskellPlatform implements FlavorConvertible {
 

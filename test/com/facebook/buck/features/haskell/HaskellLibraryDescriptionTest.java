@@ -22,6 +22,8 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.FlavorDomain;
+import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -272,5 +274,31 @@ public class HaskellLibraryDescriptionTest {
     assertThat(
         rule.getCxxPreprocessorDeps(CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder),
         Matchers.allOf(Matchers.hasItem(depA), not(Matchers.hasItem(depB))));
+  }
+
+  @Test
+  public void defaultPlatform() {
+    HaskellPlatform ruleDefaultPlatform =
+        HaskellTestUtils.DEFAULT_PLATFORM.withCxxPlatform(
+            HaskellTestUtils.DEFAULT_PLATFORM
+                .getCxxPlatform()
+                .withFlavor(InternalFlavor.of("custom_platform")));
+    HaskellLibraryBuilder libBuilder =
+        new HaskellLibraryBuilder(
+            BuildTargetFactory.newInstance("//:rule"),
+            HaskellTestUtils.DEFAULT_PLATFORM,
+            FlavorDomain.of(
+                "Haskell Platform", HaskellTestUtils.DEFAULT_PLATFORM, ruleDefaultPlatform),
+            CxxPlatformUtils.DEFAULT_CONFIG);
+    libBuilder.setPlatform(ruleDefaultPlatform.getFlavor());
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(libBuilder.build());
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
+    HaskellHaddockLibRule rule =
+        (HaskellHaddockLibRule)
+            graphBuilder.requireRule(
+                libBuilder
+                    .getTarget()
+                    .withAppendedFlavors(HaskellLibraryDescription.Type.HADDOCK.getFlavor()));
+    assertThat(rule.getPlatform(), Matchers.equalTo(ruleDefaultPlatform));
   }
 }
