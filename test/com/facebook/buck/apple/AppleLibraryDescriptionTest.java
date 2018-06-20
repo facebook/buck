@@ -52,9 +52,13 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
 import org.hamcrest.Matchers;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 public class AppleLibraryDescriptionTest {
+
+  @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Test
   public void linkerFlagsLocationMacro() {
@@ -151,5 +155,15 @@ public class AppleLibraryDescriptionTest {
         containsInAnyOrder(
             StringWithMacrosUtils.format("-fmodule-name=library"),
             StringWithMacrosUtils.format("-DDEBUG=1")));
+  }
+
+  @Test
+  public void noModularBridgingHeader() {
+    thrown.expectMessage("Cannot be modular=True and have a bridging_header in the same rule");
+    AppleLibraryDescriptionArg.builder()
+        .setName("fake")
+        .setModular(true)
+        .setBridgingHeader(FakeSourcePath.of("header.h"))
+        .build();
   }
 }
