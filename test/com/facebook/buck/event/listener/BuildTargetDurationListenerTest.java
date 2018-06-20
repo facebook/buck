@@ -18,6 +18,7 @@ package com.facebook.buck.event.listener;
 
 import static com.facebook.buck.event.listener.BuildTargetDurationListener.computeCriticalPathsUsingGraphTraversal;
 import static com.facebook.buck.event.listener.BuildTargetDurationListener.findCriticalNode;
+import static com.facebook.buck.event.listener.BuildTargetDurationListener.rendersCriticalPathTraceFile;
 
 import com.facebook.buck.event.listener.BuildTargetDurationListener.BuildRuleCriticalPath;
 import com.facebook.buck.event.listener.BuildTargetDurationListener.BuildRuleInfo;
@@ -87,6 +88,24 @@ public class BuildTargetDurationListenerTest {
           + "{\"rule-name\":\"f\",\"start\":8,\"finish\":9},"
           + "{\"rule-name\":\"c\",\"start\":9,\"finish\":11}],"
           + "\"critical-path-duration\":11}]";
+
+  private static final String EXPECTED_TRACE =
+      "[{\"cat\":\"buck\",\"name\":\"process_name\",\"ph\":\"M\",\"pid\":0,\"tid\":0,"
+          + "\"ts\":0,\"tts\":0,\"args\":{\"name\":\"Critical Path\"}},"
+          + "{\"cat\":\"buck\",\"name\":\"l\",\"ph\":\"B\",\"pid\":0,\"tid\":0,\"ts\":0,\"tts\":0,"
+          + "\"args\":{\"critical_blocking_rule\":\"None\",\"length_of_critical_path\":\"6ms\"}},"
+          + "{\"cat\":\"buck\",\"name\":\"l\",\"ph\":\"E\",\"pid\":0,\"tid\":0,\"ts\":6000,"
+          + "\"tts\":0,\"args\":{}},{\"cat\":\"buck\",\"name\":\"e\",\"ph\":\"B\",\"pid\":0,"
+          + "\"tid\":0,\"ts\":6000,\"tts\":0,\"args\":{\"critical_blocking_rule\":\"l\","
+          + "\"length_of_critical_path\":\"8ms\"}},{\"cat\":\"buck\",\"name\":\"e\",\"ph\":\"E\","
+          + "\"pid\":0,\"tid\":0,\"ts\":8000,\"tts\":0,\"args\":{}},{\"cat\":\"buck\","
+          + "\"name\":\"b\",\"ph\":\"B\",\"pid\":0,\"tid\":0,\"ts\":8000,\"tts\":0,"
+          + "\"args\":{\"critical_blocking_rule\":\"e\",\"length_of_critical_path\":\"12ms\"}},"
+          + "{\"cat\":\"buck\",\"name\":\"b\",\"ph\":\"E\",\"pid\":0,\"tid\":0,\"ts\":12000,"
+          + "\"tts\":0,\"args\":{}},{\"cat\":\"buck\",\"name\":\"a\",\"ph\":\"B\",\"pid\":0,"
+          + "\"tid\":0,\"ts\":12000,\"tts\":0,\"args\":{\"critical_blocking_rule\":\"b\","
+          + "\"length_of_critical_path\":\"20ms\"}},{\"cat\":\"buck\",\"name\":\"a\",\"ph\":\"E\","
+          + "\"pid\":0,\"tid\":0,\"ts\":20000,\"tts\":0,\"args\":{}}]";
 
   @Before
   public void setUp() {
@@ -207,7 +226,16 @@ public class BuildTargetDurationListenerTest {
             .collect(Collectors.toList());
     try (ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
       ObjectMappers.WRITER.writeValue(bos, criticalPaths);
-      Assert.assertTrue(bos.toString().equals(EXPECTED_JSON_OUTPUT));
+      Assert.assertEquals(EXPECTED_JSON_OUTPUT, bos.toString());
+    }
+  }
+
+  @Test
+  public void testChromeTrace() throws IOException {
+    computeCriticalPathsUsingGraphTraversal(buildRuleInfos);
+    try (ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
+      rendersCriticalPathTraceFile(buildRuleInfos, bos);
+      Assert.assertEquals(EXPECTED_TRACE, bos.toString());
     }
   }
 }

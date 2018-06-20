@@ -23,6 +23,9 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.test.rule.TestRule;
 import com.facebook.buck.event.ActionGraphEvent;
 import com.facebook.buck.event.BuckEventListener;
+import com.facebook.buck.event.chrome_trace.ChromeTraceEvent;
+import com.facebook.buck.event.chrome_trace.ChromeTraceEvent.Phase;
+import com.facebook.buck.event.chrome_trace.ChromeTraceWriter;
 import com.facebook.buck.graph.AbstractBottomUpTraversal;
 import com.facebook.buck.graph.TraversableGraph;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -35,6 +38,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Queues;
@@ -44,6 +48,7 @@ import com.google.common.util.concurrent.SimpleTimeLimiter;
 import java.io.BufferedOutputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -151,6 +156,10 @@ public class BuildTargetDurationListener implements BuckEventListener {
     return filesystem.resolve(info.getBuckLogDir()).resolve("critical-path");
   }
 
+  private Path getTraceFilePath() {
+    return filesystem.resolve(info.getBuckLogDir()).resolve("critical-path.trace");
+  }
+
   @VisibleForTesting
   static ImmutableBuildRuleCriticalPath constructBuildRuleCriticalPath(
       BuildRuleInfo buildRuleInfo) {
@@ -170,6 +179,84 @@ public class BuildTargetDurationListener implements BuckEventListener {
         buildRuleInfo.longestDependencyChainMillis);
   }
 
+  private void rendersCriticalPath(Map<String, BuildRuleInfo> buildRuleInfos) throws IOException {
+    try (FileOutputStream fos = new FileOutputStream(getTraceFilePath().toFile())) {
+      rendersCriticalPathTraceFile(buildRuleInfos, fos);
+    }
+  }
+
+  @VisibleForTesting
+  static void rendersCriticalPathTraceFile(
+      Map<String, BuildRuleInfo> buildRuleInfos, OutputStream os) {
+    try (ChromeTraceWriter traceWriter = new ChromeTraceWriter(os)) {
+      traceWriter.writeStart();
+      traceWriter.writeEvent(
+          new ChromeTraceEvent(
+              "buck",
+              "process_name",
+              Phase.METADATA,
+              0,
+              0,
+              0,
+              0,
+              ImmutableMap.of("name", "Critical Path")));
+      rendersCriticalPath(buildRuleInfos, traceWriter);
+      traceWriter.writeEnd();
+    } catch (IOException e) {
+      LOG.error(e, "Could not write critical path to trace file.");
+    }
+  }
+
+  private static void rendersCriticalPath(
+      Map<String, BuildRuleInfo> buildRuleInfos, ChromeTraceWriter traceWriter) throws IOException {
+    Optional<BuildRuleInfo> critical = findCriticalNode(buildRuleInfos.values());
+    long lastEventFinishMicros = 0;
+    for (BuildRuleInfo buildRuleInfo : stackOfCriticalPath(critical)) {
+      lastEventFinishMicros =
+          rendersBuildRuleInfo(buildRuleInfo, traceWriter, lastEventFinishMicros);
+    }
+  }
+
+  /**
+   * Renders rule in a similar way to {@link
+   * com.facebook.buck.distributed.build_slave.DistBuildChromeTraceRenderer#renderRule}.
+   */
+  private static long rendersBuildRuleInfo(
+      BuildRuleInfo buildRuleInfo, ChromeTraceWriter traceWriter, long lastEventFinishMicros)
+      throws IOException {
+
+    long startMicros =
+        Math.max(
+            TimeUnit.MILLISECONDS.toMicros(buildRuleInfo.startEpochMillis), lastEventFinishMicros);
+    lastEventFinishMicros =
+        Math.max(TimeUnit.MILLISECONDS.toMicros(buildRuleInfo.finishEpochMillis), startMicros + 1);
+
+    ImmutableMap<String, String> startArgs =
+        ImmutableMap.of(
+            "critical_blocking_rule",
+            buildRuleInfo
+                .previousRuleInLongestDependencyChain
+                .map(rule -> rule.ruleName)
+                .orElse("None"),
+            "length_of_critical_path",
+            String.format("%dms", buildRuleInfo.longestDependencyChainMillis));
+
+    traceWriter.writeEvent(
+        new ChromeTraceEvent(
+            "buck", buildRuleInfo.ruleName, Phase.BEGIN, 0, 0, startMicros, 0, startArgs));
+    traceWriter.writeEvent(
+        new ChromeTraceEvent(
+            "buck",
+            buildRuleInfo.ruleName,
+            Phase.END,
+            0,
+            0,
+            lastEventFinishMicros,
+            0,
+            ImmutableMap.of()));
+    return lastEventFinishMicros;
+  }
+
   @Override
   public synchronized void outputTrace(BuildId buildId) {
     SimpleTimeLimiter timeLimiter = SimpleTimeLimiter.create(executor);
@@ -185,6 +272,9 @@ public class BuildTargetDurationListener implements BuckEventListener {
                 updateBuildRuleInfosWithDependents();
 
                 computeCriticalPathsUsingGraphTraversal(buildRuleInfos);
+
+                // Render chrome trace of the critical path of the longest
+                rendersCriticalPath(buildRuleInfos);
 
                 // Compute critical path for the test targets only
                 for (TestRule testRule :
