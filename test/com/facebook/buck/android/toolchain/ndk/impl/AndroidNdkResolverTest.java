@@ -434,6 +434,26 @@ public class AndroidNdkResolverTest {
     resolver.getNdkOrThrow();
   }
 
+  @Test
+  public void testUnsupportedVersionNotUsed() throws IOException {
+    Path expectedPath =
+        createTmpNdkVersions(
+            NDK_POST_R11_VERSION_FILENAME,
+            "ndk-dir-r11",
+            "Pkg.Desc = Android NDK\nPkg.Revision = 11.2",
+            "ndk-dir-r16",
+            "Pkg.Desc = Android NDK\nPkg.Revision = 16.1.4479499",
+            "ndk-dir-r17",
+            "Pkg.Desc = Android NDK\nPkg.Revision = 17.1.4828580")[1];
+    AndroidNdkResolver resolver =
+        new AndroidNdkResolver(
+            tmpDir.getRoot().getFileSystem(),
+            ImmutableMap.of("ANDROID_NDK_REPOSITORY", tmpDir.getRoot().toString()),
+            AndroidNdkHelper.DEFAULT_CONFIG);
+
+    assertEquals(expectedPath, resolver.getNdkOrThrow());
+  }
+
   private Path[] createTmpNdkVersions(String filename, String... directoryNamesAndVersionStrings)
       throws IOException {
     Path[] ret = new Path[directoryNamesAndVersionStrings.length / 2];

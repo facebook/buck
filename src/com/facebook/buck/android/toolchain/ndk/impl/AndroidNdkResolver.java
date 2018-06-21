@@ -19,6 +19,7 @@ package com.facebook.buck.android.toolchain.ndk.impl;
 import com.facebook.buck.android.AndroidBuckConfig;
 import com.facebook.buck.android.toolchain.common.BaseAndroidToolchainResolver;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.VersionStringComparator;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.annotations.VisibleForTesting;
@@ -41,6 +42,11 @@ import java.util.Properties;
 import java.util.stream.Collectors;
 
 public class AndroidNdkResolver extends BaseAndroidToolchainResolver {
+
+  private static final Logger LOG = Logger.get(AndroidNdkResolver.class);
+
+  /** Android NDK versions starting with this number are not supported. */
+  private static final String NDK_MIN_UNSUPPORTED_VERSION = "17";
 
   // Pre r11 NDKs store the version at RELEASE.txt.
   @VisibleForTesting static final String NDK_PRE_R11_VERSION_FILENAME = "RELEASE.TXT";
@@ -179,6 +185,10 @@ public class AndroidNdkResolver extends BaseAndroidToolchainResolver {
             // Pair of path to version number
             .map(p -> new Pair<>(p, findNdkVersion(p)))
             .filter(pair -> pair.getSecond().isPresent())
+            .filter(
+                pair ->
+                    versionComparator.compare(pair.getSecond().get(), NDK_MIN_UNSUPPORTED_VERSION)
+                        < 0)
             .sorted(
                 (o1, o2) -> versionComparator.compare(o2.getSecond().get(), o1.getSecond().get()))
             .collect(Collectors.toList());
@@ -220,6 +230,8 @@ public class AndroidNdkResolver extends BaseAndroidToolchainResolver {
                       .collect(Collectors.joining(", ")));
       return Optional.empty();
     }
+
+    LOG.debug("Using Android NDK version %s", availableNdks.get(0).getSecond().get());
 
     return Optional.of(availableNdks.get(0).getFirst());
   }
