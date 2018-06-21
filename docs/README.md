@@ -31,27 +31,10 @@ using [GitHub Pages](http://pages.github.com/).
 Therefore, to publish this documentation, you must commit it on the
 `gh-pages` branch of the GitHub repository by running:
 
-    # Build the docs with plovr in the background 
-    # and serve them on TCP port 9814
-    ./docs/soyweb-prod.sh &
-
-    # Push the docs to GitHub Pages
-    ./docs/publish.sh
-
-    # Kill the process running on TCP port 9814
-    fuser -k -n tcp 9814
-
-Note that if you are using Mac OSX, your version of `fuser` might not
-support listing and terminating processes on TCP ports. As an
-alternative, you can use: 
-
-    lsof -i tcp:9814
-
-to get the process ID, and then
-
-    kill -9 <process ID>
-
-to terminate the process.
+    # Both build the docs with plovr in the background
+    # (serving them on TCP port 9814) and push the
+    # docs to GitHub Pages
+    ./docs/publish.sh --start-soyweb
 
 
 Creating a New Article
