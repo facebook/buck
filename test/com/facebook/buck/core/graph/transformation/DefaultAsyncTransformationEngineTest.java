@@ -221,6 +221,9 @@ public class DefaultAsyncTransformationEngineTest {
             return super.transform(node, env);
           }
         };
+    engine =
+        new DefaultAsyncTransformationEngine<>(
+            transformer, graph.nodes().size(), cache, ForkJoinPool.commonPool());
 
     // reuse the cache
     assertEquals((Long) 19L, engine.computeUnchecked(1L));
