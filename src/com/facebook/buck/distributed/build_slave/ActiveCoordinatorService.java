@@ -26,7 +26,6 @@ import com.facebook.buck.distributed.thrift.WorkUnit;
 import com.facebook.buck.log.Logger;
 import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 /** Handles Coordinator requests while the build is actively running. */
@@ -93,17 +92,23 @@ public class ActiveCoordinatorService implements CoordinatorService.Iface {
       return response;
     }
 
-    List<WorkUnit> newWorkUnitsForMinion =
-        allocator.dequeueZeroDependencyNodes(
+    MinionWorkloadAllocator.WorkloadAllocationResult allocationResult =
+        allocator.updateMinionWorkloadAllocation(
             minionId,
             request.getMinionType(),
             request.getFinishedTargets(),
             request.getMaxWorkUnitsToFetch());
 
+    if (allocationResult.shouldReleaseMinion) {
+      minionHealthTracker.stopTrackingForever(minionId);
+      response.setContinueBuilding(false);
+      return response;
+    }
+
     // TODO(alisdair): experiment with only sending started event for first node in chain,
     // and then send events for later nodes in the chain as their children finish.
     ImmutableList.Builder<String> startedTargetsBuilder = ImmutableList.builder();
-    for (WorkUnit workUnit : newWorkUnitsForMinion) {
+    for (WorkUnit workUnit : allocationResult.newWorkUnitsForMinion) {
       startedTargetsBuilder.addAll(workUnit.getBuildTargets());
     }
     coordinatorBuildRuleEventsPublisher.createBuildRuleStartedEvents(startedTargetsBuilder.build());
@@ -123,7 +128,7 @@ public class ActiveCoordinatorService implements CoordinatorService.Iface {
       minionHealthTracker.stopTrackingForever(request.minionId);
       response.setContinueBuilding(false);
     } else {
-      response.setWorkUnits(newWorkUnitsForMinion);
+      response.setWorkUnits(allocationResult.newWorkUnitsForMinion);
     }
 
     coordinatorBuildRuleEventsPublisher.updateCoordinatorBuildProgress(

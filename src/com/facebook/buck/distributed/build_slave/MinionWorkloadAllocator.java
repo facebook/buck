@@ -28,6 +28,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Queue;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -54,12 +55,37 @@ public class MinionWorkloadAllocator {
   private final Set<String> seenMinions = new HashSet<>();
   private final Map<String, MinionType> minionTypesByMinionId = new HashMap<>();
 
+  private final Set<String> minionsAvailableForAllocation = new HashSet<>();
+  private final Map<String, Integer> minionFreeCapacities = new HashMap<>();
+  private final Optional<String> coordinatorMinionId;
+
   private final DistBuildTraceTracker chromeTraceTracker;
 
+  /**
+   * Result of updating allocation - indicates if minion should be now released (capacity no longer
+   * needed) and contains a list of new work units for the minion to process.
+   */
+  public static class WorkloadAllocationResult {
+    public final boolean shouldReleaseMinion;
+    public final List<WorkUnit> newWorkUnitsForMinion;
+
+    public WorkloadAllocationResult(
+        boolean shouldReleaseMinion, List<WorkUnit> newWorkUnitsForMinion) {
+      if (shouldReleaseMinion) {
+        Preconditions.checkArgument(newWorkUnitsForMinion.isEmpty());
+      }
+      this.shouldReleaseMinion = shouldReleaseMinion;
+      this.newWorkUnitsForMinion = newWorkUnitsForMinion;
+    }
+  }
+
   public MinionWorkloadAllocator(
-      BuildTargetsQueue queue, DistBuildTraceTracker chromeTraceTracker) {
+      BuildTargetsQueue queue,
+      DistBuildTraceTracker chromeTraceTracker,
+      Optional<String> coordinatorMinionId) {
     this.queue = queue;
     this.chromeTraceTracker = chromeTraceTracker;
+    this.coordinatorMinionId = coordinatorMinionId;
   }
 
   public synchronized boolean isBuildFinished() {
@@ -68,7 +94,7 @@ public class MinionWorkloadAllocator {
         && !queue.hasReadyZeroDependencyNodes();
   }
 
-  private void trySetupMinion(String minionId, MinionType minionType) {
+  private void trySetupMinion(String minionId, MinionType minionType, int maxWorkUnitsToFetch) {
     if (seenMinions.contains(minionId)) {
       return;
     }
@@ -78,24 +104,56 @@ public class MinionWorkloadAllocator {
     }
 
     minionTypesByMinionId.put(minionId, minionType);
+
+    minionsAvailableForAllocation.add(minionId);
+    minionFreeCapacities.put(minionId, maxWorkUnitsToFetch);
+
     seenMinions.add(minionId);
   }
 
-  /** Returns nodes that have all their dependencies satisfied. */
-  public synchronized List<WorkUnit> dequeueZeroDependencyNodes(
-      String minionId, MinionType minionType, List<String> finishedNodes, int maxWorkUnits) {
-    trySetupMinion(minionId, minionType);
+  private boolean isMinionCapacityRedundant(String candidateMinionId) {
+    if (!minionsAvailableForAllocation.contains(candidateMinionId)) {
+      return true;
+    }
 
-    Set<WorkUnit> workUnitsAllocatedToMinion = workUnitsAssignedToMinions.get(minionId);
+    // Never release the coordinator's minion - we gain nothing doing that (machine is still
+    // occupied) and we may get lucky and schedule work there later and release more minions.
+    if (coordinatorMinionId.isPresent() && coordinatorMinionId.get().equals(candidateMinionId)) {
+      return false;
+    }
+
+    int maxParallelWorkUnitsLeft = queue.getSafeApproxOfRemainingWorkUnitsCount();
+    int capacityAvailableOnOtherMinions =
+        minionsAvailableForAllocation
+            .stream()
+            .filter(minionId -> !minionId.equals(candidateMinionId))
+            .mapToInt(minionId -> Preconditions.checkNotNull(minionFreeCapacities.get(minionId)))
+            .sum();
+
+    return maxParallelWorkUnitsLeft <= capacityAvailableOnOtherMinions;
+  }
+
+  /**
+   * Processes nodes finished by minion and, if minion's capacity is still needed, allocates it new
+   * work units (out of units from failed minions and newly available units).
+   */
+  public synchronized WorkloadAllocationResult updateMinionWorkloadAllocation(
+      String minionId, MinionType minionType, List<String> finishedNodes, int maxWorkUnitsToFetch) {
+    Preconditions.checkArgument(!failedMinions.contains(minionId));
+    trySetupMinion(minionId, minionType, maxWorkUnitsToFetch);
+
+    Set<WorkUnit> workUnitsAllocatedToMinion =
+        Preconditions.checkNotNull(workUnitsAssignedToMinions.get(minionId));
     deallocateFinishedNodes(workUnitsAllocatedToMinion, finishedNodes);
 
     // First try and re-allocate work units from any minions that have failed recently
     List<WorkUnit> newWorkUnitsForMinion =
-        reallocateWorkUnitsFromFailedMinions(minionId, maxWorkUnits);
+        reallocateWorkUnitsFromFailedMinions(minionId, maxWorkUnitsToFetch);
 
     // For any remaining capacity on this minion, fetch new work units, if they exist.
-    maxWorkUnits -= newWorkUnitsForMinion.size();
-    newWorkUnitsForMinion.addAll(queue.dequeueZeroDependencyNodes(finishedNodes, maxWorkUnits));
+    maxWorkUnitsToFetch -= newWorkUnitsForMinion.size();
+    newWorkUnitsForMinion.addAll(
+        queue.dequeueZeroDependencyNodes(finishedNodes, maxWorkUnitsToFetch));
 
     List<String> newNodesForMinion =
         allocateNewNodes(workUnitsAllocatedToMinion, newWorkUnitsForMinion);
@@ -110,8 +168,22 @@ public class MinionWorkloadAllocator {
             nodesAssignedToMinions.size(),
             queue.hasReadyZeroDependencyNodes()));
 
-    chromeTraceTracker.updateWork(minionId, finishedNodes, newWorkUnitsForMinion);
-    return newWorkUnitsForMinion;
+    WorkloadAllocationResult result;
+    // Check if we can release the minion - no work scheduled and capacity not needed anymore.
+    if (workUnitsAllocatedToMinion.isEmpty() && isMinionCapacityRedundant(minionId)) {
+      minionsAvailableForAllocation.remove(minionId);
+      LOG.info(
+          String.format(
+              "Minion [%s] should now be released - capacity unneeded and no work assigned.",
+              minionId));
+      result = new WorkloadAllocationResult(true, newWorkUnitsForMinion);
+    } else {
+      result = new WorkloadAllocationResult(false, newWorkUnitsForMinion);
+    }
+
+    minionFreeCapacities.put(minionId, maxWorkUnitsToFetch - result.newWorkUnitsForMinion.size());
+    chromeTraceTracker.updateWork(minionId, finishedNodes, result.newWorkUnitsForMinion);
+    return result;
   }
 
   /** @return True if minion has been marked as failed previously */
@@ -130,6 +202,7 @@ public class MinionWorkloadAllocator {
     }
 
     failedMinions.add(minionId);
+    minionsAvailableForAllocation.remove(minionId);
 
     if (!workUnitsAssignedToMinions.containsKey(minionId)) {
       LOG.warn(String.format("Failed minion [%s] never had work assigned to it", minionId));

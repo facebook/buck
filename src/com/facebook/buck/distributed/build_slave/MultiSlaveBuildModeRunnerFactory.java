@@ -30,6 +30,7 @@ import com.facebook.buck.distributed.BuildStatusUtil;
 import com.facebook.buck.distributed.DistBuildArtifactCacheImpl;
 import com.facebook.buck.distributed.DistBuildConfig;
 import com.facebook.buck.distributed.DistBuildService;
+import com.facebook.buck.distributed.DistBuildUtil;
 import com.facebook.buck.distributed.thrift.BuildJob;
 import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
 import com.facebook.buck.distributed.thrift.MinionType;
@@ -76,7 +77,8 @@ public class MultiSlaveBuildModeRunnerFactory {
       ArtifactCache remoteCache,
       ListenableFuture<ParallelRuleKeyCalculator<RuleKey>> asyncRuleKeyCalculator,
       HealthCheckStatsTracker healthCheckStatsTracker,
-      Optional<BuildSlaveTimingStatsTracker> timingStatsTracker) {
+      Optional<BuildSlaveTimingStatsTracker> timingStatsTracker,
+      Optional<String> coordinatorMinionId) {
 
     ListenableFuture<BuildTargetsQueue> queueFuture =
         Futures.transformAsync(
@@ -157,7 +159,8 @@ public class MultiSlaveBuildModeRunnerFactory {
         clientBuildId,
         traceUploadUri,
         minionHealthTracker,
-        listenerAndMinionCountProvider);
+        listenerAndMinionCountProvider,
+        coordinatorMinionId);
   }
 
   /**
@@ -252,7 +255,8 @@ public class MultiSlaveBuildModeRunnerFactory {
                 buildExecutor -> buildExecutor.getCachingBuildEngine().getRuleKeyCalculator(),
                 executorService),
             healthCheckStatsTracker,
-            Optional.of(timingStatsTracker)),
+            Optional.of(timingStatsTracker),
+            Optional.of(DistBuildUtil.generateMinionId(buildSlaveRunId))),
         createMinion(
             localBuildExecutor,
             distBuildService,

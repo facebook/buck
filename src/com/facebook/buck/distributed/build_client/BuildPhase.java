@@ -266,6 +266,7 @@ public class BuildPhase {
             // TODO(shivanker): Make health-check stats work.
             new HealthCheckStatsTracker(),
             // TODO(shivanker): Make timing stats work.
+            Optional.empty(),
             Optional.empty());
 
     executorService.submit(

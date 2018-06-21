@@ -18,6 +18,7 @@ package com.facebook.buck.distributed.build_slave;
 
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.distributed.DistBuildService;
+import com.facebook.buck.distributed.DistBuildUtil;
 import com.facebook.buck.distributed.build_slave.MinionModeRunnerIntegrationTest.FakeBuildExecutorImpl;
 import com.facebook.buck.distributed.testutil.CustomActiongGraphBuilderFactory;
 import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
@@ -51,6 +52,7 @@ public class CoordinatorAndMinionModeRunnerIntegrationTest {
   private static final long POLL_LOOP_INTERVAL_MILLIS = 8;
   private static final DistBuildService MOCK_SERVICE =
       EasyMock.createNiceMock(DistBuildService.class);
+  private static final BuildSlaveRunId BUILD_SLAVE_RUN_ID = new BuildSlaveRunId().setId("sl7");
 
   private HeartbeatService heartbeatService;
 
@@ -83,7 +85,8 @@ public class CoordinatorAndMinionModeRunnerIntegrationTest {
             Optional.of(new BuildId("10-20")),
             Optional.empty(),
             EasyMock.createNiceMock(MinionHealthTracker.class),
-            EasyMock.createNiceMock(MinionCountProvider.class));
+            EasyMock.createNiceMock(MinionCountProvider.class),
+            Optional.of(DistBuildUtil.generateMinionId(BUILD_SLAVE_RUN_ID)));
     FakeBuildExecutorImpl localBuilder = new FakeBuildExecutorImpl();
     MinionModeRunner minion =
         new MinionModeRunner(
@@ -92,7 +95,7 @@ public class CoordinatorAndMinionModeRunnerIntegrationTest {
             Futures.immediateFuture(localBuilder),
             STAMPEDE_ID,
             MINION_TYPE,
-            new BuildSlaveRunId().setId("sl7"),
+            BUILD_SLAVE_RUN_ID,
             new SingleBuildCapacityTracker(MAX_PARALLEL_WORK_UNITS),
             EasyMock.createNiceMock(MinionModeRunner.BuildCompletionChecker.class),
             POLL_LOOP_INTERVAL_MILLIS,

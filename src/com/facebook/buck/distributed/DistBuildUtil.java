@@ -23,6 +23,7 @@ import com.facebook.buck.distributed.thrift.BuildMode;
 import com.facebook.buck.distributed.thrift.BuildSlaveConsoleEvent;
 import com.facebook.buck.distributed.thrift.BuildSlaveEvent;
 import com.facebook.buck.distributed.thrift.BuildSlaveEventType;
+import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
 import com.facebook.buck.distributed.thrift.ConsoleEventSeverity;
 import com.facebook.buck.distributed.thrift.MinionRequirement;
 import com.facebook.buck.distributed.thrift.MinionRequirements;
@@ -33,6 +34,8 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.BuckConstant;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.nio.file.Path;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -227,5 +230,21 @@ public class DistBuildUtil {
   public static Path getRemoteBuckLogPath(String runId, Path logDirectoryPath) {
     return getLogDirForRunId(runId, logDirectoryPath)
         .resolve(DIST_BUILD_SLAVE_BUCK_OUT_LOG_DIR_NAME);
+  }
+
+  /** From buildslave runId generates id for a minion running on this buildslave host. */
+  public static String generateMinionId(BuildSlaveRunId buildSlaveRunId) {
+    Preconditions.checkState(!buildSlaveRunId.getId().isEmpty());
+
+    String hostname = "Unknown";
+    try {
+      InetAddress addr;
+      addr = InetAddress.getLocalHost();
+      hostname = addr.getHostName();
+    } catch (UnknownHostException ex) {
+      LOG.warn("Hostname can not be resolved - it will not be included in Minion ID.");
+    }
+
+    return String.format("minion:%s:%s", hostname, buildSlaveRunId);
   }
 }

@@ -42,6 +42,7 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.nio.file.Path;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -127,6 +128,7 @@ public class ThriftCoordinatorServer implements Closeable {
   private final MinionHealthTracker minionHealthTracker;
   private final DistBuildService distBuildService;
   private final MinionCountProvider minionCountProvider;
+  private final Optional<String> coordinatorMinionId;
   private final Set<String> deadMinions;
 
   private volatile OptionalInt port;
@@ -145,13 +147,15 @@ public class ThriftCoordinatorServer implements Closeable {
       CoordinatorBuildRuleEventsPublisher coordinatorBuildRuleEventsPublisher,
       MinionHealthTracker minionHealthTracker,
       DistBuildService distBuildService,
-      MinionCountProvider minionCountProvider) {
+      MinionCountProvider minionCountProvider,
+      Optional<String> coordinatorMinionId) {
     this.eventListener = eventListener;
     this.stampedeId = stampedeId;
     this.coordinatorBuildRuleEventsPublisher = coordinatorBuildRuleEventsPublisher;
     this.minionHealthTracker = minionHealthTracker;
     this.distBuildService = distBuildService;
     this.minionCountProvider = minionCountProvider;
+    this.coordinatorMinionId = coordinatorMinionId;
     this.lock = new Object();
     this.exitCodeFuture = new CompletableFuture<>();
     this.chromeTraceTracker = new DistBuildTraceTracker(stampedeId);
@@ -326,7 +330,7 @@ public class ThriftCoordinatorServer implements Closeable {
       LOG.info("Switching Coordinator to Active mode now.");
       BuildTargetsQueue queue = queueFuture.get();
       chromeTraceTracker.setBuildGraph(queue.getDistributableBuildGraph());
-      allocator = new MinionWorkloadAllocator(queue, chromeTraceTracker);
+      allocator = new MinionWorkloadAllocator(queue, chromeTraceTracker, coordinatorMinionId);
       this.handler =
           new ActiveCoordinatorService(
               allocator, exitCodeFuture, coordinatorBuildRuleEventsPublisher, minionHealthTracker);

@@ -40,7 +40,7 @@ public class ReverseDepBuildTargetsQueue implements BuildTargetsQueue {
   private final int totalCacheableNodes;
   private final int mostBuildRulesFinishedPercentageThreshold;
 
-  private final Set<String> seenWorkingNodes = new HashSet<>();
+  private final Set<String> seenWorkingCacheableNodes = new HashSet<>();
   private final Set<String> seenFinishedNodes = new HashSet<>();
   private final List<String> zeroDependencyTargets;
   private final Set<String> uncachableZeroDependencyTargets;
@@ -174,6 +174,11 @@ public class ReverseDepBuildTargetsQueue implements BuildTargetsQueue {
         .setSkippedRulesCount(skippedUncacheablesCount);
   }
 
+  @Override
+  public int getSafeApproxOfRemainingWorkUnitsCount() {
+    return totalCacheableNodes - seenWorkingCacheableNodes.size();
+  }
+
   private void processFinishedNode(DistributableNode target) {
     if (seenFinishedNodes.contains(target.getTargetName())) {
       String errorMessage = String.format("[%s] has already finished once", target.getTargetName());
@@ -194,7 +199,7 @@ public class ReverseDepBuildTargetsQueue implements BuildTargetsQueue {
 
       if (dep.areAllDependenciesResolved()
           && !dep.isUncacheable()
-          && !seenWorkingNodes.contains(dep.getTargetName())) {
+          && !seenWorkingCacheableNodes.contains(dep.getTargetName())) {
         zeroDependencyTargets.add(dep.getTargetName());
       } else if (dep.areAllDependenciesResolved() && dep.isUncacheable()) {
         LOG.debug(
@@ -221,7 +226,7 @@ public class ReverseDepBuildTargetsQueue implements BuildTargetsQueue {
         return;
       }
 
-      if (seenWorkingNodes.contains(node)) {
+      if (seenWorkingCacheableNodes.contains(node)) {
         continue; // Node may form work unit with an earlier zero dependency node
       }
 
@@ -242,7 +247,7 @@ public class ReverseDepBuildTargetsQueue implements BuildTargetsQueue {
           String.format("Skipping adding uncachable [%s] to work unit.", node.getTargetName()));
     } else {
       LOG.debug(String.format("Adding [%s] to work unit.", node.getTargetName()));
-      seenWorkingNodes.add(node.getTargetName());
+      seenWorkingCacheableNodes.add(node.getTargetName());
       unitOfWork.add(node.getTargetName()); // Reverse dependency order
     }
 
@@ -251,7 +256,7 @@ public class ReverseDepBuildTargetsQueue implements BuildTargetsQueue {
   }
 
   private WorkUnit getUnitOfWorkStartingAtLeafNode(String leafNode) {
-    if (seenWorkingNodes.contains(leafNode)) {
+    if (seenWorkingCacheableNodes.contains(leafNode)) {
       throw new RuntimeException(
           String.format("Leaf node [%s] is already part of a work unit", leafNode));
     }
@@ -273,7 +278,7 @@ public class ReverseDepBuildTargetsQueue implements BuildTargetsQueue {
           Preconditions.checkNotNull(
               distributableBuildGraph.getNode(currentNode.dependentTargets.asList().get(0)));
       if (parent.getNumUnsatisfiedDependencies() != 1
-          || seenWorkingNodes.contains(parent.getTargetName())) {
+          || seenWorkingCacheableNodes.contains(parent.getTargetName())) {
         break;
       }
 

@@ -30,5 +30,7 @@ public interface BuildTargetsQueue {
 
   CoordinatorBuildProgress getBuildProgress();
 
+  int getSafeApproxOfRemainingWorkUnitsCount();
+
   DistributableBuildGraph getDistributableBuildGraph();
 }

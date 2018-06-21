@@ -29,6 +29,7 @@ import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.distributed.BuildStatusUtil;
 import com.facebook.buck.distributed.DistBuildMode;
+import com.facebook.buck.distributed.DistBuildUtil;
 import com.facebook.buck.distributed.build_slave.RemoteBuildModeRunner.FinalBuildStatusSetter;
 import com.facebook.buck.distributed.thrift.BuildJob;
 import com.facebook.buck.distributed.thrift.BuildStatus;
@@ -133,7 +134,8 @@ public class DistBuildSlaveExecutor {
                   },
                   MoreExecutors.directExecutor()),
               args.getHealthCheckStatsTracker(),
-              Optional.of(args.getTimingStatsTracker()));
+              Optional.of(args.getTimingStatsTracker()),
+              Optional.of(DistBuildUtil.generateMinionId(args.getBuildSlaveRunId())));
       return setPreparationCallbackAndRun(runner);
     }
 

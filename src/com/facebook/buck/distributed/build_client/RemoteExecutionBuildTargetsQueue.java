@@ -166,6 +166,12 @@ public class RemoteExecutionBuildTargetsQueue implements BuildTargetsQueue {
   }
 
   @Override
+  public int getSafeApproxOfRemainingWorkUnitsCount() {
+    // TODO: investigate if this can be somehow improved/calculated.
+    return Integer.MAX_VALUE;
+  }
+
+  @Override
   public DistributableBuildGraph getDistributableBuildGraph() {
     // This class has no knowledge of the build graph.
     throw new NotImplementedException();
