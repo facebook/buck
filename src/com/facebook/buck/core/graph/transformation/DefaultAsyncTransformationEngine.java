@@ -164,8 +164,7 @@ public final class DefaultAsyncTransformationEngine<ComputeKey, ComputeResult>
 
   @Override
   public final CompletableFuture<ComputeResult> compute(ComputeKey key) {
-    return computeWithEnvironment(
-        key, new DefaultTransformationEnvironment<ComputeKey, ComputeResult>(this, executor));
+    return computeWithEnvironment(key, new DefaultTransformationEnvironment<>(this, executor));
   }
 
   @Override

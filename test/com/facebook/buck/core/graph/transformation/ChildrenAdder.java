@@ -39,8 +39,6 @@ class ChildrenAdder implements AsyncTransformer<Long, Long> {
 
     return env.evaluateAll(
         children,
-        childValues -> {
-          return key + childValues.values().parallelStream().mapToLong(Long::new).sum();
-        });
+        childValues -> key + childValues.values().parallelStream().mapToLong(Long::new).sum());
   }
 }

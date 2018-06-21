@@ -32,5 +32,5 @@ public interface AsyncTransformer<Key, Result> {
    * @param env The execution environment to request dependencies
    * @return a future of the result requested
    */
-  public CompletionStage<Result> transform(Key key, TransformationEnvironment<Key, Result> env);
+  CompletionStage<Result> transform(Key key, TransformationEnvironment<Key, Result> env);
 }

@@ -184,7 +184,7 @@ public class DefaultAsyncTransformationEngineTest {
     // all Futures should be removed
     assertComputationIndexBecomesEmpty(engine.computationIndex);
     assertEquals(1, cache.getSize());
-    assertEquals(1, cache.hitStats.get((Long) 3L).intValue());
+    assertEquals(1, cache.hitStats.get(3L).intValue());
   }
 
   @Test
@@ -228,11 +228,11 @@ public class DefaultAsyncTransformationEngineTest {
     // all Futures should be removed
     assertComputationIndexBecomesEmpty(engine.computationIndex);
     assertEquals(5, cache.getSize());
-    assertEquals(0, cache.hitStats.get((Long) 1L).intValue());
-    assertEquals(0, cache.hitStats.get((Long) 2L).intValue());
-    assertEquals(1, cache.hitStats.get((Long) 5L).intValue());
-    assertEquals(1, cache.hitStats.get((Long) 3L).intValue());
-    assertEquals(1, cache.hitStats.get((Long) 4L).intValue());
+    assertEquals(0, cache.hitStats.get(1L).intValue());
+    assertEquals(0, cache.hitStats.get(2L).intValue());
+    assertEquals(1, cache.hitStats.get(5L).intValue());
+    assertEquals(1, cache.hitStats.get(3L).intValue());
+    assertEquals(1, cache.hitStats.get(4L).intValue());
   }
 
   /**
