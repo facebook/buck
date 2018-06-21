@@ -1,0 +1,32 @@
+sh_test(
+    name = "test1",
+    test = "test1.sh",
+    visibility = ["PUBLIC"],
+)
+
+sh_test(
+    name = "test2",
+    test = "test2.sh",
+    visibility = ["PUBLIC"],
+)
+
+sh_test(
+    name = "test3",
+    test = "test3.sh",
+    visibility = ["PUBLIC"],
+)
+
+sh_test(
+    name = "test4",
+    test = "test4.sh",
+    visibility = ["PUBLIC"],
+)
+
+[
+    export_file(
+        name = "bin%s.sh" % i,
+        src = "bin.sh",
+        visibility = ["PUBLIC"],
+    )
+    for i in range(1, 8)
+]

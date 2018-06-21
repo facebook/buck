@@ -1,0 +1,113 @@
+{namespace test_suite}
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: 'test_suite()' /}
+    {param navid: 'rule_test_suite' /}
+    {param prettify: true /}
+    {param description}
+      A rule that is used to run multiple other *_test rules or test_suite rules.
+    {/param}
+    {param content}
+
+{call buck.rule}
+{param status: 'EXPERIMENTAL' /}
+{param overview}
+  <p>A <code>test_suite()</code> is used to create a grouping of tests that should all be run by just testing this rule.</p>
+
+  <p>This rule can then be given to <code>buck test</code>, and all tests that it depends on will be invoked.
+  Note that the test_suite() target is not tested itself, it just tells buck to run other
+  tests. It will not show up in calls to the external runner nor in the normal test output.</p>
+
+{/param}
+
+{param args}
+
+{call buck.arg}
+  {param name: 'name' /}
+  {param desc}
+  The name of the test_suite.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'tests' /}
+  {param default: '[]' /}
+  {param desc}
+  A list of {call buck.build_target /}s that should be tested.
+  {/param}
+{/call}
+
+{/param} // args
+
+{param examples}
+
+This test_suite() sets up two different sets of tests to run, 'all' tests and 'slow' tests. Note that <code>all_tests</code> can depend on <code>slow_tests</code>, and all three tests are run.
+
+{literal}<pre class="prettyprint lang-py">
+# instrumentation_tests/BUCK:
+sh_test(
+    name = "instrumentation_tests",
+    test = "instrumentation_tests.sh",
+    visibility = ["PUBLIC"],
+)
+
+# integration_tests/BUCK:
+sh_test(
+    name = "integration_tests",
+    test = "integration_tests.sh",
+    visibility = ["PUBLIC"],
+)
+
+# unit_tests/BUCK:
+sh_test(
+    name = "unit_tests",
+    test = "unit_tests.sh",
+    visibility = ["PUBLIC"],
+)
+
+# BUCK:
+test_suite(
+    name = "slow_tests",
+    tests = [
+        "//instrumentation_tests:instrumentation_tests",
+        "//integration_tests:integration_tests",
+    ],
+)
+
+test_suite(
+    name = "all_tests",
+    tests = [
+        ":slow_tests",
+        "//unit_tests:unit_tests",
+    ],
+)
+</pre>
+
+Yields output like this when run:
+<pre class="prettyprint lang-sh">
+$ buck test //:slow_tests
+...
+RESULTS FOR //instrumentation_tests:instrumentation_tests //integration_tests:integration_tests
+PASS    <100ms  1 Passed   0 Skipped   0 Failed   //instrumentation_tests:instrumentation_tests
+PASS    <100ms  1 Passed   0 Skipped   0 Failed   //integration_tests:integration_tests
+TESTS PASSED
+...
+
+$ buck test //:all_tests
+RESULTS FOR //instrumentation_tests:instrumentation_tests //integration_tests:integration_tests //unit_tests:unit_tests
+PASS    <100ms  1 Passed   0 Skipped   0 Failed   //instrumentation_tests:instrumentation_tests
+PASS    <100ms  1 Passed   0 Skipped   0 Failed   //integration_tests:integration_tests
+PASS    <100ms  1 Passed   0 Skipped   0 Failed   //unit_tests:unit_tests
+TESTS PASSED
+</pre>
+{/literal}
+
+{/param} // examples
+
+{/call} // buck.rule
+
+ {/param}
+  {/call}
+{/template}

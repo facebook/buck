@@ -17,6 +17,8 @@ java_library_with_plugins(
         "ShTest.java",
         "ShTestDescription.java",
         "ShellDescriptionsProvider.java",
+        "TestSuite.java",
+        "TestSuiteDescription.java",
     ],
     exported_deps = [
         "//src/com/facebook/buck/core/description/arg:arg",

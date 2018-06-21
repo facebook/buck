@@ -41,6 +41,7 @@ public class ShellDescriptionsProvider implements DescriptionProvider {
         new GenruleDescription(toolchainProvider, config, context.getSandboxExecutionStrategy()),
         new ShBinaryDescription(),
         new ShTestDescription(config),
+        new TestSuiteDescription(),
         new WorkerToolDescription(config));
   }
 }
