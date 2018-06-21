@@ -17,14 +17,11 @@
 package com.facebook.buck.core.graph.transformation;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.Executor;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 /**
  * A computation environment that {@link AsyncTransformer} can access. This class provides ability
@@ -62,21 +59,6 @@ final class DefaultTransformationEnvironment<ComputeKey, ComputeResult>
       Iterable<ComputeKey> keys,
       Function<ImmutableMap<ComputeKey, ComputeResult>, ComputeResult> asyncTransformation) {
     return collectAsyncAndRunInternal(engine.computeAll(keys), asyncTransformation);
-  }
-
-  @Override
-  public final CompletionStage<ComputeResult> collectAsyncAndRun(
-      ImmutableMap<ComputeKey, CompletionStage<ComputeResult>> toCollect,
-      Function<ImmutableMap<ComputeKey, ComputeResult>, ComputeResult> thenFunc) {
-    return collectAsyncAndRunInternal(
-        toCollect
-            .entrySet()
-            .parallelStream()
-            .map(
-                entry ->
-                    Maps.immutableEntry(entry.getKey(), entry.getValue().toCompletableFuture()))
-            .collect(Collectors.toMap(Entry::getKey, Entry::getValue)),
-        thenFunc);
   }
 
   private CompletionStage<ComputeResult> collectAsyncAndRunInternal(

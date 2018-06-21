@@ -56,16 +56,4 @@ public interface TransformationEnvironment<ComputeKey, ComputeResult> {
   CompletionStage<ComputeResult> evaluateAll(
       Iterable<ComputeKey> keys,
       Function<ImmutableMap<ComputeKey, ComputeResult>, ComputeResult> asyncTransformation);
-
-  /**
-   * Used to wait for completion of a list of CompletionStage and apply a function asynchronously on
-   * the results
-   *
-   * @param toCollect a map of CompletionStage to wait for
-   * @param thenFunc the function to run after completion
-   * @return a CompletionStage for applying asynchronous operations on the collected futures
-   */
-  CompletionStage<ComputeResult> collectAsyncAndRun(
-      ImmutableMap<ComputeKey, CompletionStage<ComputeResult>> toCollect,
-      Function<ImmutableMap<ComputeKey, ComputeResult>, ComputeResult> thenFunc);
 }

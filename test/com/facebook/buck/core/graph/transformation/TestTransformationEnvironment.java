@@ -33,11 +33,4 @@ public class TestTransformationEnvironment<Key, Result>
       Iterable<Key> keys, Function<ImmutableMap<Key, Result>, Result> asyncTransformation) {
     throw new UnsupportedOperationException();
   }
-
-  @Override
-  public CompletionStage<Result> collectAsyncAndRun(
-      ImmutableMap<Key, CompletionStage<Result>> toCollect,
-      Function<ImmutableMap<Key, Result>, Result> thenFunc) {
-    throw new UnsupportedOperationException();
-  }
 }
