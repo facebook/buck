@@ -14,8 +14,9 @@ def parse_file_name():
 
 
 def output_file(file_name):
-    with open(file_name, mode='r') as f:
+    with open(file_name, mode="r") as f:
         print(f.read())
+
 
 if __name__ == "__main__":
     output_file(parse_file_name())

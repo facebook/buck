@@ -1,14 +1,37 @@
 #!/usr/bin/env python
 
 from __future__ import print_function
+
+import errno
+import logging
+import os
+import re
+import signal
+import subprocess
 import sys
 import threading
 import time
+import uuid
+import zipfile
 from Queue import Queue
+from subprocess import check_output
+
+from buck_logging import setup_logging
+from buck_project import BuckProject, NoBuckConfigFoundException
+from buck_tool import (
+    BuckDaemonErrorException,
+    BuckStatusReporter,
+    ExecuteTarget,
+    get_java_path,
+    install_signal_handlers,
+)
+from subprocutils import propagate_failure
+from tracing import Tracing
 
 
 class ExitCode(object):
     """Python equivalent of com.facebook.buck.util.ExitCode"""
+
     SUCCESS = 0
     COMMANDLINE_ERROR = 3
     FATAL_GENERIC = 10
@@ -21,27 +44,16 @@ class ExitCode(object):
 
 if sys.version_info < (2, 7):
     import platform
-    print(("Buck requires at least version 2.7 of Python, but you are using {}."
-           "\nPlease follow https://buckbuild.com/setup/getting_started.html " +
-           "to properly setup your development environment.").format(platform.version()))
+
+    print(
+        (
+            "Buck requires at least version 2.7 of Python, but you are using {}."
+            "\nPlease follow https://buckbuild.com/setup/getting_started.html "
+            + "to properly setup your development environment."
+        ).format(platform.version())
+    )
     sys.exit(ExitCode.FATAL_BOOTSTRAP)
 
-import logging
-import os
-import signal
-import subprocess
-import re
-import uuid
-import zipfile
-import errno
-
-from buck_logging import setup_logging
-from buck_tool import ExecuteTarget, install_signal_handlers, \
-    get_java_path, BuckStatusReporter, BuckDaemonErrorException
-from buck_project import BuckProject, NoBuckConfigFoundException
-from tracing import Tracing
-from subprocutils import propagate_failure
-from subprocess import check_output
 
 THIS_DIR = os.path.dirname(os.path.realpath(__file__))
 REQUIRED_JAVA_VERSION = "8"
@@ -50,13 +62,13 @@ REQUIRED_JAVA_VERSION = "8"
 # Kill all buck processes
 def killall_buck(reporter):
     # Linux or macOS
-    if os.name != 'posix':
-        message = 'killall is not implemented on: ' + os.name
+    if os.name != "posix":
+        message = "killall is not implemented on: " + os.name
         logging.error(message)
         reporter.status_message = message
         return ExitCode.COMMANDLINE_ERROR
 
-    for line in os.popen('jps -l'):
+    for line in os.popen("jps -l"):
         split = line.split()
         if len(split) == 1:
             # Java processes which are launched not as `java Main`
@@ -64,11 +76,10 @@ def killall_buck(reporter):
             # main class name.
             continue
         if len(split) != 2:
-            raise Exception('cannot parse a line in jps -l outout: ' +
-                            repr(line))
+            raise Exception("cannot parse a line in jps -l outout: " + repr(line))
         pid = int(split[0])
         name = split[1]
-        if name != 'com.facebook.buck.cli.bootstrapper.ClassLoaderBootstrapper':
+        if name != "com.facebook.buck.cli.bootstrapper.ClassLoaderBootstrapper":
             continue
 
         os.kill(pid, signal.SIGTERM)
@@ -85,7 +96,7 @@ def _get_java_version(java_path):
     """
     java_version = check_output([java_path, "-version"], stderr=subprocess.STDOUT)
     # extract java version from a string like 'java version "1.8.0_144"'
-    match = re.search("java version \"(?P<version>.+)\"", java_version)
+    match = re.search('java version "(?P<version>.+)"', java_version)
     if not match:
         return None
     pieces = match.group("version").split(".")
@@ -108,13 +119,15 @@ def _try_to_verify_java_version(java_version_status_queue):
             warning = "You're using Java {}, but Buck requires Java {}.\nPlease follow \
 https://buckbuild.com/setup/getting_started.html \
 to properly setup your local environment and avoid build issues.".format(
-                java_version,
-                REQUIRED_JAVA_VERSION)
+                java_version, REQUIRED_JAVA_VERSION
+            )
 
     except:
         # checking Java version is brittle and as such is best effort
         warning = "Cannot verify that installed Java version at '{}' \
-is correct.".format(java_path)
+is correct.".format(
+            java_path
+        )
     java_version_status_queue.put(warning)
 
 
@@ -124,8 +137,8 @@ def _try_to_verify_java_version_off_thread(java_version_status_queue):
         testing has shown that starting java process is rather expensive and on local tests,
         this optimization has reduced startup time of 'buck run' from 673 ms to 520 ms. """
     verify_java_version_thread = threading.Thread(
-        target=_try_to_verify_java_version,
-        args=(java_version_status_queue,))
+        target=_try_to_verify_java_version, args=(java_version_status_queue,)
+    )
     verify_java_version_thread.daemon = True
     verify_java_version_thread.start()
 
@@ -148,6 +161,7 @@ def _emit_java_version_warnings_if_any(java_version_status_queue):
         if warning is not None:
             logging.warning(warning)
 
+
 def main(argv, reporter):
     java_version_status_queue = Queue(maxsize=1)
 
@@ -158,28 +172,29 @@ def main(argv, reporter):
         # via a zip file.
         if zipfile.is_zipfile(argv[0]):
             from buck_package import BuckPackage
+
             return BuckPackage(p, reporter)
         else:
             from buck_repo import BuckRepo
+
             return BuckRepo(THIS_DIR, p, reporter)
 
     # If 'killall' is the second argument, shut down all the buckd processes
-    if sys.argv[1:] == ['killall']:
+    if sys.argv[1:] == ["killall"]:
         return killall_buck(reporter)
 
     install_signal_handlers()
     try:
         tracing_dir = None
-        build_id = os.environ.get('BUCK_BUILD_ID', str(uuid.uuid4()))
+        build_id = os.environ.get("BUCK_BUILD_ID", str(uuid.uuid4()))
         reporter.build_id = build_id
         with Tracing("main"):
             with BuckProject.from_current_dir() as project:
-                tracing_dir = os.path.join(project.get_buck_out_log_dir(),
-                                           'traces')
+                tracing_dir = os.path.join(project.get_buck_out_log_dir(), "traces")
                 with get_repo(project) as buck_repo:
                     # If 'kill' is the second argument, shut down the buckd
                     # process
-                    if sys.argv[1:] == ['kill']:
+                    if sys.argv[1:] == ["kill"]:
                         buck_repo.kill_buckd()
                         return ExitCode.SUCCESS
                     return buck_repo.launch_buck(build_id)
@@ -187,6 +202,7 @@ def main(argv, reporter):
         if tracing_dir:
             Tracing.write_to_dir(tracing_dir, build_id)
         _emit_java_version_warnings_if_any(java_version_status_queue)
+
 
 if __name__ == "__main__":
     exit_code = ExitCode.SUCCESS
@@ -205,7 +221,7 @@ if __name__ == "__main__":
         # buck is started outside project root
         exit_code = ExitCode.COMMANDLINE_ERROR
     except BuckDaemonErrorException:
-        reporter.status_message = 'Buck daemon disconnected unexpectedly'
+        reporter.status_message = "Buck daemon disconnected unexpectedly"
         _, exception, _ = sys.exc_info()
         print(str(exception))
         exception = None
@@ -219,7 +235,7 @@ if __name__ == "__main__":
         else:
             exit_code = ExitCode.FATAL_IO
     except KeyboardInterrupt:
-        reporter.status_message = 'Python wrapper keyboard interrupt'
+        reporter.status_message = "Python wrapper keyboard interrupt"
         exit_code = ExitCode.SIGNAL_INTERRUPT
     except Exception:
         exc_type, exception, exc_traceback = sys.exc_info()
@@ -235,8 +251,8 @@ if __name__ == "__main__":
         reporter.report(exit_code)
     except Exception as e:
         logging.debug(
-            'Exception occurred while reporting build results. This error is '
-            'benign and doesn\'t affect the actual build.',
+            "Exception occurred while reporting build results. This error is "
+            "benign and doesn't affect the actual build.",
             exc_info=True,
         )
 

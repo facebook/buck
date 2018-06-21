@@ -23,9 +23,9 @@ import tempfile
 def run_buck_process(command, cwd=None):
     root_directory = os.getcwd()
     cwd = cwd or root_directory
-    buck_path = os.path.join(root_directory, 'buck-out', 'gen', 'programs', 'buck.pex')
-    if platform.system() == 'Windows':
-        args = ['python', buck_path] + list(command)
+    buck_path = os.path.join(root_directory, "buck-out", "gen", "programs", "buck.pex")
+    if platform.system() == "Windows":
+        args = ["python", buck_path] + list(command)
     else:
         args = [buck_path] + list(command)
     # Pass thru our environment, except disabling buckd so that we can be sure the right buck
@@ -38,12 +38,13 @@ def run_buck_process(command, cwd=None):
         cwd=cwd,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
-        env=child_environment)
+        env=child_environment,
+    )
 
 
 class ProjectWorkspace(object):
 
-    is_windows = platform.system() == 'Windows'
+    is_windows = platform.system() == "Windows"
 
     def __init__(self, template_data_directory):
         self._template_data_directory = template_data_directory
@@ -55,14 +56,14 @@ class ProjectWorkspace(object):
         for root, dirs, files in os.walk(self.test_data_directory):
             for f in files:
                 filename, fileext = os.path.splitext(f)
-                if fileext == '.fixture':
+                if fileext == ".fixture":
                     os.rename(os.path.join(root, f), os.path.join(root, filename))
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
         if self.is_windows:
             # We do this due to bug: http://bugs.python.org/issue22022
-            subprocess.call(['rd', '/S', '/Q', self._temp_dir], shell=True)
+            subprocess.call(["rd", "/S", "/Q", self._temp_dir], shell=True)
         else:
             shutil.rmtree(self._temp_dir)
 

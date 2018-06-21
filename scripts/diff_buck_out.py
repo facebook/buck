@@ -4,17 +4,20 @@ and will list any files that either have different paths or different
 md5 hash sums.
 """
 
-import os
-import hashlib
 import argparse
+import hashlib
+import os
 
 hash_cache = {}
 
-parser = argparse.ArgumentParser(description='Recursively diff two directories')
-parser.add_argument('dirOne', type=str, help='First top level directory')
-parser.add_argument('dirTwo', type=str, help='Second top level directory')
-parser.add_argument('--compareRootDirs', action='store_true',
-                    help='Will not compare the ./gen and ./bin sub dirs')
+parser = argparse.ArgumentParser(description="Recursively diff two directories")
+parser.add_argument("dirOne", type=str, help="First top level directory")
+parser.add_argument("dirTwo", type=str, help="Second top level directory")
+parser.add_argument(
+    "--compareRootDirs",
+    action="store_true",
+    help="Will not compare the ./gen and ./bin sub dirs",
+)
 args = parser.parse_args()
 dirOne = args.dirOne
 dirTwo = args.dirTwo
@@ -53,11 +56,11 @@ def compute_file_hashes(dir):
             if real_path in hash_cache:
                 hash_code = hash_cache[real_path]
             else:
-                hash_code = hash_file(open(path, 'rb'), hashlib.md5())
+                hash_code = hash_file(open(path, "rb"), hashlib.md5())
                 hash_cache[real_path] = hash_code
             file_hashes.append(
-                FileHash(
-                    dir, path, real_path, clean_path(path, dir), hash_code))
+                FileHash(dir, path, real_path, clean_path(path, dir), hash_code)
+            )
     return file_hashes
 
 
@@ -70,7 +73,7 @@ def process_hashes(file_hashes, hashes_by_path):
 
 def add_path_by_extension(path, paths_by_extension):
     _, file_ext = os.path.splitext(path)
-    if file_ext == '':
+    if file_ext == "":
         file_ext = "NONE"
     if file_ext not in paths_by_extension:
         paths_by_extension[file_ext] = []
@@ -88,8 +91,12 @@ def print_files_for_each_extension(files_by_extension, description):
         files_for_ext.sort()
 
         print(
-            str(len(files_for_ext)) +
-            " " + description + " files for extension " + file_ext)
+            str(len(files_for_ext))
+            + " "
+            + description
+            + " files for extension "
+            + file_ext
+        )
         print_line_sep("-")
         for path in files_for_ext:
             print(path)
@@ -151,8 +158,9 @@ def compare_dirs(dirOne, dirTwo, description):
 
     for path in matching_paths:
         hashes = map(lambda fh: fh.hash_code, hashes_by_path[path])
-        hashes_match = len(filter(
-            lambda hash_code: hash_code != hashes[0], hashes)) == 0
+        hashes_match = (
+            len(filter(lambda hash_code: hash_code != hashes[0], hashes)) == 0
+        )
         if hashes_match:
             paths_same_hash += 1
         else:
@@ -160,14 +168,12 @@ def compare_dirs(dirOne, dirTwo, description):
             add_path_by_extension(path, paths_different_hash_by_extension)
 
     print_h1(
-        str(paths_different_hash) +
-        " files with different hashes in " + description)
-    print_files_for_each_extension(
-        paths_different_hash_by_extension, "mismatching")
+        str(paths_different_hash) + " files with different hashes in " + description
+    )
+    print_files_for_each_extension(paths_different_hash_by_extension, "mismatching")
 
-    print_h1(
-        str(paths_same_hash) +
-        " files with matching hashes in " + description)
+    print_h1(str(paths_same_hash) + " files with matching hashes in " + description)
+
 
 ################################################################
 # Main
@@ -176,7 +182,5 @@ def compare_dirs(dirOne, dirTwo, description):
 if compareRootDirs:
     compare_dirs(dirOne, dirTwo, "root dirs")
 else:
-    compare_dirs(
-        os.path.join(dirOne, "bin"), os.path.join(dirTwo, "bin"), "bin")
-    compare_dirs(
-        os.path.join(dirOne, "gen"), os.path.join(dirTwo, "gen"), "gen")
+    compare_dirs(os.path.join(dirOne, "bin"), os.path.join(dirTwo, "bin"), "bin")
+    compare_dirs(os.path.join(dirOne, "gen"), os.path.join(dirTwo, "gen"), "gen")

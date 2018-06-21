@@ -4,8 +4,7 @@ import json
 import os
 import re
 import sys
-
-from pprint import pprint, pformat
+from pprint import pformat, pprint
 
 
 """
@@ -26,7 +25,7 @@ def read_command_arguments_from_spec_file(spec_file):
     with open(spec_file) as data_file:
         data = json.load(data_file)
 
-    return data[0]['command']
+    return data[0]["command"]
 
 
 def get_robolectric_res_directories(command_args):
@@ -47,8 +46,8 @@ def find_key_in_command_args(command_args, key):
 
 
 def get_directories_from_arg(arg):
-    if arg[0] == '@':
-        return open(arg[1:], 'r').read().split('\n')
+    if arg[0] == "@":
+        return open(arg[1:], "r").read().split("\n")
     else:
         return arg.split(os.pathsep)
 
@@ -56,9 +55,13 @@ def get_directories_from_arg(arg):
 def assert_directories_match(expected_directories, directories_arg):
     actual_directories = sorted(get_directories_from_arg(directories_arg))
     if expected_directories != actual_directories:
-        print("Directories do not match. "
-              "Expected: " + pformat(expected_directories) +
-              ". Actual: " + pformat(actual_directories))
+        print(
+            "Directories do not match. "
+            "Expected: "
+            + pformat(expected_directories)
+            + ". Actual: "
+            + pformat(actual_directories)
+        )
         sys.exit(1)
 
 
@@ -75,18 +78,20 @@ def assert_asset_directories_match(command_args, expected_asset_directories):
 def main(argv):
     command_args = read_command_arguments_from_spec_file(argv[2])
 
-    assert_res_directories_match(command_args, [
-        "buck-out/gen/res/com/sample/base/base#resources-symlink-tree/res",
-        "buck-out/gen/res/com/sample/title/title#resources-symlink-tree/res",
-        "buck-out/gen/res/com/sample/top/top#resources-symlink-tree/res",
-    ])
+    assert_res_directories_match(
+        command_args,
+        [
+            "buck-out/gen/res/com/sample/base/base#resources-symlink-tree/res",
+            "buck-out/gen/res/com/sample/title/title#resources-symlink-tree/res",
+            "buck-out/gen/res/com/sample/top/top#resources-symlink-tree/res",
+        ],
+    )
 
-    assert_asset_directories_match(command_args, [
-        "buck-out/gen/res/com/sample/base/base#assets-symlink-tree/assets",
-    ])
+    assert_asset_directories_match(
+        command_args,
+        ["buck-out/gen/res/com/sample/base/base#assets-symlink-tree/assets"],
+    )
 
 
 if __name__ == "__main__":
     main(sys.argv)
-
-

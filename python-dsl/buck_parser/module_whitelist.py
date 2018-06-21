@@ -1,15 +1,12 @@
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import with_statement
-
-from __builtin__ import __import__ as ORIGINAL_IMPORT
-from . import util
+from __future__ import absolute_import, division, print_function, with_statement
 
 import __builtin__
 import contextlib
-import inspect
 import imp
+import inspect
+from __builtin__ import __import__ as ORIGINAL_IMPORT
+
+from . import util
 
 
 class ImportWhitelistManager(object):
@@ -60,7 +57,7 @@ class ImportWhitelistManager(object):
         if not fromlist:
             # Return the top-level package if 'fromlist' is empty (e.g. 'os' for 'os.path'),
             # which is how '__import__' works.
-            name = name.split('.')[0]
+            name = name.split(".")[0]
 
         frame = util.get_caller_frame(skip=[__name__])
         filename = inspect.getframeinfo(frame).filename
@@ -77,20 +74,26 @@ class ImportWhitelistManager(object):
             return self._get_safe_module(name)
 
         raise ImportError(
-            'Importing module {0} is forbidden. '
-            'If you really need to import this module, read about '
-            'the allow_unsafe_import() function documented at: '
-            'https://buckbuild.com/function/allow_unsafe_import.html'.format(name))
+            "Importing module {0} is forbidden. "
+            "If you really need to import this module, read about "
+            "the allow_unsafe_import() function documented at: "
+            "https://buckbuild.com/function/allow_unsafe_import.html".format(name)
+        )
 
     @staticmethod
     def _block_unsafe_function(module, name):
         """Returns a function that ignores any arguments and raises AttributeError. """
+
         def func(*args, **kwargs):
             raise AttributeError(
-                'Using function {0} is forbidden in the safe version of '
-                'module {1}. If you really need to use this function read about '
-                'allow_unsafe_import() documented at: '
-                'https://buckbuild.com/function/allow_unsafe_import.html'.format(name, module))
+                "Using function {0} is forbidden in the safe version of "
+                "module {1}. If you really need to use this function read about "
+                "allow_unsafe_import() documented at: "
+                "https://buckbuild.com/function/allow_unsafe_import.html".format(
+                    name, module
+                )
+            )
+
         return func
 
     def _install_whitelisted_parts(self, mod, safe_mod, whitelist):
@@ -105,7 +108,7 @@ class ImportWhitelistManager(object):
             if name in whitelist_set:
                 # Check if a safe version is defined in case it's a submodule.
                 # If it's not defined the original submodule will be copied.
-                submodule_name = mod_name + '.' + name
+                submodule_name = mod_name + "." + name
                 if submodule_name in self._safe_modules_config:
                     # Get a safe version of the submodule
                     safe_mod.__dict__[name] = self._get_safe_module(submodule_name)
@@ -118,7 +121,8 @@ class ImportWhitelistManager(object):
         """Returns a safe version of the module."""
 
         assert name in self._safe_modules_config, (
-            "Safe version of module %s is not configured." % name)
+            "Safe version of module %s is not configured." % name
+        )
 
         # Return the safe version of the module if already created
         if name in self._safe_modules:
@@ -127,7 +131,7 @@ class ImportWhitelistManager(object):
         # Get the normal module, non-empty 'fromlist' prevents returning top-level package
         # (e.g. 'os' would be returned for 'os.path' without it)
         with self.allow_unsafe_import():
-            mod = ORIGINAL_IMPORT(name, fromlist=[''])
+            mod = ORIGINAL_IMPORT(name, fromlist=[""])
 
         # Build a new module for the safe version
         safe_mod = imp.new_module(name)

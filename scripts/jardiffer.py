@@ -15,7 +15,6 @@
 
 from __future__ import print_function
 
-
 import argparse
 import os
 import re
@@ -27,7 +26,6 @@ from zipfile import ZipFile
 
 
 class JarDiffer(object):
-
     def __init__(self, args):
         self.parse_args(args)
         self.tmpdir = tempfile.mkdtemp()
@@ -42,29 +40,34 @@ class JarDiffer(object):
         parser = argparse.ArgumentParser(
             prog=args[0],
             description="Compares the contents of two jar files.",
-            add_help=True)
-        parser.add_argument(
-            "-d", "--diff-flags",
-            help="Flags to pass to diff when comparing non-class files",
-            default="-d")
-        parser.add_argument(
-            "-p", "--javap-flags",
-            help="Flags to pass to javap when comparing class files",
-            default="-p -s -sysinfo")
-        parser.add_argument(
-            "-r", "--raw-javap-output",
-            help="Show raw (unsanitized) javap output.",
-            action='store_true'
+            add_help=True,
         )
         parser.add_argument(
-            "-o", "--output",
-            help="File to direct output (default: stdout)",
-            type=argparse.FileType('w', 0),
-            default=sys.stdout)
+            "-d",
+            "--diff-flags",
+            help="Flags to pass to diff when comparing non-class files",
+            default="-d",
+        )
         parser.add_argument(
-            "jarfile",
-            help="The jar files to compare",
-            nargs=2)
+            "-p",
+            "--javap-flags",
+            help="Flags to pass to javap when comparing class files",
+            default="-p -s -sysinfo",
+        )
+        parser.add_argument(
+            "-r",
+            "--raw-javap-output",
+            help="Show raw (unsanitized) javap output.",
+            action="store_true",
+        )
+        parser.add_argument(
+            "-o",
+            "--output",
+            help="File to direct output (default: stdout)",
+            type=argparse.FileType("w", 0),
+            default=sys.stdout,
+        )
+        parser.add_argument("jarfile", help="The jar files to compare", nargs=2)
         options = parser.parse_args(args[1:])
         self.jar1 = options.jarfile[0]
         self.jar2 = options.jarfile[1]
@@ -77,20 +80,20 @@ class JarDiffer(object):
         dest = os.path.join(self.tmpdir, str(index), entry_name)
         if not os.path.exists(os.path.dirname(dest)):
             os.makedirs(os.path.dirname(dest))
-        with open(dest, 'wb') as f:
+        with open(dest, "wb") as f:
             f.write(entry_contents)
             return os.path.join(str(index), entry_name)
 
     @staticmethod
     def sanitize_javap_output(content):
-        content = re.sub(r'\d+:', '_:', content)
-        content = re.sub(r'#\d+', '#_', content)
+        content = re.sub(r"\d+:", "_:", content)
+        content = re.sub(r"#\d+", "#_", content)
         return content
 
     def javap(self, index, entry_name, entry_contents):
         flags = self.javap_flags
         filename = self.write_contents(index, entry_name, entry_contents)
-        cmd = ['javap'] + flags + [filename]
+        cmd = ["javap"] + flags + [filename]
         output = subprocess.check_output(cmd, cwd=self.tmpdir)
         if self.should_sanitize_javap:
             output = JarDiffer.sanitize_javap_output(output)
@@ -99,7 +102,7 @@ class JarDiffer(object):
     def diff_content(self, entry_name, entry_contents1, entry_contents2):
         filename1 = self.write_contents(1, entry_name, entry_contents1)
         filename2 = self.write_contents(2, entry_name, entry_contents2)
-        cmd = ['diff'] + self.diff_flags + [filename1, filename2]
+        cmd = ["diff"] + self.diff_flags + [filename1, filename2]
         p = subprocess.Popen(cmd, stdout=subprocess.PIPE, cwd=self.tmpdir)
         (stdoutdata, _) = p.communicate()
         return p.returncode, stdoutdata
@@ -115,7 +118,7 @@ class JarDiffer(object):
         if contents1 == contents2:
             return True
         filename = zipinfo1.filename
-        if filename.endswith('.class'):
+        if filename.endswith(".class"):
             returncode, out = self.diff_classes(filename, contents1, contents2)
         else:
             returncode, out = self.diff_content(filename, contents1, contents2)
@@ -144,23 +147,21 @@ class JarDiffer(object):
                 zipinfos2 = zipinfos2_by_name.get(name, [])
                 while zipinfos1 or zipinfos2:
                     if not zipinfos1:
-                        print("Only in %s: %s" % (self.jar2, name),
-                              file=self.output)
+                        print("Only in %s: %s" % (self.jar2, name), file=self.output)
                         zipinfos2.pop()
                         return_code = 1
                     elif not zipinfos2:
-                        print("Only in %s: %s" % (self.jar1, name),
-                              file=self.output)
+                        print("Only in %s: %s" % (self.jar1, name), file=self.output)
                         zipinfos1.pop()
                         return_code = 1
                         continue
                     elif not self.diff_zipinfos(
-                            zipfile1, zipinfos1.pop(),
-                            zipfile2, zipinfos2.pop()):
+                        zipfile1, zipinfos1.pop(), zipfile2, zipinfos2.pop()
+                    ):
                         return_code = 1
         return return_code
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     with JarDiffer(sys.argv) as differ:
         differ.run()

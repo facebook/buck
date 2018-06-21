@@ -1,27 +1,26 @@
 """This is a self-profiling tool."""
-from collections import namedtuple
 import inspect
 import itertools
 import os
 import sys
 import threading
 import time
-
+from collections import namedtuple
 
 PROFILING_TIMER_DELAY = 0.01
 BLACKLIST = [
-    'copy.py:_deepcopy_dict',
-    'copy.py:_deepcopy_list',
-    '__init__.py:query',
-    'encoder.py:_iterencode',
-    'encoder.py:_iterencode_list',
-    'encoder.py:_iterencode_dict',
+    "copy.py:_deepcopy_dict",
+    "copy.py:_deepcopy_list",
+    "__init__.py:query",
+    "encoder.py:_iterencode",
+    "encoder.py:_iterencode_list",
+    "encoder.py:_iterencode_dict",
 ]
 PROFILING_USEFULNESS_THRESHOLD_DELAY = 0.02
 HIGHLIGHTS_THRESHOLD_DELAY = 0.5
 
 
-StackFrame = namedtuple('StackFrame', 'filename line function')
+StackFrame = namedtuple("StackFrame", "filename line function")
 
 
 class AggregatedStackNode(object):
@@ -33,7 +32,7 @@ class AggregatedStackNode(object):
         self.useful = True
 
     def add_children(self, frame, callstack, duration):
-        key = frame.filename + ':' + str(frame.line)
+        key = frame.filename + ":" + str(frame.line)
         if key in self.children:
             subnode = self.children[key]
             subnode.duration += duration
@@ -53,7 +52,6 @@ class AggregatedStackNode(object):
 
 
 class Profiler(object):
-
     def __init__(self, reverse_callstack):
         # The callstack storage
         self._aggregated_callstack = AggregatedStackNode(None, None)
@@ -76,7 +74,7 @@ class Profiler(object):
         self._thread = threading.Thread(
             target=self._stack_trace_collection_thread,
             args=(tid,),
-            name="sampler thread"
+            name="sampler thread",
         )
         self._thread.start()
 
@@ -94,9 +92,7 @@ class Profiler(object):
             frame = sys._current_frames()[tid]  # pylint: disable=protected-access
             callstack = Profiler._frame_stack_to_call_stack_frame(frame)
             self._aggregated_callstack.add_callstack(
-                callstack,
-                now - self._last_start_time,
-                self._reverse_callstack,
+                callstack, now - self._last_start_time, self._reverse_callstack
             )
             self._last_start_time = now
             time.sleep(PROFILING_TIMER_DELAY)
@@ -108,49 +104,51 @@ class Profiler(object):
         result = []
         while frame:
             stack_frame = StackFrame(
-                frame.f_code.co_filename,
-                frame.f_lineno,
-                frame.f_code.co_name,
+                frame.f_code.co_filename, frame.f_lineno, frame.f_code.co_name
             )
             frame = frame.f_back
             result.append(stack_frame)
         result.reverse()
-        return list(itertools.takewhile(
-            lambda x: not Profiler._is_stack_frame_in_blacklist(x),
-            result,
-        ))
+        return list(
+            itertools.takewhile(
+                lambda x: not Profiler._is_stack_frame_in_blacklist(x), result
+            )
+        )
 
     @staticmethod
     def _is_stack_frame_in_blacklist(frame):
         """Returns wether the stack frame should be ignored."""
         filename = os.path.basename(frame.filename)
-        call_identifier = '{}:{}'.format(filename, frame.function)
+        call_identifier = "{}:{}".format(filename, frame.function)
         return call_identifier in BLACKLIST
 
     @staticmethod
     def _items_sorted_by_duration(items):
         return sorted(
-            items, key=lambda current_child: current_child.duration, reverse=True)
+            items, key=lambda current_child: current_child.duration, reverse=True
+        )
 
     def generate_report(self):
         """Generate string with a nice visualization of the result of the profiling."""
         Profiler._recursive_mark_useful_leaf(self._aggregated_callstack)
 
-        content = ['# Highlights\n']
+        content = ["# Highlights\n"]
         highlights = []
         if self._reverse_callstack:
             for node in self._aggregated_callstack.children.values():
                 if node.duration > HIGHLIGHTS_THRESHOLD_DELAY:
                     highlights.append(node)
         else:
-            Profiler._recursive_collect_highlights_report(self._aggregated_callstack, highlights)
+            Profiler._recursive_collect_highlights_report(
+                self._aggregated_callstack, highlights
+            )
         highlights = Profiler._items_sorted_by_duration(highlights)
 
         content += Profiler._generate_highlights_report(highlights)
 
-        content += ['\n', '# More details\n']
+        content += ["\n", "# More details\n"]
         content += self._generate_callstack_report(highlights)
-        return ''.join(content)
+        return "".join(content)
 
     @staticmethod
     def _is_useful_leaf(node):
@@ -177,7 +175,7 @@ class Profiler(object):
                 useful = True
             else:
                 frame = child.frame
-                key = frame.filename + ':' + str(frame.line)
+                key = frame.filename + ":" + str(frame.line)
                 node.children.pop(key, None)
 
         node.useful = useful
@@ -188,9 +186,10 @@ class Profiler(object):
         if not self._reverse_callstack:
             for item in highlights:
                 frame = item.frame
-                highlights_set.add(frame.filename + ':' + str(frame.line))
+                highlights_set.add(frame.filename + ":" + str(frame.line))
         return Profiler._recursive_write_callstack_report(
-            self._aggregated_callstack, "", highlights_set)
+            self._aggregated_callstack, "", highlights_set
+        )
 
     @staticmethod
     def _recursive_write_callstack_report(node, prefix_str, highlights_set):
@@ -230,7 +229,7 @@ class Profiler(object):
         result = []
         for i, child in enumerate(Profiler._items_sorted_by_duration(children)):
             frame = child.frame
-            highlight_key = frame.filename + ':' + str(frame.line)
+            highlight_key = frame.filename + ":" + str(frame.line)
             highlighted = highlight_key in highlights_set
 
             if i == nodes_count - 1:
@@ -243,21 +242,19 @@ class Profiler(object):
                 child.duration,
                 frame.function,
                 os.path.basename(frame.filename),
-                frame.line
+                frame.line,
             )
             if highlighted:
                 if len(str_to_write) < 120:
-                    highlighted_str = '-' * (120 - len(str_to_write))
+                    highlighted_str = "-" * (120 - len(str_to_write))
                 else:
-                    highlighted_str = '-' * 10
+                    highlighted_str = "-" * 10
             else:
-                highlighted_str = ''
+                highlighted_str = ""
 
-            result += [str_to_write, highlighted_str, '\n']
+            result += [str_to_write, highlighted_str, "\n"]
             result += Profiler._recursive_write_callstack_report(
-                child,
-                next_prefix_str,
-                highlights_set,
+                child, next_prefix_str, highlights_set
             )
 
         return result
@@ -283,22 +280,26 @@ class Profiler(object):
         for node in highlights:
             frame = node.frame
             filename = os.path.basename(frame.filename)
-            result.append('{:.2f} {} ({}:{})\n'.format(
-                node.duration,
-                frame.function,
-                filename,
-                frame.line,
-            ))
+            result.append(
+                "{:.2f} {} ({}:{})\n".format(
+                    node.duration, frame.function, filename, frame.line
+                )
+            )
             # Output the stack frame of that highlight.
             for current_frame in node.callstack:
-                if current_frame.function == '<module>':
+                if current_frame.function == "<module>":
                     continue
                 item_filename = os.path.basename(current_frame.filename)
-                result.append('        {} ({}:{})\n'.format(
-                    current_frame.function, item_filename, current_frame.line))
-                if (frame.filename == current_frame.filename and
-                        frame.line == current_frame.line and
-                        frame.function == current_frame.function):
+                result.append(
+                    "        {} ({}:{})\n".format(
+                        current_frame.function, item_filename, current_frame.line
+                    )
+                )
+                if (
+                    frame.filename == current_frame.filename
+                    and frame.line == current_frame.line
+                    and frame.function == current_frame.function
+                ):
                     break
-            result.append('\n')
+            result.append("\n")
         return result

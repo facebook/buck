@@ -1,13 +1,9 @@
 #!/usr/bin/env python2.7
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 import argparse
 import os
 import re
-
 from collections import namedtuple
 
 import buckutils as buck
@@ -18,13 +14,16 @@ import javautils as java
 #  |---------------------|  |   |  |----------||     ||  |----------------------------------------------|  |---------------------------------------------------------------------------------------------------------------------------------------------------------|
 # [2017-10-26 01:08:10.126][debug][command:null][tid:83][com.facebook.buck.jvm.java.Jsr199JavacInvocation] javac: /Users/jkeljo/buck/third-party/java/dx/src/com/android/dx/cf/code/LocalsArraySet.java:-1: note: Some input files use unchecked or unsafe operations.
 BUCK_LOG_LINE_PATTERN = re.compile(
-    r"^\[(?P<timestamp>[^]]+)\]\[(?P<level>[^]]+)\]\[command:(?P<command>[^]]+)\]\[tid:(?P<tid>\d+)\]\[(?P<class>[^]]+)\] (?P<message>.+)$")
+    r"^\[(?P<timestamp>[^]]+)\]\[(?P<level>[^]]+)\]\[command:(?P<command>[^]]+)\]\[tid:(?P<tid>\d+)\]\[(?P<class>[^]]+)\] (?P<message>.+)$"
+)
 
 # Example:
 #                                               path                                          line                          message
 #        |-----------------------------------------------------------------------------------| ||  |--------------------------------------------------------|
 # javac: /Users/jkeljo/buck/third-party/java/dx/src/com/android/dx/cf/code/LocalsArraySet.java:-1: note: Some input files use unchecked or unsafe operations.
-JAVAC_MESSAGE_PATTERN = re.compile(r"^javac: (?P<path>[^:]+):(?P<line>\d+): (?P<message>.+)$")
+JAVAC_MESSAGE_PATTERN = re.compile(
+    r"^javac: (?P<path>[^:]+):(?P<line>\d+): (?P<message>.+)$"
+)
 
 # Example
 #   spaces
@@ -47,10 +46,14 @@ the targets to be migrated with buck build --config
 java.abi_generation_mode=migrating_to_source_only."""
 
     parser = argparse.ArgumentParser(description=description)
-    parser.add_argument("--log-file",
-                        help="buck.log file to search for migration instructions "
-                             "(default ./buck-out/log/last_buildcommand/buck.log)",
-                        default=os.path.join(os.getcwd(), "buck-out", "log", "last_buildcommand", "buck.log"))
+    parser.add_argument(
+        "--log-file",
+        help="buck.log file to search for migration instructions "
+        "(default ./buck-out/log/last_buildcommand/buck.log)",
+        default=os.path.join(
+            os.getcwd(), "buck-out", "log", "last_buildcommand", "buck.log"
+        ),
+    )
     return parser.parse_args()
 
 
@@ -163,11 +166,15 @@ def replace_name(path, line, col, old, new):
 
 
 ADD_REQUIRED_FOR_SOURCE_ABI_PATTERN = re.compile(
-    r"add required_for_source_only_abi = True to (?P<rule>[^#.]*).")
+    r"add required_for_source_only_abi = True to (?P<rule>[^#.]*)."
+)
 ADD_SOURCE_ONLY_ABI_DEPS_PATTERN = re.compile(
-    r"add the following rules to source_only_abi_deps in (?P<rule>[^:]+:[^#:]+)[^:]*: (?P<rules>.+)")
+    r"add the following rules to source_only_abi_deps in (?P<rule>[^:]+:[^#:]+)[^:]*: (?P<rules>.+)"
+)
 ADD_AN_IMPORT_PATTERN = re.compile(r'^Add an import for "(?P<type>[^"]+)"')
-REPLACE_A_NAME_PATTERN = re.compile(r'^Use "(?P<new>[^"]+)" here instead of "(?P<old>[^"]+)"')
+REPLACE_A_NAME_PATTERN = re.compile(
+    r'^Use "(?P<new>[^"]+)" here instead of "(?P<old>[^"]+)"'
+)
 migration_plugins = [
     (re.compile(r"^To fix:$"), do_remediations),
     (ADD_REQUIRED_FOR_SOURCE_ABI_PATTERN, add_required_for_source_only_abi),

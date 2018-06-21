@@ -17,15 +17,24 @@ class ClassLoaderTest(unittest.TestCase):
         for javac. In that case, Buck's version of guava would leak into the classpath of the
         annotation processor causing it to fail to run and all heck breaking loose."""
 
-        test_data = os.path.join('test', 'com', 'facebook', 'buck', 'cli', 'bootstrapper',
-                                 'testdata', 'old_guava')
+        test_data = os.path.join(
+            "test",
+            "com",
+            "facebook",
+            "buck",
+            "cli",
+            "bootstrapper",
+            "testdata",
+            "old_guava",
+        )
 
         with ProjectWorkspace(test_data) as workspace:
-            returncode = workspace.run_buck('build',
-                                            '//:example',
-                                            )
+            returncode = workspace.run_buck(
+                "build",
+                "//:example",
+            )
             self.assertEquals(0, returncode)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

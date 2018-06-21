@@ -15,11 +15,10 @@
 import errno
 import os
 
+BUCK_LOCK_FILE_NAME = ".buck_lock"
 
-BUCK_LOCK_FILE_NAME = '.buck_lock'
 
-
-if os.name == 'posix':
+if os.name == "posix":
     import fcntl
 
     def _fcntl_with_exception_handling(f, exclusive):
@@ -31,7 +30,10 @@ if os.name == 'posix':
             if e.errno in [errno.EACCES, errno.EAGAIN]:
                 return False
             raise
+
+
 else:
+
     def _fcntl_with_exception_handling(f, exclusive):
         return True
 
@@ -60,7 +62,7 @@ def rmtree_if_can_lock(root):
     lock_file_path = os.path.join(root, BUCK_LOCK_FILE_NAME)
     lock_file = None
     if os.path.exists(lock_file_path):
-        lock_file = open(lock_file_path, 'a+')
+        lock_file = open(lock_file_path, "a+")
         if not acquire_exclusive_lock(lock_file):
             lock_file.close()
             return

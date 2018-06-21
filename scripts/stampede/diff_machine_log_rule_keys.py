@@ -1,9 +1,6 @@
 #! /usr/bin/python
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 import argparse
 import collections
@@ -21,33 +18,33 @@ class BuildRuleDiffResult(object):
 
 
 class LogFileDiffResult(object):
-    def __init__(self, log_file_one, log_file_two,
-                 extra_build_rules_by_log_file,
-                 matching_results_by_rule_key_type,
-                 mismatching_results_by_rule_key_type):
+    def __init__(
+        self,
+        log_file_one,
+        log_file_two,
+        extra_build_rules_by_log_file,
+        matching_results_by_rule_key_type,
+        mismatching_results_by_rule_key_type,
+    ):
         self.log_file_one = log_file_one
         self.log_file_two = log_file_two
         self.extra_build_rules_by_log_file = extra_build_rules_by_log_file
-        self.matching_results_by_rule_key_type = (
-            matching_results_by_rule_key_type)
-        self.mismatching_results_by_rule_key_type = (
-            mismatching_results_by_rule_key_type)
+        self.matching_results_by_rule_key_type = matching_results_by_rule_key_type
+        self.mismatching_results_by_rule_key_type = mismatching_results_by_rule_key_type
 
 
-LogFile = collections.namedtuple('LogFile', ['id', 'path'])
+LogFile = collections.namedtuple("LogFile", ["id", "path"])
 
 BuildRule = collections.namedtuple(
-    'BuildRule', ['name', 'log_file', 'default_rulekey', 'input_rulekey'])
+    "BuildRule", ["name", "log_file", "default_rulekey", "input_rulekey"]
+)
 
 # Rule key type enum
 DEFAULT_RULE_KEY = 1
 INPUT_RULE_KEY = 2
 
-BUILD_RULE_FINISHED_TOKEN = 'BuildRuleEvent.Finished'
-SUPPORTED_RULE_KEY_TYPES = [
-    DEFAULT_RULE_KEY,
-    INPUT_RULE_KEY,
-]
+BUILD_RULE_FINISHED_TOKEN = "BuildRuleEvent.Finished"
+SUPPORTED_RULE_KEY_TYPES = [DEFAULT_RULE_KEY, INPUT_RULE_KEY]
 
 
 def parseArgs():
@@ -63,33 +60,37 @@ builds. (Buck doesn't set output hash for rules which it fetches from the
 cache. So do a --no-cache build to get the output hash for every rule.)
 """
     parser = argparse.ArgumentParser(description=description)
-    parser.add_argument('localBuildBuckOut',
-                        type=str,
-                        help='Path to buck-out of local build')
-    parser.add_argument('distBuildBuckOut',
-                        type=str,
-                        help='Path to buck-out of dist build client')
-    parser.add_argument('-v',
-                        '--verbose',
-                        action='store_true',
-                        help='Print extra information (like cache misses).')
+    parser.add_argument(
+        "localBuildBuckOut", type=str, help="Path to buck-out of local build"
+    )
+    parser.add_argument(
+        "distBuildBuckOut", type=str, help="Path to buck-out of dist build client"
+    )
+    parser.add_argument(
+        "-v",
+        "--verbose",
+        action="store_true",
+        help="Print extra information (like cache misses).",
+    )
     return parser.parse_args()
 
 
 def read_file(log_file):
     build_rules = {}
-    with open(log_file.path, 'r') as logfile:
+    with open(log_file.path, "r") as logfile:
         for line in logfile:
             if line.startswith(BUILD_RULE_FINISHED_TOKEN):
-                row = json.loads(line[len(BUILD_RULE_FINISHED_TOKEN) + 1:])
-                rule_keys = row['ruleKeys']
-                if not rule_keys.get('inputRuleKey'):
-                    rule_keys['inputRuleKey'] = {'hashCode': None}
+                row = json.loads(line[len(BUILD_RULE_FINISHED_TOKEN) + 1 :])
+                rule_keys = row["ruleKeys"]
+                if not rule_keys.get("inputRuleKey"):
+                    rule_keys["inputRuleKey"] = {"hashCode": None}
 
                 rule = BuildRule(
-                    name=row['buildRule']['name'], log_file=log_file,
-                    default_rulekey=rule_keys['ruleKey']['hashCode'],
-                    input_rulekey=rule_keys['inputRuleKey']['hashCode'])
+                    name=row["buildRule"]["name"],
+                    log_file=log_file,
+                    default_rulekey=rule_keys["ruleKey"]["hashCode"],
+                    input_rulekey=rule_keys["inputRuleKey"]["hashCode"],
+                )
                 build_rules[rule.name] = rule
     return build_rules
 
@@ -100,26 +101,25 @@ def print_line_sep(c):
 
 def list_rules_with_msg(rules, msg):
     if len(rules) > 0:
-        print_line_sep('=')
+        print_line_sep("=")
         print(msg)
-        print_line_sep('-')
+        print_line_sep("-")
         for rule in rules:
             print(rule)
-        print_line_sep('=')
+        print_line_sep("=")
 
 
 def find_dist_build_run_id(path):
-    re_match = re.search(r'dist-build-slave-(.*?)/', path)
+    re_match = re.search(r"dist-build-slave-(.*?)/", path)
     if re_match is None:
-        raise Exception('Could not find run id from path ' + path)
+        raise Exception("Could not find run id from path " + path)
     return re_match.group(1)
 
 
 def find_dist_build_logs(path_to_buck_out):
     log_files = []
     for log_path in find_log_paths(path_to_buck_out, True):
-        log_files.append(LogFile(id=find_dist_build_run_id(log_path),
-                                 path=log_path))
+        log_files.append(LogFile(id=find_dist_build_run_id(log_path), path=log_path))
     return log_files
 
 
@@ -128,8 +128,7 @@ def find_local_build_log(path_to_buck_out):
     for log_path in find_log_paths(path_to_buck_out, False):
         log_files.append(LogFile(id="local", path=log_path))
     if len(log_files) != 1:
-        raise Exception('More than 1 local log file found in' +
-                        path_to_buck_out)
+        raise Exception("More than 1 local log file found in" + path_to_buck_out)
     return log_files[0]
 
 
@@ -145,8 +144,10 @@ def find_log_paths(path_to_buck_out, find_dist_build_logs=False):
             log_paths.append(os.path.join(rootDir, filename))
     if len(log_paths) == 0:
         raise Exception(
-            'No log files found in: {0}. find_dist_build_logs: {1}'.format(
-                path_to_buck_out, find_dist_build_logs))
+            "No log files found in: {0}. find_dist_build_logs: {1}".format(
+                path_to_buck_out, find_dist_build_logs
+            )
+        )
     return log_paths
 
 
@@ -156,8 +157,7 @@ def get_rule_key_of_type(build_rule, rule_key_type):
     elif rule_key_type == INPUT_RULE_KEY:
         return build_rule.input_rulekey
     else:
-        raise Exception("{0} is not a supported rule key type".format(
-            rule_key_type))
+        raise Exception("{0} is not a supported rule key type".format(rule_key_type))
 
 
 def diff_rule_keys(build_rule_one, build_rule_two, rule_key_type):
@@ -174,10 +174,12 @@ def diff_rule_keys(build_rule_one, build_rule_two, rule_key_type):
     # print(rule_key_two)
     # print(str(was_match))
 
-    return BuildRuleDiffResult(build_rule_name=build_rule_name,
-                               build_rules=[build_rule_one, build_rule_two],
-                               rule_key_type=rule_key_type,
-                               was_match=was_match)
+    return BuildRuleDiffResult(
+        build_rule_name=build_rule_name,
+        build_rules=[build_rule_one, build_rule_two],
+        rule_key_type=rule_key_type,
+        was_match=was_match,
+    )
 
 
 def get_rule_key_type_str(rule_key_type):
@@ -186,8 +188,7 @@ def get_rule_key_type_str(rule_key_type):
     elif rule_key_type == INPUT_RULE_KEY:
         return "input"
     else:
-        raise Exception("{0} is not a supported rule key type".format(
-            rule_key_type))
+        raise Exception("{0} is not a supported rule key type".format(rule_key_type))
 
 
 def print_build_rule_names(build_rule_diff_results):
@@ -197,7 +198,8 @@ def print_build_rule_names(build_rule_diff_results):
 
 def print_log_diff_result(result):
     print_line_sep("=")
-    print("""\
+    print(
+        """\
 Rule key diff result:
 Log 1:
 - id: {log1.id}
@@ -206,26 +208,27 @@ Log 1:
 Log 2:
 - id: {log2.id}
 - path: {log2.path}
-- extra build rules: {log2_build_rules}"""
-          .format(log1=result.log_file_one,
-                  log1_build_rules=len(result.extra_build_rules_by_log_file[
-                      result.log_file_one]),
-                  log2=result.log_file_two,
-                  log2_build_rules=len(result.extra_build_rules_by_log_file[
-                      result.log_file_two])))
+- extra build rules: {log2_build_rules}""".format(
+            log1=result.log_file_one,
+            log1_build_rules=len(
+                result.extra_build_rules_by_log_file[result.log_file_one]
+            ),
+            log2=result.log_file_two,
+            log2_build_rules=len(
+                result.extra_build_rules_by_log_file[result.log_file_two]
+            ),
+        )
+    )
     for rule_key_type in SUPPORTED_RULE_KEY_TYPES:
         type_str = get_rule_key_type_str(rule_key_type)
         match_results = result.matching_results_by_rule_key_type[rule_key_type]
 
         print_line_sep("-")
-        print("Matching {0} rule keys: {1}".format(type_str, len(
-            match_results)))
+        print("Matching {0} rule keys: {1}".format(type_str, len(match_results)))
         print_line_sep("-")
 
-        mismatch_results = \
-            result.mismatching_results_by_rule_key_type[rule_key_type]
-        print("Mismatching {0} rule keys: {1}"
-              .format(type_str, len(mismatch_results)))
+        mismatch_results = result.mismatching_results_by_rule_key_type[rule_key_type]
+        print("Mismatching {0} rule keys: {1}".format(type_str, len(mismatch_results)))
         if len(mismatch_results) > 0:
             print_line_sep("-")
         print_build_rule_names(mismatch_results)
@@ -235,8 +238,7 @@ def diff_log_files(log_file_one, log_file_two):
     build_rules_one = read_file(log_file_one)
     build_rules_two = read_file(log_file_two)
 
-    common_rules = set(build_rules_one.keys()).intersection(
-        build_rules_two.keys())
+    common_rules = set(build_rules_one.keys()).intersection(build_rules_two.keys())
 
     extra_build_rules_by_log_file = {
         log_file_one: set(build_rules_one.keys()).difference(common_rules),
@@ -253,24 +255,26 @@ def diff_log_files(log_file_one, log_file_two):
     for build_rule in sorted(common_rules):
         for rule_key_type in SUPPORTED_RULE_KEY_TYPES:
             build_rule_diff_result = diff_rule_keys(
-                build_rules_one[build_rule], build_rules_two[build_rule],
-                rule_key_type)
+                build_rules_one[build_rule], build_rules_two[build_rule], rule_key_type
+            )
             if build_rule_diff_result is None:
                 continue  # No result for this rule key type
             if build_rule_diff_result.was_match:
                 matching_results_by_rule_key_type[rule_key_type].append(
-                    build_rule_diff_result)
+                    build_rule_diff_result
+                )
             else:
                 mismatching_results_by_rule_key_type[rule_key_type].append(
-                    build_rule_diff_result)
+                    build_rule_diff_result
+                )
 
     return LogFileDiffResult(
         log_file_one=log_file_one,
         log_file_two=log_file_two,
         extra_build_rules_by_log_file=extra_build_rules_by_log_file,
         matching_results_by_rule_key_type=matching_results_by_rule_key_type,
-        mismatching_results_by_rule_key_type=(
-            mismatching_results_by_rule_key_type))
+        mismatching_results_by_rule_key_type=(mismatching_results_by_rule_key_type),
+    )
 
 
 def compare_local_vs_dist_build(path_to_buck_out_local, path_to_buck_out_dist):
@@ -284,12 +288,10 @@ def compare_local_vs_dist_build(path_to_buck_out_local, path_to_buck_out_dist):
     return diff_results
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     args = parseArgs()
 
-    results = \
-        compare_local_vs_dist_build(
-            args.localBuildBuckOut, args.distBuildBuckOut)
+    results = compare_local_vs_dist_build(args.localBuildBuckOut, args.distBuildBuckOut)
 
     for result in results:
         print_log_diff_result(result)

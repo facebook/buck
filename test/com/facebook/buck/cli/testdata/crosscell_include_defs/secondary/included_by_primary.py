@@ -1,1 +1,1 @@
-flavor = 'original'
+flavor = "original"

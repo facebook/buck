@@ -32,35 +32,40 @@ class TestAppend(unittest.TestCase):
         shutil.rmtree(self.test_dir)
 
     def test_file_included(self):
-        src_zip_name = 'src.zip'
+        src_zip_name = "src.zip"
         src_zip_path = os.path.join(self.test_dir, src_zip_name)
 
-        existing_entry = 'existing_entry'
+        existing_entry = "existing_entry"
         existing_entry_content = uuid.uuid4().hex
         self.__create_zip_file(src_zip_path, existing_entry, existing_entry_content)
 
-        appended_entry_name = 'appended_entry'
-        appended_file_name = 'appended_file'
+        appended_entry_name = "appended_entry"
+        appended_file_name = "appended_file"
         appended_file_path = os.path.join(self.test_dir, appended_file_name)
         appended_file_content = uuid.uuid4().hex
         self.__create_file(appended_file_path, appended_file_content)
 
-        dst_file_path = os.path.join(self.test_dir, 'dst.zip')
+        dst_file_path = os.path.join(self.test_dir, "dst.zip")
 
-        append_with_copy.copy_and_append_to_zip_file(src_zip_path, dst_file_path,
-                                                     [appended_entry_name, appended_file_path])
+        append_with_copy.copy_and_append_to_zip_file(
+            src_zip_path, dst_file_path, [appended_entry_name, appended_file_path]
+        )
 
-        self.assertEqual(existing_entry_content,
-                         self.__read_file_entry(dst_file_path, existing_entry))
-        self.assertEqual(appended_file_content,
-                         self.__read_file_entry(dst_file_path, appended_entry_name))
+        self.assertEqual(
+            existing_entry_content,
+            self.__read_file_entry(dst_file_path, existing_entry),
+        )
+        self.assertEqual(
+            appended_file_content,
+            self.__read_file_entry(dst_file_path, appended_entry_name),
+        )
 
     def __create_zip_file(self, zip_file_path, entry, entry_content):
-        with zipfile.ZipFile(zip_file_path, 'w') as zip_file:
+        with zipfile.ZipFile(zip_file_path, "w") as zip_file:
             zip_file.writestr(entry, entry_content)
 
     def __create_file(self, file_path, file_content):
-        with open(file_path, 'w') as new_file:
+        with open(file_path, "w") as new_file:
             new_file.write(file_content)
 
     def __read_file_entry(self, zip_file_path, entry_name):

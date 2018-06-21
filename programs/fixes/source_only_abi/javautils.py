@@ -1,7 +1,4 @@
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 from collections import namedtuple
 
@@ -34,16 +31,18 @@ class JavaFile:
         self.imports.add(type)
 
     def replace_name(self, line, col, old, new):
-        if self.lines[line - 1][col - 1] == '.':
+        if self.lines[line - 1][col - 1] == ".":
             col += 1
         self.replacements.add(Replacement(line, col, old, new))
 
     def write(self):
         for replacement in sorted(self.replacements, compare_replacements_reversed):
             line = self.lines[replacement.line - 1]
-            self.lines[replacement.line - 1] = line[0:replacement.col - 1] + replacement.new + line[
-                                                                                               replacement.col + len(
-                                                                                                   replacement.old) - 1:]
+            self.lines[replacement.line - 1] = (
+                line[0 : replacement.col - 1]
+                + replacement.new
+                + line[replacement.col + len(replacement.old) - 1 :]
+            )
 
         first_import = None
         for i, line in enumerate(self.lines):

@@ -9,10 +9,7 @@ class GenerationFailedException(Exception):
     pass
 
 
-GeneratedField = collections.namedtuple('GeneratedField', [
-    'value',
-    'deps',
-])
+GeneratedField = collections.namedtuple("GeneratedField", ["value", "deps"])
 
 
 class NullableGenerator:
@@ -94,7 +91,7 @@ class StringGenerator:
 
     def generate_string(self):
         length = weighted_choice(self._lengths)
-        output = ''
+        output = ""
         if length > 0:
             output += weighted_choice(self._first_chars)
         while len(output) < length:
@@ -109,11 +106,10 @@ class VisibilityGenerator:
         pass
 
     def generate(self, base_path):
-        return GeneratedField(['PUBLIC'], [])
+        return GeneratedField(["PUBLIC"], [])
 
 
 class BuildTargetSetGenerator:
-
     class DynamicFilteredList:
         def __init__(self, input_list, predicate):
             self._input_list = input_list
@@ -130,11 +126,7 @@ class BuildTargetSetGenerator:
                 self._processed += 1
             return self._output_list
 
-    def __init__(
-            self,
-            context,
-            process_output_extensions=False,
-            override_types=None):
+    def __init__(self, context, process_output_extensions=False, override_types=None):
         self._context = context
         self._process_output_extensions = process_output_extensions
         self._lengths = collections.Counter()
@@ -146,7 +138,8 @@ class BuildTargetSetGenerator:
         self._accepted_targets_with_output_by_type = dict()
         if self._process_output_extensions:
             self._output_extensions_by_type = collections.defaultdict(
-                    collections.Counter)
+                collections.Counter
+            )
         if override_types is None:
             self._override_types = {}
         else:
@@ -155,30 +148,37 @@ class BuildTargetSetGenerator:
     def add_sample(self, base_path, sample):
         self._lengths.update([len(sample)])
         for target in sample:
-            target = target.split('#')[0]
-            if target.startswith(':'):
-                target = '//' + base_path + target
+            target = target.split("#")[0]
+            if target.startswith(":"):
+                target = "//" + base_path + target
             target_data = self._context.input_target_data[target]
-            target_type = target_data['buck.type']
+            target_type = target_data["buck.type"]
             target_type = self._override_types.get(target_type, target_type)
             self._types.update([target_type])
             extension = None
             if self._process_output_extensions:
                 extension = self._get_output_extension(target_data)
                 self._output_extensions_by_type[target_type].update([extension])
-            self._unique_values_by_type_and_extension[
-                    (target_type, extension)].add(target)
+            self._unique_values_by_type_and_extension[(target_type, extension)].add(
+                target
+            )
             self._unique_values_dirty = True
 
     def _update_choice_probability(self):
         self._choice_probability_by_type_and_extension = dict()
-        for (type, extension), used_values in (
-                self._unique_values_by_type_and_extension.items()):
-            all_values = (x for x in self._context.input_target_data.values()
-                          if x['buck.type'] == type)
+        for (
+            (type, extension),
+            used_values,
+        ) in self._unique_values_by_type_and_extension.items():
+            all_values = (
+                x
+                for x in self._context.input_target_data.values()
+                if x["buck.type"] == type
+            )
             if self._process_output_extensions:
-                all_values = (x for x in all_values
-                              if self._get_output_extension(x) == extension)
+                all_values = (
+                    x for x in all_values if self._get_output_extension(x) == extension
+                )
             num = len(used_values)
             denom = sum(1 for x in all_values)
             probability = float(num) / denom
@@ -187,12 +187,13 @@ class BuildTargetSetGenerator:
 
     def _is_accepted(self, target_name):
         target_data = self._context.gen_target_data[target_name]
-        target_type = target_data['buck.type']
+        target_type = target_data["buck.type"]
         extension = None
         if self._process_output_extensions:
             extension = self._get_output_extension(target_data)
         probability = self._choice_probability_by_type_and_extension.get(
-                (target_type, extension), 0)
+            (target_type, extension), 0
+        )
         return random.uniform(0, 1) < probability
 
     def generate(self, base_path, force_length=None):
@@ -207,8 +208,7 @@ class BuildTargetSetGenerator:
         for i in range(length):
             type = weighted_choice(self._types)
             if self._process_output_extensions:
-                extension = weighted_choice(
-                        self._output_extensions_by_type[type])
+                extension = weighted_choice(self._output_extensions_by_type[type])
             else:
                 extension = None
             type_extension_counts.update([(type, extension)])
@@ -223,24 +223,27 @@ class BuildTargetSetGenerator:
             options = accepted_targets_dict.get(type)
             if options is None:
                 options = self.DynamicFilteredList(
-                        all_targets_dict[type],
-                        lambda x: self._is_accepted(x))
+                    all_targets_dict[type], lambda x: self._is_accepted(x)
+                )
                 accepted_targets_dict[type] = options
             options = options.get_values()
             if extension is not None:
-                options = [x for x in options
-                           if self._get_output_extension(
-                               self._context.gen_target_data[x]) == extension]
+                options = [
+                    x
+                    for x in options
+                    if self._get_output_extension(self._context.gen_target_data[x])
+                    == extension
+                ]
             if count > len(options):
                 raise GenerationFailedException()
             output.extend(random.sample(options, count))
         return GeneratedField(output, output)
 
     def _get_output_extension(self, target_data):
-        if 'out' not in target_data or target_data['out'] is None:
+        if "out" not in target_data or target_data["out"] is None:
             return None
-        extension = os.path.splitext(target_data['out'])[1]
-        if extension == '':
+        extension = os.path.splitext(target_data["out"])[1]
+        if extension == "":
             return None
         return extension
 
@@ -256,16 +259,14 @@ class PathSetGenerator:
     def add_sample(self, base_path, sample):
         self._lengths.update([len(sample)])
         for path in sample:
-            self._context.file_path_generator.add_package_file_sample(
-                    base_path,
-                    path)
+            self._context.file_path_generator.add_package_file_sample(base_path, path)
             components = []
             while path:
                 path, component = os.path.split(path)
                 components.append(component)
             self._component_counts.update([len(components)])
             if not components:
-                self._extensions.update([''])
+                self._extensions.update([""])
             else:
                 components[0], extension = os.path.splitext(components[0])
                 self._extensions.update([extension])
@@ -278,23 +279,17 @@ class PathSetGenerator:
         else:
             length = weighted_choice(self._lengths)
         extension = weighted_choice(self._extensions)
-        output = [self._generate_path(base_path, extension)
-                  for i in range(length)]
+        output = [self._generate_path(base_path, extension) for i in range(length)]
         return GeneratedField(output, [])
 
     def _generate_path(self, base_path, extension):
         component_count = weighted_choice(self._component_counts)
         path = self._context.file_path_generator.generate_path_in_package(
-                base_path,
-                component_count,
-                self._component_generator,
-                extension)
-        full_path = os.path.join(
-                self._context.output_repository,
-                base_path,
-                path)
+            base_path, component_count, self._component_generator, extension
+        )
+        full_path = os.path.join(self._context.output_repository, base_path, path)
         os.makedirs(os.path.dirname(full_path), exist_ok=True)
-        with open(full_path, 'w'):
+        with open(full_path, "w"):
             pass
         return path
 
@@ -302,7 +297,8 @@ class PathSetGenerator:
 class SourcePathSetGenerator:
     def __init__(self, context):
         self._build_target_set_generator = BuildTargetSetGenerator(
-                context, process_output_extensions=True)
+            context, process_output_extensions=True
+        )
         self._path_set_generator = PathSetGenerator(context)
         self._lengths = collections.Counter()
         self._build_target_values = collections.Counter()
@@ -310,10 +306,9 @@ class SourcePathSetGenerator:
     def add_sample(self, base_path, sample):
         self._lengths.update([len(sample)])
         for source_path in sample:
-            if source_path.startswith('//') or source_path.startswith(':'):
+            if source_path.startswith("//") or source_path.startswith(":"):
                 self._build_target_values.update([True])
-                self._build_target_set_generator.add_sample(
-                        base_path, [source_path])
+                self._build_target_set_generator.add_sample(base_path, [source_path])
             else:
                 self._build_target_values.update([False])
                 self._path_set_generator.add_sample(base_path, [source_path])
@@ -328,16 +323,17 @@ class SourcePathSetGenerator:
             else:
                 path_count += 1
         build_targets = self._build_target_set_generator.generate(
-                base_path,
-                force_length=build_target_count)
-        paths = self._path_set_generator.generate(
-                base_path, force_length=path_count)
+            base_path, force_length=build_target_count
+        )
+        paths = self._path_set_generator.generate(base_path, force_length=path_count)
         assert len(build_targets.value) == build_target_count, (
-                build_targets, build_target_count)
+            build_targets,
+            build_target_count,
+        )
         assert len(paths.value) == path_count, (paths, path_count)
         return GeneratedField(
-                build_targets.value + paths.value,
-                build_targets.deps + paths.deps)
+            build_targets.value + paths.value, build_targets.deps + paths.deps
+        )
 
 
 class SourcesWithFlagsGenerator:
@@ -364,14 +360,16 @@ class SourcesWithFlagsGenerator:
 
     def generate(self, base_path):
         source_paths = self._source_path_set_generator.generate(base_path)
-        output = [self._generate_source_with_flags(base_path, sp)
-                  for sp in source_paths.value]
+        output = [
+            self._generate_source_with_flags(base_path, sp) for sp in source_paths.value
+        ]
         return GeneratedField(output, source_paths.deps)
 
     def _generate_source_with_flags(self, base_path, source_path):
         flag_count = weighted_choice(self._flag_counts)
         if flag_count == 0:
             return source_path
-        flags = [self._flag_generator.generate(base_path).value
-                 for i in range(flag_count)]
+        flags = [
+            self._flag_generator.generate(base_path).value for i in range(flag_count)
+        ]
         return [source_path, flags]

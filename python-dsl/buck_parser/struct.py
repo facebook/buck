@@ -1,7 +1,4 @@
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import with_statement
+from __future__ import absolute_import, division, print_function, with_statement
 
 import copy
 import json
@@ -47,7 +44,9 @@ class Struct(object):
 
     def to_json(self):
         """Creates a JSON string representation of this struct instance."""
-        return json.dumps(self, cls=StructEncoder, separators=(",", ":"), sort_keys=True)
+        return json.dumps(
+            self, cls=StructEncoder, separators=(",", ":"), sort_keys=True
+        )
 
     def _asdict(self):
         """Converts this struct into dict."""
@@ -61,9 +60,16 @@ class Struct(object):
         return isinstance(other, Struct) and self._get_kwargs() == other._get_kwargs()
 
     def __repr__(self):
-        return "struct(" + ",".join(
-            [str(key) + "=" + repr(value) for key, value in self._get_kwargs().iteritems()]
-        ) + ")"
+        return (
+            "struct("
+            + ",".join(
+                [
+                    str(key) + "=" + repr(value)
+                    for key, value in self._get_kwargs().iteritems()
+                ]
+            )
+            + ")"
+        )
 
 
 def struct(**kwargs):

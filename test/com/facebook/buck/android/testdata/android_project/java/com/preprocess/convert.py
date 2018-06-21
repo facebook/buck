@@ -1,8 +1,8 @@
 #!/usr/bin/env python
-import sys
 import os
-import zipfile
 import shutil
+import sys
+import zipfile
 
 
 def main(argv):
@@ -18,13 +18,14 @@ def main(argv):
             if not f.endswith(".jar"):
                 shutil.copyfile(infile, outfile)
             else:
-                inzip = zipfile.ZipFile(infile, 'r')
-                outzip = zipfile.ZipFile(outfile, 'w')
+                inzip = zipfile.ZipFile(infile, "r")
+                outzip = zipfile.ZipFile(outfile, "w")
                 for zinfo in inzip.infolist():
                     raw_content = inzip.read(zinfo.filename)
                     transformed = raw_content.replace(
                         b"__FIND_ME_HERE__content=1__GOODBYE__",
-                        b"__FIND_ME_HERE__content=2__GOODBYE__")
+                        b"__FIND_ME_HERE__content=2__GOODBYE__",
+                    )
                     outzip.writestr(zinfo, transformed)
                 outzip.close()
                 inzip.close()

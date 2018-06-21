@@ -12,5 +12,5 @@ class Repository:
         """Returns the path where provided cell is located."""
         if not cell:
             return self.root
-        assert cell in self.cell_roots, cell + ' is not a known root'
+        assert cell in self.cell_roots, cell + " is not a known root"
         return self.cell_roots[cell]

@@ -1,13 +1,11 @@
 #!/usr/bin/python
 
 import os
+import shutil
 import tempfile
 import unittest
-import shutil
 
-from find_undeclared_source_files import Paths
-from find_undeclared_source_files import process_stampede
-from find_undeclared_source_files import process_strace
+from find_undeclared_source_files import Paths, process_stampede, process_strace
 
 
 ############################################################
@@ -15,12 +13,12 @@ from find_undeclared_source_files import process_strace
 ############################################################
 def read_lines(abs_path):
     with open(abs_path) as fp:
-            return [line.strip() for line in fp.readlines()]
+        return [line.strip() for line in fp.readlines()]
 
 
 def write_lines(abs_path, lines):
-    with open(abs_path, 'w') as fp:
-            return fp.writelines([l + '\n' for l in lines])
+    with open(abs_path, "w") as fp:
+        return fp.writelines([l + "\n" for l in lines])
 
 
 def strace_line(path):
@@ -41,7 +39,7 @@ def touch(abs_path):
 ############################################################
 class TempDirBaseTestCase(unittest.TestCase):
     def setUp(self):
-        self.dir = tempfile.mkdtemp(prefix='find_undeclared_source_files_test')
+        self.dir = tempfile.mkdtemp(prefix="find_undeclared_source_files_test")
         self.paths = Paths(self.dir)
 
     def tearDown(self):
@@ -50,35 +48,41 @@ class TempDirBaseTestCase(unittest.TestCase):
 
 class TestStraceProcessing(TempDirBaseTestCase):
     def test_non_existent_not_included(self):
-        abs_path = os.path.join(self.dir, 'hello.txt')
+        abs_path = os.path.join(self.dir, "hello.txt")
         self.assertFalse(os.path.exists(abs_path))
         write_strace_file(self.paths.strace_raw_file, [abs_path])
-        process_strace(self.paths.strace_raw_file,
-                       self.paths.strace_processed_file,
-                       includes=[],
-                       known_roots=[])
+        process_strace(
+            self.paths.strace_raw_file,
+            self.paths.strace_processed_file,
+            includes=[],
+            known_roots=[],
+        )
         lines = read_lines(self.paths.strace_processed_file)
         self.assertEqual(0, len(lines))
 
     def test_relative_path(self):
-        name = 'cool.txt'
+        name = "cool.txt"
         touch(os.path.join(self.dir, name)),
         write_strace_file(self.paths.strace_raw_file, [name])
-        process_strace(self.paths.strace_raw_file,
-                       self.paths.strace_processed_file,
-                       includes=[],
-                       known_roots=[self.dir])
+        process_strace(
+            self.paths.strace_raw_file,
+            self.paths.strace_processed_file,
+            includes=[],
+            known_roots=[self.dir],
+        )
         lines = read_lines(self.paths.strace_processed_file)
         self.assertEqual(1, len(lines))
 
     def test_absolute_path(self):
-        abs_path = touch(os.path.join(self.dir, 'nice.txt'))
+        abs_path = touch(os.path.join(self.dir, "nice.txt"))
         self.assertTrue(os.path.isabs(abs_path))
         write_strace_file(self.paths.strace_raw_file, [abs_path])
-        process_strace(self.paths.strace_raw_file,
-                       self.paths.strace_processed_file,
-                       includes=[],
-                       known_roots=[])
+        process_strace(
+            self.paths.strace_raw_file,
+            self.paths.strace_processed_file,
+            includes=[],
+            known_roots=[],
+        )
         lines = read_lines(self.paths.strace_processed_file)
         self.assertEqual(1, len(lines))
 
@@ -86,24 +90,24 @@ class TestStraceProcessing(TempDirBaseTestCase):
 class TestStampedeProcessing(TempDirBaseTestCase):
     def test_process_empty_includes(self):
         original_lines = [
-            touch(os.path.join(self.dir, 'a.txt')),
-            touch(os.path.join(self.dir, 'b.txt')),
+            touch(os.path.join(self.dir, "a.txt")),
+            touch(os.path.join(self.dir, "b.txt")),
         ]
         write_lines(self.paths.stampede_raw_file, original_lines)
-        process_stampede(self.paths.stampede_raw_file,
-                         self.paths.stampede_processed_file,
-                         [])
+        process_stampede(
+            self.paths.stampede_raw_file, self.paths.stampede_processed_file, []
+        )
         lines = read_lines(self.paths.stampede_processed_file)
         self.assertEqual(2, len(lines))
 
     def test_process_non_matching_includes(self):
-        original_lines = [
-            touch(os.path.join(self.dir, 'a.txt')),
-        ]
+        original_lines = [touch(os.path.join(self.dir, "a.txt"))]
         write_lines(self.paths.stampede_raw_file, original_lines)
-        process_stampede(self.paths.stampede_raw_file,
-                         self.paths.stampede_processed_file,
-                         ['/this/does/not/exist'])
+        process_stampede(
+            self.paths.stampede_raw_file,
+            self.paths.stampede_processed_file,
+            ["/this/does/not/exist"],
+        )
         lines = read_lines(self.paths.stampede_processed_file)
         self.assertEqual(0, len(lines))
 
@@ -112,13 +116,15 @@ class TestStampedeProcessing(TempDirBaseTestCase):
         dir2 = tempfile.mkdtemp()
         try:
             original_lines = [
-                touch(os.path.join(dir1, 'a.txt')),
-                touch(os.path.join(dir2, 'b.txt')),
+                touch(os.path.join(dir1, "a.txt")),
+                touch(os.path.join(dir2, "b.txt")),
             ]
             write_lines(self.paths.stampede_raw_file, original_lines)
-            process_stampede(self.paths.stampede_raw_file,
-                             self.paths.stampede_processed_file,
-                             [os.path.realpath(dir2)])
+            process_stampede(
+                self.paths.stampede_raw_file,
+                self.paths.stampede_processed_file,
+                [os.path.realpath(dir2)],
+            )
             lines = read_lines(self.paths.stampede_processed_file)
             self.assertEqual(1, len(lines))
         finally:
@@ -129,5 +135,5 @@ class TestStampedeProcessing(TempDirBaseTestCase):
 ############################################################
 # Main
 ############################################################
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

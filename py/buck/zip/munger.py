@@ -22,24 +22,20 @@ import zipfile
 
 def main():
     parser = optparse.OptionParser()
-    parser.add_option('--input')
-    parser.add_option('--output')
-    parser.add_option(
-        '--include-path',
-        action='append',
-        default=[])
-    parser.add_option(
-        '--exclude-path',
-        action='append',
-        default=[])
+    parser.add_option("--input")
+    parser.add_option("--output")
+    parser.add_option("--include-path", action="append", default=[])
+    parser.add_option("--exclude-path", action="append", default=[])
     options, _ = parser.parse_args()
-    process_jar(options.input, options.output, options.include_path, options.exclude_path)
+    process_jar(
+        options.input, options.output, options.include_path, options.exclude_path
+    )
 
 
 def process_jar(infile, outfile, include_paths, exclude_paths):
-    with contextlib.closing(open(infile, 'rb')) as inputFile:
-        with contextlib.closing(zipfile.ZipFile(open(outfile, 'wb'), 'w')) as output:
-            input = zipfile.ZipFile(inputFile, 'r')
+    with contextlib.closing(open(infile, "rb")) as inputFile:
+        with contextlib.closing(zipfile.ZipFile(open(outfile, "wb"), "w")) as output:
+            input = zipfile.ZipFile(inputFile, "r")
             for info in input.infolist():
                 include = len(include_paths) == 0
                 for path in include_paths:
@@ -51,6 +47,7 @@ def process_jar(infile, outfile, include_paths, exclude_paths):
                     content = input.read(info)
                     output.writestr(info, content)
 
+
 @contextlib.contextmanager
 def tempdir():
     path = tempfile.mkdtemp()
@@ -60,8 +57,8 @@ def tempdir():
         try:
             shutil.rmtree(path)
         except IOError:
-            sys.stderr.write('Failed to remove {0}'.format(path))
+            sys.stderr.write("Failed to remove {0}".format(path))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

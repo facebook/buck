@@ -1,25 +1,22 @@
 """Buck agnostic utility functions.
 """
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import with_statement
+from __future__ import absolute_import, division, print_function, with_statement
 
-from collections import namedtuple
 import copy
 import functools
 import inspect
+import os
 import subprocess
 import sys
-import os
+from collections import namedtuple
 
 
 def is_in_dir(filepath, directory):
     """Returns true if `filepath` is in `directory`."""
     path = os.path.abspath(filepath)
     # Make 'directory' end with '/' (os.sep) to detect that '/a/foo.py' is not in '/a/f' etc.
-    directory = os.path.join(os.path.abspath(directory), '')
+    directory = os.path.join(os.path.abspath(directory), "")
     return os.path.commonprefix([path, directory]) == directory
 
 
@@ -35,7 +32,7 @@ def get_caller_frame(skip=None):
     # Look up the caller's stack frame, skipping specified names.
     frame = inspect.currentframe()
     # Use 'get' as '__name__' may not exist if 'eval' was used ('get' will return None then).
-    while frame.f_globals.get('__name__') in skip:
+    while frame.f_globals.get("__name__") in skip:
         frame = frame.f_back
 
     return frame
@@ -43,8 +40,8 @@ def get_caller_frame(skip=None):
 
 def cygwin_adjusted_path(path):
     """Convert windows paths to unix paths if running within cygwin."""
-    if sys.platform == 'cygwin':
-        return subprocess.check_output(['cygpath', path]).rstrip()
+    if sys.platform == "cygwin":
+        return subprocess.check_output(["cygpath", path]).rstrip()
     else:
         return path
 
@@ -58,6 +55,7 @@ def memoized(deepcopy=True, keyfunc=None):
     so callers mutating the result do not poison the cache, unless
     deepcopy is set to False.
     """
+
     def decorator(func):
         cache = {}
 
@@ -86,7 +84,7 @@ def memoized(deepcopy=True, keyfunc=None):
     return decorator
 
 
-Diagnostic = namedtuple('Diagnostic', ['message', 'level', 'source', 'exception'])
+Diagnostic = namedtuple("Diagnostic", ["message", "level", "source", "exception"])
 
 
 def is_special(pat):

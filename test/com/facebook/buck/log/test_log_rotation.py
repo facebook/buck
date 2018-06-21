@@ -23,20 +23,26 @@ class LogRotationTest(unittest.TestCase):
     def test_log_retention(self):
         """ Tests that the default java.util.logging setup can maintain at least 'a couple'
             of log files. """
-        test_data = os.path.join('test', 'com', 'facebook', 'buck', 'log', 'testdata', 'log')
+        test_data = os.path.join(
+            "test", "com", "facebook", "buck", "log", "testdata", "log"
+        )
 
         with ProjectWorkspace(test_data) as workspace:
             iterations = 3
             for i in xrange(0, iterations):
-                returncode = workspace.run_buck('targets',
-                                                '//:foo',
-                                                )
+                returncode = workspace.run_buck(
+                    "targets",
+                    "//:foo",
+                )
                 self.assertEquals(0, returncode)
 
             logs = glob.glob(
-                os.path.join(workspace.test_data_directory, 'buck-out', 'log', 'buck*.log'))
+                os.path.join(
+                    workspace.test_data_directory, "buck-out", "log", "buck*.log"
+                )
+            )
             self.assertEquals(iterations, len(logs))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

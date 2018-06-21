@@ -1,15 +1,11 @@
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
-
-from UserDict import DictMixin
-from UserList import UserList
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 import ast
 import os
 import os.path
 import re
+from UserDict import DictMixin
+from UserList import UserList
 
 BUILD_TARGET_PATTERN = re.compile(r"^(?P<cell>.*)?//(?P<path>[^:]+)?:(?P<name>.*)$")
 
@@ -61,11 +57,11 @@ class BuckFile:
 
     def replace(self, ast_node, value):
         """Replaces the given AST node with the given string"""
-        print("Manual step: {}: Delete at line {} col {}, insert {}".format(
-                self.path,
-                ast_node.lineno,
-                ast_node.col_offset,
-                value))
+        print(
+            "Manual step: {}: Delete at line {} col {}, insert {}".format(
+                self.path, ast_node.lineno, ast_node.col_offset, value
+            )
+        )
 
     def prepend(self, ast_node, key, value=None):
         """Prepends a keyword argument to the list for a given call or list node. There must not be
@@ -74,25 +70,32 @@ class BuckFile:
 
         if isinstance(ast_node, ast.Call):
             ast_node = ast_node.func
-            open_char = '('
+            open_char = "("
         else:
-            open_char = '['
+            open_char = "["
 
         for lineno in xrange(ast_node.lineno, len(self.lines) + 1):
             line = self.lines[lineno - 1]
             for col_offset in xrange(
-                    ast_node.col_offset if lineno == ast_node.lineno else 0,
-                    len(line)):
+                ast_node.col_offset if lineno == ast_node.lineno else 0, len(line)
+            ):
                 character = line[col_offset]
-                if character == '#':
+                if character == "#":
                     break
                 elif character == open_char:
                     if value:
-                        self.lines[lineno - 1] = \
-                            line[:col_offset + 1] + key + " = " + str(value) + ", " + line[col_offset + 1:]
+                        self.lines[lineno - 1] = (
+                            line[: col_offset + 1]
+                            + key
+                            + " = "
+                            + str(value)
+                            + ", "
+                            + line[col_offset + 1 :]
+                        )
                     else:
-                        self.lines[lineno - 1] = \
-                            line[:col_offset + 1] + key + ", " + line[col_offset + 1:]
+                        self.lines[lineno - 1] = (
+                            line[: col_offset + 1] + key + ", " + line[col_offset + 1 :]
+                        )
                     return
 
     def write(self):
@@ -146,7 +149,7 @@ class BuildTarget(DictMixin):
 
 
 class EditableList:
-    def __init__(self, ast_list = None):
+    def __init__(self, ast_list=None):
         assert ast_list is None or isinstance(ast_list, ast.List)
         self.__ast_list = ast_list
         self.__new_items = []
@@ -167,11 +170,11 @@ class EditableList:
 
     def save(self, buck_file):
         for item in self.__new_items:
-            buck_file.prepend(self.__ast_list, "\"" + item + "\"")
+            buck_file.prepend(self.__ast_list, '"' + item + '"')
 
     def __str__(self):
         assert self.__ast_list is None
-        return "[\"" + "\", \"".join(self.__new_items) + "\"]"
+        return '["' + '", "'.join(self.__new_items) + '"]'
 
 
 def _ast_to_python(ast_item):
@@ -179,6 +182,7 @@ def _ast_to_python(ast_item):
         return ast_item.s
 
     raise NotImplementedError(ast_item)
+
 
 def _get_buck_root():
     return os.getcwd()  # TODO(jkeljo): Look for .buckconfig

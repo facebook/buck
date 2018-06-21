@@ -5,5 +5,5 @@ def main():
     my_wheel.f()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

@@ -1,25 +1,9 @@
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import with_statement
+from __future__ import absolute_import, division, print_function, with_statement
 
 import __builtin__
-import __future__
-
-import contextlib
-import collections
-from pathlib import Path, PurePath
-from pywatchman import WatchmanError
-from .deterministic_set import DeterministicSet
-from .json_encoder import BuckJSONEncoder
-from .glob_internal import glob_internal
-from .glob_watchman import SyncCookieState, glob_watchman
-from .util import Diagnostic, cygwin_adjusted_path, get_caller_frame, is_special, is_in_dir
-from .module_whitelist import ImportWhitelistManager
-from .profiler import Profiler
-from .struct import Struct
-
 import abc
+import collections
+import contextlib
 import functools
 import imp
 import inspect
@@ -28,14 +12,32 @@ import optparse
 import os
 import os.path
 import platform
-import pywatchman
 import re
 import select
 import sys
 import time
 import traceback
 import types
-from typing import Any, Dict, List, Tuple, Optional
+from pathlib import Path, PurePath
+from typing import Any, Dict, List, Optional, Tuple
+
+import pywatchman
+from pywatchman import WatchmanError
+
+from .deterministic_set import DeterministicSet
+from .glob_internal import glob_internal
+from .glob_watchman import SyncCookieState, glob_watchman
+from .json_encoder import BuckJSONEncoder
+from .module_whitelist import ImportWhitelistManager
+from .profiler import Profiler
+from .struct import Struct
+from .util import (
+    Diagnostic,
+    cygwin_adjusted_path,
+    get_caller_frame,
+    is_in_dir,
+    is_special,
+)
 
 try:
     # Python 2.6, 2.7, use iterator filter from Python 3
@@ -70,12 +72,13 @@ DEFAULT_WATCHMAN_QUERY_TIMEOUT = 60.0
 ORIGINAL_IMPORT = __builtin__.__import__
 
 _LOAD_TARGET_PATH_RE = re.compile(
-    r'^(?P<root>(?P<cell>@?[A-Za-z0-9_]+)?//)?(?P<package>.*):(?P<target>.*)$'
+    r"^(?P<root>(?P<cell>@?[A-Za-z0-9_]+)?//)?(?P<package>.*):(?P<target>.*)$"
 )
 
 
 class AbstractContext(object):
     """Superclass of execution contexts."""
+
     __metaclass__ = abc.ABCMeta
 
     @abc.abstractproperty
@@ -121,10 +124,22 @@ class AbstractContext(object):
 class BuildFileContext(AbstractContext):
     """The build context used when processing a build file."""
 
-    def __init__(self, project_root, base_path, path, dirname, cell_name, allow_empty_globs,
-                 ignore_paths, watchman_client, watchman_watch_root, watchman_project_prefix,
-                 sync_cookie_state, watchman_glob_stat_results,
-                 watchman_use_glob_generator):
+    def __init__(
+        self,
+        project_root,
+        base_path,
+        path,
+        dirname,
+        cell_name,
+        allow_empty_globs,
+        ignore_paths,
+        watchman_client,
+        watchman_watch_root,
+        watchman_project_prefix,
+        sync_cookie_state,
+        watchman_glob_stat_results,
+        watchman_use_glob_generator,
+    ):
         self.globals = {}
         self._includes = set()
         self._used_configs = {}
@@ -219,110 +234,104 @@ class LazyBuildEnvPartial(object):
     def invoke(self, *args, **kwargs):
         """Invokes the bound function injecting 'build_env' into **kwargs."""
         updated_kwargs = kwargs.copy()
-        updated_kwargs.update({'build_env': self.build_env})
+        updated_kwargs.update({"build_env": self.build_env})
         try:
             return self.func(*args, **updated_kwargs)
         except TypeError:
-            missing_args, extra_args = get_mismatched_args(self.func, args, updated_kwargs)
+            missing_args, extra_args = get_mismatched_args(
+                self.func, args, updated_kwargs
+            )
             if missing_args or extra_args:
-                name = '[missing]'
-                if 'name' in updated_kwargs:
-                    name = updated_kwargs['name']
+                name = "[missing]"
+                if "name" in updated_kwargs:
+                    name = updated_kwargs["name"]
                 elif len(args) > 0:
                     # Optimistically hope that name is the first arg. It generally is...
                     name = args[0]
                 raise IncorrectArgumentsException(
-                    self.func.func_name, name, missing_args, extra_args)
+                    self.func.func_name, name, missing_args, extra_args
+                )
             raise
 
 
 HostInfoOs = collections.namedtuple(
-    'HostInfoOs',
-    [
-        'is_linux',
-        'is_macos',
-        'is_windows',
-        'is_freebsd',
-        'is_unknown',
-    ],
+    "HostInfoOs", ["is_linux", "is_macos", "is_windows", "is_freebsd", "is_unknown"]
 )
 
 HostInfoArch = collections.namedtuple(
-    'HostInfoArch',
+    "HostInfoArch",
     [
-        'is_aarch64',
-        'is_arm',
-        'is_armeb',
-        'is_i386',
-        'is_mips',
-        'is_mips64',
-        'is_mipsel',
-        'is_mipsel64',
-        'is_powerpc',
-        'is_ppc64',
-        'is_unknown',
-        'is_x86_64',
-    ]
+        "is_aarch64",
+        "is_arm",
+        "is_armeb",
+        "is_i386",
+        "is_mips",
+        "is_mips64",
+        "is_mipsel",
+        "is_mipsel64",
+        "is_powerpc",
+        "is_ppc64",
+        "is_unknown",
+        "is_x86_64",
+    ],
 )
 
-HostInfo = collections.namedtuple('HostInfo', ['os', 'arch'])
+HostInfo = collections.namedtuple("HostInfo", ["os", "arch"])
 
 
 __supported_oses = {
-    'darwin': 'macos',
-    'windows': 'windows',
-    'linux': 'linux',
-    'freebsd': 'freebsd',
+    "darwin": "macos",
+    "windows": "windows",
+    "linux": "linux",
+    "freebsd": "freebsd",
 }
 
 # Pulled from com.facebook.buck.util.environment.Architecture.java as
 # possible values. amd64 and arm64 are remapped, but they may not
 # actually be present on most systems
 __supported_archs = {
-    'aarch64': 'aarch64',
-    'arm': 'arm',
-    'armeb': 'armeb',
-    'i386': 'i386',
-    'mips': 'mips',
-    'mips64': 'mips64',
-    'mipsel': 'mipsel',
-    'mipsel64': 'mipsel64',
-    'powerpc': 'powerpc',
-    'ppc64': 'ppc64',
-    'unknown': 'unknown',
-    'x86_64': 'x86_64',
-    'amd64': 'x86_64',
-    'arm64': 'aarch64',
+    "aarch64": "aarch64",
+    "arm": "arm",
+    "armeb": "armeb",
+    "i386": "i386",
+    "mips": "mips",
+    "mips64": "mips64",
+    "mipsel": "mipsel",
+    "mipsel64": "mipsel64",
+    "powerpc": "powerpc",
+    "ppc64": "ppc64",
+    "unknown": "unknown",
+    "x86_64": "x86_64",
+    "amd64": "x86_64",
+    "arm64": "aarch64",
 }
 
 
-def host_info(
-        platform_system=platform.system,
-        platform_machine=platform.machine):
+def host_info(platform_system=platform.system, platform_machine=platform.machine):
 
-    host_arch = __supported_archs.get(platform_machine().lower(), 'unknown')
-    host_os = __supported_oses.get(platform_system().lower(), 'unknown')
+    host_arch = __supported_archs.get(platform_machine().lower(), "unknown")
+    host_os = __supported_oses.get(platform_system().lower(), "unknown")
     return HostInfo(
         os=HostInfoOs(
-            is_linux=(host_os == 'linux'),
-            is_macos=(host_os == 'macos'),
-            is_windows=(host_os == 'windows'),
-            is_freebsd=(host_os == 'freebsd'),
-            is_unknown=(host_os == 'unknown'),
+            is_linux=(host_os == "linux"),
+            is_macos=(host_os == "macos"),
+            is_windows=(host_os == "windows"),
+            is_freebsd=(host_os == "freebsd"),
+            is_unknown=(host_os == "unknown"),
         ),
         arch=HostInfoArch(
-            is_aarch64=(host_arch == 'aarch64'),
-            is_arm=(host_arch == 'arm'),
-            is_armeb=(host_arch == 'armeb'),
-            is_i386=(host_arch == 'i386'),
-            is_mips=(host_arch == 'mips'),
-            is_mips64=(host_arch == 'mips64'),
-            is_mipsel=(host_arch == 'mipsel'),
-            is_mipsel64=(host_arch == 'mipsel64'),
-            is_powerpc=(host_arch == 'powerpc'),
-            is_ppc64=(host_arch == 'ppc64'),
-            is_unknown=(host_arch == 'unknown'),
-            is_x86_64=(host_arch == 'x86_64'),
+            is_aarch64=(host_arch == "aarch64"),
+            is_arm=(host_arch == "arm"),
+            is_armeb=(host_arch == "armeb"),
+            is_i386=(host_arch == "i386"),
+            is_mips=(host_arch == "mips"),
+            is_mips64=(host_arch == "mips64"),
+            is_mipsel=(host_arch == "mipsel"),
+            is_mipsel64=(host_arch == "mipsel64"),
+            is_powerpc=(host_arch == "powerpc"),
+            is_ppc64=(host_arch == "ppc64"),
+            is_unknown=(host_arch == "unknown"),
+            is_x86_64=(host_arch == "x86_64"),
         ),
     )
 
@@ -345,7 +354,7 @@ def get_mismatched_args(func, actual_args, actual_kwargs):
     for k in set(actual_kwargs.keys()) - extra_kwargs:
         all_acceptable_args.remove(k)
 
-    not_supplied_args = all_acceptable_args[len(actual_args):]
+    not_supplied_args = all_acceptable_args[len(actual_args) :]
 
     missing_args = [arg for arg in not_supplied_args if arg in required_args]
     return missing_args, sorted(list(extra_kwargs))
@@ -356,11 +365,11 @@ class IncorrectArgumentsException(TypeError):
         self.missing_args = missing_args
         self.extra_args = extra_args
 
-        message = 'Incorrect arguments to %s with name %s:' % (func_name, name_arg)
+        message = "Incorrect arguments to %s with name %s:" % (func_name, name_arg)
         if missing_args:
-            message += ' Missing required args: %s' % (', '.join(missing_args),)
+            message += " Missing required args: %s" % (", ".join(missing_args),)
         if extra_args:
-            message += ' Extra unknown kwargs: %s' % (', '.join(extra_args),)
+            message += " Extra unknown kwargs: %s" % (", ".join(extra_args),)
 
         super(IncorrectArgumentsException, self).__init__(message)
 
@@ -387,39 +396,50 @@ def add_rule(rule, build_env):
     :param dict rule: dictionary of the rule's fields.
     :param build_env: the current context.
     """
-    assert isinstance(build_env, BuildFileContext), (
-        "Cannot use `{}()` at the top-level of an included file."
-        .format(rule['buck.type']))
+    assert isinstance(
+        build_env, BuildFileContext
+    ), "Cannot use `{}()` at the top-level of an included file.".format(
+        rule["buck.type"]
+    )
 
     # Include the base path of the BUCK file so the reader consuming this
     # output will know which BUCK file the rule came from.
-    if 'name' not in rule:
-        raise ValueError(
-            'rules must contain the field \'name\'.  Found %s.' % rule)
-    rule_name = rule['name']
+    if "name" not in rule:
+        raise ValueError("rules must contain the field 'name'.  Found %s." % rule)
+    rule_name = rule["name"]
     if not isinstance(rule_name, basestring):
-        raise ValueError(
-            'rules \'name\' field must be a string.  Found %s.' % rule_name)
+        raise ValueError("rules 'name' field must be a string.  Found %s." % rule_name)
 
     if rule_name in build_env.rules:
-        raise ValueError('Duplicate rule definition \'%s\' found.  Found %s and %s' %
-                         (rule_name, rule, build_env.rules[rule_name]))
-    rule['buck.base_path'] = build_env.base_path
+        raise ValueError(
+            "Duplicate rule definition '%s' found.  Found %s and %s"
+            % (rule_name, rule, build_env.rules[rule_name])
+        )
+    rule["buck.base_path"] = build_env.base_path
 
     build_env.rules[rule_name] = rule
 
 
-def glob(includes, excludes=None, include_dotfiles=False, build_env=None, search_base=None,
-         allow_safe_import=None):
+def glob(
+    includes,
+    excludes=None,
+    include_dotfiles=False,
+    build_env=None,
+    search_base=None,
+    allow_safe_import=None,
+):
     if excludes is None:
         excludes = []
-    assert isinstance(build_env, BuildFileContext), (
-        "Cannot use `glob()` at the top-level of an included file.")
+    assert isinstance(
+        build_env, BuildFileContext
+    ), "Cannot use `glob()` at the top-level of an included file."
     # Ensure the user passes lists of strings rather than just a string.
-    assert not isinstance(includes, basestring), \
-        "The first argument to glob() must be a list of strings."
-    assert not isinstance(excludes, basestring), \
-        "The excludes argument must be a list of strings."
+    assert not isinstance(
+        includes, basestring
+    ), "The first argument to glob() must be a list of strings."
+    assert not isinstance(
+        excludes, basestring
+    ), "The excludes argument must be a list of strings."
 
     if search_base is None:
         search_base = Path(build_env.dirname)
@@ -439,7 +459,8 @@ def glob(includes, excludes=None, include_dotfiles=False, build_env=None, search
             build_env.watchman_client,
             build_env.diagnostics,
             build_env.watchman_glob_stat_results,
-            build_env.watchman_use_glob_generator)
+            build_env.watchman_use_glob_generator,
+        )
         if results:
             # glob should consistently return paths of type str, but
             # watchman client returns unicode instead.
@@ -457,14 +478,13 @@ def glob(includes, excludes=None, include_dotfiles=False, build_env=None, search
             build_env.ignore_paths,
             include_dotfiles,
             search_base,
-            build_env.project_root)
+            build_env.project_root,
+        )
     assert build_env.allow_empty_globs or results, (
-        "glob(includes={includes}, excludes={excludes}, include_dotfiles={include_dotfiles}) " +
-        "returned no results.  (allow_empty_globs is set to false in the Buck " +
-        "configuration)").format(
-            includes=includes,
-            excludes=excludes,
-            include_dotfiles=include_dotfiles)
+        "glob(includes={includes}, excludes={excludes}, include_dotfiles={include_dotfiles}) "
+        + "returned no results.  (allow_empty_globs is set to false in the Buck "
+        + "configuration)"
+    ).format(includes=includes, excludes=excludes, include_dotfiles=include_dotfiles)
 
     return results
 
@@ -474,28 +494,39 @@ def merge_maps(*header_maps):
     for header_map in header_maps:
         for key in header_map:
             if key in result and result[key] != header_map[key]:
-                assert False, 'Conflicting header files in header search paths. ' + \
-                              '"%s" maps to both "%s" and "%s".' \
-                              % (key, result[key], header_map[key])
+                assert False, (
+                    "Conflicting header files in header search paths. "
+                    + '"%s" maps to both "%s" and "%s".'
+                    % (key, result[key], header_map[key])
+                )
 
             result[key] = header_map[key]
 
     return result
 
 
-def single_subdir_glob(dirpath, glob_pattern, excludes=None, prefix=None, build_env=None,
-                       search_base=None, allow_safe_import=None):
+def single_subdir_glob(
+    dirpath,
+    glob_pattern,
+    excludes=None,
+    prefix=None,
+    build_env=None,
+    search_base=None,
+    allow_safe_import=None,
+):
     if excludes is None:
         excludes = []
     results = {}
-    files = glob([os.path.join(dirpath, glob_pattern)],
-                 excludes=excludes,
-                 build_env=build_env,
-                 search_base=search_base,
-                 allow_safe_import=allow_safe_import)
+    files = glob(
+        [os.path.join(dirpath, glob_pattern)],
+        excludes=excludes,
+        build_env=build_env,
+        search_base=search_base,
+        allow_safe_import=allow_safe_import,
+    )
     for f in files:
         if dirpath:
-            key = f[len(dirpath) + 1:]
+            key = f[len(dirpath) + 1 :]
         else:
             key = f
         if prefix:
@@ -511,8 +542,14 @@ def single_subdir_glob(dirpath, glob_pattern, excludes=None, prefix=None, build_
     return results
 
 
-def subdir_glob(glob_specs, excludes=None, prefix=None, build_env=None, search_base=None,
-                allow_safe_import=None):
+def subdir_glob(
+    glob_specs,
+    excludes=None,
+    prefix=None,
+    build_env=None,
+    search_base=None,
+    allow_safe_import=None,
+):
     """
     Given a list of tuples, the form of (relative-sub-directory, glob-pattern),
     return a dict of sub-directory relative paths to full paths.  Useful for
@@ -528,8 +565,16 @@ def subdir_glob(glob_specs, excludes=None, prefix=None, build_env=None, search_b
 
     for dirpath, glob_pattern in glob_specs:
         results.append(
-            single_subdir_glob(dirpath, glob_pattern, excludes, prefix, build_env, search_base,
-                               allow_safe_import=allow_safe_import))
+            single_subdir_glob(
+                dirpath,
+                glob_pattern,
+                excludes,
+                prefix,
+                build_env,
+                search_base,
+                allow_safe_import=allow_safe_import,
+            )
+        )
 
     return merge_maps(*results)
 
@@ -556,7 +601,8 @@ def _get_package_name(func_name, build_env=None):
     :rtype: str
     """
     assert isinstance(build_env, BuildFileContext), (
-        "Cannot use `%s()` at the top-level of an included file." % func_name)
+        "Cannot use `%s()` at the top-level of an included file." % func_name
+    )
     return build_env.base_path
 
 
@@ -610,7 +656,7 @@ def fail(message, attr=None, build_env=None):
         The object is converted to a string.
     :param attr: Optional name of the attribute that caused the error.
     """
-    attribute_prefix = ("attribute " + attr + ": " if attr is not None else "")
+    attribute_prefix = "attribute " + attr + ": " if attr is not None else ""
     msg = attribute_prefix + str(message)
     raise BuildFileFailError(msg)
 
@@ -629,8 +675,9 @@ def get_cell_name(build_env=None):
              :rtype: str
 
     """
-    assert isinstance(build_env, BuildFileContext), (
-        "Cannot use `get_cell_name()` at the top-level of an included file.")
+    assert isinstance(
+        build_env, BuildFileContext
+    ), "Cannot use `get_cell_name()` at the top-level of an included file."
     return build_env.cell_name
 
 
@@ -650,8 +697,9 @@ def repository_name(build_env=None):
              :rtype: str
 
     """
-    assert isinstance(build_env, BuildFileContext), (
-        "Cannot use `repository_name()` at the top-level of an included file.")
+    assert isinstance(
+        build_env, BuildFileContext
+    ), "Cannot use `repository_name()` at the top-level of an included file."
     return "@" + build_env.cell_name
 
 
@@ -702,7 +750,9 @@ def depset(elements, build_env=None):
     return DeterministicSet(elements)
 
 
-GENDEPS_SIGNATURE = re.compile(r'^#@# GENERATED FILE: DO NOT MODIFY ([a-f0-9]{40}) #@#\n$')
+GENDEPS_SIGNATURE = re.compile(
+    r"^#@# GENERATED FILE: DO NOT MODIFY ([a-f0-9]{40}) #@#\n$"
+)
 
 
 class BuildFileProcessor(object):
@@ -712,19 +762,43 @@ class BuildFileProcessor(object):
     """
 
     SAFE_MODULES_CONFIG = {
-        'os': ['environ', 'getenv', 'path', 'sep', 'pathsep', 'linesep'],
-        'os.path': ['basename', 'commonprefix', 'dirname', 'isabs', 'join', 'normcase',
-                    'relpath', 'split', 'splitdrive', 'splitext', 'sep', 'pathsep'],
-        'pipes': ['quote'],
+        "os": ["environ", "getenv", "path", "sep", "pathsep", "linesep"],
+        "os.path": [
+            "basename",
+            "commonprefix",
+            "dirname",
+            "isabs",
+            "join",
+            "normcase",
+            "relpath",
+            "split",
+            "splitdrive",
+            "splitext",
+            "sep",
+            "pathsep",
+        ],
+        "pipes": ["quote"],
     }
 
-    def __init__(self, project_root, cell_roots, cell_name, build_file_name, allow_empty_globs,
-                 watchman_client, watchman_glob_stat_results,
-                 watchman_use_glob_generator,
-                 project_import_whitelist=None, implicit_includes=None,
-                 extra_funcs=None, configs=None, env_vars=None,
-                 ignore_paths=None, disable_implicit_native_rules=False,
-                 warn_about_deprecated_syntax=True):
+    def __init__(
+        self,
+        project_root,
+        cell_roots,
+        cell_name,
+        build_file_name,
+        allow_empty_globs,
+        watchman_client,
+        watchman_glob_stat_results,
+        watchman_use_glob_generator,
+        project_import_whitelist=None,
+        implicit_includes=None,
+        extra_funcs=None,
+        configs=None,
+        env_vars=None,
+        ignore_paths=None,
+        disable_implicit_native_rules=False,
+        warn_about_deprecated_syntax=True,
+    ):
         if project_import_whitelist is None:
             project_import_whitelist = []
         if implicit_includes is None:
@@ -770,7 +844,8 @@ class BuildFileProcessor(object):
         self._import_whitelist_manager = ImportWhitelistManager(
             import_whitelist=self._create_import_whitelist(project_import_whitelist),
             safe_modules_config=self.SAFE_MODULES_CONFIG,
-            path_predicate=lambda path: is_in_dir(path, self._project_root))
+            path_predicate=lambda path: is_in_dir(path, self._project_root),
+        )
 
     def _create_native_module(self):
         """
@@ -784,13 +859,13 @@ class BuildFileProcessor(object):
         """
         native_globals = {}
         self._install_builtins(native_globals, force_native_rules=True)
-        assert 'glob' not in native_globals
-        assert 'host_info' not in native_globals
-        assert 'read_config' not in native_globals
-        native_globals['glob'] = self._glob
-        native_globals['host_info'] = self._host_info
-        native_globals['read_config'] = self._read_config
-        native_module_type = collections.namedtuple('native', native_globals.keys())
+        assert "glob" not in native_globals
+        assert "host_info" not in native_globals
+        assert "read_config" not in native_globals
+        native_globals["glob"] = self._glob
+        native_globals["host_info"] = self._host_info
+        native_globals["read_config"] = self._read_config
+        native_module_type = collections.namedtuple("native", native_globals.keys())
         return native_module_type(**native_globals)
 
     def _wrap_env_var_read(self, read, real):
@@ -841,7 +916,7 @@ class BuildFileProcessor(object):
 
         # Install interceptors into the main ways a user can read the env.
         with self._with_env_interceptor(
-            read, os.environ, '__contains__', '__getitem__', 'get'
+            read, os.environ, "__contains__", "__getitem__", "get"
         ):
             yield
 
@@ -859,13 +934,13 @@ class BuildFileProcessor(object):
         if whitelist is not None:
             for symbol in whitelist:
                 if symbol not in src.__dict__:
-                    raise KeyError("\"%s\" is not defined in %s" % (symbol, src.__name__))
+                    raise KeyError('"%s" is not defined in %s' % (symbol, src.__name__))
                 dst[symbol] = src.__dict__[symbol]
 
         if whitelist_mapping is not None:
             for exported_name, symbol in whitelist_mapping.iteritems():
                 if symbol not in src.__dict__:
-                    raise KeyError("\"%s\" is not defined in %s" % (symbol, src.__name__))
+                    raise KeyError('"%s" is not defined in %s' % (symbol, src.__name__))
                 dst[exported_name] = src.__dict__[symbol]
 
     def _merge_globals(self, mod, dst):
@@ -876,18 +951,20 @@ class BuildFileProcessor(object):
         typically denote module-level private attributes.
         """
 
-        hidden = set([
-            'include_defs',
-            'load',
-        ])
+        hidden = set(["include_defs", "load"])
 
-        keys = getattr(mod, '__all__', mod.__dict__.keys())
+        keys = getattr(mod, "__all__", mod.__dict__.keys())
 
         for key in keys:
             # Block copying modules unless they were specified in '__all__'
-            block_copying_module = not hasattr(mod, '__all__') and isinstance(
-                mod.__dict__[key], types.ModuleType)
-            if not key.startswith('_') and key not in hidden and not block_copying_module:
+            block_copying_module = not hasattr(mod, "__all__") and isinstance(
+                mod.__dict__[key], types.ModuleType
+            )
+            if (
+                not key.startswith("_")
+                and key not in hidden
+                and not block_copying_module
+            ):
                 dst[key] = mod.__dict__[key]
 
     def _update_functions(self, build_env):
@@ -928,25 +1005,30 @@ class BuildFileProcessor(object):
     def _resolve_include(self, name):
         # type: (str) -> BuildInclude
         """Resolve the given include def name to a BuildInclude metadata."""
-        match = re.match(r'^([A-Za-z0-9_]*)//(.*)$', name)
+        match = re.match(r"^([A-Za-z0-9_]*)//(.*)$", name)
         if match is None:
             raise ValueError(
-                'include_defs argument {} should be in the form of '
-                '//path or cellname//path'.format(name))
+                "include_defs argument {} should be in the form of "
+                "//path or cellname//path".format(name)
+            )
         cell_name = match.group(1)
         relative_path = match.group(2)
         if len(cell_name) > 0:
             cell_root = self._cell_roots.get(cell_name)
             if cell_root is None:
                 raise KeyError(
-                    'include_defs argument {} references an unknown cell named {}'
-                    'known cells: {!r}'.format(name, cell_name, self._cell_roots))
-            return BuildInclude(cell_name=cell_name,
-                                path=os.path.normpath(os.path.join(cell_root, relative_path)))
+                    "include_defs argument {} references an unknown cell named {}"
+                    "known cells: {!r}".format(name, cell_name, self._cell_roots)
+                )
+            return BuildInclude(
+                cell_name=cell_name,
+                path=os.path.normpath(os.path.join(cell_root, relative_path)),
+            )
         else:
-            return BuildInclude(cell_name=cell_name,
-                                path=os.path.normpath(
-                                    os.path.join(self._project_root, relative_path)))
+            return BuildInclude(
+                cell_name=cell_name,
+                path=os.path.normpath(os.path.join(self._project_root, relative_path)),
+            )
 
     def _get_load_path(self, label):
         # type: (str) -> BuildInclude
@@ -954,46 +1036,58 @@ class BuildFileProcessor(object):
         match = _LOAD_TARGET_PATH_RE.match(label)
         if match is None:
             raise ValueError(
-                'load label {} should be in the form of '
-                '//path:file or cellname//path:file'.format(label))
-        cell_name = match.group('cell')
+                "load label {} should be in the form of "
+                "//path:file or cellname//path:file".format(label)
+            )
+        cell_name = match.group("cell")
         if cell_name:
-            if cell_name.startswith('@'):
+            if cell_name.startswith("@"):
                 cell_name = cell_name[1:]
             elif self._warn_about_deprecated_syntax:
-                self._emit_warning('{} has a load label "{}" that uses a deprecated cell format. '
-                                   '"{}" should instead be "@{}".'.format(
-                                        self._current_build_env.path, label, cell_name,
-                                        cell_name), 'load function')
+                self._emit_warning(
+                    '{} has a load label "{}" that uses a deprecated cell format. '
+                    '"{}" should instead be "@{}".'.format(
+                        self._current_build_env.path, label, cell_name, cell_name
+                    ),
+                    "load function",
+                )
         else:
             cell_name = self._current_build_env.cell_name
-        relative_path = match.group('package')
-        file_name = match.group('target')
-        label_root = match.group('root')
+        relative_path = match.group("package")
+        file_name = match.group("target")
+        label_root = match.group("root")
         if not label_root:
             # relative include. e.g. :foo.bzl
-            if '/' in file_name:
+            if "/" in file_name:
                 raise ValueError(
-                    'Relative loads work only for files in the same directory. ' +
-                    'Please use absolute label instead ([cell]//pkg[/pkg]:target).',
+                    "Relative loads work only for files in the same directory. "
+                    + "Please use absolute label instead ([cell]//pkg[/pkg]:target)."
                 )
             callee_dir = os.path.dirname(self._current_build_env.path)
             return BuildInclude(
                 cell_name=cell_name,
-                path=os.path.normpath(os.path.join(callee_dir, file_name)))
+                path=os.path.normpath(os.path.join(callee_dir, file_name)),
+            )
         elif cell_name:
             cell_root = self._cell_roots.get(cell_name)
             if cell_root is None:
                 raise KeyError(
-                    'load label {} references an unknown cell named {}'
-                    'known cells: {!r}'.format(label, cell_name, self._cell_roots))
+                    "load label {} references an unknown cell named {}"
+                    "known cells: {!r}".format(label, cell_name, self._cell_roots)
+                )
             return BuildInclude(
                 cell_name=cell_name,
-                path=os.path.normpath(os.path.join(cell_root, relative_path, file_name)))
+                path=os.path.normpath(
+                    os.path.join(cell_root, relative_path, file_name)
+                ),
+            )
         else:
             return BuildInclude(
                 cell_name=cell_name,
-                path=os.path.normpath(os.path.join(self._project_root, relative_path, file_name)))
+                path=os.path.normpath(
+                    os.path.join(self._project_root, relative_path, file_name)
+                ),
+            )
 
     def _read_config(self, section, field, default=None):
         # type: (str, str, Any) -> Any
@@ -1017,24 +1111,40 @@ class BuildFileProcessor(object):
 
         return value
 
-    def _glob(self, includes, excludes=None, include_dotfiles=False, search_base=None,
-              exclude=None):
-        assert exclude is None or excludes is None, \
-            "Mixing 'exclude' and 'excludes' attributes is not allowed. Please replace your " \
-            "exclude and excludes arguments with a single 'excludes = %r'." % (exclude + excludes)
+    def _glob(
+        self,
+        includes,
+        excludes=None,
+        include_dotfiles=False,
+        search_base=None,
+        exclude=None,
+    ):
+        assert exclude is None or excludes is None, (
+            "Mixing 'exclude' and 'excludes' attributes is not allowed. Please replace your "
+            "exclude and excludes arguments with a single 'excludes = %r'."
+            % (exclude + excludes)
+        )
         excludes = excludes or exclude
         build_env = self._current_build_env
         return glob(
-            includes, excludes=excludes, include_dotfiles=include_dotfiles,
-            search_base=search_base, build_env=build_env,
-            allow_safe_import=self._import_whitelist_manager.allow_unsafe_import)
+            includes,
+            excludes=excludes,
+            include_dotfiles=include_dotfiles,
+            search_base=search_base,
+            build_env=build_env,
+            allow_safe_import=self._import_whitelist_manager.allow_unsafe_import,
+        )
 
     def _subdir_glob(self, glob_specs, excludes=None, prefix=None, search_base=None):
         build_env = self._current_build_env
         return subdir_glob(
-            glob_specs, excludes=excludes, prefix=prefix, search_base=search_base,
+            glob_specs,
+            excludes=excludes,
+            prefix=prefix,
+            search_base=search_base,
             build_env=build_env,
-            allow_safe_import=self._import_whitelist_manager.allow_unsafe_import)
+            allow_safe_import=self._import_whitelist_manager.allow_unsafe_import,
+        )
 
     def _record_env_var(self, name, value):
         # type: (str, Any) -> None
@@ -1077,7 +1187,7 @@ class BuildFileProcessor(object):
 
         # Look up the caller's stack frame and merge the include's globals
         # into it's symbol table.
-        frame = get_caller_frame(skip=['_functools', __name__])
+        frame = get_caller_frame(skip=["_functools", __name__])
         if namespace is not None:
             # If using a fresh namespace, create a fresh module to populate.
             fresh_module = imp.new_module(namespace)
@@ -1109,9 +1219,9 @@ class BuildFileProcessor(object):
 
         # Look up the caller's stack frame and merge the include's globals
         # into it's symbol table.
-        frame = get_caller_frame(skip=['_functools', __name__])
+        frame = get_caller_frame(skip=["_functools", __name__])
         BuildFileProcessor._merge_explicit_globals(
-            module, frame.f_globals, symbols, symbol_kwargs,
+            module, frame.f_globals, symbols, symbol_kwargs
         )
 
         # Pull in the include's accounting of its own referenced includes
@@ -1131,7 +1241,6 @@ class BuildFileProcessor(object):
             print(info.x + info.foo())  # prints 5
         """
         return Struct
-
 
     def _add_build_file_dep(self, name):
         # type: (str) -> None
@@ -1171,10 +1280,9 @@ class BuildFileProcessor(object):
         if self._current_build_env is not None:
             self._current_build_env.diagnostics.append(
                 Diagnostic(
-                    message=message,
-                    level='warning',
-                    source=source,
-                    exception=None))
+                    message=message, level="warning", source=source, exception=None
+                )
+            )
 
     @staticmethod
     def _create_import_whitelist(project_import_whitelist):
@@ -1183,9 +1291,22 @@ class BuildFileProcessor(object):
         defined in '.buckconfig'.
         """
 
-        global_whitelist = ['copy', 're', 'functools', 'itertools', 'json', 'hashlib',
-                            'types', 'string', 'ast', '__future__', 'collections',
-                            'operator', 'fnmatch', 'copy_reg']
+        global_whitelist = [
+            "copy",
+            "re",
+            "functools",
+            "itertools",
+            "json",
+            "hashlib",
+            "types",
+            "string",
+            "ast",
+            "__future__",
+            "collections",
+            "operator",
+            "fnmatch",
+            "copy_reg",
+        ]
 
         return set(global_whitelist + project_import_whitelist)
 
@@ -1203,16 +1324,18 @@ class BuildFileProcessor(object):
                 if self._called_from_project_file():
                     path = os.path.abspath(filename)
                     if path not in self._current_build_env.includes:
-                        dep_path = '//' + os.path.relpath(path, self._project_root)
+                        dep_path = "//" + os.path.relpath(path, self._project_root)
                         warning_message = (
-                            "Access to a non-tracked file detected! {0} is not a ".format(path) +
-                            "known dependency and it should be added using 'add_build_file_dep' " +
-                            "function before trying to access the file, e.g.\n" +
-                            "'add_build_file_dep('{0}')'\n".format(dep_path) +
-                            "The 'add_build_file_dep' function is documented at " +
-                            "https://buckbuild.com/function/add_build_file_dep.html\n"
+                            "Access to a non-tracked file detected! {0} is not a ".format(
+                                path
+                            )
+                            + "known dependency and it should be added using 'add_build_file_dep' "
+                            + "function before trying to access the file, e.g.\n"
+                            + "'add_build_file_dep('{0}')'\n".format(dep_path)
+                            + "The 'add_build_file_dep' function is documented at "
+                            + "https://buckbuild.com/function/add_build_file_dep.html\n"
                         )
-                        self._emit_warning(warning_message, 'sandboxing')
+                        self._emit_warning(warning_message, "sandboxing")
 
                 return real(filename, *arg, **kwargs)
 
@@ -1246,7 +1369,7 @@ class BuildFileProcessor(object):
         Wrap 'open' so that they it checks if accessed files are known dependencies.
         If 'wrap' is equal to False, restore original function instead.
         """
-        return self._wrap_fun_for_file_access(__builtin__, 'open', wrap)
+        return self._wrap_fun_for_file_access(__builtin__, "open", wrap)
 
     @contextlib.contextmanager
     def _build_file_sandboxing(self):
@@ -1273,17 +1396,19 @@ class BuildFileProcessor(object):
         with self._set_build_env(build_env):
             # Set of helpers callable from the child environment.
             default_globals = {
-                'include_defs': functools.partial(self._include_defs, is_implicit_include),
-                'add_build_file_dep': self._add_build_file_dep,
-                'read_config': self._read_config,
-                'allow_unsafe_import': self._import_whitelist_manager.allow_unsafe_import,
-                'glob': self._glob,
-                'subdir_glob': self._subdir_glob,
-                'load': functools.partial(self._load, is_implicit_include),
-                'struct': Struct,
-                'provider': self._provider,
-                'host_info': self._host_info,
-                'native': self._create_native_module(),
+                "include_defs": functools.partial(
+                    self._include_defs, is_implicit_include
+                ),
+                "add_build_file_dep": self._add_build_file_dep,
+                "read_config": self._read_config,
+                "allow_unsafe_import": self._import_whitelist_manager.allow_unsafe_import,
+                "glob": self._glob,
+                "subdir_glob": self._subdir_glob,
+                "load": functools.partial(self._load, is_implicit_include),
+                "struct": Struct,
+                "provider": self._provider,
+                "host_info": self._host_info,
+                "native": self._create_native_module(),
             }
 
             # Don't include implicit includes if the current file being
@@ -1305,14 +1430,14 @@ class BuildFileProcessor(object):
             # We don't open this file as binary, as we assume it's a textual source
             # file.
             with self._wrap_file_access(wrap=False):
-                with open(path, 'r') as f:
+                with open(path, "r") as f:
                     contents = f.read()
 
             # Enable absolute imports.  This prevents the compiler from trying to
             # do a relative import first, and warning that this module doesn't
             # exist in sys.modules.
-            future_features = __future__.absolute_import.compiler_flag
-            code = compile(contents, path, 'exec', future_features, 1)
+            future_features = absolute_import.compiler_flag
+            code = compile(contents, path, "exec", future_features, 1)
 
             # Execute code with build file sandboxing
             with self._build_file_sandboxing():
@@ -1334,9 +1459,12 @@ class BuildFileProcessor(object):
         if cached is not None:
             return cached
 
-        build_env = IncludeContext(cell_name=build_include.cell_name, path=build_include.path)
-        build_env, mod = self._process(build_env, build_include.path,
-                                       is_implicit_include=is_implicit_include)
+        build_env = IncludeContext(
+            cell_name=build_include.cell_name, path=build_include.path
+        )
+        build_env, mod = self._process(
+            build_env, build_include.path, is_implicit_include=is_implicit_include
+        )
 
         self._include_cache[build_include.path] = build_env, mod
         return build_env, mod
@@ -1345,8 +1473,10 @@ class BuildFileProcessor(object):
         """Process the build file at the given path."""
         # Create the build file context, including the base path and directory
         # name of the given path.
-        relative_path_to_build_file = os.path.relpath(path, self._project_root).replace('\\', '/')
-        len_suffix = -len('/' + self._build_file_name)
+        relative_path_to_build_file = os.path.relpath(path, self._project_root).replace(
+            "\\", "/"
+        )
+        len_suffix = -len("/" + self._build_file_name)
         base_path = relative_path_to_build_file[:len_suffix]
         dirname = os.path.dirname(path)
 
@@ -1363,15 +1493,17 @@ class BuildFileProcessor(object):
             project_prefix,
             self._sync_cookie_state,
             self._watchman_glob_stat_results,
-            self._watchman_use_glob_generator)
+            self._watchman_use_glob_generator,
+        )
 
         return self._process(build_env, path, is_implicit_include=False)
 
     def process(self, watch_root, project_prefix, path, diagnostics):
         # type: (str, Optional[str], str, List[Diagnostic]) -> List[Dict[str, Any]]
         """Process a build file returning a dict of its rules and includes."""
-        build_env, mod = self._process_build_file(watch_root, project_prefix,
-                                                  os.path.join(self._project_root, path))
+        build_env, mod = self._process_build_file(
+            watch_root, project_prefix, os.path.join(self._project_root, path)
+        )
 
         # Initialize the output object to a map of the parsed rules.
         values = build_env.rules.values()
@@ -1402,100 +1534,104 @@ def format_traceback(tb):
     formatted = []
     for entry in traceback.extract_tb(tb):
         (filename, line_number, function_name, text) = entry
-        formatted.append({
-            'filename': filename,
-            'line_number': line_number,
-            'function_name': function_name,
-            'text': text,
-        })
+        formatted.append(
+            {
+                "filename": filename,
+                "line_number": line_number,
+                "function_name": function_name,
+                "text": text,
+            }
+        )
     return formatted
 
 
 def format_exception_info(exception_info):
     (exc_type, exc_value, exc_traceback) = exception_info
     formatted = {
-        'type': exc_type.__name__,
-        'value': str(exc_value),
-        'traceback': format_traceback(exc_traceback),
+        "type": exc_type.__name__,
+        "value": str(exc_value),
+        "traceback": format_traceback(exc_traceback),
     }
     if exc_type is SyntaxError:
-        formatted['filename'] = exc_value.filename
-        formatted['lineno'] = exc_value.lineno
-        formatted['offset'] = exc_value.offset
-        formatted['text'] = exc_value.text
+        formatted["filename"] = exc_value.filename
+        formatted["lineno"] = exc_value.lineno
+        formatted["offset"] = exc_value.offset
+        formatted["text"] = exc_value.text
     return formatted
 
 
 def encode_result(values, diagnostics, profile):
-    result = {'values': [
-        dict((k, v) for k, v in value.iteritems() if v is not None)
-        for value in values]}
+    result = {
+        "values": [
+            dict((k, v) for k, v in value.iteritems() if v is not None)
+            for value in values
+        ]
+    }
     json_encoder = BuckJSONEncoder()
     if diagnostics:
         encoded_diagnostics = []
         for d in diagnostics:
-            encoded = {
-                'message': d.message,
-                'level': d.level,
-                'source': d.source,
-            }
+            encoded = {"message": d.message, "level": d.level, "source": d.source}
             if d.exception:
-                encoded['exception'] = format_exception_info(d.exception)
+                encoded["exception"] = format_exception_info(d.exception)
             encoded_diagnostics.append(encoded)
-        result['diagnostics'] = encoded_diagnostics
+        result["diagnostics"] = encoded_diagnostics
     if profile is not None:
-        result['profile'] = profile
+        result["profile"] = profile
     try:
         return json_encoder.encode(result)
     except Exception as e:
         # Try again without the values
-        result['values'] = []
-        if 'diagnostics' not in result:
-            result['diagnostics'] = []
-        result['diagnostics'].append({
-            'message': str(e),
-            'level': 'fatal',
-            'source': 'parse',
-            'exception': format_exception_info(sys.exc_info()),
-        })
+        result["values"] = []
+        if "diagnostics" not in result:
+            result["diagnostics"] = []
+        result["diagnostics"].append(
+            {
+                "message": str(e),
+                "level": "fatal",
+                "source": "parse",
+                "exception": format_exception_info(sys.exc_info()),
+            }
+        )
         return json_encoder.encode(result)
 
 
-def process_with_diagnostics(build_file_query, build_file_processor, to_parent,
-                             should_profile=False):
+def process_with_diagnostics(
+    build_file_query, build_file_processor, to_parent, should_profile=False
+):
     start_time = time.time()
-    build_file = build_file_query.get('buildFile')
-    watch_root = build_file_query.get('watchRoot')
-    project_prefix = build_file_query.get('projectPrefix')
+    build_file = build_file_query.get("buildFile")
+    watch_root = build_file_query.get("watchRoot")
+    project_prefix = build_file_query.get("projectPrefix")
 
-    build_file = cygwin_adjusted_path(build_file).rstrip().encode('ascii')
-    watch_root = cygwin_adjusted_path(watch_root).rstrip().encode('ascii')
+    build_file = cygwin_adjusted_path(build_file).rstrip().encode("ascii")
+    watch_root = cygwin_adjusted_path(watch_root).rstrip().encode("ascii")
     if project_prefix is not None:
-        project_prefix = cygwin_adjusted_path(project_prefix).rstrip().encode('ascii')
+        project_prefix = cygwin_adjusted_path(project_prefix).rstrip().encode("ascii")
 
     diagnostics = []
     values = []
     try:
         values = build_file_processor.process(
-            watch_root,
-            project_prefix,
-            build_file,
-            diagnostics=diagnostics)
+            watch_root, project_prefix, build_file, diagnostics=diagnostics
+        )
     except BaseException as e:
         # sys.exit() don't emit diagnostics.
         if e is not SystemExit:
             if isinstance(e, WatchmanError):
-                source = 'watchman'
+                source = "watchman"
                 message = e.msg
             else:
-                source = 'parse'
+                source = "parse"
                 message = str(e)
             diagnostics.append(
                 Diagnostic(
                     message=message,
-                    level='fatal',
+                    level="fatal",
                     source=source,
-                    exception=sys.exc_info()))
+                    exception=sys.exc_info(),
+                )
+            )
         raise
     finally:
         java_process_send_result(to_parent, values, diagnostics, None)
@@ -1525,10 +1661,11 @@ def _optparse_store_kv(option, opt_str, value, parser):
     :param str value: argument value
     :param optparse.OptionParser parser: parser instance
     """
-    result = value.split('=', 1)
+    result = value.split("=", 1)
     if len(result) != 2:
         raise optparse.OptionError(
-            "Expected argument of to be in the form of X=Y".format(opt_str))
+            "Expected argument of to be in the form of X=Y".format(opt_str)
+        )
     (k, v) = result
 
     # Get or create the dictionary
@@ -1564,99 +1701,91 @@ def main():
     # doesn't happen.  Actually dup2 the file handle so that writing
     # to file descriptor 1, os.system, and so on work as expected too.
 
-    to_parent = os.fdopen(os.dup(sys.stdout.fileno()), 'ab')
+    to_parent = os.fdopen(os.dup(sys.stdout.fileno()), "ab")
     os.dup2(sys.stderr.fileno(), sys.stdout.fileno())
 
     parser = optparse.OptionParser()
     parser.add_option(
-        '--project_root',
-        action='store',
-        type='string',
-        dest='project_root')
+        "--project_root", action="store", type="string", dest="project_root"
+    )
     parser.add_option(
-        '--cell_root',
-        action='callback',
-        type='string',
-        dest='cell_roots',
-        metavar='NAME=PATH',
-        help='Cell roots that can be referenced by includes.',
+        "--cell_root",
+        action="callback",
+        type="string",
+        dest="cell_roots",
+        metavar="NAME=PATH",
+        help="Cell roots that can be referenced by includes.",
         callback=_optparse_store_kv,
         default={},
     )
+    parser.add_option("--cell_name", action="store", type="string", dest="cell_name")
     parser.add_option(
-        '--cell_name',
-        action='store',
-        type='string',
-        dest="cell_name")
-    parser.add_option(
-        '--build_file_name',
-        action='store',
-        type='string',
-        dest="build_file_name")
-    parser.add_option(
-        '--allow_empty_globs',
-        action='store_true',
-        dest='allow_empty_globs',
-        help='Tells the parser not to raise an error when glob returns no results.')
-    parser.add_option(
-        '--use_watchman_glob',
-        action='store_true',
-        dest='use_watchman_glob',
-        help='Invokes `watchman query` to get lists of files instead of globbing in-process.')
-    parser.add_option(
-        '--watchman_use_glob_generator',
-        action='store_true',
-        dest='watchman_use_glob_generator',
-        help='Uses Watchman glob generator to speed queries')
-    parser.add_option(
-        '--watchman_glob_stat_results',
-        action='store_true',
-        dest='watchman_glob_stat_results',
-        help='Invokes `stat()` to sanity check result of `watchman query`.')
-    parser.add_option(
-        '--watchman_socket_path',
-        action='store',
-        type='string',
-        dest='watchman_socket_path',
-        help='Path to Unix domain socket/named pipe as returned by `watchman get-sockname`.')
-    parser.add_option(
-        '--watchman_query_timeout_ms',
-        action='store',
-        type='int',
-        dest='watchman_query_timeout_ms',
-        help='Maximum time in milliseconds to wait for watchman query to respond.')
-    parser.add_option(
-        '--include',
-        action='append',
-        dest='include')
-    parser.add_option(
-        '--config',
-        help='BuckConfig settings available at parse time.')
-    parser.add_option(
-        '--ignore_paths',
-        help='Paths that should be ignored.')
-    parser.add_option(
-        '--quiet',
-        action='store_true',
-        dest='quiet',
-        help='Stifles exception backtraces printed to stderr during parsing.')
-    parser.add_option(
-        '--profile',
-        action='store_true',
-        help='Profile every buck file execution')
-    parser.add_option(
-        '--build_file_import_whitelist',
-        action='append',
-        dest='build_file_import_whitelist')
-    parser.add_option(
-        '--disable_implicit_native_rules',
-        action='store_true',
-        help='Do not allow native rules in build files, only included ones',
+        "--build_file_name", action="store", type="string", dest="build_file_name"
     )
     parser.add_option(
-        '--warn_about_deprecated_syntax',
-        action='store_true',
-        help='Warn about deprecated syntax usage.',
+        "--allow_empty_globs",
+        action="store_true",
+        dest="allow_empty_globs",
+        help="Tells the parser not to raise an error when glob returns no results.",
+    )
+    parser.add_option(
+        "--use_watchman_glob",
+        action="store_true",
+        dest="use_watchman_glob",
+        help="Invokes `watchman query` to get lists of files instead of globbing in-process.",
+    )
+    parser.add_option(
+        "--watchman_use_glob_generator",
+        action="store_true",
+        dest="watchman_use_glob_generator",
+        help="Uses Watchman glob generator to speed queries",
+    )
+    parser.add_option(
+        "--watchman_glob_stat_results",
+        action="store_true",
+        dest="watchman_glob_stat_results",
+        help="Invokes `stat()` to sanity check result of `watchman query`.",
+    )
+    parser.add_option(
+        "--watchman_socket_path",
+        action="store",
+        type="string",
+        dest="watchman_socket_path",
+        help="Path to Unix domain socket/named pipe as returned by `watchman get-sockname`.",
+    )
+    parser.add_option(
+        "--watchman_query_timeout_ms",
+        action="store",
+        type="int",
+        dest="watchman_query_timeout_ms",
+        help="Maximum time in milliseconds to wait for watchman query to respond.",
+    )
+    parser.add_option("--include", action="append", dest="include")
+    parser.add_option("--config", help="BuckConfig settings available at parse time.")
+    parser.add_option("--ignore_paths", help="Paths that should be ignored.")
+    parser.add_option(
+        "--quiet",
+        action="store_true",
+        dest="quiet",
+        help="Stifles exception backtraces printed to stderr during parsing.",
+    )
+    parser.add_option(
+        "--profile", action="store_true", help="Profile every buck file execution"
+    )
+    parser.add_option(
+        "--build_file_import_whitelist",
+        action="append",
+        dest="build_file_import_whitelist",
+    )
+    parser.add_option(
+        "--disable_implicit_native_rules",
+        action="store_true",
+        help="Do not allow native rules in build files, only included ones",
+    )
+    parser.add_option(
+        "--warn_about_deprecated_syntax",
+        action="store_true",
+        help="Warn about deprecated syntax usage.",
     )
     (options, args) = parser.parse_args()
 
@@ -1669,33 +1798,37 @@ def main():
     # relative path.
     options.project_root = cygwin_adjusted_path(options.project_root)
     project_root = os.path.abspath(options.project_root)
-    cell_roots = dict((k, os.path.abspath(cygwin_adjusted_path(v)))
-                      for (k, v) in options.cell_roots.iteritems())
+    cell_roots = dict(
+        (k, os.path.abspath(cygwin_adjusted_path(v)))
+        for (k, v) in options.cell_roots.iteritems()
+    )
 
     watchman_client = None
     if options.use_watchman_glob:
-        client_args = {'sendEncoding': 'json', 'recvEncoding': 'json'}
+        client_args = {"sendEncoding": "json", "recvEncoding": "json"}
         if options.watchman_query_timeout_ms is not None:
             # pywatchman expects a timeout as a nonnegative floating-point
             # value in seconds.
-            client_args['timeout'] = max(0.0, options.watchman_query_timeout_ms / 1000.0)
+            client_args["timeout"] = max(
+                0.0, options.watchman_query_timeout_ms / 1000.0
+            )
         else:
-            client_args['timeout'] = DEFAULT_WATCHMAN_QUERY_TIMEOUT
+            client_args["timeout"] = DEFAULT_WATCHMAN_QUERY_TIMEOUT
         if options.watchman_socket_path is not None:
-            client_args['sockpath'] = options.watchman_socket_path
-            client_args['transport'] = 'local'
+            client_args["sockpath"] = options.watchman_socket_path
+            client_args["transport"] = "local"
         watchman_client = pywatchman.client(**client_args)
 
     configs = {}
     if options.config is not None:
-        with open(options.config, 'rb') as f:
+        with open(options.config, "rb") as f:
             for section, contents in json.load(f).iteritems():
                 for field, value in contents.iteritems():
                     configs[(section, field)] = value
 
     ignore_paths = []
     if options.ignore_paths is not None:
-        with open(options.ignore_paths, 'rb') as f:
+        with open(options.ignore_paths, "rb") as f:
             ignore_paths = [make_glob(i) for i in json.load(f)]
 
     buildFileProcessor = BuildFileProcessor(
@@ -1712,7 +1845,8 @@ def main():
         configs=configs,
         ignore_paths=ignore_paths,
         disable_implicit_native_rules=options.disable_implicit_native_rules,
-        warn_about_deprecated_syntax=options.warn_about_deprecated_syntax)
+        warn_about_deprecated_syntax=options.warn_about_deprecated_syntax,
+    )
 
     # While processing, we'll write exceptions as diagnostic messages
     # to the parent then re-raise them to crash the process. While
@@ -1736,16 +1870,16 @@ def main():
 
             for build_file in args:
                 query = {
-                    'buildFile': build_file,
-                    'watchRoot': project_root,
-                    'projectPrefix': project_root,
+                    "buildFile": build_file,
+                    "watchRoot": project_root,
+                    "projectPrefix": project_root,
                 }
                 duration = process_with_diagnostics(
-                    query,
-                    buildFileProcessor,
-                    to_parent,
-                    should_profile=options.profile)
-                processed_build_file.append({'buildFile': build_file, 'duration': duration})
+                    query, buildFileProcessor, to_parent, should_profile=options.profile
+                )
+                processed_build_file.append(
+                    {"buildFile": build_file, "duration": duration}
+                )
 
             # From https://docs.python.org/2/using/cmdline.html :
             #
@@ -1754,19 +1888,24 @@ def main():
             # influenced by this option. To work around this, you will
             # want to use file.readline() inside a while 1: loop.
             for line in wait_and_read_build_file_query():
-                if line == '':
+                if line == "":
                     break
                 build_file_query = json.loads(line)
-                if build_file_query.get('command') == 'report_profile':
+                if build_file_query.get("command") == "report_profile":
                     report_profile(options, to_parent, processed_build_file, profiler)
                 else:
                     duration = process_with_diagnostics(
                         build_file_query,
                         buildFileProcessor,
                         to_parent,
-                        should_profile=options.profile)
+                        should_profile=options.profile,
+                    )
                     processed_build_file.append(
-                        {'buildFile': build_file_query['buildFile'], 'duration': duration})
+                        {
+                            "buildFile": build_file_query["buildFile"],
+                            "duration": duration,
+                        }
+                    )
 
     if options.quiet:
         sys.excepthook = orig_excepthook
@@ -1787,8 +1926,9 @@ def wait_build_file_query():
 def wait_and_read_build_file_query():
     def default_wait():
         return
+
     wait = default_wait
-    if sys.platform != 'win32':
+    if sys.platform != "win32":
         # wait_build_file_query() is useful to attribute time waiting for queries.
         # Since select.select() is not supported on Windows, we currently don't have
         # a reliable way to measure it on this platform. Then, we skip it.
@@ -1807,19 +1947,23 @@ def report_profile(options, to_parent, processed_build_file, profiler):
             profiler.stop()
             profile_result = profiler.generate_report()
             extra_result = "Total: {:.2f} sec\n\n\n".format(profiler.total_time)
-            extra_result += '# Parsed {} files'.format(len(processed_build_file))
+            extra_result += "# Parsed {} files".format(len(processed_build_file))
             processed_build_file.sort(
-                key=lambda current_child: current_child['duration'], reverse=True)
+                key=lambda current_child: current_child["duration"], reverse=True
+            )
             # Only show the top ten buck files
             if len(processed_build_file) > 10:
                 processed_build_file = processed_build_file[:10]
-                extra_result += ', {} slower BUCK files:\n'.format(len(processed_build_file))
+                extra_result += ", {} slower BUCK files:\n".format(
+                    len(processed_build_file)
+                )
             else:
-                extra_result += '\n'
+                extra_result += "\n"
             for info in processed_build_file:
-                extra_result += 'Parsed {}: {:.2f} sec \n'.format(
-                    info['buildFile'], info['duration'])
-            extra_result += '\n\n'
+                extra_result += "Parsed {}: {:.2f} sec \n".format(
+                    info["buildFile"], info["duration"]
+                )
+            extra_result += "\n\n"
             profile_result = extra_result + profile_result
             java_process_send_result(to_parent, [], [], profile_result)
         except Exception as e:
@@ -1834,7 +1978,7 @@ def report_profile(options, to_parent, processed_build_file, profiler):
 def make_glob(pat):
     if is_special(pat):
         return pat
-    return pat + '/**'
+    return pat + "/**"
 
 
 # import autogenerated rule instances for effect.
@@ -1842,4 +1986,4 @@ try:
     import generated_rules
 except ImportError:
     # If running directly or python tests of this code, this is not an error.
-    sys.stderr.write('Failed to load buck generated rules module.\n')
+    sys.stderr.write("Failed to load buck generated rules module.\n")

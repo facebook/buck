@@ -1,11 +1,11 @@
 """Glob implementation using watchman queries."""
-from util import Diagnostic, memoized
-import re
 import os.path
+import re
+
 import pywatchman
+from util import Diagnostic, memoized
 
-
-COLLAPSE_SLASHES = re.compile(r'/+')
+COLLAPSE_SLASHES = re.compile(r"/+")
 
 
 class SyncCookieState(object):
@@ -17,8 +17,9 @@ class SyncCookieState(object):
         self.use_sync_cookies = True
 
 
-def format_watchman_query_params(includes, excludes, include_dotfiles, relative_root,
-                                 watchman_use_glob_generator):
+def format_watchman_query_params(
+    includes, excludes, include_dotfiles, relative_root, watchman_use_glob_generator
+):
     match_exprs = ["allof", ["anyof", ["type", "f"], ["type", "l"]]]
     match_flags = {}
 
@@ -26,15 +27,17 @@ def format_watchman_query_params(includes, excludes, include_dotfiles, relative_
         match_flags["includedotfiles"] = True
     if excludes:
         match_exprs.append(
-            ["not",
-             ["anyof"] +
-             [["match", COLLAPSE_SLASHES.sub('/', x), "wholename", match_flags]
-              for x in excludes]])
+            [
+                "not",
+                ["anyof"]
+                + [
+                    ["match", COLLAPSE_SLASHES.sub("/", x), "wholename", match_flags]
+                    for x in excludes
+                ],
+            ]
+        )
 
-    query = {
-        "relative_root": relative_root,
-        "fields": ["name"],
-    }
+    query = {"relative_root": relative_root, "fields": ["name"]}
 
     if watchman_use_glob_generator:
         query["glob"] = includes
@@ -48,12 +51,17 @@ def format_watchman_query_params(includes, excludes, include_dotfiles, relative_
 
         # Explicitly pass an empty path so Watchman queries only the tree of files
         # starting at base_path.
-        query["path"] = ['']
+        query["path"] = [""]
         match_exprs.append(
-            ["anyof"] +
+            ["anyof"]
+            +
             # Collapse multiple consecutive slashes in pattern until fix in
             # https://github.com/facebook/watchman/pull/310/ is available
-            [["match", COLLAPSE_SLASHES.sub('/', i), "wholename", match_flags] for i in includes])
+            [
+                ["match", COLLAPSE_SLASHES.sub("/", i), "wholename", match_flags]
+                for i in includes
+            ]
+        )
 
     query["expression"] = match_exprs
 
@@ -71,18 +79,31 @@ def stat_results(base_path, result, diagnostics):
         else:
             diagnostics.append(
                 Diagnostic(
-                    message='Watchman query returned non-existent file: {0}'.format(
-                        resolved_path),
-                    level='warning',
-                    source='watchman',
-                    exception=None))
+                    message="Watchman query returned non-existent file: {0}".format(
+                        resolved_path
+                    ),
+                    level="warning",
+                    source="watchman",
+                    exception=None,
+                )
+            )
     return statted_result
 
 
 @memoized()
-def glob_watchman(includes, excludes, include_dotfiles, base_path, watchman_watch_root,
-                  watchman_project_prefix, sync_cookie_state, watchman_client, diagnostics,
-                  watchman_glob_stat_results, watchman_use_glob_generator):
+def glob_watchman(
+    includes,
+    excludes,
+    include_dotfiles,
+    base_path,
+    watchman_watch_root,
+    watchman_project_prefix,
+    sync_cookie_state,
+    watchman_client,
+    diagnostics,
+    watchman_glob_stat_results,
+    watchman_use_glob_generator,
+):
     assert includes, "The includes argument must be a non-empty list of strings."
 
     if watchman_project_prefix:
@@ -90,7 +111,8 @@ def glob_watchman(includes, excludes, include_dotfiles, base_path, watchman_watc
     else:
         relative_root = base_path
     query_params = format_watchman_query_params(
-        includes, excludes, include_dotfiles, relative_root, watchman_use_glob_generator)
+        includes, excludes, include_dotfiles, relative_root, watchman_use_glob_generator
+    )
 
     # Sync cookies cause a massive overhead when issuing thousands of
     # glob queries.  Only enable them (by not setting sync_timeout to 0)
@@ -110,23 +132,24 @@ def glob_watchman(includes, excludes, include_dotfiles, base_path, watchman_watc
         watchman_client.close()
         # Watchman timeouts are not fatal.  Fall back on the normal glob flow.
         return None
-    error_message = res.get('error')
+    error_message = res.get("error")
     if error_message is not None:
         diagnostics.append(
             Diagnostic(
-                message=error_message,
-                level='error',
-                source='watchman',
-                exception=None))
-    warning_message = res.get('warning')
+                message=error_message, level="error", source="watchman", exception=None
+            )
+        )
+    warning_message = res.get("warning")
     if warning_message is not None:
         diagnostics.append(
             Diagnostic(
                 message=warning_message,
-                level='warning',
-                source='watchman',
-                exception=None))
-    result = res.get('files', [])
+                level="warning",
+                source="watchman",
+                exception=None,
+            )
+        )
+    result = res.get("files", [])
     if watchman_glob_stat_results:
         absolute_base_path = os.path.join(watchman_watch_root, relative_root)
         result = stat_results(absolute_base_path, result, diagnostics)

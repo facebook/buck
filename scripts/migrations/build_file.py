@@ -1,9 +1,9 @@
 import ast
-from typing import Dict, List
 import logging
+from typing import Dict, List
 
-import repository
 import include_def
+import repository
 
 
 class GlobalUsageVisitor(ast.NodeVisitor):
@@ -60,7 +60,7 @@ class BuildFile:
             for node in ast.walk(self.ast_module)
             if isinstance(node, ast.Call)
             if isinstance(node.func, ast.Name)
-            if node.func.id == 'include_defs'
+            if node.func.id == "include_defs"
         ]
 
     def find_exported_symbols(self) -> List[str]:
@@ -80,7 +80,8 @@ class BuildFile:
         return global_usage_collector.globals
 
     def get_exported_symbols_transitive_closure(
-            self, repo: repository.Repository) -> List[str]:
+        self, repo: repository.Repository
+    ) -> List[str]:
         """
         :return: the set of symbols exported in the module (variables, function
         and class names) and from files it imports and transitive closure of
@@ -98,11 +99,11 @@ class BuildFile:
         for include in includes:
             include_file = from_path(include.get_include_path(repo))
             transitive_closure.extend(
-                include_file.get_exported_symbols_transitive_closure(repo))
+                include_file.get_exported_symbols_transitive_closure(repo)
+            )
         return self.find_exported_symbols() + transitive_closure
 
-    def get_export_map(self,
-                       repo: repository.Repository) -> Dict[str, List[str]]:
+    def get_export_map(self, repo: repository.Repository) -> Dict[str, List[str]]:
         """
         Returns a map where keys are include_defs labels and values are lists
         of exported symbols in corresponding include files. For example, for a
@@ -117,8 +118,9 @@ class BuildFile:
         export_map = {}
         for include in includes:
             include_file = from_path(include.get_include_path(repo))
-            export_map[include.get_label().to_import_string(
-            )] = include_file.find_exported_symbols()
+            export_map[
+                include.get_label().to_import_string()
+            ] = include_file.find_exported_symbols()
             export_map.update(include_file.get_export_map(repo))
         return export_map
 
@@ -131,7 +133,8 @@ class BuildFile:
         it will return list of nodes with variable foo and function call func.
         """
         return [
-            node for node in ast.walk(self.ast_module)
+            node
+            for node in ast.walk(self.ast_module)
             if isinstance(node, ast.Name) and isinstance(node.ctx, ast.Load)
         ]
 
@@ -156,7 +159,8 @@ class BuildFile:
             ]
         """
         return [
-            node for node in ast.walk(self.ast_module)
+            node
+            for node in ast.walk(self.ast_module)
             if isinstance(node, ast.Call) and node.func.id == name
         ]
 
@@ -166,6 +170,6 @@ def from_content(content: str):
 
 
 def from_path(path: str):
-    logging.debug('Creating build file from ' + path)
-    with open(path, 'r') as f:
+    logging.debug("Creating build file from " + path)
+    with open(path, "r") as f:
         return from_content(f.read())

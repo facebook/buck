@@ -1,7 +1,4 @@
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import with_statement
+from __future__ import absolute_import, division, print_function, with_statement
 
 import collections
 from json import JSONEncoder
@@ -13,11 +10,13 @@ class BuckJSONEncoder(JSONEncoder):
         super(BuckJSONEncoder, self).__init__(self, sort_keys=True)
 
     def default(self, obj):
-        if (isinstance(obj, collections.Mapping) and
-            isinstance(obj, collections.Sized)):  # nopep8
+        if isinstance(obj, collections.Mapping) and isinstance(
+            obj, collections.Sized
+        ):  # nopep8
             return dict(obj)
-        elif (isinstance(obj, collections.Iterable) and
-              isinstance(obj, collections.Sized)):
+        elif isinstance(obj, collections.Iterable) and isinstance(
+            obj, collections.Sized
+        ):
             return list(obj)
         else:
             return super(BuckJSONEncoder, self).default(obj)

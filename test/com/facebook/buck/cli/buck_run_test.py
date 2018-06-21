@@ -16,21 +16,22 @@ import os
 import sys
 import unittest
 
-from project_workspace import ProjectWorkspace
-from project_workspace import run_buck_process
+from project_workspace import ProjectWorkspace, run_buck_process
 
 
 class TestBuckRun(unittest.TestCase):
-    @unittest.skipUnless(os.name == 'posix', 'This test fails on windows')
+    @unittest.skipUnless(os.name == "posix", "This test fails on windows")
     def test_buck_run(self):
-        test_data = os.path.join('test', 'com', 'facebook', 'buck', 'cli', 'testdata', 'buck_run')
+        test_data = os.path.join(
+            "test", "com", "facebook", "buck", "cli", "testdata", "buck_run"
+        )
         with ProjectWorkspace(test_data) as workspace:
-            self.assertEqual(0, workspace.run_buck('run', '//:hello-java'))
-            self.assertEqual(0, workspace.run_buck('run', '//:hello-cxx'))
-            self.assertEqual(0, workspace.run_buck('run', '//:hello-python'))
-            subdir = workspace.resolve_path('subdir')
+            self.assertEqual(0, workspace.run_buck("run", "//:hello-java"))
+            self.assertEqual(0, workspace.run_buck("run", "//:hello-cxx"))
+            self.assertEqual(0, workspace.run_buck("run", "//:hello-python"))
+            subdir = workspace.resolve_path("subdir")
             os.mkdir(subdir)
-            proc = run_buck_process(['run', '//:pwd'], subdir)
+            proc = run_buck_process(["run", "//:pwd"], subdir)
             stdout, stderr = proc.communicate()
             sys.stdout.write(stdout)
             sys.stdout.flush()
@@ -39,5 +40,5 @@ class TestBuckRun(unittest.TestCase):
             self.assertEqual(0, proc.returncode)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

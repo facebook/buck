@@ -1,22 +1,20 @@
 #!/usr/bin/env python
 
 from __future__ import print_function
+
 import contextlib
-import os
-import sys
 import json
-import shutil
-import tempfile
 import optparse
+import os
+import shutil
+import sys
+import tempfile
 import zipfile
 
 
 def append_sys_path(buck_root):
-    sys.path.insert(0, os.path.join(
-        buck_root,
-        'third-party/py/pex'))
-    sys.path.insert(0, os.path.join(
-        buck_root, 'third-party/py/setuptools'))
+    sys.path.insert(0, os.path.join(buck_root, "third-party/py/pex"))
+    sys.path.insert(0, os.path.join(buck_root, "third-party/py/setuptools"))
 
 
 # This script can be executed either from a pex file or in a standalone mode.
@@ -26,10 +24,10 @@ if not zipfile.is_zipfile(sys.argv[0]):
     append_sys_path(os.sep.join(__file__.split(os.sep)[:-4]))
     append_sys_path(os.sep.join(__file__.split(os.sep)[:-7]))
 
-import pkg_resources
+import pkg_resources  # noqa
 
-from pex.pex_builder import PEXBuilder
-from pex.interpreter import PythonInterpreter, PythonIdentity
+from pex.interpreter import PythonIdentity, PythonInterpreter  # noqa
+from pex.pex_builder import PEXBuilder  # noqa
 
 
 def dereference_symlinks(src):
@@ -59,16 +57,15 @@ def closable_named_temporary_file():
         os.remove(fp.name)
 
 
-def copy_package(pex_builder, package, resource='', prefix=''):
+def copy_package(pex_builder, package, resource="", prefix=""):
     """
     Copies the code of a package to the pex using the pkg_resources API.
     """
     if pkg_resources.resource_isdir(package, resource):
         for entry in pkg_resources.resource_listdir(package, resource):
-            copy_package(pex_builder, package,
-                         os.path.join(resource, entry), prefix)
+            copy_package(pex_builder, package, os.path.join(resource, entry), prefix)
     else:
-        if not resource.endswith('.py') or 'tests' in resource:
+        if not resource.endswith(".py") or "tests" in resource:
             return
 
         target_path = os.path.join(package, resource)
@@ -78,20 +75,20 @@ def copy_package(pex_builder, package, resource='', prefix=''):
                 shutil.copyfileobj(r, fp)
                 fp.close()
 
-                pex_builder.add_source(
-                    fp.name,
-                    os.path.join(prefix, target_path))
+                pex_builder.add_source(fp.name, os.path.join(prefix, target_path))
 
 
 def main():
     parser = optparse.OptionParser(usage="usage: %prog [options] output")
-    parser.add_option('--entry-point', default='__main__')
-    parser.add_option('--directory', action='store_true', default=False)
-    parser.add_option('--no-zip-safe', action='store_false', dest='zip_safe', default=True)
-    parser.add_option('--python', default='')
-    parser.add_option('--python-version', default='')
-    parser.add_option('--python-shebang', default=None)
-    parser.add_option('--preload', action='append', default=[])
+    parser.add_option("--entry-point", default="__main__")
+    parser.add_option("--directory", action="store_true", default=False)
+    parser.add_option(
+        "--no-zip-safe", action="store_false", dest="zip_safe", default=True
+    )
+    parser.add_option("--python", default="")
+    parser.add_option("--python-version", default="")
+    parser.add_option("--python-shebang", default=None)
+    parser.add_option("--preload", action="append", default=[])
     options, args = parser.parse_args()
     if len(args) == 1:
         output = args[0]
@@ -115,19 +112,15 @@ def main():
         identity = PythonInterpreter.from_binary(options.python).identity
     else:
         # Convert "CPython 2.7" to "CPython 2 7 0"
-        python_version = options.python_version.replace('.', ' ').split()
+        python_version = options.python_version.replace(".", " ").split()
         if len(python_version) == 3:
-            python_version.append('0')
-        identity = PythonIdentity.from_id_string(' '.join(python_version))
+            python_version.append("0")
+        identity = PythonIdentity.from_id_string(" ".join(python_version))
 
-    interpreter = PythonInterpreter(
-        options.python,
-        identity,
-        extras={})
+    interpreter = PythonInterpreter(options.python, identity, extras={})
 
     pex_builder = PEXBuilder(
-        path=output if options.directory else None,
-        interpreter=interpreter,
+        path=output if options.directory else None, interpreter=interpreter
     )
 
     if options.python_shebang is not None:
@@ -143,11 +136,11 @@ def main():
     pex_builder.info.entry_point = options.entry_point
 
     # Copy in our version of `pkg_resources` & `_markerlib`.
-    copy_package(pex_builder, 'pkg_resources', prefix=pex_builder.BOOTSTRAP_DIR)
-    copy_package(pex_builder, '_markerlib', prefix=pex_builder.BOOTSTRAP_DIR)
+    copy_package(pex_builder, "pkg_resources", prefix=pex_builder.BOOTSTRAP_DIR)
+    copy_package(pex_builder, "_markerlib", prefix=pex_builder.BOOTSTRAP_DIR)
 
     # Add the sources listed in the manifest.
-    for dst, src in manifest['modules'].iteritems():
+    for dst, src in manifest["modules"].iteritems():
         # NOTE(agallagher): calls the `add_source` and `add_resource` below
         # hard-link the given source into the PEX temp dir.  Since OS X and
         # Linux behave different when hard-linking a source that is a
@@ -159,12 +152,12 @@ def main():
             raise Exception("Failed to add {}: {}".format(src, e))
 
     # Add resources listed in the manifest.
-    for dst, src in manifest['resources'].iteritems():
+    for dst, src in manifest["resources"].iteritems():
         # NOTE(agallagher): see rationale above.
         pex_builder.add_resource(dereference_symlinks(src), dst)
 
     # Add resources listed in the manifest.
-    for dst, src in manifest['nativeLibraries'].iteritems():
+    for dst, src in manifest["nativeLibraries"].iteritems():
         # NOTE(agallagher): see rationale above.
         pex_builder.add_resource(dereference_symlinks(src), dst)
 

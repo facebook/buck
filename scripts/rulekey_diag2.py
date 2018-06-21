@@ -1,21 +1,18 @@
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
+from __future__ import absolute_import, division, print_function, unicode_literals
 
-import traceback
 import math
+import traceback
 
 from rulekey_diff2 import *
 
 
 def format_duration(duration_s):
     if duration_s < 0:
-        return '-'
+        return "-"
     if duration_s < 1e-3:
-        return '%0.3f us' % (duration_s * 1e6)
+        return "%0.3f us" % (duration_s * 1e6)
     if duration_s < 1:
-        return '%0.3f ms' % (duration_s * 1e3)
+        return "%0.3f ms" % (duration_s * 1e3)
     t = math.floor(duration_s * 1000)
     ms = t % 1000
     t /= 1000
@@ -24,7 +21,7 @@ def format_duration(duration_s):
     m = t % 60
     t /= 60
     h = t
-    return '%02d:%02d:%02d.%03d' % (h, m, s, ms)
+    return "%02d:%02d:%02d.%03d" % (h, m, s, ms)
 
 
 def truncate(s, l):
@@ -33,13 +30,14 @@ def truncate(s, l):
     """
     if l is None or len(s) <= l:
         return s
-    return (s[:l-3] + '...') if l >= 3 else ''
+    return (s[: l - 3] + "...") if l >= 3 else ""
 
 
 class Table:
     """
     A printable table.
     """
+
     def __init__(self, rows=None, max_lengths=None):
         self.rows = rows or []
         self.max_lengths = max_lengths or []
@@ -51,7 +49,7 @@ class Table:
         return self.max_lengths[i] if i < len(self.max_lengths) else None
 
     def format_element(self, el, i):
-        return truncate(' %s ' % el, self.max_length(i))
+        return truncate(" %s " % el, self.max_length(i))
 
     def __str__(self):
         lengths = []
@@ -62,28 +60,29 @@ class Table:
                 lengths[i] = max(lengths[i], len(self.format_element(row[i], i)))
         lines = []
         for row in self.rows:
-            line = ''
+            line = ""
             if len(row) > 0:
-                line += '|'
+                line += "|"
                 for i in range(len(lengths)):
                     if lengths[i] > 0:
-                        el = self.format_element(row[i], i) if i < len(row) else ''
-                        line += el + ' ' * (lengths[i] - len(el)) + '|'
+                        el = self.format_element(row[i], i) if i < len(row) else ""
+                        line += el + " " * (lengths[i] - len(el)) + "|"
             else:
-                line += '+'
+                line += "+"
                 for i in range(len(lengths)):
                     if lengths[i] > 0:
-                        line += '-' * lengths[i] + '+'
+                        line += "-" * lengths[i] + "+"
             lines.append(line)
-        return '\n'.join(lines)
+        return "\n".join(lines)
 
 
 class NodeInfo:
     """
     A class that encapsulates per node information.
     """
+
     def __init__(self, line):
-        parts = line.strip().split(' ')
+        parts = line.strip().split(" ")
         self.id = int(parts[0])
         self.duration = int(parts[1])
         self.total_duration = -1
@@ -179,6 +178,7 @@ class Graph:
     """
     A class that encapsulates nodes and dependencies among them.
     """
+
     def __init__(self, lines):
         it = iter(lines)
         # int id_all, id_roots;
@@ -195,7 +195,7 @@ class Graph:
         self.rdeps = [[] for _ in range((n + 2))]
         deg = [0] * (n + 1)
         for i in range(m):
-            parts = next(it).split(' ')
+            parts = next(it).split(" ")
             u = int(parts[0])
             v = int(parts[1])
             self.deps[u].append(v)
@@ -211,7 +211,7 @@ class Graph:
         self.calc_total_durations()
         self.calc_target_index()
         dt = time.clock() - t0
-        eprint('nodes: ', n, ', edges: ', m, ', time: ', dt, sep='')
+        eprint("nodes: ", n, ", edges: ", m, ", time: ", dt, sep="")
 
     def __len__(self):
         return len(self.nodes)
@@ -238,16 +238,16 @@ class Graph:
 
 
 def print_deps(g, u, sort_col_id, cacheable_only, reverse_deps=False):
-    is_proper_node = (0 <= u < len(g))
+    is_proper_node = 0 <= u < len(g)
     if not is_proper_node and u != g.id_all and u != g.id_roots:
-        eprint('id out of range:', u)
+        eprint("id out of range:", u)
         return
 
     def col_cmp(v1, v2):
         return NodeInfo.compare_columns(g.nodes[v1], g.nodes[v2], sort_col_id)
 
     def id_col(i):
-        return str(i) + (' * ' if i == sort_col_id else '')
+        return str(i) + (" * " if i == sort_col_id else "")
 
     # build & print table
     tbl = Table([], NodeInfo.get_max_lengths())
@@ -263,19 +263,19 @@ def print_deps(g, u, sort_col_id, cacheable_only, reverse_deps=False):
             tbl.add_row(g.nodes[v].get_column_values())
     tbl.add_row([])
     if u == g.id_all:
-        print('all:')
+        print("all:")
     elif u == g.id_roots:
-        print('roots:')
+        print("roots:")
     elif reverse_deps:
-        print('reverse deps for:', u)
+        print("reverse deps for:", u)
     else:
-        print('deps for:', u)
+        print("deps for:", u)
     print(str(tbl))
 
 
 def print_node(g, u):
     if u < 0 or u >= len(g):
-        eprint('id out of range:', u)
+        eprint("id out of range:", u)
         return
     tbl = Table()
     tbl.add_row([])
@@ -324,6 +324,7 @@ class Diag:
     """
     A class that encapsulates diagnostics state such as graph and rulekey data.
     """
+
     def __init__(self):
         self.graph = None
         self.keys = None
@@ -333,11 +334,11 @@ class Diag:
 
     def load_graph(self, path):
         if not os.path.exists(path):
-            raise Exception(path + ' does not exist')
+            raise Exception(path + " does not exist")
         if os.path.isdir(path):
-            path = os.path.join(path, 'rule_key_diag_graph.txt')
-        eprint('Loading:', path)
-        with codecs.open(path, 'r', 'utf-8') as graph_file:
+            path = os.path.join(path, "rule_key_diag_graph.txt")
+        eprint("Loading:", path)
+        with codecs.open(path, "r", "utf-8") as graph_file:
             self.graph = Graph(graph_file)
 
     def load_keys(self, path):
@@ -361,21 +362,23 @@ class Diag:
                     same += 1
                     if not cacheable:
                         nonc += 1
-                if (keys != keys_ref or not only_different) and (cacheable or not only_cacheable):
+                if (keys != keys_ref or not only_different) and (
+                    cacheable or not only_cacheable
+                ):
                     print(target, keys, keys_ref)
         print("%d with mathcing keys, %d out of which non-cacheable" % (same, nonc))
 
     def save_graphviz(self, path):
         # $ dot -Tpng graph.gv -o graph.png
-        with codecs.open(path, 'w', 'utf-8') as gv_file:
-            print('digraph G {', file=gv_file)
+        with codecs.open(path, "w", "utf-8") as gv_file:
+            print("digraph G {", file=gv_file)
             for u in range(len(self.graph)):
                 label = self.graph.nodes[u].target
                 print('  %d [shape=box, label="%s"];' % (u, label), file=gv_file)
             for u in range(len(self.graph)):
                 for v in self.graph.deps[u]:
-                    print('  %d -> %d;' % (u, v), file=gv_file)
-            print('}', file=gv_file)
+                    print("  %d -> %d;" % (u, v), file=gv_file)
+            print("}", file=gv_file)
 
     def find_targets(self, pattern):
         regex = re.compile(pattern)
@@ -388,7 +391,9 @@ class Diag:
     def diff_keys_for_target(self, target):
         # use the prebuilt index when finding keys for target
         keys_left = {k: self.keys[k] for k in self.targets_to_keys.get(target, [])}
-        keys_right = {k: self.keys_ref[k] for k in self.targets_to_keys_ref.get(target, [])}
+        keys_right = {
+            k: self.keys_ref[k] for k in self.targets_to_keys_ref.get(target, [])
+        }
         keys_tuple_to_diff = find_keys_for_target(keys_left, keys_right, target)
         if keys_tuple_to_diff is not None:
             diff_keys_recursively(self.keys, self.keys_ref, keys_tuple_to_diff)
@@ -399,25 +404,23 @@ def parse_args():
     """
     parser = argparse.ArgumentParser(description=description)
     parser.add_argument(
-        '-g',
-        '--graph',
-        metavar='<path>',
-        help='path to a graph file to load')
+        "-g", "--graph", metavar="<path>", help="path to a graph file to load"
+    )
     parser.add_argument(
-        '-k',
-        '--keys',
-        metavar='<path>',
-        help='path to a keys file to load')
+        "-k", "--keys", metavar="<path>", help="path to a keys file to load"
+    )
     parser.add_argument(
-        '-l',
-        '--log_folder',
-        metavar='<path>',
-        help='folder containing the keys and graph file (use instead of -g and -k)')
+        "-l",
+        "--log_folder",
+        metavar="<path>",
+        help="folder containing the keys and graph file (use instead of -g and -k)",
+    )
     parser.add_argument(
-        '-r',
-        '--ref_keys',
-        metavar='<path>',
-        help='path to a reference keys file to load')
+        "-r",
+        "--ref_keys",
+        metavar="<path>",
+        help="path to a reference keys file to load",
+    )
 
     if len(sys.argv) == 1:
         parser.print_help()
@@ -426,7 +429,7 @@ def parse_args():
 
 
 def main():
-    print('RuleKey Diagnostics script v0.1')
+    print("RuleKey Diagnostics script v0.1")
 
     d = Diag()
 
@@ -444,86 +447,88 @@ def main():
     while True:
         try:
             print()
-            parts = raw_input('> ').strip().split(' ')
+            parts = raw_input("> ").strip().split(" ")
         except EOFError:
             break
         try:
             cmd = parts[0]
-            if cmd == 'q' or cmd == 'quit':
+            if cmd == "q" or cmd == "quit":
                 break
-            if cmd == 'h' or cmd == 'help':
+            if cmd == "h" or cmd == "help":
                 print_help()
-            elif cmd == 'lg' or cmd == 'load_graph':
+            elif cmd == "lg" or cmd == "load_graph":
                 path = parts[1]
                 d.load_graph(path)
-            elif cmd == 'r' or cmd == 'roots':
+            elif cmd == "r" or cmd == "roots":
                 bstk.append(d.graph.id_roots)
                 print_deps(d.graph, bstk[-1], sort_col_id, cacheable_only)
-            elif cmd == 'a' or cmd == 'all':
+            elif cmd == "a" or cmd == "all":
                 bstk.append(d.graph.id_all)
                 print_deps(d.graph, bstk[-1], sort_col_id, cacheable_only)
-            elif cmd == 'c' or cmd == 'cacheable_only':
+            elif cmd == "c" or cmd == "cacheable_only":
                 cacheable_only = not cacheable_only
-                print('cacheable_only: %s' % cacheable_only)
-            elif cmd == 'd' or cmd == 'deps':
+                print("cacheable_only: %s" % cacheable_only)
+            elif cmd == "d" or cmd == "deps":
                 bstk.append(int(parts[1]))
                 print_deps(d.graph, bstk[-1], sort_col_id, cacheable_only)
-            elif cmd == 'rd' or cmd == 'parents':
+            elif cmd == "rd" or cmd == "parents":
                 bstk.append(int(parts[1]))
                 print_deps(d.graph, bstk[-1], sort_col_id, cacheable_only, True)
-            elif cmd == 'b' or cmd == 'back':
+            elif cmd == "b" or cmd == "back":
                 if len(bstk) > 1:
                     bstk.pop()
                 print_deps(d.graph, bstk[-1], sort_col_id, cacheable_only)
-            elif cmd == 's' or cmd == 'sort':
+            elif cmd == "s" or cmd == "sort":
                 sort_col_id = int(parts[1])
                 print_deps(d.graph, bstk[-1], sort_col_id, cacheable_only)
-            elif cmd == 'p' or cmd == 'print':
+            elif cmd == "p" or cmd == "print":
                 u = int(parts[1])
                 print_node(d.graph, u)
-            elif cmd == 'ft' or cmd == 'find_target':
+            elif cmd == "ft" or cmd == "find_target":
                 pattern = parts[1]
                 for u in d.find_targets(pattern):
                     print(u, d.graph.nodes[u].target)
-            elif cmd == 'lk' or cmd == 'load_keys':
+            elif cmd == "lk" or cmd == "load_keys":
                 path = parts[1]
                 d.load_keys(path)
-            elif cmd == 'lkr' or cmd == 'load_keys_ref':
+            elif cmd == "lkr" or cmd == "load_keys_ref":
                 path = parts[1]
                 d.load_keys_ref(path)
-            elif cmd == 'fk' or cmd == 'find_keys':
-                criteria = zip(*[iter(parts[1:])]*2)
+            elif cmd == "fk" or cmd == "find_keys":
+                criteria = zip(*[iter(parts[1:])] * 2)
                 for key in find_keys(d.keys, criteria):
                     print(key)
-            elif cmd == 'fkr' or cmd == 'find_keys_ref':
-                criteria = zip(*[iter(parts[1:])]*2)
+            elif cmd == "fkr" or cmd == "find_keys_ref":
+                criteria = zip(*[iter(parts[1:])] * 2)
                 for key in find_keys(d.keys_ref, criteria):
                     print(key)
-            elif cmd == 'pk' or cmd == 'print_key':
+            elif cmd == "pk" or cmd == "print_key":
                 rulekey_hash = parts[1]
                 print_rulekey(d.keys.get(rulekey_hash, []))
-            elif cmd == 'pkr' or cmd == 'print_key_ref':
+            elif cmd == "pkr" or cmd == "print_key_ref":
                 rulekey_hash = parts[1]
                 print_rulekey(d.keys_ref.get(rulekey_hash, []))
-            elif cmd == 'pt' or cmd == 'print_targets':
+            elif cmd == "pt" or cmd == "print_targets":
                 d.print_targets_intersection(True, cacheable_only)
-            elif cmd == 'pta' or cmd == 'print_targets_all':
+            elif cmd == "pta" or cmd == "print_targets_all":
                 d.print_targets_intersection(False, cacheable_only)
-            elif cmd == 'dt' or cmd == 'diff_target':
+            elif cmd == "dt" or cmd == "diff_target":
                 try:
                     d.diff_keys_for_target(d.graph.nodes[int(parts[1])].target)
                 except ValueError:
                     d.diff_keys_for_target(parts[1])
-            elif cmd == 'gv' or cmd == 'save_graphviz':
+            elif cmd == "gv" or cmd == "save_graphviz":
                 path = parts[1]
                 d.save_graphviz(path)
             else:
-                eprint('unknown command: ', parts)
+                eprint("unknown command: ", parts)
         except Exception:
-            eprint('Something went wrong. Make sure you loaded all the required data and\n'
-                   'specified all the required arguments necessary for performing the command.')
+            eprint(
+                "Something went wrong. Make sure you loaded all the required data and\n"
+                "specified all the required arguments necessary for performing the command."
+            )
             eprint(traceback.format_exc())
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

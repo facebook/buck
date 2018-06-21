@@ -13,8 +13,8 @@
 # under the License.
 
 import contextlib
-import unittest
 import os
+import unittest
 import zipfile
 
 from py.buck.zip import munger
@@ -23,57 +23,54 @@ from py.buck.zip import munger
 class TestMunger(unittest.TestCase):
     def test_include_includes(self):
         with munger.tempdir() as temp_dir:
-            output_file = os.path.join(temp_dir, 'output')
-            input_file = os.path.join(temp_dir, 'input')
-            included = os.path.join(temp_dir, 'included')
-            with open(included, 'w') as f:
-                f.write('some content')
-            excluded = os.path.join(temp_dir, 'excluded')
-            with open(excluded, 'w') as f:
-                f.write('some content')
-            with contextlib.closing(zipfile.ZipFile(input_file, 'w')) as input:
+            output_file = os.path.join(temp_dir, "output")
+            input_file = os.path.join(temp_dir, "input")
+            included = os.path.join(temp_dir, "included")
+            with open(included, "w") as f:
+                f.write("some content")
+            excluded = os.path.join(temp_dir, "excluded")
+            with open(excluded, "w") as f:
+                f.write("some content")
+            with contextlib.closing(zipfile.ZipFile(input_file, "w")) as input:
                 input.write(included, os.path.relpath(included, temp_dir))
                 input.write(excluded, os.path.relpath(excluded, temp_dir))
 
-            munger.process_jar(
-                input_file,
-                output_file,
-                ['included'],
-                [])
+            munger.process_jar(input_file, output_file, ["included"], [])
 
             with contextlib.closing(zipfile.ZipFile(output_file)) as output:
-                self.assertEqual(len(output.infolist()), 1, 'Only one file ended up in the zip')
+                self.assertEqual(
+                    len(output.infolist()), 1, "Only one file ended up in the zip"
+                )
                 exists = False
                 for info in output.infolist():
-                    exists = exists or info.filename == 'included'
-                self.assertTrue(exists, 'Included file was included')
+                    exists = exists or info.filename == "included"
+                self.assertTrue(exists, "Included file was included")
 
     def test_exclude_excludes(self):
         with munger.tempdir() as temp_dir:
-            output_file = os.path.join(temp_dir, 'output')
-            input_file = os.path.join(temp_dir, 'input')
-            included = os.path.join(temp_dir, 'included')
-            with open(included, 'w') as f:
-                f.write('some content')
-            excluded = os.path.join(temp_dir, 'excluded')
-            with open(excluded, 'w') as f:
-                f.write('some content')
-            with contextlib.closing(zipfile.ZipFile(input_file, 'w')) as input:
+            output_file = os.path.join(temp_dir, "output")
+            input_file = os.path.join(temp_dir, "input")
+            included = os.path.join(temp_dir, "included")
+            with open(included, "w") as f:
+                f.write("some content")
+            excluded = os.path.join(temp_dir, "excluded")
+            with open(excluded, "w") as f:
+                f.write("some content")
+            with contextlib.closing(zipfile.ZipFile(input_file, "w")) as input:
                 input.write(included, os.path.relpath(included, temp_dir))
                 input.write(excluded, os.path.relpath(excluded, temp_dir))
 
-            munger.process_jar(
-                input_file,
-                output_file,
-                [],
-                ['excluded'])
+            munger.process_jar(input_file, output_file, [], ["excluded"])
 
             with contextlib.closing(zipfile.ZipFile(output_file)) as output:
-                self.assertEqual(len(output.infolist()), 1, 'Only one file ended up in the zip')
+                self.assertEqual(
+                    len(output.infolist()), 1, "Only one file ended up in the zip"
+                )
                 exists = False
                 for info in output.infolist():
-                    exists = exists or info.filename == 'included'
-                self.assertTrue(exists, 'Included file was included')
+                    exists = exists or info.filename == "included"
+                self.assertTrue(exists, "Included file was included")
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     unittest.main()

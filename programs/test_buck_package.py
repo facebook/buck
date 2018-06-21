@@ -20,12 +20,12 @@ from buck_package import *
 
 class TestBuckPackage(unittest.TestCase):
     def test_does_not_crash_on_file_removed(self):
-        if platform.system() == 'Windows':
+        if platform.system() == "Windows":
             # Deleting open files on Windows fails.
             return
         with closable_named_temporary_file() as outf:
             os.remove(outf.name)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

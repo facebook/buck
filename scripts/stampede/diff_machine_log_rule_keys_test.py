@@ -1,8 +1,8 @@
 import os
 import unittest
+
 import diff_machine_log_rule_keys as rule_key_differ
-from diff_machine_log_rule_keys import DEFAULT_RULE_KEY
-from diff_machine_log_rule_keys import INPUT_RULE_KEY
+from diff_machine_log_rule_keys import DEFAULT_RULE_KEY, INPUT_RULE_KEY
 
 
 def get_test_dir(test_dir):
@@ -12,9 +12,9 @@ def get_test_dir(test_dir):
 
 class TestRuleKeyDiffer(unittest.TestCase):
     def test_finds_dist_logs(self):
-        dist_build_logs = \
-            rule_key_differ \
-            .find_dist_build_logs(get_test_dir("machine_logs"))
+        dist_build_logs = rule_key_differ.find_dist_build_logs(
+            get_test_dir("machine_logs")
+        )
 
         self.assertEqual(2, len(dist_build_logs))
 
@@ -28,18 +28,19 @@ class TestRuleKeyDiffer(unittest.TestCase):
     def test_finds_local_logs(self):
         raised = False
         try:
-            local_log = \
-                rule_key_differ \
-                .find_local_build_log(get_test_dir("machine_logs"))
+            local_log = rule_key_differ.find_local_build_log(
+                get_test_dir("machine_logs")
+            )
             self.assertEqual("local", local_log.id)
         except:
             raised = True
-        self.assertFalse(raised, 'Exception raised')
+        self.assertFalse(raised, "Exception raised")
 
     def test_finds_matches_and_mismatches(self):
         machine_logs_dir = get_test_dir("machine_logs")
         results = rule_key_differ.compare_local_vs_dist_build(
-            machine_logs_dir, machine_logs_dir)
+            machine_logs_dir, machine_logs_dir
+        )
 
         ##############################
         # Log file contents:
@@ -72,34 +73,38 @@ class TestRuleKeyDiffer(unittest.TestCase):
         ###############################
 
         local_vs_dist_1 = filter(
-            lambda x: x.log_file_one.id == "local" and
-            x.log_file_two.id == "run-1", results)
+            lambda x: x.log_file_one.id == "local" and x.log_file_two.id == "run-1",
+            results,
+        )
         self.assertEqual(1, len(local_vs_dist_1))
         local_vs_dist_1 = local_vs_dist_1[0]
 
-        extra_rules_dist_1 = local_vs_dist_1 \
-            .extra_build_rules_by_log_file[local_vs_dist_1.log_file_two]
+        extra_rules_dist_1 = local_vs_dist_1.extra_build_rules_by_log_file[
+            local_vs_dist_1.log_file_two
+        ]
         extra_rules_dist_1 = sorted(list(extra_rules_dist_1))
         self.assertEqual(2, len(extra_rules_dist_1))
         self.assertEqual("//build/rule:extraOne", extra_rules_dist_1[0])
         self.assertEqual("//build/rule:extraTwo", extra_rules_dist_1[1])
 
-        default_mismatches_1 = local_vs_dist_1.\
-            mismatching_results_by_rule_key_type[DEFAULT_RULE_KEY]
-        input_mismatches_1 = local_vs_dist_1.\
-            mismatching_results_by_rule_key_type[INPUT_RULE_KEY]
+        default_mismatches_1 = local_vs_dist_1.mismatching_results_by_rule_key_type[
+            DEFAULT_RULE_KEY
+        ]
+        input_mismatches_1 = local_vs_dist_1.mismatching_results_by_rule_key_type[
+            INPUT_RULE_KEY
+        ]
         self.assertEqual(0, len(default_mismatches_1))
         self.assertEqual(0, len(input_mismatches_1))
 
-        default_matches_1 = local_vs_dist_1.\
-            matching_results_by_rule_key_type[DEFAULT_RULE_KEY]
-        input_matches_1 = local_vs_dist_1.\
-            matching_results_by_rule_key_type[INPUT_RULE_KEY]
+        default_matches_1 = local_vs_dist_1.matching_results_by_rule_key_type[
+            DEFAULT_RULE_KEY
+        ]
+        input_matches_1 = local_vs_dist_1.matching_results_by_rule_key_type[
+            INPUT_RULE_KEY
+        ]
         self.assertEqual(2, len(default_matches_1))
-        self.assertEqual(
-            default_matches_1[0].build_rule_name, "//build/rule:one")
-        self.assertEqual(
-            default_matches_1[1].build_rule_name, "//build/rule:two")
+        self.assertEqual(default_matches_1[0].build_rule_name, "//build/rule:one")
+        self.assertEqual(default_matches_1[1].build_rule_name, "//build/rule:two")
         self.assertEqual(1, len(input_matches_1))
 
         ###############################
@@ -107,35 +112,39 @@ class TestRuleKeyDiffer(unittest.TestCase):
         ###############################
 
         local_vs_dist_2 = filter(
-            lambda x: x.log_file_one.id == "local" and
-            x.log_file_two.id == "run-2", results)
+            lambda x: x.log_file_one.id == "local" and x.log_file_two.id == "run-2",
+            results,
+        )
         self.assertEqual(1, len(local_vs_dist_2))
         local_vs_dist_2 = local_vs_dist_2[0]
 
-        extra_rules_local_2 = local_vs_dist_2 \
-            .extra_build_rules_by_log_file[local_vs_dist_2.log_file_one]
+        extra_rules_local_2 = local_vs_dist_2.extra_build_rules_by_log_file[
+            local_vs_dist_2.log_file_one
+        ]
         extra_rules_local_2 = sorted(list(extra_rules_local_2))
         self.assertEqual(1, len(extra_rules_local_2))
         self.assertEqual("//build/rule:one", extra_rules_local_2[0])
 
-        default_mismatches_2 = local_vs_dist_2.\
-            mismatching_results_by_rule_key_type[DEFAULT_RULE_KEY]
-        input_mismatches_2 = local_vs_dist_2.\
-            mismatching_results_by_rule_key_type[INPUT_RULE_KEY]
+        default_mismatches_2 = local_vs_dist_2.mismatching_results_by_rule_key_type[
+            DEFAULT_RULE_KEY
+        ]
+        input_mismatches_2 = local_vs_dist_2.mismatching_results_by_rule_key_type[
+            INPUT_RULE_KEY
+        ]
         self.assertEqual(0, len(default_mismatches_2))
         self.assertEqual(1, len(input_mismatches_2))
-        self.assertEqual(
-            "//build/rule:two", input_mismatches_2[0].build_rule_name)
+        self.assertEqual("//build/rule:two", input_mismatches_2[0].build_rule_name)
 
-        default_matches_2 = local_vs_dist_2.\
-            matching_results_by_rule_key_type[DEFAULT_RULE_KEY]
-        input_matches_2 = local_vs_dist_2.\
-            matching_results_by_rule_key_type[INPUT_RULE_KEY]
+        default_matches_2 = local_vs_dist_2.matching_results_by_rule_key_type[
+            DEFAULT_RULE_KEY
+        ]
+        input_matches_2 = local_vs_dist_2.matching_results_by_rule_key_type[
+            INPUT_RULE_KEY
+        ]
         self.assertEqual(1, len(default_matches_2))
-        self.assertEqual(
-            default_matches_2[0].build_rule_name, "//build/rule:two")
+        self.assertEqual(default_matches_2[0].build_rule_name, "//build/rule:two")
         self.assertEqual(0, len(input_matches_2))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

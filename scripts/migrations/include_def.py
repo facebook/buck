@@ -1,7 +1,8 @@
 import ast
+import os
+
 import label
 import repository
-import os
 
 
 class IncludeDef:

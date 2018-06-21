@@ -19,16 +19,18 @@
 import argparse
 import shutil
 import sys
-
 from zipfile import ZipFile
 
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--input')
-    parser.add_argument('--output')
-    parser.add_argument('files-to-append', nargs='+',
-                        help='Pairs of new zip entry name and file with entry content')
+    parser.add_argument("--input")
+    parser.add_argument("--output")
+    parser.add_argument(
+        "files-to-append",
+        nargs="+",
+        help="Pairs of new zip entry name and file with entry content",
+    )
     options = parser.parse_args()
     copy_and_append_to_zip_file(options.input, options.output, options.files_to_append)
 
@@ -39,7 +41,7 @@ def copy_and_append_to_zip_file(input_zip_file, output_zip_file, files_to_append
 
 
 def append_files_to_zip(zip_file_name, files_to_append):
-    with ZipFile(zip_file_name, 'a') as zip_file:
+    with ZipFile(zip_file_name, "a") as zip_file:
         for i in range(0, len(files_to_append) - 1, 2):
             entry_name = files_to_append[i]
             entry_content = __read_file(files_to_append[i + 1])
@@ -51,5 +53,5 @@ def __read_file(file_path):
         return new_file.read()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     copy_and_append_to_zip_file(sys.argv[1], sys.argv[2], sys.argv[3:])

@@ -1,13 +1,9 @@
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import with_statement
-
-from . import struct
+from __future__ import absolute_import, division, print_function, with_statement
 
 import copy
-
 import unittest
+
+from . import struct
 
 
 class StructTest(unittest.TestCase):
@@ -15,24 +11,23 @@ class StructTest(unittest.TestCase):
         self.assertEqual(struct.struct(foo="bar").foo, "bar")
 
     def testJsonSerialization(self):
-        self.assertEqual(
-            struct.struct(foo="bar").to_json(),
-            "{\"foo\":\"bar\"}")
+        self.assertEqual(struct.struct(foo="bar").to_json(), '{"foo":"bar"}')
 
     def testJsonKeysAreSorted(self):
         self.assertEqual(
-            struct.struct(c="c", b="b", a="a").to_json(),
-            "{\"a\":\"a\",\"b\":\"b\",\"c\":\"c\"}")
+            struct.struct(c="c", b="b", a="a").to_json(), '{"a":"a","b":"b","c":"c"}'
+        )
 
     def testNestedJsonSerialization(self):
         self.assertEqual(
             struct.struct(foo=struct.struct(bar="baz")).to_json(),
-            "{\"foo\":{\"bar\":\"baz\"}}")
+            '{"foo":{"bar":"baz"}}',
+        )
 
     def testCannotMutateAField(self):
         with self.assertRaisesRegexp(
-                AttributeError,
-                "Mutation of struct attributes \('foo'\) is not allowed."):
+            AttributeError, "Mutation of struct attributes \('foo'\) is not allowed."
+        ):
             struct.struct(foo="foo").foo = "bar"
 
     def testCanCopy(self):
@@ -55,10 +50,7 @@ class StructTest(unittest.TestCase):
     def testCanUseAsAHashKey(self):
         x = struct.struct(foo="bar")
         y = struct.struct(foo="baz")
-        dictionary = {
-            x: "x",
-            y: "y",
-        }
+        dictionary = {x: "x", y: "y"}
         self.assertEqual(dictionary[x], "x")
         self.assertNotEqual(dictionary[y], "x")
 
