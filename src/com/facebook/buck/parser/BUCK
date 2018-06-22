@@ -29,6 +29,7 @@ java_immutables_library(
         "CellManager.java",
         "ConcurrentMapCache.java",
         "ConvertingPipeline.java",
+        "ConvertingPipelineWithPerfEventScope.java",
         "DaemonicCellState.java",
         "DaemonicParserState.java",
         "DefaultParser.java",
