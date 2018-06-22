@@ -133,7 +133,7 @@ public class ShTest extends NoopBuildRuleWithDeclaredAndExtraDeps
   @Override
   public Path getPathToTestOutputDirectory() {
     return BuildTargets.getGenPath(
-        getProjectFilesystem(), getBuildTarget(), "__java_test_%s_output__");
+        getProjectFilesystem(), getBuildTarget(), "__sh_test_%s_output__");
   }
 
   @VisibleForTesting
