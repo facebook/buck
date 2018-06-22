@@ -16,6 +16,7 @@ standard_java_test(
         "//third-party/java/bazel:skylark-lang",
         "//third-party/java/guava:guava",
         "//third-party/java/hamcrest:java-hamcrest",
+        "//third-party/java/jsr:jsr305",
         "//third-party/java/junit:junit",
     ],
 )
