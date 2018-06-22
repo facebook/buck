@@ -41,6 +41,7 @@ import com.facebook.buck.parser.options.ProjectBuildFileParserOptions;
 import com.facebook.buck.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.sandbox.TestSandboxExecutionStrategyFactory;
+import com.facebook.buck.skylark.io.GlobSpec;
 import com.facebook.buck.skylark.io.impl.NativeGlobber;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TestConsole;
@@ -229,6 +230,31 @@ public class SkylarkProjectBuildFileParserTest {
     assertThat(
         Type.STRING_LIST.convert(rule.get("licenses"), "license"),
         equalTo(ImmutableList.of("file1", "file2")));
+  }
+
+  @Test
+  public void globManifestIsCapturedFunction() throws Exception {
+    Path directory = projectFilesystem.resolve("src").resolve("test");
+    Path buildFile = directory.resolve("BUCK");
+    Files.createDirectories(directory);
+    Files.write(
+        buildFile,
+        Arrays.asList("prebuilt_jar(name='guava', binary_jar='foo.jar', licenses=glob(['f*']))"));
+    Files.createFile(directory.resolve("file1"));
+    Files.createFile(directory.resolve("file2"));
+    Files.createFile(directory.resolve("bad_file"));
+    BuildFileManifest buildFileManifest = parser.getBuildFileManifest(buildFile, new AtomicLong());
+    assertThat(buildFileManifest.getTargets(), Matchers.hasSize(1));
+    assertThat(
+        buildFileManifest.getGlobManifest(),
+        equalTo(
+            ImmutableMap.of(
+                GlobSpec.builder()
+                    .setInclude(ImmutableList.of("f*"))
+                    .setExclude(ImmutableList.of())
+                    .setExcludeDirectories(true)
+                    .build(),
+                ImmutableSet.of("file1", "file2"))));
   }
 
   @Test

@@ -17,12 +17,14 @@
 package com.facebook.buck.skylark.parser;
 
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.skylark.io.GlobSpec;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.devtools.build.lib.vfs.Path;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import org.immutables.value.Value;
 
 /** Parse result containing build rules defined in build file and supporting metadata. */
@@ -49,4 +51,7 @@ abstract class AbstractParseResult {
    */
   public abstract ImmutableMap<String, ImmutableMap<String, Optional<String>>>
       getReadConfigurationOptions();
+
+  /** @return A mapping from a {@link GlobSpec} to the corresponding set of expanded paths. */
+  public abstract ImmutableMap<GlobSpec, Set<String>> getGlobManifest();
 }

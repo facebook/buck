@@ -134,6 +134,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
                 .map(Object::toString)
                 .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())))
         .setConfigs(parseResult.getReadConfigurationOptions())
+        .setGlobManifest(parseResult.getGlobManifest())
         .build();
   }
 
@@ -173,7 +174,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
           "Cannot parse build file " + buildFile);
     }
     String basePath = getBasePath(buildFile);
-    Globber globber =
+    CachingGlobber globber =
         CachingGlobber.of(
             globberFactory.create(fileSystem.getPath(buildFile.getParent().toString())));
     PackageContext packageContext = createPackageContext(basePath, globber);
@@ -205,6 +206,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
                   .add(buildFilePath)
                   .build())
           .setReadConfigurationOptions(parseContext.getAccessedConfigurationOptions())
+          .setGlobManifest(globber.createGlobManifest())
           .build();
     }
   }
