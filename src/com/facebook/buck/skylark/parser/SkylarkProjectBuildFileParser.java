@@ -26,7 +26,9 @@ import com.facebook.buck.parser.events.ParseBuckFileEvent;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.options.ProjectBuildFileParserOptions;
 import com.facebook.buck.skylark.function.SkylarkNativeModule;
+import com.facebook.buck.skylark.io.Globber;
 import com.facebook.buck.skylark.io.GlobberFactory;
+import com.facebook.buck.skylark.io.impl.CachingGlobber;
 import com.facebook.buck.skylark.packages.PackageContext;
 import com.facebook.buck.skylark.parser.context.ParseContext;
 import com.google.common.base.Throwables;
@@ -171,7 +173,10 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
           "Cannot parse build file " + buildFile);
     }
     String basePath = getBasePath(buildFile);
-    PackageContext packageContext = createPackageContext(buildFile, basePath);
+    Globber globber =
+        CachingGlobber.of(
+            globberFactory.create(fileSystem.getPath(buildFile.getParent().toString())));
+    PackageContext packageContext = createPackageContext(basePath, globber);
     ParseContext parseContext = new ParseContext(packageContext);
     try (Mutability mutability = Mutability.create("parsing " + buildFile)) {
       EnvironmentData envData =
@@ -249,9 +254,9 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
   }
 
   @Nonnull
-  private PackageContext createPackageContext(Path buildFile, String basePath) {
+  private PackageContext createPackageContext(String basePath, Globber globber) {
     return PackageContext.builder()
-        .setGlobber(globberFactory.create(fileSystem.getPath(buildFile.getParent().toString())))
+        .setGlobber(globber)
         .setRawConfig(options.getRawConfig())
         .setPackageIdentifier(
             PackageIdentifier.create(
