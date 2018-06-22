@@ -59,6 +59,7 @@ public class CoordinatorModeRunner extends AbstractDistBuildModeRunner {
   private final Optional<URI> traceUploadUri;
   private final MinionCountProvider minionCountProvider;
   private final Optional<String> coordinatorMinionId;
+  private final boolean releasingMinionsEarlyEnabled;
 
   /** Constructor. */
   public CoordinatorModeRunner(
@@ -73,7 +74,8 @@ public class CoordinatorModeRunner extends AbstractDistBuildModeRunner {
       DistBuildService distBuildService,
       MinionHealthTracker minionHealthTracker,
       MinionCountProvider minionCountProvider,
-      Optional<String> coordinatorMinionId) {
+      Optional<String> coordinatorMinionId,
+      boolean releasingMinionsEarlyEnabled) {
     this.stampedeId = stampedeId;
     this.clientBuildId = clientBuildId;
     this.traceUploadUri = traceUploadUri;
@@ -87,6 +89,7 @@ public class CoordinatorModeRunner extends AbstractDistBuildModeRunner {
     this.distBuildService = distBuildService;
     this.minionCountProvider = minionCountProvider;
     this.coordinatorMinionId = coordinatorMinionId;
+    this.releasingMinionsEarlyEnabled = releasingMinionsEarlyEnabled;
   }
 
   public CoordinatorModeRunner(
@@ -100,7 +103,8 @@ public class CoordinatorModeRunner extends AbstractDistBuildModeRunner {
       Optional<URI> traceUploadUri,
       MinionHealthTracker minionHealthTracker,
       MinionCountProvider minionCountProvider,
-      Optional<String> coordinatorMinionId) {
+      Optional<String> coordinatorMinionId,
+      boolean releasingMinionsEarlyEnabled) {
     this(
         OptionalInt.empty(),
         queue,
@@ -113,7 +117,8 @@ public class CoordinatorModeRunner extends AbstractDistBuildModeRunner {
         distBuildService,
         minionHealthTracker,
         minionCountProvider,
-        coordinatorMinionId);
+        coordinatorMinionId,
+        releasingMinionsEarlyEnabled);
   }
 
   @Override
@@ -181,7 +186,8 @@ public class CoordinatorModeRunner extends AbstractDistBuildModeRunner {
                   minionHealthTracker,
                   distBuildService,
                   minionCountProvider,
-                  coordinatorMinionId));
+                  coordinatorMinionId,
+                  releasingMinionsEarlyEnabled));
       this.server.start();
       this.closer.register(
           service.addCallback("ReportCoordinatorAlive", createHeartbeatCallback()));

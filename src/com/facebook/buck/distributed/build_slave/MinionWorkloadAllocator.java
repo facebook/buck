@@ -58,6 +58,7 @@ public class MinionWorkloadAllocator {
   private final Set<String> minionsAvailableForAllocation = new HashSet<>();
   private final Map<String, Integer> minionFreeCapacities = new HashMap<>();
   private final Optional<String> coordinatorMinionId;
+  private final boolean releasingMinionsEarlyEnabled;
 
   private final DistBuildTraceTracker chromeTraceTracker;
 
@@ -82,10 +83,12 @@ public class MinionWorkloadAllocator {
   public MinionWorkloadAllocator(
       BuildTargetsQueue queue,
       DistBuildTraceTracker chromeTraceTracker,
-      Optional<String> coordinatorMinionId) {
+      Optional<String> coordinatorMinionId,
+      boolean releasingMinionsEarlyEnabled) {
     this.queue = queue;
     this.chromeTraceTracker = chromeTraceTracker;
     this.coordinatorMinionId = coordinatorMinionId;
+    this.releasingMinionsEarlyEnabled = releasingMinionsEarlyEnabled;
   }
 
   public synchronized boolean isBuildFinished() {
@@ -170,7 +173,9 @@ public class MinionWorkloadAllocator {
 
     WorkloadAllocationResult result;
     // Check if we can release the minion - no work scheduled and capacity not needed anymore.
-    if (workUnitsAllocatedToMinion.isEmpty() && isMinionCapacityRedundant(minionId)) {
+    if (workUnitsAllocatedToMinion.isEmpty()
+        && releasingMinionsEarlyEnabled
+        && isMinionCapacityRedundant(minionId)) {
       minionsAvailableForAllocation.remove(minionId);
       LOG.info(
           String.format(

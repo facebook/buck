@@ -86,7 +86,8 @@ public class CoordinatorAndMinionModeRunnerIntegrationTest {
             Optional.empty(),
             EasyMock.createNiceMock(MinionHealthTracker.class),
             EasyMock.createNiceMock(MinionCountProvider.class),
-            Optional.of(DistBuildUtil.generateMinionId(BUILD_SLAVE_RUN_ID)));
+            Optional.of(DistBuildUtil.generateMinionId(BUILD_SLAVE_RUN_ID)),
+            true /* releasingMinionsEarlyEnabled */);
     FakeBuildExecutorImpl localBuilder = new FakeBuildExecutorImpl();
     MinionModeRunner minion =
         new MinionModeRunner(

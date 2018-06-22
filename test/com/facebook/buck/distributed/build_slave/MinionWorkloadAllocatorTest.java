@@ -89,7 +89,8 @@ public class MinionWorkloadAllocatorTest {
             createQueueUsingResolver(
                 CustomActiongGraphBuilderFactory.createDiamondDependencyBuilderWithChainFromLeaf()),
             tracker,
-            Optional.of(MINION_THREE));
+            Optional.of(MINION_THREE),
+            true);
 
     // Allocate work unit with 2 targets to low-speced minion one
     allocateWorkWithNoReleaseAndAssert(
@@ -141,7 +142,8 @@ public class MinionWorkloadAllocatorTest {
             createQueueUsingResolver(
                 CustomActiongGraphBuilderFactory.createDiamondDependencyBuilderWithChainFromLeaf()),
             tracker,
-            Optional.of(MINION_FOUR));
+            Optional.of(MINION_FOUR),
+            true);
 
     // Allocate work unit with 2 targets to minion one
     allocateWorkWithNoReleaseAndAssert(
@@ -243,7 +245,8 @@ public class MinionWorkloadAllocatorTest {
             createQueueUsingResolver(
                 CustomActiongGraphBuilderFactory.createDiamondDependencyGraph()),
             tracker,
-            Optional.of(MINION_ONE));
+            Optional.of(MINION_ONE),
+            true);
     Assert.assertFalse(allocator.isBuildFinished());
 
     List<WorkUnit> firstTargets =
@@ -290,7 +293,7 @@ public class MinionWorkloadAllocatorTest {
   public void testInstantReleaseApartFromCoordinatorMinion() {
     BuildTargetsQueue queue = EasyMock.createNiceMock(BuildTargetsQueue.class);
     MinionWorkloadAllocator allocator =
-        new MinionWorkloadAllocator(queue, tracker, Optional.of(MINION_ONE));
+        new MinionWorkloadAllocator(queue, tracker, Optional.of(MINION_ONE), true);
 
     // Always say "no work left" if asked (force "this minion's capacity is redundant" decisions).
     expect(queue.getSafeApproxOfRemainingWorkUnitsCount())
@@ -312,10 +315,35 @@ public class MinionWorkloadAllocatorTest {
   }
 
   @Test
+  public void testRedundantMinionNotReleased() {
+    BuildTargetsQueue queue = EasyMock.createNiceMock(BuildTargetsQueue.class);
+    // Allocator with releasing disabled.
+    MinionWorkloadAllocator allocator =
+        new MinionWorkloadAllocator(queue, tracker, Optional.of(MINION_ONE), false);
+
+    // Do not assign work.
+    List<WorkUnit> noUnits = new LinkedList<>();
+    expect(queue.dequeueZeroDependencyNodes(new LinkedList<>(), MAX_WORK_UNITS_TO_FETCH))
+        .andReturn(noUnits)
+        .anyTimes();
+    // Always say "no work left" if asked (force "this minion's capacity is redundant" decisions).
+    expect(queue.getSafeApproxOfRemainingWorkUnitsCount())
+        .andReturn(FEW_REMAINING_UNITS)
+        .anyTimes();
+    replay(queue);
+
+    // Coordinator's minion does not get released.
+    allocateWorkAndCheckRelease(allocator, MINION_ONE, ImmutableList.of(), false, noUnits);
+    // Redundant minion (work fits on coordinator's minion) not released.
+    allocateWorkAndCheckRelease(allocator, MINION_TWO, ImmutableList.of(), false, noUnits);
+    verify(queue);
+  }
+
+  @Test
   public void testUseMinionAndThenReleaseOncePossible() {
     BuildTargetsQueue queue = EasyMock.createNiceMock(BuildTargetsQueue.class);
     MinionWorkloadAllocator allocator =
-        new MinionWorkloadAllocator(queue, tracker, Optional.of(MINION_ONE));
+        new MinionWorkloadAllocator(queue, tracker, Optional.of(MINION_ONE), true);
 
     int unitsCount = 2;
     List<WorkUnit> units = createWorkUnits(0, unitsCount);

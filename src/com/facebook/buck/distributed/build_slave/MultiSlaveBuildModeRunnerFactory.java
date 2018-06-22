@@ -160,7 +160,8 @@ public class MultiSlaveBuildModeRunnerFactory {
         traceUploadUri,
         minionHealthTracker,
         listenerAndMinionCountProvider,
-        coordinatorMinionId);
+        coordinatorMinionId,
+        distBuildConfig.isReleasingMinionsEarlyEnabled());
   }
 
   /**

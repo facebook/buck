@@ -184,7 +184,8 @@ public class ThriftCoordinatorServerIntegrationTest {
         EasyMock.createNiceMock(MinionHealthTracker.class),
         EasyMock.createNiceMock(DistBuildService.class),
         EasyMock.createNiceMock(MinionCountProvider.class),
-        Optional.of(MINION_ID));
+        Optional.of(MINION_ID),
+        true /* releasingMinionsEarlyEnabled */);
   }
 
   @Test
@@ -228,7 +229,8 @@ public class ThriftCoordinatorServerIntegrationTest {
                 EasyMock.createNiceMock(MinionHealthTracker.class),
                 EasyMock.createNiceMock(DistBuildService.class),
                 EasyMock.createNiceMock(MinionCountProvider.class),
-                Optional.of(MINION_ID));
+                Optional.of(MINION_ID),
+                true /* releasingMinionsEarlyEnabled */);
         ThriftCoordinatorClient client =
             new ThriftCoordinatorClient("localhost", STAMPEDE_ID, CONNECTION_TIMEOUT_MILLIS)) {
       server.start();
@@ -275,7 +277,8 @@ public class ThriftCoordinatorServerIntegrationTest {
                 EasyMock.createNiceMock(MinionHealthTracker.class),
                 distBuildService,
                 EasyMock.createNiceMock(MinionCountProvider.class),
-                Optional.empty());
+                Optional.empty(),
+                true /* releasingMinionsEarlyEnabled */);
         ThriftCoordinatorClient client =
             new ThriftCoordinatorClient("localhost", STAMPEDE_ID, CONNECTION_TIMEOUT_MILLIS)) {
       server.start();
@@ -315,7 +318,8 @@ public class ThriftCoordinatorServerIntegrationTest {
                 EasyMock.createNiceMock(MinionHealthTracker.class),
                 distBuildService,
                 EasyMock.createNiceMock(MinionCountProvider.class),
-                Optional.empty());
+                Optional.empty(),
+                true /* releasingMinionsEarlyEnabled */);
         ThriftCoordinatorClient client =
             new ThriftCoordinatorClient("localhost", STAMPEDE_ID, CONNECTION_TIMEOUT_MILLIS)) {
       server.start();

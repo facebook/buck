@@ -176,6 +176,9 @@ public class DistBuildConfig {
   private static final String ENABLE_UPLOADS_FROM_LOCAL_CACHE = "enable_uploads_from_local_cache";
   private static final boolean DEFAULT_ENABLE_UPLOADS_FROM_LOCAL_CACHE = false;
 
+  private static final String ENABLE_RELEASING_MINIONS_EARLY = "enable_releasing_minions_early";
+  private static final boolean DEFAULT_ENABLE_RELEASING_MINIONS_EARLY = true;
+
   /**
    * While the experiments.stampede_beta_test flag is set to true, this flag can be used to
    * configure whether we want auto-stampede conversion for all builds, no builds, or some builds.
@@ -591,5 +594,10 @@ public class DistBuildConfig {
         buckConfig.getOptionalListWithoutComments(STAMPEDE_SECTION, AUTO_STAMPEDE_USER_BLACKLIST);
 
     return optionalBlackListUsers.isPresent() && optionalBlackListUsers.get().contains(user);
+  }
+
+  public boolean isReleasingMinionsEarlyEnabled() {
+    return buckConfig.getBooleanValue(
+        STAMPEDE_SECTION, ENABLE_RELEASING_MINIONS_EARLY, DEFAULT_ENABLE_RELEASING_MINIONS_EARLY);
   }
 }
