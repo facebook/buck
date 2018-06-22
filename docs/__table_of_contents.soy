@@ -115,6 +115,9 @@
             'rust_test',
             'prebuilt_rust_library',
         ],
+        'shell': [
+            'sh_binary',
+        ],
     ] /}
   <h3>The Basics</h3>
   <ul>
@@ -342,6 +345,11 @@
         {param currentnavid: $navid /}
         {param platform: 'Rust' /}
         {param rules: $platformRulesMap['rust'] /}
+    {/call}
+    {call navigation.platformBuildRuleLink}
+        {param currentnavid: $navid /}
+        {param platform: 'Shell' /}
+        {param rules: $platformRulesMap['shell'] /}
     {/call}
     {call navigation.platformBuildRuleLink}
         {param currentnavid: $navid /}

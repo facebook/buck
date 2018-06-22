@@ -1,0 +1,97 @@
+{namespace sh_binary}
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: 'sh_binary()' /}
+    {param navid: 'rule_sh_binary' /}
+    {param prettify: true /}
+    {param description}
+      A rule that is used to invoke a shell script.
+    {/param}
+    {param content}
+
+{call buck.rule}
+{param status: 'UNFROZEN' /}
+{param overview}
+  A <code>sh_binary()</code> is used to execute a shell script.
+{/param}
+
+{param args}
+
+{call buck.arg}
+  {param name: 'name' /}
+  {param desc}
+  The name of the sh_binary.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'main' /}
+  {param desc}
+  Either the path to the script (relative to the build file), or a {call buck.build_target /}.
+  This file must be executable in order to be run.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'resources' /}
+  {param default: '[]' /}
+  {param desc}
+    A list of files or build rules that this rule requires in order to run. These could be things such as
+    random data files.
+
+    These files are made available in a directory at run time and are placed relative to
+    their original location in the project repository.
+
+    This directory's location is determined entirely by Buck; the script should not assume the directory's location.
+    The location is provided to the script in the <code>$BUCK_PROJECT_ROOT</code> environment variable.
+  {/param}
+{/call}
+
+{/param} // args
+
+{param examples}
+
+<p>This sh_binary() just cats a sample data file back at the user.</p>
+
+{literal}
+<pre class="prettyprint lang-py">
+# $REPO/BUCK
+sh_binary(
+    name = "script",
+    main = "script.sh",
+    resources = [
+        "data.dat",
+    ],
+)
+</pre>{/literal}
+
+{literal}
+<pre class="prettyprint lang-sh">
+# Sample data file with data we need at runtime
+$ echo "I'm a datafile" > data.dat
+
+# Create a simple script that prints out the resource
+$ cat > script.sh
+#!/bin/sh
+cat $BUCK_PROJECT_ROOT/data.dat
+
+# Make sure the script is executable
+$ chmod u+x script.sh
+
+# Run the script, and see that it prints out the resource we provided
+$ buck run //:script
+Building: finished in 1.9 sec (100%) 1/1 jobs, 1 updated
+  Total time: 2.1 sec
+I'm a datafile
+</pre>
+{/literal}
+
+{/param} // examples
+
+{/call} // buck.rule
+
+ {/param}
+  {/call}
+{/template}
