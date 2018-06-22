@@ -80,6 +80,8 @@ final class PreprocessorDelegate implements RuleKeyAppendable, HasCustomDepsLogi
   // Fields that added to the rule key with some processing.
   @AddToRuleKey private final PreprocessorFlags preprocessorFlags;
 
+  @AddToRuleKey private final ImmutableSortedSet<String> conflictingHeadersBasenameWhitelist;
+
   // Fields that are not added to the rule key.
   private final PathSourcePath workingDir;
 
@@ -109,7 +111,8 @@ final class PreprocessorDelegate implements RuleKeyAppendable, HasCustomDepsLogi
       RuleKeyAppendableFunction<FrameworkPath, Path> frameworkPathSearchPathFunction,
       Optional<SymlinkTree> sandbox,
       Optional<CxxIncludePaths> leadingIncludePaths,
-      Optional<BuildRule> aggregatedDeps) {
+      Optional<BuildRule> aggregatedDeps,
+      ImmutableSortedSet<String> conflictingHeaderBasenameWhitelist) {
     this.preprocessor = preprocessor;
     this.preprocessorFlags = preprocessorFlags;
     this.headerVerification = headerVerification;
@@ -119,6 +122,7 @@ final class PreprocessorDelegate implements RuleKeyAppendable, HasCustomDepsLogi
     this.sandbox = sandbox;
     this.leadingIncludePaths = leadingIncludePaths;
     this.aggregatedDeps = aggregatedDeps;
+    this.conflictingHeadersBasenameWhitelist = conflictingHeaderBasenameWhitelist;
   }
 
   public PreprocessorDelegate withLeadingIncludePaths(CxxIncludePaths leadingIncludePaths) {
@@ -130,7 +134,8 @@ final class PreprocessorDelegate implements RuleKeyAppendable, HasCustomDepsLogi
         this.frameworkPathSearchPathFunction,
         this.sandbox,
         Optional.of(leadingIncludePaths),
-        this.aggregatedDeps);
+        this.aggregatedDeps,
+        conflictingHeadersBasenameWhitelist);
   }
 
   public Preprocessor getPreprocessor() {
@@ -368,6 +373,10 @@ final class PreprocessorDelegate implements RuleKeyAppendable, HasCustomDepsLogi
       if (cxxHeaders instanceof CxxSymlinkTreeHeaders) {
         CxxSymlinkTreeHeaders symlinkTreeHeaders = (CxxSymlinkTreeHeaders) cxxHeaders;
         for (Map.Entry<Path, SourcePath> entry : symlinkTreeHeaders.getNameToPathMap().entrySet()) {
+          if (conflictingHeadersBasenameWhitelist.contains(
+              entry.getKey().getFileName().toString())) {
+            continue;
+          }
           SourcePath original = headers.put(entry.getKey(), entry.getValue());
           if (original != null && !original.equals(entry.getValue())) {
             return Optional.of(
@@ -429,6 +438,9 @@ final class PreprocessorDelegate implements RuleKeyAppendable, HasCustomDepsLogi
       HEADER_VERIFICATION_TYPE_INFO.visit(instance.headerVerification, serializer);
       PREPROCESSOR_FLAGS_TYPE_INFO.visit(instance.preprocessorFlags, serializer);
       serializer.visitSourcePath(instance.workingDir);
+      serializer.visitInteger(instance.conflictingHeadersBasenameWhitelist.size());
+      RichStream.from(instance.conflictingHeadersBasenameWhitelist)
+          .forEachThrowing(serializer::visitString);
       Preconditions.checkState(!instance.leadingIncludePaths.isPresent());
       Preconditions.checkState(!instance.sandbox.isPresent());
     }
@@ -446,6 +458,14 @@ final class PreprocessorDelegate implements RuleKeyAppendable, HasCustomDepsLogi
       SourcePath workingDirSourcePath = deserializer.createSourcePath();
       Preconditions.checkState(workingDirSourcePath instanceof PathSourcePath);
       PathSourcePath workingDir = (PathSourcePath) workingDirSourcePath;
+      ImmutableSortedSet.Builder<String> conflictingHeadersBasenameWhitelistBuilder =
+          ImmutableSortedSet.naturalOrder();
+      int conflictingHeadersBasenameWhitelistSize = deserializer.createInteger();
+      for (int i = 0; i < conflictingHeadersBasenameWhitelistSize; i++) {
+        conflictingHeadersBasenameWhitelistBuilder.add(deserializer.createString());
+      }
+      ImmutableSortedSet<String> conflictingHeadersBasenameWhitelist =
+          conflictingHeadersBasenameWhitelistBuilder.build();
       return new PreprocessorDelegate(
           headerVerification,
           workingDir,
@@ -454,7 +474,8 @@ final class PreprocessorDelegate implements RuleKeyAppendable, HasCustomDepsLogi
           frameworkPathSearchPathFunction,
           Optional.empty(),
           Optional.empty(),
-          Optional.empty());
+          Optional.empty(),
+          conflictingHeadersBasenameWhitelist);
     }
   }
 }

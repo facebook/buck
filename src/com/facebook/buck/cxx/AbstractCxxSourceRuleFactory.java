@@ -238,7 +238,8 @@ abstract class AbstractCxxSourceRuleFactory {
                             getCxxPlatform(), getPathResolver()),
                         getSandboxTree(),
                         /* leadingIncludePaths */ Optional.empty(),
-                        Optional.of(aggregatedDeps));
+                        Optional.of(aggregatedDeps),
+                        getCxxPlatform().getConflictingHeaderBasenameWhitelist());
                 return new PreprocessorDelegateCacheValue(
                     delegate, getSanitizerForSourceType(key.getSourceType()));
               });

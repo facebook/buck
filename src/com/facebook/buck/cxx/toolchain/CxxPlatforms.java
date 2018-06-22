@@ -134,7 +134,8 @@ public class CxxPlatforms {
         .setHeaderVerification(headerVerification)
         .setPublicHeadersSymlinksEnabled(config.getPublicHeadersSymlinksEnabled())
         .setPrivateHeadersSymlinksEnabled(config.getPrivateHeadersSymlinksEnabled())
-        .setPicTypeForSharedLinking(picTypeForSharedLinking);
+        .setPicTypeForSharedLinking(picTypeForSharedLinking)
+        .setConflictingHeaderBasenameWhitelist(config.getConflictingHeaderBasenameWhitelist());
 
     builder.setSymbolNameTool(
         new LazyDelegatingSymbolNameTool(

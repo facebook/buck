@@ -91,7 +91,8 @@ public class CxxCollectAndLogInferDependenciesStepTest {
             defaultFrameworkPathSearchPathFunction,
             Optional.empty(),
             /* leadingIncludePaths */ Optional.empty(),
-            Optional.of(new FakeBuildRule(buildTarget.withFlavors(InternalFlavor.of("deps")))));
+            Optional.of(new FakeBuildRule(buildTarget.withFlavors(InternalFlavor.of("deps")))),
+            ImmutableSortedSet.of());
 
     return new CxxInferCapture(
         buildTarget,

@@ -58,6 +58,7 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
@@ -208,7 +209,8 @@ public class CxxPreprocessAndCompileTest {
                         Optional.empty(),
                         /* leadingIncludePaths */ Optional.empty(),
                         Optional.of(
-                            new FakeBuildRule(target.withFlavors(InternalFlavor.of("deps"))))),
+                            new FakeBuildRule(target.withFlavors(InternalFlavor.of("deps")))),
+                        ImmutableSortedSet.of()),
                     new CompilerDelegate(
                         CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
                         DEFAULT_COMPILER,
@@ -320,7 +322,8 @@ public class CxxPreprocessAndCompileTest {
                         Optional.empty(),
                         /* leadingIncludePaths */ Optional.empty(),
                         Optional.of(
-                            new FakeBuildRule(target.withFlavors(InternalFlavor.of("deps"))))),
+                            new FakeBuildRule(target.withFlavors(InternalFlavor.of("deps")))),
+                        ImmutableSortedSet.of()),
                     new CompilerDelegate(
                         CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
                         DEFAULT_COMPILER,
@@ -416,7 +419,8 @@ public class CxxPreprocessAndCompileTest {
                 DEFAULT_FRAMEWORK_PATH_SEARCH_PATH_FUNCTION,
                 Optional.empty(),
                 /* leadingIncludePaths */ Optional.empty(),
-                Optional.of(new FakeBuildRule(target.withFlavors(InternalFlavor.of("deps"))))),
+                Optional.of(new FakeBuildRule(target.withFlavors(InternalFlavor.of("deps")))),
+                ImmutableSortedSet.of()),
             new CompilerDelegate(
                 CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
                 DEFAULT_COMPILER,
@@ -504,7 +508,8 @@ public class CxxPreprocessAndCompileTest {
                 DEFAULT_FRAMEWORK_PATH_SEARCH_PATH_FUNCTION,
                 Optional.empty(),
                 /* leadingIncludePaths */ Optional.empty(),
-                Optional.of(new FakeBuildRule(target.withFlavors(InternalFlavor.of("deps"))))),
+                Optional.of(new FakeBuildRule(target.withFlavors(InternalFlavor.of("deps")))),
+                ImmutableSortedSet.of()),
             new CompilerDelegate(
                 CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
                 COMPILER_WITH_COLOR_SUPPORT,

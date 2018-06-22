@@ -142,7 +142,8 @@ public class CxxCompilationDatabaseTest {
                         new DependencyAggregation(
                             aggregatedDeps,
                             filesystem,
-                            ImmutableSortedSet.of(privateSymlinkTree, exportedSymlinkTree)))),
+                            ImmutableSortedSet.of(privateSymlinkTree, exportedSymlinkTree))),
+                    ImmutableSortedSet.of()),
                 new CompilerDelegate(
                     CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
                     new GccCompiler(

@@ -38,6 +38,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Maps;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -83,6 +84,8 @@ public class CxxBuckConfig {
       "independent_shlib_interface_ldflags";
   private static final String DECLARED_PLATFORMS = "declared_platforms";
   private static final String SHARED_LIBRARY_EXT = "shared_library_extension";
+  private static final String CONFLICTING_HEADER_BASENAME_WHITELIST =
+      "conflicting_header_basename_whitelist";
 
   private static final String ASFLAGS = "asflags";
   private static final String ASPPFLAGS = "asppflags";
@@ -512,6 +515,11 @@ public class CxxBuckConfig {
   /** @return the extension to use for shared libraries (e.g. ".so"). */
   public Optional<String> getSharedLibraryExtension() {
     return delegate.getValue(cxxSection, SHARED_LIBRARY_EXT);
+  }
+
+  public ImmutableSortedSet<String> getConflictingHeaderBasenameWhitelist() {
+    return ImmutableSortedSet.copyOf(
+        delegate.getListWithoutComments(cxxSection, CONFLICTING_HEADER_BASENAME_WHITELIST));
   }
 
   public BuckConfig getDelegate() {

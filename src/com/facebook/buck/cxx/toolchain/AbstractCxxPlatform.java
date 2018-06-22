@@ -24,6 +24,7 @@ import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.linker.LinkerProvider;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Multimap;
 import java.util.List;
 import java.util.Optional;
@@ -139,5 +140,11 @@ interface AbstractCxxPlatform extends FlavorConvertible {
   @Value.Default
   default PicType getPicTypeForSharedLinking() {
     return PicType.PIC;
+  }
+
+  /** @return whitelist of basenames to exclude from conflicting header checks. */
+  @Value.Default
+  default ImmutableSortedSet<String> getConflictingHeaderBasenameWhitelist() {
+    return ImmutableSortedSet.of();
   }
 }

@@ -2516,6 +2516,16 @@ public class CxxBinaryIntegrationTest {
   }
 
   @Test
+  public void conflictingHeadersWithWhitelistSucceeds() throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "headers_conflicts", tmp);
+    workspace.setUp();
+    workspace
+        .runBuckBuild("-c", "cxx.conflicting_header_basename_whitelist=public.h", ":main")
+        .assertSuccess();
+  }
+
+  @Test
   public void testPlatformDependenciesNotResolvedEagerly() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "cxx_binary_platform_deps", tmp);

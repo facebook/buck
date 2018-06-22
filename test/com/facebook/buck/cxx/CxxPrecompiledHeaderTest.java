@@ -77,7 +77,8 @@ public class CxxPrecompiledHeaderTest {
                     CxxPlatformUtils.DEFAULT_PLATFORM, sourcePathResolver),
                 Optional.empty(),
                 /* leadingIncludePaths */ Optional.empty(),
-                Optional.of(new FakeBuildRule(target.withFlavors(InternalFlavor.of("deps"))))),
+                Optional.of(new FakeBuildRule(target.withFlavors(InternalFlavor.of("deps")))),
+                ImmutableSortedSet.of()),
             new CompilerDelegate(
                 CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
                 compiler,
