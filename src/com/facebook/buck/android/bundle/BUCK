@@ -1,0 +1,25 @@
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
+
+java_immutables_library(
+    name = "bundle",
+    srcs = glob(["*.java"]),
+    tests = [
+        "//test/com/facebook/buck/android/bundle:bundle",
+    ],
+    visibility = [
+        "//src/com/facebook/buck/android/...",
+        "//src/com/facebook/buck/core/rules:rules",
+        "//src/com/facebook/buck/file:file",
+        "//src/com/facebook/buck/jvm/java:rules",
+        "//src/com/facebook/buck/shell:rules",
+        "//test/com/facebook/buck/android:integration1",
+        "//test/com/facebook/buck/android:integration2",
+        "//test/com/facebook/buck/android/bundle:bundle",
+    ],
+    deps = [
+        "//src/com/facebook/buck/event:event",
+        "//src/com/facebook/buck/io/filesystem:filesystem",
+        "//src/com/facebook/buck/step:step",
+        "//third-party/java/bundletool:bundletool",
+    ],
+)

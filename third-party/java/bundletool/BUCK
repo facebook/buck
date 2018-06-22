@@ -16,7 +16,6 @@ java_library(
     name = "bundle",
     srcs = [ ":proto-gen" ],
     deps = DEPS,
-    visibility = ["PUBLIC"],
 
 )
 
@@ -29,7 +28,7 @@ prebuilt_jar(
 
 # prebuild_jar doesn't support exported_deps, so just wrap it in a java_library with no sources.
 java_library(
-    name = "prebuilt_lib",
+    name = "bundletool",
     srcs = [],
     exported_deps = [":prebuilt"] + DEPS,
     visibility = ["PUBLIC"],
