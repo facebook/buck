@@ -9,7 +9,7 @@
 /**
  * @param value The numeric value of the error code.
  * @param enum The Java enum for the error code. 
- * @param description A description of the error-code means.
+ * @param description A description of what the error-code means.
  */
 {template .exit_codes}
   <tr> 
@@ -20,7 +20,7 @@
       <code>{$enum}</code>
     </td>
     <td class="exit-codes"> 
-      {$description}
+      {$description|noAutoescape}
     </td>
   </tr>
 {/template}
@@ -57,21 +57,24 @@ command exits.
   {param value: '1' /}
   {param enum: 'BUILD_ERROR' /}
   {param description}
-  Build resulted in non-specific user error.
+  Build resulted in a non-specific user error.
   {/param}
 {/call}
 {call .exit_codes}
   {param value: '2' /}
   {param enum: 'BUSY' /}
   {param description}
-  Buck daemon is busy processing another command.
+  Buck daemon is busy processing another command. 
+  For more information, see {call buck.cmd_link}{param name: 'buckd' /}{param rendered_text: 'buckd' /}{/call}.
   {/param}
 {/call}
 {call .exit_codes}
   {param value: '3' /}
   {param enum: 'COMMANDLINE_ERROR' /}
   {param description}
-  Incorrect user-supplied command-line options.
+  Incorrect user-supplied command-line options. 
+  For more information, see {call buck.cmd_link}{param name: 'common_parameters' /}{param rendered_text: 'Common Parameters' /}{/call} or 
+  the topic page for the specific command that you executed.
   {/param}
 {/call}
 {call .exit_codes}
@@ -85,8 +88,7 @@ command exits.
   {param value: '5' /}
   {param enum: 'PARSE_ERROR' /}
   {param description}
-  Error in parsing the build file or in constructing the target or 
-  action graph. 
+  Error in parsing the build file or in constructing the target or action graph. 
   {/param}
 {/call}
 {call .exit_codes}
@@ -94,6 +96,7 @@ command exits.
   {param enum: 'RUN_ERROR' /}
   {param description}
   Failure while running a binary or installing a binary on a device.
+  For more information, see {call buck.cmd_link}{param name: 'run' /}{/call}.
   {/param}
 {/call}
 /*
@@ -142,6 +145,7 @@ command exits.
   {param enum: 'TEST_ERROR' /}
   {param description}
   Test run had user-specific test errors.
+  For more information, see {call buck.cmd_link}{param name: 'test' /}{/call}.
   {/param}
 {/call}
 {call .exit_codes}
@@ -149,6 +153,7 @@ command exits.
   {param enum: 'TEST_NOTHING' /}
   {param description}
   There were no tests to run.
+  For more information, see {call buck.cmd_link}{param name: 'test' /}{/call}.
   {/param}
 {/call}
 /*
