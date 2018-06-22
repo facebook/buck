@@ -147,4 +147,7 @@ interface AbstractCxxPlatform extends FlavorConvertible {
   default ImmutableSortedSet<String> getConflictingHeaderBasenameWhitelist() {
     return ImmutableSortedSet.of();
   }
+
+  /** @return the explicit header mode to use for this platform. */
+  Optional<HeaderMode> getHeaderMode();
 }

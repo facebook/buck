@@ -86,6 +86,7 @@ public class CxxBuckConfig {
   private static final String SHARED_LIBRARY_EXT = "shared_library_extension";
   private static final String CONFLICTING_HEADER_BASENAME_WHITELIST =
       "conflicting_header_basename_whitelist";
+  private static final String HEADER_MODE = "header_mode";
 
   private static final String ASFLAGS = "asflags";
   private static final String ASPPFLAGS = "asppflags";
@@ -520,6 +521,11 @@ public class CxxBuckConfig {
   public ImmutableSortedSet<String> getConflictingHeaderBasenameWhitelist() {
     return ImmutableSortedSet.copyOf(
         delegate.getListWithoutComments(cxxSection, CONFLICTING_HEADER_BASENAME_WHITELIST));
+  }
+
+  /** @return the configured C/C++ header mode. */
+  public Optional<HeaderMode> getHeaderMode() {
+    return delegate.getEnum(cxxSection, HEADER_MODE, HeaderMode.class);
   }
 
   public BuckConfig getDelegate() {

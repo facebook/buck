@@ -364,6 +364,24 @@ public class CxxLibraryIntegrationTest {
   }
 
   @Test
+  public void buildWithExplicitHeaderMode() throws InterruptedException, IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "headers_symlinks", tmp);
+    workspace.setUp();
+    workspace
+        .runBuckBuild("-c", "cxx.header_mode=symlink_tree_only", "-v=3", "//:main#default")
+        .assertSuccess();
+    Path rootPath = tmp.getRoot();
+    assertTrue(
+        Files.exists(
+            rootPath.resolve(
+                "buck-out/gen/foobar#header-mode-symlink-tree-only,headers/foobar/public.h")));
+    assertTrue(
+        Files.exists(
+            rootPath.resolve("buck-out/gen/foobar#default,private-headers/foobar/private.h")));
+  }
+
+  @Test
   public void buildWithoutHeadersSymlink() throws InterruptedException, IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "headers_symlinks", tmp);

@@ -133,14 +133,19 @@ public class CxxDescriptionEnhancer {
 
   public static HeaderMode getHeaderModeForPlatform(
       BuildRuleResolver resolver, CxxPlatform cxxPlatform, boolean shouldCreateHeadersSymlinks) {
-    boolean useHeaderMap =
-        (cxxPlatform.getCpp().resolve(resolver).supportsHeaderMaps()
-            && cxxPlatform.getCxxpp().resolve(resolver).supportsHeaderMaps());
-    return !useHeaderMap
-        ? HeaderMode.SYMLINK_TREE_ONLY
-        : (shouldCreateHeadersSymlinks
-            ? HeaderMode.SYMLINK_TREE_WITH_HEADER_MAP
-            : HeaderMode.HEADER_MAP_ONLY);
+    return cxxPlatform
+        .getHeaderMode()
+        .orElseGet(
+            () -> {
+              boolean useHeaderMap =
+                  (cxxPlatform.getCpp().resolve(resolver).supportsHeaderMaps()
+                      && cxxPlatform.getCxxpp().resolve(resolver).supportsHeaderMaps());
+              return !useHeaderMap
+                  ? HeaderMode.SYMLINK_TREE_ONLY
+                  : (shouldCreateHeadersSymlinks
+                      ? HeaderMode.SYMLINK_TREE_WITH_HEADER_MAP
+                      : HeaderMode.HEADER_MAP_ONLY);
+            });
   }
 
   public static HeaderSymlinkTree createHeaderSymlinkTree(
