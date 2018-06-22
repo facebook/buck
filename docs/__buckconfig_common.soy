@@ -66,9 +66,10 @@
 /**
  * @param section The section the entry is in.
  * @param entry The name of the entry to link to.
+ * @param? link_text The text of the link
  */
 {template .entry_link}
-<a href="{ROOT}concept/buckconfig.html#{$section}.{$entry}">{$section}.{$entry}</a>
+<a href="{ROOT}concept/buckconfig.html#{$section}.{$entry}">{if isNonnull($link_text)}{$link_text}{else}{$section}.{$entry}{/if}</a>
 {/template}
 
 /***/
@@ -252,6 +253,14 @@
 {call .entry_link}
     {param section: 'test' /}
     {param entry: 'rule_timeout' /}
+{/call}
+{/template}
+
+/***/
+{template .test_external_runner}
+{call .entry_link}
+    {param section: 'test' /}
+    {param entry: 'external_runner' /}
 {/call}
 {/template}
 

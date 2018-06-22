@@ -1,0 +1,132 @@
+{namespace sh_test}
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: 'sh_test()' /}
+    {param navid: 'rule_sh_test' /}
+    {param prettify: true /}
+    {param description}
+      A rule that runs a test by invoking a shell script.
+    {/param}
+    {param content}
+
+{call buck.rule}
+{param status: 'UNFROZEN' /}
+{param overview}
+  <p>A <code>sh_test()</code> is a test rule that can pass results to the test runner by invoking a shell script.</p>
+
+  <strong>NOTE:</strong> This rule is not currently supported on Windows.
+{/param}
+
+{param args}
+
+{call buck.arg}
+  {param name: 'name' /}
+  {param desc}
+  The name of the sh_test.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'test' /}
+  {param desc}
+  Either the path to the script (relative to the build file), or a {call buck.build_target /}.
+  This file must be executable in order to be run.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'args' /}
+  {param default: '[]' /}
+  {param desc}
+  The list of arguments to invoke this script with. These are literal values, and no shell interpolation is done.
+
+  These can contain {call buck.string_parameter_macros /}, for example, to give the location of a generated binary to the test script.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'env' /}
+  {{param default: '{}' /}}
+  {param desc}
+  Environment variable overrides that should be used when running the script. The key is the variable name, and the value is its value.
+
+  The values can contain {call buck.string_parameter_macros /} such as the location of a generated binary to be used by the test script.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'type' /}
+  {param default: 'None' /}
+  {param desc}
+  If provided, this will be sent to any configured {call buckconfig.entry_link}{param section: 'test' /}{param entry: 'external_runner' /}{param link_text: 'external runner' /}{/call}
+  {/param}
+{/call}
+
+{/param} // args
+
+{param examples}
+
+<p>This sh_test() fails if a string does not match a value.</p>
+
+{literal}
+<pre class="prettyprint lang-py">
+# $REPO/BUCK
+sh_test(
+    name = "script_pass",
+    test = "script.sh",
+    args = ["--pass"],
+)
+
+sh_test(
+    name = "script_fail",
+    test = "script.sh",
+    args = ["--fail"],
+)
+
+</pre>{/literal}
+
+{literal}
+<pre class="prettyprint lang-sh">
+# Create a simple script that prints out the resource
+$ cat > script.sh
+#!/bin/sh
+for arg in $@; do
+  if [ "$arg" == "--pass" ]; then
+    echo "Passed"
+    exit 0;
+  fi
+done
+echo "Failed"
+exit 1
+
+# Make sure the script is executable
+$ chmod u+x script.sh
+
+# Run the script, and see that one test passes, one fails
+$ buck test //:script_pass //:script_fail
+FAILURE script.sh sh_test
+Building: finished in 0.0 sec (100%) 2/2 jobs, 0 updated
+  Total time: 0.0 sec
+Testing: finished in 0.0 sec (1 PASS/1 FAIL)
+RESULTS FOR //:script_fail //:script_pass
+FAIL    <100ms  0 Passed   0 Skipped   1 Failed   //:script_fail
+FAILURE script.sh sh_test
+====STANDARD OUT====
+Failed
+
+PASS    <100ms  1 Passed   0 Skipped   0 Failed   //:script_pass
+TESTS FAILED: 1 FAILURE
+Failed target: //:script_fail
+FAIL //:script_fail
+</pre>
+{/literal}
+
+{/param} // examples
+
+{/call} // buck.rule
+
+ {/param}
+  {/call}
+{/template}
