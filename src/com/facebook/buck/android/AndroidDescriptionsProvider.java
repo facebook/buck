@@ -66,7 +66,8 @@ public class AndroidDescriptionsProvider implements DescriptionProvider {
             cxxBuckConfig,
             dxConfig,
             apkConfig,
-            toolchainProvider),
+            toolchainProvider,
+            new AndroidBinaryGraphEnhancerFactory()),
         new AndroidBuildConfigDescription(toolchainProvider),
         new AndroidInstrumentationApkDescription(
             javaConfig, proGuardConfig, cxxBuckConfig, dxConfig, apkConfig, toolchainProvider),

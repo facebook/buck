@@ -18,17 +18,13 @@ package com.facebook.buck.android;
 
 import static com.facebook.buck.android.AndroidBinaryResourcesGraphEnhancer.PACKAGE_STRING_ASSETS_FLAVOR;
 
-import com.facebook.buck.android.AndroidBinary.PackageType;
-import com.facebook.buck.android.AndroidBinary.RelinkerMode;
 import com.facebook.buck.android.FilterResourcesSteps.ResourceFilter;
 import com.facebook.buck.android.ResourcesFilter.ResourceCompressionMode;
-import com.facebook.buck.android.apkmodule.APKModuleGraph;
 import com.facebook.buck.android.dalvik.ZipSplitter.DexSplitStrategy;
 import com.facebook.buck.android.exopackage.ExopackageMode;
 import com.facebook.buck.android.redex.RedexOptions;
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.android.toolchain.AndroidSdkLocation;
-import com.facebook.buck.android.toolchain.DxToolchain;
 import com.facebook.buck.android.toolchain.ndk.TargetCpuType;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.core.cell.resolver.CellPathResolver;
@@ -55,18 +51,12 @@ import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
-import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.Keystore;
 import com.facebook.buck.jvm.java.toolchain.JavaOptionsProvider;
-import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.facebook.buck.rules.coercer.ManifestEntries;
-import com.facebook.buck.rules.macros.AbstractMacroExpander;
-import com.facebook.buck.rules.macros.ExecutableMacroExpander;
-import com.facebook.buck.rules.macros.LocationMacroExpander;
-import com.facebook.buck.rules.macros.Macro;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosConverter;
 import com.facebook.buck.toolchain.ToolchainProvider;
@@ -76,15 +66,12 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
-import com.google.common.util.concurrent.ListeningExecutorService;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.Set;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.immutables.value.Value;
@@ -96,11 +83,6 @@ public class AndroidBinaryDescription
             AndroidBinaryDescription.AbstractAndroidBinaryDescriptionArg> {
 
   private static final Logger LOG = Logger.get(AndroidBinaryDescription.class);
-
-  private static final ImmutableList<AbstractMacroExpander<? extends Macro, ?>> MACRO_EXPANDERS =
-      ImmutableList.of(new ExecutableMacroExpander(), new LocationMacroExpander());
-
-  private static final Pattern COUNTRY_LOCALE_PATTERN = Pattern.compile("([a-z]{2})-[A-Z]{2}");
 
   private static final Flavor ANDROID_MODULARITY_VERIFICATION_FLAVOR =
       InternalFlavor.of("modularity_verification");
@@ -121,6 +103,7 @@ public class AndroidBinaryDescription
   private final AndroidInstallConfig androidInstallConfig;
   private final ApkConfig apkConfig;
   private final ToolchainProvider toolchainProvider;
+  private final AndroidBinaryGraphEnhancerFactory androidBinaryGraphEnhancerFactory;
 
   public AndroidBinaryDescription(
       JavaBuckConfig javaBuckConfig,
@@ -130,7 +113,8 @@ public class AndroidBinaryDescription
       CxxBuckConfig cxxBuckConfig,
       DxConfig dxConfig,
       ApkConfig apkConfig,
-      ToolchainProvider toolchainProvider) {
+      ToolchainProvider toolchainProvider,
+      AndroidBinaryGraphEnhancerFactory androidBinaryGraphEnhancerFactory) {
     this.javaBuckConfig = javaBuckConfig;
     this.androidBuckConfig = androidBuckConfig;
     this.proGuardConfig = proGuardConfig;
@@ -139,6 +123,7 @@ public class AndroidBinaryDescription
     this.androidInstallConfig = new AndroidInstallConfig(buckConfig);
     this.apkConfig = apkConfig;
     this.toolchainProvider = toolchainProvider;
+    this.androidBinaryGraphEnhancerFactory = androidBinaryGraphEnhancerFactory;
   }
 
   @Override
@@ -178,22 +163,6 @@ public class AndroidBinaryDescription
           buildTarget, keystore.getFullyQualifiedName(), keystore.getType());
     }
 
-    APKModuleGraph apkModuleGraph = null;
-    if (!args.getApplicationModuleConfigs().isEmpty()) {
-      apkModuleGraph =
-          new APKModuleGraph(
-              Optional.of(args.getApplicationModuleConfigs()),
-              args.getApplicationModuleDependencies(),
-              context.getTargetGraph(),
-              buildTarget);
-    } else {
-      apkModuleGraph =
-          new APKModuleGraph(
-              context.getTargetGraph(),
-              buildTarget,
-              Optional.of(args.getApplicationModuleTargets()));
-    }
-
     EnumSet<ExopackageMode> exopackageModes = EnumSet.noneOf(ExopackageMode.class);
     if (!args.getExopackageModes().isEmpty()) {
       exopackageModes = EnumSet.copyOf(args.getExopackageModes());
@@ -205,20 +174,6 @@ public class AndroidBinaryDescription
     }
 
     DexSplitMode dexSplitMode = createDexSplitMode(args, exopackageModes);
-
-    PackageType packageType = getPackageType(args);
-
-    ProGuardObfuscateStep.SdkProguardType androidSdkProguardConfig =
-        args.getAndroidSdkProguardConfig().orElse(ProGuardObfuscateStep.SdkProguardType.NONE);
-
-    boolean shouldProguard =
-        args.getProguardConfig().isPresent()
-            || !ProGuardObfuscateStep.SdkProguardType.NONE.equals(androidSdkProguardConfig);
-
-    boolean shouldPreDex =
-        !args.getDisablePreDex()
-            && !shouldProguard
-            && !args.getPreprocessJavaClassesBash().isPresent();
 
     // Build rules added to "no_dx" are only hints, not hard dependencies. Therefore, although a
     // target may be mentioned in that parameter, it may not be present as a build rule.
@@ -238,106 +193,31 @@ public class AndroidBinaryDescription
             .filter(JavaLibrary.class)
             .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
 
-    ListeningExecutorService dxExecutorService =
-        toolchainProvider
-            .getByName(DxToolchain.DEFAULT_NAME, DxToolchain.class)
-            .getDxExecutorService();
-
-    JavaOptionsProvider javaOptionsProvider =
-        toolchainProvider.getByName(JavaOptionsProvider.DEFAULT_NAME, JavaOptionsProvider.class);
-
     CellPathResolver cellRoots = context.getCellPathResolver();
-
-    NonPredexedDexBuildableArgs nonPreDexedDexBuildableArgs =
-        NonPredexedDexBuildableArgs.builder()
-            .setProguardAgentPath(proGuardConfig.getProguardAgentPath())
-            .setProguardJarOverride(proGuardConfig.getProguardJarOverride())
-            .setProguardMaxHeapSize(proGuardConfig.getProguardMaxHeapSize())
-            .setSdkProguardConfig(androidSdkProguardConfig)
-            .setPreprocessJavaClassesBash(
-                getPreprocessJavaClassesBash(args, buildTarget, graphBuilder, cellRoots))
-            .setReorderClassesIntraDex(args.isReorderClassesIntraDex())
-            .setDexReorderToolFile(args.getDexReorderToolFile())
-            .setDexReorderDataDumpFile(args.getDexReorderDataDumpFile())
-            .setDxExecutorService(dxExecutorService)
-            .setDxMaxHeapSize(dxConfig.getDxMaxHeapSize())
-            .setOptimizationPasses(args.getOptimizationPasses())
-            .setProguardJvmArgs(args.getProguardJvmArgs())
-            .setSkipProguard(args.isSkipProguard())
-            .setJavaRuntimeLauncher(javaOptionsProvider.getJavaOptions().getJavaRuntimeLauncher())
-            .setProguardConfigPath(args.getProguardConfig())
-            .setShouldProguard(shouldProguard)
-            .build();
 
     ResourceFilter resourceFilter = new ResourceFilter(args.getResourceFilter());
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
 
-    AndroidPlatformTarget androidPlatformTarget =
-        toolchainProvider.getByName(
-            AndroidPlatformTarget.DEFAULT_NAME, AndroidPlatformTarget.class);
-
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
 
     AndroidBinaryGraphEnhancer graphEnhancer =
-        new AndroidBinaryGraphEnhancer(
+        androidBinaryGraphEnhancerFactory.create(
             toolchainProvider,
+            javaBuckConfig,
+            cxxBuckConfig,
+            dxConfig,
+            proGuardConfig,
             cellRoots,
+            context.getTargetGraph(),
             buildTarget,
             projectFilesystem,
-            androidPlatformTarget,
             params,
             graphBuilder,
-            args.getAaptMode(),
-            args.getResourceCompression(),
             resourceFilter,
-            args.getEffectiveBannedDuplicateResourceTypes(),
-            args.getDuplicateResourceWhitelist(),
-            args.getResourceUnionPackage(),
-            addFallbackLocales(args.getLocales()),
-            args.getLocalizedStringFileName(),
-            args.getManifest(),
-            args.getManifestSkeleton(),
-            args.getModuleManifestSkeleton(),
-            packageType,
-            ImmutableSet.copyOf(args.getCpuFilters()),
-            args.isBuildStringSourceMap(),
-            shouldPreDex,
             dexSplitMode,
-            args.getNoDx(),
-            /* resourcesToExclude */ ImmutableSet.of(),
-            args.isSkipCrunchPngs(),
-            args.isIncludesVectorDrawables(),
-            args.isNoAutoVersionResources(),
-            args.isNoVersionTransitionsResources(),
-            args.isNoAutoAddOverlayResources(),
-            javaBuckConfig,
-            JavacFactory.getDefault(toolchainProvider),
-            toolchainProvider
-                .getByName(JavacOptionsProvider.DEFAULT_NAME, JavacOptionsProvider.class)
-                .getJavacOptions(),
             exopackageModes,
-            args.getBuildConfigValues(),
-            args.getBuildConfigValuesFile(),
-            OptionalInt.empty(),
-            args.isTrimResourceIds(),
-            args.getKeepResourcePattern(),
-            args.isIgnoreAaptProguardConfig(),
-            Optional.of(args.getNativeLibraryMergeMap()),
-            args.getNativeLibraryMergeGlue(),
-            args.getNativeLibraryMergeCodeGenerator(),
-            args.getNativeLibraryMergeLocalizedSymbols(),
-            shouldProguard ? args.getNativeLibraryProguardConfigGenerator() : Optional.empty(),
-            args.isEnableRelinker() ? RelinkerMode.ENABLED : RelinkerMode.DISABLED,
-            args.getRelinkerWhitelist(),
-            dxExecutorService,
-            args.getManifestEntries(),
-            cxxBuckConfig,
-            apkModuleGraph,
-            dxConfig,
-            args.getDexTool(),
-            getPostFilterResourcesArgs(args, buildTarget, graphBuilder, cellRoots),
-            nonPreDexedDexBuildableArgs,
-            rulesToExcludeFromDex);
+            rulesToExcludeFromDex,
+            args);
     AndroidGraphEnhancementResult result = graphEnhancer.createAdditionalBuildables();
 
     Optional<BuildRule> moduleVerification;
@@ -360,12 +240,19 @@ public class AndroidBinaryDescription
     AndroidBinaryFilesInfo filesInfo =
         new AndroidBinaryFilesInfo(result, exopackageModes, args.isPackageAssetLibraries());
 
+    JavaOptionsProvider javaOptionsProvider =
+        toolchainProvider.getByName(JavaOptionsProvider.DEFAULT_NAME, JavaOptionsProvider.class);
+
+    ProGuardObfuscateStep.SdkProguardType androidSdkProguardConfig =
+        args.getAndroidSdkProguardConfig().orElse(ProGuardObfuscateStep.SdkProguardType.NONE);
+
     AndroidBinary androidBinary =
         new AndroidBinary(
             buildTarget,
             projectFilesystem,
             toolchainProvider.getByName(AndroidSdkLocation.DEFAULT_NAME, AndroidSdkLocation.class),
-            androidPlatformTarget,
+            toolchainProvider.getByName(
+                AndroidPlatformTarget.DEFAULT_NAME, AndroidPlatformTarget.class),
             params,
             ruleFinder,
             Optional.of(args.getProguardJvmArgs()),
@@ -426,25 +313,6 @@ public class AndroidBinaryDescription
         args.getSecondaryDexTailClassesFile());
   }
 
-  private PackageType getPackageType(AndroidBinaryDescriptionArg args) {
-    if (!args.getPackageType().isPresent()) {
-      return PackageType.DEBUG;
-    }
-    return PackageType.valueOf(args.getPackageType().get().toUpperCase(Locale.US));
-  }
-
-  private ImmutableSet<String> addFallbackLocales(ImmutableSet<String> locales) {
-    ImmutableSet.Builder<String> allLocales = ImmutableSet.builder();
-    for (String locale : locales) {
-      allLocales.add(locale);
-      Matcher matcher = COUNTRY_LOCALE_PATTERN.matcher(locale);
-      if (matcher.matches()) {
-        allLocales.add(matcher.group(1));
-      }
-    }
-    return allLocales.build();
-  }
-
   @Override
   public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
     for (Flavor flavor : flavors) {
@@ -471,34 +339,6 @@ public class AndroidBinaryDescription
     }
   }
 
-  private Optional<Arg> getPostFilterResourcesArgs(
-      AndroidBinaryDescriptionArg arg,
-      BuildTarget buildTarget,
-      ActionGraphBuilder graphBuilder,
-      CellPathResolver cellRoots) {
-    StringWithMacrosConverter macrosConverter =
-        StringWithMacrosConverter.builder()
-            .setBuildTarget(buildTarget)
-            .setCellPathResolver(cellRoots)
-            .setExpanders(MACRO_EXPANDERS)
-            .build();
-    return arg.getPostFilterResourcesCmd().map(x -> macrosConverter.convert(x, graphBuilder));
-  }
-
-  private Optional<Arg> getPreprocessJavaClassesBash(
-      AndroidBinaryDescriptionArg arg,
-      BuildTarget buildTarget,
-      ActionGraphBuilder graphBuilder,
-      CellPathResolver cellRoots) {
-    StringWithMacrosConverter macrosConverter =
-        StringWithMacrosConverter.builder()
-            .setBuildTarget(buildTarget)
-            .setCellPathResolver(cellRoots)
-            .setExpanders(MACRO_EXPANDERS)
-            .build();
-    return arg.getPreprocessJavaClassesBash().map(x -> macrosConverter.convert(x, graphBuilder));
-  }
-
   private Optional<RedexOptions> getRedexOptions(
       BuildTarget buildTarget,
       ActionGraphBuilder graphBuilder,
@@ -515,7 +355,7 @@ public class AndroidBinaryDescription
         StringWithMacrosConverter.builder()
             .setBuildTarget(buildTarget)
             .setCellPathResolver(cellRoots)
-            .setExpanders(MACRO_EXPANDERS)
+            .setExpanders(MacroExpandersForAndroidRules.MACRO_EXPANDERS)
             .build();
     List<Arg> redexExtraArgs =
         arg.getRedexExtraArgs()
