@@ -40,6 +40,12 @@ class DexSplitMode implements AddsToRuleKey {
           /* secondaryDexHeadClassesFile */ Optional.empty(),
           /* secondaryDexTailClassesFile */ Optional.empty());
 
+  /**
+   * By default, assume we have 5MB of linear alloc, 1MB of which is taken up by the framework, so
+   * that leaves 4MB.
+   */
+  static final long DEFAULT_LINEAR_ALLOC_HARD_LIMIT = 4 * 1024 * 1024;
+
   @AddToRuleKey private final boolean shouldSplitDex;
 
   @AddToRuleKey private final DexStore dexStore;

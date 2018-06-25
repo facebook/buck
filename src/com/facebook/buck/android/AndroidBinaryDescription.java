@@ -98,12 +98,6 @@ public class AndroidBinaryDescription
 
   private static final Logger LOG = Logger.get(AndroidBinaryDescription.class);
 
-  /**
-   * By default, assume we have 5MB of linear alloc, 1MB of which is taken up by the framework, so
-   * that leaves 4MB.
-   */
-  private static final long DEFAULT_LINEAR_ALLOC_HARD_LIMIT = 4 * 1024 * 1024;
-
   private static final ImmutableList<AbstractMacroExpander<? extends Macro, ?>> MACRO_EXPANDERS =
       ImmutableList.of(new ExecutableMacroExpander(), new LocationMacroExpander());
 
@@ -640,7 +634,7 @@ public class AndroidBinaryDescription
 
     @Value.Default
     default long getLinearAllocHardLimit() {
-      return DEFAULT_LINEAR_ALLOC_HARD_LIMIT;
+      return DexSplitMode.DEFAULT_LINEAR_ALLOC_HARD_LIMIT;
     }
 
     List<String> getResourceFilter();
