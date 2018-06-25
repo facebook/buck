@@ -1,0 +1,27 @@
+# Another script template to test the 'extra_script_templates' rule option.
+#!/bin/bash
+
+# Copyright 2016-present, Facebook, Inc.
+# All rights reserved.
+#
+# This source code is licensed under the BSD-style license found in the
+# LICENSE file in the root directory of this source tree. An additional grant
+# of patent rights can be found in the PATENTS file in the same directory.
+
+DIR="$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")"
+if ! test -d "$DIR"; then
+  echo Cannot locate directory containing GHCi script; exit 1
+fi
+rm -rf /tmp/foo-$$
+mkdir -m 700 /tmp/foo-$$
+cp $DIR/start.ghci /tmp/foo-$$
+
+# We remove all paths from here since buck replaces them with the
+# temporary file path location and we cannot write a static '.expected' to
+# match against them
+-optP-undef -optP-traditional-cpp -I. -no-global-package-db -no-user-package-db -hide-all-packages   -prof -osuf p_o -hisuf p_hi --interactive Foo.hs ${DIR}/libghci_dependencies.so -ghci-script /tmp/foo-$$/start.ghci "$@"
+rm -rf /tmp/foo-$$
+# StringTemplateStep adds a newline at the end of the generated script.
+# Using nuclide to edit .expected file might cause test failure.
+# .expected FILE MUST END WITH A NEWLINE
+

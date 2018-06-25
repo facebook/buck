@@ -3,4 +3,7 @@ haskell_ghci(
     srcs = [
         "Foo.hs",
     ],
+    extra_script_templates = [
+        "extra_scripts/foo_ghc",
+    ],
 )
