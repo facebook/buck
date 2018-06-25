@@ -27,6 +27,7 @@ import com.facebook.buck.android.aapt.RDotTxtEntry;
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.android.toolchain.DxToolchain;
 import com.facebook.buck.android.toolchain.ndk.impl.TestNdkCxxPlatformsProviderFactory;
+import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.AbstractNodeBuilder;
@@ -56,17 +57,22 @@ public class AndroidBinaryBuilder
         AndroidBinary> {
 
   private AndroidBinaryBuilder(BuildTarget target) {
+    this(FakeBuckConfig.builder().build(), target);
+  }
+
+  private AndroidBinaryBuilder(BuckConfig buckConfig, BuildTarget target) {
     super(
         new AndroidBinaryDescription(
             DEFAULT_JAVA_CONFIG,
-            new AndroidBuckConfig(FakeBuckConfig.builder().build(), Platform.detect()),
-            new ProGuardConfig(FakeBuckConfig.builder().build()),
-            FakeBuckConfig.builder().build(),
+            new AndroidBuckConfig(buckConfig, Platform.detect()),
+            new ProGuardConfig(buckConfig),
+            buckConfig,
             CxxPlatformUtils.DEFAULT_CONFIG,
-            new DxConfig(FakeBuckConfig.builder().build()),
-            new ApkConfig(FakeBuckConfig.builder().build()),
+            new DxConfig(buckConfig),
+            new ApkConfig(buckConfig),
             createToolchainProviderForAndroidBinary(),
-            new AndroidBinaryGraphEnhancerFactory()),
+            new AndroidBinaryGraphEnhancerFactory(),
+            new AndroidBinaryFactory(new AndroidBuckConfig(buckConfig, Platform.detect()))),
         target,
         new FakeProjectFilesystem(),
         createToolchainProviderForAndroidBinary(),
