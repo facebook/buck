@@ -1,0 +1,3 @@
+We use this as a fake file for setting various ghci_* options. The contents
+of this file don't matter.
+See HaskellTestUtils.java

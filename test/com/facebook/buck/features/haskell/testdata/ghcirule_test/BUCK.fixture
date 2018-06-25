@@ -1,0 +1,6 @@
+haskell_ghci(
+    name = "foo",
+    srcs = [
+        "Foo.hs",
+    ],
+)

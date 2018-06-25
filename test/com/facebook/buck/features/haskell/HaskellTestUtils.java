@@ -116,6 +116,18 @@ class HaskellTestUtils {
   }
 
   static String formatHaskellConfig(HaskellVersion version) {
-    return String.format("[haskell]\ncompiler_major_version = %s", version.getMajorVersion());
+    return String.format(
+        "[haskell]\ncompiler_major_version = %s\n"
+            + "ghci_script_template = standard_ghci_script_template\n"
+            + "ghci_iserv_script_template = standard_iserv_script_template\n"
+            + "ghci_binutils_path = fake_file\n"
+            + "ghci_lib_path = fake_file\n"
+            + "ghci_ghc_path = fake_file\n"
+            + "ghci_iserv_path = fake_file\n"
+            + "ghci_iserv_prof_path = fake_file\n"
+            + "ghci_cxx_path = fake_file\n"
+            + "ghci_cc_path = fake_file\n"
+            + "ghci_cpp_path = fake_file\n",
+        version.getMajorVersion());
   }
 }
