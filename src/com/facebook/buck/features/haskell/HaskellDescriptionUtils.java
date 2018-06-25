@@ -419,7 +419,8 @@ public class HaskellDescriptionUtils {
       PatternMatchedCollection<ImmutableSortedSet<BuildTarget>> argPlatformPreloadDeps,
       ImmutableList<String> argCompilerFlags,
       Optional<BuildTarget> argGhciBinDep,
-      Optional<SourcePath> argGhciInit) {
+      Optional<SourcePath> argGhciInit,
+      ImmutableList<SourcePath> argExtraScriptTemplates) {
     boolean hsProfile = true; // Always build profiled for ghci
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
@@ -575,6 +576,7 @@ public class HaskellDescriptionUtils {
         prebuiltHaskellPackages.build(),
         hsProfile,
         platform.getGhciScriptTemplate().get(),
+        argExtraScriptTemplates,
         platform.getGhciIservScriptTemplate().get(),
         platform.getGhciBinutils().get(),
         platform.getGhciGhc().get(),

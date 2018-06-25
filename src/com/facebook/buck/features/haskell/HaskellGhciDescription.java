@@ -353,7 +353,8 @@ public class HaskellGhciDescription
         args.getPlatformPreloadDeps(),
         args.getCompilerFlags(),
         args.getGhciBinDep(),
-        args.getGhciInit());
+        args.getGhciInit(),
+        args.getExtraScriptTemplates());
   }
 
   @Override
@@ -425,6 +426,11 @@ public class HaskellGhciDescription
     Optional<SourcePath> getGhciInit();
 
     Optional<Flavor> getPlatform();
+
+    @Value.Default
+    default ImmutableList<SourcePath> getExtraScriptTemplates() {
+      return ImmutableList.of();
+    }
 
     @Value.Default
     default ImmutableSortedSet<BuildTarget> getPreloadDeps() {

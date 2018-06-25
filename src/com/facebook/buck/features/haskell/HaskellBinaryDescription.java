@@ -151,7 +151,8 @@ public class HaskellBinaryDescription
           args.getGhciPlatformPreloadDeps(),
           args.getCompilerFlags(),
           Optional.empty(),
-          Optional.empty());
+          Optional.empty(),
+          ImmutableList.of());
     }
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);

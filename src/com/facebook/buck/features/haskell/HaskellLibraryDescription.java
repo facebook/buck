@@ -778,7 +778,8 @@ public class HaskellLibraryDescription
               args.getGhciPlatformPreloadDeps(),
               args.getCompilerFlags(),
               Optional.empty(),
-              Optional.empty());
+              Optional.empty(),
+              ImmutableList.of());
       }
 
       throw new IllegalStateException(
