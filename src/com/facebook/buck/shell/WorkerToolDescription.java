@@ -39,6 +39,7 @@ import com.facebook.buck.rules.macros.Macro;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosConverter;
 import com.facebook.buck.util.types.Either;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.util.Map;
@@ -129,8 +130,22 @@ public class WorkerToolDescription implements DescriptionWithTargetGraph<WorkerT
       builder.addEnv(e.getKey(), macrosConverter.convert(e.getValue(), graphBuilder));
     }
 
-    // negative or zero: unlimited number of worker processes
-    int maxWorkers = args.getMaxWorkers() < 1 ? buckConfig.getNumThreads() : args.getMaxWorkers();
+    Preconditions.checkArgument(
+        !(args.getMaxWorkers().isPresent() && args.getMaxWorkersPerThreadPercent().isPresent()),
+        "max_workers and max_workers_per_thread_percent must not be used together.");
+
+    int maxWorkers;
+    if (args.getMaxWorkersPerThreadPercent().isPresent()) {
+      int percent = args.getMaxWorkersPerThreadPercent().get();
+      Preconditions.checkArgument(
+          percent > 0, "max_workers_per_thread_percent must be greater than 0.");
+      Preconditions.checkArgument(
+          percent <= 100, "max_workers_per_thread_percent must not be greater than 100.");
+      maxWorkers = (int) Math.max(1, percent / 100.0 * buckConfig.getNumThreads());
+    } else {
+      // negative or zero: unlimited number of worker processes
+      maxWorkers = args.getMaxWorkers().map(x -> x < 1 ? buckConfig.getNumThreads() : x).orElse(1);
+    }
 
     CommandTool tool = builder.build();
     return new DefaultWorkerTool(
@@ -155,10 +170,9 @@ public class WorkerToolDescription implements DescriptionWithTargetGraph<WorkerT
 
     Optional<BuildTarget> getExe();
 
-    @Value.Default
-    default int getMaxWorkers() {
-      return 1;
-    }
+    Optional<Integer> getMaxWorkers();
+
+    Optional<Integer> getMaxWorkersPerThreadPercent();
 
     Optional<Boolean> getPersistent();
   }

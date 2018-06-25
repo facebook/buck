@@ -68,6 +68,16 @@
 {/call}
 
 {call buck.arg}
+  {param name: 'max_workers_per_thread_percent' /}
+  {param default: 'None'/}
+  {param desc}
+    The maximum ratio of workers of this type that Buck will start per thread, given in percent{sp}
+    (0–100). Must be greater than <code>0</code> and lower or equal to <code>100</code>. Only one of
+    <code>max_workers</code> and <code>max_workers_per_thread_percent</code> may be specified.
+  {/param}
+{/call}
+
+{call buck.arg}
   {param name: 'env' /}
   {param default: 'None' /}
   {param desc}

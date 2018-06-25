@@ -48,6 +48,7 @@ public class FakeBuckConfig {
     private RawConfig sections = RawConfig.of();
     private Architecture architecture = Architecture.detect();
     private Platform platform = Platform.detect();
+    private int numThreads = -1;
 
     public Builder setArchitecture(Architecture architecture) {
       this.architecture = architecture;
