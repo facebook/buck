@@ -14,7 +14,6 @@
  * under the License.
  */
 
-
 package com.facebook.buck.android;
 
 import com.facebook.buck.android.FilterResourcesSteps.ResourceFilter;

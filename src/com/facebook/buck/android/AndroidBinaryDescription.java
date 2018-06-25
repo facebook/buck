@@ -145,15 +145,8 @@ public class AndroidBinaryDescription
           "Requested target %s contains an unrecognized flavor", buildTarget);
     }
 
-    EnumSet<ExopackageMode> exopackageModes = EnumSet.noneOf(ExopackageMode.class);
-    if (!args.getExopackageModes().isEmpty()) {
-      exopackageModes = EnumSet.copyOf(args.getExopackageModes());
-    } else if (args.isExopackage().orElse(false)) {
-      LOG.error(
-          "Target %s specified exopackage=True, which is deprecated. Use exopackage_modes.",
-          buildTarget);
-      exopackageModes = EnumSet.of(ExopackageMode.SECONDARY_DEX);
-    }
+    EnumSet<ExopackageMode> exopackageModes =
+        ExopackageArgsHelper.detectExopackageModes(buildTarget, args);
 
     DexSplitMode dexSplitMode = createDexSplitMode(args, exopackageModes);
 
@@ -273,7 +266,11 @@ public class AndroidBinaryDescription
   @BuckStyleImmutable
   @Value.Immutable
   abstract static class AbstractAndroidBinaryDescriptionArg
-      implements CommonDescriptionArg, HasDeclaredDeps, HasTests, HasDuplicateAndroidResourceTypes {
+      implements CommonDescriptionArg,
+          HasDeclaredDeps,
+          HasExopackageArgs,
+          HasTests,
+          HasDuplicateAndroidResourceTypes {
     abstract Optional<SourcePath> getManifest();
 
     abstract Optional<SourcePath> getManifestSkeleton();
@@ -301,11 +298,6 @@ public class AndroidBinaryDescription
     boolean getDisablePreDex() {
       return false;
     }
-
-    // TODO(natthu): mark this as deprecated.
-    abstract Optional<Boolean> isExopackage();
-
-    abstract Set<ExopackageMode> getExopackageModes();
 
     abstract Optional<DexStore> getDexCompression();
 
