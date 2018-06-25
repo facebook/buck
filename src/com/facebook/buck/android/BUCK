@@ -24,6 +24,7 @@ java_immutables_library(
         "//src/com/facebook/buck/config:config",
         "//src/com/facebook/buck/event:event",
         "//src/com/facebook/buck/event:interfaces",
+        "//src/com/facebook/buck/rules/tool/config:config",
         "//src/com/facebook/buck/util/environment:platform",
     ],
 )

@@ -40,6 +40,7 @@ import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -58,6 +59,7 @@ public class AndroidBinaryBuilder
     super(
         new AndroidBinaryDescription(
             DEFAULT_JAVA_CONFIG,
+            new AndroidBuckConfig(FakeBuckConfig.builder().build(), Platform.detect()),
             new ProGuardConfig(FakeBuckConfig.builder().build()),
             FakeBuckConfig.builder().build(),
             CxxPlatformUtils.DEFAULT_CONFIG,

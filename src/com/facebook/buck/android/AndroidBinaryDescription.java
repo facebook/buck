@@ -70,7 +70,6 @@ import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.Macro;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosConverter;
-import com.facebook.buck.rules.tool.config.ToolConfig;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.RichStream;
 import com.google.common.collect.ImmutableCollection;
@@ -99,9 +98,6 @@ public class AndroidBinaryDescription
 
   private static final Logger LOG = Logger.get(AndroidBinaryDescription.class);
 
-  private static final String SECTION = "android";
-  private static final String CONFIG_PARAM_REDEX = "redex";
-
   /**
    * By default, assume we have 5MB of linear alloc, 1MB of which is taken up by the framework, so
    * that leaves 4MB.
@@ -125,8 +121,8 @@ public class AndroidBinaryDescription
           AndroidBinaryResourcesGraphEnhancer.GENERATE_STRING_RESOURCES_FLAVOR);
 
   private final JavaBuckConfig javaBuckConfig;
+  private final AndroidBuckConfig androidBuckConfig;
   private final ProGuardConfig proGuardConfig;
-  private final BuckConfig buckConfig;
   private final CxxBuckConfig cxxBuckConfig;
   private final DxConfig dxConfig;
   private final AndroidInstallConfig androidInstallConfig;
@@ -135,6 +131,7 @@ public class AndroidBinaryDescription
 
   public AndroidBinaryDescription(
       JavaBuckConfig javaBuckConfig,
+      AndroidBuckConfig androidBuckConfig,
       ProGuardConfig proGuardConfig,
       BuckConfig buckConfig,
       CxxBuckConfig cxxBuckConfig,
@@ -142,8 +139,8 @@ public class AndroidBinaryDescription
       ApkConfig apkConfig,
       ToolchainProvider toolchainProvider) {
     this.javaBuckConfig = javaBuckConfig;
+    this.androidBuckConfig = androidBuckConfig;
     this.proGuardConfig = proGuardConfig;
-    this.buckConfig = buckConfig;
     this.cxxBuckConfig = cxxBuckConfig;
     this.dxConfig = dxConfig;
     this.androidInstallConfig = new AndroidInstallConfig(buckConfig);
@@ -474,8 +471,7 @@ public class AndroidBinaryDescription
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     if (constructorArg.getRedex()) {
       // If specified, this option may point to either a BuildTarget or a file.
-      Optional<BuildTarget> redexTarget =
-          buckConfig.getMaybeBuildTarget(SECTION, CONFIG_PARAM_REDEX);
+      Optional<BuildTarget> redexTarget = androidBuckConfig.getRedexTarget();
       if (redexTarget.isPresent()) {
         extraDepsBuilder.add(redexTarget.get());
       }
@@ -520,14 +516,7 @@ public class AndroidBinaryDescription
       return Optional.empty();
     }
 
-    Optional<Tool> redexBinary =
-        buckConfig.getView(ToolConfig.class).getTool(SECTION, CONFIG_PARAM_REDEX, graphBuilder);
-    if (!redexBinary.isPresent()) {
-      throw new HumanReadableException(
-          "Requested running ReDex for %s but the path to the tool"
-              + "has not been specified in the %s.%s .buckconfig section.",
-          buildTarget, SECTION, CONFIG_PARAM_REDEX);
-    }
+    Tool redexBinary = androidBuckConfig.getRedexTool(graphBuilder);
 
     StringWithMacrosConverter macrosConverter =
         StringWithMacrosConverter.builder()
@@ -543,7 +532,7 @@ public class AndroidBinaryDescription
 
     return Optional.of(
         RedexOptions.builder()
-            .setRedex(redexBinary.get())
+            .setRedex(redexBinary)
             .setRedexConfig(arg.getRedexConfig())
             .setRedexExtraArgs(redexExtraArgs)
             .build());
