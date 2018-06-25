@@ -22,7 +22,6 @@ import com.facebook.buck.android.AndroidBinary.PackageType;
 import com.facebook.buck.android.AndroidBinary.RelinkerMode;
 import com.facebook.buck.android.FilterResourcesSteps.ResourceFilter;
 import com.facebook.buck.android.ResourcesFilter.ResourceCompressionMode;
-import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
 import com.facebook.buck.android.apkmodule.APKModuleGraph;
 import com.facebook.buck.android.dalvik.ZipSplitter.DexSplitStrategy;
 import com.facebook.buck.android.exopackage.ExopackageMode;
@@ -534,276 +533,220 @@ public class AndroidBinaryDescription
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractAndroidBinaryDescriptionArg
-      extends CommonDescriptionArg, HasDeclaredDeps, HasTests {
-    Optional<SourcePath> getManifest();
+  abstract static class AbstractAndroidBinaryDescriptionArg
+      implements CommonDescriptionArg, HasDeclaredDeps, HasTests, HasDuplicateAndroidResourceTypes {
+    abstract Optional<SourcePath> getManifest();
 
-    Optional<SourcePath> getManifestSkeleton();
+    abstract Optional<SourcePath> getManifestSkeleton();
 
-    Optional<SourcePath> getModuleManifestSkeleton();
+    abstract Optional<SourcePath> getModuleManifestSkeleton();
 
-    BuildTarget getKeystore();
+    abstract BuildTarget getKeystore();
 
-    Optional<String> getPackageType();
+    abstract Optional<String> getPackageType();
 
     @Hint(isDep = false)
-    ImmutableSet<BuildTarget> getNoDx();
+    abstract ImmutableSet<BuildTarget> getNoDx();
 
     @Value.Default
-    default boolean getUseSplitDex() {
+    boolean getUseSplitDex() {
       return false;
     }
 
     @Value.Default
-    default boolean getMinimizePrimaryDexSize() {
+    boolean getMinimizePrimaryDexSize() {
       return false;
     }
 
     @Value.Default
-    default boolean getDisablePreDex() {
+    boolean getDisablePreDex() {
       return false;
     }
 
     // TODO(natthu): mark this as deprecated.
-    Optional<Boolean> isExopackage();
+    abstract Optional<Boolean> isExopackage();
 
-    Set<ExopackageMode> getExopackageModes();
+    abstract Set<ExopackageMode> getExopackageModes();
 
-    Optional<DexStore> getDexCompression();
+    abstract Optional<DexStore> getDexCompression();
 
-    Optional<ProGuardObfuscateStep.SdkProguardType> getAndroidSdkProguardConfig();
+    abstract Optional<ProGuardObfuscateStep.SdkProguardType> getAndroidSdkProguardConfig();
 
-    OptionalInt getOptimizationPasses();
+    abstract OptionalInt getOptimizationPasses();
 
-    List<String> getProguardJvmArgs();
+    abstract List<String> getProguardJvmArgs();
 
-    Optional<SourcePath> getProguardConfig();
+    abstract Optional<SourcePath> getProguardConfig();
 
     @Value.Default
-    default ResourceCompressionMode getResourceCompression() {
+    ResourceCompressionMode getResourceCompression() {
       return ResourceCompressionMode.DISABLED;
     }
 
     @Value.Default
-    default boolean isSkipCrunchPngs() {
+    boolean isSkipCrunchPngs() {
       return false;
     }
 
     @Value.Default
-    default boolean isIncludesVectorDrawables() {
+    boolean isIncludesVectorDrawables() {
       return false;
     }
 
     @Value.Default
-    default boolean isNoAutoVersionResources() {
+    boolean isNoAutoVersionResources() {
       return false;
     }
 
     @Value.Default
-    default boolean isNoVersionTransitionsResources() {
+    boolean isNoVersionTransitionsResources() {
       return false;
     }
 
     @Value.Default
-    default boolean isNoAutoAddOverlayResources() {
+    boolean isNoAutoAddOverlayResources() {
       return false;
     }
 
-    List<String> getPrimaryDexPatterns();
+    abstract List<String> getPrimaryDexPatterns();
 
-    Optional<SourcePath> getPrimaryDexClassesFile();
+    abstract Optional<SourcePath> getPrimaryDexClassesFile();
 
-    Optional<SourcePath> getPrimaryDexScenarioFile();
+    abstract Optional<SourcePath> getPrimaryDexScenarioFile();
 
     @Value.Default
-    default boolean isPrimaryDexScenarioOverflowAllowed() {
+    boolean isPrimaryDexScenarioOverflowAllowed() {
       return false;
     }
 
-    Optional<SourcePath> getSecondaryDexHeadClassesFile();
+    abstract Optional<SourcePath> getSecondaryDexHeadClassesFile();
 
-    Optional<SourcePath> getSecondaryDexTailClassesFile();
+    abstract Optional<SourcePath> getSecondaryDexTailClassesFile();
 
-    Set<BuildTarget> getApplicationModuleTargets();
+    abstract Set<BuildTarget> getApplicationModuleTargets();
 
-    Optional<SourcePath> getAndroidAppModularityResult();
+    abstract Optional<SourcePath> getAndroidAppModularityResult();
 
-    Map<String, List<BuildTarget>> getApplicationModuleConfigs();
+    abstract Map<String, List<BuildTarget>> getApplicationModuleConfigs();
 
-    Optional<Map<String, List<String>>> getApplicationModuleDependencies();
+    abstract Optional<Map<String, List<String>>> getApplicationModuleDependencies();
 
     @Value.Default
-    default long getLinearAllocHardLimit() {
+    long getLinearAllocHardLimit() {
       return DexSplitMode.DEFAULT_LINEAR_ALLOC_HARD_LIMIT;
     }
 
-    List<String> getResourceFilter();
+    abstract List<String> getResourceFilter();
 
     @Value.Default
-    default boolean getIsCacheable() {
+    boolean getIsCacheable() {
       return true;
     }
 
-    // Do not inspect this, getAllowedDuplicateResourcesTypes, or getBannedDuplicateResourceTypes
-    // directly, use getEffectiveBannedDuplicateResourceTypes.
-    // Ideally these should be private, but Arg-population doesn't allow that.
-    //
-    // If set to ALLOW_BY_DEFAULT, bannedDuplicateResourceTypes is used and setting
-    // allowedDuplicateResourceTypes is an error.
-    //
-    // If set to BAN_BY_DEFAULT, allowedDuplicateResourceTypes is used and setting
-    // bannedDuplicateResourceTypes is an error.
-    // This only exists to enable migration from allowing by default to banning by default.
     @Value.Default
-    default DuplicateResourceBehaviour getDuplicateResourceBehavior() {
-      return DuplicateResourceBehaviour.ALLOW_BY_DEFAULT;
-    }
-
-    Set<RType> getAllowedDuplicateResourceTypes();
-
-    Set<RType> getBannedDuplicateResourceTypes();
-
-    Optional<SourcePath> getDuplicateResourceWhitelist();
-
-    @Value.Default
-    default AndroidBinary.AaptMode getAaptMode() {
+    AndroidBinary.AaptMode getAaptMode() {
       return AndroidBinary.AaptMode.AAPT1;
     }
 
     @Value.Default
-    default boolean isTrimResourceIds() {
+    boolean isTrimResourceIds() {
       return false;
     }
 
-    Optional<String> getKeepResourcePattern();
+    abstract Optional<String> getKeepResourcePattern();
 
-    Optional<String> getResourceUnionPackage();
+    abstract Optional<String> getResourceUnionPackage();
 
-    ImmutableSet<String> getLocales();
+    abstract ImmutableSet<String> getLocales();
 
-    Optional<String> getLocalizedStringFileName();
+    abstract Optional<String> getLocalizedStringFileName();
 
     @Value.Default
-    default boolean isBuildStringSourceMap() {
+    boolean isBuildStringSourceMap() {
       return false;
     }
 
     @Value.Default
-    default boolean isIgnoreAaptProguardConfig() {
+    boolean isIgnoreAaptProguardConfig() {
       return false;
     }
 
-    Set<TargetCpuType> getCpuFilters();
+    abstract Set<TargetCpuType> getCpuFilters();
 
     @Value.NaturalOrder
-    ImmutableSortedSet<BuildTarget> getPreprocessJavaClassesDeps();
+    abstract ImmutableSortedSet<BuildTarget> getPreprocessJavaClassesDeps();
 
-    Optional<StringWithMacros> getPreprocessJavaClassesBash();
+    abstract Optional<StringWithMacros> getPreprocessJavaClassesBash();
 
     @Value.Default
-    default boolean isReorderClassesIntraDex() {
+    boolean isReorderClassesIntraDex() {
       return false;
     }
 
     @Value.Default
-    default String getDexTool() {
+    String getDexTool() {
       return DxStep.DX;
     }
 
-    Optional<SourcePath> getDexReorderToolFile();
+    abstract Optional<SourcePath> getDexReorderToolFile();
 
-    Optional<SourcePath> getDexReorderDataDumpFile();
+    abstract Optional<SourcePath> getDexReorderDataDumpFile();
 
-    OptionalInt getXzCompressionLevel();
+    abstract OptionalInt getXzCompressionLevel();
 
     @Value.Default
-    default boolean isPackageAssetLibraries() {
+    boolean isPackageAssetLibraries() {
       return false;
     }
 
     @Value.Default
-    default boolean isCompressAssetLibraries() {
+    boolean isCompressAssetLibraries() {
       return false;
     }
 
-    Map<String, List<Pattern>> getNativeLibraryMergeMap();
+    abstract Map<String, List<Pattern>> getNativeLibraryMergeMap();
 
-    Optional<BuildTarget> getNativeLibraryMergeGlue();
+    abstract Optional<BuildTarget> getNativeLibraryMergeGlue();
 
-    Optional<BuildTarget> getNativeLibraryMergeCodeGenerator();
+    abstract Optional<BuildTarget> getNativeLibraryMergeCodeGenerator();
 
-    Optional<ImmutableSortedSet<String>> getNativeLibraryMergeLocalizedSymbols();
+    abstract Optional<ImmutableSortedSet<String>> getNativeLibraryMergeLocalizedSymbols();
 
-    Optional<BuildTarget> getNativeLibraryProguardConfigGenerator();
+    abstract Optional<BuildTarget> getNativeLibraryProguardConfigGenerator();
 
     @Value.Default
-    default boolean isEnableRelinker() {
+    boolean isEnableRelinker() {
       return false;
     }
 
-    ImmutableList<Pattern> getRelinkerWhitelist();
+    abstract ImmutableList<Pattern> getRelinkerWhitelist();
 
     @Value.Default
-    default ManifestEntries getManifestEntries() {
+    ManifestEntries getManifestEntries() {
       return ManifestEntries.empty();
     }
 
     @Value.Default
-    default BuildConfigFields getBuildConfigValues() {
+    BuildConfigFields getBuildConfigValues() {
       return BuildConfigFields.of();
     }
 
     @Value.Default
-    default boolean getRedex() {
+    boolean getRedex() {
       return false;
     }
 
-    Optional<SourcePath> getRedexConfig();
+    abstract Optional<SourcePath> getRedexConfig();
 
-    ImmutableList<StringWithMacros> getRedexExtraArgs();
+    abstract ImmutableList<StringWithMacros> getRedexExtraArgs();
 
-    Optional<StringWithMacros> getPostFilterResourcesCmd();
+    abstract Optional<StringWithMacros> getPostFilterResourcesCmd();
 
-    Optional<SourcePath> getBuildConfigValuesFile();
+    abstract Optional<SourcePath> getBuildConfigValuesFile();
 
     @Value.Default
-    default boolean isSkipProguard() {
+    boolean isSkipProguard() {
       return false;
-    }
-
-    @Value.Derived
-    default EnumSet<RType> getEffectiveBannedDuplicateResourceTypes() {
-      if (getDuplicateResourceBehavior() == DuplicateResourceBehaviour.ALLOW_BY_DEFAULT) {
-        if (!getAllowedDuplicateResourceTypes().isEmpty()) {
-          throw new IllegalArgumentException(
-              "Cannot set allowed_duplicate_resource_types if "
-                  + "duplicate_resource_behaviour is allow_by_default");
-        }
-        if (!getBannedDuplicateResourceTypes().isEmpty()) {
-          return EnumSet.copyOf(getBannedDuplicateResourceTypes());
-        } else {
-          return EnumSet.noneOf(RType.class);
-        }
-      } else if (getDuplicateResourceBehavior() == DuplicateResourceBehaviour.BAN_BY_DEFAULT) {
-        if (!getBannedDuplicateResourceTypes().isEmpty()) {
-          throw new IllegalArgumentException(
-              "Cannot set banned_duplicate_resource_types if "
-                  + "duplicate_resource_behaviour is ban_by_default");
-        }
-        if (!getAllowedDuplicateResourceTypes().isEmpty()) {
-          return EnumSet.complementOf(EnumSet.copyOf(getAllowedDuplicateResourceTypes()));
-        } else {
-          return EnumSet.allOf(RType.class);
-        }
-      } else {
-        throw new IllegalArgumentException(
-            "Unrecognized duplicate_resource_behavior: " + getDuplicateResourceBehavior());
-      }
-    }
-
-    enum DuplicateResourceBehaviour {
-      ALLOW_BY_DEFAULT,
-      BAN_BY_DEFAULT
     }
   }
 }

@@ -90,6 +90,7 @@ RULES_SRCS = [
     "GenerateRDotJava.java",
     "GenerateStringResources.java",
     "HasAndroidResourceDeps.java",
+    "HasDuplicateAndroidResourceTypes.java",
     "IdentityResourcesProvider.java",
     "MergeAndroidResourcesStep.java",
     "MergeAssets.java",
