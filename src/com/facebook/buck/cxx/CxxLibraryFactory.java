@@ -305,6 +305,28 @@ public class CxxLibraryFactory {
               .concat(RichStream.from(delegateExportedLinkerFlags))
               .toImmutableList();
         },
+        (input, graphBuilderInner) -> {
+          ImmutableList<Arg> delegatePostExportedLinkerFlags =
+              delegate
+                  .map(
+                      d ->
+                          d.getAdditionalPostExportedLinkerFlags(
+                              buildTarget, graphBuilderInner, input))
+                  .orElse(ImmutableList.of());
+
+          ImmutableList<StringWithMacros> flags =
+              CxxFlags.getFlagsWithMacrosWithPlatformMacroExpansion(
+                  args.getExportedPostLinkerFlags(),
+                  args.getExportedPostPlatformLinkerFlags(),
+                  input);
+          return RichStream.from(flags)
+              .map(
+                  f ->
+                      CxxDescriptionEnhancer.toStringWithMacrosArgs(
+                          buildTarget, cellRoots, graphBuilderInner, input, f))
+              .concat(RichStream.from(delegatePostExportedLinkerFlags))
+              .toImmutableList();
+        },
         (cxxPlatform, ruleResolverInner, pathResolverInner, ruleFinderInner) -> {
           return getSharedLibraryNativeLinkTargetInput(
               buildTarget,
@@ -322,6 +344,12 @@ public class CxxLibraryFactory {
               CxxFlags.getFlagsWithMacrosWithPlatformMacroExpansion(
                   args.getExportedLinkerFlags(),
                   args.getExportedPlatformLinkerFlags(),
+                  cxxPlatform),
+              CxxFlags.getFlagsWithMacrosWithPlatformMacroExpansion(
+                  args.getPostLinkerFlags(), args.getPostPlatformLinkerFlags(), cxxPlatform),
+              CxxFlags.getFlagsWithMacrosWithPlatformMacroExpansion(
+                  args.getExportedPostLinkerFlags(),
+                  args.getExportedPostPlatformLinkerFlags(),
                   cxxPlatform),
               args.getFrameworks(),
               args.getLibraries(),
@@ -539,6 +567,8 @@ public class CxxLibraryFactory {
       ImmutableSet<BuildRule> deps,
       ImmutableList<StringWithMacros> linkerFlags,
       ImmutableList<StringWithMacros> exportedLinkerFlags,
+      ImmutableList<StringWithMacros> postLinkerFlags,
+      ImmutableList<StringWithMacros> postExportedLinkerFlags,
       ImmutableSet<FrameworkPath> frameworks,
       ImmutableSet<FrameworkPath> libraries,
       CxxLibraryDescription.TransitiveCxxPreprocessorInputFunction
@@ -573,6 +603,20 @@ public class CxxLibraryFactory {
                             buildTarget, cellRoots, graphBuilder, cxxPlatform, f))
                 .toImmutableList())
         .addAllArgs(SourcePathArg.from(objects))
+        .addAllArgs(
+            RichStream.from(postLinkerFlags)
+                .map(
+                    f ->
+                        CxxDescriptionEnhancer.toStringWithMacrosArgs(
+                            buildTarget, cellRoots, graphBuilder, cxxPlatform, f))
+                .toImmutableList())
+        .addAllArgs(
+            RichStream.from(postExportedLinkerFlags.stream())
+                .map(
+                    f ->
+                        CxxDescriptionEnhancer.toStringWithMacrosArgs(
+                            buildTarget, cellRoots, graphBuilder, cxxPlatform, f))
+                .toImmutableList())
         .setFrameworks(frameworks)
         .setLibraries(libraries)
         .build();
@@ -595,6 +639,7 @@ public class CxxLibraryFactory {
       CxxLibraryDescriptionArg args,
       ImmutableSet<BuildRule> deps,
       ImmutableList<StringWithMacros> linkerFlags,
+      ImmutableList<StringWithMacros> postLinkerFlags,
       ImmutableSet<FrameworkPath> frameworks,
       ImmutableSet<FrameworkPath> libraries,
       Optional<String> soname,
@@ -683,6 +728,13 @@ public class CxxLibraryFactory {
                                 sharedTarget, cellRoots, graphBuilder, cxxPlatform, f))
                     .toImmutableList())
             .addAllArgs(SourcePathArg.from(objects))
+            .addAllArgs(
+                RichStream.from(postLinkerFlags)
+                    .map(
+                        f ->
+                            CxxDescriptionEnhancer.toStringWithMacrosArgs(
+                                sharedTarget, cellRoots, graphBuilder, cxxPlatform, f))
+                    .toImmutableList())
             .setFrameworks(frameworks)
             .setLibraries(libraries)
             .build(),
@@ -856,6 +908,18 @@ public class CxxLibraryFactory {
         CxxFlags.getFlagsWithMacrosWithPlatformMacroExpansion(
             args.getExportedLinkerFlags(), args.getExportedPlatformLinkerFlags(), cxxPlatform));
 
+    ImmutableList.Builder<StringWithMacros> postLinkerFlags = ImmutableList.builder();
+
+    postLinkerFlags.addAll(
+        CxxFlags.getFlagsWithMacrosWithPlatformMacroExpansion(
+            args.getPostLinkerFlags(), args.getPostPlatformLinkerFlags(), cxxPlatform));
+
+    postLinkerFlags.addAll(
+        CxxFlags.getFlagsWithMacrosWithPlatformMacroExpansion(
+            args.getExportedPostLinkerFlags(),
+            args.getExportedPostPlatformLinkerFlags(),
+            cxxPlatform));
+
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(ruleFinder);
     return createSharedLibrary(
@@ -870,6 +934,7 @@ public class CxxLibraryFactory {
         args,
         deps,
         linkerFlags.build(),
+        postLinkerFlags.build(),
         args.getFrameworks(),
         args.getLibraries(),
         args.getSoname(),

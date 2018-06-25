@@ -36,6 +36,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.TestBuildRuleParams;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
@@ -191,6 +192,7 @@ public class CxxLibraryTest {
             CxxDeps.of(),
             /* headerOnly */ x -> true,
             (unused1, unused2) -> StringArg.from("-ldl"),
+            (unused1, unused2) -> StringArg.from("-lfoobarbaz"),
             /* linkTargetInput */ (unused1, unused2, unused3, unused4) -> NativeLinkableInput.of(),
             /* supportedPlatformsRegex */ Optional.empty(),
             ImmutableSet.of(frameworkPath),
@@ -206,11 +208,74 @@ public class CxxLibraryTest {
 
     NativeLinkableInput expectedSharedNativeLinkableInput =
         NativeLinkableInput.of(
-            StringArg.from("-ldl"), ImmutableSet.of(frameworkPath), ImmutableSet.of());
+            StringArg.from("-ldl", "-lfoobarbaz"),
+            ImmutableSet.of(frameworkPath),
+            ImmutableSet.of());
 
     assertEquals(
         expectedSharedNativeLinkableInput,
         cxxLibrary.getNativeLinkableInput(
             cxxPlatform, Linker.LinkableDepType.SHARED, graphBuilder));
+  }
+
+  @Test
+  public void postLinkerArgumentsExistWhenPassed() throws Exception {
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
+    BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
+    BuildRuleParams params = TestBuildRuleParams.create();
+    CxxPlatform cxxPlatform =
+        CxxPlatformUtils.build(new CxxBuckConfig(FakeBuckConfig.builder().build()));
+
+    BuildTarget staticPicLibraryTarget =
+        target.withAppendedFlavors(
+            cxxPlatform.getFlavor(), CxxDescriptionEnhancer.STATIC_PIC_FLAVOR);
+    graphBuilder.addToIndex(
+        new FakeBuildRule(staticPicLibraryTarget, projectFilesystem, TestBuildRuleParams.create()));
+
+    FrameworkPath frameworkPath =
+        FrameworkPath.ofSourcePath(
+            DefaultBuildTargetSourcePath.of(BuildTargetFactory.newInstance("//foo:baz")));
+
+    // Construct a CxxLibrary object to test.
+    CxxLibrary cxxLibrary =
+        new CxxLibrary(
+            target,
+            projectFilesystem,
+            params,
+            graphBuilder.getParallelizer(),
+            CxxDeps.of(),
+            CxxDeps.of(),
+            /* headerOnly */ x -> true,
+            (unused1, unused2) -> StringArg.from("-ldl"),
+            (unused1, unused2) -> StringArg.from("-lfoobarbaz"),
+            /* linkTargetInput */ (unused1, unused2, unused3, unused4) -> NativeLinkableInput.of(),
+            /* supportedPlatformsRegex */ Optional.empty(),
+            ImmutableSet.of(frameworkPath),
+            ImmutableSet.of(),
+            NativeLinkable.Linkage.STATIC,
+            /* linkWhole */ false,
+            Optional.empty(),
+            ImmutableSortedSet.of(),
+            /* isAsset */ false,
+            true,
+            true,
+            Optional.empty());
+
+    ImmutableList.Builder<Arg> linkerArgsBuilder = ImmutableList.builder();
+    linkerArgsBuilder.add((Arg) StringArg.of("-ldl"));
+
+    ImmutableList<? extends Arg> postFlags = ImmutableList.copyOf(StringArg.from("-lfoobarbaz"));
+    linkerArgsBuilder.addAll(postFlags);
+
+    ImmutableList<Arg> linkerArgs = linkerArgsBuilder.build();
+
+    NativeLinkableInput expectedSharedNativeLinkableInput =
+        NativeLinkableInput.of(linkerArgs, ImmutableSet.of(frameworkPath), ImmutableSet.of());
+
+    NativeLinkableInput actualSharedNativeLinkableInput =
+        cxxLibrary.getNativeLinkableInput(cxxPlatform, Linker.LinkableDepType.SHARED, graphBuilder);
+
+    assertEquals(expectedSharedNativeLinkableInput, actualSharedNativeLinkableInput);
   }
 }

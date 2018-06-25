@@ -420,9 +420,17 @@ public class CxxLibraryDescription
 
     ImmutableList<StringWithMacros> getExportedLinkerFlags();
 
+    ImmutableList<StringWithMacros> getExportedPostLinkerFlags();
+
     @Value.Default
     default PatternMatchedCollection<ImmutableList<StringWithMacros>>
         getExportedPlatformLinkerFlags() {
+      return PatternMatchedCollection.of();
+    }
+
+    @Value.Default
+    default PatternMatchedCollection<ImmutableList<StringWithMacros>>
+        getExportedPostPlatformLinkerFlags() {
       return PatternMatchedCollection.of();
     }
 

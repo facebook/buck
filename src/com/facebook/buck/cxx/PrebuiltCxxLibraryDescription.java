@@ -267,6 +267,12 @@ public class PrebuiltCxxLibraryDescription
                         cxxPlatform)))
             .addAllArgs(
                 cxxPlatform.getLd().resolve(graphBuilder).linkWhole(SourcePathArg.of(library)))
+            .addAllArgs(
+                StringArg.from(
+                    CxxFlags.getFlagsWithPlatformMacroExpansion(
+                        args.getExportedPostLinkerFlags(),
+                        args.getExportedPostPlatformLinkerFlags(),
+                        cxxPlatform)))
             .build(),
         Optional.empty(),
         cellRoots);
@@ -450,6 +456,14 @@ public class PrebuiltCxxLibraryDescription
       public ImmutableList<String> getExportedLinkerFlags(CxxPlatform cxxPlatform) {
         return CxxFlags.getFlagsWithPlatformMacroExpansion(
             args.getExportedLinkerFlags(), args.getExportedPlatformLinkerFlags(), cxxPlatform);
+      }
+
+      @Override
+      public ImmutableList<String> getExportedPostLinkerFlags(CxxPlatform cxxPlatform) {
+        return CxxFlags.getFlagsWithPlatformMacroExpansion(
+            args.getExportedPostLinkerFlags(),
+            args.getExportedPostPlatformLinkerFlags(),
+            cxxPlatform);
       }
 
       private String getSoname(CxxPlatform cxxPlatform) {
@@ -649,6 +663,10 @@ public class PrebuiltCxxLibraryDescription
             }
           }
         }
+
+        // Add any post exported flags, if any.
+        linkerArgsBuilder.addAll(StringArg.from(getExportedPostLinkerFlags(cxxPlatform)));
+
         ImmutableList<Arg> linkerArgs = linkerArgsBuilder.build();
 
         return NativeLinkableInput.of(linkerArgs, args.getFrameworks(), args.getLibraries());
@@ -772,6 +790,7 @@ public class PrebuiltCxxLibraryDescription
                             .linkWhole(
                                 SourcePathArg.of(
                                     getStaticPicLibrary(cxxPlatform, graphBuilder).get())))
+                    .addAllArgs(StringArg.from(getExportedPostLinkerFlags(cxxPlatform)))
                     .build();
               }
 
@@ -877,8 +896,15 @@ public class PrebuiltCxxLibraryDescription
 
     ImmutableList<String> getExportedLinkerFlags();
 
+    ImmutableList<String> getExportedPostLinkerFlags();
+
     @Value.Default
     default PatternMatchedCollection<ImmutableList<String>> getExportedPlatformLinkerFlags() {
+      return PatternMatchedCollection.of();
+    }
+
+    @Value.Default
+    default PatternMatchedCollection<ImmutableList<String>> getExportedPostPlatformLinkerFlags() {
       return PatternMatchedCollection.of();
     }
 

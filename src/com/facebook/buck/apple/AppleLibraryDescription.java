@@ -1140,6 +1140,13 @@ public class AppleLibraryDescription
   }
 
   @Override
+  public ImmutableList<Arg> getAdditionalPostExportedLinkerFlags(
+      BuildTarget target, ActionGraphBuilder graphBuilder, CxxPlatform cxxPlatform) {
+    // Always return empty set here.
+    return ImmutableList.of();
+  }
+
+  @Override
   public boolean getShouldProduceLibraryArtifact(
       BuildTarget target,
       ActionGraphBuilder graphBuilder,

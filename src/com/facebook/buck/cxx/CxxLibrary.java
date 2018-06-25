@@ -74,8 +74,13 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
   private final Predicate<CxxPlatform> headerOnly;
   private final BiFunction<? super CxxPlatform, ActionGraphBuilder, Iterable<? extends Arg>>
       exportedLinkerFlags;
+  private final BiFunction<? super CxxPlatform, ActionGraphBuilder, Iterable<? extends Arg>>
+      postExportedLinkerFlags;
   private final QuadFunction<
-          ? super CxxPlatform, ActionGraphBuilder, SourcePathResolver, SourcePathRuleFinder,
+          ? super CxxPlatform,
+          ActionGraphBuilder,
+          SourcePathResolver,
+          SourcePathRuleFinder,
           NativeLinkableInput>
       linkTargetInput;
   private final Optional<Pattern> supportedPlatformsRegex;
@@ -88,6 +93,7 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
   private final boolean canBeAsset;
   private final boolean reexportAllHeaderDependencies;
   private final Optional<CxxLibraryDescriptionDelegate> delegate;
+
   /**
    * Whether Native Linkable dependencies should be propagated for the purpose of computing objects
    * to link at link time. Setting this to false makes this library invisible to linking, so it and
@@ -110,8 +116,13 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
       Predicate<CxxPlatform> headerOnly,
       BiFunction<? super CxxPlatform, ActionGraphBuilder, Iterable<? extends Arg>>
           exportedLinkerFlags,
+      BiFunction<? super CxxPlatform, ActionGraphBuilder, Iterable<? extends Arg>>
+          postExportedLinkerFlags,
       QuadFunction<
-              ? super CxxPlatform, ActionGraphBuilder, SourcePathResolver, SourcePathRuleFinder,
+              ? super CxxPlatform,
+              ActionGraphBuilder,
+              SourcePathResolver,
+              SourcePathRuleFinder,
               NativeLinkableInput>
           linkTargetInput,
       Optional<Pattern> supportedPlatformsRegex,
@@ -130,6 +141,7 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
     this.exportedDeps = exportedDeps;
     this.headerOnly = headerOnly;
     this.exportedLinkerFlags = exportedLinkerFlags;
+    this.postExportedLinkerFlags = postExportedLinkerFlags;
     this.linkTargetInput = linkTargetInput;
     this.supportedPlatformsRegex = supportedPlatformsRegex;
     this.frameworks = frameworks;
@@ -359,6 +371,10 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
       }
     }
 
+    // Add the postExportedLinkerFlags.
+    linkerArgsBuilder.addAll(
+        Preconditions.checkNotNull(postExportedLinkerFlags.apply(cxxPlatform, graphBuilder)));
+
     ImmutableList<Arg> linkerArgs = linkerArgsBuilder.build();
 
     return NativeLinkableInput.of(
@@ -485,5 +501,10 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
   public Iterable<? extends Arg> getExportedLinkerFlags(
       CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
     return exportedLinkerFlags.apply(cxxPlatform, graphBuilder);
+  }
+
+  public Iterable<? extends Arg> getExportedPostLinkerFlags(
+      CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
+    return postExportedLinkerFlags.apply(cxxPlatform, graphBuilder);
   }
 }

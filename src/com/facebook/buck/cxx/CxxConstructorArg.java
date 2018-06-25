@@ -120,10 +120,17 @@ public interface CxxConstructorArg
 
   ImmutableList<StringWithMacros> getLinkerFlags();
 
+  ImmutableList<StringWithMacros> getPostLinkerFlags();
+
   ImmutableList<String> getLinkerExtraOutputs();
 
   @Value.Default
   default PatternMatchedCollection<ImmutableList<StringWithMacros>> getPlatformLinkerFlags() {
+    return PatternMatchedCollection.of();
+  }
+
+  @Value.Default
+  default PatternMatchedCollection<ImmutableList<StringWithMacros>> getPostPlatformLinkerFlags() {
     return PatternMatchedCollection.of();
   }
 

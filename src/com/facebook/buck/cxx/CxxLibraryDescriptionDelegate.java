@@ -78,6 +78,10 @@ public interface CxxLibraryDescriptionDelegate {
   ImmutableList<Arg> getAdditionalExportedLinkerFlags(
       BuildTarget target, ActionGraphBuilder graphBuilder, CxxPlatform cxxPlatform);
 
+  /** Provides the ability to inject additional post exported linker flags. */
+  ImmutableList<Arg> getAdditionalPostExportedLinkerFlags(
+      BuildTarget target, ActionGraphBuilder graphBuilder, CxxPlatform cxxPlatform);
+
   /**
    * Specifies whether a library artifact (e.g., libName.a) should be produced. For example,
    * header-only libs will not normally produce a library. Since {@link CxxLibraryDescription} is
