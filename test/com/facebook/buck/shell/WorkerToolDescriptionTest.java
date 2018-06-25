@@ -29,7 +29,6 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.TestBuildRuleCreationContextFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -47,30 +46,30 @@ public class WorkerToolDescriptionTest {
   }
 
   @Test
-  public void testGetMaxWorkersWhenSet() throws NoSuchBuildTargetException {
+  public void testGetMaxWorkersWhenSet() {
     int maxWorkers = 14;
     WorkerTool workerTool = createWorkerTool(maxWorkers);
     assertThat(workerTool.getMaxWorkers(), equalTo(maxWorkers));
   }
 
   @Test
-  public void testGetMaxWorkersWhenSetToZero() throws NoSuchBuildTargetException {
+  public void testGetMaxWorkersWhenSetToZero() {
     WorkerTool workerTool = createWorkerTool(0);
     assertThat(workerTool.getMaxWorkers(), equalTo(BUCK_CONFIG.getNumThreads()));
   }
 
   @Test
-  public void testGetMaxWorkersWhenSetToNegativeInt() throws NoSuchBuildTargetException {
+  public void testGetMaxWorkersWhenSetToNegativeInt() {
     WorkerTool workerTool = createWorkerTool(-2);
     assertThat(workerTool.getMaxWorkers(), equalTo(BUCK_CONFIG.getNumThreads()));
   }
 
   @Test
-  public void testHandlesExeWithoutOutput() throws NoSuchBuildTargetException {
+  public void testHandlesExeWithoutOutput() {
     createWorkerTool(1, WorkerToolDescriptionTest::wrapExeInCommandAlias);
   }
 
-  private static WorkerTool createWorkerTool(int maxWorkers) throws NoSuchBuildTargetException {
+  private static WorkerTool createWorkerTool(int maxWorkers) {
     return createWorkerTool(maxWorkers, (resolver, shBinary) -> shBinary.getBuildTarget());
   }
 
@@ -83,8 +82,7 @@ public class WorkerToolDescriptionTest {
   }
 
   private static WorkerTool createWorkerTool(
-      int maxWorkers, BiFunction<ActionGraphBuilder, BuildRule, BuildTarget> getExe)
-      throws NoSuchBuildTargetException {
+      int maxWorkers, BiFunction<ActionGraphBuilder, BuildRule, BuildTarget> getExe) {
     TargetGraph targetGraph = TargetGraph.EMPTY;
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
 

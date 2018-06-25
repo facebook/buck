@@ -28,7 +28,6 @@ import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.macros.LocationMacro;
@@ -51,14 +50,14 @@ public class JsBundleWorkerJobArgsTest {
   private FakeBuildableContext fakeBuildableContext;
 
   @Before
-  public void setUp() throws NoSuchBuildTargetException {
+  public void setUp() {
     scenario = JsTestScenario.builder().build();
     fakeBuildableContext = new FakeBuildableContext();
     buildContext(scenario);
   }
 
   @Test
-  public void testFileRamBundleFlavor() throws NoSuchBuildTargetException, IOException {
+  public void testFileRamBundleFlavor() throws IOException {
     JsBundle bundle =
         scenario.createBundle(
             targetWithFlavors("//:arbitrary", JsFlavors.RAM_BUNDLE_FILES), ImmutableSortedSet.of());
@@ -68,7 +67,7 @@ public class JsBundleWorkerJobArgsTest {
   }
 
   @Test
-  public void testIndexedRamBundleFlavor() throws NoSuchBuildTargetException, IOException {
+  public void testIndexedRamBundleFlavor() throws IOException {
     JsBundle bundle =
         scenario.createBundle(
             targetWithFlavors("//:arbitrary", JsFlavors.RAM_BUNDLE_INDEXED),
@@ -79,7 +78,7 @@ public class JsBundleWorkerJobArgsTest {
   }
 
   @Test(expected = FlavorDomainException.class)
-  public void testMultipleRamBundleFlavorsFail() throws NoSuchBuildTargetException {
+  public void testMultipleRamBundleFlavorsFail() {
     JsBundle bundle =
         scenario.createBundle(
             targetWithFlavors(
@@ -90,7 +89,7 @@ public class JsBundleWorkerJobArgsTest {
   }
 
   @Test
-  public void testBuildRootIsPassed() throws NoSuchBuildTargetException, IOException {
+  public void testBuildRootIsPassed() throws IOException {
     JsBundle bundle = scenario.createBundle("//:arbitrary", ImmutableSortedSet.of());
     JsonNode args = ObjectMappers.readValue(getJobArgs(bundle), JsonNode.class);
     assertThat(
@@ -98,7 +97,7 @@ public class JsBundleWorkerJobArgsTest {
   }
 
   @Test
-  public void testBundleNameCanBeSet() throws NoSuchBuildTargetException {
+  public void testBundleNameCanBeSet() {
     String bundleName = "a-bundle-name.jsbundle";
     JsBundle bundle =
         scenario.createBundle("//:arbitrary", builder -> builder.setBundleName(bundleName));
@@ -107,7 +106,7 @@ public class JsBundleWorkerJobArgsTest {
   }
 
   @Test
-  public void testBundleNameIsFlavorSpecific() throws NoSuchBuildTargetException {
+  public void testBundleNameIsFlavorSpecific() {
     String bundleName = "flavored.js";
     JsBundle bundle =
         scenario.createBundle(
@@ -120,7 +119,7 @@ public class JsBundleWorkerJobArgsTest {
   }
 
   @Test
-  public void testFirstMatchingFlavorSetsBundleName() throws NoSuchBuildTargetException {
+  public void testFirstMatchingFlavorSetsBundleName() {
     String bundleName = "for-ios.js";
     JsBundle bundle =
         scenario.createBundle(

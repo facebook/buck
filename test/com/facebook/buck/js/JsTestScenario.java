@@ -26,7 +26,6 @@ import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.rules.macros.Macro;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosUtils;
@@ -72,21 +71,18 @@ public class JsTestScenario {
     this.filesystem = filesystem;
   }
 
-  JsBundle createBundle(String target, ImmutableSortedSet<BuildTarget> deps)
-      throws NoSuchBuildTargetException {
+  JsBundle createBundle(String target, ImmutableSortedSet<BuildTarget> deps) {
     return createBundle(target, builder -> builder.setDeps(deps));
   }
 
-  JsBundle createBundle(String target, Function<JsBundleBuilder, JsBundleBuilder> setUp)
-      throws NoSuchBuildTargetException {
+  JsBundle createBundle(String target, Function<JsBundleBuilder, JsBundleBuilder> setUp) {
     return createBundle(target, Either.ofLeft(ImmutableSet.of()), setUp);
   }
 
   private JsBundle createBundle(
       String target,
       Either<ImmutableSet<String>, String> entry,
-      Function<JsBundleBuilder, JsBundleBuilder> setUp)
-      throws NoSuchBuildTargetException {
+      Function<JsBundleBuilder, JsBundleBuilder> setUp) {
     return setUp
         .apply(
             new JsBundleBuilder(
