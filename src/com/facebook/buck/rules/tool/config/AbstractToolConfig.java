@@ -51,7 +51,12 @@ abstract class AbstractToolConfig implements ConfigView<BuckConfig> {
     } else {
       return Optional.of(
           new ConstantToolProvider(
-              new HashedFileTool(() -> getDelegate().getPathSourcePath(Paths.get(value.get())))));
+              new HashedFileTool(
+                  () ->
+                      getDelegate()
+                          .getPathSourcePath(
+                              Paths.get(value.get()),
+                              String.format("Overridden %s:%s path not found", section, field)))));
     }
   }
 

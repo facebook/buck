@@ -242,7 +242,7 @@ public class BuckConfig implements ConfigPathGetter {
                           input,
                           resolve,
                           String.format(
-                              "Error in %s.%s: Cell-relative path not found: ", section, field)))
+                              "Error in %s.%s: Cell-relative path not found", section, field)))
               .collect(ImmutableList.toImmutableList());
       return Optional.of(paths);
     }
@@ -344,23 +344,27 @@ public class BuckConfig implements ConfigPathGetter {
           PathSourcePath.of(
               projectFilesystem,
               checkPathExists(
-                  value.get(),
-                  String.format("Overridden %s:%s path not found: ", section, field))));
+                  value.get(), String.format("Overridden %s:%s path not found", section, field))));
     }
   }
 
   /** @return a {@link SourcePath} identified by a {@link Path}. */
   public PathSourcePath getPathSourcePath(@PropagatesNullable Path path) {
+    return getPathSourcePath(path, "File not found");
+  }
+
+  /**
+   * @return a {@link SourcePath} identified by a {@link Path}.
+   * @param errorMessage the error message to throw if path is not found
+   */
+  public PathSourcePath getPathSourcePath(@PropagatesNullable Path path, String errorMessage) {
     if (path == null) {
       return null;
     }
     if (path.isAbsolute()) {
       return PathSourcePath.of(projectFilesystem, path);
     }
-    return PathSourcePath.of(
-        projectFilesystem,
-        checkPathExists(
-            path.toString(), "Failed to transform Path to SourcePath, path not found: "));
+    return PathSourcePath.of(projectFilesystem, checkPathExists(path.toString(), errorMessage));
   }
 
   /**
@@ -888,7 +892,7 @@ public class BuckConfig implements ConfigPathGetter {
             convertPathWithError(
                 pathString.get(),
                 isCellRootRelative,
-                String.format("Overridden %s:%s path not found: ", sectionName, name)))
+                String.format("Overridden %s:%s path not found", sectionName, name)))
         : Optional.empty();
   }
 
@@ -927,7 +931,7 @@ public class BuckConfig implements ConfigPathGetter {
     if (projectFilesystem.exists(path)) {
       return path;
     }
-    throw new HumanReadableException(errorMsg + path);
+    throw new HumanReadableException(String.format("%s: %s", errorMsg, path));
   }
 
   public ImmutableSet<String> getSections() {
