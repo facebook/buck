@@ -220,7 +220,6 @@ public class NdkCxxPlatforms {
         ndkRoot,
         compiler,
         androidConfig.getNdkCxxRuntime().orElse(NdkCxxPlatforms.DEFAULT_CXX_RUNTIME),
-        androidConfig.getNdkAppPlatform().orElse(NdkCxxPlatforms.DEFAULT_TARGET_APP_PLATFORM),
         androidConfig.getNdkCpuAbis().orElse(NdkCxxPlatforms.DEFAULT_CPU_ABIS),
         platform);
   }
@@ -233,7 +232,6 @@ public class NdkCxxPlatforms {
       Path ndkRoot,
       NdkCxxPlatformCompiler compiler,
       NdkCxxRuntime cxxRuntime,
-      String androidPlatform,
       Set<String> cpuAbis,
       Platform platform) {
     return getPlatforms(
@@ -243,7 +241,6 @@ public class NdkCxxPlatforms {
         ndkRoot,
         compiler,
         cxxRuntime,
-        androidPlatform,
         cpuAbis,
         platform,
         new ExecutableFinder(),
@@ -258,7 +255,6 @@ public class NdkCxxPlatforms {
       Path ndkRoot,
       NdkCxxPlatformCompiler compiler,
       NdkCxxRuntime cxxRuntime,
-      String androidPlatform,
       Set<String> cpuAbis,
       Platform platform,
       ExecutableFinder executableFinder,
@@ -268,6 +264,10 @@ public class NdkCxxPlatforms {
 
     // ARM Platform
     if (cpuAbis.contains("arm")) {
+      String androidPlatform =
+          androidConfig
+              .getNdkAppPlatformForCpuAbi("arm")
+              .orElse(NdkCxxPlatforms.DEFAULT_TARGET_APP_PLATFORM);
       NdkCxxPlatformTargetConfiguration targetConfiguration =
           getTargetConfiguration(TargetCpuType.ARM, compiler, androidPlatform);
       NdkCxxPlatform armeabi =
@@ -287,6 +287,10 @@ public class NdkCxxPlatforms {
 
     // ARMv7 Platform
     if (cpuAbis.contains("armv7")) {
+      String androidPlatform =
+          androidConfig
+              .getNdkAppPlatformForCpuAbi("armv7")
+              .orElse(NdkCxxPlatforms.DEFAULT_TARGET_APP_PLATFORM);
       NdkCxxPlatformTargetConfiguration targetConfiguration =
           getTargetConfiguration(TargetCpuType.ARMV7, compiler, androidPlatform);
       NdkCxxPlatform armeabiv7 =
@@ -306,6 +310,10 @@ public class NdkCxxPlatforms {
 
     // ARM64 Platform
     if (cpuAbis.contains("arm64")) {
+      String androidPlatform =
+          androidConfig
+              .getNdkAppPlatformForCpuAbi("arm64")
+              .orElse(NdkCxxPlatforms.DEFAULT_TARGET_APP_PLATFORM);
       NdkCxxPlatformTargetConfiguration targetConfiguration =
           getTargetConfiguration(TargetCpuType.ARM64, compiler, androidPlatform);
       NdkCxxPlatform arm64 =
@@ -325,6 +333,10 @@ public class NdkCxxPlatforms {
 
     // x86 Platform
     if (cpuAbis.contains("x86")) {
+      String androidPlatform =
+          androidConfig
+              .getNdkAppPlatformForCpuAbi("x86")
+              .orElse(NdkCxxPlatforms.DEFAULT_TARGET_APP_PLATFORM);
       NdkCxxPlatformTargetConfiguration targetConfiguration =
           getTargetConfiguration(TargetCpuType.X86, compiler, androidPlatform);
       NdkCxxPlatform x86 =
@@ -344,6 +356,10 @@ public class NdkCxxPlatforms {
 
     // x86_64 Platform
     if (cpuAbis.contains("x86_64")) {
+      String androidPlatform =
+          androidConfig
+              .getNdkAppPlatformForCpuAbi("x86_64")
+              .orElse(NdkCxxPlatforms.DEFAULT_TARGET_APP_PLATFORM);
       NdkCxxPlatformTargetConfiguration targetConfiguration =
           getTargetConfiguration(TargetCpuType.X86_64, compiler, androidPlatform);
       // CHECKSTYLE.OFF: LocalVariableName

@@ -1,6 +1,6 @@
 [ndk]
   #cpu_abis
-  app_platform = android-21
+  #app_platform
 
 [scala]
   library = //scala:scala-library

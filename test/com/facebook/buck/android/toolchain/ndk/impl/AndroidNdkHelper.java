@@ -105,7 +105,6 @@ public class AndroidNdkHelper {
                     .setGccVersion(gccVersion)
                     .build(),
                 NdkCxxPlatforms.DEFAULT_CXX_RUNTIME,
-                NdkCxxPlatforms.DEFAULT_TARGET_APP_PLATFORM,
                 NdkCxxPlatforms.DEFAULT_CPU_ABIS,
                 Platform.detect())
             .values();
