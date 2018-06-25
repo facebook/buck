@@ -45,17 +45,14 @@ import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
-import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.facebook.buck.rules.coercer.ManifestEntries;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.toolchain.ToolchainProvider;
-import com.facebook.buck.util.RichStream;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Ordering;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
@@ -70,8 +67,6 @@ public class AndroidBinaryDescription
         Flavored,
         ImplicitDepsInferringDescription<
             AndroidBinaryDescription.AbstractAndroidBinaryDescriptionArg> {
-
-  private static final Logger LOG = Logger.get(AndroidBinaryDescription.class);
 
   private static final ImmutableSet<Flavor> FLAVORS =
       ImmutableSet.of(
@@ -150,23 +145,8 @@ public class AndroidBinaryDescription
 
     DexSplitMode dexSplitMode = createDexSplitMode(args, exopackageModes);
 
-    // Build rules added to "no_dx" are only hints, not hard dependencies. Therefore, although a
-    // target may be mentioned in that parameter, it may not be present as a build rule.
-    ImmutableSortedSet.Builder<BuildRule> builder = ImmutableSortedSet.naturalOrder();
-    for (BuildTarget noDxTarget : args.getNoDx()) {
-      Optional<BuildRule> ruleOptional = graphBuilder.getRuleOptional(noDxTarget);
-      if (ruleOptional.isPresent()) {
-        builder.add(ruleOptional.get());
-      } else {
-        LOG.info("%s: no_dx target not a dependency: %s", buildTarget, noDxTarget);
-      }
-    }
-
-    ImmutableSortedSet<BuildRule> buildRulesToExcludeFromDex = builder.build();
     ImmutableSortedSet<JavaLibrary> rulesToExcludeFromDex =
-        RichStream.from(buildRulesToExcludeFromDex)
-            .filter(JavaLibrary.class)
-            .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
+        NoDxArgsHelper.findRulesToExcludeFromDex(graphBuilder, buildTarget, args.getNoDx());
 
     CellPathResolver cellRoots = context.getCellPathResolver();
 
