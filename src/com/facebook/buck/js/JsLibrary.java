@@ -36,6 +36,7 @@ import com.facebook.buck.shell.WorkerTool;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.util.json.JsonBuilder;
+import com.facebook.buck.util.json.JsonBuilder.ObjectBuilder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
@@ -75,7 +76,7 @@ public class JsLibrary extends AbstractBuildRuleWithDeclaredAndExtraDeps {
         this::getJobArgs);
   }
 
-  private String getJobArgs(SourcePathResolver resolver, Path outputPath) {
+  private ObjectBuilder getJobArgs(SourcePathResolver resolver, Path outputPath) {
     ImmutableSortedSet<Flavor> flavors = getBuildTarget().getFlavors();
 
     return JsonBuilder.object()
@@ -92,8 +93,7 @@ public class JsLibrary extends AbstractBuildRuleWithDeclaredAndExtraDeps {
                 .map(Path::toString)
                 .collect(JsonBuilder.toArrayOfStrings()))
         .addString(
-            "aggregatedSourceFilesFilePath", resolver.getAbsolutePath(filesDependency).toString())
-        .toString();
+            "aggregatedSourceFilesFilePath", resolver.getAbsolutePath(filesDependency).toString());
   }
 
   @Override
@@ -151,7 +151,7 @@ public class JsLibrary extends AbstractBuildRuleWithDeclaredAndExtraDeps {
           this::getJobArgs);
     }
 
-    private String getJobArgs(SourcePathResolver resolver, Path outputPath) {
+    private ObjectBuilder getJobArgs(SourcePathResolver resolver, Path outputPath) {
       ImmutableSortedSet<Flavor> flavors = getBuildTarget().getFlavors();
 
       return JsonBuilder.object()
@@ -166,8 +166,7 @@ public class JsLibrary extends AbstractBuildRuleWithDeclaredAndExtraDeps {
                   .stream()
                   .map(resolver::getAbsolutePath)
                   .map(Path::toString)
-                  .collect(JsonBuilder.toArrayOfStrings()))
-          .toString();
+                  .collect(JsonBuilder.toArrayOfStrings()));
     }
 
     @Override
@@ -198,7 +197,7 @@ public class JsLibrary extends AbstractBuildRuleWithDeclaredAndExtraDeps {
       BuildTargetSourcePath output,
       ProjectFilesystem filesystem,
       WorkerTool worker,
-      BiFunction<SourcePathResolver, Path, String> jobArgs) {
+      BiFunction<SourcePathResolver, Path, ObjectBuilder> jobArgs) {
     SourcePathResolver resolver = context.getSourcePathResolver();
     Path outputPath = resolver.getAbsolutePath(output);
     buildableContext.recordArtifact(resolver.getRelativePath(output));
@@ -206,7 +205,7 @@ public class JsLibrary extends AbstractBuildRuleWithDeclaredAndExtraDeps {
         RmStep.of(
             BuildCellRelativePath.fromCellRelativePath(
                 context.getBuildCellRootPath(), filesystem, outputPath)),
-        JsUtil.workerShellStep(
+        JsUtil.jsonWorkerShellStepAddingFlavors(
             worker, jobArgs.apply(resolver, outputPath), output.getTarget(), resolver, filesystem));
   }
 }
