@@ -129,4 +129,11 @@ public class JsFlavors {
             () ->
                 new HumanReadableException("A platform flavor must be passed for release builds"));
   }
+
+  static boolean shouldBePassedToWorker(Flavor flavor) {
+    return !flavor.equals(LIBRARY_FILES)
+        && !flavor.equals(ANDROID_RESOURCES)
+        && !flavor.equals(FORCE_JS_BUNDLE)
+        && !isFileFlavor(flavor);
+  }
 }

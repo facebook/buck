@@ -36,6 +36,7 @@ import com.facebook.buck.shell.WorkerTool;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.util.json.JsonBuilder;
+import com.facebook.buck.util.json.JsonBuilder.ObjectBuilder;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
@@ -81,12 +82,12 @@ public abstract class JsFile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   @Nullable
   abstract BuildTarget getSourceBuildTarget(SourcePathRuleFinder ruleFinder);
 
-  ImmutableList<Step> getBuildSteps(BuildContext context, String jobArgs, Path outputPath) {
+  ImmutableList<Step> getBuildSteps(BuildContext context, ObjectBuilder jobArgs, Path outputPath) {
     return ImmutableList.of(
         RmStep.of(
             BuildCellRelativePath.fromCellRelativePath(
                 context.getBuildCellRootPath(), getProjectFilesystem(), outputPath)),
-        JsUtil.workerShellStep(
+        JsUtil.jsonWorkerShellStepAddingFlavors(
             worker,
             jobArgs,
             getBuildTarget(),
@@ -139,7 +140,7 @@ public abstract class JsFile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
       Path outputPath = sourcePathResolver.getAbsolutePath(getSourcePathToOutput());
 
       Path srcPath = sourcePathResolver.getAbsolutePath(src);
-      String jobArgs =
+      ObjectBuilder jobArgs =
           JsonBuilder.object()
               .addString("command", "transform")
               .addString("outputFilePath", outputPath.toString())
@@ -152,8 +153,7 @@ public abstract class JsFile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
                           MorePaths.pathWithUnixSeparators(
                               sourcePathResolver.getRelativePath(src))))
               .addRaw("extraData", getExtraJson().map(a -> Arg.stringify(a, sourcePathResolver)))
-              .addString("extraArgs", getExtraArgs())
-              .toString();
+              .addString("extraArgs", getExtraArgs());
 
       return getBuildSteps(context, jobArgs, outputPath);
     }
@@ -192,7 +192,7 @@ public abstract class JsFile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
       buildableContext.recordArtifact(sourcePathResolver.getRelativePath(getSourcePathToOutput()));
 
       Path outputPath = sourcePathResolver.getAbsolutePath(getSourcePathToOutput());
-      String jobArgs =
+      ObjectBuilder jobArgs =
           JsonBuilder.object()
               .addString("command", "optimize")
               .addString("outputFilePath", outputPath.toString())
@@ -200,8 +200,7 @@ public abstract class JsFile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
               .addString(
                   "transformedJsFilePath", sourcePathResolver.getAbsolutePath(devFile).toString())
               .addRaw("extraData", getExtraJson().map(a -> Arg.stringify(a, sourcePathResolver)))
-              .addString("extraArgs", getExtraArgs())
-              .toString();
+              .addString("extraArgs", getExtraArgs());
 
       return getBuildSteps(context, jobArgs, outputPath);
     }

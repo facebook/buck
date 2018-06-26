@@ -40,6 +40,8 @@ import com.facebook.buck.rules.macros.Macro;
 import com.facebook.buck.rules.macros.StringWithMacrosConverter;
 import com.facebook.buck.shell.WorkerShellStep;
 import com.facebook.buck.shell.WorkerTool;
+import com.facebook.buck.util.json.JsonBuilder;
+import com.facebook.buck.util.json.JsonBuilder.ObjectBuilder;
 import com.facebook.buck.worker.WorkerJobParams;
 import com.facebook.buck.worker.WorkerProcessIdentity;
 import com.facebook.buck.worker.WorkerProcessParams;
@@ -107,6 +109,29 @@ public class JsUtil {
         Optional.empty(),
         Optional.empty(),
         new WorkerProcessPoolFactory(projectFilesystem));
+  }
+
+  static WorkerShellStep jsonWorkerShellStepAddingFlavors(
+      WorkerTool worker,
+      ObjectBuilder jobArgs,
+      BuildTarget buildTarget,
+      SourcePathResolver pathResolver,
+      ProjectFilesystem filesystem) {
+    return workerShellStep(
+        worker,
+        jobArgs
+            .addArray(
+                "flavors",
+                buildTarget
+                    .getFlavors()
+                    .stream()
+                    .filter(JsFlavors::shouldBePassedToWorker)
+                    .map(Flavor::getName)
+                    .collect(JsonBuilder.toArrayOfStrings()))
+            .toString(),
+        buildTarget,
+        pathResolver,
+        filesystem);
   }
 
   static boolean isJsLibraryTarget(BuildTarget target, TargetGraph targetGraph) {
