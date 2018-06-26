@@ -71,10 +71,11 @@ public class HaskellHaddockDescription
     ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     HaskellPlatform platform = getPlatform(baseTarget, args);
-    Iterable<BuildRule> deps = graphBuilder.getAllRules(args.getDeps());
+    ImmutableCollection<BuildRule> deps = graphBuilder.getAllRules(args.getDeps());
 
     // Collect all Haskell deps
     ImmutableSet.Builder<HaskellHaddockInput> haddockInputs = ImmutableSet.builder();
+
     // Traverse all deps to pull packages + locations
     new AbstractBreadthFirstTraversal<BuildRule>(deps) {
       @Override
@@ -82,7 +83,11 @@ public class HaskellHaddockDescription
         ImmutableSet.Builder<BuildRule> traverse = ImmutableSet.builder();
         if (rule instanceof HaskellCompileDep) {
           HaskellCompileDep haskellCompileDep = (HaskellCompileDep) rule;
-          haddockInputs.add(haskellCompileDep.getHaddockInput(platform));
+
+          // Only index first order dependencies
+          if (deps.contains(rule)) {
+            haddockInputs.add(haskellCompileDep.getHaddockInput(platform));
+          }
 
           traverse.addAll(haskellCompileDep.getCompileDeps(platform));
         }
