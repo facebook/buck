@@ -82,20 +82,31 @@ public class JsUtil {
 
   private JsUtil() {}
 
-  static WorkerShellStep workerShellStep(
+  static WorkerShellStep jsonWorkerShellStepAddingFlavors(
       WorkerTool worker,
-      String jobArgs,
+      ObjectBuilder jobArgs,
       BuildTarget buildTarget,
-      SourcePathResolver sourcePathResolver,
-      ProjectFilesystem projectFilesystem) {
+      SourcePathResolver pathResolver,
+      ProjectFilesystem filesystem) {
+    String jobArgsString =
+        jobArgs
+            .addArray(
+                "flavors",
+                buildTarget
+                    .getFlavors()
+                    .stream()
+                    .filter(JsFlavors::shouldBePassedToWorker)
+                    .map(Flavor::getName)
+                    .collect(JsonBuilder.toArrayOfStrings()))
+            .toString();
     Tool tool = worker.getTool();
     WorkerJobParams params =
         WorkerJobParams.of(
-            jobArgs,
+            jobArgsString,
             WorkerProcessParams.of(
                 worker.getTempDir(),
-                tool.getCommandPrefix(sourcePathResolver),
-                tool.getEnvironment(sourcePathResolver),
+                tool.getCommandPrefix(pathResolver),
+                tool.getEnvironment(pathResolver),
                 worker.getMaxWorkers(),
                 worker.isPersistent()
                     ? Optional.of(
@@ -108,30 +119,7 @@ public class JsUtil {
         Optional.of(params),
         Optional.empty(),
         Optional.empty(),
-        new WorkerProcessPoolFactory(projectFilesystem));
-  }
-
-  static WorkerShellStep jsonWorkerShellStepAddingFlavors(
-      WorkerTool worker,
-      ObjectBuilder jobArgs,
-      BuildTarget buildTarget,
-      SourcePathResolver pathResolver,
-      ProjectFilesystem filesystem) {
-    return workerShellStep(
-        worker,
-        jobArgs
-            .addArray(
-                "flavors",
-                buildTarget
-                    .getFlavors()
-                    .stream()
-                    .filter(JsFlavors::shouldBePassedToWorker)
-                    .map(Flavor::getName)
-                    .collect(JsonBuilder.toArrayOfStrings()))
-            .toString(),
-        buildTarget,
-        pathResolver,
-        filesystem);
+        new WorkerProcessPoolFactory(filesystem));
   }
 
   static boolean isJsLibraryTarget(BuildTarget target, TargetGraph targetGraph) {

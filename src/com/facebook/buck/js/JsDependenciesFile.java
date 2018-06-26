@@ -34,6 +34,7 @@ import com.facebook.buck.shell.WorkerTool;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.util.json.JsonBuilder;
+import com.facebook.buck.util.json.JsonBuilder.ObjectBuilder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -71,7 +72,7 @@ public class JsDependenciesFile extends AbstractBuildRuleWithDeclaredAndExtraDep
     SourcePathResolver sourcePathResolver = context.getSourcePathResolver();
 
     SourcePath outputFile = getSourcePathToOutput();
-    String jobArgs = getJobArgs(sourcePathResolver, outputFile);
+    ObjectBuilder jobArgs = getJobArgs(sourcePathResolver, outputFile);
 
     buildableContext.recordArtifact(sourcePathResolver.getRelativePath(outputFile));
 
@@ -82,12 +83,13 @@ public class JsDependenciesFile extends AbstractBuildRuleWithDeclaredAndExtraDep
                     context.getBuildCellRootPath(),
                     getProjectFilesystem(),
                     sourcePathResolver.getRelativePath(outputFile).getParent())),
-            JsUtil.workerShellStep(
+            JsUtil.jsonWorkerShellStepAddingFlavors(
                 worker, jobArgs, getBuildTarget(), sourcePathResolver, getProjectFilesystem()))
         .build();
   }
 
-  private String getJobArgs(SourcePathResolver sourcePathResolver, SourcePath outputFilePath) {
+  private ObjectBuilder getJobArgs(
+      SourcePathResolver sourcePathResolver, SourcePath outputFilePath) {
 
     ImmutableSortedSet<Flavor> flavors = getBuildTarget().getFlavors();
 
@@ -105,8 +107,7 @@ public class JsDependenciesFile extends AbstractBuildRuleWithDeclaredAndExtraDep
         .addString("platform", JsUtil.getPlatformString(flavors))
         .addBoolean("release", flavors.contains(JsFlavors.RELEASE))
         .addString("rootPath", getProjectFilesystem().getRootPath().toString())
-        .addRaw("extraData", extraJson.map(a -> Arg.stringify(a, sourcePathResolver)))
-        .toString();
+        .addRaw("extraData", extraJson.map(a -> Arg.stringify(a, sourcePathResolver)));
   }
 
   @Override
