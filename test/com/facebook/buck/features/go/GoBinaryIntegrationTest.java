@@ -87,9 +87,20 @@ public class GoBinaryIntegrationTest {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "cgo", tmp);
     workspace.setUp();
 
-    ProcessResult result = workspace.runBuckCommand("run", "//src/cgo_test:bin");
+    ProcessResult result = workspace.runBuckCommand("run", "//src/simple:bin");
     result.assertSuccess();
     assertThat(result.getStdout(), Matchers.containsString("fmt: Go string"));
+  }
+
+  @Test
+  public void binaryWithCgoAndGenruleAsSource() throws IOException {
+    GoAssumptions.assumeGoVersionAtLeast("1.10.0");
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "cgo", tmp);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckCommand("run", "//src/genrule:bin");
+    result.assertSuccess();
+    assertThat(result.getStdout(), Matchers.containsString("fmt: Go string second"));
   }
 
   @Test

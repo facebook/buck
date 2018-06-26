@@ -1,0 +1,9 @@
+go_binary(
+    name = "copy",
+    srcs = [
+        "copy.go",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+)

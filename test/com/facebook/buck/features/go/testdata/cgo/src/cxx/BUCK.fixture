@@ -1,0 +1,8 @@
+cxx_library(
+    name = "lib",
+    srcs = ["lib.c"],
+    headers = ["lib.h"],
+    visibility = [
+        "PUBLIC",
+    ],
+)

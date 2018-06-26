@@ -73,18 +73,17 @@ public class CGoGenSource extends AbstractBuildRule {
     ImmutableList.Builder<SourcePath> goBuilder = ImmutableList.builder();
 
     for (SourcePath srcPath : cgoSrcs) {
-      String path =
-          projectFilesystem
-              .getPathForRelativePath(getBuildTarget().getBasePath())
-              .relativize(pathResolver.getAbsolutePath(srcPath))
-              .toString();
-      String filename = path.substring(0, path.lastIndexOf('.')).replace(File.separatorChar, '_');
+      String filename = pathResolver.getAbsolutePath(srcPath).getFileName().toString();
+      String filenameWithoutExt =
+          filename.substring(0, filename.lastIndexOf('.')).replace(File.separatorChar, '_');
 
       // cgo generates 2 files for each Go sources, 1 .cgo1.go and 1 .cgo2.c
       goBuilder.add(
-          ExplicitBuildTargetSourcePath.of(buildTarget, genDir.resolve(filename + ".cgo1.go")));
+          ExplicitBuildTargetSourcePath.of(
+              buildTarget, genDir.resolve(filenameWithoutExt + ".cgo1.go")));
       cBuilder.add(
-          ExplicitBuildTargetSourcePath.of(buildTarget, genDir.resolve(filename + ".cgo2.c")));
+          ExplicitBuildTargetSourcePath.of(
+              buildTarget, genDir.resolve(filenameWithoutExt + ".cgo2.c")));
     }
 
     cBuilder.add(ExplicitBuildTargetSourcePath.of(buildTarget, genDir.resolve("_cgo_export.c")));
@@ -121,7 +120,7 @@ public class CGoGenSource extends AbstractBuildRule {
             cgoCompilerFlags,
             cgoSrcs
                 .stream()
-                .map(context.getSourcePathResolver()::getAbsolutePath)
+                .map(context.getSourcePathResolver()::getRelativePath)
                 .collect(ImmutableList.toImmutableList()),
             platform,
             genDir));

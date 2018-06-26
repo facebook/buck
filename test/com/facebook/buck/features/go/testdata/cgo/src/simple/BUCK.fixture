@@ -9,11 +9,5 @@ cgo_library(
     package_name = "main",
     srcs = ["cgosrc.go"],
     headers = ["lib.h"],
-    deps = [":lib"],
-)
-
-cxx_library(
-    name = "lib",
-    srcs = ["lib.c"],
-    headers = ["lib.h"],
+    deps = ["//src/cxx:lib"],
 )
