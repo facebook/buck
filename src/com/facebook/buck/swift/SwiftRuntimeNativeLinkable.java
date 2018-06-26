@@ -18,6 +18,7 @@ package com.facebook.buck.swift;
 
 import static com.facebook.buck.core.model.UnflavoredBuildTarget.BUILD_TARGET_PREFIX;
 
+import com.facebook.buck.apple.platform_type.ApplePlatformType;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRuleResolver;
@@ -90,7 +91,11 @@ public final class SwiftRuntimeNativeLinkable implements NativeLinkable {
 
   @Override
   public Linkage getPreferredLinkage(CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
-    return Linkage.ANY;
+    ApplePlatformType type = ApplePlatformType.of(cxxPlatform.getFlavor().getName());
+    if (type == ApplePlatformType.MAC) {
+      return Linkage.ANY;
+    }
+    return Linkage.SHARED;
   }
 
   @Override
