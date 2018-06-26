@@ -26,12 +26,15 @@ import com.facebook.buck.core.rules.impl.SymlinkTree;
 import com.facebook.buck.core.rules.tool.BinaryBuildRule;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
+import com.facebook.buck.cxx.CxxPrepareForLinkStep;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
@@ -45,6 +48,7 @@ public class GoBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps implemen
   @AddToRuleKey private final Tool linker;
   @AddToRuleKey private final ImmutableList<String> linkerFlags;
   @AddToRuleKey private final Optional<Linker> cxxLinker;
+  @AddToRuleKey private final ImmutableList<Arg> cxxLinkerArgs;
   @AddToRuleKey private final GoPlatform platform;
 
   private final GoCompile mainObject;
@@ -57,6 +61,7 @@ public class GoBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps implemen
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       Optional<Linker> cxxLinker,
+      ImmutableList<Arg> cxxLinkerArgs,
       SymlinkTree linkTree,
       GoCompile mainObject,
       Tool linker,
@@ -64,6 +69,7 @@ public class GoBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps implemen
       GoPlatform platform) {
     super(buildTarget, projectFilesystem, params);
     this.cxxLinker = cxxLinker;
+    this.cxxLinkerArgs = cxxLinkerArgs;
     this.linker = linker;
     this.linkTree = linkTree;
     this.mainObject = mainObject;
@@ -94,22 +100,57 @@ public class GoBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps implemen
       cxxLinkerCommand = cxxLinker.get().getCommandPrefix(context.getSourcePathResolver());
     }
     environment.putAll(linker.getEnvironment(context.getSourcePathResolver()));
-    return ImmutableList.of(
+
+    SourcePathResolver resolver = context.getSourcePathResolver();
+    ImmutableList.Builder<Step> steps = ImmutableList.builder();
+    steps.add(
         MkdirStep.of(
             BuildCellRelativePath.fromCellRelativePath(
-                context.getBuildCellRootPath(), getProjectFilesystem(), output.getParent())),
+                context.getBuildCellRootPath(), getProjectFilesystem(), output.getParent())));
+
+    // cxxLinkerArgs comes from cgo rules and are reuqired for cxx deps linking
+    ImmutableList.Builder<String> allLinkerFlags = ImmutableList.builder();
+    allLinkerFlags.addAll(linkerFlags);
+    if (cxxLinkerArgs.size() > 0) {
+      Path argFilePath =
+          getProjectFilesystem()
+              .getRootPath()
+              .resolve(
+                  BuildTargets.getScratchPath(
+                      getProjectFilesystem(), getBuildTarget(), "%s.argsfile"));
+      Path fileListPath =
+          getProjectFilesystem()
+              .getRootPath()
+              .resolve(
+                  BuildTargets.getScratchPath(
+                      getProjectFilesystem(), getBuildTarget(), "%s__filelist.txt"));
+      steps.addAll(
+          CxxPrepareForLinkStep.create(
+              argFilePath,
+              fileListPath,
+              cxxLinker.get().fileList(fileListPath),
+              output,
+              cxxLinkerArgs,
+              cxxLinker.get(),
+              getBuildTarget().getCellPath(),
+              resolver));
+      allLinkerFlags.addAll(ImmutableList.of("-extldflags", String.format("@%s", argFilePath)));
+    }
+
+    steps.add(
         new GoLinkStep(
             getBuildTarget(),
             getProjectFilesystem().getRootPath(),
             environment.build(),
             cxxLinkerCommand,
             linker.getCommandPrefix(context.getSourcePathResolver()),
-            linkerFlags,
+            allLinkerFlags.build(),
             ImmutableList.of(linkTree.getRoot()),
             platform,
             context.getSourcePathResolver().getRelativePath(mainObject.getSourcePathToOutput()),
             GoLinkStep.LinkMode.EXECUTABLE,
             output));
+    return steps.build();
   }
 
   @Override

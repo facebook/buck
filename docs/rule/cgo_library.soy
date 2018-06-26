@@ -16,6 +16,10 @@
 {param overview}
 A cgo_library() rule builds an object from the supplied set of Go/C source files and
 dependencies. The outputs are linked into go executable in the last step (compile).
+
+The 'go build' command would collect the cgo directives from the source files, however
+with buck the flags needs to be passed in the cgo_library manually
+
 This rule borrows from cxx_binary since C/C++ sources are being compiled.
 {/param}
 
@@ -63,7 +67,7 @@ This rule borrows from cxx_binary since C/C++ sources are being compiled.
 go_binary(
     name = "bin",
     srcs = ["main.go"],
-    cgo_deps = [":lib"],
+    cgo = ":lib",
 )
 
 cgo_library(

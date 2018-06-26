@@ -104,6 +104,17 @@ public class GoBinaryIntegrationTest {
   }
 
   @Test
+  public void binaryWithLibraryIncludingCgoLib() throws IOException {
+    GoAssumptions.assumeGoVersionAtLeast("1.10.0");
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "cgo", tmp);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckCommand("run", "//src/interdeps:bin");
+    result.assertSuccess();
+    assertThat(result.getStdout(), Matchers.containsString("fmt: Go string"));
+  }
+
+  @Test
   public void buildAfterChangeWorks() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "simple_binary", tmp);

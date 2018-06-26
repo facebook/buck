@@ -17,12 +17,8 @@
 package com.facebook.buck.features.go;
 
 import com.facebook.buck.core.model.BuildTarget;
-import com.google.common.collect.ImmutableSortedSet;
-import org.immutables.value.Value;
+import java.util.Optional;
 
 public interface HasCgo {
-  @Value.Default
-  default ImmutableSortedSet<BuildTarget> getCgoDeps() {
-    return ImmutableSortedSet.of();
-  }
+  Optional<BuildTarget> getCgo();
 }

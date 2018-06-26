@@ -1,0 +1,26 @@
+go_binary(
+    name = "bin",
+    srcs = ["main.go"],
+    deps = [":lib"],
+)
+
+go_library(
+    name = "lib",
+    package_name = "lib",
+    srcs = ["lib.go"],
+    deps = [":cgolib"],
+)
+
+go_library(
+    name = "cgolib",
+    package_name = "cgolib",
+    srcs = ["cgolib.go"],
+    cgo = ":cgo",
+)
+
+cgo_library(
+    name = "cgo",
+    package_name = "cgolib",
+    srcs = ["cgosrc.go"],
+    deps = ["//src/cxx:lib"],
+)

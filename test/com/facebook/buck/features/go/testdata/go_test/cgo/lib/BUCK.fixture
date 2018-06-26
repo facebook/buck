@@ -1,17 +1,17 @@
 cgo_library(
-  name="cgo_lib",
-  srcs=['double_cgo.go']
+    name = "cgo_lib",
+    srcs = ["double_cgo.go"],
 )
 
 go_library(
-  name="lib",
-  srcs=["quad_lib.go"],
-  tests=[":all_tests"],
-  cgo_deps=[":cgo_lib"]
+    name = "lib",
+    srcs = ["quad_lib.go"],
+    cgo = ":cgo_lib",
+    tests = [":all_tests"],
 )
 
 go_test(
-  name="all_tests",
-  library=":lib",
-  srcs=["double_test.go"]
+    name = "all_tests",
+    srcs = ["double_test.go"],
+    library = ":lib",
 )

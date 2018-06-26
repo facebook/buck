@@ -1,7 +1,7 @@
 package main
 
 /*
-#include "src/genrule/lib.h"
+#include "src/cxx/lib.h"
 #include <stdlib.h>
 
 void wrapper(int i) {

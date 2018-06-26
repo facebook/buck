@@ -17,28 +17,34 @@
 package com.facebook.buck.features.go;
 
 import com.facebook.buck.core.cell.resolver.CellPathResolver;
-import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.description.BuildRuleParams;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.rules.impl.NoopBuildRule;
+import com.facebook.buck.core.rules.impl.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.toolchain.tool.Tool;
+import com.facebook.buck.cxx.CxxDeps;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
+import com.facebook.buck.cxx.CxxLink;
 import com.facebook.buck.cxx.CxxLinkAndCompileRules;
 import com.facebook.buck.cxx.CxxLinkOptions;
+import com.facebook.buck.cxx.CxxLinkableEnhancer;
 import com.facebook.buck.cxx.CxxSource;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.args.FileListableLinkerInputArg;
+import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.macros.StringWithMacros;
-import com.facebook.buck.util.types.Either;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -46,7 +52,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.Optional;
-import java.util.SortedSet;
 
 /**
  * The CGoLibrary represents cgo build process which outputs the linkable object that is appended to
@@ -56,22 +61,27 @@ import java.util.SortedSet;
  * 2. Compile and link cgo sources into single object 3. Generate cgo_import.go 4. Return generated
  * go files and linked object (used by GoCompile)
  */
-public class CGoLibrary extends NoopBuildRule {
+public class CGoLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps {
   private final ImmutableList<SourcePath> goFiles;
   private final SourcePath output;
+  private final Iterable<BuildRule> linkableDeps;
 
   private CGoLibrary(
+      BuildRuleParams params,
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       ImmutableList<SourcePath> goFiles,
-      SourcePath output) {
-    super(buildTarget, projectFilesystem);
+      SourcePath output,
+      Iterable<BuildRule> linkableDeps) {
+    super(buildTarget, projectFilesystem, params);
 
     this.goFiles = goFiles;
     this.output = output;
+    this.linkableDeps = linkableDeps;
   }
 
   public static BuildRule create(
+      BuildRuleParams params,
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       ActionGraphBuilder graphBuilder,
@@ -80,14 +90,12 @@ public class CGoLibrary extends NoopBuildRule {
       CxxBuckConfig cxxBuckConfig,
       GoPlatform platform,
       CgoLibraryDescriptionArg args,
-      Iterable<BuildTarget> cgoDeps,
+      Iterable<BuildTarget> cxxDeps,
       Tool cgo,
       Path packageName) {
 
-    if (args.getHeaders().getNamedSources().isPresent()) {
-      throw new HumanReadableException(
-          "explicit header mapping is unsupported for cgo_library rule");
-    }
+    CxxDeps allDeps =
+        CxxDeps.builder().addDeps(cxxDeps).addPlatformDeps(args.getPlatformDeps()).build();
 
     // generate C sources with cgo tool (go build writes c files to _obj dir)
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
@@ -123,30 +131,37 @@ public class CGoLibrary extends NoopBuildRule {
     //   * _cgo_export.o
     //   * _cgo_main.o
     //   * all of the *.cgo2.o
-    BuildRule cgoBin =
-        graphBuilder.computeIfAbsent(
-            buildTarget.withAppendedFlavors(InternalFlavor.of("cgo-first-step")),
-            target ->
-                nativeBinCompilation(
-                    target,
-                    projectFilesystem,
-                    graphBuilder,
-                    pathResolver,
-                    cellRoots,
-                    cxxBuckConfig,
-                    platform.getCxxPlatform(),
-                    args,
-                    ImmutableSortedSet.of(genSource),
-                    ImmutableSortedSet.<SourcePath>naturalOrder()
-                        .add(genSource.getExportHeader())
-                        .addAll(headers.values())
-                        .build(),
-                    new ImmutableList.Builder<SourcePath>()
-                        .addAll(genSource.getCFiles())
-                        .addAll(genSource.getCgoFiles())
-                        .build(),
-                    cgoDeps,
-                    args.getLinkerFlags()));
+    CxxLink cgoBin =
+        (CxxLink)
+            graphBuilder.computeIfAbsent(
+                buildTarget.withAppendedFlavors(InternalFlavor.of("cgo-first-step")),
+                target ->
+                    nativeBinCompilation(
+                        target,
+                        projectFilesystem,
+                        graphBuilder,
+                        pathResolver,
+                        cellRoots,
+                        cxxBuckConfig,
+                        platform.getCxxPlatform(),
+                        args,
+                        new ImmutableList.Builder<BuildRule>()
+                            .add(genSource)
+                            .addAll(allDeps.get(graphBuilder, platform.getCxxPlatform()))
+                            .build(),
+                        new ImmutableMap.Builder<Path, SourcePath>()
+                            .putAll(headers)
+                            .put(
+                                pathResolver
+                                    .getAbsolutePath(genSource.getExportHeader())
+                                    .getFileName(),
+                                genSource.getExportHeader())
+                            .build(),
+                        new ImmutableList.Builder<SourcePath>()
+                            .addAll(genSource.getCFiles())
+                            .addAll(genSource.getCgoFiles())
+                            .build(),
+                        args.getLinkerFlags()));
 
     // generate cgo_import.h with previously generated object file (_cgo.o)
     BuildRule cgoImport =
@@ -163,37 +178,46 @@ public class CGoLibrary extends NoopBuildRule {
                     packageName,
                     Preconditions.checkNotNull(cgoBin.getSourcePathToOutput())));
 
-    // TODO: performance improvement: those object were compiled in step 1 (used
-    // to generate _cgo_import.go). The objects should be linked toghether not
-    // compiled again.
-    //
     // generate final object file (equivalent of _all.o) which includes:
     //  * _cgo_export.o
     //  * all of the *.cgo2.o files
-    BuildRule cgoAllBin =
-        graphBuilder.computeIfAbsent(
-            buildTarget.withAppendedFlavors(InternalFlavor.of("cgo-second-step")),
-            target ->
-                nativeBinCompilation(
-                    target,
-                    projectFilesystem,
-                    graphBuilder,
-                    pathResolver,
-                    cellRoots,
-                    cxxBuckConfig,
-                    platform.getCxxPlatform(),
-                    args,
-                    ImmutableSortedSet.of(cgoImport),
-                    ImmutableSortedSet.<SourcePath>naturalOrder()
-                        .add(genSource.getExportHeader())
-                        .addAll(headers.values())
-                        .build(),
-                    genSource.getCFiles(),
-                    cgoDeps,
-                    ImmutableList.<StringWithMacros>builder()
-                        .addAll(args.getLinkerFlags())
-                        .addAll(wrapFlags(ImmutableList.of("-r", "-nostdlib")))
-                        .build()));
+    ImmutableList<Arg> cxxArgs =
+        ImmutableList.<Arg>builder()
+            .addAll(StringArg.from("-r", "-nostdlib"))
+            .addAll(
+                cgoBin
+                    .getArgs()
+                    .stream()
+                    .filter(FileListableLinkerInputArg.class::isInstance)
+                    .map(FileListableLinkerInputArg.class::cast)
+                    .filter(
+                        arg -> {
+                          String fileName =
+                              pathResolver.getAbsolutePath(arg.getPath()).getFileName().toString();
+                          return fileName.contains(".cgo2.c") || fileName.contains("_cgo_export.c");
+                        })
+                    .collect(ImmutableList.toImmutableList()))
+            .build();
+
+    CxxLink cgoAllBin =
+        (CxxLink)
+            graphBuilder.computeIfAbsent(
+                buildTarget.withAppendedFlavors(InternalFlavor.of("cgo-second-step")),
+                target ->
+                    CxxLinkableEnhancer.createCxxLinkableBuildRule(
+                        cellRoots,
+                        cxxBuckConfig,
+                        platform.getCxxPlatform(),
+                        projectFilesystem,
+                        graphBuilder,
+                        ruleFinder,
+                        target,
+                        BuildTargets.getGenPath(projectFilesystem, target, "%s/_all"),
+                        ImmutableMap.of(),
+                        cxxArgs, // collection of selected object files
+                        args.getLinkStyle().orElse(Linker.LinkableDepType.STATIC),
+                        CxxLinkOptions.of(),
+                        Optional.empty()));
 
     // output (referenced later on by GoCompile) provides:
     // * _cgo_gotypes.go
@@ -206,16 +230,32 @@ public class CGoLibrary extends NoopBuildRule {
         buildTarget,
         target ->
             new CGoLibrary(
+                params
+                    .withDeclaredDeps(
+                        ImmutableSortedSet.<BuildRule>naturalOrder()
+                            .addAll(
+                                ruleFinder.filterBuildRuleInputs(cgoAllBin.getSourcePathToOutput()))
+                            .addAll(
+                                ruleFinder.filterBuildRuleInputs(
+                                    new ImmutableList.Builder<SourcePath>()
+                                        .addAll(genSource.getGoFiles())
+                                        .add(
+                                            Preconditions.checkNotNull(
+                                                cgoImport.getSourcePathToOutput()))
+                                        .build()))
+                            .build())
+                    .withoutExtraDeps(),
                 target,
                 projectFilesystem,
                 new ImmutableList.Builder<SourcePath>()
                     .addAll(genSource.getGoFiles())
                     .add(Preconditions.checkNotNull(cgoImport.getSourcePathToOutput()))
                     .build(),
-                Preconditions.checkNotNull(cgoAllBin.getSourcePathToOutput())));
+                Preconditions.checkNotNull(cgoAllBin.getSourcePathToOutput()),
+                Preconditions.checkNotNull(allDeps.get(graphBuilder, platform.getCxxPlatform()))));
   }
 
-  private static BuildRule nativeBinCompilation(
+  private static CxxLink nativeBinCompilation(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       ActionGraphBuilder graphBuilder,
@@ -224,10 +264,9 @@ public class CGoLibrary extends NoopBuildRule {
       CxxBuckConfig cxxBuckConfig,
       CxxPlatform cxxPlatform,
       CgoLibraryDescriptionArg args,
-      ImmutableSortedSet<BuildRule> deps,
-      ImmutableSortedSet<SourcePath> rawHeaders,
+      Iterable<BuildRule> deps,
+      ImmutableMap<Path, SourcePath> headers,
       ImmutableList<SourcePath> sources,
-      Iterable<BuildTarget> cgoDeps,
       ImmutableList<StringWithMacros> flags) {
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
@@ -241,16 +280,6 @@ public class CGoLibrary extends NoopBuildRule {
             wrapSourcePathsWithFlags(sources),
             PatternMatchedCollection.of());
 
-    ImmutableSet.Builder<BuildRule> cgoRules = ImmutableSet.builder();
-    for (BuildTarget target : cgoDeps) {
-      cgoRules.add(graphBuilder.requireRule(target));
-    }
-
-    ImmutableMap.Builder<Path, SourcePath> headers = ImmutableMap.builder();
-    for (SourcePath header : rawHeaders) {
-      headers.put(projectFilesystem.relativize(pathResolver.getAbsolutePath(header)), header);
-    }
-
     CxxLinkAndCompileRules cxxLinkAndCompileRules =
         CxxDescriptionEnhancer.createBuildRulesForCxxBinary(
             buildTarget,
@@ -260,15 +289,12 @@ public class CGoLibrary extends NoopBuildRule {
             cxxBuckConfig,
             cxxPlatform,
             srcs,
-            headers.build(),
-            ImmutableSortedSet.<BuildRule>naturalOrder()
-                .addAll(deps)
-                .addAll(cgoRules.build())
-                .build(),
+            headers,
+            ImmutableSortedSet.<BuildRule>naturalOrder().addAll(deps).build(),
             ImmutableSet.of(),
             Optional.empty(),
             Optional.empty(),
-            args.getLinkStyle().orElse(Linker.LinkableDepType.STATIC),
+            args.getLinkStyle().orElse(Linker.LinkableDepType.STATIC_PIC),
             CxxLinkOptions.of(),
             args.getPreprocessorFlags(),
             args.getPlatformPreprocessorFlags(),
@@ -289,15 +315,7 @@ public class CGoLibrary extends NoopBuildRule {
             args.getIncludeDirs(),
             args.getRawHeaders());
 
-    return cxxLinkAndCompileRules.getBinaryRule();
-  }
-
-  private static ImmutableList<StringWithMacros> wrapFlags(ImmutableList<String> flags) {
-    ImmutableList.Builder<StringWithMacros> builder = ImmutableList.builder();
-    for (String flag : flags) {
-      builder.add(StringWithMacros.of(ImmutableList.of(Either.ofLeft(flag))));
-    }
-    return builder.build();
+    return cxxLinkAndCompileRules.getCxxLink();
   }
 
   private static ImmutableSortedSet<SourceWithFlags> wrapSourcePathsWithFlags(
@@ -319,8 +337,7 @@ public class CGoLibrary extends NoopBuildRule {
     return output;
   }
 
-  @Override
-  public SortedSet<BuildRule> getBuildDeps() {
-    return ImmutableSortedSet.of();
+  public Iterable<BuildRule> getLinkableDeps() {
+    return linkableDeps;
   }
 }

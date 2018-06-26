@@ -147,7 +147,7 @@ public class GoLibraryDescription
                   params.getDeclaredDeps().get().stream().map(BuildRule::getBuildTarget).iterator())
               .addAll(args.getExportedDeps())
               .build(),
-          args.getCgoDeps(),
+          args.getCgo(),
           Arrays.asList(FileType.GoFiles));
     }
 

@@ -148,10 +148,16 @@ public class GoTestDescription
       ImmutableMap<Path, ImmutableMap<String, Path>> coverVariables,
       GoTestCoverStep.Mode coverageMode,
       Path packageName,
-      ImmutableSortedSet<BuildTarget> cgoDeps) {
+      Optional<BuildTarget> cgoBuildTarget) {
     Tool testMainGenerator =
         GoDescriptors.getTestMainGenerator(
-            goBuckConfig, platform, buildTarget, projectFilesystem, params, graphBuilder, cgoDeps);
+            goBuckConfig,
+            platform,
+            buildTarget,
+            projectFilesystem,
+            params,
+            graphBuilder,
+            cgoBuildTarget);
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
 
@@ -298,7 +304,7 @@ public class GoTestDescription
             ImmutableMap.of(packageName, coverVariables),
             coverageMode,
             packageName,
-            args.getCgoDeps());
+            args.getCgo());
     GoBinary testMain =
         GoDescriptors.createGoBinaryRule(
             buildTarget.withAppendedFlavors(InternalFlavor.of("test-main")),
@@ -313,7 +319,7 @@ public class GoTestDescription
             args.getAssemblerFlags(),
             args.getLinkerFlags(),
             platform,
-            args.getCgoDeps());
+            args.getCgo());
     graphBuilder.addToIndex(testMain);
     return testMain;
   }
@@ -414,10 +420,7 @@ public class GoTestDescription
                   .stream()
                   .map(BuildRule::getBuildTarget)
                   .collect(ImmutableList.toImmutableList()),
-              ImmutableSortedSet.<BuildTarget>naturalOrder()
-                  .addAll(libraryArg.getCgoDeps())
-                  .addAll(args.getCgoDeps())
-                  .build(),
+              libraryArg.getCgo(),
               Arrays.asList(FileType.GoFiles, FileType.TestGoFiles));
     } else {
       testLibrary =
@@ -438,7 +441,7 @@ public class GoTestDescription
                   .stream()
                   .map(BuildRule::getBuildTarget)
                   .collect(ImmutableList.toImmutableList()),
-              args.getCgoDeps(),
+              args.getCgo(),
               Arrays.asList(FileType.GoFiles, FileType.TestGoFiles, FileType.XTestGoFiles));
     }
 

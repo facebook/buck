@@ -81,7 +81,7 @@ public class GoBinaryDescription
         args.getAssemblerFlags(),
         args.getLinkerFlags(),
         platform,
-        args.getCgoDeps());
+        args.getCgo());
   }
 
   @Override

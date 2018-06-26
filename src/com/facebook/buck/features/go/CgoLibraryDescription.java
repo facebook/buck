@@ -94,6 +94,7 @@ public class CgoLibraryDescription
       SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
       return CGoLibrary.create(
+          params,
           buildTarget,
           projectFilesystem,
           graphBuilder,

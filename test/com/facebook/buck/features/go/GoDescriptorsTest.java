@@ -38,10 +38,10 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Maps;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.Optional;
 import org.hamcrest.Matchers;
 import org.junit.Assert;
 import org.junit.Rule;
@@ -158,7 +158,7 @@ public class GoDescriptorsTest {
             ImmutableList.of(),
             goPlatform,
             ImmutableList.of(),
-            ImmutableSortedSet.of(),
+            Optional.empty(),
             Arrays.asList(FileType.GoFiles));
 
     Assert.assertTrue(
@@ -203,7 +203,7 @@ public class GoDescriptorsTest {
             ImmutableList.of(),
             ImmutableList.of(),
             goPlatform,
-            ImmutableSortedSet.of());
+            Optional.empty());
 
     System.out.println(binary.getBuildDeps());
     GoCompile compile =
