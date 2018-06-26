@@ -37,10 +37,13 @@ import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.facebook.buck.util.types.Pair;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -64,6 +67,9 @@ public class JsBundleWorkerJobArgsTest {
 
     JsonNode args = ObjectMappers.readValue(getJobArgs(bundle), JsonNode.class);
     assertThat(args.get("ramBundle").asText(), equalTo("files"));
+
+    JsonNode flavors = args.get("flavors");
+    assertThat(flavors, equalTo(arrayNodeOf(JsFlavors.RAM_BUNDLE_FILES)));
   }
 
   @Test
@@ -75,6 +81,7 @@ public class JsBundleWorkerJobArgsTest {
 
     JsonNode args = ObjectMappers.readValue(getJobArgs(bundle), JsonNode.class);
     assertThat(args.get("ramBundle").asText(), equalTo("indexed"));
+    assertThat(args.get("flavors"), equalTo(arrayNodeOf(JsFlavors.RAM_BUNDLE_INDEXED)));
   }
 
   @Test(expected = FlavorDomainException.class)
@@ -185,5 +192,14 @@ public class JsBundleWorkerJobArgsTest {
     context =
         FakeBuildContext.withSourcePathResolver(
             DefaultSourcePathResolver.from(new SourcePathRuleFinder(scenario.graphBuilder)));
+  }
+
+  private ArrayNode arrayNodeOf(Object... strings) {
+    return new ArrayNode(
+        JsonNodeFactory.instance,
+        Arrays.stream(strings)
+            .map(Object::toString)
+            .map(JsonNodeFactory.instance::textNode)
+            .collect(ImmutableList.toImmutableList()));
   }
 }

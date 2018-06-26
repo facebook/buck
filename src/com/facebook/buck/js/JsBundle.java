@@ -34,6 +34,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.util.json.JsonBuilder;
+import com.facebook.buck.util.json.JsonBuilder.ObjectBuilder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -84,7 +85,7 @@ public class JsBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps implemen
     SourcePath resourcesDir = getSourcePathToResources();
     SourcePath miscDirPath = getSourcePathToMisc();
 
-    String jobArgs =
+    ObjectBuilder jobArgs =
         getJobArgs(sourcePathResolver, jsOutputDir, sourceMapFile, resourcesDir, miscDirPath);
 
     buildableContext.recordArtifact(sourcePathResolver.getRelativePath(jsOutputDir));
@@ -122,12 +123,12 @@ public class JsBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps implemen
                     context.getBuildCellRootPath(),
                     getProjectFilesystem(),
                     sourcePathResolver.getRelativePath(miscDirPath))),
-            JsUtil.workerShellStep(
+            JsUtil.jsonWorkerShellStepAddingFlavors(
                 worker, jobArgs, getBuildTarget(), sourcePathResolver, getProjectFilesystem()))
         .build();
   }
 
-  private String getJobArgs(
+  private ObjectBuilder getJobArgs(
       SourcePathResolver sourcePathResolver,
       SourcePath jsOutputDir,
       SourcePath sourceMapFile,
@@ -160,8 +161,7 @@ public class JsBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps implemen
         .addString("rootPath", getProjectFilesystem().getRootPath().toString())
         .addString("sourceMapPath", sourcePathResolver.getAbsolutePath(sourceMapFile).toString())
         .addString("miscDirPath", sourcePathResolver.getAbsolutePath(miscDirPath).toString())
-        .addRaw("extraData", extraJson.map(a -> Arg.stringify(a, sourcePathResolver)))
-        .toString();
+        .addRaw("extraData", extraJson.map(a -> Arg.stringify(a, sourcePathResolver)));
   }
 
   @Override
