@@ -23,6 +23,7 @@ import com.facebook.buck.android.relinker.Symbols;
 import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
 import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatform;
 import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatformCompiler;
+import com.facebook.buck.android.toolchain.ndk.NdkCxxRuntimeType;
 import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
@@ -105,6 +106,7 @@ public class AndroidNdkHelper {
                     .setGccVersion(gccVersion)
                     .build(),
                 NdkCxxPlatforms.DEFAULT_CXX_RUNTIME,
+                NdkCxxRuntimeType.DYNAMIC,
                 NdkCxxPlatforms.DEFAULT_TARGET_APP_PLATFORM,
                 NdkCxxPlatforms.DEFAULT_CPU_ABIS,
                 Platform.detect())

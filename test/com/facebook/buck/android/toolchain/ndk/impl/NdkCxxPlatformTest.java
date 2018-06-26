@@ -30,6 +30,7 @@ import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatform;
 import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatformCompiler;
 import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatformTargetConfiguration;
 import com.facebook.buck.android.toolchain.ndk.NdkCxxRuntime;
+import com.facebook.buck.android.toolchain.ndk.NdkCxxRuntimeType;
 import com.facebook.buck.android.toolchain.ndk.TargetCpuType;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.FakeBuckConfig;
@@ -239,6 +240,7 @@ public class NdkCxxPlatformTest {
             ndkRoot,
             targetConfiguration,
             NdkCxxRuntime.GNUSTL,
+            NdkCxxRuntimeType.DYNAMIC,
             new AlwaysFoundExecutableFinder(),
             false /* strictToolchainPaths */);
     assertThat(platform.getCxxPlatform().getCflags(), hasItems("-std=gnu11", "-O2"));
@@ -287,6 +289,7 @@ public class NdkCxxPlatformTest {
             ndkRoot,
             targetConfiguration,
             NdkCxxRuntime.GNUSTL,
+            NdkCxxRuntimeType.DYNAMIC,
             new AlwaysFoundExecutableFinder(),
             false /* strictToolchainPaths */);
 
@@ -387,6 +390,7 @@ public class NdkCxxPlatformTest {
             ndkRoot,
             targetConfiguration,
             NdkCxxRuntime.GNUSTL,
+            NdkCxxRuntimeType.DYNAMIC,
             new AlwaysFoundExecutableFinder(),
             false /* strictToolchainPaths */);
 
@@ -469,6 +473,7 @@ public class NdkCxxPlatformTest {
                       .setGccVersion("clang-version")
                       .build(),
                   NdkCxxRuntime.GNUSTL,
+                  NdkCxxRuntimeType.DYNAMIC,
                   "target-app-platform",
                   ImmutableSet.of("x86"),
                   platform,
@@ -522,6 +527,7 @@ public class NdkCxxPlatformTest {
                 .setGccVersion("clang-version")
                 .build(),
             NdkCxxRuntime.GNUSTL,
+            NdkCxxRuntimeType.DYNAMIC,
             "target-app-platform",
             ImmutableSet.of("x86"),
             Platform.LINUX,

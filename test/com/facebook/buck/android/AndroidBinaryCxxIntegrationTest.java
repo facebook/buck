@@ -99,6 +99,24 @@ public class AndroidBinaryCxxIntegrationTest extends AbiCompilationModeTest {
   }
 
   @Test
+  public void testCxxLibraryDepStaticRuntime() throws IOException {
+    String target = "//apps/sample:app_cxx_lib_dep";
+    workspace.runBuckCommand("build", "-c", "ndk.cxx_runtime_type=static", target).assertSuccess();
+
+    ZipInspector zipInspector =
+        new ZipInspector(
+            workspace.getPath(
+                BuildTargets.getGenPath(
+                    filesystem, BuildTargetFactory.newInstance(target), "%s.apk")));
+    zipInspector.assertFileExists("lib/armeabi/libnative_cxx_lib.so");
+    zipInspector.assertFileDoesNotExist("lib/armeabi/libgnustl_shared.so");
+    zipInspector.assertFileExists("lib/armeabi-v7a/libnative_cxx_lib.so");
+    zipInspector.assertFileDoesNotExist("lib/armeabi-v7a/libgnustl_shared.so");
+    zipInspector.assertFileExists("lib/x86/libnative_cxx_lib.so");
+    zipInspector.assertFileDoesNotExist("lib/x86/libgnustl_shared.so");
+  }
+
+  @Test
   public void testCxxLibraryDepModular() throws IOException {
     String target = "//apps/sample:app_cxx_lib_dep_modular";
     workspace.runBuckCommand("build", target).assertSuccess();

@@ -2967,6 +2967,22 @@ your <code>.buckjavaargs</code> file</a>:
   {/param}
 {/call}
 
+{call buckconfig.entry}
+  {param section: 'ndk' /}
+  {param name: 'cxx_runtime_type' /}
+  {param example_value: 'dynamic' /}
+  {param description}
+    When compiling {call buck.cxx_library /} rules, this specifies how libraries 
+    are intended to be linked with the runtime. If this is <code>static</code>, 
+    then the C/C++ runtime library will not be packaged in the APK.     
+    Possible values are:
+    <ul>
+      <li><code>dynamic</code> (default)</li>
+      <li><code>static</code></li>
+    </ul>
+  {/param}
+{/call}
+
 {call buckconfig.section}
   {param name: 'ocaml' /}
   {param description}

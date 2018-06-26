@@ -24,6 +24,7 @@ import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatform;
 import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatformCompiler;
 import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatformTargetConfiguration;
 import com.facebook.buck.android.toolchain.ndk.NdkCxxRuntime;
+import com.facebook.buck.android.toolchain.ndk.NdkCxxRuntimeType;
 import com.facebook.buck.android.toolchain.ndk.NdkTargetArchAbi;
 import com.facebook.buck.android.toolchain.ndk.TargetCpuType;
 import com.facebook.buck.core.model.Flavor;
@@ -220,6 +221,7 @@ public class NdkCxxPlatforms {
         ndkRoot,
         compiler,
         androidConfig.getNdkCxxRuntime().orElse(NdkCxxPlatforms.DEFAULT_CXX_RUNTIME),
+        androidConfig.getNdkCxxRuntimeType().orElse(NdkCxxRuntimeType.DYNAMIC),
         androidConfig.getNdkAppPlatform().orElse(NdkCxxPlatforms.DEFAULT_TARGET_APP_PLATFORM),
         androidConfig.getNdkCpuAbis().orElse(NdkCxxPlatforms.DEFAULT_CPU_ABIS),
         platform);
@@ -233,6 +235,7 @@ public class NdkCxxPlatforms {
       Path ndkRoot,
       NdkCxxPlatformCompiler compiler,
       NdkCxxRuntime cxxRuntime,
+      NdkCxxRuntimeType runtimeType,
       String androidPlatform,
       Set<String> cpuAbis,
       Platform platform) {
@@ -243,6 +246,7 @@ public class NdkCxxPlatforms {
         ndkRoot,
         compiler,
         cxxRuntime,
+        runtimeType,
         androidPlatform,
         cpuAbis,
         platform,
@@ -258,6 +262,7 @@ public class NdkCxxPlatforms {
       Path ndkRoot,
       NdkCxxPlatformCompiler compiler,
       NdkCxxRuntime cxxRuntime,
+      NdkCxxRuntimeType runtimeType,
       String androidPlatform,
       Set<String> cpuAbis,
       Platform platform,
@@ -280,6 +285,7 @@ public class NdkCxxPlatforms {
               ndkRoot,
               targetConfiguration,
               cxxRuntime,
+              runtimeType,
               executableFinder,
               strictToolchainPaths);
       ndkCxxPlatformBuilder.put(TargetCpuType.ARM, armeabi);
@@ -299,6 +305,7 @@ public class NdkCxxPlatforms {
               ndkRoot,
               targetConfiguration,
               cxxRuntime,
+              runtimeType,
               executableFinder,
               strictToolchainPaths);
       ndkCxxPlatformBuilder.put(TargetCpuType.ARMV7, armeabiv7);
@@ -318,6 +325,7 @@ public class NdkCxxPlatforms {
               ndkRoot,
               targetConfiguration,
               cxxRuntime,
+              runtimeType,
               executableFinder,
               strictToolchainPaths);
       ndkCxxPlatformBuilder.put(TargetCpuType.ARM64, arm64);
@@ -337,6 +345,7 @@ public class NdkCxxPlatforms {
               ndkRoot,
               targetConfiguration,
               cxxRuntime,
+              runtimeType,
               executableFinder,
               strictToolchainPaths);
       ndkCxxPlatformBuilder.put(TargetCpuType.X86, x86);
@@ -359,6 +368,7 @@ public class NdkCxxPlatforms {
               ndkRoot,
               targetConfiguration,
               cxxRuntime,
+              runtimeType,
               executableFinder,
               strictToolchainPaths);
       ndkCxxPlatformBuilder.put(TargetCpuType.X86_64, x86_64);
@@ -390,6 +400,7 @@ public class NdkCxxPlatforms {
       Path ndkRoot,
       NdkCxxPlatformTargetConfiguration targetConfiguration,
       NdkCxxRuntime cxxRuntime,
+      NdkCxxRuntimeType runtimeType,
       ExecutableFinder executableFinder,
       boolean strictToolchainPaths) {
     // Create a version string to use when generating rule keys via the NDK tools we'll generate
@@ -551,8 +562,9 @@ public class NdkCxxPlatforms {
     builder
         .setCxxPlatform(cxxPlatform)
         .setCxxRuntime(cxxRuntime)
+        .setCxxRuntimeType(runtimeType)
         .setObjdump(getGccTool(toolchainPaths, "objdump", version, executableFinder));
-    if (cxxRuntime != NdkCxxRuntime.SYSTEM) {
+    if ((cxxRuntime != NdkCxxRuntime.SYSTEM) && (runtimeType != NdkCxxRuntimeType.STATIC)) {
       builder.setCxxSharedRuntimePath(
           toolchainPaths.getCxxRuntimeLibsDirectory().resolve(cxxRuntime.getSoname()));
     }

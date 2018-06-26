@@ -24,6 +24,7 @@ import com.facebook.buck.android.relinker.NativeRelinker;
 import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatform;
 import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatformsProvider;
 import com.facebook.buck.android.toolchain.ndk.NdkCxxRuntime;
+import com.facebook.buck.android.toolchain.ndk.NdkCxxRuntimeType;
 import com.facebook.buck.android.toolchain.ndk.TargetCpuType;
 import com.facebook.buck.core.cell.resolver.CellPathResolver;
 import com.facebook.buck.core.description.BuildRuleParams;
@@ -363,8 +364,9 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
               NdkCxxPlatform platform =
                   Preconditions.checkNotNull(nativePlatforms.get(targetCpuType));
               NdkCxxRuntime cxxRuntime = platform.getCxxRuntime();
-              if (cxxRuntime.equals(NdkCxxRuntime.SYSTEM)) {
-                // The system runtime doesn't need to be packaged with apks.
+              if (cxxRuntime.equals(NdkCxxRuntime.SYSTEM)
+                  || (platform.getCxxRuntimeType() == NdkCxxRuntimeType.STATIC)) {
+                // The system / statically compiled runtime doesn't need to be packaged with apks.
                 return;
               }
               AndroidLinkableMetadata runtimeLinkableMetadata =

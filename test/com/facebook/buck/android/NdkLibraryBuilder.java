@@ -19,6 +19,7 @@ import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
 import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatform;
 import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatformsProvider;
 import com.facebook.buck.android.toolchain.ndk.NdkCxxRuntime;
+import com.facebook.buck.android.toolchain.ndk.NdkCxxRuntimeType;
 import com.facebook.buck.android.toolchain.ndk.TargetCpuType;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.AbstractNodeBuilder;
@@ -48,6 +49,7 @@ public class NdkLibraryBuilder
       NdkCxxPlatform.builder()
           .setCxxPlatform(CxxPlatformUtils.DEFAULT_PLATFORM)
           .setCxxRuntime(NdkCxxRuntime.GNUSTL)
+          .setCxxRuntimeType(NdkCxxRuntimeType.DYNAMIC)
           .setCxxSharedRuntimePath(Paths.get("runtime"))
           .setObjdump(new CommandTool.Builder().addArg("objdump").build())
           .build();
