@@ -1,10 +1,14 @@
 java_library(
     name = "immutables",
     srcs = glob(["*.java"]),
-    required_for_source_only_abi = True,
-    visibility = ["PUBLIC"],
-    deps = [
+    exported_deps = [
         "//third-party/java/immutables:immutables",
+    ],
+    required_for_source_only_abi = True,
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
         "//third-party/java/jackson:jackson-databind",
     ],
 )

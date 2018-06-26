@@ -455,4 +455,22 @@ public abstract class AbstractCommand implements Command {
   public boolean performsBuild() {
     return false;
   }
+
+  /**
+   * Converts target arguments to fully qualified form (including resolving aliases, resolving the
+   * implicit package target, etc).
+   */
+  protected ImmutableSet<BuildTarget> convertArgumentsToBuildTargets(
+      CommandRunnerParams params, List<String> arguments) {
+    return getCommandLineBuildTargetNormalizer(params.getBuckConfig())
+        .normalizeAll(arguments)
+        .stream()
+        .map(
+            input ->
+                BuildTargetParser.INSTANCE.parse(
+                    input,
+                    BuildTargetPatternParser.fullyQualified(),
+                    params.getCell().getCellPathResolver()))
+        .collect(ImmutableSet.toImmutableSet());
+  }
 }

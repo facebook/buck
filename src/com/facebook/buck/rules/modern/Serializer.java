@@ -235,6 +235,7 @@ public class Serializer {
           ValueTypeInfo<T> typeInfo =
               (ValueTypeInfo<T>)
                   ValueTypeInfoFactory.forTypeToken(TypeToken.of(field.getGenericType()));
+
           typeInfo.visit(value, this);
           return;
         }

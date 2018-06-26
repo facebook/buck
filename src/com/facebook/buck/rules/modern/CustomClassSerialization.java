@@ -18,14 +18,13 @@ package com.facebook.buck.rules.modern;
 
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rules.modern.annotations.CustomClassBehaviorTag;
-import java.io.IOException;
 
 /**
  * Allows a class to follow specify its serialization/deserialization in terms of calls to the
  * ValueVisitor/ValueCreator.
  */
 public interface CustomClassSerialization<T extends AddsToRuleKey> extends CustomClassBehaviorTag {
-  void serialize(T instance, ValueVisitor<IOException> serializer) throws IOException;
+  <E extends Exception> void serialize(T instance, ValueVisitor<E> serializer) throws E;
 
-  T deserialize(ValueCreator<IOException> deserializer) throws IOException;
+  <E extends Exception> T deserialize(ValueCreator<E> deserializer) throws E;
 }

@@ -27,7 +27,6 @@ import com.facebook.buck.rules.modern.ValueCreator;
 import com.facebook.buck.rules.modern.ValueVisitor;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Objects;
 import java.util.function.Consumer;
@@ -79,13 +78,14 @@ class RelativeLinkArg implements Arg {
   /** Custom serialization. */
   static class SerializationBehavior implements CustomClassSerialization<RelativeLinkArg> {
     @Override
-    public void serialize(RelativeLinkArg instance, ValueVisitor<IOException> serializer)
-        throws IOException {
+    public <E extends Exception> void serialize(
+        RelativeLinkArg instance, ValueVisitor<E> serializer) throws E {
       serializer.visitSourcePath(instance.library);
     }
 
     @Override
-    public RelativeLinkArg deserialize(ValueCreator<IOException> deserializer) throws IOException {
+    public <E extends Exception> RelativeLinkArg deserialize(ValueCreator<E> deserializer)
+        throws E {
       PathSourcePath library = (PathSourcePath) deserializer.createSourcePath();
       return new RelativeLinkArg(library);
     }

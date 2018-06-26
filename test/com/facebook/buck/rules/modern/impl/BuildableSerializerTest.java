@@ -367,16 +367,16 @@ public class BuildableSerializerTest extends AbstractValueVisitorTest {
   private static class SpecialClassSerialization
       implements CustomClassSerialization<WithCustomClassBehavior> {
     @Override
-    public void serialize(WithCustomClassBehavior instance, ValueVisitor<IOException> serializer)
-        throws IOException {
+    public <E extends Exception> void serialize(
+        WithCustomClassBehavior instance, ValueVisitor<E> serializer) throws E {
       assertEquals("value", instance.value);
       assertEquals(3, instance.number);
       serializer.visitString("special");
     }
 
     @Override
-    public WithCustomClassBehavior deserialize(ValueCreator<IOException> deserializer)
-        throws IOException {
+    public <E extends Exception> WithCustomClassBehavior deserialize(ValueCreator<E> deserializer)
+        throws E {
       assertEquals("special", deserializer.createString());
       return new WithCustomClassBehavior();
     }

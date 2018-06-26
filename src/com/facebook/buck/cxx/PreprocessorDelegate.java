@@ -56,7 +56,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.reflect.TypeToken;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
@@ -431,8 +430,8 @@ final class PreprocessorDelegate implements RuleKeyAppendable, HasCustomDepsLogi
         ValueTypeInfoFactory.forTypeToken(new TypeToken<PreprocessorFlags>() {});
 
     @Override
-    public void serialize(PreprocessorDelegate instance, ValueVisitor<IOException> serializer)
-        throws IOException {
+    public <E extends Exception> void serialize(
+        PreprocessorDelegate instance, ValueVisitor<E> serializer) throws E {
       PREPROCESSOR_TYPE_INFO.visit(instance.preprocessor, serializer);
       FRAMEWORK_PATH_FUNCTION_TYPE_INFO.visit(instance.frameworkPathSearchPathFunction, serializer);
       HEADER_VERIFICATION_TYPE_INFO.visit(instance.headerVerification, serializer);
@@ -441,13 +440,14 @@ final class PreprocessorDelegate implements RuleKeyAppendable, HasCustomDepsLogi
       serializer.visitInteger(instance.conflictingHeadersBasenameWhitelist.size());
       RichStream.from(instance.conflictingHeadersBasenameWhitelist)
           .forEachThrowing(serializer::visitString);
-      Preconditions.checkState(!instance.leadingIncludePaths.isPresent());
-      Preconditions.checkState(!instance.sandbox.isPresent());
+      Preconditions.checkState(
+          !instance.leadingIncludePaths.isPresent(), "leadingIncludePaths is not serializable.");
+      Preconditions.checkState(!instance.sandbox.isPresent(), "sandbox is not serializable.");
     }
 
     @Override
-    public PreprocessorDelegate deserialize(ValueCreator<IOException> deserializer)
-        throws IOException {
+    public <E extends Exception> PreprocessorDelegate deserialize(ValueCreator<E> deserializer)
+        throws E {
       Preprocessor preprocessor = PREPROCESSOR_TYPE_INFO.createNotNull(deserializer);
       RuleKeyAppendableFunction<FrameworkPath, Path> frameworkPathSearchPathFunction =
           FRAMEWORK_PATH_FUNCTION_TYPE_INFO.createNotNull(deserializer);

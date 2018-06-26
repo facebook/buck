@@ -1,4 +1,7 @@
-load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
+load(
+    "//tools/build_rules:java_rules.bzl",
+    "java_immutables_library",
+)
 
 TYPES = [
     "OutputPath.java",
@@ -42,8 +45,12 @@ java_library(
         "//src/com/facebook/buck/core/rules/modern/annotations:annotations",
         "//src/com/facebook/buck/rules/keys:keys",
     ],
-    tests = ["//test/com/facebook/buck/rules/modern/impl:impl"],
-    visibility = ["PUBLIC"],
+    tests = [
+        "//test/com/facebook/buck/rules/modern/impl:impl",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
     deps = [
         "//src/com/facebook/buck/core/cell/resolver:resolver",
         "//src/com/facebook/buck/core/rulekey:rulekey",
@@ -51,6 +58,7 @@ java_library(
         "//src/com/facebook/buck/core/rules/impl:impl",
         "//src/com/facebook/buck/core/rules/modern:modern",
         "//src/com/facebook/buck/core/sourcepath/resolver:resolver",
+        "//src/com/facebook/buck/core/sourcepath/resolver/impl:impl",
         "//src/com/facebook/buck/core/util/immutables:immutables",
         "//src/com/facebook/buck/event:interfaces",
         "//src/com/facebook/buck/io:io",

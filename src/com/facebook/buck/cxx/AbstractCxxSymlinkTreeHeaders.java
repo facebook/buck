@@ -42,7 +42,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.reflect.TypeToken;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
@@ -172,8 +171,8 @@ abstract class AbstractCxxSymlinkTreeHeaders extends CxxHeaders implements RuleK
         ValueTypeInfoFactory.forTypeToken(new TypeToken<Either<PathSourcePath, SourcePath>>() {});
 
     @Override
-    public void serialize(CxxSymlinkTreeHeaders instance, ValueVisitor<IOException> serializer)
-        throws IOException {
+    public <E extends Exception> void serialize(
+        CxxSymlinkTreeHeaders instance, ValueVisitor<E> serializer) throws E {
       INCLUDE_TYPE_TYPE_INFO.visit(instance.getIncludeType(), serializer);
       HEADER_MAP_TYPE_INFO.visit(instance.getHeaderMap(), serializer);
       serializer.visitSourcePath(instance.getRoot());
@@ -190,8 +189,8 @@ abstract class AbstractCxxSymlinkTreeHeaders extends CxxHeaders implements RuleK
     }
 
     @Override
-    public CxxSymlinkTreeHeaders deserialize(ValueCreator<IOException> deserializer)
-        throws IOException {
+    public <E extends Exception> CxxSymlinkTreeHeaders deserialize(ValueCreator<E> deserializer)
+        throws E {
       Builder builder = CxxSymlinkTreeHeaders.builder();
       builder.setIncludeType(INCLUDE_TYPE_TYPE_INFO.createNotNull(deserializer));
       builder.setHeaderMap(HEADER_MAP_TYPE_INFO.createNotNull(deserializer));
