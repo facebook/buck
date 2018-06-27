@@ -139,7 +139,7 @@ public class NdkCxxPlatformIntegrationTest {
     workspace.getBuildLog().assertTargetBuiltLocally(linkTarget.toString());
 
     // Change the app platform and verify that our rulekey has changed.
-    workspace.writeContentsToPath("[ndk]\n  app_platform = android-12", ".buckconfig");
+    workspace.writeContentsToPath("[ndk]\n  app_platform = android-17", ".buckconfig");
     workspace.runBuckCommand("build", target.toString()).assertSuccess();
     workspace.getBuildLog().assertTargetBuiltLocally(linkTarget.toString());
   }
