@@ -24,6 +24,7 @@ import android.os.Bundle;
 import android.os.Process;
 import android.util.Log;
 import buck.exotest.R;
+import com.facebook.buck.android.support.exopackage.DelegatingClassLoader;
 import com.facebook.buck.android.support.exopackage.ExopackageSoLoader;
 import java.io.IOException;
 import java.util.Scanner;
@@ -96,7 +97,11 @@ public class LogActivity extends Activity {
 
   public String getModularClassValue() {
     try {
-      return (String) Class.forName("exotest.Module").getDeclaredField("VALUE").get(null);
+      return (String)
+          DelegatingClassLoader.getInstance()
+              .loadClass("exotest.Module")
+              .getDeclaredField("VALUE")
+              .get(null);
     } catch (Exception e) {
       throw new RuntimeException(e);
     }

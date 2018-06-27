@@ -37,7 +37,6 @@ import dalvik.system.DexFile;
 import dalvik.system.PathClassLoader;
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -100,45 +99,6 @@ public class DelegatingClassLoader extends ClassLoader {
 
   private DelegatingClassLoader(ClassLoader parent) {
     super(parent);
-  }
-
-  /**
-   * Install the helper classloader above the application's ClassLoader, and below the system CL. If
-   * the host application's default ClassLoader needs to load a class from our delegate, we need to
-   * intercept that class request. We cannot/do not want to install DelegatingClassLoader above the
-   * AppCL because we need to allow managed classes to request classes from the primary dex, thus we
-   * need to query the AppCL from the DCL. Placing the DCL above the AppCL would create a loop, so
-   * we install this AboveAppClassLoader to catch any requests for managed classes (e.g. resolution
-   * of an Activity from an Intent) which the AppCL receives.
-   */
-  public void installHelperAboveApplicationClassLoader() {
-    try {
-      ClassLoader appClassLoader = getClass().getClassLoader();
-      Field parentField = ClassLoader.class.getDeclaredField("parent");
-      parentField.setAccessible(true);
-      ClassLoader systemClassLoader = (ClassLoader) parentField.get(appClassLoader);
-      final ClassLoader instance = new AboveAppClassLoader(systemClassLoader);
-      parentField.set(appClassLoader, instance);
-    } catch (Exception e) {
-      throw new RuntimeException(e);
-    }
-  }
-
-  /** {@see #installHelperAboveApplicationClassLoader()} for an explanation of this functionality */
-  private class AboveAppClassLoader extends ClassLoader {
-    private AboveAppClassLoader(ClassLoader parent) {
-      super(parent);
-    }
-
-    @Override
-    protected Class<?> findClass(String name) throws ClassNotFoundException {
-      final DelegatingClassLoader instance = DelegatingClassLoader.getInstance();
-      if (mManagedClassesToDexFile.containsKey(name)) {
-        return instance.loadManagedClass(name);
-      } else {
-        throw new ClassNotFoundException(name);
-      }
-    }
   }
 
   /**
