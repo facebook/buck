@@ -76,14 +76,14 @@ public class AndroidBinaryNativeIntegrationTest extends AbiCompilationModeTest {
   public void testPrebuiltNativeLibraryIsIncluded() throws IOException {
     Path output = workspace.buildAndReturnOutput("//apps/sample:app_with_prebuilt_native_libs");
     ZipInspector zipInspector = new ZipInspector(output);
-    zipInspector.assertFileExists("lib/armeabi/libprebuilt.so");
+    zipInspector.assertFileExists("lib/armeabi-v7a/libprebuilt.so");
   }
 
   @Test
   public void testPrebuiltNativeLibraryAsAssetIsIncluded() throws IOException {
     Path output = workspace.buildAndReturnOutput("//apps/sample:app_with_prebuilt_native_libs");
     ZipInspector zipInspector = new ZipInspector(output);
-    zipInspector.assertFileExists("assets/lib/armeabi/libprebuilt_asset.so");
+    zipInspector.assertFileExists("assets/lib/armeabi-v7a/libprebuilt_asset.so");
   }
 
   @Test

@@ -2906,10 +2906,10 @@ your <code>.buckjavaargs</code> file</a>:
 {call buckconfig.entry}
   {param section: 'ndk' /}
   {param name: 'cpu_abis' /}
-  {param example_value: 'armv7, x86' /}
+  {param example_value: 'armv7, arm64, x86' /}
   {param description}
     A comma separated list of the CPU ABIs that this repo supports.  Buck will only build NDK code
-    for these ABIs.
+    for these ABIs. The default is <code>armv7, x86</code>.
   {/param}
 {/call}
 

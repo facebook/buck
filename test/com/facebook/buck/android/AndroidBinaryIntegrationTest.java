@@ -109,7 +109,7 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
     zipInspector.assertFileDoesNotExist("classes2.dex");
 
     zipInspector.assertFileExists("classes.dex");
-    zipInspector.assertFileExists("lib/armeabi/libnative_cxx_lib.so");
+    zipInspector.assertFileExists("lib/armeabi-v7a/libnative_cxx_lib.so");
   }
 
   @Test
@@ -124,7 +124,7 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
     zipInspector.assertFileDoesNotExist("classes2.dex");
 
     zipInspector.assertFileExists("classes.dex");
-    zipInspector.assertFileExists("lib/armeabi/libnative_cxx_lib.so");
+    zipInspector.assertFileExists("lib/armeabi-v7a/libnative_cxx_lib.so");
   }
 
   @Test
@@ -143,21 +143,21 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
     zipInspector.assertFileExists("classes2.dex");
 
     zipInspector.assertFileExists("classes.dex");
-    zipInspector.assertFileExists("lib/armeabi/libnative_cxx_lib.so");
+    zipInspector.assertFileExists("lib/armeabi-v7a/libnative_cxx_lib.so");
   }
 
   @Test
   public void testDisguisedExecutableIsRenamed() throws IOException {
     Path output = workspace.buildAndReturnOutput("//apps/sample:app_with_disguised_exe");
     ZipInspector zipInspector = new ZipInspector(output);
-    zipInspector.assertFileExists("lib/armeabi/libmybinary.so");
+    zipInspector.assertFileExists("lib/armeabi-v7a/libmybinary.so");
   }
 
   @Test
   public void testNdkLibraryIsIncluded() throws IOException {
     Path output = workspace.buildAndReturnOutput("//apps/sample:app_with_ndk_library");
     ZipInspector zipInspector = new ZipInspector(output);
-    zipInspector.assertFileExists("lib/armeabi/libfakenative.so");
+    zipInspector.assertFileExists("lib/armeabi-v7a/libfakenative.so");
   }
 
   @Test
@@ -165,7 +165,7 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
     String apkWithNdkLibrary = "//apps/sample:app_with_ndk_library";
     Path output = workspace.buildAndReturnOutput(apkWithNdkLibrary);
     ZipInspector zipInspector = new ZipInspector(output);
-    zipInspector.assertFileExists("lib/armeabi/libfakenative.so");
+    zipInspector.assertFileExists("lib/armeabi-v7a/libfakenative.so");
 
     // Sleep 1 second (plus another half to be super duper safe) to make sure that
     // fakesystem.c gets a later timestamp than the fakesystem.o that was produced

@@ -86,8 +86,7 @@ public class NdkCxxPlatforms {
 
   public static final NdkCompilerType DEFAULT_COMPILER_TYPE = NdkCompilerType.GCC;
   public static final String DEFAULT_TARGET_APP_PLATFORM = "android-16";
-  public static final ImmutableSet<String> DEFAULT_CPU_ABIS =
-      ImmutableSet.of("arm", "armv7", "x86");
+  public static final ImmutableSet<String> DEFAULT_CPU_ABIS = ImmutableSet.of("armv7", "x86");
   public static final NdkCxxRuntime DEFAULT_CXX_RUNTIME = NdkCxxRuntime.GNUSTL;
 
   private static final ImmutableMap<Platform, Host> BUILD_PLATFORMS =
