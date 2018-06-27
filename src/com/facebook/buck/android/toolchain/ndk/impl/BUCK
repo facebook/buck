@@ -7,6 +7,9 @@ java_library_with_plugins(
         "//src/com/facebook/buck/android/toolchain/ndk:ndk",
         "//src/com/facebook/buck/toolchain:toolchain",
     ],
+    tests = [
+        "//test/com/facebook/buck/android/toolchain/ndk/impl:impl",
+    ],
     visibility = [
         "PUBLIC",
     ],

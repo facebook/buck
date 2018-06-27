@@ -7,6 +7,9 @@ java_immutables_library(
         "//src/com/facebook/buck/cxx/toolchain:toolchain",
         "//src/com/facebook/buck/toolchain:toolchain",
     ],
+    tests = [
+        "//test/com/facebook/buck/android/toolchain/ndk/impl:impl",
+    ],
     visibility = [
         "PUBLIC",
     ],
