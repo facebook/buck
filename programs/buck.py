@@ -13,7 +13,7 @@ import threading
 import time
 import uuid
 import zipfile
-from Queue import Queue
+from multiprocessing import Queue
 from subprocess import check_output
 
 from buck_logging import setup_logging
