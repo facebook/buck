@@ -1,18 +1,18 @@
-From 50120d0edba6cd07013ee6872e015f9a26b8c80a Mon Sep 17 00:00:00 2001
+From 6cd90fda6ada4ca76165f11c2599aafa49d2eecb Mon Sep 17 00:00:00 2001
 From: Taras Tsugrii <ttsugrii@fb.com>
 Date: Sat, 12 May 2018 20:21:17 -0700
 Subject: [PATCH] [Buck] Patch Skylark build file for Buck.
 
 ---
  .../java/com/google/devtools/build/lib/BUILD  |   49 +-
- .../build/lib/packages/Attribute.java         | 2359 +----------------
- 2 files changed, 45 insertions(+), 2363 deletions(-)
+ .../build/lib/packages/Attribute.java         | 2362 +----------------
+ 2 files changed, 45 insertions(+), 2366 deletions(-)
 
 diff --git a/src/main/java/com/google/devtools/build/lib/BUILD b/src/main/java/com/google/devtools/build/lib/BUILD
-index 27f1e62f8a..8e69be6949 100644
+index ec1cc12b62..5ccd601ac7 100644
 --- a/src/main/java/com/google/devtools/build/lib/BUILD
 +++ b/src/main/java/com/google/devtools/build/lib/BUILD
-@@ -312,16 +312,55 @@ java_library(
+@@ -314,16 +314,55 @@ java_library(
  #
  # IMPORTANT:  NOT A PUBLIC INTERFACE. TARGETS SHOULDN'T DEPEND ON THIS.
  #
@@ -74,7 +74,7 @@ index 27f1e62f8a..8e69be6949 100644
  )
  
 diff --git a/src/main/java/com/google/devtools/build/lib/packages/Attribute.java b/src/main/java/com/google/devtools/build/lib/packages/Attribute.java
-index b22a3d69bc..c7afa8a21d 100644
+index 91a26c2f1e..c7afa8a21d 100644
 --- a/src/main/java/com/google/devtools/build/lib/packages/Attribute.java
 +++ b/src/main/java/com/google/devtools/build/lib/packages/Attribute.java
 @@ -14,55 +14,7 @@
@@ -133,7 +133,7 @@ index b22a3d69bc..c7afa8a21d 100644
  import javax.annotation.concurrent.Immutable;
  
  /**
-@@ -73,2237 +25,8 @@ import javax.annotation.concurrent.Immutable;
+@@ -73,2240 +25,8 @@ import javax.annotation.concurrent.Immutable;
   */
  @Immutable
  @AutoCodec
@@ -1126,8 +1126,11 @@ index b22a3d69bc..c7afa8a21d 100644
 -     * dependencies through this attribute.
 -     */
 -    public Builder<TYPE> aspect(NativeAspectClass aspect) {
--      return this.aspect(aspect, input -> AspectParameters.EMPTY);
+-      return this.aspect(aspect, EMPTY_FUNCTION);
 -    }
+-
+-    @AutoCodec @AutoCodec.VisibleForSerialization
+-    static final Function<Rule, AspectParameters> EMPTY_FUNCTION = input -> AspectParameters.EMPTY;
 -
 -    public Builder<TYPE> aspect(SkylarkDefinedAspect skylarkAspect, Location location)
 -        throws EvalException {
@@ -2372,7 +2375,7 @@ index b22a3d69bc..c7afa8a21d 100644
  
    /**
     * Returns if an attribute with the given name is an implicit dependency according to the
-@@ -2313,14 +36,6 @@ public final class Attribute implements Comparable<Attribute> {
+@@ -2316,14 +36,6 @@ public final class Attribute implements Comparable<Attribute> {
      return name.startsWith("$");
    }
  
@@ -2387,7 +2390,7 @@ index b22a3d69bc..c7afa8a21d 100644
    /**
     * Returns if an attribute with the given name is late-bound according to the naming policy
     * that designates late-bound attributes.
-@@ -2345,76 +60,4 @@ public final class Attribute implements Comparable<Attribute> {
+@@ -2348,76 +60,4 @@ public final class Attribute implements Comparable<Attribute> {
      }
      return nativeAttrName;
    }
@@ -2465,5 +2468,5 @@ index b22a3d69bc..c7afa8a21d 100644
 -  }
  }
 -- 
-2.17.0
+2.18.0
 

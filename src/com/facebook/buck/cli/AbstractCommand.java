@@ -51,6 +51,7 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.devtools.build.lib.clock.Clock;
 import com.google.devtools.build.lib.clock.JavaClock;
 import com.google.devtools.build.lib.profiler.Profiler;
+import com.google.devtools.build.lib.profiler.Profiler.Format;
 import com.google.devtools.build.lib.profiler.Profiler.ProfiledTaskKinds;
 import java.io.BufferedOutputStream;
 import java.io.Closeable;
@@ -131,8 +132,7 @@ public abstract class AbstractCommand implements Command {
       name = SKYLARK_PROFILE_LONG_ARG,
       usage =
           "Experimental. Path to a file where Skylark profile information should be written into."
-              + " The output is in a binary format and can be converted into textual form using Bazel's "
-              + "analyze-profile command",
+              + " The output is in Chrome Tracing format and can be viewed in chrome://tracing tab",
       metaVar = "PATH")
   @Nullable
   private String skylarkProfile;
@@ -395,6 +395,7 @@ public abstract class AbstractCommand implements Command {
             .start(
                 ProfiledTaskKinds.ALL,
                 outputStream,
+                Format.JSON_TRACE_FILE_FORMAT,
                 "Buck profile for " + skylarkProfile + " at " + LocalDate.now(),
                 false,
                 clock,
