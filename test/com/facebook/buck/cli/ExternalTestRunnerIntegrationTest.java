@@ -184,6 +184,33 @@ public class ExternalTestRunnerIntegrationTest {
   }
 
   @Test
+  public void numberOfJobsInExtraArgsWithShortNotationIsPassedToExternalRunner()
+      throws IOException {
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "test",
+            "-c",
+            "test.external_runner=" + workspace.getPath("test_runner_echo_all_args.py"),
+            "//:pass",
+            "--",
+            "-j",
+            "10");
+    result.assertSuccess();
+
+    List<String> args = Arrays.asList(result.getStdout().trim().split(" "));
+    int jobsIndex = args.indexOf("-j");
+
+    // exists
+    assertThat(jobsIndex, greaterThanOrEqualTo(0));
+    // appears only once
+    assertThat(jobsIndex, equalTo(args.lastIndexOf("-j")));
+    // not the last token
+    assertThat(jobsIndex, lessThan(args.size() - 1));
+    // expected value
+    assertThat(args.get(jobsIndex + 1), equalTo("10"));
+  }
+
+  @Test
   public void numberOfJobsWithUtilizationRatioAppliedIsPassedToExternalRunner() throws IOException {
     ProcessResult result =
         workspace.runBuckCommand(

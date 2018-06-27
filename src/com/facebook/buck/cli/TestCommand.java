@@ -408,7 +408,7 @@ public class TestCommand extends BuildCommand {
     if (!withDashArguments.contains("--buck-test-info")) {
       builder = builder.addCommand("--buck-test-info", infoFile.toString());
     }
-    if (!withDashArguments.contains("--jobs")) {
+    if (!withDashArguments.contains("--jobs") && !withDashArguments.contains("-j")) {
       builder =
           builder.addCommand("--jobs", String.valueOf(getTestConcurrencyLimit(params).threadLimit));
     }
