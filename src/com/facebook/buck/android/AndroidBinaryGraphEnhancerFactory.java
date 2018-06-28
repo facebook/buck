@@ -68,7 +68,7 @@ public class AndroidBinaryGraphEnhancerFactory {
       DexSplitMode dexSplitMode,
       EnumSet<ExopackageMode> exopackageModes,
       ImmutableSortedSet<JavaLibrary> rulesToExcludeFromDex,
-      AndroidBinaryDescriptionArg args) {
+      AndroidGraphEnhancerArgs args) {
 
     AndroidPlatformTarget androidPlatformTarget =
         toolchainProvider.getByName(
@@ -201,7 +201,7 @@ public class AndroidBinaryGraphEnhancerFactory {
     return allLocales.build();
   }
 
-  private PackageType getPackageType(AndroidBinaryDescriptionArg args) {
+  private PackageType getPackageType(AndroidGraphEnhancerArgs args) {
     if (!args.getPackageType().isPresent()) {
       return PackageType.DEBUG;
     }
@@ -209,7 +209,7 @@ public class AndroidBinaryGraphEnhancerFactory {
   }
 
   private Optional<Arg> getPostFilterResourcesArgs(
-      AndroidBinaryDescriptionArg arg,
+      AndroidGraphEnhancerArgs arg,
       BuildTarget buildTarget,
       ActionGraphBuilder graphBuilder,
       CellPathResolver cellRoots) {
@@ -223,7 +223,7 @@ public class AndroidBinaryGraphEnhancerFactory {
   }
 
   private Optional<Arg> getPreprocessJavaClassesBash(
-      AndroidBinaryDescriptionArg arg,
+      AndroidGraphEnhancerArgs arg,
       BuildTarget buildTarget,
       ActionGraphBuilder graphBuilder,
       CellPathResolver cellRoots) {

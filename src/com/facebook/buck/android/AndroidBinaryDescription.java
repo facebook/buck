@@ -19,17 +19,14 @@ package com.facebook.buck.android;
 import static com.facebook.buck.android.AndroidBinaryResourcesGraphEnhancer.PACKAGE_STRING_ASSETS_FLAVOR;
 
 import com.facebook.buck.android.FilterResourcesSteps.ResourceFilter;
-import com.facebook.buck.android.ResourcesFilter.ResourceCompressionMode;
 import com.facebook.buck.android.dalvik.ZipSplitter.DexSplitStrategy;
 import com.facebook.buck.android.exopackage.ExopackageMode;
-import com.facebook.buck.android.toolchain.ndk.TargetCpuType;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.core.cell.resolver.CellPathResolver;
 import com.facebook.buck.core.description.BuildRuleParams;
 import com.facebook.buck.core.description.arg.CommonDescriptionArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.description.arg.HasTests;
-import com.facebook.buck.core.description.arg.Hint;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
@@ -45,8 +42,6 @@ import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
-import com.facebook.buck.rules.coercer.BuildConfigFields;
-import com.facebook.buck.rules.coercer.ManifestEntries;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.google.common.collect.ImmutableCollection;
@@ -55,11 +50,8 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.OptionalInt;
-import java.util.Set;
-import java.util.regex.Pattern;
 import org.immutables.value.Value;
 
 public class AndroidBinaryDescription
@@ -250,19 +242,8 @@ public class AndroidBinaryDescription
           HasDeclaredDeps,
           HasExopackageArgs,
           HasTests,
-          HasDuplicateAndroidResourceTypes {
-    abstract Optional<SourcePath> getManifest();
-
-    abstract Optional<SourcePath> getManifestSkeleton();
-
-    abstract Optional<SourcePath> getModuleManifestSkeleton();
-
+          AndroidGraphEnhancerArgs {
     abstract BuildTarget getKeystore();
-
-    abstract Optional<String> getPackageType();
-
-    @Hint(isDep = false)
-    abstract ImmutableSet<BuildTarget> getNoDx();
 
     @Value.Default
     boolean getUseSplitDex() {
@@ -274,50 +255,7 @@ public class AndroidBinaryDescription
       return false;
     }
 
-    @Value.Default
-    boolean getDisablePreDex() {
-      return false;
-    }
-
     abstract Optional<DexStore> getDexCompression();
-
-    abstract Optional<ProGuardObfuscateStep.SdkProguardType> getAndroidSdkProguardConfig();
-
-    abstract OptionalInt getOptimizationPasses();
-
-    abstract List<String> getProguardJvmArgs();
-
-    abstract Optional<SourcePath> getProguardConfig();
-
-    @Value.Default
-    ResourceCompressionMode getResourceCompression() {
-      return ResourceCompressionMode.DISABLED;
-    }
-
-    @Value.Default
-    boolean isSkipCrunchPngs() {
-      return false;
-    }
-
-    @Value.Default
-    boolean isIncludesVectorDrawables() {
-      return false;
-    }
-
-    @Value.Default
-    boolean isNoAutoVersionResources() {
-      return false;
-    }
-
-    @Value.Default
-    boolean isNoVersionTransitionsResources() {
-      return false;
-    }
-
-    @Value.Default
-    boolean isNoAutoAddOverlayResources() {
-      return false;
-    }
 
     abstract List<String> getPrimaryDexPatterns();
 
@@ -334,13 +272,7 @@ public class AndroidBinaryDescription
 
     abstract Optional<SourcePath> getSecondaryDexTailClassesFile();
 
-    abstract Set<BuildTarget> getApplicationModuleTargets();
-
     abstract Optional<SourcePath> getAndroidAppModularityResult();
-
-    abstract Map<String, List<BuildTarget>> getApplicationModuleConfigs();
-
-    abstract Optional<Map<String, List<String>>> getApplicationModuleDependencies();
 
     @Value.Default
     long getLinearAllocHardLimit() {
@@ -349,59 +281,8 @@ public class AndroidBinaryDescription
 
     abstract List<String> getResourceFilter();
 
-    @Value.Default
-    boolean getIsCacheable() {
-      return true;
-    }
-
-    @Value.Default
-    AndroidBinary.AaptMode getAaptMode() {
-      return AndroidBinary.AaptMode.AAPT1;
-    }
-
-    @Value.Default
-    boolean isTrimResourceIds() {
-      return false;
-    }
-
-    abstract Optional<String> getKeepResourcePattern();
-
-    abstract Optional<String> getResourceUnionPackage();
-
-    abstract ImmutableSet<String> getLocales();
-
-    abstract Optional<String> getLocalizedStringFileName();
-
-    @Value.Default
-    boolean isBuildStringSourceMap() {
-      return false;
-    }
-
-    @Value.Default
-    boolean isIgnoreAaptProguardConfig() {
-      return false;
-    }
-
-    abstract Set<TargetCpuType> getCpuFilters();
-
     @Value.NaturalOrder
     abstract ImmutableSortedSet<BuildTarget> getPreprocessJavaClassesDeps();
-
-    abstract Optional<StringWithMacros> getPreprocessJavaClassesBash();
-
-    @Value.Default
-    boolean isReorderClassesIntraDex() {
-      return false;
-    }
-
-    @Value.Default
-    String getDexTool() {
-      return DxStep.DX;
-    }
-
-    abstract Optional<SourcePath> getDexReorderToolFile();
-
-    abstract Optional<SourcePath> getDexReorderDataDumpFile();
 
     abstract OptionalInt getXzCompressionLevel();
 
@@ -415,33 +296,6 @@ public class AndroidBinaryDescription
       return false;
     }
 
-    abstract Map<String, List<Pattern>> getNativeLibraryMergeMap();
-
-    abstract Optional<BuildTarget> getNativeLibraryMergeGlue();
-
-    abstract Optional<BuildTarget> getNativeLibraryMergeCodeGenerator();
-
-    abstract Optional<ImmutableSortedSet<String>> getNativeLibraryMergeLocalizedSymbols();
-
-    abstract Optional<BuildTarget> getNativeLibraryProguardConfigGenerator();
-
-    @Value.Default
-    boolean isEnableRelinker() {
-      return false;
-    }
-
-    abstract ImmutableList<Pattern> getRelinkerWhitelist();
-
-    @Value.Default
-    ManifestEntries getManifestEntries() {
-      return ManifestEntries.empty();
-    }
-
-    @Value.Default
-    BuildConfigFields getBuildConfigValues() {
-      return BuildConfigFields.of();
-    }
-
     @Value.Default
     boolean getRedex() {
       return false;
@@ -450,14 +304,5 @@ public class AndroidBinaryDescription
     abstract Optional<SourcePath> getRedexConfig();
 
     abstract ImmutableList<StringWithMacros> getRedexExtraArgs();
-
-    abstract Optional<StringWithMacros> getPostFilterResourcesCmd();
-
-    abstract Optional<SourcePath> getBuildConfigValuesFile();
-
-    @Value.Default
-    boolean isSkipProguard() {
-      return false;
-    }
   }
 }
