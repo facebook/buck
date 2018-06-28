@@ -21,8 +21,9 @@
   list of pairs where the first element in each pair is an un-anchored 
   regex against which the platform name is matched, and the second element 
   is a list of source files. The regex should use <code>java.util.regex.Pattern</code> syntax.  
-  The platform name is defined as an alternate <code>[python]</code> section 
-  in <code>.buckconfig</code>.
+  The platform name is a Python platform <em>flavor</em> defined in 
+  the <code>{call buck.concept_link_heading}{param page : 'buckconfig' /}{param heading : 'python' /}{param name : '[python]' /}{/call}</code> section 
+  of <code>.buckconfig</code>.
   {/param}
 {/call}
 {/template}
@@ -51,8 +52,9 @@
   list of pairs where the first element in each pair is an un-anchored 
   regex against which the platform name is matched, and the second element 
   is a list of resource files. The regex should use <code>java.util.regex.Pattern</code> syntax.  
-  The platform name is defined as an alternate <code>[python]</code> section 
-  in <code>.buckconfig</code>.
+  The platform name is a Python platform <em>flavor</em> defined in 
+  the <code>{call buck.concept_link_heading}{param page : 'buckconfig' /}{param heading : 'python' /}{param name : '[python]' /}{/call}</code> section 
+  of <code>.buckconfig</code>.
   {/param}
 {/call}
 {/template}
@@ -76,8 +78,9 @@
   {param name : 'platform' /}
   {param default : 'None' /}
   {param desc}
-  The name of the Python platform to build against by default as defined 
-  in <code>.buckconfig</code>.
+  The name of the Python platform <em>flavor</em> to build against by default as defined in 
+  the <code>{call buck.concept_link_heading}{param page : 'buckconfig' /}{param heading : 'python' /}{param name : '[python]' /}{/call}</code> section 
+  of <code>.buckconfig</code>.
   {/param}
 {/call}
 {/template}

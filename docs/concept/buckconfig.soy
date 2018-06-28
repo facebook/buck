@@ -637,14 +637,14 @@ osx_toolchains_override = tools.stable,tools.swift40,tools.common
   {param name: '*_version_override' /}
   {param description}
     Specify version string to use for Xcode tool.
-    By default, Xcode tool's version value is calculated automatically from its container SDK and Toolchain.
-    But in some cases (e.g. when tools are overrided by <code>apple.*_replacement</code>), it needs to be
-    manually overrided in order to prevent rule key collision.
+    By default, Xcode tool's version value is calculated automatically from its container SDK and toolchain.
+    But in some cases (e.g. when tools are overridden by <code>apple.*_replacement</code>), it needs to be
+    manually overridden in order to prevent rule key collision.
   {/param}
   {param raw_example}
 {literal}<pre class="prettyprint lang-ini">
 [apple]
-    actool_replacement=/some/path/to/custum/actool
+    actool_replacement=/some/path/to/custom/actool
     actool_version_override=custom_actool_1.0
 </pre>{/literal}
   {/param}
@@ -1038,7 +1038,7 @@ osx_toolchains_override = tools.stable,tools.swift40,tools.common
   {param name: 'http_max_concurrent_writes' /}
   {param example_value: '1' /}
   {param description}
-    The numver of writer threads to use to upload to the http cache when using http-based caching
+    The number of writer threads to use to upload to the http cache when using http-based caching
     {sp}({call buckconfig.cache_mode /} must contain <code>http</code>).  The default is{sp}
     <code>1</code>.  Note that when using multiple http caches (see below), the writer thread pool
     is shared between them all.
@@ -1246,7 +1246,7 @@ osx_toolchains_override = tools.stable,tools.swift40,tools.common
   {param name: 'load_balancing_type' /}
   {param example_value: 'SINGLE_SERVER, CLIENT_SLB' /}
   {param description}
-    Decides whether the distributed cache connects to a single url or
+    Decides whether the distributed cache connects to a single URL or
     it has a pool of servers and chooses which one to use based on
     client side load balancing.
 
@@ -1962,7 +1962,7 @@ cxx_library(
   {param name: 'protocol' /}
   {param example_value: 'json' /}
   {param description}
-    The protocol of communication, it can be either simple or json.
+    The protocol of communication, it can be either simple or JSON.
   {/param}
 {/call}
 
@@ -2498,7 +2498,7 @@ cxx_library(
   {param example_value: 'warn' /}
   {param description}
      <p>Action performed when Buck detects that some dependencies are not used during Java compilation.</p>
-     <p>Note that this feature is experimental and does not handle runtime dependencies.</p>
+     <p>Note that this feature is experimental and does not handle run-time dependencies.</p>
      <p>The valid values are:
        <ul>
          <li><code>ignore</code> (default): ignore unused dependencies,</li>
@@ -2713,7 +2713,7 @@ cxx_library(
   {param description}
     <code>true</code> if Buck should output to a machine readable log file under name <code>
     buck-machine-log</code>. Log entries are formatted one per line like <code>< Event type >
-    < space >< Json ></code>.
+    < space >< JSON ></code>.
   {/param}
 {/call}
 
@@ -3328,9 +3328,14 @@ your <code>.buckjavaargs</code> file</a>:
       This section defines settings relevant to <code>python_*</code> rules.
     </p>
 
-    <h4>Alternative python section in .buckconfig</h4>
+    <h4>Python platform flavors in <code>.buckconfig</code></h4>
     <p>
-      Adding a section with the header 
+      Buck enables you to create additional platform <em>flavors</em> for Python
+      in <code>.buckconfig</code>. A platform flavor groups together a set of
+      configuration parameters, which you can then reference at build time.
+    </p>
+    <p>
+      To create a new Python platform flavor, add a section with the header 
     </p>
 
 <p>
@@ -3342,11 +3347,13 @@ your <code>.buckjavaargs</code> file</a>:
 </p>
 
     <p>
-      to <code>.buckconfig</code> adds an <em>alternate</em> python section.  
-      Buck uses the values in this section instead of those in {sp}<code>[python]</code> if 
-      it is invoked with the specified flavor appended to the {sp}{call buck.build_target /}.  
-      For example, to build with the values in {sp}<code>[python#py3]</code> instead 
-      of <code>[python]</code>:
+      to <code>.buckconfig</code>. 
+      If you invoke Buck with the specified <em>flavor</em> appended 
+      to the {sp}{call buck.build_target /}, Buck uses the values in 
+      this section instead of those in {sp}<code>[python]</code>.
+      For example, to build with the values 
+      in {sp}<code>[python#py3]</code> instead of <code>[python]</code>,
+      you could invoke Buck using the following command:
     </p>
 
 <p>
@@ -3358,9 +3365,16 @@ $ buck build app#py3
 </p>
 
     <p>
-      This is useful if you have both Python 2 and Python 3 code in
+      This is useful if, for example, you have both Python 2 and Python 3 code in
       your project and need to differentiate between them by changing the
       value of the {sp}{call buckconfig.python_interpreter /}. 
+    </p>
+
+    <p>
+    You can also use these platform flavors, in the <code>platform</code> argument of 
+    the {call buck.ruleLink}{param name : 'python_binary' /}{/call} rule, 
+    and in the <code>platform_sources</code> and <code>platform_resources</code> arguments 
+    of the {call buck.ruleLink}{param name : 'python_library' /}{/call} rule.
     </p>
 
   {/param}
