@@ -22,6 +22,7 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.android.StringResources.Gender;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemDelegate;
+import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -464,7 +465,10 @@ public class CompileStringsStepTest {
     }
 
     private FakeProjectFileSystem(Path root) {
-      super(root, new DefaultProjectFilesystemDelegate(root));
+      super(
+          root,
+          new DefaultProjectFilesystemDelegate(root),
+          DefaultProjectFilesystemFactory.getWindowsFSInstance());
     }
 
     @Override

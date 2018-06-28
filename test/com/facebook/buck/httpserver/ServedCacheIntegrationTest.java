@@ -39,6 +39,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemDelegate;
+import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.Platform;
@@ -182,7 +183,9 @@ public class ServedCacheIntegrationTest {
   public void testExceptionDuringTheRead() throws Exception {
     ProjectFilesystem throwingStreamFilesystem =
         new DefaultProjectFilesystem(
-            tmpDir.getRoot(), new DefaultProjectFilesystemDelegate(tmpDir.getRoot())) {
+            tmpDir.getRoot(),
+            new DefaultProjectFilesystemDelegate(tmpDir.getRoot()),
+            DefaultProjectFilesystemFactory.getWindowsFSInstance()) {
           private boolean throwingStreamServed = false;
 
           @Override
@@ -218,7 +221,9 @@ public class ServedCacheIntegrationTest {
   public void testExceptionDuringTheReadRetryingFail() throws Exception {
     ProjectFilesystem throwingStreamFilesystem =
         new DefaultProjectFilesystem(
-            tmpDir.getRoot(), new DefaultProjectFilesystemDelegate(tmpDir.getRoot())) {
+            tmpDir.getRoot(),
+            new DefaultProjectFilesystemDelegate(tmpDir.getRoot()),
+            DefaultProjectFilesystemFactory.getWindowsFSInstance()) {
           private int throwingStreamServedCount = 0;
 
           @Override
@@ -249,7 +254,9 @@ public class ServedCacheIntegrationTest {
   public void testExceptionDuringTheReadRetryingSuccess() throws Exception {
     ProjectFilesystem throwingStreamFilesystem =
         new DefaultProjectFilesystem(
-            tmpDir.getRoot(), new DefaultProjectFilesystemDelegate(tmpDir.getRoot())) {
+            tmpDir.getRoot(),
+            new DefaultProjectFilesystemDelegate(tmpDir.getRoot()),
+            DefaultProjectFilesystemFactory.getWindowsFSInstance()) {
           private int throwingStreamServedCount = 0;
 
           @Override

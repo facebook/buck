@@ -22,6 +22,7 @@ import com.facebook.buck.io.filesystem.CopySourceMode;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemDelegate;
+import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.facebook.buck.util.timing.Clock;
@@ -242,7 +243,10 @@ public class FakeProjectFilesystem extends DefaultProjectFilesystem {
       throw new RuntimeException(e);
     }
 
-    return new DefaultProjectFilesystem(root, new DefaultProjectFilesystemDelegate(root)) {
+    return new DefaultProjectFilesystem(
+        root,
+        new DefaultProjectFilesystemDelegate(root),
+        DefaultProjectFilesystemFactory.getWindowsFSInstance()) {
       @Override
       public Path resolve(Path path) {
         // Avoid resolving paths from different Java FileSystems.
@@ -270,7 +274,10 @@ public class FakeProjectFilesystem extends DefaultProjectFilesystem {
   public FakeProjectFilesystem(Clock clock, Path root, Set<Path> files) {
     // For testing, we always use a DefaultProjectFilesystemDelegate so that the logic being
     // exercised is always the same, even if a test using FakeProjectFilesystem is used on EdenFS.
-    super(root, new DefaultProjectFilesystemDelegate(root));
+    super(
+        root,
+        new DefaultProjectFilesystemDelegate(root),
+        DefaultProjectFilesystemFactory.getWindowsFSInstance());
     // We use LinkedHashMap to preserve insertion order, so the
     // behavior of this test is consistent across versions. (It also lets
     // us write tests which explicitly test iterating over entries in

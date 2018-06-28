@@ -11,6 +11,7 @@ java_library(
     ),
     exported_deps = [
         "//src/com/facebook/buck/io/filesystem/impl:impl",
+        "//src/com/facebook/buck/io/windowsfs:windowsfs",
         "//src/com/facebook/buck/util/cache:cache",
         "//src/com/facebook/buck/util/hashing:hashing",
     ],

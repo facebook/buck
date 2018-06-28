@@ -102,6 +102,7 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
   private final Supplier<Path> tmpDir;
 
   private final ProjectFilesystemDelegate delegate;
+  private final WindowsFS winFSInstance;
 
   // Defaults to false, and so paths should be valid.
   @VisibleForTesting protected boolean ignoreValidityOfPaths;
@@ -116,13 +117,16 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
 
   @VisibleForTesting
   protected DefaultProjectFilesystem(
-      Path root, ProjectFilesystemDelegate projectFilesystemDelegate) {
+      Path root,
+      ProjectFilesystemDelegate projectFilesystemDelegate,
+      @Nullable WindowsFS winFSInstance) {
     this(
         root.getFileSystem(),
         root,
         ImmutableSet.of(),
         BuckPaths.createDefaultBuckPaths(root),
-        projectFilesystemDelegate);
+        projectFilesystemDelegate,
+        winFSInstance);
   }
 
   public DefaultProjectFilesystem(
@@ -130,12 +134,18 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
       Path root,
       ImmutableSet<PathOrGlobMatcher> blackListedPaths,
       BuckPaths buckPaths,
-      ProjectFilesystemDelegate delegate) {
+      ProjectFilesystemDelegate delegate,
+      @Nullable WindowsFS winFSInstance) {
     if (shouldVerifyConstructorArguments()) {
       Preconditions.checkArgument(Files.isDirectory(root), "%s must be a directory", root);
       Preconditions.checkState(vfs.equals(root.getFileSystem()));
       Preconditions.checkArgument(root.isAbsolute(), "Expected absolute path. Got <%s>.", root);
     }
+
+    if (Platform.detect() == Platform.WINDOWS) {
+      Preconditions.checkNotNull(winFSInstance);
+    }
+
     this.projectRoot = MorePaths.normalize(root);
     this.delegate = delegate;
     this.ignoreValidityOfPaths = false;
@@ -185,6 +195,8 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
               }
               return relativeTmpDir;
             });
+
+    this.winFSInstance = winFSInstance;
   }
 
   public static Path getCacheDir(Path root, Optional<String> value, BuckPaths buckPaths) {
@@ -813,7 +825,7 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
     }
     if (Platform.detect() == Platform.WINDOWS) {
       realFile = MorePaths.normalize(symLink.getParent().resolve(realFile));
-      WindowsFS.createSymbolicLink(symLink, realFile, isDirectory(realFile));
+      winFSInstance.createSymbolicLink(symLink, realFile, isDirectory(realFile));
     } else {
       Files.createSymbolicLink(symLink, realFile);
     }
