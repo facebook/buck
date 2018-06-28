@@ -210,6 +210,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
@@ -3310,6 +3311,13 @@ public class CachingBuildEngineTest {
               .getResult()
               .get();
       assertThat(getSuccess(result), equalTo(BuildRuleSuccessType.BUILT_LOCALLY));
+      assertManifestLoaded(
+          listener
+              .getEvents()
+              .stream()
+              .filter(BuildRuleEvent.Finished.class::isInstance)
+              .map(BuildRuleEvent.Finished.class::cast)
+              .collect(Collectors.toList()));
 
       // Verify there's no stale entry in the manifest.
       LazyPath fetchedManifest = LazyPath.ofInstance(tmp.newFile("fetched_artifact.zip"));
@@ -3321,6 +3329,14 @@ public class CachingBuildEngineTest {
       Manifest cachedManifest = loadManifest(fetchedManifest.get());
       assertThat(
           ManifestUtil.toMap(cachedManifest).keySet(), Matchers.not(hasItem(staleDepFileRuleKey)));
+    }
+
+    private void assertManifestLoaded(List<BuildRuleEvent.Finished> events) {
+      assertFalse(events.isEmpty());
+      events.forEach(
+          event -> {
+            assertFalse(event.getManifestStoreResult().get().getManifestLoadError().isPresent());
+          });
     }
   }
 
