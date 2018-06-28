@@ -36,6 +36,9 @@ com.facebook.buck.log.ConsoleHandler.level=SEVERE
 httpclient.wire.content.level=SEVERE
 httpclient.wire.header.level=SEVERE
 
+# Needed for "buck fix" to find many source ABI errors
+com.facebook.buck.jvm.java.Jsr199JavacInvocation.level=FINE
+
 # Log to buck-out/log/buck-*.log.
 java.util.logging.FileHandler.pattern=<default_file_pattern>
 
