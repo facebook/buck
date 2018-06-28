@@ -1,3 +1,4 @@
+import argparse
 import errno
 import json
 import os
@@ -8,6 +9,18 @@ import buck_version
 
 
 def main(argv):
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--release-version", help="The buck release version")
+    parser.add_argument(
+        "--release-timestamp", help="The unix timestamp when the release happened"
+    )
+    args = parser.parse_args(argv[1:])
+    if bool(args.release_version) != bool(args.release_timestamp):
+        print(
+            "--release-version and --release-timestamp must either both be "
+            "set, or neither can be set"
+        )
+        sys.exit(1)
 
     # Locate the root of the buck repo.  We'll need to be there to
     # generate the buck version UID.
@@ -15,7 +28,11 @@ def main(argv):
     while not os.path.exists(os.path.join(path, ".buckconfig")):
         path = os.path.dirname(path)
 
-    if os.path.exists(os.path.join(path, ".git")):
+    if args.release_version:
+        version = args.release_version
+        timestamp = args.release_timestamp
+        dirty = False
+    elif os.path.exists(os.path.join(path, ".git")):
         # Attempt to create a "clean" version, but fall back to a "dirty"
         # one if need be.
         version = buck_version.get_clean_buck_version(path)

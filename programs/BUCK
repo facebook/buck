@@ -6,6 +6,7 @@ load(
 )
 load("@bazel_skylib//lib:dicts.bzl", "dicts")
 load("//tools/build_rules:python_rules.bzl", "interpreter_override_args")
+load(":defs.bzl", "get_gen_buck_info_command")
 
 python_library(
     name = "subprocutils",
@@ -47,7 +48,7 @@ python_binary(
 genrule(
     name = "gen_buck_package_info",
     out = "buck_package_info.json",
-    cmd = "$(exe :gen_buck_info) > $OUT",
+    cmd = get_gen_buck_info_command(":gen_buck_info"),
 )
 
 build_type = read_config("build", "type", "LOCAL_PEX")
