@@ -56,7 +56,6 @@ import com.google.devtools.build.lib.events.EventHandler;
 import com.google.devtools.build.lib.events.EventKind;
 import com.google.devtools.build.lib.events.PrintingEventHandler;
 import com.google.devtools.build.lib.syntax.Type;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -618,19 +617,6 @@ public class SkylarkProjectBuildFileParserTest {
   }
 
   @Test
-  public void extensionFileIoEvaluationErrorIsReported() throws Exception {
-    Path directory = projectFilesystem.resolve("src").resolve("test");
-    Files.createDirectories(directory);
-    Path buildFile = directory.resolve("BUCK");
-    Files.write(buildFile, Arrays.asList("load('//src/test:build_rule.bzl', 'guava_jar')"));
-
-    thrown.expect(FileNotFoundException.class);
-    thrown.expectMessage(containsString("build_rule.bzl"));
-
-    parser.getBuildFileManifest(buildFile, new AtomicLong());
-  }
-
-  @Test
   public void canUseBuiltInListFunctionInExtension() throws Exception {
     Path directory = projectFilesystem.resolve("src").resolve("test");
     Files.createDirectories(directory);
@@ -1043,6 +1029,25 @@ public class SkylarkProjectBuildFileParserTest {
     Map<String, Object> rule = buildFileManifest.getTargets().get(0);
     assertThat(rule.get("name"), is("foo"));
     assertThat(rule.get("binaryJar"), equalTo("True"));
+  }
+
+  @Test
+  public void throwsHumanReadableExceptionWhenFileDoesNotExist()
+      throws IOException, InterruptedException {
+    thrown.expect(BuildFileParseException.class);
+    thrown.expectMessage(
+        "src/test/build_rules.bzl cannot be loaded because it does not exist. It was referenced from //src/test:BUCK");
+
+    Path directory = projectFilesystem.resolve("src").resolve("test");
+    Files.createDirectories(directory);
+    Path buildFile = directory.resolve("BUCK");
+    Files.write(
+        buildFile,
+        Arrays.asList(
+            "load('//src/test:build_rules.bzl', 'get_name')",
+            "prebuilt_jar(name='exists', binary_jar='binary.jar')",
+            "prebuilt_jar(name='foo', binary_jar=get_name())"));
+    parser.getBuildFileManifest(buildFile, new AtomicLong());
   }
 
   private Map<String, Object> getSingleRule(Path buildFile)

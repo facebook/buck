@@ -55,6 +55,7 @@ import com.google.devtools.build.lib.syntax.SkylarkImport;
 import com.google.devtools.build.lib.vfs.FileSystem;
 import com.google.devtools.build.lib.vfs.FileSystemUtils;
 import com.google.devtools.build.lib.vfs.PathFragment;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
@@ -351,8 +352,16 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
     ImmutableList<ExtensionData> dependencies = ImmutableList.of();
     Extension extension;
     try (Mutability mutability = Mutability.create("importing extension")) {
-      BuildFileAST extensionAst =
-          BuildFileAST.parseSkylarkFile(createInputSource(extensionPath), eventHandler);
+      BuildFileAST extensionAst;
+      try {
+        extensionAst =
+            BuildFileAST.parseSkylarkFile(createInputSource(extensionPath), eventHandler);
+      } catch (FileNotFoundException e) {
+        throw BuildFileParseException.createForUnknownParseError(
+            String.format(
+                "%s cannot be loaded because it does not exist. It was referenced from %s",
+                extensionPath, loadImport.getContainingLabel()));
+      }
       if (extensionAst.containsErrors()) {
         throw BuildFileParseException.createForUnknownParseError(
             "Cannot parse extension file " + loadImport.getImport().getImportString());
