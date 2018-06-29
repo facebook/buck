@@ -10,5 +10,6 @@ java_library(
         "//src/com/facebook/buck/log:api",
         "//src/com/facebook/buck/util:util",
         "//third-party/java/guava:guava",
+        "//third-party/java/jsr:jsr305",
     ],
 )

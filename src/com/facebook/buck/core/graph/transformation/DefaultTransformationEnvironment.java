@@ -17,6 +17,7 @@
 package com.facebook.buck.core.graph.transformation;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
@@ -59,6 +60,23 @@ final class DefaultTransformationEnvironment<ComputeKey, ComputeResult>
       Iterable<ComputeKey> keys,
       Function<ImmutableMap<ComputeKey, ComputeResult>, ComputeResult> asyncTransformation) {
     return collectAsyncAndRunInternal(engine.computeAll(keys), asyncTransformation);
+  }
+
+  @Override
+  public CompletionStage<ComputeResult> evaluateAllAndCollectAsync(
+      Iterable<ComputeKey> computeKeys, AsyncSink<ComputeKey, ComputeResult> sink) {
+    return engine
+        .collectFutures(
+            Maps.transformEntries(
+                engine.computeAll(computeKeys),
+                (key, value) ->
+                    value.thenApplyAsync(
+                        partialResult -> {
+                          sink.sink(key, partialResult);
+                          return new Object();
+                        },
+                        executor)))
+        .thenApplyAsync(ignored -> sink.collect(), executor);
   }
 
   private CompletionStage<ComputeResult> collectAsyncAndRunInternal(
