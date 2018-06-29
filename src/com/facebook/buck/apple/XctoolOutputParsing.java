@@ -42,6 +42,7 @@ import javax.annotation.Nullable;
 class XctoolOutputParsing {
 
   private static final Logger LOG = Logger.get(XctoolOutputParsing.class);
+  private static final String XCTOOL_CRASH_REPORT_KEY = "CRASH REPORT:";
 
   // Utility class; do not instantiate.
   private XctoolOutputParsing() {}
@@ -249,7 +250,7 @@ class XctoolOutputParsing {
             endTestEvent.succeeded ? ResultType.SUCCESS : ResultType.FAILURE,
             timeMillis,
             formatTestMessage(endTestEvent),
-            null, // stackTrace,
+            formatTestStackTrace(endTestEvent),
             formatTestStdout(endTestEvent),
             null // stdErr
             );
@@ -281,6 +282,16 @@ class XctoolOutputParsing {
   private static String formatTestStdout(EndTestEvent endTestEvent) {
     if (endTestEvent.output != null && !endTestEvent.output.isEmpty()) {
       return endTestEvent.output;
+    } else {
+      return null;
+    }
+  }
+
+  @Nullable
+  private static String formatTestStackTrace(EndTestEvent endTestEvent) {
+    String output = formatTestStdout(endTestEvent);
+    if (!endTestEvent.succeeded && output != null && output.contains(XCTOOL_CRASH_REPORT_KEY)) {
+      return output;
     } else {
       return null;
     }
