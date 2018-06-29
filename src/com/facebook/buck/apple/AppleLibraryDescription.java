@@ -404,8 +404,7 @@ public class AppleLibraryDescription
     CxxPlatformsProvider cxxPlatformsProvider = getCxxPlatformsProvider();
 
     return AppleDescriptions.createAppleBundle(
-        cxxPlatformsProvider.getCxxPlatforms(),
-        cxxPlatformsProvider.getDefaultCxxPlatform().getFlavor(),
+        cxxPlatformsProvider,
         getAppleCxxPlatformDomain(),
         targetGraph,
         buildTarget,
@@ -511,8 +510,7 @@ public class AppleLibraryDescription
         AppleDebugFormat.FLAVOR_DOMAIN
             .getValue(buildTarget)
             .orElse(appleConfig.getDefaultDebugInfoFormatForLibraries()),
-        cxxPlatforms,
-        defaultCxxFlavor,
+        cxxPlatformsProvider,
         getAppleCxxPlatformDomain());
   }
 
