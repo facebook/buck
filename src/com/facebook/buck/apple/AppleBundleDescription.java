@@ -148,8 +148,7 @@ public class AppleBundleDescription
     CxxPlatformsProvider cxxPlatformsProvider = getCxxPlatformsProvider();
 
     return AppleDescriptions.createAppleBundle(
-        cxxPlatformsProvider.getCxxPlatforms(),
-        cxxPlatformsProvider.getDefaultCxxPlatform().getFlavor(),
+        cxxPlatformsProvider,
         getAppleCxxPlatformFlavorDomain(),
         context.getTargetGraph(),
         buildTarget,
@@ -206,11 +205,7 @@ public class AppleBundleDescription
       AppleCxxPlatform appleCxxPlatform = fatBinaryInfo.get().getRepresentativePlatform();
       cxxPlatform = appleCxxPlatform.getCxxPlatform();
     } else {
-      cxxPlatform =
-          ApplePlatforms.getCxxPlatformForBuildTarget(
-              cxxPlatformsProvider.getCxxPlatforms(),
-              cxxPlatformsProvider.getDefaultCxxPlatform().getFlavor(),
-              buildTarget);
+      cxxPlatform = ApplePlatforms.getCxxPlatformForBuildTarget(cxxPlatformsProvider, buildTarget);
     }
 
     String platformName = cxxPlatform.getFlavor().getName();
@@ -307,8 +302,7 @@ public class AppleBundleDescription
     FlavorDomain<AppleCxxPlatform> appleCxxPlatforms = getAppleCxxPlatformFlavorDomain();
     AppleCxxPlatform appleCxxPlatform =
         ApplePlatforms.getAppleCxxPlatformForBuildTarget(
-            cxxPlatformsProvider.getCxxPlatforms(),
-            cxxPlatformsProvider.getDefaultCxxPlatform().getFlavor(),
+            cxxPlatformsProvider,
             appleCxxPlatforms,
             buildTarget,
             MultiarchFileInfos.create(appleCxxPlatforms, buildTarget));

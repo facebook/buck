@@ -53,7 +53,7 @@ import com.facebook.buck.cxx.CxxLibraryDescriptionArg;
 import com.facebook.buck.cxx.CxxStrip;
 import com.facebook.buck.cxx.FrameworkDependencies;
 import com.facebook.buck.cxx.HasAppleDebugSymbolDeps;
-import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.LinkerMapMode;
 import com.facebook.buck.cxx.toolchain.StripStyle;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
@@ -480,8 +480,7 @@ public class AppleDescriptions {
       BuildRule strippedBinaryRule,
       HasAppleDebugSymbolDeps unstrippedBinaryRule,
       AppleDebugFormat debugFormat,
-      FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain,
-      Flavor defaultCxxFlavor,
+      CxxPlatformsProvider cxxPlatformsProvider,
       FlavorDomain<AppleCxxPlatform> appleCxxPlatforms) {
     // Target used as the base target of AppleDebuggableBinary.
 
@@ -497,8 +496,7 @@ public class AppleDescriptions {
                 projectFilesystem,
                 graphBuilder,
                 unstrippedBinaryRule,
-                cxxPlatformFlavorDomain,
-                defaultCxxFlavor,
+                cxxPlatformsProvider,
                 appleCxxPlatforms);
         return AppleDebuggableBinary.createWithDsym(
             projectFilesystem, baseTarget, strippedBinaryRule, dsym);
@@ -514,8 +512,7 @@ public class AppleDescriptions {
       ProjectFilesystem projectFilesystem,
       ActionGraphBuilder graphBuilder,
       HasAppleDebugSymbolDeps unstrippedBinaryRule,
-      FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain,
-      Flavor defaultCxxFlavor,
+      CxxPlatformsProvider cxxPlatformsProvider,
       FlavorDomain<AppleCxxPlatform> appleCxxPlatforms) {
     return (AppleDsym)
         graphBuilder.computeIfAbsent(
@@ -528,8 +525,7 @@ public class AppleDescriptions {
             dsymBuildTarget -> {
               AppleCxxPlatform appleCxxPlatform =
                   ApplePlatforms.getAppleCxxPlatformForBuildTarget(
-                      cxxPlatformFlavorDomain,
-                      defaultCxxFlavor,
+                      cxxPlatformsProvider,
                       appleCxxPlatforms,
                       unstrippedBinaryRule.getBuildTarget(),
                       MultiarchFileInfos.create(
@@ -550,8 +546,7 @@ public class AppleDescriptions {
   }
 
   static AppleBundle createAppleBundle(
-      FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain,
-      Flavor defaultCxxFlavor,
+      CxxPlatformsProvider cxxPlatformsProvider,
       FlavorDomain<AppleCxxPlatform> appleCxxPlatforms,
       TargetGraph targetGraph,
       BuildTarget buildTarget,
@@ -580,8 +575,7 @@ public class AppleDescriptions {
       Duration codesignTimeout) {
     AppleCxxPlatform appleCxxPlatform =
         ApplePlatforms.getAppleCxxPlatformForBuildTarget(
-            cxxPlatformFlavorDomain,
-            defaultCxxFlavor,
+            cxxPlatformsProvider,
             appleCxxPlatforms,
             buildTarget,
             MultiarchFileInfos.create(appleCxxPlatforms, buildTarget));
@@ -685,8 +679,7 @@ public class AppleDescriptions {
         buildTargetWithoutBundleSpecificFlavors.getFlavors();
     BuildRule flavoredBinaryRule =
         getFlavoredBinaryRule(
-            cxxPlatformFlavorDomain,
-            defaultCxxFlavor,
+            cxxPlatformsProvider,
             targetGraph,
             flavoredBinaryRuleFlavors,
             graphBuilder,
@@ -727,8 +720,7 @@ public class AppleDescriptions {
               getBinaryFromBuildRuleWithBinary(flavoredBinaryRule),
               (HasAppleDebugSymbolDeps) unstrippedBinaryRule,
               debugFormat,
-              cxxPlatformFlavorDomain,
-              defaultCxxFlavor,
+              cxxPlatformsProvider,
               appleCxxPlatforms);
       targetDebuggableBinaryRule = debuggableBinary;
       appleDsym = debuggableBinary.getAppleDsym();
@@ -742,8 +734,7 @@ public class AppleDescriptions {
             appleCxxPlatform.getAppleSdk().getApplePlatform().getType(),
             deps,
             binaryTarget,
-            cxxPlatformFlavorDomain,
-            defaultCxxFlavor,
+            cxxPlatformsProvider,
             targetGraph,
             flavoredBinaryRuleFlavors,
             graphBuilder);
@@ -861,8 +852,7 @@ public class AppleDescriptions {
   }
 
   private static BuildRule getFlavoredBinaryRule(
-      FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain,
-      Flavor defaultCxxFlavor,
+      CxxPlatformsProvider cxxPlatformsProvider,
       TargetGraph targetGraph,
       ImmutableSet<Flavor> flavors,
       ActionGraphBuilder graphBuilder,
@@ -887,8 +877,12 @@ public class AppleDescriptions {
                 flavors,
                 ImmutableSet.of(
                     AppleDescriptions.FRAMEWORK_FLAVOR, AppleBinaryDescription.APP_FLAVOR)));
-    if (!cxxPlatformFlavorDomain.containsAnyOf(flavors)) {
-      flavors = new ImmutableSet.Builder<Flavor>().addAll(flavors).add(defaultCxxFlavor).build();
+    if (!cxxPlatformsProvider.getCxxPlatforms().containsAnyOf(flavors)) {
+      flavors =
+          new ImmutableSet.Builder<Flavor>()
+              .addAll(flavors)
+              .add(cxxPlatformsProvider.getDefaultCxxPlatform().getFlavor())
+              .build();
     }
 
     ImmutableSet.Builder<Flavor> binaryFlavorsBuilder = ImmutableSet.builder();
@@ -1007,8 +1001,7 @@ public class AppleDescriptions {
       ApplePlatformType platformType,
       ImmutableSortedSet<BuildTarget> depBuildTargets,
       BuildTarget primaryBinaryTarget,
-      FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain,
-      Flavor defaultCxxFlavor,
+      CxxPlatformsProvider cxxPlatformsProvider,
       TargetGraph targetGraph,
       ImmutableSet<Flavor> flavors,
       ActionGraphBuilder graphBuilder) {
@@ -1034,8 +1027,7 @@ public class AppleDescriptions {
 
       BuildRule flavoredBinary =
           getFlavoredBinaryRule(
-              cxxPlatformFlavorDomain,
-              defaultCxxFlavor,
+              cxxPlatformsProvider,
               targetGraph,
               flavors,
               graphBuilder,

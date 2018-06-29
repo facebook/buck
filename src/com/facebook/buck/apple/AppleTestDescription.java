@@ -280,8 +280,7 @@ public class AppleTestDescription
 
     AppleBundle bundle =
         AppleDescriptions.createAppleBundle(
-            cxxPlatformFlavorDomain,
-            defaultCxxFlavor,
+            getCxxPlatformsProvider(),
             appleCxxPlatformFlavorDomain,
             context.getTargetGraph(),
             buildTarget.withAppendedFlavors(
