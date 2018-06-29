@@ -7,7 +7,7 @@
   {param navid: 'rule_worker_tool' /}
   {param prettify: true /}
   {param description}
-    A rule that can be used to tell Buck that multiple invocations of an external tool should be
+    A rule to tell Buck that multiple invocations of an external tool should be
     multiplexed to a shared instance of that tool.
   {/param}
   {param content}
@@ -16,18 +16,26 @@
 {param status: 'UNFROZEN' /}
 {param overview}
   <p>
-    Some external tools have high startup costs. To amortize that cost over the whole build
-    rather than paying for it in each rule invocation, the <code>worker_tool()</code> rule
-    can be used in conjunction with {call buck.genrule /}.
-    Buck will start the external tool once and then reuse it by communicating to it
+    Some external tools have high startup costs. To amortize those costs over the whole build
+    rather than paying them for each rule invocation, use the <code>worker_tool()</code> rule
+    in conjunction with {call buck.genrule /}.
+    Buck then starts the external tool once and reuses it by communicating with it 
     over <code>stdin</code> and <code>stdout</code> using a simple JSON protocol.
   </p>
+
   <p>
     A <code>worker_tool</code> rule can be referenced in the <code>cmd</code> parameter of
-    a <code>genrule</code> by using a macro:
-    <br/>
-    <code>$(worker /&#x2Fpath/to:target)</code>
+    a <code>genrule</code> by using the macro:
   </p>
+
+<p>
+<pre>
+{literal}
+<code>$(worker /&#x2Fpath/to:target)</code>
+{/literal}
+</pre>
+</p>
+
 
 {/param}
 
@@ -44,8 +52,8 @@
   {param name: 'exe' /}
   {param desc}
     A {call buck.build_target /} for a rule that outputs
-    an executable, such as an <code>sh_binary</code>. Buck will only run this executable
-    once per build.
+    an executable, such as an {call buck.ruleLink}{param name : 'sh_binary' /}{/call}. 
+    Buck runs this executable only once per build.
   {/param}
 {/call}
 
@@ -53,7 +61,7 @@
   {param name: 'args' /}
   {param default: 'None' /}
   {param desc}
-    A string of args that will be passed to the executable represented by <code>exe</code> on
+    A string of args that is passed to the executable represented by <code>exe</code> on
     initial startup.
   {/param}
 {/call}
@@ -62,7 +70,7 @@
   {param name: 'max_workers' /}
   {param default: '1' /}
   {param desc}
-    The maximum number of workers of this type that Buck will start. Use <code>-1</code> to allow
+    The maximum number of workers of this type that Buck starts. Use <code>-1</code> to allow
     the creation of as many workers as necessary.
   {/param}
 {/call}
@@ -71,9 +79,10 @@
   {param name: 'max_workers_per_thread_percent' /}
   {param default: 'None'/}
   {param desc}
-    The maximum ratio of workers of this type that Buck will start per thread, given in percent{sp}
-    (0–100). Must be greater than <code>0</code> and lower or equal to <code>100</code>. Only one of
-    <code>max_workers</code> and <code>max_workers_per_thread_percent</code> may be specified.
+    The maximum ratio of workers of this type that Buck starts per
+    thread, specified as a positive integer percentage{sp} (1-100). Must be
+    greater than or equal to <code>1</code> and less than or equal to <code>100</code>. 
+    Only one of <code>max_workers</code> and <code>max_workers_per_thread_percent</code> may be specified.
   {/param}
 {/call}
 
@@ -81,7 +90,7 @@
   {param name: 'env' /}
   {param default: 'None' /}
   {param desc}
-    A map of environment variables that will be passed to the executable represented
+    A map of environment variables that is passed to the executable represented
     by <code>exe</code> on initial startup.
   {/param}
 {/call}
@@ -90,10 +99,10 @@
   {param name: 'persistent' /}
   {param default: 'False' /}
   {param desc}
-    If set to true, buck will not restart the tool unless the tool itself changes. This means the
-    tool will persist across multiple buck commands without being shut down and may see the same
-    rule being built more than once. Be careful when using this with tools that don't expect
-    to process the same input (with different contents) twice!
+    If set to true, Buck does not restart the tool unless the tool itself changes. This means the
+    tool persists across multiple Buck commands without being shut down and may see the same
+    rule being built more than once. Be careful not to use this setting with tools that don't expect
+    to process the same input&mdash;with different contents&mdash;twice!
   {/param}
 {/call}
 
@@ -101,7 +110,14 @@
 
 {param examples}
 
+<p>
+Consider the following {call buck.concept_link}{param page: 'build_rule' /}{param name: 'build rules' /}{/call}:
+</p>
+
 {literal}<pre class="prettyprint lang-py">
+#
+# Buck
+#
 worker_tool(
   name = 'ExternalToolWorker',
   exe = ':ExternalTool',
@@ -133,11 +149,19 @@ genrule(
 
 <p>
   When doing a <code>buck build</code> on all three of the above <code>genrules</code>, Buck
-  will first create the worker process by invoking:
-  </br>
-  <code>./external_tool.sh --arg1 --arg2</code>
-  </br>
-  Buck will then communicate with this process using JSON over <code>stdin</code>,
+  first creates the worker process by invoking:
+</p>
+
+<p>
+<pre>
+{literal}
+./external_tool.sh --arg1 --arg2</code>
+{/literal}
+</pre>
+</p>
+
+<p>
+  Buck then communicates with this process using JSON over <code>stdin</code>,
   starting with a handshake:
 </p>
 
@@ -152,7 +176,7 @@ genrule(
 </pre>{/literal}
 
 <p>
-  Buck will then wait for the tool to reply on <code>stdout</code>:
+  Buck then waits for the tool to reply on <code>stdout</code>:
 </p>
 
 {literal}<pre class="prettyprint lang-py">
@@ -166,7 +190,7 @@ genrule(
 </pre>{/literal}
 
 <p>
-  Then, when building the first <code>genrule</code>, Buck will write to <code>stdin</code>:
+  Then, when building the first <code>genrule</code>, Buck writes to <code>stdin</code>:
 </p>
 
 {literal}<pre class="prettyprint lang-py">
@@ -180,9 +204,10 @@ genrule(
 </pre>{/literal}
 
 <p>
-  The file <code>/tmp/1.args</code> would contain <code>argA</code>. The tool should
-  then perform the necessary work for this job and then write the job's output to the files
-  supplied by Buck. Once the job is done, the tool should reply to Buck on <code>stdout</code> with:
+  The file <code>/tmp/1.args</code> contains <code>argA</code>. The tool should
+  perform the necessary work for this job and then write the job's output to the files
+  supplied by Buck&mdash;in this case, <code>/tmp/1.out</code> and <code>/tmp/1.err</code>. 
+  Once the job is done, the tool should reply to Buck on <code>stdout</code> with:
 </p>
 
 {literal}<pre class="prettyprint lang-py">
@@ -194,9 +219,9 @@ genrule(
 </pre>{/literal}
 
 <p>
-  Once Buck hears back from the first genrule's job, it will submit the second genrule's job in the
-  same fashion and await the response. When the build is all finished Buck will close the JSON by
-  writing to <code>stdin</code>:
+  Once Buck hears back from the first genrule's job, it submits the second genrule's job in the
+  same fashion and awaits the response. When the build is all finished,
+  Buck closes the JSON by writing to <code>stdin</code>:
 </p>
 
 {literal}<pre class="prettyprint lang-py">
@@ -204,7 +229,7 @@ genrule(
 </pre>{/literal}
 
 <p>
-  which signals to the tool that it should close itself after replying on <code>stdout</code>:
+  which signals the tool that it should exit after replying on <code>stdout</code> with:
 </p>
 
 {literal}<pre class="prettyprint lang-py">
@@ -213,16 +238,24 @@ genrule(
 
 <p>
   In this example, Buck is guaranteed to invoke
-  </br>
-  <code>./external_tool.sh --arg1 --arg2</code>
-  </br>
-  just once during the build. The three jobs corresponding to the three genrules are submitted
+</p>
+
+<p>
+<pre>
+{literal}
+./external_tool.sh --arg1 --arg2</code>
+{/literal}
+</pre>
+</p>
+
+<p>
+  only once during the build. The three jobs corresponding to the three genrules are submitted
   synchronously to the single worker process.
 </p>
 
 <p>
   Note that the <code>id</code> values in the messages are not necessarily increasing or sequential,
-  but they have to match between the request message and the response message of a given job as
+  but they do have to match between the request message and the response message of a given job as
   well as in the initial handshake.
 </p>
 
