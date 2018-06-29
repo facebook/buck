@@ -654,7 +654,7 @@ public class BuildCommand extends AbstractCommand {
                 OUT_LONG_ARG,
                 loneTarget);
 
-        ProjectFilesystem projectFilesystem = rule.getProjectFilesystem();
+        ProjectFilesystem projectFilesystem = params.getCell().getFilesystem();
         SourcePathResolver pathResolver =
             DefaultSourcePathResolver.from(
                 new SourcePathRuleFinder(
