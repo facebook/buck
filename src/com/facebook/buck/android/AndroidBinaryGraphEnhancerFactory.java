@@ -16,8 +16,6 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.android.AndroidBinary.PackageType;
-import com.facebook.buck.android.AndroidBinary.RelinkerMode;
 import com.facebook.buck.android.FilterResourcesSteps.ResourceFilter;
 import com.facebook.buck.android.apkmodule.APKModuleGraph;
 import com.facebook.buck.android.exopackage.ExopackageMode;

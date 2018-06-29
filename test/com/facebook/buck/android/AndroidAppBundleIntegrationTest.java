@@ -64,11 +64,11 @@ public class AndroidAppBundleIntegrationTest extends AbiCompilationModeTest {
     result.assertSuccess();
 
     // Iterate over each of the entries, expecting to see all zeros in the time fields.
-    Path apk =
+    Path aab =
         workspace.getPath(
             BuildTargets.getGenPath(filesystem, BuildTargetFactory.newInstance(target), "%s.apk"));
     Date dosEpoch = new Date(ZipUtil.dosToJavaTime(ZipConstants.DOS_FAKE_TIME));
-    try (ZipInputStream is = new ZipInputStream(Files.newInputStream(apk))) {
+    try (ZipInputStream is = new ZipInputStream(Files.newInputStream(aab))) {
       for (ZipEntry entry = is.getNextEntry(); entry != null; entry = is.getNextEntry()) {
         assertThat(entry.getName(), new Date(entry.getTime()), Matchers.equalTo(dosEpoch));
       }

@@ -47,14 +47,14 @@ class AndroidBinaryInstallGraphEnhancer {
 
   private ProjectFilesystem projectFilesystem;
   private BuildTarget buildTarget;
-  private AndroidBinary androidBinary;
+  private HasInstallableApk androidBinary;
   private AndroidInstallConfig androidInstallConfig;
 
   AndroidBinaryInstallGraphEnhancer(
       AndroidInstallConfig androidInstallConfig,
       ProjectFilesystem projectFilesystem,
       BuildTarget buildTarget,
-      AndroidBinary androidBinary) {
+      HasInstallableApk androidBinary) {
     this.projectFilesystem = projectFilesystem;
     this.buildTarget = buildTarget.withFlavors(INSTALL_FLAVOR);
     this.androidBinary = androidBinary;

@@ -38,18 +38,18 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.util.EnumSet;
 import java.util.Optional;
 
-public class AndroidBinaryFactory {
+public class AndroidBundleFactory {
 
   private static final Flavor ANDROID_MODULARITY_VERIFICATION_FLAVOR =
       InternalFlavor.of("modularity_verification");
 
   private final AndroidBuckConfig androidBuckConfig;
 
-  public AndroidBinaryFactory(AndroidBuckConfig androidBuckConfig) {
+  public AndroidBundleFactory(AndroidBuckConfig androidBuckConfig) {
     this.androidBuckConfig = androidBuckConfig;
   }
 
-  public AndroidBinary create(
+  public AndroidBundle create(
       ToolchainProvider toolchainProvider,
       ProjectFilesystem projectFilesystem,
       ActionGraphBuilder graphBuilder,
@@ -62,7 +62,7 @@ public class AndroidBinaryFactory {
       ResourceFilter resourceFilter,
       ImmutableSortedSet<JavaLibrary> rulesToExcludeFromDex,
       ApkConfig apkConfig,
-      AndroidBinaryDescriptionArg args) {
+      AndroidBundleDescriptionArg args) {
 
     BuildRule keystore = graphBuilder.getRule(args.getKeystore());
     if (!(keystore instanceof Keystore)) {
@@ -101,7 +101,7 @@ public class AndroidBinaryFactory {
       moduleVerification = Optional.empty();
     }
 
-    return new AndroidBinary(
+    return new AndroidBundle(
         buildTarget,
         projectFilesystem,
         toolchainProvider.getByName(AndroidSdkLocation.DEFAULT_NAME, AndroidSdkLocation.class),

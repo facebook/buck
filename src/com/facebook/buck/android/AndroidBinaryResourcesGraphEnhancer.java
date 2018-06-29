@@ -76,7 +76,7 @@ class AndroidBinaryResourcesGraphEnhancer {
   private final BuildTarget buildTarget;
   private final ProjectFilesystem projectFilesystem;
   private final ActionGraphBuilder graphBuilder;
-  private final AndroidBinary.AaptMode aaptMode;
+  private final AaptMode aaptMode;
   private final Optional<SourcePath> rawManifest;
   private final Optional<SourcePath> manifestSkeleton;
   private final Optional<SourcePath> moduleManifestSkeleton;
@@ -105,7 +105,7 @@ class AndroidBinaryResourcesGraphEnhancer {
       Optional<SourcePath> rawManifest,
       Optional<SourcePath> manifestSkeleton,
       Optional<SourcePath> moduleManifestSkeleton,
-      AndroidBinary.AaptMode aaptMode,
+      AaptMode aaptMode,
       FilterResourcesSteps.ResourceFilter resourceFilter,
       ResourcesFilter.ResourceCompressionMode resourceCompressionMode,
       ImmutableSet<String> locales,

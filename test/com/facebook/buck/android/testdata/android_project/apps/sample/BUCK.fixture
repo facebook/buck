@@ -8,7 +8,7 @@ android_binary(
     ],
 )
 
-android_binary(
+android_bundle(
     name = "app_bundle",
     keystore = "//keystores:debug",
     manifest = "AndroidManifest.xml",

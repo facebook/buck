@@ -102,7 +102,7 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
             /* nativeLibraryMergeMap */ Optional.empty(),
             /* nativeLibraryMergeGlue */ Optional.empty(),
             Optional.empty(),
-            AndroidBinary.RelinkerMode.DISABLED,
+            RelinkerMode.DISABLED,
             ImmutableList.of(),
             apkModuleGraph);
 
@@ -183,7 +183,7 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
             /* nativeLibraryMergeMap */ Optional.empty(),
             /* nativeLibraryMergeGlue */ Optional.empty(),
             Optional.empty(),
-            AndroidBinary.RelinkerMode.DISABLED,
+            RelinkerMode.DISABLED,
             ImmutableList.of(),
             apkModuleGraph);
 
@@ -257,7 +257,7 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
             /* nativeLibraryMergeMap */ Optional.empty(),
             /* nativeLibraryMergeGlue */ Optional.empty(),
             Optional.empty(),
-            AndroidBinary.RelinkerMode.DISABLED,
+            RelinkerMode.DISABLED,
             ImmutableList.of(),
             apkModuleGraph);
 
@@ -304,7 +304,7 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
             /* nativeLibraryMergeMap */ Optional.empty(),
             /* nativeLibraryMergeGlue */ Optional.empty(),
             Optional.empty(),
-            AndroidBinary.RelinkerMode.DISABLED,
+            RelinkerMode.DISABLED,
             ImmutableList.of(),
             apkModuleGraph);
 
@@ -390,7 +390,7 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
             /* nativeLibraryMergeMap */ Optional.empty(),
             /* nativeLibraryMergeGlue */ Optional.empty(),
             Optional.empty(),
-            AndroidBinary.RelinkerMode.DISABLED,
+            RelinkerMode.DISABLED,
             ImmutableList.of(),
             apkModuleGraph);
 

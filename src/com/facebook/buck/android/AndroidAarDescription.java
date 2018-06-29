@@ -204,7 +204,7 @@ public class AndroidAarDescription implements DescriptionWithTargetGraph<Android
           AndroidBinaryGraphEnhancer.addBuildConfigDeps(
               buildTarget,
               projectFilesystem,
-              AndroidBinary.PackageType.RELEASE,
+              PackageType.RELEASE,
               EnumSet.noneOf(ExopackageMode.class),
               args.getBuildConfigValues(),
               Optional.empty(),
@@ -237,7 +237,7 @@ public class AndroidAarDescription implements DescriptionWithTargetGraph<Android
             /* nativeLibraryMergeMap */ Optional.empty(),
             /* nativeLibraryMergeGlue */ Optional.empty(),
             Optional.empty(),
-            AndroidBinary.RelinkerMode.DISABLED,
+            RelinkerMode.DISABLED,
             ImmutableList.of(),
             apkModuleGraph);
     Optional<ImmutableMap<APKModule, CopyNativeLibraries>> nativeLibrariesOptional =

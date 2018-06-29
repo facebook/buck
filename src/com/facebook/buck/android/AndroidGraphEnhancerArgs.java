@@ -102,8 +102,8 @@ public interface AndroidGraphEnhancerArgs extends HasDuplicateAndroidResourceTyp
   }
 
   @Value.Default
-  default AndroidBinary.AaptMode getAaptMode() {
-    return AndroidBinary.AaptMode.AAPT1;
+  default AaptMode getAaptMode() {
+    return AaptMode.AAPT1;
   }
 
   @Value.Default

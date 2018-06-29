@@ -78,7 +78,7 @@ import java.util.stream.Stream;
  * )
  * </pre>
  */
-public class AndroidBinary extends AbstractBuildRule
+public class AndroidBundle extends AbstractBuildRule
     implements SupportsInputBasedRuleKey,
         HasDeclaredAndExtraDeps,
         HasClasspathEntries,
@@ -117,7 +117,7 @@ public class AndroidBinary extends AbstractBuildRule
   @AddToRuleKey private final AndroidBinaryBuildable buildable;
 
   // TODO(cjhopman): What's the difference between shouldProguard and skipProguard?
-  AndroidBinary(
+  AndroidBundle(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       AndroidSdkLocation androidSdkLocation,

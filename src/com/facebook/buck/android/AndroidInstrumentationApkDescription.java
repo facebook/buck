@@ -18,7 +18,6 @@ package com.facebook.buck.android;
 
 import static com.facebook.buck.jvm.java.JavaLibraryClasspathProvider.getClasspathDeps;
 
-import com.facebook.buck.android.AndroidBinary.PackageType;
 import com.facebook.buck.android.ResourcesFilter.ResourceCompressionMode;
 import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
 import com.facebook.buck.android.apkmodule.APKModuleGraph;
@@ -207,7 +206,7 @@ public class AndroidInstrumentationApkDescription
             /* nativeLibraryMergeCodeGenerator */ Optional.empty(),
             /* nativeLibraryProguardConfigGenerator */ Optional.empty(),
             Optional.empty(),
-            AndroidBinary.RelinkerMode.DISABLED,
+            RelinkerMode.DISABLED,
             ImmutableList.of(),
             dxExecutorService,
             apkUnderTest.getManifestEntries(),
@@ -251,8 +250,8 @@ public class AndroidInstrumentationApkDescription
     BuildTarget getApk();
 
     @Value.Default
-    default AndroidBinary.AaptMode getAaptMode() {
-      return AndroidBinary.AaptMode.AAPT1;
+    default AaptMode getAaptMode() {
+      return AaptMode.AAPT1;
     }
 
     @Value.Default

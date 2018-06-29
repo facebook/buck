@@ -16,9 +16,6 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.android.AndroidBinary.AaptMode;
-import com.facebook.buck.android.AndroidBinary.PackageType;
-import com.facebook.buck.android.AndroidBinary.RelinkerMode;
 import com.facebook.buck.android.FilterResourcesSteps.ResourceFilter;
 import com.facebook.buck.android.ResourcesFilter.ResourceCompressionMode;
 import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
@@ -554,7 +551,7 @@ public class AndroidBinaryGraphEnhancer {
                 BuildConfigFields.Field.of(
                     "boolean",
                     BuildConfigs.DEBUG_CONSTANT,
-                    String.valueOf(packageType != AndroidBinary.PackageType.RELEASE)),
+                    String.valueOf(packageType != PackageType.RELEASE)),
                 BuildConfigFields.Field.of(
                     "boolean",
                     BuildConfigs.IS_EXO_CONSTANT,
