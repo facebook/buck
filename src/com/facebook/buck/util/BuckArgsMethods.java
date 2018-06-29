@@ -49,7 +49,10 @@ public class BuckArgsMethods {
   }
 
   private static Iterable<String> getArgsFromTextFile(Path argsPath) throws IOException {
-    return Files.readAllLines(argsPath, Charsets.UTF_8);
+    return Files.readAllLines(argsPath, Charsets.UTF_8)
+        .stream()
+        .filter(line -> !line.isEmpty())
+        .collect(ImmutableList.toImmutableList());
   }
 
   private static Iterable<String> getArgsFromPythonFile(Path argsPath, String suffix)
@@ -61,7 +64,7 @@ public class BuckArgsMethods {
     try (InputStream input = proc.getInputStream();
         OutputStream output = proc.getOutputStream();
         BufferedReader reader = new BufferedReader(new InputStreamReader(input, Charsets.UTF_8))) {
-      return reader.lines().collect(Collectors.toList());
+      return reader.lines().filter(line -> !line.isEmpty()).collect(Collectors.toList());
     }
   }
 
