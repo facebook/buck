@@ -217,6 +217,26 @@ public class NdkCxxPlatformTest {
   }
 
   @Test
+  public void testClangVersion10() {
+    assertEquals("3.5", NdkCxxPlatforms.getDefaultClangVersionForNdk("10.1.2977051"));
+  }
+
+  @Test
+  public void testClangVersion14() {
+    assertEquals("3.8", NdkCxxPlatforms.getDefaultClangVersionForNdk("14.1.2977051"));
+  }
+
+  @Test
+  public void testClangVersion16() {
+    assertEquals("5.0", NdkCxxPlatforms.getDefaultClangVersionForNdk("16.1.2977051"));
+  }
+
+  @Test
+  public void testClangVersion17() {
+    assertEquals("6.0.2", NdkCxxPlatforms.getDefaultClangVersionForNdk("17.1.2977051"));
+  }
+
+  @Test
   public void testNdkFlags() throws IOException {
     ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
     Path ndkRoot = tmp.newFolder("android-ndk-r10b");

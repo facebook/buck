@@ -174,10 +174,13 @@ public class NdkCxxPlatforms {
     int ndkMajorVersion = getNdkMajorVersion(ndkVersion);
     if (ndkMajorVersion < 11) {
       return "3.5";
-    } else if (ndkMajorVersion >= 15) {
+    } else if (ndkMajorVersion < 15) {
+      return "3.8";
+    } else if (ndkMajorVersion < 17) {
       return "5.0";
+    } else {
+      return "6.0.2";
     }
-    return "3.8";
   }
 
   public static boolean isSupportedConfiguration(Path ndkRoot, NdkCxxRuntime cxxRuntime) {
