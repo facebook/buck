@@ -30,6 +30,7 @@ import com.facebook.buck.android.toolchain.ndk.impl.AndroidNdkHelper;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
+import com.facebook.buck.util.VersionStringComparator;
 import java.nio.file.Paths;
 import java.util.Optional;
 
@@ -43,6 +44,24 @@ public class AssumeAndroidPlatform {
     Optional<AndroidNdk> androidNdk = AndroidNdkHelper.detectAndroidNdk(projectFilesystem);
 
     assumeTrue(androidNdk.isPresent());
+  }
+
+  public static void assumeArchIsAvailable(String arch) {
+    if ("arm".equals(arch)) {
+      assumeArmIsAvailable();
+    }
+  }
+
+  public static void assumeArmIsAvailable() {
+    ProjectFilesystem projectFilesystem =
+        TestProjectFilesystems.createProjectFilesystem(Paths.get(".").toAbsolutePath());
+    Optional<AndroidNdk> androidNdk = AndroidNdkHelper.detectAndroidNdk(projectFilesystem);
+
+    assumeTrue(androidNdk.isPresent());
+
+    VersionStringComparator comparator = new VersionStringComparator();
+
+    assumeTrue(comparator.compare(androidNdk.get().getNdkVersion(), "17") < 0);
   }
 
   public static void assumeSdkIsAvailable() throws InterruptedException {

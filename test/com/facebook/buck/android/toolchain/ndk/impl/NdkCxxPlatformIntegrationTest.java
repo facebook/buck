@@ -108,6 +108,7 @@ public class NdkCxxPlatformIntegrationTest {
   @Before
   public void setUp() throws InterruptedException {
     AssumeAndroidPlatform.assumeNdkIsAvailable();
+    AssumeAndroidPlatform.assumeArchIsAvailable(arch);
   }
 
   @Test
