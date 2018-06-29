@@ -171,7 +171,7 @@ public class AndroidPackageableCollectorTest {
                 NdkCxxPlatformsProvider.of(NdkLibraryBuilder.NDK_PLATFORMS))
             .withToolchain(
                 AndroidNdk.DEFAULT_NAME,
-                AndroidNdk.of("12b", Paths.get("/android/ndk"), new ExecutableFinder()))
+                AndroidNdk.of("12b", Paths.get("/android/ndk"), false, new ExecutableFinder()))
             .withToolchain(
                 AndroidPlatformTarget.DEFAULT_NAME, TestAndroidPlatformTargetFactory.create())
             .withToolchain(TestNdkCxxPlatformsProviderFactory.createDefaultNdkPlatformsProvider())

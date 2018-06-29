@@ -96,7 +96,7 @@ public class NdkLibraryBuilder
             NdkCxxPlatformsProvider.DEFAULT_NAME, NdkCxxPlatformsProvider.of(NDK_PLATFORMS))
         .withToolchain(
             AndroidNdk.DEFAULT_NAME,
-            AndroidNdk.of("12b", Paths.get("/android/ndk"), new ExecutableFinder()))
+            AndroidNdk.of("12b", Paths.get("/android/ndk"), false, new ExecutableFinder()))
         .build();
   }
 

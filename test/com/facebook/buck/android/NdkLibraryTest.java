@@ -70,7 +70,10 @@ public class NdkLibraryTest {
             .withToolchain(
                 AndroidNdk.DEFAULT_NAME,
                 AndroidNdk.of(
-                    "1", androidNdk, new FakeExecutableFinder(androidNdk.resolve("ndk-build"))))
+                    "1",
+                    androidNdk,
+                    false,
+                    new FakeExecutableFinder(androidNdk.resolve("ndk-build"))))
             .withToolchain(TestNdkCxxPlatformsProviderFactory.createDefaultNdkPlatformsProvider())
             .build();
 

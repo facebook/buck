@@ -23,7 +23,11 @@ import com.facebook.buck.toolchain.ToolchainCreationContext;
 import com.facebook.buck.toolchain.ToolchainFactory;
 import com.facebook.buck.toolchain.ToolchainInstantiationException;
 import com.facebook.buck.toolchain.ToolchainProvider;
+import com.facebook.buck.util.VersionStringComparator;
 import com.facebook.buck.util.environment.Platform;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableMap;
+import java.nio.file.FileSystem;
 import java.nio.file.Path;
 import java.util.Optional;
 
@@ -37,7 +41,7 @@ public class AndroidNdkFactory implements ToolchainFactory<AndroidNdk> {
         new AndroidBuckConfig(context.getBuckConfig(), Platform.detect());
 
     AndroidNdkResolver ndkResolver =
-        new AndroidNdkResolver(
+        createAndroidNdkResolver(
             context.getFilesystem().getRootPath().getFileSystem(),
             context.getEnvironment(),
             androidBuckConfig);
@@ -50,11 +54,20 @@ public class AndroidNdkFactory implements ToolchainFactory<AndroidNdk> {
       throw new ToolchainInstantiationException(e, e.getHumanReadableErrorMessage());
     }
 
+    String ndkVersion = detectNdkVersion(androidBuckConfig, ndkResolver);
+    VersionStringComparator versionComparator = new VersionStringComparator();
+    boolean escapeCFlags = versionComparator.compare(ndkVersion, "16") >= 0;
+
     return Optional.of(
-        AndroidNdk.of(
-            detectNdkVersion(androidBuckConfig, ndkResolver),
-            ndkRoot,
-            context.getExecutableFinder()));
+        AndroidNdk.of(ndkVersion, ndkRoot, escapeCFlags, context.getExecutableFinder()));
+  }
+
+  @VisibleForTesting
+  AndroidNdkResolver createAndroidNdkResolver(
+      FileSystem filesystem,
+      ImmutableMap<String, String> environment,
+      AndroidBuckConfig androidBuckConfig) {
+    return new AndroidNdkResolver(filesystem, environment, androidBuckConfig);
   }
 
   private String detectNdkVersion(

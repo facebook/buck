@@ -91,7 +91,8 @@ public class NdkLibraryDescription implements DescriptionWithTargetGraph<NdkLibr
     return NdkLibraryDescriptionArg.class;
   }
 
-  private Iterable<String> escapeForMakefile(ProjectFilesystem filesystem, Iterable<String> args) {
+  private Iterable<String> escapeForMakefile(
+      ProjectFilesystem filesystem, boolean escapeInQuotes, Iterable<String> args) {
     ImmutableList.Builder<String> escapedArgs = ImmutableList.builder();
 
     for (String arg : args) {
@@ -103,9 +104,19 @@ public class NdkLibraryDescription implements DescriptionWithTargetGraph<NdkLibr
       // including the initial escaping.  Since the makefiles eventually hand-off these values
       // to the shell, we first perform bash escaping.
       //
+      // Additionally to that Android NDK 16 has a fix that changes the escaping logic for some of
+      // the flags, but not for all of them. This means some flags needs to be escaped with the old
+      // logic (4 escapes) while other flags must be escaped using a simpler approach.
+      // Github issue with the fix: https://github.com/android-ndk/ndk/issues/161
+
       escapedArg = Escaper.escapeAsShellString(escapedArg);
-      for (int i = 0; i < 4; i++) {
-        escapedArg = Escaper.escapeAsMakefileValueString(escapedArg);
+
+      if (escapeInQuotes) {
+        escapedArg = Escaper.escapeWithQuotesAsMakefileValueString(escapedArg);
+      } else {
+        for (int i = 0; i < 4; i++) {
+          escapedArg = Escaper.escapeAsMakefileValueString(escapedArg);
+        }
       }
 
       // We run ndk-build from the root of the NDK, so fixup paths that use the relative path to
@@ -163,6 +174,7 @@ public class NdkLibraryDescription implements DescriptionWithTargetGraph<NdkLibr
     NdkCxxPlatformsProvider ndkCxxPlatformsProvider =
         toolchainProvider.getByName(
             NdkCxxPlatformsProvider.DEFAULT_NAME, NdkCxxPlatformsProvider.class);
+    AndroidNdk androidNdk = toolchainProvider.getByName(AndroidNdk.DEFAULT_NAME, AndroidNdk.class);
 
     for (Map.Entry<TargetCpuType, NdkCxxPlatform> entry :
         ndkCxxPlatformsProvider.getNdkCxxPlatforms().entrySet()) {
@@ -191,7 +203,12 @@ public class NdkLibraryDescription implements DescriptionWithTargetGraph<NdkLibr
           CxxHeaders.getArgs(
               cxxPreprocessorInput.getIncludes(), pathResolver, Optional.empty(), preprocessor));
       String localCflags =
-          Joiner.on(' ').join(escapeForMakefile(projectFilesystem, ppFlags.build()));
+          Joiner.on(' ')
+              .join(
+                  escapeForMakefile(
+                      projectFilesystem,
+                      androidNdk.shouldEscapeCFlagsInDoubleQuotes(),
+                      ppFlags.build()));
 
       // Collect the native linkable input for all C/C++ library deps.  We search *through* other
       // NDK library rules.
@@ -219,6 +236,7 @@ public class NdkLibraryDescription implements DescriptionWithTargetGraph<NdkLibr
               .join(
                   escapeForMakefile(
                       projectFilesystem,
+                      false,
                       Arg.stringify(nativeLinkableInput.getArgs(), pathResolver)));
 
       // Write the relevant lines to the generated makefile.

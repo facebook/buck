@@ -597,7 +597,7 @@ public class GenruleTest {
         new ToolchainProviderBuilder()
             .withToolchain(AndroidPlatformTarget.DEFAULT_NAME, android)
             .withToolchain(
-                AndroidNdk.DEFAULT_NAME, AndroidNdk.of("12", ndkDir, new ExecutableFinder()))
+                AndroidNdk.DEFAULT_NAME, AndroidNdk.of("12", ndkDir, false, new ExecutableFinder()))
             .withToolchain(AndroidSdkLocation.DEFAULT_NAME, AndroidSdkLocation.of(sdkDir))
             .build();
     Genrule genrule =

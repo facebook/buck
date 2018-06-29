@@ -271,6 +271,15 @@ public final class Escaper {
     return escapeAsMakefileString("#", str);
   }
 
+  /** @return quoted string if it contains at least one character that needs to be escaped */
+  public static String escapeWithQuotesAsMakefileValueString(String str) {
+    String result = escapeAsMakefileValueString(str);
+    if (str.indexOf('#') != -1) {
+      result = Quoter.DOUBLE.quote(result);
+    }
+    return result;
+  }
+
   /**
    * Escapes forward slashes in a Path as a String that is safe to consume with other tools (such as
    * gcc). On Unix systems, this is equivalent to {@link java.nio.file.Path Path.toString()}.

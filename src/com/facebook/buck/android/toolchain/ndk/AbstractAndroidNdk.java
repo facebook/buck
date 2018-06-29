@@ -37,6 +37,10 @@ public abstract class AbstractAndroidNdk implements ComparableToolchain {
   @Value.Parameter
   public abstract Path getNdkRootPath();
 
+  /** Escaping logic can be different and depends on the version of Android NDK. */
+  @Value.Parameter
+  public abstract boolean shouldEscapeCFlagsInDoubleQuotes();
+
   @Value.Parameter
   @Value.Auxiliary
   protected abstract ExecutableFinder getExecutableFinder();

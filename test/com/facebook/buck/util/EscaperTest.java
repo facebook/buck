@@ -85,6 +85,16 @@ public class EscaperTest {
   }
 
   @Test
+  public void testEscapeWithQuotesAsMakefileValueStringDoesNothingWithoutSpecialCharacters() {
+    assertEquals("hello world", Escaper.escapeWithQuotesAsMakefileValueString("hello world"));
+  }
+
+  @Test
+  public void testEscapeWithQuotesAsMakefileValueStringEscapesWithSpecialCharacters() {
+    assertEquals("\"hello\\#world\"", Escaper.escapeWithQuotesAsMakefileValueString("hello#world"));
+  }
+
+  @Test
   public void testEscapePathForCIncludeStringWindows() {
     assumeThat(File.separatorChar, equalTo('\\'));
 
