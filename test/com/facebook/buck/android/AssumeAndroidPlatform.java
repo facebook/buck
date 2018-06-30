@@ -64,6 +64,18 @@ public class AssumeAndroidPlatform {
     assumeTrue(comparator.compare(androidNdk.get().getNdkVersion(), "17") < 0);
   }
 
+  public static void assumeUnifiedHeadersAvailable() {
+    ProjectFilesystem projectFilesystem =
+        TestProjectFilesystems.createProjectFilesystem(Paths.get(".").toAbsolutePath());
+    Optional<AndroidNdk> androidNdk = AndroidNdkHelper.detectAndroidNdk(projectFilesystem);
+
+    assumeTrue(androidNdk.isPresent());
+
+    VersionStringComparator comparator = new VersionStringComparator();
+
+    assumeTrue(comparator.compare(androidNdk.get().getNdkVersion(), "14") >= 0);
+  }
+
   public static void assumeSdkIsAvailable() throws InterruptedException {
     try {
       assumeNotNull(getAndroidSdkLocation().getSdkRootPath());

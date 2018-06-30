@@ -230,4 +230,13 @@ public class AndroidBinaryCxxIntegrationTest extends AbiCompilationModeTest {
     zipInspector.assertFileExists("lib/x86/libnative_cxx_x86-only.so");
     zipInspector.assertFileExists("lib/x86/libgnustl_shared.so");
   }
+
+  @Test
+  public void testCxxLibraryDepWithUnifiedHeaders() throws IOException {
+    AssumeAndroidPlatform.assumeUnifiedHeadersAvailable();
+
+    String target = "//apps/sample:app_cxx_lib_dep";
+    workspace.addBuckConfigLocalOption("nkd", "use_unified_headers", "true");
+    workspace.runBuckCommand("build", target).assertSuccess();
+  }
 }

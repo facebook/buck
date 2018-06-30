@@ -26,9 +26,9 @@
 -isystem
 @ANDROID_NDK_ROOT@/toolchains/x86-gcc-version/prebuilt/@BUILD_HOST@/lib/gcc/i686-linux-android/gcc-version/include
 -isystem
-@ANDROID_NDK_ROOT@/platforms/target-app-platform/arch-x86/usr/include
+@ANDROID_NDK_ROOT@/platforms/android-16/arch-x86/usr/include
 -isystem
-@ANDROID_NDK_ROOT@/platforms/target-app-platform/arch-x86/usr/include/linux
+@ANDROID_NDK_ROOT@/platforms/android-16/arch-x86/usr/include/linux
 -nostdinc
 -DNDEBUG
 -DANDROID
@@ -83,9 +83,9 @@
 -isystem
 @ANDROID_NDK_ROOT@/toolchains/x86-gcc-version/prebuilt/@BUILD_HOST@/lib/gcc/i686-linux-android/gcc-version/include
 -isystem
-@ANDROID_NDK_ROOT@/platforms/target-app-platform/arch-x86/usr/include
+@ANDROID_NDK_ROOT@/platforms/android-16/arch-x86/usr/include
 -isystem
-@ANDROID_NDK_ROOT@/platforms/target-app-platform/arch-x86/usr/include/linux
+@ANDROID_NDK_ROOT@/platforms/android-16/arch-x86/usr/include/linux
 -nostdinc
 -DNDEBUG
 -DANDROID

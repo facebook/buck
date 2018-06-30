@@ -28,6 +28,11 @@ abstract class AbstractNdkCxxPlatformTargetConfiguration {
 
   public abstract String getTargetAppPlatform();
 
+  @Value.Derived
+  public int getTargetAppPlatformLevel() {
+    return Integer.parseInt(getTargetAppPlatform().substring("android-".length()));
+  }
+
   public abstract NdkCxxPlatformCompiler getCompiler();
 
   @Value.Derived
