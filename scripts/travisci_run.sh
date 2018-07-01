@@ -9,7 +9,7 @@ ant
 
 # Use Buck to build first because its output is more
 # conducive to diagnosing failed builds than Ant's is.
-./bin/buck build buck || { cat buck-out/log/ant.log; exit 1; }
+./bin/buck build buck || { cat buck-out/log/buck-0.log; exit 1; }
 
 # There are only two cores in the containers, but Buck thinks there are 12
 # and tries to use all of them.  As a result, we seem to have our test
