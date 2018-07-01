@@ -9,7 +9,7 @@ ant
 
 # Use Buck to build first because its output is more
 # conducive to diagnosing failed builds than Ant's is.
-./bin/buck build buck || { cat buck-out/log/ant.log; exit 1; }
+./bin/buck build buck || { cat buck-out/log/buck-0.log; exit 1; }
 
 # There are only two cores in the containers, but Buck thinks there are 12
 # and tries to use all of them.  As a result, we seem to have our test
@@ -34,7 +34,7 @@ if [ "$CI_ACTION" = "heavy_integration" ]; then
   ./bin/buck test  --num-threads=1 //test/com/facebook/buck/android/... //test/com/facebook/buck/jvm/java/... --filter '.*[Ii]ntegration.*'
 fi
 
-if [ "$CI_ACTION" = "android_ndk_15" ] || [ "$CI_ACTION" = "android_ndk_16" ]; then
+if [ "$CI_ACTION" = "android_ndk_15" ] || [ "$CI_ACTION" = "android_ndk_16" ] || [ "$CI_ACTION" = "android_ndk_17" ]; then
   ./bin/buck build --num-threads=$BUCK_NUM_THREADS //test/com/facebook/buck/android/...
   ./bin/buck test  --num-threads=1 //test/com/facebook/buck/android/... --filter '.*[Ii]ntegration.*'
 fi
