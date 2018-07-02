@@ -13,7 +13,6 @@
   xctool_zip_target = //third-party/ios/xctool:xctool-minimal-zip
 
 [ndk]
-  ndk_version = r10e
   app_platform = android-21
 
 [android]
