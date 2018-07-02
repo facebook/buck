@@ -1,19 +1,29 @@
-load("//tools/build_rules:java_rules.bzl", "standard_java_test")
+load("//tools/build_rules:java_rules.bzl", "java_test")
+
+GUAVA_TESTS_SRCS = [
+    "GuavaRuleKeyHasherTest.java",
+]
+
+COMMON_TEST_SRCS = [
+    "CommonRuleKeyHasherTest.java",
+]
 
 java_library(
     name = "testutil",
     srcs = glob(
         ["*.java"],
         exclude = [
-            "*Benchmark.java",
             "*Test.java",
         ],
-    ),
+    ) + COMMON_TEST_SRCS,
     exported_deps = [
         "//src/com/facebook/buck/rules/keys:keys",
+        "//src/com/facebook/buck/util/types:types",
         "//test/com/facebook/buck/testutil:testutil",
     ],
-    visibility = ["//test/..."],
+    visibility = [
+        "//test/...",
+    ],
     deps = [
         "//src/com/facebook/buck/android:utils",
         "//src/com/facebook/buck/config:config",
@@ -49,6 +59,7 @@ java_library(
         "//src/com/facebook/buck/util/versioncontrol:versioncontrol",
         "//src/com/facebook/buck/versions:types",
         "//src/com/facebook/buck/worker:worker_process",
+        "//test/com/facebook/buck/model:testutil",
         "//test/com/facebook/buck/rules/keys/config:testutil",
         "//third-party/java/guava:guava",
         "//third-party/java/immutables:immutables",
@@ -58,12 +69,17 @@ java_library(
         "//third-party/java/jackson:jackson-databind",
         "//third-party/java/jna:jna",
         "//third-party/java/jsr:jsr305",
+        "//third-party/java/junit:junit",
     ],
 )
 
-standard_java_test(
+java_test(
     name = "keys",
-    with_test_data = True,
+    srcs = glob(
+        ["*Test.java"],
+        exclude = GUAVA_TESTS_SRCS + COMMON_TEST_SRCS,
+    ),
+    resources = glob(["testdata/**"]),
     deps = [
         "//src-gen:thrift",
         "//src/com/facebook/buck/android:helpers",
@@ -198,5 +214,16 @@ standard_java_test(
         "//third-party/java/okio:okio",
         "//third-party/java/stringtemplate:stringtemplate",
         "//third-party/java/thrift:libthrift",
+    ],
+)
+
+java_test(
+    name = "keys-guava",
+    srcs = GUAVA_TESTS_SRCS,
+    deps = [
+        ":testutil",
+        "//src/com/facebook/buck/rules/keys:keys",
+        "//third-party/java/guava:guava",
+        "//third-party/java/junit:junit",
     ],
 )
