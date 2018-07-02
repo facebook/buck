@@ -8,16 +8,16 @@
       <root url="jar://$PROJECT_DIR$/third-party/java/jsr/jsr305.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/easymock/easymock-3.3.1.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/args4j/args4j-2.0.30.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/guava/guava-23.3-jre.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/caliper/caliper-1.0-all.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/jackson/jackson-core-2.7.8.jar!/" />
-      <root url="jar://$PROJECT_DIR$/third-party/java/guava/guava-25.0-jre.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES>
       <root url="jar://$PROJECT_DIR$/third-party/java/junit/junit-4.12-sources.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/jsr/jsr305.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/args4j/args4j-2.0.30-sources.jar!/" />
-      <root url="jar://$PROJECT_DIR$/third-party/java/guava/guava-25.0-jre-sources.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/guava/guava-23.3-jre-sources.jar!/" />
     </SOURCES>
   </library>
 </component>

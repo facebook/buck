@@ -156,7 +156,7 @@
     <include name="errorprone/error_prone_annotations-2.0.19.jar" />
     <include name="fastutil/fastutil-7.2.0.jar" />
     <include name="guava/guava-20.0.jar" />
-    <include name="guava/guava-25.0-jre.jar" />
+    <include name="guava/guava-23.3-jre.jar" />
     <include name="grpc/grpc-context-1.11.0.jar" />
     <include name="grpc/grpc-core-1.10.1.jar" />
     <include name="grpc/grpc-netty-1.10.1.jar" />
@@ -303,7 +303,7 @@
   <fileset dir="${third-party.dir}/java" id="testrunner.jars">
     <include name="android/ddmlib-25.3.0.jar" />
     <include name="guava/guava-20.0.jar" />
-    <include name="guava/guava-25.0-jre.jar" />
+    <include name="guava/guava-23.3-jre.jar" />
     <include name="guice/guice-3.0.jar" />
     <include name="jsr/javax.inject-1.jar" />
     <include name="jsr/jsr305.jar" />
@@ -674,7 +674,7 @@
   </target>
 
   <fileset dir="${third-party.dir}/java" id="dx.jars">
-    <include name="guava/guava-25.0-jre.jar" />
+    <include name="guava/guava-23.3-jre.jar" />
   </fileset>
 
   <path id="dx.classpath">
@@ -702,7 +702,7 @@
     </javac>
 
     <jar destfile="${build.dir}/dx.jar">
-      <zipfileset includes="**/*.class" src="${third-party.dir}/java/guava/guava-25.0-jre.jar"/>
+      <zipfileset includes="**/*.class" src="${third-party.dir}/java/guava/guava-23.3-jre.jar"/>
       <zipfileset includes="**/*.class" src="${third-party.dir}/java/junit/junit-4.12.jar" />
       <fileset dir="${dx.classes.dir}" />
       <manifest>
@@ -768,7 +768,7 @@
       <zipfileset includes="**/*.class" src="${third-party.dir}/java/asm/asm-tree-6.0.jar" />
       <zipfileset includes="**/*.class" src="${third-party.dir}/java/asm/asm-util-6.0.jar" />
       <zipfileset includes="**/*.class" src="${third-party.dir}/java/asm/asm-xml-6.0.jar" />
-      <zipfileset includes="**/*.class" src="${third-party.dir}/java/guava/guava-25.0-jre.jar"/>
+      <zipfileset includes="**/*.class" src="${third-party.dir}/java/guava/guava-23.3-jre.jar"/>
       <fileset dir="${classes.dir}">
           <include name="com/facebook/buck/jvm/java/coverage/ReportGenerator.class"/>
       </fileset>
@@ -780,7 +780,7 @@
 
   <path id="pmd-classpath">
     <fileset dir="${basedir}/pmd" includes="*.jar" />
-    <pathelement location="${third-party.dir}/java/guava/guava-25.0-jre.jar" />
+    <pathelement location="${third-party.dir}/java/guava/guava-23.3-jre.jar" />
   </path>
 
   <!--

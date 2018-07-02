@@ -34,7 +34,7 @@ third-party/java/errorprone/error_prone_annotations-2.0.19.jar
 third-party/java/fastutil/fastutil-7.2.0.jar
 third-party/java/gson/gson-2.8.2.jar
 third-party/java/guava/guava-20.0.jar
-third-party/java/guava/guava-25.0-jre.jar
+third-party/java/guava/guava-23.3-jre.jar
 third-party/java/guice/guice-3.0.jar
 third-party/java/guice/guice-assistedinject-3.0.jar
 third-party/java/guice/guice-multibindings-3.0.jar
