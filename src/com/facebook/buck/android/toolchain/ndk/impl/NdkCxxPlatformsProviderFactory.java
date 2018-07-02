@@ -26,6 +26,7 @@ import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.toolchain.ToolchainCreationContext;
 import com.facebook.buck.toolchain.ToolchainFactory;
+import com.facebook.buck.toolchain.ToolchainInstantiationException;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableMap;
@@ -59,7 +60,11 @@ public class NdkCxxPlatformsProviderFactory implements ToolchainFactory<NdkCxxPl
       ndkVersion = androidNdk.getNdkVersion();
     }
 
-    return NdkCxxPlatforms.getPlatforms(
-        cxxBuckConfig, androidConfig, filesystem, platform, toolchainProvider, ndkVersion);
+    try {
+      return NdkCxxPlatforms.getPlatforms(
+          cxxBuckConfig, androidConfig, filesystem, platform, toolchainProvider, ndkVersion);
+    } catch (AssertionError e) {
+      throw new ToolchainInstantiationException(e, e.getMessage());
+    }
   }
 }
