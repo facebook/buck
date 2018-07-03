@@ -16,48 +16,30 @@
 
 package com.facebook.buck.core.build.engine.buildinfo;
 
-import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.artifact_cache.ArtifactCache;
-import com.facebook.buck.artifact_cache.ArtifactInfo;
-import com.facebook.buck.artifact_cache.NoopArtifactCache;
-import com.facebook.buck.artifact_cache.config.CacheReadMode;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.rulekey.RuleKey;
-import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.DefaultBuckEventBus;
-import com.facebook.buck.io.file.BorrowablePath;
 import com.facebook.buck.io.file.MorePathsForTests;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.TemporaryPaths;
-import com.facebook.buck.testutil.ZipArchive;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.FileHashCacheMode;
 import com.facebook.buck.util.cache.impl.DefaultFileHashCache;
 import com.facebook.buck.util.cache.impl.StackedFileHashCache;
 import com.facebook.buck.util.timing.DefaultClock;
-import com.facebook.buck.util.timing.FakeClock;
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
-import com.google.common.util.concurrent.Futures;
-import com.google.common.util.concurrent.ListenableFuture;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.concurrent.atomic.AtomicBoolean;
-import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -133,79 +115,6 @@ public class BuildInfoRecorderTest {
 
     BuildInfoRecorder buildInfoRecorder = createBuildInfoRecorder(filesystem);
     buildInfoRecorder.recordArtifact(absPath);
-  }
-
-  @Test
-  public void testPerformUploadToArtifactCache() throws IOException {
-
-    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
-    BuildInfoRecorder buildInfoRecorder = createBuildInfoRecorder(filesystem);
-    BuckEventBus bus = new DefaultBuckEventBus(FakeClock.doNotCare(), new BuildId("BUILD"));
-
-    byte[] contents = "contents".getBytes();
-
-    Path file = Paths.get("file");
-    filesystem.writeBytesToPath(contents, file);
-    buildInfoRecorder.recordArtifact(file);
-
-    Path dir = Paths.get("dir");
-    filesystem.mkdirs(dir);
-    filesystem.writeBytesToPath(contents, dir.resolve("file"));
-    buildInfoRecorder.recordArtifact(dir);
-
-    // Record some metadata.
-    buildInfoRecorder.addMetadata("metadata", "metadata");
-
-    // Record some build metadata.
-    buildInfoRecorder.addBuildMetadata("build-metadata", "build-metadata");
-
-    buildInfoRecorder.writeMetadataToDisk(true);
-
-    AtomicBoolean stored = new AtomicBoolean(false);
-    ArtifactCache cache =
-        new NoopArtifactCache() {
-          @Override
-          public CacheReadMode getCacheReadMode() {
-            return CacheReadMode.READWRITE;
-          }
-
-          @Override
-          public ListenableFuture<Void> store(ArtifactInfo info, BorrowablePath output) {
-            stored.set(true);
-
-            // Verify the build metadata.
-            assertThat(
-                info.getMetadata().get("build-metadata"), Matchers.equalTo("build-metadata"));
-
-            // Verify zip contents
-            try (ZipArchive zip = new ZipArchive(output.getPath(), /* forWriting */ false)) {
-              assertEquals(
-                  ImmutableSet.of(
-                      "",
-                      "dir/",
-                      "buck-out/",
-                      "buck-out/bin/",
-                      "buck-out/bin/foo/",
-                      "buck-out/bin/foo/.bar/",
-                      "buck-out/bin/foo/.bar/metadata/",
-                      "buck-out/bin/foo/.bar/metadata/artifact/"),
-                  zip.getDirNames());
-              assertEquals(
-                  ImmutableSet.of(
-                      "dir/file", "file", "buck-out/bin/foo/.bar/metadata/artifact/metadata"),
-                  zip.getFileNames());
-              assertArrayEquals(contents, zip.readFully("file"));
-              assertArrayEquals(contents, zip.readFully("dir/file"));
-            } catch (IOException e) {
-              Throwables.throwIfUnchecked(e);
-              throw new RuntimeException(e);
-            }
-            return Futures.immediateFuture(null);
-          }
-        };
-
-    buildInfoRecorder.performUploadToArtifactCache(ImmutableSet.of(new RuleKey("aa")), cache, bus);
-    assertTrue(stored.get());
   }
 
   @Test

@@ -16,17 +16,11 @@
 
 package com.facebook.buck.core.build.engine.buildinfo;
 
-import com.facebook.buck.artifact_cache.ArtifactCache;
-import com.facebook.buck.artifact_cache.ArtifactUploader;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.rulekey.RuleKey;
-import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.collect.SortedSets;
-import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.facebook.buck.util.timing.Clock;
 import com.google.common.annotations.VisibleForTesting;
@@ -42,8 +36,6 @@ import com.google.common.collect.Sets;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
-import com.google.common.util.concurrent.Futures;
-import com.google.common.util.concurrent.ListenableFuture;
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Path;
@@ -66,8 +58,6 @@ import javax.annotation.Nullable;
  * build by an {@link OnDiskBuildInfo}.
  */
 public class BuildInfoRecorder {
-  @SuppressWarnings("unused")
-  private static final Logger LOG = Logger.get(BuildInfoRecorder.class);
 
   @VisibleForTesting
   static final String ABSOLUTE_PATH_ERROR_FORMAT =
@@ -180,10 +170,6 @@ public class BuildInfoRecorder {
     return this;
   }
 
-  public BuildInfoRecorder addBuildMetadata(String key, ImmutableMap<String, String> value) {
-    return addBuildMetadata(key, toJson(value));
-  }
-
   /**
    * This key/value pair is stored in memory until {@link #writeMetadataToDisk(boolean)} is invoked.
    */
@@ -231,11 +217,6 @@ public class BuildInfoRecorder {
     return SortedSets.union(getRecordedMetadataFiles(), getRecordedOutputDirsAndFiles());
   }
 
-  /** @return the outputs paths as recorded by the rule. */
-  public ImmutableSortedSet<Path> getOutputPaths() {
-    return ImmutableSortedSet.copyOf(pathsToOutputs);
-  }
-
   public ImmutableSortedSet<Path> getRecordedPaths() {
     return ImmutableSortedSet.<Path>naturalOrder()
         .addAll(getRecordedMetadataFiles())
@@ -259,36 +240,6 @@ public class BuildInfoRecorder {
       }
     }
     return size;
-  }
-
-  /**
-   * Creates a zip file of the metadata and recorded artifacts and stores it in the artifact cache.
-   */
-  public ListenableFuture<Void> performUploadToArtifactCache(
-      ImmutableSet<RuleKey> ruleKeys, ArtifactCache artifactCache, BuckEventBus eventBus) {
-    // Skip all of this if caching is disabled. Although artifactCache.store() will be a noop,
-    // building up the zip is wasted I/O.
-    if (!artifactCache.getCacheReadMode().isWritable()) {
-      return Futures.immediateFuture(null);
-    }
-
-    SortedSet<Path> pathsToIncludeInZip;
-    try {
-      pathsToIncludeInZip = getRecordedDirsAndFiles();
-    } catch (IOException e) {
-      throw new BuckUncheckedExecutionException(
-          e, "When creating getting recorded paths for %s.", buildTarget);
-    }
-
-    ImmutableMap<String, String> buildMetadata = getBuildMetadata();
-    return ArtifactUploader.performUploadToArtifactCache(
-        ruleKeys,
-        artifactCache,
-        eventBus,
-        buildMetadata,
-        pathsToIncludeInZip,
-        buildTarget,
-        projectFilesystem);
   }
 
   /** @param pathToArtifact Relative path to the project root. */
