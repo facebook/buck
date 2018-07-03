@@ -194,7 +194,16 @@ public class DefaultOnDiskBuildInfo implements OnDiskBuildInfo {
 
   @Override
   public ImmutableSortedMap<String, String> getMetadataForArtifact() throws IOException {
-    return ImmutableSortedMap.copyOf(buildInfoStore.getAllMetadata(buildTarget));
+    ImmutableSortedMap<String, String> metadata =
+        ImmutableSortedMap.copyOf(buildInfoStore.getAllMetadata(buildTarget));
+
+    Preconditions.checkState(
+        metadata.containsKey(BuildInfo.MetadataKey.ORIGIN_BUILD_ID),
+        "Cache artifact for build target %s is missing metadata %s.",
+        buildTarget,
+        BuildInfo.MetadataKey.ORIGIN_BUILD_ID);
+
+    return metadata;
   }
 
   @Override

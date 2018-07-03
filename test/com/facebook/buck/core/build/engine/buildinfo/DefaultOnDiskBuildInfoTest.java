@@ -29,9 +29,14 @@ import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.Optional;
 import org.hamcrest.Matchers;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 public class DefaultOnDiskBuildInfoTest {
+
+  @Rule public ExpectedException thrown = ExpectedException.none();
+
   @Test
   public void whenMetadataEmptyStringThenGetValueReturnsEmptyString() throws IOException {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
@@ -187,5 +192,24 @@ public class DefaultOnDiskBuildInfoTest {
     assertThat(
         onDiskBuildInfo.getRuleKey(BuildInfo.MetadataKey.RULE_KEY),
         Matchers.equalTo(Optional.empty()));
+  }
+
+  @Test
+  public void testGetMetadataForArtifactRequiresOriginBuildId() throws IOException {
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
+    projectFilesystem.writeContentsToPath(
+        "Not A Valid Rule Key",
+        Paths.get("buck-out/bin/foo/bar/.baz/metadata/build", BuildInfo.MetadataKey.RULE_KEY));
+
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo/bar:baz");
+    DefaultOnDiskBuildInfo onDiskBuildInfo =
+        new DefaultOnDiskBuildInfo(
+            buildTarget, projectFilesystem, new FilesystemBuildInfoStore(projectFilesystem));
+
+    thrown.expect(IllegalStateException.class);
+    thrown.expectMessage(
+        "Cache artifact for build target //foo/bar:baz is missing metadata ORIGIN_BUILD_ID");
+
+    onDiskBuildInfo.getMetadataForArtifact();
   }
 }

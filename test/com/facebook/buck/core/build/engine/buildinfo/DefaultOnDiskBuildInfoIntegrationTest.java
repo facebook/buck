@@ -18,6 +18,7 @@ package com.facebook.buck.core.build.engine.buildinfo;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.core.build.engine.buildinfo.BuildInfo.MetadataKey;
 import com.facebook.buck.core.build.engine.type.MetadataStorage;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.model.BuildTarget;
@@ -118,6 +119,7 @@ public class DefaultOnDiskBuildInfoIntegrationTest {
             .stream()
             .map(Object::toString)
             .collect(ImmutableList.toImmutableList()));
+    recorder.addBuildMetadata(MetadataKey.ORIGIN_BUILD_ID, "build-id");
 
     recorder.writeMetadataToDisk(true);
 
@@ -146,6 +148,8 @@ public class DefaultOnDiskBuildInfoIntegrationTest {
         ImmutableSortedMap.of(
             BuildInfo.MetadataKey.ADDITIONAL_INFO,
             "build_id=cat,timestamp=1,artifact_data=null,",
+            MetadataKey.ORIGIN_BUILD_ID,
+            "build-id",
             "build_key0",
             "value0",
             "build_key1",
