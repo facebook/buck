@@ -247,11 +247,11 @@ public class CustomActiongGraphBuilderFactory {
   }
 
   // Graph structure:
-  // cacheable_a - - - - - - - - - build_locally_a - cacheable_d
-  //             \               /
-  //              uncachaeable_a
-  //             /
-  // cacheable_b - cacheable_c
+  // cacheable_a - cacheable_b - - - - - - - - - build_locally_a - cacheable_d
+  //                           \               /
+  //                            uncachaeable_a
+  //                           /
+  //               cacheable_c
   public static BuildRuleResolver createGraphWithBuildLocallyDep() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
 
@@ -266,18 +266,18 @@ public class CustomActiongGraphBuilderFactory {
     BuildRule uncacheableA =
         newUncacheableRule(
             graphBuilder, CustomActiongGraphBuilderFactory.UNCACHABLE_A, cacheableBuildLocallyA);
-    // cacheable_c
-    BuildRule cacheableC =
-        newCacheableRule(graphBuilder, CustomActiongGraphBuilderFactory.CACHABLE_C);
 
-    // cacheable_a, cacheable_b
-    newCacheableRule(
-        graphBuilder,
-        CustomActiongGraphBuilderFactory.CACHABLE_A,
-        uncacheableA,
-        cacheableBuildLocallyA);
-    newCacheableRule(
-        graphBuilder, CustomActiongGraphBuilderFactory.CACHABLE_B, uncacheableA, cacheableC);
+    // cacheable_b, cacheable_c
+    BuildRule cacheableB =
+        newCacheableRule(
+            graphBuilder,
+            CustomActiongGraphBuilderFactory.CACHABLE_B,
+            uncacheableA,
+            cacheableBuildLocallyA);
+    newCacheableRule(graphBuilder, CustomActiongGraphBuilderFactory.CACHABLE_C, uncacheableA);
+
+    // cacheable_a - cacheable_b
+    newCacheableRule(graphBuilder, CustomActiongGraphBuilderFactory.CACHABLE_A, cacheableB);
 
     return graphBuilder;
   }

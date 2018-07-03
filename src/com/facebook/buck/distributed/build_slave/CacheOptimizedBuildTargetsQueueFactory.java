@@ -112,7 +112,6 @@ public class CacheOptimizedBuildTargetsQueueFactory {
   private Queue<BuildRule> processTopLevelTargets(Iterable<BuildTarget> targetsToBuild) {
     return RichStream.from(targetsToBuild)
         .map(resolver::getRule)
-        .filter(this::doesRuleNeedToBeScheduled)
         .collect(Collectors.toCollection(LinkedList::new));
   }
 
