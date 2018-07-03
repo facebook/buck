@@ -17,7 +17,6 @@
 package com.facebook.buck.httpserver;
 
 import com.facebook.buck.core.build.event.BuildEvent;
-import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.test.event.IndividualTestEvent;
 import com.facebook.buck.core.test.event.TestRunEvent;
 import com.facebook.buck.distributed.DistBuildCreatedEvent;
@@ -42,9 +41,6 @@ public class WebServerBuckEventListener implements BuckEventListener {
   WebServerBuckEventListener(WebServer webServer) {
     this.streamingWebSocketServlet = webServer.getStreamingWebSocketServlet();
   }
-
-  @Override
-  public void outputTrace(BuildId buildId) {}
 
   @Subscribe
   public void parseStarted(ParseEvent.Started started) {

@@ -16,7 +16,6 @@
 
 package com.facebook.buck.event.listener;
 
-import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.counters.CounterRegistry;
 import com.facebook.buck.counters.IntegerCounter;
 import com.facebook.buck.counters.SamplingCounter;
@@ -120,11 +119,6 @@ public class LoadBalancerEventsListener implements BuckEventListener {
       }
       return Preconditions.checkNotNull(allServerCounters.get(server));
     }
-  }
-
-  @Override
-  public void outputTrace(BuildId buildId) {
-    // Nothing to do.
   }
 
   public static class ServerCounters {

@@ -93,7 +93,7 @@ public class HttpArtifactCacheEventListenerTest {
     Finished event = builder.build();
     event.configure(-1, -1, -1, -1, BUILD_ID);
     listener.onHttpArtifactCacheEvent(event);
-    listener.outputTrace(BUILD_ID);
+    listener.close();
     String actualLogLine = fetchLogger.getLogEntries().iterator().next();
     assertFalse(Strings.isNullOrEmpty(actualLogLine));
     assertTrue(actualLogLine.contains(errorMsg));

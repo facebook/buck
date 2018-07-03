@@ -29,7 +29,6 @@ import com.facebook.buck.artifact_cache.CacheResultType;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
 import com.facebook.buck.artifact_cache.config.ArtifactCacheMode;
 import com.facebook.buck.core.build.event.BuildRuleEvent;
-import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.CommandEvent;
 import com.facebook.buck.event.ParsingEvent;
@@ -233,7 +232,7 @@ public class MachineReadableLoggerListener implements BuckEventListener {
   }
 
   @Override
-  public void outputTrace(BuildId buildId) throws InterruptedException {
+  public void close() {
     // IMPORTANT: logging the ExitCode must happen on the executor, otherwise random
     // log lines will be overwritten as outputStream access is not thread safe.
 
@@ -272,10 +271,14 @@ public class MachineReadableLoggerListener implements BuckEventListener {
     executor.shutdown();
     // Allow SHUTDOWN_TIMEOUT_SECONDS seconds for already scheduled writeToLog calls
     // to complete.
-    if (!executor.awaitTermination(SHUTDOWN_TIMEOUT_SECONDS, TimeUnit.SECONDS)) {
-      String error =
-          "Machine readable log failed to complete all jobs within timeout during shutdown";
-      LOG.error(error);
+    try {
+      if (!executor.awaitTermination(SHUTDOWN_TIMEOUT_SECONDS, TimeUnit.SECONDS)) {
+        String error =
+            "Machine readable log failed to complete all jobs within timeout during shutdown";
+        LOG.error(error);
+      }
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
     }
   }
 }

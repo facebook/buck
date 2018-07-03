@@ -19,7 +19,6 @@ package com.facebook.buck.event.listener;
 import com.facebook.buck.core.build.event.BuildEvent;
 import com.facebook.buck.core.build.event.BuildRuleEvent;
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.eventbus.Subscribe;
@@ -121,11 +120,6 @@ public class JavaUtilsLoggingBuildListener implements BuckEventListener {
     LOG.log(record);
   }
 
-  @Override
-  public void outputTrace(BuildId buildId) {
-    closeLogFile();
-  }
-
   private static class BuildEventFormatter extends Formatter {
 
     private final ThreadLocal<SimpleDateFormat> dateFormat =
@@ -152,6 +146,11 @@ public class JavaUtilsLoggingBuildListener implements BuckEventListener {
 
       return builder.toString();
     }
+  }
+
+  @Override
+  public void close() {
+    closeLogFile();
   }
 
   public static void closeLogFile() {

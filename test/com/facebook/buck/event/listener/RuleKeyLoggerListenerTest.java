@@ -74,7 +74,7 @@ public class RuleKeyLoggerListenerTest {
   @Test
   public void testFileIsNotCreatedWithoutEvents() throws InterruptedException {
     RuleKeyLoggerListener listener = newInstance(1);
-    listener.outputTrace(info.getBuildId());
+    listener.close();
     Assert.assertFalse(Files.exists(listener.getLogFilePath()));
   }
 
@@ -82,7 +82,7 @@ public class RuleKeyLoggerListenerTest {
   public void testSendingHttpCacheEvent() throws InterruptedException, IOException {
     RuleKeyLoggerListener listener = newInstance(1);
     listener.onArtifactCacheEvent(createArtifactCacheEvent(CacheResultType.MISS));
-    listener.outputTrace(info.getBuildId());
+    listener.close();
     Assert.assertTrue(Files.exists(listener.getLogFilePath()));
     Assert.assertTrue(Files.size(listener.getLogFilePath()) > 0);
   }
@@ -91,7 +91,7 @@ public class RuleKeyLoggerListenerTest {
   public void testSendingInvalidHttpCacheEvent() throws InterruptedException {
     RuleKeyLoggerListener listener = newInstance(1);
     listener.onArtifactCacheEvent(createArtifactCacheEvent(CacheResultType.HIT));
-    listener.outputTrace(info.getBuildId());
+    listener.close();
     Assert.assertFalse(Files.exists(listener.getLogFilePath()));
   }
 
@@ -99,7 +99,7 @@ public class RuleKeyLoggerListenerTest {
   public void testSendingBuildEvent() throws InterruptedException, IOException {
     RuleKeyLoggerListener listener = newInstance(1);
     listener.onBuildRuleEvent(createBuildEvent());
-    listener.outputTrace(info.getBuildId());
+    listener.close();
     Assert.assertTrue(Files.exists(listener.getLogFilePath()));
     Assert.assertTrue(Files.size(listener.getLogFilePath()) > 0);
   }

@@ -16,14 +16,11 @@
 
 package com.facebook.buck.event;
 
-import com.facebook.buck.core.model.BuildId;
+import java.io.Closeable;
 import java.io.IOException;
 
-public interface BuckEventListener {
-  /**
-   * Output any trace data collected to the backing store.
-   *
-   * @param buildId for the trace to be written.
-   */
-  void outputTrace(BuildId buildId) throws IOException, InterruptedException;
+public interface BuckEventListener extends Closeable {
+  /** Cleanup, output any trace data collected to the backing store. */
+  @Override
+  default void close() throws IOException {}
 }

@@ -17,7 +17,6 @@
 package com.facebook.buck.event.listener;
 
 import com.facebook.buck.core.build.event.BuildRuleEvent;
-import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.rulekey.BuildRuleKeys;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rulekey.RuleKeyDiagnosticsMode;
@@ -109,11 +108,15 @@ public class RuleKeyDiagnosticsListener implements BuckEventListener {
   }
 
   @Override
-  public void outputTrace(BuildId buildId) throws InterruptedException {
+  public void close() {
     submitFlushDiagKeys();
     outputExecutor.execute(this::writeDiagGraph);
     outputExecutor.shutdown();
-    outputExecutor.awaitTermination(1, TimeUnit.HOURS);
+    try {
+      outputExecutor.awaitTermination(1, TimeUnit.HOURS);
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+    }
   }
 
   /** Diagnostic keys flushing logic. */

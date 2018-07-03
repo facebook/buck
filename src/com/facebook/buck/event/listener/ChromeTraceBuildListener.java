@@ -127,6 +127,8 @@ public class ChromeTraceBuildListener implements BuckEventListener {
 
   private final ExecutorService outputExecutor;
 
+  private final BuildId buildId;
+
   public ChromeTraceBuildListener(
       ProjectFilesystem projectFilesystem,
       InvocationInfo invocationInfo,
@@ -156,6 +158,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
     this.logDirectoryPath = invocationInfo.getLogDirectoryPath();
     this.projectFilesystem = projectFilesystem;
     this.clock = clock;
+    this.buildId = invocationInfo.getBuildId();
     this.dateFormat =
         new ThreadLocal<SimpleDateFormat>() {
           @Override
@@ -251,7 +254,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
   }
 
   @Override
-  public void outputTrace(BuildId buildId) throws IOException {
+  public void close() throws IOException {
     LOG.debug("Writing Chrome trace to %s", tracePath);
     outputExecutor.shutdown();
     try {
@@ -265,7 +268,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
     chromeTraceWriter.writeEnd();
     chromeTraceWriter.close();
     traceStream.close();
-    uploadTraceIfConfigured(buildId);
+    uploadTraceIfConfigured(this.buildId);
 
     String symlinkName = config.getCompressTraces() ? "build.trace.gz" : "build.trace";
     Path symlinkPath = projectFilesystem.getBuckPaths().getLogDir().resolve(symlinkName);

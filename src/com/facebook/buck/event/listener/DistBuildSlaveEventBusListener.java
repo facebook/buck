@@ -17,7 +17,6 @@ package com.facebook.buck.event.listener;
 
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
 import com.facebook.buck.core.build.event.BuildRuleEvent;
-import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.distributed.DistBuildMode;
 import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.DistBuildUtil;
@@ -172,9 +171,6 @@ public class DistBuildSlaveEventBusListener
   public void setDistBuildService(DistBuildService service) {
     this.distBuildService = service;
   }
-
-  @Override
-  public void outputTrace(BuildId buildId) {}
 
   @Override
   public void close() throws IOException {

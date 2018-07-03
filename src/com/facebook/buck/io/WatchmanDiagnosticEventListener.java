@@ -16,7 +16,6 @@
 
 package com.facebook.buck.io;
 
-import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.ConsoleEvent;
@@ -65,7 +64,4 @@ public class WatchmanDiagnosticEventListener implements BuckEventListener {
       LOG.verbose("Added duplicate diagnostic: %s", diagnostic);
     }
   }
-
-  @Override
-  public void outputTrace(BuildId buildId) {}
 }

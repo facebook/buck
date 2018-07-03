@@ -19,7 +19,6 @@ package com.facebook.buck.event.listener;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
 import com.facebook.buck.core.build.event.BuildEvent;
 import com.facebook.buck.core.build.event.BuildRuleEvent;
-import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.ActionGraphEvent;
@@ -159,9 +158,6 @@ public class PerfTimesEventListener implements BuckEventListener {
     buildPhasesLastEvent.set(event.getTimestamp());
     return diff;
   }
-
-  @Override
-  public void outputTrace(BuildId buildId) {}
 
   public static class PerfTimesEvent extends AbstractBuckEvent {
     private String eventName;

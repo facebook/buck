@@ -20,7 +20,6 @@ import com.facebook.buck.artifact_cache.ArtifactCacheEvent;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEventFetchData;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEventStoreData;
-import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.network.BatchingLogger;
@@ -52,7 +51,7 @@ public class HttpArtifactCacheEventListener implements BuckEventListener {
   }
 
   @Override
-  public void outputTrace(BuildId buildId) {
+  public void close() {
     List<ListenableFuture<Void>> futures = new ArrayList<>();
     futures.add(fetchRequestLogger.forceFlush());
     futures.add(storeRequestLogger.forceFlush());

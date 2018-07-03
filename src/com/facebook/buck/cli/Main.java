@@ -1216,7 +1216,7 @@ public final class Main {
           }
 
           // TODO(buck_team): refactor eventListeners for RAII
-          flushAndCloseEventListeners(console, buildId, eventListeners);
+          flushAndCloseEventListeners(console, eventListeners);
         }
       }
     }
@@ -1355,14 +1355,10 @@ public final class Main {
   }
 
   private void flushAndCloseEventListeners(
-      Console console, BuildId buildId, ImmutableList<BuckEventListener> eventListeners)
-      throws InterruptedException, IOException {
+      Console console, ImmutableList<BuckEventListener> eventListeners) throws IOException {
     for (BuckEventListener eventListener : eventListeners) {
       try {
-        eventListener.outputTrace(buildId);
-        if (eventListener instanceof Closeable) {
-          ((Closeable) eventListener).close();
-        }
+        eventListener.close();
       } catch (RuntimeException e) {
         PrintStream stdErr = console.getStdErr();
         stdErr.println("Ignoring non-fatal error!  The stack trace is below:");
@@ -1676,7 +1672,8 @@ public final class Main {
         new LogUploaderListener(
             chromeTraceConfig,
             invocationInfo.getLogFilePath(),
-            invocationInfo.getLogDirectoryPath()));
+            invocationInfo.getLogDirectoryPath(),
+            invocationInfo.getBuildId()));
     if (buckConfig.isRuleKeyLoggerEnabled()) {
       eventListenersBuilder.add(
           new RuleKeyLoggerListener(

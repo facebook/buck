@@ -16,7 +16,6 @@
 
 package com.facebook.buck.io;
 
-import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.event.BuckEventListener;
@@ -102,8 +101,5 @@ public class WatchmanDiagnosticEventListenerTest {
     public void on(ConsoleEvent event) {
       receivedEvents.add(event);
     }
-
-    @Override
-    public void outputTrace(BuildId buildId) {}
   }
 }

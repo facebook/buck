@@ -20,7 +20,6 @@ import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
 import com.facebook.buck.core.build.engine.BuildRuleStatus;
 import com.facebook.buck.core.build.event.BuildEvent;
 import com.facebook.buck.core.build.event.BuildRuleEvent;
-import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.distributed.DistBuildStatus;
 import com.facebook.buck.distributed.DistBuildStatusEvent;
@@ -58,7 +57,6 @@ import com.google.common.collect.Range;
 import com.google.common.collect.RangeSet;
 import com.google.common.collect.TreeRangeSet;
 import com.google.common.eventbus.Subscribe;
-import java.io.Closeable;
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
@@ -86,7 +84,7 @@ import javax.annotation.concurrent.GuardedBy;
  * Base class for {@link BuckEventListener}s responsible for outputting information about the
  * running build to {@code stderr}.
  */
-public abstract class AbstractConsoleEventBusListener implements BuckEventListener, Closeable {
+public abstract class AbstractConsoleEventBusListener implements BuckEventListener {
 
   private static final Logger LOG = Logger.get(AbstractConsoleEventBusListener.class);
 
@@ -924,9 +922,6 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
       lines.addAll(slowRulesLogs);
     }
   }
-
-  @Override
-  public void outputTrace(BuildId buildId) {}
 
   @Override
   public void close() throws IOException {

@@ -16,21 +16,19 @@
 
 package com.facebook.buck.event.listener;
 
-import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.test.event.IndividualTestEvent;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.google.common.eventbus.Subscribe;
 import java.io.BufferedWriter;
-import java.io.Closeable;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 
-public class FileSerializationEventBusListener implements BuckEventListener, Closeable {
+public class FileSerializationEventBusListener implements BuckEventListener {
 
   private final BufferedWriter bufferedWriter;
 
@@ -42,11 +40,6 @@ public class FileSerializationEventBusListener implements BuckEventListener, Clo
             StandardOpenOption.CREATE,
             StandardOpenOption.WRITE,
             StandardOpenOption.APPEND);
-  }
-
-  @Override
-  public void outputTrace(BuildId buildId) {
-    // Empty
   }
 
   @Subscribe

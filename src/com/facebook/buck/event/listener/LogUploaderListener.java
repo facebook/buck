@@ -35,17 +35,19 @@ public class LogUploaderListener implements BuckEventListener {
   private Optional<ExitCode> commandExitCode = Optional.empty();
   private final Path logFilePath;
   private final Path logDirectoryPath;
+  private final BuildId buildId;
 
   public LogUploaderListener(
-      ChromeTraceBuckConfig config, Path logFilePath, Path logDirectoryPath) {
+      ChromeTraceBuckConfig config, Path logFilePath, Path logDirectoryPath, BuildId buildId) {
     this.config = config;
     this.logFilePath = logFilePath;
     this.logDirectoryPath = logDirectoryPath;
+    this.buildId = buildId;
   }
 
   @Override
-  public synchronized void outputTrace(BuildId buildId) {
-    uploadLogIfConfigured(buildId);
+  public synchronized void close() {
+    uploadLogIfConfigured();
   }
 
   @Subscribe
@@ -58,7 +60,7 @@ public class LogUploaderListener implements BuckEventListener {
     commandExitCode = Optional.of(interrupted.getExitCode());
   }
 
-  private void uploadLogIfConfigured(BuildId buildId) {
+  private void uploadLogIfConfigured() {
     Optional<URI> traceUploadUri = config.getTraceUploadUri();
     if (!traceUploadUri.isPresent()
         || !config.getLogUploadMode().shouldUploadLogs(commandExitCode)) {

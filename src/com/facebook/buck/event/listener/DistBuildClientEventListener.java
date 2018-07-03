@@ -18,7 +18,6 @@ package com.facebook.buck.event.listener;
 import com.facebook.buck.artifact_cache.CacheResultType;
 import com.facebook.buck.artifact_cache.RuleKeyCacheResult;
 import com.facebook.buck.artifact_cache.RuleKeyCacheResultEvent;
-import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.distributed.DistBuildClientCacheResult;
 import com.facebook.buck.distributed.DistBuildClientCacheResultEvent;
 import com.facebook.buck.distributed.thrift.RuleKeyLogEntry;
@@ -28,15 +27,13 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.eventbus.Subscribe;
-import java.io.Closeable;
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public class DistBuildClientEventListener implements BuckEventListener, Closeable {
+public class DistBuildClientEventListener implements BuckEventListener {
   private final Set<String> firstLevelRuleKeys = Sets.newHashSet(); // i.e. the real rule key.
   private final Set<String> secondLevelContentKeys = Sets.newHashSet();
 
@@ -109,10 +106,4 @@ public class DistBuildClientEventListener implements BuckEventListener, Closeabl
     result.addAll(secondLevelContentKeys);
     return result;
   }
-
-  @Override
-  public void outputTrace(BuildId buildId) {}
-
-  @Override
-  public void close() throws IOException {}
 }

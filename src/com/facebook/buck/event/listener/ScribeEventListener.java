@@ -16,7 +16,6 @@
 
 package com.facebook.buck.event.listener;
 
-import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.log.Logger;
@@ -82,9 +81,6 @@ public class ScribeEventListener implements BuckEventListener {
           }
         });
   }
-
-  @Override
-  public void outputTrace(BuildId buildId) {}
 
   @Subscribe
   public void handle(BuckEvent event) {

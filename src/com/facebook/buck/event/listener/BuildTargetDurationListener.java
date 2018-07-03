@@ -17,7 +17,6 @@
 package com.facebook.buck.event.listener;
 
 import com.facebook.buck.core.build.event.BuildRuleEvent;
-import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.model.actiongraph.ActionGraph;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.test.rule.TestRule;
@@ -259,7 +258,7 @@ public class BuildTargetDurationListener implements BuckEventListener {
   }
 
   @Override
-  public synchronized void outputTrace(BuildId buildId) {
+  public synchronized void close() {
     SimpleTimeLimiter timeLimiter = SimpleTimeLimiter.create(executor);
     try {
       timeLimiter.runWithTimeout(

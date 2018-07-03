@@ -139,7 +139,7 @@ public class ChromeTraceBuildListenerTest {
 
     listener.writeChromeTraceEvent(
         "test", event.getEventName(), ChromeTraceEvent.Phase.BEGIN, ImmutableMap.of(), event);
-    listener.outputTrace(BUILD_ID);
+    listener.close();
 
     List<ChromeTraceEvent> originalResultList =
         ObjectMappers.readValue(
@@ -168,7 +168,7 @@ public class ChromeTraceBuildListenerTest {
         new ChromeTraceBuildListener(
             projectFilesystem, invocationInfo, FAKE_CLOCK, chromeTraceConfig(1, false));
     listener.writeChromeTraceMetadataEvent("test", ImmutableMap.of());
-    listener.outputTrace(BUILD_ID);
+    listener.close();
 
     List<ChromeTraceEvent> originalResultList =
         ObjectMappers.readValue(
@@ -210,7 +210,7 @@ public class ChromeTraceBuildListenerTest {
     event.configure(1, 1, 1, threadId, invocationInfo.getBuildId());
     listener.writeChromeTraceEvent("category", "name", Phase.METADATA, ImmutableMap.of(), event);
 
-    listener.outputTrace(new BuildId("BUILD_ID"));
+    listener.close();
 
     List<ChromeTraceEvent> originalResultList =
         ObjectMappers.readValue(
@@ -258,7 +258,7 @@ public class ChromeTraceBuildListenerTest {
             ManagementFactory.getThreadMXBean(),
             chromeTraceConfig(3, false));
 
-    listener.outputTrace(invocationInfo.getBuildId());
+    listener.close();
 
     ImmutableList<String> files =
         projectFilesystem
@@ -422,7 +422,7 @@ public class ChromeTraceBuildListenerTest {
 
     eventBus.post(BuildEvent.finished(buildEventStarted, ExitCode.SUCCESS));
     eventBus.post(CommandEvent.finished(commandEventStarted, /* exitCode */ ExitCode.SUCCESS));
-    listener.outputTrace(new BuildId("BUILD_ID"));
+    listener.close();
 
     List<ChromeTraceEvent> originalResultList =
         ObjectMappers.readValue(
@@ -675,7 +675,7 @@ public class ChromeTraceBuildListenerTest {
             TimeZone.getTimeZone("America/Los_Angeles"),
             ManagementFactory.getThreadMXBean(),
             chromeTraceConfig(3, false));
-    listener.outputTrace(invocationInfo.getBuildId());
+    listener.close();
   }
 
   @Test
@@ -692,7 +692,7 @@ public class ChromeTraceBuildListenerTest {
             TimeZone.getTimeZone("America/Los_Angeles"),
             ManagementFactory.getThreadMXBean(),
             chromeTraceConfig(1, false));
-    listener.outputTrace(invocationInfo.getBuildId());
+    listener.close();
     assertTrue(
         projectFilesystem.exists(
             Paths.get(EXPECTED_DIR + "build.2014-09-02.16-55-51.BUILD_ID.trace")));
@@ -712,7 +712,7 @@ public class ChromeTraceBuildListenerTest {
             TimeZone.getTimeZone("America/Los_Angeles"),
             ManagementFactory.getThreadMXBean(),
             chromeTraceConfig(1, true));
-    listener.outputTrace(invocationInfo.getBuildId());
+    listener.close();
 
     Path tracePath = Paths.get(EXPECTED_DIR + "build.2014-09-02.16-55-51.BUILD_ID.trace.gz");
 
