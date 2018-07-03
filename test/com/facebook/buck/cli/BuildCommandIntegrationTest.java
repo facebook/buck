@@ -39,6 +39,7 @@ import com.facebook.buck.testutil.integration.ZipInspector;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.ThriftRuleKeyDeserializer;
 import com.facebook.buck.util.environment.Platform;
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -176,6 +177,22 @@ public class BuildCommandIntegrationTest {
 
     ZipInspector zipInspector = new ZipInspector(output);
     zipInspector.assertFileExists("com/example/Example.class");
+  }
+
+  @Test
+  public void buckBuildAndCopyOutputFileIntoDirectoryWithBuildTargetThatSupportsIt()
+      throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "build_into", tmp);
+    workspace.setUp();
+
+    Path outputDir = tmp.newFolder("into-output");
+    assertEquals(0, outputDir.toFile().listFiles().length);
+    workspace.runBuckBuild("//:example", "--out", outputDir.toString());
+    assertTrue(outputDir.toFile().isDirectory());
+    File[] files = outputDir.toFile().listFiles();
+    assertEquals(1, files.length);
+    assertTrue(Files.isRegularFile(outputDir.resolve("example.jar")));
   }
 
   @Test
