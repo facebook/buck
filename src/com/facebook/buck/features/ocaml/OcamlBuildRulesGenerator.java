@@ -492,7 +492,6 @@ public class OcamlBuildRulesGenerator {
             projectFilesystem,
             compileParams,
             new OcamlMLCompileStep.Args(
-                projectFilesystem::resolve,
                 cCompiler.getEnvironment(pathResolver),
                 cCompiler.getCommandPrefix(pathResolver),
                 ocamlContext.getOcamlCompiler().get(),
@@ -572,7 +571,6 @@ public class OcamlBuildRulesGenerator {
             projectFilesystem,
             compileParams,
             new OcamlMLCompileStep.Args(
-                projectFilesystem::resolve,
                 cCompiler.getEnvironment(pathResolver),
                 cCompiler.getCommandPrefix(pathResolver),
                 ocamlContext.getOcamlBytecodeCompiler().get(),

@@ -329,7 +329,6 @@ public class OcamlBuildStep implements Step {
               workingDirectory,
               getResolver(),
               new OcamlMLCompileStep.Args(
-                  filesystem::resolve,
                   cCompilerEnvironment,
                   cCompiler,
                   ocamlContext.getOcamlCompiler().get(),
@@ -382,7 +381,6 @@ public class OcamlBuildStep implements Step {
               workingDirectory,
               getResolver(),
               new OcamlMLCompileStep.Args(
-                  filesystem::resolve,
                   cCompilerEnvironment,
                   cCompiler,
                   ocamlContext.getOcamlBytecodeCompiler().get(),

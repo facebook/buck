@@ -17,8 +17,8 @@
 package com.facebook.buck.features.ocaml;
 
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.rulekey.RuleKeyAppendable;
-import com.facebook.buck.core.rulekey.RuleKeyObjectSink;
+import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.rules.args.Arg;
@@ -31,27 +31,27 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
-import java.util.function.Function;
 
 /** A compilation step for .ml and .mli files */
 public class OcamlMLCompileStep extends ShellStep {
 
-  public static class Args implements RuleKeyAppendable {
+  public static class Args implements AddsToRuleKey {
 
-    private final Function<Path, Path> absolutifier;
     public final ImmutableMap<String, String> environment;
-    public final Tool ocamlCompiler;
-    public final ImmutableList<String> cCompiler;
-    public final ImmutableList<Arg> flags;
-    public final Optional<String> stdlib;
-    public final Path output;
-    public final Path input;
+    @AddToRuleKey final Tool ocamlCompiler;
+    @AddToRuleKey final ImmutableList<String> cCompiler;
+    @AddToRuleKey final ImmutableList<Arg> flags;
+    @AddToRuleKey final Optional<String> stdlib;
+
+    @AddToRuleKey(stringify = true)
+    final Path output;
+    // TODO (cjhopman): This should be a SourcePath
+    @AddToRuleKey(stringify = true)
+    final Path input;
 
     public Args(
-        Function<Path, Path> absolutifier,
         ImmutableMap<String, String> environment,
         ImmutableList<String> cCompiler,
         Tool ocamlCompiler,
@@ -59,7 +59,6 @@ public class OcamlMLCompileStep extends ShellStep {
         Path output,
         Path input,
         ImmutableList<Arg> flags) {
-      this.absolutifier = absolutifier;
       this.environment = environment;
       this.ocamlCompiler = ocamlCompiler;
       this.stdlib = stdlib;
@@ -67,20 +66,6 @@ public class OcamlMLCompileStep extends ShellStep {
       this.flags = flags;
       this.output = output;
       this.input = input;
-    }
-
-    @Override
-    public void appendToRuleKey(RuleKeyObjectSink sink) {
-      try {
-        sink.setReflectively("cCompiler", cCompiler)
-            .setReflectively("ocamlCompiler", ocamlCompiler)
-            .setReflectively("stdlib", stdlib)
-            .setReflectively("output", output.toString())
-            .setPath(absolutifier.apply(input), input)
-            .setReflectively("flags", flags);
-      } catch (IOException e) {
-        throw new RuntimeException(e);
-      }
     }
 
     public ImmutableSet<Path> getAllOutputs() {
