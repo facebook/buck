@@ -93,8 +93,8 @@ public class TestCaseSummariesBuildingXctoolEventHandlerTest {
               hasProperty("type", equalTo(ResultType.FAILURE)),
               hasProperty("time", equalTo(0L)),
               hasProperty("message", nullValue(String.class)),
-              hasProperty("stacktrace", containsString(
-                  "-[SomeTests testBacktraceOutputIsCaptured]")),
+              hasProperty(
+                  "stacktrace", containsString("-[SomeTests testBacktraceOutputIsCaptured]")),
               hasProperty("stdOut", containsString("-[SenTestCase performTest:]")),
               hasProperty("stdErr", nullValue(String.class)));
 
