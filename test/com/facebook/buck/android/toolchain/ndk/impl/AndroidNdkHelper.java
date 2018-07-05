@@ -108,7 +108,7 @@ public class AndroidNdkHelper {
                 NdkCxxPlatforms.DEFAULT_CXX_RUNTIME,
                 NdkCxxRuntimeType.DYNAMIC,
                 NdkCxxPlatforms.DEFAULT_TARGET_APP_PLATFORM,
-                NdkCxxPlatforms.DEFAULT_CPU_ABIS,
+                getDefaultCpuAbis(ndkVersion),
                 Platform.detect())
             .values();
     assertFalse(platforms.isEmpty());
@@ -217,5 +217,9 @@ public class AndroidNdkHelper {
       this.symbols = symbols;
       this.dtNeeded = dtNeeded;
     }
+  }
+
+  public static ImmutableSet<String> getDefaultCpuAbis(String ndkVersion) {
+    return NdkCxxPlatforms.getDefaultCpuAbis(ndkVersion);
   }
 }

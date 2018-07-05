@@ -66,7 +66,7 @@ public class SharedLibraryInterfacePlatforms {
             NdkCxxPlatforms.DEFAULT_CXX_RUNTIME,
             NdkCxxRuntimeType.DYNAMIC,
             NdkCxxPlatforms.DEFAULT_TARGET_APP_PLATFORM,
-            NdkCxxPlatforms.DEFAULT_CPU_ABIS,
+            AndroidNdkHelper.getDefaultCpuAbis(ndkVersion),
             Platform.detect());
     // Just return one of the NDK platforms, which should be enough to test shared library interface
     // functionality.

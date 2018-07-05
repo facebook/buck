@@ -188,7 +188,6 @@ android_binary(
 android_binary(
     name = "app_cxx_lib_dep",
     cpu_filters = [
-        "arm",
         "armv7",
         "x86",
     ],
@@ -211,11 +210,31 @@ android_binary(
 )
 
 android_binary(
+    name = "app_with_disguised_exe-16",
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifest.xml",
+    deps = [
+        "//native/mybinary/jni:mybinary-16",
+        "//res/com/sample/base:base",
+    ],
+)
+
+android_binary(
     name = "app_with_ndk_library",
     keystore = "//keystores:debug",
     manifest = "AndroidManifest.xml",
     deps = [
         "//native/fakenative/jni:fakenative",
+        "//res/com/sample/base:base",
+    ],
+)
+
+android_binary(
+    name = "app_with_ndk_library-16",
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifest.xml",
+    deps = [
+        "//native/fakenative/jni:fakenative-16",
         "//res/com/sample/base:base",
     ],
 )
@@ -254,7 +273,6 @@ android_binary(
         "//native/cxx:lib",
     ],
     cpu_filters = [
-        "arm",
         "armv7",
         "x86",
     ],
@@ -322,7 +340,6 @@ android_binary(
 android_binary(
     name = "app_no_cxx_deps",
     cpu_filters = [
-        "arm",
         "armv7",
         "x86",
     ],
@@ -392,6 +409,23 @@ android_binary(
 
 android_binary(
     name = "app_with_native_lib_proguard",
+    cpu_filters = [
+        "armv7",
+        "x86",
+    ],
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifest.xml",
+    native_library_proguard_config_generator = "//native/proguard_gen:generator",
+    package_type = "release",
+    proguard_config = "dontobfuscate.pro",
+    deps = [
+        "//native/cxx:lib",
+        "//res/com/sample/base:base",
+    ],
+)
+
+android_binary(
+    name = "app_with_native_lib_proguard-16",
     cpu_filters = [
         "arm",
         "armv7",

@@ -46,22 +46,22 @@ public class AssumeAndroidPlatform {
     assumeTrue(androidNdk.isPresent());
   }
 
-  public static void assumeArchIsAvailable(String arch) {
-    if ("arm".equals(arch)) {
-      assumeArmIsAvailable();
-    }
+  public static void assumeArmIsAvailable() {
+    assumeTrue(isArmAvailable());
   }
 
-  public static void assumeArmIsAvailable() {
+  public static boolean isArmAvailable() {
     ProjectFilesystem projectFilesystem =
         TestProjectFilesystems.createProjectFilesystem(Paths.get(".").toAbsolutePath());
     Optional<AndroidNdk> androidNdk = AndroidNdkHelper.detectAndroidNdk(projectFilesystem);
 
-    assumeTrue(androidNdk.isPresent());
+    if (!androidNdk.isPresent()) {
+      return false;
+    }
 
     VersionStringComparator comparator = new VersionStringComparator();
 
-    assumeTrue(comparator.compare(androidNdk.get().getNdkVersion(), "17") < 0);
+    return comparator.compare(androidNdk.get().getNdkVersion(), "17") < 0;
   }
 
   public static void assumeUnifiedHeadersAvailable() {

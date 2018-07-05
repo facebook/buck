@@ -8,3 +8,14 @@ ndk_library(
         "PUBLIC",
     ],
 )
+
+ndk_library(
+    name = "foo-16",
+    flags = [
+        "NDK_APPLICATION_MK=$(env PWD)/foo/Application-16.mk",
+    ],
+    is_asset = True,
+    visibility = [
+        "PUBLIC",
+    ],
+)

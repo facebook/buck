@@ -88,8 +88,6 @@ public class NdkCxxPlatforms {
 
   public static final NdkCompilerType DEFAULT_COMPILER_TYPE = NdkCompilerType.GCC;
   public static final String DEFAULT_TARGET_APP_PLATFORM = "android-16";
-  public static final ImmutableSet<String> DEFAULT_CPU_ABIS =
-      ImmutableSet.of("arm", "armv7", "x86");
   public static final NdkCxxRuntime DEFAULT_CXX_RUNTIME = NdkCxxRuntime.GNUSTL;
 
   private static final ImmutableMap<Platform, Host> BUILD_PLATFORMS =
@@ -228,8 +226,18 @@ public class NdkCxxPlatforms {
         androidConfig.getNdkCxxRuntime().orElse(NdkCxxPlatforms.DEFAULT_CXX_RUNTIME),
         androidConfig.getNdkCxxRuntimeType().orElse(NdkCxxRuntimeType.DYNAMIC),
         androidConfig.getNdkAppPlatform().orElse(NdkCxxPlatforms.DEFAULT_TARGET_APP_PLATFORM),
-        androidConfig.getNdkCpuAbis().orElse(NdkCxxPlatforms.DEFAULT_CPU_ABIS),
+        androidConfig.getNdkCpuAbis().orElseGet(() -> getDefaultCpuAbis(ndkVersion)),
         platform);
+  }
+
+  @VisibleForTesting
+  static ImmutableSet<String> getDefaultCpuAbis(String ndkVersion) {
+    int ndkMajorVersion = getNdkMajorVersion(ndkVersion);
+    if (ndkMajorVersion > 16) {
+      return ImmutableSet.of("armv7", "x86");
+    } else {
+      return ImmutableSet.of("arm", "armv7", "x86");
+    }
   }
 
   @VisibleForTesting

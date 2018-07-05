@@ -7,3 +7,13 @@ ndk_library(
         "PUBLIC",
     ],
 )
+
+ndk_library(
+    name = "bar-16",
+    flags = [
+        "NDK_APPLICATION_MK=$(env PWD)/bar/Application-16.mk",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+)

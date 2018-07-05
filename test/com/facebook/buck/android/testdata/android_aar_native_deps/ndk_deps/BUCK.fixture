@@ -19,3 +19,14 @@ android_aar(
         "//foo:foo",
     ],
 )
+
+android_aar(
+    name = "app-16",
+    manifest_skeleton = "AndroidManifest.xml",
+    deps = [
+        ":lib",
+        ":res",
+        "//bar:bar-16",
+        "//foo:foo-16",
+    ],
+)

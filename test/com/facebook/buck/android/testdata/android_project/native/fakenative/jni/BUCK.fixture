@@ -6,6 +6,14 @@ ndk_library(
     visibility = ["PUBLIC"],
 )
 
+ndk_library(
+    name = "fakenative-16",
+    flags = [
+        "NDK_APPLICATION_MK=$(env PWD)/native/fakenative/jni/Application-16.mk",
+    ],
+    visibility = ["PUBLIC"],
+)
+
 prebuilt_native_library(
     name = "prebuilt_native",
     is_asset = False,

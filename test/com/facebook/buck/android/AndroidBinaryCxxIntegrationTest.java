@@ -90,8 +90,6 @@ public class AndroidBinaryCxxIntegrationTest extends AbiCompilationModeTest {
             workspace.getPath(
                 BuildTargets.getGenPath(
                     filesystem, BuildTargetFactory.newInstance(target), "%s.apk")));
-    zipInspector.assertFileExists("lib/armeabi/libnative_cxx_lib.so");
-    zipInspector.assertFileExists("lib/armeabi/libgnustl_shared.so");
     zipInspector.assertFileExists("lib/armeabi-v7a/libnative_cxx_lib.so");
     zipInspector.assertFileExists("lib/armeabi-v7a/libgnustl_shared.so");
     zipInspector.assertFileExists("lib/x86/libnative_cxx_lib.so");
@@ -108,8 +106,6 @@ public class AndroidBinaryCxxIntegrationTest extends AbiCompilationModeTest {
             workspace.getPath(
                 BuildTargets.getGenPath(
                     filesystem, BuildTargetFactory.newInstance(target), "%s.apk")));
-    zipInspector.assertFileExists("lib/armeabi/libnative_cxx_lib.so");
-    zipInspector.assertFileDoesNotExist("lib/armeabi/libgnustl_shared.so");
     zipInspector.assertFileExists("lib/armeabi-v7a/libnative_cxx_lib.so");
     zipInspector.assertFileDoesNotExist("lib/armeabi-v7a/libgnustl_shared.so");
     zipInspector.assertFileExists("lib/x86/libnative_cxx_lib.so");
@@ -126,8 +122,6 @@ public class AndroidBinaryCxxIntegrationTest extends AbiCompilationModeTest {
             workspace.getPath(
                 BuildTargets.getGenPath(
                     filesystem, BuildTargetFactory.newInstance(target), "%s.apk")));
-    zipInspector.assertFileDoesNotExist("lib/armeabi/libnative_cxx_lib.so");
-    zipInspector.assertFileExists("lib/armeabi/libgnustl_shared.so");
     zipInspector.assertFileDoesNotExist("lib/armeabi-v7a/libnative_cxx_lib.so");
     zipInspector.assertFileExists("lib/armeabi-v7a/libgnustl_shared.so");
     zipInspector.assertFileDoesNotExist("lib/x86/libnative_cxx_lib.so");
@@ -149,8 +143,6 @@ public class AndroidBinaryCxxIntegrationTest extends AbiCompilationModeTest {
             workspace.getPath(
                 BuildTargets.getGenPath(
                     filesystem, BuildTargetFactory.newInstance(target), "%s.apk")));
-    zipInspector.assertFileExists("lib/armeabi/libnative_cxx_lib.so");
-    zipInspector.assertFileExists("lib/armeabi/libc++_shared.so");
     zipInspector.assertFileExists("lib/armeabi-v7a/libnative_cxx_lib.so");
     zipInspector.assertFileExists("lib/armeabi-v7a/libc++_shared.so");
     zipInspector.assertFileExists("lib/x86/libnative_cxx_lib.so");
@@ -167,7 +159,9 @@ public class AndroidBinaryCxxIntegrationTest extends AbiCompilationModeTest {
             workspace.getPath(
                 BuildTargets.getGenPath(
                     filesystem, BuildTargetFactory.newInstance(target), "%s.apk")));
-    zipInspector.assertFileExists("lib/armeabi/libnative_cxx_lib.so");
+    if (AssumeAndroidPlatform.isArmAvailable()) {
+      zipInspector.assertFileExists("lib/armeabi/libnative_cxx_lib.so");
+    }
     zipInspector.assertFileExists("lib/armeabi-v7a/libnative_cxx_lib.so");
     zipInspector.assertFileExists("lib/x86/libnative_cxx_lib.so");
   }
@@ -182,7 +176,6 @@ public class AndroidBinaryCxxIntegrationTest extends AbiCompilationModeTest {
             workspace.getPath(
                 BuildTargets.getGenPath(
                     filesystem, BuildTargetFactory.newInstance(target), "%s.apk")));
-    zipInspector.assertFileDoesNotExist("lib/armeabi/libgnustl_shared.so");
     zipInspector.assertFileDoesNotExist("lib/armeabi-v7a/libgnustl_shared.so");
     zipInspector.assertFileDoesNotExist("lib/x86/libgnustl_shared.so");
   }

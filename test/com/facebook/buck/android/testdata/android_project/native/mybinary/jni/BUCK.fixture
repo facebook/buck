@@ -5,3 +5,11 @@ ndk_library(
     ],
     visibility = ["PUBLIC"],
 )
+
+ndk_library(
+    name = "mybinary-16",
+    flags = [
+        "NDK_APPLICATION_MK=$(env PWD)/native/mybinary/jni/Application-16.mk",
+    ],
+    visibility = ["PUBLIC"],
+)

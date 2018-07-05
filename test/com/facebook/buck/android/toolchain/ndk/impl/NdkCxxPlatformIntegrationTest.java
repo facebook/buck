@@ -58,8 +58,13 @@ public class NdkCxxPlatformIntegrationTest {
 
   @Parameterized.Parameters(name = "{0},{1},{2}")
   public static Collection<Object[]> data() {
+    ImmutableList.Builder<String> architectures = ImmutableList.builder();
+    if (AssumeAndroidPlatform.isArmAvailable()) {
+      architectures.add("arm");
+    }
+    architectures.add("armv7", "arm64", "x86", "x86_64");
     List<Object[]> data = new ArrayList<>();
-    for (String arch : ImmutableList.of("arm", "armv7", "arm64", "x86", "x86_64")) {
+    for (String arch : architectures.build()) {
       data.add(new Object[] {NdkCompilerType.GCC, NdkCxxRuntime.GNUSTL, arch});
       // We don't support 64-bit clang yet.
       if (!arch.equals("arm64") && !arch.equals("x86_64")) {
@@ -81,18 +86,24 @@ public class NdkCxxPlatformIntegrationTest {
   @Rule public TemporaryPaths tmp = new TemporaryPaths("ndk-test", true);
   @Rule public TemporaryPaths tmp_long_pwd = new TemporaryPaths("ndk-test-long-pwd", true);
 
+  private String architectures;
+
   private ProjectWorkspace setupWorkspace(String name, TemporaryPaths tmp) throws IOException {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(this, name, tmp);
     workspace.setUp();
+
     workspace.writeContentsToPath(
         String.format(
             "[ndk]\n"
                 + "  compiler = %s\n"
                 + "  gcc_version = 4.9\n"
                 + "  cxx_runtime = %s\n"
-                + "  cpu_abis = arm, armv7, arm64, x86, x86_64\n"
+                + "  cpu_abis = "
+                + architectures
+                + "\n"
                 + "  app_platform = android-21\n",
-            compiler, cxxRuntime),
+            compiler,
+            cxxRuntime),
         ".buckconfig");
     return workspace;
   }
@@ -108,7 +119,11 @@ public class NdkCxxPlatformIntegrationTest {
   @Before
   public void setUp() throws InterruptedException {
     AssumeAndroidPlatform.assumeNdkIsAvailable();
-    AssumeAndroidPlatform.assumeArchIsAvailable(arch);
+    if (AssumeAndroidPlatform.isArmAvailable()) {
+      architectures = "arm, armv7, arm64, x86, x86_64";
+    } else {
+      architectures = "armv7, arm64, x86, x86_64";
+    }
   }
 
   @Test
@@ -150,7 +165,9 @@ public class NdkCxxPlatformIntegrationTest {
       throws InterruptedException, IOException {
     String buckConfig =
         "[ndk]\n"
-            + "  cpu_abis = arm, armv7, arm64, x86, x86_64\n"
+            + "  cpu_abis = "
+            + architectures
+            + "\n"
             + "  gcc_version = 4.9\n"
             + "  app_platform = android-21\n";
 
