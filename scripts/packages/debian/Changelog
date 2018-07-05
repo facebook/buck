@@ -1,14 +1,1 @@
-buck (2018.03.26) stable; urgency=low
-  * Skylark parser, stability and API improvements. See https://buckbuild.com
-buck (2018.02.16) stable; urgency=low
-  * Skylark parser and API improvements. See https://buckbuild.com
-
-buck (2017.11.16) stable; urgency=low
-  * Source based ABI computation for Android. See https://buckbuild.com
-
-buck (2017.07.24) stable; urgency=low
-  * See https://buckbuild.com
-
- -- Gaetano Checinski <gaetano@loopperfect.com>  Mon, 24 Jul 2017 15:00:00 +0100
-
-
+# This changelog intentionally left blank. This will be filled in by tools/release

@@ -4,7 +4,7 @@ Homepage: https://buckbuild.com
 Standards-Version: 3.9.2
 
 Package: buck
-Version: v2018.03.26.01
+Version: v<VERSION>
 Maintainer: team@buckaroo.pm
 Recommends: watchman, nailgun
 Depends: openjdk-8-jre, python2.7
@@ -12,5 +12,5 @@ Architecture: all
 Copyright: LICENSE
 Readme: README.md
 Changelog: Changelog
-Files: buck /usr/bin
+Files: buck /usr/local/bin
 Description: A fast build system that encourages the creation of small, reusable modules over a variety of platforms and languages. https://buckbuild.com

@@ -1,5 +1,7 @@
 FROM azul/zulu-openjdk:8
-ARG tag
+ARG version=
+ARG timestamp=
+ARG repository=facebook/buck
 RUN apt-get update
 RUN apt-get install -y --no-install-recommends curl ca-certificates \
       git pkg-config zip unzip \
@@ -13,12 +15,10 @@ RUN apt-get install -y --no-install-recommends curl ca-certificates \
       equivs && \
       apt-get clean
 
-RUN git clone --depth 1 https://github.com/facebook/buck.git src
+RUN git clone --branch v${version} --depth 1 https://github.com/${repository}.git src
 
 WORKDIR /src
 
-RUN git checkout tags/${tag}
-
 RUN ant
 
-RUN ./bin/buck build scripts/packages/debian --show-output
+RUN ./bin/buck build -c buck.release_version=${version} -c buck.release_timestamp=${timestamp} scripts/packages/debian --out /src/buck.deb

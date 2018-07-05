@@ -1,18 +1,31 @@
+load("//programs:defs.bzl", "get_release_version")
+
+version = get_release_version()
+
+export_file(name = "buck.equivs")
+
+genrule(
+    name = "update_version",
+    srcs = ["buck.equivs"],
+    out = "buck.equivs",
+    cmd = "sed -i 's,<VERSION>,v{},' $(location :buck.equivs) > $OUT".format(version),
+)
+
 genrule(
     name = "debian",
     srcs = [
         "Changelog",
-        "buck.equivs",
+        ":update_version",
         "//:LICENSE",
         "//:README",
     ],
-    out = "out",
+    out = "buck_{}_all.deb".format(version),
     cmd = " && ".join([
-        "mkdir -p $OUT",
-        "cp $SRCS $OUT",
-        "cp $(location //programs:buck) $OUT",
-        "cd $OUT",
-        "mv buck.pex buck",
+        "[ -n \"" + version + "\" ]",
+        "cd $TMP",
+        "cp $SRCDIR/* $TMP/",
+        "cp $(location //programs:buck) $TMP/buck",
         "equivs-build buck.equivs",
+        "mv *.deb $OUT",
     ]),
 )
