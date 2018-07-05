@@ -38,8 +38,12 @@ import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
+import com.facebook.buck.step.fs.SymlinkTreeStep;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Maps;
 import java.nio.file.Path;
 import java.util.Optional;
 
@@ -51,10 +55,10 @@ public class GoBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps implemen
   @AddToRuleKey private final ImmutableList<Arg> cxxLinkerArgs;
   @AddToRuleKey private final GoPlatform platform;
 
+  private final Path output;
   private final GoCompile mainObject;
   private final SymlinkTree linkTree;
-
-  private final Path output;
+  private final ImmutableSortedSet<SourcePath> resources;
 
   public GoBinary(
       BuildTarget buildTarget,
@@ -62,6 +66,7 @@ public class GoBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps implemen
       BuildRuleParams params,
       Optional<Linker> cxxLinker,
       ImmutableList<Arg> cxxLinkerArgs,
+      ImmutableSortedSet<SourcePath> resources,
       SymlinkTree linkTree,
       GoCompile mainObject,
       Tool linker,
@@ -70,6 +75,7 @@ public class GoBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps implemen
     super(buildTarget, projectFilesystem, params);
     this.cxxLinker = cxxLinker;
     this.cxxLinkerArgs = cxxLinkerArgs;
+    this.resources = resources;
     this.linker = linker;
     this.linkTree = linkTree;
     this.mainObject = mainObject;
@@ -78,6 +84,31 @@ public class GoBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps implemen
         BuildTargets.getGenPath(
             getProjectFilesystem(), buildTarget, "%s/" + buildTarget.getShortName());
     this.linkerFlags = linkerFlags;
+  }
+
+  private SymlinkTreeStep getResourceSymlinkTree(
+      BuildContext buildContext, Path outputDirectory, BuildableContext buildableContext) {
+
+    resources.forEach(
+        pth ->
+            buildableContext.recordArtifact(
+                buildContext.getSourcePathResolver().getRelativePath(getProjectFilesystem(), pth)));
+
+    return new SymlinkTreeStep(
+        "go_binary",
+        getProjectFilesystem(),
+        outputDirectory,
+        ImmutableMap.copyOf(
+            FluentIterable.from(resources)
+                .transform(
+                    input ->
+                        Maps.immutableEntry(
+                            getProjectFilesystem()
+                                .getPath(
+                                    buildContext
+                                        .getSourcePathResolver()
+                                        .getSourcePathName(getBuildTarget(), input)),
+                            buildContext.getSourcePathResolver().getAbsolutePath(input)))));
   }
 
   @Override
@@ -107,6 +138,10 @@ public class GoBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps implemen
         MkdirStep.of(
             BuildCellRelativePath.fromCellRelativePath(
                 context.getBuildCellRootPath(), getProjectFilesystem(), output.getParent())));
+
+    // symlink resources to target directory
+    steps.addAll(
+        ImmutableList.of(getResourceSymlinkTree(context, output.getParent(), buildableContext)));
 
     // cxxLinkerArgs comes from cgo rules and are reuqired for cxx deps linking
     ImmutableList.Builder<String> allLinkerFlags = ImmutableList.builder();

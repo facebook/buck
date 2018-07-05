@@ -20,7 +20,6 @@ import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.description.BuildRuleParams;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
@@ -85,7 +84,6 @@ public class GoTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final Optional<Long> testRuleTimeoutMs;
   private final ImmutableSet<String> contacts;
   private final boolean runTestsSeparately;
-  private final boolean createResourcesSymlinkTree;
   private final ImmutableSortedSet<SourcePath> resources;
   private final Mode coverageMode;
 
@@ -98,7 +96,6 @@ public class GoTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
       ImmutableSet<String> contacts,
       Optional<Long> testRuleTimeoutMs,
       boolean runTestsSeparately,
-      boolean createResourcesSymlinkTree,
       ImmutableSortedSet<SourcePath> resources,
       Mode coverageMode) {
     super(buildTarget, projectFilesystem, buildRuleParams);
@@ -107,7 +104,6 @@ public class GoTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.contacts = contacts;
     this.testRuleTimeoutMs = testRuleTimeoutMs;
     this.runTestsSeparately = runTestsSeparately;
-    this.createResourcesSymlinkTree = createResourcesSymlinkTree;
     this.resources = resources;
     this.coverageMode = coverageMode;
   }
@@ -280,16 +276,6 @@ public class GoTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @Override
   public ImmutableList<? extends Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
-    if (createResourcesSymlinkTree) {
-      Path outputDir =
-          BuildTargets.getGenPath(
-              getProjectFilesystem(),
-              getBuildTarget().withFlavors(InternalFlavor.of("test-main")),
-              "%s");
-
-      return ImmutableList.of(
-          getResourceSymlinkTree(context, outputDir, Optional.of(buildableContext)));
-    }
     return ImmutableList.of();
   }
 

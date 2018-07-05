@@ -29,6 +29,7 @@ import com.facebook.buck.core.model.Flavored;
 import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.toolchain.CxxPlatforms;
 import com.facebook.buck.toolchain.ToolchainProvider;
@@ -36,6 +37,7 @@ import com.facebook.buck.versions.VersionRoot;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
 import org.immutables.value.Value;
 
@@ -77,6 +79,7 @@ public class GoBinaryDescription
         context.getActionGraphBuilder(),
         goBuckConfig,
         args.getSrcs(),
+        args.getResources(),
         args.getCompilerFlags(),
         args.getAssemblerFlags(),
         args.getLinkerFlags(),
@@ -123,5 +126,8 @@ public class GoBinaryDescription
     ImmutableList<String> getAssemblerFlags();
 
     ImmutableList<String> getLinkerFlags();
+
+    @Value.NaturalOrder
+    ImmutableSortedSet<SourcePath> getResources();
   }
 }

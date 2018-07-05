@@ -271,7 +271,6 @@ public class GoTestDescription
             .map(Optional::of)
             .orElse(goBuckConfig.getDelegate().getDefaultTestRuleTimeoutMs()),
         args.getRunTestSeparately(),
-        goBuckConfig.getDelegate().getExternalTestRunner().isPresent(),
         args.getResources(),
         coverageMode);
   }
@@ -287,6 +286,8 @@ public class GoTestDescription
       GoTestDescriptionArg args,
       GoPlatform platform) {
     Path packageName = getGoPackageName(graphBuilder, buildTarget, args);
+    boolean createResourcesSymlinkTree =
+        goBuckConfig.getDelegate().getExternalTestRunner().isPresent();
 
     BuildRule testLibrary =
         new NoopBuildRuleWithDeclaredAndExtraDeps(
@@ -305,6 +306,7 @@ public class GoTestDescription
             coverageMode,
             packageName,
             args.getCgo());
+
     GoBinary testMain =
         GoDescriptors.createGoBinaryRule(
             buildTarget.withAppendedFlavors(InternalFlavor.of("test-main")),
@@ -315,6 +317,7 @@ public class GoTestDescription
             graphBuilder,
             goBuckConfig,
             ImmutableSet.of(generatedTestMain.getSourcePathToOutput()),
+            createResourcesSymlinkTree ? args.getResources() : ImmutableSortedSet.of(),
             args.getCompilerFlags(),
             args.getAssemblerFlags(),
             args.getLinkerFlags(),

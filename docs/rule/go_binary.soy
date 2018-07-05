@@ -44,6 +44,15 @@
 
 {call go_common.linker_flags_arg /}
 
+{call buck.arg}
+  {param name: 'resources' /}
+  {param default : '[]' /}
+  {param desc}
+  Static files to be symlinked into the working directory of the test. You can access these in your
+  by opening the files as relative paths, e.g. <code>ioutil.ReadFile("testdata/input")</code>.
+  {/param}
+{/call}
+
 {/param} // close args
 
 {param examples}

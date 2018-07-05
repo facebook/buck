@@ -38,6 +38,7 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Maps;
 import java.nio.file.Paths;
 import java.util.Arrays;
@@ -199,6 +200,7 @@ public class GoDescriptorsTest {
             ImmutableSet.of(
                 PathSourcePath.of(filesystem, Paths.get("not_build_target.go")),
                 DefaultBuildTargetSourcePath.of(srcTarget)),
+            ImmutableSortedSet.of(),
             ImmutableList.of(),
             ImmutableList.of(),
             ImmutableList.of(),

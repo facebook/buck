@@ -138,6 +138,17 @@ public class GoBinaryIntegrationTest {
   }
 
   @Test
+  public void binaryWithResources() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "binary_with_resources", tmp);
+    workspace.setUp();
+
+    assertThat(
+        workspace.runBuckCommand("run", "//:hello").assertSuccess().getStdout(),
+        Matchers.containsString("Hello, world!"));
+  }
+
+  @Test
   public void vendoredLibrary() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "vendored_library", tmp);
