@@ -107,7 +107,6 @@ public class AndroidNdkHelper {
                     .build(),
                 NdkCxxPlatforms.DEFAULT_CXX_RUNTIME,
                 NdkCxxRuntimeType.DYNAMIC,
-                NdkCxxPlatforms.DEFAULT_TARGET_APP_PLATFORM,
                 getDefaultCpuAbis(ndkVersion),
                 Platform.detect())
             .values();

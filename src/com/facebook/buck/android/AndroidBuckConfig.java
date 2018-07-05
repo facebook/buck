@@ -27,6 +27,7 @@ import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.rules.tool.config.ToolConfig;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -73,8 +74,12 @@ public class AndroidBuckConfig {
     return delegate.getValue("ndk", "ndk_repository_path");
   }
 
-  public Optional<String> getNdkAppPlatform() {
+  public Optional<String> getNdkCpuAbiFallbackAppPlatform() {
     return delegate.getValue("ndk", "app_platform");
+  }
+
+  public ImmutableMap<String, String> getNdkCpuAbiAppPlatformMap() {
+    return delegate.getMap("ndk", "app_platform_per_cpu_abi");
   }
 
   public Optional<ImmutableSet<String>> getNdkCpuAbis() {
@@ -119,6 +124,19 @@ public class AndroidBuckConfig {
 
   public boolean isGrayscaleImageProcessingEnabled() {
     return delegate.getBooleanValue("resources", "resource_grayscale_enabled", false);
+  }
+
+  /**
+   * Returns the CPU specific app platform, or the fallback one if set. If neither are set, returns
+   * `Optional.empty` instead of a default value so callers can determine the difference between
+   * user-set and buck defaults.
+   */
+  public Optional<String> getNdkAppPlatformForCpuAbi(String cpuAbi) {
+    ImmutableMap<String, String> platformMap = getNdkCpuAbiAppPlatformMap();
+    Optional<String> specificAppPlatform = Optional.ofNullable(platformMap.get(cpuAbi));
+    return specificAppPlatform.isPresent()
+        ? specificAppPlatform
+        : getNdkCpuAbiFallbackAppPlatform();
   }
 
   /**
