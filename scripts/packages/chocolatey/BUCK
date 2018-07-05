@@ -1,0 +1,30 @@
+load("//programs:defs.bzl", "get_release_version")
+
+version = get_release_version()
+
+python_library(
+    name = "build-lib",
+    srcs = ["build.py"],
+)
+
+python_binary(
+    name = "build",
+    main_module = "scripts.packages.chocolatey.build",
+    deps = [":build-lib"],
+)
+
+genrule(
+    name = "chocolatey",
+    srcs = [
+        "//:LICENSE",
+        "//:README",
+        "//programs:buck",
+        "CHANGELOG.md",
+        "buck.nuspec",
+        "buck.bat",
+        "chocolateyInstall.ps1",
+        "chocolateyUninstall.ps1",
+    ],
+    out = "buck.nupkg",
+    cmd = "$(exe :build) --version {} --output %OUT% --src-dir %SRCDIR%".format(version),
+)

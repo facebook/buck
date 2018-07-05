@@ -160,6 +160,7 @@ python_binary(
     build_args = interpreter_override_args(),
     main = "buck.py",
     visibility = [
+        "//scripts/packages/chocolatey:chocolatey",
         "//scripts/packages/debian:debian",
         "//test/...",
         "//tools/...",

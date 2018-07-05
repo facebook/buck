@@ -1,0 +1,27 @@
+# Make sure we're on a version that supports symlinks, and that we're using
+# powershell instead of cmd by default
+FROM  microsoft/windowsservercore:1803
+SHELL ["powershell", "-command"]
+ARG version=
+ARG timestamp=
+ARG repository=facebook/buck
+
+# Install chocolatey
+RUN Set-ExecutionPolicy Bypass -Scope Process -Force; iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
+
+# Download enough to bootstrap a build
+RUN choco install -y ant jdk8 python2 git
+
+# Clone buck
+RUN git clone --branch v${env:version} --depth 1 https://github.com/${env:repository}.git c:\src
+
+WORKDIR c:/src
+
+# Bootstrap buck
+RUN ant
+
+# Build buck with buck
+RUN ./bin/buck build -c buck.release_version=${env:version} -c buck.release_timestamp=${env:timestamp} buck
+
+# Build the buck nupkg
+RUN ./bin/buck build -c buck.release_version=${env:version} -c buck.release_timestamp=${env:timestamp} scripts/packages/chocolatey --out buck.nupkg
