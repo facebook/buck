@@ -23,6 +23,7 @@ import com.facebook.buck.util.NamedTemporaryDirectory;
 import com.google.common.io.Closer;
 import io.grpc.Server;
 import io.grpc.netty.NettyServerBuilder;
+import io.netty.channel.ChannelOption;
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
@@ -40,7 +41,9 @@ public class GrpcServer implements Closeable {
                 workDir.getPath().resolve("__cache__"), GrpcRemoteExecution.PROTOCOL),
             workDir.getPath().resolve("__work__"));
     NettyServerBuilder builder = NettyServerBuilder.forPort(port);
+
     builder.maxMessageSize(500 * 1024 * 1024);
+    builder.withChildOption(ChannelOption.SO_REUSEADDR, true);
     remoteExecution.getServices().forEach(builder::addService);
     this.server = builder.build().start();
   }
