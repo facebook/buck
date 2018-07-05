@@ -229,7 +229,7 @@ public class AndroidBinaryCxxIntegrationTest extends AbiCompilationModeTest {
     AssumeAndroidPlatform.assumeUnifiedHeadersAvailable();
 
     String target = "//apps/sample:app_cxx_lib_dep";
-    workspace.addBuckConfigLocalOption("nkd", "use_unified_headers", "true");
+    workspace.addBuckConfigLocalOption("ndk", "use_unified_headers", "true");
     workspace.runBuckCommand("build", target).assertSuccess();
   }
 }
