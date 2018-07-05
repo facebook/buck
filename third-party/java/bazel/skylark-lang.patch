@@ -1,4 +1,4 @@
-From 6cd90fda6ada4ca76165f11c2599aafa49d2eecb Mon Sep 17 00:00:00 2001
+From d397d4f09a2d190e517d87aa41d0fd3e4ae8d8ef Mon Sep 17 00:00:00 2001
 From: Taras Tsugrii <ttsugrii@fb.com>
 Date: Sat, 12 May 2018 20:21:17 -0700
 Subject: [PATCH] [Buck] Patch Skylark build file for Buck.
@@ -9,10 +9,10 @@ Subject: [PATCH] [Buck] Patch Skylark build file for Buck.
  2 files changed, 45 insertions(+), 2366 deletions(-)
 
 diff --git a/src/main/java/com/google/devtools/build/lib/BUILD b/src/main/java/com/google/devtools/build/lib/BUILD
-index ec1cc12b62..5ccd601ac7 100644
+index 5d7b548914..ab152ec3b5 100644
 --- a/src/main/java/com/google/devtools/build/lib/BUILD
 +++ b/src/main/java/com/google/devtools/build/lib/BUILD
-@@ -314,16 +314,55 @@ java_library(
+@@ -315,16 +315,55 @@ java_library(
  #
  # IMPORTANT:  NOT A PUBLIC INTERFACE. TARGETS SHOULDN'T DEPEND ON THIS.
  #
