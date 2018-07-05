@@ -17,12 +17,18 @@ install:
   - cmd: python --version
   - cmd: java -version
   - cmd: ant -version
+  - cmd: reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\AppModelUnlock" /t REG_DWORD /f /v "AllowDevelopmentWithoutDevLicense" /d "1"
+  - cmd: reg add "HKLM\SYSTEM\CurrentControlSet\Control\FileSystem" /t REG_DWORD /f /v "LongPathsEnabled" /d "1"
+  - cmd: powershell -Command 'Enable-WindowsOptionalFeature -FeatureName Microsoft-Windows-Subsystem-Linux -Online -All -LimitAccess -NoRestart'
+  - cmd: mklink link.md README.md
+  - cmd: dir
 
 # to disable automatic builds by MsBuild
 build: off
 
 build_script:
   - ant
+  - if exist "buck-out" (rmdir /s /q "buck-out")
   - bin\buck build buck
 
 test_script:
