@@ -58,7 +58,7 @@ public class ConsoleEventsDispatcher {
 
     DistBuildStatus status =
         DistBuildStatus.builder().setStatus(stage).setSlaveStatuses(slaveStatuses).build();
-    buckEventBus.post(new DistBuildStatusEvent(status));
+    buckEventBus.post(new DistBuildStatusEvent(job, status));
   }
 
   public BuckEventBus getBuckEventBus() {

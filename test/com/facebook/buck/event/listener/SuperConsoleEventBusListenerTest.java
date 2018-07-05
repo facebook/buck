@@ -45,6 +45,8 @@ import com.facebook.buck.distributed.StampedeLocalBuildStatusEvent;
 import com.facebook.buck.distributed.build_client.DistBuildRemoteProgressEvent;
 import com.facebook.buck.distributed.build_client.DistBuildSuperConsoleEvent;
 import com.facebook.buck.distributed.build_client.StampedeConsoleEvent;
+import com.facebook.buck.distributed.thrift.BuildJob;
+import com.facebook.buck.distributed.thrift.BuildSlaveInfo;
 import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
 import com.facebook.buck.distributed.thrift.BuildSlaveStatus;
 import com.facebook.buck.distributed.thrift.BuildStatus;
@@ -897,11 +899,35 @@ public class SuperConsoleEventBusListenerTest {
             "Downloading... 0 artifacts, 0.00 bytes, 0.0% cache miss",
             "Local Steps... 0.2 sec"));
 
+    BuildSlaveRunId buildSlaveRunId1 = new BuildSlaveRunId();
+    buildSlaveRunId1.setId("slave1");
+    BuildSlaveStatus slave1 = new BuildSlaveStatus();
+    slave1.setBuildSlaveRunId(buildSlaveRunId1);
+    BuildSlaveInfo slaveInfo1 = new BuildSlaveInfo();
+    slaveInfo1.setBuildSlaveRunId(buildSlaveRunId1);
+
+    BuildSlaveRunId buildSlaveRunId2 = new BuildSlaveRunId();
+    buildSlaveRunId2.setId("slave2");
+    BuildSlaveStatus slave2 = new BuildSlaveStatus();
+    slave2.setBuildSlaveRunId(buildSlaveRunId2);
+    BuildSlaveInfo slaveInfo2 = new BuildSlaveInfo();
+    slaveInfo2.setBuildSlaveRunId(buildSlaveRunId2);
+
+    BuildSlaveRunId buildSlaveRunId3 = new BuildSlaveRunId();
+    buildSlaveRunId3.setId("slave3");
+    BuildSlaveStatus slave3 = new BuildSlaveStatus();
+    slave3.setBuildSlaveRunId(buildSlaveRunId3);
+    BuildSlaveInfo slaveInfo3 = new BuildSlaveInfo();
+    slaveInfo3.setBuildSlaveRunId(buildSlaveRunId3);
+
+    BuildJob job = new BuildJob();
+    job.setBuildSlaves(ImmutableList.of(slaveInfo1, slaveInfo2, slaveInfo3));
+
     timeMillis += 250;
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
             new DistBuildStatusEvent(
-                DistBuildStatus.builder().setStatus(BuildStatus.QUEUED.toString()).build()),
+                job, DistBuildStatus.builder().setStatus(BuildStatus.QUEUED.toString()).build()),
             timeMillis,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
@@ -931,7 +957,7 @@ public class SuperConsoleEventBusListenerTest {
     timeMillis += 100;
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
-            new DistBuildStatusEvent(DistBuildStatus.builder().build()),
+            new DistBuildStatusEvent(job, DistBuildStatus.builder().build()),
             timeMillis,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
@@ -970,24 +996,16 @@ public class SuperConsoleEventBusListenerTest {
             "Local Steps... 0.8 sec (10%) 1/10 jobs, 1 updated",
             " - IDLE"));
 
-    BuildSlaveRunId buildSlaveRunId1 = new BuildSlaveRunId();
-    buildSlaveRunId1.setId("slave1");
-    BuildSlaveStatus slave1 = new BuildSlaveStatus();
-    slave1.setBuildSlaveRunId(buildSlaveRunId1);
-
-    BuildSlaveRunId buildSlaveRunId2 = new BuildSlaveRunId();
-    buildSlaveRunId2.setId("slave2");
-    BuildSlaveStatus slave2 = new BuildSlaveStatus();
-    slave2.setBuildSlaveRunId(buildSlaveRunId2);
     slave2.setFilesMaterializedCount(128);
 
     timeMillis += 100;
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
             new DistBuildStatusEvent(
+                job,
                 DistBuildStatus.builder()
                     .setStatus(BuildStatus.BUILDING.toString())
-                    .setSlaveStatuses(ImmutableList.of(slave1, slave2))
+                    .setSlaveStatuses(ImmutableList.of(slave1, slave2, slave3))
                     .build()),
             timeMillis,
             TimeUnit.MILLISECONDS,
@@ -1008,6 +1026,7 @@ public class SuperConsoleEventBusListenerTest {
             actionGraphLine,
             "Distributed Build... 1.1 sec (0%) remote status: building; local status: init",
             " - Preparing: creating action graph, materializing source files [128] ...",
+            " - Preparing: creating action graph ...",
             " - Preparing: creating action graph ...",
             "Downloading... 0 artifacts, 0.00 bytes, 100.0% cache miss",
             "Local Steps... 1.0 sec (10%) 1/10 jobs, 1 updated",
@@ -1035,12 +1054,15 @@ public class SuperConsoleEventBusListenerTest {
     cacheRateStatsForSlave2.setCacheHitsCount(5);
     cacheRateStatsForSlave2.setCacheMissesCount(0);
 
+    slaveInfo3.setStatus(BuildStatus.FAILED);
+
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
             new DistBuildStatusEvent(
+                job,
                 DistBuildStatus.builder()
                     .setStatus(BuildStatus.BUILDING.toString())
-                    .setSlaveStatuses(ImmutableList.of(slave1, slave2))
+                    .setSlaveStatuses(ImmutableList.of(slave1, slave2, slave3))
                     .build()),
             timeMillis,
             TimeUnit.MILLISECONDS,
@@ -1094,9 +1116,10 @@ public class SuperConsoleEventBusListenerTest {
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
             new DistBuildStatusEvent(
+                job,
                 DistBuildStatus.builder()
                     .setStatus("custom")
-                    .setSlaveStatuses(ImmutableList.of(slave1, slave2))
+                    .setSlaveStatuses(ImmutableList.of(slave1, slave2, slave3))
                     .build()),
             timeMillis,
             TimeUnit.MILLISECONDS,
@@ -1166,9 +1189,10 @@ public class SuperConsoleEventBusListenerTest {
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
             new DistBuildStatusEvent(
+                job,
                 DistBuildStatus.builder()
                     .setStatus("custom")
-                    .setSlaveStatuses(ImmutableList.of(slave1, slave2))
+                    .setSlaveStatuses(ImmutableList.of(slave1, slave2, slave3))
                     .build()),
             timeMillis,
             TimeUnit.MILLISECONDS,
@@ -1196,9 +1220,10 @@ public class SuperConsoleEventBusListenerTest {
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
             new DistBuildStatusEvent(
+                job,
                 DistBuildStatus.builder()
                     .setStatus(BuildStatus.FINISHED_SUCCESSFULLY.toString())
-                    .setSlaveStatuses(ImmutableList.of(slave1, slave2))
+                    .setSlaveStatuses(ImmutableList.of(slave1, slave2, slave3))
                     .build()),
             timeMillis,
             TimeUnit.MILLISECONDS,

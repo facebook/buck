@@ -16,6 +16,7 @@
 package com.facebook.buck.distributed;
 
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.distributed.thrift.BuildJob;
 import com.facebook.buck.distributed.thrift.BuildSlaveStatus;
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.EventKey;
@@ -27,11 +28,17 @@ import org.immutables.value.Value;
 
 public class DistBuildStatusEvent extends AbstractBuckEvent implements LeafEvent, WorkAdvanceEvent {
 
+  private final BuildJob job;
   private final DistBuildStatus status;
 
-  public DistBuildStatusEvent(DistBuildStatus status) {
+  public DistBuildStatusEvent(BuildJob job, DistBuildStatus status) {
     super(EventKey.unique());
+    this.job = job;
     this.status = status;
+  }
+
+  public BuildJob getJob() {
+    return job;
   }
 
   public DistBuildStatus getStatus() {

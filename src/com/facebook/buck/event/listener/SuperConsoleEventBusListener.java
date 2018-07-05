@@ -26,8 +26,10 @@ import com.facebook.buck.distributed.DistBuildStatusEvent;
 import com.facebook.buck.distributed.StampedeLocalBuildStatusEvent;
 import com.facebook.buck.distributed.build_client.DistBuildSuperConsoleEvent;
 import com.facebook.buck.distributed.build_client.StampedeConsoleEvent;
+import com.facebook.buck.distributed.thrift.BuildSlaveInfo;
 import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
 import com.facebook.buck.distributed.thrift.BuildSlaveStatus;
+import com.facebook.buck.distributed.thrift.BuildStatus;
 import com.facebook.buck.event.ActionGraphEvent;
 import com.facebook.buck.event.ArtifactCompressionEvent;
 import com.facebook.buck.event.ConsoleEvent;
@@ -792,6 +794,14 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     synchronized (distBuildSlaveTrackerLock) {
       for (BuildSlaveStatus status : event.getStatus().getSlaveStatuses()) {
         distBuildSlaveTracker.put(status.buildSlaveRunId, status);
+      }
+
+      // Don't track the status of failed or lost minions
+      for (BuildSlaveInfo slaveInfo : event.getJob().getBuildSlaves()) {
+        if (slaveInfo.getStatus().equals(BuildStatus.FAILED)
+            || slaveInfo.getStatus().equals(BuildStatus.LOST)) {
+          distBuildSlaveTracker.remove(slaveInfo.buildSlaveRunId);
+        }
       }
     }
   }

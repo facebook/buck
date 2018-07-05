@@ -167,7 +167,8 @@ public class MinionModeRunner extends AbstractDistBuildModeRunner {
     try {
       buildExecutor = buildExecutorFuture.get();
     } catch (ExecutionException e) {
-      String msg = "Failed to get the BuildExecutor.";
+      String msg =
+          String.format("Failed to get the BuildExecutor. Reason: %s", e.getCause().getMessage());
       LOG.error(e, msg);
       throw new RuntimeException(msg, e);
     }
