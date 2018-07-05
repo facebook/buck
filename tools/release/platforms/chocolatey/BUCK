@@ -9,7 +9,7 @@ python_library(
 
 python_binary(
     name = "build",
-    main_module = "scripts.packages.chocolatey.build",
+    main_module = "tools.release.platforms.chocolatey.build",
     deps = [":build-lib"],
 )
 

@@ -21,4 +21,4 @@ WORKDIR /src
 
 RUN ant
 
-RUN ./bin/buck build -c buck.release_version=${version} -c buck.release_timestamp=${timestamp} scripts/packages/debian --out /src/buck.deb
+RUN ./bin/buck build -c buck.release_version=${version} -c buck.release_timestamp=${timestamp} tools/release/platforms/debian --out /src/buck.deb

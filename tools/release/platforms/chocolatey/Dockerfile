@@ -24,4 +24,4 @@ RUN ant
 RUN ./bin/buck build -c buck.release_version=${env:version} -c buck.release_timestamp=${env:timestamp} buck
 
 # Build the buck nupkg
-RUN ./bin/buck build -c buck.release_version=${env:version} -c buck.release_timestamp=${env:timestamp} scripts/packages/chocolatey --out buck.nupkg
+RUN ./bin/buck build -c buck.release_version=${env:version} -c buck.release_timestamp=${env:timestamp} tools/release/platforms/chocolatey --out buck.nupkg
