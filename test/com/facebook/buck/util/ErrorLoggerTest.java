@@ -99,6 +99,25 @@ public class ErrorLoggerTest {
     assertEquals(expected, errors.userVisible);
   }
 
+  @Test
+  public void addsErrorMessageAugmentationsToInternalErrors() {
+    String rawMessage =
+        "\u001B[1mmain.cpp:1:13: \u001B[0m\u001B[0;1;31merror: \u001B[0m\u001B[1mexpected '}'\u001B[0m\n"
+            + "int main() {\n"
+            + "\u001B[0;1;32m            ^\n"
+            + "\u001B[0m\u001B[1mmain.cpp:1:12: \u001B[0m\u001B[0;1;30mnote: \u001B[0mto match this '{'\u001B[0m\n"
+            + "int main() {\n"
+            + "\u001B[0;1;32m           ^\n"
+            + "\u001B[0m1 error generated.";
+    String expected =
+        "java.lang.RuntimeException: " + rawMessage + "\n    context\nTry adding '}'!";
+
+    LoggedErrors errors =
+        logException(new BuckExecutionException(new RuntimeException(rawMessage), "context"));
+    assertNull(errors.userVisible);
+    assertEquals(expected, errors.userVisibleInternal);
+  }
+
   LoggedErrors logException(Exception e) {
     LoggedErrors result = new LoggedErrors();
     new ErrorLogger(

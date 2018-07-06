@@ -151,10 +151,11 @@ public class ErrorLogger {
           Joiner.on("\n").join(context.stream().map(c -> "    " + c).collect(Collectors.toList())));
     }
 
+    String augmentedError = errorAugmentor.getAugmentedError(messageBuilder.toString());
     if (rootCause instanceof HumanReadableException) {
-      logger.logUserVisible(errorAugmentor.getAugmentedError(messageBuilder.toString()));
+      logger.logUserVisible(augmentedError);
     } else {
-      logger.logUserVisibleInternalError(messageBuilder.toString());
+      logger.logUserVisibleInternalError(augmentedError);
     }
   }
 
