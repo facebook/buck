@@ -22,10 +22,15 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.features.python.toolchain.PythonVersion;
 import com.facebook.buck.util.ProcessExecutor;
 import java.nio.file.Paths;
+import java.util.Optional;
 import org.hamcrest.Matchers;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 public class PythonVersionFactoryTest {
+
+  @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Test
   public void testGetPythonVersion() {
@@ -33,6 +38,20 @@ public class PythonVersionFactoryTest {
         PythonVersionFactory.extractPythonVersion(
             Paths.get("usr", "bin", "python"), new ProcessExecutor.Result(0, "", "CPython 2.7\n"));
     assertEquals("CPython 2.7", version.toString());
+  }
+
+  @Test
+  public void testBrokenPythonVersionWithoutStderr() {
+    thrown.expectMessage("Could not extract Python version of broken");
+    PythonVersionFactory.extractPythonVersion(Paths.get("broken"), new ProcessExecutor.Result(1));
+  }
+
+  @Test
+  public void testBrokenPythonVersionWithStderr() {
+    thrown.expectMessage("Could not extract Python version of broken (foo)");
+    PythonVersionFactory.extractPythonVersion(
+        Paths.get("broken"),
+        new ProcessExecutor.Result(1, false, Optional.empty(), Optional.of("foo")));
   }
 
   @Test

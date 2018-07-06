@@ -81,7 +81,12 @@ public class PythonVersionFactory {
   @VisibleForTesting
   static PythonVersion extractPythonVersion(Path pythonPath, ProcessExecutor.Result versionResult) {
     if (versionResult.getExitCode() != 0) {
-      throw new HumanReadableException(versionResult.getStderr().get());
+      throw new HumanReadableException(
+          "Could not extract Python version of "
+              + pythonPath
+              + versionResult.getStderr().map(stderr -> " (" + stderr + ")").orElse("")
+              + ". Please make sure your Python interpreter is configured properly and you are "
+              + "using the right platform.");
     }
     String versionString =
         CharMatcher.whitespace()
