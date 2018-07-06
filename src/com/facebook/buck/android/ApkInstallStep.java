@@ -43,9 +43,7 @@ public class ApkInstallStep implements Step {
       return StepExecutionResults.SUCCESS;
     }
 
-    if (!adbHelper.installApk(pathResolver, hasInstallableApk, false, true, null)) {
-      return StepExecutionResults.ERROR;
-    }
+    adbHelper.installApk(pathResolver, hasInstallableApk, false, true, null);
     return StepExecutionResults.SUCCESS;
   }
 

@@ -17,7 +17,6 @@
 package com.facebook.buck.android.exopackage;
 
 import com.facebook.buck.android.HasInstallableApk;
-import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
@@ -39,19 +38,16 @@ public interface AndroidDevicesHelper extends Closeable {
    * instead of an IDevice.
    */
   interface AdbDeviceCallable {
-
     boolean apply(AndroidDevice device) throws Exception;
   }
 
   /** A simple wrapper around adbCall that will throw if adbCall returns false. */
   default void adbCallOrThrow(String description, AdbDeviceCallable func, boolean quiet)
       throws InterruptedException {
-    if (!adbCall(description, func, quiet)) {
-      throw new HumanReadableException(String.format("Error when running: <%s>", description));
-    }
+    adbCall(description, func, quiet);
   }
 
-  boolean adbCall(String description, AdbDeviceCallable func, boolean quiet)
+  void adbCall(String description, AdbDeviceCallable func, boolean quiet)
       throws InterruptedException;
 
   ImmutableList<AndroidDevice> getDevices(boolean quiet) throws InterruptedException;
@@ -68,7 +64,7 @@ public interface AndroidDevicesHelper extends Closeable {
    * is enabled (-x). This flag is used as a marker that user understands that multiple devices will
    * be used to install the apk if needed.
    */
-  boolean installApk(
+  void installApk(
       SourcePathResolver pathResolver,
       HasInstallableApk hasInstallableApk,
       boolean installViaSd,
@@ -81,7 +77,7 @@ public interface AndroidDevicesHelper extends Closeable {
    *
    * @see #installApk(SourcePathResolver, HasInstallableApk, boolean, boolean, String)
    */
-  boolean uninstallApp(String packageName, boolean shouldKeepUserData) throws InterruptedException;
+  void uninstallApp(String packageName, boolean shouldKeepUserData) throws InterruptedException;
 
   void startActivity(
       SourcePathResolver pathResolver,

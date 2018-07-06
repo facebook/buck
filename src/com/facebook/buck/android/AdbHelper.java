@@ -46,8 +46,10 @@ import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.InterruptionFailedException;
 import com.facebook.buck.util.MoreSuppliers;
+import com.facebook.buck.util.Scope;
 import com.facebook.buck.util.Threads;
 import com.facebook.buck.util.concurrent.MostExecutors;
+import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -66,6 +68,7 @@ import java.util.Optional;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
@@ -150,7 +153,7 @@ public class AdbHelper implements AndroidDevicesHelper {
    */
   @SuppressWarnings("PMD.EmptyCatchBlock")
   @Override
-  public synchronized boolean adbCall(String description, AdbDeviceCallable func, boolean quiet)
+  public synchronized void adbCall(String description, AdbDeviceCallable func, boolean quiet)
       throws InterruptedException {
     List<AndroidDevice> devices;
 
@@ -158,7 +161,7 @@ public class AdbHelper implements AndroidDevicesHelper {
         SimplePerfEvent.scope(getBuckEventBus(), "set_up_adb_call")) {
       devices = getDevices(quiet);
       if (devices.size() == 0) {
-        return false;
+        throw new HumanReadableException("Didn't find any attached Android devices/emulators.");
       }
     }
 
@@ -181,13 +184,11 @@ public class AdbHelper implements AndroidDevicesHelper {
     }
 
     // Wait for all executions to complete or fail.
-    List<Boolean> results = null;
+    List<Boolean> results;
     try {
       results = Futures.allAsList(futures).get();
     } catch (ExecutionException ex) {
-      printError("Failed: " + description);
-      printStacktrace(ex);
-      return false;
+      throw new BuckUncheckedExecutionException(ex.getCause());
     } catch (InterruptedException e) {
       try {
         Futures.allAsList(futures).cancel(true);
@@ -210,11 +211,10 @@ public class AdbHelper implements AndroidDevicesHelper {
     if (successCount > 0 && !quiet) {
       printSuccess(String.format("Successfully ran %s on %d device(s)", description, successCount));
     }
-    if (failureCount > 0) {
-      printError(String.format("Failed to %s on %d device(s).", description, failureCount));
-    }
 
-    return failureCount == 0;
+    if (failureCount != 0) {
+      throw new HumanReadableException("Failed to %s on %d device(s).", description, failureCount);
+    }
   }
 
   private synchronized ListeningExecutorService getExecutorService() {
@@ -248,14 +248,8 @@ public class AdbHelper implements AndroidDevicesHelper {
     getBuckEventBus().post(ConsoleEvent.severe(failureMessage));
   }
 
-  private void printStacktrace(ExecutionException ex) {
-    // TODO(cjhopman): This message should not be sent directly to the console. Will probably
-    // require making adbCall() propagate exceptions correctly.
-    ex.printStackTrace(getConsole().getStdErr());
-  }
-
   @Override
-  public boolean installApk(
+  public void installApk(
       SourcePathResolver pathResolver,
       HasInstallableApk hasInstallableApk,
       boolean installViaSd,
@@ -266,26 +260,30 @@ public class AdbHelper implements AndroidDevicesHelper {
     if (!quiet) {
       getBuckEventBus().post(started);
     }
-    boolean success;
-    Optional<ExopackageInfo> exopackageInfo = hasInstallableApk.getApkInfo().getExopackageInfo();
-    if (exopackageInfo.isPresent()) {
-      // TODO(dreiss): Support SD installation.
-      success = installApkExopackage(pathResolver, hasInstallableApk, quiet, processName);
-    } else {
-      success = installApkDirectly(pathResolver, hasInstallableApk, installViaSd, quiet);
+    AtomicBoolean success = new AtomicBoolean();
+    try (Scope ignored =
+        () -> {
+          if (!quiet) {
+            getBuckEventBus()
+                .post(
+                    InstallEvent.finished(
+                        started,
+                        success.get(),
+                        Optional.empty(),
+                        Optional.of(
+                            AdbHelper.tryToExtractPackageNameFromManifest(
+                                pathResolver, hasInstallableApk.getApkInfo()))));
+          }
+        }) {
+      Optional<ExopackageInfo> exopackageInfo = hasInstallableApk.getApkInfo().getExopackageInfo();
+      if (exopackageInfo.isPresent()) {
+        // TODO(dreiss): Support SD installation.
+        installApkExopackage(pathResolver, hasInstallableApk, quiet, processName);
+      } else {
+        installApkDirectly(pathResolver, hasInstallableApk, installViaSd, quiet);
+      }
+      success.set(true);
     }
-    if (!quiet) {
-      getBuckEventBus()
-          .post(
-              InstallEvent.finished(
-                  started,
-                  success,
-                  Optional.empty(),
-                  Optional.of(
-                      AdbHelper.tryToExtractPackageNameFromManifest(
-                          pathResolver, hasInstallableApk.getApkInfo()))));
-    }
-    return success;
   }
 
   @Override
@@ -348,22 +346,25 @@ public class AdbHelper implements AndroidDevicesHelper {
    * @see #installApk(SourcePathResolver, HasInstallableApk, boolean, boolean, String)
    */
   @Override
-  public boolean uninstallApp(String packageName, boolean shouldKeepUserData)
+  public void uninstallApp(String packageName, boolean shouldKeepUserData)
       throws InterruptedException {
     Preconditions.checkArgument(AdbHelper.PACKAGE_NAME_PATTERN.matcher(packageName).matches());
 
     UninstallEvent.Started started = UninstallEvent.started(packageName);
     getBuckEventBus().post(started);
-    boolean success =
-        adbCall(
-            "uninstall apk",
-            (device) -> {
-              ((RealAndroidDevice) device).uninstallApkFromDevice(packageName, shouldKeepUserData);
-              return true;
-            },
-            false);
-    getBuckEventBus().post(UninstallEvent.finished(started, success));
-    return success;
+    try {
+      adbCall(
+          "uninstall apk",
+          (device) -> {
+            ((RealAndroidDevice) device).uninstallApkFromDevice(packageName, shouldKeepUserData);
+            return true;
+          },
+          false);
+    } catch (RuntimeException e) {
+      getBuckEventBus().post(UninstallEvent.finished(started, false));
+      throw e;
+    }
+    getBuckEventBus().post(UninstallEvent.finished(started, true));
   }
 
   public static String tryToExtractPackageNameFromManifest(
@@ -596,13 +597,13 @@ public class AdbHelper implements AndroidDevicesHelper {
     }
   }
 
-  private boolean installApkExopackage(
+  private void installApkExopackage(
       SourcePathResolver pathResolver,
       HasInstallableApk hasInstallableApk,
       boolean quiet,
       @Nullable String processName)
       throws InterruptedException {
-    return adbCall(
+    adbCall(
         "install exopackage apk",
         device ->
             new ExopackageInstaller(
@@ -616,18 +617,16 @@ public class AdbHelper implements AndroidDevicesHelper {
         quiet);
   }
 
-  private boolean installApkDirectly(
+  private void installApkDirectly(
       SourcePathResolver pathResolver,
       HasInstallableApk hasInstallableApk,
       boolean installViaSd,
       boolean quiet)
       throws InterruptedException {
     File apk = pathResolver.getAbsolutePath(hasInstallableApk.getApkInfo().getApkPath()).toFile();
-    boolean success =
-        adbCall(
-            String.format("install apk %s", hasInstallableApk.getBuildTarget().toString()),
-            (device) -> device.installApkOnDevice(apk, installViaSd, quiet),
-            quiet);
-    return success;
+    adbCall(
+        String.format("install apk %s", hasInstallableApk.getBuildTarget().toString()),
+        (device) -> device.installApkOnDevice(apk, installViaSd, quiet),
+        quiet);
   }
 }

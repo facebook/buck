@@ -153,9 +153,8 @@ public class UninstallCommand extends AbstractCommand {
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
     String appId =
         AdbHelper.tryToExtractPackageNameFromManifest(pathResolver, hasInstallableApk.getApkInfo());
-    return adbHelper.uninstallApp(appId, uninstallOptions().shouldKeepUserData())
-        ? ExitCode.SUCCESS
-        : ExitCode.RUN_ERROR;
+    adbHelper.uninstallApp(appId, uninstallOptions().shouldKeepUserData());
+    return ExitCode.SUCCESS;
   }
 
   @Override

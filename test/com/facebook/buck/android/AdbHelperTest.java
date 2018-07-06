@@ -362,11 +362,8 @@ public class AdbHelperTest {
     List<IDevice> deviceList = Lists.newArrayList((IDevice) device);
 
     AdbHelper adbHelper = createAdbHelper(deviceList);
-    boolean success =
-        adbHelper.adbCall(
-            "install apk", (d) -> d.installApkOnDevice(apk, false, true, false), true);
+    adbHelper.adbCall("install apk", (d) -> d.installApkOnDevice(apk, false, true, false), true);
 
-    assertTrue(success);
     assertEquals(apk.getAbsolutePath(), apkPath.get());
     assertTrue(listener.getLogMessages().isEmpty());
   }
@@ -393,11 +390,8 @@ public class AdbHelperTest {
     List<IDevice> deviceList = Lists.newArrayList((IDevice) device);
 
     AdbHelper adbHelper = createAdbHelper(deviceList);
-    boolean success =
-        adbHelper.adbCall(
-            "install apk", (d) -> d.installApkOnDevice(apk, false, false, false), false);
+    adbHelper.adbCall("install apk", (d) -> d.installApkOnDevice(apk, false, false, false), false);
 
-    assertTrue(success);
     assertEquals(apk.getAbsolutePath(), apkPath.get());
     MoreAsserts.assertListEquals(
         listener.getLogMessages(),

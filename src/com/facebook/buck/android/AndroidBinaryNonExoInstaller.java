@@ -70,12 +70,11 @@ public class AndroidBinaryNonExoInstaller extends AbstractBuildRule implements H
           @Override
           public StepExecutionResult execute(ExecutionContext context) throws InterruptedException {
             trigger.verify(context);
-            boolean result =
-                context
-                    .getAndroidDevicesHelper()
-                    .get()
-                    .installApk(buildContext.getSourcePathResolver(), apk, false, true, null);
-            return result ? StepExecutionResults.SUCCESS : StepExecutionResults.ERROR;
+            context
+                .getAndroidDevicesHelper()
+                .get()
+                .installApk(buildContext.getSourcePathResolver(), apk, false, true, null);
+            return StepExecutionResults.SUCCESS;
           }
         });
   }
