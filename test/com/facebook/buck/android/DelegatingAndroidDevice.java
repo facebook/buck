@@ -65,7 +65,7 @@ public class DelegatingAndroidDevice implements AndroidDevice {
   }
 
   @Override
-  public void rmFiles(String dirPath, Iterable<String> filesToDelete) throws Exception {
+  public void rmFiles(String dirPath, Iterable<String> filesToDelete) {
     delegate.rmFiles(dirPath, filesToDelete);
   }
 

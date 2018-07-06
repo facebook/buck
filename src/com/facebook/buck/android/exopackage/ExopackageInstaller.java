@@ -284,11 +284,7 @@ public class ExopackageInstaller {
         .asMap()
         .forEach(
             (dir, files) -> {
-              try {
-                device.rmFiles(dir.toString(), files);
-              } catch (Exception e) {
-                throw new RuntimeException(e);
-              }
+              device.rmFiles(dir.toString(), files);
             });
   }
 

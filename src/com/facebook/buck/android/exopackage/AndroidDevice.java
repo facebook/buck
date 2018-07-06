@@ -42,7 +42,7 @@ public interface AndroidDevice {
 
   ImmutableSortedSet<Path> listDirRecursive(Path dirPath) throws Exception;
 
-  void rmFiles(String dirPath, Iterable<String> filesToDelete) throws Exception;
+  void rmFiles(String dirPath, Iterable<String> filesToDelete);
 
   AutoCloseable createForward() throws Exception;
 

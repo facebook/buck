@@ -20,6 +20,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.android.agent.util.AgentUtil;
 import com.facebook.buck.io.file.MostFiles;
+import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -182,9 +183,13 @@ public class TestAndroidDevice implements AndroidDevice {
   }
 
   @Override
-  public void rmFiles(String dirPath, Iterable<String> filesToDelete) throws Exception {
+  public void rmFiles(String dirPath, Iterable<String> filesToDelete) {
     for (String s : filesToDelete) {
-      Files.delete(resolve(dirPath).resolve(s));
+      try {
+        Files.delete(resolve(dirPath).resolve(s));
+      } catch (IOException e) {
+        throw new BuckUncheckedExecutionException(e);
+      }
     }
   }
 
