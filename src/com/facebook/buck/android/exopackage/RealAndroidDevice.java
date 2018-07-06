@@ -624,7 +624,7 @@ public class RealAndroidDevice implements AndroidDevice {
 
   @Override
   public void rmFiles(String dirPath, Iterable<String> filesToDelete) {
-    String commandPrefix = "cd " + dirPath + " && rm ";
+    String commandPrefix = "cd " + dirPath + " && rm -f ";
     // Add a fudge factor for separators and error checking.
     int overhead = commandPrefix.length() + 100;
     try {
