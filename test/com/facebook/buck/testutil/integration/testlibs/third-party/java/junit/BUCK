@@ -24,3 +24,9 @@ prebuilt_jar(
         "PUBLIC",
     ],
 )
+
+prebuilt_jar(
+    name = "junit-4-8-2",
+    binary_jar = "junit-4.8.2.jar",
+    visibility = ["PUBLIC"],
+)

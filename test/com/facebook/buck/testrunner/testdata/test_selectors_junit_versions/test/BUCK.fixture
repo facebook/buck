@@ -5,7 +5,7 @@ java_test(
         "TestB.java",
     ],
     deps = [
-        "//lib:junit-4-11",
+        "buck//third-party/java/junit:junit",
     ],
 )
 
@@ -16,6 +16,6 @@ java_test(
         "TestD.java",
     ],
     deps = [
-        "//lib:junit-4-8-2",
+        "buck//third-party/java/junit:junit-4-8-2",
     ],
 )
