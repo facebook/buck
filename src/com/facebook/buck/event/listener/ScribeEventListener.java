@@ -16,6 +16,7 @@
 
 package com.facebook.buck.event.listener;
 
+import com.facebook.buck.core.build.event.BuildRuleEvent.Finished;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.log.Logger;
@@ -56,18 +57,17 @@ public class ScribeEventListener implements BuckEventListener {
   }
 
   private void log(BuckEvent event) {
+    // Send enabled events to Scribe.
+    if (!enabled || !events.contains(event.getEventName())) {
+      return;
+    }
+
     /*
-     * Send enabled events to Scribe.
      * If the event is BuildRuleFinished, only send if it failed.
-     * We only want to show failed rules on the Buck build page, there are too many successful ones.
+     * We only want to show failed rules on the Buck build page, there are too many other ones.
      */
-    if (!enabled
-        || !events.contains(event.getEventName())
-        || (event.getEventName().equals("BuildRuleFinished")
-            && ((com.facebook.buck.core.build.event.BuildRuleEvent.Finished) event)
-                .getStatus()
-                .name()
-                .equals("SUCCESS"))) {
+    if (event.getEventName().equals("BuildRuleFinished")
+        && !((Finished) event).getStatus().name().equals("FAIL")) {
       return;
     }
 
