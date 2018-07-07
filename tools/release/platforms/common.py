@@ -37,13 +37,14 @@ def temp_move_file(path):
         os.rename(bak_path, path)
 
 
-def docker(host, command):
+def docker(host, command, **run_kwargs):
     """
     Run a docker command optionally on a host.
 
     Args:
         host: None if run locally, else a host to provided to docker -H
         command: An array of all of the parts of a docker command after 'docker'
+        **run_kwargs: Additional kwargs to pass to run()
     Returns:
         result of subprocess.run()
     """
@@ -52,10 +53,17 @@ def docker(host, command):
         full_command.append("-H")
         full_command.append(host)
     full_command.extend(command)
-    return run(full_command)
+    return run(full_command, **run_kwargs)
 
 
-def run(command, cwd=None, capture_output=False, input=None, check=True):
+def run(
+    command,
+    cwd=None,
+    capture_output=False,
+    input=None,
+    check=True,
+    **subprocess_run_kwargs
+):
     """ Wrapper for subprocess.run() that sets some sane defaults """
     logging.info("Running {} in {}".format(" ".join(command), cwd or os.getcwd()))
     if isinstance(input, str):
@@ -70,6 +78,7 @@ def run(command, cwd=None, capture_output=False, input=None, check=True):
         stdout=subprocess.PIPE if capture_output else None,
         check=check,
         env=env,
+        **subprocess_run_kwargs
     )
 
 

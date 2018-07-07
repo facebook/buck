@@ -10,7 +10,7 @@ import sys
 import tempfile
 
 from platforms.chocolatey import build_chocolatey, publish_chocolatey
-from platforms.common import ReleaseException
+from platforms.common import ReleaseException, docker, run
 from platforms.debian import build_deb
 from platforms.homebrew import (
     build_bottle,
@@ -211,6 +211,53 @@ def configure_logging():
     )
 
 
+def validate_environment(args):
+    """ Make sure we can build """
+    if args.build_deb:
+        ret = docker(
+            args.docker_linux_host,
+            ["info", "-f", "{{.OSType}}"],
+            check=False,
+            capture_output=True,
+        )
+        host = args.docker_linux_host or "localhost"
+        if ret.returncode != 0:
+            raise ReleaseException(
+                "docker info on linux host {} failed. debs cannot be built", host
+            )
+        host_os = ret.stdout.decode("utf-8").strip()
+        if host_os != "linux":
+            raise ReleaseException(
+                "docker info on host {} returned type '{}' not 'linux'. debs cannot be built",
+                host,
+                host_os,
+            )
+    if args.build_chocolatey:
+        ret = docker(
+            args.docker_windows_host,
+            ["info", "-f", "{{.OSType}}"],
+            check=False,
+            capture_output=True,
+        )
+        host = args.docker_windows_host or "localhost"
+        if ret.returncode != 0:
+            raise ReleaseException(
+                "docker info on windows host {} failed. chocolatey nupkgs cannot be built",
+                host,
+            )
+        host_os = ret.stdout.decode("utf-8").strip()
+        if host_os != "windows":
+            raise ReleaseException(
+                "docker info on host {} returned type '{}' not 'windows'. chocolatey nupkgs cannot be built",
+                host,
+                host_os,
+            )
+    if args.build_homebrew:
+        ret = run(["brew", "--version"], check=False)
+        if ret.returncode != 0:
+            raise ReleaseException("brew --version failed. bottles cannot be created")
+
+
 def build(args, output_dir, release, github_token):
     deb_file = args.deb_file
     chocolatey_file = args.chocolatey_file
@@ -281,13 +328,15 @@ def main():
 
     temp_dir = None
 
-    if args.use_existing_release:
-        release = get_release_for_tag(args.repository, github_token, version_tag)
-    else:
-        release = create_new_release(
-            args.repository, github_token, version_tag, args.release_message
-        )
     try:
+        validate_environment(args)
+
+        if args.use_existing_release:
+            release = get_release_for_tag(args.repository, github_token, version_tag)
+        else:
+            release = create_new_release(
+                args.repository, github_token, version_tag, args.release_message
+            )
         if args.output_dir:
             output_dir = args.output_dir
         else:
