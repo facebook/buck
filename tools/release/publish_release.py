@@ -3,6 +3,7 @@
 import argparse
 import datetime
 import logging
+import logging.config
 import os
 import shutil
 import sys
@@ -170,10 +171,44 @@ def parse_args(args):
 
 
 def configure_logging():
+    # Bold message
     TTY_LOGGING = " publish_release => \033[1m%(message)s\033[0m"
     NOTTY_LOGGING = " publish_release => %(message)s"
     msg_format = TTY_LOGGING if sys.stderr.isatty() else NOTTY_LOGGING
-    logging.basicConfig(level=logging.INFO, format=msg_format)
+
+    # Red message for errors
+    TTY_ERROR_LOGGING = " publish_release => \033[1;31mERROR: %(message)s\033[0m"
+    NOTTY_ERROR_LOGGING = " publish_release => ERROR: %(message)s"
+    error_msg_format = TTY_ERROR_LOGGING if sys.stderr.isatty() else NOTTY_ERROR_LOGGING
+
+    class LevelFilter(logging.Filter):
+        def filter(self, record):
+            return record.levelno < logging.ERROR
+
+    logging.config.dictConfig(
+        {
+            "version": 1,
+            "filters": {"lower_than_error": {"()": LevelFilter}},
+            "formatters": {
+                "info": {"format": msg_format},
+                "error": {"format": error_msg_format},
+            },
+            "handlers": {
+                "info": {
+                    "level": "INFO",
+                    "class": "logging.StreamHandler",
+                    "formatter": "info",
+                    "filters": ["lower_than_error"],
+                },
+                "error": {
+                    "level": "ERROR",
+                    "class": "logging.StreamHandler",
+                    "formatter": "error",
+                },
+            },
+            "loggers": {"": {"handlers": ["info", "error"], "level": "INFO"}},
+        }
+    )
 
 
 def build(args, output_dir, release, github_token):
