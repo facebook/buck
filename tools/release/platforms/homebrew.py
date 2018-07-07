@@ -12,28 +12,63 @@ from platforms.common import ReleaseException, run, temp_move_file
 from releases import get_version_and_timestamp_from_release
 
 
+def brew(homebrew_dir, command, *run_args, **run_kwargs):
+    """
+    Run brew that is installed in the specified prefix.
+
+    Args:
+        homebrew_dir: The path containing bin/brew. e.g. /usr/local
+        command: The list of args to pass to the brew command
+        run_args: Extra args to send to platforms.common.run
+        run_kwargs: Extra kwargs to send to platforms.common.run
+    Returns:
+        Result from subprocess.run
+    """
+    brew_path = os.path.join(homebrew_dir, "bin", "brew")
+    return run([brew_path] + command, *run_args, **run_kwargs)
+
+
+def install_homebrew(homebrew_dir):
+    logging.info("Installing homebrew to {}".format(homebrew_dir))
+    if not os.path.exists(homebrew_dir):
+        os.makedirs(homebrew_dir)
+
+    logging.info("Downloading homebrew...")
+    response = requests.get(
+        "https://github.com/Homebrew/brew/tarball/master", stream=True
+    )
+    response.raise_for_status()
+    with tempfile.NamedTemporaryFile() as fout:
+        for chunk in response.iter_content(1024 * 1024):
+            fout.write(chunk)
+        fout.flush()
+        logging.info("Extracting homebrew...")
+        run(["tar", "xzf", fout.name, "--strip", "1", "-C", homebrew_dir])
+        logging.info("Extracted homebrew")
+
+
 def fetch_tarball_sha256(url):
     """ Get the sha256 of a tarball """
     logging.info("Fetching tarball from {}...".format(url))
     response = requests.get(url, stream=True)
     sha256 = hashlib.sha256()
-    for chunk in response.iter_content(chunk_size=4096):
+    for chunk in response.iter_content(chunk_size=1024 * 1024):
         sha256.update(chunk)
     hex_hash = sha256.hexdigest()
     logging.info("Downloaded {} with hash {}".format(url, hex_hash))
     return hex_hash
 
 
-def get_formula_path(tap_repository):
+def get_formula_path(homebrew_dir, tap_repository):
     """ Get the path for the buck forumula in the given repository """
-    result = run(["brew", "formula", tap_repository + "/buck"], None, True)
+    result = brew(homebrew_dir, ["formula", tap_repository + "/buck"], None, True)
     return result.stdout.decode("utf-8").strip()
 
 
-def setup_tap(tap_repository):
+def setup_tap(homebrew_dir, tap_repository):
     """ Make sure that `tap_repository` is tapped """
     logging.info("Tapping {}".format(tap_repository))
-    run(["brew", "tap", tap_repository])
+    brew(homebrew_dir, ["tap", tap_repository])
     logging.info("Tapped {}".format(tap_repository))
 
 
@@ -82,7 +117,12 @@ def update_formula_before_bottle(
 
 
 def build_bottle_file(
-    tap_repository, tap_path, release_version, target_macos_version, output_dir
+    homebrew_dir,
+    tap_repository,
+    tap_path,
+    release_version,
+    target_macos_version,
+    output_dir,
 ):
     """
     Builds the actual bottle file via brew
@@ -103,7 +143,7 @@ def build_bottle_file(
     # fails down the road. There is, so far as I could tell, no way to verify if
     # a formula is linked :/
     logging.info("Unlinking buck")
-    run(["brew", "unlink", brew_target], tap_path, check=False)
+    brew(homebrew_dir, ["unlink", brew_target], tap_path, check=False)
 
     logging.info("Building bottle")
     # If there is still a buck file that exists, move it out of the way for now
@@ -111,22 +151,28 @@ def build_bottle_file(
     with temp_move_file("/usr/local/bin/buck") as moved:
         # Cool, so install --force will still not rebuild. Uninstall, and just don't
         # care if the uninstall fails
-        run(
-            ["brew", "uninstall", "--force", "--build-bottle", brew_target],
+        brew(
+            homebrew_dir,
+            ["uninstall", "--force", "--build-bottle", brew_target],
             tap_path,
             check=False,
         )
-        run(["brew", "install", "--force", "--build-bottle", brew_target], tap_path)
+        brew(
+            homebrew_dir,
+            ["install", "--force", "--build-bottle", brew_target],
+            tap_path,
+        )
         logging.info("Creating bottle file")
-        run(
-            ["brew", "bottle", "--no-rebuild", "--skip-relocation", brew_target],
+        brew(
+            homebrew_dir,
+            ["bottle", "--no-rebuild", "--skip-relocation", brew_target],
             tap_path,
         )
         logging.info("Created bottle file")
         if moved:
             # Make sure to unlink again so that we can move the original file back
             logging.info("Unlinking buck again")
-            run(["brew", "unlink", brew_target], tap_path)
+            brew(homebrew_dir, ["unlink", brew_target], tap_path)
 
     bottle_filename = "buck-{ver}.{macos_ver}.bottle.tar.gz".format(
         ver=release_version, macos_ver=target_macos_version
@@ -223,19 +269,19 @@ def push_tap(git_repository, tap_path, version):
     logging.info("Reset state of {}, and updating it after push".format(tap_path))
 
 
-def validate_tap(tap_repository, version):
+def validate_tap(homebrew_dir, tap_repository, version):
     logging.info("Validating that brew installs with new tap information")
     brew_target = tap_repository + "/buck"
-    run(["brew", "uninstall", "--force", brew_target])
+    brew(homebrew_dir, ["uninstall", "--force", brew_target])
     with temp_move_file("/usr/local/bin/buck") as moved:
-        run(["brew", "install", brew_target])
+        brew(homebrew_dir, ["install", brew_target])
         output = (
-            run(["brew", "info", brew_target], capture_output=True)
+            brew(homebrew_dir, ["info", brew_target], capture_output=True)
             .stdout.decode("utf-8")
             .splitlines()[0]
         )
         if moved:
-            run(["brew", "uninstall", brew_target])
+            brew(homebrew_dir, ["uninstall", brew_target])
         if output != "{}/buck: stable {}".format(tap_repository, version):
             raise ReleaseException(
                 "Expected version {} to be installed, but got this from `brew info {}`: {}".format(
@@ -244,17 +290,17 @@ def validate_tap(tap_repository, version):
             )
 
 
-def publish_tap_changes(tap_repository, version):
+def publish_tap_changes(homebrew_dir, tap_repository, version):
     git_user, git_repo = tap_repository.split("/")
     full_git_repo = "{}/homebrew-{}".format(git_user, git_repo)
-    formula_path = get_formula_path(tap_repository)
+    formula_path = get_formula_path(homebrew_dir, tap_repository)
     tap_path = os.path.dirname(formula_path)
 
     push_tap(full_git_repo, tap_path, version)
 
 
-def log_about_manual_tap_push(tap_repository):
-    formula_path = get_formula_path(tap_repository)
+def log_about_manual_tap_push(homebrew_dir, tap_repository):
+    formula_path = get_formula_path(homebrew_dir, tap_repository)
     tap_path = os.path.dirname(formula_path)
     logging.info(
         "The homebrew tap is ready for a pull request. It can be found at {}".format(
@@ -264,12 +310,19 @@ def log_about_manual_tap_push(tap_repository):
 
 
 def build_bottle(
-    release, tap_repository, target_macos_version, target_macos_version_spec, output_dir
+    homebrew_dir,
+    release,
+    tap_repository,
+    target_macos_version,
+    target_macos_version_spec,
+    output_dir,
 ):
     release_version, release_timestamp = get_version_and_timestamp_from_release(release)
 
-    setup_tap(tap_repository)
-    formula_path = get_formula_path(tap_repository)
+    if not os.path.exists(os.path.join(homebrew_dir, "bin", "brew")):
+        install_homebrew(homebrew_dir)
+    setup_tap(homebrew_dir, tap_repository)
+    formula_path = get_formula_path(homebrew_dir, tap_repository)
     tap_path = os.path.dirname(formula_path)
 
     tarball_sha256 = fetch_tarball_sha256(release["tarball_url"])
@@ -281,7 +334,12 @@ def build_bottle(
 
     # Build the actual bottle file
     bottle_path = build_bottle_file(
-        tap_repository, tap_path, release_version, target_macos_version, output_dir
+        homebrew_dir,
+        tap_repository,
+        tap_path,
+        release_version,
+        target_macos_version,
+        output_dir,
     )
 
     # Get the bottle file sha, and update the bottle formula

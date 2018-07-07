@@ -160,6 +160,14 @@ def parse_args(args):
             "a temporary one"
         ),
     )
+    parser.add_argument(
+        "--homebrew-dir",
+        help=(
+            "Where homebrew is (e.g. /usr/local). If not specified, homebrew will be "
+            "installed in a separate, temporary directory that gets cleaned up after "
+            "building (unless --keep-temp-files is specified)"
+        ),
+    )
     parsed_kwargs = dict(parser.parse_args(args)._get_kwargs())
     if parsed_kwargs["deb_file"]:
         parsed_kwargs["build_deb"] = False
@@ -253,12 +261,21 @@ def validate_environment(args):
                 host_os,
             )
     if args.build_homebrew:
-        ret = run(["brew", "--version"], check=False)
-        if ret.returncode != 0:
-            raise ReleaseException("brew --version failed. bottles cannot be created")
+        if args.homebrew_dir:
+            if not os.path.exists(args.homebrew_dir):
+                raise ReleaseException(
+                    "Specified homebrew path, {}, does not exist", args.homebrew_dir
+                )
+            brew_path = os.path.join(args.homebrew_dir, "bin", "brew")
+            try:
+                ret = run([brew_path, "--version"])
+            except Exception:
+                raise ReleaseException(
+                    "{} --version failed. bottles cannot be created", brew_path
+                )
 
 
-def build(args, output_dir, release, github_token):
+def build(args, output_dir, release, github_token, homebrew_dir):
     deb_file = args.deb_file
     chocolatey_file = args.chocolatey_file
     homebrew_file = args.homebrew_file
@@ -271,6 +288,7 @@ def build(args, output_dir, release, github_token):
         )
     if args.build_homebrew:
         homebrew_file = build_bottle(
+            homebrew_dir,
             release,
             args.tap_repository,
             args.homebrew_target_macos_version,
@@ -327,6 +345,7 @@ def main():
         chocolatey_token = None
 
     temp_dir = None
+    temp_homebrew_dir = None
 
     try:
         validate_environment(args)
@@ -342,9 +361,14 @@ def main():
         else:
             temp_dir = tempfile.mkdtemp()
             output_dir = temp_dir
+        if args.homebrew_dir:
+            homebrew_dir = args.homebrew_dir
+        else:
+            temp_homebrew_dir = tempfile.mkdtemp()
+            homebrew_dir = temp_homebrew_dir
 
         deb_file, homebrew_file, chocolatey_file = build(
-            args, output_dir, release, github_token
+            args, output_dir, release, github_token, homebrew_dir
         )
         publish(
             args,
@@ -359,11 +383,20 @@ def main():
     except ReleaseException as e:
         logging.error(str(e))
     finally:
-        if not args.keep_temp_files and temp_dir:
-            try:
-                shutil.rmtree(temp_dir)
-            except Exception:
-                logging.error("Could not remove temp dir at {}".format(temp_dir))
+        if not args.keep_temp_files:
+
+            def remove(path):
+                try:
+                    shutil.rmtree(path)
+                except Exception:
+                    logging.error("Could not remove temp dir at {}".format(path))
+
+            if temp_dir:
+                remove(temp_dir)
+            if temp_homebrew_dir:
+                # If the person didn't want to publish, we need to keep this around
+                if not homebrew_file or not args.homebrew_push_tap:
+                    remove(temp_homebrew_dir)
 
 
 if __name__ == "__main__":
