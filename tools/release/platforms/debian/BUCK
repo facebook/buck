@@ -8,7 +8,7 @@ genrule(
     name = "update_version",
     srcs = ["buck.equivs"],
     out = "buck.equivs",
-    cmd = "sed -i 's,<VERSION>,v{},' $(location :buck.equivs) > $OUT".format(version),
+    cmd = "sed 's,<VERSION>,v{},' $(location :buck.equivs) > $OUT".format(version),
 )
 
 genrule(
@@ -26,6 +26,6 @@ genrule(
         "cp $SRCDIR/* $TMP/",
         "cp $(location //programs:buck) $TMP/buck",
         "equivs-build buck.equivs",
-        "mv *.deb $OUT",
+        "mv buck_{}_all.deb $OUT".format(version),
     ]),
 )

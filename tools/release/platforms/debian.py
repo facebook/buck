@@ -38,19 +38,8 @@ def validate(linux_host, image_tag, deb_path):
     """ Spin up a fresh docker image, and make sure that the deb installs and runs """
     DOCKERFILE = r"""\
 FROM azul/zulu-openjdk:8
+RUN sed -i 's,archive\.canonical\.com,mirror\.facebook\.net,g' /etc/apt/sources.list
 RUN apt-get update
-RUN apt-get install -y --no-install-recommends curl ca-certificates \
-      git pkg-config zip unzip \
-      g++ gcc \
-      zlib1g-dev libarchive-dev \
-      ca-certificates-java \
-      ant \
-      python \
-      groovy \
-      ghc \
-      equivs && \
-      apt-get clean
-
 ADD {deb_filename} /{deb_filename}
 RUN apt install -y /{deb_filename}
 RUN touch .buckconfig

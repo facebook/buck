@@ -21,4 +21,9 @@ WORKDIR /src
 
 RUN ant
 
+RUN ./bin/buck build -c buck.release_version=${version} -c buck.release_timestamp=${timestamp} buck
+
+# This gets updated by tooling to reflect the current state of GH releases
+ADD Changelog /src/tools/release/platforms/debian/Changelog
+
 RUN ./bin/buck build -c buck.release_version=${version} -c buck.release_timestamp=${timestamp} tools/release/platforms/debian --out /src/buck.deb
