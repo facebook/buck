@@ -1,5 +1,26 @@
 {namespace buck.audit}
 
+/**
+ * Use to format parameters of buck audit commands with complex syntax.
+ *
+ * @param name Name of the parameter; noAutoescape enables more complex
+ *        syntax for subcommands.
+ * @param? nodash If set, do not add "--" prefix to $name.
+ * @param? alias The alias for this parameter.
+ * @param desc Prose description of the parameter.
+ */
+{template .param}
+  <li class="{css arg}"><code>{if not $nodash}--{/if}{$name|noAutoescape}</code>
+  {sp}
+  {if $alias}
+    <code>(-{$alias})</code>
+  {/if}
+
+  {sp}
+  {$desc|noAutoescape}
+
+{/template}
+
 /***/
 {template .soyweb}
   {call buck.page}
@@ -7,7 +28,8 @@
     {param navid: 'command_audit' /}
     {param prettify: true /}
     {param description}
-      Provide build information about build targets and outputs.
+      Provide information about the build configuration parameters, targets, and
+      rules.
     {/param}
     {param content}
 
@@ -15,7 +37,7 @@
 {param overview}
 
 <p>
-Provide build information about build targets and outputs.
+Provide information about build configuration parameters, targets, and rules.
 </p>
 
 <p>
@@ -31,7 +53,7 @@ Example:
 <pre>buck audit input /&#x2F;java/com/example/app:amazing</pre>
 
 <p>
-For more examples, see the <b>Examples</b> section below.
+For more examples, see the command descriptions and <strong>Examples</strong> section below.
 </p>
 
 <h2>Commands</h2>
@@ -41,52 +63,170 @@ For more examples, see the <b>Examples</b> section below.
     {param name: 'alias --list' /}
     {param nodash: true /}
     {param desc}
-    List the aliases declared in
-    either {call buck.concept_buckconfig /} or <tt>.buckconfig.local</tt>.
+    <p>
+    List the aliases declared in {call buck.concept_buckconfig /} and <code>.buckconfig.local</code>.
+    This command lists only the aliases, not their values. To see the values, use the <code>buck audit config</code> command.
+    </p>
    {/param}
+  {/call}
+
+  {call buck.param}
+    {param name: 'buildruletype <rule>' /}
+    {param nodash: true /}
+    {param desc}
+    <p>
+    Print the Python signature for the specified rule.
+    </p>
+
+<p>
+<pre>
+{literal}
+buck audit buildruletype remote_file
+{/literal}
+</pre>
+</p>
+
+<p>
+<pre>
+{literal}
+def remote_file (
+    name,
+    sha1,
+    url,
+    labels = None,
+    licenses = None,
+    out = None,
+    type = None,
+):
+    ...
+{/literal}
+</pre>
+</p>
+
+    {/param}                    
+  {/call}
+
+  {call buck.param}
+    {param name: 'buildruletypes' /}
+    {param nodash: true /}
+    {param desc}
+    <p>
+    List all the build rules that Buck supports, in alphabetical order.
+    </p>
+
+<p>
+<pre>
+{literal}
+buck audit buildruletypes 
+{/literal}
+</pre>
+</p>
+
+<p>
+<pre>
+{literal}
+android_aar
+android_app_modularity
+android_binary
+android_build_config
+android_bundle
+android_instrumentation_apk
+android_instrumentation_test
+android_library
+android_manifest
+android_prebuilt_aar
+android_resource
+apk_genrule
+apple_asset_catalog
+apple_binary
+&lt;truncated>
+{/literal}
+</pre>
+</p>
+
+    {/param}
   {/call}
 
   {call buck.param}
     {param name: 'classpath <targets>' /}
     {param nodash: true /}
     {param desc}
-    List the classpath used to run the given targets. This does
+    <p>
+    List the Java classpath used to run the specified targets. This does
     not work for all build rule types.
+    </p>
     {/param}
   {/call}
 
-  {call buck.param}
-    {param name: 'config <section.property> [,...]' /}
+  {call buck.audit.param}
+    {param name: 'config &#x7b;&lt;section> | &lt;section.property>&#x7d; [...]' /}
     {param nodash: true /}
     {param desc}
-    List values from <code>.buckconfig</code> (and
+    <p>
+    List the values from <code>.buckconfig</code> (and
     {sp}<code>.buckconfig.local</code>) for the specified
-    sections and properties. Use <code>--tab</code> to get tab-delimited
-    details. For example, to get the C and C++ compiler, use
-    {literal}
-    <pre class="prettyprint lang-py">
-buck audit config invalid_section.novalue cxx.cc cxx.cxx
-</pre>
+    sections and properties. 
+    </p>
 
+    <p>
+    If you specify only the section name, <code>buck audit config</code> lists 
+    all the properties and values for that section.
+    </p>
+
+    <p>
+    Note that properties and values specified 
+    with {call buck.cmd_link}{param name: 'common_parameters' /}{param rendered_text: '--config' /}{/call} are 
+    not surfaced by this command, and those properties and values
+    override both <code>.buckconfig</code> and <code>.buckconfig.local</code>.
+    </p>
+
+    <p>
+    Use <code>--tab</code> to get tab-delimited output. 
+    </p>
+
+    <p>
+    Example: To get the C compiler and the C++ compiler, use
+    </p>
+
+<p>
 <pre class="prettyprint lang-py">
+{literal}
+buck audit config cxx.cc cxx.cxx
+{/literal}
+</pre>
+</p>
+
+<p>
+<pre class="prettyprint lang-py">
+{literal}
 [cxx]
     cc = /usr/bin/gcc
     cxx = /usr/bin/g++
+{/literal}
 </pre>
-    {/literal}
-<p>
-or
 </p>
-    {literal}
-    <pre class="prettyprint lang-py">
-buck audit config --tab invalid_section.novalue cxx.cc cxx.cxx
-</pre>
+
+<p>
+or (with <code>--tab</code>)
+</p>
+
+<p>
 <pre class="prettyprint lang-py">
-invalid_section.novalue&#9;
+{literal}
+buck audit config --tab cxx.cc cxx.cxx
+{/literal}
+</pre>
+</p>
+
+<p>
+<pre class="prettyprint lang-py">
+{literal}
 cxx.cc&#9;/usr/bin/gcc
 cxx.cxx&#9;/usr/bin/g++
+{/literal}
 </pre>
-    {/literal}
+</p>
+
     {/param}
   {/call}
 
@@ -94,7 +234,8 @@ cxx.cxx&#9;/usr/bin/g++
     {param name: 'dependencies <targets>' /}
     {param nodash: true /}
     {param desc}
-    List the dependencies used to build the given targets. Results are
+    <p>
+    List the dependencies used to build the specified targets. Results are
     listed in alphabetical order. By default, only direct dependencies
     are listed; to show transitive dependencies, use 
     the <code>--transitive</code> parameter.  To show tests for a rule, use
@@ -102,7 +243,7 @@ cxx.cxx&#9;/usr/bin/g++
     tests as if they were dependencies of the rule.  To print out all of
     the <em>test's</em> dependencies as well, 
     combine <code>--include-tests</code> with the <code>--transitive</code> parameter. 
-
+    </p>
     {/param}
   {/call}
 
@@ -110,6 +251,7 @@ cxx.cxx&#9;/usr/bin/g++
     {param name: 'flavors <targets>' /}
     {param nodash: true /}
     {param desc}
+    <p>
     List the flavors that are available for the specified targets and
     what the default flavor is for each target. 
     If the <code>flavors</code> command prints <code>no flavors</code>, 
@@ -118,6 +260,7 @@ cxx.cxx&#9;/usr/bin/g++
     prints <code>unknown</code>, it indicates that the target rule
     doesn't support flavors. The <code>flavors</code> command supports
     the <code>--json</code> parameter for JSON-formatted output.
+    </p>
    {/param}
   {/call}
 
@@ -125,8 +268,10 @@ cxx.cxx&#9;/usr/bin/g++
     {param name: 'input <targets>' /}
     {param nodash: true /}
     {param desc}
+    <p>
     List the input source and resource files used to build the
-    given targets.
+    specified targets.
+    </p>
    {/param}
   {/call}
 
@@ -134,8 +279,10 @@ cxx.cxx&#9;/usr/bin/g++
     {param name: 'includes <build_file>' /}
     {param nodash: true /}
     {param desc}
-        List the {call buck.build_file /}s, and their extensions, that 
-        are included in the given build file.
+    <p>
+    List the {call buck.build_file /}s, and their extensions, that 
+    are included in the specified build file.
+    </p>
     {/param}
   {/call}
 
@@ -143,27 +290,35 @@ cxx.cxx&#9;/usr/bin/g++
     {param name: 'modules' /}
     {param nodash: true /}
     {param desc}
-        List the modules known by Buck as well as their content hashes and dependencies.
+    <p>
+    List the Java modules known by Buck as well as their content hashes and dependencies.
+    </p>
     {/param}
   {/call}
 
   {call buck.param}
-    {param name: 'tests <targets>' /}
+    {param name: 'tests <targets> [...]' /}
     {param nodash: true /}
     {param desc}
-    List the tests for the given targets. Results are listed in alphabetical
-    order. Only tests for the given targets are printed, though multiple
+    <p>
+    List the tests for the specified targets. Results are listed in alphabetical
+    order. Only tests for the specified targets are printed, though multiple
     targets may be specified on a single command line. 
     This command is intended to be used in
     conjunction with the <code>audit dependencies</code> command. For example,
     to retrieve a list of all tests for a given project, use:
-    <br>
-    <br>
-    <pre>
-    buck audit dependencies --transitive PROJECT | xargs buck audit tests
-    </pre>
+    </p>
+<p>
+<pre>
+{literal}
+buck audit dependencies --transitive PROJECT | xargs buck audit tests
+{/literal}
+</pre>
+</p>
+
     {/param}
   {/call}
+
 </ul>
 {/param}
 
@@ -172,55 +327,69 @@ cxx.cxx&#9;/usr/bin/g++
 {call buck.param}
   {param name: 'include-tests' /}
   {param desc}
+  <p>
   Show the tests for the specified targets. Can be combined with 
   the <code>--transitive</code> parameter. For more information, see 
   the <code>dependencies</code> command.   
+  </p>
   {/param}
 {/call}
 
 {call buck.param}
   {param name: 'json' /}
   {param desc}
+  <p>
   Output the results as JSON.
+  </p>
   {/param}
 {/call}
 
 {call buck.param}
   {param name: 'list' /}
   {param desc}
+  <p>
   List <code>.buckconfig</code> and <code>.buckconfig.local</code> aliases. 
   Used only with the <code>aliases</code> command. For more information, see 
   that command.
+  </p>
   {/param}
 {/call}
 
 {call buck.param}
   {param name: 'tab' /}
   {param desc}
+  <p>
   Output the results using tab delimiters.
   Used only with the <code>config</code> command. For more information, see 
   that command.
+  </p>
   {/param}
 {/call}
 
 {call buck.param}
   {param name: 'transitive' /}
   {param desc}
+  <p>
   Show transitive dependencies in addition to direct dependencies. Can
   be combined with the <code>--include-tests</code> parameter. For
   more information, see the <code>dependencies</code> command. 
+  </p>
   {/param}
 {/call}
-
 
 {/param}
 
 {param examples}
 
+<p>
 <pre class="prettyprint lang-py">
 {literal}
+#
+# BUCK
+#
 # For all of the following examples, assume this BUCK file exists in
 # the `examples` directory.
+#
 java_library(
   name = 'one',
   srcs = [ '1.txt' ],
@@ -252,7 +421,7 @@ java_library(
   srcs = [ '4.txt' ],
   deps = [
     ':five',
-  ]
+  ],
 )
 
 java_library(
@@ -261,21 +430,47 @@ java_library(
 )
 {/literal}
 </pre>
+</p>
 
-Lists all of the source files used to build the <code>one</code> library
-<pre>buck audit input /&#x2F;examples:one</pre>
+<p>
+List all of the source files used to build the <code>one</code> library
+</p>
+
+<p>
 <pre>
-examples/1.txt{\n}
-examples/2.txt{\n}
-examples/3.txt{\n}
-examples/4.txt{\n}
-examples/5.txt{\n}
+{literal}
+buck audit input /&#x2F;examples:one
+{/literal}
 </pre>
+</p>
 
-Outputs a JSON representation of all of the source files used to build the{sp}
+<p>
+<pre>
+{literal}
+examples/1.txt
+examples/2.txt
+examples/3.txt
+examples/4.txt
+examples/5.txt
+{/literal}
+</pre>
+</p>
+
+<p>
+Output a JSON representation of all of the source files used to build the{sp}
 <code>two</code> library. In this JSON object, each key is a build target and
 each value is an array of the source paths used to build that rule.
-<pre>buck audit input --json /&#x2F;examples:two</pre>
+</p>
+
+<p>
+<pre>
+{literal}
+buck audit input --json /&#x2F;examples:two
+{/literal}
+</pre>
+</p>
+
+<p>
 <pre class="prettyprint lang-js">
 {literal}
 {
@@ -285,18 +480,42 @@ each value is an array of the source paths used to build that rule.
 }
 {/literal}
 </pre>
+</p>
 
-Lists all of the rules that the <code>one</code> library directly depends on
-<pre>buck audit dependencies /&#x2F;examples:one</pre>
+<p>
+List all of the rules that the <code>one</code> library directly depends on
+</p>
+
+<p>
+<pre>
+{literal}
+buck audit dependencies /&#x2F;examples:one
+{/literal}
+</pre>
+</p>
+
+<p>
 <pre>
 {literal}
 //examples:three
 //examples:two
 {/literal}
 </pre>
+</p>
 
-Lists all of the rules that the <code>one</code> library transitively depends on
-<pre>buck audit dependencies --transitive /&#x2F;examples:one</pre>
+<p>
+List all of the rules that the <code>one</code> library transitively depends on
+</p>
+
+<p>
+<pre>
+{literal}
+buck audit dependencies --transitive /&#x2F;examples:one
+{/literal}
+</pre>
+</p>
+
+<p>
 <pre>
 {literal}
 //examples:five
@@ -305,10 +524,22 @@ Lists all of the rules that the <code>one</code> library transitively depends on
 //examples:two
 {/literal}
 </pre>
+</p>
 
-Outputs a JSON representation of all of the rules that the <code>two</code>{sp}
+<p>
+Output a JSON representation of all of the rules that the <code>two</code>{sp}
 library transitively depends on.
-<pre>buck audit dependencies --transitive --json /&#x2F;examples:two</pre>
+</p>
+
+<p>
+<pre>
+{literal}
+buck audit dependencies --transitive --json /&#x2F;examples:two
+{/literal}
+</pre>
+</p>
+
+<p>
 <pre class="prettyprint lang-js">
 {literal}
 {
@@ -316,10 +547,22 @@ library transitively depends on.
 }
 {/literal}
 </pre>
+</p>
 
-Outputs a JSON representation of the direct dependencies of the{sp}
+<p>
+Output a JSON representation of the direct dependencies of the{sp}
 <code>two</code> and <code>three</code> libraries.
-<pre>buck audit dependencies --json /&#x2F;examples:two /&#x2F;examples:three</pre>
+</p>
+
+<p>
+<pre>
+{literal}
+buck audit dependencies --json /&#x2F;examples:two /&#x2F;examples:three
+{/literal}
+</pre>
+</p>
+
+<p>
 <pre class="prettyprint lang-js">
 {literal}
 {
@@ -328,6 +571,7 @@ Outputs a JSON representation of the direct dependencies of the{sp}
 }
 {/literal}
 </pre>
+</p>
 
 {/param}
 
@@ -337,12 +581,12 @@ Outputs a JSON representation of the direct dependencies of the{sp}
 <h2>See also</h2>
 
 <p>
-{call buck.concept_buckconfig /}
+<ul>
+<li>{call buck.concept_link}{param page: 'build_file' /}{param name: 'Build File' /}{/call}</li>
+<li>{call buck.concept_link}{param page: 'buckconfig' /}{param name: 'buckconfig' /}{/call}</li>
+</ul>
 </p>
 
-<p>
-{call buck.build_file /} 
-</p>
 
     {/param}  // content
   {/call} // buck.page
