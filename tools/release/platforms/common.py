@@ -9,8 +9,8 @@ WINDOWS_EXIT_ZERO = ["powershell", "-Command", "exit", "0"]
 
 
 class ReleaseException(Exception):
-    def __init__(format_string, *args, **kwargs):
-        super(format_string.format(*args, **kwargs))
+    def __init__(self, format_string, *args, **kwargs):
+        super().__init__(format_string.format(*args, **kwargs))
 
 
 @contextlib.contextmanager

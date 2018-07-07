@@ -272,8 +272,8 @@ def main():
             chocolatey_file,
         )
 
-    except ReleaseException:
-        logging.error(str(ReleaseException))
+    except ReleaseException as e:
+        logging.error(str(e))
     finally:
         if not args.keep_temp_files and temp_dir:
             try:
