@@ -259,4 +259,12 @@ public class GoBinaryIntegrationTest {
     workspace.setUp();
     workspace.runBuckBuild("//:family").assertSuccess();
   }
+
+  @Test
+  public void cgoIncludeHeaderFromSamePackage() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "cgo", tmp);
+    workspace.setUp();
+    ProcessResult result = workspace.runBuckCommand("run", "//src/mixed_with_c:bin");
+    result.assertSuccess();
+  }
 }

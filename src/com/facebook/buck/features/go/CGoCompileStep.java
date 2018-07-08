@@ -58,6 +58,8 @@ public class CGoCompileStep extends ShellStep {
         .add("-importpath", context.getBuildCellRootPath().toString())
         .add("-srcdir", context.getBuildCellRootPath().toString())
         .add("-objdir", outputDir.toString())
+        .add("--")
+        .add("-I" + getBuildTarget().get().getBasePath().toString())
         .addAll(cgoCompilerFlags)
         .addAll(srcs.stream().map(Object::toString).iterator())
         .build();
