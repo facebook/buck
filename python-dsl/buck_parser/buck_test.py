@@ -13,7 +13,7 @@ from .buck import (
     host_info,
     subdir_glob,
 )
-from .glob_internal import glob_internal, path_component_contains_dot
+from .glob_internal import glob_internal, path_component_starts_with_dot
 from .glob_watchman import format_watchman_query_params
 
 
@@ -566,13 +566,13 @@ class TestBuck(unittest.TestCase):
         self.assertEquals({"a": "baz"}, override)
         self.assertEquals({"a": 42, "c": "new"}, override2)
 
-    def test_path_component_contains_dot(self):
-        self.assertFalse(path_component_contains_dot(Path("")))
-        self.assertFalse(path_component_contains_dot(Path("foo")))
-        self.assertFalse(path_component_contains_dot(Path("foo/bar")))
-        self.assertTrue(path_component_contains_dot(Path(".foo/bar")))
-        self.assertTrue(path_component_contains_dot(Path("foo/.bar")))
-        self.assertTrue(path_component_contains_dot(Path(".foo/.bar")))
+    def test_path_component_starts_with_dot(self):
+        self.assertFalse(path_component_starts_with_dot(Path("")))
+        self.assertFalse(path_component_starts_with_dot(Path("foo")))
+        self.assertFalse(path_component_starts_with_dot(Path("foo/bar")))
+        self.assertTrue(path_component_starts_with_dot(Path(".foo/bar")))
+        self.assertTrue(path_component_starts_with_dot(Path("foo/.bar")))
+        self.assertTrue(path_component_starts_with_dot(Path(".foo/.bar")))
 
 
 class TestHostInfo(unittest.TestCase):

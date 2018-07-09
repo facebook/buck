@@ -3,7 +3,7 @@
 from .util import is_special
 
 
-def path_component_contains_dot(relative_path):
+def path_component_starts_with_dot(relative_path):
     for p in relative_path.parts:
         if p.startswith("."):
             return True
@@ -24,7 +24,7 @@ def glob_internal(
                 # TODO(beng): Handle hidden files on Windows.
                 if path.is_file() and (
                     include_dotfiles
-                    or not path_component_contains_dot(path.relative_to(search_base))
+                    or not path_component_starts_with_dot(path.relative_to(search_base))
                 ):
                     yield path
 
