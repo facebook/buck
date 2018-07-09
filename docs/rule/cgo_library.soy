@@ -54,7 +54,9 @@ This rule borrows from cxx_binary since C/C++ sources are being compiled.
 
 {call cxx_common.platform_linker_flags_arg /}
 
-{call native_common.link_style /}
+{call native_common.link_style }
+  {param default: 'static_pic' /}
+{/call}
 
 {call cxx_common.raw_headers_arg /}
 
