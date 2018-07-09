@@ -30,6 +30,10 @@
       <item index="10" class="java.lang.String" itemvalue="org.kohsuke.args4j.Argument" />
       <item index="11" class="java.lang.String" itemvalue="org.kohsuke.args4j.Option" />
     </list>
+    <writeAnnotations>
+      <writeAnnotation name="com.facebook.infer.annotation.SuppressFieldNotInitialized" />
+      <writeAnnotation name="org.kohsuke.args4j.Option" />
+    </writeAnnotations>
   </component>
   <component name="FrameworkDetectionExcludesConfiguration">
     <type id="android" />

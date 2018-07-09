@@ -1,6 +1,16 @@
 <component name="InspectionProjectProfileManager">
   <profile version="1.0">
     <option name="myName" value="Project Default" />
+    <inspection_tool class="FieldCanBeLocal" enabled="true" level="WARNING" enabled_by_default="true">
+      <option name="EXCLUDE_ANNOS">
+        <value>
+          <list size="1">
+            <item index="0" class="java.lang.String" itemvalue="org.kohsuke.args4j.Option" />
+          </list>
+        </value>
+      </option>
+      <option name="IGNORE_FIELDS_USED_IN_MULTIPLE_METHODS" value="true" />
+    </inspection_tool>
     <inspection_tool class="MissingOverrideAnnotation" enabled="true" level="ERROR" enabled_by_default="true">
       <option name="ignoreObjectMethods" value="true" />
       <option name="ignoreAnonymousClassMethods" value="false" />
