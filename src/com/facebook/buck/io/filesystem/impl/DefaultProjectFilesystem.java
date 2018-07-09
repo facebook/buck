@@ -102,7 +102,7 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
   private final Supplier<Path> tmpDir;
 
   private final ProjectFilesystemDelegate delegate;
-  private final WindowsFS winFSInstance;
+  @Nullable private final WindowsFS winFSInstance;
 
   // Defaults to false, and so paths should be valid.
   @VisibleForTesting protected boolean ignoreValidityOfPaths;
@@ -140,10 +140,6 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
       Preconditions.checkArgument(Files.isDirectory(root), "%s must be a directory", root);
       Preconditions.checkState(vfs.equals(root.getFileSystem()));
       Preconditions.checkArgument(root.isAbsolute(), "Expected absolute path. Got <%s>.", root);
-    }
-
-    if (Platform.detect() == Platform.WINDOWS) {
-      Preconditions.checkNotNull(winFSInstance);
     }
 
     this.projectRoot = MorePaths.normalize(root);
@@ -197,6 +193,9 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
             });
 
     this.winFSInstance = winFSInstance;
+    if (Platform.detect() == Platform.WINDOWS) {
+      Preconditions.checkNotNull(this.winFSInstance);
+    }
   }
 
   public static Path getCacheDir(Path root, Optional<String> value, BuckPaths buckPaths) {

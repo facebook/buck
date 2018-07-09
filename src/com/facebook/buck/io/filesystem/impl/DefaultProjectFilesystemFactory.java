@@ -44,7 +44,7 @@ public class DefaultProjectFilesystemFactory implements ProjectFilesystemFactory
   private static final Pattern GLOB_CHARS = Pattern.compile("[\\*\\?\\{\\[]");
 
   // WindowsFS singleton instance
-  private static WindowsFS winFSInstance = null;
+  @Nullable private static WindowsFS winFSInstance = null;
 
   /** Intialize the winFSInstane singleton when on Windows. */
   static {
@@ -58,6 +58,7 @@ public class DefaultProjectFilesystemFactory implements ProjectFilesystemFactory
    *
    * @return the WindowsFS instance.
    */
+  @Nullable
   public static WindowsFS getWindowsFSInstance() {
     return winFSInstance;
   }
