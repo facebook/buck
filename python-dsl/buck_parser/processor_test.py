@@ -1354,6 +1354,44 @@ class BuckTest(unittest.TestCase):
             build_file_processor._get_load_path("foo//bar:baz"),
         )
 
+    def test_load_path_with_cell_with_dot_is_resolved(self):
+        build_file_processor = self.create_build_file_processor(
+            cell_roots={
+                "foo.cell": os.path.abspath(os.path.join(self.project_root, "../cell"))
+            }
+        )
+        build_file_processor._current_build_env = IncludeContext(
+            "foo.cell", "some_lib.bzl"
+        )
+        self.assertEqual(
+            BuildInclude(
+                cell_name="foo.cell",
+                path=os.path.abspath(
+                    os.path.join(self.project_root, "../cell/bar/baz")
+                ),
+            ),
+            build_file_processor._get_load_path("foo.cell//bar:baz"),
+        )
+
+    def test_load_path_with_cell_with_dash_is_resolved(self):
+        build_file_processor = self.create_build_file_processor(
+            cell_roots={
+                "foo-cell": os.path.abspath(os.path.join(self.project_root, "../cell"))
+            }
+        )
+        build_file_processor._current_build_env = IncludeContext(
+            "foo-cell", "some_lib.bzl"
+        )
+        self.assertEqual(
+            BuildInclude(
+                cell_name="foo-cell",
+                path=os.path.abspath(
+                    os.path.join(self.project_root, "../cell/bar/baz")
+                ),
+            ),
+            build_file_processor._get_load_path("foo-cell//bar:baz"),
+        )
+
     def test_load_path_with_skylark_style_cell_is_resolved(self):
         build_file_processor = self.create_build_file_processor(
             cell_roots={

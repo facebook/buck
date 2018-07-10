@@ -72,7 +72,7 @@ DEFAULT_WATCHMAN_QUERY_TIMEOUT = 60.0
 ORIGINAL_IMPORT = __builtin__.__import__
 
 _LOAD_TARGET_PATH_RE = re.compile(
-    r"^(?P<root>(?P<cell>@?[A-Za-z0-9_]+)?//)?(?P<package>.*):(?P<target>.*)$"
+    r"^(?P<root>(?P<cell>@?[\w\-.]+)?//)?(?P<package>.*):(?P<target>.*)$"
 )
 
 
