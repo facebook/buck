@@ -217,7 +217,8 @@ public class AndroidInstrumentationApkDescription
             args.getDexTool(),
             /* postFilterResourcesCommands */ Optional.empty(),
             nonPreDexedDexBuildableArgs,
-            rulesToExcludeFromDex);
+            rulesToExcludeFromDex,
+            false);
 
     AndroidGraphEnhancementResult enhancementResult = graphEnhancer.createAdditionalBuildables();
     AndroidBinaryFilesInfo filesInfo =

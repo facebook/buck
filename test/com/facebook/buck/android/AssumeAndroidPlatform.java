@@ -164,4 +164,12 @@ public class AssumeAndroidPlatform {
       currentPart++;
     }
   }
+
+  public static void assumeBundleBuildIsSupported() {
+    AndroidSdkLocation androidSdkLocation = getAndroidSdkLocation();
+
+    assumeBuildToolsIsNewer(androidSdkLocation, "28.0.0");
+
+    assumeAapt2IsAvailable(androidSdkLocation);
+  }
 }

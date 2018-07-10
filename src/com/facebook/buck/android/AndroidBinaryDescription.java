@@ -163,7 +163,8 @@ public class AndroidBinaryDescription
             dexSplitMode,
             exopackageModes,
             rulesToExcludeFromDex,
-            args);
+            args,
+            false);
     AndroidBinary androidBinary =
         androidBinaryFactory.create(
             toolchainProvider,

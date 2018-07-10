@@ -222,7 +222,8 @@ public class AndroidBundle extends AbstractBuildRule
             resourceFilesInfo,
             apkModules,
             enhancementResult.getModuleResourceApkPaths(),
-            apkCompressionLevel);
+            apkCompressionLevel,
+            false);
     this.exopackageInfo = exopackageInfo;
 
     params =

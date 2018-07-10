@@ -57,6 +57,7 @@ public class Aapt2Link extends AbstractBuildRule {
   @AddToRuleKey private final boolean noAutoVersion;
   @AddToRuleKey private final boolean noVersionTransitions;
   @AddToRuleKey private final boolean noAutoAddOverlay;
+  @AddToRuleKey private final boolean useProtoFormat;
   @AddToRuleKey private final ImmutableList<Aapt2Compile> compileRules;
   @AddToRuleKey private final SourcePath manifest;
   @AddToRuleKey private final ManifestEntries manifestEntries;
@@ -78,6 +79,7 @@ public class Aapt2Link extends AbstractBuildRule {
       boolean noAutoVersion,
       boolean noVersionTransitions,
       boolean noAutoAddOverlay,
+      boolean useProtoFormat,
       AndroidPlatformTarget androidPlatformTarget) {
     super(buildTarget, projectFilesystem);
     this.androidPlatformTarget = androidPlatformTarget;
@@ -89,6 +91,7 @@ public class Aapt2Link extends AbstractBuildRule {
     this.noAutoVersion = noAutoVersion;
     this.noVersionTransitions = noVersionTransitions;
     this.noAutoAddOverlay = noAutoAddOverlay;
+    this.useProtoFormat = useProtoFormat;
     this.buildDepsSupplier =
         MoreSuppliers.memoize(
             () ->
@@ -264,6 +267,10 @@ public class Aapt2Link extends AbstractBuildRule {
 
       if (!noAutoAddOverlay) {
         builder.add("--auto-add-overlay");
+      }
+
+      if (useProtoFormat) {
+        builder.add("--proto-format");
       }
 
       ProjectFilesystem pf = getProjectFilesystem();

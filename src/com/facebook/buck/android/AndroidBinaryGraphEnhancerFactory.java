@@ -66,7 +66,8 @@ public class AndroidBinaryGraphEnhancerFactory {
       DexSplitMode dexSplitMode,
       EnumSet<ExopackageMode> exopackageModes,
       ImmutableSortedSet<JavaLibrary> rulesToExcludeFromDex,
-      AndroidGraphEnhancerArgs args) {
+      AndroidGraphEnhancerArgs args,
+      boolean useProtoFormat) {
 
     AndroidPlatformTarget androidPlatformTarget =
         toolchainProvider.getByName(
@@ -184,7 +185,8 @@ public class AndroidBinaryGraphEnhancerFactory {
         args.getDexTool(),
         getPostFilterResourcesArgs(args, buildTarget, graphBuilder, cellPathResolver),
         nonPreDexedDexBuildableArgs,
-        rulesToExcludeFromDex);
+        rulesToExcludeFromDex,
+        useProtoFormat);
   }
 
   private ImmutableSet<String> addFallbackLocales(ImmutableSet<String> locales) {

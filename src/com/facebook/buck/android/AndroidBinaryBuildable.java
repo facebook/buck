@@ -114,6 +114,8 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
 
   @AddToRuleKey private final ImmutableMap<APKModule, SourcePath> moduleResourceApkPaths;
 
+  private final boolean isApk;
+
   // These should be the only things not added to the rulekey.
   private final ProjectFilesystem filesystem;
   private final BuildTarget buildTarget;
@@ -141,7 +143,8 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
       ResourceFilesInfo resourceFilesInfo,
       ImmutableSortedSet<APKModule> apkModules,
       ImmutableMap<APKModule, SourcePath> moduleResourceApkPaths,
-      int apkCompressionLevel) {
+      int apkCompressionLevel,
+      boolean isApk) {
     this.filesystem = filesystem;
     this.buildTarget = buildTarget;
     this.androidSdkLocation = androidSdkLocation;
@@ -163,6 +166,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
     this.compressAssetLibraries = compressAssetLibraries;
     this.resourceFilesInfo = resourceFilesInfo;
     this.apkCompressionLevel = apkCompressionLevel;
+    this.isApk = isApk;
   }
 
   @SuppressWarnings("PMD.PrematureDeclaration")
@@ -295,22 +299,39 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
             .stream()
             .map(resolver::getAbsolutePath)
             .collect(ImmutableSet.toImmutableSet());
-
-    steps.add(
-        new ApkBuilderStep(
-            getProjectFilesystem(),
-            pathResolver.getAbsolutePath(resourceFilesInfo.resourcesApkPath),
-            getSignedApkPath(),
-            pathResolver.getRelativePath(dexFilesInfo.primaryDexPath),
-            allAssetDirectories,
-            nativeLibraryDirectoriesBuilder.build(),
-            zipFiles.build(),
-            thirdPartyJars,
-            pathToKeystore,
-            keystoreProperties,
-            false,
-            javaRuntimeLauncher.getCommandPrefix(pathResolver),
-            apkCompressionLevel));
+    if (isApk) {
+      steps.add(
+          new ApkBuilderStep(
+              getProjectFilesystem(),
+              pathResolver.getAbsolutePath(resourceFilesInfo.resourcesApkPath),
+              getSignedApkPath(),
+              pathResolver.getRelativePath(dexFilesInfo.primaryDexPath),
+              allAssetDirectories,
+              nativeLibraryDirectoriesBuilder.build(),
+              zipFiles.build(),
+              thirdPartyJars,
+              pathToKeystore,
+              keystoreProperties,
+              false,
+              javaRuntimeLauncher.getCommandPrefix(pathResolver),
+              apkCompressionLevel));
+    } else {
+      steps.add(
+          new AabBuilderStep(
+              getProjectFilesystem(),
+              pathResolver.getAbsolutePath(resourceFilesInfo.resourcesApkPath),
+              getSignedApkPath(),
+              pathResolver.getRelativePath(dexFilesInfo.primaryDexPath),
+              allAssetDirectories,
+              nativeLibraryDirectoriesBuilder.build(),
+              zipFiles.build(),
+              thirdPartyJars,
+              pathToKeystore,
+              keystoreProperties,
+              false,
+              javaRuntimeLauncher.getCommandPrefix(pathResolver),
+              apkCompressionLevel));
+    }
 
     // The `ApkBuilderStep` delegates to android tools to build a ZIP with timestamps in it, making
     // the output non-deterministic.  So use an additional scrubbing step to zero these out.

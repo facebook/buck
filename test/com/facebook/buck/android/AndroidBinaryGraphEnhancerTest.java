@@ -185,7 +185,8 @@ public class AndroidBinaryGraphEnhancerTest {
             DxStep.DX,
             Optional.empty(),
             defaultNonPredexedArgs(),
-            ImmutableSortedSet.of());
+            ImmutableSortedSet.of(),
+            false);
 
     BuildTarget aaptPackageResourcesTarget =
         BuildTargetFactory.newInstance("//java/com/example:apk#aapt_package");
@@ -350,7 +351,8 @@ public class AndroidBinaryGraphEnhancerTest {
             DxStep.DX,
             Optional.empty(),
             defaultNonPredexedArgs(),
-            ImmutableSortedSet.of());
+            ImmutableSortedSet.of(),
+            false);
     AndroidGraphEnhancementResult result = graphEnhancer.createAdditionalBuildables();
 
     // Verify that android_build_config() was processed correctly.
@@ -483,7 +485,8 @@ public class AndroidBinaryGraphEnhancerTest {
             DxStep.DX,
             Optional.empty(),
             defaultNonPredexedArgs(),
-            ImmutableSortedSet.of());
+            ImmutableSortedSet.of(),
+            false);
     graphEnhancer.createAdditionalBuildables();
 
     BuildRule aaptPackageResourcesRule = findRuleOfType(graphBuilder, AaptPackageResources.class);
@@ -560,7 +563,8 @@ public class AndroidBinaryGraphEnhancerTest {
             DxStep.DX,
             Optional.empty(),
             defaultNonPredexedArgs(),
-            ImmutableSortedSet.of());
+            ImmutableSortedSet.of(),
+            false);
     graphEnhancer.createAdditionalBuildables();
 
     ResourcesFilter resourcesFilter = findRuleOfType(graphBuilder, ResourcesFilter.class);
@@ -666,7 +670,8 @@ public class AndroidBinaryGraphEnhancerTest {
             DxStep.DX,
             Optional.empty(),
             defaultNonPredexedArgs(),
-            ImmutableSortedSet.of());
+            ImmutableSortedSet.of(),
+            false);
     graphEnhancer.createAdditionalBuildables();
 
     ResourcesFilter resourcesFilter = findRuleOfType(graphBuilder, ResourcesFilter.class);

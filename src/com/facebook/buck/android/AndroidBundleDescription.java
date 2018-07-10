@@ -163,7 +163,8 @@ public class AndroidBundleDescription
             dexSplitMode,
             exopackageModes,
             rulesToExcludeFromDex,
-            args);
+            args,
+            true);
     AndroidBundle androidBundle =
         androidBundleFactory.create(
             toolchainProvider,

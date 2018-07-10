@@ -190,7 +190,8 @@ public class AndroidBinaryGraphEnhancer {
       String dexTool,
       Optional<Arg> postFilterResourcesCmd,
       NonPredexedDexBuildableArgs nonPreDexedDexBuildableArgs,
-      ImmutableSortedSet<JavaLibrary> rulesToExcludeFromDex) {
+      ImmutableSortedSet<JavaLibrary> rulesToExcludeFromDex,
+      boolean useProtoFormat) {
     this.ignoreAaptProguardConfig = ignoreAaptProguardConfig;
     this.androidPlatformTarget = androidPlatformTarget;
     Preconditions.checkArgument(originalParams.getExtraDeps().get().isEmpty());
@@ -262,7 +263,8 @@ public class AndroidBinaryGraphEnhancer {
             noAutoVersionResources,
             noVersionTransitionsResources,
             noAutoAddOverlayResources,
-            apkModuleGraph);
+            apkModuleGraph,
+            useProtoFormat);
     this.apkModuleGraph = apkModuleGraph;
     this.dxConfig = dxConfig;
     this.nonPreDexedDexBuildableArgs = nonPreDexedDexBuildableArgs;

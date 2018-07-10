@@ -27,6 +27,7 @@ import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.testutil.integration.ZipInspector;
 import com.facebook.buck.util.zip.ZipConstants;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -50,6 +51,7 @@ public class AndroidAppBundleIntegrationTest extends AbiCompilationModeTest {
   public void setUp() throws InterruptedException, IOException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
     AssumeAndroidPlatform.assumeNdkIsAvailable();
+    AssumeAndroidPlatform.assumeBundleBuildIsSupported();
     workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "android_project", tmpFolder);
     workspace.setUp();
@@ -73,5 +75,12 @@ public class AndroidAppBundleIntegrationTest extends AbiCompilationModeTest {
         assertThat(entry.getName(), new Date(entry.getTime()), Matchers.equalTo(dosEpoch));
       }
     }
+
+    ZipInspector zipInspector = new ZipInspector(aab);
+    zipInspector.assertFileExists("base/dex/classes.dex");
+    zipInspector.assertFileExists("base/resources.pb");
+    zipInspector.assertFileExists("base/manifest/AndroidManifest.xml");
+    zipInspector.assertFileExists("base/assets/asset_file.txt");
+    zipInspector.assertFileExists("base/res/drawable/tiny_black.png");
   }
 }
