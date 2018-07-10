@@ -33,6 +33,14 @@ A fully-qualified build target has three components:
       Build rule names must be unique within a build file.
 </ol>
 
+The full regular expression of a valid build target is as follows:
+{literal}
+<pre>
+[A-Za-z0-9._-]*//[A-Za-z0-9/._-]*:[A-Za-z0-9_/.=,@~+-]+
+|- cell name -|  | package path | |--- target name ---|
+</pre>
+{/literal}
+
 A relative build target can be used to reference another build target within
 the same <a href="build_file.html">build file</a>. A relative build target
 starts with a colon (<code>:</code>) and is followed by only the third
