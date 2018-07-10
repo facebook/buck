@@ -166,16 +166,16 @@ public class ErrorLogger {
         return "Failed because buck was already dying";
       }
 
+      if (isNoSpaceOnDevice()) {
+        return rootCause.getMessage();
+      }
+
       String message = "";
-      if (rootCause instanceof IOException) {
-        if (rootCause.getMessage().startsWith("No space left on device")) {
-          return rootCause.getMessage();
-        } else if (rootCause instanceof FileSystemLoopException) {
-          // TODO(cjhopman): Is this message helpful? What's a smaller directory?
-          message =
-              "Loop detected in your directory, which may be caused by circular symlink. "
-                  + "You may consider running the command in a smaller directory.\n";
-        }
+      if (rootCause instanceof FileSystemLoopException) {
+        // TODO(cjhopman): Is this message helpful? What's a smaller directory?
+        message =
+            "Loop detected in your directory, which may be caused by circular symlink. "
+                + "You may consider running the command in a smaller directory.\n";
       }
 
       if (rootCause instanceof OutOfMemoryError) {
@@ -197,8 +197,24 @@ public class ErrorLogger {
       return String.format("%s%s", message, getStackTraceOfCause(parent));
     }
 
-    public Throwable getRootCause() {
-      return rootCause;
+    /** Indicates whether this exception is a user error or a buck internal error. */
+    public boolean isUserError() {
+      if (rootCause instanceof HumanReadableException
+          || rootCause instanceof InterruptedException
+          || rootCause instanceof ClosedByInterruptException) {
+        return true;
+      }
+
+      if (isNoSpaceOnDevice()) {
+        return true;
+      }
+
+      return false;
+    }
+
+    public boolean isNoSpaceOnDevice() {
+      return rootCause instanceof IOException
+          && rootCause.getMessage().startsWith("No space left on device");
     }
 
     /**
@@ -254,7 +270,7 @@ public class ErrorLogger {
   private void logUserVisible(DeconstructedException deconstructed) {
     String augmentedError =
         deconstructed.getAugmentedErrorWithContext(suppressStackTraces, "    ", errorAugmentor);
-    if (deconstructed.getRootCause() instanceof HumanReadableException) {
+    if (deconstructed.isUserError()) {
       logger.logUserVisible(augmentedError);
     } else {
       logger.logUserVisibleInternalError(augmentedError);

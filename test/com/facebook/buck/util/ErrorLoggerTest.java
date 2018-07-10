@@ -130,8 +130,8 @@ public class ErrorLoggerTest {
         logException(
             new BuckExecutionException(new InterruptedException("This has been interrupted.")));
 
-    assertNull(errors.userVisible);
-    assertEquals("Interrupted", errors.userVisibleInternal);
+    assertEquals("Interrupted", errors.userVisible);
+    assertNull(errors.userVisibleInternal);
   }
 
   @Test
@@ -139,8 +139,8 @@ public class ErrorLoggerTest {
     LoggedErrors errors =
         logException(new BuckExecutionException(new ClosedByInterruptException()));
 
-    assertNull(errors.userVisible);
-    assertEquals("Interrupted", errors.userVisibleInternal);
+    assertEquals("Interrupted", errors.userVisible);
+    assertNull(errors.userVisibleInternal);
   }
 
   @Test
@@ -174,8 +174,8 @@ public class ErrorLoggerTest {
     LoggedErrors errors =
         logException(new BuckExecutionException(new IOException("No space left on device xyzzy.")));
 
-    assertNull(errors.userVisible);
-    assertEquals("No space left on device xyzzy.", errors.userVisibleInternal);
+    assertEquals("No space left on device xyzzy.", errors.userVisible);
+    assertNull(errors.userVisibleInternal);
   }
 
   @Test
