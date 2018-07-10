@@ -11,6 +11,7 @@
     "src-gen"
   ],
   "external-java-packages": [
+    "com.android.",
     "com.dd.",
     "com.google.",
     "com.sun.",
