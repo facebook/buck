@@ -68,6 +68,8 @@ public class GoCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   // TODO(mikekap): Make these part of the rule key.
   private final ImmutableList<Path> assemblerIncludeDirs;
   private final ImmutableMap<Path, Path> importPathMap;
+  private final ImmutableList<Path> vendorPaths;
+  private final boolean genGopathSymlinkTree;
 
   private final SymlinkTree symlinkTree;
   private final Path output;
@@ -79,6 +81,8 @@ public class GoCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
       BuildRuleParams params,
       SymlinkTree symlinkTree,
       Path packageName,
+      boolean genGopathSymlinkTree,
+      ImmutableList<Path> vendorPaths,
       ImmutableMap<Path, Path> importPathMap,
       ImmutableSet<SourcePath> srcs,
       ImmutableSet<SourcePath> generatedSrcs,
@@ -88,6 +92,9 @@ public class GoCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
       ImmutableList<SourcePath> extraAsmOutputs,
       List<FileType> goFileTypes) {
     super(buildTarget, projectFilesystem, params);
+
+    this.genGopathSymlinkTree = genGopathSymlinkTree;
+    this.vendorPaths = vendorPaths;
     this.importPathMap = importPathMap;
     this.srcs = srcs;
     this.generatedSrcs = generatedSrcs;
@@ -135,6 +142,11 @@ public class GoCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     ImmutableList<Path> rawAsmSrcs = asmSrcListBuilder.build();
 
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
+
+    // create gopath symlinktree with all the sources linked (useful for IDE)
+    if (genGopathSymlinkTree) {
+      steps.addAll(getGopathSymlinkTree(context, buildableContext));
+    }
 
     steps.add(
         MkdirStep.of(
@@ -289,6 +301,75 @@ public class GoCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
       }
     }
     return srcFiles;
+  }
+
+  private ImmutableList<Step> getGopathSymlinkTree(
+      BuildContext context, BuildableContext buildableContext) {
+    if (srcs.size() == 0) {
+      return ImmutableList.of();
+    }
+
+    // setup paths for vendor packages (pkg/src/) and main (src/)
+    Path goLinkPathRoot =
+        getProjectFilesystem()
+            .getRootPath()
+            .resolve(getProjectFilesystem().getBuckPaths().getGenDir().resolve("gopath#linktree"));
+    Path goLinkPathSrc = goLinkPathRoot.resolve("src");
+    Path goLinkPathPkg = goLinkPathRoot.resolve("pkg/src");
+    Path goLinkPathGoroot = goLinkPathRoot.resolve("goroot");
+
+    ImmutableList.Builder<Step> steps = ImmutableList.builder();
+
+    // the vendor path should be converted to target package path
+    Path newPackageName = stripVendorPath(packageName);
+    Path linkDir =
+        packageName.toString().equals("main")
+            ? goLinkPathSrc
+            : goLinkPathPkg.resolve(newPackageName);
+
+    steps.add(
+        MkdirStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), linkDir)));
+
+    for (Path src : getSourceFiles(srcs, context)) {
+      String filename = src.getFileName().toString();
+      Path outputSymLink = linkDir.resolve(filename);
+
+      if (!Files.exists(outputSymLink)) {
+        steps.add(
+            SymlinkFileStep.builder()
+                .setFilesystem(getProjectFilesystem())
+                .setExistingFile(src)
+                .setDesiredLink(outputSymLink)
+                .build());
+      }
+    }
+
+    buildableContext.recordArtifact(getProjectFilesystem().relativize(linkDir));
+
+    // create symlink to GOROOT path used to compile sources
+    if (!Files.exists(goLinkPathRoot)) {
+      steps.add(
+          SymlinkFileStep.builder()
+              .setFilesystem(getProjectFilesystem())
+              .setExistingFile(platform.getGoRoot())
+              .setDesiredLink(goLinkPathGoroot)
+              .build());
+    }
+
+    buildableContext.recordArtifact(getProjectFilesystem().relativize(goLinkPathGoroot));
+
+    return steps.build();
+  }
+
+  private Path stripVendorPath(Path orig) {
+    for (Path vend : vendorPaths) {
+      if (orig.startsWith(vend)) {
+        return vend.relativize(orig);
+      }
+    }
+    return orig;
   }
 
   @Override

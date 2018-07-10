@@ -165,6 +165,8 @@ abstract class GoDescriptors {
             .copyAppendingExtraDeps(getDependenciesFromSources(ruleFinder, srcs)),
         symlinkTree,
         packageName,
+        goBuckConfig.getGenGopathSymlinkTree(),
+        goBuckConfig.getVendorPaths(),
         getPackageImportMap(
             goBuckConfig.getVendorPaths(),
             buildTarget.getBasePath(),

@@ -16,7 +16,9 @@
 
 package com.facebook.buck.features.go;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.testutil.ProcessResult;
@@ -25,7 +27,9 @@ import com.facebook.buck.testutil.integration.BuckBuildLog;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ProcessExecutor;
+import com.google.common.collect.ImmutableList;
 import java.io.IOException;
+import java.nio.file.Files;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
@@ -258,5 +262,41 @@ public class GoBinaryIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "build_constraints", tmp);
     workspace.setUp();
     workspace.runBuckBuild("//:family").assertSuccess();
+  }
+
+  @Test
+  public void generateGopathSymlinkTree() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "vendored_library", tmp);
+    workspace.setUp();
+
+    assertThat(
+        workspace
+            .runBuckCommand("run", "--config", "go.gopath_symlinktree=true", "//:hello")
+            .assertSuccess()
+            .getStdout(),
+        Matchers.containsString("Hello, world!"));
+
+    ImmutableList<String> dst =
+        ImmutableList.of(
+            "buck-out/gen/gopath#linktree/pkg/src/messenger/messenger.go",
+            "buck-out/gen/gopath#linktree/pkg/src/vendor/printer/printer.go",
+            "buck-out/gen/gopath#linktree/src/main.go",
+            "buck-out/gen/gopath#linktree/goroot/bin/go");
+
+    for (String pth : dst) {
+      assertTrue(Files.exists(workspace.resolve(pth)));
+    }
+
+    // clean and run with symlinktree disabled
+    workspace.runBuckCommand("clean");
+
+    assertThat(
+        workspace.runBuckCommand("run", "//:hello").assertSuccess().getStdout(),
+        Matchers.containsString("Hello, world!"));
+
+    for (String pth : dst) {
+      assertFalse(Files.exists(workspace.resolve(pth)));
+    }
   }
 }
