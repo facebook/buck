@@ -19,14 +19,9 @@ package com.facebook.buck.cli.exceptions.handlers;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.exceptions.handler.ExceptionHandler;
 import com.facebook.buck.core.exceptions.handler.ExceptionHandlerRegistry;
-import com.facebook.buck.core.exceptions.handler.HumanReadableExceptionAugmentor;
-import com.facebook.buck.log.Logger;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.util.BuckIsDyingException;
 import com.facebook.buck.util.CommandLineException;
-import com.facebook.buck.util.Console;
-import com.facebook.buck.util.ErrorLogger;
-import com.facebook.buck.util.ErrorLogger.LogImpl;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.InterruptionFailedException;
 import com.google.common.collect.ImmutableList;
@@ -39,30 +34,19 @@ import java.util.Optional;
 
 /** Util class for creating an {@link ExceptionHandlerRegistry} with the default handlers */
 public class ExceptionHandlerRegistryFactory {
-
-  private static final Logger LOG = Logger.get(ExceptionHandlerRegistryFactory.class);
-
   /**
-   * @param console Console for the related handlers print the messages to
    * @param ngContext NailGun context for the related handlers to take action on
-   * @param errorAugmentor Augmentor to make errors more clear to users (e.g. for macro failures)
    * @return a new ExceptionHandlerRegistry with the default handlers
    */
-  public static ExceptionHandlerRegistry<ExitCode> create(
-      Console console,
-      Optional<NGContext> ngContext,
-      HumanReadableExceptionAugmentor errorAugmentor) {
+  public static ExceptionHandlerRegistry<ExitCode> create(Optional<NGContext> ngContext) {
     ImmutableList.Builder<ExceptionHandler<? extends Throwable, ExitCode>> handlerListBuilder =
         ImmutableList.builder();
-
-    ErrorLogger logger = createErrorLogger(console, errorAugmentor);
 
     handlerListBuilder.addAll(
         Arrays.asList(
             new ExceptionHandler<InterruptedException, ExitCode>(InterruptedException.class) {
               @Override
               public ExitCode handleException(InterruptedException e) {
-                logger.logException(e);
                 return ExitCode.SIGNAL_INTERRUPT;
               }
             },
@@ -70,14 +54,12 @@ public class ExceptionHandlerRegistryFactory {
                 ClosedByInterruptException.class) {
               @Override
               public ExitCode handleException(ClosedByInterruptException e) {
-                logger.logException(e);
                 return ExitCode.SIGNAL_INTERRUPT;
               }
             },
             new ExceptionHandler<IOException, ExitCode>(IOException.class) {
               @Override
               public ExitCode handleException(IOException e) {
-                logger.logException(e);
                 if (e instanceof FileSystemLoopException) {
                   return ExitCode.FATAL_GENERIC;
                 } else if (e.getMessage().startsWith("No space left on device")) {
@@ -90,28 +72,24 @@ public class ExceptionHandlerRegistryFactory {
             new ExceptionHandler<OutOfMemoryError, ExitCode>(OutOfMemoryError.class) {
               @Override
               public ExitCode handleException(OutOfMemoryError e) {
-                logger.logException(e);
                 return ExitCode.FATAL_OOM;
               }
             },
             new ExceptionHandler<BuildFileParseException, ExitCode>(BuildFileParseException.class) {
               @Override
               public ExitCode handleException(BuildFileParseException e) {
-                logger.logException(e);
                 return ExitCode.PARSE_ERROR;
               }
             },
             new ExceptionHandler<CommandLineException, ExitCode>(CommandLineException.class) {
               @Override
               public ExitCode handleException(CommandLineException e) {
-                logger.logException(e);
                 return ExitCode.COMMANDLINE_ERROR;
               }
             },
             new ExceptionHandler<HumanReadableException, ExitCode>(HumanReadableException.class) {
               @Override
               public ExitCode handleException(HumanReadableException e) {
-                logger.logException(e);
                 return ExitCode.BUILD_ERROR;
               }
             },
@@ -119,7 +97,6 @@ public class ExceptionHandlerRegistryFactory {
                 InterruptionFailedException.class) {
               @Override
               public ExitCode handleException(InterruptionFailedException e) {
-                logger.logException(e);
                 ngContext.ifPresent(c -> c.getNGServer().shutdown(false));
                 return ExitCode.SIGNAL_INTERRUPT;
               }
@@ -127,7 +104,6 @@ public class ExceptionHandlerRegistryFactory {
             new ExceptionHandler<BuckIsDyingException, ExitCode>(BuckIsDyingException.class) {
               @Override
               public ExitCode handleException(BuckIsDyingException e) {
-                logger.logException(e);
                 return ExitCode.FATAL_GENERIC;
               }
             }));
@@ -136,35 +112,8 @@ public class ExceptionHandlerRegistryFactory {
         new ExceptionHandler<Throwable, ExitCode>(Throwable.class) {
           @Override
           public ExitCode handleException(Throwable t) {
-            logger.logException(t);
             return ExitCode.FATAL_GENERIC;
           }
         });
-  }
-
-  private static ErrorLogger createErrorLogger(
-      Console console, HumanReadableExceptionAugmentor augmentor) {
-    return new ErrorLogger(
-        new LogImpl() {
-          @Override
-          public void logUserVisible(String message) {
-            console.printFailure(message);
-          }
-
-          @Override
-          public void logUserVisibleInternalError(String message) {
-            console.printFailure(message);
-          }
-
-          @Override
-          public void logVerbose(Throwable e) {
-            String message = "Command failed:";
-            if (e instanceof InterruptedException || e instanceof ClosedByInterruptException) {
-              message = "Command was interrupted:";
-            }
-            LOG.warn(e, message);
-          }
-        },
-        augmentor);
   }
 }

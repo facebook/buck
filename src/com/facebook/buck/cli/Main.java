@@ -124,6 +124,8 @@ import com.facebook.buck.util.CloseableWrapper;
 import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultProcessExecutor;
+import com.facebook.buck.util.ErrorLogger;
+import com.facebook.buck.util.ErrorLogger.LogImpl;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.Libc;
 import com.facebook.buck.util.PkillProcessManager;
@@ -440,8 +442,33 @@ public final class Main {
         console.printErrorText(e.getHumanReadableErrorMessage());
         augmentor = new HumanReadableExceptionAugmentor(ImmutableMap.of());
       }
-      exceptionHandlerRegistry =
-          ExceptionHandlerRegistryFactory.create(console, context, augmentor);
+      ErrorLogger logger =
+          new ErrorLogger(
+              new LogImpl() {
+                @Override
+                public void logUserVisible(String message) {
+                  console.printFailure(message);
+                }
+
+                @Override
+                public void logUserVisibleInternalError(String message) {
+                  console.printFailure(message);
+                }
+
+                @Override
+                public void logVerbose(Throwable e) {
+                  String message = "Command failed:";
+                  if (e instanceof InterruptedException
+                      || e instanceof ClosedByInterruptException) {
+                    message = "Command was interrupted:";
+                  }
+                  LOG.warn(e, message);
+                }
+              },
+              augmentor);
+      logger.logException(t);
+
+      exceptionHandlerRegistry = ExceptionHandlerRegistryFactory.create(context);
       exitCode = exceptionHandlerRegistry.handleException(t);
     } finally {
       LOG.debug("Done.");
