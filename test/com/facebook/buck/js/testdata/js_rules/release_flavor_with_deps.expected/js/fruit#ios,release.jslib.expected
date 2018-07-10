@@ -1,11 +1,11 @@
 {"command":"library-dependencies","release":true,"rootPath":"@","platform":"ios","outputPath":"@/buck-out/gen/js/fruit#ios,release.jslib","dependencyLibraryFilePaths":[],"aggregatedSourceFilesFilePath":"@/buck-out/gen/js/fruit#_files_,ios,release.jslib","flavors":["ios","release"]}
 {"command":"library-files","release":true,"rootPath":"@","platform":"ios","outputFilePath":"@/buck-out/gen/js/fruit#_files_,ios,release.jslib","sourceFilePaths":["@/buck-out/gen/js/fruit#_files_,file-apple.js-9635e8d52e,ios,release.jsfile","@/buck-out/gen/js/fruit#_files_,file-banana.js-b5d5d641eb,ios,release.jsfile","@/buck-out/gen/js/fruit#_files_,file-pear.js-b84041fd03,ios,release.jsfile"],"flavors":["ios","release"]}
-{"command":"optimize","outputFilePath":"@/buck-out/gen/js/fruit#_files_,file-apple.js-9635e8d52e,ios,release.jsfile","platform":"ios","transformedJsFilePath":"@/buck-out/gen/js/fruit#file-apple.js-9635e8d52e.jsfile","flavors":["ios","release"]}
+{"command":"optimize","outputFilePath":"@/buck-out/gen/js/fruit#_files_,file-apple.js-9635e8d52e,ios,release.jsfile","transformedJsFilePath":"@/buck-out/gen/js/fruit#file-apple.js-9635e8d52e.jsfile","flavors":["ios","release"]}
 {"command":"transform","outputFilePath":"@/buck-out/gen/js/fruit#file-apple.js-9635e8d52e.jsfile","sourceJsFilePath":"@/js/apple.js","sourceJsFileName":"js/apple.js","flavors":[]}
 var apple;
-{"command":"optimize","outputFilePath":"@/buck-out/gen/js/fruit#_files_,file-banana.js-b5d5d641eb,ios,release.jsfile","platform":"ios","transformedJsFilePath":"@/buck-out/gen/js/fruit#file-banana.js-b5d5d641eb.jsfile","flavors":["ios","release"]}
+{"command":"optimize","outputFilePath":"@/buck-out/gen/js/fruit#_files_,file-banana.js-b5d5d641eb,ios,release.jsfile","transformedJsFilePath":"@/buck-out/gen/js/fruit#file-banana.js-b5d5d641eb.jsfile","flavors":["ios","release"]}
 {"command":"transform","outputFilePath":"@/buck-out/gen/js/fruit#file-banana.js-b5d5d641eb.jsfile","sourceJsFilePath":"@/js/banana.js","sourceJsFileName":"js/banana.js","flavors":[]}
 var banana;
-{"command":"optimize","outputFilePath":"@/buck-out/gen/js/fruit#_files_,file-pear.js-b84041fd03,ios,release.jsfile","platform":"ios","transformedJsFilePath":"@/buck-out/gen/js/fruit#file-pear.js-b84041fd03.jsfile","flavors":["ios","release"]}
+{"command":"optimize","outputFilePath":"@/buck-out/gen/js/fruit#_files_,file-pear.js-b84041fd03,ios,release.jsfile","transformedJsFilePath":"@/buck-out/gen/js/fruit#file-pear.js-b84041fd03.jsfile","flavors":["ios","release"]}
 {"command":"transform","outputFilePath":"@/buck-out/gen/js/fruit#file-pear.js-b84041fd03.jsfile","sourceJsFilePath":"@/js/pear.js","sourceJsFileName":"js/pear.js","flavors":[]}
 var pear;

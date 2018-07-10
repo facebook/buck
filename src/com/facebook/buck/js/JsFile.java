@@ -185,7 +185,6 @@ public abstract class JsFile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
           JsonBuilder.object()
               .addString("command", "optimize")
               .addString("outputFilePath", outputPath.toString())
-              .addString("platform", JsUtil.getPlatformString(getBuildTarget().getFlavors()))
               .addString(
                   "transformedJsFilePath", sourcePathResolver.getAbsolutePath(devFile).toString())
               .addRaw("extraData", getExtraJson().map(a -> Arg.stringify(a, sourcePathResolver)));

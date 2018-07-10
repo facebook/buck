@@ -1,11 +1,11 @@
 {"command":"library-dependencies","release":true,"rootPath":"@","platform":"android","outputPath":"@/buck-out/gen/js/fruit#android,release.jslib","dependencyLibraryFilePaths":[],"aggregatedSourceFilesFilePath":"@/buck-out/gen/js/fruit#_files_,android,release.jslib","flavors":["android","release"]}
 {"command":"library-files","release":true,"rootPath":"@","platform":"android","outputFilePath":"@/buck-out/gen/js/fruit#_files_,android,release.jslib","sourceFilePaths":["@/buck-out/gen/js/fruit#_files_,android,file-apple.js-9635e8d52e,release.jsfile","@/buck-out/gen/js/fruit#_files_,android,file-banana.js-b5d5d641eb,release.jsfile","@/buck-out/gen/js/fruit#_files_,android,file-pear.js-b84041fd03,release.jsfile"],"flavors":["android","release"]}
-{"command":"optimize","outputFilePath":"@/buck-out/gen/js/fruit#_files_,android,file-apple.js-9635e8d52e,release.jsfile","platform":"android","transformedJsFilePath":"@/buck-out/gen/js/fruit#file-apple.js-9635e8d52e.jsfile","flavors":["android","release"]}
+{"command":"optimize","outputFilePath":"@/buck-out/gen/js/fruit#_files_,android,file-apple.js-9635e8d52e,release.jsfile","transformedJsFilePath":"@/buck-out/gen/js/fruit#file-apple.js-9635e8d52e.jsfile","flavors":["android","release"]}
 {"command":"transform","outputFilePath":"@/buck-out/gen/js/fruit#file-apple.js-9635e8d52e.jsfile","sourceJsFilePath":"@/js/apple.js","sourceJsFileName":"js/apple.js","flavors":[]}
 var apple;
-{"command":"optimize","outputFilePath":"@/buck-out/gen/js/fruit#_files_,android,file-banana.js-b5d5d641eb,release.jsfile","platform":"android","transformedJsFilePath":"@/buck-out/gen/js/fruit#file-banana.js-b5d5d641eb.jsfile","flavors":["android","release"]}
+{"command":"optimize","outputFilePath":"@/buck-out/gen/js/fruit#_files_,android,file-banana.js-b5d5d641eb,release.jsfile","transformedJsFilePath":"@/buck-out/gen/js/fruit#file-banana.js-b5d5d641eb.jsfile","flavors":["android","release"]}
 {"command":"transform","outputFilePath":"@/buck-out/gen/js/fruit#file-banana.js-b5d5d641eb.jsfile","sourceJsFilePath":"@/js/banana.js","sourceJsFileName":"js/banana.js","flavors":[]}
 var banana;
-{"command":"optimize","outputFilePath":"@/buck-out/gen/js/fruit#_files_,android,file-pear.js-b84041fd03,release.jsfile","platform":"android","transformedJsFilePath":"@/buck-out/gen/js/fruit#file-pear.js-b84041fd03.jsfile","flavors":["android","release"]}
+{"command":"optimize","outputFilePath":"@/buck-out/gen/js/fruit#_files_,android,file-pear.js-b84041fd03,release.jsfile","transformedJsFilePath":"@/buck-out/gen/js/fruit#file-pear.js-b84041fd03.jsfile","flavors":["android","release"]}
 {"command":"transform","outputFilePath":"@/buck-out/gen/js/fruit#file-pear.js-b84041fd03.jsfile","sourceJsFilePath":"@/js/pear.js","sourceJsFileName":"js/pear.js","flavors":[]}
 var pear;
