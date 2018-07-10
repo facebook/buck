@@ -138,6 +138,7 @@ The following sections are recognized by Buck:
     'java',
     'kotlin',
     'httpserver',
+    'incompatible',
     'log',
     'lua',
     'maven_repositories',
@@ -2681,9 +2682,18 @@ cxx_library(
 {/call}
 
 {call buckconfig.section}
+  {param name: 'incompatible' /}
+  {param description}
+    This section controls features of buck that are in the process of being deprecated. 
+  {/param}
+{/call}
+
+{call buckconfig.section}
   {param name: 'log' /}
   {param description}
     This section controls how Buck will log information about builds for later inspection.
+    Settings in this section will appear as features are in the processing of being deprecated, and
+    be removed after features are removed from Buck.
   {/param}
 {/call}
 
