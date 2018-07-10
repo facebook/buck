@@ -33,7 +33,6 @@ import com.facebook.buck.core.cell.impl.DefaultCellPathResolver;
 import com.facebook.buck.core.cell.impl.LocalCellProviderFactory;
 import com.facebook.buck.core.cell.name.RelativeCellName;
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.core.exceptions.handler.ExceptionHandlerRegistry;
 import com.facebook.buck.core.exceptions.handler.HumanReadableExceptionAugmentor;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphCache;
@@ -325,8 +324,6 @@ public final class Main {
 
   private static final Logger LOG = Logger.get(Main.class);
 
-  private ExceptionHandlerRegistry<ExitCode> exceptionHandlerRegistry;
-
   private static boolean isSessionLeader;
   private static PluginManager pluginManager;
   private static BuckModuleManager moduleManager;
@@ -467,9 +464,7 @@ public final class Main {
               },
               augmentor);
       logger.logException(t);
-
-      exceptionHandlerRegistry = ExceptionHandlerRegistryFactory.create();
-      exitCode = exceptionHandlerRegistry.handleException(t);
+      exitCode = ExceptionHandlerRegistryFactory.create().handleException(t);
     } finally {
       LOG.debug("Done.");
       LogConfig.flushLogs();
