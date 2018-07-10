@@ -158,7 +158,8 @@ public class ExceptionHandlerRegistryTest {
     assertThat(
         registry.handleException(new BuckIsDyingException("Buck is dying")),
         is(ExitCode.FATAL_GENERIC));
-    assertThat(getTextWrittenToStdErr(), is(emptyString()));
+    String consoleText = getTextWrittenToStdErr();
+    assertThat(consoleText, containsString("Fallout because buck was already dying"));
   }
 
   @Test

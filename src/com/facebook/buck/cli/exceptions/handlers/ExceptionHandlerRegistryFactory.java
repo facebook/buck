@@ -131,7 +131,7 @@ public class ExceptionHandlerRegistryFactory {
             new ExceptionHandler<BuckIsDyingException, ExitCode>(BuckIsDyingException.class) {
               @Override
               public ExitCode handleException(BuckIsDyingException e) {
-                LOG.warn(e, "Fallout because buck was already dying");
+                console.printFailure(e, "Fallout because buck was already dying");
                 return ExitCode.FATAL_GENERIC;
               }
             }));
