@@ -26,6 +26,7 @@ import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import java.io.IOException;
+import java.nio.file.FileSystemLoopException;
 import java.util.concurrent.ExecutionException;
 import java.util.regex.Pattern;
 import javax.annotation.Nullable;
@@ -120,6 +121,28 @@ public class ErrorLoggerTest {
         logException(new BuckExecutionException(new RuntimeException(rawMessage), "context"));
     assertNull(errors.userVisible);
     assertEquals(expected, errors.userVisibleInternal);
+  }
+
+  @Test
+  public void testFileSystemLoopException() {
+    LoggedErrors errors =
+        logException(new BuckExecutionException(new FileSystemLoopException("It's a loop!")));
+
+    assertNull(errors.userVisible);
+    assertEquals(
+        "Loop detected in your directory, which may be caused by circular symlink. "
+            + "You may consider running the command in a smaller directory.\n"
+            + "java.nio.file.FileSystemLoopException: It's a loop!",
+        errors.userVisibleInternal);
+  }
+
+  @Test
+  public void testNoSpaceLeftOnDevice() {
+    LoggedErrors errors =
+        logException(new BuckExecutionException(new IOException("No space left on device xyzzy.")));
+
+    assertNull(errors.userVisible);
+    assertEquals("No space left on device xyzzy.", errors.userVisibleInternal);
   }
 
   @Test

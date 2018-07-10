@@ -29,6 +29,8 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.UncheckedExecutionException;
+import java.io.IOException;
+import java.nio.file.FileSystemLoopException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
@@ -152,14 +154,31 @@ public class ErrorLogger {
     private String getMessage(boolean suppressStackTraces) {
       if (rootCause instanceof HumanReadableException) {
         return ((HumanReadableException) rootCause).getHumanReadableErrorMessage();
-      } else if (suppressStackTraces) {
-        return String.format("%s: %s", rootCause.getClass().getName(), rootCause.getMessage());
-      } else if (parent == null) {
-        return Throwables.getStackTraceAsString(rootCause);
-      } else {
-        Preconditions.checkState(parent.getCause() == rootCause);
-        return getStackTraceOfCause(parent);
       }
+
+      String message = "";
+      if (rootCause instanceof IOException) {
+        if (rootCause.getMessage().startsWith("No space left on device")) {
+          return rootCause.getMessage();
+        } else if (rootCause instanceof FileSystemLoopException) {
+          // TODO(cjhopman): Is this message helpful? What's a smaller directory?
+          message =
+              "Loop detected in your directory, which may be caused by circular symlink. "
+                  + "You may consider running the command in a smaller directory.\n";
+        }
+      }
+
+      if (suppressStackTraces) {
+        return String.format(
+            "%s%s: %s", message, rootCause.getClass().getName(), rootCause.getMessage());
+      }
+
+      if (parent == null) {
+        return String.format("%s%s", message, Throwables.getStackTraceAsString(rootCause));
+      }
+
+      Preconditions.checkState(parent.getCause() == rootCause);
+      return String.format("%s%s", message, getStackTraceOfCause(parent));
     }
 
     public Throwable getRootCause() {

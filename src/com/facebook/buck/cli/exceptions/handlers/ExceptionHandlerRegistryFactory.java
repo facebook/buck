@@ -25,6 +25,8 @@ import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.util.BuckIsDyingException;
 import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.Console;
+import com.facebook.buck.util.ErrorLogger;
+import com.facebook.buck.util.ErrorLogger.LogImpl;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.InterruptionFailedException;
 import com.google.common.collect.ImmutableList;
@@ -53,6 +55,8 @@ public class ExceptionHandlerRegistryFactory {
     ImmutableList.Builder<ExceptionHandler<? extends Throwable, ExitCode>> handlerListBuilder =
         ImmutableList.builder();
 
+    ErrorLogger logger = createErrorLogger(console, errorAugmentor);
+
     handlerListBuilder.addAll(
         Arrays.asList(
             new ExceptionHandler<InterruptedException, ExitCode>(InterruptedException.class) {
@@ -73,17 +77,12 @@ public class ExceptionHandlerRegistryFactory {
             new ExceptionHandler<IOException, ExitCode>(IOException.class) {
               @Override
               public ExitCode handleException(IOException e) {
+                logger.logException(e);
                 if (e instanceof FileSystemLoopException) {
-                  console.printFailureWithStacktrace(
-                      e,
-                      "Loop detected in your directory, which may be caused by circular symlink. "
-                          + "You may consider running the command in a smaller directory.");
                   return ExitCode.FATAL_GENERIC;
                 } else if (e.getMessage().startsWith("No space left on device")) {
-                  console.printFailure(e.getMessage());
                   return ExitCode.FATAL_DISK_FULL;
                 } else {
-                  console.printFailureWithStacktrace(e, e.getMessage());
                   return ExitCode.FATAL_IO;
                 }
               }
@@ -144,5 +143,27 @@ public class ExceptionHandlerRegistryFactory {
             return ExitCode.FATAL_GENERIC;
           }
         });
+  }
+
+  private static ErrorLogger createErrorLogger(
+      Console console, HumanReadableExceptionAugmentor augmentor) {
+    return new ErrorLogger(
+        new LogImpl() {
+          @Override
+          public void logUserVisible(String message) {
+            console.printFailure(message);
+          }
+
+          @Override
+          public void logUserVisibleInternalError(String message) {
+            console.printFailure(message);
+          }
+
+          @Override
+          public void logVerbose(Throwable e) {
+            LOG.warn(e, "Command failed:");
+          }
+        },
+        augmentor);
   }
 }
