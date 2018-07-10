@@ -163,6 +163,10 @@ public class ErrorLogger {
         return "Interrupted";
       }
 
+      if (rootCause instanceof BuckIsDyingException) {
+        return "Failed because buck was already dying";
+      }
+
       String message = "";
       if (rootCause instanceof IOException) {
         if (rootCause.getMessage().startsWith("No space left on device")) {

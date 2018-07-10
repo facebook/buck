@@ -179,6 +179,16 @@ public class ErrorLoggerTest {
   }
 
   @Test
+  public void testBuckIsDying() {
+    LoggedErrors errors =
+        logException(
+            new BuckExecutionException(new BuckIsDyingException("It's all falling apart.")));
+
+    assertNull(errors.userVisible);
+    assertEquals("Failed because buck was already dying", errors.userVisibleInternal);
+  }
+
+  @Test
   public void testDeconstruct() {
     DeconstructedException deconstructed =
         ErrorLogger.deconstruct(
