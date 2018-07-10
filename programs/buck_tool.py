@@ -670,7 +670,7 @@ class BuckTool(object):
                 if transport_exists(buckd_transport_file_path):
                     force_close_transport(buckd_transport_file_path)
 
-            self._buck_project.clean_up_buckd()
+                self._buck_project.clean_up_buckd()
 
     def _is_buckd_running(self):
         with Tracing("BuckTool._is_buckd_running"):
