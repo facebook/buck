@@ -28,23 +28,31 @@ public class CommandLineException extends HumanReadableException
     implements ExceptionWithHumanReadableMessage {
 
   public CommandLineException(String humanReadableFormatString, Object... args) {
-    super(String.format(humanReadableFormatString, args));
+    this(null, humanReadableFormatString, args);
   }
 
   public CommandLineException(String humanReadableErrorMessage) {
-    super(null /* cause */, humanReadableErrorMessage);
+    this(null /* cause */, humanReadableErrorMessage);
+  }
+
+  public CommandLineException(ExceptionWithHumanReadableMessage e) {
+    this((Throwable) ((e instanceof Throwable) ? e : null), e.getHumanReadableErrorMessage());
   }
 
   public CommandLineException(@Nullable Throwable cause, String humanReadableErrorMessage) {
-    super(humanReadableErrorMessage, cause);
+    super(cause, formatMessage(humanReadableErrorMessage));
   }
 
   public CommandLineException(
       @Nullable Throwable cause, String humanReadableFormatString, Object... args) {
-    super(cause, String.format(humanReadableFormatString, args));
+    super(cause, formatMessage(humanReadableFormatString, args));
   }
 
-  public CommandLineException(ExceptionWithHumanReadableMessage e) {
-    super((Throwable) ((e instanceof Throwable) ? e : null), e.getHumanReadableErrorMessage());
+  private static String formatMessage(String message) {
+    return "BAD ARGUMENTS: " + message;
+  }
+
+  private static String formatMessage(String format, Object... args) {
+    return "BAD ARGUMENTS: " + String.format(format, args);
   }
 }

@@ -189,6 +189,16 @@ public class ErrorLoggerTest {
   }
 
   @Test
+  public void testCommandLineException() {
+    LoggedErrors errors =
+        logException(
+            new BuckExecutionException(new CommandLineException("--foo isn't an argument, silly")));
+
+    assertEquals("BAD ARGUMENTS: --foo isn't an argument, silly", errors.userVisible);
+    assertNull(errors.userVisibleInternal);
+  }
+
+  @Test
   public void testDeconstruct() {
     DeconstructedException deconstructed =
         ErrorLogger.deconstruct(

@@ -104,7 +104,7 @@ public class ExceptionHandlerRegistryFactory {
             new ExceptionHandler<CommandLineException, ExitCode>(CommandLineException.class) {
               @Override
               public ExitCode handleException(CommandLineException e) {
-                console.printFailure(e, "BAD ARGUMENTS: " + e.getHumanReadableErrorMessage());
+                logger.logException(e);
                 return ExitCode.COMMANDLINE_ERROR;
               }
             },
