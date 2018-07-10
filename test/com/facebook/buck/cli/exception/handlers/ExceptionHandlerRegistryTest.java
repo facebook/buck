@@ -59,7 +59,7 @@ public class ExceptionHandlerRegistryTest {
   public void testWithUnhandledExecutionException() {
     ExecutionException ex = new ExecutionException(new Throwable());
     assertThat(registry.handleException(ex), is(ExitCode.FATAL_GENERIC));
-    assertThat(getTextWrittenToStdErr(), containsString("UNKNOWN ERROR"));
+    assertThat(getTextWrittenToStdErr(), containsString("java.lang.Throwable"));
   }
 
   @Test
@@ -164,11 +164,10 @@ public class ExceptionHandlerRegistryTest {
 
   @Test
   public void testWithThrowable() {
-    String throwableMessage = "this is a throwable";
+    String throwableMessage = "java.lang.Throwable: this is a throwable";
     assertThat(
         registry.handleException(new Throwable(throwableMessage)), is(ExitCode.FATAL_GENERIC));
     String consoleText = getTextWrittenToStdErr();
-    assertThat(consoleText, containsString("UNKNOWN ERROR"));
     assertThat(consoleText, containsString(throwableMessage));
   }
 
@@ -182,7 +181,6 @@ public class ExceptionHandlerRegistryTest {
     t4.initCause(t0.getCause());
     assertThat(registry.handleException(t0), is(ExitCode.FATAL_GENERIC));
     String consoleText = getTextWrittenToStdErr();
-    assertThat(consoleText, containsString("UNKNOWN ERROR"));
     assertThat(consoleText, containsString(throwableMessage));
   }
 

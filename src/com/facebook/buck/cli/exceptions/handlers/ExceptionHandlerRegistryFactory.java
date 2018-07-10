@@ -97,8 +97,7 @@ public class ExceptionHandlerRegistryFactory {
             new ExceptionHandler<BuildFileParseException, ExitCode>(BuildFileParseException.class) {
               @Override
               public ExitCode handleException(BuildFileParseException e) {
-                console.printFailure(
-                    errorAugmentor.getAugmentedError(e.getHumanReadableErrorMessage()));
+                logger.logException(e);
                 return ExitCode.PARSE_ERROR;
               }
             },
@@ -112,8 +111,7 @@ public class ExceptionHandlerRegistryFactory {
             new ExceptionHandler<HumanReadableException, ExitCode>(HumanReadableException.class) {
               @Override
               public ExitCode handleException(HumanReadableException e) {
-                console.printFailure(
-                    errorAugmentor.getAugmentedError(e.getHumanReadableErrorMessage()));
+                logger.logException(e);
                 return ExitCode.BUILD_ERROR;
               }
             },
@@ -137,7 +135,7 @@ public class ExceptionHandlerRegistryFactory {
         new ExceptionHandler<Throwable, ExitCode>(Throwable.class) {
           @Override
           public ExitCode handleException(Throwable t) {
-            console.printFailureWithStacktrace(t, "UNKNOWN ERROR: " + t.getMessage());
+            logger.logException(t);
             return ExitCode.FATAL_GENERIC;
           }
         });
