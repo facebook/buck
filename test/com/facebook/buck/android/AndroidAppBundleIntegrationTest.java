@@ -17,7 +17,10 @@
 package com.facebook.buck.android;
 
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
+import com.android.bundle.Files.NativeLibraries;
+import com.android.bundle.Files.TargetedNativeDirectory;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.jvm.java.testutil.AbiCompilationModeTest;
@@ -84,5 +87,12 @@ public class AndroidAppBundleIntegrationTest extends AbiCompilationModeTest {
     zipInspector.assertFileExists("base/assets/asset_file.txt");
     zipInspector.assertFileExists("base/res/drawable/tiny_black.png");
     zipInspector.assertFileExists("base/native.pb");
+
+    NativeLibraries nativeLibraries =
+        NativeLibraries.parseFrom(zipInspector.getFileContents("base/native.pb"));
+    for (TargetedNativeDirectory targetedNativeDirectory : nativeLibraries.getDirectoryList()) {
+      assertTrue(targetedNativeDirectory.hasTargeting());
+      assertTrue(targetedNativeDirectory.getTargeting().hasAbi());
+    }
   }
 }
