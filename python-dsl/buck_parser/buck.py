@@ -841,6 +841,9 @@ class BuildFileProcessor(object):
 
         self._global_functions = lazy_global_functions
         self._native_functions = lazy_native_functions
+        self._native_module_class = self._create_native_module_class(
+            self._global_functions, self._native_functions
+        )
         self._import_whitelist_manager = ImportWhitelistManager(
             import_whitelist=self._create_import_whitelist(project_import_whitelist),
             safe_modules_config=self.SAFE_MODULES_CONFIG,
@@ -865,8 +868,20 @@ class BuildFileProcessor(object):
         native_globals["glob"] = self._glob
         native_globals["host_info"] = self._host_info
         native_globals["read_config"] = self._read_config
-        native_module_type = collections.namedtuple("native", native_globals.keys())
-        return native_module_type(**native_globals)
+        return self._native_module_class(**native_globals)
+
+    @staticmethod
+    def _create_native_module_class(global_functions, native_functions):
+        """
+        Creates a native module class.
+        :return: namedtuple instance for native module
+        """
+        return collections.namedtuple(
+            "native",
+            global_functions.keys()
+            + native_functions.keys()
+            + ["glob", "host_info", "read_config"],
+        )
 
     def _wrap_env_var_read(self, read, real):
         """
