@@ -26,10 +26,12 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -47,11 +49,19 @@ public class ErrorLogger {
 
   @VisibleForTesting
   public interface LogImpl {
-
+    /**
+     * For user errors (HumanReadableException and similar), the user-friendly message will be
+     * reported through logUserVisible()
+     */
     void logUserVisible(String message);
 
+    /**
+     * For internal errrors (all non-user errors), the user-friendly message will be reported
+     * through logUserVisibleInternalError()
+     */
     void logUserVisibleInternalError(String message);
 
+    /** All exceptions will be passed to logVerbose. */
     void logVerbose(Throwable e);
   }
 
@@ -114,8 +124,76 @@ public class ErrorLogger {
     this.errorAugmentor = errorAugmentor;
   }
 
+  /**
+   * The result of exception "deconstruction". Provides access to the user-friendly message with
+   * context.
+   */
+  @VisibleForTesting
+  static class DeconstructedException {
+    private final Throwable rootCause;
+    @Nullable private final Throwable parent;
+    private final ImmutableList<String> context;
+
+    private DeconstructedException(
+        Throwable rootCause, @Nullable Throwable parent, ImmutableList<String> context) {
+      this.rootCause = rootCause;
+      this.parent = parent;
+      this.context = context;
+    }
+
+    private Optional<String> getContext(String indent) {
+      return context.isEmpty()
+          ? Optional.empty()
+          : Optional.of(
+              Joiner.on("\n")
+                  .join(context.stream().map(c -> indent + c).collect(Collectors.toList())));
+    }
+
+    private String getMessage(boolean suppressStackTraces) {
+      if (rootCause instanceof HumanReadableException) {
+        return ((HumanReadableException) rootCause).getHumanReadableErrorMessage();
+      } else if (suppressStackTraces) {
+        return String.format("%s: %s", rootCause.getClass().getName(), rootCause.getMessage());
+      } else if (parent == null) {
+        return Throwables.getStackTraceAsString(rootCause);
+      } else {
+        Preconditions.checkState(parent.getCause() == rootCause);
+        return getStackTraceOfCause(parent);
+      }
+    }
+
+    public Throwable getRootCause() {
+      return rootCause;
+    }
+
+    /**
+     * Creates the user-friendly exception with context, masked stack trace (if not suppressed), and
+     * with augmentations.
+     */
+    public String getAugmentedErrorWithContext(
+        boolean suppressStackTraces,
+        String indent,
+        HumanReadableExceptionAugmentor errorAugmentor) {
+      StringBuilder messageBuilder = new StringBuilder();
+      // TODO(cjhopman): Based on verbosity, get the stacktrace here instead of just the message.
+      messageBuilder.append(getMessage(suppressStackTraces));
+      Optional<String> context = getContext(indent);
+      if (context.isPresent()) {
+        messageBuilder.append("\n");
+        messageBuilder.append(context.get());
+      }
+      return errorAugmentor.getAugmentedError(messageBuilder.toString());
+    }
+  }
+
   public void logException(Throwable e) {
     logger.logVerbose(e);
+    logUserVisible(deconstruct(e));
+  }
+
+  /** Deconstructs an exception to assist in creating user-friendly messages. */
+  @VisibleForTesting
+  static DeconstructedException deconstruct(Throwable e) {
     Throwable parent = null;
 
     // TODO(cjhopman): Think about how to handle multiline context strings.
@@ -137,42 +215,21 @@ public class ErrorLogger {
       e = cause;
     }
 
-    logUserVisible(e, parent, context);
+    return new DeconstructedException(
+        Preconditions.checkNotNull(e), parent, ImmutableList.copyOf(context));
   }
 
-  private void logUserVisible(
-      Throwable rootCause, @Nullable Throwable parent, List<String> context) {
-    StringBuilder messageBuilder = new StringBuilder();
-    // TODO(cjhopman): Based on verbosity, get the stacktrace here instead of just the message.
-    messageBuilder.append(getMessageForRootCause(rootCause, parent));
-    if (!context.isEmpty()) {
-      messageBuilder.append("\n");
-      messageBuilder.append(
-          Joiner.on("\n").join(context.stream().map(c -> "    " + c).collect(Collectors.toList())));
-    }
-
-    String augmentedError = errorAugmentor.getAugmentedError(messageBuilder.toString());
-    if (rootCause instanceof HumanReadableException) {
+  private void logUserVisible(DeconstructedException deconstructed) {
+    String augmentedError =
+        deconstructed.getAugmentedErrorWithContext(suppressStackTraces, "    ", errorAugmentor);
+    if (deconstructed.getRootCause() instanceof HumanReadableException) {
       logger.logUserVisible(augmentedError);
     } else {
       logger.logUserVisibleInternalError(augmentedError);
     }
   }
 
-  private String getMessageForRootCause(Throwable rootCause, @Nullable Throwable parent) {
-    if (rootCause instanceof HumanReadableException) {
-      return ((HumanReadableException) rootCause).getHumanReadableErrorMessage();
-    } else if (suppressStackTraces) {
-      return String.format("%s: %s", rootCause.getClass().getName(), rootCause.getMessage());
-    } else if (parent == null) {
-      return Throwables.getStackTraceAsString(rootCause);
-    } else {
-      Preconditions.checkState(parent.getCause() == rootCause);
-      return getStackTraceOfCause(parent);
-    }
-  }
-
-  private String getStackTraceOfCause(Throwable parent) {
+  private static String getStackTraceOfCause(Throwable parent) {
     // If there's a parent, print the parent's stack trace and then filter out it and its
     // suppressed exceptions. This allows us to elide stack frames that are shared between the
     // root cause and its parent.

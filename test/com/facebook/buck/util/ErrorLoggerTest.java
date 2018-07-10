@@ -20,12 +20,16 @@ import static org.junit.Assert.*;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.exceptions.handler.HumanReadableExceptionAugmentor;
+import com.facebook.buck.util.ErrorLogger.DeconstructedException;
 import com.facebook.buck.util.exceptions.BuckExecutionException;
+import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.UncheckedExecutionException;
+import java.io.IOException;
 import java.util.concurrent.ExecutionException;
 import java.util.regex.Pattern;
 import javax.annotation.Nullable;
+import org.hamcrest.Matchers;
 import org.junit.Test;
 
 public class ErrorLoggerTest {
@@ -116,6 +120,24 @@ public class ErrorLoggerTest {
         logException(new BuckExecutionException(new RuntimeException(rawMessage), "context"));
     assertNull(errors.userVisible);
     assertEquals(expected, errors.userVisibleInternal);
+  }
+
+  @Test
+  public void testDeconstruct() {
+    DeconstructedException deconstructed =
+        ErrorLogger.deconstruct(
+            new BuckExecutionException(
+                new BuckUncheckedExecutionException(
+                    new ExecutionException(new IOException("okay")) {}, "a little more context"),
+                "a little context"));
+
+    assertThat(
+        deconstructed.getAugmentedErrorWithContext(
+            false, "    ", new HumanReadableExceptionAugmentor(ImmutableMap.of())),
+        Matchers.allOf(
+            Matchers.startsWith("java.io.IOException: okay"),
+            Matchers.containsString("    a little more context"),
+            Matchers.containsString("    a little context")));
   }
 
   LoggedErrors logException(Exception e) {
