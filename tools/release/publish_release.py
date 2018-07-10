@@ -310,6 +310,7 @@ def publish(
     chocolatey_token,
     deb_file,
     homebrew_file,
+    homebrew_dir,
     chocolatey_file,
 ):
     if args.upload_assets:
@@ -321,9 +322,9 @@ def publish(
                 publish_chocolatey(chocolatey_file, chocolatey_token)
         if homebrew_file:
             add_assets(release, github_token, homebrew_file)
-            validate_tap(args.tap_repository, args.version)
+            validate_tap(homebrew_dir, args.tap_repository, args.version)
             if args.homebrew_push_tap:
-                publish_tap_changes(args.version, args.tap_repository)
+                publish_tap_changes(homebrew_dir, args.tap_repository, args.version)
             else:
                 log_about_manual_tap_push(args.tap_repository)
 
@@ -346,6 +347,7 @@ def main():
 
     temp_dir = None
     temp_homebrew_dir = None
+    homebrew_file = None
 
     try:
         validate_environment(args)
@@ -377,6 +379,7 @@ def main():
             chocolatey_token,
             deb_file,
             homebrew_file,
+            homebrew_dir,
             chocolatey_file,
         )
 
@@ -395,7 +398,7 @@ def main():
                 remove(temp_dir)
             if temp_homebrew_dir:
                 # If the person didn't want to publish, we need to keep this around
-                if not homebrew_file or not args.homebrew_push_tap:
+                if not homebrew_file or args.homebrew_push_tap:
                     remove(temp_homebrew_dir)
 
 

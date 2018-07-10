@@ -241,7 +241,6 @@ def push_tap(git_repository, tap_path, version):
     git_url = "git@github.com:{}.git".format(git_repository)
 
     with tempfile.TemporaryDirectory() as temp_dir:
-        temp_dir = temp_dir.name
         logging.info("Cloning {} into {}".format(git_url, temp_dir))
         run(["git", "clone", git_url, temp_dir])
 
@@ -282,7 +281,7 @@ def validate_tap(homebrew_dir, tap_repository, version):
         )
         if moved:
             brew(homebrew_dir, ["uninstall", brew_target])
-        if output != "{}/buck: stable {}".format(tap_repository, version):
+        if "{}/buck: stable {}".format(tap_repository, version) not in output:
             raise ReleaseException(
                 "Expected version {} to be installed, but got this from `brew info {}`: {}".format(
                     version, tap_repository, output
