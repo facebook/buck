@@ -158,8 +158,7 @@ public class ErrorLogger {
       }
 
       if (rootCause instanceof InterruptedException
-          || rootCause instanceof ClosedByInterruptException
-          || rootCause instanceof InterruptionFailedException) {
+          || rootCause instanceof ClosedByInterruptException) {
         return "Interrupted";
       }
 

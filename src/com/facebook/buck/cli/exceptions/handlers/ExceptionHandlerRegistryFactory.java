@@ -23,22 +23,16 @@ import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.util.BuckIsDyingException;
 import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.ExitCode;
-import com.facebook.buck.util.InterruptionFailedException;
 import com.google.common.collect.ImmutableList;
-import com.martiansoftware.nailgun.NGContext;
 import java.io.IOException;
 import java.nio.channels.ClosedByInterruptException;
 import java.nio.file.FileSystemLoopException;
 import java.util.Arrays;
-import java.util.Optional;
 
 /** Util class for creating an {@link ExceptionHandlerRegistry} with the default handlers */
 public class ExceptionHandlerRegistryFactory {
-  /**
-   * @param ngContext NailGun context for the related handlers to take action on
-   * @return a new ExceptionHandlerRegistry with the default handlers
-   */
-  public static ExceptionHandlerRegistry<ExitCode> create(Optional<NGContext> ngContext) {
+  /** @return a new ExceptionHandlerRegistry with the default handlers */
+  public static ExceptionHandlerRegistry<ExitCode> create() {
     ImmutableList.Builder<ExceptionHandler<? extends Throwable, ExitCode>> handlerListBuilder =
         ImmutableList.builder();
 
@@ -91,14 +85,6 @@ public class ExceptionHandlerRegistryFactory {
               @Override
               public ExitCode handleException(HumanReadableException e) {
                 return ExitCode.BUILD_ERROR;
-              }
-            },
-            new ExceptionHandler<InterruptionFailedException, ExitCode>(
-                InterruptionFailedException.class) {
-              @Override
-              public ExitCode handleException(InterruptionFailedException e) {
-                ngContext.ifPresent(c -> c.getNGServer().shutdown(false));
-                return ExitCode.SIGNAL_INTERRUPT;
               }
             },
             new ExceptionHandler<BuckIsDyingException, ExitCode>(BuckIsDyingException.class) {

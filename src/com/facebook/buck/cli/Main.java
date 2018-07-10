@@ -468,7 +468,7 @@ public final class Main {
               augmentor);
       logger.logException(t);
 
-      exceptionHandlerRegistry = ExceptionHandlerRegistryFactory.create(context);
+      exceptionHandlerRegistry = ExceptionHandlerRegistryFactory.create();
       exitCode = exceptionHandlerRegistry.handleException(t);
     } finally {
       LOG.debug("Done.");

@@ -44,7 +44,6 @@ import com.facebook.buck.step.TargetDeviceOptions;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
-import com.facebook.buck.util.InterruptionFailedException;
 import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.Scope;
 import com.facebook.buck.util.Threads;
@@ -578,7 +577,7 @@ public class AdbHelper implements AndroidDevicesHelper {
           executorService,
           10,
           TimeUnit.MINUTES,
-          new InterruptionFailedException("Failed to shutdown ExecutorService."));
+          new RuntimeException("Failed to shutdown ExecutorService."));
       executorService = null;
     }
   }

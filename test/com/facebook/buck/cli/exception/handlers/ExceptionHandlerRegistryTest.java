@@ -26,12 +26,9 @@ import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.util.BuckIsDyingException;
 import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.ExitCode;
-import com.facebook.buck.util.InterruptionFailedException;
-import com.martiansoftware.nailgun.NGContext;
 import java.io.IOException;
 import java.nio.channels.ClosedByInterruptException;
 import java.nio.file.FileSystemLoopException;
-import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import org.junit.Before;
 import org.junit.Test;
@@ -39,11 +36,10 @@ import org.junit.Test;
 public class ExceptionHandlerRegistryTest {
 
   private ExceptionHandlerRegistry registry;
-  private Optional<NGContext> ngContext = Optional.empty();
 
   @Before
   public void setUp() {
-    registry = ExceptionHandlerRegistryFactory.create(ngContext);
+    registry = ExceptionHandlerRegistryFactory.create();
   }
 
   @Test
@@ -113,13 +109,6 @@ public class ExceptionHandlerRegistryTest {
         registry.handleException(
             new ExecutionException("coming from Future, will be ignored", new OutOfMemoryError())),
         is(ExitCode.FATAL_OOM));
-  }
-
-  @Test
-  public void testWithInterruptionFailedException() {
-    assertThat(
-        registry.handleException(new InterruptionFailedException("Interruption failed")),
-        is(ExitCode.SIGNAL_INTERRUPT));
   }
 
   @Test
