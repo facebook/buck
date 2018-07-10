@@ -208,8 +208,6 @@ public class JsLibraryDescription
   @Value.Immutable(copy = true)
   interface AbstractJsLibraryDescriptionArg
       extends CommonDescriptionArg, HasDepsQuery, HasExtraJson, HasTests {
-    Optional<String> getExtraArgs();
-
     ImmutableSet<Either<SourcePath, Pair<SourcePath, String>>> getSrcs();
 
     BuildTarget getWorker();
@@ -361,7 +359,6 @@ public class JsLibraryDescription
         params.copyAppendingExtraDeps(devFile),
         graphBuilder.getRuleWithType(devTarget, JsFile.class).getSourcePathToOutput(),
         JsUtil.getExtraJson(args, buildTarget, graphBuilder, cellRoots),
-        args.getExtraArgs(),
         worker);
   }
 
@@ -400,7 +397,6 @@ public class JsLibraryDescription
         subPath,
         virtualPath,
         JsUtil.getExtraJson(args, buildTarget, graphBuilder, cellRoots),
-        args.getExtraArgs(),
         worker);
   }
 

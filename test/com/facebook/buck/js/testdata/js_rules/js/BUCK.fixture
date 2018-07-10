@@ -26,7 +26,6 @@ js_library(
 js_library(
     name = "extras",
     srcs = glob(["extras/*.js"]),
-    extra_args = "--arbitrary extra --flags",
     extra_json = "{\"arbitrary\":\"extra\",\"json\":1}",
     worker = ":packager_worker",
 )

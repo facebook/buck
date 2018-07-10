@@ -45,8 +45,6 @@ import javax.annotation.Nullable;
 
 public abstract class JsFile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 
-  @AddToRuleKey private final Optional<String> extraArgs;
-
   @AddToRuleKey private final Optional<Arg> extraJson;
 
   @AddToRuleKey private final WorkerTool worker;
@@ -56,11 +54,9 @@ public abstract class JsFile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       Optional<Arg> extraJson,
-      Optional<String> extraArgs,
       WorkerTool worker) {
     super(buildTarget, projectFilesystem, params);
     this.extraJson = extraJson;
-    this.extraArgs = extraArgs;
     this.worker = worker;
   }
 
@@ -73,10 +69,6 @@ public abstract class JsFile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 
   public Optional<Arg> getExtraJson() {
     return extraJson;
-  }
-
-  public Optional<String> getExtraArgs() {
-    return extraArgs;
   }
 
   @Nullable
@@ -115,9 +107,8 @@ public abstract class JsFile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
         Optional<String> subPath,
         Optional<Path> virtualPath,
         Optional<Arg> extraJson,
-        Optional<String> extraArgs,
         WorkerTool worker) {
-      super(buildTarget, projectFilesystem, params, extraJson, extraArgs, worker);
+      super(buildTarget, projectFilesystem, params, extraJson, worker);
       this.src = src;
       this.subPath = subPath;
       this.virtualPath = virtualPath.map(MorePaths::pathWithUnixSeparators);
@@ -152,8 +143,7 @@ public abstract class JsFile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
                       () ->
                           MorePaths.pathWithUnixSeparators(
                               sourcePathResolver.getRelativePath(src))))
-              .addRaw("extraData", getExtraJson().map(a -> Arg.stringify(a, sourcePathResolver)))
-              .addString("extraArgs", getExtraArgs());
+              .addRaw("extraData", getExtraJson().map(a -> Arg.stringify(a, sourcePathResolver)));
 
       return getBuildSteps(context, jobArgs, outputPath);
     }
@@ -179,9 +169,8 @@ public abstract class JsFile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
         BuildRuleParams buildRuleParams,
         BuildTargetSourcePath devFile,
         Optional<Arg> extraJson,
-        Optional<String> extraArgs,
         WorkerTool worker) {
-      super(buildTarget, projectFilesystem, buildRuleParams, extraJson, extraArgs, worker);
+      super(buildTarget, projectFilesystem, buildRuleParams, extraJson, worker);
       this.devFile = devFile;
     }
 
@@ -199,8 +188,7 @@ public abstract class JsFile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
               .addString("platform", JsUtil.getPlatformString(getBuildTarget().getFlavors()))
               .addString(
                   "transformedJsFilePath", sourcePathResolver.getAbsolutePath(devFile).toString())
-              .addRaw("extraData", getExtraJson().map(a -> Arg.stringify(a, sourcePathResolver)))
-              .addString("extraArgs", getExtraArgs());
+              .addRaw("extraData", getExtraJson().map(a -> Arg.stringify(a, sourcePathResolver)));
 
       return getBuildSteps(context, jobArgs, outputPath);
     }

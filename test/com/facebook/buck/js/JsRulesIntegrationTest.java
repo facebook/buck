@@ -143,10 +143,10 @@ public class JsRulesIntegrationTest {
   }
 
   @Test
-  public void testBuildWithExtraArgs() throws IOException {
+  public void testLibraryWithExtraJson() throws IOException {
     workspace.runBuckBuild("//js:extras").assertSuccess();
 
-    workspace.verify(Paths.get("with_extra_args.expected"), genPath);
+    workspace.verify(Paths.get("with_extra_json.expected"), genPath);
   }
 
   @Test

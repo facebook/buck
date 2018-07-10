@@ -1,6 +1,0 @@
-{"command":"library-dependencies","release":false,"rootPath":"@","outputPath":"@/buck-out/gen/js/extras.jslib","dependencyLibraryFilePaths":[],"aggregatedSourceFilesFilePath":"@/buck-out/gen/js/extras#_files_.jslib","flavors":[]}
-{"command":"library-files","release":false,"rootPath":"@","outputFilePath":"@/buck-out/gen/js/extras#_files_.jslib","sourceFilePaths":["@/buck-out/gen/js/extras#file-choclate-chips.js-51c2bd5932.jsfile","@/buck-out/gen/js/extras#file-yoghurt.js-c8b0447e06.jsfile"],"flavors":[]}
-{"command":"transform","outputFilePath":"@/buck-out/gen/js/extras#file-choclate-chips.js-51c2bd5932.jsfile","sourceJsFilePath":"@/js/extras/choclate-chips.js","sourceJsFileName":"js/extras/choclate-chips.js","extraData":{"arbitrary":"extra","json":1},"extraArgs":"--arbitrary extra --flags","flavors":[]}
-var choclateChips;
-{"command":"transform","outputFilePath":"@/buck-out/gen/js/extras#file-yoghurt.js-c8b0447e06.jsfile","sourceJsFilePath":"@/js/extras/yoghurt.js","sourceJsFileName":"js/extras/yoghurt.js","extraData":{"arbitrary":"extra","json":1},"extraArgs":"--arbitrary extra --flags","flavors":[]}
-var yoghurt;
