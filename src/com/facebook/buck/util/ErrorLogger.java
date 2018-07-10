@@ -168,6 +168,12 @@ public class ErrorLogger {
         }
       }
 
+      if (rootCause instanceof OutOfMemoryError) {
+        message =
+            "Buck ran out of memory, you may consider increasing heap size with java args "
+                + "(see https://buckbuild.com/concept/buckjavaargs.html)\n";
+      }
+
       if (suppressStackTraces) {
         return String.format(
             "%s%s: %s", message, rootCause.getClass().getName(), rootCause.getMessage());
@@ -224,9 +230,6 @@ public class ErrorLogger {
         ((ExceptionWithContext) e).getContext().ifPresent(msg -> context.add(0, msg));
       }
       Throwable cause = e.getCause();
-      if (!(cause instanceof Exception)) {
-        break;
-      }
       // TODO(cjhopman): Should parent point to the closest parent with context instead of just the
       // parent? If the parent doesn't include context, we're currently removing parts of the stack
       // trace without any context to replace it.

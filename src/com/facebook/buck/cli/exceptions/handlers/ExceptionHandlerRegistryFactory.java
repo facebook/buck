@@ -90,9 +90,7 @@ public class ExceptionHandlerRegistryFactory {
             new ExceptionHandler<OutOfMemoryError, ExitCode>(OutOfMemoryError.class) {
               @Override
               public ExitCode handleException(OutOfMemoryError e) {
-                console.printFailureWithStacktrace(
-                    e,
-                    "Buck ran out of memory, you may consider increasing heap size with java args");
+                logger.logException(e);
                 return ExitCode.FATAL_OOM;
               }
             },

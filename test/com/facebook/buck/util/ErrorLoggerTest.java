@@ -124,6 +124,19 @@ public class ErrorLoggerTest {
   }
 
   @Test
+  public void testOutOfMemoryError() {
+    LoggedErrors errors =
+        logException(new BuckExecutionException(new OutOfMemoryError("No more memory!")));
+
+    assertNull(errors.userVisible);
+    assertEquals(
+        "Buck ran out of memory, you may consider increasing heap size with java args "
+            + "(see https://buckbuild.com/concept/buckjavaargs.html)\n"
+            + "java.lang.OutOfMemoryError: No more memory!",
+        errors.userVisibleInternal);
+  }
+
+  @Test
   public void testFileSystemLoopException() {
     LoggedErrors errors =
         logException(new BuckExecutionException(new FileSystemLoopException("It's a loop!")));
