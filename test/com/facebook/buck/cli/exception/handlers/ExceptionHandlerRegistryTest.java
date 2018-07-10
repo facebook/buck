@@ -59,7 +59,7 @@ public class ExceptionHandlerRegistryTest {
   public void testWithUnhandledExecutionException() {
     ExecutionException ex = new ExecutionException(new Throwable());
     assertThat(registry.handleException(ex), is(ExitCode.FATAL_GENERIC));
-    assertThat(console.getTextWrittenToStdErr(), containsString("UNKNOWN ERROR"));
+    assertThat(getTextWrittenToStdErr(), containsString("UNKNOWN ERROR"));
   }
 
   @Test
@@ -69,7 +69,7 @@ public class ExceptionHandlerRegistryTest {
             "coming from Future, should be ignored",
             new HumanReadableException("useful exception"));
     assertThat(registry.handleException(ex), is(ExitCode.BUILD_ERROR));
-    assertThat(console.getTextWrittenToStdErr(), containsString("useful exception"));
+    assertThat(getTextWrittenToStdErr(), containsString("useful exception"));
   }
 
   @Test
@@ -81,14 +81,14 @@ public class ExceptionHandlerRegistryTest {
                 "coming from Future, should be ignored",
                 new InterruptedException("user interrupted exception")));
     assertThat(registry.handleException(ex), is(ExitCode.SIGNAL_INTERRUPT));
-    assertThat(console.getTextWrittenToStdErr(), is(emptyString()));
+    assertThat(getTextWrittenToStdErr(), is(emptyString()));
   }
 
   @Test
   public void testWithClosedByInterruptException() {
     assertThat(
         registry.handleException(new ClosedByInterruptException()), is(ExitCode.SIGNAL_INTERRUPT));
-    assertThat(console.getTextWrittenToStdErr(), is(emptyString()));
+    assertThat(getTextWrittenToStdErr(), is(emptyString()));
   }
 
   @Test
@@ -97,7 +97,7 @@ public class ExceptionHandlerRegistryTest {
     assertThat(
         registry.handleException(new IOException(noDiskSpaceMessage)),
         is(ExitCode.FATAL_DISK_FULL));
-    assertThat(console.getTextWrittenToStdErr(), containsString(noDiskSpaceMessage));
+    assertThat(getTextWrittenToStdErr(), containsString(noDiskSpaceMessage));
   }
 
   @Test
@@ -105,7 +105,7 @@ public class ExceptionHandlerRegistryTest {
     String fatalIOExceptionMessage = "Fatal IO Exception, not disk full, not FileSystemLoop";
     assertThat(
         registry.handleException(new IOException(fatalIOExceptionMessage)), is(ExitCode.FATAL_IO));
-    assertThat(console.getTextWrittenToStdErr(), containsString(fatalIOExceptionMessage));
+    assertThat(getTextWrittenToStdErr(), containsString(fatalIOExceptionMessage));
   }
 
   @Test
@@ -113,7 +113,7 @@ public class ExceptionHandlerRegistryTest {
     assertThat(
         registry.handleException(new CommandLineException("command line exception")),
         is(ExitCode.COMMANDLINE_ERROR));
-    assertThat(console.getTextWrittenToStdErr(), containsString("BAD ARGUMENTS:"));
+    assertThat(getTextWrittenToStdErr(), containsString("BAD ARGUMENTS:"));
   }
 
   @Test
@@ -121,7 +121,7 @@ public class ExceptionHandlerRegistryTest {
     assertThat(
         registry.handleException(new FileSystemLoopException("Symlink found")),
         is(ExitCode.FATAL_GENERIC));
-    String consoleText = console.getTextWrittenToStdErr();
+    String consoleText = getTextWrittenToStdErr();
     assertThat(consoleText, containsString("Loop detected"));
     assertThat(consoleText, containsString("Symlink found"));
   }
@@ -132,7 +132,7 @@ public class ExceptionHandlerRegistryTest {
         registry.handleException(
             new ExecutionException("coming from Future, will be ignored", new OutOfMemoryError())),
         is(ExitCode.FATAL_OOM));
-    assertThat(console.getTextWrittenToStdErr(), containsString("Buck ran out of memory"));
+    assertThat(getTextWrittenToStdErr(), containsString("Buck ran out of memory"));
   }
 
   @Test
@@ -140,7 +140,7 @@ public class ExceptionHandlerRegistryTest {
     assertThat(
         registry.handleException(new InterruptionFailedException("Interruption failed")),
         is(ExitCode.SIGNAL_INTERRUPT));
-    assertThat(console.getTextWrittenToStdErr(), is(emptyString()));
+    assertThat(getTextWrittenToStdErr(), is(emptyString()));
   }
 
   @Test
@@ -150,7 +150,7 @@ public class ExceptionHandlerRegistryTest {
         registry.handleException(
             BuildFileParseException.createForUnknownParseError(parserErrorMessage)),
         is(ExitCode.PARSE_ERROR));
-    assertThat(console.getTextWrittenToStdErr(), containsString(parserErrorMessage));
+    assertThat(getTextWrittenToStdErr(), containsString(parserErrorMessage));
   }
 
   @Test
@@ -158,7 +158,7 @@ public class ExceptionHandlerRegistryTest {
     assertThat(
         registry.handleException(new BuckIsDyingException("Buck is dying")),
         is(ExitCode.FATAL_GENERIC));
-    assertThat(console.getTextWrittenToStdErr(), is(emptyString()));
+    assertThat(getTextWrittenToStdErr(), is(emptyString()));
   }
 
   @Test
@@ -166,7 +166,7 @@ public class ExceptionHandlerRegistryTest {
     String throwableMessage = "this is a throwable";
     assertThat(
         registry.handleException(new Throwable(throwableMessage)), is(ExitCode.FATAL_GENERIC));
-    String consoleText = console.getTextWrittenToStdErr();
+    String consoleText = getTextWrittenToStdErr();
     assertThat(consoleText, containsString("UNKNOWN ERROR"));
     assertThat(consoleText, containsString(throwableMessage));
   }
@@ -180,8 +180,16 @@ public class ExceptionHandlerRegistryTest {
             throwableMessage, new Exception("t1", new Exception("t2", new Exception("t3", t4))));
     t4.initCause(t0.getCause());
     assertThat(registry.handleException(t0), is(ExitCode.FATAL_GENERIC));
-    String consoleText = console.getTextWrittenToStdErr();
+    String consoleText = getTextWrittenToStdErr();
     assertThat(consoleText, containsString("UNKNOWN ERROR"));
     assertThat(consoleText, containsString(throwableMessage));
+  }
+
+  public String getTextWrittenToStdErr() {
+    String text = console.getTextWrittenToStdErr();
+    System.err.println("-- Captured test console stderr --");
+    System.err.println(text);
+    System.err.println("----");
+    return text;
   }
 }
