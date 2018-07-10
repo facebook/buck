@@ -74,8 +74,9 @@ abstract class AbstractParserConfig implements ConfigView<BuckConfig> {
 
   /** Controls whether default flavors should be applied to unflavored targets. */
   public enum ApplyDefaultFlavorsMode {
-    ENABLED,
-    DISABLED
+    DISABLED,
+    SINGLE,
+    ALL
   }
 
   @Value.Lazy
@@ -198,7 +199,7 @@ abstract class AbstractParserConfig implements ConfigView<BuckConfig> {
   public ApplyDefaultFlavorsMode getDefaultFlavorsMode() {
     return getDelegate()
         .getEnum("project", "default_flavors_mode", ApplyDefaultFlavorsMode.class)
-        .orElse(ApplyDefaultFlavorsMode.ENABLED);
+        .orElse(ApplyDefaultFlavorsMode.SINGLE);
   }
 
   @Value.Lazy

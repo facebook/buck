@@ -25,6 +25,7 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeThat;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.apple.AppleNativeIntegrationTestUtils;
@@ -38,6 +39,7 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.ThriftRuleKeyDeserializer;
+import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.base.CharMatcher;
@@ -55,6 +57,7 @@ import java.util.regex.Pattern;
 import org.apache.thrift.TException;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -74,6 +77,11 @@ public class TargetsCommandIntegrationTest {
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   @Rule public ExpectedException thrown = ExpectedException.none();
+
+  @Before
+  public void setUp() {
+    assumeThat(Platform.detect(), Matchers.not(Platform.WINDOWS));
+  }
 
   @Test
   public void testOutputPath() throws IOException {
@@ -624,17 +632,74 @@ public class TargetsCommandIntegrationTest {
   }
 
   @Test
-  public void testShowAllTargets() throws IOException {
+  public void testShowTargetsApplyDefaultFlavorsModeSingle() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "xcode_workspace_with_tests", tmp);
     workspace.setUp();
 
-    ProcessResult result = workspace.runBuckCommand("targets", "...");
-    result.assertSuccess();
+    ProcessResult resultAll = workspace.runBuckCommand("targets", "...");
+    resultAll.assertSuccess();
     assertEquals(
         ImmutableSet.of(
             "//bin:bin", "//bin:genrule", "//lib:lib", "//test:test", "//workspace:workspace"),
-        ImmutableSet.copyOf(Splitter.on('\n').omitEmptyStrings().split(result.getStdout())));
+        ImmutableSet.copyOf(Splitter.on('\n').omitEmptyStrings().split(resultAll.getStdout())));
+
+    ProcessResult resultSingle = workspace.runBuckCommand("targets", "//lib:lib");
+    resultSingle.assertSuccess();
+    assertEquals(
+        ImmutableSet.of("//lib:lib#default,static"),
+        ImmutableSet.copyOf(Splitter.on('\n').omitEmptyStrings().split(resultSingle.getStdout())));
+  }
+
+  @Test
+  public void testShowTargetsApplyDefaultFlavorsModeAll() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "xcode_workspace_with_tests", tmp);
+    workspace.setUp();
+
+    ProcessResult resultAll =
+        workspace.runBuckCommand("targets", "...", "--config", "project.default_flavors_mode=all");
+    resultAll.assertSuccess();
+    assertEquals(
+        ImmutableSet.of(
+            "//bin:bin",
+            "//bin:genrule",
+            "//lib:lib#default,static",
+            "//test:test",
+            "//workspace:workspace"),
+        ImmutableSet.copyOf(Splitter.on('\n').omitEmptyStrings().split(resultAll.getStdout())));
+
+    ProcessResult resultSingle =
+        workspace.runBuckCommand(
+            "targets", "//lib:lib", "--config", "project.default_flavors_mode=all");
+    resultSingle.assertSuccess();
+    assertEquals(
+        ImmutableSet.of("//lib:lib#default,static"),
+        ImmutableSet.copyOf(Splitter.on('\n').omitEmptyStrings().split(resultSingle.getStdout())));
+  }
+
+  @Test
+  public void testShowTargetsApplyDefaultFlavorsModeDisabled() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "xcode_workspace_with_tests", tmp);
+    workspace.setUp();
+
+    ProcessResult resultAll =
+        workspace.runBuckCommand(
+            "targets", "...", "--config", "project.default_flavors_mode=disabled");
+    resultAll.assertSuccess();
+    assertEquals(
+        ImmutableSet.of(
+            "//bin:bin", "//bin:genrule", "//lib:lib", "//test:test", "//workspace:workspace"),
+        ImmutableSet.copyOf(Splitter.on('\n').omitEmptyStrings().split(resultAll.getStdout())));
+
+    ProcessResult resultSingle =
+        workspace.runBuckCommand(
+            "targets", "//lib:lib", "--config", "project.default_flavors_mode=disabled");
+    resultSingle.assertSuccess();
+    assertEquals(
+        ImmutableSet.of("//lib:lib"),
+        ImmutableSet.copyOf(Splitter.on('\n').omitEmptyStrings().split(resultSingle.getStdout())));
   }
 
   @Test

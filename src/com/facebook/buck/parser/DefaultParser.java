@@ -476,7 +476,8 @@ public class DefaultParser implements Parser {
       ParserConfig.ApplyDefaultFlavorsMode applyDefaultFlavorsMode) {
     if (target.isFlavored()
         || !targetNode.isPresent()
-        || targetType == TargetNodeSpec.TargetType.MULTIPLE_TARGETS
+        || (targetType == TargetNodeSpec.TargetType.MULTIPLE_TARGETS
+            && applyDefaultFlavorsMode == ParserConfig.ApplyDefaultFlavorsMode.SINGLE)
         || applyDefaultFlavorsMode == ParserConfig.ApplyDefaultFlavorsMode.DISABLED) {
       return target;
     }

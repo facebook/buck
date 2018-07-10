@@ -2089,7 +2089,7 @@ public class DefaultParserTest {
                             ImmutableUnflavoredBuildTarget.of(
                                 cell.getRoot(), cell.getCanonicalName(), "//foo", "lib")),
                         BuildFileSpec.of(Paths.get("foo"), false, cell.getRoot()))),
-                ParserConfig.ApplyDefaultFlavorsMode.ENABLED)
+                ParserConfig.ApplyDefaultFlavorsMode.SINGLE)
             .getTargetGraph();
     assertEquals(oldGraph, newGraph);
   }
@@ -2199,7 +2199,7 @@ public class DefaultParserTest {
                 ImmutableList.of(
                     AbstractBuildTargetSpec.from(
                         BuildTargetFactory.newInstance(cellRoot, "//lib", "lib"))),
-                ParserConfig.ApplyDefaultFlavorsMode.ENABLED)
+                ParserConfig.ApplyDefaultFlavorsMode.SINGLE)
             .getBuildTargets();
 
     assertThat(
@@ -2246,7 +2246,7 @@ public class DefaultParserTest {
                 ImmutableList.of(
                     AbstractBuildTargetSpec.from(
                         BuildTargetFactory.newInstance(cellRoot, "//lib", "lib"))),
-                ParserConfig.ApplyDefaultFlavorsMode.ENABLED)
+                ParserConfig.ApplyDefaultFlavorsMode.SINGLE)
             .getBuildTargets();
 
     assertThat(
@@ -2297,7 +2297,7 @@ public class DefaultParserTest {
                 ImmutableList.of(
                     AbstractBuildTargetSpec.from(
                         BuildTargetFactory.newInstance(cellRoot, "//lib", "lib"))),
-                ParserConfig.ApplyDefaultFlavorsMode.ENABLED)
+                ParserConfig.ApplyDefaultFlavorsMode.SINGLE)
             .getBuildTargets();
 
     assertThat(
