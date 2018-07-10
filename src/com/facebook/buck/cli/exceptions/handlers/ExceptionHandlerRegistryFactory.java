@@ -26,9 +26,12 @@ import com.facebook.buck.util.BuckIsDyingException;
 import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ExitCode;
+import com.facebook.buck.util.InterruptionFailedException;
 import com.google.common.collect.ImmutableList;
 import com.martiansoftware.nailgun.NGContext;
+import java.io.IOException;
 import java.nio.channels.ClosedByInterruptException;
+import java.nio.file.FileSystemLoopException;
 import java.util.Arrays;
 import java.util.Optional;
 
@@ -52,24 +55,40 @@ public class ExceptionHandlerRegistryFactory {
 
     handlerListBuilder.addAll(
         Arrays.asList(
-            new ExceptionHandlerWithConsole<InterruptedException>(
-                InterruptedException.class, console) {
+            new ExceptionHandler<InterruptedException, ExitCode>(InterruptedException.class) {
               @Override
               public ExitCode handleException(InterruptedException e) {
                 LOG.info(e, "Execution of the command was interrupted (SIGINT)");
                 return ExitCode.SIGNAL_INTERRUPT;
               }
             },
-            new ExceptionHandlerWithConsole<ClosedByInterruptException>(
-                ClosedByInterruptException.class, console) {
+            new ExceptionHandler<ClosedByInterruptException, ExitCode>(
+                ClosedByInterruptException.class) {
               @Override
               public ExitCode handleException(ClosedByInterruptException e) {
                 LOG.info(e, "Execution of the command was interrupted (SIGINT)");
                 return ExitCode.SIGNAL_INTERRUPT;
               }
             },
-            new IOExceptionHandler(console),
-            new ExceptionHandlerWithConsole<OutOfMemoryError>(OutOfMemoryError.class, console) {
+            new ExceptionHandler<IOException, ExitCode>(IOException.class) {
+              @Override
+              public ExitCode handleException(IOException e) {
+                if (e instanceof FileSystemLoopException) {
+                  console.printFailureWithStacktrace(
+                      e,
+                      "Loop detected in your directory, which may be caused by circular symlink. "
+                          + "You may consider running the command in a smaller directory.");
+                  return ExitCode.FATAL_GENERIC;
+                } else if (e.getMessage().startsWith("No space left on device")) {
+                  console.printBuildFailure(e.getMessage());
+                  return ExitCode.FATAL_DISK_FULL;
+                } else {
+                  console.printFailureWithStacktrace(e, e.getMessage());
+                  return ExitCode.FATAL_IO;
+                }
+              }
+            },
+            new ExceptionHandler<OutOfMemoryError, ExitCode>(OutOfMemoryError.class) {
               @Override
               public ExitCode handleException(OutOfMemoryError e) {
                 console.printFailureWithStacktrace(
@@ -78,8 +97,7 @@ public class ExceptionHandlerRegistryFactory {
                 return ExitCode.FATAL_OOM;
               }
             },
-            new ExceptionHandlerWithConsole<BuildFileParseException>(
-                BuildFileParseException.class, console) {
+            new ExceptionHandler<BuildFileParseException, ExitCode>(BuildFileParseException.class) {
               @Override
               public ExitCode handleException(BuildFileParseException e) {
                 console.printBuildFailure(
@@ -87,16 +105,14 @@ public class ExceptionHandlerRegistryFactory {
                 return ExitCode.PARSE_ERROR;
               }
             },
-            new ExceptionHandlerWithConsole<CommandLineException>(
-                CommandLineException.class, console) {
+            new ExceptionHandler<CommandLineException, ExitCode>(CommandLineException.class) {
               @Override
               public ExitCode handleException(CommandLineException e) {
                 console.printFailure(e, "BAD ARGUMENTS: " + e.getHumanReadableErrorMessage());
                 return ExitCode.COMMANDLINE_ERROR;
               }
             },
-            new ExceptionHandlerWithConsole<HumanReadableException>(
-                HumanReadableException.class, console) {
+            new ExceptionHandler<HumanReadableException, ExitCode>(HumanReadableException.class) {
               @Override
               public ExitCode handleException(HumanReadableException e) {
                 console.printBuildFailure(
@@ -104,7 +120,14 @@ public class ExceptionHandlerRegistryFactory {
                 return ExitCode.BUILD_ERROR;
               }
             },
-            new InterruptionFailedExceptionHandler(ngContext),
+            new ExceptionHandler<InterruptionFailedException, ExitCode>(
+                InterruptionFailedException.class) {
+              @Override
+              public ExitCode handleException(InterruptionFailedException e) {
+                ngContext.ifPresent(c -> c.getNGServer().shutdown(false));
+                return ExitCode.SIGNAL_INTERRUPT;
+              }
+            },
             new ExceptionHandler<BuckIsDyingException, ExitCode>(BuckIsDyingException.class) {
               @Override
               public ExitCode handleException(BuckIsDyingException e) {
@@ -112,7 +135,14 @@ public class ExceptionHandlerRegistryFactory {
                 return ExitCode.FATAL_GENERIC;
               }
             }));
-    return new ExceptionHandlerRegistry<ExitCode>(
-        handlerListBuilder.build(), new GenericExceptionHandler(console));
+    return new ExceptionHandlerRegistry<>(
+        handlerListBuilder.build(),
+        new ExceptionHandler<Throwable, ExitCode>(Throwable.class) {
+          @Override
+          public ExitCode handleException(Throwable t) {
+            console.printFailureWithStacktrace(t, "UNKNOWN ERROR: " + t.getMessage());
+            return ExitCode.FATAL_GENERIC;
+          }
+        });
   }
 }
