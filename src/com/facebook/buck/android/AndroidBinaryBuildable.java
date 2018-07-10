@@ -17,6 +17,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.android.apkmodule.APKModule;
+import com.facebook.buck.android.bundle.GenerateAssetsStep;
 import com.facebook.buck.android.exopackage.ExopackageMode;
 import com.facebook.buck.android.redex.ReDexStep;
 import com.facebook.buck.android.redex.RedexOptions;
@@ -316,6 +317,10 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
               javaRuntimeLauncher.getCommandPrefix(pathResolver),
               apkCompressionLevel));
     } else {
+      Path tempAssets =
+          BuildTargets.getGenPath(getProjectFilesystem(), buildTarget, "__assets__%s__.pb");
+
+      steps.add(new GenerateAssetsStep(getProjectFilesystem(), tempAssets, allAssetDirectories));
       steps.add(
           new AabBuilderStep(
               getProjectFilesystem(),
@@ -323,6 +328,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
               getSignedApkPath(),
               pathResolver.getRelativePath(dexFilesInfo.primaryDexPath),
               allAssetDirectories,
+              tempAssets,
               nativeLibraryDirectoriesBuilder.build(),
               zipFiles.build(),
               thirdPartyJars,

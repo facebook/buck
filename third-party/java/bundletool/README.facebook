@@ -2,3 +2,13 @@ This is the .proto file needed to generate java class files for GenerateConfigSt
 to create BundleConfig.pb file. 
 
 Acquired from https://github.com/google/bundletool/blob/master/src/main/proto/config.proto
+Release Number: 0.4.2
+
+files.proto and targeting.proto are needed to generate java classes of Assets and NativeLibraries
+and the targeting elements.
+
+Acquired from https://github.com/google/bundletool/blob/master/src/main/proto/files.proto
+and https://github.com/google/bundletool/blob/master/src/main/proto/targeting.proto
+Release Number: 0.4.2
+
+To generate those classes, run update.sh

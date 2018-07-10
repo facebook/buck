@@ -1,0 +1,149 @@
+syntax = "proto3";
+
+package android.bundle;
+
+option java_package = "com.android.bundle";
+
+import "google/protobuf/wrappers.proto";
+
+// Targeting on the level of variants.
+message VariantTargeting {
+  SdkVersionTargeting sdk_version_targeting = 1;
+  AbiTargeting abi_targeting = 2;
+  ScreenDensityTargeting screen_density_targeting = 3;
+}
+
+// Targeting on the level of individual APKs.
+message ApkTargeting {
+  AbiTargeting abi_targeting = 1;
+  GraphicsApiTargeting graphics_api_targeting = 2;
+  LanguageTargeting language_targeting = 3;
+  ScreenDensityTargeting screen_density_targeting = 4;
+  SdkVersionTargeting sdk_version_targeting = 5;
+  TextureCompressionFormatTargeting texture_compression_format_targeting = 6;
+}
+
+message ScreenDensity {
+  enum DensityAlias {
+    DENSITY_UNSPECIFIED = 0;
+    NODPI = 1;
+    LDPI = 2;
+    MDPI = 3;
+    TVDPI = 4;
+    HDPI = 5;
+    XHDPI = 6;
+    XXHDPI = 7;
+    XXXHDPI = 8;
+  }
+
+  oneof density_oneof {
+    DensityAlias density_alias = 1;
+    int32 density_dpi = 2;
+  }
+}
+
+message SdkVersion {
+  // Inclusive.
+  google.protobuf.Int32Value min = 1;
+}
+
+message GraphicsApi {
+  oneof api_oneof {
+    // Inclusive.
+    OpenGlVersion min_open_gl_version = 1;
+  }
+}
+
+
+message OpenGlVersion {
+  // e.g. OpenGL ES 3.2 is represented as { major: 3, minor: 2 }
+  int32 major = 1;  // GL_MAJOR_VERSION
+  int32 minor = 2;  // GL_MINOR_VERSION
+}
+
+message TextureCompressionFormat {
+  enum TextureCompressionFormatAlias {
+    UNSPECIFIED_TEXTURE_COMPRESSION_FORMAT = 0;
+    ETC1_RGB8 = 1;
+    PALETTED = 2;
+    THREE_DC = 3;
+    ATC = 4;
+    LATC = 5;
+    DXT1 = 6;
+    S3TC = 7;
+    PVRTC = 8;
+  }
+  TextureCompressionFormatAlias alias = 1;
+}
+
+message Abi {
+  enum AbiAlias {
+    UNSPECIFIED_CPU_ARCHITECTURE = 0;
+    ARMEABI = 1;
+    ARMEABI_V7A = 2;
+    ARM64_V8A = 3;
+    X86 = 4;
+    X86_64 = 5;
+    MIPS = 6;
+    MIPS64 = 7;
+  }
+  AbiAlias alias = 1;
+}
+
+// Targeting specific for directories under assets/.
+message AssetsDirectoryTargeting {
+  AbiTargeting abi = 1;
+  GraphicsApiTargeting graphics_api = 2;
+  TextureCompressionFormatTargeting texture_compression_format = 3;
+  LanguageTargeting language = 4;
+}
+
+// Targeting specific for directories under lib/.
+message NativeDirectoryTargeting {
+  Abi abi = 1;
+  GraphicsApi graphics_api = 2;
+  TextureCompressionFormat texture_compression_format = 3;
+}
+
+message AbiTargeting {
+  repeated Abi value = 1;
+  // Targeting of other sibling directories that were in the Bundle.
+  // For master splits this is targeting of other master splits.
+  repeated Abi alternatives = 2;
+}
+
+message ScreenDensityTargeting {
+  repeated ScreenDensity value = 1;
+  // Targeting of other sibling directories that were in the Bundle.
+  // For master splits this is targeting of other master splits.
+  repeated ScreenDensity alternatives = 2;
+}
+
+message LanguageTargeting {
+  // ISO-639: 2 or 3 letter language code.
+  repeated string value = 1;
+  // Targeting of other sibling directories that were in the Bundle.
+  // For master splits this is targeting of other master splits.
+  repeated string alternatives = 2;
+}
+
+message GraphicsApiTargeting {
+  repeated GraphicsApi value = 1;
+  // Targeting of other sibling directories that were in the Bundle.
+  // For master splits this is targeting of other master splits.
+  repeated GraphicsApi alternatives = 2;
+}
+
+message SdkVersionTargeting {
+  repeated SdkVersion value = 1;
+  // Targeting of other sibling directories that were in the Bundle.
+  // For master splits this is targeting of other master splits.
+  repeated SdkVersion alternatives = 2;
+}
+
+message TextureCompressionFormatTargeting {
+  repeated TextureCompressionFormat value = 1;
+  // Targeting of other sibling directories that were in the Bundle.
+  // For master splits this is targeting of other master splits.
+  repeated TextureCompressionFormat alternatives = 2;
+}

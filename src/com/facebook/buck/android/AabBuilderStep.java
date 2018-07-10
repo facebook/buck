@@ -53,6 +53,7 @@ public class AabBuilderStep extends ApkBuilderStep {
   private final Path dexFile;
   private final Path pathToOutputApkFile;
   private final ImmutableSet<Path> assetDirectories;
+  private final Path tempAssets;
   private final ImmutableSet<Path> nativeLibraryDirectories;
   private final ImmutableSet<Path> zipFiles;
   private final ImmutableSet<Path> jarFilesThatMayContainResources;
@@ -75,6 +76,7 @@ public class AabBuilderStep extends ApkBuilderStep {
       Path pathToOutputApkFile,
       Path dexFile,
       ImmutableSet<Path> assetDirectories,
+      Path tempAssets,
       ImmutableSet<Path> nativeLibraryDirectories,
       ImmutableSet<Path> zipFiles,
       ImmutableSet<Path> jarFilesThatMayContainResources,
@@ -102,6 +104,7 @@ public class AabBuilderStep extends ApkBuilderStep {
     this.pathToOutputApkFile = pathToOutputApkFile;
     this.dexFile = dexFile;
     this.assetDirectories = assetDirectories;
+    this.tempAssets = tempAssets;
     this.nativeLibraryDirectories = nativeLibraryDirectories;
     this.jarFilesThatMayContainResources = jarFilesThatMayContainResources;
     this.zipFiles = zipFiles;
@@ -134,6 +137,7 @@ public class AabBuilderStep extends ApkBuilderStep {
       builder.setDebugMode(debugMode);
       builder.addFile(filesystem.getPathForRelativePath(dexFile).toFile(), "base/dex/classes.dex");
       packageFile(builder, resourceApk.toFile(), "base/");
+      builder.addFile(filesystem.getPathForRelativePath(tempAssets).toFile(), "base/assets.pb");
 
       for (Path nativeLibraryDirectory : nativeLibraryDirectories) {
         builder.addNativeLibraries(
