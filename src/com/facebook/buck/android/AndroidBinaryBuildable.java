@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.android.apkmodule.APKModule;
 import com.facebook.buck.android.bundle.GenerateAssetsStep;
+import com.facebook.buck.android.bundle.GenerateNativeStep;
 import com.facebook.buck.android.exopackage.ExopackageMode;
 import com.facebook.buck.android.redex.ReDexStep;
 import com.facebook.buck.android.redex.RedexOptions;
@@ -319,8 +320,14 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
     } else {
       Path tempAssets =
           BuildTargets.getGenPath(getProjectFilesystem(), buildTarget, "__assets__%s__.pb");
-
       steps.add(new GenerateAssetsStep(getProjectFilesystem(), tempAssets, allAssetDirectories));
+
+      Path tempNative =
+          BuildTargets.getGenPath(getProjectFilesystem(), buildTarget, "__native__%s__.pb");
+      steps.add(
+          new GenerateNativeStep(
+              getProjectFilesystem(), tempNative, nativeLibraryDirectoriesBuilder.build()));
+
       steps.add(
           new AabBuilderStep(
               getProjectFilesystem(),
@@ -330,6 +337,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
               allAssetDirectories,
               tempAssets,
               nativeLibraryDirectoriesBuilder.build(),
+              tempNative,
               zipFiles.build(),
               thirdPartyJars,
               pathToKeystore,

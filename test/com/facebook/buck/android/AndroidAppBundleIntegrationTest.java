@@ -83,5 +83,6 @@ public class AndroidAppBundleIntegrationTest extends AbiCompilationModeTest {
     zipInspector.assertFileExists("base/manifest/AndroidManifest.xml");
     zipInspector.assertFileExists("base/assets/asset_file.txt");
     zipInspector.assertFileExists("base/res/drawable/tiny_black.png");
+    zipInspector.assertFileExists("base/native.pb");
   }
 }
