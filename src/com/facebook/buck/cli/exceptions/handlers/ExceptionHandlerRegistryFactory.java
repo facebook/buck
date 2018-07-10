@@ -80,7 +80,7 @@ public class ExceptionHandlerRegistryFactory {
                           + "You may consider running the command in a smaller directory.");
                   return ExitCode.FATAL_GENERIC;
                 } else if (e.getMessage().startsWith("No space left on device")) {
-                  console.printBuildFailure(e.getMessage());
+                  console.printFailure(e.getMessage());
                   return ExitCode.FATAL_DISK_FULL;
                 } else {
                   console.printFailureWithStacktrace(e, e.getMessage());
@@ -100,7 +100,7 @@ public class ExceptionHandlerRegistryFactory {
             new ExceptionHandler<BuildFileParseException, ExitCode>(BuildFileParseException.class) {
               @Override
               public ExitCode handleException(BuildFileParseException e) {
-                console.printBuildFailure(
+                console.printFailure(
                     errorAugmentor.getAugmentedError(e.getHumanReadableErrorMessage()));
                 return ExitCode.PARSE_ERROR;
               }
@@ -115,7 +115,7 @@ public class ExceptionHandlerRegistryFactory {
             new ExceptionHandler<HumanReadableException, ExitCode>(HumanReadableException.class) {
               @Override
               public ExitCode handleException(HumanReadableException e) {
-                console.printBuildFailure(
+                console.printFailure(
                     errorAugmentor.getAugmentedError(e.getHumanReadableErrorMessage()));
                 return ExitCode.BUILD_ERROR;
               }

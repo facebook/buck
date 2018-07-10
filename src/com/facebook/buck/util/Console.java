@@ -92,18 +92,6 @@ public class Console {
   }
 
   /**
-   * Prints the root cause of the {@link Throwable} with its stacktrace as a build failure.
-   *
-   * @see #printBuildFailure(String)
-   */
-  public void printBuildFailureWithStacktrace(Throwable t) {
-    LOG.warn(t, "Build error caused by exception");
-    t.printStackTrace(stdErr);
-    printBuildFailureInternal(
-        "Unexpected internal error (if you are using buckd, you should restart it).");
-  }
-
-  /**
    * Prints the message of the {@link Throwable} as a build failure.
    *
    * @see #printBuildFailure(String)
@@ -124,6 +112,12 @@ public class Console {
 
   private void printBuildFailureInternal(String failureMessage) {
     ansi.printlnHighlightedFailureText(stdErr, String.format("BUILD FAILED: %s", failureMessage));
+  }
+
+  /** Prints error message to console in red, also logs stacktrace but does not display it */
+  public void printFailure(String failureMessage) {
+    LOG.warn("Command failure: %s", failureMessage);
+    ansi.printlnHighlightedFailureText(stdErr, failureMessage);
   }
 
   /** Prints error message to console in red, also logs stacktrace but does not display it */
