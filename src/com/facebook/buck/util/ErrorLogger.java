@@ -30,6 +30,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import java.io.IOException;
+import java.nio.channels.ClosedByInterruptException;
 import java.nio.file.FileSystemLoopException;
 import java.util.LinkedList;
 import java.util.List;
@@ -154,6 +155,12 @@ public class ErrorLogger {
     private String getMessage(boolean suppressStackTraces) {
       if (rootCause instanceof HumanReadableException) {
         return ((HumanReadableException) rootCause).getHumanReadableErrorMessage();
+      }
+
+      if (rootCause instanceof InterruptedException
+          || rootCause instanceof ClosedByInterruptException
+          || rootCause instanceof InterruptionFailedException) {
+        return "Interrupted";
       }
 
       String message = "";

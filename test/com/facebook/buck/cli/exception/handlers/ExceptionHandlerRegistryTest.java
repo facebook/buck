@@ -18,7 +18,6 @@ package com.facebook.buck.cli.exception.handlers;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.emptyString;
 import static org.hamcrest.Matchers.is;
 
 import com.facebook.buck.cli.exceptions.handlers.ExceptionHandlerRegistryFactory;
@@ -81,14 +80,14 @@ public class ExceptionHandlerRegistryTest {
                 "coming from Future, should be ignored",
                 new InterruptedException("user interrupted exception")));
     assertThat(registry.handleException(ex), is(ExitCode.SIGNAL_INTERRUPT));
-    assertThat(getTextWrittenToStdErr(), is(emptyString()));
+    assertThat(getTextWrittenToStdErr(), containsString("Interrupted"));
   }
 
   @Test
   public void testWithClosedByInterruptException() {
     assertThat(
         registry.handleException(new ClosedByInterruptException()), is(ExitCode.SIGNAL_INTERRUPT));
-    assertThat(getTextWrittenToStdErr(), is(emptyString()));
+    assertThat(getTextWrittenToStdErr(), containsString("Interrupted"));
   }
 
   @Test
@@ -140,7 +139,7 @@ public class ExceptionHandlerRegistryTest {
     assertThat(
         registry.handleException(new InterruptionFailedException("Interruption failed")),
         is(ExitCode.SIGNAL_INTERRUPT));
-    assertThat(getTextWrittenToStdErr(), is(emptyString()));
+    assertThat(getTextWrittenToStdErr(), containsString("Interrupted"));
   }
 
   @Test

@@ -62,7 +62,7 @@ public class ExceptionHandlerRegistryFactory {
             new ExceptionHandler<InterruptedException, ExitCode>(InterruptedException.class) {
               @Override
               public ExitCode handleException(InterruptedException e) {
-                LOG.info(e, "Execution of the command was interrupted (SIGINT)");
+                logger.logException(e);
                 return ExitCode.SIGNAL_INTERRUPT;
               }
             },
@@ -70,7 +70,7 @@ public class ExceptionHandlerRegistryFactory {
                 ClosedByInterruptException.class) {
               @Override
               public ExitCode handleException(ClosedByInterruptException e) {
-                LOG.info(e, "Execution of the command was interrupted (SIGINT)");
+                logger.logException(e);
                 return ExitCode.SIGNAL_INTERRUPT;
               }
             },
@@ -119,6 +119,7 @@ public class ExceptionHandlerRegistryFactory {
                 InterruptionFailedException.class) {
               @Override
               public ExitCode handleException(InterruptionFailedException e) {
+                logger.logException(e);
                 ngContext.ifPresent(c -> c.getNGServer().shutdown(false));
                 return ExitCode.SIGNAL_INTERRUPT;
               }
@@ -157,7 +158,11 @@ public class ExceptionHandlerRegistryFactory {
 
           @Override
           public void logVerbose(Throwable e) {
-            LOG.warn(e, "Command failed:");
+            String message = "Command failed:";
+            if (e instanceof InterruptedException || e instanceof ClosedByInterruptException) {
+              message = "Command was interrupted:";
+            }
+            LOG.warn(e, message);
           }
         },
         augmentor);

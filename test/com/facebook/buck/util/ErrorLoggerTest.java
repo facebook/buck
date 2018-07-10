@@ -26,6 +26,7 @@ import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import java.io.IOException;
+import java.nio.channels.ClosedByInterruptException;
 import java.nio.file.FileSystemLoopException;
 import java.util.concurrent.ExecutionException;
 import java.util.regex.Pattern;
@@ -121,6 +122,25 @@ public class ErrorLoggerTest {
         logException(new BuckExecutionException(new RuntimeException(rawMessage), "context"));
     assertNull(errors.userVisible);
     assertEquals(expected, errors.userVisibleInternal);
+  }
+
+  @Test
+  public void testInterruptedException() {
+    LoggedErrors errors =
+        logException(
+            new BuckExecutionException(new InterruptedException("This has been interrupted.")));
+
+    assertNull(errors.userVisible);
+    assertEquals("Interrupted", errors.userVisibleInternal);
+  }
+
+  @Test
+  public void testClosedByInterruptedException() {
+    LoggedErrors errors =
+        logException(new BuckExecutionException(new ClosedByInterruptException()));
+
+    assertNull(errors.userVisible);
+    assertEquals("Interrupted", errors.userVisibleInternal);
   }
 
   @Test
