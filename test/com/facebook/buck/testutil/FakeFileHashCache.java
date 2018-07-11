@@ -71,7 +71,7 @@ public class FakeFileHashCache implements FileHashCache {
       cachedValues.put(Paths.get(entry.getKey()), HashCode.fromString(entry.getValue()));
 
       // And ensure that the absolute path is also present.
-      if (!entry.getKey().startsWith("/")) {
+      if (!Paths.get(entry.getKey()).isAbsolute()) {
         cachedValues.put(filesystem.resolve(entry.getKey()), HashCode.fromString(entry.getValue()));
       }
     }
