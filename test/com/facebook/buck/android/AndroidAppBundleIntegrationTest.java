@@ -23,6 +23,7 @@ import com.android.bundle.Files.Assets;
 import com.android.bundle.Files.NativeLibraries;
 import com.android.bundle.Files.TargetedAssetsDirectory;
 import com.android.bundle.Files.TargetedNativeDirectory;
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.jvm.java.testutil.AbiCompilationModeTest;
@@ -45,12 +46,14 @@ import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 public class AndroidAppBundleIntegrationTest extends AbiCompilationModeTest {
 
   private ProjectWorkspace workspace;
   @Rule public TemporaryPaths tmpFolder = new TemporaryPaths(true);
   private ProjectFilesystem filesystem;
+  @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Before
   public void setUp() throws InterruptedException, IOException {
@@ -102,5 +105,16 @@ public class AndroidAppBundleIntegrationTest extends AbiCompilationModeTest {
       assertTrue(targetedAssetsDirectory.hasTargeting());
       assertTrue(targetedAssetsDirectory.getTargeting().hasLanguage());
     }
+  }
+
+  @Test
+  public void testAppBundleHaveCorrectAaptMode() throws IOException {
+    String target = "//apps/sample:app_bundle_wrong_aapt_mode";
+
+    thrown.expect(HumanReadableException.class);
+    thrown.expectMessage(
+        "Android App Bundle can only be built with aapt2, but " + target + " is using aapt1.");
+
+    workspace.runBuckBuild(target);
   }
 }
