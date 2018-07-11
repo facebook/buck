@@ -728,7 +728,7 @@ public class ProjectGenerator {
             Optional.of(AppleBuildRules.XCODE_TARGET_DESCRIPTION_CLASSES));
     if (bundleRequiresRemovalOfAllTransitiveFrameworks(targetNode)) {
       copiedRules = rulesWithoutFrameworkBundles(copiedRules);
-    } else if (bundleRequiresAllTransitiveFrameworks(binaryNode)) {
+    } else if (bundleRequiresAllTransitiveFrameworks(binaryNode, bundleLoaderNode)) {
       copiedRules =
           ImmutableSet.<TargetNode<?, ?>>builder()
               .addAll(copiedRules)
@@ -1822,7 +1822,9 @@ public class ProjectGenerator {
                         if (prebuilt.getConstructorArg().getPreferredLinkage()
                             != NativeLinkable.Linkage.STATIC) {
                           // Frameworks that are copied into the binary.
+                          iOSLdRunpathSearchPaths.add("@loader_path/Frameworks");
                           iOSLdRunpathSearchPaths.add("@executable_path/Frameworks");
+                          macOSLdRunpathSearchPaths.add("@loader_path/../Frameworks");
                           macOSLdRunpathSearchPaths.add("@executable_path/../Frameworks");
                         }
                       });
@@ -3386,8 +3388,11 @@ public class ProjectGenerator {
   }
 
   private static boolean bundleRequiresAllTransitiveFrameworks(
-      TargetNode<? extends AppleNativeTargetDescriptionArg, ?> binaryNode) {
-    return binaryNode.castArg(AppleBinaryDescriptionArg.class).isPresent();
+      TargetNode<? extends AppleNativeTargetDescriptionArg, ?> binaryNode,
+      Optional<TargetNode<AppleBundleDescriptionArg, ?>> bundleLoaderNode) {
+    return binaryNode.castArg(AppleBinaryDescriptionArg.class).isPresent()
+        || (!bundleLoaderNode.isPresent()
+            && binaryNode.castArg(AppleTestDescriptionArg.class).isPresent());
   }
 
   private Path resolveSourcePath(SourcePath sourcePath) {

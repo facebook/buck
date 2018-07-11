@@ -252,6 +252,67 @@ public class PrebuiltAppleFrameworkIntegrationTest {
   }
 
   @Test
+  public void testProjectGeneratorGeneratesWorkingProjectWithoutTestHost() throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "prebuilt_apple_framework_links", tmp);
+    workspace.setUp();
+    workspace.runBuckCommand("project", "//test:workspace").assertSuccess();
+
+    {
+      ProcessExecutor.Result result =
+          workspace.runCommand(
+              "xcodebuild",
+
+              // "json" output.
+              "-json",
+
+              // Make sure the output stays in the temp folder.
+              "-derivedDataPath",
+              "xcode-out/",
+
+              // Build the project that we just generated
+              "-workspace",
+              "test/testworkspace.xcworkspace",
+              "-scheme",
+              "testworkspace",
+              "build-for-testing",
+
+              // Build for iphonesimulator
+              "-arch",
+              "x86_64",
+              "-sdk",
+              "iphonesimulator");
+      result.getStderr().ifPresent(System.err::print);
+      assertEquals("xcodebuild should succeed", 0, result.getExitCode());
+    }
+
+    Path appBundlePath =
+        tmp.getRoot().resolve("xcode-out/Build/Products/Debug-iphonesimulator/test.xctest");
+    assertTrue(
+        "Framework is copied into bundle.",
+        Files.isRegularFile(appBundlePath.resolve("Frameworks/BuckTest.framework/BuckTest")));
+
+    {
+      ProcessExecutor.Result result =
+          workspace.runCommand("otool", "-l", appBundlePath.resolve("test").toString());
+      assertThat(
+          "App binary adds Framework dir to rpath.",
+          result.getStdout().get(),
+          matchesPattern(
+              Pattern.compile(
+                  ".*\\s+cmd LC_RPATH.*\\s+path @loader_path/Frameworks\\b.*", Pattern.DOTALL)));
+      assertThat(
+          "App binary has load instruction for framework",
+          result.getStdout().get(),
+          matchesPattern(
+              Pattern.compile(
+                  ".*\\s+cmd LC_LOAD_DYLIB.*\\s+name @rpath/BuckTest.framework/BuckTest\\b.*",
+                  Pattern.DOTALL)));
+    }
+  }
+
+  @Test
   public void frameworkPathsPassedIntoSwiftc() throws Exception {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
