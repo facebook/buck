@@ -72,4 +72,6 @@ abstract class AbstractTestRunningOptions {
   public abstract Optional<String> getCoverageExcludes();
 
   public abstract Optional<String> getCoverageIncludes();
+
+  public abstract Optional<String> getJavaTempDir();
 }

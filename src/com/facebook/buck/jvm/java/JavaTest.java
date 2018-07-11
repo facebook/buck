@@ -229,7 +229,11 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
         reorderClasses(testClassNames, options.isShufflingTests());
 
     ImmutableList<String> properVmArgs =
-        amendVmArgs(this.vmArgs, pathResolver, executionContext.getTargetDevice());
+        amendVmArgs(
+            this.vmArgs,
+            pathResolver,
+            executionContext.getTargetDevice(),
+            options.getJavaTempDir());
 
     BuckEventBus buckEventBus = executionContext.getBuckEventBus();
     BuildId buildId = buckEventBus.getBuildId();
@@ -350,9 +354,11 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   ImmutableList<String> amendVmArgs(
       ImmutableList<String> existingVmArgs,
       SourcePathResolver pathResolver,
-      Optional<TargetDevice> targetDevice) {
+      Optional<TargetDevice> targetDevice,
+      Optional<String> javaTempDir) {
     ImmutableList.Builder<String> vmArgs = ImmutableList.builder();
     vmArgs.addAll(existingVmArgs);
+    javaTempDir.ifPresent(dir -> vmArgs.add(String.format("-Djava.io.tmpdir=%s", dir)));
     onAmendVmArgs(vmArgs, pathResolver, targetDevice);
     return vmArgs.build();
   }

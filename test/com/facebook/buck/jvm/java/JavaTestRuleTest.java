@@ -45,7 +45,8 @@ public class JavaTestRuleTest {
     JavaTest rule = newRule(vmArgs);
 
     ImmutableList<String> amended =
-        rule.amendVmArgs(vmArgs, createMock(SourcePathResolver.class), Optional.empty());
+        rule.amendVmArgs(
+            vmArgs, createMock(SourcePathResolver.class), Optional.empty(), Optional.empty());
 
     MoreAsserts.assertListEquals(vmArgs, amended);
   }
@@ -57,7 +58,8 @@ public class JavaTestRuleTest {
 
     TargetDevice device = new TargetDevice(TargetDevice.Type.EMULATOR, Optional.empty());
     ImmutableList<String> amended =
-        rule.amendVmArgs(vmArgs, createMock(SourcePathResolver.class), Optional.of(device));
+        rule.amendVmArgs(
+            vmArgs, createMock(SourcePathResolver.class), Optional.of(device), Optional.empty());
 
     ImmutableList<String> expected = ImmutableList.of("--one", "-Dbuck.device=emulator");
     assertEquals(expected, amended);
@@ -70,7 +72,8 @@ public class JavaTestRuleTest {
 
     TargetDevice device = new TargetDevice(TargetDevice.Type.REAL_DEVICE, Optional.empty());
     ImmutableList<String> amended =
-        rule.amendVmArgs(vmArgs, createMock(SourcePathResolver.class), Optional.of(device));
+        rule.amendVmArgs(
+            vmArgs, createMock(SourcePathResolver.class), Optional.of(device), Optional.empty());
 
     ImmutableList<String> expected = ImmutableList.of("--one", "-Dbuck.device=device");
     assertEquals(expected, amended);
@@ -83,10 +86,24 @@ public class JavaTestRuleTest {
 
     TargetDevice device = new TargetDevice(TargetDevice.Type.EMULATOR, Optional.of("123"));
     List<String> amended =
-        rule.amendVmArgs(vmArgs, createMock(SourcePathResolver.class), Optional.of(device));
+        rule.amendVmArgs(
+            vmArgs, createMock(SourcePathResolver.class), Optional.of(device), Optional.empty());
 
     List<String> expected =
         ImmutableList.of("--one", "-Dbuck.device=emulator", "-Dbuck.device.id=123");
+    assertEquals(expected, amended);
+  }
+
+  @Test
+  public void shouldAddJavaTempDirToVmArgs() {
+    ImmutableList<String> vmArgs = ImmutableList.of("--one");
+    JavaTest rule = newRule(vmArgs);
+
+    List<String> amended =
+        rule.amendVmArgs(
+            vmArgs, createMock(SourcePathResolver.class), Optional.empty(), Optional.of("path"));
+
+    List<String> expected = ImmutableList.of("--one", "-Djava.io.tmpdir=path");
     assertEquals(expected, amended);
   }
 

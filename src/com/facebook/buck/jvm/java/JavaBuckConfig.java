@@ -245,6 +245,10 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
         .orElse(UnusedDependenciesAction.IGNORE);
   }
 
+  public Optional<String> getJavaTempDir() {
+    return delegate.getValue("java", "test_temp_dir");
+  }
+
   public Level getDuplicatesLogLevel() {
     return delegate
         .getEnum(SECTION, "duplicates_log_level", DuplicatesLogLevel.class)
