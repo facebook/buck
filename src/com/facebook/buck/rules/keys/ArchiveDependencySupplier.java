@@ -16,6 +16,7 @@
 package com.facebook.buck.rules.keys;
 
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
+import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.google.common.collect.ImmutableSortedSet;
@@ -29,5 +30,6 @@ import java.util.stream.Stream;
 public interface ArchiveDependencySupplier extends AddsToRuleKey {
   ImmutableSortedSet<SourcePath> get();
 
-  Stream<SourcePath> getArchiveMembers(SourcePathResolver resolver);
+  Stream<SourcePath> getArchiveMembers(
+      SourcePathResolver resolver, SourcePathRuleFinder ruleFinder);
 }

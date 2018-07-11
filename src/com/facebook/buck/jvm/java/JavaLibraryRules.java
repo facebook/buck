@@ -21,7 +21,6 @@ import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
@@ -141,7 +140,6 @@ public class JavaLibraryRules {
   public static ZipArchiveDependencySupplier getAbiClasspath(
       ActionGraphBuilder graphBuilder, Iterable<BuildRule> inputs) {
     return new ZipArchiveDependencySupplier(
-        new SourcePathRuleFinder(graphBuilder),
         getAbiRules(graphBuilder, inputs)
             .stream()
             .map(BuildRule::getSourcePathToOutput)

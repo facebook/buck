@@ -155,7 +155,6 @@ abstract class AbstractDefaultJavaLibraryClasspaths {
   @Value.Lazy
   public ZipArchiveDependencySupplier getAbiClasspath() {
     return new ZipArchiveDependencySupplier(
-        getSourcePathRuleFinder(),
         getCompileTimeClasspathAbiDeps()
             .stream()
             .map(BuildRule::getSourcePathToOutput)

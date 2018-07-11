@@ -30,11 +30,8 @@ import java.util.stream.Stream;
 
 public class ZipArchiveDependencySupplier implements ArchiveDependencySupplier {
   @AddToRuleKey private final ImmutableSortedSet<SourcePath> zipFiles;
-  private final SourcePathRuleFinder ruleFinder;
 
-  public ZipArchiveDependencySupplier(
-      SourcePathRuleFinder ruleFinder, ImmutableSortedSet<SourcePath> zipFiles) {
-    this.ruleFinder = ruleFinder;
+  public ZipArchiveDependencySupplier(ImmutableSortedSet<SourcePath> zipFiles) {
     this.zipFiles = zipFiles;
   }
 
@@ -44,7 +41,8 @@ public class ZipArchiveDependencySupplier implements ArchiveDependencySupplier {
   }
 
   @Override
-  public Stream<SourcePath> getArchiveMembers(SourcePathResolver resolver) {
+  public Stream<SourcePath> getArchiveMembers(
+      SourcePathResolver resolver, SourcePathRuleFinder ruleFinder) {
     return zipFiles
         .stream()
         .flatMap(

@@ -151,7 +151,9 @@ public class JarBuildStepsFactory
 
   public Predicate<SourcePath> getCoveredByDepFilePredicate(SourcePathResolver pathResolver) {
     // a hash set is intentionally used to achieve constant time look-up
-    return abiClasspath.getArchiveMembers(pathResolver).collect(ImmutableSet.toImmutableSet())
+    return abiClasspath
+            .getArchiveMembers(pathResolver, ruleFinder)
+            .collect(ImmutableSet.toImmutableSet())
         ::contains;
   }
 
