@@ -28,6 +28,7 @@ import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
+import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.attr.BuildOutputInitializer;
 import com.facebook.buck.core.rules.attr.ExportDependencies;
 import com.facebook.buck.core.rules.attr.InitializableFromDisk;
@@ -127,6 +128,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
   private final ImmutableSortedSet<BuildTarget> tests;
 
   @Nullable private CalculateSourceAbi sourceAbi;
+  private SourcePathRuleFinder ruleFinder;
 
   public static DefaultJavaLibraryRules.Builder rulesBuilder(
       BuildTarget buildTarget,
@@ -160,6 +162,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
       ProjectFilesystem projectFilesystem,
       BuildDeps buildDeps,
       JarBuildStepsFactory jarBuildStepsFactory,
+      SourcePathRuleFinder ruleFinder,
       Optional<SourcePath> proguardConfig,
       SortedSet<BuildRule> firstOrderPackageableDeps,
       ImmutableSortedSet<BuildRule> fullJarExportedDeps,
@@ -177,6 +180,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
     this.jarBuildStepsFactory = jarBuildStepsFactory;
     this.unusedDependenciesAction = unusedDependenciesAction;
     this.unusedDependenciesFinderFactory = unusedDependenciesFinderFactory;
+    this.ruleFinder = ruleFinder;
 
     // Exported deps are meant to be forwarded onto the CLASSPATH for dependents,
     // and so only make sense for java library types.
@@ -440,7 +444,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
 
   @Override
   public Predicate<SourcePath> getCoveredByDepFilePredicate(SourcePathResolver pathResolver) {
-    return jarBuildStepsFactory.getCoveredByDepFilePredicate(pathResolver);
+    return jarBuildStepsFactory.getCoveredByDepFilePredicate(pathResolver, ruleFinder);
   }
 
   @Override
@@ -452,7 +456,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
   public ImmutableList<SourcePath> getInputsAfterBuildingLocally(
       BuildContext context, CellPathResolver cellPathResolver) {
     return jarBuildStepsFactory.getInputsAfterBuildingLocally(
-        context, cellPathResolver, getBuildTarget());
+        context, ruleFinder, cellPathResolver, getBuildTarget());
   }
 
   @Override

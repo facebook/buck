@@ -22,6 +22,7 @@ import com.facebook.buck.core.cell.resolver.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.attr.BuildOutputInitializer;
 import com.facebook.buck.core.rules.attr.InitializableFromDisk;
 import com.facebook.buck.core.rules.attr.SupportsDependencyFileRuleKey;
@@ -56,15 +57,18 @@ public class CalculateSourceAbi extends AbstractBuildRule
   private final BuildDeps buildDeps;
   private final JarContentsSupplier outputJarContents;
   private final BuildOutputInitializer<Object> buildOutputInitializer;
+  private final SourcePathRuleFinder ruleFinder;
 
   public CalculateSourceAbi(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildDeps buildDeps,
-      JarBuildStepsFactory jarBuildStepsFactory) {
+      JarBuildStepsFactory jarBuildStepsFactory,
+      SourcePathRuleFinder ruleFinder) {
     super(buildTarget, projectFilesystem);
     this.buildDeps = buildDeps;
     this.jarBuildStepsFactory = jarBuildStepsFactory;
+    this.ruleFinder = ruleFinder;
     this.outputJarContents = new JarContentsSupplier(getSourcePathToOutput());
     buildOutputInitializer = new BuildOutputInitializer<>(getBuildTarget(), this);
   }
@@ -137,7 +141,7 @@ public class CalculateSourceAbi extends AbstractBuildRule
 
   @Override
   public Predicate<SourcePath> getCoveredByDepFilePredicate(SourcePathResolver pathResolver) {
-    return jarBuildStepsFactory.getCoveredByDepFilePredicate(pathResolver);
+    return jarBuildStepsFactory.getCoveredByDepFilePredicate(pathResolver, ruleFinder);
   }
 
   @Override
@@ -149,6 +153,6 @@ public class CalculateSourceAbi extends AbstractBuildRule
   public ImmutableList<SourcePath> getInputsAfterBuildingLocally(
       BuildContext context, CellPathResolver cellPathResolver) {
     return jarBuildStepsFactory.getInputsAfterBuildingLocally(
-        context, cellPathResolver, getBuildTarget());
+        context, ruleFinder, cellPathResolver, getBuildTarget());
   }
 }

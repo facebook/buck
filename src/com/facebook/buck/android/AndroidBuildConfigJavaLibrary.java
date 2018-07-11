@@ -72,7 +72,6 @@ class AndroidBuildConfigJavaLibrary extends DefaultJavaLibrary implements Androi
                     params.getBuildDeps(), ruleFinder.filterBuildRuleInputs(abiClasspath.get())))),
         new JarBuildStepsFactory(
             projectFilesystem,
-            ruleFinder,
             buildTarget,
             new JavacToJarStepFactory(
                 resolver,
@@ -95,7 +94,8 @@ class AndroidBuildConfigJavaLibrary extends DefaultJavaLibrary implements Androi
             AbiGenerationMode.CLASS,
             AbiGenerationMode.CLASS,
             /* sourceOnlyAbiRuleInfo */ null),
-        /* proguardConfig */ Optional.empty(),
+        ruleFinder,
+        Optional.empty(),
         /* firstOrderPackageableDeps */ params.getDeclaredDeps().get(),
         /* exportedDeps */ ImmutableSortedSet.of(),
         /* providedDeps */ ImmutableSortedSet.of(),

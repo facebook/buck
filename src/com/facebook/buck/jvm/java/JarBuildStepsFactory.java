@@ -55,7 +55,6 @@ public class JarBuildStepsFactory
   private static final Path METADATA_DIR = Paths.get("META-INF");
 
   private final ProjectFilesystem projectFilesystem;
-  private final SourcePathRuleFinder ruleFinder;
   private final BuildTarget libraryTarget;
 
   @AddToRuleKey private final ConfiguredCompiler configuredCompiler;
@@ -83,7 +82,6 @@ public class JarBuildStepsFactory
 
   public JarBuildStepsFactory(
       ProjectFilesystem projectFilesystem,
-      SourcePathRuleFinder ruleFinder,
       BuildTarget libraryTarget,
       ConfiguredCompiler configuredCompiler,
       ImmutableSortedSet<SourcePath> srcs,
@@ -100,7 +98,6 @@ public class JarBuildStepsFactory
       AbiGenerationMode abiCompatibilityMode,
       @Nullable Supplier<SourceOnlyAbiRuleInfoFactory> ruleInfoFactorySupplier) {
     this.projectFilesystem = projectFilesystem;
-    this.ruleFinder = ruleFinder;
     this.libraryTarget = libraryTarget;
     this.configuredCompiler = configuredCompiler;
     this.srcs = srcs;
@@ -149,7 +146,9 @@ public class JarBuildStepsFactory
     return !srcs.isEmpty() && trackClassUsage;
   }
 
-  public Predicate<SourcePath> getCoveredByDepFilePredicate(SourcePathResolver pathResolver) {
+  /** Returns a predicate indicating whether a SourcePath is covered by the depfile. */
+  public Predicate<SourcePath> getCoveredByDepFilePredicate(
+      SourcePathResolver pathResolver, SourcePathRuleFinder ruleFinder) {
     // a hash set is intentionally used to achieve constant time look-up
     return abiClasspath
             .getArchiveMembers(pathResolver, ruleFinder)
@@ -328,13 +327,16 @@ public class JarBuildStepsFactory
   }
 
   public ImmutableList<SourcePath> getInputsAfterBuildingLocally(
-      BuildContext context, CellPathResolver cellPathResolver, BuildTarget buildTarget) {
+      BuildContext context,
+      SourcePathRuleFinder ruleFinder,
+      CellPathResolver cellPathResolver,
+      BuildTarget buildTarget) {
     Preconditions.checkState(useDependencyFileRuleKeys());
     return DefaultClassUsageFileReader.loadFromFile(
         projectFilesystem,
         cellPathResolver,
         projectFilesystem.getPathForRelativePath(getDepFileRelativePath(buildTarget)),
-        getDepOutputPathToAbiSourcePath(context.getSourcePathResolver()));
+        getDepOutputPathToAbiSourcePath(context.getSourcePathResolver(), ruleFinder));
   }
 
   private Optional<Path> getOutputJarPath(BuildTarget buildTarget) {
@@ -358,7 +360,7 @@ public class JarBuildStepsFactory
   }
 
   private ImmutableMap<Path, SourcePath> getDepOutputPathToAbiSourcePath(
-      SourcePathResolver pathResolver) {
+      SourcePathResolver pathResolver, SourcePathRuleFinder ruleFinder) {
     ImmutableMap.Builder<Path, SourcePath> pathToSourcePathMapBuilder = ImmutableMap.builder();
     for (SourcePath sourcePath : compileTimeClasspathSourcePaths) {
       BuildRule rule = ruleFinder.getRule(sourcePath).get();

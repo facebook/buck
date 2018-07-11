@@ -71,7 +71,6 @@ public class AndroidPrebuiltAar extends AndroidLibrary
                     ruleFinder.filterBuildRuleInputs(abiClasspath.get())))),
         new JarBuildStepsFactory(
             projectFilesystem,
-            ruleFinder,
             androidLibraryBuildTarget,
             configuredCompiler,
             /* srcs */ ImmutableSortedSet.of(),
@@ -88,6 +87,7 @@ public class AndroidPrebuiltAar extends AndroidLibrary
             AbiGenerationMode.CLASS,
             AbiGenerationMode.CLASS,
             /* sourceOnlyAbiRuleInfo */ null),
+        ruleFinder,
         Optional.of(proguardConfig),
         /* firstOrderPackageableDeps */ androidLibraryParams.getDeclaredDeps().get(),
         /* exportedDeps */ ImmutableSortedSet.<BuildRule>naturalOrder()

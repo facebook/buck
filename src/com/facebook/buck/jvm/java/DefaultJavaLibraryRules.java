@@ -59,6 +59,7 @@ public abstract class DefaultJavaLibraryRules {
         ProjectFilesystem projectFilesystem,
         BuildDeps buildDeps,
         JarBuildStepsFactory jarBuildStepsFactory,
+        SourcePathRuleFinder ruleFinder,
         Optional<SourcePath> proguardConfig,
         SortedSet<BuildRule> firstOrderPackageableDeps,
         ImmutableSortedSet<BuildRule> fullJarExportedDeps,
@@ -408,6 +409,7 @@ public abstract class DefaultJavaLibraryRules {
                 getProjectFilesystem(),
                 buildDeps,
                 getJarBuildStepsFactory(),
+                getSourcePathRuleFinder(),
                 getProguardConfig(),
                 classpaths.getFirstOrderPackageableDeps(),
                 Preconditions.checkNotNull(getDeps()).getExportedDeps(),
@@ -458,7 +460,11 @@ public abstract class DefaultJavaLibraryRules {
     return getActionGraphBuilder()
         .addToIndex(
             new CalculateSourceAbi(
-                sourceAbiTarget, getProjectFilesystem(), buildDeps, jarBuildStepsFactory));
+                sourceAbiTarget,
+                getProjectFilesystem(),
+                buildDeps,
+                jarBuildStepsFactory,
+                getSourcePathRuleFinder()));
   }
 
   @Nullable
@@ -474,7 +480,11 @@ public abstract class DefaultJavaLibraryRules {
     return getActionGraphBuilder()
         .addToIndex(
             new CalculateSourceAbi(
-                sourceAbiTarget, getProjectFilesystem(), buildDeps, jarBuildStepsFactory));
+                sourceAbiTarget,
+                getProjectFilesystem(),
+                buildDeps,
+                jarBuildStepsFactory,
+                getSourcePathRuleFinder()));
   }
 
   @Nullable
@@ -624,7 +634,6 @@ public abstract class DefaultJavaLibraryRules {
     DefaultJavaLibraryClasspaths classpaths = getClasspaths();
     return new JarBuildStepsFactory(
         getProjectFilesystem(),
-        getSourcePathRuleFinder(),
         getLibraryTarget(),
         getConfiguredCompiler(),
         getSrcs(),
@@ -647,7 +656,6 @@ public abstract class DefaultJavaLibraryRules {
     DefaultJavaLibraryClasspaths classpaths = getClasspathsForSourceOnlyAbi();
     return new JarBuildStepsFactory(
         getProjectFilesystem(),
-        getSourcePathRuleFinder(),
         getLibraryTarget(),
         getConfiguredCompilerForSourceOnlyAbi(),
         getSrcs(),
