@@ -38,11 +38,13 @@ import javax.annotation.Nullable;
 /** The default inmplementation of JavaAbiInfo. */
 public class DefaultJavaAbiInfo implements JavaAbiInfo {
   private final BuildTarget buildTarget;
-  private final JarContentsSupplier jarContentsSupplier;
+  @Nullable private final SourcePath jarSourcePath;
+  @Nullable private volatile JarContents jarContents;
 
   public DefaultJavaAbiInfo(BuildTarget buildTarget, @Nullable SourcePath jarPath) {
     this.buildTarget = buildTarget;
-    this.jarContentsSupplier = new JarContentsSupplier(jarPath);
+    this.jarSourcePath = jarPath;
+    this.jarContents = null;
   }
 
   @Override
@@ -52,41 +54,44 @@ public class DefaultJavaAbiInfo implements JavaAbiInfo {
 
   @Override
   public ImmutableSortedSet<SourcePath> getJarContents() {
-    return jarContentsSupplier.get();
+    return Preconditions.checkNotNull(jarContents, "Must call load first.").contents;
   }
 
   @Override
   public boolean jarContains(String path) {
-    return jarContentsSupplier.jarContains(path);
+    return Preconditions.checkNotNull(jarContents, "Must call load first.")
+        .contentPaths
+        .contains(Paths.get(path));
   }
 
   public void load(SourcePathResolver pathResolver) throws IOException {
-    jarContentsSupplier.load(pathResolver);
+    Preconditions.checkState(
+        jarContents == null,
+        "load() called without a preceding invalidate(). This usually indicates "
+            + "that a rule is calling load in initializeFromDisk() but failing to call "
+            + "invalidate() in invalidateInitializeFromDiskState().");
+    jarContents = JarContents.load(pathResolver, jarSourcePath);
   }
 
   public void invalidate() {
-    jarContentsSupplier.invalidate();
+    jarContents = null;
   }
 
-  private static class JarContentsSupplier {
-    @Nullable private final SourcePath jarSourcePath;
-    @Nullable private ImmutableSortedSet<SourcePath> contents;
-    @Nullable private ImmutableSet<Path> contentPaths;
+  private static class JarContents {
+    private final ImmutableSortedSet<SourcePath> contents;
+    private final ImmutableSet<Path> contentPaths;
 
-    public JarContentsSupplier(@Nullable SourcePath jarSourcePath) {
-      this.jarSourcePath = jarSourcePath;
+    public JarContents(ImmutableSortedSet<SourcePath> contents, ImmutableSet<Path> contentPaths) {
+      this.contents = contents;
+      this.contentPaths = contentPaths;
     }
 
-    public void load(SourcePathResolver resolver) throws IOException {
-      Preconditions.checkState(
-          contents == null,
-          "load() called without a preceding invalidate(). This usually indicates "
-              + "that a rule is calling load in initializeFromDisk() but failing to call "
-              + "invalidate() in invalidateInitializeFromDiskState().");
+    static JarContents load(SourcePathResolver resolver, @Nullable SourcePath jarSourcePath)
+        throws IOException {
       if (jarSourcePath == null) {
-        contents = ImmutableSortedSet.of();
-        contentPaths = ImmutableSet.of();
+        return new JarContents(ImmutableSortedSet.of(), ImmutableSet.of());
       } else {
+        ImmutableSortedSet<SourcePath> contents;
         Path jarAbsolutePath = resolver.getAbsolutePath(jarSourcePath);
         if (Files.isDirectory(jarAbsolutePath)) {
           BuildTargetSourcePath buildTargetSourcePath = (BuildTargetSourcePath) jarSourcePath;
@@ -106,7 +111,8 @@ public class DefaultJavaAbiInfo implements JavaAbiInfo {
                   .map(path -> ArchiveMemberSourcePath.of(nonNullJarSourcePath, path))
                   .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
         }
-        contentPaths =
+        return new JarContents(
+            contents,
             contents
                 .stream()
                 .map(
@@ -117,22 +123,8 @@ public class DefaultJavaAbiInfo implements JavaAbiInfo {
                         return ((ArchiveMemberSourcePath) sourcePath).getMemberPath();
                       }
                     })
-                .collect(ImmutableSet.toImmutableSet());
+                .collect(ImmutableSet.toImmutableSet()));
       }
-    }
-
-    public ImmutableSortedSet<SourcePath> get() {
-      return Preconditions.checkNotNull(contents, "Must call load first.");
-    }
-
-    public boolean jarContains(String path) {
-      return Preconditions.checkNotNull(contentPaths, "Must call load first.")
-          .contains(Paths.get(path));
-    }
-
-    public void invalidate() {
-      contents = null;
-      contentPaths = null;
     }
   }
 }
