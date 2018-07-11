@@ -28,7 +28,6 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.common.BuildDeps;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.HasJavaAbi;
 import com.facebook.buck.jvm.java.ConfiguredCompilerFactory;
@@ -90,7 +89,6 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildDeps buildDeps,
-      SourcePathResolver resolver,
       JarBuildStepsFactory jarBuildStepsFactory,
       Optional<SourcePath> proguardConfig,
       SortedSet<BuildRule> fullJarDeclaredDeps,
@@ -109,7 +107,6 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
         buildTarget,
         projectFilesystem,
         buildDeps,
-        resolver,
         jarBuildStepsFactory,
         proguardConfig,
         fullJarDeclaredDeps,
@@ -172,7 +169,6 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
                 BuildTarget buildTarget,
                 ProjectFilesystem projectFilesystem,
                 BuildDeps buildDeps,
-                SourcePathResolver resolver,
                 JarBuildStepsFactory jarBuildStepsFactory,
                 Optional<SourcePath> proguardConfig,
                 SortedSet<BuildRule> firstOrderPackageableDeps,
@@ -190,7 +186,6 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
                   buildTarget,
                   projectFilesystem,
                   buildDeps,
-                  resolver,
                   jarBuildStepsFactory,
                   proguardConfig,
                   firstOrderPackageableDeps,

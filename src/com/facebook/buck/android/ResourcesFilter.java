@@ -374,7 +374,7 @@ public class ResourcesFilter extends AbstractBuildRule
   }
 
   @Override
-  public BuildOutput initializeFromDisk() throws IOException {
+  public BuildOutput initializeFromDisk(SourcePathResolver pathResolver) throws IOException {
     ImmutableList<Path> stringFiles =
         getProjectFilesystem()
             .readLines(getStringFilesPath())

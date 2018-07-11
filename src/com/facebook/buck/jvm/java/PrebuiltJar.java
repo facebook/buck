@@ -25,7 +25,6 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.attr.BuildOutputInitializer;
 import com.facebook.buck.core.rules.attr.ExportDependencies;
 import com.facebook.buck.core.rules.attr.InitializableFromDisk;
@@ -135,7 +134,7 @@ public class PrebuiltJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
     copiedBinaryJar =
         BuildTargets.getGenPath(
             getProjectFilesystem(), getBuildTarget(), "__%s__/" + fileNameWithJarExtension);
-    this.binaryJarContentsSupplier = new JarContentsSupplier(resolver, getSourcePathToOutput());
+    this.binaryJarContentsSupplier = new JarContentsSupplier(getSourcePathToOutput());
 
     buildOutputInitializer = new BuildOutputInitializer<>(buildTarget, this);
   }
@@ -159,9 +158,9 @@ public class PrebuiltJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public JavaLibrary.Data initializeFromDisk() throws IOException {
+  public JavaLibrary.Data initializeFromDisk(SourcePathResolver pathResolver) throws IOException {
     // Warm up the jar contents. We just wrote the thing, so it should be in the filesystem cache
-    binaryJarContentsSupplier.load();
+    binaryJarContentsSupplier.load(pathResolver);
     return JavaLibraryRules.initializeFromDisk(getBuildTarget(), getProjectFilesystem());
   }
 
@@ -323,13 +322,5 @@ public class PrebuiltJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @Override
   public Optional<String> getMavenCoords() {
     return mavenCoords;
-  }
-
-  @Override
-  public void updateBuildRuleResolver(
-      BuildRuleResolver ruleResolver,
-      SourcePathRuleFinder ruleFinder,
-      SourcePathResolver pathResolver) {
-    binaryJarContentsSupplier.updateSourcePathResolver(pathResolver);
   }
 }

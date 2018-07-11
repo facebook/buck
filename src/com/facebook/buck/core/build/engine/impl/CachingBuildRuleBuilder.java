@@ -1165,7 +1165,7 @@ class CachingBuildRuleBuilder {
   private <T> void doInitializeFromDisk(InitializableFromDisk<T> initializable) throws IOException {
     try (Scope ignored = LeafEvents.scope(eventBus, "initialize_from_disk")) {
       BuildOutputInitializer<T> buildOutputInitializer = initializable.getBuildOutputInitializer();
-      buildOutputInitializer.initializeFromDisk();
+      buildOutputInitializer.initializeFromDisk(pathResolver);
     }
   }
 

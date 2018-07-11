@@ -70,7 +70,6 @@ class AndroidBuildConfigJavaLibrary extends DefaultJavaLibrary implements Androi
             ImmutableSortedSet.copyOf(
                 Iterables.concat(
                     params.getBuildDeps(), ruleFinder.filterBuildRuleInputs(abiClasspath.get())))),
-        resolver,
         new JarBuildStepsFactory(
             projectFilesystem,
             ruleFinder,

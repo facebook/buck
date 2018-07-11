@@ -22,7 +22,6 @@ import com.facebook.buck.core.cell.resolver.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.attr.BuildOutputInitializer;
 import com.facebook.buck.core.rules.attr.InitializableFromDisk;
 import com.facebook.buck.core.rules.attr.SupportsDependencyFileRuleKey;
@@ -33,7 +32,6 @@ import com.facebook.buck.core.rules.pipeline.RulePipelineStateFactory;
 import com.facebook.buck.core.rules.pipeline.SupportsPipelining;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.HasJavaAbi;
 import com.facebook.buck.step.Step;
@@ -63,14 +61,11 @@ public class CalculateSourceAbi extends AbstractBuildRule
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildDeps buildDeps,
-      SourcePathRuleFinder ruleFinder,
       JarBuildStepsFactory jarBuildStepsFactory) {
     super(buildTarget, projectFilesystem);
     this.buildDeps = buildDeps;
     this.jarBuildStepsFactory = jarBuildStepsFactory;
-    this.outputJarContents =
-        new JarContentsSupplier(
-            DefaultSourcePathResolver.from(ruleFinder), getSourcePathToOutput());
+    this.outputJarContents = new JarContentsSupplier(getSourcePathToOutput());
     buildOutputInitializer = new BuildOutputInitializer<>(getBuildTarget(), this);
   }
 
@@ -101,9 +96,9 @@ public class CalculateSourceAbi extends AbstractBuildRule
   }
 
   @Override
-  public Object initializeFromDisk() throws IOException {
+  public Object initializeFromDisk(SourcePathResolver pathResolver) throws IOException {
     // Warm up the jar contents. We just wrote the thing, so it should be in the filesystem cache
-    outputJarContents.load();
+    outputJarContents.load(pathResolver);
     return new Object();
   }
 

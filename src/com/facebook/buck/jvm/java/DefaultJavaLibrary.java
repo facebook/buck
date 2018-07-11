@@ -159,7 +159,6 @@ public class DefaultJavaLibrary extends AbstractBuildRule
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildDeps buildDeps,
-      SourcePathResolver resolver,
       JarBuildStepsFactory jarBuildStepsFactory,
       Optional<SourcePath> proguardConfig,
       SortedSet<BuildRule> firstOrderPackageableDeps,
@@ -198,7 +197,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
     this.tests = tests;
     this.requiredForSourceOnlyAbi = requiredForSourceOnlyAbi;
 
-    this.outputJarContentsSupplier = new JarContentsSupplier(resolver, getSourcePathToOutput());
+    this.outputJarContentsSupplier = new JarContentsSupplier(getSourcePathToOutput());
     this.abiJar = abiJar;
     this.sourceOnlyAbiJar = sourceOnlyAbiJar;
 
@@ -366,11 +365,15 @@ public class DefaultJavaLibrary extends AbstractBuildRule
     return outputJarContentsSupplier.jarContains(path);
   }
 
-  /** Instructs this rule to report the ABI it has on disk as its current ABI. */
+  /**
+   * Instructs this rule to report the ABI it has on disk as its current ABI.
+   *
+   * @param pathResolver
+   */
   @Override
-  public JavaLibrary.Data initializeFromDisk() throws IOException {
+  public JavaLibrary.Data initializeFromDisk(SourcePathResolver pathResolver) throws IOException {
     // Warm up the jar contents. We just wrote the thing, so it should be in the filesystem cache
-    outputJarContentsSupplier.load();
+    outputJarContentsSupplier.load(pathResolver);
     return JavaLibraryRules.initializeFromDisk(getBuildTarget(), getProjectFilesystem());
   }
 

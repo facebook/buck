@@ -31,6 +31,7 @@ import com.facebook.buck.core.rules.attr.SupportsInputBasedRuleKey;
 import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaLibrary;
@@ -213,7 +214,7 @@ public class DexProducedFromJavaLibrary extends AbstractBuildRuleWithDeclaredAnd
   }
 
   @Override
-  public BuildOutput initializeFromDisk() throws IOException {
+  public BuildOutput initializeFromDisk(SourcePathResolver pathResolver) throws IOException {
     int weightEstimate =
         Integer.parseInt(
             readMetadataValue(getProjectFilesystem(), getBuildTarget(), WEIGHT_ESTIMATE).get());

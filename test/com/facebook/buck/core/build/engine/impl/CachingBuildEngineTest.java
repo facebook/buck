@@ -4448,7 +4448,7 @@ public class CachingBuildEngineTest {
     }
 
     @Override
-    public Object initializeFromDisk() {
+    public Object initializeFromDisk(SourcePathResolver pathResolver) {
       return new Object();
     }
 

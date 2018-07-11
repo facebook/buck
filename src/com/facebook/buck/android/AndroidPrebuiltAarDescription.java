@@ -202,7 +202,6 @@ public class AndroidPrebuiltAarDescription
         buildTarget,
         projectFilesystem,
         androidLibraryParams,
-        pathResolver,
         ruleFinder,
         /* proguardConfig */ ExplicitBuildTargetSourcePath.of(
             unzipAar.getBuildTarget(), unzipAar.getProguardConfig()),

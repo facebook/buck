@@ -54,7 +54,6 @@ public class CompareAbis extends AbstractBuildRuleWithDeclaredAndExtraDeps
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      SourcePathResolver resolver,
       SourcePath correctAbi,
       SourcePath experimentalAbi,
       JavaBuckConfig.SourceAbiVerificationMode verificationMode) {
@@ -67,7 +66,7 @@ public class CompareAbis extends AbstractBuildRuleWithDeclaredAndExtraDeps
         BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s")
             .resolve(String.format("%s-abi.jar", getBuildTarget().getShortName()));
 
-    outputPathContentsSupplier = new JarContentsSupplier(resolver, getSourcePathToOutput());
+    outputPathContentsSupplier = new JarContentsSupplier(getSourcePathToOutput());
     buildOutputInitializer = new BuildOutputInitializer<>(getBuildTarget(), this);
   }
 
@@ -97,8 +96,8 @@ public class CompareAbis extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public Object initializeFromDisk() throws IOException {
-    outputPathContentsSupplier.load();
+  public Object initializeFromDisk(SourcePathResolver pathResolver) throws IOException {
+    outputPathContentsSupplier.load(pathResolver);
     return new Object();
   }
 

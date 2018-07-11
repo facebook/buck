@@ -114,17 +114,15 @@ public interface HasJavaAbi {
   }
 
   class JarContentsSupplier {
-    private SourcePathResolver resolver;
     @Nullable private final SourcePath jarSourcePath;
     @Nullable private ImmutableSortedSet<SourcePath> contents;
     @Nullable private ImmutableSet<Path> contentPaths;
 
-    public JarContentsSupplier(SourcePathResolver resolver, @Nullable SourcePath jarSourcePath) {
-      this.resolver = resolver;
+    public JarContentsSupplier(@Nullable SourcePath jarSourcePath) {
       this.jarSourcePath = jarSourcePath;
     }
 
-    public void load() throws IOException {
+    public void load(SourcePathResolver resolver) throws IOException {
       if (jarSourcePath == null) {
         contents = ImmutableSortedSet.of();
       } else {
@@ -168,10 +166,6 @@ public interface HasJavaAbi {
 
     public boolean jarContains(String path) {
       return contentPaths.contains(Paths.get(path));
-    }
-
-    public void updateSourcePathResolver(SourcePathResolver resolver) {
-      this.resolver = resolver;
     }
   }
 }

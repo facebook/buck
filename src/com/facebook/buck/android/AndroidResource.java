@@ -34,6 +34,7 @@ import com.facebook.buck.core.rules.attr.SupportsInputBasedRuleKey;
 import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.HasClasspathDeps;
@@ -371,7 +372,7 @@ public class AndroidResource extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public String initializeFromDisk() {
+  public String initializeFromDisk(SourcePathResolver pathResolver) {
     String rDotJavaPackageFromFile =
         getProjectFilesystem().readFirstLine(pathToRDotJavaPackageFile).get();
     if (rDotJavaPackageArgument != null

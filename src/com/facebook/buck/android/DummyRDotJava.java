@@ -29,7 +29,6 @@ import com.facebook.buck.core.rules.impl.AbstractBuildRule;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.HasJavaAbi;
@@ -131,7 +130,6 @@ public class DummyRDotJava extends AbstractBuildRule
             .addAll(ruleFinder.filterBuildRuleInputs(abiInputs))
             .addAll(compileStepFactory.getBuildDeps(ruleFinder))
             .build();
-    SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
     // Sort the input so that we get a stable ABI for the same set of resources.
     this.androidResourceDeps =
         androidResourceDeps
@@ -146,7 +144,7 @@ public class DummyRDotJava extends AbstractBuildRule
     this.unionPackage = unionPackage;
     this.finalRName = finalRName;
     this.abiInputs = abiInputs;
-    this.outputJarContentsSupplier = new JarContentsSupplier(resolver, getSourcePathToOutput());
+    this.outputJarContentsSupplier = new JarContentsSupplier(getSourcePathToOutput());
     buildOutputInitializer = new BuildOutputInitializer<>(getBuildTarget(), this);
   }
 
@@ -285,9 +283,9 @@ public class DummyRDotJava extends AbstractBuildRule
   }
 
   @Override
-  public Object initializeFromDisk() throws IOException {
+  public Object initializeFromDisk(SourcePathResolver pathResolver) throws IOException {
     // Warm up the jar contents. We just wrote the thing, so it should be in the filesystem cache
-    outputJarContentsSupplier.load();
+    outputJarContentsSupplier.load(pathResolver);
     return new Object();
   }
 

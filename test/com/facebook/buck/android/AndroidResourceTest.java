@@ -139,7 +139,7 @@ public class AndroidResourceTest {
     projectFilesystem.writeContentsToPath(
         "com.example.android\n",
         resolver.getRelativePath(androidResource.getPathToRDotJavaPackageFile()));
-    androidResource.initializeFromDisk();
+    androidResource.initializeFromDisk(resolver);
     assertEquals("com.example.android", androidResource.getRDotJavaPackage());
   }
 
@@ -169,7 +169,7 @@ public class AndroidResourceTest {
             /* hasWhitelistedStrings */ false);
     projectFilesystem.writeContentsToPath(
         "com.ex.pkg\n", resolver.getRelativePath(androidResource.getPathToRDotJavaPackageFile()));
-    androidResource.initializeFromDisk();
+    androidResource.initializeFromDisk(resolver);
     assertEquals("com.ex.pkg", androidResource.getRDotJavaPackage());
   }
 

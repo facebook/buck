@@ -58,7 +58,6 @@ public abstract class DefaultJavaLibraryRules {
         BuildTarget buildTarget,
         ProjectFilesystem projectFilesystem,
         BuildDeps buildDeps,
-        SourcePathResolver resolver,
         JarBuildStepsFactory jarBuildStepsFactory,
         Optional<SourcePath> proguardConfig,
         SortedSet<BuildRule> firstOrderPackageableDeps,
@@ -240,7 +239,6 @@ public abstract class DefaultJavaLibraryRules {
                 getInitialParams()
                     .withDeclaredDeps(ImmutableSortedSet.of(correctAbi, experimentalAbi))
                     .withoutExtraDeps(),
-                getSourcePathResolver(),
                 correctAbi.getSourcePathToOutput(),
                 experimentalAbi.getSourcePathToOutput(),
                 Preconditions.checkNotNull(getJavaBuckConfig()).getSourceAbiVerificationMode()));
@@ -409,7 +407,6 @@ public abstract class DefaultJavaLibraryRules {
                 getLibraryTarget(),
                 getProjectFilesystem(),
                 buildDeps,
-                getSourcePathResolver(),
                 getJarBuildStepsFactory(),
                 getProguardConfig(),
                 classpaths.getFirstOrderPackageableDeps(),
@@ -461,11 +458,7 @@ public abstract class DefaultJavaLibraryRules {
     return getActionGraphBuilder()
         .addToIndex(
             new CalculateSourceAbi(
-                sourceAbiTarget,
-                getProjectFilesystem(),
-                buildDeps,
-                getSourcePathRuleFinder(),
-                jarBuildStepsFactory));
+                sourceAbiTarget, getProjectFilesystem(), buildDeps, jarBuildStepsFactory));
   }
 
   @Nullable
@@ -481,11 +474,7 @@ public abstract class DefaultJavaLibraryRules {
     return getActionGraphBuilder()
         .addToIndex(
             new CalculateSourceAbi(
-                sourceAbiTarget,
-                getProjectFilesystem(),
-                buildDeps,
-                getSourcePathRuleFinder(),
-                jarBuildStepsFactory));
+                sourceAbiTarget, getProjectFilesystem(), buildDeps, jarBuildStepsFactory));
   }
 
   @Nullable

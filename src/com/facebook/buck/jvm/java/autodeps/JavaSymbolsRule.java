@@ -29,6 +29,7 @@ import com.facebook.buck.core.rules.attr.InitializableFromDisk;
 import com.facebook.buck.core.rules.impl.AbstractBuildRule;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargets;
@@ -77,7 +78,7 @@ final class JavaSymbolsRule extends AbstractBuildRule implements InitializableFr
   }
 
   @Override
-  public Symbols initializeFromDisk() throws IOException {
+  public Symbols initializeFromDisk(SourcePathResolver pathResolver) throws IOException {
     List<String> lines = getProjectFilesystem().readLines(outputPath);
     Preconditions.checkArgument(lines.size() == 1, "Should be one line of JSON: %s", lines);
     return ObjectMappers.readValue(lines.get(0), Symbols.class);

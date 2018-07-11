@@ -14,10 +14,10 @@
  * under the License.
  */
 
-
 package com.facebook.buck.core.rules.attr;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.google.common.annotations.VisibleForTesting;
 import java.io.IOException;
 import javax.annotation.Nullable;
@@ -49,16 +49,16 @@ public final class BuildOutputInitializer<T> {
   }
 
   /** Initializes the build output from the on disk state. */
-  public void initializeFromDisk() throws IOException {
+  public void initializeFromDisk(SourcePathResolver pathResolver) throws IOException {
     if (buildOutput == null) {
-      buildOutput = initializableFromDisk.initializeFromDisk();
+      buildOutput = initializableFromDisk.initializeFromDisk(pathResolver);
     }
   }
 
   /**
    * This should be invoked only by the build engine (currently, {@link
    * com.facebook.buck.core.build.engine.impl.CachingBuildEngine}) that invoked {@link
-   * #initializeFromDisk()}.
+   * #initializeFromDisk(SourcePathResolver)}.
    *
    * <p>
    *

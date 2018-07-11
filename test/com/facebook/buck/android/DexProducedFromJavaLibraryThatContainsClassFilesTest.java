@@ -150,7 +150,7 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest {
 
     BuildOutputInitializer<DexProducedFromJavaLibrary.BuildOutput> outputInitializer =
         preDex.getBuildOutputInitializer();
-    outputInitializer.initializeFromDisk();
+    outputInitializer.initializeFromDisk(pathResolver);
     assertEquals(250, outputInitializer.getBuildOutput().weightEstimate);
   }
 

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.core.rules.attr;
 
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import java.io.IOException;
 
 /**
@@ -38,7 +39,7 @@ public interface InitializableFromDisk<T> {
    * @return an object that has the in-memory data structures that need to be populated as a result
    *     of executing this object's steps.
    */
-  T initializeFromDisk() throws IOException;
+  T initializeFromDisk(SourcePathResolver pathResolver) throws IOException;
 
   BuildOutputInitializer<T> getBuildOutputInitializer();
 }

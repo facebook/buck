@@ -25,7 +25,6 @@ import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
 import com.facebook.buck.core.rules.common.BuildDeps;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.HasJavaAbi;
 import com.facebook.buck.jvm.java.ConfiguredCompiler;
@@ -53,7 +52,6 @@ public class AndroidPrebuiltAar extends AndroidLibrary
       BuildTarget androidLibraryBuildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams androidLibraryParams,
-      SourcePathResolver resolver,
       SourcePathRuleFinder ruleFinder,
       SourcePath proguardConfig,
       SourcePath nativeLibsDirectory,
@@ -71,7 +69,6 @@ public class AndroidPrebuiltAar extends AndroidLibrary
                 Iterables.concat(
                     androidLibraryParams.getBuildDeps(),
                     ruleFinder.filterBuildRuleInputs(abiClasspath.get())))),
-        resolver,
         new JarBuildStepsFactory(
             projectFilesystem,
             ruleFinder,
