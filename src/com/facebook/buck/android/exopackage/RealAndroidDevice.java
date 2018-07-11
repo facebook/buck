@@ -624,18 +624,32 @@ public class RealAndroidDevice implements AndroidDevice {
 
   @Override
   public void rmFiles(String dirPath, Iterable<String> filesToDelete) {
-    String commandPrefix = "cd " + dirPath + " && rm -f ";
-    // Add a fudge factor for separators and error checking.
-    int overhead = commandPrefix.length() + 100;
     try {
-      for (List<String> rmArgs : chunkArgs(filesToDelete, MAX_ADB_COMMAND_SIZE - overhead)) {
-        String command = commandPrefix + Joiner.on(' ').join(rmArgs);
-        LOG.debug("Executing %s", command);
-        executeCommandWithErrorChecking(command);
+      try {
+        rmFilesWithFlags(dirPath, filesToDelete, "-f");
+      } catch (AdbHelper.CommandFailedException e) {
+        if (!e.output.contains("rm failed for -f")) {
+          throw e;
+        }
+        LOG.debug("Deleting files failed, retrying without `-f`.");
+        rmFilesWithFlags(dirPath, filesToDelete, "");
       }
     } catch (Exception e) {
       throw new BuckUncheckedExecutionException(
           e, "When deleting files on the device %s.", getNameForDisplay());
+    }
+  }
+
+  private void rmFilesWithFlags(String dirPath, Iterable<String> filesToDelete, String flags)
+      throws TimeoutException, AdbCommandRejectedException, ShellCommandUnresponsiveException,
+          IOException {
+    String commandPrefix = "cd " + dirPath + " && rm " + flags;
+    // Add a fudge factor for separators and error checking.
+    int overhead = commandPrefix.length() + 100;
+    for (List<String> rmArgs : chunkArgs(filesToDelete, MAX_ADB_COMMAND_SIZE - overhead)) {
+      String command = commandPrefix + Joiner.on(' ').join(rmArgs);
+      LOG.debug("Executing %s", command);
+      executeCommandWithErrorChecking(command);
     }
   }
 
