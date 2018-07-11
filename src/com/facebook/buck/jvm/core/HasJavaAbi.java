@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright 2018-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -17,87 +17,11 @@
 package com.facebook.buck.jvm.core;
 
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.Flavor;
-import com.facebook.buck.core.model.InternalFlavor;
-import com.facebook.buck.core.sourcepath.ArchiveMemberSourcePath;
-import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
-import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.util.unarchive.Unzip;
-import com.facebook.infer.annotation.Assertions;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Ordering;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Optional;
-import java.util.jar.JarFile;
-import javax.annotation.Nullable;
 
 public interface HasJavaAbi {
-  Flavor CLASS_ABI_FLAVOR = InternalFlavor.of("class-abi");
-  Flavor SOURCE_ABI_FLAVOR = InternalFlavor.of("source-abi");
-  Flavor SOURCE_ONLY_ABI_FLAVOR = InternalFlavor.of("source-only-abi");
-  Flavor VERIFIED_SOURCE_ABI_FLAVOR = InternalFlavor.of("verified-source-abi");
-
-  static BuildTarget getClassAbiJar(BuildTarget libraryTarget) {
-    Preconditions.checkArgument(isLibraryTarget(libraryTarget));
-    return libraryTarget.withAppendedFlavors(CLASS_ABI_FLAVOR);
-  }
-
-  static boolean isAbiTarget(BuildTarget target) {
-    return isClassAbiTarget(target)
-        || isSourceAbiTarget(target)
-        || isSourceOnlyAbiTarget(target)
-        || isVerifiedSourceAbiTarget(target);
-  }
-
-  static boolean isClassAbiTarget(BuildTarget target) {
-    return target.getFlavors().contains(CLASS_ABI_FLAVOR);
-  }
-
-  static BuildTarget getSourceAbiJar(BuildTarget libraryTarget) {
-    Preconditions.checkArgument(isLibraryTarget(libraryTarget));
-    return libraryTarget.withAppendedFlavors(SOURCE_ABI_FLAVOR);
-  }
-
-  static boolean isSourceAbiTarget(BuildTarget target) {
-    return target.getFlavors().contains(SOURCE_ABI_FLAVOR);
-  }
-
-  static BuildTarget getSourceOnlyAbiJar(BuildTarget libraryTarget) {
-    Preconditions.checkArgument(isLibraryTarget(libraryTarget));
-    return libraryTarget.withAppendedFlavors(SOURCE_ONLY_ABI_FLAVOR);
-  }
-
-  static boolean isSourceOnlyAbiTarget(BuildTarget target) {
-    return target.getFlavors().contains(SOURCE_ONLY_ABI_FLAVOR);
-  }
-
-  static BuildTarget getVerifiedSourceAbiJar(BuildTarget libraryTarget) {
-    Preconditions.checkArgument(isLibraryTarget(libraryTarget));
-    return libraryTarget.withAppendedFlavors(VERIFIED_SOURCE_ABI_FLAVOR);
-  }
-
-  static boolean isVerifiedSourceAbiTarget(BuildTarget target) {
-    return target.getFlavors().contains(VERIFIED_SOURCE_ABI_FLAVOR);
-  }
-
-  static boolean isLibraryTarget(BuildTarget target) {
-    return !isAbiTarget(target);
-  }
-
-  static BuildTarget getLibraryTarget(BuildTarget abiTarget) {
-    Preconditions.checkArgument(isAbiTarget(abiTarget));
-
-    return abiTarget.withoutFlavors(
-        CLASS_ABI_FLAVOR, SOURCE_ABI_FLAVOR, SOURCE_ONLY_ABI_FLAVOR, VERIFIED_SOURCE_ABI_FLAVOR);
-  }
-
   BuildTarget getBuildTarget();
 
   ImmutableSortedSet<SourcePath> getJarContents();
@@ -106,66 +30,10 @@ public interface HasJavaAbi {
 
   /** @return the {@link SourcePath} representing the ABI Jar for this rule. */
   default Optional<BuildTarget> getAbiJar() {
-    return Optional.of(getBuildTarget().withAppendedFlavors(CLASS_ABI_FLAVOR));
+    return Optional.of(getBuildTarget().withAppendedFlavors(JavaAbis.CLASS_ABI_FLAVOR));
   }
 
   default Optional<BuildTarget> getSourceOnlyAbiJar() {
     return Optional.empty();
-  }
-
-  class JarContentsSupplier {
-    @Nullable private final SourcePath jarSourcePath;
-    @Nullable private ImmutableSortedSet<SourcePath> contents;
-    @Nullable private ImmutableSet<Path> contentPaths;
-
-    public JarContentsSupplier(@Nullable SourcePath jarSourcePath) {
-      this.jarSourcePath = jarSourcePath;
-    }
-
-    public void load(SourcePathResolver resolver) throws IOException {
-      if (jarSourcePath == null) {
-        contents = ImmutableSortedSet.of();
-      } else {
-        Path jarAbsolutePath = resolver.getAbsolutePath(jarSourcePath);
-        if (Files.isDirectory(jarAbsolutePath)) {
-          BuildTargetSourcePath buildTargetSourcePath = (BuildTargetSourcePath) jarSourcePath;
-          contents =
-              Files.walk(jarAbsolutePath)
-                  .filter(path -> !path.endsWith(JarFile.MANIFEST_NAME))
-                  .map(
-                      path ->
-                          ExplicitBuildTargetSourcePath.of(buildTargetSourcePath.getTarget(), path))
-                  .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
-        } else {
-          SourcePath nonNullJarSourcePath = Assertions.assertNotNull(jarSourcePath);
-          contents =
-              Unzip.getZipMembers(jarAbsolutePath)
-                  .stream()
-                  .filter(path -> !path.endsWith(JarFile.MANIFEST_NAME))
-                  .map(path -> ArchiveMemberSourcePath.of(nonNullJarSourcePath, path))
-                  .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
-        }
-        contentPaths =
-            contents
-                .stream()
-                .map(
-                    sourcePath -> {
-                      if (sourcePath instanceof ExplicitBuildTargetSourcePath) {
-                        return ((ExplicitBuildTargetSourcePath) sourcePath).getResolvedPath();
-                      } else {
-                        return ((ArchiveMemberSourcePath) sourcePath).getMemberPath();
-                      }
-                    })
-                .collect(ImmutableSet.toImmutableSet());
-      }
-    }
-
-    public ImmutableSortedSet<SourcePath> get() {
-      return Preconditions.checkNotNull(contents, "Must call load first.");
-    }
-
-    public boolean jarContains(String path) {
-      return contentPaths.contains(Paths.get(path));
-    }
   }
 }

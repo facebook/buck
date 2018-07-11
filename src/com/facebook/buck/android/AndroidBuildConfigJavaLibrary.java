@@ -24,7 +24,7 @@ import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.common.BuildDeps;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.jvm.core.HasJavaAbi;
+import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
 import com.facebook.buck.jvm.java.ExtraClasspathProvider;
@@ -100,7 +100,7 @@ class AndroidBuildConfigJavaLibrary extends DefaultJavaLibrary implements Androi
         /* exportedDeps */ ImmutableSortedSet.of(),
         /* providedDeps */ ImmutableSortedSet.of(),
         ImmutableSortedSet.of(),
-        HasJavaAbi.getClassAbiJar(buildTarget),
+        JavaAbis.getClassAbiJar(buildTarget),
         /* sourceOnlyAbiJar */ null,
         /* mavenCoords */ Optional.empty(),
         /* tests */ ImmutableSortedSet.of(),

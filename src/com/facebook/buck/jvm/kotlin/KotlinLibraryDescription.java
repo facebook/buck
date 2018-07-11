@@ -26,7 +26,7 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.jvm.core.HasJavaAbi;
+import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
 import com.facebook.buck.jvm.java.DefaultJavaLibraryRules;
@@ -142,7 +142,7 @@ public class KotlinLibraryDescription
 
     // We know that the flavour we're being asked to create is valid, since the check is done when
     // creating the action graph from the target graph.
-    if (HasJavaAbi.isAbiTarget(buildTarget)) {
+    if (JavaAbis.isAbiTarget(buildTarget)) {
       return defaultKotlinLibraryBuilder.buildAbi();
     }
 

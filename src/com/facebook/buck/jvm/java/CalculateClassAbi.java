@@ -31,6 +31,7 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.jvm.core.JarContentsSupplier;
 import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.step.Step;

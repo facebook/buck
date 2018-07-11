@@ -30,7 +30,7 @@ import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.jvm.core.HasJavaAbi;
+import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
@@ -49,19 +49,18 @@ public class CalculateClassAbiTest {
   @Test
   public void testIsAbiTargetRecognizesAbiTargets() {
     assertTrue(
-        HasJavaAbi.isClassAbiTarget(BuildTargetFactory.newInstance("//foo/bar:bar#class-abi")));
+        JavaAbis.isClassAbiTarget(BuildTargetFactory.newInstance("//foo/bar:bar#class-abi")));
   }
 
   @Test
   public void testIsAbiTargetRecognizesNonAbiTargets() {
-    assertFalse(
-        HasJavaAbi.isClassAbiTarget(BuildTargetFactory.newInstance("//foo/bar:bar#not-abi")));
+    assertFalse(JavaAbis.isClassAbiTarget(BuildTargetFactory.newInstance("//foo/bar:bar#not-abi")));
   }
 
   @Test
   public void testGetLibraryTarget() {
     assertThat(
-        HasJavaAbi.getLibraryTarget(BuildTargetFactory.newInstance("//foo/bar:bar#class-abi")),
+        JavaAbis.getLibraryTarget(BuildTargetFactory.newInstance("//foo/bar:bar#class-abi")),
         Matchers.equalTo(BuildTargetFactory.newInstance("//foo/bar:bar")));
   }
 

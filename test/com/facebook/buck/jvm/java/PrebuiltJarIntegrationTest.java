@@ -23,7 +23,7 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
-import com.facebook.buck.jvm.core.HasJavaAbi;
+import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.testutil.ProcessResult;
@@ -69,7 +69,7 @@ public class PrebuiltJarIntegrationTest {
     workspace.setUp();
 
     BuildTarget target = BuildTargetFactory.newInstance("//:jar");
-    BuildTarget abiTarget = target.withAppendedFlavors(HasJavaAbi.CLASS_ABI_FLAVOR);
+    BuildTarget abiTarget = target.withAppendedFlavors(JavaAbis.CLASS_ABI_FLAVOR);
     ProcessResult result = workspace.runBuckBuild(target.getFullyQualifiedName());
     result.assertSuccess();
 

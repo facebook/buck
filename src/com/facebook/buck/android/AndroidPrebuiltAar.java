@@ -26,7 +26,7 @@ import com.facebook.buck.core.rules.common.BuildDeps;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.jvm.core.HasJavaAbi;
+import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.jvm.java.ConfiguredCompiler;
 import com.facebook.buck.jvm.java.JarBuildStepsFactory;
 import com.facebook.buck.jvm.java.JavaBuckConfig.UnusedDependenciesAction;
@@ -96,7 +96,7 @@ public class AndroidPrebuiltAar extends AndroidLibrary
             .build(),
         /* providedDeps */ ImmutableSortedSet.of(),
         ImmutableSortedSet.of(),
-        HasJavaAbi.getClassAbiJar(androidLibraryBuildTarget),
+        JavaAbis.getClassAbiJar(androidLibraryBuildTarget),
         /* sourceOnlyAbiJar */ null,
         /* mavenCoords */ Optional.empty(),
         Optional.of(

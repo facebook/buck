@@ -32,6 +32,7 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.HasJavaAbi;
+import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
 import com.facebook.buck.jvm.java.abi.source.api.SourceOnlyAbiRuleInfoFactory;
 import com.facebook.buck.step.Step;
@@ -181,8 +182,8 @@ public class JarBuildStepsFactory
       BuildContext context, BuildableContext buildableContext, BuildTarget buildTarget) {
     Preconditions.checkState(producesJar());
     Preconditions.checkArgument(
-        buildTarget.equals(HasJavaAbi.getSourceAbiJar(libraryTarget))
-            || buildTarget.equals(HasJavaAbi.getSourceOnlyAbiJar(libraryTarget)));
+        buildTarget.equals(JavaAbis.getSourceAbiJar(libraryTarget))
+            || buildTarget.equals(JavaAbis.getSourceOnlyAbiJar(libraryTarget)));
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
     CompilerParameters compilerParameters = getCompilerParameters(context, buildTarget);
@@ -304,11 +305,11 @@ public class JarBuildStepsFactory
 
   protected Optional<JarParameters> getAbiJarParameters(
       BuildTarget target, BuildContext context, CompilerParameters compilerParameters) {
-    if (HasJavaAbi.isLibraryTarget(target)) {
+    if (JavaAbis.isLibraryTarget(target)) {
       return Optional.empty();
     }
     Preconditions.checkState(
-        HasJavaAbi.isSourceAbiTarget(target) || HasJavaAbi.isSourceOnlyAbiTarget(target));
+        JavaAbis.isSourceAbiTarget(target) || JavaAbis.isSourceOnlyAbiTarget(target));
     return getJarParameters(context, target, compilerParameters);
   }
 
@@ -344,10 +345,9 @@ public class JarBuildStepsFactory
       return Optional.empty();
     }
 
-    if (HasJavaAbi.isSourceAbiTarget(buildTarget)
-        || HasJavaAbi.isSourceOnlyAbiTarget(buildTarget)) {
+    if (JavaAbis.isSourceAbiTarget(buildTarget) || JavaAbis.isSourceOnlyAbiTarget(buildTarget)) {
       return Optional.of(CompilerParameters.getAbiJarPath(buildTarget, projectFilesystem));
-    } else if (HasJavaAbi.isLibraryTarget(buildTarget)) {
+    } else if (JavaAbis.isLibraryTarget(buildTarget)) {
       return Optional.of(DefaultJavaLibrary.getOutputJarPath(buildTarget, projectFilesystem));
     } else {
       throw new IllegalArgumentException();
@@ -365,13 +365,9 @@ public class JarBuildStepsFactory
     for (SourcePath sourcePath : compileTimeClasspathSourcePaths) {
       BuildRule rule = ruleFinder.getRule(sourcePath).get();
       Path path = pathResolver.getAbsolutePath(sourcePath);
-      if (rule instanceof HasJavaAbi) {
-        if (((HasJavaAbi) rule).getAbiJar().isPresent()) {
-          BuildTarget buildTarget = ((HasJavaAbi) rule).getAbiJar().get();
-          pathToSourcePathMapBuilder.put(path, DefaultBuildTargetSourcePath.of(buildTarget));
-        }
-      } else if (rule instanceof CalculateAbi) {
-        pathToSourcePathMapBuilder.put(path, sourcePath);
+      if (rule instanceof HasJavaAbi && ((HasJavaAbi) rule).getAbiJar().isPresent()) {
+        BuildTarget buildTarget = ((HasJavaAbi) rule).getAbiJar().get();
+        pathToSourcePathMapBuilder.put(path, DefaultBuildTargetSourcePath.of(buildTarget));
       }
     }
     return pathToSourcePathMapBuilder.build();

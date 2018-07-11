@@ -38,6 +38,7 @@ import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.HasClasspathEntries;
+import com.facebook.buck.jvm.core.JarContentsSupplier;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.step.Step;

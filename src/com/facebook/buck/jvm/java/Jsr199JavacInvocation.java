@@ -19,7 +19,7 @@ package com.facebook.buck.jvm.java;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.event.api.BuckTracing;
-import com.facebook.buck.jvm.core.HasJavaAbi;
+import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
 import com.facebook.buck.jvm.java.abi.SourceBasedAbiStubber;
 import com.facebook.buck.jvm.java.abi.StubGenerator;
@@ -116,9 +116,9 @@ class Jsr199JavacInvocation implements Javac.Invocation {
     this.context = context;
     this.invokingRule = invokingRule;
     this.libraryTarget =
-        HasJavaAbi.isLibraryTarget(invokingRule)
+        JavaAbis.isLibraryTarget(invokingRule)
             ? invokingRule
-            : HasJavaAbi.getLibraryTarget(invokingRule);
+            : JavaAbis.getLibraryTarget(invokingRule);
     this.abiCompatibilityMode = abiCompatibilityMode;
     this.options = options;
     this.pluginFields = pluginFields;
@@ -238,8 +238,8 @@ class Jsr199JavacInvocation implements Javac.Invocation {
 
       BuildTarget abiTarget =
           buildSourceOnlyAbi
-              ? HasJavaAbi.getSourceOnlyAbiJar(libraryTarget)
-              : HasJavaAbi.getSourceAbiJar(libraryTarget);
+              ? JavaAbis.getSourceOnlyAbiJar(libraryTarget)
+              : JavaAbis.getSourceAbiJar(libraryTarget);
       JarParameters jarParameters = Preconditions.checkNotNull(abiJarParameters);
       BuckJavacTaskProxy javacTask = getJavacTask(buildSourceOnlyAbi);
       javacTask.addPostEnterCallback(
@@ -283,7 +283,7 @@ class Jsr199JavacInvocation implements Javac.Invocation {
                 abiResult.set(1);
               }
 
-              if (HasJavaAbi.isSourceAbiTarget(invokingRule)) {
+              if (JavaAbis.isSourceAbiTarget(invokingRule)) {
                 switchToFullJarIfRequested();
               }
             } catch (IOException e) {

@@ -36,7 +36,7 @@ import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.jvm.core.HasJavaAbi;
+import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.step.Step;
@@ -67,7 +67,7 @@ public class PrebuiltJarDescription
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
 
-    if (HasJavaAbi.isClassAbiTarget(buildTarget)) {
+    if (JavaAbis.isClassAbiTarget(buildTarget)) {
       return CalculateClassAbi.of(
           buildTarget, ruleFinder, projectFilesystem, params, args.getBinaryJar());
     }

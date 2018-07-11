@@ -38,7 +38,7 @@ import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.json.HasJsonField;
-import com.facebook.buck.jvm.core.HasJavaAbi;
+import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.jvm.java.testutil.AbiCompilationModeTest;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
@@ -367,15 +367,15 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
     workspace
         .getBuildLog()
         .assertTargetWasFetchedFromCache(
-            b.withFlavors(HasJavaAbi.CLASS_ABI_FLAVOR).getFullyQualifiedName());
+            b.withFlavors(JavaAbis.CLASS_ABI_FLAVOR).getFullyQualifiedName());
     workspace
         .getBuildLog()
         .assertTargetWasFetchedFromCache(
-            c.withFlavors(HasJavaAbi.CLASS_ABI_FLAVOR).getFullyQualifiedName());
+            c.withFlavors(JavaAbis.CLASS_ABI_FLAVOR).getFullyQualifiedName());
     workspace
         .getBuildLog()
         .assertTargetWasFetchedFromCache(
-            d.withFlavors(HasJavaAbi.CLASS_ABI_FLAVOR).getFullyQualifiedName());
+            d.withFlavors(JavaAbis.CLASS_ABI_FLAVOR).getFullyQualifiedName());
 
     // Confirm that B, C, and D were not re-built
     workspace.getBuildLog().assertNoLogEntry(b.getFullyQualifiedName());

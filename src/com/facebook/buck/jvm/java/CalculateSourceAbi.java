@@ -34,7 +34,8 @@ import com.facebook.buck.core.rules.pipeline.SupportsPipelining;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.jvm.core.HasJavaAbi;
+import com.facebook.buck.jvm.core.JarContentsSupplier;
+import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.step.Step;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -113,7 +114,7 @@ public class CalculateSourceAbi extends AbstractBuildRule
 
   @Override
   public boolean useRulePipelining() {
-    return !HasJavaAbi.isSourceOnlyAbiTarget(getBuildTarget());
+    return !JavaAbis.isSourceOnlyAbiTarget(getBuildTarget());
   }
 
   @Nullable

@@ -22,7 +22,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.CompilerErrorEvent;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.jvm.core.HasJavaAbi;
+import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
@@ -90,9 +90,9 @@ public class JavacStep implements Step {
     Optional<String> returnedStderr;
     try {
       Javac.Invocation invocation = pipeline.getJavacInvocation(context);
-      if (HasJavaAbi.isSourceAbiTarget(invokingRule)) {
+      if (JavaAbis.isSourceAbiTarget(invokingRule)) {
         declaredDepsBuildResult = invocation.buildSourceAbiJar();
-      } else if (HasJavaAbi.isSourceOnlyAbiTarget(invokingRule)) {
+      } else if (JavaAbis.isSourceOnlyAbiTarget(invokingRule)) {
         declaredDepsBuildResult = invocation.buildSourceOnlyAbiJar();
       } else {
         declaredDepsBuildResult = invocation.buildClasses();
@@ -144,8 +144,7 @@ public class JavacStep implements Step {
                 pipeline.getCompilerParameters().getSourceFilePaths(),
                 pipeline.getCompilerParameters().getPathToSourcesList());
 
-    if (HasJavaAbi.isLibraryTarget(invokingRule)
-        && pipeline.getLibraryJarParameters().isPresent()) {
+    if (JavaAbis.isLibraryTarget(invokingRule) && pipeline.getLibraryJarParameters().isPresent()) {
       JarParameters jarParameters = pipeline.getLibraryJarParameters().get();
       Optional<Path> manifestFile = jarParameters.getManifestFile();
       ImmutableSortedSet<Path> entriesToJar = jarParameters.getEntriesToJar();
@@ -166,9 +165,9 @@ public class JavacStep implements Step {
   @Override
   public String getShortName() {
     String name;
-    if (HasJavaAbi.isSourceAbiTarget(invokingRule)) {
+    if (JavaAbis.isSourceAbiTarget(invokingRule)) {
       return "source_abi";
-    } else if (HasJavaAbi.isSourceOnlyAbiTarget(invokingRule)) {
+    } else if (JavaAbis.isSourceOnlyAbiTarget(invokingRule)) {
       return "source_only_abi";
     } else if (pipeline.getLibraryJarParameters().isPresent()) {
       name = "javac_jar";

@@ -35,7 +35,7 @@ import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.jvm.core.HasJavaAbi;
+import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.jvm.java.CalculateClassAbi;
 import com.facebook.buck.jvm.java.JavaLibraryRules;
 import com.facebook.buck.jvm.java.JavacFactory;
@@ -119,7 +119,7 @@ public class AndroidPrebuiltAarDescription
         buildTarget);
     UnzipAar unzipAar = (UnzipAar) unzipAarRule;
 
-    if (HasJavaAbi.isClassAbiTarget(buildTarget)) {
+    if (JavaAbis.isClassAbiTarget(buildTarget)) {
       return CalculateClassAbi.of(
           buildTarget,
           ruleFinder,

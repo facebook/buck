@@ -34,8 +34,8 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.HasClasspathEntries;
-import com.facebook.buck.jvm.core.HasJavaAbi;
 import com.facebook.buck.jvm.core.HasSources;
+import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.maven.aether.AetherUtil;
@@ -60,10 +60,10 @@ public class JavaLibraryDescription
           Javadoc.DOC_JAR,
           JavaLibrary.SRC_JAR,
           JavaLibrary.MAVEN_JAR,
-          HasJavaAbi.CLASS_ABI_FLAVOR,
-          HasJavaAbi.SOURCE_ABI_FLAVOR,
-          HasJavaAbi.SOURCE_ONLY_ABI_FLAVOR,
-          HasJavaAbi.VERIFIED_SOURCE_ABI_FLAVOR);
+          JavaAbis.CLASS_ABI_FLAVOR,
+          JavaAbis.SOURCE_ABI_FLAVOR,
+          JavaAbis.SOURCE_ONLY_ABI_FLAVOR,
+          JavaAbis.VERIFIED_SOURCE_ABI_FLAVOR);
 
   private final ToolchainProvider toolchainProvider;
   private final JavaBuckConfig javaBuckConfig;
@@ -200,7 +200,7 @@ public class JavaLibraryDescription
             .setToolchainProvider(context.getToolchainProvider())
             .build();
 
-    if (HasJavaAbi.isAbiTarget(buildTarget)) {
+    if (JavaAbis.isAbiTarget(buildTarget)) {
       return defaultJavaLibraryRules.buildAbi();
     }
 

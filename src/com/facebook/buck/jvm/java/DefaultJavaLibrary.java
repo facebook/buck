@@ -44,6 +44,7 @@ import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.HasClasspathDeps;
 import com.facebook.buck.jvm.core.HasClasspathEntries;
+import com.facebook.buck.jvm.core.JarContentsSupplier;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaBuckConfig.UnusedDependenciesAction;
 import com.facebook.buck.step.Step;

@@ -21,7 +21,7 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.jvm.core.HasJavaAbi;
+import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
 import com.facebook.buck.jvm.java.abi.source.api.SourceOnlyAbiRuleInfoFactory;
 import com.facebook.buck.model.BuildTargets;
@@ -95,7 +95,7 @@ abstract class AbstractCompilerParameters {
 
   public static Path getAbiJarPath(BuildTarget buildTarget, ProjectFilesystem projectFilesystem) {
     Preconditions.checkArgument(
-        HasJavaAbi.isSourceAbiTarget(buildTarget) || HasJavaAbi.isSourceOnlyAbiTarget(buildTarget));
+        JavaAbis.isSourceAbiTarget(buildTarget) || JavaAbis.isSourceOnlyAbiTarget(buildTarget));
 
     return BuildTargets.getGenPath(projectFilesystem, buildTarget, "lib__%s__output")
         .resolve(String.format("%s-abi.jar", buildTarget.getShortName()));

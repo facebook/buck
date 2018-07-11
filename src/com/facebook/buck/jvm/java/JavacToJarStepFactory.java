@@ -29,7 +29,7 @@ import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.jvm.core.HasJavaAbi;
+import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
@@ -156,7 +156,7 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
     }
 
     Optional<JarParameters> jarParameters =
-        HasJavaAbi.isLibraryTarget(target)
+        JavaAbis.isLibraryTarget(target)
             ? pipeline.getLibraryJarParameters()
             : pipeline.getAbiJarParameters();
 
@@ -274,7 +274,7 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
             SymlinkFileStep.of(
                 projectFilesystem,
                 CompilerParameters.getAnnotationPath(
-                        projectFilesystem, HasJavaAbi.getSourceAbiJar(invokingRule))
+                        projectFilesystem, JavaAbis.getSourceAbiJar(invokingRule))
                     .get(),
                 CompilerParameters.getAnnotationPath(projectFilesystem, invokingRule).get()));
       }

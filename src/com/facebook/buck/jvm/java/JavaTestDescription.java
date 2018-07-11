@@ -37,7 +37,7 @@ import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatforms;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.jvm.core.HasJavaAbi;
+import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.toolchain.JavaCxxPlatformProvider;
 import com.facebook.buck.jvm.java.toolchain.JavaOptionsProvider;
@@ -144,7 +144,7 @@ public class JavaTestDescription
             .setToolchainProvider(context.getToolchainProvider())
             .build();
 
-    if (HasJavaAbi.isAbiTarget(buildTarget)) {
+    if (JavaAbis.isAbiTarget(buildTarget)) {
       return defaultJavaLibraryRules.buildAbi();
     }
 

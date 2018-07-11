@@ -24,7 +24,7 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.jvm.core.HasJavaAbi;
+import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
 import com.facebook.buck.jvm.java.DefaultJavaLibraryRules;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
@@ -102,7 +102,7 @@ public class KotlinTestDescription implements DescriptionWithTargetGraph<KotlinT
             .setJavacOptions(javacOptions)
             .build();
 
-    if (HasJavaAbi.isAbiTarget(buildTarget)) {
+    if (JavaAbis.isAbiTarget(buildTarget)) {
       return defaultJavaLibraryRules.buildAbi();
     }
 

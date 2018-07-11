@@ -29,7 +29,7 @@ import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.common.ResourceValidator;
-import com.facebook.buck.jvm.core.HasJavaAbi;
+import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.jvm.java.JavaBuckConfig.SourceAbiVerificationMode;
 import com.facebook.buck.jvm.java.JavaBuckConfig.UnusedDependenciesAction;
 import com.facebook.buck.jvm.java.JavaLibraryDescription.CoreArg;
@@ -80,9 +80,9 @@ public abstract class DefaultJavaLibraryRules {
   @Value.Lazy
   BuildTarget getLibraryTarget() {
     BuildTarget initialBuildTarget = getInitialBuildTarget();
-    return HasJavaAbi.isLibraryTarget(initialBuildTarget)
+    return JavaAbis.isLibraryTarget(initialBuildTarget)
         ? initialBuildTarget
-        : HasJavaAbi.getLibraryTarget(initialBuildTarget);
+        : JavaAbis.getLibraryTarget(initialBuildTarget);
   }
 
   @org.immutables.builder.Builder.Parameter
@@ -190,9 +190,9 @@ public abstract class DefaultJavaLibraryRules {
     // we want any requests to block until all of the rules are built.
     BuildTarget rootmostTarget = getLibraryTarget();
     if (willProduceCompareAbis()) {
-      rootmostTarget = HasJavaAbi.getVerifiedSourceAbiJar(rootmostTarget);
+      rootmostTarget = JavaAbis.getVerifiedSourceAbiJar(rootmostTarget);
     } else if (willProduceClassAbi()) {
-      rootmostTarget = HasJavaAbi.getClassAbiJar(rootmostTarget);
+      rootmostTarget = JavaAbis.getClassAbiJar(rootmostTarget);
     }
 
     ActionGraphBuilder graphBuilder = getActionGraphBuilder();
@@ -210,11 +210,11 @@ public abstract class DefaultJavaLibraryRules {
             compareAbisRule = buildCompareAbisRule(classAbiRule, sourceAbiRule);
           }
 
-          if (HasJavaAbi.isLibraryTarget(target)) {
+          if (JavaAbis.isLibraryTarget(target)) {
             return libraryRule;
-          } else if (HasJavaAbi.isClassAbiTarget(target)) {
+          } else if (JavaAbis.isClassAbiTarget(target)) {
             return classAbiRule;
-          } else if (HasJavaAbi.isVerifiedSourceAbiTarget(target)) {
+          } else if (JavaAbis.isVerifiedSourceAbiTarget(target)) {
             return compareAbisRule;
           }
 
@@ -231,7 +231,7 @@ public abstract class DefaultJavaLibraryRules {
     Preconditions.checkNotNull(correctAbi);
     Preconditions.checkNotNull(experimentalAbi);
 
-    BuildTarget compareAbisTarget = HasJavaAbi.getVerifiedSourceAbiJar(getLibraryTarget());
+    BuildTarget compareAbisTarget = JavaAbis.getVerifiedSourceAbiJar(getLibraryTarget());
     return getActionGraphBuilder()
         .addToIndex(
             new CompareAbis(
@@ -249,11 +249,11 @@ public abstract class DefaultJavaLibraryRules {
   @Nullable
   BuildTarget getAbiJar() {
     if (willProduceCompareAbis()) {
-      return HasJavaAbi.getVerifiedSourceAbiJar(getLibraryTarget());
+      return JavaAbis.getVerifiedSourceAbiJar(getLibraryTarget());
     } else if (willProduceSourceAbi()) {
-      return HasJavaAbi.getSourceAbiJar(getLibraryTarget());
+      return JavaAbis.getSourceAbiJar(getLibraryTarget());
     } else if (willProduceClassAbi()) {
-      return HasJavaAbi.getClassAbiJar(getLibraryTarget());
+      return JavaAbis.getClassAbiJar(getLibraryTarget());
     }
 
     return null;
@@ -263,7 +263,7 @@ public abstract class DefaultJavaLibraryRules {
   @Nullable
   BuildTarget getSourceOnlyAbiJar() {
     if (willProduceSourceOnlyAbi()) {
-      return HasJavaAbi.getSourceOnlyAbiJar(getLibraryTarget());
+      return JavaAbis.getSourceOnlyAbiJar(getLibraryTarget());
     }
 
     return null;
@@ -456,7 +456,7 @@ public abstract class DefaultJavaLibraryRules {
     BuildDeps buildDeps = getFinalBuildDepsForSourceOnlyAbi();
     JarBuildStepsFactory jarBuildStepsFactory = getJarBuildStepsFactoryForSourceOnlyAbi();
 
-    BuildTarget sourceAbiTarget = HasJavaAbi.getSourceOnlyAbiJar(getLibraryTarget());
+    BuildTarget sourceAbiTarget = JavaAbis.getSourceOnlyAbiJar(getLibraryTarget());
     return getActionGraphBuilder()
         .addToIndex(
             new CalculateSourceAbi(
@@ -476,7 +476,7 @@ public abstract class DefaultJavaLibraryRules {
     BuildDeps buildDeps = getFinalBuildDeps();
     JarBuildStepsFactory jarBuildStepsFactory = getJarBuildStepsFactory();
 
-    BuildTarget sourceAbiTarget = HasJavaAbi.getSourceAbiJar(getLibraryTarget());
+    BuildTarget sourceAbiTarget = JavaAbis.getSourceAbiJar(getLibraryTarget());
     return getActionGraphBuilder()
         .addToIndex(
             new CalculateSourceAbi(
@@ -493,7 +493,7 @@ public abstract class DefaultJavaLibraryRules {
       return null;
     }
 
-    BuildTarget classAbiTarget = HasJavaAbi.getClassAbiJar(getLibraryTarget());
+    BuildTarget classAbiTarget = JavaAbis.getClassAbiJar(getLibraryTarget());
     return getActionGraphBuilder()
         .addToIndex(
             CalculateClassAbi.of(

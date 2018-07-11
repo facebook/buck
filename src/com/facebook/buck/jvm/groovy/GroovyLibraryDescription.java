@@ -24,7 +24,7 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.jvm.core.HasJavaAbi;
+import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.jvm.java.DefaultJavaLibraryRules;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
@@ -89,7 +89,7 @@ public class GroovyLibraryDescription
             .setJavacOptions(javacOptions)
             .build();
 
-    return HasJavaAbi.isAbiTarget(buildTarget)
+    return JavaAbis.isAbiTarget(buildTarget)
         ? defaultJavaLibraryRules.buildAbi()
         : graphBuilder.addToIndex(defaultJavaLibraryRules.buildLibrary());
   }

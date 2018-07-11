@@ -32,7 +32,7 @@ import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatforms;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.jvm.core.HasJavaAbi;
+import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.CalculateClassAbi;
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
@@ -106,10 +106,10 @@ public class RobolectricTestDescription
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
 
-    if (HasJavaAbi.isClassAbiTarget(buildTarget)) {
+    if (JavaAbis.isClassAbiTarget(buildTarget)) {
       Preconditions.checkArgument(
           !buildTarget.getFlavors().contains(AndroidLibraryGraphEnhancer.DUMMY_R_DOT_JAVA_FLAVOR));
-      BuildTarget testTarget = HasJavaAbi.getLibraryTarget(buildTarget);
+      BuildTarget testTarget = JavaAbis.getLibraryTarget(buildTarget);
       BuildRule testRule = graphBuilder.requireRule(testTarget);
       return CalculateClassAbi.of(
           buildTarget,

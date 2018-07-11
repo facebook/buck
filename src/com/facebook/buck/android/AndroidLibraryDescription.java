@@ -31,7 +31,7 @@ import com.facebook.buck.core.rules.type.BuildRuleType;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.jvm.core.HasJavaAbi;
+import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
@@ -127,7 +127,7 @@ public class AndroidLibraryDescription
 
     if (hasDummyRDotJavaFlavor) {
       return androidLibraryBuilder.buildDummyRDotJava();
-    } else if (HasJavaAbi.isAbiTarget(buildTarget)) {
+    } else if (JavaAbis.isAbiTarget(buildTarget)) {
       return androidLibraryBuilder.buildAbi();
     }
     return androidLibraryBuilder.build();
@@ -138,10 +138,10 @@ public class AndroidLibraryDescription
     return flavors.isEmpty()
         || flavors.equals(ImmutableSet.of(JavaLibrary.SRC_JAR))
         || flavors.equals(ImmutableSet.of(DUMMY_R_DOT_JAVA_FLAVOR))
-        || flavors.equals(ImmutableSet.of(HasJavaAbi.CLASS_ABI_FLAVOR))
-        || flavors.equals(ImmutableSet.of(HasJavaAbi.SOURCE_ABI_FLAVOR))
-        || flavors.equals(ImmutableSet.of(HasJavaAbi.SOURCE_ONLY_ABI_FLAVOR))
-        || flavors.equals(ImmutableSet.of(HasJavaAbi.VERIFIED_SOURCE_ABI_FLAVOR));
+        || flavors.equals(ImmutableSet.of(JavaAbis.CLASS_ABI_FLAVOR))
+        || flavors.equals(ImmutableSet.of(JavaAbis.SOURCE_ABI_FLAVOR))
+        || flavors.equals(ImmutableSet.of(JavaAbis.SOURCE_ONLY_ABI_FLAVOR))
+        || flavors.equals(ImmutableSet.of(JavaAbis.VERIFIED_SOURCE_ABI_FLAVOR));
   }
 
   @Override

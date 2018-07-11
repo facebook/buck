@@ -29,7 +29,7 @@ import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.common.BuildDeps;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.jvm.core.HasJavaAbi;
+import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.jvm.java.ConfiguredCompilerFactory;
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
 import com.facebook.buck.jvm.java.DefaultJavaLibraryRules;
@@ -211,9 +211,9 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
 
       JavaLibraryDeps deps = Preconditions.checkNotNull(delegateBuilder.getDeps());
       BuildTarget libraryTarget =
-          HasJavaAbi.isLibraryTarget(buildTarget)
+          JavaAbis.isLibraryTarget(buildTarget)
               ? buildTarget
-              : HasJavaAbi.getLibraryTarget(buildTarget);
+              : JavaAbis.getLibraryTarget(buildTarget);
       graphEnhancer =
           new AndroidLibraryGraphEnhancer(
               libraryTarget,
