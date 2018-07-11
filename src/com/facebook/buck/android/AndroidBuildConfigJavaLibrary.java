@@ -34,6 +34,7 @@ import com.facebook.buck.jvm.java.Javac;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacToJarStepFactory;
 import com.facebook.buck.jvm.java.RemoveClassesPatternsMatcher;
+import com.facebook.buck.jvm.java.ResourcesParameters;
 import com.facebook.buck.jvm.java.ZipArchiveDependencySupplier;
 import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
 import com.google.common.base.Preconditions;
@@ -82,8 +83,8 @@ class AndroidBuildConfigJavaLibrary extends DefaultJavaLibrary implements Androi
                 javacOptions,
                 ExtraClasspathProvider.EMPTY),
             /* srcs */ ImmutableSortedSet.of(androidBuildConfig.getSourcePathToOutput()),
-            /* resources */ ImmutableSortedSet.of(),
-            /* resourcesRoot */ Optional.empty(),
+            ImmutableSortedSet.of(),
+            ResourcesParameters.of(),
             /* manifest file */ Optional.empty(),
             /* postprocessClassesCommands */ ImmutableList.of(),
             abiClasspath,

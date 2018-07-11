@@ -27,7 +27,6 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.AbstractPathSourcePath;
-import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.features.python.PythonLibrary;
 import com.facebook.buck.features.python.PythonLibraryBuilder;
@@ -62,8 +61,7 @@ public class MavenUberJarTest {
 
     PythonLibraryBuilder pythonLibraryBuilder = PythonLibraryBuilder.createBuilder(pythonTarget);
     JavaLibraryBuilder javaLibraryBuilder =
-        JavaLibraryBuilder.createBuilder(javaTarget)
-            .addResource(DefaultBuildTargetSourcePath.of(pythonTarget));
+        JavaLibraryBuilder.createBuilder(javaTarget).addDep(pythonTarget);
 
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(pythonLibraryBuilder.build(), javaLibraryBuilder.build());

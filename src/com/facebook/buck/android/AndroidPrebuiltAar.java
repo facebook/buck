@@ -33,6 +33,7 @@ import com.facebook.buck.jvm.java.JarBuildStepsFactory;
 import com.facebook.buck.jvm.java.JavaBuckConfig.UnusedDependenciesAction;
 import com.facebook.buck.jvm.java.PrebuiltJar;
 import com.facebook.buck.jvm.java.RemoveClassesPatternsMatcher;
+import com.facebook.buck.jvm.java.ResourcesParameters;
 import com.facebook.buck.jvm.java.ZipArchiveDependencySupplier;
 import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
 import com.google.common.collect.ImmutableList;
@@ -77,8 +78,8 @@ public class AndroidPrebuiltAar extends AndroidLibrary
             androidLibraryBuildTarget,
             configuredCompiler,
             /* srcs */ ImmutableSortedSet.of(),
-            /* resources */ ImmutableSortedSet.of(),
-            /* resourcesRoot */ Optional.empty(),
+            ImmutableSortedSet.of(),
+            ResourcesParameters.of(),
             /* manifestFile */ Optional.empty(), // Manifest means something else for Android rules
             /* postprocessClassesCommands */ ImmutableList.of(),
             abiClasspath,

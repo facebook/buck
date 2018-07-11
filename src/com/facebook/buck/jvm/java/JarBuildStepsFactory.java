@@ -30,7 +30,6 @@ import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.HasJavaAbi;
 import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
@@ -62,9 +61,7 @@ public class JarBuildStepsFactory
   @AddToRuleKey private final ConfiguredCompiler configuredCompiler;
   @AddToRuleKey private final ImmutableSortedSet<SourcePath> srcs;
   @AddToRuleKey private final ImmutableSortedSet<SourcePath> resources;
-
-  @AddToRuleKey(stringify = true)
-  private final Optional<Path> resourcesRoot;
+  @AddToRuleKey private final ResourcesParameters resourcesParameters;
 
   @AddToRuleKey private final Optional<SourcePath> manifestFile;
   @AddToRuleKey private final ImmutableList<String> postprocessClassesCommands;
@@ -91,7 +88,7 @@ public class JarBuildStepsFactory
       ConfiguredCompiler configuredCompiler,
       ImmutableSortedSet<SourcePath> srcs,
       ImmutableSortedSet<SourcePath> resources,
-      Optional<Path> resourcesRoot,
+      ResourcesParameters resourcesParameters,
       Optional<SourcePath> manifestFile,
       ImmutableList<String> postprocessClassesCommands,
       ZipArchiveDependencySupplier abiClasspath,
@@ -108,7 +105,7 @@ public class JarBuildStepsFactory
     this.configuredCompiler = configuredCompiler;
     this.srcs = srcs;
     this.resources = resources;
-    this.resourcesRoot = resourcesRoot;
+    this.resourcesParameters = resourcesParameters;
     this.postprocessClassesCommands = postprocessClassesCommands;
     this.manifestFile = manifestFile;
     this.abiClasspath = abiClasspath;
@@ -295,15 +292,7 @@ public class JarBuildStepsFactory
   }
 
   protected ResourcesParameters getResourcesParameters() {
-    return ResourcesParameters.builder()
-        .setResources(
-            ResourcesParameters.getNamedResources(
-                DefaultSourcePathResolver.from(ruleFinder),
-                ruleFinder,
-                projectFilesystem,
-                this.resources))
-        .setResourcesRoot(this.resourcesRoot.map(Path::toString))
-        .build();
+    return resourcesParameters;
   }
 
   protected Optional<JarParameters> getLibraryJarParameters(

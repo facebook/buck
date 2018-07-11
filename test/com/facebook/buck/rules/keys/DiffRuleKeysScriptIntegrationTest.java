@@ -227,8 +227,8 @@ public class DiffRuleKeysScriptIntegrationTest {
             Matchers.containsString(
                 "Change details for [//:java_lib_all]\n"
                     + "  (jarBuildStepsFactory):\n"
-                    + "    -[ruleKey(sha1=9241a8c0f9dd6ded71e133ba67b49e8f2cdb34f3)]\n"
-                    + "    +[ruleKey(sha1=e822b1bf6f2416bfa285d6e8e11874f9807390ce)]\n"),
+                    + "    -[ruleKey(sha1=0391a3c2c80429b9b07ad2ac1d86597026d3b8ed)]\n"
+                    + "    +[ruleKey(sha1=7ae021f83c2628c80f202a20a37acc2e109cc3d5)]\n"),
             Matchers.containsString(
                 "Change details for [//:java_lib_2->jarBuildStepsFactory]\n"
                     + "  (srcs):\n"

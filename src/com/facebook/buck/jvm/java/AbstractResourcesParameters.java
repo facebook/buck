@@ -24,6 +24,7 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -52,6 +53,22 @@ abstract class AbstractResourcesParameters implements AddsToRuleKey {
 
   public static ResourcesParameters of() {
     return ResourcesParameters.builder().build();
+  }
+
+  public static ResourcesParameters create(
+      ProjectFilesystem projectFilesystem,
+      SourcePathRuleFinder ruleFinder,
+      ImmutableCollection<SourcePath> resources,
+      Optional<Path> resourcesRoot) {
+    return ResourcesParameters.builder()
+        .setResources(
+            getNamedResources(
+                DefaultSourcePathResolver.from(ruleFinder),
+                ruleFinder,
+                projectFilesystem,
+                resources))
+        .setResourcesRoot(resourcesRoot.map(Path::toString))
+        .build();
   }
 
   public static ImmutableSortedMap<String, SourcePath> getNamedResources(

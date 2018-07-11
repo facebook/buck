@@ -639,7 +639,7 @@ public abstract class DefaultJavaLibraryRules {
         getConfiguredCompiler(),
         getSrcs(),
         getResources(),
-        getResourcesRoot(),
+        getResourcesParameters(),
         getManifestFile(),
         getPostprocessClassesCommands(),
         classpaths.getAbiClasspath(),
@@ -662,7 +662,7 @@ public abstract class DefaultJavaLibraryRules {
         getConfiguredCompilerForSourceOnlyAbi(),
         getSrcs(),
         getResources(),
-        getResourcesRoot(),
+        getResourcesParameters(),
         getManifestFile(),
         getPostprocessClassesCommands(),
         classpaths.getAbiClasspath(),
@@ -673,6 +673,11 @@ public abstract class DefaultJavaLibraryRules {
         getAbiGenerationMode(),
         getAbiCompatibilityMode(),
         getSourceOnlyAbiRuleInfoSupplier());
+  }
+
+  private ResourcesParameters getResourcesParameters() {
+    return ResourcesParameters.create(
+        getProjectFilesystem(), getSourcePathRuleFinder(), getResources(), getResourcesRoot());
   }
 
   private static UnusedDependenciesAction getUnusedDependenciesAction(
