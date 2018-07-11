@@ -643,7 +643,7 @@ public class RealAndroidDevice implements AndroidDevice {
   private void rmFilesWithFlags(String dirPath, Iterable<String> filesToDelete, String flags)
       throws TimeoutException, AdbCommandRejectedException, ShellCommandUnresponsiveException,
           IOException {
-    String commandPrefix = "cd " + dirPath + " && rm " + flags;
+    String commandPrefix = String.format("cd %s && rm %s ", dirPath, flags);
     // Add a fudge factor for separators and error checking.
     int overhead = commandPrefix.length() + 100;
     for (List<String> rmArgs : chunkArgs(filesToDelete, MAX_ADB_COMMAND_SIZE - overhead)) {
