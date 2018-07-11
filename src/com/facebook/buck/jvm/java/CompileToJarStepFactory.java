@@ -120,7 +120,6 @@ public abstract class CompileToJarStepFactory implements ConfiguredCompiler {
         new CopyResourcesStep(
             projectFilesystem,
             context,
-            ruleFinder,
             target,
             resourcesParameters,
             compilerParameters.getOutputDirectory()));

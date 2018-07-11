@@ -30,6 +30,7 @@ import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.HasJavaAbi;
 import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
@@ -295,8 +296,13 @@ public class JarBuildStepsFactory
 
   protected ResourcesParameters getResourcesParameters() {
     return ResourcesParameters.builder()
-        .setResources(this.resources)
-        .setResourcesRoot(this.resourcesRoot)
+        .setResources(
+            ResourcesParameters.getNamedResources(
+                DefaultSourcePathResolver.from(ruleFinder),
+                ruleFinder,
+                projectFilesystem,
+                this.resources))
+        .setResourcesRoot(this.resourcesRoot.map(Path::toString))
         .build();
   }
 

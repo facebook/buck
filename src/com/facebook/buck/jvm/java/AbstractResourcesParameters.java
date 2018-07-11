@@ -16,20 +16,101 @@
 
 package com.facebook.buck.jvm.java;
 
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.HasOutputName;
+import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rulekey.AddsToRuleKey;
+import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import com.google.common.collect.ImmutableSortedSet;
+import com.facebook.buck.io.file.MorePaths;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.model.BuildTargets;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableCollection;
+import com.google.common.collect.ImmutableSortedMap;
 import java.nio.file.Path;
 import java.util.Optional;
 import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleImmutable
-abstract class AbstractResourcesParameters {
+abstract class AbstractResourcesParameters implements AddsToRuleKey {
   @Value.Default
-  public ImmutableSortedSet<SourcePath> getResources() {
-    return ImmutableSortedSet.of();
+  @AddToRuleKey
+  public ImmutableSortedMap<String, SourcePath> getResources() {
+    return ImmutableSortedMap.of();
   }
 
-  public abstract Optional<Path> getResourcesRoot();
+  @Value.Default
+  @AddToRuleKey
+  public Optional<String> getResourcesRoot() {
+    return Optional.empty();
+  }
+
+  public static ResourcesParameters of() {
+    return ResourcesParameters.builder().build();
+  }
+
+  public static ImmutableSortedMap<String, SourcePath> getNamedResources(
+      SourcePathResolver pathResolver,
+      SourcePathRuleFinder ruleFinder,
+      ProjectFilesystem filesystem,
+      ImmutableCollection<SourcePath> resources) {
+    ImmutableSortedMap.Builder<String, SourcePath> builder = ImmutableSortedMap.naturalOrder();
+    for (SourcePath rawResource : resources) {
+      // If the path to the file defining this rule were:
+      // "first-party/orca/lib-http/tests/com/facebook/orca/BUCK"
+      //
+      // And the value of resource were:
+      // "first-party/orca/lib-http/tests/com/facebook/orca/protocol/base/batch_exception1.txt"
+      //
+      // Assuming that `src_roots = tests` were in the [java] section of the .buckconfig file,
+      // then javaPackageAsPath would be:
+      // "com/facebook/orca/protocol/base/"
+      //
+      // And the path that we would want to copy to the classes directory would be:
+      // "com/facebook/orca/protocol/base/batch_exception1.txt"
+      //
+      // Therefore, some path-wrangling is required to produce the correct string.
+
+      Optional<BuildRule> underlyingRule = ruleFinder.getRule(rawResource);
+      Path relativePathToResource = pathResolver.getRelativePath(rawResource);
+
+      String resource;
+
+      if (underlyingRule.isPresent()) {
+        BuildTarget underlyingTarget = underlyingRule.get().getBuildTarget();
+        if (underlyingRule.get() instanceof HasOutputName) {
+          resource =
+              MorePaths.pathWithUnixSeparators(
+                  underlyingTarget
+                      .getBasePath()
+                      .resolve(((HasOutputName) underlyingRule.get()).getOutputName()));
+        } else {
+          Path genOutputParent =
+              BuildTargets.getGenPath(filesystem, underlyingTarget, "%s").getParent();
+          Path scratchOutputParent =
+              BuildTargets.getScratchPath(filesystem, underlyingTarget, "%s").getParent();
+          Optional<Path> outputPath =
+              MorePaths.stripPrefix(relativePathToResource, genOutputParent)
+                  .map(Optional::of)
+                  .orElse(MorePaths.stripPrefix(relativePathToResource, scratchOutputParent));
+          Preconditions.checkState(
+              outputPath.isPresent(),
+              "%s is used as a resource but does not output to a default output directory",
+              underlyingTarget.getFullyQualifiedName());
+          resource =
+              MorePaths.pathWithUnixSeparators(
+                  underlyingTarget.getBasePath().resolve(outputPath.get()));
+        }
+      } else {
+        resource = MorePaths.pathWithUnixSeparators(relativePathToResource);
+      }
+      builder.put(resource, rawResource);
+    }
+    return builder.build();
+  }
 }

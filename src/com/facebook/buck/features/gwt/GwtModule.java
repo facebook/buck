@@ -86,10 +86,14 @@ public class GwtModule extends AbstractBuildRuleWithDeclaredAndExtraDeps {
         new CopyResourcesStep(
             getProjectFilesystem(),
             context,
-            ruleFinder,
             getBuildTarget(),
             ResourcesParameters.builder()
-                .setResources(filesForGwtModule)
+                .setResources(
+                    ResourcesParameters.getNamedResources(
+                        context.getSourcePathResolver(),
+                        ruleFinder,
+                        getProjectFilesystem(),
+                        filesForGwtModule))
                 .setResourcesRoot(Optional.empty())
                 .build(),
             tempJarFolder));
