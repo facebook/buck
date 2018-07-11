@@ -11,6 +11,10 @@ android_binary(
 android_bundle(
     name = "app_bundle",
     aapt_mode = "aapt2",
+    cpu_filters = [
+        "armv7",
+        "x86",
+    ],
     keystore = "//keystores:debug",
     manifest = "AndroidManifest.xml",
     deps = [

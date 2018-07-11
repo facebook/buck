@@ -19,7 +19,9 @@ package com.facebook.buck.android;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
+import com.android.bundle.Files.Assets;
 import com.android.bundle.Files.NativeLibraries;
+import com.android.bundle.Files.TargetedAssetsDirectory;
 import com.android.bundle.Files.TargetedNativeDirectory;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
@@ -64,7 +66,7 @@ public class AndroidAppBundleIntegrationTest extends AbiCompilationModeTest {
 
   @Test
   public void testAppBundleHaveDeterministicTimestamps() throws IOException {
-    String target = "//apps/sample:app_bundle";
+    String target = "//apps/sample:app_bundle_1";
     ProcessResult result = workspace.runBuckCommand("build", target);
     result.assertSuccess();
 
@@ -93,6 +95,12 @@ public class AndroidAppBundleIntegrationTest extends AbiCompilationModeTest {
     for (TargetedNativeDirectory targetedNativeDirectory : nativeLibraries.getDirectoryList()) {
       assertTrue(targetedNativeDirectory.hasTargeting());
       assertTrue(targetedNativeDirectory.getTargeting().hasAbi());
+    }
+
+    Assets assets = Assets.parseFrom(zipInspector.getFileContents("base/assets.pb"));
+    for (TargetedAssetsDirectory targetedAssetsDirectory : assets.getDirectoryList()) {
+      assertTrue(targetedAssetsDirectory.hasTargeting());
+      assertTrue(targetedAssetsDirectory.getTargeting().hasLanguage());
     }
   }
 }
