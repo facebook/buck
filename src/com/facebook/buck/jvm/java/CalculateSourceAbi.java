@@ -96,6 +96,11 @@ public class CalculateSourceAbi extends AbstractBuildRule
   }
 
   @Override
+  public void invalidateInitializeFromDiskState() {
+    javaAbiInfo.invalidate();
+  }
+
+  @Override
   public Object initializeFromDisk(SourcePathResolver pathResolver) throws IOException {
     // Warm up the jar contents. We just wrote the thing, so it should be in the filesystem cache
     javaAbiInfo.load(pathResolver);

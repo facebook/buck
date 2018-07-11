@@ -35,6 +35,9 @@ import java.io.IOException;
  */
 public interface InitializableFromDisk<T> {
 
+  // WARNING: It's difficult to use this class correctly and you are probably better off propagating
+  // information to dependents through files. We'll probably get rid of this in the future.
+
   /**
    * @return an object that has the in-memory data structures that need to be populated as a result
    *     of executing this object's steps.
@@ -42,4 +45,6 @@ public interface InitializableFromDisk<T> {
   T initializeFromDisk(SourcePathResolver pathResolver) throws IOException;
 
   BuildOutputInitializer<T> getBuildOutputInitializer();
+
+  default void invalidateInitializeFromDiskState() {}
 }

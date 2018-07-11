@@ -97,6 +97,11 @@ public class CompareAbis extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
+  public void invalidateInitializeFromDiskState() {
+    javaAbiInfo.invalidate();
+  }
+
+  @Override
   public Object initializeFromDisk(SourcePathResolver pathResolver) throws IOException {
     javaAbiInfo.load(pathResolver);
     return new Object();

@@ -64,6 +64,10 @@ public class DefaultJavaAbiInfo implements JavaAbiInfo {
     jarContentsSupplier.load(pathResolver);
   }
 
+  public void invalidate() {
+    jarContentsSupplier.invalidate();
+  }
+
   private static class JarContentsSupplier {
     @Nullable private final SourcePath jarSourcePath;
     @Nullable private ImmutableSortedSet<SourcePath> contents;
@@ -74,8 +78,14 @@ public class DefaultJavaAbiInfo implements JavaAbiInfo {
     }
 
     public void load(SourcePathResolver resolver) throws IOException {
+      Preconditions.checkState(
+          contents == null,
+          "load() called without a preceding invalidate(). This usually indicates "
+              + "that a rule is calling load in initializeFromDisk() but failing to call "
+              + "invalidate() in invalidateInitializeFromDiskState().");
       if (jarSourcePath == null) {
         contents = ImmutableSortedSet.of();
+        contentPaths = ImmutableSet.of();
       } else {
         Path jarAbsolutePath = resolver.getAbsolutePath(jarSourcePath);
         if (Files.isDirectory(jarAbsolutePath)) {
@@ -118,6 +128,11 @@ public class DefaultJavaAbiInfo implements JavaAbiInfo {
     public boolean jarContains(String path) {
       return Preconditions.checkNotNull(contentPaths, "Must call load first.")
           .contains(Paths.get(path));
+    }
+
+    public void invalidate() {
+      contents = null;
+      contentPaths = null;
     }
   }
 }

@@ -160,6 +160,11 @@ public class PrebuiltJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
+  public void invalidateInitializeFromDiskState() {
+    javaAbiInfo.invalidate();
+  }
+
+  @Override
   public JavaLibrary.Data initializeFromDisk(SourcePathResolver pathResolver) throws IOException {
     // Warm up the jar contents. We just wrote the thing, so it should be in the filesystem cache
     javaAbiInfo.load(pathResolver);

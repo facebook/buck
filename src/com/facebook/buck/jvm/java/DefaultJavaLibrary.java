@@ -361,6 +361,11 @@ public class DefaultJavaLibrary extends AbstractBuildRule
     return steps.build();
   }
 
+  @Override
+  public void invalidateInitializeFromDiskState() {
+    javaAbiInfo.invalidate();
+  }
+
   /**
    * Instructs this rule to report the ABI it has on disk as its current ABI.
    *

@@ -45,7 +45,10 @@ public final class BuildOutputInitializer<T> {
    * to change.
    */
   public void invalidate() {
-    buildOutput = null;
+    if (buildOutput != null) {
+      initializableFromDisk.invalidateInitializeFromDiskState();
+      buildOutput = null;
+    }
   }
 
   /** Initializes the build output from the on disk state. */
