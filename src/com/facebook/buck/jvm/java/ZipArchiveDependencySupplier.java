@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java;
 
+import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
@@ -28,8 +29,8 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.util.stream.Stream;
 
 public class ZipArchiveDependencySupplier implements ArchiveDependencySupplier {
+  @AddToRuleKey private final ImmutableSortedSet<SourcePath> zipFiles;
   private final SourcePathRuleFinder ruleFinder;
-  private final ImmutableSortedSet<SourcePath> zipFiles;
 
   public ZipArchiveDependencySupplier(
       SourcePathRuleFinder ruleFinder, ImmutableSortedSet<SourcePath> zipFiles) {

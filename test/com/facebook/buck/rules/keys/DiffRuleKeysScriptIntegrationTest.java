@@ -200,8 +200,8 @@ public class DiffRuleKeysScriptIntegrationTest {
             "    +[\"//:java_lib_3\"@ruleKey(sha1=", /* some rulekey */
             ")]",
             "    +[\"//:java_lib_3#class-abi\"@ruleKey(sha1=", /* some rulekey */
-            "Change details for [//:java_lib_2->jarBuildStepsFactory]",
-            "  (abiClasspath):",
+            "Change details for [//:java_lib_2->jarBuildStepsFactory->abiClasspath]",
+            "  (zipFiles):",
             "    -[<missing>]",
             "    +[\"//:java_lib_3#class-abi\"@ruleKey(sha1=", /* some rulekey */
             ")]",
@@ -227,8 +227,8 @@ public class DiffRuleKeysScriptIntegrationTest {
             Matchers.containsString(
                 "Change details for [//:java_lib_all]\n"
                     + "  (jarBuildStepsFactory):\n"
-                    + "    -[ruleKey(sha1=0391a3c2c80429b9b07ad2ac1d86597026d3b8ed)]\n"
-                    + "    +[ruleKey(sha1=7ae021f83c2628c80f202a20a37acc2e109cc3d5)]\n"),
+                    + "    -[ruleKey(sha1=3357093a6a6f24fe2f63fdfdb141553a6d0820e9)]\n"
+                    + "    +[ruleKey(sha1=75402ecb11ea28caac34fe86ed9d2dfdded2f063)]\n"),
             Matchers.containsString(
                 "Change details for [//:java_lib_2->jarBuildStepsFactory]\n"
                     + "  (srcs):\n"

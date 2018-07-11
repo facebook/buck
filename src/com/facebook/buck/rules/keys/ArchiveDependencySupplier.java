@@ -15,10 +15,10 @@
  */
 package com.facebook.buck.rules.keys;
 
+import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.google.common.collect.ImmutableSortedSet;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 /**
@@ -26,8 +26,7 @@ import java.util.stream.Stream;
  * as a single {@link SourcePath}. For input-based rule-key generation, each archive is treated as a
  * set of {@link SourcePath}s, one for each member of the archive.
  */
-public interface ArchiveDependencySupplier extends Supplier<ImmutableSortedSet<SourcePath>> {
-  @Override
+public interface ArchiveDependencySupplier extends AddsToRuleKey {
   ImmutableSortedSet<SourcePath> get();
 
   Stream<SourcePath> getArchiveMembers(SourcePathResolver resolver);
