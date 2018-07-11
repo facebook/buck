@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright 2018-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -21,15 +21,21 @@ import javax.lang.model.element.Element;
 import javax.lang.model.util.Elements;
 import javax.tools.JavaFileManager;
 
-public interface SourceOnlyAbiRuleInfo {
-  void setFileManager(JavaFileManager fileManager);
+/** Used to create the SourceOnlyAbiRuleInfo for a target given a JavaFileManager. */
+public interface SourceOnlyAbiRuleInfoFactory {
+  SourceOnlyAbiRuleInfo create(JavaFileManager fileManager);
 
-  @Nullable
-  String getOwningTarget(Elements elements, Element element);
+  /** Provides information related to source-only abi support. */
+  interface SourceOnlyAbiRuleInfo {
+    void setFileManager(JavaFileManager fileManager);
 
-  boolean elementIsAvailableForSourceOnlyAbi(Elements elements, Element element);
+    @Nullable
+    String getOwningTarget(Elements elements, Element element);
 
-  String getRuleName();
+    boolean elementIsAvailableForSourceOnlyAbi(Elements elements, Element element);
 
-  boolean ruleIsRequiredForSourceOnlyAbi();
+    String getRuleName();
+
+    boolean ruleIsRequiredForSourceOnlyAbi();
+  }
 }

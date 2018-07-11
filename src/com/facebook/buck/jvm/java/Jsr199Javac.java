@@ -19,7 +19,7 @@ package com.facebook.buck.jvm.java;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
-import com.facebook.buck.jvm.java.abi.source.api.SourceOnlyAbiRuleInfo;
+import com.facebook.buck.jvm.java.abi.source.api.SourceOnlyAbiRuleInfoFactory;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -77,7 +77,7 @@ public abstract class Jsr199Javac implements Javac {
       @Nullable JarParameters libraryJarParameters,
       AbiGenerationMode abiGenerationMode,
       AbiGenerationMode abiCompatibilityMode,
-      @Nullable SourceOnlyAbiRuleInfo ruleInfo) {
+      @Nullable SourceOnlyAbiRuleInfoFactory ruleInfoFactory) {
     return new Jsr199JavacInvocation(
         () -> createCompiler(context, resolver),
         context,
@@ -92,6 +92,6 @@ public abstract class Jsr199Javac implements Javac {
         libraryJarParameters,
         abiGenerationMode,
         abiCompatibilityMode,
-        ruleInfo);
+        ruleInfoFactory);
   }
 }

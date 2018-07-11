@@ -34,7 +34,7 @@ import com.facebook.buck.jvm.java.JavaBuckConfig.SourceAbiVerificationMode;
 import com.facebook.buck.jvm.java.JavaBuckConfig.UnusedDependenciesAction;
 import com.facebook.buck.jvm.java.JavaLibraryDescription.CoreArg;
 import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
-import com.facebook.buck.jvm.java.abi.source.api.SourceOnlyAbiRuleInfo;
+import com.facebook.buck.jvm.java.abi.source.api.SourceOnlyAbiRuleInfoFactory;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -437,14 +437,15 @@ public abstract class DefaultJavaLibraryRules {
   }
 
   @Value.Lazy
-  Supplier<SourceOnlyAbiRuleInfo> getSourceOnlyAbiRuleInfoSupplier() {
+  Supplier<SourceOnlyAbiRuleInfoFactory> getSourceOnlyAbiRuleInfoFactorySupplier() {
     return () ->
-        new DefaultSourceOnlyAbiRuleInfo(
-            getSourcePathRuleFinder(),
-            getLibraryTarget(),
-            getRequiredForSourceOnlyAbi(),
-            getClasspaths(),
-            getClasspathsForSourceOnlyAbi());
+        new DefaultSourceOnlyAbiRuleInfoFactory(
+            new DefaultSourceOnlyAbiRuleInfo(
+                getSourcePathRuleFinder(),
+                getLibraryTarget(),
+                getRequiredForSourceOnlyAbi(),
+                getClasspaths(),
+                getClasspathsForSourceOnlyAbi()));
   }
 
   @Nullable
@@ -649,7 +650,7 @@ public abstract class DefaultJavaLibraryRules {
         getClassesToRemoveFromJar(),
         getAbiGenerationMode(),
         getAbiCompatibilityMode(),
-        getSourceOnlyAbiRuleInfoSupplier());
+        getSourceOnlyAbiRuleInfoFactorySupplier());
   }
 
   @Value.Lazy
@@ -672,7 +673,7 @@ public abstract class DefaultJavaLibraryRules {
         getClassesToRemoveFromJar(),
         getAbiGenerationMode(),
         getAbiCompatibilityMode(),
-        getSourceOnlyAbiRuleInfoSupplier());
+        getSourceOnlyAbiRuleInfoFactorySupplier());
   }
 
   private ResourcesParameters getResourcesParameters() {

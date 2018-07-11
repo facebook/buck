@@ -33,7 +33,7 @@ import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.HasJavaAbi;
 import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
-import com.facebook.buck.jvm.java.abi.source.api.SourceOnlyAbiRuleInfo;
+import com.facebook.buck.jvm.java.abi.source.api.SourceOnlyAbiRuleInfoFactory;
 import com.facebook.buck.step.Step;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -77,7 +77,7 @@ public class JarBuildStepsFactory
 
   @AddToRuleKey private final AbiGenerationMode abiGenerationMode;
   @AddToRuleKey private final AbiGenerationMode abiCompatibilityMode;
-  @Nullable private final Supplier<SourceOnlyAbiRuleInfo> ruleInfoSupplier;
+  @Nullable private final Supplier<SourceOnlyAbiRuleInfoFactory> ruleInfoFactorySupplier;
 
   private final Map<BuildTarget, SourcePath> sourcePathsToOutput = new HashMap<>();
 
@@ -98,7 +98,7 @@ public class JarBuildStepsFactory
       RemoveClassesPatternsMatcher classesToRemoveFromJar,
       AbiGenerationMode abiGenerationMode,
       AbiGenerationMode abiCompatibilityMode,
-      @Nullable Supplier<SourceOnlyAbiRuleInfo> ruleInfoSupplier) {
+      @Nullable Supplier<SourceOnlyAbiRuleInfoFactory> ruleInfoFactorySupplier) {
     this.projectFilesystem = projectFilesystem;
     this.ruleFinder = ruleFinder;
     this.libraryTarget = libraryTarget;
@@ -115,7 +115,7 @@ public class JarBuildStepsFactory
     this.classesToRemoveFromJar = classesToRemoveFromJar;
     this.abiGenerationMode = abiGenerationMode;
     this.abiCompatibilityMode = abiCompatibilityMode;
-    this.ruleInfoSupplier = ruleInfoSupplier;
+    this.ruleInfoFactorySupplier = ruleInfoFactorySupplier;
   }
 
   public boolean producesJar() {
@@ -289,7 +289,8 @@ public class JarBuildStepsFactory
         .setShouldTrackJavacPhaseEvents(trackJavacPhaseEvents)
         .setAbiGenerationMode(abiGenerationMode)
         .setAbiCompatibilityMode(abiCompatibilityMode)
-        .setSourceOnlyAbiRuleInfo(ruleInfoSupplier != null ? ruleInfoSupplier.get() : null)
+        .setSourceOnlyAbiRuleInfoFactory(
+            ruleInfoFactorySupplier != null ? ruleInfoFactorySupplier.get() : null)
         .build();
   }
 

@@ -23,7 +23,7 @@ import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.HasJavaAbi;
 import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
-import com.facebook.buck.jvm.java.abi.source.api.SourceOnlyAbiRuleInfo;
+import com.facebook.buck.jvm.java.abi.source.api.SourceOnlyAbiRuleInfoFactory;
 import com.facebook.buck.model.BuildTargets;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSortedSet;
@@ -75,7 +75,7 @@ abstract class AbstractCompilerParameters {
   }
 
   @Nullable
-  public abstract SourceOnlyAbiRuleInfo getSourceOnlyAbiRuleInfo();
+  public abstract SourceOnlyAbiRuleInfoFactory getSourceOnlyAbiRuleInfoFactory();
 
   public static Path getDepFilePath(BuildTarget target, ProjectFilesystem filesystem) {
     return getOutputJarDirPath(target, filesystem).resolve("used-classes.json");

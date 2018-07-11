@@ -24,7 +24,7 @@ import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
 import com.facebook.buck.jvm.java.abi.SourceBasedAbiStubber;
 import com.facebook.buck.jvm.java.abi.StubGenerator;
 import com.facebook.buck.jvm.java.abi.source.api.FrontendOnlyJavacTaskProxy;
-import com.facebook.buck.jvm.java.abi.source.api.SourceOnlyAbiRuleInfo;
+import com.facebook.buck.jvm.java.abi.source.api.SourceOnlyAbiRuleInfoFactory;
 import com.facebook.buck.jvm.java.abi.source.api.StopCompilation;
 import com.facebook.buck.jvm.java.plugin.PluginLoader;
 import com.facebook.buck.jvm.java.plugin.api.BuckJavacTaskListener;
@@ -91,7 +91,7 @@ class Jsr199JavacInvocation implements Javac.Invocation {
   private final AbiGenerationMode abiGenerationMode;
   @Nullable private final JarParameters abiJarParameters;
   @Nullable private final JarParameters libraryJarParameters;
-  @Nullable private final SourceOnlyAbiRuleInfo ruleInfo;
+  @Nullable private final SourceOnlyAbiRuleInfoFactory ruleInfoFactory;
   private final boolean trackClassUsage;
   private final boolean trackJavacPhaseEvents;
 
@@ -111,7 +111,7 @@ class Jsr199JavacInvocation implements Javac.Invocation {
       @Nullable JarParameters libraryJarParameters,
       AbiGenerationMode abiGenerationMode,
       AbiGenerationMode abiCompatibilityMode,
-      @Nullable SourceOnlyAbiRuleInfo ruleInfo) {
+      @Nullable SourceOnlyAbiRuleInfoFactory ruleInfoFactory) {
     this.compilerConstructor = compilerConstructor;
     this.context = context;
     this.invokingRule = invokingRule;
@@ -129,7 +129,7 @@ class Jsr199JavacInvocation implements Javac.Invocation {
     this.abiJarParameters = abiJarParameters;
     this.libraryJarParameters = libraryJarParameters;
     this.abiGenerationMode = abiGenerationMode;
-    this.ruleInfo = ruleInfo;
+    this.ruleInfoFactory = ruleInfoFactory;
   }
 
   @Override
@@ -573,13 +573,12 @@ class Jsr199JavacInvocation implements Javac.Invocation {
           BuckJavacTaskListener taskListener = null;
           if (abiGenerationMode.checkForSourceOnlyAbiCompatibility()
               && !generatingSourceOnlyAbi
-              && ruleInfo != null) {
-            ruleInfo.setFileManager(fileManager);
+              && ruleInfoFactory != null) {
             taskListener =
                 SourceBasedAbiStubber.newValidatingTaskListener(
                     pluginLoader,
                     javacTask,
-                    ruleInfo,
+                    ruleInfoFactory.create(fileManager),
                     () ->
                         diagnostics
                                 .getDiagnostics()

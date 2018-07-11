@@ -311,6 +311,7 @@ java_library_with_plugins(
         "DefaultJavaLibrary.java",
         "DefaultJavaLibraryRules.java",
         "DefaultSourceOnlyAbiRuleInfo.java",
+        "DefaultSourceOnlyAbiRuleInfoFactory.java",
         "ForkMode.java",
         "JarBuildStepsFactory.java",
         "JarFattener.java",
