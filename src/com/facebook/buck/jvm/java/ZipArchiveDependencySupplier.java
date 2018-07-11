@@ -50,7 +50,7 @@ public class ZipArchiveDependencySupplier implements ArchiveDependencySupplier {
               BuildRule rule = ruleFinder.getRule((BuildTargetSourcePath) zipSourcePath);
               HasJavaAbi hasJavaAbi = (HasJavaAbi) rule;
               Preconditions.checkState(rule.getSourcePathToOutput().equals(zipSourcePath));
-              return hasJavaAbi.getJarContents().stream();
+              return hasJavaAbi.getAbiInfo().getJarContents().stream();
             });
   }
 }

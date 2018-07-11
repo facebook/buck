@@ -37,8 +37,9 @@ import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.jvm.core.DefaultJavaAbiInfo;
 import com.facebook.buck.jvm.core.HasClasspathEntries;
-import com.facebook.buck.jvm.core.JarContentsSupplier;
+import com.facebook.buck.jvm.core.JavaAbiInfo;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.step.Step;
@@ -70,7 +71,7 @@ public class PrebuiltJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
         SupportsInputBasedRuleKey {
 
   @AddToRuleKey private final SourcePath binaryJar;
-  private final JarContentsSupplier binaryJarContentsSupplier;
+  private final DefaultJavaAbiInfo javaAbiInfo;
   private final Path copiedBinaryJar;
   @AddToRuleKey private final Optional<SourcePath> sourceJar;
 
@@ -135,7 +136,7 @@ public class PrebuiltJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
     copiedBinaryJar =
         BuildTargets.getGenPath(
             getProjectFilesystem(), getBuildTarget(), "__%s__/" + fileNameWithJarExtension);
-    this.binaryJarContentsSupplier = new JarContentsSupplier(getSourcePathToOutput());
+    this.javaAbiInfo = new DefaultJavaAbiInfo(getBuildTarget(), getSourcePathToOutput());
 
     buildOutputInitializer = new BuildOutputInitializer<>(buildTarget, this);
   }
@@ -161,7 +162,7 @@ public class PrebuiltJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @Override
   public JavaLibrary.Data initializeFromDisk(SourcePathResolver pathResolver) throws IOException {
     // Warm up the jar contents. We just wrote the thing, so it should be in the filesystem cache
-    binaryJarContentsSupplier.load(pathResolver);
+    javaAbiInfo.load(pathResolver);
     return JavaLibraryRules.initializeFromDisk(getBuildTarget(), getProjectFilesystem());
   }
 
@@ -311,13 +312,8 @@ public class PrebuiltJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public ImmutableSortedSet<SourcePath> getJarContents() {
-    return binaryJarContentsSupplier.get();
-  }
-
-  @Override
-  public boolean jarContains(String path) {
-    return binaryJarContentsSupplier.jarContains(path);
+  public JavaAbiInfo getAbiInfo() {
+    return javaAbiInfo;
   }
 
   @Override

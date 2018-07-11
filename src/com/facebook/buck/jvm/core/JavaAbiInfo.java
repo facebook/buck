@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright 2018-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -14,16 +14,17 @@
  * under the License.
  */
 
-package com.facebook.buck.jvm.java;
+package com.facebook.buck.jvm.core;
 
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.jvm.core.HasJavaAbi;
-import java.util.Optional;
+import com.facebook.buck.core.sourcepath.SourcePath;
+import com.google.common.collect.ImmutableSortedSet;
 
-/** Tag interface for rules that calculate ABIs for Java code. */
-public interface CalculateAbi extends HasJavaAbi {
-  @Override
-  default Optional<BuildTarget> getAbiJar() {
-    return Optional.of(getAbiInfo().getBuildTarget());
-  }
+/** Provides information about a java abi. */
+public interface JavaAbiInfo {
+  BuildTarget getBuildTarget();
+
+  ImmutableSortedSet<SourcePath> getJarContents();
+
+  boolean jarContains(String path);
 }

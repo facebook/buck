@@ -30,13 +30,13 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.jvm.core.JarContentsSupplier;
+import com.facebook.buck.jvm.core.DefaultJavaAbiInfo;
+import com.facebook.buck.jvm.core.JavaAbiInfo;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.nio.file.Path;
 import javax.annotation.Nullable;
@@ -48,8 +48,8 @@ public class CompareAbis extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @AddToRuleKey private final JavaBuckConfig.SourceAbiVerificationMode verificationMode;
 
   private final Path outputPath;
-  private final JarContentsSupplier outputPathContentsSupplier;
   private final BuildOutputInitializer<Object> buildOutputInitializer;
+  private final DefaultJavaAbiInfo javaAbiInfo;
 
   public CompareAbis(
       BuildTarget buildTarget,
@@ -67,7 +67,7 @@ public class CompareAbis extends AbstractBuildRuleWithDeclaredAndExtraDeps
         BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s")
             .resolve(String.format("%s-abi.jar", getBuildTarget().getShortName()));
 
-    outputPathContentsSupplier = new JarContentsSupplier(getSourcePathToOutput());
+    this.javaAbiInfo = new DefaultJavaAbiInfo(getBuildTarget(), getSourcePathToOutput());
     buildOutputInitializer = new BuildOutputInitializer<>(getBuildTarget(), this);
   }
 
@@ -98,7 +98,7 @@ public class CompareAbis extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public Object initializeFromDisk(SourcePathResolver pathResolver) throws IOException {
-    outputPathContentsSupplier.load(pathResolver);
+    javaAbiInfo.load(pathResolver);
     return new Object();
   }
 
@@ -108,12 +108,7 @@ public class CompareAbis extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public ImmutableSortedSet<SourcePath> getJarContents() {
-    return outputPathContentsSupplier.get();
-  }
-
-  @Override
-  public boolean jarContains(String path) {
-    return outputPathContentsSupplier.jarContains(path);
+  public JavaAbiInfo getAbiInfo() {
+    return javaAbiInfo;
   }
 }

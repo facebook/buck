@@ -31,7 +31,8 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.jvm.core.JarContentsSupplier;
+import com.facebook.buck.jvm.core.DefaultJavaAbiInfo;
+import com.facebook.buck.jvm.core.JavaAbiInfo;
 import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.step.Step;
@@ -53,8 +54,8 @@ public class CalculateClassAbi extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @AddToRuleKey private final AbiGenerationMode compatibilityMode;
 
   private final Path outputPath;
-  private final JarContentsSupplier abiJarContentsSupplier;
   private BuildOutputInitializer<Object> buildOutputInitializer;
+  private final DefaultJavaAbiInfo javaAbiInfo;
 
   public CalculateClassAbi(
       BuildTarget buildTarget,
@@ -66,7 +67,7 @@ public class CalculateClassAbi extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.binaryJar = binaryJar;
     this.compatibilityMode = compatibilityMode;
     this.outputPath = getAbiJarPath(getProjectFilesystem(), getBuildTarget());
-    this.abiJarContentsSupplier = new JarContentsSupplier(getSourcePathToOutput());
+    this.javaAbiInfo = new DefaultJavaAbiInfo(getBuildTarget(), getSourcePathToOutput());
     this.buildOutputInitializer = new BuildOutputInitializer<>(getBuildTarget(), this);
   }
 
@@ -132,19 +133,14 @@ public class CalculateClassAbi extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public ImmutableSortedSet<SourcePath> getJarContents() {
-    return abiJarContentsSupplier.get();
-  }
-
-  @Override
-  public boolean jarContains(String path) {
-    return abiJarContentsSupplier.jarContains(path);
+  public JavaAbiInfo getAbiInfo() {
+    return javaAbiInfo;
   }
 
   @Override
   public Object initializeFromDisk(SourcePathResolver pathResolver) throws IOException {
     // Warm up the jar contents. We just wrote the thing, so it should be in the filesystem cache
-    abiJarContentsSupplier.load(pathResolver);
+    javaAbiInfo.load(pathResolver);
     return new Object();
   }
 

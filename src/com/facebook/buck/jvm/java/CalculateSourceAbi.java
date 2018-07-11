@@ -34,12 +34,12 @@ import com.facebook.buck.core.rules.pipeline.SupportsPipelining;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.jvm.core.JarContentsSupplier;
+import com.facebook.buck.jvm.core.DefaultJavaAbiInfo;
+import com.facebook.buck.jvm.core.JavaAbiInfo;
 import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.step.Step;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.util.SortedSet;
 import java.util.function.Predicate;
@@ -56,9 +56,9 @@ public class CalculateSourceAbi extends AbstractBuildRule
 
   // This will be added to the rule key by virtue of being returned from getBuildDeps.
   private final BuildDeps buildDeps;
-  private final JarContentsSupplier outputJarContents;
   private final BuildOutputInitializer<Object> buildOutputInitializer;
   private final SourcePathRuleFinder ruleFinder;
+  private final DefaultJavaAbiInfo javaAbiInfo;
 
   public CalculateSourceAbi(
       BuildTarget buildTarget,
@@ -70,7 +70,7 @@ public class CalculateSourceAbi extends AbstractBuildRule
     this.buildDeps = buildDeps;
     this.jarBuildStepsFactory = jarBuildStepsFactory;
     this.ruleFinder = ruleFinder;
-    this.outputJarContents = new JarContentsSupplier(getSourcePathToOutput());
+    this.javaAbiInfo = new DefaultJavaAbiInfo(getBuildTarget(), getSourcePathToOutput());
     buildOutputInitializer = new BuildOutputInitializer<>(getBuildTarget(), this);
   }
 
@@ -91,19 +91,14 @@ public class CalculateSourceAbi extends AbstractBuildRule
   }
 
   @Override
-  public ImmutableSortedSet<SourcePath> getJarContents() {
-    return outputJarContents.get();
-  }
-
-  @Override
-  public boolean jarContains(String path) {
-    return outputJarContents.jarContains(path);
+  public JavaAbiInfo getAbiInfo() {
+    return javaAbiInfo;
   }
 
   @Override
   public Object initializeFromDisk(SourcePathResolver pathResolver) throws IOException {
     // Warm up the jar contents. We just wrote the thing, so it should be in the filesystem cache
-    outputJarContents.load(pathResolver);
+    javaAbiInfo.load(pathResolver);
     return new Object();
   }
 

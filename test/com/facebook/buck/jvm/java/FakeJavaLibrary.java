@@ -24,6 +24,7 @@ import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.jvm.core.JavaAbiInfo;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.FakeBuildRule;
@@ -88,12 +89,7 @@ public class FakeJavaLibrary extends FakeBuildRule implements JavaLibrary, Andro
   }
 
   @Override
-  public ImmutableSortedSet<SourcePath> getJarContents() {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
-  public boolean jarContains(String path) {
+  public JavaAbiInfo getAbiInfo() {
     throw new UnsupportedOperationException();
   }
 

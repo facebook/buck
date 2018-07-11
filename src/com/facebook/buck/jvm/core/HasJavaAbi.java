@@ -18,19 +18,15 @@ package com.facebook.buck.jvm.core;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
 
 public interface HasJavaAbi {
-  BuildTarget getBuildTarget();
-
-  ImmutableSortedSet<SourcePath> getJarContents();
-
-  boolean jarContains(String path);
+  JavaAbiInfo getAbiInfo();
 
   /** @return the {@link SourcePath} representing the ABI Jar for this rule. */
   default Optional<BuildTarget> getAbiJar() {
-    return Optional.of(getBuildTarget().withAppendedFlavors(JavaAbis.CLASS_ABI_FLAVOR));
+    return Optional.of(
+        getAbiInfo().getBuildTarget().withAppendedFlavors(JavaAbis.CLASS_ABI_FLAVOR));
   }
 
   default Optional<BuildTarget> getSourceOnlyAbiJar() {
