@@ -470,8 +470,67 @@ For some distros, the default packages may be older than what you would like. In
 <h3>Set Location of Android SDK and NDK</h3>
 
 <p>
-  You will need to tell Buck where to find our SDK and NDK.  Buck will look at the value of the <code>ANDROID_SDK</code>, <code>ANDROID_HOME</code>, or {call buckconfig.android_sdk_path /} to locate the SDK files on your system.  Buck will look at <code>ANDROID_NDK</code>, <code>NDK_HOME</code>, or {call buckconfig.ndk_path /} to find a specific version of the NDK, and <code>ANDROID_NDK_REPOSITORY</code> or {call buckconfig.ndk_repository_path /} to find an appropriate NDK from a directory containing multiple NDK versions.
+  You will need to tell Buck where to find the Android SDK and NDK.  
 </p>
+
+<p>
+  To find the location of the <strong>Android SDK</strong>, Buck looks at the following
+  values <em>in the following order</em>: 
+  <ul>
+    <li>
+      <code>ANDROID_SDK</code> environment variable 
+    </li>
+    <li>
+      <code>ANDROID_HOME</code> environment variable
+    </li>
+    <li>
+      The value of the {call buckconfig.android_sdk_path /} property 
+      in <code>.buckconfig</code>.
+    </li>
+  </ul>
+</p>
+
+<p>
+  To find the location of a specific <strong>NDK</strong>, Buck looks at
+  the following values <em>in the following order</em>:
+  <ul>
+    <li>
+      <code>ANDROID_NDK</code> environment variable.
+    </li>  
+    <li>
+      <code>NDK_HOME</code> environment variable.
+    </li>  
+    <li>
+      The value of the {call buckconfig.ndk_path /} property 
+      in <code>.buckconfig</code>.
+    </li>
+  </ul>
+  </p>
+
+  <p>
+  If you have <strong>multiple NDKs</strong> installed into a single 
+  enclosing directory, you can specify this directory to Buck using either 
+  of the following values:
+  <ul>
+    <li>
+      <code>ANDROID_NDK_REPOSITORY</code> environment variable.
+    </li>
+    <li>
+      The {call buckconfig.ndk_repository_path /} property 
+      in <code>.buckconfig</code>. 
+    </li>
+  </ul>
+  If you specify <em>both</em> the environment variable and 
+  the <code>.buckconfig</code> setting, the environment variable takes
+  precedence.
+  </p>
+
+  <p>
+  If you specify an NDK repository, Buck selects the NDK based on the
+  version that you specify in the {call buckconfig.ndk_version /} property 
+  of <code>.buckconfig</code>.
+  </p>
+
 
 <span><block class="windows linux android other" /></span>
 
@@ -705,7 +764,12 @@ Optionally:
 <ul>
   <li>{call buckconfig.android_sdk_path /} is an absolute path to the Android SDK.</li>
   <li>{call buckconfig.ndk_path /} is an absolute path to the Android NDK.</li>
-  <li>{call buckconfig.ndk_repository_path /} is an absolute path to the Android NDK repository.</li>
+  <li>
+    {call buckconfig.ndk_repository_path /} is an absolute path to a
+    directory that contains multiple Android NDKs in subdirectories.
+    Buck selects which NDK to use based on the value of 
+    the {call buckconfig.ndk_version /} property in <code>.buckconfig</code>.
+  </li>
 </ul>
 
 <h3>Build the Android sample</h3>
