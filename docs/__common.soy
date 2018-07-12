@@ -219,6 +219,8 @@ docsearch({
  * @param? default What the default value should be. If null, the argument is
  *     required.
  * @param desc Prose description of the argument.
+ * @param? deprecated Whether this argument has been deprecated
+ * @param? deprecationAlternative An alternative to use rather than this deprecated property
  */
 {template .arg}
 <li id="{$name}" class="arg">
@@ -235,6 +237,11 @@ docsearch({
     {sp}
     <a class="inline-link" href="#{$name}">#</a>
   </h3>
+  {if $deprecated}
+  <p class="warning-banner">
+  This property is deprecated. {if isNonnull($deprecationAlternative)}{$deprecationAlternative|noAutoescape}{/if}
+  </p>
+  {/if}
   <p>
     {$desc|noAutoescape}
   </p>

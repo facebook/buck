@@ -32,7 +32,22 @@ all transitive {call buck.python_library /} dependencies.
 {/call}
 
 {call buck.arg}
+  {param name: 'main_module' /}
+  {param desc}
+  The python module that should be the entry point of the binary. This should be
+  a module name within a python_library that this binary depends on. Note that
+  module names take <code>base_module</code> of the library into account.
+  This property is mutually exclusive with <code>main</code>, and should be preferred to <code>main</code>, which is deprecated.
+  {/param}
+{/call}
+
+{call buck.arg}
   {param name: 'main' /}
+  {param deprecated: true /}
+  {param deprecationAlternative}
+  Use a {call buck.python_library /} dependency and <code>main_module</code> instead
+  {/param}
+  {param default: 'None' /}
   {param desc}
   The Python file which serves as the entry point for the PEX.
   The interpreter initiates execution of the PEX with the code in this file.
@@ -42,6 +57,7 @@ all transitive {call buck.python_library /} dependencies.
 {call buck.arg}
   {param name: 'base_module' /}
   {param default : 'None' /}
+  {param deprecated: true /}
   {param desc}
   The package in which the main module should reside in its final
   location in the binary. If unset, Buck uses the project-relative directory 
