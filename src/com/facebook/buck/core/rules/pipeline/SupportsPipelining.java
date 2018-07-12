@@ -28,7 +28,11 @@ import javax.annotation.Nullable;
  * after those of a dependency.
  *
  * @param <T> the type that is used to share build state between rules in the pipeline
+ * @deprecated Rule pipelining couples rules in a way that makes it very easy to violate buck's
+ *     assumptions and makes it nearly impossible for buck to understand and restrict what rules are
+ *     doing.
  */
+@Deprecated
 public interface SupportsPipelining<T extends RulePipelineState> extends BuildRule {
   static boolean isSupported(BuildRule rule) {
     if (!(rule instanceof SupportsPipelining)) {
@@ -37,16 +41,6 @@ public interface SupportsPipelining<T extends RulePipelineState> extends BuildRu
 
     SupportsPipelining<?> supportsPipelining = (SupportsPipelining<?>) rule;
     return supportsPipelining.useRulePipelining();
-  }
-
-  static <T extends RulePipelineState> SupportsPipelining<T> getRootRule(
-      SupportsPipelining<T> rule) {
-    SupportsPipelining<T> result = rule;
-    while (result.getPreviousRuleInPipeline() != null) {
-      result = result.getPreviousRuleInPipeline();
-    }
-
-    return result;
   }
 
   boolean useRulePipelining();
