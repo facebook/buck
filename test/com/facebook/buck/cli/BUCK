@@ -463,6 +463,7 @@ java_test(
         "//third-party/java/hamcrest:java-hamcrest",
         "//third-party/java/immutables:immutables",
         "//third-party/java/infer-annotations:infer-annotations",
+        "//third-party/java/ini4j:ini4j",
         "//third-party/java/jackson:jackson-annotations",
         "//third-party/java/jackson:jackson-core",
         "//third-party/java/jackson:jackson-databind",

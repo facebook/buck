@@ -24,7 +24,10 @@ import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ExitCode;
+import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
+import java.io.StringReader;
+import org.ini4j.Ini;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -49,6 +52,7 @@ public class AuditConfigCommandIntegrationTest {
             "ignored_section.long_value");
     result.assertSuccess();
     assertEquals(workspace.getFileContents("stdout-config"), result.getStdout());
+    assertThat(result.getStderr(), containsString("missing_section is not a valid section string"));
   }
 
   @Test
@@ -68,6 +72,7 @@ public class AuditConfigCommandIntegrationTest {
             "ignored_section.long_value");
     result.assertSuccess();
     assertEquals(workspace.getFileContents("stdout-config.json").trim(), result.getStdout());
+    assertThat(result.getStderr(), containsString("missing_section is not a valid section string"));
   }
 
   @Test
@@ -81,6 +86,7 @@ public class AuditConfigCommandIntegrationTest {
             "audit", "config", "--json", "missing_section.badvalue", "ignored_section");
     result.assertSuccess();
     assertEquals(workspace.getFileContents("stdout-config.json").trim(), result.getStdout());
+    assertThat(result.getStderr(), containsString("missing_section is not a valid section string"));
   }
 
   @Test
@@ -101,6 +107,7 @@ public class AuditConfigCommandIntegrationTest {
             "ignored_section.long_value");
     result.assertSuccess();
     assertEquals(workspace.getFileContents("stdout-buckconfig"), result.getStdout());
+    assertThat(result.getStderr(), containsString("missing_section is not a valid section string"));
   }
 
   @Test
@@ -134,6 +141,30 @@ public class AuditConfigCommandIntegrationTest {
             "ignored_section.short_value",
             "ignored_section.long_value");
     result.assertExitCode("--json and --tab are incompatible", ExitCode.COMMANDLINE_ERROR);
-    assertThat(result.getStderr(), containsString("--json and --tab cannot both be specified"));
+    assertThat(result.getStderr(), containsString("cannot be used"));
+  }
+
+  @Test
+  public void testConfigAuditEntireConfig() throws IOException, InterruptedException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "audit_config", tmp);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckCommand("audit", "config");
+
+    // Use low level ini parser to build config.
+    Ini audit_ini = new Ini(new StringReader(result.getStdout()));
+    // Ini object doesn't really provide a good way to compare 2 ini files.
+    // Convert that into immutable map so that we can compare sorted maps instead.
+    ImmutableMap.Builder<String, ImmutableMap<String, String>> audit_config =
+        ImmutableMap.builder();
+    audit_ini.forEach(
+        (section_name, section) -> {
+          ImmutableMap.Builder<String, String> section_builder = ImmutableMap.builder();
+          section.forEach((k, v) -> section_builder.put(k, v));
+          audit_config.put(section_name, section_builder.build());
+        });
+
+    assertEquals(workspace.getConfig().getSectionToEntries(), audit_config.build());
   }
 }

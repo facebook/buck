@@ -578,6 +578,10 @@ public class ProjectWorkspace extends AbstractWorkspace {
         getDestPath(), Files.readAllLines(getPath(PATH_TO_BUILD_LOG), UTF_8));
   }
 
+  public Config getConfig() throws IOException, InterruptedException {
+    return getProjectFilesystemAndConfig().config;
+  }
+
   public Cell asCell() throws IOException, InterruptedException {
     ProjectFilesystemAndConfig filesystemAndConfig = getProjectFilesystemAndConfig();
     ProjectFilesystem filesystem = filesystemAndConfig.projectFilesystem;

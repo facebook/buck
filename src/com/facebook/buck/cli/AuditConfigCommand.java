@@ -20,7 +20,6 @@ import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.util.BuckCellArg;
-import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.DirtyPrintStreamDecorator;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.json.ObjectMappers;
@@ -36,21 +35,25 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Stream;
 import org.immutables.value.Value;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
 
 public class AuditConfigCommand extends AbstractCommand {
-
-  @Option(name = "--json", usage = "Output in JSON format")
+  @Option(
+      name = "--json",
+      usage = "Output in JSON format",
+      forbids = {"--tab"})
   private boolean generateJsonOutput;
 
   public boolean shouldGenerateJsonOutput() {
     return generateJsonOutput;
   }
 
-  @Option(name = "--tab", usage = "Output in a tab-delmiited format key/value format")
+  @Option(
+      name = "--tab",
+      usage = "Output in a tab-delmiited format key/value format",
+      forbids = {"--json"})
   private boolean generateTabbedOutput;
 
   public boolean shouldGenerateTabbedOutput() {
@@ -79,56 +82,76 @@ public class AuditConfigCommand extends AbstractCommand {
     public abstract Optional<String> getValue();
   }
 
+  private ImmutableSortedSet<ConfigValue> readConfig(CommandRunnerParams params) {
+    Cell rootCell = params.getCell();
+
+    ImmutableSortedSet.Builder<ConfigValue> builder;
+    builder =
+        ImmutableSortedSet.orderedBy(
+            Comparator.comparing(ConfigValue::getSection).thenComparing(ConfigValue::getKey));
+    if (getArguments().isEmpty()) {
+      // Dump entire config.
+      BuckConfig buckConfig = rootCell.getBuckConfig();
+      buckConfig
+          .getConfig()
+          .getSectionToEntries()
+          .forEach(
+              (section_name, section) ->
+                  section.forEach(
+                      (key, val) ->
+                          builder.add(ConfigValue.of(key, section_name, key, Optional.of(val)))));
+    } else {
+      // Dump specified sections/values
+      getArguments()
+          .forEach(
+              input -> {
+                BuckCellArg arg = BuckCellArg.of(input);
+                BuckConfig buckConfig = getCellBuckConfig(rootCell, arg.getCellName());
+                String[] parts = arg.getArg().split("\\.", 2);
+
+                DirtyPrintStreamDecorator stdErr = params.getConsole().getStdErr();
+
+                if (parts.length == 0 || parts.length > 2) {
+                  stdErr.println(String.format("%s is not a valid section/property string", input));
+                  return;
+                }
+
+                Optional<ImmutableMap<String, String>> section = buckConfig.getSection(parts[0]);
+                if (!section.isPresent()) {
+                  stdErr.println(
+                      String.format(
+                          "%s is not a valid section string, when processing arg %s",
+                          parts[0], input));
+                  return;
+                }
+
+                if (parts.length == 1) {
+                  // Dump entire section.
+                  section
+                      .get()
+                      .forEach(
+                          (key, val) ->
+                              builder.add(
+                                  ConfigValue.of(
+                                      String.join(".", input, key), input, key, Optional.of(val))));
+                } else {
+                  // Dump specified value
+                  builder.add(
+                      ConfigValue.of(
+                          input,
+                          parts[0],
+                          parts[1],
+                          Optional.ofNullable(section.get().get(parts[1]))));
+                }
+              });
+    }
+    return builder.build();
+  }
+
   @Override
   public ExitCode runWithoutHelp(CommandRunnerParams params)
       throws IOException, InterruptedException {
-    if (shouldGenerateTabbedOutput() && shouldGenerateJsonOutput()) {
-      throw new CommandLineException("--json and --tab cannot both be specified");
-    }
-
-    Cell rootCell = params.getCell();
-
-    ImmutableSortedSet<ConfigValue> configs =
-        getArguments()
-            .stream()
-            .flatMap(
-                input -> {
-                  BuckCellArg arg = BuckCellArg.of(input);
-                  BuckConfig buckConfig = getCellBuckConfig(rootCell, arg.getCellName());
-                  String[] parts = arg.getArg().split("\\.", 2);
-
-                  DirtyPrintStreamDecorator stdErr = params.getConsole().getStdErr();
-                  if (parts.length == 1) {
-                    Optional<ImmutableMap<String, String>> section =
-                        buckConfig.getSection(parts[0]);
-                    if (!section.isPresent()) {
-                      stdErr.println(String.format("%s is not a valid section string", input));
-                      return Stream.of(ConfigValue.of(input, "", input, Optional.empty()));
-                    }
-                    return section
-                        .get()
-                        .entrySet()
-                        .stream()
-                        .map(
-                            entry ->
-                                ConfigValue.of(
-                                    parts[0] + "." + entry.getKey(),
-                                    parts[0],
-                                    entry.getKey(),
-                                    Optional.of(entry.getValue())));
-                  } else if (parts.length != 2) {
-                    stdErr.println(
-                        String.format("%s is not a valid section/property string", input));
-                    return Stream.of(ConfigValue.of(input, "", input, Optional.empty()));
-                  }
-                  return Stream.of(
-                      ConfigValue.of(
-                          input, parts[0], parts[1], buckConfig.getValue(parts[0], parts[1])));
-                })
-            .collect(
-                ImmutableSortedSet.toImmutableSortedSet(
-                    Comparator.comparing(ConfigValue::getSection)
-                        .thenComparing(ConfigValue::getKey)));
+    ImmutableSortedSet<ConfigValue> configs = readConfig(params);
 
     if (shouldGenerateJsonOutput()) {
       printJsonOutput(params, configs);
