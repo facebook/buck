@@ -620,57 +620,57 @@ class BuckTool(object):
             buckd_transport_file_path = (
                 self._buck_project.get_buckd_transport_file_path()
             )
-            if not transport_exists(buckd_transport_file_path):
-                logging.warning("No buck daemon transport file, cannot kill")
-                return
-            buckd_pid = self._buck_project.get_running_buckd_pid()
-            logging.debug("Shutting down buck daemon.")
-            wait_socket_close = False
-            try:
-                with NailgunConnection(
-                    self._buck_project.get_buckd_transport_address(),
-                    cwd=self._buck_project.root,
-                ) as c:
-                    c.send_command("ng-stop")
-                wait_socket_close = True
-            except NailgunException as e:
-                if e.code not in (
-                    NailgunException.CONNECT_FAILED,
-                    NailgunException.CONNECTION_BROKEN,
-                    NailgunException.UNEXPECTED_CHUNKTYPE,
-                ):
-                    raise BuckToolException(
-                        "Unexpected error shutting down nailgun server: " + str(e)
-                    )
-
-            # If ng-stop command succeeds, wait for buckd process to terminate and for the
-            # socket to close. On Unix ng-stop always drops the connection and throws.
-            if wait_socket_close:
-                for i in range(0, 300):
-                    if not transport_exists(buckd_transport_file_path):
-                        break
-                    time.sleep(0.01)
-            elif buckd_pid is not None and os.name == "posix":
-                # otherwise just wait for up to 5 secs for the process to die
-                # TODO(buck_team) implement wait for process and hard kill for Windows too
-                if not wait_for_process_posix(buckd_pid, 5000):
-                    # There is a possibility that daemon is dead for some time but pid file
-                    # still exists and another process is assigned to the same pid. Ideally we
-                    # should check first which process we are killing but so far let's pretend
-                    # this will never happen and kill it with fire anyways.
-
-                    try:
-                        force_kill_process_posix(buckd_pid)
-                    except Exception as e:
-                        # In the worst case it keeps running multiple daemons simultaneously
-                        # consuming memory. Not the good place to be, but let's just issue a
-                        # warning for now.
-                        logging.warning("Error killing running Buck daemon " + str(e))
-
             if transport_exists(buckd_transport_file_path):
-                force_close_transport(buckd_transport_file_path)
+                buckd_pid = self._buck_project.get_running_buckd_pid()
+                logging.debug("Shutting down buck daemon.")
+                wait_socket_close = False
+                try:
+                    with NailgunConnection(
+                        self._buck_project.get_buckd_transport_address(),
+                        cwd=self._buck_project.root,
+                    ) as c:
+                        c.send_command("ng-stop")
+                    wait_socket_close = True
+                except NailgunException as e:
+                    if e.code not in (
+                        NailgunException.CONNECT_FAILED,
+                        NailgunException.CONNECTION_BROKEN,
+                        NailgunException.UNEXPECTED_CHUNKTYPE,
+                    ):
+                        raise BuckToolException(
+                            "Unexpected error shutting down nailgun server: " + str(e)
+                        )
 
-            self._buck_project.clean_up_buckd()
+                # If ng-stop command succeeds, wait for buckd process to terminate and for the
+                # socket to close. On Unix ng-stop always drops the connection and throws.
+                if wait_socket_close:
+                    for i in range(0, 300):
+                        if not transport_exists(buckd_transport_file_path):
+                            break
+                        time.sleep(0.01)
+                elif buckd_pid is not None and os.name == "posix":
+                    # otherwise just wait for up to 5 secs for the process to die
+                    # TODO(buck_team) implement wait for process and hard kill for Windows too
+                    if not wait_for_process_posix(buckd_pid, 5000):
+                        # There is a possibility that daemon is dead for some time but pid file
+                        # still exists and another process is assigned to the same pid. Ideally we
+                        # should check first which process we are killing but so far let's pretend
+                        # this will never happen and kill it with fire anyways.
+
+                        try:
+                            force_kill_process_posix(buckd_pid)
+                        except Exception as e:
+                            # In the worst case it keeps running multiple daemons simultaneously
+                            # consuming memory. Not the good place to be, but let's just issue a
+                            # warning for now.
+                            logging.warning(
+                                "Error killing running Buck daemon " + str(e)
+                            )
+
+                if transport_exists(buckd_transport_file_path):
+                    force_close_transport(buckd_transport_file_path)
+
+                self._buck_project.clean_up_buckd()
 
     def _is_buckd_running(self):
         with Tracing("BuckTool._is_buckd_running"):
