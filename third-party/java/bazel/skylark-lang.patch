@@ -1,7 +1,7 @@
-From d397d4f09a2d190e517d87aa41d0fd3e4ae8d8ef Mon Sep 17 00:00:00 2001
+From 0275620aa93ace8f111218df562b87797841ea6c Mon Sep 17 00:00:00 2001
 From: Taras Tsugrii <ttsugrii@fb.com>
-Date: Sat, 12 May 2018 20:21:17 -0700
-Subject: [PATCH] [Buck] Patch Skylark build file for Buck.
+Date: Thu, 12 Jul 2018 13:12:47 -0700
+Subject: [PATCH] [Buck] Patch build file to create deployable Skylark jar.
 
 ---
  .../java/com/google/devtools/build/lib/BUILD  |   49 +-
@@ -9,7 +9,7 @@ Subject: [PATCH] [Buck] Patch Skylark build file for Buck.
  2 files changed, 45 insertions(+), 2366 deletions(-)
 
 diff --git a/src/main/java/com/google/devtools/build/lib/BUILD b/src/main/java/com/google/devtools/build/lib/BUILD
-index 5d7b548914..ab152ec3b5 100644
+index 6b27d1d86b..3e1994d5ad 100644
 --- a/src/main/java/com/google/devtools/build/lib/BUILD
 +++ b/src/main/java/com/google/devtools/build/lib/BUILD
 @@ -315,16 +315,55 @@ java_library(
@@ -69,7 +69,7 @@ index 5d7b548914..ab152ec3b5 100644
 +        "//src/main/java/com/google/devtools/build/lib/collect/nestedset",
 +        "//src/main/java/com/google/devtools/build/lib/skyframe/serialization/autocodec:autocodec-annotation",
 +        "//src/main/java/com/google/devtools/build/lib/skylarkbuildapi",
-+        "//third_party/protobuf/3.4.0:protobuf_java"
++        "//third_party/protobuf:protobuf_java",
      ],
  )
  

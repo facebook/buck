@@ -232,6 +232,17 @@ public class SkylarkProjectBuildFileParserTest {
   }
 
   @Test
+  public void lazyRangeIsUsedFunction() throws Exception {
+    Path directory = projectFilesystem.resolve("src").resolve("test");
+    Path buildFile = directory.resolve("BUCK");
+    Files.createDirectories(directory);
+    Files.write(
+        buildFile, Arrays.asList("prebuilt_jar(name=type(range(5)), binary_jar='foo.jar')"));
+    Map<String, Object> rule = getSingleRule(buildFile);
+    assertThat(rule.get("name"), equalTo("range"));
+  }
+
+  @Test
   public void globManifestIsCapturedFunction() throws Exception {
     Path directory = projectFilesystem.resolve("src").resolve("test");
     Path buildFile = directory.resolve("BUCK");
