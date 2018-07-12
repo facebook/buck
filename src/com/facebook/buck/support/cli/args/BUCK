@@ -1,0 +1,13 @@
+java_library(
+    name = "args",
+    srcs = glob(
+        ["*.java"],
+    ),
+    exported_deps = [
+        "//third-party/java/args4j:args4j",
+    ],
+    visibility = ["PUBLIC"],
+    deps = [
+        "//third-party/java/guava:guava",
+    ],
+)

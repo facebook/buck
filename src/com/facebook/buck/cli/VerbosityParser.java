@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.support.cli.args.GlobalCliOptions;
 import com.facebook.buck.util.Verbosity;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
@@ -24,21 +25,24 @@ import java.util.regex.Pattern;
 
 public class VerbosityParser {
 
-  @VisibleForTesting static final String VERBOSE_LONG_ARG = "--verbose";
-
-  @VisibleForTesting static final String VERBOSE_SHORT_ARG = "-v";
-
   @VisibleForTesting static final Verbosity DEFAULT_VERBOSITY = Verbosity.STANDARD_INFORMATION;
 
   private static final Pattern VERBOSE_ARG_PATTERN =
-      Pattern.compile("(?:" + VERBOSE_LONG_ARG + "|" + VERBOSE_SHORT_ARG + ")=(\\d+)");
+      Pattern.compile(
+          "(?:"
+              + GlobalCliOptions.VERBOSE_LONG_ARG
+              + "|"
+              + GlobalCliOptions.VERBOSE_SHORT_ARG
+              + ")=(\\d+)");
 
   private VerbosityParser() {}
 
   public static Verbosity parse(ImmutableList<String> args) {
     for (int i = 0; i < args.size() && !"--".equals(args.get(i)); i++) {
       String arg = args.get(i);
-      if ((VERBOSE_LONG_ARG.equals(arg) || VERBOSE_SHORT_ARG.equals(arg)) && i < args.size() - 1) {
+      if ((GlobalCliOptions.VERBOSE_LONG_ARG.equals(arg)
+              || GlobalCliOptions.VERBOSE_SHORT_ARG.equals(arg))
+          && i < args.size() - 1) {
         String nextArg = args.get(i + 1);
         int verbosityLevel = Integer.parseInt(nextArg, /* radix */ 10);
         return getVerbosityForLevel(verbosityLevel);

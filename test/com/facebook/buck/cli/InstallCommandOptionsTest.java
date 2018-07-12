@@ -25,6 +25,7 @@ import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.BuckConfigTestUtils;
 import com.facebook.buck.step.AdbOptions;
 import com.facebook.buck.step.TargetDeviceOptions;
+import com.facebook.buck.support.cli.args.GlobalCliOptions;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.google.common.base.Joiner;
 import java.io.IOException;
@@ -62,7 +63,7 @@ public class InstallCommandOptionsTest {
     InstallCommand command =
         getCommand(
             InstallCommand.RUN_SHORT_ARG, "katana",
-            VerbosityParser.VERBOSE_SHORT_ARG, "10");
+            GlobalCliOptions.VERBOSE_SHORT_ARG, "10");
     assertTrue(command.shouldStartActivity());
     assertNull(command.getActivityToStart());
   }
@@ -72,7 +73,7 @@ public class InstallCommandOptionsTest {
     InstallCommand command =
         getCommand(
             InstallCommand.RUN_SHORT_ARG,
-            VerbosityParser.VERBOSE_SHORT_ARG,
+            GlobalCliOptions.VERBOSE_SHORT_ARG,
             "10",
             "wakizashi",
             InstallCommand.ACTIVITY_SHORT_ARG,
@@ -91,7 +92,7 @@ public class InstallCommandOptionsTest {
 
   @Test
   public void testInstallCommandOptionsNone() throws CmdLineException {
-    InstallCommand command = getCommand(VerbosityParser.VERBOSE_SHORT_ARG, "10", "katana");
+    InstallCommand command = getCommand(GlobalCliOptions.VERBOSE_SHORT_ARG, "10", "katana");
     assertFalse(command.shouldStartActivity());
     assertNull(command.getActivityToStart());
   }

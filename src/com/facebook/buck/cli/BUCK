@@ -139,6 +139,7 @@ java_immutables_library(
         "//src/com/facebook/buck/shell:rules",
         "//src/com/facebook/buck/shell:steps",
         "//src/com/facebook/buck/shell:worker",
+        "//src/com/facebook/buck/support/cli/args:args",
         "//src/com/facebook/buck/worker:worker_job_params",
         "//src/com/facebook/buck/worker:worker_pool_factory",
         "//src/com/facebook/buck/worker:worker_process",

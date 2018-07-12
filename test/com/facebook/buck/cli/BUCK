@@ -385,6 +385,7 @@ java_test(
         "//src/com/facebook/buck/shell:worker_tool",
         "//src/com/facebook/buck/slb:slb",
         "//src/com/facebook/buck/step:step",
+        "//src/com/facebook/buck/support/cli/args:args",
         "//src/com/facebook/buck/swift:swift",
         "//src/com/facebook/buck/test:config",
         "//src/com/facebook/buck/test:test",

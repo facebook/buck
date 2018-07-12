@@ -39,6 +39,7 @@ import com.facebook.buck.rules.keys.RuleKeyCacheScope;
 import com.facebook.buck.rules.keys.TrackedRuleKeyCache;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.ExecutorPool;
+import com.facebook.buck.support.cli.args.GlobalCliOptions;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.cache.InstrumentingCacheStatsTracker;
@@ -71,37 +72,9 @@ import java.util.concurrent.ScheduledExecutorService;
 import javax.annotation.Nullable;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
-import org.kohsuke.args4j.NamedOptionDef;
 import org.kohsuke.args4j.Option;
-import org.kohsuke.args4j.OptionDef;
-import org.kohsuke.args4j.spi.OptionHandler;
 
 public abstract class AbstractCommand implements Command {
-
-  private static final String HELP_LONG_ARG = "--help";
-  private static final String NO_CACHE_LONG_ARG = "--no-cache";
-  private static final String OUTPUT_TEST_EVENTS_TO_FILE_LONG_ARG = "--output-test-events-to-file";
-  private static final String PROFILE_PARSER_LONG_ARG = "--profile-buck-parser";
-  private static final String NUM_THREADS_LONG_ARG = "--num-threads";
-  private static final String CONFIG_LONG_ARG = "--config";
-  private static final String SKYLARK_PROFILE_LONG_ARG = "--skylark-profile-output";
-
-  /**
-   * Contains all options defined in this class. These options are considered global since they are
-   * known to all commands that inherit from this class.
-   *
-   * <p>The main purpose of having this list is to provide more structured help.
-   */
-  private static final ImmutableSet<String> GLOBAL_OPTIONS =
-      ImmutableSet.of(
-          HELP_LONG_ARG,
-          NO_CACHE_LONG_ARG,
-          OUTPUT_TEST_EVENTS_TO_FILE_LONG_ARG,
-          PROFILE_PARSER_LONG_ARG,
-          NUM_THREADS_LONG_ARG,
-          CONFIG_LONG_ARG,
-          VerbosityParser.VERBOSE_LONG_ARG,
-          SKYLARK_PROFILE_LONG_ARG);
 
   /**
    * This value should never be read. {@link VerbosityParser} should be used instead. args4j
@@ -109,27 +82,30 @@ public abstract class AbstractCommand implements Command {
    * field so that {@code --verbose} is universally available to all commands.
    */
   @Option(
-      name = VerbosityParser.VERBOSE_LONG_ARG,
-      aliases = {VerbosityParser.VERBOSE_SHORT_ARG},
+      name = GlobalCliOptions.VERBOSE_LONG_ARG,
+      aliases = {GlobalCliOptions.VERBOSE_SHORT_ARG},
       usage = "Specify a number between 0 and 8. '-v 1' is default, '-v 8' is most verbose.")
   @SuppressWarnings("PMD.UnusedPrivateField")
   private int verbosityLevel = -1;
 
   private volatile ExecutionContext executionContext;
 
-  @Option(name = NUM_THREADS_LONG_ARG, aliases = "-j", usage = "Default is 1.25 * num processors.")
+  @Option(
+      name = GlobalCliOptions.NUM_THREADS_LONG_ARG,
+      aliases = "-j",
+      usage = "Default is 1.25 * num processors.")
   @Nullable
   private Integer numThreads = null;
 
   @Option(
-      name = CONFIG_LONG_ARG,
+      name = GlobalCliOptions.CONFIG_LONG_ARG,
       aliases = {"-c"},
       usage = "Override .buckconfig option",
       metaVar = "section.option=value")
   private Map<String, String> configOverrides = new LinkedHashMap<>();
 
   @Option(
-      name = SKYLARK_PROFILE_LONG_ARG,
+      name = GlobalCliOptions.SKYLARK_PROFILE_LONG_ARG,
       usage =
           "Experimental. Path to a file where Skylark profile information should be written into."
               + " The output is in Chrome Tracing format and can be viewed in chrome://tracing tab",
@@ -201,13 +177,13 @@ public abstract class AbstractCommand implements Command {
   }
 
   @Option(
-      name = NO_CACHE_LONG_ARG,
+      name = GlobalCliOptions.NO_CACHE_LONG_ARG,
       usage = "Whether to ignore the remote & local cache declared in .buckconfig.")
   private boolean noCache = false;
 
   @Nullable
   @Option(
-      name = OUTPUT_TEST_EVENTS_TO_FILE_LONG_ARG,
+      name = GlobalCliOptions.OUTPUT_TEST_EVENTS_TO_FILE_LONG_ARG,
       aliases = {"--output-events-to-file"},
       usage =
           "Serialize test-related event-bus events to the given file "
@@ -215,13 +191,13 @@ public abstract class AbstractCommand implements Command {
   private String eventsOutputPath = null;
 
   @Option(
-      name = PROFILE_PARSER_LONG_ARG,
+      name = GlobalCliOptions.PROFILE_PARSER_LONG_ARG,
       usage =
           "Enable profiling of buck.py internals (not the target being compiled) in the debug"
               + "log and trace.")
   private boolean enableParserProfiling = false;
 
-  @Option(name = HELP_LONG_ARG, usage = "Prints the available options and exits.")
+  @Option(name = GlobalCliOptions.HELP_LONG_ARG, usage = "Prints the available options and exits.")
   private boolean help = false;
 
   /** @return {code true} if the {@code [cache]} in {@code .buckconfig} should be ignored. */
@@ -260,24 +236,15 @@ public abstract class AbstractCommand implements Command {
     CmdLineParser parser = new AdditionalOptionsCmdLineParser(this);
 
     stream.println("Global options:");
-    parser.printUsage(new OutputStreamWriter(stream), null, AbstractCommand::isGlobalOption);
+    parser.printUsage(new OutputStreamWriter(stream), null, GlobalCliOptions::isGlobalOption);
     stream.println();
 
     stream.println("Options:");
     parser.printUsage(
         new OutputStreamWriter(stream),
         null,
-        optionHandler -> !AbstractCommand.isGlobalOption(optionHandler));
+        optionHandler -> !GlobalCliOptions.isGlobalOption(optionHandler));
     stream.println();
-  }
-
-  private static boolean isGlobalOption(OptionHandler<?> optionHandler) {
-    OptionDef option = optionHandler.option;
-    if (option instanceof NamedOptionDef) {
-      NamedOptionDef namedOption = (NamedOptionDef) option;
-      return GLOBAL_OPTIONS.contains(namedOption.name());
-    }
-    return false;
   }
 
   @Override
