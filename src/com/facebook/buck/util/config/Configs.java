@@ -55,6 +55,7 @@ public final class Configs {
    *   <li>Files (in lexicographical order) in {@code /etc/buckconfig.d}
    *   <li>{@code <HOME>/.buckconfig}
    *   <li>Files (in lexicographical order) in {@code <HOME>/buckconfig.d}
+   *   <li>Files (in lexicographical order) in {@code <PROJECT ROOT >/buckconfig.d}
    *   <li>{@code <PROJECT ROOT>/.buckconfig}
    *   <li>{@code <PROJECT ROOT>/.buckconfig.local}
    *   <li>Any overrides (usually from the command line)
@@ -121,6 +122,10 @@ public final class Configs {
     Path homeDirectory = Paths.get(System.getProperty("user.home"));
     Path userConfigDir = homeDirectory.resolve(DEFAULT_BUCK_CONFIG_DIRECTORY_NAME);
     configFileBuilder.addAll(listFiles(userConfigDir));
+
+    Path projectConfigDir = root.resolve(DEFAULT_BUCK_CONFIG_DIRECTORY_NAME);
+    configFileBuilder.addAll(listFiles(projectConfigDir));
+
     Path userConfigFile = homeDirectory.resolve(DEFAULT_BUCK_CONFIG_FILE_NAME);
     if (Files.isRegularFile(userConfigFile)) {
       configFileBuilder.add(userConfigFile);
