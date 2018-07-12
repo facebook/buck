@@ -249,7 +249,7 @@ public class CleanCommandTest {
 
   private CleanCommand createCommandFromArgs(String... args) throws CmdLineException {
     CleanCommand command = new CleanCommand();
-    new AdditionalOptionsCmdLineParser(command).parseArgument(args);
+    CmdLineParserFactory.create(command).parseArgument(args);
     return command;
   }
 

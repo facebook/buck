@@ -42,7 +42,7 @@ public class TestCommandTest {
 
   private TestCommand getCommand(String... args) throws CmdLineException {
     TestCommand command = new TestCommand();
-    new AdditionalOptionsCmdLineParser(command).parseArgument(args);
+    CmdLineParserFactory.create(command).parseArgument(args);
     return command;
   }
 
@@ -231,7 +231,7 @@ public class TestCommandTest {
     assertThat(config.getDefaultRawExcludedLabelSelectors(), contains("e2e"));
     TestCommand command = new TestCommand();
 
-    new AdditionalOptionsCmdLineParser(command).parseArgument();
+    CmdLineParserFactory.create(command).parseArgument();
 
     assertFalse(command.isMatchedByLabelOptions(config, ImmutableSet.of("e2e")));
   }
@@ -246,7 +246,7 @@ public class TestCommandTest {
     assertThat(config.getDefaultRawExcludedLabelSelectors(), contains("e2e"));
     TestCommand command = new TestCommand();
 
-    new AdditionalOptionsCmdLineParser(command).parseArgument("--include", "e2e");
+    CmdLineParserFactory.create(command).parseArgument("--include", "e2e");
 
     assertTrue(command.isMatchedByLabelOptions(config, ImmutableSet.of("e2e")));
   }
@@ -261,7 +261,7 @@ public class TestCommandTest {
     assertThat(config.getDefaultRawExcludedLabelSelectors(), contains(excludedLabel));
     TestCommand command = new TestCommand();
 
-    new AdditionalOptionsCmdLineParser(command).parseArgument("//example:test");
+    CmdLineParserFactory.create(command).parseArgument("//example:test");
 
     FakeTestRule rule =
         new FakeTestRule(

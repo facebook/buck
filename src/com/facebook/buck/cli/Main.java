@@ -578,10 +578,17 @@ public final class Main {
     ImmutableList<String> args =
         BuckArgsMethods.expandAtFiles(unexpandedCommandLineArgs, rootCellMapping);
 
+    if (moduleManager == null) {
+      pluginManager = BuckPluginManagerFactory.createPluginManager();
+      moduleManager = new DefaultBuckModuleManager(pluginManager, new BuckModuleJarHashProvider());
+    }
+
     // Parse command line arguments
     BuckCommand command = new BuckCommand();
+    command.setPluginManager(pluginManager);
     // Parse the command line args.
-    AdditionalOptionsCmdLineParser cmdLineParser = new AdditionalOptionsCmdLineParser(command);
+    AdditionalOptionsCmdLineParser cmdLineParser =
+        new AdditionalOptionsCmdLineParser(pluginManager, command);
     try {
       cmdLineParser.parseArgument(args);
     } catch (CmdLineException e) {
@@ -602,12 +609,6 @@ public final class Main {
       if (!command.isReadOnly() && semaphore == null) {
         LOG.warn("Buck server was busy executing a command. Maybe retrying later will help.");
         return ExitCode.BUSY;
-      }
-
-      if (moduleManager == null) {
-        pluginManager = BuckPluginManagerFactory.createPluginManager();
-        moduleManager =
-            new DefaultBuckModuleManager(pluginManager, new BuckModuleJarHashProvider());
       }
 
       // statically configure Buck logging environment based on Buck config, usually buck-x.log

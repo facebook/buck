@@ -748,7 +748,7 @@ public class TestCommand extends BuildCommand {
     stream.println();
 
     stream.println("Options:");
-    new AdditionalOptionsCmdLineParser(this).printUsage(stream);
+    new AdditionalOptionsCmdLineParser(getPluginManager(), this).printUsage(stream);
     stream.println();
   }
 

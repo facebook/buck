@@ -58,7 +58,7 @@ public class BuildCommandOptionsTest {
   public void testCommandLineOptionOverridesOtherBuildThreadSettings() throws CmdLineException {
     BuildCommand command = new BuildCommand();
 
-    AdditionalOptionsCmdLineParser parser = new AdditionalOptionsCmdLineParser(command);
+    AdditionalOptionsCmdLineParser parser = CmdLineParserFactory.create(command);
     parser.parseArgument("--num-threads", "42");
 
     BuckConfig buckConfig =

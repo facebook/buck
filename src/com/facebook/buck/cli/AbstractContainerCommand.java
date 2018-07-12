@@ -34,7 +34,7 @@ import org.kohsuke.args4j.Option;
 import org.kohsuke.args4j.spi.SubCommand;
 import org.kohsuke.args4j.spi.SubCommands;
 
-public abstract class AbstractContainerCommand implements Command {
+public abstract class AbstractContainerCommand extends CommandWithPluginManager {
 
   @Option(
       name = "--help",
@@ -127,7 +127,7 @@ public abstract class AbstractContainerCommand implements Command {
     stream.println();
 
     stream.println("Options:");
-    new AdditionalOptionsCmdLineParser(this).printUsage(stream);
+    new AdditionalOptionsCmdLineParser(getPluginManager(), this).printUsage(stream);
     stream.println();
   }
 

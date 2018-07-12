@@ -41,7 +41,7 @@ public class InstallCommandOptionsTest {
 
   private InstallCommand getCommand(String... args) throws CmdLineException {
     InstallCommand command = new InstallCommand();
-    new AdditionalOptionsCmdLineParser(command).parseArgument(args);
+    CmdLineParserFactory.create(command).parseArgument(args);
     return command;
   }
 

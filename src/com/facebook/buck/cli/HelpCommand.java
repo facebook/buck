@@ -52,7 +52,8 @@ public class HelpCommand extends AbstractCommand {
    */
   public ExitCode run(PrintStream stream) {
     BuckCommand command = new BuckCommand();
-    AdditionalOptionsCmdLineParser cmdLineParser = new AdditionalOptionsCmdLineParser(command);
+    AdditionalOptionsCmdLineParser cmdLineParser =
+        new AdditionalOptionsCmdLineParser(getPluginManager(), command);
     try {
       cmdLineParser.parseArgument(arguments);
     } catch (CmdLineException e) {

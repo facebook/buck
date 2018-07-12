@@ -32,20 +32,23 @@ import org.kohsuke.args4j.spi.Setter;
 import org.kohsuke.args4j.spi.SubCommand;
 import org.kohsuke.args4j.spi.SubCommandHandler;
 import org.kohsuke.args4j.spi.SubCommands;
+import org.pf4j.PluginManager;
 
 public class AdditionalOptionsSubCommandHandler extends SubCommandHandler {
 
+  private final PluginManager pluginManager;
   private final Setter<Object> cachedSetter;
 
   public AdditionalOptionsSubCommandHandler(
       CmdLineParser parser, OptionDef option, Setter<Object> setter) {
     super(parser, option, setter);
+    this.pluginManager = ((AdditionalOptionsCmdLineParser) parser).getPluginManager();
     this.cachedSetter = setter;
   }
 
   @Override
   protected CmdLineParser configureParser(Object subCmd, SubCommand c) {
-    return new AdditionalOptionsCmdLineParser(subCmd);
+    return new AdditionalOptionsCmdLineParser(pluginManager, subCmd);
   }
 
   @Override
@@ -70,7 +73,9 @@ public class AdditionalOptionsSubCommandHandler extends SubCommandHandler {
     }
     if (c != null) {
       try {
-        cachedSetter.addValue(subCommand(c, params));
+        Command command = (Command) subCommand(c, params);
+        command.setPluginManager(pluginManager);
+        cachedSetter.addValue(command);
       } catch (CmdLineException e) {
         Object subCmdObj = instantiate(c);
         if (subCmdObj instanceof AbstractCommand) {

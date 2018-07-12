@@ -147,6 +147,7 @@ java_immutables_library(
         "//src/com/facebook/buck/slb:slb",
         "//src/com/facebook/buck/step/fs:fs",
         "//src/com/facebook/buck/step:step",
+        "//src/com/facebook/buck/support/cli/args:args",
         "//src/com/facebook/buck/core/test/event:event",
         "//src/com/facebook/buck/core/test/rule:rule",
         "//src/com/facebook/buck/swift:swift",

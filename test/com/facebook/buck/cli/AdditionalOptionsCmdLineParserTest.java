@@ -77,17 +77,17 @@ public class AdditionalOptionsCmdLineParserTest {
   @Before
   public void setUp() {
     options = new RootOptions();
-    parser = new AdditionalOptionsCmdLineParser(options);
+    parser = CmdLineParserFactory.create(options);
   }
 
   @Test(expected = IllegalAnnotationError.class)
   public void testDuplicateAdditionalOptionsClass() {
-    new AdditionalOptionsCmdLineParser(new DuplicateOptions());
+    CmdLineParserFactory.create(new DuplicateOptions());
   }
 
   @Test(expected = IllegalAnnotationError.class)
   public void testRecursiveAdditionalOptions() {
-    new AdditionalOptionsCmdLineParser(new InfiniteOptions());
+    CmdLineParserFactory.create(new InfiniteOptions());
   }
 
   @Test

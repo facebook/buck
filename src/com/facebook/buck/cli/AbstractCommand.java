@@ -74,7 +74,7 @@ import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 
-public abstract class AbstractCommand implements Command {
+public abstract class AbstractCommand extends CommandWithPluginManager {
 
   /**
    * This value should never be read. {@link VerbosityParser} should be used instead. args4j
@@ -233,7 +233,7 @@ public abstract class AbstractCommand implements Command {
   @Override
   public void printUsage(PrintStream stream) {
     CommandHelper.printShortDescription(this, stream);
-    CmdLineParser parser = new AdditionalOptionsCmdLineParser(this);
+    CmdLineParser parser = new AdditionalOptionsCmdLineParser(getPluginManager(), this);
 
     stream.println("Global options:");
     parser.printUsage(new OutputStreamWriter(stream), null, GlobalCliOptions::isGlobalOption);

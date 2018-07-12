@@ -27,6 +27,7 @@ import java.io.PrintStream;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ScheduledExecutorService;
+import org.pf4j.PluginManager;
 
 public interface Command {
 
@@ -66,4 +67,8 @@ public interface Command {
   void printUsage(PrintStream stream);
 
   boolean performsBuild();
+
+  void setPluginManager(PluginManager pluginManager);
+
+  PluginManager getPluginManager();
 }
