@@ -17,9 +17,23 @@
  * @param description The description of this setting.
  * @param? example_value An example value for this setting.
  * @param? raw_example Raw HTML to show the example.
+ * @param? deprecated Whether this setting has been deprecated
+ * @param? deprecationAlternative An alternative to use rather than this deprecated setting. Can also include a link to the github deprecation announcement.
+ * @param? preliminary Whether or not this setting is preliminary
  */
 {template .entry}
   <h3 id="{$section}.{$name}">{$name} <a class="inline-link" href="#{$section}.{$name}">#</a></h3>
+  {if $deprecated}
+  <p class="warning-banner">
+  This setting is deprecated. {if isNonnull($deprecationAlternative)}{$deprecationAlternative|noAutoescape}{/if}
+  </p>
+  {/if}
+  {if $preliminary}
+  <p class="warning-banner">
+  This setting is preliminary and is likely to change.
+  </p>
+  {/if}
+
   <p>
     {$description|noAutoescape}
   </p>
