@@ -16,7 +16,11 @@
 
 package com.facebook.buck.cli.parameter_extractors;
 
+import com.facebook.buck.cli.output.Mode;
+import com.facebook.buck.parser.TargetNodeSpec;
 import com.facebook.buck.util.Verbosity;
+import com.google.common.collect.ImmutableList;
+import java.util.function.Function;
 
 /** Command line switches for project generation */
 public interface ProjectGeneratorParameters extends CommandRunnerParameters {
@@ -35,4 +39,10 @@ public interface ProjectGeneratorParameters extends CommandRunnerParameters {
   boolean isUpdateOnly();
 
   Verbosity getVerbosity();
+
+  boolean getEnableParserProfiling();
+
+  Function<Iterable<String>, ImmutableList<TargetNodeSpec>> getArgsParser();
+
+  Mode getOutputMode();
 }

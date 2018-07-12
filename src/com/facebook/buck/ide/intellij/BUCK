@@ -1,6 +1,6 @@
-load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
+load("//tools/build_rules:java_rules.bzl", "java_library_with_plugins")
 
-java_immutables_library(
+java_library_with_plugins(
     name = "intellij",
     srcs = glob(["**/*.java"]),
     resources = glob(["templates/*.st"]),
@@ -8,12 +8,13 @@ java_immutables_library(
         "//test/com/facebook/buck/ide/intellij:intellij",
     ],
     visibility = [
-        "//src/com/facebook/buck/cli:cli",
+        "//src/com/facebook/buck/cli:main",
         "//test/...",
     ],
     deps = [
         "//src/com/facebook/buck/android:rules",
         "//src/com/facebook/buck/artifact_cache/config:config",
+        "//src/com/facebook/buck/cli:cli",
         "//src/com/facebook/buck/cli/parameter_extractors:parameter_extractors",
         "//src/com/facebook/buck/config:config",
         "//src/com/facebook/buck/config/resources:resources",
@@ -53,6 +54,7 @@ java_immutables_library(
         "//src/com/facebook/buck/util/sha1:sha1",
         "//src/com/facebook/buck/util/xml:xml",
         "//src/com/facebook/buck/versions:versions",
+        "//third-party/java/args4j:args4j",
         "//third-party/java/infer-annotations:infer-annotations",
         "//third-party/java/stringtemplate:stringtemplate",
     ],

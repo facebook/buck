@@ -25,7 +25,7 @@ import java.nio.file.Path;
 
 class CommandRunnerParametersImplementation implements CommandRunnerParameters {
 
-  private final CommandRunnerParams parameters;
+  protected final CommandRunnerParams parameters;
 
   protected CommandRunnerParametersImplementation(CommandRunnerParams parameters) {
     this.parameters = parameters;
