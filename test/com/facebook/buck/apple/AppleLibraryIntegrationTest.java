@@ -24,11 +24,13 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
+import com.facebook.buck.apple.AppleLibraryDescription.Type;
 import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxStrip;
+import com.facebook.buck.cxx.toolchain.CxxFlavorSanitizer;
 import com.facebook.buck.cxx.toolchain.HeaderMode;
 import com.facebook.buck.cxx.toolchain.StripStyle;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -38,10 +40,12 @@ import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
+import com.facebook.buck.testutil.integration.BuckBuildLog;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.Platform;
+import com.sun.tools.javac.util.List;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -931,6 +935,58 @@ public class AppleLibraryIntegrationTest {
             .withAppendedFlavors(CxxDescriptionEnhancer.SHARED_FLAVOR);
     ProcessResult result = workspace.runBuckCommand("build", dylibTarget.getFullyQualifiedName());
     result.assertSuccess();
+  }
+
+  @Test
+  public void testSplitSwiftModuleGeneration() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "apple_library_split_swift_module_generation", tmp);
+    workspace.setUp();
+    workspace.addBuckConfigLocalOption("apple", "use_swift_delegate", "false");
+    workspace.addBuckConfigLocalOption("swift", "split_swift_module_generation", "true");
+
+    BuildTarget swiftCompileTarget =
+        workspace.newBuildTarget("//:App#macosx-x86_64");
+    ProcessResult result =
+        workspace.runBuckCommand("build", swiftCompileTarget.getFullyQualifiedName());
+    result.assertSuccess();
+
+    // Verify the swiftmodule file was generated
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
+    BuildTarget swiftModuleTarget =
+        workspace
+            .newBuildTarget("//:Foo#macosx-x86_64")
+            .withAppendedFlavors(Type.SWIFT_MODULE.getFlavor());
+    String swiftModulePathFormat = "%s/" + String.format("%s.swiftmodule", "Foo");
+    Path moduleOutput =
+        workspace.getPath(
+            BuildTargets.getGenPath(filesystem, swiftModuleTarget, swiftModulePathFormat));
+    assertTrue(Files.exists(moduleOutput));
+
+    // Verify that bitcode files were generated for each source file
+    Path bitcodeFile1 = moduleOutput.getParent().resolve("Foo1.swift.bc");
+    Path bitcodeFile2 = moduleOutput.getParent().resolve("Foo2.swift.bc");
+    assertTrue(Files.exists(bitcodeFile1));
+    assertTrue(Files.exists(bitcodeFile2));
+
+    // Verify separate object files for each bitcode input
+    List<String> objectFileNames = List.of("Foo1.swift", "Foo2.swift");
+    for (String name : objectFileNames) {
+      BuildTarget objectTarget = workspace
+          .newBuildTarget("//:Foo#macosx-x86_64")
+          .withAppendedFlavors(
+              InternalFlavor.of(
+                  String.format("bc-compile-%s",
+                      CxxFlavorSanitizer.sanitize(name + ".o"))));
+      Path objectFileOutput = workspace.getPath(
+          BuildTargets.getGenPath(filesystem, objectTarget, "%s/" + name + ".o"));
+      assertTrue(Files.exists(objectFileOutput));
+    }
   }
 
   private static void assertIsSymbolicLink(Path link, Path target) throws IOException {
