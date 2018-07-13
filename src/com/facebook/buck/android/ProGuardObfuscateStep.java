@@ -136,6 +136,7 @@ public final class ProGuardObfuscateStep extends ShellStep {
       buildableContext.recordArtifact(commandLineHelperStep.getConfigurationTxt());
       buildableContext.recordArtifact(commandLineHelperStep.getMappingTxt());
       buildableContext.recordArtifact(commandLineHelperStep.getSeedsTxt());
+      buildableContext.recordArtifact(commandLineHelperStep.getUsageTxt());
 
       steps.add(
           commandLineHelperStep,
@@ -375,6 +376,7 @@ public final class ProGuardObfuscateStep extends ShellStep {
       args.add("-printmapping").add(getMappingTxt().toString());
       args.add("-printconfiguration").add(getConfigurationTxt().toString());
       args.add("-printseeds").add(getSeedsTxt().toString());
+      args.add("-printusage").add(getUsageTxt().toString());
 
       return args.build();
     }
@@ -389,6 +391,10 @@ public final class ProGuardObfuscateStep extends ShellStep {
 
     public Path getSeedsTxt() {
       return proguardDirectory.resolve("seeds.txt");
+    }
+
+    public Path getUsageTxt() {
+      return proguardDirectory.resolve("usage.txt");
     }
 
     @Override
