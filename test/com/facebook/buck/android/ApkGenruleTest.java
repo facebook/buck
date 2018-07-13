@@ -101,7 +101,7 @@ public class ApkGenruleTest {
   @Test
   @SuppressWarnings("PMD.AvoidUsingHardCodedIP")
   public void testCreateAndRunApkGenrule() throws IOException, NoSuchBuildTargetException {
-    ProjectFilesystem projectFilesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
+    ProjectFilesystem projectFilesystem = FakeProjectFilesystem.createRealTempFilesystem();
     FileSystem fileSystem = projectFilesystem.getRootPath().getFileSystem();
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     createSampleAndroidBinaryRule(graphBuilder, projectFilesystem);
