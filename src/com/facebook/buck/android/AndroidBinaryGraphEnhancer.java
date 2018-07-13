@@ -561,6 +561,11 @@ public class AndroidBinaryGraphEnhancer {
               false);
       graphBuilder.addToIndex(prebuiltJar);
 
+      // For the primary dex, don't scale our weight estimate.  Just try to fit it and hope for
+      // the best.  For secondary dexes, scale the estimate by a factor of 8 because R.java
+      // classes are relatively small but consume a lot of field-id space.  The constant value
+      // 8 was determined empirically and unscientifically.
+      int weightFactor = rtype.equals("_primarydex") ? 1 : 8;
       DexProducedFromJavaLibrary dexJar =
           new DexProducedFromJavaLibrary(
               splitJarTarget.withAppendedFlavors(dexFlavor, rtypeFlavor, getDexFlavor(dexTool)),
@@ -568,7 +573,8 @@ public class AndroidBinaryGraphEnhancer {
               androidPlatformTarget,
               buildRuleParams.withDeclaredDeps(ImmutableSortedSet.of(prebuiltJar)),
               prebuiltJar,
-              dexTool);
+              dexTool,
+              weightFactor);
       graphBuilder.addToIndex(dexJar);
       builder.add(dexJar);
     }
