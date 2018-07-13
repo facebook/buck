@@ -17,7 +17,6 @@
       <excludeFolder url="file://$MODULE_DIR$/buck-out" />
       <excludeFolder url="file://$MODULE_DIR$/build" />
       <excludeFolder url="file://$MODULE_DIR$/src/com/facebook/buck/android/support" />
-      <excludeFolder url="file://$MODULE_DIR$/src/com/facebook/buck/intellij" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/android/agent/util/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/android/exopackage/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/android/testdata" />
@@ -38,6 +37,7 @@
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/dotnet/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/event/listener/integration/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/features/gwt/testdata/gwt_binary" />
+      <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/features/project/intellij/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/features/zip/rules/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/go/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/go/testdata/go_test/testdata" />
