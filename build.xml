@@ -507,6 +507,7 @@
           <exclude name="com/facebook/buck/cli/bootstrapper/**" />
           <exclude name="com/facebook/buck/event/api/**" />
           <exclude name="com/facebook/buck/features/**" />
+          <exclude name="com/facebook/buck/ide/intellij/**" />
           <exclude name="com/facebook/buck/jvm/java/abi/source/**" />
           <exclude name="com/facebook/buck/jvm/java/lang/model/**" />
           <exclude name="com/facebook/buck/jvm/java/plugin/adapter/**" />
@@ -544,6 +545,7 @@
                                         build-module-go,
                                         build-module-gwt,
                                         build-module-haskell,
+                                        build-module-intellij,
                                         build-module-lua,
                                         build-module-ocaml,
                                         build-module-python,
@@ -611,6 +613,17 @@
         <include name="com/facebook/buck/features/haskell/**/*.java" />
       </module-javac-params>
     </build-buck-module-jar>
+  </target>
+
+  <target name="build-module-intellij" depends="compile">
+    <build-buck-module-jar-with-resources module-name="intellij">
+      <module-javac-params>
+        <include name="com/facebook/buck/ide/intellij/**/*.java" />
+      </module-javac-params>
+      <module-resources>
+        <include name="com/facebook/buck/ide/intellij/templates/*.st"/>
+      </module-resources>
+    </build-buck-module-jar-with-resources>
   </target>
 
   <target name="build-module-lua" depends="compile, build-module-python">
@@ -743,7 +756,6 @@
         <include name="com/facebook/buck/apple/project_generator/*.st"/>
         <include name="com/facebook/buck/httpserver/*.stg"/>
         <include name="com/facebook/buck/httpserver/resources/static/*"/>
-        <include name="com/facebook/buck/ide/intellij/templates/*"/>
         <include name="com/facebook/buck/maven/build-file.st"/>
         <include name="com/facebook/buck/python/*.py"/>
         <include name="com/facebook/buck/python/run_inplace.py.in"/>

@@ -1,17 +1,9 @@
-load("//tools/build_rules:java_rules.bzl", "java_library_with_plugins")
+load("//tools/build_rules:module_rules.bzl", "buck_module")
 
-java_library_with_plugins(
+buck_module(
     name = "intellij",
     srcs = glob(["**/*.java"]),
-    resources = glob(["templates/*.st"]),
-    tests = [
-        "//test/com/facebook/buck/ide/intellij:intellij",
-    ],
-    visibility = [
-        "//src/com/facebook/buck/cli:main",
-        "//test/...",
-    ],
-    deps = [
+    provided_deps = [
         "//src/com/facebook/buck/android:rules",
         "//src/com/facebook/buck/artifact_cache/config:config",
         "//src/com/facebook/buck/cli:cli",
@@ -57,5 +49,12 @@ java_library_with_plugins(
         "//third-party/java/args4j:args4j",
         "//third-party/java/infer-annotations:infer-annotations",
         "//third-party/java/stringtemplate:stringtemplate",
+    ],
+    resources = glob(["templates/*.st"]),
+    tests = [
+        "//test/com/facebook/buck/ide/intellij:intellij",
+    ],
+    visibility = [
+        "//test/...",
     ],
 )
