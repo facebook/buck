@@ -18,4 +18,9 @@ setup(
         "Programming Language :: Python :: 2",
         "Programming Language :: Python :: 3",
     ],
+    data_files=[
+        ("lib", ["lib/__init__.py"]),
+        ("lib/foo", ["lib/foo/bar.py", "lib/foo/__init__.py"]),
+        ("lib/foobar", ["lib/foobar/baz.py", "lib/foobar/__init__.py"]),
+    ],
 )

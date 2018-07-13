@@ -99,6 +99,7 @@ public class PrebuiltPythonLibrary extends AbstractBuildRuleWithDeclaredAndExtra
             context.getSourcePathResolver().getAbsolutePath(binarySrc),
             extractedOutput,
             Optional.empty()));
+    builder.add(new MovePythonWhlDataStep(getProjectFilesystem(), extractedOutput));
     return builder.build();
   }
 
