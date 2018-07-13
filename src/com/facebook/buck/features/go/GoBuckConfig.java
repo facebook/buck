@@ -29,10 +29,6 @@ import java.util.Optional;
 public class GoBuckConfig {
 
   static final String SECTION = "go";
-  private static final String PACKAGE_PREFIX = "prefix";
-  private static final String VENDOR_PATH = "vendor_path";
-  private static final String TEST_MAIN_GEN = "test_main_gen";
-  private static final String GOPATH_SYMLINKTREE = "gopath_symlinktree";
 
   private final BuckConfig delegate;
 
@@ -49,13 +45,13 @@ public class GoBuckConfig {
   }
 
   Path getDefaultPackageName(BuildTarget target) {
-    Path prefix = Paths.get(delegate.getValue(SECTION, PACKAGE_PREFIX).orElse(""));
+    Path prefix = Paths.get(delegate.getValue(SECTION, "prefix").orElse(""));
     return prefix.resolve(target.getBasePath());
   }
 
   ImmutableList<Path> getVendorPaths() {
     Optional<ImmutableList<String>> vendorPaths =
-        delegate.getOptionalListWithoutComments(SECTION, VENDOR_PATH, ':');
+        delegate.getOptionalListWithoutComments(SECTION, "vendor_path", ':');
 
     if (vendorPaths.isPresent()) {
       return vendorPaths.get().stream().map(Paths::get).collect(ImmutableList.toImmutableList());
@@ -63,11 +59,7 @@ public class GoBuckConfig {
     return ImmutableList.of();
   }
 
-  boolean getGenGopathSymlinkTree() {
-    return delegate.getBoolean(SECTION, GOPATH_SYMLINKTREE).orElse(false);
-  }
-
   Optional<Tool> getGoTestMainGenerator(BuildRuleResolver resolver) {
-    return delegate.getView(ToolConfig.class).getTool(SECTION, TEST_MAIN_GEN, resolver);
+    return delegate.getView(ToolConfig.class).getTool(SECTION, "test_main_gen", resolver);
   }
 }
