@@ -25,6 +25,7 @@ import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.attr.SupportsInputBasedRuleKey;
 import com.facebook.buck.core.rules.impl.AbstractBuildRule;
+import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
@@ -209,7 +210,7 @@ public class ModernBuildRule<T extends Buildable> extends AbstractBuildRule
   /**
    * This should only be exposed to implementations of the ModernBuildRule, not of the Buildable.
    */
-  protected final SourcePath getSourcePath(OutputPath outputPath) {
+  protected final BuildTargetSourcePath getSourcePath(OutputPath outputPath) {
     // TODO(cjhopman): enforce that the outputPath is actually from this target somehow.
     return ExplicitBuildTargetSourcePath.of(
         getBuildTarget(), outputPathResolver.resolvePath(outputPath));
