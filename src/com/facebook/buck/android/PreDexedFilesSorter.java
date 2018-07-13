@@ -50,13 +50,11 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 
 /** Responsible for bucketing pre-dexed objects into primary and secondary dex files. */
 public class PreDexedFilesSorter {
 
-  private final Optional<DexWithClasses> rDotJavaDex;
   private final ImmutableMultimap<APKModule, DexWithClasses> dexFilesToMerge;
   private final ClassNameFilter primaryDexFilter;
   private final APKModuleGraph apkModuleGraph;
@@ -72,7 +70,6 @@ public class PreDexedFilesSorter {
   private final Path scratchDirectory;
 
   public PreDexedFilesSorter(
-      Optional<DexWithClasses> rDotJavaDex,
       ImmutableMultimap<APKModule, DexWithClasses> dexFilesToMerge,
       ImmutableSet<String> primaryDexPatterns,
       APKModuleGraph apkModuleGraph,
@@ -81,7 +78,6 @@ public class PreDexedFilesSorter {
       DexStore dexStore,
       Path secondaryDexJarFilesDir,
       Path additionalDexJarFilesDir) {
-    this.rDotJavaDex = rDotJavaDex;
     this.dexFilesToMerge = dexFilesToMerge;
     this.primaryDexFilter = ClassNameFilter.fromConfiguration(primaryDexPatterns);
     this.apkModuleGraph = apkModuleGraph;
@@ -99,11 +95,6 @@ public class PreDexedFilesSorter {
     DexStoreContents rootStoreContents =
         new DexStoreContents(apkModuleGraph.getRootAPKModule(), filesystem, steps);
     apkModuleDexesContents.put(apkModuleGraph.getRootAPKModule(), rootStoreContents);
-
-    // R.class files should always be in the primary dex.
-    if (rDotJavaDex.isPresent()) {
-      rootStoreContents.addPrimaryDex(rDotJavaDex.get());
-    }
 
     for (APKModule module : dexFilesToMerge.keySet()) {
       // Sort dex files so that there's a better chance of the same set of pre-dexed files to end up

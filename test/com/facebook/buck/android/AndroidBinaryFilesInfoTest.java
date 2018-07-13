@@ -33,7 +33,6 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.types.Either;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -120,7 +119,6 @@ public class AndroidBinaryFilesInfoTest {
               /* secondaryDexHeadClassesFile */ Optional.empty(),
               /* secondaryDexTailClassesFile */ Optional.empty()),
           apkModuleGraph,
-          ImmutableMultimap.of(),
           null,
           MoreExecutors.newDirectExecutorService(),
           OptionalInt.empty(),

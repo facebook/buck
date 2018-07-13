@@ -197,12 +197,27 @@ public class AndroidBinaryDescription
         args.getMinimizePrimaryDexSize()
             ? DexSplitStrategy.MINIMIZE_PRIMARY_DEX_SIZE
             : DexSplitStrategy.MAXIMIZE_PRIMARY_DEX_SIZE;
+    ImmutableList<String> primaryDexPatterns;
+    if (args.isAllowRDotJavaInSecondaryDex()) {
+      primaryDexPatterns = args.getPrimaryDexPatterns();
+    } else {
+      primaryDexPatterns =
+          ImmutableList.<String>builder()
+              .addAll(args.getPrimaryDexPatterns())
+              .add(
+                  "/R^",
+                  "/R$",
+                  // Pin this to the primary for test apps with no primary dex classes.
+                  // The exact match makes it fairly efficient.
+                  "^com/facebook/buck_generated/AppWithoutResourcesStub^")
+              .build();
+    }
     return new DexSplitMode(
         args.getUseSplitDex(),
         dexSplitStrategy,
         args.getDexCompression().orElse(defaultDexStore),
         args.getLinearAllocHardLimit(),
-        args.getPrimaryDexPatterns(),
+        primaryDexPatterns,
         args.getPrimaryDexClassesFile(),
         args.getPrimaryDexScenarioFile(),
         args.isPrimaryDexScenarioOverflowAllowed(),

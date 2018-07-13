@@ -51,7 +51,6 @@ import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.HasJavaClassHashes;
-import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.FakeJavac;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.jvm.java.JavacFactoryHelper;
@@ -222,23 +221,7 @@ public class AndroidBinaryGraphEnhancerTest {
             /* additionalJavaLibrariesToDex */
             ImmutableList.of(), collection);
 
-    BuildTarget fakeUberRDotJavaCompileTarget =
-        BuildTargetFactory.newInstance("//fake:uber_r_dot_java#compile");
-    JavaLibrary fakeUberRDotJavaCompile =
-        JavaLibraryBuilder.createBuilder(fakeUberRDotJavaCompileTarget).build(graphBuilder);
-    BuildTarget fakeUberRDotJavaDexTarget =
-        BuildTargetFactory.newInstance("//fake:uber_r_dot_java#dex");
-    DexProducedFromJavaLibrary fakeUberRDotJavaDex =
-        new DexProducedFromJavaLibrary(
-            fakeUberRDotJavaDexTarget,
-            filesystem,
-            TestAndroidPlatformTargetFactory.create(),
-            TestBuildRuleParams.create(),
-            fakeUberRDotJavaCompile);
-    graphBuilder.addToIndex(fakeUberRDotJavaDex);
-
-    BuildRule preDexMergeRule =
-        graphEnhancer.createPreDexMergeRule(preDexedLibraries, fakeUberRDotJavaDex);
+    BuildRule preDexMergeRule = graphEnhancer.createPreDexMergeRule(preDexedLibraries);
     BuildTarget dexMergeTarget =
         BuildTargetFactory.newInstance("//java/com/example:apk#dex,dex_merge");
     BuildRule dexMergeRule = graphBuilder.getRule(dexMergeTarget);
@@ -260,8 +243,7 @@ public class AndroidBinaryGraphEnhancerTest {
             Matchers.hasItem(javaDep1DexBuildTarget),
             Matchers.not(Matchers.hasItem(javaDep2BuildTarget)),
             Matchers.not(Matchers.hasItem(javaDep2DexBuildTarget)),
-            Matchers.hasItem(javaLibDexBuildTarget),
-            Matchers.hasItem(fakeUberRDotJavaDex.getBuildTarget())));
+            Matchers.hasItem(javaLibDexBuildTarget)));
   }
 
   @Test

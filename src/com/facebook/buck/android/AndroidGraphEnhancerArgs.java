@@ -111,6 +111,11 @@ public interface AndroidGraphEnhancerArgs extends HasDuplicateAndroidResourceTyp
     return false;
   }
 
+  @Value.Default
+  default boolean isAllowRDotJavaInSecondaryDex() {
+    return false;
+  }
+
   Optional<String> getKeepResourcePattern();
 
   Optional<String> getResourceUnionPackage();

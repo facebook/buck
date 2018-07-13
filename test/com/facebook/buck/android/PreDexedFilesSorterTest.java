@@ -222,7 +222,6 @@ public class PreDexedFilesSorterTest {
 
     PreDexedFilesSorter sorter =
         new PreDexedFilesSorter(
-            Optional.empty(),
             inputDexes.build(),
             ImmutableSet.of(PRIMARY_DEX_PATTERN),
             moduleGraph,
