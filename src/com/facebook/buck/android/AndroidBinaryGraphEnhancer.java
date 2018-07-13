@@ -74,6 +74,7 @@ import java.util.OptionalInt;
 import java.util.SortedSet;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import javax.annotation.Nonnull;
 
 public class AndroidBinaryGraphEnhancer {
 
@@ -400,72 +401,10 @@ public class AndroidBinaryGraphEnhancer {
       preDexedLibrariesExceptRDotJava =
           createPreDexRulesForLibraries(additionalJavaLibraries, packageableCollection);
     }
-
-    // Create rule to trim uber R.java sources.
-    Collection<DexProducedFromJavaLibrary> preDexedLibrariesForResourceIdFiltering =
-        trimResourceIds ? preDexedLibrariesExceptRDotJava.values() : ImmutableList.of();
-    BuildRuleParams paramsForTrimUberRDotJava =
-        buildRuleParams.withDeclaredDeps(
-            ImmutableSortedSet.<BuildRule>naturalOrder()
-                .addAll(
-                    ruleFinder.filterBuildRuleInputs(
-                        resourcesEnhancementResult.getRDotJavaDir().orElse(null)))
-                .addAll(preDexedLibrariesForResourceIdFiltering)
-                .build());
-    TrimUberRDotJava trimUberRDotJava =
-        new TrimUberRDotJava(
-            originalBuildTarget.withAppendedFlavors(TRIM_UBER_R_DOT_JAVA_FLAVOR),
-            projectFilesystem,
-            paramsForTrimUberRDotJava,
-            resourcesEnhancementResult.getRDotJavaDir(),
-            preDexedLibrariesForResourceIdFiltering,
-            keepResourcePattern);
-    graphBuilder.addToIndex(trimUberRDotJava);
-
-    // Create rule to compile uber R.java sources.
-    BuildRuleParams paramsForCompileUberRDotJava =
-        buildRuleParams.withDeclaredDeps(ImmutableSortedSet.of(trimUberRDotJava));
     JavaLibrary compileUberRDotJava =
-        DefaultJavaLibrary.rulesBuilder(
-                originalBuildTarget.withAppendedFlavors(COMPILE_UBER_R_DOT_JAVA_FLAVOR),
-                projectFilesystem,
-                toolchainProvider,
-                paramsForCompileUberRDotJava,
-                graphBuilder,
-                cellPathResolver,
-                new JavaConfiguredCompilerFactory(javaBuckConfig, javacFactory),
-                javaBuckConfig,
-                null)
-            .setJavacOptions(javacOptions.withSourceLevel("7").withTargetLevel("7"))
-            .setSrcs(ImmutableSortedSet.of(trimUberRDotJava.getSourcePathToOutput()))
-            .setSourceOnlyAbisAllowed(false)
-            .setDeps(
-                new JavaLibraryDeps.Builder(graphBuilder)
-                    .addAllDepTargets(
-                        paramsForCompileUberRDotJava
-                            .getDeclaredDeps()
-                            .get()
-                            .stream()
-                            .map(BuildRule::getBuildTarget)
-                            .collect(Collectors.toList()))
-                    .build())
-            .build()
-            .buildLibrary();
-    graphBuilder.addToIndex(compileUberRDotJava);
-
-    // Create rule to dex uber R.java sources.
-    BuildRuleParams paramsForDexUberRDotJava =
-        buildRuleParams.withDeclaredDeps(ImmutableSortedSet.of(compileUberRDotJava));
-    DexProducedFromJavaLibrary dexUberRDotJava =
-        new DexProducedFromJavaLibrary(
-            originalBuildTarget.withAppendedFlavors(
-                DEX_UBER_R_DOT_JAVA_FLAVOR, getDexFlavor(dexTool)),
-            projectFilesystem,
-            androidPlatformTarget,
-            paramsForDexUberRDotJava,
-            compileUberRDotJava,
-            dexTool);
-    graphBuilder.addToIndex(dexUberRDotJava);
+        createTrimAndCompileUberRDotJava(
+            resourcesEnhancementResult, preDexedLibrariesExceptRDotJava);
+    DexProducedFromJavaLibrary dexUberRDotJava = createSplitAndDexUberRDotJava(compileUberRDotJava);
 
     ImmutableMultimap<APKModule, DexProducedFromJavaLibrary> preDexedLibraries =
         ImmutableMultimap.<APKModule, DexProducedFromJavaLibrary>builder()
@@ -518,6 +457,82 @@ public class AndroidBinaryGraphEnhancer {
         .setAPKModuleGraph(apkModuleGraph)
         .setModuleResourceApkPaths(resourcesEnhancementResult.getModuleResourceApkPaths())
         .build();
+  }
+
+  private JavaLibrary createTrimAndCompileUberRDotJava(
+      AndroidBinaryResourcesGraphEnhancementResult resourcesEnhancementResult,
+      ImmutableMultimap<APKModule, DexProducedFromJavaLibrary> preDexedLibrariesExceptRDotJava) {
+    // Create rule to trim uber R.java sources.
+    Collection<DexProducedFromJavaLibrary> preDexedLibrariesForResourceIdFiltering =
+        trimResourceIds ? preDexedLibrariesExceptRDotJava.values() : ImmutableList.of();
+    BuildRuleParams paramsForTrimUberRDotJava =
+        buildRuleParams.withDeclaredDeps(
+            ImmutableSortedSet.<BuildRule>naturalOrder()
+                .addAll(
+                    ruleFinder.filterBuildRuleInputs(
+                        resourcesEnhancementResult.getRDotJavaDir().orElse(null)))
+                .addAll(preDexedLibrariesForResourceIdFiltering)
+                .build());
+    TrimUberRDotJava trimUberRDotJava =
+        new TrimUberRDotJava(
+            originalBuildTarget.withAppendedFlavors(TRIM_UBER_R_DOT_JAVA_FLAVOR),
+            projectFilesystem,
+            paramsForTrimUberRDotJava,
+            resourcesEnhancementResult.getRDotJavaDir(),
+            preDexedLibrariesForResourceIdFiltering,
+            keepResourcePattern);
+    graphBuilder.addToIndex(trimUberRDotJava);
+
+    // Create rule to compile uber R.java sources.
+    BuildRuleParams paramsForCompileUberRDotJava =
+        buildRuleParams.withDeclaredDeps(ImmutableSortedSet.of(trimUberRDotJava));
+    JavaLibrary compileUberRDotJava =
+        DefaultJavaLibrary.rulesBuilder(
+                originalBuildTarget.withAppendedFlavors(COMPILE_UBER_R_DOT_JAVA_FLAVOR),
+                projectFilesystem,
+                toolchainProvider,
+                paramsForCompileUberRDotJava,
+                graphBuilder,
+                cellPathResolver,
+                new JavaConfiguredCompilerFactory(javaBuckConfig, javacFactory),
+                javaBuckConfig,
+                null)
+            .setJavacOptions(javacOptions.withSourceLevel("7").withTargetLevel("7"))
+            .setSrcs(ImmutableSortedSet.of(trimUberRDotJava.getSourcePathToOutput()))
+            .setSourceOnlyAbisAllowed(false)
+            .setDeps(
+                new JavaLibraryDeps.Builder(graphBuilder)
+                    .addAllDepTargets(
+                        paramsForCompileUberRDotJava
+                            .getDeclaredDeps()
+                            .get()
+                            .stream()
+                            .map(BuildRule::getBuildTarget)
+                            .collect(Collectors.toList()))
+                    .build())
+            .build()
+            .buildLibrary();
+    graphBuilder.addToIndex(compileUberRDotJava);
+    return compileUberRDotJava;
+  }
+
+  @Nonnull
+  private DexProducedFromJavaLibrary createSplitAndDexUberRDotJava(
+      JavaLibrary compileUberRDotJava) {
+    // Create rule to dex uber R.java sources.
+    BuildRuleParams paramsForDexUberRDotJava =
+        buildRuleParams.withDeclaredDeps(ImmutableSortedSet.of(compileUberRDotJava));
+    DexProducedFromJavaLibrary dexUberRDotJava =
+        new DexProducedFromJavaLibrary(
+            originalBuildTarget.withAppendedFlavors(
+                DEX_UBER_R_DOT_JAVA_FLAVOR, getDexFlavor(dexTool)),
+            projectFilesystem,
+            androidPlatformTarget,
+            paramsForDexUberRDotJava,
+            compileUberRDotJava,
+            dexTool);
+    graphBuilder.addToIndex(dexUberRDotJava);
+    return dexUberRDotJava;
   }
 
   private NativeLibraryProguardGenerator createNativeLibraryProguardGenerator(
