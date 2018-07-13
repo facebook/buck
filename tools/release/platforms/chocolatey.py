@@ -105,7 +105,7 @@ def build_chocolatey(repository, release, windows_host, output_dir):
 
 def publish_chocolatey(chocolatey_file, chocolatey_api_key):
     """ Publish a nupkg to chocolatey """
-    url = "https://chocolatey.org/api/v2/package"
+    url = "https://push.chocolatey.org/api/v2/package"
     headers = {"X-NuGet-ApiKey": chocolatey_api_key}
 
     logging.info("Publishing chocolatey package at {}".format(chocolatey_file))

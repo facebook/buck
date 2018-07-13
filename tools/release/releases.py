@@ -60,7 +60,7 @@ def get_current_user(github_token, prefer_fb_email=True):
                 ret["email"] = fb_email
                 break
             else:
-                emails_url = response.links.get("next", None)
+                emails_url = response.links.get("next", {}).get("url")
     return ret
 
 
@@ -155,7 +155,7 @@ def get_all_releases(repository, github_token):
         response.raise_for_status()
         releases.extend(response.json())
         if "next" in response.links:
-            url = response.links["next"]
+            url = response.links["next"]["url"]
         else:
             url = None
     logging.info("Got {} releases".format(len(releases)))

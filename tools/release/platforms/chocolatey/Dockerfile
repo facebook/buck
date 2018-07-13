@@ -23,5 +23,8 @@ RUN ant
 # Build buck with buck
 RUN ./bin/buck build -c buck.release_version=${env:version} -c buck.release_timestamp=${env:timestamp} buck
 
+# This is filled in by build scripts
+ADD Changelog.md c:/src/tools/release/platforms/chocolatey/Changelog.md
+
 # Build the buck nupkg
 RUN ./bin/buck build -c buck.release_version=${env:version} -c buck.release_timestamp=${env:timestamp} tools/release/platforms/chocolatey --out buck.nupkg
