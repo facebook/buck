@@ -157,7 +157,7 @@ genrule(
     name = "disassemble_app_r_dot_java",
     out = "all_r_fields.smali",
     bash = " && ".join([
-        "$(exe //third-party/smali:baksmali) -o $TMP $(location :app)",
+        "$(exe //third-party/smali:baksmali) d -o $TMP $(location :app)",
         "cat $TMP/com/sample*/R*.smali | grep ^.field > $OUT",
     ]),
 )

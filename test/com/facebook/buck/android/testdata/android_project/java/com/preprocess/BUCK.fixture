@@ -22,7 +22,7 @@ genrule(
     name = "disassemble",
     out = "content.txt",
     bash = " && ".join([
-        "$(exe //third-party/smali:baksmali) -o $TMP $(location :app)",
+        "$(exe //third-party/smali:baksmali) d -o $TMP $(location :app)",
         "grep -o content=. $TMP/com/facebook/sample/Sample3.smali > $OUT",
     ]),
 )

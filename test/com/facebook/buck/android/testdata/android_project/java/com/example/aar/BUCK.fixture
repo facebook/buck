@@ -46,11 +46,11 @@ genrule(
     name = "extract-classes-dex",
     out = "smali-files.txt",
     bash = " && ".join([
-        "$(exe //third-party/smali:baksmali) -o $TMP $(location :app)",
+        "$(exe //third-party/smali:baksmali) d -o $TMP $(location :app)",
         "find $TMP -name \*.smali > $OUT",
     ]),
     cmd_exe = " && ".join([
-        "$(exe //third-party/smali:baksmali) -o %TMP% $(location :app)",
+        "$(exe //third-party/smali:baksmali) d -o %TMP% $(location :app)",
         "dir /s/b %TMP% | findstr /L .smali > %OUT%",
     ]),
 )

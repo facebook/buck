@@ -781,7 +781,7 @@ genrule(
     name = "disassemble_app_with_aapt2",
     out = "disassembled_aapt2.smali",
     bash = " && ".join([
-        "$(exe //third-party/smali:baksmali) -o $TMP $(location :app_with_aapt2)",
+        "$(exe //third-party/smali:baksmali) d -o $TMP $(location :app_with_aapt2)",
         "cat $TMP/com/*/R*.smali > $OUT",
     ]),
 )
@@ -845,7 +845,7 @@ genrule(
     name = "disassemble_app_with_merged_libs_gencode",
     out = "disassembled_gencode.smali",
     bash = " && ".join([
-        "$(exe //third-party/smali:baksmali) -o $TMP $(location :app_with_merged_libs)",
+        "$(exe //third-party/smali:baksmali) d -o $TMP $(location :app_with_merged_libs)",
         "cat $TMP/com/gen/*.smali > $OUT",
     ]),
 )
