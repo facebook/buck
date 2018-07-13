@@ -46,9 +46,6 @@ import org.kohsuke.args4j.Option;
 
 public class ProjectCommand extends AbstractCommand implements PluginBasedCommand {
 
-  @Option(name = "--process-annotations", usage = "Enable annotation processing")
-  private boolean processAnnotations;
-
   @Option(
       name = "--without-tests",
       usage = "When generating a project slice, exclude tests that test the code in that slice")
@@ -264,11 +261,6 @@ public class ProjectCommand extends AbstractCommand implements PluginBasedComman
     @Override
     public boolean isWithoutDependenciesTests() {
       return withoutDependenciesTests;
-    }
-
-    @Override
-    public boolean isProcessAnnotations() {
-      return processAnnotations;
     }
 
     @Override

@@ -83,6 +83,7 @@ public class IjProjectCommandHelper {
   private final RuleKeyConfiguration ruleKeyConfiguration;
   private final IjProjectConfig projectConfig;
   private final boolean enableParserProfiling;
+  private final boolean processAnnotations;
   private final BuckBuildRunner buckBuildRunner;
   private final Function<Iterable<String>, ImmutableList<TargetNodeSpec>> argsParser;
 
@@ -99,6 +100,7 @@ public class IjProjectCommandHelper {
       RuleKeyConfiguration ruleKeyConfiguration,
       IjProjectConfig projectConfig,
       boolean enableParserProfiling,
+      boolean processAnnotations,
       BuckBuildRunner buckBuildRunner,
       Function<Iterable<String>, ImmutableList<TargetNodeSpec>> argsParser,
       ProjectGeneratorParameters projectGeneratorParameters) {
@@ -114,6 +116,7 @@ public class IjProjectCommandHelper {
     this.ruleKeyConfiguration = ruleKeyConfiguration;
     this.projectConfig = projectConfig;
     this.enableParserProfiling = enableParserProfiling;
+    this.processAnnotations = processAnnotations;
     this.buckBuildRunner = buckBuildRunner;
     this.argsParser = argsParser;
 
@@ -249,7 +252,7 @@ public class IjProjectCommandHelper {
       return ExitCode.SUCCESS;
     }
 
-    return projectGeneratorParameters.isProcessAnnotations()
+    return processAnnotations
         ? buildRequiredTargetsWithoutUsingCacheForAnnotatedTargets(
             targetGraphAndTargets, requiredBuildTargets)
         : runBuild(requiredBuildTargets);

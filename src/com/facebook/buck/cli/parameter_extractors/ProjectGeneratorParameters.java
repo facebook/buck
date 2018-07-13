@@ -33,8 +33,6 @@ public interface ProjectGeneratorParameters extends CommandRunnerParameters {
 
   boolean isWithoutDependenciesTests();
 
-  boolean isProcessAnnotations();
-
   boolean isUpdateOnly();
 
   Verbosity getVerbosity();

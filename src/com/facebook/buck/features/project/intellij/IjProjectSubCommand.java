@@ -45,6 +45,9 @@ import org.pf4j.Extension;
 @Extension
 public class IjProjectSubCommand extends ProjectSubCommand {
 
+  @Option(name = "--process-annotations", usage = "Enable annotation processing")
+  private boolean processAnnotations;
+
   @Option(
       name = "--intellij-aggregation-mode",
       handler = AggregationModeOptionHandler.class,
@@ -157,6 +160,7 @@ public class IjProjectSubCommand extends ProjectSubCommand {
             params.getRuleKeyConfiguration(),
             projectConfig,
             projectGeneratorParameters.getEnableParserProfiling(),
+            processAnnotations,
             (buildTargets, disableCaching) -> runBuild(params, buildTargets, disableCaching),
             projectGeneratorParameters.getArgsParser(),
             projectGeneratorParameters);
