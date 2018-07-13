@@ -16,7 +16,6 @@
 
 package com.facebook.buck.cli.parameter_extractors;
 
-import com.facebook.buck.cli.output.Mode;
 import com.facebook.buck.parser.TargetNodeSpec;
 import com.facebook.buck.util.Verbosity;
 import com.google.common.collect.ImmutableList;
@@ -43,6 +42,4 @@ public interface ProjectGeneratorParameters extends CommandRunnerParameters {
   boolean getEnableParserProfiling();
 
   Function<Iterable<String>, ImmutableList<TargetNodeSpec>> getArgsParser();
-
-  Mode getOutputMode();
 }

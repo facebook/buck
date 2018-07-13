@@ -16,7 +16,6 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.cli.output.Mode;
 import com.facebook.buck.cli.parameter_extractors.ProjectGeneratorParameters;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.event.ProjectGenerationEvent;
@@ -37,12 +36,15 @@ import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 import javax.annotation.Nullable;
+import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
 
-public class ProjectCommand extends BuildCommand implements PluginBasedCommand {
+public class ProjectCommand extends AbstractCommand implements PluginBasedCommand {
 
   @Option(name = "--process-annotations", usage = "Enable annotation processing")
   private boolean processAnnotations;
@@ -89,6 +91,8 @@ public class ProjectCommand extends BuildCommand implements PluginBasedCommand {
   @PluginBasedSubCommands(commandClass = ProjectSubCommand.class)
   @SuppressFieldNotInitialized
   private ImmutableList<ProjectSubCommand> ides;
+
+  @Argument private List<String> arguments = new ArrayList<>();
 
   private Optional<String> getPathToPreProcessScript(BuckConfig buckConfig) {
     return buckConfig.getValue("project", "pre_process");
@@ -140,7 +144,7 @@ public class ProjectCommand extends BuildCommand implements PluginBasedCommand {
       params.getBuckEventBus().post(ProjectGenerationEvent.started());
       ExitCode result;
       try {
-        result = subCommand.run(params, pool, projectGeneratorParameters, getArguments());
+        result = subCommand.run(params, pool, projectGeneratorParameters, arguments);
         rc = runPostprocessScriptIfNeeded(params, projectIde);
         if (rc != 0) {
           return ExitCode.map(rc);
@@ -194,7 +198,7 @@ public class ProjectCommand extends BuildCommand implements PluginBasedCommand {
             .setEnvironment(
                 ImmutableMap.<String, String>builder()
                     .putAll(params.getEnvironment())
-                    .put("BUCK_PROJECT_TARGETS", Joiner.on(" ").join(getArguments()))
+                    .put("BUCK_PROJECT_TARGETS", Joiner.on(" ").join(arguments))
                     .put("BUCK_PROJECT_TYPE", projectIde)
                     .build())
             .setDirectory(params.getCell().getFilesystem().getRootPath())
@@ -285,11 +289,6 @@ public class ProjectCommand extends BuildCommand implements PluginBasedCommand {
     @Override
     public Function<Iterable<String>, ImmutableList<TargetNodeSpec>> getArgsParser() {
       return arguments -> parseArgumentsAsTargetNodeSpecs(parameters.getBuckConfig(), arguments);
-    }
-
-    @Override
-    public Mode getOutputMode() {
-      return ProjectCommand.this.getOutputMode();
     }
   }
 }

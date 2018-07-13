@@ -21,6 +21,7 @@ import com.facebook.buck.cli.BuildCommand;
 import com.facebook.buck.cli.CommandRunnerParams;
 import com.facebook.buck.cli.CommandThreadManager;
 import com.facebook.buck.cli.ProjectSubCommand;
+import com.facebook.buck.cli.output.Mode;
 import com.facebook.buck.cli.output.PrintStreamPathOutputPresenter;
 import com.facebook.buck.cli.parameter_extractors.ProjectGeneratorParameters;
 import com.facebook.buck.config.BuckConfig;
@@ -62,6 +63,26 @@ public class XCodeProjectSubCommand extends ProjectSubCommand {
               + "applies to generated Xcode projects.)")
   private boolean readOnly = DEFAULT_READ_ONLY_VALUE;
 
+  @Option(
+      name = "--show-full-output",
+      usage = "Print the absolute path to the output for each of the built rules.")
+  private boolean showFullOutput;
+
+  @Option(
+      name = "--show-output",
+      usage = "Print the path to the output for each of the built rules relative to the cell.")
+  private boolean showOutput;
+
+  protected Mode getOutputMode() {
+    if (this.showFullOutput) {
+      return Mode.FULL;
+    } else if (this.showOutput) {
+      return Mode.SIMPLE;
+    } else {
+      return Mode.NONE;
+    }
+  }
+
   @Override
   public ExitCode run(
       CommandRunnerParams params,
@@ -99,9 +120,7 @@ public class XCodeProjectSubCommand extends ProjectSubCommand {
             projectGeneratorParameters.isDryRun(),
             getReadOnly(params.getBuckConfig()),
             new PrintStreamPathOutputPresenter(
-                params.getConsole().getStdOut(),
-                projectGeneratorParameters.getOutputMode(),
-                params.getCell().getRoot()),
+                params.getConsole().getStdOut(), getOutputMode(), params.getCell().getRoot()),
             projectGeneratorParameters.getArgsParser(),
             arguments -> {
               try {

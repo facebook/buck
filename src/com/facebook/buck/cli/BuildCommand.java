@@ -27,7 +27,6 @@ import static com.facebook.buck.util.concurrent.MostExecutors.newMultiThreadExec
 import com.facebook.buck.apple.AppleBundle;
 import com.facebook.buck.apple.AppleDsym;
 import com.facebook.buck.artifact_cache.config.ArtifactCacheBuckConfig;
-import com.facebook.buck.cli.output.Mode;
 import com.facebook.buck.command.Build;
 import com.facebook.buck.command.LocalBuildExecutor;
 import com.facebook.buck.command.LocalBuildExecutorInvoker;
@@ -291,16 +290,6 @@ public class BuildCommand extends AbstractCommand {
 
   public boolean isDebugEnabled() {
     return false;
-  }
-
-  protected Mode getOutputMode() {
-    if (this.showFullOutput) {
-      return Mode.FULL;
-    } else if (this.showOutput) {
-      return Mode.SIMPLE;
-    } else {
-      return Mode.NONE;
-    }
   }
 
   public BuildCommand() {
