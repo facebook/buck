@@ -298,7 +298,11 @@ public class IjProjectCommandHelper {
       throws IOException {
     Path vendorPath;
     ProjectFilesystem fs = cell.getFilesystem();
-    if (fs.exists(Paths.get("src"))) {
+
+    Optional<String> vendorConfig = buckConfig.getValue("go", "vendor_path");
+    if (vendorConfig.isPresent()) {
+      vendorPath = Paths.get(vendorConfig.get());
+    }else if (fs.exists(Paths.get("src"))) {
       vendorPath = Paths.get("src", "vendor");
     } else {
       vendorPath = Paths.get("vendor");
