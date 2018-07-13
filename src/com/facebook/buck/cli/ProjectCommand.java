@@ -19,7 +19,6 @@ package com.facebook.buck.cli;
 import com.facebook.buck.cli.output.Mode;
 import com.facebook.buck.cli.parameter_extractors.ProjectGeneratorParameters;
 import com.facebook.buck.config.BuckConfig;
-import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.event.ProjectGenerationEvent;
 import com.facebook.buck.parser.TargetNodeSpec;
 import com.facebook.buck.support.cli.args.PluginBasedCommand;
@@ -32,7 +31,6 @@ import com.facebook.buck.util.ListeningProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Ascii;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -45,26 +43,6 @@ import javax.annotation.Nullable;
 import org.kohsuke.args4j.Option;
 
 public class ProjectCommand extends BuildCommand implements PluginBasedCommand {
-
-  public enum Ide {
-    INTELLIJ,
-    XCODE;
-
-    public String getName() {
-      return Ascii.toLowerCase(name());
-    }
-
-    public static Ide fromString(String string) {
-      switch (Ascii.toLowerCase(string)) {
-        case "intellij":
-          return Ide.INTELLIJ;
-        case "xcode":
-          return Ide.XCODE;
-        default:
-          throw new HumanReadableException("Invalid ide value %s.", string);
-      }
-    }
-  }
 
   @Option(name = "--process-annotations", usage = "Enable annotation processing")
   private boolean processAnnotations;
@@ -92,7 +70,7 @@ public class ProjectCommand extends BuildCommand implements PluginBasedCommand {
           "The type of IDE for which to generate a project. You may specify it in the "
               + ".buckconfig file. Please refer to https://buckbuild.com/concept/buckconfig.html#project")
   @Nullable
-  private Ide ide = null;
+  private String ide = null;
 
   @Option(
       name = "--dry-run",
@@ -120,14 +98,14 @@ public class ProjectCommand extends BuildCommand implements PluginBasedCommand {
     return buckConfig.getValue("project", "post_process");
   }
 
-  private Optional<Ide> getIdeFromBuckConfig(BuckConfig buckConfig) {
-    return buckConfig.getValue("project", "ide").map(Ide::fromString);
+  private Optional<String> getIdeFromBuckConfig(BuckConfig buckConfig) {
+    return buckConfig.getValue("project", "ide");
   }
 
   @Override
   public ExitCode runWithoutHelp(CommandRunnerParams params)
       throws IOException, InterruptedException {
-    Ide projectIde =
+    String projectIde =
         (ide == null) ? getIdeFromBuckConfig(params.getBuckConfig()).orElse(null) : ide;
 
     if (projectIde == null) {
@@ -148,7 +126,13 @@ public class ProjectCommand extends BuildCommand implements PluginBasedCommand {
                   ImmutableMap.toImmutableMap(
                       ProjectSubCommand::getOptionValue, Function.identity()));
 
-      ProjectSubCommand subCommand = subcommands.get(projectIde.getName());
+      if (!subcommands.containsKey(projectIde)) {
+        throw new CommandLineException(
+            "Unknown IDE: %s. Known IDEs: %s",
+            projectIde, Joiner.on(", ").join(subcommands.keySet()));
+      }
+
+      ProjectSubCommand subCommand = subcommands.get(projectIde);
 
       ProjectGeneratorParameters projectGeneratorParameters =
           new ProjectGeneratorParametersImplementation(params);
@@ -174,20 +158,20 @@ public class ProjectCommand extends BuildCommand implements PluginBasedCommand {
     return false;
   }
 
-  private int runPreprocessScriptIfNeeded(CommandRunnerParams params, Ide projectIde)
+  private int runPreprocessScriptIfNeeded(CommandRunnerParams params, String projectIde)
       throws IOException, InterruptedException {
     Optional<String> script = getPathToPreProcessScript(params.getBuckConfig());
     return runScriptIfNeeded(script, params, projectIde);
   }
 
-  private int runPostprocessScriptIfNeeded(CommandRunnerParams params, Ide projectIde)
+  private int runPostprocessScriptIfNeeded(CommandRunnerParams params, String projectIde)
       throws IOException, InterruptedException {
     Optional<String> script = getPathToPostProcessScript(params.getBuckConfig());
     return runScriptIfNeeded(script, params, projectIde);
   }
 
   private int runScriptIfNeeded(
-      Optional<String> optionalPathToScript, CommandRunnerParams params, Ide projectIde)
+      Optional<String> optionalPathToScript, CommandRunnerParams params, String projectIde)
       throws IOException, InterruptedException {
     if (!optionalPathToScript.isPresent()) {
       return 0;
@@ -211,7 +195,7 @@ public class ProjectCommand extends BuildCommand implements PluginBasedCommand {
                 ImmutableMap.<String, String>builder()
                     .putAll(params.getEnvironment())
                     .put("BUCK_PROJECT_TARGETS", Joiner.on(" ").join(getArguments()))
-                    .put("BUCK_PROJECT_TYPE", projectIde.toString().toLowerCase())
+                    .put("BUCK_PROJECT_TYPE", projectIde)
                     .build())
             .setDirectory(params.getCell().getFilesystem().getRootPath())
             .build();
