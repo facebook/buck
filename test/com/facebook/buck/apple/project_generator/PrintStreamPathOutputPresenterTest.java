@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright 2018-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.cli.output;
+package com.facebook.buck.apple.project_generator;
 
 import static org.junit.Assert.assertEquals;
 

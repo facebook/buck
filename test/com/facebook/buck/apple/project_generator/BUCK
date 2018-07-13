@@ -125,7 +125,6 @@ standard_java_test(
         "//src/com/facebook/buck/apple/toolchain:toolchain",
         "//src/com/facebook/buck/apple/xcode:xcode",
         "//src/com/facebook/buck/artifact_cache:artifact_cache",
-        "//src/com/facebook/buck/cli/output:output",
         "//src/com/facebook/buck/config:config",
         "//src/com/facebook/buck/core/cell:cell",
         "//src/com/facebook/buck/core/model/actiongraph/computation:computation",

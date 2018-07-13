@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright 2018-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -14,14 +14,12 @@
  * under the License.
  */
 
-package com.facebook.buck.cli.output;
+package com.facebook.buck.apple.project_generator;
 
-/**
- * This is the output Mode controlling the amount of details presented in the output of the CLI
- * command
- */
-public enum Mode {
-  FULL,
-  SIMPLE,
-  NONE
+import java.nio.file.Path;
+
+/** A PathOutputPresenter that doesn't output anything. */
+public class NullPathOutputPresenter implements PathOutputPresenter {
+  @Override
+  public void present(String prefix, Path path) {}
 }

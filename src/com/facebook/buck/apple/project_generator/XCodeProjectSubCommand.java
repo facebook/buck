@@ -21,8 +21,6 @@ import com.facebook.buck.cli.BuildCommand;
 import com.facebook.buck.cli.CommandRunnerParams;
 import com.facebook.buck.cli.CommandThreadManager;
 import com.facebook.buck.cli.ProjectSubCommand;
-import com.facebook.buck.cli.output.Mode;
-import com.facebook.buck.cli.output.PrintStreamPathOutputPresenter;
 import com.facebook.buck.cli.parameter_extractors.ProjectGeneratorParameters;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.step.ExecutorPool;

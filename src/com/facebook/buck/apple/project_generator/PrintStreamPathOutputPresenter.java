@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright 2018-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.cli.output;
+package com.facebook.buck.apple.project_generator;
 
 import java.io.PrintStream;
 import java.nio.file.Path;
@@ -23,7 +23,7 @@ import java.nio.file.Path;
  * A presenter that outputs paths to a PrintStream. Depending on the mode, the presenter displays
  * absolute/relative/no paths.
  */
-public class PrintStreamPathOutputPresenter implements PathOutputPresenter {
+class PrintStreamPathOutputPresenter implements PathOutputPresenter {
 
   private final PrintStream outputStream;
   private final Mode outputMode;
