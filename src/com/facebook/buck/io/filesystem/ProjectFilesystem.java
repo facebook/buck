@@ -292,6 +292,9 @@ public interface ProjectFilesystem {
 
   void move(Path source, Path target, CopyOption... options) throws IOException;
 
+  /** Moves the children of {@code source} into {@code target}, merging the two directories. */
+  void mergeChildren(Path source, Path target, CopyOption... options) throws IOException;
+
   void copyFolder(Path source, Path target) throws IOException;
 
   void copyFile(Path source, Path target) throws IOException;

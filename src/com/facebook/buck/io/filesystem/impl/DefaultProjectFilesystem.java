@@ -807,6 +807,51 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
   }
 
   @Override
+  public void mergeChildren(Path source, Path target, CopyOption... options) throws IOException {
+    Path resolvedSource = resolve(source);
+    Path resolvedTarget = resolve(target);
+    walkFileTree(
+        resolvedSource,
+        new FileVisitor<Path>() {
+          @Override
+          public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs)
+              throws IOException {
+            Path relative = resolvedSource.relativize(dir);
+            Path destDir = resolvedTarget.resolve(relative);
+            if (!Files.exists(destDir)) {
+              // Short circuit any copying
+              Files.move(dir, destDir, options);
+              return FileVisitResult.SKIP_SUBTREE;
+            }
+            return FileVisitResult.CONTINUE;
+          }
+
+          @Override
+          public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
+              throws IOException {
+            if (!attrs.isDirectory()) {
+              Path relative = resolvedSource.relativize(file);
+              Files.move(file, resolvedTarget.resolve(relative), options);
+            }
+            return FileVisitResult.CONTINUE;
+          }
+
+          @Override
+          public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
+            return FileVisitResult.CONTINUE;
+          }
+
+          @Override
+          public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+            if (!dir.equals(resolvedSource)) {
+              Files.deleteIfExists(dir);
+            }
+            return FileVisitResult.CONTINUE;
+          }
+        });
+  }
+
+  @Override
   public void copyFolder(Path source, Path target) throws IOException {
     copy(source, target, CopySourceMode.DIRECTORY_CONTENTS_ONLY);
   }
