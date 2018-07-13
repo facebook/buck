@@ -171,7 +171,8 @@ public class IjProjectSubCommand extends ProjectSubCommand {
             updateOnly,
             (buildTargets, disableCaching) -> runBuild(params, buildTargets, disableCaching),
             projectGeneratorParameters.getArgsParser(),
-            projectGeneratorParameters);
+            projectGeneratorParameters,
+            params.getPluginManager());
     return projectCommandHelper.parseTargetsAndRunProjectGenerator(projectCommandArguments);
   }
 
