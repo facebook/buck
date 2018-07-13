@@ -84,6 +84,7 @@ public class IjProjectCommandHelper {
   private final IjProjectConfig projectConfig;
   private final boolean enableParserProfiling;
   private final boolean processAnnotations;
+  private final boolean updateOnly;
   private final BuckBuildRunner buckBuildRunner;
   private final Function<Iterable<String>, ImmutableList<TargetNodeSpec>> argsParser;
 
@@ -101,6 +102,7 @@ public class IjProjectCommandHelper {
       IjProjectConfig projectConfig,
       boolean enableParserProfiling,
       boolean processAnnotations,
+      boolean updateOnly,
       BuckBuildRunner buckBuildRunner,
       Function<Iterable<String>, ImmutableList<TargetNodeSpec>> argsParser,
       ProjectGeneratorParameters projectGeneratorParameters) {
@@ -117,6 +119,7 @@ public class IjProjectCommandHelper {
     this.projectConfig = projectConfig;
     this.enableParserProfiling = enableParserProfiling;
     this.processAnnotations = processAnnotations;
+    this.updateOnly = updateOnly;
     this.buckBuildRunner = buckBuildRunner;
     this.argsParser = argsParser;
 
@@ -125,8 +128,7 @@ public class IjProjectCommandHelper {
 
   public ExitCode parseTargetsAndRunProjectGenerator(List<String> arguments)
       throws IOException, InterruptedException {
-    if (projectGeneratorParameters.isUpdateOnly()
-        && projectConfig.getAggregationMode() != AggregationMode.NONE) {
+    if (updateOnly && projectConfig.getAggregationMode() != AggregationMode.NONE) {
       throw new CommandLineException(
           "`--regenerate` option is incompatible with IntelliJ"
               + " module aggregation. In order to use `--regenerate` set `--intellij-aggregation-mode=none`");
@@ -277,7 +279,7 @@ public class IjProjectCommandHelper {
             projectConfig);
 
     final ImmutableSet<BuildTarget> buildTargets;
-    if (projectGeneratorParameters.isUpdateOnly()) {
+    if (updateOnly) {
       buildTargets = project.update();
     } else {
       buildTargets = project.write();

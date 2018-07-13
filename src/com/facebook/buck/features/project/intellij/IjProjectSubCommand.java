@@ -116,6 +116,13 @@ public class IjProjectSubCommand extends ProjectSubCommand {
   @Nullable
   private String generatedFilesListFilename = null;
 
+  @Option(
+      name = "--update",
+      usage =
+          "Instead of generating a whole project, only regenerate the module files for the "
+              + "given targets, possibly updating the top-level modules list.")
+  private boolean updateOnly = false;
+
   @Override
   public String getOptionValue() {
     return "intellij";
@@ -161,6 +168,7 @@ public class IjProjectSubCommand extends ProjectSubCommand {
             projectConfig,
             projectGeneratorParameters.getEnableParserProfiling(),
             processAnnotations,
+            updateOnly,
             (buildTargets, disableCaching) -> runBuild(params, buildTargets, disableCaching),
             projectGeneratorParameters.getArgsParser(),
             projectGeneratorParameters);

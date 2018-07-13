@@ -32,8 +32,6 @@ public interface ProjectGeneratorParameters extends CommandRunnerParameters {
 
   boolean isWithoutDependenciesTests();
 
-  boolean isUpdateOnly();
-
   boolean getEnableParserProfiling();
 
   Function<Iterable<String>, ImmutableList<TargetNodeSpec>> getArgsParser();

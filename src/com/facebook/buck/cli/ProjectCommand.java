@@ -77,13 +77,6 @@ public class ProjectCommand extends AbstractCommand implements PluginBasedComman
               + "would be included.")
   private boolean dryRun = false;
 
-  @Option(
-      name = "--update",
-      usage =
-          "Instead of generating a whole project, only regenerate the module files for the "
-              + "given targets, possibly updating the top-level modules list.")
-  private boolean updateOnly = false;
-
   @PluginBasedSubCommands(commandClass = ProjectSubCommand.class)
   @SuppressFieldNotInitialized
   private ImmutableList<ProjectSubCommand> ides;
@@ -260,11 +253,6 @@ public class ProjectCommand extends AbstractCommand implements PluginBasedComman
     @Override
     public boolean isWithoutDependenciesTests() {
       return withoutDependenciesTests;
-    }
-
-    @Override
-    public boolean isUpdateOnly() {
-      return updateOnly;
     }
 
     @Override
