@@ -28,7 +28,6 @@ import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.ForwardingProcessListener;
 import com.facebook.buck.util.ListeningProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
-import com.facebook.buck.util.Verbosity;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -266,11 +265,6 @@ public class ProjectCommand extends AbstractCommand implements PluginBasedComman
     @Override
     public boolean isUpdateOnly() {
       return updateOnly;
-    }
-
-    @Override
-    public Verbosity getVerbosity() {
-      return getConsole().getVerbosity();
     }
 
     @Override
