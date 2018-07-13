@@ -496,6 +496,37 @@ public class ProjectIntegrationTest {
     assertThat(doc2, Matchers.hasXPath(urlXpath, Matchers.startsWith("jar://$PROJECT_DIR$/..")));
   }
 
+  @Test
+  public void testBuckProjectCopyGeneratedGoCode() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "go_project_with_generated_code", temporaryFolder.newFolder());
+    workspace.setUp();
+    ProcessResult result = workspace.runBuckCommand("project");
+    result.assertSuccess("buck project should exit cleanly");
+
+    assertTrue(workspace.resolve("vendor/a/b1.go").toFile().exists());
+    assertTrue(workspace.resolve("vendor/a/b2.go").toFile().exists());
+  }
+
+  @Test
+  public void testBuckProjectPurgeExistingVendor() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "go_project_with_existing_vendor", temporaryFolder.newFolder());
+    workspace.setUp();
+    assertTrue(workspace.resolve("vendor/a/b0.go").toFile().exists());
+    assertTrue(workspace.resolve("vendor/a/b/b.go").toFile().exists());
+    ProcessResult result = workspace.runBuckCommand("project");
+    result.assertSuccess("buck project should exit cleanly");
+
+    assertFalse(workspace.resolve("vendor/a/b0.go").toFile().exists());
+    assertTrue(workspace.resolve("vendor/a/b1.go").toFile().exists());
+    assertTrue(workspace.resolve("vendor/a/b2.go").toFile().exists());
+    assertTrue(workspace.resolve("vendor/a/b/b.go").toFile().exists());
+  }
+
+
   private ProcessResult runBuckProjectAndVerify(String folderWithTestData, String... commandArgs)
       throws InterruptedException, IOException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();

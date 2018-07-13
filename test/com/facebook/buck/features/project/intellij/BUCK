@@ -137,6 +137,7 @@ java_test(
     srcs = TEST_SRCS,
     module_deps = [
         "//src/com/facebook/buck/features/zip/rules:rules",
+        "//src/com/facebook/buck/features/go:go",
     ],
     resources = glob(["testdata/**"]),
     deps = [
