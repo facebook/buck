@@ -299,11 +299,4 @@ public class GoBinaryIntegrationTest {
       assertFalse(Files.exists(workspace.resolve(pth)));
     }
   }
-
-  public void cgoIncludeHeaderFromSamePackage() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "cgo", tmp);
-    workspace.setUp();
-    ProcessResult result = workspace.runBuckCommand("run", "//src/mixed_with_c:bin");
-    result.assertSuccess();
-  }
 }
