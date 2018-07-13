@@ -34,7 +34,6 @@ import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.rules.common.BuildRules;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -617,18 +616,12 @@ public class AndroidBinaryGraphEnhancer {
   @VisibleForTesting
   PreDexMerge createPreDexMergeRule(
       ImmutableMultimap<APKModule, DexProducedFromJavaLibrary> allPreDexDeps) {
-    BuildRuleParams paramsForPreDexMerge =
-        buildRuleParams.withDeclaredDeps(
-            ImmutableSortedSet.<BuildRule>naturalOrder()
-                .addAll(getDexMergeDeps(ImmutableSet.copyOf(allPreDexDeps.values())))
-                .build());
-
     PreDexMerge preDexMerge =
         new PreDexMerge(
             originalBuildTarget.withAppendedFlavors(DEX_MERGE_FLAVOR, getDexFlavor(dexTool)),
             projectFilesystem,
             androidPlatformTarget,
-            paramsForPreDexMerge,
+            buildRuleParams.withDeclaredDeps(ImmutableSortedSet.copyOf(allPreDexDeps.values())),
             dexSplitMode,
             apkModuleGraph,
             allPreDexDeps,
@@ -747,19 +740,6 @@ public class AndroidBinaryGraphEnhancer {
     }
 
     return nonPreDexedDexBuildable;
-  }
-
-  private ImmutableSortedSet<BuildRule> getDexMergeDeps(
-      ImmutableSet<DexProducedFromJavaLibrary> preDexDeps) {
-    ImmutableSet.Builder<BuildTarget> targets = ImmutableSet.builder();
-    for (DexProducedFromJavaLibrary preDex : preDexDeps) {
-      targets.add(preDex.getBuildTarget());
-    }
-    return getTargetsAsRules(targets.build());
-  }
-
-  private ImmutableSortedSet<BuildRule> getTargetsAsRules(Collection<BuildTarget> buildTargets) {
-    return BuildRules.toBuildRulesFor(originalBuildTarget, graphBuilder, buildTargets);
   }
 
   private static Flavor getDexFlavor(String dexTool) {
