@@ -269,4 +269,12 @@ public class GoBinaryIntegrationTest {
     ProcessResult result = workspace.runBuckCommand("run", "//src/mixed_with_c:bin");
     result.assertSuccess();
   }
+
+  @Test
+  public void generatedCgoPackage() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "cgo", tmp);
+    workspace.setUp();
+    ProcessResult result = workspace.runBuckCommand("run", "//src/gen_pkg:bin");
+    result.assertSuccess();
+  }
 }

@@ -23,6 +23,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.rules.impl.SymlinkTree;
+import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
@@ -278,7 +279,7 @@ public class GoCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     List<Path> srcFiles = new ArrayList<>();
     for (SourcePath path : srcPaths) {
       Path srcPath = context.getSourcePathResolver().getAbsolutePath(path);
-      if (Files.isDirectory(srcPath)) {
+      if (path instanceof BuildTargetSourcePath && Files.isDirectory(srcPath)) {
         try (Stream<Path> sourcePaths = Files.list(srcPath)) {
           srcFiles.addAll(sourcePaths.filter(Files::isRegularFile).collect(Collectors.toList()));
         } catch (IOException e) {

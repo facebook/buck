@@ -124,6 +124,7 @@ public class CGoLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps {
                             .collect(ImmutableSet.toImmutableSet()),
                         cgo,
                         args.getCgoCompilerFlags(),
+                        headers,
                         platform));
 
     // generated c files needs to be compiled and linked into a single object
