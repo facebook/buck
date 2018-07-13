@@ -22,6 +22,7 @@ import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import java.util.Collection;
 import java.util.Optional;
 
@@ -54,7 +55,7 @@ class DexSplitMode implements AddsToRuleKey {
 
   @AddToRuleKey private final long linearAllocHardLimit;
 
-  @AddToRuleKey private final ImmutableSet<String> primaryDexPatterns;
+  @AddToRuleKey private final ImmutableSortedSet<String> primaryDexPatterns;
 
   /**
    * File that whitelists the class files that should be in the primary dex.
@@ -146,7 +147,7 @@ class DexSplitMode implements AddsToRuleKey {
     this.dexSplitStrategy = dexSplitStrategy;
     this.dexStore = dexStore;
     this.linearAllocHardLimit = linearAllocHardLimit;
-    this.primaryDexPatterns = ImmutableSet.copyOf(primaryDexPatterns);
+    this.primaryDexPatterns = ImmutableSortedSet.copyOf(primaryDexPatterns);
     this.primaryDexClassesFile = primaryDexClassesFile;
     this.primaryDexScenarioFile = primaryDexScenarioFile;
     this.isPrimaryDexScenarioOverflowAllowed = isPrimaryDexScenarioOverflowAllowed;
