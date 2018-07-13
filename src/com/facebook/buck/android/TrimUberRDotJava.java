@@ -51,6 +51,7 @@ import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
+import javax.annotation.Nonnull;
 
 /** Rule for trimming unnecessary ids from R.java files. */
 class TrimUberRDotJava extends AbstractBuildRuleWithDeclaredAndExtraDeps {
@@ -101,6 +102,7 @@ class TrimUberRDotJava extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   }
 
   @Override
+  @Nonnull
   public SourcePath getSourcePathToOutput() {
     return ExplicitBuildTargetSourcePath.of(
         getBuildTarget(),
