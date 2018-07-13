@@ -34,7 +34,9 @@ import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaLibrary;
@@ -45,6 +47,7 @@ import com.facebook.buck.jvm.java.JavaLibraryDeps;
 import com.facebook.buck.jvm.java.Javac;
 import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.JavacOptions;
+import com.facebook.buck.jvm.java.PrebuiltJar;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.facebook.buck.rules.coercer.ManifestEntries;
@@ -56,6 +59,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
@@ -69,6 +73,7 @@ import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.SortedSet;
@@ -85,7 +90,8 @@ public class AndroidBinaryGraphEnhancer {
       InternalFlavor.of("trim_uber_r_dot_java");
   private static final Flavor COMPILE_UBER_R_DOT_JAVA_FLAVOR =
       InternalFlavor.of("compile_uber_r_dot_java");
-  private static final Flavor DEX_UBER_R_DOT_JAVA_FLAVOR = InternalFlavor.of("dex_uber_r_dot_java");
+  private static final Flavor SPLIT_UBER_R_DOT_JAVA_JAR_FLAVOR =
+      InternalFlavor.of("split_uber_r_dot_java_jar");
   private static final Flavor GENERATE_NATIVE_LIB_MERGE_MAP_GENERATED_CODE_FLAVOR =
       InternalFlavor.of("generate_native_lib_merge_map_generated_code");
   private static final Flavor COMPILE_NATIVE_LIB_MERGE_MAP_GENERATED_CODE_FLAVOR =
@@ -404,12 +410,13 @@ public class AndroidBinaryGraphEnhancer {
     JavaLibrary compileUberRDotJava =
         createTrimAndCompileUberRDotJava(
             resourcesEnhancementResult, preDexedLibrariesExceptRDotJava);
-    DexProducedFromJavaLibrary dexUberRDotJava = createSplitAndDexUberRDotJava(compileUberRDotJava);
+    ImmutableCollection<DexProducedFromJavaLibrary> dexUberRDotJavaParts =
+        createSplitAndDexUberRDotJava(compileUberRDotJava);
 
     ImmutableMultimap<APKModule, DexProducedFromJavaLibrary> preDexedLibraries =
         ImmutableMultimap.<APKModule, DexProducedFromJavaLibrary>builder()
             .putAll(preDexedLibrariesExceptRDotJava)
-            .put(apkModuleGraph.getRootAPKModule(), dexUberRDotJava)
+            .putAll(apkModuleGraph.getRootAPKModule(), dexUberRDotJavaParts)
             .build();
 
     ImmutableSet<SourcePath> classpathEntriesToDex =
@@ -517,22 +524,56 @@ public class AndroidBinaryGraphEnhancer {
   }
 
   @Nonnull
-  private DexProducedFromJavaLibrary createSplitAndDexUberRDotJava(
+  private ImmutableCollection<DexProducedFromJavaLibrary> createSplitAndDexUberRDotJava(
       JavaLibrary compileUberRDotJava) {
-    // Create rule to dex uber R.java sources.
-    BuildRuleParams paramsForDexUberRDotJava =
-        buildRuleParams.withDeclaredDeps(ImmutableSortedSet.of(compileUberRDotJava));
-    DexProducedFromJavaLibrary dexUberRDotJava =
-        new DexProducedFromJavaLibrary(
-            originalBuildTarget.withAppendedFlavors(
-                DEX_UBER_R_DOT_JAVA_FLAVOR, getDexFlavor(dexTool)),
+    // Create rule to split the compiled R.java into multiple smaller jars.
+    BuildTarget splitJarTarget =
+        originalBuildTarget.withAppendedFlavors(SPLIT_UBER_R_DOT_JAVA_JAR_FLAVOR);
+    SplitUberRDotJavaJar splitJar =
+        new SplitUberRDotJavaJar(
+            splitJarTarget,
             projectFilesystem,
-            androidPlatformTarget,
-            paramsForDexUberRDotJava,
-            compileUberRDotJava,
-            dexTool);
-    graphBuilder.addToIndex(dexUberRDotJava);
-    return dexUberRDotJava;
+            ruleFinder,
+            compileUberRDotJava.getSourcePathToOutput(),
+            dexSplitMode);
+    graphBuilder.addToIndex(splitJar);
+
+    // Create rules to dex uber R.java jars.
+    ImmutableCollection.Builder<DexProducedFromJavaLibrary> builder = ImmutableList.builder();
+    Flavor prebuiltJarFlavor = InternalFlavor.of("prebuilt_jar");
+    Flavor dexFlavor = InternalFlavor.of("dexing");
+    for (Entry<String, BuildTargetSourcePath> entry : splitJar.getOutputJars().entrySet()) {
+      String rtype = entry.getKey();
+      BuildTargetSourcePath jarPath = entry.getValue();
+      InternalFlavor rtypeFlavor = InternalFlavor.of("rtype_" + rtype);
+      PrebuiltJar prebuiltJar =
+          new PrebuiltJar(
+              splitJarTarget.withAppendedFlavors(prebuiltJarFlavor, rtypeFlavor),
+              projectFilesystem,
+              buildRuleParams.withDeclaredDeps(ImmutableSortedSet.of(ruleFinder.getRule(jarPath))),
+              DefaultSourcePathResolver.from(ruleFinder),
+              jarPath,
+              Optional.empty(),
+              Optional.empty(),
+              Optional.empty(),
+              Optional.empty(),
+              false,
+              false);
+      graphBuilder.addToIndex(prebuiltJar);
+
+      DexProducedFromJavaLibrary dexJar =
+          new DexProducedFromJavaLibrary(
+              splitJarTarget.withAppendedFlavors(dexFlavor, rtypeFlavor, getDexFlavor(dexTool)),
+              projectFilesystem,
+              androidPlatformTarget,
+              buildRuleParams.withDeclaredDeps(ImmutableSortedSet.of(prebuiltJar)),
+              prebuiltJar,
+              dexTool);
+      graphBuilder.addToIndex(dexJar);
+      builder.add(dexJar);
+    }
+
+    return builder.build();
   }
 
   private NativeLibraryProguardGenerator createNativeLibraryProguardGenerator(

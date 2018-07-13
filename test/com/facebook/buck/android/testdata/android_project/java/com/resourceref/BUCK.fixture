@@ -1,0 +1,36 @@
+android_library(
+    name = "resourceref",
+    srcs = [":java_src"],
+    visibility = ["PUBLIC"],
+    deps = [
+        ":resources_primary",
+        ":resources_secondary1",
+        ":resources_secondary2",
+    ],
+)
+
+for pkg in ["primary", "secondary1", "secondary2"]:
+    android_resource(
+        name = "resources_" + pkg,
+        package = "com." + pkg,
+        res = {
+            "values/all.xml": ":generate_" + pkg,
+        }
+    )
+
+    genrule(
+        name = "generate_" + pkg,
+        out = "res_%s.xml" % pkg,
+        bash = "$(exe :generator) res > $OUT",
+    )
+
+genrule(
+    name = "java_src",
+    out = "ResourceRef.java",
+    bash = "$(exe :generator) java > $OUT",
+)
+
+python_binary(
+    name = "generator",
+    main = "generator.py",
+)
