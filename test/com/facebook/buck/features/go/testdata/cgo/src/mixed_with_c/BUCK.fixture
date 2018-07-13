@@ -1,0 +1,22 @@
+go_binary(
+    name = "bin",
+    srcs = ["main.go"],
+    cgo = ":cgo",
+)
+
+cgo_library(
+    name = "cgo",
+    package_name = "main",
+    srcs = ["cgosrc.go"],
+    deps = [":lib"],
+)
+
+cxx_library(
+    name = "lib",
+    srcs = ["lib.c"],
+    exported_headers = ["lib.h"],
+    header_namespace = "",
+    visibility = [
+        "PUBLIC",
+    ],
+)
