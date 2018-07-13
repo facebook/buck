@@ -33,7 +33,7 @@ buck_module(
     ],
     visibility = [
         "//test/com/facebook/buck/cli:cli",
+        "//test/com/facebook/buck/features/project/intellij:intellij",
         "//test/com/facebook/buck/features/zip/rules:rules",
-        "//test/com/facebook/buck/ide/intellij:intellij",
     ],
 )

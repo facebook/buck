@@ -507,7 +507,6 @@
           <exclude name="com/facebook/buck/cli/bootstrapper/**" />
           <exclude name="com/facebook/buck/event/api/**" />
           <exclude name="com/facebook/buck/features/**" />
-          <exclude name="com/facebook/buck/ide/intellij/**" />
           <exclude name="com/facebook/buck/jvm/java/abi/source/**" />
           <exclude name="com/facebook/buck/jvm/java/lang/model/**" />
           <exclude name="com/facebook/buck/jvm/java/plugin/adapter/**" />
@@ -618,10 +617,10 @@
   <target name="build-module-intellij" depends="compile">
     <build-buck-module-jar-with-resources module-name="intellij">
       <module-javac-params>
-        <include name="com/facebook/buck/ide/intellij/**/*.java" />
+        <include name="com/facebook/buck/features/project/intellij/**/*.java" />
       </module-javac-params>
       <module-resources>
-        <include name="com/facebook/buck/ide/intellij/templates/*.st"/>
+        <include name="com/facebook/buck/features/project/intellij/templates/*.st"/>
       </module-resources>
     </build-buck-module-jar-with-resources>
   </target>
