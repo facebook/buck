@@ -21,6 +21,7 @@ import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.ProjectTestsMode;
 import com.facebook.buck.config.resources.ResourcesConfig;
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.description.arg.HasSrcs;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
@@ -30,10 +31,14 @@ import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetGraphAndTargets;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
+import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
+import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.features.project.intellij.aggregation.AggregationMode;
 import com.facebook.buck.features.project.intellij.model.IjProjectConfig;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaFileParser;
@@ -64,10 +69,18 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ForkJoinPool;
 import java.util.function.Function;
+import java.util.stream.Collectors;
+import org.pf4j.PluginManager;
 
 public class IjProjectCommandHelper {
 
@@ -87,6 +100,7 @@ public class IjProjectCommandHelper {
   private final boolean updateOnly;
   private final BuckBuildRunner buckBuildRunner;
   private final Function<Iterable<String>, ImmutableList<TargetNodeSpec>> argsParser;
+  private final PluginManager pluginManager;
 
   private final ProjectGeneratorParameters projectGeneratorParameters;
 
@@ -105,7 +119,8 @@ public class IjProjectCommandHelper {
       boolean updateOnly,
       BuckBuildRunner buckBuildRunner,
       Function<Iterable<String>, ImmutableList<TargetNodeSpec>> argsParser,
-      ProjectGeneratorParameters projectGeneratorParameters) {
+      ProjectGeneratorParameters projectGeneratorParameters,
+      PluginManager pluginManager) {
     this.buckEventBus = buckEventBus;
     this.console = projectGeneratorParameters.getConsole();
     this.executor = executor;
@@ -124,6 +139,7 @@ public class IjProjectCommandHelper {
     this.argsParser = argsParser;
 
     this.projectGeneratorParameters = projectGeneratorParameters;
+    this.pluginManager = pluginManager;
   }
 
   public ExitCode parseTargetsAndRunProjectGenerator(List<String> arguments)
@@ -195,7 +211,10 @@ public class IjProjectCommandHelper {
 
       return ExitCode.SUCCESS;
     }
-
+    ExitCode result = initGoWorkspace(targetGraphAndTargets);
+    if (result != ExitCode.SUCCESS) {
+      return result;
+    }
     return runIntellijProjectGenerator(targetGraphAndTargets);
   }
 
@@ -236,6 +255,131 @@ public class IjProjectCommandHelper {
     Preconditions.checkState(!passedInTargets.isEmpty());
     return parser.buildTargetGraph(
         buckEventBus, cell, enableParserProfiling, executor, passedInTargets);
+  }
+
+  /**
+   * Instead of specifying the location of libraries in project files, Go requires libraries to be
+   * in locations consistent with their package name, either relative to GOPATH environment variable
+   * or to the "vendor" folder of a project. This method identifies code generation targets, builds
+   * them, and copy the generated code from buck-out to vendor, so that they are accessible by IDEs.
+   */
+  private ExitCode initGoWorkspace(TargetGraphAndTargets targetGraphAndTargets)
+      throws IOException, InterruptedException {
+    Map<BuildTargetSourcePath, Path> generatedPackages =
+        findCodeGenerationTargets(targetGraphAndTargets);
+    if (generatedPackages.size() == 0) {
+      return ExitCode.SUCCESS;
+    }
+    // Run code generation targets
+    ExitCode exitCode =
+        runBuild(
+            generatedPackages
+                .keySet()
+                .stream()
+                .map(BuildTargetSourcePath::getTarget)
+                .collect(ImmutableSet.toImmutableSet()));
+    if (exitCode != ExitCode.SUCCESS) {
+      return exitCode;
+    }
+
+    copyGeneratedGoCode(targetGraphAndTargets, generatedPackages);
+    return ExitCode.SUCCESS;
+  }
+
+  /**
+   * Assuming GOPATH is set to a directory higher or equal to buck root, copy generated code to the
+   * package path relative to the highest level vendor directory. Not handling the case of GOPATH
+   * lower than buck root for now, as it requires walking the directory structure, which can be
+   * expensive and unreliable (e.g., what if there are multiple src directory?).
+   */
+  private void copyGeneratedGoCode(
+      TargetGraphAndTargets targetGraphAndTargets,
+      Map<BuildTargetSourcePath, Path> generatedPackages)
+      throws IOException {
+    Path vendorPath;
+    ProjectFilesystem fs = cell.getFilesystem();
+
+    Optional<String> vendorConfig = buckConfig.getValue("go", "vendor_path");
+    if (vendorConfig.isPresent()) {
+      vendorPath = Paths.get(vendorConfig.get());
+    }else if (fs.exists(Paths.get("src"))) {
+      vendorPath = Paths.get("src", "vendor");
+    } else {
+      vendorPath = Paths.get("vendor");
+    }
+    ActionGraphAndBuilder result =
+        Preconditions.checkNotNull(getActionGraph(targetGraphAndTargets.getTargetGraph()));
+    DefaultSourcePathResolver sourcePathResolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(result.getActionGraphBuilder()));
+    for (BuildTargetSourcePath sourcePath : generatedPackages.keySet()) {
+      Path desiredPath = vendorPath.resolve(generatedPackages.get(sourcePath));
+      fs.mkdirs(desiredPath);
+      for (Path f : fs.getDirectoryContents(desiredPath)) {
+        if (fs.isFile(f)) {
+          fs.deleteFileAtPath(f);
+        }
+      }
+      Path generatedSrc = sourcePathResolver.getAbsolutePath(sourcePath);
+      if (fs.isDirectory(generatedSrc)) {
+        fs.copyFolder(generatedSrc, desiredPath);
+      } else {
+        fs.copyFile(generatedSrc, desiredPath.resolve(generatedSrc.getFileName()));
+      }
+    }
+  }
+
+  /**
+   * Find code generation targets by inspecting go_library targets in the target graph with "srcs"
+   * pointing to other Buck targets rather than Go files. Those Buck targets in "srcs" are assumed
+   * to be code generation targets. Their output is intended to be used as some package name, either
+   * specified by package_name argument of go_library, or guessed from the base path of the the
+   * go_library
+   */
+  @SuppressWarnings("unchecked")
+  private Map<BuildTargetSourcePath, Path> findCodeGenerationTargets(
+      TargetGraphAndTargets targetGraphAndTargets) {
+    ClassLoader classLoader = pluginManager.getPluginClassLoader("com.facebook.buck.features.go");
+    Map<BuildTargetSourcePath, Path> generatedPackages = new HashMap<>();
+    try {
+      Class<?> goLibraryDescriptionArgClass;
+      if (classLoader != null) {
+        goLibraryDescriptionArgClass =
+            Class.forName(
+                "com.facebook.buck.features.go.GoLibraryDescriptionArg", true, classLoader);
+      } else {
+        // Try to see if it is already in the default class loader
+        goLibraryDescriptionArgClass =
+            Class.forName("com.facebook.buck.features.go.GoLibraryDescriptionArg");
+      }
+      for (TargetNode<?, ?> targetNode : targetGraphAndTargets.getTargetGraph().getNodes()) {
+        Object constructorArg = targetNode.getConstructorArg();
+        if (constructorArg.getClass() == goLibraryDescriptionArgClass) {
+          Method getPackageNameMethod = goLibraryDescriptionArgClass.getMethod("getPackageName");
+          Optional<String> packageNameArg =
+              (Optional<String>) getPackageNameMethod.invoke(constructorArg);
+          Path pkgName =
+              packageNameArg
+                  .map(Paths::get)
+                  .orElse(
+                      Paths.get(buckConfig.getValue("go", "prefix").orElse(""))
+                          .resolve(targetNode.getBuildTarget().getBasePath()));
+          generatedPackages.putAll(
+              ((HasSrcs) constructorArg)
+                  .getSrcs()
+                  .stream()
+                  .filter(srcPath -> srcPath instanceof BuildTargetSourcePath)
+                  .collect(Collectors.toMap(src -> (BuildTargetSourcePath) src, src -> pkgName)));
+        }
+      }
+    } catch (ClassNotFoundException
+        | NoSuchMethodException
+        | IllegalAccessException
+        | InvocationTargetException e) {
+      // If any of these exception occur, the Go module is not available, and thus none of the Go
+      // rules is available either
+      buckEventBus.post(ConsoleEvent.warning(MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
+    }
+    return generatedPackages;
   }
 
   /** Run intellij specific project generation actions. */

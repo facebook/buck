@@ -1,0 +1,29 @@
+go_binary(
+    name = "main",
+    srcs = [
+        ":main.go",
+    ],
+    deps = [
+        ":a",
+    ],
+)
+
+genrule(
+    name = "main.go",
+    out = "main.go",
+    cmd = "echo 'package main\nimport \"a\"\nfunc main() { a.A() }\n' > $OUT",
+)
+
+go_library(
+    name = "a",
+    package_name = "a",
+    srcs = [
+        ":b",
+    ],
+)
+
+genrule(
+    name = "b",
+    out = ".",
+    cmd = "echo 'package a\nfunc A() {}\n' > $OUT/b1.go; echo 'package a\nfunc B() {}\n' > $OUT/b2.go;",
+)

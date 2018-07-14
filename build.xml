@@ -614,7 +614,7 @@
     </build-buck-module-jar>
   </target>
 
-  <target name="build-module-intellij" depends="compile">
+  <target name="build-module-intellij" depends="compile, build-module-go">
     <build-buck-module-jar-with-resources module-name="intellij">
       <module-javac-params>
         <include name="com/facebook/buck/features/project/intellij/**/*.java" />
