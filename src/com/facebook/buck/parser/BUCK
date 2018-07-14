@@ -52,6 +52,7 @@ java_immutables_library(
         "ProjectBuildFileParserPool.java",
         "RawNodeParsePipeline.java",
         "RawTargetNodeFactory.java",
+        "RawTargetNodePipeline.java",
         "SpeculativeParsing.java",
         "SymlinkCache.java",
         "TargetNodeListener.java",
