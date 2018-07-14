@@ -90,10 +90,11 @@ public class TestCaseSummariesBuildingXctoolEventHandlerTest {
           allOf(
               hasProperty("testCaseName", equalTo("SomeTests")),
               hasProperty("testName", equalTo("-[SomeTests testBacktraceOutputIsCaptured]")),
-              hasProperty("type", equalTo(ResultType.SUCCESS)),
+              hasProperty("type", equalTo(ResultType.FAILURE)),
               hasProperty("time", equalTo(0L)),
               hasProperty("message", nullValue(String.class)),
-              hasProperty("stacktrace", nullValue(String.class)),
+              hasProperty(
+                  "stacktrace", containsString("-[SomeTests testBacktraceOutputIsCaptured]")),
               hasProperty("stdOut", containsString("-[SenTestCase performTest:]")),
               hasProperty("stdErr", nullValue(String.class)));
 
