@@ -25,6 +25,8 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.core.description.arg.Hint;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.select.SelectorKey;
+import com.facebook.buck.core.select.SelectorList;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -37,6 +39,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Lists;
+import com.google.devtools.build.lib.syntax.SelectorValue;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
@@ -46,6 +50,7 @@ import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.Set;
 import java.util.SortedSet;
+import java.util.stream.Collectors;
 import org.immutables.value.Value;
 import org.junit.Before;
 import org.junit.Rule;
@@ -614,6 +619,56 @@ public class ConstructorArgMarshallerImmutableTest {
     assertEquals("bar", built.getString());
   }
 
+  @Test
+  public void convertRawAttributesReturnsEmptyListOnEmptyInput() throws CoerceFailedException {
+    ImmutableMap<String, Object> attributes =
+        marshaller.convertRawAttributes(
+            createCellRoots(filesystem),
+            filesystem,
+            TARGET,
+            DtoWithString.class,
+            ImmutableMap.of());
+
+    assertTrue(attributes.isEmpty());
+  }
+
+  @Test
+  public void convertRawAttributesCoercesSimpleTypes() throws CoerceFailedException {
+    ImmutableMap<String, Object> attributes =
+        marshaller.convertRawAttributes(
+            createCellRoots(filesystem),
+            filesystem,
+            TARGET,
+            DtoWithFakeDeps.class,
+            ImmutableMap.of("deps", Lists.newArrayList("//a:b")));
+
+    @SuppressWarnings({"unchecked"})
+    Iterable<BuildTarget> deps = (Iterable<BuildTarget>) attributes.get("deps");
+    assertEquals("//a:b", deps.iterator().next().getFullyQualifiedName());
+  }
+
+  @Test
+  public void convertRawAttributesCoercesSelectableValues() throws CoerceFailedException {
+    com.google.devtools.build.lib.syntax.SelectorList selectorList =
+        com.google.devtools.build.lib.syntax.SelectorList.of(
+            new SelectorValue(ImmutableMap.of("//a:c", "b", "DEFAULT", "c"), ""));
+    ImmutableMap<String, Object> attributes =
+        marshaller.convertRawAttributes(
+            createCellRoots(filesystem),
+            filesystem,
+            TARGET,
+            DtoWithString.class,
+            ImmutableMap.of("string", selectorList));
+
+    @SuppressWarnings({"unchecked"})
+    SelectorList<String> string = (SelectorList<String>) attributes.get("string");
+    Map<SelectorKey, ?> conditions = string.getSelectors().get(0).getConditions();
+    assertEquals(
+        Lists.newArrayList("//a:c", "DEFAULT"),
+        conditions.keySet().stream().map(Object::toString).collect(Collectors.toList()));
+    assertEquals(Lists.newArrayList("b", "c"), conditions.values());
+  }
+
   @BuckStyleImmutable
   @Value.Immutable
   abstract static class AbstractDtoWithString {
@@ -639,6 +694,9 @@ public class ConstructorArgMarshallerImmutableTest {
   abstract static class AbstractDtoWithFakeDeps {
     @Hint(isDep = false)
     abstract Set<BuildTarget> getDeps();
+
+    @Hint(isDep = false)
+    abstract Set<BuildTarget> getProvidedDeps();
   }
 
   @BuckStyleImmutable
@@ -717,6 +775,14 @@ public class ConstructorArgMarshallerImmutableTest {
   @Value.Immutable
   abstract static class AbstractDtoWithImmutableSortedSet {
     abstract ImmutableSortedSet<BuildTarget> getStuff();
+  }
+
+  @BuckStyleImmutable
+  @Value.Immutable
+  abstract static class AbstractDtoWithDeclaredDeps {
+    abstract ImmutableSet<BuildTarget> getDeps();
+
+    abstract ImmutableSet<SourcePath> getPaths();
   }
 
   @BuckStyleImmutable

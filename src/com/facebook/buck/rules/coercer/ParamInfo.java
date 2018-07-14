@@ -190,6 +190,10 @@ public class ParamInfo implements Comparable<ParamInfo> {
     return typeCoercer.getOutputClass();
   }
 
+  public Method getSetter() {
+    return setter;
+  }
+
   /**
    * Traverse the value of the field on {@code dto} that is represented by this instance.
    *

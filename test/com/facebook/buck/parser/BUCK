@@ -257,6 +257,7 @@ java_test(
         "//test/com/facebook/buck/config:FakeBuckConfig",
         "//test/com/facebook/buck/config:testutil",
         "//test/com/facebook/buck/core/cell:testutil",
+        "//test/com/facebook/buck/core/rules/knowntypes:testutil",
         "//test/com/facebook/buck/event:testutil",
         "//test/com/facebook/buck/io:testutil",
         "//test/com/facebook/buck/io/filesystem:testutil",

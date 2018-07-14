@@ -22,7 +22,9 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.sandbox.SandboxExecutionStrategyFactory;
 import com.facebook.buck.sandbox.TestSandboxExecutionStrategyFactory;
+import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.toolchain.ToolchainProvider;
+import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.FakeProcess;
 import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
@@ -115,5 +117,12 @@ public final class KnownBuildRuleTypesTestUtil {
 
     return KnownBuildRuleTypes.createInstance(
         config, processExecutor, toolchainProvider, pluginManager, sandboxExecutionStrategyFactory);
+  }
+
+  public static KnownBuildRuleTypesFactory createKnownBuildRuleTypesFactory() {
+    return DefaultKnownBuildRuleTypesFactory.of(
+        new DefaultProcessExecutor(new TestConsole()),
+        BuckPluginManagerFactory.createPluginManager(),
+        new TestSandboxExecutionStrategyFactory());
   }
 }
