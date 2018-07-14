@@ -22,6 +22,7 @@ import com.facebook.buck.core.select.SelectorList;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.types.Pair;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
@@ -31,6 +32,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import javax.annotation.CheckReturnValue;
+import javax.annotation.Nullable;
 
 /**
  * Used to derive information from the constructor args returned by {@link
@@ -93,10 +95,18 @@ public class ConstructorArgMarshaller {
       info.setFromParams(cellRoots, filesystem, buildTarget, dtoAndBuild.getFirst(), instance);
     }
     T dto = dtoAndBuild.getSecond().apply(dtoAndBuild.getFirst());
-    ParamInfo deps = allParamInfo.get("deps");
+    collectDeclaredDeps(cellRoots, allParamInfo.get("deps"), declaredDeps, dto);
+    return dto;
+  }
+
+  private void collectDeclaredDeps(
+      CellPathResolver cellPathResolver,
+      @Nullable ParamInfo deps,
+      ImmutableSet.Builder<BuildTarget> declaredDeps,
+      Object dto) {
     if (deps != null && deps.isDep()) {
       deps.traverse(
-          cellRoots,
+          cellPathResolver,
           object -> {
             if (!(object instanceof BuildTarget)) {
               return;
@@ -105,6 +115,37 @@ public class ConstructorArgMarshaller {
           },
           dto);
     }
+  }
+
+  /**
+   * Creates a constructor argument using configured attributes.
+   *
+   * @param attributes configured attributes that cannot contain selectable values (instances of
+   *     {@link SelectorList})
+   */
+  public <T> T populateFromConfiguredAttributes(
+      CellPathResolver cellPathResolver,
+      BuildTarget buildTarget,
+      Class<T> dtoClass,
+      ImmutableSet.Builder<BuildTarget> declaredDeps,
+      ImmutableMap<String, ?> attributes) {
+    Pair<Object, Function<Object, T>> dtoAndBuild =
+        CoercedTypeCache.instantiateSkeleton(dtoClass, buildTarget);
+    ImmutableMap<String, ParamInfo> allParamInfo =
+        CoercedTypeCache.INSTANCE.getAllParamInfo(typeCoercerFactory, dtoClass);
+    for (ParamInfo info : allParamInfo.values()) {
+      Object argumentValue = attributes.get(info.getName());
+      if (argumentValue == null) {
+        continue;
+      }
+      Preconditions.checkArgument(
+          !(argumentValue instanceof SelectorList),
+          "Attribute \"%s\" is not resolved",
+          info.getName());
+      info.setCoercedValue(dtoAndBuild.getFirst(), argumentValue);
+    }
+    T dto = dtoAndBuild.getSecond().apply(dtoAndBuild.getFirst());
+    collectDeclaredDeps(cellPathResolver, allParamInfo.get("deps"), declaredDeps, dto);
     return dto;
   }
 

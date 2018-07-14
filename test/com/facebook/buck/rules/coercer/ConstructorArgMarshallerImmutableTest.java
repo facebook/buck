@@ -43,6 +43,7 @@ import com.google.common.collect.Lists;
 import com.google.devtools.build.lib.syntax.SelectorValue;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -617,6 +618,61 @@ public class ConstructorArgMarshallerImmutableTest {
             ImmutableSet.builder(),
             ImmutableMap.<String, Object>of("string", "bar"));
     assertEquals("bar", built.getString());
+  }
+
+  @Test
+  public void populateFromCoercedAttributesThrowsOnSelectorList() {
+    SelectorList<String> selectorList =
+        new SelectorList<>(new IdentityTypeCoercer<>(String.class), Collections.emptyList());
+
+    expected.expect(IllegalArgumentException.class);
+    expected.expectMessage("Attribute \"string\" is not resolved");
+
+    marshaller.populateFromConfiguredAttributes(
+        createCellRoots(filesystem),
+        TARGET,
+        DtoWithString.class,
+        ImmutableSet.builder(),
+        ImmutableMap.<String, Object>of("string", selectorList));
+  }
+
+  @Test
+  public void populateFromCoercedAttributesCopiesValuesToImmutable() {
+    ImmutableSet.Builder<BuildTarget> declaredDeps = ImmutableSet.builder();
+    DtoWithString dto =
+        marshaller.populateFromConfiguredAttributes(
+            createCellRoots(filesystem),
+            TARGET,
+            DtoWithString.class,
+            declaredDeps,
+            ImmutableMap.<String, Object>of("string", "value"));
+    assertEquals("value", dto.getString());
+    assertTrue(declaredDeps.build().isEmpty());
+  }
+
+  @Test
+  public void populateFromCoercedAttributesCollectsDeclaredDeps() {
+    ImmutableSet.Builder<BuildTarget> declaredDeps = ImmutableSet.builder();
+    BuildTarget dep = BuildTargetFactory.newInstance("//a/b:c");
+    marshaller.populateFromConfiguredAttributes(
+        createCellRoots(filesystem),
+        TARGET,
+        DtoWithDepsAndNotDeps.class,
+        declaredDeps,
+        ImmutableMap.<String, Object>of("deps", ImmutableList.of(dep)));
+    assertEquals(ImmutableSet.of(dep), declaredDeps.build());
+  }
+
+  @Test
+  public void populateFromCoercedAttributesSkipsMissingValues() {
+    DtoWithOptionalSetOfStrings dto =
+        marshaller.populateFromConfiguredAttributes(
+            createCellRoots(filesystem),
+            TARGET,
+            DtoWithOptionalSetOfStrings.class,
+            ImmutableSet.builder(),
+            ImmutableMap.of());
+    assertFalse(dto.getStrings().isPresent());
   }
 
   @Test
