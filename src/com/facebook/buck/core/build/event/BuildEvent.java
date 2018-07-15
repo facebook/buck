@@ -61,6 +61,10 @@ public abstract class BuildEvent extends AbstractBuckEvent implements WorkAdvanc
     return new UnskippedRuleCountUpdated(ruleCount);
   }
 
+  public static BuildReport buildReport(String buildReportJson) {
+    return new BuildReport(buildReportJson);
+  }
+
   public static class Started extends BuildEvent {
 
     private final ImmutableSet<String> buildArgs;
@@ -279,6 +283,44 @@ public abstract class BuildEvent extends AbstractBuckEvent implements WorkAdvanc
     @Override
     public int hashCode() {
       return System.identityHashCode(this);
+    }
+  }
+
+  /** Event used to post build reports */
+  public static class BuildReport extends BuildEvent {
+
+    private final String buildReportJson;
+
+    protected BuildReport(String buildReportJson) {
+      super(EventKey.unique());
+      this.buildReportJson = buildReportJson;
+    }
+
+    public String getBuildReport() {
+      return buildReportJson;
+    }
+
+    @Override
+    public String getEventName() {
+      return BUILD_REPORT;
+    }
+
+    @Override
+    protected String getValueString() {
+      return buildReportJson;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (o instanceof BuildReport) {
+        return this.getBuildReport().equals(((BuildReport) o).getBuildReport());
+      }
+      return false;
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hashCode(super.hashCode(), buildReportJson);
     }
   }
 }

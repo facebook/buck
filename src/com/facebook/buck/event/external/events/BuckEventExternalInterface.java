@@ -41,6 +41,8 @@ public interface BuckEventExternalInterface {
   String DIST_BUILD_STARTED = "DistBuildStarted";
   // Sent when a distributed build has finished
   String DIST_BUILD_FINISHED = "DistBuildFinished";
+  // Sent when a build finishes with the tag --build-report
+  String BUILD_REPORT = "BuildReport";
   // Sent when file parsing has started
   String PARSE_STARTED = "ParseStarted";
   // Sent when file parsing has finished
