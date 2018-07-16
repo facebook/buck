@@ -33,6 +33,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.PosixFilePermission;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.NavigableMap;
 import java.util.Optional;
@@ -96,6 +97,7 @@ public class Untar extends Unarchiver {
       throws IOException {
 
     ImmutableSet.Builder<Path> paths = ImmutableSet.builder();
+    HashSet<Path> dirsToTidy = new HashSet<>();
     TreeMap<Path, Long> dirCreationTimes = new TreeMap<>();
     DirectoryCreator creator = new DirectoryCreator(filesystem);
 
@@ -120,6 +122,7 @@ public class Untar extends Unarchiver {
         }
 
         if (entry.isDirectory()) {
+          dirsToTidy.add(destPath);
           mkdirs(creator, destPath);
           dirCreationTimes.put(destPath, entry.getModTime().getTime());
         } else if (entry.isSymbolicLink()) {
@@ -148,7 +151,7 @@ public class Untar extends Unarchiver {
     ImmutableSet<Path> filePaths = paths.build();
     if (existingFileMode == ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES) {
       // Clean out directories of files that were not in the archive
-      tidyDirectories(filesystem, creator, filePaths);
+      tidyDirectories(filesystem, dirsToTidy, filePaths);
     }
     return filePaths.asList();
   }
@@ -167,12 +170,11 @@ public class Untar extends Unarchiver {
 
   /** Cleans up any files that exist on the filesystem that were not in the archive */
   private void tidyDirectories(
-      ProjectFilesystem filesystem, DirectoryCreator creator, ImmutableSet<Path> createdFiles)
+      ProjectFilesystem filesystem, Set<Path> dirsToTidy, ImmutableSet<Path> createdFiles)
       throws IOException {
-    Set<Path> directories = creator.recordedDirectories();
-    for (Path directory : directories) {
+    for (Path directory : dirsToTidy) {
       for (Path foundFile : filesystem.getDirectoryContents(directory)) {
-        if (!createdFiles.contains(foundFile) && !directories.contains(foundFile)) {
+        if (!createdFiles.contains(foundFile) && !dirsToTidy.contains(foundFile)) {
           filesystem.deleteRecursivelyIfExists(foundFile);
         }
       }
