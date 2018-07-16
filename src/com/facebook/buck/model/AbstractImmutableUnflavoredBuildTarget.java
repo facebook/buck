@@ -52,7 +52,7 @@ abstract class AbstractImmutableUnflavoredBuildTarget extends AbstractUnflavored
         BUILD_TARGET_PREFIX,
         getBaseName());
 
-    // On Windows, baseName may contain backslashes, which are not permitted.
+    // BaseName may contain backslashes, which are the path separator, so not permitted.
     Preconditions.checkArgument(
         !getBaseName().contains("\\"), "baseName may not contain backslashes.");
 

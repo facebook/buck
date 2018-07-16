@@ -142,7 +142,17 @@ public class JsBundleWorkerJobArgsTest {
 
   @Test
   public void testLocationMacrosInExtraJsonAreExpandedAndEscaped() {
-    BuildTarget referenced = BuildTargetFactory.newInstance("//needs\t\":escaping");
+    String fileNameWithEscapes;
+    if (Platform.detect() == Platform.WINDOWS) {
+      // Double quote not allowed as Windows path character.
+      // The Java nio Windows normalizer gives errors for the \t
+      // and all other escape characters, but \'.
+      fileNameWithEscapes = "//needs\'\':escaping";
+    } else {
+      fileNameWithEscapes = "//needs\t\":escaping";
+    }
+
+    BuildTarget referenced = BuildTargetFactory.newInstance(fileNameWithEscapes);
     JsTestScenario scenario = JsTestScenario.builder().arbitraryRule(referenced).build();
     JsBundle bundle =
         scenario.createBundle(
@@ -150,12 +160,21 @@ public class JsBundleWorkerJobArgsTest {
             builder -> builder.setExtraJson("[\"1 %s 2\"]", LocationMacro.of(referenced)));
 
     buildContext(scenario);
-    assertThat(
-        getJobJson(bundle).get("extraData").toString(),
-        equalTo(
-            String.format(
-                "[\"1 %s/buck-out/gen/needs\\t\\\"/escaping/escaping 2\"]",
-                JsUtil.escapeJsonForStringEmbedding(context.getBuildCellRootPath().toString()))));
+    String expectedStr;
+
+    if (Platform.detect() == Platform.WINDOWS) {
+      expectedStr =
+          String.format(
+              "[\"1 %s\\\\buck-out\\\\gen\\\\needs\'\'\\\\escaping\\\\escaping 2\"]",
+              JsUtil.escapeJsonForStringEmbedding(context.getBuildCellRootPath().toString()));
+    } else {
+      expectedStr =
+          String.format(
+              "[\"1 %s/buck-out/gen/needs\\t\\\"/escaping/escaping 2\"]",
+              JsUtil.escapeJsonForStringEmbedding(context.getBuildCellRootPath().toString()));
+    }
+
+    assertThat(getJobJson(bundle).get("extraData").toString(), equalTo(expectedStr));
   }
 
   private static String targetWithFlavors(String target, Flavor... flavors) {
