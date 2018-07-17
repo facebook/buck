@@ -147,7 +147,8 @@ public class AndroidBinaryTest {
         ImmutableSet.of(
             proguardOutputDir.resolve("configuration.txt"),
             proguardOutputDir.resolve("mapping.txt"),
-            proguardOutputDir.resolve("seeds.txt"));
+            proguardOutputDir.resolve("seeds.txt"),
+            proguardOutputDir.resolve("usage.txt"));
 
     assertEquals(expectedRecordedArtifacts, buildableContext.getRecordedArtifacts());
 
