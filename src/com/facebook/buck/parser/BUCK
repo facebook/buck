@@ -54,6 +54,7 @@ java_immutables_library(
         "RawTargetNodeFactory.java",
         "RawTargetNodePipeline.java",
         "RawTargetNodeToTargetNodeFactory.java",
+        "RawTargetNodeToTargetNodeParsePipeline.java",
         "SpeculativeParsing.java",
         "SymlinkCache.java",
         "TargetNodeListener.java",
