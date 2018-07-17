@@ -519,14 +519,9 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
 
   @Subscribe
   public void commandStartedEvent(CommandEvent.Started startedEvent) {
-    try {
-      LOG.warn("Command.Started event received at %d", System.currentTimeMillis());
-      progressEstimator.ifPresent(
-          estimator ->
-              estimator.setCurrentCommand(startedEvent.getCommandName(), startedEvent.getArgs()));
-    } finally {
-      LOG.warn("Command.Started event done processing at %d", System.currentTimeMillis());
-    }
+    progressEstimator.ifPresent(
+        estimator ->
+            estimator.setCurrentCommand(startedEvent.getCommandName(), startedEvent.getArgs()));
   }
 
   public static void aggregateStartedEvent(
