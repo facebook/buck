@@ -63,7 +63,7 @@ third-party/java/jsr/javax.inject-1.jar
 third-party/java/jsr/jsr305.jar
 third-party/java/kxml2/kxml2-2.3.0.jar
 third-party/java/nailgun/nailgun-server-0.9.3-SNAPSHOT.jar
-third-party/java/nuprocess/nuprocess-1.1.0.jar
+third-party/java/nuprocess/nuprocess-1.2.4.jar
 third-party/java/ObjCBridge/ObjCBridge.jar
 third-party/java/objenesis/objenesis-1.2.jar
 third-party/java/okhttp/okhttp-3.9.0.jar
