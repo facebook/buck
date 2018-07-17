@@ -90,7 +90,6 @@ public class TargetSpecResolverTest {
     filesystem = TestProjectFilesystems.createProjectFilesystem(cellRoot);
     cell = new TestCellBuilder().setFilesystem(filesystem).build();
     eventBus = BuckEventBusForTests.newInstance();
-    perBuildStateFactory = new PerBuildStateFactory();
     ProcessExecutor processExecutor = new DefaultProcessExecutor(new TestConsole());
     typeCoercerFactory = new DefaultTypeCoercerFactory();
     constructorArgMarshaller = new ConstructorArgMarshaller(typeCoercerFactory);
@@ -100,19 +99,27 @@ public class TargetSpecResolverTest {
                 processExecutor,
                 BuckPluginManagerFactory.createPluginManager(),
                 new TestSandboxExecutionStrategyFactory()));
+    ParserConfig parserConfig = cell.getBuckConfig().getView(ParserConfig.class);
     ExecutableFinder executableFinder = new ExecutableFinder();
-    targetNodeTargetSpecResolver = new TargetSpecResolver();
-    parser =
-        new DefaultParser(
-            cell.getBuckConfig().getView(ParserConfig.class),
+    parserPythonInterpreterProvider =
+        new ParserPythonInterpreterProvider(parserConfig, executableFinder);
+    perBuildStateFactory =
+        new PerBuildStateFactory(
             typeCoercerFactory,
             constructorArgMarshaller,
             knownBuildRuleTypesProvider,
-            executableFinder,
+            parserPythonInterpreterProvider);
+    targetNodeTargetSpecResolver = new TargetSpecResolver();
+    parser =
+        new DefaultParser(
+            new PerBuildStateFactory(
+                typeCoercerFactory,
+                constructorArgMarshaller,
+                knownBuildRuleTypesProvider,
+                parserPythonInterpreterProvider),
+            parserConfig,
+            typeCoercerFactory,
             targetNodeTargetSpecResolver);
-    ParserConfig parserConfig = cell.getBuckConfig().getView(ParserConfig.class);
-    parserPythonInterpreterProvider =
-        new ParserPythonInterpreterProvider(parserConfig, executableFinder);
     flavorEnhancer = (target, targetNode, targetType) -> target;
     executorService = MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(1));
   }
@@ -197,14 +204,10 @@ public class TargetSpecResolverTest {
       throws IOException, InterruptedException {
     PerBuildState state =
         perBuildStateFactory.create(
-            typeCoercerFactory,
             parser.getPermState(),
-            constructorArgMarshaller,
             eventBus,
-            parserPythonInterpreterProvider,
             executorService,
             cell,
-            knownBuildRuleTypesProvider,
             false,
             SpeculativeParsing.DISABLED);
     return targetNodeTargetSpecResolver.resolveTargetSpecs(

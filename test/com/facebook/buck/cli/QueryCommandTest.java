@@ -101,16 +101,16 @@ public class QueryCommandTest {
     ListeningExecutorService executorService = new FakeListeningExecutorService();
     TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
     PerBuildState perBuildState =
-        new PerBuildStateFactory()
-            .create(
+        new PerBuildStateFactory(
                 typeCoercerFactory,
-                params.getParser().getPermState(),
                 new ConstructorArgMarshaller(typeCoercerFactory),
+                params.getKnownBuildRuleTypesProvider(),
+                new ParserPythonInterpreterProvider(cell.getBuckConfig(), new ExecutableFinder()))
+            .create(
+                params.getParser().getPermState(),
                 eventBus,
-                new ParserPythonInterpreterProvider(cell.getBuckConfig(), new ExecutableFinder()),
                 executorService,
                 cell,
-                params.getKnownBuildRuleTypesProvider(),
                 false,
                 SpeculativeParsing.ENABLED);
     env =

@@ -43,6 +43,8 @@ import com.facebook.buck.model.FilesystemBackedBuildFileTree;
 import com.facebook.buck.parser.DefaultParser;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
+import com.facebook.buck.parser.ParserPythonInterpreterProvider;
+import com.facebook.buck.parser.PerBuildStateFactory;
 import com.facebook.buck.parser.TargetSpecResolver;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.plugin.impl.BuckPluginManagerFactory;
@@ -291,12 +293,15 @@ public class OwnersReportTest {
                 BuckPluginManagerFactory.createPluginManager(),
                 new TestSandboxExecutionStrategyFactory()));
     TypeCoercerFactory coercerFactory = new DefaultTypeCoercerFactory();
+    ParserConfig parserConfig = cell.getBuckConfig().getView(ParserConfig.class);
     return new DefaultParser(
-        cell.getBuckConfig().getView(ParserConfig.class),
+        new PerBuildStateFactory(
+            coercerFactory,
+            new ConstructorArgMarshaller(coercerFactory),
+            knownBuildRuleTypesProvider,
+            new ParserPythonInterpreterProvider(parserConfig, new ExecutableFinder())),
+        parserConfig,
         coercerFactory,
-        new ConstructorArgMarshaller(coercerFactory),
-        knownBuildRuleTypesProvider,
-        new ExecutableFinder(),
         new TargetSpecResolver());
   }
 

@@ -28,15 +28,28 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 
 public class PerBuildStateFactory {
-  public PerBuildState create(
+
+  private final TypeCoercerFactory typeCoercerFactory;
+  private final ConstructorArgMarshaller marshaller;
+  private final KnownBuildRuleTypesProvider knownBuildRuleTypesProvider;
+  private final ParserPythonInterpreterProvider parserPythonInterpreterProvider;
+
+  public PerBuildStateFactory(
       TypeCoercerFactory typeCoercerFactory,
-      DaemonicParserState daemonicParserState,
       ConstructorArgMarshaller marshaller,
+      KnownBuildRuleTypesProvider knownBuildRuleTypesProvider,
+      ParserPythonInterpreterProvider parserPythonInterpreterProvider) {
+    this.typeCoercerFactory = typeCoercerFactory;
+    this.marshaller = marshaller;
+    this.knownBuildRuleTypesProvider = knownBuildRuleTypesProvider;
+    this.parserPythonInterpreterProvider = parserPythonInterpreterProvider;
+  }
+
+  public PerBuildState create(
+      DaemonicParserState daemonicParserState,
       BuckEventBus eventBus,
-      ParserPythonInterpreterProvider parserPythonInterpreterProvider,
       ListeningExecutorService executorService,
       Cell rootCell,
-      KnownBuildRuleTypesProvider knownBuildRuleTypesProvider,
       boolean enableProfiling,
       SpeculativeParsing speculativeParsing) {
 

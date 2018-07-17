@@ -102,17 +102,17 @@ public class AuditDependenciesCommand extends AbstractCommand {
     try (CommandThreadManager pool =
             new CommandThreadManager("Audit", getConcurrencyLimit(params.getBuckConfig()));
         PerBuildState parserState =
-            new PerBuildStateFactory()
-                .create(
+            new PerBuildStateFactory(
                     params.getTypeCoercerFactory(),
-                    params.getParser().getPermState(),
                     new ConstructorArgMarshaller(params.getTypeCoercerFactory()),
-                    params.getBuckEventBus(),
+                    params.getKnownBuildRuleTypesProvider(),
                     new ParserPythonInterpreterProvider(
-                        params.getCell().getBuckConfig(), params.getExecutableFinder()),
+                        params.getCell().getBuckConfig(), params.getExecutableFinder()))
+                .create(
+                    params.getParser().getPermState(),
+                    params.getBuckEventBus(),
                     pool.getListeningExecutorService(),
                     params.getCell(),
-                    params.getKnownBuildRuleTypesProvider(),
                     getEnableParserProfiling(),
                     SpeculativeParsing.ENABLED)) {
       BuckQueryEnvironment env =

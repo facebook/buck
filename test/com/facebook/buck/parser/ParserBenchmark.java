@@ -127,13 +127,16 @@ public class ParserBenchmark {
 
     TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
     ConstructorArgMarshaller marshaller = new ConstructorArgMarshaller(typeCoercerFactory);
+    ParserConfig parserConfig = config.getView(ParserConfig.class);
     parser =
         new DefaultParser(
-            config.getView(ParserConfig.class),
+            new PerBuildStateFactory(
+                typeCoercerFactory,
+                marshaller,
+                knownBuildRuleTypesProvider,
+                new ParserPythonInterpreterProvider(parserConfig, new ExecutableFinder())),
+            parserConfig,
             typeCoercerFactory,
-            marshaller,
-            knownBuildRuleTypesProvider,
-            new ExecutableFinder(),
             new TargetSpecResolver());
   }
 

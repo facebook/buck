@@ -47,6 +47,8 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.DefaultParser;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
+import com.facebook.buck.parser.ParserPythonInterpreterProvider;
+import com.facebook.buck.parser.PerBuildStateFactory;
 import com.facebook.buck.parser.TargetSpecResolver;
 import com.facebook.buck.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
@@ -110,16 +112,19 @@ public class DistBuildFileHashesIntegrationTest {
                 BuckPluginManagerFactory.createPluginManager(),
                 new TestSandboxExecutionStrategyFactory()));
 
+    ParserConfig parserConfig = rootCellConfig.getView(ParserConfig.class);
     TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
     ConstructorArgMarshaller constructorArgMarshaller =
         new ConstructorArgMarshaller(typeCoercerFactory);
     Parser parser =
         new DefaultParser(
+            new PerBuildStateFactory(
+                typeCoercerFactory,
+                constructorArgMarshaller,
+                knownBuildRuleTypesProvider,
+                new ParserPythonInterpreterProvider(parserConfig, new ExecutableFinder())),
             rootCellConfig.getView(ParserConfig.class),
             typeCoercerFactory,
-            constructorArgMarshaller,
-            knownBuildRuleTypesProvider,
-            new ExecutableFinder(),
             new TargetSpecResolver());
     TargetGraph targetGraph =
         parser.buildTargetGraph(
@@ -186,16 +191,19 @@ public class DistBuildFileHashesIntegrationTest {
                 BuckPluginManagerFactory.createPluginManager(),
                 new TestSandboxExecutionStrategyFactory()));
 
+    ParserConfig parserConfig = rootCellConfig.getView(ParserConfig.class);
     TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
     ConstructorArgMarshaller constructorArgMarshaller =
         new ConstructorArgMarshaller(typeCoercerFactory);
     Parser parser =
         new DefaultParser(
-            rootCellConfig.getView(ParserConfig.class),
+            new PerBuildStateFactory(
+                typeCoercerFactory,
+                constructorArgMarshaller,
+                knownBuildRuleTypesProvider,
+                new ParserPythonInterpreterProvider(parserConfig, new ExecutableFinder())),
+            parserConfig,
             typeCoercerFactory,
-            constructorArgMarshaller,
-            knownBuildRuleTypesProvider,
-            new ExecutableFinder(),
             new TargetSpecResolver());
     TargetGraph targetGraph =
         parser.buildTargetGraph(

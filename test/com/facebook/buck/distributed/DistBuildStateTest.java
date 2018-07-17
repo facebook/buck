@@ -58,7 +58,9 @@ import com.facebook.buck.parser.DefaultParser;
 import com.facebook.buck.parser.DefaultParserTargetNodeFactory;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
+import com.facebook.buck.parser.ParserPythonInterpreterProvider;
 import com.facebook.buck.parser.ParserTargetNodeFactory;
+import com.facebook.buck.parser.PerBuildStateFactory;
 import com.facebook.buck.parser.TargetSpecResolver;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.plugin.impl.BuckPluginManagerFactory;
@@ -253,17 +255,20 @@ public class DistBuildStateTest {
     ProjectFilesystem projectFilesystem = cell.getFilesystem();
     projectFilesystem.mkdirs(projectFilesystem.getBuckPaths().getBuckOut());
     BuckConfig buckConfig = cell.getBuckConfig();
+    ParserConfig parserConfig = buckConfig.getView(ParserConfig.class);
     setUp();
     TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
     ConstructorArgMarshaller constructorArgMarshaller =
         new ConstructorArgMarshaller(typeCoercerFactory);
     Parser parser =
         new DefaultParser(
-            buckConfig.getView(ParserConfig.class),
+            new PerBuildStateFactory(
+                typeCoercerFactory,
+                constructorArgMarshaller,
+                knownBuildRuleTypesProvider,
+                new ParserPythonInterpreterProvider(parserConfig, executableFinder)),
+            parserConfig,
             typeCoercerFactory,
-            constructorArgMarshaller,
-            knownBuildRuleTypesProvider,
-            executableFinder,
             new TargetSpecResolver());
     TargetGraph targetGraph =
         parser.buildTargetGraph(

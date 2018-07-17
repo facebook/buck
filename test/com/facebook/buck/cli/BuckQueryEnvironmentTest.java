@@ -106,27 +106,24 @@ public class BuckQueryEnvironmentTest {
 
     ExecutableFinder executableFinder = new ExecutableFinder();
     TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
-    Parser parser =
-        new DefaultParser(
-            cell.getBuckConfig().getView(ParserConfig.class),
+    ParserConfig parserConfig = cell.getBuckConfig().getView(ParserConfig.class);
+    PerBuildStateFactory perBuildStateFactory =
+        new PerBuildStateFactory(
             typeCoercerFactory,
             new ConstructorArgMarshaller(typeCoercerFactory),
             knownBuildRuleTypesProvider,
-            executableFinder,
-            new TargetSpecResolver());
+            new ParserPythonInterpreterProvider(parserConfig, executableFinder));
+    Parser parser =
+        new DefaultParser(
+            perBuildStateFactory, parserConfig, typeCoercerFactory, new TargetSpecResolver());
     parserState =
-        new PerBuildStateFactory()
-            .create(
-                typeCoercerFactory,
-                parser.getPermState(),
-                new ConstructorArgMarshaller(typeCoercerFactory),
-                eventBus,
-                new ParserPythonInterpreterProvider(cell.getBuckConfig(), executableFinder),
-                executor,
-                cell,
-                knownBuildRuleTypesProvider,
-                /* enableProfiling */ false,
-                SpeculativeParsing.ENABLED);
+        perBuildStateFactory.create(
+            parser.getPermState(),
+            eventBus,
+            executor,
+            cell,
+            /* enableProfiling */ false,
+            SpeculativeParsing.ENABLED);
 
     TargetPatternEvaluator targetPatternEvaluator =
         new TargetPatternEvaluator(

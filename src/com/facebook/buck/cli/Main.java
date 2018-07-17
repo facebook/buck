@@ -99,6 +99,8 @@ import com.facebook.buck.module.impl.DefaultBuckModuleManager;
 import com.facebook.buck.parser.DefaultParser;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
+import com.facebook.buck.parser.ParserPythonInterpreterProvider;
+import com.facebook.buck.parser.PerBuildStateFactory;
 import com.facebook.buck.parser.TargetSpecResolver;
 import com.facebook.buck.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
@@ -1330,11 +1332,13 @@ public final class Main {
       parserAndCaches =
           ParserAndCaches.of(
               new DefaultParser(
+                  new PerBuildStateFactory(
+                      typeCoercerFactory,
+                      new ConstructorArgMarshaller(typeCoercerFactory),
+                      knownBuildRuleTypesProvider,
+                      new ParserPythonInterpreterProvider(parserConfig, executableFinder)),
                   parserConfig,
                   typeCoercerFactory,
-                  new ConstructorArgMarshaller(typeCoercerFactory),
-                  knownBuildRuleTypesProvider,
-                  executableFinder,
                   new TargetSpecResolver()),
               typeCoercerFactory,
               new InstrumentedVersionedTargetGraphCache(

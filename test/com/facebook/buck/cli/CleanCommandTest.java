@@ -41,6 +41,8 @@ import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
 import com.facebook.buck.module.TestBuckModuleManagerFactory;
 import com.facebook.buck.parser.DefaultParser;
 import com.facebook.buck.parser.ParserConfig;
+import com.facebook.buck.parser.ParserPythonInterpreterProvider;
+import com.facebook.buck.parser.PerBuildStateFactory;
 import com.facebook.buck.parser.TargetSpecResolver;
 import com.facebook.buck.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
@@ -291,6 +293,7 @@ public class CleanCommandTest {
             DefaultKnownBuildRuleTypesFactory.of(
                 processExecutor, pluginManager, new TestSandboxExecutionStrategyFactory()));
     ExecutableFinder executableFinder = new ExecutableFinder();
+    ParserConfig parserConfig = buckConfig.getView(ParserConfig.class);
 
     return CommandRunnerParams.of(
         new TestConsole(),
@@ -301,11 +304,13 @@ public class CleanCommandTest {
         new SingletonArtifactCacheFactory(new NoopArtifactCache()),
         typeCoercerFactory,
         new DefaultParser(
-            buckConfig.getView(ParserConfig.class),
+            new PerBuildStateFactory(
+                typeCoercerFactory,
+                new ConstructorArgMarshaller(typeCoercerFactory),
+                knownBuildRuleTypesProvider,
+                new ParserPythonInterpreterProvider(parserConfig, executableFinder)),
+            parserConfig,
             typeCoercerFactory,
-            new ConstructorArgMarshaller(typeCoercerFactory),
-            knownBuildRuleTypesProvider,
-            executableFinder,
             new TargetSpecResolver()),
         BuckEventBusForTests.newInstance(),
         Platform.detect(),

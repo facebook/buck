@@ -25,18 +25,15 @@ import com.facebook.buck.core.model.HasDefaultFlavors;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
-import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypesProvider;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.graph.AcyclicDepthFirstPostOrderTraversal;
 import com.facebook.buck.graph.GraphTraversable;
 import com.facebook.buck.graph.MutableDirectedGraph;
-import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.ImmutableBuildTarget;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.facebook.buck.parser.exceptions.MissingBuildFileException;
-import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.MoreMaps;
 import com.google.common.annotations.VisibleForTesting;
@@ -70,30 +67,19 @@ public class DefaultParser implements Parser {
 
   private final PerBuildStateFactory perBuildStateFactory;
   private final DaemonicParserState permState;
-  private final ConstructorArgMarshaller marshaller;
-  private final TypeCoercerFactory typeCoercerFactory;
-  private final KnownBuildRuleTypesProvider knownBuildRuleTypesProvider;
-  private final ParserPythonInterpreterProvider parserPythonInterpreterProvider;
   private final TargetSpecResolver targetSpecResolver;
 
   public DefaultParser(
+      PerBuildStateFactory perBuildStateFactory,
       ParserConfig parserConfig,
       TypeCoercerFactory typeCoercerFactory,
-      ConstructorArgMarshaller marshaller,
-      KnownBuildRuleTypesProvider knownBuildRuleTypesProvider,
-      ExecutableFinder executableFinder,
       TargetSpecResolver targetSpecResolver) {
-    this.perBuildStateFactory = new PerBuildStateFactory();
-    this.typeCoercerFactory = typeCoercerFactory;
+    this.perBuildStateFactory = perBuildStateFactory;
     this.permState =
         new DaemonicParserState(
             typeCoercerFactory,
             parserConfig.getNumParsingThreads(),
             parserConfig.shouldIgnoreEnvironmentVariablesChanges());
-    this.marshaller = marshaller;
-    this.knownBuildRuleTypesProvider = knownBuildRuleTypesProvider;
-    this.parserPythonInterpreterProvider =
-        new ParserPythonInterpreterProvider(parserConfig, executableFinder);
     this.targetSpecResolver = targetSpecResolver;
   }
 
@@ -130,16 +116,7 @@ public class DefaultParser implements Parser {
 
     try (PerBuildState state =
         perBuildStateFactory.create(
-            typeCoercerFactory,
-            permState,
-            marshaller,
-            eventBus,
-            parserPythonInterpreterProvider,
-            executor,
-            cell,
-            knownBuildRuleTypesProvider,
-            enableProfiling,
-            SpeculativeParsing.ENABLED)) {
+            permState, eventBus, executor, cell, enableProfiling, SpeculativeParsing.ENABLED)) {
       return state.getAllTargetNodes(cell, buildFile);
     }
   }
@@ -154,16 +131,7 @@ public class DefaultParser implements Parser {
       throws BuildFileParseException {
     try (PerBuildState state =
         perBuildStateFactory.create(
-            typeCoercerFactory,
-            permState,
-            marshaller,
-            eventBus,
-            parserPythonInterpreterProvider,
-            executor,
-            cell,
-            knownBuildRuleTypesProvider,
-            enableProfiling,
-            SpeculativeParsing.DISABLED)) {
+            permState, eventBus, executor, cell, enableProfiling, SpeculativeParsing.DISABLED)) {
       return state.getTargetNode(target);
     }
   }
@@ -229,16 +197,7 @@ public class DefaultParser implements Parser {
 
     try (PerBuildState state =
         perBuildStateFactory.create(
-            typeCoercerFactory,
-            permState,
-            marshaller,
-            eventBus,
-            parserPythonInterpreterProvider,
-            executor,
-            cell,
-            knownBuildRuleTypesProvider,
-            enableProfiling,
-            SpeculativeParsing.DISABLED)) {
+            permState, eventBus, executor, cell, enableProfiling, SpeculativeParsing.DISABLED)) {
       return getTargetNodeRawAttributes(state, cell, targetNode);
     }
   }
@@ -271,16 +230,7 @@ public class DefaultParser implements Parser {
 
     try (PerBuildState state =
         perBuildStateFactory.create(
-            typeCoercerFactory,
-            permState,
-            marshaller,
-            eventBus,
-            parserPythonInterpreterProvider,
-            executor,
-            rootCell,
-            knownBuildRuleTypesProvider,
-            enableProfiling,
-            SpeculativeParsing.ENABLED)) {
+            permState, eventBus, executor, rootCell, enableProfiling, SpeculativeParsing.ENABLED)) {
       return buildTargetGraph(state, eventBus, toExplore);
     }
   }
@@ -397,16 +347,7 @@ public class DefaultParser implements Parser {
 
     try (PerBuildState state =
         perBuildStateFactory.create(
-            typeCoercerFactory,
-            permState,
-            marshaller,
-            eventBus,
-            parserPythonInterpreterProvider,
-            executor,
-            rootCell,
-            knownBuildRuleTypesProvider,
-            enableProfiling,
-            SpeculativeParsing.ENABLED)) {
+            permState, eventBus, executor, rootCell, enableProfiling, SpeculativeParsing.ENABLED)) {
 
       ImmutableSet<BuildTarget> buildTargets =
           ImmutableSet.copyOf(
@@ -447,16 +388,7 @@ public class DefaultParser implements Parser {
 
     try (PerBuildState state =
         perBuildStateFactory.create(
-            typeCoercerFactory,
-            permState,
-            marshaller,
-            eventBus,
-            parserPythonInterpreterProvider,
-            executor,
-            rootCell,
-            knownBuildRuleTypesProvider,
-            enableProfiling,
-            speculativeParsing)) {
+            permState, eventBus, executor, rootCell, enableProfiling, speculativeParsing)) {
       return targetSpecResolver.resolveTargetSpecs(
           eventBus,
           rootCell,

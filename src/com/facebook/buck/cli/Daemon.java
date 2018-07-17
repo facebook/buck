@@ -35,6 +35,8 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.parser.DefaultParser;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
+import com.facebook.buck.parser.ParserPythonInterpreterProvider;
+import com.facebook.buck.parser.PerBuildStateFactory;
 import com.facebook.buck.parser.TargetSpecResolver;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
@@ -110,13 +112,16 @@ final class Daemon implements Closeable {
     this.knownBuildRuleTypesProvider = knownBuildRuleTypesProvider;
 
     typeCoercerFactory = new DefaultTypeCoercerFactory();
+    ParserConfig parserConfig = rootCell.getBuckConfig().getView(ParserConfig.class);
     this.parser =
         new DefaultParser(
-            rootCell.getBuckConfig().getView(ParserConfig.class),
+            new PerBuildStateFactory(
+                typeCoercerFactory,
+                new ConstructorArgMarshaller(typeCoercerFactory),
+                knownBuildRuleTypesProvider,
+                new ParserPythonInterpreterProvider(parserConfig, executableFinder)),
+            parserConfig,
             typeCoercerFactory,
-            new ConstructorArgMarshaller(typeCoercerFactory),
-            knownBuildRuleTypesProvider,
-            executableFinder,
             new TargetSpecResolver());
     parser.register(fileEventBus);
 
