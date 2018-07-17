@@ -19,7 +19,7 @@ package com.facebook.buck.model;
 import com.facebook.buck.core.model.AbstractUnflavoredBuildTarget;
 import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import com.facebook.buck.util.string.StringsUtils;
+import com.facebook.buck.util.string.MoreStrings;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Interner;
 import com.google.common.collect.Interners;
@@ -103,15 +103,15 @@ abstract class AbstractImmutableUnflavoredBuildTarget extends AbstractUnflavored
       return cmp;
     }
     if (getCell().isPresent() && o.getCell().isPresent()) {
-      cmp = StringsUtils.compareStrings(getCell().get(), o.getCell().get());
+      cmp = MoreStrings.compareStrings(getCell().get(), o.getCell().get());
       if (cmp != 0) {
         return cmp;
       }
     }
-    cmp = StringsUtils.compareStrings(getBaseName(), o.getBaseName());
+    cmp = MoreStrings.compareStrings(getBaseName(), o.getBaseName());
     if (cmp != 0) {
       return cmp;
     }
-    return StringsUtils.compareStrings(getShortName(), o.getShortName());
+    return MoreStrings.compareStrings(getShortName(), o.getShortName());
   }
 }

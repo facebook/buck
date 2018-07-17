@@ -124,4 +124,12 @@ public final class MoreStrings {
   public static ImmutableList<String> lines(String data) throws IOException {
     return CharSource.wrap(data).readLines();
   }
+
+  /** Compare two strings lexicographically. */
+  public static int compareStrings(String a, String b) {
+    if (a == b) {
+      return 0;
+    }
+    return a.compareTo(b);
+  }
 }
