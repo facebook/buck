@@ -43,6 +43,8 @@
   "//src/com/facebook/buck/core/rules/attr:attr",
   "//src/com/facebook/buck/core/rules/build/strategy:strategy",
   "//src/com/facebook/buck/core/rules/common:common",
+  "//src/com/facebook/buck/core/rules/config:config",
+  "//src/com/facebook/buck/core/rules/config/impl:impl",
   "//src/com/facebook/buck/core/rules/graphbuilder:graphbuilder",
   "//src/com/facebook/buck/core/rules/graphbuilder/impl:impl",
   "//src/com/facebook/buck/core/rules/impl:impl",
