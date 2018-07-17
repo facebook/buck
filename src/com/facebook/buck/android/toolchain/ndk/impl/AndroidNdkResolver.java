@@ -171,7 +171,7 @@ public class AndroidNdkResolver extends BaseAndroidToolchainResolver {
     } catch (IOException e) {
       ndkErrorMessage =
           Optional.of(
-              "Unable to read contents of Android ndk.repository or "
+              "Unable to read contents of Android ndk.ndk_repository_path or "
                   + "ANDROID_NDK_REPOSITORY at "
                   + repository);
       return Optional.empty();
@@ -198,7 +198,7 @@ public class AndroidNdkResolver extends BaseAndroidToolchainResolver {
           Optional.of(
               repository
                   + " does not contain any valid Android NDK. Make"
-                  + " sure to specify ANDROID_NDK_REPOSITORY or ndk.repository.");
+                  + " sure to specify ANDROID_NDK_REPOSITORY or ndk.ndk_repository_path.");
       return Optional.empty();
     }
 
