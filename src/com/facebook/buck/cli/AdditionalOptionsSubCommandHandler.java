@@ -16,7 +16,7 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.util.MoreStrings;
+import com.facebook.buck.util.string.MoreStrings;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableList;
 import java.util.Arrays;

@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.util.string.MoreStrings;
 import com.google.common.collect.ImmutableSet;
 import java.util.regex.Pattern;
 import org.junit.Test;

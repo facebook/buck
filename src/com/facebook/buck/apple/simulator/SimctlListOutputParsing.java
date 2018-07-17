@@ -17,7 +17,7 @@
 package com.facebook.buck.apple.simulator;
 
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.util.MoreStrings;
+import com.facebook.buck.util.string.MoreStrings;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.util.regex.Matcher;

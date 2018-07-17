@@ -25,8 +25,8 @@ import com.facebook.buck.cxx.toolchain.DefaultCxxPlatforms;
 import com.facebook.buck.toolchain.ToolchainCreationContext;
 import com.facebook.buck.toolchain.ToolchainFactory;
 import com.facebook.buck.toolchain.ToolchainProvider;
-import com.facebook.buck.util.MoreStrings;
 import com.facebook.buck.util.RichStream;
+import com.facebook.buck.util.string.MoreStrings;
 import com.google.common.collect.ImmutableList;
 import java.util.Optional;
 

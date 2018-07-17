@@ -44,6 +44,7 @@ buck_module(
         "//src/com/facebook/buck/util:process_executor",
         "//src/com/facebook/buck/util:util",
         "//src/com/facebook/buck/util/environment:platform",
+        "//src/com/facebook/buck/util/string:string",
         "//src/com/facebook/buck/versions:types",
         "//third-party/java/infer-annotations:infer-annotations",
         "//third-party/java/jackson:jackson-databind",

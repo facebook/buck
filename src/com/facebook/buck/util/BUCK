@@ -98,6 +98,7 @@ java_immutables_library(
         "//src/com/facebook/buck/log:api",
         "//src/com/facebook/buck/util/concurrent:concurrent",
         "//src/com/facebook/buck/util/environment:platform",
+        "//src/com/facebook/buck/util/string:string",
         "//third-party/java/jna:jna-platform",
         "//third-party/java/nuprocess:nuprocess",
         "//third-party/java/oshi:oshi-core",

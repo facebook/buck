@@ -17,7 +17,7 @@
 package com.facebook.buck.core.rules.type.impl;
 
 import com.facebook.buck.core.rules.type.BuildRuleType;
-import com.facebook.buck.util.MoreStrings;
+import com.facebook.buck.util.string.MoreStrings;
 import com.google.common.base.CaseFormat;
 
 public class BuildRuleTypeFactory {
