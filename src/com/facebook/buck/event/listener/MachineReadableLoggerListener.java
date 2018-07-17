@@ -16,6 +16,7 @@
 
 package com.facebook.buck.event.listener;
 
+import static com.facebook.buck.log.MachineReadableLogConfig.PREFIX_BUILD_FINISHED;
 import static com.facebook.buck.log.MachineReadableLogConfig.PREFIX_BUILD_RULE_FINISHED;
 import static com.facebook.buck.log.MachineReadableLogConfig.PREFIX_CACHE_STATS;
 import static com.facebook.buck.log.MachineReadableLogConfig.PREFIX_EXIT_CODE;
@@ -28,6 +29,7 @@ import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.artifact_cache.CacheResultType;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
 import com.facebook.buck.artifact_cache.config.ArtifactCacheMode;
+import com.facebook.buck.core.build.event.BuildEvent;
 import com.facebook.buck.core.build.event.BuildRuleEvent;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.CommandEvent;
@@ -133,6 +135,12 @@ public class MachineReadableLoggerListener implements BuckEventListener {
   @Subscribe
   public void parseFinished(ParseEvent.Finished event) {
     writeToLog("ParseFinished", event);
+  }
+
+  /** @ BuildFinished event handler */
+  @Subscribe
+  public void buildFinished(BuildEvent.Finished event) {
+    writeToLog(PREFIX_BUILD_FINISHED, event);
   }
 
   @Subscribe

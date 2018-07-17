@@ -92,12 +92,13 @@ public class DoctorReportHelper {
           cmdArgs = cmdArgs.substring(0, Math.min(cmdArgs.length(), ARGS_MAX_CHARS));
 
           return String.format(
-              "\t%s\tbuck [%s] %s (%.2f %s)",
+              "\t%s\tbuck [%s] %s (%.2f %s) (duration: %s)",
               entry.getLastModifiedTime(),
               cmdArgs,
               prettyPrintExitCode(entry.getExitCode()),
               humanReadableSize.getFirst(),
-              humanReadableSize.getSecond().getAbbreviation());
+              humanReadableSize.getSecond().getAbbreviation(),
+              printBuildTime(entry.getBuildTimeMs()));
         });
   }
 
@@ -261,6 +262,16 @@ public class DoctorReportHelper {
       }
     }
     return result;
+  }
+
+  private String printBuildTime(OptionalInt buildTimeMs) {
+    if (!buildTimeMs.isPresent()) {
+      return "Unknown";
+    }
+    long buildTimeSecs = TimeUnit.MILLISECONDS.toSeconds(buildTimeMs.getAsInt());
+    long mins = buildTimeSecs / 60;
+    long secs = buildTimeSecs % 60;
+    return mins == 0 ? String.format("%ds", secs) : String.format("%dm %ds", mins, secs);
   }
 
   private DoctorEndpointResponse createErrorDoctorEndpointResponse(String errorMessage) {

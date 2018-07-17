@@ -36,6 +36,8 @@ abstract class AbstractBuildLogEntry {
 
   public abstract OptionalInt getExitCode();
 
+  public abstract OptionalInt getBuildTimeMs();
+
   public abstract Optional<Path> getRuleKeyLoggerLogFile();
 
   public abstract Optional<Path> getMachineReadableLogFile();

@@ -25,4 +25,5 @@ public final class MachineReadableLogConfig {
   public static final String PREFIX_CACHE_STATS = "Cache.Stats";
   public static final String PREFIX_PERFTIMES = "PertTimesStats";
   public static final String PREFIX_BUILD_RULE_FINISHED = "BuildRuleEvent.Finished";
+  public static final String PREFIX_BUILD_FINISHED = "BuildFinished";
 }

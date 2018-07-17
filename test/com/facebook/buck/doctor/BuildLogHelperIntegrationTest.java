@@ -28,24 +28,30 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import java.util.OptionalInt;
 import org.hamcrest.Matchers;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
 public class BuildLogHelperIntegrationTest {
 
   @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
+  private BuildLogHelper buildLogHelper;
 
-  @Test
-  public void findsLogFiles() throws Exception {
+  @Before
+  public void setUp() throws Exception {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "report", temporaryFolder);
     workspace.setUp();
 
     Cell cell = workspace.asCell();
     ProjectFilesystem filesystem = cell.getFilesystem();
-    BuildLogHelper buildLogHelper = new BuildLogHelper(filesystem);
+    buildLogHelper = new BuildLogHelper(filesystem);
+  }
 
+  @Test
+  public void testBuildCommand() throws Exception {
     ImmutableList<BuildLogEntry> buildLogs = buildLogHelper.getBuildLogs();
     ImmutableMap<BuildId, String> buildIdToCommandMap =
         buildLogs
@@ -60,5 +66,24 @@ public class BuildLogHelperIntegrationTest {
             ImmutableMap.of(
                 new BuildId("ac8bd626-6137-4747-84dd-5d4f215c876c"),
                 "build --config foo.bar=baz @mode_file buck")));
+  }
+
+  @Test
+  public void testBuildDuration() throws Exception {
+    ImmutableList<BuildLogEntry> buildLogs = buildLogHelper.getBuildLogs();
+    ImmutableMap<BuildId, OptionalInt> buildIdToCommandMap =
+        buildLogs
+            .stream()
+            .collect(
+                ImmutableMap.toImmutableMap(e -> e.getBuildId().get(), e -> e.getBuildTimeMs()));
+
+    assertThat(
+        buildIdToCommandMap,
+        Matchers.equalTo(
+            ImmutableMap.of(
+                new BuildId("ac8bd626-6137-4747-84dd-5d4f215c876c"),
+                // this is the value of BuildFinished.timestamp minus InvocationInfo.timestampMillis
+                // in buck-machine-log
+                OptionalInt.of(111640))));
   }
 }

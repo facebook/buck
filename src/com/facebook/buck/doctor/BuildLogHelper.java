@@ -16,12 +16,14 @@
 
 package com.facebook.buck.doctor;
 
+import static com.facebook.buck.log.MachineReadableLogConfig.PREFIX_BUILD_FINISHED;
 import static com.facebook.buck.log.MachineReadableLogConfig.PREFIX_EXIT_CODE;
 import static com.facebook.buck.log.MachineReadableLogConfig.PREFIX_INVOCATION_INFO;
 
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.doctor.config.BuildLogEntry;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.log.InvocationInfo;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -42,14 +44,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.OptionalInt;
-import java.util.stream.Stream;
 
 /** Methods for finding and inspecting buck log files. */
 public class BuildLogHelper {
 
   private final ProjectFilesystem projectFilesystem;
-
-  private static final String INFO_FIELD_UNEXPANDED_CMD_ARGS = "unexpandedCommandArgs";
 
   public BuildLogHelper(ProjectFilesystem projectFilesystem) {
     this.projectFilesystem = projectFilesystem;
@@ -74,40 +73,44 @@ public class BuildLogHelper {
         .collect(ImmutableList.toImmutableList());
   }
 
-  @SuppressWarnings("unchecked")
   private BuildLogEntry newBuildLogEntry(Path logFile) throws IOException {
     BuildLogEntry.Builder builder = BuildLogEntry.builder();
 
     Path machineReadableLogFile =
         logFile.getParent().resolve(BuckConstant.BUCK_MACHINE_LOG_FILE_NAME);
+
     if (projectFilesystem.isFile(machineReadableLogFile)) {
-      String invocationInfoLine;
-      try (Stream<String> logLines =
-          Files.lines(projectFilesystem.resolve(machineReadableLogFile))) {
-        invocationInfoLine =
-            logLines
-                .filter(line -> line.startsWith(PREFIX_INVOCATION_INFO))
-                .map(line -> line.substring(PREFIX_INVOCATION_INFO.length()))
-                .findFirst()
-                .get();
+
+      Optional<InvocationInfo> invocationInfo =
+          readObjectFromLog(
+              machineReadableLogFile,
+              PREFIX_INVOCATION_INFO,
+              new TypeReference<InvocationInfo>() {});
+      Optional<Long> startTimestampMs = Optional.empty();
+
+      if (invocationInfo.isPresent()) {
+        builder.setCommandArgs(
+            Optional.ofNullable(invocationInfo.get().getUnexpandedCommandArgs()));
+        startTimestampMs = Optional.of(invocationInfo.get().getTimestampMillis());
       }
 
-      // TODO(mikath): Keep this for a while for compatibility for commandArgs, then replace with
-      // a proper ObjectMapper deserialization of InvocationInfo.
-      Map<String, Object> invocationInfo =
-          ObjectMappers.readValue(invocationInfoLine, new TypeReference<Map<String, Object>>() {});
-      Optional<List<String>> commandArgs = Optional.empty();
-      if (invocationInfo.containsKey(INFO_FIELD_UNEXPANDED_CMD_ARGS)
-          && invocationInfo.get(INFO_FIELD_UNEXPANDED_CMD_ARGS) instanceof List) {
-        commandArgs =
-            Optional.of((List<String>) invocationInfo.get(INFO_FIELD_UNEXPANDED_CMD_ARGS));
-      }
-
-      String buildId = (String) invocationInfo.get("buildId");
-      builder.setBuildId(Optional.of(new BuildId(buildId != null ? buildId : "unknown")));
-      builder.setCommandArgs(commandArgs);
+      builder.setBuildId(
+          Optional.of(
+              invocationInfo.isPresent()
+                  ? invocationInfo.get().getBuildId()
+                  : new BuildId("unknown")));
       builder.setMachineReadableLogFile(machineReadableLogFile);
-      builder.setExitCode(readExitCode(machineReadableLogFile));
+      Optional<Integer> exitCode =
+          readObjectFieldFromLog(machineReadableLogFile, PREFIX_EXIT_CODE, "exitCode");
+      Optional<Long> finishTimestampMs =
+          readObjectFieldFromLog(machineReadableLogFile, PREFIX_BUILD_FINISHED, "timestamp");
+
+      builder.setExitCode(
+          exitCode.isPresent() ? OptionalInt.of(exitCode.get()) : OptionalInt.empty());
+      if (finishTimestampMs.isPresent() && startTimestampMs.isPresent()) {
+        builder.setBuildTimeMs(
+            OptionalInt.of((int) (finishTimestampMs.get() - startTimestampMs.get())));
+      }
     }
 
     Path ruleKeyLoggerFile = logFile.getParent().resolve(BuckConstant.RULE_KEY_LOGGER_FILE_NAME);
@@ -142,28 +145,37 @@ public class BuildLogHelper {
         .build();
   }
 
-  private OptionalInt readExitCode(Path machineReadableLogFile) {
+  private <T> Optional<T> readObjectFromLog(
+      Path machineReadableLogFile, String linePrefix, TypeReference<T> typeReference) {
     try (BufferedReader reader =
         Files.newBufferedReader(projectFilesystem.resolve(machineReadableLogFile))) {
       Optional<String> line =
           reader
               .lines()
-              .filter(s -> s.startsWith(PREFIX_EXIT_CODE))
-              .map(s -> s.substring(PREFIX_EXIT_CODE.length()))
+              .filter(s -> s.startsWith(linePrefix))
+              .map(s -> s.substring(linePrefix.length()))
               .findFirst();
       if (line.isPresent()) {
-        Map<String, Integer> exitCode =
+        return Optional.of(
             ObjectMappers.READER.readValue(
                 ObjectMappers.createParser(line.get().getBytes(StandardCharsets.UTF_8)),
-                new TypeReference<Map<String, Integer>>() {});
-        if (exitCode.containsKey("exitCode")) {
-          return OptionalInt.of(exitCode.get("exitCode"));
-        }
+                typeReference));
       }
     } catch (IOException e) {
-      return OptionalInt.empty();
+      return Optional.empty();
     }
-    return OptionalInt.empty();
+    return Optional.empty();
+  }
+
+  private <T> Optional<T> readObjectFieldFromLog(
+      Path machineReadableLogFile, String linePrefix, String fieldName) {
+    Optional<Map<String, T>> logObject =
+        readObjectFromLog(
+            machineReadableLogFile, linePrefix, new TypeReference<Map<String, T>>() {});
+    if (logObject.isPresent() && logObject.get().containsKey(fieldName)) {
+      return Optional.of(logObject.get().get(fieldName));
+    }
+    return Optional.empty();
   }
 
   private Collection<Path> getAllBuckLogFiles() throws IOException {
