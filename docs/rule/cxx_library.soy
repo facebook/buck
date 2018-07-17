@@ -94,7 +94,11 @@ depends on <em>might not be built</em>.
 
 {call cxx_common.exported_linker_flags_arg /}
 
+{call cxx_common.exported_post_linker_flags_arg /}
+
 {call cxx_common.exported_platform_linker_flags_arg /}
+
+{call cxx_common.exported_post_platform_linker_flags_arg /}
 
 {call native_common.link_style /}
 

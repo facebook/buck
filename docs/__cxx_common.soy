@@ -349,8 +349,9 @@
   {param name : 'linker_flags' /}
   {param default : '[]' /}
   {param desc}
-  Flags to use whenever this rule is involved in a link operation (e.g linked into an executable or
-  shared library).
+  Flags to add to the linker command line whenever the output from this
+  rule is used in a link operation, such as linked into an executable 
+  or a shared library.
   {/param}
 {/call}
 {/template}
@@ -361,10 +362,12 @@
   {param name : 'platform_linker_flags' /}
   {param default : '[]' /}
   {param desc}
-  Platform specific linker flags. These should be specified as a list of pairs where the first
-  element is an un-anchored regex (in java.util.regex.Pattern syntax) against which the platform
-  name is matched, and the second element is a list of flags to use when this target is involved in
-  a link operation. See <code>linker_flags</code> for more information.
+  Platform-specific linker flags. This argument is specified as a list of pairs where the first
+  element in each pair is an un-anchored regex against which the platform name is matched. 
+  The regex should use <code>java.util.regex.Pattern</code> syntax.
+  The second element in each pair is a list of linker flags. If the regex matches the
+  platform, these flags are added to the linker command line when the 
+  output from this rule is used in a link operation. 
   {/param}
 {/call}
 {/template}
@@ -375,7 +378,24 @@
   {param name : 'exported_linker_flags' /}
   {param default : '[]' /}
   {param desc}
-  Linker flags to add to this library and to libraries that depend on this library.
+  Flags to add to the linker command line when the output from this 
+  rule, or the output from any rule that transitively depends on this
+  rule, is used in a link operation. 
+  {/param}
+{/call}
+{/template}
+
+/***/
+{template .exported_post_linker_flags_arg}
+{call buck.arg}
+  {param name : 'exported_post_linker_flags' /}
+  {param default : '[]' /}
+  {param desc}
+  Flags to add to the linker command line when the output from this 
+  rule, or the output from any rule that transitively depends on this
+  rule, is used in a link operation&mdash;with the additional feature
+  that these flags are guaranteed to be placed <em>after</em> the compiled 
+  object (<code>.o</code>) files on the linker command line. 
   {/param}
 {/call}
 {/template}
@@ -386,11 +406,31 @@
   {param name : 'exported_platform_linker_flags' /}
   {param default : '[]' /}
   {param desc}
-  Platform specific linker flags. These should be specified as a list of pairs where the first
-  element is an un-anchored regex (in java.util.regex.Pattern syntax) against which the platform
-  name is matched, and the second element is a list of flags to use when the target and all targets
-  that transitively depend on it are involved in a link operation if the platform matches the regex.
-  See <code>exported_linker_flags</code> for more information.
+  Platform-specific linker flags for this rule and for all rules that 
+  transitively depend on this rule. This argument is specified 
+  as a list of pairs where the first element in each pair is an un-anchored regex 
+  against which the platform name is matched. 
+  The regex should use <code>java.util.regex.Pattern</code> syntax.
+  The second element in each pair is a list of linker flags. If the regex matches the
+  platform, these flags are added to the linker command line when the output from 
+  this rule, or the output from any rule that transitively depends on
+  this rule, is used in a link operation. 
+  {/param}
+{/call}
+{/template}
+
+/***/
+{template .exported_post_platform_linker_flags_arg}
+{call buck.arg}
+  {param name : 'exported_post_platform_linker_flags' /}
+  {param default : '[]' /}
+  {param desc}
+  Platform-specific linker flags for this rule and for all 
+  rules that transitively depend on this rule&mdash;and that 
+  are guaranteed to be placed <em>after</em> the compiled object 
+  (<code>.o</code>) files on the linker command line. In other respects, 
+  the syntax and semantics of this argument are the same as 
+  for the <code>exported_platform_linker_flags</code> argument.
   {/param}
 {/call}
 {/template}
