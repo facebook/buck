@@ -279,7 +279,7 @@ public class GoCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     List<Path> srcFiles = new ArrayList<>();
     for (SourcePath path : srcPaths) {
       Path srcPath = context.getSourcePathResolver().getAbsolutePath(path);
-      if (path instanceof BuildTargetSourcePath && Files.isDirectory(srcPath)) {
+      if (Files.isDirectory(srcPath)) {
         try (Stream<Path> sourcePaths = Files.list(srcPath)) {
           srcFiles.addAll(sourcePaths.filter(Files::isRegularFile).collect(Collectors.toList()));
         } catch (IOException e) {
