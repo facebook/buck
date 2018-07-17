@@ -25,6 +25,7 @@ import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assume.assumeFalse;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
@@ -43,6 +44,7 @@ import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.macros.LocationMacro;
 import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.util.RichStream;
+import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -355,7 +357,51 @@ public class JsLibraryDescriptionTest {
   }
 
   @Test
-  public void supportsDepsQuery() {
+  public void supportsDepsQueryAllPlatforms() {
+    BuildTarget a = BuildTargetFactory.newInstance("//query-deps:a");
+    BuildTarget b = BuildTargetFactory.newInstance("//query-deps:b");
+    BuildTarget c = BuildTargetFactory.newInstance("//query-deps:c");
+    BuildTarget l = BuildTargetFactory.newInstance("//query-deps:l");
+    BuildTarget x = BuildTargetFactory.newInstance("//query-deps:x");
+
+    JsTestScenario scenario =
+        scenarioBuilder
+            .library(a)
+            .library(b)
+            .library(c, b)
+            .bundleWithDeps(l, a, c)
+            .bundleWithDeps(x, l)
+            .bundleWithDeps(BuildTargetFactory.newInstance("//query-deps:bundle"))
+            .library(
+                target,
+                Query.of(String.format("deps(%s)", x)),
+                FakeSourcePath.of("arbitrary/source"))
+            .build();
+
+    TargetNode<?, ?> node = scenario.targetGraph.get(target);
+    assertThat(x, in(node.getBuildDeps()));
+
+    JsLibrary lib = scenario.graphBuilder.getRuleWithType(target, JsLibrary.class);
+    ImmutableSortedSet<BuildRule> deps =
+        scenario.graphBuilder.getAllRules(ImmutableList.of(a, b, c));
+    assertThat(deps, everyItem(in(lib.getBuildDeps())));
+    assertEquals(
+        deps.stream()
+            .map(BuildRule::getSourcePathToOutput)
+            .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())),
+        lib.getLibraryDependencies());
+
+    assertThat(deps, everyItem(not(in(internalFileRule(scenario.graphBuilder).getBuildDeps()))));
+    findJsFileRules(scenario.graphBuilder)
+        .collect(
+            countAssertions(jsFile -> assertThat(deps, everyItem(not(in(jsFile.getBuildDeps()))))));
+  }
+
+  @Test
+  public void supportsDepsQueryAppleToolchain() {
+    assumeFalse(
+        "Only for Apple OS. Invokes the AppleLibraryDescription",
+        Platform.detect() == Platform.WINDOWS);
     BuildTarget a = BuildTargetFactory.newInstance("//query-deps:a");
     BuildTarget b = BuildTargetFactory.newInstance("//query-deps:b");
     BuildTarget c = BuildTargetFactory.newInstance("//query-deps:c");
