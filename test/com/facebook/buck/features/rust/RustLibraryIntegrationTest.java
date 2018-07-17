@@ -20,6 +20,7 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.testutil.TemporaryPaths;
+import com.facebook.buck.testutil.integration.BuckBuildLog;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import java.io.IOException;
@@ -80,6 +81,9 @@ public class RustLibraryIntegrationTest {
         .runBuckBuild(
             "--config", "rust.rustc_check_flags=-Dwarnings", "//messenger:messenger#check")
         .assertSuccess();
+    BuckBuildLog buildLog = workspace.getBuildLog();
+    buildLog.assertTargetBuiltLocally("//messenger:messenger#check,default");
+    workspace.resetBuildLogFile();
   }
 
   @Test
@@ -112,6 +116,23 @@ public class RustLibraryIntegrationTest {
                 "//messenger:messenger#check")
             .getStderr(),
         Matchers.containsString("Unrecognized option: 'this-is-a-bad-option'"));
+  }
+
+  @Test
+  public void rustLibrarySaveAnalysis() throws IOException, InterruptedException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "binary_with_library", tmp);
+    workspace.setUp();
+
+    RustAssumptions.assumeNightly(workspace);
+
+    workspace
+        .runBuckBuild(
+            "--config", "rust.rustc_check_flags=-Dwarnings", "//messenger:messenger#save-analysis")
+        .assertSuccess();
+    BuckBuildLog buildLog = workspace.getBuildLog();
+    buildLog.assertTargetBuiltLocally("//messenger:messenger#save-analysis,default");
+    workspace.resetBuildLogFile();
   }
 
   @Test

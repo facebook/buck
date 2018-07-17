@@ -20,6 +20,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import java.util.Optional;
 
 /** Describe the kinds of crates rustc can generate. */
 public enum CrateType {
@@ -27,48 +28,59 @@ public enum CrateType {
       "bin",
       RustDescriptionEnhancer.RFBIN,
       (target, n, p) ->
-          String.format("%s%s", n, p.getBinaryExtension().map(e -> "." + e).orElse(""))),
+          Optional.of(
+              String.format("%s%s", n, p.getBinaryExtension().map(e -> "." + e).orElse("")))),
   CHECK(
       "lib",
       RustDescriptionEnhancer.RFCHECK,
-      (target, crate, plat) -> hashed_filename(target, crate, "rmeta")),
-  CHECKBIN(
+      (target, crate, plat) -> hashed_filename(target, "lib", crate, "rmeta")),
+  CHECKBIN("bin", RustDescriptionEnhancer.RFCHECK, (target, crate, plat) -> Optional.empty()),
+  SAVEANALYSIS(
+      "lib",
+      RustDescriptionEnhancer.RFSAVEANALYSIS,
+      (target, crate, plat) ->
+          Optional.of(
+              String.format("save-analysis/%s", hashed_filename(target, "lib", crate, "json")))),
+  SAVEANALYSISBIN(
       "bin",
-      RustDescriptionEnhancer.RFCHECK,
-      (target, n, p) ->
-          String.format("%s%s", n, p.getBinaryExtension().map(e -> "." + e).orElse(""))),
+      RustDescriptionEnhancer.RFSAVEANALYSIS,
+      (target, crate, plat) ->
+          Optional.of(
+              String.format("save-analysis/%s", hashed_filename(target, "", crate, "json")))),
   LIB(
       "lib",
       RustDescriptionEnhancer.RFLIB,
-      (target, crate, plat) -> hashed_filename(target, crate, "rlib")), // XXX how to tell?
+      (target, crate, plat) -> hashed_filename(target, "lib", crate, "rlib")), // XXX how to tell?
   RLIB(
       "rlib",
       RustDescriptionEnhancer.RFRLIB,
-      (target, crate, plat) -> hashed_filename(target, crate, "rlib")),
+      (target, crate, plat) -> hashed_filename(target, "lib", crate, "rlib")),
   RLIB_PIC(
       "rlib",
       RustDescriptionEnhancer.RFRLIB_PIC,
-      (target, crate, plat) -> hashed_filename(target, crate, "rlib")),
+      (target, crate, plat) -> hashed_filename(target, "lib", crate, "rlib")),
   DYLIB("dylib", RustDescriptionEnhancer.RFDYLIB, CrateType::dylib_filename),
   CDYLIB("cdylib", CxxDescriptionEnhancer.SHARED_FLAVOR, CrateType::dylib_filename),
   STATIC(
       "staticlib",
       CxxDescriptionEnhancer.STATIC_FLAVOR,
-      (target, n, p) -> hashed_filename(target, n, p.getStaticLibraryExtension())),
+      (target, n, p) -> hashed_filename(target, "lib", n, p.getStaticLibraryExtension())),
   STATIC_PIC(
       "staticlib",
       CxxDescriptionEnhancer.STATIC_PIC_FLAVOR,
-      (target, n, p) -> hashed_filename(target, n, p.getStaticLibraryExtension())),
+      (target, n, p) -> hashed_filename(target, "lib", n, p.getStaticLibraryExtension())),
   PROC_MACRO("proc-macro", RustDescriptionEnhancer.RFPROC_MACRO, CrateType::dylib_filename),
   ;
 
-  private static String hashed_filename(BuildTarget target, String crate, String ext) {
+  private static Optional<String> hashed_filename(
+      BuildTarget target, String prefix, String crate, String ext) {
     String hash = RustCompileUtils.hashForTarget(target);
-    return String.format("lib%s-%s.%s", crate, hash, ext);
+    return Optional.of(String.format("%s%s-%s.%s", prefix, crate, hash, ext));
   }
 
-  private static String dylib_filename(BuildTarget target, String crate, CxxPlatform plat) {
-    return hashed_filename(target, crate, plat.getSharedLibraryExtension());
+  private static Optional<String> dylib_filename(
+      BuildTarget target, String crate, CxxPlatform plat) {
+    return hashed_filename(target, "lib", crate, plat.getSharedLibraryExtension());
   }
 
   // Crate type as passed to `rustc --crate-type=`
@@ -150,10 +162,19 @@ public enum CrateType {
   /**
    * We're just checking the code, and generating metadata to allow dependents to check. For
    * libraries this means we emit a metadata file, and binaries produce no output (they just consume
-   * library metadata).
+   * library metadata). "save-analysis" also builds in check mode, but we're only concerned about
+   * the analysis output.
    */
   public boolean isCheck() {
-    return this == CHECK || this == CHECKBIN;
+    return this == CHECK || this == CHECKBIN || this.isSaveAnalysis();
+  }
+
+  /**
+   * Save-analysis is a more detailed version of check, which saves full type and other information
+   * in a json file for consumption by other tools (namely RLS).
+   */
+  public boolean isSaveAnalysis() {
+    return this == SAVEANALYSIS || this == SAVEANALYSISBIN;
   }
 
   /**
@@ -165,21 +186,13 @@ public enum CrateType {
   }
 
   /**
-   * Returns true if the build is expected to produce output (vs is just being run for
-   * error-checking side-effects). The only build which produces no output is a CHECKBIN build
-   */
-  public boolean hasOutput() {
-    return this != CHECKBIN;
-  }
-
-  /**
    * Return an appropriate filename for this crate, given its type and the platform.
    *
    * @param name Base filename
    * @param cxxPlatform Platform we're building for
    * @return Path component
    */
-  public String filenameFor(BuildTarget target, String name, CxxPlatform cxxPlatform) {
+  public Optional<String> filenameFor(BuildTarget target, String name, CxxPlatform cxxPlatform) {
     return filenameMap.apply(target, name, cxxPlatform);
   }
 }

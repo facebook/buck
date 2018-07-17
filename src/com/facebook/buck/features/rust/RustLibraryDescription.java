@@ -227,7 +227,7 @@ public class RustLibraryDescription
         // Procedural Macros (aka, compiler plugins) take priority over check builds
         // as we need the compiler plugin to be able to check the code which depends on the
         // plugin.
-        if (args.getProcMacro()) {
+        if (isProcMacro()) {
           crateType = CrateType.PROC_MACRO;
         } else if (isCheck) {
           crateType = CrateType.CHECK;
@@ -301,7 +301,7 @@ public class RustLibraryDescription
 
         ImmutableMap.Builder<String, SourcePath> libs = ImmutableMap.builder();
         String sharedLibrarySoname =
-            CrateType.DYLIB.filenameFor(target, crate, rustPlatform.getCxxPlatform());
+            CrateType.DYLIB.filenameFor(target, crate, rustPlatform.getCxxPlatform()).get();
         BuildRule sharedLibraryBuildRule =
             requireBuild(
                 buildTarget,
@@ -431,7 +431,7 @@ public class RustLibraryDescription
           CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
         ImmutableMap.Builder<String, SourcePath> libs = ImmutableMap.builder();
         String sharedLibrarySoname =
-            CrateType.DYLIB.filenameFor(getBuildTarget(), crate, cxxPlatform);
+            CrateType.DYLIB.filenameFor(getBuildTarget(), crate, cxxPlatform).get();
         RustPlatform rustPlatform =
             getRustToolchain().getRustPlatforms().getValue(cxxPlatform.getFlavor());
         BuildRule sharedLibraryBuildRule =

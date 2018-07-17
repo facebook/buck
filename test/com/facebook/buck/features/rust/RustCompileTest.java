@@ -201,7 +201,7 @@ public class RustCompileTest {
           target,
           new FakeProjectFilesystem(),
           TestBuildRuleParams.create(),
-          String.format("lib%s.rlib", target),
+          Optional.of(String.format("lib%s.rlib", target)),
           fakeTool(),
           fakeLinker(),
           Stream.of("--crate-name", target.getShortName(), "--crate-type", "rlib")
@@ -212,7 +212,6 @@ public class RustCompileTest {
           ImmutableList.of(),
           srcs,
           rootModule,
-          true,
           RustBuckConfig.RemapSrcPaths.NO);
     }
 

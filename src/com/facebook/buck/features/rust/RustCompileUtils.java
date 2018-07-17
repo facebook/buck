@@ -82,6 +82,7 @@ public class RustCompileUtils {
   // - `-L dependency=<dir>` for transitive dependencies
   // - `-C relocation-model=pic/static/default/dynamic-no-pic` according to flavor
   // - `--emit metadata` if flavor is "check"
+  // - `-Zsave-analysis` if flavor is "save-analysis"
   // - `--crate-type lib/rlib/dylib/cdylib/staticlib` according to flavor
   private static RustCompileRule createBuild(
       BuildTarget target,
@@ -129,6 +130,11 @@ public class RustCompileUtils {
       checkArgs = rustPlatform.getRustCheckFlags().stream();
     } else {
       checkArgs = Stream.of();
+    }
+
+    if (crateType.isSaveAnalysis()) {
+      // This is an unstable option - not clear what the path to stabilization is.
+      args.add(StringArg.of("-Zsave-analysis"));
     }
 
     Stream.of(
@@ -219,7 +225,7 @@ public class RustCompileUtils {
       args.add(StringArg.of("-Cprefer-dynamic"));
     }
 
-    String filename = crateType.filenameFor(target, crateName, cxxPlatform);
+    Optional<String> filename = crateType.filenameFor(target, crateName, cxxPlatform);
 
     return RustCompileRule.from(
         ruleFinder,
@@ -234,7 +240,6 @@ public class RustCompileUtils {
         linkerArgs.build(),
         CxxGenruleDescription.fixupSourcePaths(graphBuilder, ruleFinder, cxxPlatform, sources),
         CxxGenruleDescription.fixupSourcePath(graphBuilder, ruleFinder, cxxPlatform, rootModule),
-        crateType.hasOutput(),
         rustConfig.getRemapSrcPaths());
   }
 
@@ -290,10 +295,8 @@ public class RustCompileUtils {
 
     if (type.isPresent()) {
       ret = type.get().getLinkStyle();
-    } else if (linkStyle.isPresent()) {
-      ret = linkStyle.get();
     } else {
-      ret = Linker.LinkableDepType.STATIC;
+      ret = linkStyle.orElse(LinkableDepType.STATIC);
     }
 
     // XXX rustc always links executables with "-pie", which requires all objects to be built
@@ -344,12 +347,12 @@ public class RustCompileUtils {
       ImmutableSortedSet<String> features,
       Iterator<String> rustcFlags,
       Iterator<String> linkerFlags,
-      Linker.LinkableDepType linkStyle,
+      LinkableDepType linkStyle,
       boolean rpath,
       ImmutableSortedSet<SourcePath> srcs,
       Optional<SourcePath> crateRoot,
       ImmutableSet<String> defaultRoots,
-      boolean isCheck,
+      CrateType crateType,
       Iterable<BuildRule> deps) {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
@@ -380,11 +383,9 @@ public class RustCompileUtils {
             srcs);
 
     // The target to use for the link rule.
-    BuildTarget binaryTarget =
-        buildTarget.withAppendedFlavors(
-            isCheck ? RustDescriptionEnhancer.RFCHECK : RustDescriptionEnhancer.RFBIN);
+    BuildTarget binaryTarget = buildTarget.withAppendedFlavors(crateType.getFlavor());
 
-    if (isCheck || !rustBuckConfig.getUnflavoredBinaries()) {
+    if (crateType.isCheck() || !rustBuckConfig.getUnflavoredBinaries()) {
       binaryTarget = binaryTarget.withAppendedFlavors(cxxPlatform.getFlavor());
     }
 
@@ -461,7 +462,7 @@ public class RustCompileUtils {
                         rustcArgs.build(),
                         linkerArgs.build(),
                         /* linkerInputs */ ImmutableList.of(),
-                        isCheck ? CrateType.CHECKBIN : CrateType.BIN,
+                        crateType,
                         linkStyle,
                         rpath,
                         rootModuleAndSources.getSecond(),

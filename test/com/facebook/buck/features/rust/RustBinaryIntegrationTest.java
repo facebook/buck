@@ -119,6 +119,49 @@ public class RustBinaryIntegrationTest {
   }
 
   @Test
+  public void simpleBinarySaveAnalysis() throws IOException, InterruptedException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "simple_binary", tmp);
+    workspace.setUp();
+
+    RustAssumptions.assumeNightly(workspace);
+
+    workspace.runBuckBuild("//:xyzzy#save-analysis").assertSuccess();
+    BuckBuildLog buildLog = workspace.getBuildLog();
+    buildLog.assertTargetBuiltLocally("//:xyzzy#save-analysis");
+    workspace.resetBuildLogFile();
+
+    thrown.expect(IOException.class);
+    thrown.expectMessage(Matchers.containsString("No such file or directory"));
+
+    workspace.runCommand(
+        workspace.resolve("buck-out/gen/xyzzy#binary,save-analysis,default/xyzzy").toString());
+  }
+
+  @Test
+  public void simpleBinarySaveAnalysisUnflavored() throws IOException, InterruptedException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "simple_binary", tmp);
+    workspace.setUp();
+
+    RustAssumptions.assumeNightly(workspace);
+
+    workspace
+        .runBuckCommand(
+            "build", "--config", "rust.unflavored_binaries=true", "//:xyzzy#save-analysis")
+        .assertSuccess();
+    BuckBuildLog buildLog = workspace.getBuildLog();
+    buildLog.assertTargetBuiltLocally("//:xyzzy#save-analysis");
+    workspace.resetBuildLogFile();
+
+    thrown.expect(IOException.class);
+    thrown.expectMessage(Matchers.containsString("No such file or directory"));
+
+    workspace.runCommand(
+        workspace.resolve("buck-out/gen/xyzzy#binary,save-analysis,default/xyzzy").toString());
+  }
+
+  @Test
   public void simpleBinaryWarnings() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "simple_binary", tmp);

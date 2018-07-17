@@ -23,6 +23,7 @@ import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.UserFlavor;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import java.util.Optional;
 
 /** Rust-specific flavors. */
 public class RustDescriptionEnhancer {
@@ -37,6 +38,8 @@ public class RustDescriptionEnhancer {
   public static final Flavor RFCHECK =
       UserFlavor.of(
           "check", "Quickly check code and generate metadata about crate, without generating code");
+  public static final Flavor RFSAVEANALYSIS =
+      UserFlavor.of("save-analysis", "Generate type analysis data");
 
   /**
    * Flavor of Rust crate
@@ -52,6 +55,7 @@ public class RustDescriptionEnhancer {
     STATICLIB(CxxDescriptionEnhancer.STATIC_FLAVOR, CrateType.STATIC),
     CDYLIB(CxxDescriptionEnhancer.SHARED_FLAVOR, CrateType.CDYLIB),
     CHECK(RustDescriptionEnhancer.RFCHECK, CrateType.CHECK),
+    SAVEANALYSIS(RustDescriptionEnhancer.RFSAVEANALYSIS, CrateType.SAVEANALYSIS),
     PROC_MACRO(RustDescriptionEnhancer.RFPROC_MACRO, CrateType.PROC_MACRO),
     ;
 
@@ -75,6 +79,6 @@ public class RustDescriptionEnhancer {
 
   @FunctionalInterface
   interface FilenameMap {
-    String apply(BuildTarget target, String name, CxxPlatform cxxPlatform);
+    Optional<String> apply(BuildTarget target, String name, CxxPlatform cxxPlatform);
   }
 }

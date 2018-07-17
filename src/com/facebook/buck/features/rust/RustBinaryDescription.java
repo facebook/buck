@@ -44,7 +44,7 @@ import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.stream.Stream;
 import org.immutables.value.Value;
@@ -82,10 +82,8 @@ public class RustBinaryDescription
     Linker.LinkableDepType linkStyle =
         RustCompileUtils.getLinkStyle(buildTarget, args.getLinkStyle());
 
-    Optional<Map.Entry<Flavor, RustBinaryDescription.Type>> type =
-        BINARY_TYPE.getFlavorAndValue(buildTarget);
-
-    boolean isCheck = type.map(t -> t.getValue().isCheck()).orElse(false);
+    RustBinaryDescription.Type type =
+        BINARY_TYPE.getFlavorAndValue(buildTarget).map(Entry::getValue).orElse(Type.STATIC);
 
     RustToolchain rustToolchain = getRustToolchain();
     RustPlatform rustPlatform = RustCompileUtils.getRustPlatform(rustToolchain, buildTarget, args);
@@ -108,7 +106,7 @@ public class RustBinaryDescription
         args.getSrcs(),
         args.getCrateRoot(),
         ImmutableSet.of("main.rs"),
-        isCheck,
+        type.getCrateType(),
         allDeps.get(context.getActionGraphBuilder(), rustPlatform.getCxxPlatform()));
   }
 
@@ -124,18 +122,25 @@ public class RustBinaryDescription
   }
 
   protected enum Type implements FlavorConvertible {
-    CHECK(RustDescriptionEnhancer.RFCHECK, Linker.LinkableDepType.STATIC_PIC),
-    SHARED(CxxDescriptionEnhancer.SHARED_FLAVOR, Linker.LinkableDepType.SHARED),
-    STATIC_PIC(CxxDescriptionEnhancer.STATIC_PIC_FLAVOR, Linker.LinkableDepType.STATIC_PIC),
-    STATIC(CxxDescriptionEnhancer.STATIC_FLAVOR, Linker.LinkableDepType.STATIC),
+    CHECK(RustDescriptionEnhancer.RFCHECK, Linker.LinkableDepType.STATIC_PIC, CrateType.CHECKBIN),
+    SAVEANALYSIS(
+        RustDescriptionEnhancer.RFSAVEANALYSIS,
+        Linker.LinkableDepType.STATIC_PIC,
+        CrateType.SAVEANALYSISBIN),
+    SHARED(CxxDescriptionEnhancer.SHARED_FLAVOR, Linker.LinkableDepType.SHARED, CrateType.BIN),
+    STATIC_PIC(
+        CxxDescriptionEnhancer.STATIC_PIC_FLAVOR, Linker.LinkableDepType.STATIC_PIC, CrateType.BIN),
+    STATIC(CxxDescriptionEnhancer.STATIC_FLAVOR, Linker.LinkableDepType.STATIC, CrateType.BIN),
     ;
 
     private final Flavor flavor;
     private final Linker.LinkableDepType linkStyle;
+    private final CrateType crateType;
 
-    Type(Flavor flavor, Linker.LinkableDepType linkStyle) {
+    Type(Flavor flavor, Linker.LinkableDepType linkStyle, CrateType crateType) {
       this.flavor = flavor;
       this.linkStyle = linkStyle;
+      this.crateType = crateType;
     }
 
     @Override
@@ -147,8 +152,16 @@ public class RustBinaryDescription
       return linkStyle;
     }
 
+    public CrateType getCrateType() {
+      return crateType;
+    }
+
     public boolean isCheck() {
-      return flavor == RustDescriptionEnhancer.RFCHECK;
+      return flavor == RustDescriptionEnhancer.RFCHECK || this.isSaveAnalysis();
+    }
+
+    public boolean isSaveAnalysis() {
+      return flavor == RustDescriptionEnhancer.RFSAVEANALYSIS;
     }
   }
 
