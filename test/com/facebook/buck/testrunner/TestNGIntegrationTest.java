@@ -71,8 +71,35 @@ public class TestNGIntegrationTest {
     filteredTestNGTestResult.assertSuccess();
     // should run SimpleTest
     assertThat(filteredTestNGTestResult.getStderr(), containsString("SimpleTest"));
-    // should not run SimpleTest
+    // should not run SimpleFailingTest
     assertThat(filteredTestNGTestResult.getStderr(), not(containsString("SimpleFailingTest")));
+  }
+
+  @Test
+  public void testSelectorsBlacklistClass() throws IOException {
+    ProcessResult filteredTestNGTestResult =
+        workspace.runBuckCommand("test", "//test:simple-test", "-f", "!SimpleTest");
+    filteredTestNGTestResult.assertSuccess();
+    // should not run SimpleTest
+    assertThat(filteredTestNGTestResult.getStderr(), not(containsString("SimpleTest")));
+  }
+
+  @Test
+  public void testSelectorsWhitelistMethod() throws IOException {
+    ProcessResult filteredTestNGTestResult =
+        workspace.runBuckCommand("test", "//test:simple-test", "-f", "SimpleTest#defeat");
+    filteredTestNGTestResult.assertSuccess();
+    // should run SimpleTest#defeat only
+    assertThat(filteredTestNGTestResult.getStderr(), containsString("1 Passed"));
+  }
+
+  @Test
+  public void testSelectorsBlacklistMethod() throws IOException {
+    ProcessResult filteredTestNGTestResult =
+        workspace.runBuckCommand("test", "//test:simple-test", "-f", "!SimpleTest#defeat");
+    filteredTestNGTestResult.assertSuccess();
+    // should run SimpleTest#victory only
+    assertThat(filteredTestNGTestResult.getStderr(), containsString("1 Passed"));
   }
 
   @Test

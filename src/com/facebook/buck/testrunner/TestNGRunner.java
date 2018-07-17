@@ -51,9 +51,6 @@ public final class TestNGRunner extends BaseRunner {
   @Override
   public void run() throws Throwable {
     for (String className : testClassNames) {
-      if (!shouldIncludeTest(className)) {
-        continue;
-      }
 
       Class<?> testClass = Class.forName(className);
 
@@ -124,11 +121,6 @@ public final class TestNGRunner extends BaseRunner {
       }
     }
     return hasAtLeastOneTestMethod;
-  }
-
-  private boolean shouldIncludeTest(String className) {
-    TestDescription testDescription = new TestDescription(className, null);
-    return testSelectorList.isIncluded(testDescription);
   }
 
   /** Compute the "full name" of a test method, including its parameters, if any. */
