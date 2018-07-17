@@ -16,40 +16,43 @@
 
 package com.facebook.buck.jvm.java.runner;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
+import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
- * This class handles extra large classpaths by allowing the client to pass classpath via file
- * specified by {@code buck.classpath_file}. <b>WARNING: </b> this class creates a new classloader
- * on java 9+ and it modifies system property {@code java.class.path}.
+ * A standalone class that's designed to read its classpath from a file given using the standard `@`
+ * syntax used by javac. <b>WARNING: </b> this class modifies the system classloader. Don't use this
+ * in-process. This also modifies the System property {@code java.class.path}.
  *
- * <p>This class has different behavior for java 8 and java 9+, neither is bullet-proof. On java 8
- * it adds entries from classpath_file to ClassLoader.getSystemClassLoader(). On java 9+ it creates
- * a new classloader with test_runner classes and all entries from classpath_file.
+ * <p>We rely on the fact that you can pass total garbage into the classpath, and it'll be set just
+ * fine. Because of this, usage is like so:
  *
- * <p>This class needs 2 system properties set to work: -Dbuck.classpath_file - path to a classpath
- * file, each line is an entry of classpath -Dbuck.testrunner_classes - path to testrunner classes -
- * a folder, single entry of classpath
+ * <pre>java -classpath @path/to/classpath-file com.example.MainClass arg1 arg2 arg3</pre>
+ *
+ * <p>The format of the file used for adding new entries to the classpath is simply one entry per
+ * line. Each entry is checked to see if it resolves to a valid path on the local file system. If it
+ * does then a URL is constructed from that entry and added to the system classloader.
+ *
+ * <p>It is possible to declare more than one @classpathfile, and ordering and duplicates will be
+ * honoured.
  *
  * <p>Note: this class only depends on classes present in the JRE, since we don't want to have to
  * push more things on to the classpath when using it.
- *
- * <p>TODO(jtokkola): creating child classloader will not work for buck tests that use javac
  */
 public class FileClassPathRunner {
-  public static final String CLASSPATH_FILE_PROPERTY = "buck.classpath_file";
-  public static final String TESTRUNNER_CLASSES_PROPERTY = "buck.testrunner_classes";
 
   private FileClassPathRunner() {
     // Do not instantiate.
@@ -60,87 +63,142 @@ public class FileClassPathRunner {
     if (args.length < 1) {
       System.exit(-1);
     }
-    if (System.getProperty(CLASSPATH_FILE_PROPERTY) == null) {
-      throw new IllegalArgumentException(
-          String.format(
-              "System property %s is required by %s",
-              CLASSPATH_FILE_PROPERTY, FileClassPathRunner.class.getSimpleName()));
-    }
-    if (System.getProperty(TESTRUNNER_CLASSES_PROPERTY) == null) {
-      throw new IllegalArgumentException(
-          String.format(
-              "System property %s is required by %s",
-              TESTRUNNER_CLASSES_PROPERTY, FileClassPathRunner.class.getSimpleName()));
+
+    ClassLoader sysLoader = ClassLoader.getSystemClassLoader();
+    if (!(sysLoader instanceof URLClassLoader)) {
+      System.exit(-2);
     }
 
-    StringBuilder classPathProperty = new StringBuilder();
-    URL[] classpath = getClassPath(classPathProperty);
-    System.setProperty("java.class.path", classPathProperty.toString());
-    ClassLoader classLoader = getClassLoaderForTests(classpath);
+    URLClassLoader urlClassLoader = (URLClassLoader) sysLoader;
+
+    modifyClassLoader(urlClassLoader, true);
 
     // Now read the main class from the args and invoke it
-    Method main = getMainMethod(classLoader, args);
+    Method main = getMainClass(args);
     String[] mainArgs = constructArgs(args);
 
     main.invoke(null, new Object[] {mainArgs});
   }
 
-  private static ClassLoader getClassLoaderForTests(URL[] classpath) {
-    String javaVersion = System.getProperty("java.version");
-    if (javaVersion.startsWith("1.8.") || "1.8".equals(javaVersion)) {
-      URLClassLoader urlClassLoader = (URLClassLoader) ClassLoader.getSystemClassLoader();
-      try {
-        Method addURL = URLClassLoader.class.getDeclaredMethod("addURL", URL.class);
-        addURL.setAccessible(true);
-        for (URL entry : classpath) {
-          addURL.invoke(urlClassLoader, entry);
-        }
-      } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-        throw new RuntimeException(
-            String.format(
-                "Couldn't add classpath URLs to (URLClassLoader) ClassLoader.getSystemClassLoader() on java version %s",
-                javaVersion),
-            e);
+  static void modifyClassLoader(
+      URLClassLoader urlClassLoader, boolean modifySystemClasspathProperty)
+      throws IOException, ReflectiveOperationException {
+    List<Path> paths = getClasspathFiles(urlClassLoader.getURLs());
+    List<URL> readUrls = readUrls(paths, modifySystemClasspathProperty);
+    addUrlsToClassLoader(urlClassLoader, readUrls);
+  }
+
+  // @VisibileForTesting
+  @SuppressWarnings("PMD.EmptyCatchBlock")
+  static List<Path> getClasspathFiles(URL[] urls) {
+    List<Path> paths = new LinkedList<>();
+
+    for (URL url : urls) {
+      if (!"file".equals(url.getProtocol())) {
+        continue;
       }
-      return urlClassLoader;
-    } else {
-      ClassLoader classLoader = URLClassLoader.newInstance(classpath, findPlatformClassLoader());
-      Thread.currentThread().setContextClassLoader(classLoader);
-      return classLoader;
+
+      // Segment the path, looking for a section that starts with "@". If one is found, reconstruct
+      // the rest of the path.
+      // WARNING: While the classfile's path can contain directories that include "@", the path
+      // cannot contain a directory that starts with "@".
+
+      String path = url.getPath();
+      int found, splitIndex = -1;
+      if (path == null || path.length() == 0) {
+        continue;
+      } else if (path.charAt(0) == '@') {
+        // path starts with '@'
+        splitIndex = 1;
+      } else if ((found = path.indexOf("/@")) >= 0) {
+        // found first section that begins with '@'
+        splitIndex = found + 2;
+      }
+
+      if (splitIndex > 0 && splitIndex < path.length()) {
+        try {
+          paths.add(Paths.get(path.substring(splitIndex)));
+        } catch (InvalidPathException e) {
+          // Carry on regardless
+        }
+      }
+    }
+    return paths;
+  }
+
+  // @VisibleForTesting
+  @SuppressWarnings("PMD.EmptyCatchBlock")
+  static List<URL> readUrls(List<Path> paths, boolean modifySystemClassPathProperty)
+      throws IOException {
+    List<URL> readUrls = new LinkedList<>();
+
+    List<String> classPathEntries = new LinkedList<>();
+
+    // Check to see if each of the provided paths is a file that's readable. If it's readable,
+    // pull it into memory, and scan it for entries to add to the classpath, using the standard
+    // format of "file/" to indicate a directory and assuming all other files are jars.
+    for (Path path : paths) {
+      if (!Files.exists(path)) {
+        continue;
+      }
+
+      List<String> lines = Files.readAllLines(path, UTF_8);
+      for (String line : lines) {
+        if (line.isEmpty()) {
+          continue;
+        }
+        try {
+          Path entry = Paths.get(line);
+          readUrls.add(entry.toUri().toURL());
+          classPathEntries.add(entry.toString());
+        } catch (InvalidPathException e) {
+          // Carry on regardless --- java allows us to put absolute garbage into the classpath.
+        }
+      }
+    }
+
+    String classpathProperty = System.getProperty("java.class.path");
+    if (classpathProperty == null) {
+      throw new NullPointerException("java.class.path system property must not be null");
+    }
+    StringBuilder newClassPath = new StringBuilder();
+    constructNewClassPath(newClassPath, classpathProperty, classPathEntries);
+
+    if (modifySystemClassPathProperty) {
+      System.setProperty("java.class.path", newClassPath.toString());
+    }
+
+    return readUrls;
+  }
+
+  // @VisibleForTesting
+  static void constructNewClassPath(
+      StringBuilder newClassPath,
+      /* @Nullable */ String existingClassPath,
+      List<String> classPathEntries) {
+
+    if (existingClassPath != null) {
+      newClassPath.append(existingClassPath);
+    }
+
+    Iterator<String> iterator = classPathEntries.iterator();
+    if (iterator.hasNext()) {
+      newClassPath.append(existingClassPath == null ? "" : File.pathSeparatorChar);
+      newClassPath.append(iterator.next());
+    }
+    while (iterator.hasNext()) {
+      newClassPath.append(File.pathSeparatorChar).append(iterator.next());
     }
   }
 
-  private static URL[] getClassPath(StringBuilder classPathPropertyOut) throws IOException {
-    Path classpathFile = Paths.get(System.getProperty(CLASSPATH_FILE_PROPERTY));
-    List<Path> classpath = getTestClassPath(classpathFile);
-    classpath.add(getTestRunnerClassPath());
-
-    List<URL> result = new ArrayList<>();
-    if (!classpath.isEmpty()) {
-      for (Path entry : classpath) {
-        if (!Files.exists(entry)) {
-          throw new IllegalArgumentException(
-              String.format(
-                  "Can't find classpath entry %s specified in classpath file %s",
-                  entry, classpathFile));
-        }
-        classPathPropertyOut.append(entry.toString());
-        classPathPropertyOut.append(":");
-        result.add(entry.toUri().toURL());
-      }
-      classPathPropertyOut.setLength(classPathPropertyOut.length() - 1);
+  private static void addUrlsToClassLoader(ClassLoader sysLoader, List<URL> readUrls)
+      throws ReflectiveOperationException {
+    // Add all the URLs to the classloader
+    Method addURL = URLClassLoader.class.getDeclaredMethod("addURL", URL.class);
+    addURL.setAccessible(true);
+    for (URL readUrl : readUrls) {
+      addURL.invoke(sysLoader, readUrl);
     }
-
-    return result.toArray(new URL[result.size()]);
-  }
-
-  private static List<Path> getTestClassPath(Path classpathFile) throws IOException {
-    return Files.readAllLines(classpathFile).stream().map(Paths::get).collect(Collectors.toList());
-  }
-
-  private static Path getTestRunnerClassPath() {
-    String path = System.getProperty(TESTRUNNER_CLASSES_PROPERTY);
-    return Paths.get(path);
   }
 
   private static String[] constructArgs(String[] args) {
@@ -155,28 +213,13 @@ public class FileClassPathRunner {
     return mainArgs;
   }
 
-  private static Method getMainMethod(ClassLoader classLoader, String[] args)
-      throws ReflectiveOperationException {
-    Class<?> mainClazz = classLoader.loadClass(args[0]);
+  private static Method getMainClass(String[] args) throws ReflectiveOperationException {
+    Class<?> mainClazz = Class.forName(args[0]);
     Method main = mainClazz.getMethod("main", args.getClass());
     int modifiers = main.getModifiers();
     if (!Modifier.isStatic(modifiers)) {
       System.exit(-4);
     }
     return main;
-  }
-
-  /**
-   * Returns ClassLoader that is a sibling on "current" class loader, in java 8 that is "Ext" class
-   * loader, on java 9+ that is "platform" classloader.
-   */
-  private static ClassLoader findPlatformClassLoader() {
-    try {
-      // use platform class loader on Java 9+ if exists
-      Method method = ClassLoader.class.getMethod("getPlatformClassLoader");
-      return (ClassLoader) method.invoke(null);
-    } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-      throw new AssertionError("Cannot find platform class loader", e);
-    }
   }
 }

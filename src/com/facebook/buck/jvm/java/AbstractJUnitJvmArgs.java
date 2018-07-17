@@ -25,6 +25,7 @@ import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.env.BuckClasspath;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import java.io.File;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
@@ -131,13 +132,9 @@ abstract class AbstractJUnitJvmArgs {
       ProjectFilesystem filesystem,
       Verbosity verbosity,
       long defaultTestTimeoutMillis) {
-    args.add(
-        String.format(
-            "-D%s=%s", FileClassPathRunner.TESTRUNNER_CLASSES_PROPERTY, getTestRunnerClasspath()));
-    args.add(
-        String.format(
-            "-D%s=%s",
-            FileClassPathRunner.CLASSPATH_FILE_PROPERTY, filesystem.resolve(getClasspathFile())));
+    // NOTE(agallagher): These probably don't belong here, but buck integration tests need
+    // to find the test runner classes, so propagate these down via the relevant properties.
+    args.add(String.format("-Dbuck.testrunner_classes=%s", getTestRunnerClasspath()));
 
     if (isCodeCoverageEnabled()) {
       args.add(
@@ -192,7 +189,12 @@ abstract class AbstractJUnitJvmArgs {
       args.add("-verbose");
     }
 
-    args.add("-classpath", getTestRunnerClasspath().toString());
+    args.add(
+        "-classpath",
+        "@"
+            + filesystem.resolve(getClasspathFile())
+            + File.pathSeparator
+            + getTestRunnerClasspath());
 
     args.add(FileClassPathRunner.class.getName());
 
