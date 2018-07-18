@@ -226,6 +226,7 @@ standard_java_test(
         "//test/com/facebook/buck/android:testutil",
         "//test/com/facebook/buck/android:utils",
         "//test/com/facebook/buck/config:FakeBuckConfig",
+        "//test/com/facebook/buck/core/build/context:testutil",
         "//test/com/facebook/buck/core/cell:testutil",
         "//test/com/facebook/buck/core/model/targetgraph:testutil",
         "//test/com/facebook/buck/core/rules/resolver/impl:testutil",

@@ -1,0 +1,20 @@
+java_library(
+    name = "testutil",
+    srcs = glob(
+        ["*.java"],
+        exclude = ["*Test.java"],
+    ),
+    exported_deps = [
+        "//src/com/facebook/buck/core/build/context:context",
+    ],
+    visibility = ["//test/..."],
+    deps = [
+        "//src/com/facebook/buck/jvm/core:core",
+        "//test/com/facebook/buck/event:testutil",
+        "//test/com/facebook/buck/jvm/java:fakepackagefinder",
+        "//test/com/facebook/buck/jvm/java:testutil",
+        "//test/com/facebook/buck/testutil:testutil",
+        "//third-party/java/easymock:easymock",
+        "//third-party/java/guava:guava",
+    ],
+)

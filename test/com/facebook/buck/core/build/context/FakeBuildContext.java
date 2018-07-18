@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright 2018-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -14,18 +14,20 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
+package com.facebook.buck.core.build.context;
 
 import static org.easymock.EasyMock.createMock;
 
-import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 
-/** Facilitates creating a fake {@link BuildContext} for unit tests. */
+/**
+ * Facilitates creating a fake {@link com.facebook.buck.core.build.context.BuildContext} for unit
+ * tests.
+ */
 public class FakeBuildContext {
 
   /** Utility class: do not instantiate. */

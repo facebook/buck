@@ -436,6 +436,7 @@ java_test(
         "//src/com/facebook/buck/worker:worker_pool_factory",
         "//src/com/facebook/buck/worker:worker_process",
         "//test/com/facebook/buck/config:FakeBuckConfig",
+        "//test/com/facebook/buck/core/build/context:testutil",
         "//test/com/facebook/buck/core/cell:testutil",
         "//test/com/facebook/buck/core/model/targetgraph:testutil",
         "//test/com/facebook/buck/core/rules/resolver/impl:testutil",

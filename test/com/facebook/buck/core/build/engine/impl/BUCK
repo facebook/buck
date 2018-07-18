@@ -20,6 +20,7 @@ java_test(
         "//src/com/facebook/buck/util/json:json",
         "//src/com/facebook/buck/util/zip:zip",
         "//test/com/facebook/buck/artifact_cache:testutil",
+        "//test/com/facebook/buck/core/build/context:testutil",
         "//test/com/facebook/buck/core/build/distributed/synchronization/impl:testutil",
         "//test/com/facebook/buck/core/build/engine/cache/manager:testutil",
         "//test/com/facebook/buck/core/build/engine/manifest:testutil",

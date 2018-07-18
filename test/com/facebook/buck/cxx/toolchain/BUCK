@@ -60,6 +60,7 @@ standard_java_test(
         "//src/com/facebook/buck/util/cache/impl:impl",
         "//src/com/facebook/buck/util/environment:platform",
         "//test/com/facebook/buck/config:FakeBuckConfig",
+        "//test/com/facebook/buck/core/build/context:testutil",
         "//test/com/facebook/buck/core/rules/resolver/impl:testutil",
         "//test/com/facebook/buck/core/sourcepath:testutil",
         "//test/com/facebook/buck/io/filesystem:testutil",
