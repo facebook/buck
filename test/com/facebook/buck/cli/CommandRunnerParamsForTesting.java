@@ -25,6 +25,8 @@ import com.facebook.buck.core.build.engine.cache.manager.BuildInfoStoreManager;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphCache;
+import com.facebook.buck.core.rules.config.KnownConfigurationRuleTypes;
+import com.facebook.buck.core.rules.config.impl.PluginBasedKnownConfigurationRuleTypesFactory;
 import com.facebook.buck.core.rules.knowntypes.DefaultKnownBuildRuleTypesFactory;
 import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypesProvider;
 import com.facebook.buck.event.BuckEventBus;
@@ -108,6 +110,8 @@ public class CommandRunnerParamsForTesting {
             DefaultKnownBuildRuleTypesFactory.of(
                 processExecutor, pluginManager, new TestSandboxExecutionStrategyFactory()));
     ParserConfig parserConfig = cell.getBuckConfig().getView(ParserConfig.class);
+    KnownConfigurationRuleTypes knownConfigurationRuleTypes =
+        PluginBasedKnownConfigurationRuleTypesFactory.createFromPlugins(pluginManager);
 
     return CommandRunnerParams.of(
         console,
@@ -122,6 +126,7 @@ public class CommandRunnerParamsForTesting {
                 typeCoercerFactory,
                 new ConstructorArgMarshaller(typeCoercerFactory),
                 knownBuildRuleTypesProvider,
+                knownConfigurationRuleTypes,
                 new ParserPythonInterpreterProvider(parserConfig, new ExecutableFinder())),
             parserConfig,
             typeCoercerFactory,
@@ -142,6 +147,7 @@ public class CommandRunnerParamsForTesting {
         BUILD_ENVIRONMENT_DESCRIPTION,
         new ActionGraphCache(config.getMaxActionGraphCacheEntries()),
         knownBuildRuleTypesProvider,
+        knownConfigurationRuleTypes,
         new BuildInfoStoreManager(),
         Optional.empty(),
         Optional.empty(),

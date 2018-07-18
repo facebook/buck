@@ -31,6 +31,8 @@ import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.cell.name.RelativeCellName;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphCache;
+import com.facebook.buck.core.rules.config.KnownConfigurationRuleTypes;
+import com.facebook.buck.core.rules.config.impl.PluginBasedKnownConfigurationRuleTypesFactory;
 import com.facebook.buck.core.rules.knowntypes.DefaultKnownBuildRuleTypesFactory;
 import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypesProvider;
 import com.facebook.buck.event.BuckEventBusForTests;
@@ -292,6 +294,8 @@ public class CleanCommandTest {
         KnownBuildRuleTypesProvider.of(
             DefaultKnownBuildRuleTypesFactory.of(
                 processExecutor, pluginManager, new TestSandboxExecutionStrategyFactory()));
+    KnownConfigurationRuleTypes knownConfigurationRuleTypes =
+        PluginBasedKnownConfigurationRuleTypesFactory.createFromPlugins(pluginManager);
     ExecutableFinder executableFinder = new ExecutableFinder();
     ParserConfig parserConfig = buckConfig.getView(ParserConfig.class);
 
@@ -308,6 +312,7 @@ public class CleanCommandTest {
                 typeCoercerFactory,
                 new ConstructorArgMarshaller(typeCoercerFactory),
                 knownBuildRuleTypesProvider,
+                knownConfigurationRuleTypes,
                 new ParserPythonInterpreterProvider(parserConfig, executableFinder)),
             parserConfig,
             typeCoercerFactory,
@@ -328,6 +333,7 @@ public class CleanCommandTest {
         CommandRunnerParamsForTesting.BUILD_ENVIRONMENT_DESCRIPTION,
         new ActionGraphCache(buckConfig.getMaxActionGraphCacheEntries()),
         knownBuildRuleTypesProvider,
+        knownConfigurationRuleTypes,
         new BuildInfoStoreManager(),
         Optional.empty(),
         Optional.empty(),

@@ -30,6 +30,8 @@ import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.TestCellBuilder;
+import com.facebook.buck.core.rules.config.KnownConfigurationRuleTypes;
+import com.facebook.buck.core.rules.config.impl.PluginBasedKnownConfigurationRuleTypesFactory;
 import com.facebook.buck.core.rules.knowntypes.DefaultKnownBuildRuleTypesFactory;
 import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypesProvider;
 import com.facebook.buck.io.ExecutableFinder;
@@ -56,6 +58,7 @@ import java.util.Map;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.pf4j.PluginManager;
 
 public class DaemonLifecycleManagerTest {
 
@@ -64,6 +67,7 @@ public class DaemonLifecycleManagerTest {
   private ProjectFilesystem filesystem;
   private DaemonLifecycleManager daemonLifecycleManager;
   private KnownBuildRuleTypesProvider knownBuildRuleTypesProvider;
+  private KnownConfigurationRuleTypes knownConfigurationRuleTypes;
   private BuckConfig buckConfig;
   private ExecutableFinder executableFinder;
 
@@ -73,12 +77,13 @@ public class DaemonLifecycleManagerTest {
     buckConfig = FakeBuckConfig.builder().build();
     daemonLifecycleManager = new DaemonLifecycleManager();
     ProcessExecutor executor = new DefaultProcessExecutor(new TestConsole());
+    PluginManager pluginManager = BuckPluginManagerFactory.createPluginManager();
     knownBuildRuleTypesProvider =
         KnownBuildRuleTypesProvider.of(
             DefaultKnownBuildRuleTypesFactory.of(
-                executor,
-                BuckPluginManagerFactory.createPluginManager(),
-                new TestSandboxExecutionStrategyFactory()));
+                executor, pluginManager, new TestSandboxExecutionStrategyFactory()));
+    knownConfigurationRuleTypes =
+        PluginBasedKnownConfigurationRuleTypesFactory.createFromPlugins(pluginManager);
     executableFinder = new ExecutableFinder();
   }
 
@@ -96,6 +101,7 @@ public class DaemonLifecycleManagerTest {
                 .setFilesystem(filesystem)
                 .build(),
             knownBuildRuleTypesProvider,
+            knownConfigurationRuleTypes,
             executableFinder,
             Console.createNullConsole());
 
@@ -113,6 +119,7 @@ public class DaemonLifecycleManagerTest {
                 .setFilesystem(filesystem)
                 .build(),
             knownBuildRuleTypesProvider,
+            knownConfigurationRuleTypes,
             executableFinder,
             Console.createNullConsole()));
 
@@ -130,6 +137,7 @@ public class DaemonLifecycleManagerTest {
                 .setFilesystem(filesystem)
                 .build(),
             knownBuildRuleTypesProvider,
+            knownConfigurationRuleTypes,
             executableFinder,
             Console.createNullConsole()));
   }
@@ -151,6 +159,7 @@ public class DaemonLifecycleManagerTest {
         daemonLifecycleManager.getDaemon(
             new TestCellBuilder().setBuckConfig(buckConfig1).setFilesystem(filesystem).build(),
             knownBuildRuleTypesProvider,
+            knownConfigurationRuleTypes,
             executableFinder,
             Console.createNullConsole());
 
@@ -160,6 +169,7 @@ public class DaemonLifecycleManagerTest {
         daemonLifecycleManager.getDaemon(
             new TestCellBuilder().setBuckConfig(buckConfig2).setFilesystem(filesystem).build(),
             knownBuildRuleTypesProvider,
+            knownConfigurationRuleTypes,
             executableFinder,
             Console.createNullConsole()));
   }
@@ -184,6 +194,7 @@ public class DaemonLifecycleManagerTest {
         daemonLifecycleManager.getDaemon(
             new TestCellBuilder().setBuckConfig(buckConfig).setFilesystem(filesystem).build(),
             knownBuildRuleTypesProvider,
+            knownConfigurationRuleTypes,
             executableFinder,
             Console.createNullConsole());
 
@@ -191,6 +202,7 @@ public class DaemonLifecycleManagerTest {
         daemonLifecycleManager.getDaemon(
             new TestCellBuilder().setBuckConfig(buckConfig).setFilesystem(filesystem).build(),
             knownBuildRuleTypesProvider,
+            knownConfigurationRuleTypes,
             executableFinder,
             Console.createNullConsole());
     assertEquals("Apple SDK should still be not found", daemon1, daemon2);
@@ -210,6 +222,7 @@ public class DaemonLifecycleManagerTest {
                 .setFilesystem(filesystem)
                 .build(),
             knownBuildRuleTypesProvider,
+            knownConfigurationRuleTypes,
             executableFinder,
             Console.createNullConsole());
     assertNotEquals("Apple SDK should be found", daemon2, daemon3);
@@ -221,6 +234,7 @@ public class DaemonLifecycleManagerTest {
                 .setFilesystem(filesystem)
                 .build(),
             knownBuildRuleTypesProvider,
+            knownConfigurationRuleTypes,
             executableFinder,
             Console.createNullConsole());
     assertEquals("Apple SDK should still be found", daemon3, daemon4);
@@ -266,12 +280,14 @@ public class DaemonLifecycleManagerTest {
         daemonLifecycleManager.getDaemon(
             new TestCellBuilder().setBuckConfig(buckConfig).setFilesystem(filesystem).build(),
             knownBuildRuleTypesProvider,
+            knownConfigurationRuleTypes,
             executableFinder,
             Console.createNullConsole());
     Object daemon2 =
         daemonLifecycleManager.getDaemon(
             new TestCellBuilder().setBuckConfig(buckConfig).setFilesystem(filesystem).build(),
             knownBuildRuleTypesProvider,
+            knownConfigurationRuleTypes,
             executableFinder,
             Console.createNullConsole());
     assertEquals("Android SDK should be the same initial location", daemon1, daemon2);
@@ -282,11 +298,19 @@ public class DaemonLifecycleManagerTest {
 
     Object daemon3 =
         daemonLifecycleManager.getDaemon(
-            cell, knownBuildRuleTypesProvider, executableFinder, Console.createNullConsole());
+            cell,
+            knownBuildRuleTypesProvider,
+            knownConfigurationRuleTypes,
+            executableFinder,
+            Console.createNullConsole());
     assertEquals("Daemon should not be re-created", daemon2, daemon3);
     Object daemon4 =
         daemonLifecycleManager.getDaemon(
-            cell, knownBuildRuleTypesProvider, executableFinder, Console.createNullConsole());
+            cell,
+            knownBuildRuleTypesProvider,
+            knownConfigurationRuleTypes,
+            executableFinder,
+            Console.createNullConsole());
     assertEquals("Android SDK should be the same other location", daemon3, daemon4);
   }
 
@@ -331,12 +355,14 @@ public class DaemonLifecycleManagerTest {
         daemonLifecycleManager.getDaemon(
             new TestCellBuilder().setBuckConfig(buckConfig).setFilesystem(filesystem).build(),
             knownBuildRuleTypesProvider,
+            knownConfigurationRuleTypes,
             executableFinder,
             Console.createNullConsole());
     Object daemon2 =
         daemonLifecycleManager.getDaemon(
             new TestCellBuilder().setBuckConfig(buckConfig).setFilesystem(filesystem).build(),
             knownBuildRuleTypesProvider,
+            knownConfigurationRuleTypes,
             executableFinder,
             Console.createNullConsole());
     assertEquals("Android SDK should be the same initial location", daemon1, daemon2);
@@ -348,11 +374,19 @@ public class DaemonLifecycleManagerTest {
 
     Object daemon3 =
         daemonLifecycleManager.getDaemon(
-            cell, knownBuildRuleTypesProvider, executableFinder, Console.createNullConsole());
+            cell,
+            knownBuildRuleTypesProvider,
+            knownConfigurationRuleTypes,
+            executableFinder,
+            Console.createNullConsole());
     assertNotEquals("Android SDK should be the other location", daemon2, daemon3);
     Object daemon4 =
         daemonLifecycleManager.getDaemon(
-            cell, knownBuildRuleTypesProvider, executableFinder, Console.createNullConsole());
+            cell,
+            knownBuildRuleTypesProvider,
+            knownConfigurationRuleTypes,
+            executableFinder,
+            Console.createNullConsole());
     assertEquals("Android SDK should be the same other location", daemon3, daemon4);
   }
 
@@ -378,14 +412,22 @@ public class DaemonLifecycleManagerTest {
         .getByNameIfPresent(AndroidSdkLocation.DEFAULT_NAME, AndroidSdkLocation.class);
     Daemon daemonWithBrokenAndroidSdk =
         daemonLifecycleManager.getDaemon(
-            cell, knownBuildRuleTypesProvider, executableFinder, Console.createNullConsole());
+            cell,
+            knownBuildRuleTypesProvider,
+            knownConfigurationRuleTypes,
+            executableFinder,
+            Console.createNullConsole());
 
     tmp.newFolder("android-sdk");
 
     cell = createCellWithAndroidSdk(androidSdkPath);
     Daemon daemonWithWorkingAndroidSdk =
         daemonLifecycleManager.getDaemon(
-            cell, knownBuildRuleTypesProvider, executableFinder, Console.createNullConsole());
+            cell,
+            knownBuildRuleTypesProvider,
+            knownConfigurationRuleTypes,
+            executableFinder,
+            Console.createNullConsole());
 
     assertNotEquals(daemonWithBrokenAndroidSdk, daemonWithWorkingAndroidSdk);
   }
@@ -402,14 +444,22 @@ public class DaemonLifecycleManagerTest {
         .getByNameIfPresent(AndroidSdkLocation.DEFAULT_NAME, AndroidSdkLocation.class);
     Daemon daemonWithWorkingAndroidSdk =
         daemonLifecycleManager.getDaemon(
-            cell, knownBuildRuleTypesProvider, executableFinder, Console.createNullConsole());
+            cell,
+            knownBuildRuleTypesProvider,
+            knownConfigurationRuleTypes,
+            executableFinder,
+            Console.createNullConsole());
 
     Files.deleteIfExists(androidSdkPath);
 
     cell = createCellWithAndroidSdk(androidSdkPath);
     Daemon daemonWithBrokenAndroidSdk =
         daemonLifecycleManager.getDaemon(
-            cell, knownBuildRuleTypesProvider, executableFinder, Console.createNullConsole());
+            cell,
+            knownBuildRuleTypesProvider,
+            knownConfigurationRuleTypes,
+            executableFinder,
+            Console.createNullConsole());
 
     assertNotEquals(daemonWithWorkingAndroidSdk, daemonWithBrokenAndroidSdk);
   }
@@ -427,14 +477,22 @@ public class DaemonLifecycleManagerTest {
         .getByNameIfPresent(AndroidSdkLocation.DEFAULT_NAME, AndroidSdkLocation.class);
     Daemon daemonWithBrokenAndroidSdk1 =
         daemonLifecycleManager.getDaemon(
-            cell, knownBuildRuleTypesProvider, executableFinder, Console.createNullConsole());
+            cell,
+            knownBuildRuleTypesProvider,
+            knownConfigurationRuleTypes,
+            executableFinder,
+            Console.createNullConsole());
 
     cell = createCellWithAndroidSdk(androidSdkPath);
     cell.getToolchainProvider()
         .getByNameIfPresent(AndroidSdkLocation.DEFAULT_NAME, AndroidSdkLocation.class);
     Daemon daemonWithBrokenAndroidSdk2 =
         daemonLifecycleManager.getDaemon(
-            cell, knownBuildRuleTypesProvider, executableFinder, Console.createNullConsole());
+            cell,
+            knownBuildRuleTypesProvider,
+            knownConfigurationRuleTypes,
+            executableFinder,
+            Console.createNullConsole());
 
     assertEquals(daemonWithBrokenAndroidSdk1, daemonWithBrokenAndroidSdk2);
   }
@@ -452,12 +510,20 @@ public class DaemonLifecycleManagerTest {
         .getByNameIfPresent(AndroidSdkLocation.DEFAULT_NAME, AndroidSdkLocation.class);
     Daemon daemonWithBrokenAndroidSdk1 =
         daemonLifecycleManager.getDaemon(
-            cell, knownBuildRuleTypesProvider, executableFinder, Console.createNullConsole());
+            cell,
+            knownBuildRuleTypesProvider,
+            knownConfigurationRuleTypes,
+            executableFinder,
+            Console.createNullConsole());
 
     cell = createCellWithAndroidSdk(androidSdkPath);
     Daemon daemonWithBrokenAndroidSdk2 =
         daemonLifecycleManager.getDaemon(
-            cell, knownBuildRuleTypesProvider, executableFinder, Console.createNullConsole());
+            cell,
+            knownBuildRuleTypesProvider,
+            knownConfigurationRuleTypes,
+            executableFinder,
+            Console.createNullConsole());
 
     assertEquals(daemonWithBrokenAndroidSdk1, daemonWithBrokenAndroidSdk2);
   }
@@ -475,12 +541,20 @@ public class DaemonLifecycleManagerTest {
         .getByNameIfPresent(AndroidSdkLocation.DEFAULT_NAME, AndroidSdkLocation.class);
     Object daemonWithBrokenAndroidSdk1 =
         daemonLifecycleManager.getDaemon(
-            cell, knownBuildRuleTypesProvider, executableFinder, Console.createNullConsole());
+            cell,
+            knownBuildRuleTypesProvider,
+            knownConfigurationRuleTypes,
+            executableFinder,
+            Console.createNullConsole());
 
     cell = createCellWithAndroidSdk(androidSdkPath.resolve("some-other-dir"));
     Object daemonWithBrokenAndroidSdk2 =
         daemonLifecycleManager.getDaemon(
-            cell, knownBuildRuleTypesProvider, executableFinder, Console.createNullConsole());
+            cell,
+            knownBuildRuleTypesProvider,
+            knownConfigurationRuleTypes,
+            executableFinder,
+            Console.createNullConsole());
 
     assertNotEquals(daemonWithBrokenAndroidSdk1, daemonWithBrokenAndroidSdk2);
   }

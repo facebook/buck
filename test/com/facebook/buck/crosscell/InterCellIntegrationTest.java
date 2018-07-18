@@ -37,6 +37,8 @@ import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.rules.config.KnownConfigurationRuleTypes;
+import com.facebook.buck.core.rules.config.impl.PluginBasedKnownConfigurationRuleTypesFactory;
 import com.facebook.buck.core.rules.knowntypes.DefaultKnownBuildRuleTypesFactory;
 import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypesProvider;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
@@ -96,6 +98,7 @@ import org.hamcrest.Matchers;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
+import org.pf4j.PluginManager;
 
 /** Cross-cell related integration tests that don't fit anywhere else. */
 public class InterCellIntegrationTest {
@@ -388,13 +391,14 @@ public class InterCellIntegrationTest {
 
     // We could just do a build, but that's a little extreme since all we need is the target graph
     ProcessExecutor processExecutor = new DefaultProcessExecutor(new TestConsole());
+    PluginManager pluginManager = BuckPluginManagerFactory.createPluginManager();
     KnownBuildRuleTypesProvider knownBuildRuleTypesProvider =
         KnownBuildRuleTypesProvider.of(
             DefaultKnownBuildRuleTypesFactory.of(
-                processExecutor,
-                BuckPluginManagerFactory.createPluginManager(),
-                new TestSandboxExecutionStrategyFactory()));
+                processExecutor, pluginManager, new TestSandboxExecutionStrategyFactory()));
     ParserConfig parserConfig = primary.asCell().getBuckConfig().getView(ParserConfig.class);
+    KnownConfigurationRuleTypes knownConfigurationRuleTypes =
+        PluginBasedKnownConfigurationRuleTypesFactory.createFromPlugins(pluginManager);
     TypeCoercerFactory coercerFactory = new DefaultTypeCoercerFactory();
     Parser parser =
         new DefaultParser(
@@ -402,6 +406,7 @@ public class InterCellIntegrationTest {
                 coercerFactory,
                 new ConstructorArgMarshaller(coercerFactory),
                 knownBuildRuleTypesProvider,
+                knownConfigurationRuleTypes,
                 new ParserPythonInterpreterProvider(parserConfig, new ExecutableFinder())),
             parserConfig,
             coercerFactory,

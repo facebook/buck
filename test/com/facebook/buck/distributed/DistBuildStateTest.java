@@ -35,6 +35,8 @@ import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.rules.config.KnownConfigurationRuleTypes;
+import com.facebook.buck.core.rules.config.impl.PluginBasedKnownConfigurationRuleTypesFactory;
 import com.facebook.buck.core.rules.knowntypes.DefaultKnownBuildRuleTypesFactory;
 import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypesProvider;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
@@ -111,6 +113,7 @@ public class DistBuildStateTest {
   @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
 
   private KnownBuildRuleTypesProvider knownBuildRuleTypesProvider;
+  private KnownConfigurationRuleTypes knownConfigurationRuleTypes;
   private ProcessExecutor processExecutor;
   private ExecutableFinder executableFinder;
   private BuckModuleManager moduleManager;
@@ -126,6 +129,8 @@ public class DistBuildStateTest {
         KnownBuildRuleTypesProvider.of(
             DefaultKnownBuildRuleTypesFactory.of(
                 processExecutor, pluginManager, new TestSandboxExecutionStrategyFactory()));
+    knownConfigurationRuleTypes =
+        PluginBasedKnownConfigurationRuleTypesFactory.createFromPlugins(pluginManager);
   }
 
   @Test
@@ -266,6 +271,7 @@ public class DistBuildStateTest {
                 typeCoercerFactory,
                 constructorArgMarshaller,
                 knownBuildRuleTypesProvider,
+                knownConfigurationRuleTypes,
                 new ParserPythonInterpreterProvider(parserConfig, executableFinder)),
             parserConfig,
             typeCoercerFactory,

@@ -22,6 +22,7 @@ import com.facebook.buck.core.build.engine.cache.manager.BuildInfoStoreManager;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphCache;
 import com.facebook.buck.core.rulekey.RuleKey;
+import com.facebook.buck.core.rules.config.KnownConfigurationRuleTypes;
 import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypesProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.event.BuckEventBus;
@@ -129,6 +130,9 @@ public abstract class AbstractCommandRunnerParams {
 
   @Value.Parameter
   public abstract KnownBuildRuleTypesProvider getKnownBuildRuleTypesProvider();
+
+  @Value.Parameter
+  public abstract KnownConfigurationRuleTypes getKnownConfigurationRuleTypes();
 
   @Value.Parameter
   public abstract BuildInfoStoreManager getBuildInfoStoreManager();

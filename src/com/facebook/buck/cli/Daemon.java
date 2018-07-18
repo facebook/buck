@@ -23,6 +23,7 @@ import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphCache;
 import com.facebook.buck.core.rulekey.RuleKey;
+import com.facebook.buck.core.rules.config.KnownConfigurationRuleTypes;
 import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypesProvider;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.FileHashCacheEvent;
@@ -84,6 +85,7 @@ final class Daemon implements Closeable {
   Daemon(
       Cell rootCell,
       KnownBuildRuleTypesProvider knownBuildRuleTypesProvider,
+      KnownConfigurationRuleTypes knownConfigurationRuleTypes,
       ExecutableFinder executableFinder,
       Optional<WebServer> webServerToReuse) {
     this.rootCell = rootCell;
@@ -119,6 +121,7 @@ final class Daemon implements Closeable {
                 typeCoercerFactory,
                 new ConstructorArgMarshaller(typeCoercerFactory),
                 knownBuildRuleTypesProvider,
+                knownConfigurationRuleTypes,
                 new ParserPythonInterpreterProvider(parserConfig, executableFinder)),
             parserConfig,
             typeCoercerFactory,

@@ -31,6 +31,8 @@ import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
 import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.config.KnownConfigurationRuleTypes;
+import com.facebook.buck.core.rules.config.impl.PluginBasedKnownConfigurationRuleTypesFactory;
 import com.facebook.buck.core.rules.knowntypes.DefaultKnownBuildRuleTypesFactory;
 import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypesProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
@@ -70,6 +72,7 @@ import java.util.function.Function;
 import org.immutables.value.Value;
 import org.junit.Before;
 import org.junit.Test;
+import org.pf4j.PluginManager;
 
 /** Reports targets that own a specified list of files. */
 public class OwnersReportTest {
@@ -286,12 +289,13 @@ public class OwnersReportTest {
 
   private Parser createParser(Cell cell) {
     ProcessExecutor processExecutor = new DefaultProcessExecutor(new TestConsole());
+    PluginManager pluginManager = BuckPluginManagerFactory.createPluginManager();
     KnownBuildRuleTypesProvider knownBuildRuleTypesProvider =
         KnownBuildRuleTypesProvider.of(
             DefaultKnownBuildRuleTypesFactory.of(
-                processExecutor,
-                BuckPluginManagerFactory.createPluginManager(),
-                new TestSandboxExecutionStrategyFactory()));
+                processExecutor, pluginManager, new TestSandboxExecutionStrategyFactory()));
+    KnownConfigurationRuleTypes knownConfigurationRuleTypes =
+        PluginBasedKnownConfigurationRuleTypesFactory.createFromPlugins(pluginManager);
     TypeCoercerFactory coercerFactory = new DefaultTypeCoercerFactory();
     ParserConfig parserConfig = cell.getBuckConfig().getView(ParserConfig.class);
     return new DefaultParser(
@@ -299,6 +303,7 @@ public class OwnersReportTest {
             coercerFactory,
             new ConstructorArgMarshaller(coercerFactory),
             knownBuildRuleTypesProvider,
+            knownConfigurationRuleTypes,
             new ParserPythonInterpreterProvider(parserConfig, new ExecutableFinder())),
         parserConfig,
         coercerFactory,

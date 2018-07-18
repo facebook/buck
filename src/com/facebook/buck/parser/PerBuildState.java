@@ -32,12 +32,11 @@ import java.util.concurrent.atomic.AtomicLong;
 
 public class PerBuildState implements AutoCloseable {
 
-  private final AtomicLong parseProcessedBytes = new AtomicLong();
-
+  private final AtomicLong parseProcessedBytes;
   private final KnownBuildRuleTypesProvider knownBuildRuleTypesProvider;
   private final CellManager cellManager;
   private final RawNodeParsePipeline rawNodeParsePipeline;
-  private final TargetNodeParsePipeline targetNodeParsePipeline;
+  private final ParsePipeline<TargetNode<?, ?>> targetNodeParsePipeline;
 
   private final TargetNodeProviderForSpecResolver<TargetNode<?, ?>>
       targetNodeProviderForSpecResolver =
@@ -56,10 +55,12 @@ public class PerBuildState implements AutoCloseable {
           };
 
   PerBuildState(
+      AtomicLong parseProcessedBytes,
       KnownBuildRuleTypesProvider knownBuildRuleTypesProvider,
       CellManager cellManager,
       RawNodeParsePipeline rawNodeParsePipeline,
-      TargetNodeParsePipeline targetNodeParsePipeline) {
+      ParsePipeline<TargetNode<?, ?>> targetNodeParsePipeline) {
+    this.parseProcessedBytes = parseProcessedBytes;
     this.knownBuildRuleTypesProvider = knownBuildRuleTypesProvider;
     this.cellManager = cellManager;
     this.rawNodeParsePipeline = rawNodeParsePipeline;

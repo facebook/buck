@@ -294,4 +294,9 @@ abstract class AbstractParserConfig implements ConfigView<BuckConfig> {
   public int getParserTargetThreshold() {
     return getDelegate().getInteger("parser", "target_threshold").orElse(TARGET_PARSER_THRESHOLD);
   }
+
+  @Value.Lazy
+  public boolean getEnableConfigurableAttributes() {
+    return getDelegate().getBooleanValue("parser", "enable_configurable_attributes", false);
+  }
 }

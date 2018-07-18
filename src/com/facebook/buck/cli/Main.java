@@ -37,6 +37,8 @@ import com.facebook.buck.core.exceptions.handler.HumanReadableExceptionAugmentor
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphCache;
 import com.facebook.buck.core.rulekey.RuleKey;
+import com.facebook.buck.core.rules.config.KnownConfigurationRuleTypes;
+import com.facebook.buck.core.rules.config.impl.PluginBasedKnownConfigurationRuleTypesFactory;
 import com.facebook.buck.core.rules.knowntypes.DefaultKnownBuildRuleTypesFactory;
 import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypesFactory;
 import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypesProvider;
@@ -750,11 +752,18 @@ public final class Main {
                   projectFilesystemFactory)
               .getCellByPath(filesystem.getRootPath());
 
+      KnownConfigurationRuleTypes knownConfigurationRuleTypes =
+          PluginBasedKnownConfigurationRuleTypesFactory.createFromPlugins(pluginManager);
+
       Optional<Daemon> daemon =
           context.isPresent() && (watchman != WatchmanFactory.NULL_WATCHMAN)
               ? Optional.of(
                   daemonLifecycleManager.getDaemon(
-                      rootCell, knownBuildRuleTypesProvider, executableFinder, console))
+                      rootCell,
+                      knownBuildRuleTypesProvider,
+                      knownConfigurationRuleTypes,
+                      executableFinder,
+                      console))
               : Optional.empty();
 
       // Used the cached provider, if present.
@@ -1129,6 +1138,7 @@ public final class Main {
                   buckConfig,
                   watchman,
                   knownBuildRuleTypesProvider,
+                  knownConfigurationRuleTypes,
                   rootCell,
                   daemon,
                   buildEventBus,
@@ -1196,6 +1206,7 @@ public final class Main {
                         buildEnvironmentDescription,
                         parserAndCaches.getActionGraphCache(),
                         knownBuildRuleTypesProvider,
+                        knownConfigurationRuleTypes,
                         storeManager,
                         Optional.of(invocationInfo),
                         parserAndCaches.getDefaultRuleKeyFactoryCacheRecycler(),
@@ -1270,6 +1281,7 @@ public final class Main {
       BuckConfig buckConfig,
       Watchman watchman,
       KnownBuildRuleTypesProvider knownBuildRuleTypesProvider,
+      KnownConfigurationRuleTypes knownConfigurationRuleTypes,
       Cell rootCell,
       Optional<Daemon> daemonOptional,
       BuckEventBus buildEventBus,
@@ -1336,6 +1348,7 @@ public final class Main {
                       typeCoercerFactory,
                       new ConstructorArgMarshaller(typeCoercerFactory),
                       knownBuildRuleTypesProvider,
+                      knownConfigurationRuleTypes,
                       new ParserPythonInterpreterProvider(parserConfig, executableFinder)),
                   parserConfig,
                   typeCoercerFactory,

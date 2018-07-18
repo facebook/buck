@@ -25,6 +25,8 @@ import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.rules.config.KnownConfigurationRuleTypes;
+import com.facebook.buck.core.rules.config.impl.PluginBasedKnownConfigurationRuleTypesFactory;
 import com.facebook.buck.core.rules.knowntypes.DefaultKnownBuildRuleTypesFactory;
 import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypesProvider;
 import com.facebook.buck.event.BuckEventBus;
@@ -60,6 +62,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.pf4j.PluginManager;
 
 public class TargetSpecResolverTest {
 
@@ -93,31 +96,29 @@ public class TargetSpecResolverTest {
     ProcessExecutor processExecutor = new DefaultProcessExecutor(new TestConsole());
     typeCoercerFactory = new DefaultTypeCoercerFactory();
     constructorArgMarshaller = new ConstructorArgMarshaller(typeCoercerFactory);
+    PluginManager pluginManager = BuckPluginManagerFactory.createPluginManager();
     knownBuildRuleTypesProvider =
         KnownBuildRuleTypesProvider.of(
             DefaultKnownBuildRuleTypesFactory.of(
-                processExecutor,
-                BuckPluginManagerFactory.createPluginManager(),
-                new TestSandboxExecutionStrategyFactory()));
+                processExecutor, pluginManager, new TestSandboxExecutionStrategyFactory()));
     ParserConfig parserConfig = cell.getBuckConfig().getView(ParserConfig.class);
     ExecutableFinder executableFinder = new ExecutableFinder();
     parserPythonInterpreterProvider =
         new ParserPythonInterpreterProvider(parserConfig, executableFinder);
+    KnownConfigurationRuleTypes knownConfigurationRuleTypes =
+        PluginBasedKnownConfigurationRuleTypesFactory.createFromPlugins(pluginManager);
     perBuildStateFactory =
         new PerBuildStateFactory(
             typeCoercerFactory,
             constructorArgMarshaller,
             knownBuildRuleTypesProvider,
+            knownConfigurationRuleTypes,
             parserPythonInterpreterProvider);
     targetNodeTargetSpecResolver = new TargetSpecResolver();
     parser =
         new DefaultParser(
-            new PerBuildStateFactory(
-                typeCoercerFactory,
-                constructorArgMarshaller,
-                knownBuildRuleTypesProvider,
-                parserPythonInterpreterProvider),
-            parserConfig,
+            perBuildStateFactory,
+            cell.getBuckConfig().getView(ParserConfig.class),
             typeCoercerFactory,
             targetNodeTargetSpecResolver);
     flavorEnhancer = (target, targetNode, targetType) -> target;
