@@ -14,13 +14,12 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
+package com.facebook.buck.core.build.buildable.context;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.util.HashMap;
@@ -28,7 +27,10 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-/** Fake implementation of {@link BuildableContext} for testing. */
+/**
+ * Fake implementation of {@link com.facebook.buck.core.build.buildable.context.BuildableContext}
+ * for testing.
+ */
 public class FakeBuildableContext implements BuildableContext {
 
   private final Map<String, Object> metadata = new HashMap<>();

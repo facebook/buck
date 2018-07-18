@@ -19,6 +19,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.core.build.buildable.context.FakeBuildableContext;
 import com.facebook.buck.core.build.context.FakeBuildContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.InternalFlavor;
@@ -40,7 +41,6 @@ import com.facebook.buck.cxx.toolchain.HeaderVisibility;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.args.RuleKeyAppendableFunction;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.step.Step;

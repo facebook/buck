@@ -17,6 +17,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
+import com.facebook.buck.core.build.buildable.context.FakeBuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.context.FakeBuildContext;
 import com.facebook.buck.core.cell.TestCellPathResolver;
@@ -32,7 +33,6 @@ import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.jvm.java.FakeJavaLibrary;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.TestBuildRuleParams;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;

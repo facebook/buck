@@ -19,6 +19,7 @@ package com.facebook.buck.features.python;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.config.FakeBuckConfig;
+import com.facebook.buck.core.build.buildable.context.FakeBuildableContext;
 import com.facebook.buck.core.build.context.FakeBuildContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.FlavorDomain;
@@ -46,7 +47,6 @@ import com.facebook.buck.io.AlwaysFoundExecutableFinder;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.coercer.VersionMatchedCollection;

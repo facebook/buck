@@ -19,6 +19,7 @@ package com.facebook.buck.js;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.core.build.buildable.context.FakeBuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.context.FakeBuildContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
@@ -29,7 +30,6 @@ import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.macros.LocationMacro;
 import com.facebook.buck.shell.WorkerShellStep;
 import com.facebook.buck.util.RichStream;

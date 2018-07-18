@@ -29,6 +29,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.android.AndroidLibraryBuilder;
+import com.facebook.buck.core.build.buildable.context.FakeBuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.context.FakeBuildContext;
 import com.facebook.buck.core.cell.TestCellBuilder;
@@ -58,7 +59,6 @@ import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.jvm.java.testutil.AbiCompilationModeTest;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
-import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.TestBuildRuleParams;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.InputBasedRuleKeyFactory;
