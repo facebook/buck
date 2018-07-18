@@ -202,6 +202,7 @@ java_test(
         "//src/com/facebook/buck/shell:steps",
         "//src/com/facebook/buck/shell:worker",
         "//src/com/facebook/buck/worker:worker_job_params",
+        "//test/com/facebook/buck/core/sourcepath:testutil",
         "//src/com/facebook/buck/worker:worker_pool_factory",
         "//test/com/facebook/buck/core/model/targetgraph:testutil",
         "//src/com/facebook/buck/worker:worker_process",

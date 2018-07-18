@@ -11,6 +11,7 @@ java_test(
         "//src/com/facebook/buck/core/sourcepath/resolver/impl:impl",
         "//src/com/facebook/buck/util/timing:timing",
         "//test/com/facebook/buck/core/rules/resolver/impl:testutil",
+        "//test/com/facebook/buck/core/sourcepath:testutil",
         "//test/com/facebook/buck/rules:testutil",
         "//test/com/facebook/buck/testutil:testutil",
         "//third-party/java/junit:junit",

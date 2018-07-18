@@ -222,6 +222,7 @@ standard_java_test(
         "//test/com/facebook/buck/apple:testutil",
         "//test/com/facebook/buck/core/model/targetgraph:testutil",
         "//test/com/facebook/buck/core/rules/resolver/impl:testutil",
+        "//test/com/facebook/buck/core/sourcepath:testutil",
         "//test/com/facebook/buck/io/filesystem:testutil",
         "//test/com/facebook/buck/js:testutil",
         "//test/com/facebook/buck/model:testutil",

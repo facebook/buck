@@ -253,6 +253,7 @@ java_test(
         "//test/com/facebook/buck/config:FakeBuckConfig",
         "//test/com/facebook/buck/core/model/targetgraph:testutil",
         "//test/com/facebook/buck/core/rules/resolver/impl:testutil",
+        "//test/com/facebook/buck/core/sourcepath:testutil",
         "//test/com/facebook/buck/cxx:testutil",
         "//test/com/facebook/buck/cxx/toolchain:testutil",
         "//test/com/facebook/buck/features/lua:testutil",
