@@ -96,13 +96,13 @@ public class AndroidAppBundleIntegrationTest extends AbiCompilationModeTest {
 
     NativeLibraries nativeLibraries =
         NativeLibraries.parseFrom(zipInspector.getFileContents("base/native.pb"));
+    assertEquals(3, nativeLibraries.getDirectoryList().size());
     for (TargetedNativeDirectory targetedNativeDirectory : nativeLibraries.getDirectoryList()) {
       assertTrue(targetedNativeDirectory.hasTargeting());
       assertTrue(targetedNativeDirectory.getTargeting().hasAbi());
     }
 
     Assets assets = Assets.parseFrom(zipInspector.getFileContents("base/assets.pb"));
-    assertEquals(2, assets.getDirectoryCount());
     for (TargetedAssetsDirectory targetedAssetsDirectory : assets.getDirectoryList()) {
       assertTrue(targetedAssetsDirectory.hasTargeting());
       assertTrue(targetedAssetsDirectory.getTargeting().hasAbi());
