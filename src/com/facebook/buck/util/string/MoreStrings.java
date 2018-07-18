@@ -93,9 +93,7 @@ public final class MoreStrings {
   }
 
   public static Optional<String> stripPrefix(String s, String prefix) {
-    return s.startsWith(prefix)
-        ? Optional.of(s.substring(prefix.length(), s.length()))
-        : Optional.empty();
+    return s.startsWith(prefix) ? Optional.of(s.substring(prefix.length())) : Optional.empty();
   }
 
   public static Optional<String> stripSuffix(String s, String suffix) {
