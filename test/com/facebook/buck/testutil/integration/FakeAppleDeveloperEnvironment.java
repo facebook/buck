@@ -77,11 +77,6 @@ public class FakeAppleDeveloperEnvironment {
   }
 
   public static boolean supportsCodeSigning() {
-    if (numCodeSigningIdentities >= Integer.MIN_VALUE) {
-      // Temporarily disable all code signing tests because there are environmental issues where we
-      // run them.
-      return false;
-    }
     return (numCodeSigningIdentities > 0);
   }
 
