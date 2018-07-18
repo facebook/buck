@@ -18,7 +18,6 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypes;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
@@ -49,11 +48,7 @@ public abstract class ConvertingPipelineWithPerfEventScope<F, T> extends Convert
 
   @Override
   protected final T computeNode(
-      Cell cell,
-      KnownBuildRuleTypes knownBuildRuleTypes,
-      BuildTarget buildTarget,
-      F rawNode,
-      AtomicLong processedBytes)
+      Cell cell, BuildTarget buildTarget, F rawNode, AtomicLong processedBytes)
       throws BuildTargetException {
 
     try (SimplePerfEvent.Scope scope =
@@ -70,14 +65,12 @@ public abstract class ConvertingPipelineWithPerfEventScope<F, T> extends Convert
               SimplePerfEvent.scopeIgnoringShortEvents(
                   eventBus, perfEventId, scope, getMinimumPerfEventTimeMs(), TimeUnit.MILLISECONDS);
 
-      return computeNodeInScope(
-          cell, knownBuildRuleTypes, buildTarget, rawNode, processedBytes, perfEventScopeFunction);
+      return computeNodeInScope(cell, buildTarget, rawNode, processedBytes, perfEventScopeFunction);
     }
   }
 
   protected abstract T computeNodeInScope(
       Cell cell,
-      KnownBuildRuleTypes knownBuildRuleTypes,
       BuildTarget buildTarget,
       F rawNode,
       AtomicLong processedBytes,

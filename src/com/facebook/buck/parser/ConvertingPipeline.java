@@ -18,7 +18,6 @@ package com.facebook.buck.parser;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypes;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.parser.PipelineNodeCache.Cache;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
@@ -55,12 +54,11 @@ public abstract class ConvertingPipeline<F, T> extends ParsePipeline<T> {
 
   @Override
   public ListenableFuture<ImmutableSet<T>> getAllNodesJob(
-      Cell cell, KnownBuildRuleTypes knownBuildRuleTypes, Path buildFile, AtomicLong processedBytes)
-      throws BuildTargetException {
+      Cell cell, Path buildFile, AtomicLong processedBytes) throws BuildTargetException {
     // TODO(csarbora): this hits the chained pipeline before hitting the cache
     ListenableFuture<List<T>> allNodesListJob =
         Futures.transformAsync(
-            getItemsToConvert(cell, knownBuildRuleTypes, buildFile, processedBytes),
+            getItemsToConvert(cell, buildFile, processedBytes),
             allToConvert -> {
               if (shuttingDown()) {
                 return Futures.immediateCancelledFuture();
@@ -80,8 +78,7 @@ public abstract class ConvertingPipeline<F, T> extends ParsePipeline<T> {
                             if (shuttingDown()) {
                               return Futures.immediateCancelledFuture();
                             }
-                            return dispatchComputeNode(
-                                cell, knownBuildRuleTypes, target, processedBytes, from);
+                            return dispatchComputeNode(cell, target, processedBytes, from);
                           },
                           eventBus));
                 }
@@ -95,20 +92,14 @@ public abstract class ConvertingPipeline<F, T> extends ParsePipeline<T> {
 
   @Override
   public ListenableFuture<T> getNodeJob(
-      Cell cell,
-      KnownBuildRuleTypes knownBuildRuleTypes,
-      BuildTarget buildTarget,
-      AtomicLong processedBytes)
-      throws BuildTargetException {
+      Cell cell, BuildTarget buildTarget, AtomicLong processedBytes) throws BuildTargetException {
     return cache.getJobWithCacheLookup(
         cell,
         buildTarget,
         () ->
             Futures.transformAsync(
-                getItemToConvert(cell, knownBuildRuleTypes, buildTarget, processedBytes),
-                from ->
-                    dispatchComputeNode(
-                        cell, knownBuildRuleTypes, buildTarget, processedBytes, from),
+                getItemToConvert(cell, buildTarget, processedBytes),
+                from -> dispatchComputeNode(cell, buildTarget, processedBytes, from),
                 MoreExecutors.directExecutor()),
         eventBus);
   }
@@ -121,30 +112,17 @@ public abstract class ConvertingPipeline<F, T> extends ParsePipeline<T> {
       Path root, Optional<String> cellName, Path buildFile, F from);
 
   protected abstract T computeNode(
-      Cell cell,
-      KnownBuildRuleTypes knownBuildRuleTypes,
-      BuildTarget buildTarget,
-      F rawNode,
-      AtomicLong processedBytes)
+      Cell cell, BuildTarget buildTarget, F rawNode, AtomicLong processedBytes)
       throws BuildTargetException;
 
   protected abstract ListenableFuture<ImmutableSet<F>> getItemsToConvert(
-      Cell cell, KnownBuildRuleTypes knownBuildRuleTypes, Path buildFile, AtomicLong processedBytes)
-      throws BuildTargetException;
+      Cell cell, Path buildFile, AtomicLong processedBytes) throws BuildTargetException;
 
   protected abstract ListenableFuture<F> getItemToConvert(
-      Cell cell,
-      KnownBuildRuleTypes knownBuildRuleTypes,
-      BuildTarget buildTarget,
-      AtomicLong processedBytes)
-      throws BuildTargetException;
+      Cell cell, BuildTarget buildTarget, AtomicLong processedBytes) throws BuildTargetException;
 
   private ListenableFuture<T> dispatchComputeNode(
-      Cell cell,
-      KnownBuildRuleTypes knownBuildRuleTypes,
-      BuildTarget buildTarget,
-      AtomicLong processedBytes,
-      F from)
+      Cell cell, BuildTarget buildTarget, AtomicLong processedBytes, F from)
       throws BuildTargetException {
     // TODO(csarbora): would be nice to have the first half of this function pulled up into base
     if (shuttingDown()) {
@@ -162,7 +140,6 @@ public abstract class ConvertingPipeline<F, T> extends ParsePipeline<T> {
           pathToCheck);
     }
 
-    return Futures.immediateFuture(
-        computeNode(cell, knownBuildRuleTypes, buildTarget, from, processedBytes));
+    return Futures.immediateFuture(computeNode(cell, buildTarget, from, processedBytes));
   }
 }

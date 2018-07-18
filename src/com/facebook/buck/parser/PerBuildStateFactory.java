@@ -110,17 +110,16 @@ public class PerBuildStateFactory {
               rawNodeParsePipeline,
               eventBus,
               new DefaultRawTargetNodeFactory(
-                  marshaller, new VisibilityPatternFactory(), new BuiltTargetVerifier()));
+                  knownBuildRuleTypesProvider,
+                  marshaller,
+                  new VisibilityPatternFactory(),
+                  new BuiltTargetVerifier()));
 
       ConfigurationRuleResolver configurationRuleResolver =
           new SameThreadConfigurationRuleResolver(
               cellManager::getCell,
               (cell, buildTarget) ->
-                  rawTargetNodePipeline.getNode(
-                      cell,
-                      knownBuildRuleTypesProvider.get(cell),
-                      buildTarget,
-                      parseProcessedBytes),
+                  rawTargetNodePipeline.getNode(cell, buildTarget, parseProcessedBytes),
               knownConfigurationRuleTypes);
 
       SelectableResolver selectableResolver =
@@ -148,8 +147,7 @@ public class PerBuildStateFactory {
               rawTargetNodePipeline,
               eventBus,
               enableSpeculativeParsing,
-              rawTargetNodeToTargetNodeFactory,
-              knownBuildRuleTypesProvider);
+              rawTargetNodeToTargetNodeFactory);
     } else {
       targetNodeParsePipeline =
           new TargetNodeParsePipeline(
@@ -168,17 +166,12 @@ public class PerBuildStateFactory {
               eventBus,
               parserConfig.getEnableParallelParsing()
                   && speculativeParsing == SpeculativeParsing.ENABLED,
-              rawNodeParsePipeline,
-              knownBuildRuleTypesProvider);
+              rawNodeParsePipeline);
     }
 
     cellManager.register(rootCell);
 
     return new PerBuildState(
-        parseProcessedBytes,
-        knownBuildRuleTypesProvider,
-        cellManager,
-        rawNodeParsePipeline,
-        targetNodeParsePipeline);
+        parseProcessedBytes, cellManager, rawNodeParsePipeline, targetNodeParsePipeline);
   }
 }

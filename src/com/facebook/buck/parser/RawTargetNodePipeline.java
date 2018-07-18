@@ -19,7 +19,6 @@ package com.facebook.buck.parser;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.RawTargetNode;
-import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypes;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
@@ -69,7 +68,6 @@ public class RawTargetNodePipeline
   @Override
   protected RawTargetNode computeNodeInScope(
       Cell cell,
-      KnownBuildRuleTypes knownBuildRuleTypes,
       BuildTarget buildTarget,
       Map<String, Object> rawNode,
       AtomicLong processedBytes,
@@ -77,7 +75,6 @@ public class RawTargetNodePipeline
       throws BuildTargetException {
     return rawTargetNodeFactory.create(
         cell,
-        knownBuildRuleTypes,
         cell.getAbsolutePathToBuildFile(buildTarget),
         buildTarget,
         rawNode,
@@ -86,19 +83,13 @@ public class RawTargetNodePipeline
 
   @Override
   protected ListenableFuture<ImmutableSet<Map<String, Object>>> getItemsToConvert(
-      Cell cell, KnownBuildRuleTypes knownBuildRuleTypes, Path buildFile, AtomicLong processedBytes)
-      throws BuildTargetException {
-    return rawNodeParsePipeline.getAllNodesJob(
-        cell, knownBuildRuleTypes, buildFile, processedBytes);
+      Cell cell, Path buildFile, AtomicLong processedBytes) throws BuildTargetException {
+    return rawNodeParsePipeline.getAllNodesJob(cell, buildFile, processedBytes);
   }
 
   @Override
   protected ListenableFuture<Map<String, Object>> getItemToConvert(
-      Cell cell,
-      KnownBuildRuleTypes knownBuildRuleTypes,
-      BuildTarget buildTarget,
-      AtomicLong processedBytes)
-      throws BuildTargetException {
-    return rawNodeParsePipeline.getNodeJob(cell, knownBuildRuleTypes, buildTarget, processedBytes);
+      Cell cell, BuildTarget buildTarget, AtomicLong processedBytes) throws BuildTargetException {
+    return rawNodeParsePipeline.getNodeJob(cell, buildTarget, processedBytes);
   }
 }

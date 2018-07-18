@@ -23,8 +23,7 @@ import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.RawAttributes;
 import com.facebook.buck.core.model.targetgraph.RawTargetNode;
-import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypes;
-import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypesFactory;
+import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypesProvider;
 import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypesTestUtil;
 import com.facebook.buck.core.rules.type.BuildRuleType;
 import com.facebook.buck.core.select.Selector;
@@ -55,22 +54,19 @@ public class DefaultRawTargetNodeFactoryTest {
 
     DefaultRawTargetNodeFactory factory =
         new DefaultRawTargetNodeFactory(
+            KnownBuildRuleTypesProvider.of(
+                KnownBuildRuleTypesTestUtil.createKnownBuildRuleTypesFactory()),
             new ConstructorArgMarshaller(new DefaultTypeCoercerFactory()),
             new VisibilityPatternFactory(),
             new BuiltTargetVerifier());
 
     Cell cell = new TestCellBuilder().build();
 
-    KnownBuildRuleTypesFactory knownBuildRuleTypesFactory =
-        KnownBuildRuleTypesTestUtil.createKnownBuildRuleTypesFactory();
-    KnownBuildRuleTypes knownBuildRuleTypes = knownBuildRuleTypesFactory.create(cell);
-
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//a/b:c");
 
     RawTargetNode rawTargetNode =
         factory.create(
             cell,
-            knownBuildRuleTypes,
             cell.getRoot().resolve("a/b/BUCK"),
             buildTarget,
             ImmutableMap.<String, Object>builder()

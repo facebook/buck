@@ -18,7 +18,6 @@ package com.facebook.buck.parser;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.UnflavoredBuildTarget;
-import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypes;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.model.ImmutableUnflavoredBuildTarget;
@@ -85,8 +84,7 @@ public class RawNodeParsePipeline extends ParsePipeline<Map<String, Object>> {
 
   @Override
   public ListenableFuture<ImmutableSet<Map<String, Object>>> getAllNodesJob(
-      Cell cell, KnownBuildRuleTypes knownBuildRuleTypes, Path buildFile, AtomicLong processedBytes)
-      throws BuildTargetException {
+      Cell cell, Path buildFile, AtomicLong processedBytes) throws BuildTargetException {
 
     if (shuttingDown()) {
       return Futures.immediateCancelledFuture();
@@ -111,17 +109,9 @@ public class RawNodeParsePipeline extends ParsePipeline<Map<String, Object>> {
 
   @Override
   public ListenableFuture<Map<String, Object>> getNodeJob(
-      Cell cell,
-      KnownBuildRuleTypes knownBuildRuleTypes,
-      BuildTarget buildTarget,
-      AtomicLong processedBytes)
-      throws BuildTargetException {
+      Cell cell, BuildTarget buildTarget, AtomicLong processedBytes) throws BuildTargetException {
     return Futures.transformAsync(
-        getAllNodesJob(
-            cell,
-            knownBuildRuleTypes,
-            cell.getAbsolutePathToBuildFile(buildTarget),
-            processedBytes),
+        getAllNodesJob(cell, cell.getAbsolutePathToBuildFile(buildTarget), processedBytes),
         input -> {
           for (Map<String, Object> rawNode : input) {
             Object shortName = rawNode.get("name");

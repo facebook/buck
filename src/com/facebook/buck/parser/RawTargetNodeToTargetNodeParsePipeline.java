@@ -20,8 +20,6 @@ import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.RawTargetNode;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
-import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypes;
-import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypesProvider;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
@@ -47,7 +45,6 @@ public class RawTargetNodeToTargetNodeParsePipeline
   private final RawTargetNodePipeline rawTargetNodePipeline;
   private final RawTargetNodeToTargetNodeFactory rawTargetNodeToTargetNodeFactory;
   private final SimplePerfEvent.Scope targetNodePipelineLifetimeEventScope;
-  private final KnownBuildRuleTypesProvider knownBuildRuleTypesProvider;
 
   /** Create new pipeline for parsing Buck files. */
   public RawTargetNodeToTargetNodeParsePipeline(
@@ -56,8 +53,7 @@ public class RawTargetNodeToTargetNodeParsePipeline
       RawTargetNodePipeline rawTargetNodePipeline,
       BuckEventBus eventBus,
       boolean speculativeDepsTraversal,
-      RawTargetNodeToTargetNodeFactory rawTargetNodeToTargetNodeFactory,
-      KnownBuildRuleTypesProvider knownBuildRuleTypesProvider) {
+      RawTargetNodeToTargetNodeFactory rawTargetNodeToTargetNodeFactory) {
     super(
         executorService,
         cache,
@@ -71,7 +67,6 @@ public class RawTargetNodeToTargetNodeParsePipeline
         SimplePerfEvent.scope(
             eventBus, PerfEventId.of("configured_raw_target_node_parse_pipeline"));
     this.rawTargetNodeToTargetNodeFactory = rawTargetNodeToTargetNodeFactory;
-    this.knownBuildRuleTypesProvider = knownBuildRuleTypesProvider;
   }
 
   @Override
@@ -83,7 +78,6 @@ public class RawTargetNodeToTargetNodeParsePipeline
   @Override
   protected TargetNode<?, ?> computeNodeInScope(
       Cell cell,
-      KnownBuildRuleTypes knownBuildRuleTypes,
       BuildTarget buildTarget,
       RawTargetNode rawNode,
       AtomicLong processedBytes,
@@ -102,16 +96,14 @@ public class RawTargetNodeToTargetNodeParsePipeline
           () -> {
             for (BuildTarget depTarget : targetNode.getParseDeps()) {
               Cell depCell = cell.getCellIgnoringVisibilityCheck(depTarget.getCellPath());
-              KnownBuildRuleTypes depKnownBuildRuleTypes = knownBuildRuleTypesProvider.get(depCell);
               try {
                 if (depTarget.isFlavored()) {
                   getNodeJob(
                       depCell,
-                      depKnownBuildRuleTypes,
                       ImmutableBuildTarget.of(depTarget.getUnflavoredBuildTarget()),
                       processedBytes);
                 }
-                getNodeJob(depCell, depKnownBuildRuleTypes, depTarget, processedBytes);
+                getNodeJob(depCell, depTarget, processedBytes);
               } catch (BuildTargetException e) {
                 // No biggie, we'll hit the error again in the non-speculative path.
                 LOG.info(e, "Could not schedule speculative parsing for %s", depTarget);
@@ -124,20 +116,14 @@ public class RawTargetNodeToTargetNodeParsePipeline
 
   @Override
   protected ListenableFuture<ImmutableSet<RawTargetNode>> getItemsToConvert(
-      Cell cell, KnownBuildRuleTypes knownBuildRuleTypes, Path buildFile, AtomicLong processedBytes)
-      throws BuildTargetException {
-    return rawTargetNodePipeline.getAllNodesJob(
-        cell, knownBuildRuleTypes, buildFile, processedBytes);
+      Cell cell, Path buildFile, AtomicLong processedBytes) throws BuildTargetException {
+    return rawTargetNodePipeline.getAllNodesJob(cell, buildFile, processedBytes);
   }
 
   @Override
   protected ListenableFuture<RawTargetNode> getItemToConvert(
-      Cell cell,
-      KnownBuildRuleTypes knownBuildRuleTypes,
-      BuildTarget buildTarget,
-      AtomicLong processedBytes)
-      throws BuildTargetException {
-    return rawTargetNodePipeline.getNodeJob(cell, knownBuildRuleTypes, buildTarget, processedBytes);
+      Cell cell, BuildTarget buildTarget, AtomicLong processedBytes) throws BuildTargetException {
+    return rawTargetNodePipeline.getNodeJob(cell, buildTarget, processedBytes);
   }
 
   @Override

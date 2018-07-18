@@ -24,6 +24,7 @@ import com.facebook.buck.core.model.targetgraph.RawAttributes;
 import com.facebook.buck.core.model.targetgraph.RawTargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.ImmutableRawTargetNode;
 import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypes;
+import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypesProvider;
 import com.facebook.buck.core.rules.type.BuildRuleType;
 import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
@@ -46,14 +47,17 @@ import java.util.function.Function;
  */
 class DefaultRawTargetNodeFactory implements RawTargetNodeFactory<Map<String, Object>> {
 
+  private final KnownBuildRuleTypesProvider knownBuildRuleTypesProvider;
   private final ConstructorArgMarshaller marshaller;
   private final VisibilityPatternFactory visibilityPatternFactory;
   private final BuiltTargetVerifier builtTargetVerifier;
 
   public DefaultRawTargetNodeFactory(
+      KnownBuildRuleTypesProvider knownBuildRuleTypesProvider,
       ConstructorArgMarshaller marshaller,
       VisibilityPatternFactory visibilityPatternFactory,
       BuiltTargetVerifier builtTargetVerifier) {
+    this.knownBuildRuleTypesProvider = knownBuildRuleTypesProvider;
     this.marshaller = marshaller;
     this.visibilityPatternFactory = visibilityPatternFactory;
     this.builtTargetVerifier = builtTargetVerifier;
@@ -62,11 +66,11 @@ class DefaultRawTargetNodeFactory implements RawTargetNodeFactory<Map<String, Ob
   @Override
   public RawTargetNode create(
       Cell cell,
-      KnownBuildRuleTypes knownBuildRuleTypes,
       Path buildFile,
       BuildTarget target,
       Map<String, Object> rawAttributes,
       Function<PerfEventId, SimplePerfEvent.Scope> perfEventScope) {
+    KnownBuildRuleTypes knownBuildRuleTypes = knownBuildRuleTypesProvider.get(cell);
     BuildRuleType buildRuleType = parseBuildRuleTypeFromRawRule(knownBuildRuleTypes, rawAttributes);
 
     // Because of the way that the parser works, we know this can never return null.
