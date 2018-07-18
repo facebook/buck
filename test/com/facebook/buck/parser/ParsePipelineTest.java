@@ -454,10 +454,13 @@ public class ParsePipelineTest {
               this.projectBuildFileParserPool,
               executorService,
               eventBus);
+      KnownBuildRuleTypesProvider knownBuildRuleTypesProvider =
+          KnownBuildRuleTypesProvider.of(knownBuildRuleTypesFactory);
       this.targetNodeParsePipeline =
           new TargetNodeParsePipeline(
               this.targetNodeParsePipelineCache,
               DefaultParserTargetNodeFactory.createForParser(
+                  knownBuildRuleTypesProvider,
                   constructorArgMarshaller,
                   buildFileTrees,
                   nodeListener,
@@ -468,7 +471,7 @@ public class ParsePipelineTest {
               this.eventBus,
               speculativeParsing == SpeculativeParsing.ENABLED,
               this.rawNodeParsePipeline,
-              KnownBuildRuleTypesProvider.of(knownBuildRuleTypesFactory));
+              knownBuildRuleTypesProvider);
     }
 
     public TargetNodeParsePipeline getTargetNodeParsePipeline() {

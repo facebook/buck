@@ -120,8 +120,7 @@ public class DelegateAndGraphsInitializer {
           Preconditions.checkNotNull(
               codec.createTargetGraph(
                   args.getState().getRemoteState().getTargetGraph(),
-                  key -> Preconditions.checkNotNull(cells.get(key)),
-                  args.getKnownBuildRuleTypesProvider()));
+                  key -> Preconditions.checkNotNull(cells.get(key))));
 
       try {
         if (args.getState().getRemoteRootCellConfig().getBuildVersions()) {
@@ -243,6 +242,7 @@ public class DelegateAndGraphsInitializer {
         new DefaultTypeCoercerFactory(PathTypeCoercer.PathExistenceVerificationMode.DO_NOT_VERIFY);
     ParserTargetNodeFactory<Map<String, Object>> parserTargetNodeFactory =
         DefaultParserTargetNodeFactory.createForDistributedBuild(
+            args.getKnownBuildRuleTypesProvider(),
             new ConstructorArgMarshaller(typeCoercerFactory),
             new TargetNodeFactory(typeCoercerFactory),
             new VisibilityPatternFactory(),

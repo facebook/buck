@@ -24,7 +24,6 @@ import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
-import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypesProvider;
 import com.facebook.buck.distributed.thrift.BuildJobStateBuildTarget;
 import com.facebook.buck.distributed.thrift.BuildJobStateTargetGraph;
 import com.facebook.buck.distributed.thrift.BuildJobStateTargetNode;
@@ -153,9 +152,7 @@ public class DistBuildTargetGraphCodec {
   }
 
   public TargetGraphAndBuildTargets createTargetGraph(
-      BuildJobStateTargetGraph remoteTargetGraph,
-      Function<Integer, Cell> cellLookup,
-      KnownBuildRuleTypesProvider knownBuildRuleTypesProvider)
+      BuildJobStateTargetGraph remoteTargetGraph, Function<Integer, Cell> cellLookup)
       throws InterruptedException {
 
     ConcurrentMap<BuildTarget, TargetNode<?, ?>> index = new ConcurrentHashMap<>();
@@ -166,13 +163,7 @@ public class DistBuildTargetGraphCodec {
 
     for (BuildJobStateTargetNode remoteNode : remoteTargetGraph.getNodes()) {
       processRemoteBuildTargetFutures.add(
-          asyncProcessRemoteBuildTarget(
-              cellLookup,
-              knownBuildRuleTypesProvider,
-              index,
-              graphNodes,
-              buildTargets,
-              remoteNode));
+          asyncProcessRemoteBuildTarget(cellLookup, index, graphNodes, buildTargets, remoteNode));
     }
 
     try {
@@ -210,7 +201,6 @@ public class DistBuildTargetGraphCodec {
 
   private ListenableFuture<Void> asyncProcessRemoteBuildTarget(
       Function<Integer, Cell> cellLookup,
-      KnownBuildRuleTypesProvider knownBuildRuleTypesProvider,
       ConcurrentMap<BuildTarget, TargetNode<?, ?>> index,
       ConcurrentMap<BuildTarget, TargetNode<?, ?>> graphNodes,
       ConcurrentMap<BuildTarget, Boolean> buildTargets,
@@ -236,7 +226,6 @@ public class DistBuildTargetGraphCodec {
           TargetNode<?, ?> targetNode =
               parserTargetNodeFactory.createTargetNode(
                   cell,
-                  knownBuildRuleTypesProvider.get(cell),
                   buildFilePath,
                   target,
                   rawNode,
@@ -251,7 +240,6 @@ public class DistBuildTargetGraphCodec {
             TargetNode<?, ?> unflavoredTargetNode =
                 parserTargetNodeFactory.createTargetNode(
                     cell,
-                    knownBuildRuleTypesProvider.get(cell),
                     buildFilePath,
                     unflavoredTarget,
                     rawNode,

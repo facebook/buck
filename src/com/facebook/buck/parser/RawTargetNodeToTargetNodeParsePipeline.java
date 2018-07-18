@@ -92,7 +92,6 @@ public class RawTargetNodeToTargetNodeParsePipeline
     TargetNode<?, ?> targetNode =
         rawTargetNodeToTargetNodeFactory.createTargetNode(
             cell,
-            knownBuildRuleTypes,
             cell.getAbsolutePathToBuildFile(buildTarget),
             buildTarget,
             rawNode,

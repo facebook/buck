@@ -142,7 +142,8 @@ public class DistBuildFileHashesIntegrationTest {
             ImmutableSet.of(BuildTargetFactory.newInstance(rootFs.getRootPath(), "//:libA")));
 
     DistBuildTargetGraphCodec targetGraphCodec =
-        DistBuildStateTest.createDefaultCodec(rootCell, Optional.of(parser));
+        DistBuildStateTest.createDefaultCodec(
+            knownBuildRuleTypesProvider, rootCell, Optional.of(parser));
     BuildJobState dump =
         DistBuildState.dump(
             new DistBuildCellIndexer(rootCell),
@@ -225,7 +226,8 @@ public class DistBuildFileHashesIntegrationTest {
             ImmutableSet.of(BuildTargetFactory.newInstance(rootFs.getRootPath(), "//:libA")));
 
     DistBuildTargetGraphCodec targetGraphCodec =
-        DistBuildStateTest.createDefaultCodec(rootCell, Optional.of(parser));
+        DistBuildStateTest.createDefaultCodec(
+            knownBuildRuleTypesProvider, rootCell, Optional.of(parser));
     BuildJobState dump =
         DistBuildState.dump(
             new DistBuildCellIndexer(rootCell),

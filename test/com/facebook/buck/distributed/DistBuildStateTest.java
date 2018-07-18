@@ -157,7 +157,7 @@ public class DistBuildStateTest {
         DistBuildState.dump(
             new DistBuildCellIndexer(rootCellWhenSaving),
             emptyActionGraph(),
-            createDefaultCodec(rootCellWhenSaving, Optional.empty()),
+            createDefaultCodec(knownBuildRuleTypesProvider, rootCellWhenSaving, Optional.empty()),
             createTargetGraph(filesystem),
             ImmutableSet.of(BuildTargetFactory.newInstance(filesystem.getRootPath(), "//:dummy")));
 
@@ -227,7 +227,7 @@ public class DistBuildStateTest {
         DistBuildState.dump(
             new DistBuildCellIndexer(rootCellWhenSaving),
             emptyActionGraph(),
-            createDefaultCodec(rootCellWhenSaving, Optional.empty()),
+            createDefaultCodec(knownBuildRuleTypesProvider, rootCellWhenSaving, Optional.empty()),
             createTargetGraph(filesystem),
             ImmutableSet.of(BuildTargetFactory.newInstance(filesystem.getRootPath(), "//:dummy")));
     Cell rootCellWhenLoading =
@@ -287,7 +287,8 @@ public class DistBuildStateTest {
                 BuildTargetFactory.newInstance(projectFilesystem.getRootPath(), "//:lib2"),
                 BuildTargetFactory.newInstance(projectFilesystem.getRootPath(), "//:lib3")));
 
-    DistBuildTargetGraphCodec targetGraphCodec = createDefaultCodec(cell, Optional.of(parser));
+    DistBuildTargetGraphCodec targetGraphCodec =
+        createDefaultCodec(knownBuildRuleTypesProvider, cell, Optional.of(parser));
     BuildJobState dump =
         DistBuildState.dump(
             new DistBuildCellIndexer(cell),
@@ -315,9 +316,7 @@ public class DistBuildStateTest {
     ProjectFilesystem reconstructedCellFilesystem =
         distributedBuildState.getCells().get(0).getFilesystem();
     TargetGraph reconstructedGraph =
-        distributedBuildState
-            .createTargetGraph(targetGraphCodec, knownBuildRuleTypesProvider)
-            .getTargetGraph();
+        distributedBuildState.createTargetGraph(targetGraphCodec).getTargetGraph();
     assertEquals(
         reconstructedGraph
             .getNodes()
@@ -367,7 +366,7 @@ public class DistBuildStateTest {
         DistBuildState.dump(
             new DistBuildCellIndexer(rootCellWhenSaving),
             emptyActionGraph(),
-            createDefaultCodec(rootCellWhenSaving, Optional.empty()),
+            createDefaultCodec(knownBuildRuleTypesProvider, rootCellWhenSaving, Optional.empty()),
             createCrossCellTargetGraph(cell1Filesystem, cell2Filesystem),
             ImmutableSet.of(
                 BuildTargetFactory.newInstance(cell1Filesystem.getRootPath(), "//:dummy")));
@@ -437,7 +436,8 @@ public class DistBuildStateTest {
         rootCell);
   }
 
-  public static DistBuildTargetGraphCodec createDefaultCodec(Cell cell, Optional<Parser> parser) {
+  public static DistBuildTargetGraphCodec createDefaultCodec(
+      KnownBuildRuleTypesProvider knownBuildRuleTypesProvider, Cell cell, Optional<Parser> parser) {
     BuckEventBus eventBus = BuckEventBusForTests.newInstance();
 
     Function<? super TargetNode<?, ?>, ? extends Map<String, Object>> nodeToRawNode;
@@ -465,6 +465,7 @@ public class DistBuildStateTest {
         new DefaultTypeCoercerFactory(PathTypeCoercer.PathExistenceVerificationMode.DO_NOT_VERIFY);
     ParserTargetNodeFactory<Map<String, Object>> parserTargetNodeFactory =
         DefaultParserTargetNodeFactory.createForDistributedBuild(
+            knownBuildRuleTypesProvider,
             new ConstructorArgMarshaller(typeCoercerFactory),
             new TargetNodeFactory(typeCoercerFactory),
             new VisibilityPatternFactory(),

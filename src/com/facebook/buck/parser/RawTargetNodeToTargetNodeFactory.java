@@ -23,7 +23,7 @@ import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.RawTargetNode;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
-import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypes;
+import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypesProvider;
 import com.facebook.buck.core.select.SelectorList;
 import com.facebook.buck.core.select.SelectorListResolver;
 import com.facebook.buck.event.PerfEventId;
@@ -39,6 +39,7 @@ import java.util.function.Function;
 /** Creates {@link TargetNode} from {@link RawTargetNode}. */
 public class RawTargetNodeToTargetNodeFactory implements ParserTargetNodeFactory<RawTargetNode> {
 
+  private final KnownBuildRuleTypesProvider knownBuildRuleTypesProvider;
   private final ConstructorArgMarshaller marshaller;
   private final TargetNodeFactory targetNodeFactory;
   private final PackageBoundaryChecker packageBoundaryChecker;
@@ -46,11 +47,13 @@ public class RawTargetNodeToTargetNodeFactory implements ParserTargetNodeFactory
   private final SelectorListResolver selectorListResolver;
 
   public RawTargetNodeToTargetNodeFactory(
+      KnownBuildRuleTypesProvider knownBuildRuleTypesProvider,
       ConstructorArgMarshaller marshaller,
       TargetNodeFactory targetNodeFactory,
       PackageBoundaryChecker packageBoundaryChecker,
       TargetNodeListener<TargetNode<?, ?>> nodeListener,
       SelectorListResolver selectorListResolver) {
+    this.knownBuildRuleTypesProvider = knownBuildRuleTypesProvider;
     this.marshaller = marshaller;
     this.targetNodeFactory = targetNodeFactory;
     this.packageBoundaryChecker = packageBoundaryChecker;
@@ -61,14 +64,13 @@ public class RawTargetNodeToTargetNodeFactory implements ParserTargetNodeFactory
   @Override
   public TargetNode<?, ?> createTargetNode(
       Cell cell,
-      KnownBuildRuleTypes knownBuildRuleTypes,
       Path buildFile,
       BuildTarget target,
       RawTargetNode rawTargetNode,
       Function<PerfEventId, Scope> perfEventScope) {
 
     DescriptionWithTargetGraph<?> description =
-        knownBuildRuleTypes.getDescription(rawTargetNode.getBuildRuleType());
+        knownBuildRuleTypesProvider.get(cell).getDescription(rawTargetNode.getBuildRuleType());
     Cell targetCell = cell.getCell(target);
     ImmutableSet.Builder<BuildTarget> declaredDeps = ImmutableSet.builder();
 

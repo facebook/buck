@@ -26,6 +26,7 @@ import com.facebook.buck.core.model.targetgraph.RawTargetNode;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.ImmutableRawTargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
+import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypesProvider;
 import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypesTestUtil;
 import com.facebook.buck.core.rules.type.BuildRuleType;
 import com.facebook.buck.core.select.TestSelectableResolver;
@@ -72,6 +73,8 @@ public class RawTargetNodeToTargetNodeFactoryTest {
     TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
     RawTargetNodeToTargetNodeFactory factory =
         new RawTargetNodeToTargetNodeFactory(
+            KnownBuildRuleTypesProvider.of(
+                KnownBuildRuleTypesTestUtil.createKnownBuildRuleTypesFactory()),
             new ConstructorArgMarshaller(typeCoercerFactory),
             new TargetNodeFactory(typeCoercerFactory),
             new NoopPackageBoundaryChecker(),
@@ -81,7 +84,6 @@ public class RawTargetNodeToTargetNodeFactoryTest {
     TargetNode<?, ?> targetNode =
         factory.createTargetNode(
             cell,
-            KnownBuildRuleTypesTestUtil.createKnownBuildRuleTypesFactory().create(cell),
             Paths.get("a/b/BUCK"),
             buildTarget,
             node,

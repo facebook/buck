@@ -134,6 +134,7 @@ public class PerBuildStateFactory {
 
       RawTargetNodeToTargetNodeFactory rawTargetNodeToTargetNodeFactory =
           new RawTargetNodeToTargetNodeFactory(
+              knownBuildRuleTypesProvider,
               marshaller,
               targetNodeFactory,
               packageBoundaryChecker,
@@ -154,6 +155,7 @@ public class PerBuildStateFactory {
           new TargetNodeParsePipeline(
               daemonicParserState.getOrCreateNodeCache(TargetNode.class),
               DefaultParserTargetNodeFactory.createForParser(
+                  knownBuildRuleTypesProvider,
                   marshaller,
                   daemonicParserState.getBuildFileTrees(),
                   symlinkCheckers,

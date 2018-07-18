@@ -111,7 +111,6 @@ public class TargetNodeParsePipeline
     TargetNode<?, ?> targetNode =
         delegate.createTargetNode(
             cell,
-            knownBuildRuleTypes,
             cell.getAbsolutePathToBuildFile(buildTarget),
             buildTarget,
             rawNode,
