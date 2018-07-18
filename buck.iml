@@ -38,14 +38,12 @@
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/dotnet/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/event/listener/integration/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/features/gwt/testdata/gwt_binary" />
+      <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/features/project/intellij/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/features/zip/rules/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/go/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/go/testdata/go_test/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/gwt/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/haskell/testdata" />
-      <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/ide/intellij/deprecated/testdata" />
-      <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/ide/intellij/projectview/testdata" />
-      <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/ide/intellij/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/io/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/js/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/jvm/groovy/testdata" />
