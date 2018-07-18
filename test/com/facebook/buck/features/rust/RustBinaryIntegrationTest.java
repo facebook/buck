@@ -17,6 +17,7 @@
 package com.facebook.buck.features.rust;
 
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -24,6 +25,7 @@ import com.facebook.buck.testutil.integration.BuckBuildLog;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ProcessExecutor;
+import java.io.File;
 import java.io.IOException;
 import org.hamcrest.Matchers;
 import org.junit.Before;
@@ -126,10 +128,18 @@ public class RustBinaryIntegrationTest {
 
     RustAssumptions.assumeNightly(workspace);
 
+    File output =
+        workspace
+            .resolve(
+                "buck-out/gen/xyzzy#default,save-analysis/save-analysis/xyzzy-bf3e2606cfd1e9e1.json")
+            .toFile();
+
     workspace.runBuckBuild("//:xyzzy#save-analysis").assertSuccess();
     BuckBuildLog buildLog = workspace.getBuildLog();
     buildLog.assertTargetBuiltLocally("//:xyzzy#save-analysis");
     workspace.resetBuildLogFile();
+
+    assertTrue(output.exists());
 
     thrown.expect(IOException.class);
     thrown.expectMessage(Matchers.containsString("No such file or directory"));
@@ -146,6 +156,12 @@ public class RustBinaryIntegrationTest {
 
     RustAssumptions.assumeNightly(workspace);
 
+    File output =
+        workspace
+            .resolve(
+                "buck-out/gen/xyzzy#default,save-analysis/save-analysis/xyzzy-bf3e2606cfd1e9e1.json")
+            .toFile();
+
     workspace
         .runBuckCommand(
             "build", "--config", "rust.unflavored_binaries=true", "//:xyzzy#save-analysis")
@@ -153,6 +169,8 @@ public class RustBinaryIntegrationTest {
     BuckBuildLog buildLog = workspace.getBuildLog();
     buildLog.assertTargetBuiltLocally("//:xyzzy#save-analysis");
     workspace.resetBuildLogFile();
+
+    assertTrue(output.exists());
 
     thrown.expect(IOException.class);
     thrown.expectMessage(Matchers.containsString("No such file or directory"));

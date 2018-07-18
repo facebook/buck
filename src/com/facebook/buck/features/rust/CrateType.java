@@ -39,14 +39,14 @@ public enum CrateType {
       "lib",
       RustDescriptionEnhancer.RFSAVEANALYSIS,
       (target, crate, plat) ->
-          Optional.of(
-              String.format("save-analysis/%s", hashed_filename(target, "lib", crate, "json")))),
+          hashed_filename(target, "lib", crate, "json")
+              .map(f -> String.format("save-analysis/%s", f))),
   SAVEANALYSISBIN(
       "bin",
       RustDescriptionEnhancer.RFSAVEANALYSIS,
       (target, crate, plat) ->
-          Optional.of(
-              String.format("save-analysis/%s", hashed_filename(target, "", crate, "json")))),
+          hashed_filename(target, "", crate, "json")
+              .map(f -> String.format("save-analysis/%s", f))),
   LIB(
       "lib",
       RustDescriptionEnhancer.RFLIB,
