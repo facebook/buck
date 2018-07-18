@@ -25,7 +25,6 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -37,18 +36,6 @@ public class GenerateNativeStep implements Step {
   private final ProjectFilesystem filesystem;
   private final Path output;
   private final ImmutableSet<Path> module;
-  private static final String LIB_DIRECTORY = "lib/";
-  private static final ImmutableMap<String, Integer> ABI_BY_NAME =
-      new ImmutableMap.Builder<String, Integer>()
-          .put("UNSPECIFIED_CPU_ARCHITECTURE", 0)
-          .put("ARMEABI", 1)
-          .put("ARMEABI_V7A", 2)
-          .put("ARM64_V8A", 3)
-          .put("X86", 4)
-          .put("X86_64", 5)
-          .put("MIPS", 6)
-          .put("MIPS64", 7)
-          .build();
 
   public GenerateNativeStep(ProjectFilesystem filesystem, Path output, ImmutableSet<Path> module) {
     this.filesystem = filesystem;
@@ -74,23 +61,18 @@ public class GenerateNativeStep implements Step {
               .setPath(nativeLib.toString())
               .setTargeting(
                   NativeDirectoryTargeting.newBuilder()
-                      .setAbi(
-                          Targeting.Abi.newBuilder().setAliasValue(getAbi(nativeLib.toString())))));
+                      .setAbi(Targeting.Abi.newBuilder().setAliasValue(getAbi(nativeLib)))));
     }
     return builder.build();
   }
 
-  private int getAbi(String path) {
-    if (path.length() <= LIB_DIRECTORY.length()) {
+  private static int getAbi(Path path) {
+    if (path.getNameCount() < 2) {
       return -1;
     }
-    String abiName = path.substring(LIB_DIRECTORY.length());
+    String abiName = path.getName(1).toString();
 
-    if (ABI_BY_NAME.containsKey(abiName.toUpperCase())) {
-      return ABI_BY_NAME.get(abiName.toUpperCase());
-    } else {
-      return -1;
-    }
+    return GetAbiByName.getAbi(abiName);
   }
 
   @Override

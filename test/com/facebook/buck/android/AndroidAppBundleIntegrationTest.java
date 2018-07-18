@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
@@ -101,9 +102,10 @@ public class AndroidAppBundleIntegrationTest extends AbiCompilationModeTest {
     }
 
     Assets assets = Assets.parseFrom(zipInspector.getFileContents("base/assets.pb"));
+    assertEquals(2, assets.getDirectoryCount());
     for (TargetedAssetsDirectory targetedAssetsDirectory : assets.getDirectoryList()) {
       assertTrue(targetedAssetsDirectory.hasTargeting());
-      assertTrue(targetedAssetsDirectory.getTargeting().hasLanguage());
+      assertTrue(targetedAssetsDirectory.getTargeting().hasAbi());
     }
   }
 
