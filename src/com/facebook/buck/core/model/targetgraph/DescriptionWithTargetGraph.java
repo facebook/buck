@@ -16,11 +16,11 @@
 
 package com.facebook.buck.core.model.targetgraph;
 
-import com.facebook.buck.core.description.BuildRuleParams;
 import com.facebook.buck.core.description.Description;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.BuildRuleParams;
 
 /**
  * The Source of Truth about a {@link BuildRule}, providing mechanisms to expose the arguments that

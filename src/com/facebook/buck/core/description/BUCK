@@ -16,8 +16,6 @@ java_immutables_library(
     visibility = ["PUBLIC"],
     deps = [
         "//src/com/facebook/buck/core/rules/type/impl:impl",
-        "//src/com/facebook/buck/util:util",
-        "//src/com/facebook/buck/util/collect:collect",
         "//third-party/java/guava:guava",
     ],
 )
