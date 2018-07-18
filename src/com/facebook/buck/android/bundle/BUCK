@@ -5,7 +5,6 @@ java_immutables_library(
     srcs = glob(["*.java"]),
     tests = [
         "//test/com/facebook/buck/android:app-bundle-integration",
-        "//test/com/facebook/buck/android/bundle:bundle",
     ],
     visibility = [
         "//src/com/facebook/buck/android/...",
@@ -16,7 +15,6 @@ java_immutables_library(
         "//test/com/facebook/buck/android:app-bundle-integration",
         "//test/com/facebook/buck/android:integration1",
         "//test/com/facebook/buck/android:integration2",
-        "//test/com/facebook/buck/android/bundle:bundle",
     ],
     deps = [
         "//src/com/facebook/buck/core/exceptions:exceptions",

@@ -20,6 +20,12 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
+import com.android.bundle.Config.BundleConfig;
+import com.android.bundle.Config.Bundletool;
+import com.android.bundle.Config.Compression;
+import com.android.bundle.Config.Optimizations;
+import com.android.bundle.Config.SplitDimension;
+import com.android.bundle.Config.SplitsConfig;
 import com.android.bundle.Files.Assets;
 import com.android.bundle.Files.NativeLibraries;
 import com.android.bundle.Files.TargetedAssetsDirectory;
@@ -86,6 +92,7 @@ public class AndroidAppBundleIntegrationTest extends AbiCompilationModeTest {
     }
 
     ZipInspector zipInspector = new ZipInspector(aab);
+    zipInspector.assertFileExists("BundleConfig.pb");
     zipInspector.assertFileExists("base/dex/classes.dex");
     zipInspector.assertFileExists("base/assets.pb");
     zipInspector.assertFileExists("base/resources.pb");
@@ -107,6 +114,43 @@ public class AndroidAppBundleIntegrationTest extends AbiCompilationModeTest {
       assertTrue(targetedAssetsDirectory.hasTargeting());
       assertTrue(targetedAssetsDirectory.getTargeting().hasAbi());
     }
+
+    BundleConfig bundleConfig =
+        BundleConfig.parseFrom(zipInspector.getFileContents("BundleConfig.pb"));
+
+    assertTrue(bundleConfig.hasBundletool());
+    assertBundletool(bundleConfig.getBundletool());
+
+    assertTrue(bundleConfig.hasOptimizations());
+    assertOptimizations(bundleConfig.getOptimizations());
+
+    assertTrue(bundleConfig.hasCompression());
+    assertCompression(bundleConfig.getCompression());
+  }
+
+  public void assertSplitDimension(SplitDimension splitdimension, int index) {
+    assertEquals(index + 1, splitdimension.getValueValue());
+    assertEquals(index != 0, splitdimension.getNegate());
+  }
+
+  public void assertSplitsConfig(SplitsConfig splitsconfig) {
+    assertEquals(3, splitsconfig.getSplitDimensionCount());
+    for (int i = 0; i < 3; i++) {
+      assertSplitDimension(splitsconfig.getSplitDimension(i), i);
+    }
+  }
+
+  public void assertOptimizations(Optimizations optimizations) {
+    assertTrue(optimizations.hasSplitsConfig());
+    assertSplitsConfig(optimizations.getSplitsConfig());
+  }
+
+  public void assertCompression(Compression compression) {
+    assertEquals(0, compression.getUncompressedGlobCount());
+  }
+
+  public void assertBundletool(Bundletool bundletool) {
+    assertEquals("", bundletool.getVersion());
   }
 
   @Test

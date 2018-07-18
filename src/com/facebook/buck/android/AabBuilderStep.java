@@ -60,6 +60,7 @@ public class AabBuilderStep extends ApkBuilderStep {
   private final ImmutableSet<Path> jarFilesThatMayContainResources;
   private final boolean debugMode;
   private final int apkCompressionLevel;
+  private final Path tempBundleConfig;
 
   /**
    * @param resourceApk Path to the Apk which only contains resources, no dex files.
@@ -86,7 +87,8 @@ public class AabBuilderStep extends ApkBuilderStep {
       Supplier<KeystoreProperties> keystorePropertiesSupplier,
       boolean debugMode,
       ImmutableList<String> javaRuntimeLauncher,
-      int apkCompressionLevel) {
+      int apkCompressionLevel,
+      Path tempBundleConfig) {
     super(
         filesystem,
         resourceApk,
@@ -113,6 +115,7 @@ public class AabBuilderStep extends ApkBuilderStep {
     this.zipFiles = zipFiles;
     this.debugMode = debugMode;
     this.apkCompressionLevel = apkCompressionLevel;
+    this.tempBundleConfig = tempBundleConfig;
   }
 
   @Override
@@ -142,6 +145,8 @@ public class AabBuilderStep extends ApkBuilderStep {
       packageFile(builder, resourceApk.toFile(), "base/");
       builder.addFile(filesystem.getPathForRelativePath(tempAssets).toFile(), "base/assets.pb");
       builder.addFile(filesystem.getPathForRelativePath(tempNativeLib).toFile(), "base/native.pb");
+      builder.addFile(
+          filesystem.getPathForRelativePath(tempBundleConfig).toFile(), "BundleConfig.pb");
 
       for (Path nativeLibraryDirectory : nativeLibraryDirectories) {
         builder.addNativeLibraries(

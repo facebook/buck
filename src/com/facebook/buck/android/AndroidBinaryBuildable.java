@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.android.apkmodule.APKModule;
 import com.facebook.buck.android.bundle.GenerateAssetsStep;
+import com.facebook.buck.android.bundle.GenerateBundleConfigStep;
 import com.facebook.buck.android.bundle.GenerateNativeStep;
 import com.facebook.buck.android.exopackage.ExopackageMode;
 import com.facebook.buck.android.redex.ReDexStep;
@@ -318,6 +319,10 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
               javaRuntimeLauncher.getCommandPrefix(pathResolver),
               apkCompressionLevel));
     } else {
+      Path tempBundleConfig =
+          BuildTargets.getGenPath(getProjectFilesystem(), buildTarget, "__BundleConfig__%s__.pb");
+      steps.add(new GenerateBundleConfigStep(getProjectFilesystem(), tempBundleConfig));
+
       Path tempAssets =
           BuildTargets.getGenPath(getProjectFilesystem(), buildTarget, "__assets__%s__.pb");
       steps.add(new GenerateAssetsStep(getProjectFilesystem(), tempAssets, allAssetDirectories));
@@ -344,7 +349,8 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
               keystoreProperties,
               false,
               javaRuntimeLauncher.getCommandPrefix(pathResolver),
-              apkCompressionLevel));
+              apkCompressionLevel,
+              tempBundleConfig));
     }
 
     // The `ApkBuilderStep` delegates to android tools to build a ZIP with timestamps in it, making

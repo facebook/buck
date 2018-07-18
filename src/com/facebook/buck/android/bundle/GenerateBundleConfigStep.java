@@ -40,8 +40,7 @@ public class GenerateBundleConfigStep implements Step {
   private final ProjectFilesystem projectFilesystem;
   private final Path output;
 
-  public GenerateBundleConfigStep(ProjectFilesystem projectFilesystem, Path output)
-      throws Exception {
+  public GenerateBundleConfigStep(ProjectFilesystem projectFilesystem, Path output) {
     this.projectFilesystem = projectFilesystem;
     this.output = output;
   }
@@ -50,9 +49,7 @@ public class GenerateBundleConfigStep implements Step {
   public StepExecutionResult execute(ExecutionContext context)
       throws IOException, InterruptedException {
     Path path = projectFilesystem.resolve(this.output);
-    projectFilesystem.mkdirs(path);
-    Path tempOutput = path.resolve("BundleConfig.pb");
-    try (OutputStream outputFile = projectFilesystem.newFileOutputStream(tempOutput)) {
+    try (OutputStream outputFile = projectFilesystem.newFileOutputStream(path)) {
       createDefaultBundleConfig().writeTo(outputFile);
     }
     return StepExecutionResults.SUCCESS;
@@ -66,7 +63,11 @@ public class GenerateBundleConfigStep implements Step {
   public static BundleConfig createDefaultBundleConfig() {
     Optimizations.Builder optimizations = Optimizations.newBuilder();
     SplitsConfig.Builder splitsConfig = SplitsConfig.newBuilder();
-    splitsConfig.addSplitDimension(SplitDimension.newBuilder().build());
+    for (int i = 1; i <= 3; i++) {
+      splitsConfig.addSplitDimension(
+          SplitDimension.newBuilder().setValueValue(i).setNegate(i != 1).build());
+    }
+
     optimizations.setSplitsConfig(splitsConfig.build());
 
     return BundleConfig.newBuilder()
