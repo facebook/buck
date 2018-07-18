@@ -313,7 +313,19 @@ public class ModernBuildRule<T extends Buildable> extends AbstractBuildRule
     collector.add(outputPathResolver.getRootPath());
     classInfo.visit(
         buildable,
-        new OutputPathVisitor(path1 -> collector.add(outputPathResolver.resolvePath(path1))));
+        new OutputPathVisitor(
+            path1 -> {
+              // Check that any PublicOutputPath is not specified inside the rule's temporary
+              // directory,
+              // as the temp directory may be deleted after the rule is run.
+              if (path1 instanceof PublicOutputPath
+                  && path1.getPath().startsWith(outputPathResolver.getTempPath())) {
+                throw new IllegalStateException(
+                    "PublicOutputPath should not be inside rule temporary directory. Path: "
+                        + path1);
+              }
+              collector.add(outputPathResolver.resolvePath(path1));
+            }));
     // ImmutableSet guarantees that iteration order is unchanged.
     Set<Path> outputs = collector.build().collect(ImmutableSet.toImmutableSet());
     for (Path path : outputs) {

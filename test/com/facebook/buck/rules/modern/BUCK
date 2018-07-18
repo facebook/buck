@@ -20,6 +20,7 @@ java_test(
         "//src/com/facebook/buck/step:step",
         "//src/com/facebook/buck/step/fs:fs",
         "//src/com/facebook/buck/util/env:env",
+        "//test/com/facebook/buck/core/rules/resolver/impl:testutil",
         "//test/com/facebook/buck/io/file:testutil",
         "//test/com/facebook/buck/io/filesystem:testutil",
         "//test/com/facebook/buck/model:testutil",
