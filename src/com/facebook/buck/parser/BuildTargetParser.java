@@ -92,15 +92,15 @@ public class BuildTargetParser {
     }
 
     List<String> parts = BUILD_RULE_SEPARATOR_SPLITTER.splitToList(targetAfterCell);
-    if (parts.size() != 2) {
+    if (parts.size() > 2) {
       throw new BuildTargetParseException(
           String.format(
-              "%s must contain exactly one colon (found %d)", buildTargetName, parts.size() - 1));
+              "%s must contain at most one colon (found %d)", buildTargetName, parts.size() - 1));
     }
 
     String baseName =
         parts.get(0).isEmpty() ? buildTargetPatternParser.getBaseName() : parts.get(0);
-    String shortName = parts.get(1);
+    String shortName = ((parts.size() == 2) ? parts.get(1) : parts.get(0).substring(parts.get(0).lastIndexOf("/")+1));
     Iterable<String> flavorNames = new HashSet<>();
     int hashIndex = shortName.indexOf('#');
     if (hashIndex != -1 && hashIndex < shortName.length()) {
