@@ -1,0 +1,52 @@
+genrule(
+    name = "cat",
+    srcs = select({
+        "//:a": ["a.txt"],
+        "//:b": ["b.txt"],
+    }),
+    out = "cat_out.txt",
+    cmd = "cat $SRCS > $OUT",
+)
+
+genrule(
+    name = "cat_with_default",
+    srcs = select({
+        "//:a": ["a.txt"],
+        "//:b": ["b.txt"],
+        "DEFAULT": ["c.txt"],
+    }),
+    out = "cat_out.txt",
+    cmd = "cat $SRCS > $OUT",
+)
+
+genrule(
+    name = "cat_with_refined_config",
+    srcs = select({
+        "//:bc": ["c.txt"],
+        "//:b": ["b.txt"],
+    }),
+    out = "cat_out.txt",
+    cmd = "cat $SRCS > $OUT",
+)
+
+config_setting(
+    name = "a",
+    values = {
+        "cat.file": "a",
+    },
+)
+
+config_setting(
+    name = "b",
+    values = {
+        "cat.file": "b",
+    },
+)
+
+config_setting(
+    name = "bc",
+    values = {
+        "cat.file": "b",
+        "cat.file2": "c",
+    },
+)
