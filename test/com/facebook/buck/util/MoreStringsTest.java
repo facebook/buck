@@ -21,6 +21,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.util.string.MoreStrings;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.util.regex.Pattern;
 import org.junit.Test;
@@ -123,5 +124,19 @@ public class MoreStringsTest {
 
     assertFalse(MoreStrings.endsWithIgnoreCase("string", "strin"));
     assertFalse(MoreStrings.endsWithIgnoreCase("strin", "string"));
+  }
+
+  @Test
+  public void testSpellingSuggestionsWithinDistance() {
+    assertEquals(
+        MoreStrings.getSpellingSuggestions("appl:", ImmutableList.of("apple", "foo"), 2),
+        ImmutableList.of("apple"));
+  }
+
+  @Test
+  public void testSpellingSuggestionsOutsideOfDistance() {
+    assertEquals(
+        MoreStrings.getSpellingSuggestions("ppl:", ImmutableList.of("apple", "foo"), 1),
+        ImmutableList.of());
   }
 }

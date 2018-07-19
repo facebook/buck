@@ -17,11 +17,7 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.util.string.MoreStrings;
-import com.facebook.buck.util.types.Pair;
-import com.google.common.collect.ImmutableList;
 import java.util.Arrays;
-import java.util.Collection;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import org.kohsuke.args4j.CmdLineException;
@@ -62,7 +58,8 @@ public class AdditionalOptionsSubCommandHandler extends SubCommandHandler {
     SubCommand c = availableSubcommands.get(subCmd);
     if (c == null) {
       // Try alternative spellings
-      List<String> suggestions = spellingSuggestions(subCmd, availableSubcommands.keySet(), 2);
+      List<String> suggestions =
+          MoreStrings.getSpellingSuggestions(subCmd, availableSubcommands.keySet(), 2);
       if (suggestions.size() == 1) {
         // Only use the suggestion if it's unambiguous
         String corrected = suggestions.get(0);
@@ -88,16 +85,5 @@ public class AdditionalOptionsSubCommandHandler extends SubCommandHandler {
     } else {
       return fallback(subCmd);
     }
-  }
-
-  private static List<String> spellingSuggestions(
-      String input, Collection<String> options, int maxDistance) {
-    return options
-        .stream()
-        .map(option -> new Pair<>(option, MoreStrings.getLevenshteinDistance(input, option)))
-        .filter(pair -> pair.getSecond() <= maxDistance)
-        .sorted(Comparator.comparing(Pair::getSecond))
-        .map(Pair::getFirst)
-        .collect(ImmutableList.toImmutableList());
   }
 }
