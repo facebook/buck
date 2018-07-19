@@ -36,6 +36,10 @@ Therefore, to publish this documentation, you must commit it on the
     # docs to GitHub Pages
     ./docs/publish.sh --start-soyweb
 
+Because this script interacts with GitHub, you should have your
+GitHub credentials configured as described at
+[Generating a new SSH key and adding it to the ssh-agent](https://help.github.com/articles/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent/).
+
 
 Creating a New Article
 ======================
