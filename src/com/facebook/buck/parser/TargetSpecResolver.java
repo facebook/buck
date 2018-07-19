@@ -43,7 +43,9 @@ import java.nio.file.Path;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 
@@ -63,31 +65,12 @@ public class TargetSpecResolver {
       TargetNodeFilterForSpecResolver<T> targetNodeFilter)
       throws BuildFileParseException, InterruptedException, IOException {
 
-    ParserConfig parserConfig = rootCell.getBuckConfig().getView(ParserConfig.class);
-    ParserConfig.BuildFileSearchMethod buildFileSearchMethod =
-        parserConfig.getBuildFileSearchMethod();
-
     // Convert the input spec iterable into a list so we have a fixed ordering, which we'll rely on
     // when returning results.
     ImmutableList<TargetNodeSpec> orderedSpecs = ImmutableList.copyOf(specs);
 
-    // Resolve all the build files from all the target specs.  We store these into a multi-map which
-    // maps the path to the build file to the index of it's spec file in the ordered spec list.
-    Multimap<Path, Integer> perBuildFileSpecs = LinkedHashMultimap.create();
-    for (int index = 0; index < orderedSpecs.size(); index++) {
-      TargetNodeSpec spec = orderedSpecs.get(index);
-      Cell cell = rootCell.getCell(spec.getBuildFileSpec().getCellPath());
-      ImmutableSet<Path> buildFiles;
-      try (SimplePerfEvent.Scope perfEventScope =
-          SimplePerfEvent.scope(
-              eventBus, PerfEventId.of("FindBuildFiles"), "targetNodeSpec", spec)) {
-        // Iterate over the build files the given target node spec returns.
-        buildFiles = spec.getBuildFileSpec().findBuildFiles(cell, buildFileSearchMethod);
-      }
-      for (Path buildFile : buildFiles) {
-        perBuildFileSpecs.put(buildFile, index);
-      }
-    }
+    Multimap<Path, Integer> perBuildFileSpecs =
+        groupSpecsByBuildFile(eventBus, rootCell, orderedSpecs);
 
     // Kick off parse futures for each build file.
     ArrayList<ListenableFuture<Map.Entry<Integer, ImmutableSet<BuildTarget>>>> targetFutures =
@@ -105,37 +88,90 @@ public class TargetSpecResolver {
 
       for (int index : buildFileSpecs) {
         TargetNodeSpec spec = orderedSpecs.get(index);
-        if (spec instanceof BuildTargetSpec) {
-          BuildTargetSpec buildTargetSpec = (BuildTargetSpec) spec;
-          targetFutures.add(
-              Futures.transform(
-                  targetNodeProvider.getTargetNodeJob(buildTargetSpec.getBuildTarget()),
-                  node -> {
-                    ImmutableSet<BuildTarget> buildTargets =
-                        applySpecFilter(
-                            spec, ImmutableSet.of(node), flavorEnhancer, targetNodeFilter);
-                    Preconditions.checkState(
-                        buildTargets.size() == 1,
-                        "BuildTargetSpec %s filter discarded target %s, but was not supposed to.",
-                        spec,
-                        node.getBuildTarget());
-                    return new AbstractMap.SimpleEntry<>(index, buildTargets);
-                  },
-                  MoreExecutors.directExecutor()));
-        } else {
-          // Build up a list of all target nodes from the build file.
-          targetFutures.add(
-              Futures.transform(
-                  targetNodeProvider.getAllTargetNodesJob(cell, buildFile),
-                  nodes ->
-                      new AbstractMap.SimpleEntry<>(
-                          index, applySpecFilter(spec, nodes, flavorEnhancer, targetNodeFilter)),
-                  MoreExecutors.directExecutor()));
-        }
+        handleTargetNodeSpec(
+            flavorEnhancer,
+            targetNodeProvider,
+            targetNodeFilter,
+            targetFutures,
+            cell,
+            buildFile,
+            index,
+            spec);
       }
     }
 
-    // Now walk through and resolve all the futures, and place their results in a multimap that
+    return collectTargets(orderedSpecs.size(), targetFutures);
+  }
+
+  // Resolve all the build files from all the target specs.  We store these into a multi-map which
+  // maps the path to the build file to the index of it's spec file in the ordered spec list.
+  private Multimap<Path, Integer> groupSpecsByBuildFile(
+      BuckEventBus eventBus, Cell rootCell, ImmutableList<TargetNodeSpec> orderedSpecs)
+      throws IOException, InterruptedException {
+    ParserConfig parserConfig = rootCell.getBuckConfig().getView(ParserConfig.class);
+    ParserConfig.BuildFileSearchMethod buildFileSearchMethod =
+        parserConfig.getBuildFileSearchMethod();
+
+    Multimap<Path, Integer> perBuildFileSpecs = LinkedHashMultimap.create();
+    for (int index = 0; index < orderedSpecs.size(); index++) {
+      TargetNodeSpec spec = orderedSpecs.get(index);
+      Cell cell = rootCell.getCell(spec.getBuildFileSpec().getCellPath());
+      ImmutableSet<Path> buildFiles;
+      try (SimplePerfEvent.Scope perfEventScope =
+          SimplePerfEvent.scope(
+              eventBus, PerfEventId.of("FindBuildFiles"), "targetNodeSpec", spec)) {
+        // Iterate over the build files the given target node spec returns.
+        buildFiles = spec.getBuildFileSpec().findBuildFiles(cell, buildFileSearchMethod);
+      }
+      for (Path buildFile : buildFiles) {
+        perBuildFileSpecs.put(buildFile, index);
+      }
+    }
+    return perBuildFileSpecs;
+  }
+
+  private <T extends HasBuildTarget> void handleTargetNodeSpec(
+      FlavorEnhancer<T> flavorEnhancer,
+      TargetNodeProviderForSpecResolver<T> targetNodeProvider,
+      TargetNodeFilterForSpecResolver<T> targetNodeFilter,
+      List<ListenableFuture<Map.Entry<Integer, ImmutableSet<BuildTarget>>>> targetFutures,
+      Cell cell,
+      Path buildFile,
+      int index,
+      TargetNodeSpec spec) {
+    if (spec instanceof BuildTargetSpec) {
+      BuildTargetSpec buildTargetSpec = (BuildTargetSpec) spec;
+      targetFutures.add(
+          Futures.transform(
+              targetNodeProvider.getTargetNodeJob(buildTargetSpec.getBuildTarget()),
+              node -> {
+                ImmutableSet<BuildTarget> buildTargets =
+                    applySpecFilter(spec, ImmutableSet.of(node), flavorEnhancer, targetNodeFilter);
+                Preconditions.checkState(
+                    buildTargets.size() == 1,
+                    "BuildTargetSpec %s filter discarded target %s, but was not supposed to.",
+                    spec,
+                    node.getBuildTarget());
+                return new AbstractMap.SimpleEntry<>(index, buildTargets);
+              },
+              MoreExecutors.directExecutor()));
+    } else {
+      // Build up a list of all target nodes from the build file.
+      targetFutures.add(
+          Futures.transform(
+              targetNodeProvider.getAllTargetNodesJob(cell, buildFile),
+              nodes ->
+                  new AbstractMap.SimpleEntry<>(
+                      index, applySpecFilter(spec, nodes, flavorEnhancer, targetNodeFilter)),
+              MoreExecutors.directExecutor()));
+    }
+  }
+
+  private ImmutableList<ImmutableSet<BuildTarget>> collectTargets(
+      int specsCount,
+      List<ListenableFuture<Entry<Integer, ImmutableSet<BuildTarget>>>> targetFutures)
+      throws InterruptedException {
+    // Walk through and resolve all the futures, and place their results in a multimap that
     // is indexed by the integer representing the input target spec order.
     LinkedHashMultimap<Integer, BuildTarget> targetsMap = LinkedHashMultimap.create();
     try {
@@ -152,11 +188,10 @@ public class TargetSpecResolver {
       Throwables.throwIfUnchecked(e.getCause());
       throw new RuntimeException(e);
     }
-
     // Finally, pull out the final build target results in input target spec order, and place them
     // into a list of sets that exactly matches the ihput order.
     ImmutableList.Builder<ImmutableSet<BuildTarget>> targets = ImmutableList.builder();
-    for (int index = 0; index < orderedSpecs.size(); index++) {
+    for (int index = 0; index < specsCount; index++) {
       targets.add(ImmutableSet.copyOf(targetsMap.get(index)));
     }
     return targets.build();
