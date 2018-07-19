@@ -26,6 +26,7 @@ java_test(
         "//src/com/facebook/buck/core/build/engine/impl:impl",
         "//src/com/facebook/buck/core/cell:cell",
         "//src/com/facebook/buck/core/description/arg:arg",
+        "//src/com/facebook/buck/core/model/impl:impl",
         "//src/com/facebook/buck/core/rules:rules",
         "//src/com/facebook/buck/core/sourcepath/resolver/impl:impl",
         "//src/com/facebook/buck/core/toolchain/tool/impl:impl",

@@ -20,6 +20,8 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.impl.ImmutableBuildTarget;
+import com.facebook.buck.core.model.impl.ImmutableUnflavoredBuildTarget;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;

@@ -20,6 +20,7 @@ java_test(
         "//src/com/facebook/buck/artifact_cache:artifact_cache",
         "//src/com/facebook/buck/cli:cli",
         "//src/com/facebook/buck/config:config",
+        "//src/com/facebook/buck/core/model/impl:impl",
         "//src/com/facebook/buck/core/rules:rules",
         "//src/com/facebook/buck/core/rules/modern:modern",
         "//src/com/facebook/buck/core/util/immutables:immutables",

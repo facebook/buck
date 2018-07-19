@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.model;
+package com.facebook.buck.core.model.impl;
 
 import com.facebook.buck.core.model.AbstractUnflavoredBuildTarget;
 import com.facebook.buck.core.model.UnflavoredBuildTarget;

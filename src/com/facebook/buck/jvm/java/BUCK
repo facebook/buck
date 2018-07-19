@@ -371,6 +371,7 @@ java_library_with_plugins(
         "//src/com/facebook/buck/apple/xcode:xcode",
         "//src/com/facebook/buck/artifact_cache:artifact_cache",
         "//src/com/facebook/buck/config:config",
+        "//src/com/facebook/buck/core/model/impl:impl",
         "//src/com/facebook/buck/core/rules:rules",
         "//src/com/facebook/buck/core/sourcepath/resolver/impl:impl",
         "//src/com/facebook/buck/core/toolchain/tool/impl:impl",

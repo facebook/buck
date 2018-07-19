@@ -20,8 +20,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.model.ImmutableBuildTarget;
-import com.facebook.buck.model.ImmutableUnflavoredBuildTarget;
+import com.facebook.buck.core.model.impl.ImmutableBuildTarget;
+import com.facebook.buck.core.model.impl.ImmutableUnflavoredBuildTarget;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Paths;

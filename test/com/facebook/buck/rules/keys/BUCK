@@ -95,6 +95,7 @@ java_test(
         "//src/com/facebook/buck/config:config",
         "//src/com/facebook/buck/core/cell:cell",
         "//src/com/facebook/buck/core/model/actiongraph:actiongraph",
+        "//src/com/facebook/buck/core/model/impl:impl",
         "//src/com/facebook/buck/core/rules:rules",
         "//src/com/facebook/buck/core/rules/transformer/impl:impl",
         "//src/com/facebook/buck/core/sourcepath/resolver/impl:impl",
