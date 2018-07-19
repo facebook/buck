@@ -36,7 +36,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.concurrent.TimeUnit;
+import okhttp3.Connection;
 import okhttp3.OkHttpClient;
+import okhttp3.Response;
 
 public class DistBuildConfig {
 
@@ -557,11 +559,32 @@ public class DistBuildConfig {
   }
 
   public OkHttpClient createOkHttpClient() {
-    return new OkHttpClient.Builder()
+    OkHttpClient.Builder clientBuilder = new OkHttpClient.Builder();
+    clientBuilder
         .connectTimeout(getFrontendRequestTimeoutMillis(), TimeUnit.MILLISECONDS)
         .readTimeout(getFrontendRequestTimeoutMillis(), TimeUnit.MILLISECONDS)
-        .writeTimeout(getFrontendRequestTimeoutMillis(), TimeUnit.MILLISECONDS)
-        .build();
+        .writeTimeout(getFrontendRequestTimeoutMillis(), TimeUnit.MILLISECONDS);
+
+    clientBuilder
+        .networkInterceptors()
+        .add(
+            chain -> {
+              String remoteAddress = null;
+              Connection connection = chain.connection();
+              if (connection != null) {
+                remoteAddress = connection.socket().getRemoteSocketAddress().toString();
+              }
+
+              Response response = chain.proceed(chain.request());
+              if (response.code() != 200 && remoteAddress != null) {
+                LOG.warn(
+                    String.format(
+                        "Connection to %s failed with code %d", remoteAddress, response.code()));
+              }
+              return response;
+            });
+
+    return clientBuilder.build();
   }
 
   public MinionRequirements getMinionRequirements() {
