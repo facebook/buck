@@ -58,8 +58,19 @@ p, pre, ul, ol {
     margin:  0 0 1em 0;
 }
 
-pre {
-    border: 1px solid #ccc;
+/*  
+ *
+ *  Override pre.prettyprint from
+ *
+ *    google-code-prettify/prettify.css
+ *  
+ *  in order to make the non-code aspects 
+ *  of our code blocks all share the same 
+ *  styling.
+ *
+ */
+pre, pre.prettyprint {
+    border: 1px solid #ededed;
     padding: 0.5em 1em;
     overflow-x: auto;
     background: #fff;
