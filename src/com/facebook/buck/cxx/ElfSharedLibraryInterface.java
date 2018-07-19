@@ -298,6 +298,11 @@ abstract class ElfSharedLibraryInterface extends AbstractBuildRule
       steps.add(ElfRewriteDynStrSectionStep.of(getProjectFilesystem(), outputScratch));
     }
     steps.add(
+        // objcopy doesn't like the section-address shuffling chicanery we're doing in
+        // the ElfCompactSectionsStep, since the new addresses may not jive with the current
+        // segment locations.  So kill the segments (program headers) in the scratch file
+        // prior to compacting sections, and _again_ in the interface .so file.
+        ElfClearProgramHeadersStep.of(getProjectFilesystem(), outputScratch),
         ElfCompactSectionsStep.of(
             getBuildTarget(),
             objcopy.getCommandPrefix(context.getSourcePathResolver()),
