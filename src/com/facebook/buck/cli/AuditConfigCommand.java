@@ -197,7 +197,7 @@ public class AuditConfigCommand extends AbstractCommand {
       CommandRunnerParams params, ImmutableSortedSet<ConfigValue> configs) {
     ImmutableListMultimap<String, ConfigValue> iniData =
         FluentIterable.from(configs)
-            .filter(config -> config.getSection() != "" && config.getValue().isPresent())
+            .filter(config -> !config.getSection().isEmpty() && config.getValue().isPresent())
             .index(ConfigValue::getSection);
 
     for (Map.Entry<String, Collection<ConfigValue>> entry : iniData.asMap().entrySet()) {

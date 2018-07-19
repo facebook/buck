@@ -37,6 +37,6 @@ abstract class AbstractPatternAndMessage {
   @Value.Check
   protected void check() {
     Preconditions.checkArgument(getPattern().toString().compareTo("*") != 0);
-    Preconditions.checkArgument(getMessage() != null && getMessage() != "");
+    Preconditions.checkArgument(getMessage() != null && !getMessage().isEmpty());
   }
 }

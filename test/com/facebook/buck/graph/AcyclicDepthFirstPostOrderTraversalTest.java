@@ -189,7 +189,7 @@ public class AcyclicDepthFirstPostOrderTraversalTest {
     graph.put("C", "D");
     graph.put("B", "E");
 
-    TestDagDepthFirstSearch dfs = new TestDagDepthFirstSearch(graph, node -> node != "C");
+    TestDagDepthFirstSearch dfs = new TestDagDepthFirstSearch(graph, node -> !node.equals("C"));
     dfs.traverse(ImmutableList.of("A"));
     assertEquals(ImmutableList.of("C", "E", "B", "A"), dfs.exploredNodes);
   }
