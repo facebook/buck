@@ -25,7 +25,7 @@ prebuilt_jar(
 genrule(
     name = "generated_jar",
     out = "generated.jar",
-    cmd = "echo foo > $OUT",
+    cmd = "echo foo > $TMP/foo && zip $OUT $TMP/foo",
 )
 
 prebuilt_jar(
