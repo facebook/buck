@@ -70,7 +70,7 @@ public class PostBuildPhase {
   }
 
   /** Run all the local steps required after the build. */
-  public DistBuildController.ExecutionResult runPostDistBuildLocalSteps(
+  public StampedeExecutionResult runPostDistBuildLocalSteps(
       ListeningExecutorService networkExecutorService,
       List<BuildSlaveStatus> buildSlaveStatusList,
       BuildJob finalJob,
@@ -114,8 +114,7 @@ public class PostBuildPhase {
       consoleEventsDispatcher.postDistBuildStatusEvent(finalJob, buildSlaveStatusList, "FAILED");
     }
 
-    return new DistBuildController.ExecutionResult(
-        finalJob.getStampedeId(),
+    return new StampedeExecutionResult(
         finalJob.getStatus().equals(BuildStatus.FINISHED_SUCCESSFULLY)
             ? 0
             : ExitCode.DISTRIBUTED_BUILD_STEP_REMOTE_FAILURE.getCode());

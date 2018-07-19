@@ -13,14 +13,25 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package com.facebook.buck.distributed.build_client;
 
-import java.io.IOException;
+import java.util.Optional;
 
-/**
- * Abstracts DistBuildController invocation, so that caller doesn't need to directly depend on this
- * class or any of its invocation arguments.
- */
-public interface DistBuildControllerInvoker {
-  StampedeExecutionResult runDistBuildAndReturnExitCode() throws IOException, InterruptedException;
+/** Result of a distributed build execution. */
+public class StampedeExecutionResult {
+  public final int exitCode;
+  public final Optional<Throwable> exception;
+  public final Optional<String> errorStage;
+
+  public StampedeExecutionResult(int exitCode) {
+    this(exitCode, Optional.empty(), Optional.empty());
+  }
+
+  public StampedeExecutionResult(
+      int exitCode, Optional<Throwable> exception, Optional<String> errorStage) {
+    this.exitCode = exitCode;
+    this.exception = exception;
+    this.errorStage = errorStage;
+  }
 }

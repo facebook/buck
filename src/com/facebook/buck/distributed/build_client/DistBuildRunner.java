@@ -23,10 +23,13 @@ import com.facebook.buck.distributed.StampedeLocalBuildStatusEvent;
 import com.facebook.buck.distributed.thrift.BuildStatus;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.log.Logger;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
+import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -62,7 +65,7 @@ public class DistBuildRunner {
 
   @GuardedBy("this")
   @Nullable
-  private Future<?> runDistributedBuildFuture = null;
+  private Future<StampedeExecutionResult> runDistributedBuildFuture = null;
 
   public DistBuildRunner(
       DistBuildControllerInvoker distBuildControllerInvoker,
@@ -108,30 +111,39 @@ public class DistBuildRunner {
     }
   }
 
-  private void performStampedeDistributedBuild() {
+  private StampedeExecutionResult performStampedeDistributedBuild() {
     // If finally {} block is reached without an exit code being set, there was an exception
-    int exitCode = ExitCode.DISTRIBUTED_BUILD_STEP_LOCAL_EXCEPTION.getCode();
+    StampedeExecutionResult result =
+        new StampedeExecutionResult(ExitCode.DISTRIBUTED_BUILD_STEP_LOCAL_EXCEPTION.getCode());
     try {
       LOG.info("Invoking DistBuildController..");
-      exitCode = distBuildControllerInvoker.runDistBuildAndReturnExitCode();
-      LOG.info("Distributed build finished with exit code: " + exitCode);
+      result = distBuildControllerInvoker.runDistBuildAndReturnExitCode();
+      LOG.info("Distributed build finished with exit code: " + result.exitCode);
     } catch (IOException e) {
       LOG.error(e, "Stampede distributed build failed with exception");
-      throw new RuntimeException(e);
+      result =
+          new StampedeExecutionResult(
+              ExitCode.DISTRIBUTED_BUILD_STEP_LOCAL_EXCEPTION.getCode(),
+              Optional.of(e),
+              Optional.empty());
     } catch (InterruptedException e) {
       LOG.warn(e, "Stampede distributed build thread was interrupted");
+      result =
+          new StampedeExecutionResult(
+              ExitCode.DISTRIBUTED_BUILD_STEP_LOCAL_EXCEPTION.getCode(),
+              Optional.of(e),
+              Optional.empty());
       Thread.currentThread().interrupt();
-      return;
     } finally {
-      LOG.info("Distributed build finished with exit code: " + exitCode);
+      LOG.info("Distributed build finished with exit code: " + result.exitCode);
 
       distributedBuildExitCode.compareAndSet(
-          ExitCode.DISTRIBUTED_PENDING_EXIT_CODE.getCode(), exitCode);
+          ExitCode.DISTRIBUTED_PENDING_EXIT_CODE.getCode(), result.exitCode);
 
       // If remote build succeeded, always set the code.
       // This is important for allowing post build analysis to proceed.
-      if (exitCode == 0) {
-        distributedBuildExitCode.set(exitCode);
+      if (result.exitCode == 0) {
+        distributedBuildExitCode.set(result.exitCode);
       }
 
       if (distributedBuildExitCode.get()
@@ -148,11 +160,14 @@ public class DistBuildRunner {
           distributedBuildExitCode.get() == ExitCode.SUCCESSFUL.getCode());
       // We probably already have sent the DistBuildFinishedEvent but in case it slipped through the
       // exceptions, send it again.
-      eventBus.post(BuildEvent.distBuildFinished(Preconditions.checkNotNull(started), exitCode));
+      eventBus.post(
+          BuildEvent.distBuildFinished(Preconditions.checkNotNull(started), result.exitCode));
 
       // Whichever build phase is executing should now move to the final stage.
       buildPhaseLatches.forEach(latch -> latch.countDown());
     }
+
+    return result;
   }
 
   /**
@@ -212,6 +227,37 @@ public class DistBuildRunner {
               + "Abandoning now.");
       runDistributedBuildFuture.cancel(true);
     }
+  }
+
+  /** Prints any infra failures to the console */
+  public void printAnyFailures() throws InterruptedException {
+    StampedeExecutionResult result = null;
+    try {
+      Future<StampedeExecutionResult> executionResultFuture =
+          Preconditions.checkNotNull(runDistributedBuildFuture);
+      if (executionResultFuture.isCancelled()) {
+        return;
+      }
+      result =
+          executionResultFuture.get(distributedBuildThreadKillTimeoutSeconds, TimeUnit.SECONDS);
+    } catch (ExecutionException | TimeoutException e) {
+      LOG.warn("Failed to get ExecutionResult within timeout. Skipping printing failures");
+      return;
+    }
+
+    if (!result.exception.isPresent()) {
+      return;
+    }
+
+    Throwable exception = result.exception.get();
+    String stackTrace = Throwables.getStackTraceAsString(exception);
+    String stage = result.errorStage.isPresent() ? result.errorStage.get() : "unknown";
+    String errorMessage =
+        String.format(
+            "- STAMPEDE DISTRIBUTED BUILD FAILED AT [%s] STAGE. EXCEPTION:\n%s",
+            stage.toUpperCase(), stackTrace);
+
+    eventBus.post(ConsoleEvent.severe(errorMessage));
   }
 
   private void terminateDistributedBuildJob(BuildStatus finalStatus, String statusMessage) {

@@ -171,7 +171,7 @@ public class StampedeBuildClientTest {
     waitForRacingBuildCalledLatch = new CountDownLatch(1);
     waitForSynchronizedBuildCalledLatch = new CountDownLatch(1);
     waitGracefullyForDistributedBuildThreadToFinish = false;
-    distributedBuildThreadKillTimeoutSeconds = 0;
+    distributedBuildThreadKillTimeoutSeconds = 1;
     createStampedBuildClient();
     buildClientExecutor = Executors.newSingleThreadExecutor();
   }
@@ -212,7 +212,7 @@ public class StampedeBuildClientTest {
 
     // Simulate failure at a remote minion
     expect(mockDistBuildControllerInvoker.runDistBuildAndReturnExitCode())
-        .andReturn(REMOTE_FAILURE_CODE);
+        .andReturn(new StampedeExecutionResult(REMOTE_FAILURE_CODE));
 
     replayAllMocks();
 
@@ -242,7 +242,8 @@ public class StampedeBuildClientTest {
     // Ensure local racing build is invoked and finishes with failure code (as it was terminated)
     expectMockLocalBuildExecutorReturnsWithCode(SUCCESS_CODE);
 
-    expect(mockDistBuildControllerInvoker.runDistBuildAndReturnExitCode()).andReturn(SUCCESS_CODE);
+    expect(mockDistBuildControllerInvoker.runDistBuildAndReturnExitCode())
+        .andReturn(new StampedeExecutionResult(SUCCESS_CODE));
 
     replayAllMocks();
 
@@ -280,7 +281,7 @@ public class StampedeBuildClientTest {
 
     // Simulate failure at a remote minion
     expect(mockDistBuildControllerInvoker.runDistBuildAndReturnExitCode())
-        .andReturn(REMOTE_FAILURE_CODE);
+        .andReturn(new StampedeExecutionResult(REMOTE_FAILURE_CODE));
 
     // Ensure local synchronized build is invoked and finishes with failure code (as it was
     // terminated)
@@ -326,7 +327,7 @@ public class StampedeBuildClientTest {
 
     // Simulate failure at a remote minion
     expect(mockDistBuildControllerInvoker.runDistBuildAndReturnExitCode())
-        .andReturn(REMOTE_FAILURE_CODE);
+        .andReturn(new StampedeExecutionResult(REMOTE_FAILURE_CODE));
 
     // Synchronized build should be cancelled when distributed build fails
     ensureTerminationOfBuild(buildTwoMock, localBuildExecutorInvokerPhaseTwoLatch);
@@ -418,7 +419,8 @@ public class StampedeBuildClientTest {
     expectMockLocalBuildExecutorReturnsWithCode(NON_SUCCESS_EXIT_CODE);
 
     // Distributed build finishes successfully
-    expect(mockDistBuildControllerInvoker.runDistBuildAndReturnExitCode()).andReturn(SUCCESS_CODE);
+    expect(mockDistBuildControllerInvoker.runDistBuildAndReturnExitCode())
+        .andReturn(new StampedeExecutionResult(SUCCESS_CODE));
 
     // Synchronized build returns with success code
     expectMockLocalBuildExecutorReturnsWithCode(SUCCESS_CODE);
@@ -482,7 +484,8 @@ public class StampedeBuildClientTest {
     createStampedBuildClient(INITIALIZED_STAMPEDE_ID);
 
     distBuildControllerInvokerLatch.countDown();
-    expect(mockDistBuildControllerInvoker.runDistBuildAndReturnExitCode()).andReturn(SUCCESS_CODE);
+    expect(mockDistBuildControllerInvoker.runDistBuildAndReturnExitCode())
+        .andReturn(new StampedeExecutionResult(SUCCESS_CODE));
 
     EasyMock.expectLastCall();
     replayAllMocks();
@@ -506,7 +509,7 @@ public class StampedeBuildClientTest {
     // Simulate failure at a remote minion
     distBuildControllerInvokerLatch.countDown();
     expect(mockDistBuildControllerInvoker.runDistBuildAndReturnExitCode())
-        .andReturn(REMOTE_FAILURE_CODE);
+        .andReturn(new StampedeExecutionResult(REMOTE_FAILURE_CODE));
 
     // Ensure Build object for racing build is terminated and then unlock local build executor
     ensureTerminationOfBuild(buildOneMock, localBuildExecutorInvokerPhaseOneLatch);
@@ -536,7 +539,7 @@ public class StampedeBuildClientTest {
     // Simulate failure at a remote minion
     distBuildControllerInvokerLatch.countDown();
     expect(mockDistBuildControllerInvoker.runDistBuildAndReturnExitCode())
-        .andReturn(REMOTE_FAILURE_CODE);
+        .andReturn(new StampedeExecutionResult(REMOTE_FAILURE_CODE));
 
     // Ensure local racing build is invoked and finishes with failure code (as it was terminated)
     expectMockLocalBuildExecutorReturnsWithCode(SUCCESS_CODE);

@@ -201,8 +201,8 @@ public class DistBuildControllerTest {
             .build());
   }
 
-  private DistBuildController.ExecutionResult runBuildWithController(
-      DistBuildController distBuildController) throws InterruptedException {
+  private StampedeExecutionResult runBuildWithController(DistBuildController distBuildController)
+      throws InterruptedException {
     // Normally LOCAL_PREPARATION get started in BuildCommand, so simulate that here,
     // otherwise when we stop the timer it will fail with an exception about not being started.
     distBuildClientStatsTracker.startTimer(LOCAL_PREPARATION);
@@ -267,7 +267,7 @@ public class DistBuildControllerTest {
     BuildJob job = new BuildJob();
     job.setStampedeId(stampedeId);
 
-    DistBuildController.ExecutionResult executionResult = runBuildWithController(controller);
+    StampedeExecutionResult executionResult = runBuildWithController(controller);
     assertEquals(ExitCode.PREPARATION_STEP_FAILED.getCode(), executionResult.exitCode);
   }
 
@@ -305,9 +305,8 @@ public class DistBuildControllerTest {
     DistBuildController controller =
         createController(Futures.immediateFailedFuture(new Exception("Async preparation failed")));
 
-    DistBuildController.ExecutionResult executionResult = runBuildWithController(controller);
+    StampedeExecutionResult executionResult = runBuildWithController(controller);
     assertEquals(ExitCode.PREPARATION_ASYNC_STEP_FAILED.getCode(), executionResult.exitCode);
-    assertEquals(stampedeId, executionResult.stampedeId);
   }
 
   @Test
@@ -328,12 +327,11 @@ public class DistBuildControllerTest {
 
     replay(mockDistBuildService);
 
-    DistBuildController.ExecutionResult executionResult =
+    StampedeExecutionResult executionResult =
         runBuildWithController(createController(Futures.immediateFuture(buildJobState)));
 
     assertEquals(
         ExitCode.DISTRIBUTED_BUILD_STEP_LOCAL_EXCEPTION.getCode(), executionResult.exitCode);
-    assertEquals(stampedeId, executionResult.stampedeId);
   }
 
   /**
@@ -474,7 +472,7 @@ public class DistBuildControllerTest {
     replay(mockEventBus);
     replay(mockLogStateTracker);
 
-    DistBuildController.ExecutionResult executionResult =
+    StampedeExecutionResult executionResult =
         runBuildWithController(createController(Futures.immediateFuture(buildJobState)));
 
     verify(mockDistBuildService);

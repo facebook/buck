@@ -189,6 +189,8 @@ public class StampedeBuildClient {
           eventBus);
     }
 
+    distBuildRunner.printAnyFailures();
+
     int localExitCode =
         synchronizedBuildRunner.isFinished()
             ? synchronizedBuildRunner.getExitCode()
@@ -261,7 +263,7 @@ public class StampedeBuildClient {
       DistBuildController distBuildController,
       DistBuildControllerInvocationArgs distBuildControllerInvocationArgs) {
     return () -> {
-      DistBuildController.ExecutionResult distBuildResult =
+      StampedeExecutionResult distBuildResult =
           distBuildController.executeAndPrintFailuresToEventBus(
               distBuildControllerInvocationArgs.getExecutorService(),
               distBuildControllerInvocationArgs.getProjectFilesystem(),
@@ -274,7 +276,7 @@ public class StampedeBuildClient {
               distBuildControllerInvocationArgs.getTenantId(),
               distBuildControllerInvocationArgs.getRuleKeyCalculatorFuture());
 
-      return distBuildResult.exitCode;
+      return distBuildResult;
     };
   }
 
