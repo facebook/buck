@@ -18,14 +18,20 @@ package com.facebook.buck.slb;
 
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.timing.Clock;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import java.net.URI;
 import java.util.Optional;
+import okhttp3.Connection;
+import okhttp3.OkHttpClient;
+import okhttp3.Response;
 
 public class SlbBuckConfig {
+
+  private static final Logger LOG = Logger.get(SlbBuckConfig.class);
 
   // SLB BuckConfig keys.
   private static final String SERVER_POOL = "slb_server_pool";
@@ -65,14 +71,38 @@ public class SlbBuckConfig {
   }
 
   public ClientSideSlb createClientSideSlb(Clock clock, BuckEventBus eventBus) {
-    return new ClientSideSlb(createConfig(clock, eventBus));
+    return new ClientSideSlb(createConfig(clock, eventBus), createOkHttpClientBuilder());
   }
 
   public Optional<ClientSideSlb> tryCreatingClientSideSlb(Clock clock, BuckEventBus eventBus) {
     ClientSideSlbConfig config = createConfig(clock, eventBus);
     return ClientSideSlb.isSafeToCreate(config)
-        ? Optional.of(new ClientSideSlb(config))
+        ? Optional.of(new ClientSideSlb(config, createOkHttpClientBuilder()))
         : Optional.empty();
+  }
+
+  private OkHttpClient.Builder createOkHttpClientBuilder() {
+    OkHttpClient.Builder clientBuilder = new OkHttpClient().newBuilder();
+    clientBuilder
+        .networkInterceptors()
+        .add(
+            chain -> {
+              String remoteAddress = null;
+              Connection connection = chain.connection();
+              if (connection != null) {
+                remoteAddress = connection.socket().getRemoteSocketAddress().toString();
+              } else {
+                LOG.warn(String.format("No available connection."));
+              }
+              Response response = chain.proceed(chain.request());
+              if (response.code() != 200 && remoteAddress != null) {
+                LOG.warn(
+                    String.format(
+                        "Connection to %s failed with code %d", remoteAddress, response.code()));
+              }
+              return response;
+            });
+    return clientBuilder;
   }
 
   private ClientSideSlbConfig createConfig(Clock clock, BuckEventBus eventBus) {
