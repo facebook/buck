@@ -100,7 +100,8 @@ public class AndroidAppBundleIntegrationTest extends AbiCompilationModeTest {
     zipInspector.assertFileExists("base/assets/asset_file.txt");
     zipInspector.assertFileExists("base/res/drawable/tiny_black.png");
     zipInspector.assertFileExists("base/native.pb");
-
+    zipInspector.assertFileExists("base/lib/armeabi-v7a/libnative_cxx_lib.so");
+    zipInspector.assertFileExists("base/assets/secondary-program-dex-jars/secondary-1.dex.jar");
     NativeLibraries nativeLibraries =
         NativeLibraries.parseFrom(zipInspector.getFileContents("base/native.pb"));
     assertEquals(3, nativeLibraries.getDirectoryList().size());

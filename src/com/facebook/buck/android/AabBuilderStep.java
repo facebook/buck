@@ -16,9 +16,11 @@
 
 package com.facebook.buck.android;
 
+import com.android.common.SdkConstants;
 import com.android.common.sdklib.build.ApkBuilder;
 import com.android.sdklib.build.ApkCreationException;
 import com.android.sdklib.build.DuplicateFileException;
+import com.android.sdklib.build.IArchiveBuilder;
 import com.android.sdklib.build.SealedApkException;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -33,11 +35,13 @@ import java.io.InputStream;
 import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableKeyException;
 import java.util.Enumeration;
 import java.util.function.Supplier;
+import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -61,6 +65,11 @@ public class AabBuilderStep extends ApkBuilderStep {
   private final boolean debugMode;
   private final int apkCompressionLevel;
   private final Path tempBundleConfig;
+  private static final Pattern PATTERN_NATIVELIB_EXT =
+      Pattern.compile("^.+\\.so$", Pattern.CASE_INSENSITIVE);
+  private static final Pattern PATTERN_BITCODELIB_EXT =
+      Pattern.compile("^.+\\.bc$", Pattern.CASE_INSENSITIVE);
+  private final String moduleName = "base";
 
   /**
    * @param resourceApk Path to the Apk which only contains resources, no dex files.
@@ -141,29 +150,39 @@ public class AabBuilderStep extends ApkBuilderStep {
               output,
               apkCompressionLevel);
       builder.setDebugMode(debugMode);
-      builder.addFile(filesystem.getPathForRelativePath(dexFile).toFile(), "base/dex/classes.dex");
-      packageFile(builder, resourceApk.toFile(), "base/");
-      builder.addFile(filesystem.getPathForRelativePath(tempAssets).toFile(), "base/assets.pb");
-      builder.addFile(filesystem.getPathForRelativePath(tempNativeLib).toFile(), "base/native.pb");
+      builder.addFile(
+          filesystem.getPathForRelativePath(dexFile).toFile(),
+          Paths.get(moduleName).resolve("dex").resolve("classes.dex").toString());
+      packageFile(builder, resourceApk.toFile(), resolve(moduleName, ""));
+      builder.addFile(
+          filesystem.getPathForRelativePath(tempAssets).toFile(),
+          Paths.get(moduleName).resolve("assets.pb").toString());
+      builder.addFile(
+          filesystem.getPathForRelativePath(tempNativeLib).toFile(),
+          Paths.get(moduleName).resolve("native.pb").toString());
       builder.addFile(
           filesystem.getPathForRelativePath(tempBundleConfig).toFile(), "BundleConfig.pb");
 
       for (Path nativeLibraryDirectory : nativeLibraryDirectories) {
-        builder.addNativeLibraries(
-            filesystem.getPathForRelativePath(nativeLibraryDirectory).toFile());
+        addNativeLibraries(
+            builder, filesystem.getPathForRelativePath(nativeLibraryDirectory).toFile());
       }
       for (Path assetDirectory : assetDirectories) {
-        builder.addSourceFolder(filesystem.getPathForRelativePath(assetDirectory).toFile());
+        addSourceFolder(builder, filesystem.getPathForRelativePath(assetDirectory).toFile());
       }
       for (Path zipFile : zipFiles) {
         // TODO(natthu): Skipping silently is bad. These should really be assertions.
         if (filesystem.exists(zipFile) && filesystem.isFile(zipFile)) {
-          builder.addZipFile(filesystem.getPathForRelativePath(zipFile).toFile());
+          packageFile(
+              builder,
+              filesystem.getPathForRelativePath(zipFile).toFile(),
+              resolve(moduleName, ""));
         }
       }
       for (Path jarFileThatMayContainResources : jarFilesThatMayContainResources) {
         Path jarFile = filesystem.getPathForRelativePath(jarFileThatMayContainResources);
-        builder.addResourcesFromJar(jarFile.toFile());
+        packageFile(
+            builder, filesystem.getPathForRelativePath(jarFile).toFile(), resolve(moduleName, ""));
       }
 
       // Build the APK
@@ -184,13 +203,96 @@ public class AabBuilderStep extends ApkBuilderStep {
     return StepExecutionResults.SUCCESS;
   }
 
+  private void addSourceFolder(ApkBuilder builder, File sourceFolder)
+      throws ApkCreationException, DuplicateFileException, SealedApkException {
+    if (sourceFolder.isDirectory()) {
+      File[] files = sourceFolder.listFiles();
+      if (files == null) {
+        return;
+      }
+      for (File file : files) {
+        processFileForResource(builder, file, "base");
+      }
+    } else {
+      if (sourceFolder.exists()) {
+        throw new ApkCreationException("%s is not a folder", sourceFolder);
+      } else {
+        throw new ApkCreationException("%s does not exist", sourceFolder);
+      }
+    }
+  }
+
+  private void processFileForResource(IArchiveBuilder builder, File file, String path)
+      throws DuplicateFileException, ApkCreationException, SealedApkException {
+    path = resolve(path, file.getName());
+    if (file.isDirectory() && ApkBuilder.checkFolderForPackaging(file.getName())) {
+      File[] files = file.listFiles();
+      if (files == null) {
+        return;
+      }
+      for (File contentFile : files) {
+        processFileForResource(builder, contentFile, path);
+      }
+    } else if (!file.isDirectory() && ApkBuilder.checkFileForPackaging(file.getName())) {
+      builder.addFile(file, path);
+    }
+  }
+
+  private String resolve(String path, String fileName) {
+    return path == null ? fileName : path + File.separator + fileName;
+  }
+
+  private void addNativeLibraries(ApkBuilder builder, File nativeFolder)
+      throws ApkCreationException, SealedApkException, DuplicateFileException {
+    if (!nativeFolder.isDirectory()) {
+      if (nativeFolder.exists()) {
+        throw new ApkCreationException("%s is not a folder", nativeFolder);
+      } else {
+        throw new ApkCreationException("%s does not exist", nativeFolder);
+      }
+    }
+    File[] abiList = nativeFolder.listFiles();
+    if (abiList == null) {
+      return;
+    }
+    for (File abi : abiList) {
+      if (!abi.isDirectory()) {
+        continue;
+      }
+      File[] libs = abi.listFiles();
+      if (libs == null) {
+        continue;
+      }
+      for (File lib : libs) {
+        if (!addFileToBuilder(lib)) {
+          continue;
+        }
+        Path libPath =
+            Paths.get(moduleName)
+                .resolve(SdkConstants.FD_APK_NATIVE_LIBS)
+                .resolve(abi.getName())
+                .resolve(lib.getName());
+
+        builder.addFile(lib, libPath.toString());
+      }
+    }
+  }
+
+  private boolean addFileToBuilder(File lib) {
+    return lib.isFile()
+        && (PATTERN_NATIVELIB_EXT.matcher(lib.getName()).matches()
+            || PATTERN_BITCODELIB_EXT.matcher(lib.getName()).matches()
+            || (debugMode && SdkConstants.FN_GDBSERVER.equals(lib.getName())));
+  }
+
   private void packageFile(ApkBuilder builder, File original, String destination)
       throws IOException, ApkCreationException, DuplicateFileException, SealedApkException {
     try (ZipFile zipFile = new ZipFile(original)) {
       Enumeration<? extends ZipEntry> zipEntryEnumeration = zipFile.entries();
       while (zipEntryEnumeration.hasMoreElements()) {
         ZipEntry entry = zipEntryEnumeration.nextElement();
-        String location = entry.getName().equals("AndroidManifest.xml") ? "manifest/" : "";
+        String location =
+            entry.getName().equals("AndroidManifest.xml") ? "manifest" + File.separator : "";
         builder.addFile(
             convertZipEntryToFile(zipFile, entry), destination + location + entry.getName());
       }
