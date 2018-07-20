@@ -126,6 +126,14 @@ public class BuildTargetParserTest {
   }
 
   @Test
+  public void testParseNoColon() {
+    BuildTarget buildTarget =
+        parser.parse("//facebook/orca", fullyQualifiedParser, createCellRoots(null));
+    assertEquals("//facebook/orca", buildTarget.getBaseName());
+    assertEquals("orca", buildTarget.getShortNameAndFlavorPostfix());
+  }
+
+  @Test
   public void testParseMultipleColons() {
     try {
       parser.parse("//facebook:orca:assets", fullyQualifiedParser, createCellRoots(null));
