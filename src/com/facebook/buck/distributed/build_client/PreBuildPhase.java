@@ -92,6 +92,8 @@ public class PreBuildPhase {
     this.buildLabel = buildLabel;
   }
 
+  // TODO(shivanker): Add unit-tests for this class (decoupled from DistBuildControllerTest).
+
   /** Run all steps required before the build. */
   public Pair<StampedeId, ListenableFuture<Void>> runPreDistBuildLocalStepsAsync(
       ListeningExecutorService networkExecutorService,
@@ -136,7 +138,7 @@ public class PreBuildPhase {
     List<ListenableFuture<?>> asyncJobs = new LinkedList<>();
 
     asyncJobs.add(
-        Futures.transform(
+        Futures.transformAsync(
             asyncJobState,
             jobState -> {
               LOG.info("Uploading local changes.");
