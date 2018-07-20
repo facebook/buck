@@ -91,6 +91,10 @@ public class MoreStringsTest {
         "The distance between 'test' and 'tset' should be 2 (e.g., 1 deletion + 1 insertion).",
         2,
         MoreStrings.getLevenshteinDistance("test", "tset"));
+    assertEquals(
+        "The distance between '' and 'BUILD' should be 5 (e.g., 5 insertions).",
+        5,
+        MoreStrings.getLevenshteinDistance("BUILD", ""));
   }
 
   @Test
