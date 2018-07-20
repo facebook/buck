@@ -154,6 +154,7 @@ public class AppleCxxPlatforms {
       XcodeToolFinder xcodeToolFinder,
       XcodeBuildVersionCache xcodeBuildVersionCache) {
     AppleCxxPlatform.Builder platformBuilder = AppleCxxPlatform.builder();
+    platformBuilder.setTargetAchitecture(targetArchitecture);
 
     ImmutableList.Builder<Path> toolSearchPathsBuilder = ImmutableList.builder();
     // Search for tools from most specific to least specific.

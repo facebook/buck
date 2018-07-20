@@ -58,7 +58,6 @@ import com.facebook.buck.cxx.HasAppleDebugSymbolDeps;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.LinkerMapMode;
 import com.facebook.buck.cxx.toolchain.StripStyle;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
@@ -634,24 +633,12 @@ public class AppleDescriptions {
         }
       }
     }
-    // TODO(17155714): framework embedding is currently oddly entwined with framework generation.
-    // This change simply treats all the immediate prebuilt framework dependencies as wishing to be
-    // embedded, but in the future this should be dealt with with some greater sophistication.
-    for (BuildTarget dep : deps) {
-      Optional<TargetNode<PrebuiltAppleFrameworkDescriptionArg>> prebuiltNode =
-          targetGraph
-              .getOptional(dep)
-              .flatMap(
-                  node -> TargetNodes.castArg(node, PrebuiltAppleFrameworkDescriptionArg.class));
-      if (prebuiltNode.isPresent()
-          && !prebuiltNode
-              .get()
-              .getConstructorArg()
-              .getPreferredLinkage()
-              .equals(NativeLinkable.Linkage.STATIC)) {
-        frameworksBuilder.add(graphBuilder.requireRule(dep).getSourcePathToOutput());
-      }
-    }
+    frameworksBuilder.addAll(
+        getAppleNativeTargetBundleIncludableDependencies(
+            buildTarget,
+            graphBuilder,
+            cxxPlatformsProvider,
+            ImmutableSortedSet.<BuildTarget>naturalOrder().addAll(deps).add(binaryTarget).build()));
     ImmutableSet<SourcePath> frameworks = frameworksBuilder.build();
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
@@ -816,6 +803,30 @@ public class AppleDescriptions {
         ibtoolModuleFlag,
         codesignTimeout,
         copySwiftStdlibToFrameworks);
+  }
+
+  static ImmutableSet<SourcePath> getAppleNativeTargetBundleIncludableDependencies(
+      BuildTarget buildTarget,
+      ActionGraphBuilder graphBuilder,
+      CxxPlatformsProvider platformsProvider,
+      ImmutableSortedSet<BuildTarget> deps) {
+    Set<Flavor> platformFlavors =
+        platformsProvider.getCxxPlatforms().containsAnyOf(buildTarget.getFlavors())
+            ? Sets.intersection(
+                platformsProvider.getCxxPlatforms().getFlavors(), buildTarget.getFlavors())
+            : ImmutableSet.of(platformsProvider.getDefaultCxxPlatform().getFlavor());
+    Preconditions.checkState(
+        platformFlavors.size() > 0,
+        "Need to a cxx platform flavor to collect framework dependencies for %s",
+        buildTarget);
+    ImmutableSet.Builder<SourcePath> frameworksBuilder = ImmutableSet.builder();
+    for (BuildTarget dep : deps) {
+      graphBuilder
+          .requireMetadata(dep.withFlavors(platformFlavors), AppleBundleIncludableDependenies.class)
+          .map(AbstractAppleBundleIncludableDependenies::getFrameworkPaths)
+          .map(frameworksBuilder::addAll);
+    }
+    return frameworksBuilder.build();
   }
 
   /**
