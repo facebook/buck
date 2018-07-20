@@ -33,7 +33,6 @@ import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.jvm.java.JavaFileParser;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
-import java.util.Optional;
 
 /** Top-level class for IntelliJ project generation. */
 public class IjProject {
@@ -108,10 +107,7 @@ public class IjProject {
                 sourcePathResolver,
                 graphBuilder,
                 ruleFinder,
-                requiredBuildTargets),
-            Optional.of(
-                new ParsingJavaPackageFinder.PackagePathResolver(
-                    javaFileParser, projectFilesystem)));
+                requiredBuildTargets));
     IjModuleFactoryResolver moduleFactoryResolver =
         new DefaultIjModuleFactoryResolver(
             graphBuilder, sourcePathResolver, ruleFinder, projectFilesystem, requiredBuildTargets);

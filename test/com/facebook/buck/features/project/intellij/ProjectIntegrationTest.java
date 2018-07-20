@@ -304,38 +304,6 @@ public class ProjectIntegrationTest {
         "//project1/lib:lib");
   }
 
-  // This test is identical to testProjectWithProjectRoot, except
-  // one of the dependencies follows the proper source root structure.
-  // This should cause the corresponding file under .idea/libraries/
-  // to create SOURCES entries for IntelliJ.
-  @Test
-  public void testProjectWithSourceRoot() throws InterruptedException, IOException {
-    runBuckProjectAndVerify(
-        "project_with_source_root",
-        "--intellij-project-root",
-        "project1",
-        "--intellij-include-transitive-dependencies",
-        "--intellij-module-group-name",
-        "",
-        "//project1/lib:lib");
-  }
-
-  // This test is identical to testProjectWithSourceRoot, except
-  // .buckconfig is missing the 'enable_raw_sources_for_libraries' option.
-  // Not including this option should cause source roots to not be included
-  // in the library XML files.
-  @Test
-  public void testProjectWithSourceRootExcluded() throws InterruptedException, IOException {
-    runBuckProjectAndVerify(
-        "project_with_source_root_excluded",
-        "--intellij-project-root",
-        "project1",
-        "--intellij-include-transitive-dependencies",
-        "--intellij-module-group-name",
-        "",
-        "//project1/lib:lib");
-  }
-
   @Test
   public void testProjectWithBinaryInputs() throws InterruptedException, IOException {
     runBuckProjectAndVerify("project_with_binary_inputs");

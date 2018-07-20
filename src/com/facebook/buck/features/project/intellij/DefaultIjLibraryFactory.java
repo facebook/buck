@@ -24,7 +24,6 @@ import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.features.project.intellij.lang.java.ParsingJavaPackageFinder;
 import com.facebook.buck.features.project.intellij.model.IjLibrary;
 import com.facebook.buck.features.project.intellij.model.IjLibraryFactory;
 import com.facebook.buck.features.project.intellij.model.IjLibraryFactoryResolver;
@@ -40,7 +39,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Stream;
 
 /**
  * Filters out all of the targets which can be represented as IntelliJ prebuilts from the set of
@@ -75,22 +73,14 @@ class DefaultIjLibraryFactory extends IjLibraryFactory {
   private Set<String> uniqueLibraryNamesSet = new HashSet<>();
   private IjLibraryFactoryResolver libraryFactoryResolver;
   private Map<TargetNode<?, ?>, Optional<IjLibrary>> libraryCache;
-  private final Optional<ParsingJavaPackageFinder.PackagePathResolver> packagePathResolver;
 
-  public DefaultIjLibraryFactory(
-      IjLibraryFactoryResolver libraryFactoryResolver,
-      Optional<ParsingJavaPackageFinder.PackagePathResolver> packagePathResolver) {
+  public DefaultIjLibraryFactory(IjLibraryFactoryResolver libraryFactoryResolver) {
     this.libraryFactoryResolver = libraryFactoryResolver;
-    this.packagePathResolver = packagePathResolver;
 
     addToIndex(new AndroidPrebuiltAarLibraryRule());
     addToIndex(new PrebuiltJarLibraryRule());
 
     libraryCache = new HashMap<>();
-  }
-
-  public DefaultIjLibraryFactory(IjLibraryFactoryResolver libraryFactoryResolver) {
-    this(libraryFactoryResolver, Optional.empty());
   }
 
   private void addToIndex(TypedIjLibraryRule<?> rule) {
@@ -111,30 +101,11 @@ class DefaultIjLibraryFactory extends IjLibraryFactory {
   private Optional<IjLibraryRule> getRule(TargetNode<?, ?> targetNode) {
     IjLibraryRule rule = libraryRuleIndex.get(targetNode.getDescription().getClass());
     if (rule == null) {
-      ImmutableSet<Path> sourceDirs =
-          packagePathResolver
-              .map(
-                  packageResolver ->
-                      targetNode
-                          .getInputs()
-                          .stream()
-                          .flatMap(
-                              path -> {
-                                Optional<Path> sourceRoot =
-                                    packageResolver.getSourceRootFromSource(path);
-                                if (sourceRoot.isPresent()) {
-                                  return Stream.of(sourceRoot.get());
-                                }
-                                return Stream.empty();
-                              })
-                          .collect(ImmutableSet.toImmutableSet()))
-              .orElse(ImmutableSet.of());
-
       rule =
           libraryFactoryResolver
               .getPathIfJavaLibrary(targetNode)
               .map(libraryFactoryResolver::getPath)
-              .map(path -> new JavaLibraryRule(path, sourceDirs))
+              .map(JavaLibraryRule::new)
               .orElse(null);
     }
     return Optional.ofNullable(rule);
@@ -159,19 +130,14 @@ class DefaultIjLibraryFactory extends IjLibraryFactory {
 
   private static class JavaLibraryRule implements IjLibraryRule {
     private final Path binaryJarPath;
-    private final ImmutableSet<Path> sourceDirs;
 
-    public JavaLibraryRule(Path binaryJarPath, ImmutableSet<Path> sourceDirs) {
+    public JavaLibraryRule(Path binaryJarPath) {
       this.binaryJarPath = binaryJarPath;
-      this.sourceDirs = sourceDirs;
     }
 
     @Override
     public void applyRule(TargetNode<?, ?> targetNode, IjLibrary.Builder library) {
       library.addBinaryJars(binaryJarPath);
-      for (Path sourceDir : sourceDirs) {
-        library.addSourceDirs(sourceDir);
-      }
     }
   }
 

@@ -1,9 +1,0 @@
-<component name="libraryTable">
-  <library name="//project2/lib:lib">
-    <CLASSES>
-      <root url="jar://$PROJECT_DIR$/../buck-out/gen/project2/lib/lib__lib__output/lib.jar!/" />
-    </CLASSES>
-    <JAVADOC />
-    <SOURCES />
-  </library>
-</component>

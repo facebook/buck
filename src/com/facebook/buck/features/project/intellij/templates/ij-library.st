@@ -18,12 +18,10 @@
 %else%
     <JAVADOC />
 %endif%
-%if(sourceJars || sourceDirs)%
+%if(sourceJars)%
     <SOURCES>
 %sourceJars:{sourceJar |
       <root url="jar://$PROJECT_DIR$/%sourceJar%!/" />
-}%%sourceDirs:{sourceDir |
-      <root url="file://$PROJECT_DIR$/%sourceDir%" />
 }%    </SOURCES>
 %else%
     <SOURCES />

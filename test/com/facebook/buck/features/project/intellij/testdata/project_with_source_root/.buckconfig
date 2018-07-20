@@ -1,5 +1,0 @@
-[project]
-  ide = intellij
-
-[intellij]
-  enable_raw_sources_for_libraries = true
