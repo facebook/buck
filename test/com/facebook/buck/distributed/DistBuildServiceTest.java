@@ -156,6 +156,8 @@ public class DistBuildServiceTest {
     stampedeId.setId("check-id");
     distBuildService.uploadTargetGraph(buildJobState, stampedeId, distBuildClientStatsTracker);
 
+    EasyMock.verify(frontendService);
+
     Assert.assertTrue(request.getValue().isSetType());
     Assert.assertEquals(request.getValue().getType(), FrontendRequestType.STORE_BUILD_GRAPH);
     Assert.assertTrue(request.getValue().isSetStoreBuildGraphRequest());
@@ -225,6 +227,8 @@ public class DistBuildServiceTest {
         .uploadMissingFilesAsync(filesystems, fileHashes, distBuildClientStatsTracker, executor)
         .get();
 
+    EasyMock.verify(frontendService);
+
     Assert.assertEquals(containsRequest.getValue().getType(), FrontendRequestType.CAS_CONTAINS);
     Assert.assertTrue(containsRequest.getValue().isSetCasContainsRequest());
     Assert.assertTrue(containsRequest.getValue().getCasContainsRequest().isSetContentSha1s());
@@ -276,6 +280,8 @@ public class DistBuildServiceTest {
             BUILD_TARGETS,
             BUILD_LABEL);
 
+    EasyMock.verify(frontendService);
+
     Assert.assertEquals(request.getValue().getType(), FrontendRequestType.CREATE_BUILD);
     Assert.assertTrue(request.getValue().isSetCreateBuildRequest());
     Assert.assertTrue(request.getValue().getCreateBuildRequest().isSetCreateTimestampMillis());
@@ -310,6 +316,8 @@ public class DistBuildServiceTest {
     id.setId(idString);
     BuildJob job = distBuildService.startBuild(id);
 
+    EasyMock.verify(frontendService);
+
     Assert.assertEquals(request.getValue().getType(), FrontendRequestType.START_BUILD);
     Assert.assertTrue(request.getValue().isSetStartBuildRequest());
     Assert.assertTrue(request.getValue().getStartBuildRequest().isSetStampedeId());
@@ -342,6 +350,8 @@ public class DistBuildServiceTest {
     StampedeId id = new StampedeId();
     id.setId(idString);
     BuildJob job = distBuildService.getCurrentBuildJobState(id);
+
+    EasyMock.verify(frontendService);
 
     Assert.assertEquals(request.getValue().getType(), FrontendRequestType.BUILD_STATUS);
     Assert.assertTrue(request.getValue().isSetBuildStatusRequest());
@@ -379,6 +389,9 @@ public class DistBuildServiceTest {
 
     ImmutableMap<String, byte[]> result =
         distBuildService.multiFetchSourceFiles(ImmutableSet.copyOf(hashCodes));
+
+    EasyMock.verify(frontendService);
+
     Assert.assertEquals(hashCodes.size(), result.keySet().size());
     for (int i = 0; i < hashCodes.size(); ++i) {
       String hashCode = hashCodes.get(i);
@@ -387,8 +400,6 @@ public class DistBuildServiceTest {
       Assert.assertTrue(result.containsKey(hashCode));
       Assert.assertArrayEquals(content.getBytes(StandardCharsets.UTF_8), result.get(hashCode));
     }
-
-    EasyMock.verify(frontendService);
   }
 
   @Test
@@ -461,6 +472,8 @@ public class DistBuildServiceTest {
         distBuildService.createBuildSlaveEventsQuery(stampedeId, buildSlaveRunId, 2);
     List<BuildSlaveEventWrapper> events =
         distBuildService.multiGetBuildSlaveEvents(ImmutableList.of(query));
+
+    EasyMock.verify(frontendService);
 
     // Verify correct events are received.
     Assert.assertEquals(events.size(), 3);
@@ -555,6 +568,8 @@ public class DistBuildServiceTest {
     distBuildService.updateBuildSlaveStatus(stampedeId, buildSlaveRunId, slaveStatus);
     BuildSlaveStatus receivedStatus =
         distBuildService.fetchBuildSlaveStatus(stampedeId, buildSlaveRunId).get();
+
+    EasyMock.verify(frontendService);
     Assert.assertEquals(receivedStatus, slaveStatus);
 
     // Verify validity of first request.
@@ -638,6 +653,8 @@ public class DistBuildServiceTest {
         distBuildService.fetchBuildSlaveFinishedStats(stampedeId, runId).get();
     Assert.assertEquals(receivedStats, slaveFinishedStats);
 
+    EasyMock.verify(frontendService);
+
     // Verify validity of first request.
     FrontendRequest receivedRequest = request1.getValue();
     Assert.assertTrue(receivedRequest.isSetType());
@@ -698,12 +715,12 @@ public class DistBuildServiceTest {
     int port = 4284;
     String address = "very nice address indeed";
     distBuildService.setCoordinator(stampedeId, port, address);
+    EasyMock.verify(frontendService);
     Assert.assertEquals(FrontendRequestType.SET_COORDINATOR, request.getValue().getType());
     SetCoordinatorRequest coordinatorRequest = request.getValue().getSetCoordinatorRequest();
     Assert.assertEquals(stampedeId, coordinatorRequest.getStampedeId());
     Assert.assertEquals(port, coordinatorRequest.getCoordinatorPort());
     Assert.assertEquals(address, coordinatorRequest.getCoordinatorHostname());
-    EasyMock.verify(frontendService);
   }
 
   @Test
@@ -725,13 +742,14 @@ public class DistBuildServiceTest {
     String minionQueueName = "a_happy_place_indeed";
     distBuildService.enqueueMinions(
         stampedeId, buildLabel, minionCount, minionQueueName, MinionType.STANDARD_SPEC);
+
+    EasyMock.verify(frontendService);
     Assert.assertEquals(FrontendRequestType.ENQUEUE_MINIONS, request.getValue().getType());
     EnqueueMinionsRequest minionsRequest = request.getValue().getEnqueueMinionsRequest();
     Assert.assertEquals(stampedeId, minionsRequest.getStampedeId());
     Assert.assertEquals(buildLabel, minionsRequest.getBuildLabel());
     Assert.assertEquals(minionCount, minionsRequest.getNumberOfMinions());
     Assert.assertEquals(minionQueueName, minionsRequest.getMinionQueue());
-    EasyMock.verify(frontendService);
   }
 
   @Test
@@ -751,12 +769,13 @@ public class DistBuildServiceTest {
     BuildStatus finalStatus = BuildStatus.FINISHED_SUCCESSFULLY;
     String finalStatusMessage = "Super cool message!!!!";
     distBuildService.setFinalBuildStatus(stampedeId, finalStatus, finalStatusMessage);
+
+    EasyMock.verify(frontendService);
     Assert.assertEquals(FrontendRequestType.SET_FINAL_BUILD_STATUS, request.getValue().getType());
     SetFinalBuildStatusRequest setStatusRequest =
         request.getValue().getSetFinalBuildStatusRequest();
     Assert.assertEquals(stampedeId, setStatusRequest.getStampedeId());
     Assert.assertEquals(finalStatus, setStatusRequest.getBuildStatus());
     Assert.assertEquals(finalStatusMessage, setStatusRequest.getBuildStatusMessage());
-    EasyMock.verify(frontendService);
   }
 }
