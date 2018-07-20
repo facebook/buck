@@ -49,7 +49,8 @@ import java.util.regex.Pattern;
 public class DistBuildUtil {
 
   private static final Logger LOG = Logger.get(ConsoleEvent.class);
-  private static final DateFormat DATE_FORMAT = new SimpleDateFormat("[yyyy-MM-dd HH:mm:ss.SSS]");
+  private static final ThreadLocal<DateFormat> DATE_FORMAT =
+      ThreadLocal.withInitial(() -> new SimpleDateFormat("[yyyy-MM-dd HH:mm:ss.SSS]"));
 
   // Converts '//project/subdir:target' or '//project:target' into '//project'
   private static final String TARGET_TO_PROJECT_REGREX = "(//.*?)[/|:].*";
@@ -151,7 +152,7 @@ public class DistBuildUtil {
     Preconditions.checkState(consoleEvent.isSetMessage());
     Preconditions.checkState(consoleEvent.isSetSeverity());
 
-    String timestampPrefix = DATE_FORMAT.format(new Date(event.getTimestampMillis())) + " ";
+    String timestampPrefix = DATE_FORMAT.get().format(new Date(event.getTimestampMillis())) + " ";
     switch (consoleEvent.getSeverity()) {
       case INFO:
         return ConsoleEvent.create(Level.INFO, timestampPrefix + consoleEvent.getMessage());
