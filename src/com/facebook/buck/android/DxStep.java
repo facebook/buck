@@ -42,7 +42,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.PrintStream;
-import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -185,6 +184,9 @@ public class DxStep extends ShellStep {
         "In-process dexing is only supported with custom DX");
 
     Preconditions.checkArgument(
+        !dexTool.equals(D8) || options.contains(Option.RUN_IN_PROCESS),
+        "D8 is only supported with In-process dexing");
+    Preconditions.checkArgument(
         !intermediate || dexTool.equals(D8), "Intermediate dexing is only supported with D8");
   }
 
@@ -192,6 +194,7 @@ public class DxStep extends ShellStep {
   protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
     CharsCountingStringList commandArgs = new CharsCountingStringList(10 + filesToDex.size());
 
+    // TODO: Support D8 for out of process dexing by respecting dexTool here
     String dx = androidPlatformTarget.getDxExecutable().toString();
 
     if (options.contains(Option.USE_CUSTOM_DX_IF_AVAILABLE)) {
@@ -238,6 +241,7 @@ public class DxStep extends ShellStep {
     final int splitPoint = commandArgs.size();
 
     for (Path fileToDex : filesToDex) {
+      // TODO: Does this need to also resolve directory entries as below when using D8?
       commandArgs.add(filesystem.resolve(fileToDex).toString());
     }
 
@@ -284,10 +288,7 @@ public class DxStep extends ShellStep {
           if (Files.isRegularFile(toDex)) {
             inputs.add(toDex);
           } else {
-            try (DirectoryStream<Path> directories =
-                Files.newDirectoryStream(toDex, path -> path.toFile().isFile())) {
-              directories.forEach(inputs::add);
-            }
+            Files.walk(toDex).filter(path -> path.toFile().isFile()).forEach(inputs::add);
           }
         }
 

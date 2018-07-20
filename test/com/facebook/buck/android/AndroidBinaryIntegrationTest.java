@@ -22,6 +22,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertThat;
@@ -485,6 +486,14 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
   @Test
   public void testSimpleD8App() throws IOException {
     workspace.runBuckBuild("//apps/sample:app_with_d8").assertSuccess();
+  }
+
+  @Test
+  public void testD8AppWithMultidexContainsCanaryClasses() throws IOException {
+    workspace.runBuckBuild("//apps/multidex:app_with_d8").assertSuccess();
+    final Path path = workspace.buildAndReturnOutput("//apps/multidex:disassemble_app_with_d8");
+    final List<String> smali = filesystem.readLines(path);
+    assertFalse(smali.isEmpty());
   }
 
   @Test
