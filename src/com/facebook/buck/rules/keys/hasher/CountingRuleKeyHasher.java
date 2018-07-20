@@ -18,7 +18,7 @@ package com.facebook.buck.rules.keys.hasher;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.RuleKey;
-import com.facebook.buck.core.rules.type.BuildRuleType;
+import com.facebook.buck.core.rules.type.RuleType;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.rules.keys.SourceRoot;
@@ -140,9 +140,9 @@ public class CountingRuleKeyHasher<HASH> implements RuleKeyHasher<HASH> {
   }
 
   @Override
-  public CountingRuleKeyHasher<HASH> putBuildRuleType(BuildRuleType buildRuleType) {
+  public CountingRuleKeyHasher<HASH> putRuleType(RuleType ruleType) {
     count++;
-    delegate.putBuildRuleType(buildRuleType);
+    delegate.putRuleType(ruleType);
     return this;
   }
 

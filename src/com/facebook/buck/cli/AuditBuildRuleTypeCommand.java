@@ -19,7 +19,7 @@ package com.facebook.buck.cli;
 import com.facebook.buck.core.description.DescriptionCache;
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypes;
-import com.facebook.buck.core.rules.type.BuildRuleType;
+import com.facebook.buck.core.rules.type.RuleType;
 import com.facebook.buck.rules.coercer.CoercedTypeCache;
 import com.facebook.buck.rules.coercer.ParamInfo;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
@@ -41,7 +41,7 @@ public class AuditBuildRuleTypeCommand extends AbstractCommand {
       throws IOException, InterruptedException {
     KnownBuildRuleTypes knownBuildRuleTypes =
         params.getKnownBuildRuleTypesProvider().get(params.getCell());
-    BuildRuleType buildRuleType = knownBuildRuleTypes.getBuildRuleType(ruleName);
+    RuleType buildRuleType = knownBuildRuleTypes.getBuildRuleType(ruleName);
     DescriptionWithTargetGraph<?> description = knownBuildRuleTypes.getDescription(buildRuleType);
     printPythonFunction(params.getConsole(), description, params.getTypeCoercerFactory());
     return ExitCode.SUCCESS;

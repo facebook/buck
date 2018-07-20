@@ -30,7 +30,7 @@ import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.SingleThreadedActionGraphBuilder;
 import com.facebook.buck.core.rules.transformer.impl.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.core.rules.type.BuildRuleType;
+import com.facebook.buck.core.rules.type.RuleType;
 import com.facebook.buck.core.sourcepath.ArchiveMemberSourcePath;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
@@ -132,8 +132,8 @@ public class RuleKeyBuilderTest {
           new SourceRoot("42"),
           RULE_KEY_1,
           RULE_KEY_2,
-          BuildRuleType.of(""),
-          BuildRuleType.of("42"),
+          RuleType.of(""),
+          RuleType.of("42"),
           TARGET_1,
           TARGET_2,
 

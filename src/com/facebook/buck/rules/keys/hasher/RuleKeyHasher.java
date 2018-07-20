@@ -18,7 +18,7 @@ package com.facebook.buck.rules.keys.hasher;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.RuleKey;
-import com.facebook.buck.core.rules.type.BuildRuleType;
+import com.facebook.buck.core.rules.type.RuleType;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.rules.keys.SourceRoot;
@@ -103,7 +103,7 @@ public interface RuleKeyHasher<HASH> {
 
   RuleKeyHasher<HASH> putRuleKey(RuleKey ruleKey);
 
-  RuleKeyHasher<HASH> putBuildRuleType(BuildRuleType buildRuleType);
+  RuleKeyHasher<HASH> putRuleType(RuleType ruleType);
 
   RuleKeyHasher<HASH> putBuildTarget(BuildTarget buildTarget);
 

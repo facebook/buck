@@ -27,7 +27,7 @@ import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rulekey.RuleKeyObjectSink;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.rules.type.BuildRuleType;
+import com.facebook.buck.core.rules.type.RuleType;
 import com.facebook.buck.core.sourcepath.ArchiveMemberSourcePath;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
@@ -271,8 +271,8 @@ public abstract class RuleKeyBuilder<RULE_KEY> extends AbstractRuleKeyBuilder<RU
       hasher.putString((String) val);
     } else if (val instanceof Pattern) {
       hasher.putPattern((Pattern) val);
-    } else if (val instanceof BuildRuleType) { // Buck types
-      hasher.putBuildRuleType((BuildRuleType) val);
+    } else if (val instanceof RuleType) { // Buck types
+      hasher.putRuleType((RuleType) val);
     } else if (val instanceof RuleKey) {
       hasher.putRuleKey((RuleKey) val);
     } else if (val instanceof BuildTarget) {

@@ -22,7 +22,7 @@ import org.immutables.value.Value;
 
 @Value.Immutable(intern = true)
 @BuckStyleImmutable
-abstract class AbstractBuildRuleType {
+abstract class AbstractRuleType {
 
   /** @return the name as displayed in a build file, such as "java_library" */
   @Value.Parameter

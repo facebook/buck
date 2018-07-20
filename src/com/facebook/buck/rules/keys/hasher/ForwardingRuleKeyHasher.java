@@ -18,7 +18,7 @@ package com.facebook.buck.rules.keys.hasher;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.RuleKey;
-import com.facebook.buck.core.rules.type.BuildRuleType;
+import com.facebook.buck.core.rules.type.RuleType;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.rules.keys.SourceRoot;
@@ -143,9 +143,9 @@ public abstract class ForwardingRuleKeyHasher<HASH, HASH2> implements RuleKeyHas
   }
 
   @Override
-  public ForwardingRuleKeyHasher<HASH, HASH2> putBuildRuleType(BuildRuleType buildRuleType) {
-    secondHasher.putBuildRuleType(buildRuleType);
-    delegate.putBuildRuleType(buildRuleType);
+  public ForwardingRuleKeyHasher<HASH, HASH2> putRuleType(RuleType ruleType) {
+    secondHasher.putRuleType(ruleType);
+    delegate.putRuleType(ruleType);
     return this;
   }
 

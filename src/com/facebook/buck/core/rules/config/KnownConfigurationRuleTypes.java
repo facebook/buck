@@ -16,11 +16,11 @@
 
 package com.facebook.buck.core.rules.config;
 
-import com.facebook.buck.core.rules.type.BuildRuleType;
+import com.facebook.buck.core.rules.type.RuleType;
 
 /** Registry of all known kinds of {@link ConfigurationRuleDescription}. */
 public interface KnownConfigurationRuleTypes {
 
   /** @return {@link ConfigurationRuleDescription} associated with the given type. */
-  ConfigurationRuleDescription<?> getRuleDescription(BuildRuleType buildRuleType);
+  ConfigurationRuleDescription<?> getRuleDescription(RuleType configurationRuleType);
 }

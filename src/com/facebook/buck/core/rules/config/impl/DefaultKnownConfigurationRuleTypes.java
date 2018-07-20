@@ -18,21 +18,21 @@ package com.facebook.buck.core.rules.config.impl;
 
 import com.facebook.buck.core.rules.config.ConfigurationRuleDescription;
 import com.facebook.buck.core.rules.config.KnownConfigurationRuleTypes;
-import com.facebook.buck.core.rules.type.BuildRuleType;
+import com.facebook.buck.core.rules.type.RuleType;
 import com.google.common.collect.ImmutableMap;
 
 public class DefaultKnownConfigurationRuleTypes implements KnownConfigurationRuleTypes {
 
-  private final ImmutableMap<BuildRuleType, ConfigurationRuleDescription<?>>
+  private final ImmutableMap<RuleType, ConfigurationRuleDescription<?>>
       configurationRuleDescriptions;
 
   public DefaultKnownConfigurationRuleTypes(
-      ImmutableMap<BuildRuleType, ConfigurationRuleDescription<?>> configurationRuleDescriptions) {
+      ImmutableMap<RuleType, ConfigurationRuleDescription<?>> configurationRuleDescriptions) {
     this.configurationRuleDescriptions = configurationRuleDescriptions;
   }
 
   @Override
-  public ConfigurationRuleDescription<?> getRuleDescription(BuildRuleType buildRuleType) {
-    return configurationRuleDescriptions.get(buildRuleType);
+  public ConfigurationRuleDescription<?> getRuleDescription(RuleType configurationRuleType) {
+    return configurationRuleDescriptions.get(configurationRuleType);
   }
 }

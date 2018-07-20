@@ -22,7 +22,7 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.HasBuildTarget;
-import com.facebook.buck.core.rules.type.BuildRuleType;
+import com.facebook.buck.core.rules.type.RuleType;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.visibility.ObeysVisibility;
@@ -160,7 +160,7 @@ abstract class AbstractTargetNode<T, U extends DescriptionWithTargetGraph<T>>
     }
   }
 
-  public BuildRuleType getBuildRuleType() {
+  public RuleType getBuildRuleType() {
     return DescriptionCache.getBuildRuleType(getDescription());
   }
 

@@ -17,7 +17,7 @@
 package com.facebook.buck.core.model.targetgraph;
 
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.rules.type.BuildRuleType;
+import com.facebook.buck.core.rules.type.RuleType;
 import com.facebook.buck.rules.visibility.VisibilityPattern;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
@@ -37,8 +37,8 @@ public interface RawTargetNode {
   /** Build target of this node. */
   BuildTarget getBuildTarget();
 
-  /** The type of a build rule. */
-  BuildRuleType getBuildRuleType();
+  /** The type of a rule. */
+  RuleType getRuleType();
 
   /**
    * Attributes of this node coerced to the types declared in constructor arguments.

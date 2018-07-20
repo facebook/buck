@@ -22,7 +22,7 @@ import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.UserFlavor;
 import com.facebook.buck.core.rules.schedule.RuleScheduleInfo;
-import com.facebook.buck.core.rules.type.BuildRuleType;
+import com.facebook.buck.core.rules.type.RuleType;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.tool.Tool;
@@ -419,7 +419,7 @@ public class CxxBuckConfig {
         .orElse(ArchiveContents.NORMAL);
   }
 
-  public ImmutableMap<String, Flavor> getDefaultFlavorsForRuleType(BuildRuleType type) {
+  public ImmutableMap<String, Flavor> getDefaultFlavorsForRuleType(RuleType type) {
     return ImmutableMap.copyOf(
         Maps.transformValues(
             delegate.getEntriesForSection("defaults." + type.getName()), InternalFlavor::of));

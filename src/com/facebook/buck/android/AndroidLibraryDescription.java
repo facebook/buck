@@ -27,7 +27,7 @@ import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTarg
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
-import com.facebook.buck.core.rules.type.BuildRuleType;
+import com.facebook.buck.core.rules.type.RuleType;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -52,7 +52,7 @@ public class AndroidLibraryDescription
         Flavored,
         ImplicitDepsInferringDescription<
             AndroidLibraryDescription.AbstractAndroidLibraryDescriptionArg> {
-  public static final BuildRuleType TYPE = BuildRuleType.of("android_library");
+  public static final RuleType TYPE = RuleType.of("android_library");
 
   private static final Flavor DUMMY_R_DOT_JAVA_FLAVOR =
       AndroidLibraryGraphEnhancer.DUMMY_R_DOT_JAVA_FLAVOR;

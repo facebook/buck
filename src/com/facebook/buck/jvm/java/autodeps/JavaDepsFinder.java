@@ -25,7 +25,7 @@ import com.facebook.buck.core.description.DescriptionCache;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
-import com.facebook.buck.core.rules.type.BuildRuleType;
+import com.facebook.buck.core.rules.type.RuleType;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaFileParser;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
@@ -75,7 +75,7 @@ public class JavaDepsFinder {
     return new JavaDepsFinder(javaFileParser, buildContext, executionContext, buildEngine);
   }
 
-  private static final Set<BuildRuleType> RULES_TO_VISIT =
+  private static final Set<RuleType> RULES_TO_VISIT =
       ImmutableSet.of(
           DescriptionCache.getBuildRuleType(AndroidLibraryDescription.class),
           DescriptionCache.getBuildRuleType(JavaLibraryDescription.class),

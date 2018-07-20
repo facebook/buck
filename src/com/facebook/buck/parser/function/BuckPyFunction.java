@@ -17,7 +17,7 @@
 package com.facebook.buck.parser.function;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.core.rules.type.BuildRuleType;
+import com.facebook.buck.core.rules.type.RuleType;
 import com.facebook.buck.rules.coercer.CoercedTypeCache;
 import com.facebook.buck.rules.coercer.ParamInfo;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
@@ -70,7 +70,7 @@ public class BuckPyFunction {
     this.coercedTypeCache = coercedTypeCache;
   }
 
-  public String toPythonFunction(BuildRuleType type, Class<?> dtoClass) {
+  public String toPythonFunction(RuleType type, Class<?> dtoClass) {
     ImmutableList.Builder<StParamInfo> mandatory = ImmutableList.builder();
     ImmutableList.Builder<StParamInfo> optional = ImmutableList.builder();
     for (ParamInfo param :

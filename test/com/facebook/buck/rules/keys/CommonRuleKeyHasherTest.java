@@ -23,7 +23,7 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.RuleKey;
-import com.facebook.buck.core.rules.type.BuildRuleType;
+import com.facebook.buck.core.rules.type.RuleType;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.ForwardingBuildTargetSourcePath;
@@ -143,13 +143,11 @@ public final class CommonRuleKeyHasherTest {
                     h -> h.putSourceRoot(new SourceRoot("4")).putSourceRoot(new SourceRoot("2"))),
                 pair.apply(String.format("RuleKey<%s>", RULE_KEY_1), h -> h.putRuleKey(RULE_KEY_1)),
                 pair.apply(String.format("RuleKey<%s>", RULE_KEY_2), h -> h.putRuleKey(RULE_KEY_2)),
-                pair.apply("BuildRuleType<>", h -> h.putBuildRuleType(BuildRuleType.of(""))),
-                pair.apply("BuildRuleType<42>", h -> h.putBuildRuleType(BuildRuleType.of("42"))),
+                pair.apply("RuleType<>", h -> h.putRuleType(RuleType.of(""))),
+                pair.apply("RuleType<42>", h -> h.putRuleType(RuleType.of("42"))),
                 pair.apply(
-                    "BuildRuleType<4>, BuildRuleType<2>",
-                    h ->
-                        h.putBuildRuleType(BuildRuleType.of("4"))
-                            .putBuildRuleType(BuildRuleType.of("2"))),
+                    "RuleType<4>, RuleType<2>",
+                    h -> h.putRuleType(RuleType.of("4")).putRuleType(RuleType.of("2"))),
                 pair.apply(TARGET_1.toString(), h -> h.putBuildTarget(TARGET_1)),
                 pair.apply(TARGET_2.toString(), h -> h.putBuildTarget(TARGET_2)),
                 pair.apply(
@@ -344,8 +342,8 @@ public final class CommonRuleKeyHasherTest {
     @Test
     public void testConsistencyForBuildRuleType() {
       assertEquals(
-          newHasher().putBuildRuleType(BuildRuleType.of("42")).hash(),
-          newHasher().putBuildRuleType(BuildRuleType.of("42")).hash());
+          newHasher().putRuleType(RuleType.of("42")).hash(),
+          newHasher().putRuleType(RuleType.of("42")).hash());
     }
 
     @Test

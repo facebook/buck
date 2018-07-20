@@ -28,7 +28,7 @@ import com.facebook.buck.core.model.targetgraph.impl.ImmutableRawTargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
 import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypesProvider;
 import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypesTestUtil;
-import com.facebook.buck.core.rules.type.BuildRuleType;
+import com.facebook.buck.core.rules.type.RuleType;
 import com.facebook.buck.core.select.TestSelectableResolver;
 import com.facebook.buck.core.select.impl.DefaultSelectorListResolver;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
@@ -66,7 +66,7 @@ public class RawTargetNodeToTargetNodeFactoryTest {
     RawTargetNode node =
         ImmutableRawTargetNode.of(
             buildTarget,
-            BuildRuleType.of("java_library"),
+            RuleType.of("java_library"),
             attributes,
             ImmutableSet.of(),
             ImmutableSet.of());

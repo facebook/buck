@@ -70,7 +70,7 @@ public class RawTargetNodeToTargetNodeFactory implements ParserTargetNodeFactory
       Function<PerfEventId, Scope> perfEventScope) {
 
     DescriptionWithTargetGraph<?> description =
-        knownBuildRuleTypesProvider.get(cell).getDescription(rawTargetNode.getBuildRuleType());
+        knownBuildRuleTypesProvider.get(cell).getDescription(rawTargetNode.getRuleType());
     Cell targetCell = cell.getCell(target);
     ImmutableSet.Builder<BuildTarget> declaredDeps = ImmutableSet.builder();
 

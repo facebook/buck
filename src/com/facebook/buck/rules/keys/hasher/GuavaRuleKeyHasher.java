@@ -18,7 +18,7 @@ package com.facebook.buck.rules.keys.hasher;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.RuleKey;
-import com.facebook.buck.core.rules.type.BuildRuleType;
+import com.facebook.buck.core.rules.type.RuleType;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.ForwardingBuildTargetSourcePath;
@@ -156,8 +156,8 @@ public class GuavaRuleKeyHasher implements RuleKeyHasher<HashCode> {
   }
 
   @Override
-  public GuavaRuleKeyHasher putBuildRuleType(BuildRuleType buildRuleType) {
-    return this.putStringified(RuleKeyHasherTypes.RULE_TYPE, buildRuleType.toString());
+  public GuavaRuleKeyHasher putRuleType(RuleType ruleType) {
+    return this.putStringified(RuleKeyHasherTypes.RULE_TYPE, ruleType.toString());
   }
 
   @Override

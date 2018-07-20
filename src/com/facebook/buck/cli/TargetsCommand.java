@@ -35,7 +35,7 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypes;
-import com.facebook.buck.core.rules.type.BuildRuleType;
+import com.facebook.buck.core.rules.type.RuleType;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
@@ -635,7 +635,7 @@ public class TargetsCommand extends AbstractCommand {
       try {
         KnownBuildRuleTypes knownBuildRuleTypes =
             params.getKnownBuildRuleTypesProvider().get(params.getCell());
-        BuildRuleType type = knownBuildRuleTypes.getBuildRuleType(name);
+        RuleType type = knownBuildRuleTypes.getBuildRuleType(name);
         DescriptionWithTargetGraph<?> description = knownBuildRuleTypes.getDescription(type);
         descriptionClassesBuilder.add(
             (Class<? extends DescriptionWithTargetGraph<?>>) description.getClass());

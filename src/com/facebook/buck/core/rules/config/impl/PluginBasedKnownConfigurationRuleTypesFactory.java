@@ -19,8 +19,8 @@ package com.facebook.buck.core.rules.config.impl;
 import com.facebook.buck.core.rules.config.ConfigurationRuleDescription;
 import com.facebook.buck.core.rules.config.ConfigurationRuleDescriptionProvider;
 import com.facebook.buck.core.rules.config.KnownConfigurationRuleTypes;
-import com.facebook.buck.core.rules.type.BuildRuleType;
-import com.facebook.buck.core.rules.type.impl.BuildRuleTypeFactory;
+import com.facebook.buck.core.rules.type.RuleType;
+import com.facebook.buck.core.rules.type.impl.RuleTypeFactory;
 import com.google.common.collect.ImmutableMap;
 import java.util.Collection;
 import java.util.List;
@@ -38,14 +38,14 @@ public class PluginBasedKnownConfigurationRuleTypesFactory {
     List<ConfigurationRuleDescriptionProvider> descriptionProviders =
         pluginManager.getExtensions(ConfigurationRuleDescriptionProvider.class);
 
-    ImmutableMap<BuildRuleType, ConfigurationRuleDescription<?>> descriptions =
+    ImmutableMap<RuleType, ConfigurationRuleDescription<?>> descriptions =
         descriptionProviders
             .stream()
             .map(ConfigurationRuleDescriptionProvider::getDescriptions)
             .flatMap(Collection::stream)
             .collect(
                 ImmutableMap.toImmutableMap(
-                    description -> BuildRuleTypeFactory.fromClassName(description.getClass()),
+                    description -> RuleTypeFactory.fromClassName(description.getClass()),
                     description -> description));
     return new DefaultKnownConfigurationRuleTypes(descriptions);
   }

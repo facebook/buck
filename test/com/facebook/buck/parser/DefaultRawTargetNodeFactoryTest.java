@@ -25,7 +25,7 @@ import com.facebook.buck.core.model.targetgraph.RawAttributes;
 import com.facebook.buck.core.model.targetgraph.RawTargetNode;
 import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypesProvider;
 import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypesTestUtil;
-import com.facebook.buck.core.rules.type.BuildRuleType;
+import com.facebook.buck.core.rules.type.RuleType;
 import com.facebook.buck.core.select.Selector;
 import com.facebook.buck.core.select.SelectorKey;
 import com.facebook.buck.core.select.SelectorList;
@@ -89,7 +89,7 @@ public class DefaultRawTargetNodeFactoryTest {
                 .build(),
             (id) -> SimplePerfEvent.scope(Optional.empty(), null, null));
 
-    assertEquals(BuildRuleType.of("java_library"), rawTargetNode.getBuildRuleType());
+    assertEquals(RuleType.of("java_library"), rawTargetNode.getRuleType());
     assertEquals(buildTarget, rawTargetNode.getBuildTarget());
 
     RawAttributes attributes = rawTargetNode.getAttributes();

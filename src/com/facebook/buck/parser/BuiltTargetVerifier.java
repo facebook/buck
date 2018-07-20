@@ -23,7 +23,7 @@ import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.Flavored;
 import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
-import com.facebook.buck.core.rules.type.BuildRuleType;
+import com.facebook.buck.core.rules.type.RuleType;
 import com.facebook.buck.log.Logger;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableSet;
@@ -37,7 +37,7 @@ class BuiltTargetVerifier {
 
   void verifyBuildTarget(
       Cell cell,
-      BuildRuleType buildRuleType,
+      RuleType buildRuleType,
       Path buildFile,
       BuildTarget target,
       DescriptionWithTargetGraph<?> description,

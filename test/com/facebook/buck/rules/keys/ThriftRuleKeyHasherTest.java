@@ -20,7 +20,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.ImmutableBuildTarget;
 import com.facebook.buck.core.model.impl.ImmutableUnflavoredBuildTarget;
 import com.facebook.buck.core.rulekey.RuleKey;
-import com.facebook.buck.core.rules.type.BuildRuleType;
+import com.facebook.buck.core.rules.type.RuleType;
 import com.facebook.buck.core.sourcepath.AbstractDefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.ForwardingBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
@@ -166,7 +166,7 @@ public class ThriftRuleKeyHasherTest {
     hasher.putKey(".source_root_value");
     hasher.putRuleKey(new RuleKey(HashCode.fromString("d0c852385a66458b6e960c89fac580e5eb6d6aec")));
     hasher.putKey(".rule_key_value");
-    hasher.putBuildRuleType(BuildRuleType.of("sample_build_rule"));
+    hasher.putRuleType(RuleType.of("sample_build_rule"));
     hasher.putKey(".build_rule_type_value");
     hasher.putBuildTarget(
         ImmutableBuildTarget.of(

@@ -71,7 +71,7 @@ public class SameThreadConfigurationRuleResolver implements ConfigurationRuleRes
           Cell cell = cellProvider.apply(buildTarget);
           RawTargetNode rawTargetNode = rawTargetNodeSupplier.apply(cell, buildTarget);
           ConfigurationRuleDescription<?> configurationRuleDescription =
-              knownConfigurationRuleTypes.getRuleDescription(rawTargetNode.getBuildRuleType());
+              knownConfigurationRuleTypes.getRuleDescription(rawTargetNode.getRuleType());
           ConfigurationRule configurationRule =
               configurationRuleDescription.createConfigurationRule(this, cell, rawTargetNode);
           Preconditions.checkState(

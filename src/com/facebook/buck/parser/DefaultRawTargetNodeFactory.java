@@ -25,7 +25,7 @@ import com.facebook.buck.core.model.targetgraph.RawTargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.ImmutableRawTargetNode;
 import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypes;
 import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypesProvider;
-import com.facebook.buck.core.rules.type.BuildRuleType;
+import com.facebook.buck.core.rules.type.RuleType;
 import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
@@ -71,7 +71,7 @@ class DefaultRawTargetNodeFactory implements RawTargetNodeFactory<Map<String, Ob
       Map<String, Object> rawAttributes,
       Function<PerfEventId, SimplePerfEvent.Scope> perfEventScope) {
     KnownBuildRuleTypes knownBuildRuleTypes = knownBuildRuleTypesProvider.get(cell);
-    BuildRuleType buildRuleType = parseBuildRuleTypeFromRawRule(knownBuildRuleTypes, rawAttributes);
+    RuleType buildRuleType = parseBuildRuleTypeFromRawRule(knownBuildRuleTypes, rawAttributes);
 
     // Because of the way that the parser works, we know this can never return null.
     DescriptionWithTargetGraph<?> description = knownBuildRuleTypes.getDescription(buildRuleType);
@@ -110,7 +110,7 @@ class DefaultRawTargetNodeFactory implements RawTargetNodeFactory<Map<String, Ob
         withinViewPatterns);
   }
 
-  private static BuildRuleType parseBuildRuleTypeFromRawRule(
+  private static RuleType parseBuildRuleTypeFromRawRule(
       KnownBuildRuleTypes knownBuildRuleTypes, Map<String, Object> attributes) {
     String type =
         (String) Preconditions.checkNotNull(attributes.get(BuckPyFunction.TYPE_PROPERTY_NAME));

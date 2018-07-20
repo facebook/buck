@@ -16,16 +16,16 @@
 
 package com.facebook.buck.core.rules.type.impl;
 
-import com.facebook.buck.core.rules.type.BuildRuleType;
+import com.facebook.buck.core.rules.type.RuleType;
 import com.facebook.buck.util.string.MoreStrings;
 import com.google.common.base.CaseFormat;
 
-public class BuildRuleTypeFactory {
+public class RuleTypeFactory {
 
-  public static BuildRuleType fromClassName(Class<?> cls) {
+  public static RuleType fromClassName(Class<?> cls) {
     String result = cls.getSimpleName();
     result = MoreStrings.stripPrefix(result, "Abstract").orElse(result);
     result = MoreStrings.stripSuffix(result, "Description").orElse(result);
-    return BuildRuleType.of(CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, result));
+    return RuleType.of(CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, result));
   }
 }
