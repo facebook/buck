@@ -23,7 +23,7 @@ java_immutables_library(
         "//test/com/facebook/buck/cli:cli-apple-integration",
     ],
     visibility = [
-        "//src/com/facebook/buck/apple/project_generator:project_generator",
+        "//src/com/facebook/buck/apple/project_generator:",
         "//src/com/facebook/buck/event:dependencies-for-external-projects-inner",
         "//src/com/facebook/buck/features/go:",
         "//src/com/facebook/buck/features/project/intellij:",
@@ -233,7 +233,6 @@ java_binary(
         "//src/com/facebook/buck/android/redex:options",
         "//src/com/facebook/buck/android/toolchain/impl:impl",
         "//src/com/facebook/buck/android/toolchain/ndk/impl:impl",
-        "//src/com/facebook/buck/apple/project_generator:project_generator",
         "//src/com/facebook/buck/apple/xcode:xcode",
         "//src/com/facebook/buck/artifact_cache:artifact_cache",
         "//src/com/facebook/buck/config:config",

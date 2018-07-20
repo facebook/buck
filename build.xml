@@ -504,6 +504,7 @@
             These patterns are excluded because they are compiled elsewhere
             and are deliberately isolated from Buck's core.
           -->
+          <exclude name="com/facebook/buck/apple/project_generator/**" />
           <exclude name="com/facebook/buck/cli/bootstrapper/**" />
           <exclude name="com/facebook/buck/event/api/**" />
           <exclude name="com/facebook/buck/features/**" />
@@ -549,6 +550,7 @@
                                         build-module-ocaml,
                                         build-module-python,
                                         build-module-rust,
+                                        build-module-xcode,
                                         build-module-ziprules
                                        "/>
 
@@ -674,6 +676,17 @@
     </build-buck-module-jar>
   </target>
 
+  <target name="build-module-xcode" depends="compile">
+    <build-buck-module-jar-with-resources module-name="xcode">
+      <module-javac-params>
+        <include name="com/facebook/buck/apple/project_generator/*.java" />
+      </module-javac-params>
+      <module-resources>
+        <include name="com/facebook/buck/apple/project_generator/*.st"/>
+      </module-resources>
+    </build-buck-module-jar-with-resources>
+  </target>
+
   <target name="build-module-ziprules" depends="compile, build-module-filebundler">
     <build-buck-module-jar module-name="ziprules">
       <module-javac-params>
@@ -752,7 +765,6 @@
   <target name="copy-resources" description="Copy resources used by Buck at runtime to the build directory">
     <copy todir="${classes.dir}">
       <fileset dir="${src.dir}">
-        <include name="com/facebook/buck/apple/project_generator/*.st"/>
         <include name="com/facebook/buck/httpserver/*.stg"/>
         <include name="com/facebook/buck/httpserver/resources/static/*"/>
         <include name="com/facebook/buck/maven/build-file.st"/>

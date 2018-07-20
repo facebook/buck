@@ -8,7 +8,7 @@ java_library_with_plugins(
     ],
     visibility = [
         "//src/com/facebook/buck/apple:apple",
-        "//src/com/facebook/buck/apple/project_generator:project_generator",
+        "//src/com/facebook/buck/apple/project_generator:",
         "//src/com/facebook/buck/cli:main",
         "//test/...",
     ],

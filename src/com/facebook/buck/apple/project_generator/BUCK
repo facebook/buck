@@ -1,17 +1,9 @@
-load("//tools/build_rules:java_rules.bzl", "java_library_with_plugins")
+load("//tools/build_rules:module_rules.bzl", "buck_module")
 
-java_library_with_plugins(
+buck_module(
     name = "project_generator",
     srcs = glob(["*.java"]),
-    resources = [
-        "js-bundle.st",
-        "rn-package.st",
-    ],
-    tests = [
-        "//test/com/facebook/buck/apple/project_generator:project_generator",
-    ],
-    visibility = ["PUBLIC"],
-    deps = [
+    provided_deps = [
         "//src/com/facebook/buck/apple:apple",
         "//src/com/facebook/buck/apple/clang:clang",
         "//src/com/facebook/buck/apple/toolchain:toolchain",
@@ -69,4 +61,12 @@ java_library_with_plugins(
         "//third-party/java/jackson:jackson-databind",
         "//third-party/java/stringtemplate:stringtemplate",
     ],
+    resources = [
+        "js-bundle.st",
+        "rn-package.st",
+    ],
+    tests = [
+        "//test/com/facebook/buck/apple/project_generator:project_generator",
+    ],
+    visibility = ["PUBLIC"],
 )
