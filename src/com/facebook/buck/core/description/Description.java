@@ -24,12 +24,7 @@ package com.facebook.buck.core.description;
  * @param <T> the argument type for the description to construct the {@link
  *     com.facebook.buck.core.rules.BuildRule}
  */
-public interface Description<T> {
-
-  /**
-   * The class of the argument of this DescriptionWithDepOnTargetGraph uses in createBuildRule().
-   */
-  Class<T> getConstructorArgType();
+public interface Description<T> extends BaseDescription<T> {
 
   /**
    * Whether or not the build rule subgraph produced by this {@code Description} is safe to cache in
