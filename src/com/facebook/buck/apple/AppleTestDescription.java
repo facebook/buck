@@ -516,7 +516,7 @@ public class AppleTestDescription
           buildTarget,
           testHostKeyName,
           testHostBuildTarget,
-          DescriptionCache.getBuildRuleType(AppleBundleDescription.class));
+          DescriptionCache.getRuleType(AppleBundleDescription.class));
     }
     return (AppleBundle) rule;
   }

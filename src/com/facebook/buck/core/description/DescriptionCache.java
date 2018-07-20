@@ -24,24 +24,24 @@ import com.google.common.cache.LoadingCache;
 
 public class DescriptionCache {
 
-  private static final LoadingCache<Class<? extends Description<?>>, RuleType>
+  private static final LoadingCache<Class<? extends BaseDescription<?>>, RuleType>
       BUILD_RULE_TYPES_BY_CLASS =
           CacheBuilder.newBuilder()
               .build(
-                  new CacheLoader<Class<? extends Description<?>>, RuleType>() {
+                  new CacheLoader<Class<? extends BaseDescription<?>>, RuleType>() {
                     @Override
-                    public RuleType load(Class<? extends Description<?>> key) {
+                    public RuleType load(Class<? extends BaseDescription<?>> key) {
                       return RuleTypeFactory.fromClassName(key);
                     }
                   });
 
   /** @return The {@link RuleType} being described. */
-  public static RuleType getBuildRuleType(Class<? extends Description<?>> descriptionClass) {
+  public static RuleType getRuleType(Class<? extends BaseDescription<?>> descriptionClass) {
     return BUILD_RULE_TYPES_BY_CLASS.getUnchecked(descriptionClass);
   }
 
   @SuppressWarnings("unchecked")
-  public static RuleType getBuildRuleType(Description<?> description) {
-    return getBuildRuleType((Class<? extends Description<?>>) description.getClass());
+  public static RuleType getRuleType(BaseDescription<?> description) {
+    return getRuleType((Class<? extends BaseDescription<?>>) description.getClass());
   }
 }

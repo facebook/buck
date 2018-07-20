@@ -969,8 +969,8 @@ public class AppleLibraryDescription
     // Use defaults.apple_library if present, but fall back to defaults.cxx_library otherwise.
     return cxxLibraryImplicitFlavors.addImplicitFlavorsForRuleTypes(
         argDefaultFlavors,
-        DescriptionCache.getBuildRuleType(this),
-        DescriptionCache.getBuildRuleType(CxxLibraryDescription.class));
+        DescriptionCache.getRuleType(this),
+        DescriptionCache.getRuleType(CxxLibraryDescription.class));
   }
 
   @Override

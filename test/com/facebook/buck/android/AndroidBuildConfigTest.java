@@ -81,7 +81,7 @@ public class AndroidBuildConfigTest {
   public void testGetTypeMethodOfBuilder() {
     assertEquals(
         "android_build_config",
-        DescriptionCache.getBuildRuleType(AndroidBuildConfigDescription.class).getName());
+        DescriptionCache.getRuleType(AndroidBuildConfigDescription.class).getName());
   }
 
   @Test

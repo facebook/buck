@@ -50,8 +50,8 @@ abstract class AbstractKnownBuildRuleTypes {
   protected void check() {
     Set<RuleType> types = new HashSet<>();
     for (DescriptionWithTargetGraph<?> description : getDescriptions()) {
-      RuleType type = DescriptionCache.getBuildRuleType(description);
-      if (!types.add(DescriptionCache.getBuildRuleType(description))) {
+      RuleType type = DescriptionCache.getRuleType(description);
+      if (!types.add(DescriptionCache.getRuleType(description))) {
         throw new IllegalStateException(String.format("multiple descriptions with type %s", type));
       }
     }
@@ -61,14 +61,14 @@ abstract class AbstractKnownBuildRuleTypes {
   protected ImmutableMap<RuleType, DescriptionWithTargetGraph<?>> getDescriptionsByType() {
     return getDescriptions()
         .stream()
-        .collect(ImmutableMap.toImmutableMap(DescriptionCache::getBuildRuleType, d -> d));
+        .collect(ImmutableMap.toImmutableMap(DescriptionCache::getRuleType, d -> d));
   }
 
   @Value.Lazy
   protected ImmutableMap<String, RuleType> getTypesByName() {
     return getDescriptions()
         .stream()
-        .map(DescriptionCache::getBuildRuleType)
+        .map(DescriptionCache::getRuleType)
         .collect(ImmutableMap.toImmutableMap(RuleType::getName, t -> t));
   }
 

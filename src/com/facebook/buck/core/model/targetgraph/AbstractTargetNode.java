@@ -161,7 +161,7 @@ abstract class AbstractTargetNode<T, U extends DescriptionWithTargetGraph<T>>
   }
 
   public RuleType getBuildRuleType() {
-    return DescriptionCache.getBuildRuleType(getDescription());
+    return DescriptionCache.getRuleType(getDescription());
   }
 
   @Override

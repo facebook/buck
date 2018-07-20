@@ -124,8 +124,8 @@ public class GenAidlTest {
     GenAidl genAidlRule = createGenAidlRule(ImmutableSortedSet.of());
     GenAidlDescription description = new GenAidlDescription();
     assertEquals(
-        DescriptionCache.getBuildRuleType(GenAidlDescription.class),
-        DescriptionCache.getBuildRuleType(description));
+        DescriptionCache.getRuleType(GenAidlDescription.class),
+        DescriptionCache.getRuleType(description));
 
     BuildContext buildContext =
         FakeBuildContext.withSourcePathResolver(pathResolver)

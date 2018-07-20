@@ -68,7 +68,7 @@ public class RuleFunctionFactory {
    * @return Skylark function to handle the Buck rule.
    */
   BuiltinFunction create(DescriptionWithTargetGraph<?> ruleClass) {
-    String name = DescriptionCache.getBuildRuleType(ruleClass).getName();
+    String name = DescriptionCache.getRuleType(ruleClass).getName();
     return new BuiltinFunction(
         name, FunctionSignature.KWARGS, BuiltinFunction.USE_AST_ENV, /*isRule=*/ true) {
 

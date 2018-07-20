@@ -1,0 +1,12 @@
+load("//tools/build_rules:java_rules.bzl", "standard_java_test")
+
+standard_java_test(
+    name = "description",
+    deps = [
+        "//src/com/facebook/buck/core/description:description",
+        "//src/com/facebook/buck/core/rules/configsetting:configsetting",
+        "//src/com/facebook/buck/jvm/java:rules",
+        "//third-party/java/guava:guava",
+        "//third-party/java/junit:junit",
+    ],
+)

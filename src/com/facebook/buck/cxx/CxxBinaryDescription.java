@@ -137,7 +137,7 @@ public class CxxBinaryDescription
   public ImmutableSortedSet<Flavor> addImplicitFlavors(
       ImmutableSortedSet<Flavor> argDefaultFlavors) {
     return cxxBinaryImplicitFlavors.addImplicitFlavorsForRuleTypes(
-        argDefaultFlavors, DescriptionCache.getBuildRuleType(this));
+        argDefaultFlavors, DescriptionCache.getRuleType(this));
   }
 
   @Override

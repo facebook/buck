@@ -629,8 +629,8 @@ public class AppleBinaryDescription
     // Use defaults.apple_binary if present, but fall back to defaults.cxx_binary otherwise.
     return cxxBinaryImplicitFlavors.addImplicitFlavorsForRuleTypes(
         argDefaultFlavors,
-        DescriptionCache.getBuildRuleType(this),
-        DescriptionCache.getBuildRuleType(CxxBinaryDescription.class));
+        DescriptionCache.getRuleType(this),
+        DescriptionCache.getRuleType(CxxBinaryDescription.class));
   }
 
   @Override

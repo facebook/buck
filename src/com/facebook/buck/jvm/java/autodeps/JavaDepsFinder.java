@@ -77,10 +77,10 @@ public class JavaDepsFinder {
 
   private static final Set<RuleType> RULES_TO_VISIT =
       ImmutableSet.of(
-          DescriptionCache.getBuildRuleType(AndroidLibraryDescription.class),
-          DescriptionCache.getBuildRuleType(JavaLibraryDescription.class),
-          DescriptionCache.getBuildRuleType(JavaTestDescription.class),
-          DescriptionCache.getBuildRuleType(PrebuiltJarDescription.class));
+          DescriptionCache.getRuleType(AndroidLibraryDescription.class),
+          DescriptionCache.getRuleType(JavaLibraryDescription.class),
+          DescriptionCache.getRuleType(JavaTestDescription.class),
+          DescriptionCache.getRuleType(PrebuiltJarDescription.class));
 
   /** Java dependency information that is extracted from a {@link TargetGraph}. */
   public static class DependencyInfo {

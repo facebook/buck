@@ -68,7 +68,7 @@ public class AuditBuildRuleTypeCommand extends AbstractCommand {
     ImmutableMap<String, ParamInfo> allParamInfo =
         CoercedTypeCache.INSTANCE.getAllParamInfo(
             typeCoercerFactory, description.getConstructorArgType());
-    String name = DescriptionCache.getBuildRuleType(description).getName();
+    String name = DescriptionCache.getRuleType(description).getName();
     printStream.println("def " + name + " (");
     allParamInfo
         .values()

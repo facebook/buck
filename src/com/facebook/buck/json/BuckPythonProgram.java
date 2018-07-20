@@ -130,8 +130,7 @@ class BuckPythonProgram implements AutoCloseable {
         try {
           out.write(
               function.toPythonFunction(
-                  DescriptionCache.getBuildRuleType(description),
-                  description.getConstructorArgType()));
+                  DescriptionCache.getRuleType(description), description.getConstructorArgType()));
           out.write('\n');
         } catch (RuntimeException e) {
           throw new BuckUncheckedExecutionException(

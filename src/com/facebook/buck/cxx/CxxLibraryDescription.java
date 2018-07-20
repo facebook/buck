@@ -286,7 +286,7 @@ public class CxxLibraryDescription
   public ImmutableSortedSet<Flavor> addImplicitFlavors(
       ImmutableSortedSet<Flavor> argDefaultFlavors) {
     return cxxLibraryImplicitFlavors.addImplicitFlavorsForRuleTypes(
-        argDefaultFlavors, DescriptionCache.getBuildRuleType(this));
+        argDefaultFlavors, DescriptionCache.getRuleType(this));
   }
 
   @Override
