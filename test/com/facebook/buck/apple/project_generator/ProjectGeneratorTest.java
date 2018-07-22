@@ -198,12 +198,14 @@ public class ProjectGeneratorTest {
     ImmutableMap<String, ImmutableMap<String, String>> sections =
         ImmutableMap.of(
             "cxx",
-                ImmutableMap.of(
-                    "cflags", "-Wno-deprecated -Wno-conversion",
-                    "cxxflags", "-Wundeclared-selector -Wno-objc-designated-initializers",
-                    "ldflags", "-fatal_warnings"),
-            "apple", ImmutableMap.of("force_dsym_mode_in_build_with_buck", "false"),
-            "swift", ImmutableMap.of("version", "1.23"));
+            ImmutableMap.of(
+                "cflags", "-Wno-deprecated -Wno-conversion",
+                "cxxflags", "-Wundeclared-selector -Wno-objc-designated-initializers",
+                "ldflags", "-fatal_warnings"),
+            "apple",
+            ImmutableMap.of("force_dsym_mode_in_build_with_buck", "false"),
+            "swift",
+            ImmutableMap.of("version", "1.23"));
     BuckConfig config = FakeBuckConfig.builder().setSections(sections).build();
     cxxBuckConfig = new CxxBuckConfig(config);
     appleConfig = config.getView(AppleConfig.class);
@@ -2075,85 +2077,376 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void testAppleLibraryForceLoadLinkerFlagsEnabled() throws IOException {
-
-    BuildTarget buildTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
-    TargetNode<?, ?> node =
-        AppleLibraryBuilder.createBuilder(buildTarget)
-            .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
-            .setLinkerFlags(ImmutableList.of(StringWithMacrosUtils.format("-lhello")))
-            .build();
-
-    BuildTarget dependentBuildTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib2");
-    TargetNode<?, ?> dependentNode =
-        AppleLibraryBuilder.createBuilder(dependentBuildTarget)
-            .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
-            .setDeps(ImmutableSortedSet.of(buildTarget))
-            .setLinkWhole(true)
-            .setExportedLinkerFlags(
-                ImmutableList.of(
-                    StringWithMacrosUtils.format("-Xlinker"),
-                    StringWithMacrosUtils.format("-lhello"),
-                    StringWithMacrosUtils.format("-lhello2")))
-            .build();
-
-    ProjectGenerator projectGenerator =
-        createProjectGenerator(
-            ImmutableSet.of(node, dependentNode),
-            ProjectGeneratorOptions.builder().setShouldForceLoadLinkWholeLibraries(true).build());
-
-    projectGenerator.createXcodeProjects();
-
-    PBXTarget target =
-        assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:lib2");
-
-    ImmutableMap<String, String> settings =
-        ProjectGeneratorTestUtils.getBuildSettings(projectFilesystem, buildTarget, target, "Debug");
-
-    assertEquals(
-        "$(inherited) -fatal_warnings -ObjC -Xlinker -lhello -lhello2 '-Wl,-force_load,$BUILT_PRODUCTS_DIR/liblib2.a'",
-        settings.get("OTHER_LDFLAGS"));
+  public void testAppleLibraryForceLoadLinkerFlagsEnabled_LibsAsFlagsDisabled() throws IOException {
+    testAppleLibraryLinkerFlags(true, false);
   }
 
   @Test
-  public void testAppleBinaryForceLoadLinkerFlagsEnabled() throws IOException {
+  public void testAppleLibraryForceLoadLinkerFlagsEnabled_LibsAsFlagsEnabled() throws IOException {
+    testAppleLibraryLinkerFlags(true, true);
+  }
 
-    BuildTarget buildTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
-    TargetNode<?, ?> node =
-        AppleLibraryBuilder.createBuilder(buildTarget)
-            .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
-            .setLinkerFlags(ImmutableList.of(StringWithMacrosUtils.format("-lhello")))
+  @Test
+  public void testAppleLibraryForceLoadLinkerFlagsDisabled_LibsAsFlagsEnabled() throws IOException {
+    testAppleLibraryLinkerFlags(false, true);
+  }
+
+  @Test
+  public void testAppleLibraryForceLoadLinkerFlagsDisabled_LibsAsFlagsDisabled()
+      throws IOException {
+    testAppleLibraryLinkerFlags(false, false);
+  }
+
+  public void testAppleLibraryLinkerFlags(
+      boolean shouldEnableForceLoad, boolean shouldEnableAddLibrariesAsFlags) throws IOException {
+
+    BuildTarget dependentframeworkBinaryTarget1 =
+        BuildTargetFactory.newInstance(
+            rootPath,
+            "//foo",
+            "framework_1_bin",
+            DEFAULT_FLAVOR,
+            CxxDescriptionEnhancer.SHARED_FLAVOR);
+
+    TargetNode<?, ?> framework1BinaryNode =
+        AppleLibraryBuilder.createBuilder(dependentframeworkBinaryTarget1)
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("fooTest.m"))))
             .build();
 
-    BuildTarget dependentBuildTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib2");
-    TargetNode<?, ?> dependentNode =
-        AppleBinaryBuilder.createBuilder(dependentBuildTarget)
+    BuildTarget dependentframeworkTarget1 =
+        BuildTargetFactory.newInstance(
+            rootPath, "//foo", "framework_1", DEFAULT_FLAVOR, CxxDescriptionEnhancer.SHARED_FLAVOR);
+
+    TargetNode<?, ?> framework1Node =
+        AppleBundleBuilder.createBuilder(dependentframeworkTarget1)
+            .setExtension(Either.ofLeft(AppleBundleExtension.FRAMEWORK))
+            .setInfoPlist(FakeSourcePath.of("Info.plist"))
+            .setBinary(dependentframeworkBinaryTarget1)
+            .build();
+
+    BuildTarget dependentframeworkBinaryTarget2 =
+        BuildTargetFactory.newInstance(
+            rootPath,
+            "//bar",
+            "remote_framework_2_bin",
+            DEFAULT_FLAVOR,
+            CxxDescriptionEnhancer.SHARED_FLAVOR);
+
+    TargetNode<?, ?> framework2BinaryNode =
+        AppleLibraryBuilder.createBuilder(dependentframeworkBinaryTarget2)
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("fooTest.m"))))
+            .build();
+
+    BuildTarget dependentframeworkTarget2 =
+        BuildTargetFactory.newInstance(
+            rootPath,
+            "//bar",
+            "remote_framework_2",
+            DEFAULT_FLAVOR,
+            CxxDescriptionEnhancer.SHARED_FLAVOR);
+
+    TargetNode<?, ?> framework2Node =
+        AppleBundleBuilder.createBuilder(dependentframeworkTarget2)
+            .setExtension(Either.ofLeft(AppleBundleExtension.FRAMEWORK))
+            .setInfoPlist(FakeSourcePath.of("Info.plist"))
+            .setBinary(dependentframeworkBinaryTarget2)
+            .build();
+
+    BuildTarget dependentBuildTarget1 =
+        BuildTargetFactory.newInstance(rootPath, "//foo", "localForceLoadlib");
+    TargetNode<?, ?> dependentNode1 =
+        AppleLibraryBuilder.createBuilder(dependentBuildTarget1)
             .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
-            .setDeps(ImmutableSortedSet.of(buildTarget))
+            .setExportedLinkerFlags(ImmutableList.of(StringWithMacrosUtils.format("-lhello1")))
             .setLinkWhole(true)
-            .setExportedLinkerFlags(
-                ImmutableList.of(
-                    StringWithMacrosUtils.format("-Xlinker"),
-                    StringWithMacrosUtils.format("-lhello"),
-                    StringWithMacrosUtils.format("-lhello2")))
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("fooTest.m"))))
+            .build();
+
+    BuildTarget dependentBuildTarget2 =
+        BuildTargetFactory.newInstance(rootPath, "//foo", "nonForceLoadlib");
+    TargetNode<?, ?> dependentNode2 =
+        AppleLibraryBuilder.createBuilder(dependentBuildTarget2)
+            .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
+            .setExportedLinkerFlags(ImmutableList.of(StringWithMacrosUtils.format("-lhello2")))
+            .setLinkWhole(false)
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("fooTest.m"))))
+            .build();
+
+    BuildTarget dependentBuildTarget3 =
+        BuildTargetFactory.newInstance(rootPath, "//bar", "remoteForceLoadLib");
+    TargetNode<?, ?> dependentNode3 =
+        AppleLibraryBuilder.createBuilder(dependentBuildTarget3)
+            .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
+            .setExportedLinkerFlags(ImmutableList.of(StringWithMacrosUtils.format("-lhello3")))
+            .setLinkWhole(true)
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("fooTest.m"))))
+            .build();
+
+    BuildTarget dependentBuildTarget4 =
+        BuildTargetFactory.newInstance(rootPath, "//bar", "remoteNonForceLoadLib");
+    TargetNode<?, ?> dependentNode4 =
+        AppleLibraryBuilder.createBuilder(dependentBuildTarget4)
+            .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
+            .setExportedLinkerFlags(ImmutableList.of(StringWithMacrosUtils.format("-lhello4")))
+            .setLinkWhole(false)
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("fooTest.m"))))
+            .build();
+
+    BuildTarget libraryBuildTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "mainLib");
+    TargetNode<?, ?> libraryNode =
+        AppleLibraryBuilder.createBuilder(libraryBuildTarget)
+            .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
+            .setDeps(
+                ImmutableSortedSet.of(
+                    dependentBuildTarget1,
+                    dependentBuildTarget2,
+                    dependentBuildTarget3,
+                    dependentBuildTarget4,
+                    dependentframeworkTarget1,
+                    dependentframeworkTarget2))
+            .setLinkWhole(true)
+            .setLinkerFlags(ImmutableList.of(StringWithMacrosUtils.format("-lhello5")))
             .build();
 
     ProjectGenerator projectGenerator =
         createProjectGenerator(
-            ImmutableSet.of(node, dependentNode),
-            ProjectGeneratorOptions.builder().setShouldForceLoadLinkWholeLibraries(true).build());
+            ImmutableSet.of(
+                libraryNode,
+                dependentNode1,
+                dependentNode2,
+                dependentNode3,
+                dependentNode4,
+                framework1BinaryNode,
+                framework1Node,
+                framework2BinaryNode,
+                framework2Node), // all deps
+            ImmutableSet.of(
+                libraryNode, dependentNode1, dependentNode2, framework1BinaryNode, framework1Node),
+            // local deps to project
+            ProjectGeneratorOptions.builder()
+                .setShouldForceLoadLinkWholeLibraries(shouldEnableForceLoad)
+                .setShouldAddLinkedLibrariesAsFlags(shouldEnableAddLibrariesAsFlags)
+                .build());
 
     projectGenerator.createXcodeProjects();
 
     PBXTarget target =
-        assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:lib2");
+        assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:mainLib");
 
     ImmutableMap<String, String> settings =
-        ProjectGeneratorTestUtils.getBuildSettings(projectFilesystem, buildTarget, target, "Debug");
+        ProjectGeneratorTestUtils.getBuildSettings(
+            projectFilesystem, libraryBuildTarget, target, "Debug");
+
+    validateLinkerSettings(settings, shouldEnableForceLoad, shouldEnableAddLibrariesAsFlags);
+  }
+
+  public void validateLinkerSettings(
+      ImmutableMap<String, String> settings,
+      boolean shouldEnableForceLoad,
+      boolean shouldEnableAddLibrariesAsFlags) {
+
+    if (shouldEnableForceLoad && shouldEnableAddLibrariesAsFlags) {
+      assertEquals(
+          "$(inherited) -fatal_warnings -ObjC -lhello5 -lhello3 -lhello4 -lhello1 -lhello2 $BUCK_LINKER_FLAGS_FRAMEWORK_LOCAL $BUCK_LINKER_FLAGS_FRAMEWORK_OTHER $BUCK_LINKER_FLAGS_LIBRARY_FORCE_LOAD $BUCK_LINKER_FLAGS_LIBRARY_LOCAL $BUCK_LINKER_FLAGS_LIBRARY_OTHER",
+          settings.get("OTHER_LDFLAGS"));
+    } else if (shouldEnableForceLoad) {
+
+      assertEquals(
+          "$(inherited) -fatal_warnings -ObjC -lhello5 -lhello3 -lhello4 -lhello1 -lhello2 $BUCK_LINKER_FLAGS_LIBRARY_FORCE_LOAD",
+          settings.get("OTHER_LDFLAGS"));
+    } else if (shouldEnableAddLibrariesAsFlags) {
+
+      assertEquals(
+          "$(inherited) -fatal_warnings -ObjC -lhello5 -lhello3 -lhello4 -lhello1 -lhello2 $BUCK_LINKER_FLAGS_FRAMEWORK_LOCAL $BUCK_LINKER_FLAGS_FRAMEWORK_OTHER $BUCK_LINKER_FLAGS_LIBRARY_LOCAL $BUCK_LINKER_FLAGS_LIBRARY_OTHER",
+          settings.get("OTHER_LDFLAGS"));
+    } else {
+      assertEquals(
+          "$(inherited) -fatal_warnings -ObjC -lhello5 -lhello3 -lhello4 -lhello1 -lhello2",
+          settings.get("OTHER_LDFLAGS"));
+    }
 
     assertEquals(
-        "$(inherited) -fatal_warnings -ObjC -Xlinker -lhello -lhello2 '-Wl,-force_load,$BUILT_PRODUCTS_DIR/liblib2.a'",
-        settings.get("OTHER_LDFLAGS"));
+        "$(inherited) '-Wl,-force_load,$BUILT_PRODUCTS_DIR/libremoteForceLoadLib.a' '-Wl,-force_load,$BUILT_PRODUCTS_DIR/liblocalForceLoadlib.a'",
+        settings.get("BUCK_LINKER_FLAGS_LIBRARY_FORCE_LOAD"));
+
+    assertEquals(
+        "$(inherited) -framework remote_framework_2",
+        settings.get("BUCK_LINKER_FLAGS_FRAMEWORK_OTHER"));
+
+    assertEquals(
+        "$(inherited) -lremoteNonForceLoadLib", settings.get("BUCK_LINKER_FLAGS_LIBRARY_OTHER"));
+
+    assertEquals(
+        "$(inherited) -framework framework_1", settings.get("BUCK_LINKER_FLAGS_FRAMEWORK_LOCAL"));
+
+    assertEquals(
+        "$(inherited) -llocalForceLoadlib -lnonForceLoadlib",
+        settings.get("BUCK_LINKER_FLAGS_LIBRARY_LOCAL"));
+  }
+
+  @Test
+  public void testAppleBinaryForceLoadLinkerFlagsEnabled_LibsAsFlagsDisabled() throws IOException {
+    testAppleBinaryLinkerFlags(true, false);
+  }
+
+  @Test
+  public void testAppleBinaryForceLoadLinkerFlagsEnabled_LibsAsFlagsEnabled() throws IOException {
+    testAppleBinaryLinkerFlags(true, true);
+  }
+
+  @Test
+  public void testAppleBinaryForceLoadLinkerFlagsDisabled_LibsAsFlagsEnabled() throws IOException {
+    testAppleBinaryLinkerFlags(false, true);
+  }
+
+  @Test
+  public void testAppleBinaryForceLoadLinkerFlagsDisabled_LibsAsFlagsDisabled() throws IOException {
+    testAppleBinaryLinkerFlags(false, false);
+  }
+
+  public void testAppleBinaryLinkerFlags(
+      boolean shouldEnableForceLoad, boolean shouldEnableAddLibrariesAsFlags) throws IOException {
+
+    BuildTarget dependentframeworkBinaryTarget1 =
+        BuildTargetFactory.newInstance(
+            rootPath,
+            "//foo",
+            "framework_1_bin",
+            DEFAULT_FLAVOR,
+            CxxDescriptionEnhancer.SHARED_FLAVOR);
+
+    TargetNode<?, ?> framework1BinaryNode =
+        AppleLibraryBuilder.createBuilder(dependentframeworkBinaryTarget1)
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("fooTest.m"))))
+            .build();
+
+    BuildTarget dependentframeworkTarget1 =
+        BuildTargetFactory.newInstance(
+            rootPath, "//foo", "framework_1", DEFAULT_FLAVOR, CxxDescriptionEnhancer.SHARED_FLAVOR);
+
+    TargetNode<?, ?> framework1Node =
+        AppleBundleBuilder.createBuilder(dependentframeworkTarget1)
+            .setExtension(Either.ofLeft(AppleBundleExtension.FRAMEWORK))
+            .setInfoPlist(FakeSourcePath.of("Info.plist"))
+            .setBinary(dependentframeworkBinaryTarget1)
+            .build();
+
+    BuildTarget dependentframeworkBinaryTarget2 =
+        BuildTargetFactory.newInstance(
+            rootPath,
+            "//bar",
+            "remote_framework_2_bin",
+            DEFAULT_FLAVOR,
+            CxxDescriptionEnhancer.SHARED_FLAVOR);
+
+    TargetNode<?, ?> framework2BinaryNode =
+        AppleLibraryBuilder.createBuilder(dependentframeworkBinaryTarget2)
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("fooTest.m"))))
+            .build();
+
+    BuildTarget dependentframeworkTarget2 =
+        BuildTargetFactory.newInstance(
+            rootPath,
+            "//bar",
+            "remote_framework_2",
+            DEFAULT_FLAVOR,
+            CxxDescriptionEnhancer.SHARED_FLAVOR);
+
+    TargetNode<?, ?> framework2Node =
+        AppleBundleBuilder.createBuilder(dependentframeworkTarget2)
+            .setExtension(Either.ofLeft(AppleBundleExtension.FRAMEWORK))
+            .setInfoPlist(FakeSourcePath.of("Info.plist"))
+            .setBinary(dependentframeworkBinaryTarget2)
+            .build();
+
+    BuildTarget dependentBuildTarget1 =
+        BuildTargetFactory.newInstance(rootPath, "//foo", "localForceLoadlib");
+    TargetNode<?, ?> dependentNode1 =
+        AppleLibraryBuilder.createBuilder(dependentBuildTarget1)
+            .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
+            .setExportedLinkerFlags(ImmutableList.of(StringWithMacrosUtils.format("-lhello1")))
+            .setLinkWhole(true)
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("fooTest.m"))))
+            .build();
+
+    BuildTarget dependentBuildTarget2 =
+        BuildTargetFactory.newInstance(rootPath, "//foo", "nonForceLoadlib");
+    TargetNode<?, ?> dependentNode2 =
+        AppleLibraryBuilder.createBuilder(dependentBuildTarget2)
+            .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
+            .setExportedLinkerFlags(ImmutableList.of(StringWithMacrosUtils.format("-lhello2")))
+            .setLinkWhole(false)
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("fooTest.m"))))
+            .build();
+
+    BuildTarget dependentBuildTarget3 =
+        BuildTargetFactory.newInstance(rootPath, "//bar", "remoteForceLoadLib");
+    TargetNode<?, ?> dependentNode3 =
+        AppleLibraryBuilder.createBuilder(dependentBuildTarget3)
+            .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
+            .setExportedLinkerFlags(ImmutableList.of(StringWithMacrosUtils.format("-lhello3")))
+            .setLinkWhole(true)
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("fooTest.m"))))
+            .build();
+
+    BuildTarget dependentBuildTarget4 =
+        BuildTargetFactory.newInstance(rootPath, "//bar", "remoteNonForceLoadLib");
+    TargetNode<?, ?> dependentNode4 =
+        AppleLibraryBuilder.createBuilder(dependentBuildTarget4)
+            .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
+            .setExportedLinkerFlags(ImmutableList.of(StringWithMacrosUtils.format("-lhello4")))
+            .setLinkWhole(false)
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("fooTest.m"))))
+            .build();
+
+    BuildTarget binaryTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "binary");
+    TargetNode<?, ?> binaryNode =
+        AppleBinaryBuilder.createBuilder(binaryTarget)
+            .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
+            .setDeps(
+                ImmutableSortedSet.of(
+                    dependentBuildTarget1,
+                    dependentBuildTarget2,
+                    dependentBuildTarget3,
+                    dependentBuildTarget4,
+                    dependentframeworkTarget1,
+                    dependentframeworkTarget2))
+            .setLinkerFlags(ImmutableList.of(StringWithMacrosUtils.format("-lhello5")))
+            .build();
+
+    ProjectGenerator projectGenerator =
+        createProjectGenerator(
+            ImmutableSet.of(
+                binaryNode,
+                dependentNode1,
+                dependentNode2,
+                dependentNode3,
+                dependentNode4,
+                framework1BinaryNode,
+                framework1Node,
+                framework2BinaryNode,
+                framework2Node), // all deps
+            ImmutableSet.of(
+                binaryNode,
+                dependentNode1,
+                dependentNode2,
+                framework1BinaryNode,
+                framework1Node), // local deps to project
+            ProjectGeneratorOptions.builder()
+                .setShouldForceLoadLinkWholeLibraries(shouldEnableForceLoad)
+                .setShouldAddLinkedLibrariesAsFlags(shouldEnableAddLibrariesAsFlags)
+                .build());
+
+    projectGenerator.createXcodeProjects();
+
+    PBXTarget target =
+        assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:binary");
+
+    ImmutableMap<String, String> settings =
+        ProjectGeneratorTestUtils.getBuildSettings(
+            projectFilesystem, binaryTarget, target, "Debug");
+
+    validateLinkerSettings(settings, shouldEnableForceLoad, shouldEnableAddLibrariesAsFlags);
   }
 
   @Test
@@ -4286,11 +4579,14 @@ public class ProjectGeneratorTest {
         AppleLibraryBuilder.createBuilder(buildTarget)
             .setLangPreprocessorFlags(
                 ImmutableMap.of(
-                    CxxSource.Type.C, ImmutableList.of("-std=gnu11"),
-                    CxxSource.Type.OBJC, ImmutableList.of("-std=gnu11", "-fobjc-arc"),
-                    CxxSource.Type.CXX, ImmutableList.of("-std=c++11", "-stdlib=libc++"),
+                    CxxSource.Type.C,
+                    ImmutableList.of("-std=gnu11"),
+                    CxxSource.Type.OBJC,
+                    ImmutableList.of("-std=gnu11", "-fobjc-arc"),
+                    CxxSource.Type.CXX,
+                    ImmutableList.of("-std=c++11", "-stdlib=libc++"),
                     CxxSource.Type.OBJCXX,
-                        ImmutableList.of("-std=c++11", "-stdlib=libc++", "-fobjc-arc")))
+                    ImmutableList.of("-std=c++11", "-stdlib=libc++", "-fobjc-arc")))
             .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
             .setSrcs(
                 ImmutableSortedSet.of(
@@ -5402,6 +5698,19 @@ public class ProjectGeneratorTest {
     return createProjectGenerator(
         allNodes,
         allNodes,
+        projectGeneratorOptions,
+        ImmutableSet.of(),
+        getActionGraphBuilderNodeFunction(targetGraph));
+  }
+
+  private ProjectGenerator createProjectGenerator(
+      Collection<TargetNode<?, ?>> allNodes,
+      Collection<TargetNode<?, ?>> initialTargetNodes,
+      ProjectGeneratorOptions projectGeneratorOptions) {
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(ImmutableSet.copyOf(allNodes));
+    return createProjectGenerator(
+        allNodes,
+        initialTargetNodes,
         projectGeneratorOptions,
         ImmutableSet.of(),
         getActionGraphBuilderNodeFunction(targetGraph));

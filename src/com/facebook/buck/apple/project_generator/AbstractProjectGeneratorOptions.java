@@ -85,4 +85,10 @@ interface AbstractProjectGeneratorOptions {
   default boolean shouldForceLoadLinkWholeLibraries() {
     return false;
   }
+
+  /** Add linker flags to OTHER_LDFLAGS for libraries rather than to the library build phase */
+  @Value.Default
+  default boolean shouldAddLinkedLibrariesAsFlags() {
+    return false;
+  }
 }

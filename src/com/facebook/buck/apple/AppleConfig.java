@@ -296,6 +296,10 @@ public class AppleConfig implements ConfigView<BuckConfig> {
     return delegate.getBooleanValue(APPLE_SECTION, "verify_bundle_resources", false);
   }
 
+  public boolean shouldAddLinkedLibrariesAsFlags() {
+    return delegate.getBooleanValue(APPLE_SECTION, "link_libraries_as_flags", false);
+  }
+
   public boolean shouldAddLinkerFlagsForLinkWholeLibraries() {
     return delegate.getBooleanValue(APPLE_SECTION, FORCE_LOAD_LINK_WHOLE_LIBRARY_ENABLED, false);
   }

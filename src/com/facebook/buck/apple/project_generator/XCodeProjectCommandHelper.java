@@ -315,6 +315,7 @@ public class XCodeProjectCommandHelper {
             .setShouldIncludeDependenciesTests(isWithDependenciesTests(buckConfig))
             .setShouldUseHeaderMaps(appleConfig.shouldUseHeaderMapsInXcodeProject())
             .setShouldMergeHeaderMaps(appleConfig.shouldMergeHeaderMapsInXcodeProject())
+            .setShouldAddLinkedLibrariesAsFlags(appleConfig.shouldAddLinkedLibrariesAsFlags())
             .setShouldForceLoadLinkWholeLibraries(
                 appleConfig.shouldAddLinkerFlagsForLinkWholeLibraries())
             .setShouldGenerateHeaderSymlinkTreesOnly(
