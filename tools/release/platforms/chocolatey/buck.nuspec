@@ -4,13 +4,14 @@
   <metadata>
     <id>buck</id>
     <version>__REPLACE__</version>
-    <title>buck</title>
+    <title>Buck</title>
     <authors>Facebook Inc</authors>
     <projectUrl>https://buckbuild.com</projectUrl>
     <copyright>2012-present Facebook Inc</copyright>
     <licenseUrl>https://github.com/facebook/buck/blob/master/LICENSE</licenseUrl>
     <requireLicenseAcceptance>true</requireLicenseAcceptance>
     <projectSourceUrl>https://github.com/facebook/buck</projectSourceUrl>
+    <packageSourceUrl>https://github.com/facebook/buck</packageSourceUrl>
     <bugTrackerUrl>https://github.com/facebook/buck/issues</bugTrackerUrl>
     <tags>buck</tags>
     <summary>A fast multi-language build system from Facebook</summary>
@@ -22,7 +23,8 @@
     </dependencies>
   </metadata>
   <files>
-    <file src="LICENSE" target="LICENSE" />
+    <file src="LICENSE.txt" target="tools/LICENSE.txt" />
+    <file src="VERIFICATION.txt" target="tools/VERIFICATION.txt" />
     <file src="README.md" target="README.md" />
     <file src="buck.bat" target="tools/buck.bat" />
     <file src="buck.pex" target="tools/buck.pex" />

@@ -12,7 +12,20 @@ import xml.etree.ElementTree as ElemTree
 def parse_args(args):
     parser = argparse.ArgumentParser(description="Build buck's choco package")
     parser.add_argument(
+        "--license-file",
+        required=True,
+        help="The original license file that needs a prefix added",
+    )
+    parser.add_argument(
+        "--verification-txt",
+        required=True,
+        help="The verification.txt template used when creating the nupkg",
+    )
+    parser.add_argument(
         "--version", required=True, help="The version that is being built"
+    )
+    parser.add_argument(
+        "--timestamp", required=True, help="The timestamp when the release was made"
     )
     parser.add_argument(
         "--src-dir",
@@ -51,9 +64,29 @@ def build(nuspec, output):
     os.rename(glob.glob("buck.*.nupkg")[0], output)
 
 
+def write_license_file(original_license):
+    dest = "LICENSE.txt"
+    with open(original_license, "r") as fin, open(dest, "w") as fout:
+        fout.write("From: https://github.com/facebook/buck/blob/master/LICENSE\n")
+        fout.write("\n")
+        fout.write(fin.read())
+
+
+def write_verification_txt(original_verification_txt, version, timestamp):
+    dest = "VERIFICATION.txt"
+    with open(original_verification_txt, "r") as fin, open(dest, "w") as fout:
+        verification_text = fin.read().decode("utf-8")
+        verification_text = verification_text.format(
+            release_version=version, release_timestamp=timestamp
+        )
+        fout.write(verification_text)
+
+
 if __name__ == "__main__":
     args = parse_args(sys.argv[1:])
     tmp_dir = copy_files(args.src_dir)
     os.chdir(tmp_dir)
     update_nuspec("buck.nuspec", "CHANGELOG.md", args.version)
+    write_license_file(args.license_file)
+    write_verification_txt(args.verification_txt, args.version, args.timestamp)
     build("buck.nuspec", args.output)

@@ -1,6 +1,8 @@
-load("//programs:defs.bzl", "get_release_version")
+load("//programs:defs.bzl", "get_release_version", "get_release_timestamp")
 
 version = get_release_version()
+
+timestamp = get_release_timestamp()
 
 python_library(
     name = "build-lib",
@@ -13,10 +15,11 @@ python_binary(
     deps = [":build-lib"],
 )
 
+export_file(name = "VERIFICATION.TXT")
+
 genrule(
     name = "chocolatey",
     srcs = [
-        "//:LICENSE",
         "//:README",
         "//programs:buck",
         "CHANGELOG.md",
@@ -26,5 +29,19 @@ genrule(
         "chocolateyUninstall.ps1",
     ],
     out = "buck.nupkg",
-    cmd = "$(exe :build) --version {} --output %OUT% --src-dir %SRCDIR%".format(version),
+    cmd = " ".join([
+        "$(exe :build)",
+        "--license-file",
+        "$(location //:LICENSE)",
+        "--verification-txt",
+        "$(location :VERIFICATION.TXT)",
+        "--version",
+        version,
+        "--timestamp",
+        timestamp,
+        "--output",
+        "%OUT%",
+        "--src-dir",
+        "%SRCDIR%",
+    ]),
 )
