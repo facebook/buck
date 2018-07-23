@@ -66,6 +66,8 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
   @AddToRuleKey private final Kotlinc kotlinc;
   @AddToRuleKey private final ImmutableList<String> extraArguments;
   @AddToRuleKey private final ExtraClasspathProvider extraClassPath;
+  @AddToRuleKey private final Javac javac;
+  @AddToRuleKey private final JavacOptions javacOptions;
 
   private static final String COMPILER_BUILTINS = "-Xadd-compiler-builtins";
   private static final String LOAD_BUILTINS_FROM = "-Xload-builtins-from-dependencies";
@@ -92,8 +94,6 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
   private static final String VERBOSE = "-verbose";
 
   private final ImmutableSortedSet<Path> kotlinHomeLibraries;
-  private final Javac javac;
-  private final JavacOptions javacOptions;
 
   KotlincToJarStepFactory(
       SourcePathResolver resolver,
