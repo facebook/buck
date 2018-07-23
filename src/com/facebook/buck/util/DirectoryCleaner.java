@@ -55,7 +55,7 @@ public class DirectoryCleaner {
       pathStats.add(stats);
     }
 
-    if (shouldDeleteOldestLog(pathStats.size(), totalSizeBytes)) {
+    if (shouldDeleteOldestLog(pathStats.size(), totalSizeBytes, args.getMaxTotalSizeBytes())) {
       Collections.sort(
           pathStats, (stats1, stats2) -> args.getPathSelector().comparePaths(stats1, stats2));
 
@@ -66,8 +66,7 @@ public class DirectoryCleaner {
       }
 
       for (int i = 0; i < pathStats.size(); ++i) {
-        if (totalSizeBytes <= finalMaxSizeBytes
-            && remainingLogDirectories <= args.getMaxPathCount()) {
+        if (!shouldDeleteOldestLog(remainingLogDirectories, totalSizeBytes, finalMaxSizeBytes)) {
           break;
         }
 
@@ -82,13 +81,13 @@ public class DirectoryCleaner {
     }
   }
 
-  private boolean shouldDeleteOldestLog(int currentNumberOfLogs, long totalSizeBytes) {
+  private boolean shouldDeleteOldestLog(
+      int currentNumberOfLogs, long totalSizeBytes, long maxTotalSizeBytes) {
     if (currentNumberOfLogs <= args.getMinAmountOfEntriesToKeep()) {
       return false;
     }
 
-    return totalSizeBytes > args.getMaxTotalSizeBytes()
-        || currentNumberOfLogs > args.getMaxPathCount();
+    return totalSizeBytes > maxTotalSizeBytes || currentNumberOfLogs > args.getMaxPathCount();
   }
 
   private PathStats computePathStats(Path path) throws IOException {
