@@ -25,7 +25,6 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="//libs:generated" scope="TEST" level="project" />
-    <orderEntry type="library" name="//libs:guava" scope="COMPILE" level="project" />
     <orderEntry type="library" name="//libs:jsr305" scope="COMPILE" level="project" />
     <orderEntry type="library" name="//libs:junit" scope="TEST" level="project" />
     <orderEntry type="module" module-name="modules_dep1" scope="COMPILE" />

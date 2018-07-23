@@ -5,7 +5,6 @@ android_library(
         "PUBLIC",
     ],
     deps = [
-        "//libs:guava",
         "//libs:jsr305",
     ],
 )
@@ -33,7 +32,6 @@ java_test(
     deps = [
         ":dep1",
         ":generated",
-        "//libs:guava",
         "//libs:junit",
     ],
 )
