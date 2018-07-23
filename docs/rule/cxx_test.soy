@@ -41,7 +41,18 @@ it as part of {call buck.cmd_test /}.
 
 {call buck.deps_query_arg /}
 
-{call test_common.resources_arg /}
+{call buck.arg}
+  {param name : 'resources' /}
+  {param default : '[]' /}
+  {param desc}
+  <p class="warning-banner">
+  This attribute is currently not implemented, and just causes buck to rebuild
+  the test file if any of the resources change. This will change in the future
+  to provide a more reliable interface for resource files.
+  </p>
+  Additional data or source files which this test uses.
+ {/param}
+{/call}
 
 {call cxx_common.raw_headers_arg /}
 
