@@ -164,6 +164,5 @@
   "//src/com/facebook/buck/util:util",
   "//src/com/facebook/buck/versions:types",
   "//src/com/facebook/buck/versions:translator",
-  "//src/com/facebook/buck/versions:versions",
   "//src/com/facebook/buck/worker:worker_process"
 ]

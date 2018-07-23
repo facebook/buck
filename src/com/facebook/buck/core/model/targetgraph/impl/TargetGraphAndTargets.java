@@ -16,27 +16,19 @@
 
 package com.facebook.buck.core.model.targetgraph.impl;
 
-import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
-import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
-import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.RichStream;
-import com.facebook.buck.versions.InstrumentedVersionedTargetGraphCache;
-import com.facebook.buck.versions.VersionException;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Sets;
 import java.util.Iterator;
-import java.util.stream.Collectors;
 
 public class TargetGraphAndTargets {
   private final TargetGraph targetGraph;
   private final ImmutableSet<TargetNode<?, ?>> projectRoots;
 
-  private TargetGraphAndTargets(TargetGraph targetGraph, Iterable<TargetNode<?, ?>> projectRoots) {
+  public TargetGraphAndTargets(TargetGraph targetGraph, Iterable<TargetNode<?, ?>> projectRoots) {
     this.targetGraph = targetGraph;
     this.projectRoots = ImmutableSet.copyOf(projectRoots);
   }
@@ -79,31 +71,5 @@ public class TargetGraphAndTargets {
         projectGraph.getSubgraph(Iterables.concat(projectRoots, associatedTests));
 
     return new TargetGraphAndTargets(targetGraph, projectRoots);
-  }
-
-  public static TargetGraphAndTargets toVersionedTargetGraphAndTargets(
-      TargetGraphAndTargets targetGraphAndTargets,
-      InstrumentedVersionedTargetGraphCache versionedTargetGraphCache,
-      BuckEventBus buckEventBus,
-      BuckConfig buckConfig,
-      TypeCoercerFactory typeCoercerFactory,
-      ImmutableSet<BuildTarget> explicitTestTargets)
-      throws VersionException, InterruptedException {
-    TargetGraphAndBuildTargets targetGraphAndBuildTargets =
-        TargetGraphAndBuildTargets.of(
-            targetGraphAndTargets.getTargetGraph(),
-            Sets.union(
-                targetGraphAndTargets
-                    .getProjectRoots()
-                    .stream()
-                    .map(root -> root.getBuildTarget())
-                    .collect(Collectors.toSet()),
-                explicitTestTargets));
-    TargetGraphAndBuildTargets versionedTargetGraphAndBuildTargets =
-        versionedTargetGraphCache.toVersionedTargetGraph(
-            buckEventBus, buckConfig, typeCoercerFactory, targetGraphAndBuildTargets);
-    return new TargetGraphAndTargets(
-        versionedTargetGraphAndBuildTargets.getTargetGraph(),
-        targetGraphAndTargets.getProjectRoots());
   }
 }

@@ -50,6 +50,7 @@ import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.MoreExceptions;
 import com.facebook.buck.util.concurrent.MostExecutors;
 import com.facebook.buck.versions.VersionException;
+import com.facebook.buck.versions.VersionedTargetGraphAndTargets;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -372,7 +373,7 @@ public class GoProjectCommandHelper {
         TargetGraphAndTargets.create(graphRoots, projectGraph, isWithTests, explicitTestTargets);
     if (buckConfig.getBuildVersions()) {
       targetGraphAndTargets =
-          TargetGraphAndTargets.toVersionedTargetGraphAndTargets(
+          VersionedTargetGraphAndTargets.toVersionedTargetGraphAndTargets(
               targetGraphAndTargets,
               params.getVersionedTargetGraphCache(),
               buckEventBus,

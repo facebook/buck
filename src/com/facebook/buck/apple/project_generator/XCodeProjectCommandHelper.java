@@ -66,6 +66,7 @@ import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.config.Configs;
 import com.facebook.buck.versions.InstrumentedVersionedTargetGraphCache;
 import com.facebook.buck.versions.VersionException;
+import com.facebook.buck.versions.VersionedTargetGraphAndTargets;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
@@ -704,7 +705,7 @@ public class XCodeProjectCommandHelper {
         TargetGraphAndTargets.create(graphRoots, projectGraph, isWithTests, explicitTestTargets);
     if (buckConfig.getBuildVersions()) {
       targetGraphAndTargets =
-          TargetGraphAndTargets.toVersionedTargetGraphAndTargets(
+          VersionedTargetGraphAndTargets.toVersionedTargetGraphAndTargets(
               targetGraphAndTargets,
               versionedTargetGraphCache,
               buckEventBus,
