@@ -50,6 +50,7 @@ import com.facebook.buck.distributed.ExitCode;
 import com.facebook.buck.distributed.thrift.BuildStatus;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.BuckEventBusForTests;
 import java.io.IOException;
 import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
@@ -110,7 +111,7 @@ public class StampedeBuildClientTest {
 
   @Before
   public void setUp() {
-    mockEventBus = EasyMock.createMock(BuckEventBus.class);
+    mockEventBus = BuckEventBusForTests.newInstance();
     remoteBuildRuleSynchronizer = new RemoteBuildRuleSynchronizer();
     executorForLocalBuild = Executors.newSingleThreadExecutor();
     executorForDistBuildController = Executors.newSingleThreadExecutor();
