@@ -174,13 +174,8 @@ abstract class AbstractTargetNode<T, U extends DescriptionWithTargetGraph<T>>
     return getBuildTarget().getFullyQualifiedName();
   }
 
-  // This method uses the TargetNodeFactory, rather than just calling withDescription, because
-  // ImplicitDepsInferringDescriptions may give different results for deps.
-  //
-  // Note that this method strips away selected versions, and may be buggy because of it.
-  public <V, W extends DescriptionWithTargetGraph<V>> TargetNode<V, W> copyWithDescription(
-      W description) {
-    return getNodeCopier().copyNodeWithDescription(TargetNode.copyOf(this), description);
+  public TargetNode<T, U> copy() {
+    return TargetNode.copyOf(this);
   }
 
   // This method uses the TargetNodeFactory, rather than just calling withBuildTarget, because
