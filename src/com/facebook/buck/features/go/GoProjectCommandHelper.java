@@ -74,6 +74,7 @@ public class GoProjectCommandHelper {
   private final Console console;
   private final ListeningExecutorService executor;
   private final Parser parser;
+  private final GoBuckConfig goBuckConfig;
   private final BuckConfig buckConfig;
   private final Cell cell;
   private final boolean enableParserProfiling;
@@ -92,6 +93,7 @@ public class GoProjectCommandHelper {
     this.console = projectGeneratorParameters.getConsole();
     this.executor = executor;
     this.parser = projectGeneratorParameters.getParser();
+    this.goBuckConfig = new GoBuckConfig(params.getBuckConfig());
     this.buckConfig = params.getBuckConfig();
     this.cell = params.getCell();
     this.enableParserProfiling = enableParserProfiling;
@@ -247,9 +249,9 @@ public class GoProjectCommandHelper {
     Path vendorPath;
     ProjectFilesystem projectFilesystem = cell.getFilesystem();
 
-    Optional<String> vendorConfig = buckConfig.getValue("go", "vendor_path");
-    if (vendorConfig.isPresent()) {
-      vendorPath = Paths.get(vendorConfig.get());
+    Optional<Path> projectPath = goBuckConfig.getProjectPath();
+    if (projectPath.isPresent()) {
+      vendorPath = projectPath.get();
     } else if (projectFilesystem.exists(Paths.get("src"))) {
       vendorPath = Paths.get("src", "vendor");
     } else {
@@ -259,15 +261,27 @@ public class GoProjectCommandHelper {
         Preconditions.checkNotNull(getActionGraph(targetGraphAndTargets.getTargetGraph()));
     DefaultSourcePathResolver sourcePathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(result.getActionGraphBuilder()));
+
+    // cleanup files from previous runs
     for (BuildTargetSourcePath sourcePath : generatedPackages.keySet()) {
       Path desiredPath = vendorPath.resolve(generatedPackages.get(sourcePath));
-      projectFilesystem.mkdirs(desiredPath);
-      for (Path path : projectFilesystem.getDirectoryContents(desiredPath)) {
-        if (projectFilesystem.isFile(path)) {
-          projectFilesystem.deleteFileAtPath(path);
+
+      if (projectFilesystem.isDirectory(desiredPath)) {
+        for (Path path : projectFilesystem.getDirectoryContents(desiredPath)) {
+          if (projectFilesystem.isFile(path)) {
+            projectFilesystem.deleteFileAtPath(path);
+          }
         }
+      } else {
+        projectFilesystem.mkdirs(desiredPath);
       }
+    }
+
+    // copy files generated in current run
+    for (BuildTargetSourcePath sourcePath : generatedPackages.keySet()) {
+      Path desiredPath = vendorPath.resolve(generatedPackages.get(sourcePath));
       Path generatedSrc = sourcePathResolver.getAbsolutePath(sourcePath);
+
       if (projectFilesystem.isDirectory(generatedSrc)) {
         projectFilesystem.copyFolder(generatedSrc, desiredPath);
       } else {
@@ -294,9 +308,7 @@ public class GoProjectCommandHelper {
         Path pkgName =
             packageNameArg
                 .map(Paths::get)
-                .orElse(
-                    Paths.get(buckConfig.getValue("go", "prefix").orElse(""))
-                        .resolve(targetNode.getBuildTarget().getBasePath()));
+                .orElse(goBuckConfig.getDefaultPackageName(targetNode.getBuildTarget()));
         generatedPackages.putAll(
             ((HasSrcs) constructorArg)
                 .getSrcs()

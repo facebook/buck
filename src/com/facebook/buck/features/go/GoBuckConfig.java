@@ -29,29 +29,51 @@ import java.util.Optional;
 public class GoBuckConfig {
 
   static final String SECTION = "go";
-
   private final BuckConfig delegate;
+
+  private static final String VENDOR_PATH = "vendor_path";
+  private static final String PROJECT_PATH = "project_path";
+  private static final String TEST_MAIN_GEN = "test_main_gen";
+  private static final String DEFAULT_PLATFORM = "default_platform";
+  private static final String PREFIX = "prefix";
 
   public GoBuckConfig(BuckConfig delegate) {
     this.delegate = delegate;
-  }
-
-  Optional<String> getDefaultPlatform() {
-    return delegate.getValue(SECTION, "default_platform");
   }
 
   public BuckConfig getDelegate() {
     return delegate;
   }
 
+  /**
+   * Get default Go platform
+   *
+   * @return Go platform
+   */
+  Optional<String> getDefaultPlatform() {
+    return delegate.getValue(SECTION, DEFAULT_PLATFORM);
+  }
+
+  /**
+   * Get package name either from build target attribute (package_name) if provided, otherwise use
+   * BuildTarget base path.
+   *
+   * @return Package name
+   */
   Path getDefaultPackageName(BuildTarget target) {
-    Path prefix = Paths.get(delegate.getValue(SECTION, "prefix").orElse(""));
+    Path prefix = Paths.get(delegate.getValue(SECTION, PREFIX).orElse(""));
     return prefix.resolve(target.getBasePath());
   }
 
+  /**
+   * Get vendor paths based on vendor_path section. Section allows to specify multiple vendor paths
+   * separated by colon (":").
+   *
+   * @return List of vendor paths
+   */
   ImmutableList<Path> getVendorPaths() {
     Optional<ImmutableList<String>> vendorPaths =
-        delegate.getOptionalListWithoutComments(SECTION, "vendor_path", ':');
+        delegate.getOptionalListWithoutComments(SECTION, VENDOR_PATH, ':');
 
     if (vendorPaths.isPresent()) {
       return vendorPaths.get().stream().map(Paths::get).collect(ImmutableList.toImmutableList());
@@ -59,7 +81,25 @@ public class GoBuckConfig {
     return ImmutableList.of();
   }
 
+  /**
+   * Get test main generator. The tool is a middle-step utility that utilizes selected .go sources
+   * and generates the main.go which is later on compiled and used as test binary (run by "buck
+   * test").
+   *
+   * @return test_main_gen tool
+   */
   Optional<Tool> getGoTestMainGenerator(BuildRuleResolver resolver) {
-    return delegate.getView(ToolConfig.class).getTool(SECTION, "test_main_gen", resolver);
+    return delegate.getView(ToolConfig.class).getTool(SECTION, TEST_MAIN_GEN, resolver);
+  }
+
+  /**
+   * Get "project_path" location. When set, buck project will copy generated sources to given
+   * directory
+   *
+   * @return project_path path
+   */
+  Optional<Path> getProjectPath() {
+    Optional<String> path = delegate.getValue(SECTION, PROJECT_PATH);
+    return (path.isPresent()) ? Optional.of(Paths.get(path.get())) : Optional.empty();
   }
 }

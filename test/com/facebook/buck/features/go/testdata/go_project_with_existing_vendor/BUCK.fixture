@@ -19,6 +19,8 @@ go_library(
     package_name = "a",
     srcs = [
         ":b",
+        ":c=c1.go",
+        ":c=c2.go",
     ],
 )
 
@@ -26,4 +28,23 @@ genrule(
     name = "b",
     out = ".",
     cmd = "echo 'package a\nfunc A() {}\n' > $OUT/b1.go; echo 'package a\nfunc B() {}\n' > $OUT/b2.go;",
+)
+
+# copy files from :c separately
+genrule(
+    name = "c",
+    out = ".",
+    cmd = "echo 'package a\nfunc C() {}\n' > $OUT/c1.go; echo 'package a\nfunc D() {}\n' > $OUT/c2.go;",
+)
+
+genrule(
+    name = "c=c1.go",
+    out = "c1.go",
+    cmd = "mkdir -p `dirname $OUT` && cp $(location :c)/c1.go $OUT",
+)
+
+genrule(
+    name = "c=c2.go",
+    out = "c2.go",
+    cmd = "mkdir -p `dirname $OUT` && cp $(location :c)/c2.go $OUT",
 )

@@ -2145,6 +2145,17 @@ cxx_library(
   {/param}
 {/call}
 
+{call buckconfig.entry}
+  {param section: 'go' /}
+  {param name: 'project_path' /}
+  {param example_value: 'third-party/go' /}
+  {param description}
+    You can specify the path where <code>buck project</code> will store dynamically
+    generated files (ex. genrule). This is extension to <code>$GOPATH</code>, particularly
+    usefuly while working with native go toolchain or IDE's.
+  {/param}
+{/call}
+
 {call buckconfig.section}
   {param name: 'groovy' /}
   {param description}

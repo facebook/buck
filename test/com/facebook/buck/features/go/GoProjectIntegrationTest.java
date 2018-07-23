@@ -64,6 +64,8 @@ public class GoProjectIntegrationTest {
     assertFalse(workspace.resolve("vendor/a/b0.go").toFile().exists());
     assertTrue(workspace.resolve("vendor/a/b1.go").toFile().exists());
     assertTrue(workspace.resolve("vendor/a/b2.go").toFile().exists());
+    assertTrue(workspace.resolve("vendor/a/c1.go").toFile().exists());
+    assertTrue(workspace.resolve("vendor/a/c2.go").toFile().exists());
     assertTrue(workspace.resolve("vendor/a/b/b.go").toFile().exists());
   }
 }
