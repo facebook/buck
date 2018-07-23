@@ -23,7 +23,6 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
-import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -69,6 +68,7 @@ public class ShBinaryRuleIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "sh_binary_with_caching", temporaryFolder);
     workspace.setUp();
+    workspace.enableDirCache();
 
     // First build only the sh_binary rule itself.
     ProcessResult buildResult = workspace.runBuckCommand("build", "//:example_sh", "-v", "2");
@@ -81,14 +81,16 @@ public class ShBinaryRuleIntegrationTest {
     assertTrue("Output file must be executable.", Files.isExecutable(output));
 
     // Now delete the buck-out directory (but not buck-cache).
-    Path buckOutDir = workspace.getPath("buck-out");
-    MostFiles.deleteRecursivelyIfExists(buckOutDir);
+    workspace.runBuckCommand("clean", "--keep-cache");
 
     // Now run the genrule that depends on the sh_binary above. This will force buck to fetch the
     // sh_binary output from cache. If the executable flag is lost somewhere along the way, this
     // will fail.
     buildResult = workspace.runBuckCommand("build", "//:run_example", "-v", "2");
     buildResult.assertSuccess("Build failed when rerunning sh_binary from cache.");
+
+    // verify it's actually fetched from cache
+    workspace.getBuildLog().assertTargetWasFetchedFromCache("//:example_sh");
 
     // In addition to running the build, explicitly check that the output file is still executable.
     assertTrue(
