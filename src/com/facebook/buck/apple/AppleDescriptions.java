@@ -33,6 +33,7 @@ import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.model.targetgraph.impl.TargetNodes;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
@@ -624,7 +625,8 @@ public class AppleDescriptions {
       Optional<TargetNode<PrebuiltAppleFrameworkDescriptionArg, ?>> prebuiltNode =
           targetGraph
               .getOptional(dep)
-              .flatMap(node -> node.castArg(PrebuiltAppleFrameworkDescriptionArg.class));
+              .flatMap(
+                  node -> TargetNodes.castArg(node, PrebuiltAppleFrameworkDescriptionArg.class));
       if (prebuiltNode.isPresent()
           && !prebuiltNode
               .get()
@@ -1019,7 +1021,7 @@ public class AppleDescriptions {
 
       Optional<TargetNode<?, ?>> depTargetNode = targetGraph.getOptional(dep);
       Optional<TargetNode<AppleBinaryDescriptionArg, ?>> binaryDepNode =
-          depTargetNode.flatMap(n -> n.castArg(AppleBinaryDescriptionArg.class));
+          depTargetNode.flatMap(n -> TargetNodes.castArg(n, AppleBinaryDescriptionArg.class));
       if (!binaryDepNode.isPresent()) {
         // Skip any deps which are not apple_binary
         continue;

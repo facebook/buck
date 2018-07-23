@@ -22,6 +22,7 @@ import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.model.targetgraph.impl.TargetNodes;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.google.common.base.Charsets;
@@ -195,7 +196,7 @@ public class VersionedTargetGraphBuilder {
   private TargetNode<?, ?> resolveVersions(
       TargetNode<?, ?> node, ImmutableMap<BuildTarget, Version> selectedVersions) {
     Optional<TargetNode<VersionedAliasDescriptionArg, ?>> versionedNode =
-        node.castArg(VersionedAliasDescriptionArg.class);
+        TargetNodes.castArg(node, VersionedAliasDescriptionArg.class);
     if (versionedNode.isPresent()) {
       node =
           getNode(

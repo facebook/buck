@@ -150,16 +150,6 @@ abstract class AbstractTargetNode<T, U extends DescriptionWithTargetGraph<T>>
     }
   }
 
-  /** Type safe checked cast of the constructor arg. */
-  @SuppressWarnings("unchecked")
-  public <V> Optional<TargetNode<V, ?>> castArg(Class<V> cls) {
-    if (cls.isInstance(getConstructorArg())) {
-      return Optional.of((TargetNode<V, ?>) TargetNode.copyOf(this));
-    } else {
-      return Optional.empty();
-    }
-  }
-
   public RuleType getBuildRuleType() {
     return DescriptionCache.getRuleType(getDescription());
   }

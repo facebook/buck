@@ -84,6 +84,7 @@ import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.NoSuchTargetException;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.model.targetgraph.impl.TargetNodes;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
@@ -666,8 +667,7 @@ public class ProjectGenerator {
         testTargetApp.map(
             testHostBundleTarget -> {
               TargetNode<?, ?> testHostBundleNode = targetGraph.get(testHostBundleTarget);
-              return testHostBundleNode
-                  .castArg(AppleBundleDescriptionArg.class)
+              return TargetNodes.castArg(testHostBundleNode, AppleBundleDescriptionArg.class)
                   .orElseGet(
                       () -> {
                         throw new HumanReadableException(
@@ -796,14 +796,14 @@ public class ProjectGenerator {
     try {
       for (TargetNode<?, ?> node : traversal.traverse(ImmutableList.of(targetNode))) {
         if (node != targetNode) {
-          node.castArg(AppleBundleDescriptionArg.class)
+          TargetNodes.castArg(node, AppleBundleDescriptionArg.class)
               .ifPresent(
                   appleBundleNode -> {
                     if (isFrameworkBundle(appleBundleNode.getConstructorArg())) {
                       filteredRules.add(node);
                     }
                   });
-          node.castArg(PrebuiltAppleFrameworkDescriptionArg.class)
+          TargetNodes.castArg(node, PrebuiltAppleFrameworkDescriptionArg.class)
               .ifPresent(
                   prebuiltFramework -> {
                     // Technically (see Apple Tech Notes 2435), static frameworks are lies. In case
@@ -829,8 +829,7 @@ public class ProjectGenerator {
     return RichStream.from(copiedRules)
         .filter(
             input ->
-                input
-                    .castArg(AppleBundleDescriptionArg.class)
+                TargetNodes.castArg(input, AppleBundleDescriptionArg.class)
                     .map(argTargetNode -> !isFrameworkBundle(argTargetNode.getConstructorArg()))
                     .orElse(true))
         .toImmutableList();
@@ -990,7 +989,7 @@ public class ProjectGenerator {
 
   private Optional<String> getSwiftVersionForTargetNode(TargetNode<?, ?> targetNode) {
     Optional<TargetNode<SwiftCommonArg, ?>> targetNodeWithSwiftArgs =
-        targetNode.castArg(SwiftCommonArg.class);
+        TargetNodes.castArg(targetNode, SwiftCommonArg.class);
     return targetNodeWithSwiftArgs.flatMap(t -> t.getConstructorArg().getSwiftVersion());
   }
 
@@ -1441,7 +1440,7 @@ public class ProjectGenerator {
 
         ImmutableList.Builder<String> targetSpecificSwiftFlags = ImmutableList.builder();
         Optional<TargetNode<SwiftCommonArg, ?>> swiftTargetNode =
-            targetNode.castArg(SwiftCommonArg.class);
+            TargetNodes.castArg(targetNode, SwiftCommonArg.class);
         targetSpecificSwiftFlags.addAll(
             swiftTargetNode
                 .map(
@@ -1606,7 +1605,7 @@ public class ProjectGenerator {
     }
 
     Optional<TargetNode<AppleNativeTargetDescriptionArg, ?>> appleTargetNode =
-        targetNode.castArg(AppleNativeTargetDescriptionArg.class);
+        TargetNodes.castArg(targetNode, AppleNativeTargetDescriptionArg.class);
     if (appleTargetNode.isPresent()
         && isFocusedOnTarget
         && !options.shouldGenerateHeaderSymlinkTreesOnly()) {
@@ -1859,7 +1858,9 @@ public class ProjectGenerator {
                         PrebuiltAppleFrameworkDescription.class))
                 .stream())
         // Keep only the ones that may have frameworks and libraries fields.
-        .flatMap(input -> RichStream.from(input.castArg(HasSystemFrameworkAndLibraries.class)))
+        .flatMap(
+            input ->
+                RichStream.from(TargetNodes.castArg(input, HasSystemFrameworkAndLibraries.class)))
         // Then for each of them
         .forEach(
             castedNode -> {
@@ -1894,8 +1895,7 @@ public class ProjectGenerator {
 
               // If the item itself is a prebuilt framework, add it to framework_search_paths.
               // This is needed for prebuilt framework's headers to be reference-able.
-              castedNode
-                  .castArg(PrebuiltAppleFrameworkDescriptionArg.class)
+              TargetNodes.castArg(castedNode, PrebuiltAppleFrameworkDescriptionArg.class)
                   .ifPresent(
                       prebuilt -> {
                         frameworkSearchPaths.add(
@@ -2016,9 +2016,9 @@ public class ProjectGenerator {
           TargetNode<?, ?> targetNode, ImmutableMap<String, String> appendedConfig) {
     Optional<ImmutableSortedMap<String, ImmutableMap<String, String>>> configs = Optional.empty();
     Optional<TargetNode<AppleNativeTargetDescriptionArg, ?>> appleTargetNode =
-        targetNode.castArg(AppleNativeTargetDescriptionArg.class);
+        TargetNodes.castArg(targetNode, AppleNativeTargetDescriptionArg.class);
     Optional<TargetNode<HalideLibraryDescriptionArg, ?>> halideTargetNode =
-        targetNode.castArg(HalideLibraryDescriptionArg.class);
+        TargetNodes.castArg(targetNode, HalideLibraryDescriptionArg.class);
     if (appleTargetNode.isPresent()) {
       configs = Optional.of(appleTargetNode.get().getConstructorArg().getConfigs());
     } else if (halideTargetNode.isPresent()) {
@@ -2734,22 +2734,19 @@ public class ProjectGenerator {
 
   private String getModuleName(TargetNode<?, ?> buildTargetNode) {
     Optional<String> swiftName =
-        buildTargetNode
-            .castArg(SwiftLibraryDescriptionArg.class)
+        TargetNodes.castArg(buildTargetNode, SwiftLibraryDescriptionArg.class)
             .flatMap(node -> node.getConstructorArg().getModuleName());
     if (swiftName.isPresent()) {
       return swiftName.get();
     }
 
-    return buildTargetNode
-        .castArg(CommonArg.class)
+    return TargetNodes.castArg(buildTargetNode, CommonArg.class)
         .flatMap(node -> node.getConstructorArg().getModuleName())
         .orElse(buildTargetNode.getBuildTarget().getShortName());
   }
 
   private String getProductName(TargetNode<?, ?> buildTargetNode) {
-    return buildTargetNode
-        .castArg(AppleBundleDescriptionArg.class)
+    return TargetNodes.castArg(buildTargetNode, AppleBundleDescriptionArg.class)
         .flatMap(node -> node.getConstructorArg().getProductName())
         .orElse(getProductNameForBuildTargetNode(buildTargetNode));
   }
@@ -2806,7 +2803,7 @@ public class ProjectGenerator {
     }
 
     Optional<TargetNode<AppleNativeTargetDescriptionArg, ?>> maybeAppleNode =
-        node.castArg(AppleNativeTargetDescriptionArg.class);
+        TargetNodes.castArg(node, AppleNativeTargetDescriptionArg.class);
     if (!maybeAppleNode.isPresent()) {
       return ImmutableMap.of();
     }
@@ -3108,7 +3105,7 @@ public class ProjectGenerator {
               }
 
               Optional<TargetNode<PrebuiltAppleFrameworkDescriptionArg, ?>> prebuilt =
-                  input.castArg(PrebuiltAppleFrameworkDescriptionArg.class);
+                  TargetNodes.castArg(input, PrebuiltAppleFrameworkDescriptionArg.class);
               if (prebuilt.isPresent()) {
                 return Iterables.concat(
                     prebuilt.get().getConstructorArg().getFrameworks(),
@@ -3134,8 +3131,7 @@ public class ProjectGenerator {
         .append(targetNode)
         .transformAndConcat(
             input ->
-                input
-                    .castArg(CxxLibraryDescription.CommonArg.class)
+                TargetNodes.castArg(input, CxxLibraryDescription.CommonArg.class)
                     .map(input1 -> input1.getConstructorArg().getExportedPreprocessorFlags())
                     .orElse(ImmutableList.of()));
   }
@@ -3152,8 +3148,7 @@ public class ProjectGenerator {
         .append(targetNode)
         .transformAndConcat(
             input ->
-                input
-                    .castArg(CxxLibraryDescription.CommonArg.class)
+                TargetNodes.castArg(input, CxxLibraryDescription.CommonArg.class)
                     .map(
                         input1 ->
                             ImmutableList.of(
@@ -3176,8 +3171,7 @@ public class ProjectGenerator {
         .append(targetNode)
         .transformAndConcat(
             input ->
-                input
-                    .castArg(CxxLibraryDescription.CommonArg.class)
+                TargetNodes.castArg(input, CxxLibraryDescription.CommonArg.class)
                     .map(input1 -> input1.getConstructorArg().getExportedLinkerFlags())
                     .orElse(ImmutableList.of()))
         .toList();
@@ -3198,8 +3192,7 @@ public class ProjectGenerator {
         .append(targetNode)
         .transformAndConcat(
             input ->
-                input
-                    .castArg(CxxLibraryDescription.CommonArg.class)
+                TargetNodes.castArg(input, CxxLibraryDescription.CommonArg.class)
                     .map(
                         input1 ->
                             ImmutableList.of(
@@ -3226,7 +3219,7 @@ public class ProjectGenerator {
       Optional<TargetNode<AppleBundleDescriptionArg, ?>> bundleLoaderNode) {
     // This is an application test if it is not a UI test and has a bundle loader.
     Optional<TargetNode<AppleTestDescriptionArg, ?>> testNode =
-        targetNode.castArg(AppleTestDescriptionArg.class);
+        TargetNodes.castArg(targetNode, AppleTestDescriptionArg.class);
     if (testNode.isPresent() && bundleLoaderNode.isPresent()) {
       AppleTestDescriptionArg testArg = testNode.get().getConstructorArg();
       return !testArg.getIsUiTest();
@@ -3279,7 +3272,7 @@ public class ProjectGenerator {
   private FluentIterable<TargetNode<?, ?>> filterRecursiveFrameworkDepTargets(
       FluentIterable<TargetNode<?, ?>> targetNodes) {
     return targetNodes
-        .transform(input -> input.castArg(AppleBundleDescriptionArg.class))
+        .transform(input -> TargetNodes.castArg(input, AppleBundleDescriptionArg.class))
         .filter(Optional::isPresent)
         .transform(input -> input.get());
   }
@@ -3364,8 +3357,7 @@ public class ProjectGenerator {
     return targetNodes
         .transform(
             input ->
-                input
-                    .castArg(CxxLibraryDescription.CommonArg.class)
+                TargetNodes.castArg(input, CxxLibraryDescription.CommonArg.class)
                     .flatMap(this::getLibraryLinkerFlag))
         .filter(Optional::isPresent)
         .transform(input -> input.get())
@@ -3377,8 +3369,7 @@ public class ProjectGenerator {
     return targetNodes
         .transform(
             input ->
-                input
-                    .castArg(AppleBundleDescriptionArg.class)
+                TargetNodes.castArg(input, AppleBundleDescriptionArg.class)
                     .flatMap(this::getFrameworkLinkerFlag))
         .filter(Optional::isPresent)
         .transform(input -> input.get())
@@ -3405,8 +3396,7 @@ public class ProjectGenerator {
     return allDeps
         .transform(
             input ->
-                input
-                    .castArg(CxxLibraryDescription.CommonArg.class)
+                TargetNodes.castArg(input, CxxLibraryDescription.CommonArg.class)
                     .flatMap(this::getForceLoadLinkerFlag))
         .filter(Optional::isPresent)
         .transform(input -> input.get())
@@ -3554,7 +3544,7 @@ public class ProjectGenerator {
         }
       } else if (binaryNode.getDescription() instanceof AppleTestDescription) {
         TargetNode<AppleTestDescriptionArg, ?> testNode =
-            binaryNode.castArg(AppleTestDescriptionArg.class).get();
+            TargetNodes.castArg(binaryNode, AppleTestDescriptionArg.class).get();
         if (testNode.getConstructorArg().getIsUiTest()) {
           return ProductTypes.UI_TEST;
         } else {
@@ -3577,7 +3567,7 @@ public class ProjectGenerator {
 
   private static boolean isModularAppleLibrary(TargetNode<?, ?> libraryNode) {
     Optional<TargetNode<AppleLibraryDescriptionArg, ?>> appleLibNode =
-        libraryNode.castArg(AppleLibraryDescriptionArg.class);
+        TargetNodes.castArg(libraryNode, AppleLibraryDescriptionArg.class);
     if (appleLibNode.isPresent()) {
       AppleLibraryDescriptionArg constructorArg = appleLibNode.get().getConstructorArg();
       return constructorArg.isModular();
@@ -3594,9 +3584,9 @@ public class ProjectGenerator {
   private static boolean bundleRequiresAllTransitiveFrameworks(
       TargetNode<? extends AppleNativeTargetDescriptionArg, ?> binaryNode,
       Optional<TargetNode<AppleBundleDescriptionArg, ?>> bundleLoaderNode) {
-    return binaryNode.castArg(AppleBinaryDescriptionArg.class).isPresent()
+    return TargetNodes.castArg(binaryNode, AppleBinaryDescriptionArg.class).isPresent()
         || (!bundleLoaderNode.isPresent()
-            && binaryNode.castArg(AppleTestDescriptionArg.class).isPresent());
+            && TargetNodes.castArg(binaryNode, AppleTestDescriptionArg.class).isPresent());
   }
 
   private Path resolveSourcePath(SourcePath sourcePath) {
@@ -3608,7 +3598,7 @@ public class ProjectGenerator {
     BuildTarget buildTarget = buildTargetSourcePath.getTarget();
     TargetNode<?, ?> node = targetGraph.get(buildTarget);
     Optional<TargetNode<ExportFileDescriptionArg, ?>> exportFileNode =
-        node.castArg(ExportFileDescriptionArg.class);
+        TargetNodes.castArg(node, ExportFileDescriptionArg.class);
     if (!exportFileNode.isPresent()) {
       BuildRuleResolver resolver = actionGraphBuilderForNode.apply(node);
       SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);

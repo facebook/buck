@@ -35,6 +35,7 @@ import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.model.targetgraph.impl.TargetNodes;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
@@ -768,7 +769,7 @@ public class WorkspaceAndProjectGenerator {
                 targetGraph.getOptional(explicitTestTarget);
             if (explicitTestNode.isPresent()) {
               Optional<TargetNode<AppleTestDescriptionArg, ?>> castedNode =
-                  explicitTestNode.get().castArg(AppleTestDescriptionArg.class);
+                  TargetNodes.castArg(explicitTestNode.get(), AppleTestDescriptionArg.class);
               if (castedNode.isPresent()) {
                 testsBuilder.add(castedNode.get());
               } else {
@@ -827,7 +828,7 @@ public class WorkspaceAndProjectGenerator {
     ImmutableSet.Builder<TargetNode<AppleTestDescriptionArg, ?>> builder = ImmutableSet.builder();
     for (TargetNode<?, ?> node : graph.getAll(targets)) {
       Optional<TargetNode<AppleTestDescriptionArg, ?>> castedNode =
-          node.castArg(AppleTestDescriptionArg.class);
+          TargetNodes.castArg(node, AppleTestDescriptionArg.class);
       if (castedNode.isPresent()) {
         builder.add(castedNode.get());
       } else {

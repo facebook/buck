@@ -20,6 +20,7 @@ import com.facebook.buck.core.description.arg.HasTests;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.google.common.collect.ImmutableSortedSet;
+import java.util.Optional;
 
 /** Utility class to work with {@link TargetNode} objects. */
 public class TargetNodes {
@@ -37,6 +38,16 @@ public class TargetNodes {
       return ((HasTests) node.getConstructorArg()).getTests();
     } else {
       return ImmutableSortedSet.of();
+    }
+  }
+
+  /** Type safe checked cast of the constructor arg. */
+  @SuppressWarnings("unchecked")
+  public static <V> Optional<TargetNode<V, ?>> castArg(TargetNode<?, ?> node, Class<V> cls) {
+    if (cls.isInstance(node.getConstructorArg())) {
+      return Optional.of((TargetNode<V, ?>) node.copy());
+    } else {
+      return Optional.empty();
     }
   }
 }

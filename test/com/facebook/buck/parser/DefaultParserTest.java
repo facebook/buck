@@ -54,6 +54,7 @@ import com.facebook.buck.core.model.impl.ImmutableBuildTarget;
 import com.facebook.buck.core.model.impl.ImmutableUnflavoredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.model.targetgraph.impl.TargetNodes;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.config.KnownConfigurationRuleTypes;
@@ -2201,9 +2202,9 @@ public class DefaultParserTest {
 
     Cell cell = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();
     TargetNode<GenruleDescriptionArg, ?> node =
-        parser
-            .getTargetNode(eventBus, cell, false, executorService, buildTarget)
-            .castArg(GenruleDescriptionArg.class)
+        TargetNodes.castArg(
+                parser.getTargetNode(eventBus, cell, false, executorService, buildTarget),
+                GenruleDescriptionArg.class)
             .get();
 
     assertThat(node.getConstructorArg().getOut(), is(equalTo("default.txt")));

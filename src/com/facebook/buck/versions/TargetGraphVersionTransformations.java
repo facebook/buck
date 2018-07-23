@@ -19,6 +19,7 @@ package com.facebook.buck.versions;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.model.targetgraph.impl.TargetNodes;
 import com.facebook.buck.rules.coercer.CoercedTypeCache;
 import com.facebook.buck.rules.coercer.ParamInfo;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
@@ -42,7 +43,7 @@ class TargetGraphVersionTransformations {
 
   public static Optional<TargetNode<VersionedAliasDescriptionArg, ?>> getVersionedNode(
       TargetNode<?, ?> node) {
-    return node.castArg(VersionedAliasDescriptionArg.class);
+    return TargetNodes.castArg(node, VersionedAliasDescriptionArg.class);
   }
 
   @SuppressWarnings("unchecked")

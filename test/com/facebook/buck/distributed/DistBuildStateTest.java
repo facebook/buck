@@ -33,6 +33,7 @@ import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
+import com.facebook.buck.core.model.targetgraph.impl.TargetNodes;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.config.KnownConfigurationRuleTypes;
@@ -321,7 +322,9 @@ public class DistBuildStateTest {
         reconstructedGraph
             .getNodes()
             .stream()
-            .map(targetNode -> targetNode.castArg(JavaLibraryDescriptionArg.class).get())
+            .map(
+                targetNode ->
+                    TargetNodes.castArg(targetNode, JavaLibraryDescriptionArg.class).get())
             .sorted()
             .map(targetNode -> targetNode.getConstructorArg().getSrcs())
             .collect(Collectors.toList()),

@@ -22,6 +22,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.model.targetgraph.impl.TargetNodes;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.graph.AcyclicDepthFirstPostOrderTraversal;
@@ -158,7 +159,7 @@ public final class AppleBuildRules {
         node -> {
           // Handle resource exporting behavior of AppleResource.getResourceFromDeps
           Optional<Iterable<TargetNode<?, ?>>> iterable =
-              node.castArg(AppleResourceDescriptionArg.class)
+              TargetNodes.castArg(node, AppleResourceDescriptionArg.class)
                   .map(TargetNode::getConstructorArg)
                   .map(arg -> targetGraph.getAll(arg.getResourcesFromDeps()));
           if (iterable.isPresent()) {
