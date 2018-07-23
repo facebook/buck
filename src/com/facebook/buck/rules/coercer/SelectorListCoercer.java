@@ -77,6 +77,9 @@ public class SelectorListCoercer<T> implements TypeCoercer<SelectorList<T>> {
         }
         elementTypeCoercer.traverse(cellRoots, entry.getValue(), traversal);
       }
+      for (SelectorKey selectorKey : element.getNullConditions()) {
+        buildTargetTypeCoercer.traverse(cellRoots, selectorKey.getBuildTarget(), traversal);
+      }
     }
   }
 

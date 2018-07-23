@@ -17,6 +17,7 @@
 package com.facebook.buck.core.select;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import javax.annotation.Nullable;
 
 /**
@@ -26,6 +27,7 @@ import javax.annotation.Nullable;
 public class Selector<T> {
 
   private final ImmutableMap<SelectorKey, T> conditions;
+  private final ImmutableSet<SelectorKey> nullConditions;
   private final String noMatchMessage;
   private final boolean hasDefaultCondition;
 
@@ -33,14 +35,22 @@ public class Selector<T> {
    * Creates a new Selector with a custom error message for a situation when no conditions match.
    */
   public Selector(
-      ImmutableMap<SelectorKey, T> conditions, String noMatchMessage, boolean hasDefaultCondition) {
+      ImmutableMap<SelectorKey, T> conditions,
+      ImmutableSet<SelectorKey> nullConditions,
+      String noMatchMessage,
+      boolean hasDefaultCondition) {
     this.conditions = conditions;
+    this.nullConditions = nullConditions;
     this.noMatchMessage = noMatchMessage;
     this.hasDefaultCondition = hasDefaultCondition;
   }
 
   public ImmutableMap<SelectorKey, T> getConditions() {
     return conditions;
+  }
+
+  public ImmutableSet<SelectorKey> getNullConditions() {
+    return nullConditions;
   }
 
   /**

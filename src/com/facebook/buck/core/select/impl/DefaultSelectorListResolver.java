@@ -39,6 +39,8 @@ import javax.annotation.Nullable;
  */
 public class DefaultSelectorListResolver implements SelectorListResolver {
 
+  private static final Object NULL_VALUE = new Object();
+
   private final SelectableResolver selectableResolver;
 
   public DefaultSelectorListResolver(SelectableResolver selectableResolver) {
@@ -61,11 +63,12 @@ public class DefaultSelectorListResolver implements SelectorListResolver {
   }
 
   @Nullable
+  @SuppressWarnings("unchecked")
   private <T> T resolveSelector(
       BuildTarget buildTarget, String attributeName, Selector<T> selector) {
-    Map<Selectable, T> matchingConditions = findMatchingConditions(selector);
+    Map<Selectable, Object> matchingConditions = findMatchingConditions(selector);
 
-    T matchingResult = null;
+    Object matchingResult = null;
     assertNotMultipleMatches(matchingConditions, attributeName, buildTarget);
     if (matchingConditions.size() == 1) {
       matchingResult = Iterables.getOnlyElement(matchingConditions.values());
@@ -76,29 +79,36 @@ public class DefaultSelectorListResolver implements SelectorListResolver {
       matchingResult = selector.hasDefaultCondition() ? selector.getDefaultConditionValue() : null;
     }
 
-    return matchingResult;
+    return matchingResult == NULL_VALUE ? null : (T) matchingResult;
   }
 
-  private <T> Map<Selectable, T> findMatchingConditions(Selector<T> selector) {
-    Map<Selectable, T> matchingConditions = new LinkedHashMap<>();
+  private <T> Map<Selectable, Object> findMatchingConditions(Selector<T> selector) {
+    Map<Selectable, Object> matchingConditions = new LinkedHashMap<>();
 
     for (Map.Entry<SelectorKey, T> entry : selector.getConditions().entrySet()) {
-      SelectorKey selectorKey = entry.getKey();
-      if (selectorKey.isReserved()) {
-        continue;
-      }
-
-      Selectable selectable = selectableResolver.getSelectable(selectorKey.getBuildTarget());
-
-      if (selectable.matches()) {
-        updateConditions(matchingConditions, selectable, entry.getValue());
-      }
+      handleSelector(matchingConditions, entry.getKey(), entry.getValue());
+    }
+    for (SelectorKey selectorKey : selector.getNullConditions()) {
+      handleSelector(matchingConditions, selectorKey, NULL_VALUE);
     }
     return matchingConditions;
   }
 
+  private void handleSelector(
+      Map<Selectable, Object> matchingConditions, SelectorKey selectorKey, Object value) {
+    if (selectorKey.isReserved()) {
+      return;
+    }
+
+    Selectable selectable = selectableResolver.getSelectable(selectorKey.getBuildTarget());
+
+    if (selectable.matches()) {
+      updateConditions(matchingConditions, selectable, value);
+    }
+  }
+
   private static <T> void updateConditions(
-      Map<Selectable, T> matchingConditions, Selectable newCondition, T value) {
+      Map<Selectable, Object> matchingConditions, Selectable newCondition, Object value) {
     // Skip the new condition if some existing condition refines it
     if (matchingConditions
         .keySet()

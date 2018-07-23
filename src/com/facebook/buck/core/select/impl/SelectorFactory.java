@@ -24,12 +24,15 @@ import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.facebook.buck.rules.coercer.TypeCoercer;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.devtools.build.lib.syntax.Runtime;
 import java.nio.file.Path;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 /** Factory to create {@link Selector} using raw (non-coerced) data. */
 public class SelectorFactory {
@@ -68,6 +71,7 @@ public class SelectorFactory {
       throws CoerceFailedException {
     LinkedHashMap<SelectorKey, T> result =
         Maps.newLinkedHashMapWithExpectedSize(rawAttributes.size());
+    Set<SelectorKey> nullConditions = new HashSet<>();
     boolean foundDefaultCondition = false;
     for (Entry<String, ?> entry : rawAttributes.entrySet()) {
       String key = entry.getKey();
@@ -82,14 +86,20 @@ public class SelectorFactory {
       }
       if (entry.getValue() == Runtime.NONE) {
         result.remove(selectorKey);
+        nullConditions.add(selectorKey);
       } else {
         result.put(
             selectorKey,
             elementTypeCoercer.coerce(
                 cellPathResolver, filesystem, pathRelativeToProjectRoot, entry.getValue()));
+        nullConditions.remove(selectorKey);
       }
     }
 
-    return new Selector<>(ImmutableMap.copyOf(result), noMatchMessage, foundDefaultCondition);
+    return new Selector<>(
+        ImmutableMap.copyOf(result),
+        ImmutableSet.copyOf(nullConditions),
+        noMatchMessage,
+        foundDefaultCondition);
   }
 }

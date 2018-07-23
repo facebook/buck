@@ -50,3 +50,33 @@ config_setting(
         "cat.file2": "c",
     },
 )
+
+genrule(
+    name = "echo",
+    out = "echo_out.txt",
+    bash = select({
+        "//:a": "echo select > $OUT",
+        "DEFAULT": None,
+    }),
+    cmd = "echo cmd > $OUT",
+    cmd_exe = select({
+        "//:a": "echo select > $OUT",
+        "DEFAULT": None,
+    }),
+)
+
+config_setting(
+    name = "c",
+    values = {
+        "another.option": "c",
+    },
+)
+
+genrule(
+    name = "echo_with_one_none",
+    out = "echo_out.txt",
+    cmd = select({
+        "//:a": None,
+        "//:c": "echo c > $OUT",
+    }),
+)

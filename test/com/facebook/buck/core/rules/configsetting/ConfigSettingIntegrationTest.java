@@ -94,4 +94,30 @@ public class ConfigSettingIntegrationTest {
             "-c", "cat.file=b", "-c", "cat.file2=c", ":cat_with_refined_config");
     assertEquals("c", Files.readAllLines(output).get(0));
   }
+
+  @Test
+  public void testNoneSetsValueToNull() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "simple_project", temporaryFolder);
+    workspace.setUp();
+
+    Path output = workspace.buildAndReturnOutput(":echo");
+    assertEquals("cmd", Files.readAllLines(output).get(0).trim());
+
+    output = workspace.buildAndReturnOutput("-c", "cat.file=a", ":echo");
+    assertEquals("select", Files.readAllLines(output).get(0).trim());
+  }
+
+  @Test
+  public void testConflictingConditionsWithNoneCauseError() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "simple_project", temporaryFolder);
+    workspace.setUp();
+
+    thrown.expect(HumanReadableException.class);
+    thrown.expectMessage(
+        "Multiple matches found when resolving configurable attribute \"cmd\" in //:echo_with_one_none");
+    workspace.buildAndReturnOutput(
+        "-c", "cat.file=a", "-c", "another.option=c", ":echo_with_one_none");
+  }
 }
