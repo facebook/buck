@@ -14,18 +14,19 @@
  * under the License.
  */
 
-package com.facebook.buck.core.model.targetgraph;
+package com.facebook.buck.core.model.targetgraph.impl;
 
 import com.facebook.buck.core.cell.resolver.CellPathResolver;
 import com.facebook.buck.core.description.DescriptionCache;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
-import com.facebook.buck.core.model.HasBuildTarget;
+import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
+import com.facebook.buck.core.model.targetgraph.NodeCopier;
+import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.type.RuleType;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.rules.visibility.ObeysVisibility;
 import com.facebook.buck.rules.visibility.VisibilityChecker;
 import com.facebook.buck.rules.visibility.VisibilityPattern;
 import com.facebook.buck.versions.Version;
@@ -48,18 +49,20 @@ import org.immutables.value.Value;
  */
 @BuckStyleImmutable
 @Value.Immutable(builder = false, prehash = true)
-abstract class AbstractTargetNode<T, U extends DescriptionWithTargetGraph<T>>
-    implements Comparable<TargetNode<?, ?>>, ObeysVisibility, HasBuildTarget {
+abstract class AbstractImmutableTargetNode<T, U extends DescriptionWithTargetGraph<T>>
+    implements TargetNode<T, U> {
 
   @Value.Parameter
   @Override
   public abstract BuildTarget getBuildTarget();
 
   @Value.Parameter
+  @Override
   public abstract NodeCopier getNodeCopier();
 
   /** @return A hash of the raw input from the build file used to construct the node. */
   @Value.Parameter
+  @Override
   public abstract HashCode getRawInputsHashCode();
 
   // TODO(#22139496): Currently, `Descriptions` don't implement content equality, so we exclude it
@@ -68,21 +71,27 @@ abstract class AbstractTargetNode<T, U extends DescriptionWithTargetGraph<T>>
   // maintain parser cache integrity.
   @Value.Parameter
   @Value.Auxiliary
+  @Override
   public abstract U getDescription();
 
   @Value.Parameter
+  @Override
   public abstract T getConstructorArg();
 
   @Value.Parameter
+  @Override
   public abstract ProjectFilesystem getFilesystem();
 
   @Value.Parameter
+  @Override
   public abstract ImmutableSet<Path> getInputs();
 
   @Value.Parameter
+  @Override
   public abstract ImmutableSet<BuildTarget> getDeclaredDeps();
 
   @Value.Parameter
+  @Override
   public abstract ImmutableSortedSet<BuildTarget> getExtraDeps();
 
   /**
@@ -95,18 +104,23 @@ abstract class AbstractTargetNode<T, U extends DescriptionWithTargetGraph<T>>
    * output of those detected rules.
    */
   @Value.Parameter
+  @Override
   public abstract ImmutableSortedSet<BuildTarget> getTargetGraphOnlyDeps();
 
   @Value.Parameter
+  @Override
   public abstract CellPathResolver getCellNames();
 
   @Value.Parameter
+  @Override
   public abstract ImmutableSet<VisibilityPattern> getVisibilityPatterns();
 
   @Value.Parameter
+  @Override
   public abstract ImmutableSet<VisibilityPattern> getWithinViewPatterns();
 
   @Value.Parameter
+  @Override
   public abstract Optional<ImmutableMap<BuildTarget, Version>> getSelectedVersions();
 
   @Override
@@ -116,6 +130,7 @@ abstract class AbstractTargetNode<T, U extends DescriptionWithTargetGraph<T>>
   }
 
   /** @return all targets which must be built before this one can be. */
+  @Override
   public Set<BuildTarget> getBuildDeps() {
     return Sets.union(getDeclaredDeps(), getExtraDeps());
   }
@@ -124,6 +139,7 @@ abstract class AbstractTargetNode<T, U extends DescriptionWithTargetGraph<T>>
    * @return all targets which must be present in the TargetGraph before this one can be transformed
    *     into a BuildRule.
    */
+  @Override
   public Set<BuildTarget> getParseDeps() {
     return Sets.union(getBuildDeps(), getTargetGraphOnlyDeps());
   }
@@ -135,14 +151,17 @@ abstract class AbstractTargetNode<T, U extends DescriptionWithTargetGraph<T>>
    * <p>This method can be faster than {@link #getBuildDeps()} in cases where repeated traversals
    * and set operations are not necessary, as it avoids creating the intermediate set.
    */
+  @Override
   public Stream<BuildTarget> getBuildDepsStream() {
     return Stream.concat(getDeclaredDeps().stream(), getExtraDeps().stream());
   }
 
+  @Override
   public boolean isVisibleTo(TargetNode<?, ?> viewer) {
     return getVisibilityChecker().isVisibleTo(viewer);
   }
 
+  @Override
   public void isVisibleToOrThrow(TargetNode<?, ?> viewer) {
     if (!isVisibleTo(viewer)) {
       throw new HumanReadableException(
@@ -150,6 +169,7 @@ abstract class AbstractTargetNode<T, U extends DescriptionWithTargetGraph<T>>
     }
   }
 
+  @Override
   public RuleType getBuildRuleType() {
     return DescriptionCache.getRuleType(getDescription());
   }
@@ -164,21 +184,18 @@ abstract class AbstractTargetNode<T, U extends DescriptionWithTargetGraph<T>>
     return getBuildTarget().getFullyQualifiedName();
   }
 
+  @Override
   public TargetNode<T, U> copy() {
-    return TargetNode.copyOf(this);
+    return ImmutableTargetNode.copyOf(this);
   }
 
-  // This method uses the TargetNodeFactory, rather than just calling withBuildTarget, because
-  // ImplicitDepsInferringDescriptions may give different results for deps based on flavors.
-  //
-  // Note that this method strips away selected versions, and may be buggy because of it.
+  @Override
   public TargetNode<T, U> copyWithFlavors(ImmutableSet<Flavor> flavors) {
-    return getNodeCopier().copyNodeWithFlavors(TargetNode.copyOf(this), flavors);
+    return getNodeCopier().copyNodeWithFlavors(ImmutableTargetNode.copyOf(this), flavors);
   }
 
-  // Note that this method bypasses TargetNodeFactory, and may be buggy because it doesn't
-  // re-compute ImplicitDepsInferringDescription-detected deps..
+  @Override
   public TargetNode<T, U> withFlavors(ImmutableSet<Flavor> flavors) {
-    return TargetNode.copyOf(this).withBuildTarget(getBuildTarget().withFlavors(flavors));
+    return ImmutableTargetNode.copyOf(this).withBuildTarget(getBuildTarget().withFlavors(flavors));
   }
 }
