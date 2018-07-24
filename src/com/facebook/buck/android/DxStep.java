@@ -182,10 +182,6 @@ public class DxStep extends ShellStep {
         !options.contains(Option.RUN_IN_PROCESS)
             || options.contains(Option.USE_CUSTOM_DX_IF_AVAILABLE),
         "In-process dexing is only supported with custom DX");
-
-    Preconditions.checkArgument(
-        !dexTool.equals(D8) || options.contains(Option.RUN_IN_PROCESS),
-        "D8 is only supported with In-process dexing");
     Preconditions.checkArgument(
         !intermediate || dexTool.equals(D8), "Intermediate dexing is only supported with D8");
   }
@@ -196,6 +192,11 @@ public class DxStep extends ShellStep {
 
     // TODO: Support D8 for out of process dexing by respecting dexTool here
     String dx = androidPlatformTarget.getDxExecutable().toString();
+
+    if (dexTool.equals(D8)) {
+      context.postEvent(
+          ConsoleEvent.warning("Using %s instead of D8. D8 can only be used in-process.", dx));
+    }
 
     if (options.contains(Option.USE_CUSTOM_DX_IF_AVAILABLE)) {
       String customDx = Strings.emptyToNull(System.getProperty("buck.dx"));
