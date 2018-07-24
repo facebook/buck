@@ -17,6 +17,7 @@
 package com.facebook.buck.parser;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.TestCellBuilder;
@@ -237,6 +238,13 @@ public class BuildFileSpecTest {
     thrown.expect(HumanReadableException.class);
     thrown.expectMessage("could not be found");
     recursiveSpec.findBuildFiles(cell, ParserConfig.BuildFileSearchMethod.FILESYSTEM_CRAWL);
+  }
+
+  @Test
+  public void testBuckOutIsIgnored() {
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+    Path buildFile = Paths.get("buck-out", "gen", "a", "BUCK");
+    assertTrue(BuildFileSpec.isIgnored(filesystem, buildFile));
   }
 
   private static Watchman createWatchman(
