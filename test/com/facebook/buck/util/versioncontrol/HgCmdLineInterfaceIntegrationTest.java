@@ -200,6 +200,6 @@ public class HgCmdLineInterfaceIntegrationTest {
         repoRootDir,
         new TestProcessExecutorFactory(),
         new VersionControlBuckConfig(FakeBuckConfig.builder().build()).getHgCmd(),
-        ImmutableMap.of());
+        ImmutableMap.of("PATH", System.getenv("PATH")));
   }
 }
