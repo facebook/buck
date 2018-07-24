@@ -20,7 +20,7 @@ import com.facebook.buck.core.cell.resolver.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.util.string.MoreStrings;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
@@ -29,9 +29,10 @@ import java.util.stream.Collectors;
 /** Contains base logic for {@link CellPathResolver}. */
 public abstract class AbstractCellPathResolver implements CellPathResolver {
 
+  /** @return sorted set of known roots in reverse natural order */
   @Override
-  public ImmutableSet<Path> getKnownRoots() {
-    return ImmutableSet.<Path>builder()
+  public ImmutableSortedSet<Path> getKnownRoots() {
+    return ImmutableSortedSet.<Path>reverseOrder()
         .addAll(getCellPaths().values())
         .add(getCellPathOrThrow(Optional.empty()))
         .build();

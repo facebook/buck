@@ -25,7 +25,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.primitives.UnsignedInteger;
 import com.google.common.primitives.UnsignedLong;
 import java.io.IOException;
@@ -49,7 +49,7 @@ public class ObjectPathsAbsolutifier {
 
   private final RandomAccessFile file;
   private final ProjectFilesystem filesystem;
-  private final ImmutableSet<Path> knownRoots;
+  private final ImmutableSortedSet<Path> knownRoots;
   private final String oldCompDir;
   private final String newCompDir;
   private ByteBuffer buffer;
@@ -60,7 +60,7 @@ public class ObjectPathsAbsolutifier {
       String oldCompDir,
       String newCompDir,
       ProjectFilesystem filesystem,
-      ImmutableSet<Path> knownRoots,
+      ImmutableSortedSet<Path> knownRoots,
       NulTerminatedCharsetDecoder nulTerminatedCharsetDecoder)
       throws IOException {
     Path compDir = Paths.get(newCompDir);

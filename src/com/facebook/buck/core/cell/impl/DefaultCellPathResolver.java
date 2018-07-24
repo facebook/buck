@@ -24,7 +24,6 @@ import com.facebook.buck.util.config.Config;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Maps;
 import java.io.IOException;
@@ -72,17 +71,28 @@ public abstract class DefaultCellPathResolver extends AbstractCellPathResolver {
 
   @Value.Lazy
   @Override
-  public ImmutableSet<Path> getKnownRoots() {
+  public ImmutableSortedSet<Path> getKnownRoots() {
     return super.getKnownRoots();
   }
 
+  private static ImmutableMap<String, ? extends Path> sortCellPaths(
+      Map<String, ? extends Path> cellPaths) {
+    return cellPaths
+        .entrySet()
+        .stream()
+        .sorted(Comparator.comparing(Map.Entry::getValue))
+        .collect(ImmutableMap.toImmutableMap(Map.Entry::getKey, Map.Entry::getValue));
+  }
+
   public static DefaultCellPathResolver of(Path root, Map<String, ? extends Path> cellPaths) {
-    return ImmutableDefaultCellPathResolver.of(root, cellPaths);
+    return ImmutableDefaultCellPathResolver.of(root, sortCellPaths(cellPaths));
   }
 
   public static DefaultCellPathResolver of(Path root, Config config) {
     return ImmutableDefaultCellPathResolver.of(
-        root, getCellPathsFromConfigRepositoriesSection(root, config.get(REPOSITORIES_SECTION)));
+        root,
+        sortCellPaths(
+            getCellPathsFromConfigRepositoriesSection(root, config.get(REPOSITORIES_SECTION))));
   }
 
   static ImmutableMap<String, Path> getCellPathsFromConfigRepositoriesSection(

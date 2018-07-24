@@ -117,7 +117,7 @@ public abstract class CxxTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
     return ImmutableList.of();
   }
 
-  /** @return the path to which the test commands output is written. */
+  /** @return the path to which the test exit code output is written. */
   @VisibleForTesting
   protected Path getPathToTestExitCode() {
     return getPathToTestOutputDirectory().resolve("exitCode");

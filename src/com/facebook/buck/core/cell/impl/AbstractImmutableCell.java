@@ -34,7 +34,7 @@ import com.facebook.buck.util.RichStream;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Optional;
@@ -47,7 +47,7 @@ abstract class AbstractImmutableCell implements Cell {
 
   @Override
   @Value.Auxiliary
-  public abstract ImmutableSet<Path> getKnownRoots();
+  public abstract ImmutableSortedSet<Path> getKnownRoots();
 
   @Override
   @Value.Auxiliary

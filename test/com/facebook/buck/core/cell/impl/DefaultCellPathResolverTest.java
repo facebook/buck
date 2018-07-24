@@ -24,7 +24,7 @@ import com.facebook.buck.util.config.ConfigBuilder;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
 import java.nio.charset.StandardCharsets;
@@ -211,6 +211,39 @@ public class DefaultCellPathResolverTest {
   }
 
   @Test
+  public void cellPathsAreCorrectlySorted() {
+    FileSystem vfs = Jimfs.newFileSystem(Configuration.unix());
+
+    Path root = vfs.getPath("/root");
+    Path a = vfs.getPath("/root/a");
+    Path abcde = vfs.getPath("/root/a/b/c/d/e");
+    Path afg = vfs.getPath("/root/a/f/g");
+    Path i = vfs.getPath("/root/i");
+
+    DefaultCellPathResolver cellPathResolver =
+        DefaultCellPathResolver.of(
+            root,
+            // out of order
+            ImmutableMap.of(
+                "root", root,
+                "abcde", abcde,
+                "i", i,
+                "afg", afg,
+                "a", a));
+
+    assertEquals(
+        cellPathResolver.getCellPaths(),
+        ImmutableMap.of(
+            "i", i,
+            "afg", afg,
+            "abcde", abcde,
+            "a", a,
+            "root", root));
+
+    assertEquals(cellPathResolver.getKnownRoots(), ImmutableSortedSet.of(i, afg, abcde, a, root));
+  }
+
+  @Test
   public void testGetKnownRootsReturnsAllRoots() {
     FileSystem vfs = Jimfs.newFileSystem(Configuration.unix());
     DefaultCellPathResolver cellPathResolver =
@@ -223,7 +256,7 @@ public class DefaultCellPathResolverTest {
 
     assertEquals(
         cellPathResolver.getKnownRoots(),
-        ImmutableSet.of(vfs.getPath("/foo/root"), vfs.getPath("/foo/cell")));
+        ImmutableSortedSet.of(vfs.getPath("/foo/root"), vfs.getPath("/foo/cell")));
   }
 
   @Test

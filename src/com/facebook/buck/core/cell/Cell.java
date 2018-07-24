@@ -14,7 +14,6 @@
  * under the License.
  */
 
-
 package com.facebook.buck.core.cell;
 
 import com.facebook.buck.config.BuckConfig;
@@ -27,7 +26,7 @@ import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.Optional;
 
@@ -64,7 +63,7 @@ public interface Cell {
     }
   }
 
-  ImmutableSet<Path> getKnownRoots();
+  ImmutableSortedSet<Path> getKnownRoots();
 
   Optional<String> getCanonicalName();
 

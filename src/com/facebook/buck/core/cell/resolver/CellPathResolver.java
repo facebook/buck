@@ -18,7 +18,7 @@ package com.facebook.buck.core.cell.resolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.Optional;
 
@@ -66,5 +66,5 @@ public interface CellPathResolver {
   Optional<String> getCanonicalCellName(Path cellPath);
 
   /** @return paths to roots of all cells known to this resolver. */
-  ImmutableSet<Path> getKnownRoots();
+  ImmutableSortedSet<Path> getKnownRoots();
 }

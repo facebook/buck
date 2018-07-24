@@ -52,7 +52,7 @@ import com.facebook.buck.util.types.Either;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.HashCode;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -79,7 +79,8 @@ public class BuildableSerializerTest extends AbstractValueVisitorTest {
     cellResolver = createMock(CellPathResolver.class);
 
     expect(cellResolver.getKnownRoots())
-        .andReturn(ImmutableSet.of(rootFilesystem.getRootPath(), otherFilesystem.getRootPath()))
+        .andReturn(
+            ImmutableSortedSet.of(rootFilesystem.getRootPath(), otherFilesystem.getRootPath()))
         .anyTimes();
 
     expect(cellResolver.getCanonicalCellName(rootFilesystem.getRootPath()))

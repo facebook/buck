@@ -30,6 +30,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.cache.CacheLoader;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -86,7 +87,7 @@ public class DistributedCellProviderFactory {
                           ruleKeyConfiguration);
 
                   return ImmutableCell.of(
-                      cellParams.keySet(),
+                      ImmutableSortedSet.copyOf(cellParams.keySet()),
                       // Distributed builds don't care about cell names, use a sentinel value that
                       // will show up if it actually does care about them.
                       cellParam.getCanonicalName(),
