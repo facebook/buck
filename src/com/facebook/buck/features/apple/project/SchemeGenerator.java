@@ -16,7 +16,6 @@
 
 package com.facebook.buck.features.apple.project;
 
-import com.facebook.buck.apple.SchemeActionType;
 import com.facebook.buck.apple.xcode.XCScheme;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
 import com.facebook.buck.io.MoreProjectFilesystems;

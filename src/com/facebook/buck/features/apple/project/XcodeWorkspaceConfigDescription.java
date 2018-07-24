@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.apple;
+package com.facebook.buck.features.apple.project;
 
 import com.facebook.buck.apple.xcode.XCScheme;
 import com.facebook.buck.core.description.arg.CommonDescriptionArg;

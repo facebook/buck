@@ -333,6 +333,7 @@ java_test(
         "//src/com/facebook/buck/event:interfaces",
         "//src/com/facebook/buck/event/external:external_lib",
         "//src/com/facebook/buck/event/listener:listener",
+        "//src/com/facebook/buck/features/apple/project:project",
         "//src/com/facebook/buck/features/project/intellij:intellij",
         "//src/com/facebook/buck/graph:graph",
         "//src/com/facebook/buck/httpserver:httpserver",

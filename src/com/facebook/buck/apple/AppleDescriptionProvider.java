@@ -94,7 +94,6 @@ public class AppleDescriptionProvider implements DescriptionProvider {
         new AppleAssetCatalogDescription(),
         new AppleResourceDescription(),
         new CoreDataModelDescription(),
-        new XcodeWorkspaceConfigDescription(),
         new XcodePrebuildScriptDescription(),
         new XcodePostbuildScriptDescription(),
         appleLibraryDescription,
