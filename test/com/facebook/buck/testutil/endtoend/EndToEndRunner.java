@@ -412,6 +412,7 @@ public class EndToEndRunner extends ParentRunner<EndToEndTestDescriptor> {
     validateTestAnnotations(errors);
   }
 
+  @Override
   protected boolean isIgnored(EndToEndTestDescriptor child) {
     return child.getMethod().getAnnotation(Ignore.class) != null;
   }

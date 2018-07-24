@@ -376,11 +376,13 @@ public class ProjectWorkspace extends AbstractWorkspace {
    *     {@code ["project"]}, etc.
    * @return the result of running Buck, which includes the exit code, stdout, and stderr.
    */
+  @Override
   public ProcessResult runBuckCommand(String... args) throws IOException {
     return runBuckCommandWithEnvironmentOverridesAndContext(
         destPath, Optional.empty(), ImmutableMap.of(), args);
   }
 
+  @Override
   public ProcessResult runBuckCommand(ImmutableMap<String, String> environment, String... args)
       throws IOException {
     return runBuckCommandWithEnvironmentOverridesAndContext(

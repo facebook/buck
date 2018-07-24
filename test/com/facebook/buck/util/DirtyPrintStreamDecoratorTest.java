@@ -85,6 +85,7 @@ public class DirtyPrintStreamDecoratorTest {
     int[] writtenLen = new int[1];
     PrintStream delegate =
         new PrintStream(new ByteArrayOutputStream()) {
+          @Override
           public void write(byte[] buf, int off, int len) {
             writtenBytes[0] = buf;
             writtenOff[0] = off;
