@@ -17,6 +17,7 @@
 package com.facebook.buck.apple.toolchain;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertFalse;
@@ -334,5 +335,63 @@ public class ProvisioningProfileStoreTest {
             new StringBuffer());
 
     assertThat(actual.get(), is(equalTo(expected)));
+  }
+
+  @Test
+  public void testDiagnostics() throws Exception {
+    NSString[] fakeKeychainAccessGroups = {new NSString("AAAAAAAAAA.*")};
+    NSArray fakeKeychainAccessGroupsArray = new NSArray(fakeKeychainAccessGroups);
+
+    ImmutableMap<String, NSObject> fakeDevelopmentEntitlements =
+        ImmutableMap.of(
+            "keychain-access-groups",
+            fakeKeychainAccessGroupsArray,
+            "aps-environment",
+            new NSString("development"),
+            "com.apple.security.application-groups",
+            new NSArray(new NSString("foobar"), new NSString("bar")));
+
+    ProvisioningProfileStore profiles =
+        createStorefromProvisioningProfiles(
+            ImmutableList.of(
+                makeTestMetadata(
+                    "AAAAAAAAAA.com.facebook.test",
+                    new Date(Long.MAX_VALUE),
+                    "00000000-0000-0000-0000-000000000000",
+                    fakeDevelopmentEntitlements)));
+
+    StringBuffer diagnosticsBuffer = new StringBuffer();
+    Optional<ProvisioningProfileMetadata> actual =
+        profiles.getBestProvisioningProfile(
+            "com.facebook.test",
+            ApplePlatform.IPHONEOS,
+            Optional.of(
+                ImmutableMap.of(
+                    "keychain-access-groups",
+                    fakeKeychainAccessGroupsArray,
+                    "aps-environment",
+                    new NSString("production"),
+                    "com.apple.security.application-groups",
+                    new NSArray(new NSString("foo"), new NSString("bar")))),
+            ProvisioningProfileStore.MATCH_ANY_IDENTITY,
+            diagnosticsBuffer);
+    String diagnostics = diagnosticsBuffer.toString();
+    assertThat(
+        diagnostics,
+        containsString(
+            "mismatched entitlement aps-environment;"
+                + System.lineSeparator()
+                + "value is: development"
+                + System.lineSeparator()
+                + "but expected: production"));
+    assertThat(
+        diagnostics,
+        containsString(
+            "mismatched entitlement com.apple.security.application-groups;"
+                + System.lineSeparator()
+                + "value is: (\"foobar\", \"bar\")"
+                + System.lineSeparator()
+                + "but expected: (\"foo\", \"bar\")"));
+    assertFalse(actual.isPresent());
   }
 }

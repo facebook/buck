@@ -17,6 +17,7 @@
 package com.facebook.buck.apple.toolchain;
 
 import com.dd.plist.NSArray;
+import com.dd.plist.NSDictionary;
 import com.dd.plist.NSObject;
 import com.facebook.buck.core.rulekey.RuleKeyAppendable;
 import com.facebook.buck.core.rulekey.RuleKeyObjectSink;
@@ -94,6 +95,18 @@ public abstract class AbstractProvisioningProfileStore implements RuleKeyAppenda
     }
 
     return lhs.equals(rhs);
+  }
+
+  private String getStringFromNSObject(@Nullable NSObject obj) {
+    if (obj == null) {
+      return "(not set)" + System.lineSeparator();
+    } else if (obj instanceof NSArray) {
+      return ((NSArray) obj).toASCIIPropertyList();
+    } else if (obj instanceof NSDictionary) {
+      return ((NSDictionary) obj).toASCIIPropertyList();
+    } else {
+      return obj.toString() + System.lineSeparator();
+    }
   }
 
   // If multiple valid ones, find the one which matches the most specifically.  I.e.,
@@ -179,18 +192,25 @@ public abstract class AbstractProvisioningProfileStore implements RuleKeyAppenda
             if (!(FORCE_INCLUDE_ENTITLEMENTS.contains(entry.getKey())
                 || matchesOrArrayIsSubsetOf(entry.getValue(), profileEntitlement))) {
               match = false;
+              String profileEntitlementString = getStringFromNSObject(profileEntitlement);
+              String entryValueString = getStringFromNSObject(entry.getValue());
               String message =
-                  "Ignoring profile "
+                  "Profile "
+                      + profile.getProfilePath().getFileName()
+                      + " ("
                       + profile.getUUID()
-                      + " with mismatched entitlement "
+                      + ") with bundleID "
+                      + profile.getAppID().getSecond()
+                      + " correctly matches. However there is a mismatched entitlement "
                       + entry.getKey()
-                      + "; value is "
-                      + profileEntitlement
-                      + " but expected "
-                      + entry.getValue();
+                      + ";"
+                      + System.lineSeparator()
+                      + "value is: "
+                      + profileEntitlementString
+                      + "but expected: "
+                      + entryValueString;
               LOG.debug(message);
               lines.add(message);
-              break;
             }
           }
         }
