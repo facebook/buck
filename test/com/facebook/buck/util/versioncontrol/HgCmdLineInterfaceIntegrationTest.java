@@ -55,7 +55,6 @@ public class HgCmdLineInterfaceIntegrationTest {
   private static final String REPOS_DIR = "hg_repos";
   private static final String REPO_TWO_DIR = "hg_repo_two";
   private static final String REPO_THREE_DIR = "hg_repo_three";
-  private static final String REPO_WITH_SUB_DIR = "hg_repo_with_subdir";
 
   /**
    * *
@@ -88,8 +87,6 @@ public class HgCmdLineInterfaceIntegrationTest {
    *
    * <p>hg_repo_two: above, current tip @branch_from_master2, and no local changes. hg_repo_three:
    * above, current tip @branch_from_master3, and with local changes.
-   *
-   * <p>Additionally hg_repo_with_subdir is a new hg_repo with a directory called subdir
    */
   @SuppressWarnings("javadoc")
   @ClassRule
@@ -202,14 +199,6 @@ public class HgCmdLineInterfaceIntegrationTest {
     return new DelegatingVersionControlCmdLineInterface(
         repoRootDir,
         new TestProcessExecutorFactory(),
-        new VersionControlBuckConfig(FakeBuckConfig.builder().build()).getHgCmd(),
-        ImmutableMap.of());
-  }
-
-  private static HgCmdLineInterface makeHgCmdLine(Path repoRootDir) {
-    return new HgCmdLineInterface(
-        new TestProcessExecutorFactory(),
-        repoRootDir,
         new VersionControlBuckConfig(FakeBuckConfig.builder().build()).getHgCmd(),
         ImmutableMap.of());
   }
