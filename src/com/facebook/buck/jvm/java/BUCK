@@ -368,7 +368,6 @@ java_library_with_plugins(
     deps = [
         "//src/com/facebook/buck/android:utils",
         "//src/com/facebook/buck/android/packageable:packageable",
-        "//src/com/facebook/buck/apple/xcode:xcode",
         "//src/com/facebook/buck/artifact_cache:artifact_cache",
         "//src/com/facebook/buck/config:config",
         "//src/com/facebook/buck/core/model/impl:impl",
