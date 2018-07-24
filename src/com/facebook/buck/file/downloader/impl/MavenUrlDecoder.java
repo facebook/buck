@@ -130,6 +130,12 @@ public class MavenUrlDecoder {
       case "aar":
         return ".aar";
 
+      case "exe":
+        return ".exe";
+
+      case "pex":
+        return ".pex";
+
       case "tar.gz":
         return ".tar.gz";
 
