@@ -195,7 +195,7 @@ public class DxStep extends ShellStep {
 
     if (dexTool.equals(D8)) {
       context.postEvent(
-          ConsoleEvent.warning("Using %s instead of D8. D8 can only be used in-process.", dx));
+          ConsoleEvent.info("Using %s instead of D8. D8 can only be used in-process.", dx));
     }
 
     if (options.contains(Option.USE_CUSTOM_DX_IF_AVAILABLE)) {
