@@ -1631,40 +1631,48 @@ public class ProjectGenerator {
 
     FluentIterable<TargetNode<?, ?>> depTargetNodes = collectRecursiveLibraryDepTargets(targetNode);
 
-    Iterable<String> forceLoadLibraryFlags =
-        collectRecursiveLibraryLinkerFlagsWithForceLoad(
-            targetNode, depTargetNodes, bundleLoaderNode);
-    Iterable<String> otherLibraryFlags =
-        collectRecursiveLibraryLinkerFlagsWithoutForceLoad(depTargetNodes);
-    Iterable<String> localLibraryFlags =
-        collectRecursiveLibraryLinkerFlagsForCurrentProject(depTargetNodes);
-
-    Iterable<String> otherFrameworkFlags =
-        collectRecursiveFrameworkLinkerFlagsWithoutForceLoad(depTargetNodes);
-    Iterable<String> localFrameworkFlags =
-        collectRecursiveFrameworkLinkerFlagsForCurrentProject(depTargetNodes);
-
     /* These options will always be emitted to the xcconfig files regardless of passed in options
     so that any post processing scritps can take advantage of them */
 
-    appendConfigsBuilder
-        .put(
-            "BUCK_LINKER_FLAGS_LIBRARY_FORCE_LOAD",
-            Streams.stream(forceLoadLibraryFlags)
-                .map(Escaper.BASH_ESCAPER)
-                .collect(Collectors.joining(" ")))
-        .put(
-            "BUCK_LINKER_FLAGS_LIBRARY_LOCAL",
-            Streams.stream(localLibraryFlags).collect(Collectors.joining(" ")))
-        .put(
-            "BUCK_LINKER_FLAGS_LIBRARY_OTHER",
-            Streams.stream(otherLibraryFlags).collect(Collectors.joining(" ")))
-        .put(
-            "BUCK_LINKER_FLAGS_FRAMEWORK_LOCAL",
-            Streams.stream(localFrameworkFlags).collect(Collectors.joining(" ")))
-        .put(
-            "BUCK_LINKER_FLAGS_FRAMEWORK_OTHER",
-            Streams.stream(otherFrameworkFlags).collect(Collectors.joining(" ")));
+    if (options.shouldForceLoadLinkWholeLibraries() || options.shouldAddLinkedLibrariesAsFlags()) {
+      Iterable<String> forceLoadLibraryFlags =
+          collectRecursiveLibraryLinkerFlagsWithForceLoad(
+              targetNode, depTargetNodes, bundleLoaderNode);
+
+      appendConfigsBuilder
+          .put(
+              "BUCK_LINKER_FLAGS_LIBRARY_FORCE_LOAD",
+              Streams.stream(forceLoadLibraryFlags)
+                  .map(Escaper.BASH_ESCAPER)
+                  .collect(Collectors.joining(" ")));
+    }
+
+    if (options.shouldAddLinkedLibrariesAsFlags()) {
+
+      Iterable<String> otherLibraryFlags =
+          collectRecursiveLibraryLinkerFlagsWithoutForceLoad(depTargetNodes);
+      Iterable<String> localLibraryFlags =
+          collectRecursiveLibraryLinkerFlagsForCurrentProject(depTargetNodes);
+
+      Iterable<String> otherFrameworkFlags =
+          collectRecursiveFrameworkLinkerFlagsWithoutForceLoad(depTargetNodes);
+      Iterable<String> localFrameworkFlags =
+          collectRecursiveFrameworkLinkerFlagsForCurrentProject(depTargetNodes);
+
+      appendConfigsBuilder
+          .put(
+              "BUCK_LINKER_FLAGS_LIBRARY_LOCAL",
+              Streams.stream(localLibraryFlags).collect(Collectors.joining(" ")))
+          .put(
+              "BUCK_LINKER_FLAGS_LIBRARY_OTHER",
+              Streams.stream(otherLibraryFlags).collect(Collectors.joining(" ")))
+          .put(
+              "BUCK_LINKER_FLAGS_FRAMEWORK_LOCAL",
+              Streams.stream(localFrameworkFlags).collect(Collectors.joining(" ")))
+          .put(
+              "BUCK_LINKER_FLAGS_FRAMEWORK_OTHER",
+              Streams.stream(otherFrameworkFlags).collect(Collectors.joining(" ")));
+    }
 
     Stream<String> otherLdFlagsStream = Streams.stream(otherLdFlags).map(Escaper.BASH_ESCAPER);
 

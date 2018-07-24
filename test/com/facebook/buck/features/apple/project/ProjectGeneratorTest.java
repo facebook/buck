@@ -2265,23 +2265,26 @@ public class ProjectGeneratorTest {
           settings.get("OTHER_LDFLAGS"));
     }
 
-    assertEquals(
-        "$(inherited) '-Wl,-force_load,$BUILT_PRODUCTS_DIR/libremoteForceLoadLib.a' '-Wl,-force_load,$BUILT_PRODUCTS_DIR/liblocalForceLoadlib.a'",
-        settings.get("BUCK_LINKER_FLAGS_LIBRARY_FORCE_LOAD"));
+    if (shouldEnableForceLoad || shouldEnableAddLibrariesAsFlags) {
+      assertEquals(
+          "$(inherited) '-Wl,-force_load,$BUILT_PRODUCTS_DIR/libremoteForceLoadLib.a' '-Wl,-force_load,$BUILT_PRODUCTS_DIR/liblocalForceLoadlib.a'",
+          settings.get("BUCK_LINKER_FLAGS_LIBRARY_FORCE_LOAD"));
+    }
+    if (shouldEnableAddLibrariesAsFlags) {
+      assertEquals(
+          "$(inherited) -framework remote_framework_2",
+          settings.get("BUCK_LINKER_FLAGS_FRAMEWORK_OTHER"));
 
-    assertEquals(
-        "$(inherited) -framework remote_framework_2",
-        settings.get("BUCK_LINKER_FLAGS_FRAMEWORK_OTHER"));
+      assertEquals(
+          "$(inherited) -lremoteNonForceLoadLib", settings.get("BUCK_LINKER_FLAGS_LIBRARY_OTHER"));
 
-    assertEquals(
-        "$(inherited) -lremoteNonForceLoadLib", settings.get("BUCK_LINKER_FLAGS_LIBRARY_OTHER"));
+      assertEquals(
+          "$(inherited) -framework framework_1", settings.get("BUCK_LINKER_FLAGS_FRAMEWORK_LOCAL"));
 
-    assertEquals(
-        "$(inherited) -framework framework_1", settings.get("BUCK_LINKER_FLAGS_FRAMEWORK_LOCAL"));
-
-    assertEquals(
-        "$(inherited) -llocalForceLoadlib -lnonForceLoadlib",
-        settings.get("BUCK_LINKER_FLAGS_LIBRARY_LOCAL"));
+      assertEquals(
+          "$(inherited) -llocalForceLoadlib -lnonForceLoadlib",
+          settings.get("BUCK_LINKER_FLAGS_LIBRARY_LOCAL"));
+    }
   }
 
   @Test
