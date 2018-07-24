@@ -105,7 +105,7 @@ BUCK_MODULES = {
     "ocaml": "//src/com/facebook/buck/features/ocaml:ocaml",
     "python": "//src/com/facebook/buck/features/python:module",
     "rust": "//src/com/facebook/buck/features/rust:rust",
-    "xcode": "//src/com/facebook/buck/apple/project_generator:project_generator",
+    "xcode": "//src/com/facebook/buck/features/apple/project:project",
     "ziprules": "//src/com/facebook/buck/features/zip/rules:rules",
 }
 

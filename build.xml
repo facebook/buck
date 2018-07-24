@@ -504,7 +504,6 @@
             These patterns are excluded because they are compiled elsewhere
             and are deliberately isolated from Buck's core.
           -->
-          <exclude name="com/facebook/buck/apple/project_generator/**" />
           <exclude name="com/facebook/buck/cli/bootstrapper/**" />
           <exclude name="com/facebook/buck/event/api/**" />
           <exclude name="com/facebook/buck/features/**" />
@@ -679,10 +678,10 @@
   <target name="build-module-xcode" depends="compile">
     <build-buck-module-jar-with-resources module-name="xcode">
       <module-javac-params>
-        <include name="com/facebook/buck/apple/project_generator/*.java" />
+        <include name="com/facebook/buck/features/apple/project/*.java" />
       </module-javac-params>
       <module-resources>
-        <include name="com/facebook/buck/apple/project_generator/*.st"/>
+        <include name="com/facebook/buck/features/apple/project/*.st"/>
       </module-resources>
     </build-buck-module-jar-with-resources>
   </target>
