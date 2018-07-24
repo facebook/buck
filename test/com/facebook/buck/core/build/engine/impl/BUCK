@@ -25,6 +25,7 @@ java_test(
         "//test/com/facebook/buck/core/build/engine/cache/manager:testutil",
         "//test/com/facebook/buck/core/build/engine/manifest:testutil",
         "//test/com/facebook/buck/core/model/targetgraph:testutil",
+        "//test/com/facebook/buck/core/rules:testutil",
         "//test/com/facebook/buck/core/rules/resolver/impl:testutil",
         "//test/com/facebook/buck/core/sourcepath:testutil",
         "//test/com/facebook/buck/event:testutil",
