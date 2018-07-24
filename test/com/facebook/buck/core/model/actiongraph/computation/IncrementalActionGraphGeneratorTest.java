@@ -17,6 +17,7 @@
 package com.facebook.buck.core.model.actiongraph.computation;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
@@ -177,6 +178,43 @@ public class IncrementalActionGraphGeneratorTest {
     assertNotSame(originalBuildRule, newBuildRule);
     assertTrue(graphBuilder.getRuleOptional(newNode.getBuildTarget()).isPresent());
     assertNotSame(originalBuildRule, graphBuilder.getRule(newNode.getBuildTarget()));
+  }
+
+  @Test
+  public void changedRuleWithUnchangedFlavoredChildNotLoadedFromCache() {
+    TargetNode<?, ?> depNode = createTargetNode("test#flavor");
+    TargetNode<?, ?> parentNode = createTargetNode("test", "label1", depNode);
+    setUpTargetGraphAndResolver(parentNode, depNode);
+
+    generator.populateActionGraphBuilderWithCachedRules(eventBus, targetGraph, graphBuilder);
+    graphBuilder.requireRule(depNode.getBuildTarget());
+    BuildRule originalParentRule = graphBuilder.requireRule(parentNode.getBuildTarget());
+
+    TargetNode<?, ?> newParentNode = createTargetNode("test", "label2", depNode);
+    setUpTargetGraphAndResolver(newParentNode, depNode);
+
+    generator.populateActionGraphBuilderWithCachedRules(eventBus, targetGraph, graphBuilder);
+    graphBuilder.requireRule(depNode.getBuildTarget());
+    BuildRule newParentRule = graphBuilder.requireRule(newParentNode.getBuildTarget());
+
+    assertNotSame(originalParentRule, newParentRule);
+  }
+
+  @Test
+  public void newFlavoredRuleWithoutPreviouslyPresentUnflavoredRuleInvalidatesUnflavoredRule() {
+    TargetNode<?, ?> originalNode = createTargetNode("test");
+    setUpTargetGraphAndResolver(originalNode);
+
+    generator.populateActionGraphBuilderWithCachedRules(eventBus, targetGraph, graphBuilder);
+    graphBuilder.requireRule(originalNode.getBuildTarget());
+
+    TargetNode<?, ?> newNode = createTargetNode("test#flavor");
+    setUpTargetGraphAndResolver(newNode);
+
+    generator.populateActionGraphBuilderWithCachedRules(eventBus, targetGraph, graphBuilder);
+    graphBuilder.requireRule(newNode.getBuildTarget());
+
+    assertFalse(graphBuilder.getRuleOptional(originalNode.getBuildTarget()).isPresent());
   }
 
   @Test
@@ -559,7 +597,9 @@ public class IncrementalActionGraphGeneratorTest {
   }
 
   private void setUpTargetGraphAndResolver(TargetNode<?, ?>... nodes) {
-    targetGraph = TargetGraphFactory.newInstance(nodes);
+    // Use {@code newInstanceExact} instead of {@code newInstance}, as some tests assume unflavored
+    // versions of flavored nodes don't get automatically added.
+    targetGraph = TargetGraphFactory.newInstanceExact(nodes);
     graphBuilder = createActionGraphBuilder(targetGraph);
   }
 
