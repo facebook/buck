@@ -127,13 +127,10 @@ public class BuildTargetParserTest {
 
   @Test
   public void testParseNoColon() {
-    try {
-      parser.parse("//facebook/orca/assets", fullyQualifiedParser, createCellRoots(null));
-      fail("parse() should throw an exception");
-    } catch (BuildTargetParseException e) {
-      assertEquals(
-          "//facebook/orca/assets must contain exactly one colon (found 0)", e.getMessage());
-    }
+    BuildTarget buildTarget =
+        parser.parse("//facebook/orca", fullyQualifiedParser, createCellRoots(null));
+    assertEquals("//facebook/orca", buildTarget.getBaseName());
+    assertEquals("orca", buildTarget.getShortNameAndFlavorPostfix());
   }
 
   @Test
@@ -143,7 +140,7 @@ public class BuildTargetParserTest {
       fail("parse() should throw an exception");
     } catch (BuildTargetParseException e) {
       assertEquals(
-          "//facebook:orca:assets must contain exactly one colon (found 2)", e.getMessage());
+          "//facebook:orca:assets must contain at most one colon (found 2)", e.getMessage());
     }
   }
 
