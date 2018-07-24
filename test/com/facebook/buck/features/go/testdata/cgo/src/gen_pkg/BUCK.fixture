@@ -1,0 +1,109 @@
+CGOSRC = '''
+package main
+
+/*
+#include <lib.h>
+#include <stdlib.h>
+
+void wrapper(int i) {
+	print_int(i);
+}
+*/
+import "C"
+
+import (
+	"fmt"
+)
+
+func test() {
+	C.simple_hello()
+
+	C.print_int(5)
+
+	C.wrapper(6)
+
+	var i int = 8
+	C.print_int(C.int(i))
+
+	cs := C.CString("Go string")
+	csRet := C.complex_func(cs)
+	fmt.Printf("fmt: %s\\n", C.GoString(csRet))
+}
+'''
+
+CSRC = '''
+#include "lib.h"
+
+#include <stdlib.h>
+#include <stdio.h>
+
+
+void simple_hello(void) {
+	printf("simple_hello()\\n");
+}
+
+void print_int(int i) {
+	printf("print_int(%d)\\n", i);
+}
+
+char *complex_func(char *s) {
+	printf("complex_func(%s)\\n", s);
+
+	char *buf = malloc(150);
+	sprintf(buf, "%s", s);
+	return buf;
+}
+'''
+
+HEADER = '''
+void simple_hello(void);
+
+void print_int(int i);
+
+char *complex_func(char *s);
+'''
+
+GOSRC = '''
+package main
+
+func main() {
+	test()
+}
+'''
+
+# a code generation program that generates a Go package with cgo
+genrule(
+  name='gen',
+  out='.',
+  cmd="echo '{}' > $OUT/cgosrc.go && echo '{}' > $OUT/lib.c && echo '{}' > $OUT/lib.h && echo '{}' > $OUT/main.go".format(CGOSRC, CSRC, HEADER, GOSRC)
+)
+
+# Define a target for each file so they can be used individually
+for file in ['cgosrc.go', 'lib.c', 'lib.h', 'main.go']:
+  genrule(
+    name=file,
+    out=file,
+    cmd='cp $(location :gen)/{} $OUT'.format(file)
+  )
+
+# Regular rules that uses the generated files
+go_binary(
+    name = "bin",
+    srcs = [":main.go"],
+    cgo = ":cgo",
+)
+
+cgo_library(
+    name = "cgo",
+    package_name = "main",
+    srcs = [":cgosrc.go"],
+    headers = [":lib.h"],
+    deps = [":lib"]
+)
+
+cxx_library(
+    name = "lib",
+    srcs = [":lib.c"],
+    exported_headers = [":lib.h"],
+    header_namespace = "",
+)
