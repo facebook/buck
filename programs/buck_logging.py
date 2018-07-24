@@ -18,7 +18,10 @@ def setup_logging():
         "NOTSET": logging.NOTSET,
     }
     level = level_name_to_level.get(level_name.upper(), logging.INFO)
-    logging.basicConfig(
-        level=level,
-        format=("%(asctime)s [%(levelname)s][%(filename)s:%(lineno)d] %(message)s"),
-    )
+    if level == logging.INFO:
+        format_string = "%(message)s"
+    else:
+        format_string = (
+            "%(asctime)s [%(levelname)s][%(filename)s:%(lineno)d] %(message)s"
+        )
+    logging.basicConfig(level=level, format=format_string)
