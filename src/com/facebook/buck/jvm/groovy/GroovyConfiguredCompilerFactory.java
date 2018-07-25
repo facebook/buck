@@ -17,8 +17,6 @@
 package com.facebook.buck.jvm.groovy;
 
 import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.ConfiguredCompiler;
 import com.facebook.buck.jvm.java.ConfiguredCompilerFactory;
 import com.facebook.buck.jvm.java.JavacOptions;
@@ -37,8 +35,6 @@ public class GroovyConfiguredCompilerFactory extends ConfiguredCompilerFactory {
 
   @Override
   public ConfiguredCompiler configure(
-      SourcePathRuleFinder ruleFinder,
-      ProjectFilesystem projectFilesystem,
       @Nullable JvmLibraryArg args,
       JavacOptions javacOptions,
       BuildRuleResolver buildRuleResolver,

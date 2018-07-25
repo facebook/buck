@@ -537,21 +537,13 @@ public abstract class DefaultJavaLibraryRules {
   @Value.Lazy
   ConfiguredCompiler getConfiguredCompiler() {
     return getConfiguredCompilerFactory()
-        .configure(
-            getSourcePathRuleFinder(),
-            getProjectFilesystem(),
-            getArgs(),
-            getJavacOptions(),
-            getActionGraphBuilder(),
-            getToolchainProvider());
+        .configure(getArgs(), getJavacOptions(), getActionGraphBuilder(), getToolchainProvider());
   }
 
   @Value.Lazy
   ConfiguredCompiler getConfiguredCompilerForSourceOnlyAbi() {
     return getConfiguredCompilerFactory()
         .configure(
-            getSourcePathRuleFinder(),
-            getProjectFilesystem(),
             getArgs(),
             getJavacOptionsForSourceOnlyAbi(),
             getActionGraphBuilder(),
