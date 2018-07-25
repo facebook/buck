@@ -104,7 +104,8 @@ public class FileClassPathRunner {
     }
   }
 
-  private static URL[] getClassPath(StringBuilder classPathPropertyOut) throws IOException {
+  // VisibleForTesting (can not use guava as dependency)
+  static URL[] getClassPath(StringBuilder classPathPropertyOut) throws IOException {
     List<Path> classPath = new ArrayList<>();
     classPath.add(getTestRunnerClassPath());
 
@@ -125,7 +126,8 @@ public class FileClassPathRunner {
     return result;
   }
 
-  private static List<Path> getTestClassPath(Path classpathFile) throws IOException {
+  // VisibleForTesting (can not use guava as dependency)
+  static List<Path> getTestClassPath(Path classpathFile) throws IOException {
     return Files.readAllLines(classpathFile)
         .stream()
         .map(Paths::get)
@@ -133,12 +135,13 @@ public class FileClassPathRunner {
         .collect(Collectors.toList());
   }
 
-  private static Path getTestRunnerClassPath() {
+  static Path getTestRunnerClassPath() {
     String path = System.getProperty(TESTRUNNER_CLASSES_PROPERTY);
     return Paths.get(path);
   }
 
-  private static String[] constructArgs(String[] args) {
+  // VisibleForTesting (can not use guava as dependency)
+  static String[] constructArgs(String[] args) {
     String[] mainArgs;
 
     if (args.length == 1) {
@@ -165,7 +168,8 @@ public class FileClassPathRunner {
    * Returns ClassLoader that is a sibling on "current" class loader, in java 8 that is "Ext" class
    * loader, on java 9+ that is "platform" classloader.
    */
-  private static ClassLoader findPlatformClassLoader() {
+  // VisibleForTesting (can not use guava as dependency)
+  static ClassLoader findPlatformClassLoader() {
     try {
       // use platform class loader on Java 9+ if exists
       Method method = ClassLoader.class.getMethod("getPlatformClassLoader");
