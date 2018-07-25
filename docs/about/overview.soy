@@ -10,43 +10,77 @@
     {/param}
     {param content}
 
-<h2>How Buck Works</h2>
+<h3>Fundamentals</h3>
 
-Buck has three primary concepts:
+<p>Buck has a number of fundamental concepts:</p>
 
 <ul>
   <li>
-    A {call buck.concept_link}{param name: 'build rule' /}{param page: 'build_rule' /}{/call} is a
-    procedure for producing an output file from a set of input files.
+    A <em>{call buck.concept_link}{param name: 'build rule' /}{param page: 'build_rule' /}{/call}</em> describes 
+    how to produce an output file from a set of input files. Most build rules
+    are specific to a particular language or platform. For example, you would use 
+    the {call buck.ruleLink}{param name : 'cxx_binary' /}{/call} rule to
+    create a C++ binary, but you would use the {call buck.ruleLink}{param name : 'android_binary' /}{/call} rule to 
+    create an Android APK.
   </li>
   <li>
-    A {call buck.concept_link}{param name: 'build target' /}{param page: 'build_target' /}{/call} is
-    a string identifier for a build rule.  It can be thought of as a "URI" within a project using
-    Buck.
+    A <em>{call buck.concept_link}{param name: 'build file' /}{param page: 'build_file' /}{/call}</em> defines 
+    one or more build rules. In Buck, build files are typically named <code>BUCK</code>. 
+    A <code>BUCK</code> file is analogous to the <code>Makefile</code> used by the Make utility. 
+    In your project, you will usually have a separate a <code>BUCK</code> file for each buildable 
+    unit of software&mdash;such as a binary or library. For large projects, you could have hundreds 
+    of <code>BUCK</code> files.
   </li>
   <li>
-    A {call buck.concept_link}{param name: 'build file' /}{param page: 'build_file' /}{/call} that
-    defines one or more build rules.  In Make, this would be a <code>Makefile</code>, but in Buck,
-    these files are named <code>BUCK</code>.  A project using Buck is expected to have
-    many <code>BUCK</code> files.
+    A <em>{call buck.concept_link}{param name: 'build target' /}{param page: 'build_target' /}{/call}</em> is
+    a string that uniquely identifies a build rule. It can be thought of as a URI for the build rule 
+    within the Buck project.
+  </li>
+  <li>
+    The root of your Buck project contains a global configuration file
+    called <em>{call buck.concept_link}{param page: 'buckconfig' /}{param name: '.buckconfig' /}{/call}</em>. 
+    This location of the <code>.buckconfig</code> file identifies the root directory of your Buck project.
   </li>
 </ul>
 
+<h3>Buck's dependency graph</h3>
+
 <p>
-  Every build rule can have zero or more dependencies associated with it, or <code>deps</code>.
-  These dependencies form a directed graph, which Buck requires to be acyclic.  When building the
-  output of a build rule, all of the rule's transitive dependencies are built first.  This means
-  that the graph is built in a "bottom-up" fashion.  A build rule knows only who it depends on, not
-  what depends on it, which makes the build graph easier to reason about.  This helps Buck identify
-  independent subgraphs that can be built in parallel, as well as determine the minimal set of build
-  rules that need to be rebuilt.
+  Every build rule can have zero or more dependencies. You can specify
+  these dependencies using, for example, the <code>deps</code> argument
+  to the build rule. For more information about specifying dependencies,
+  consult the reference page for the build rule you are using.
 </p>
 
 <p>
-  Buck is designed for building multiple deliverables from a single repository (a monorepo) rather
-  than across multiple repositories.  It has been Facebook's experience that maintaining
-  dependencies in the same repository makes it easier to ensure that all developers have the correct
-  version of all of the code, and simplifies the process of making atomic commits.
+  These dependencies form a directed graph, called the <em>target graph</em>. 
+  Buck requires the graph to be acyclic.  When building the output of a build rule, 
+  all of the rule's transitive dependencies are built first.  This means
+  that the graph is built in a "bottom-up" fashion. A build rule knows only which rules it depends on, 
+  not which rules depends on it. This makes the graph easier to reason
+  about and enables Buck to identify independent subgraphs that can be built in parallel. 
+  It also enables Buck to determine the minimal set of build targets that need to be rebuilt.
+</p>
+
+<p>
+  For more information about how Buck leverages the graph of build dependencies, 
+  see {call buck.concept_link}{param page: 'what_makes_buck_so_fast' /}{param name: 'What Makes Buck so Fast' /}{/call}.
+</p>
+
+<h3>Multiple Buck projects in a single repository</h3>
+
+<p>
+  Buck is designed to build multiple deliverables from a single
+  repository&mdash;that is, a <em>monorepo</em>&mdash;rather than from multiple repositories.  
+  Therefore, your repository could contain multiple Buck projects, each
+  with a separate root, defined by a <code>.buckconfig</code> file.
+</p>
+
+<p>
+  It is Facebook's experience that maintaining all dependencies in the
+  same repository makes it easier to ensure that all developers have the
+  correct version of the code, and simplifies the process for making
+  atomic commits.
 </p>
 
     {/param}
