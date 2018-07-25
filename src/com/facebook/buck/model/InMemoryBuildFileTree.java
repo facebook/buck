@@ -22,6 +22,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -33,6 +34,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.TreeSet;
+import java.util.stream.StreamSupport;
 import javax.annotation.Nullable;
 
 /**
@@ -57,6 +59,18 @@ public class InMemoryBuildFileTree extends BuildFileTree {
    */
   public InMemoryBuildFileTree(Iterable<BuildTarget> targets) {
     this(collectBasePaths(targets));
+  }
+
+  /**
+   * Returns the base paths for zero or more targets.
+   *
+   * @param targets targets to return base paths for
+   * @return base paths for targets
+   */
+  private static Collection<Path> collectBasePaths(Iterable<? extends BuildTarget> targets) {
+    return StreamSupport.stream(targets.spliterator(), false)
+        .map(BuildTarget::getBasePath)
+        .collect(ImmutableSet.toImmutableSet());
   }
 
   public InMemoryBuildFileTree(Collection<Path> basePaths) {

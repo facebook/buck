@@ -17,11 +17,9 @@
 package com.facebook.buck.model;
 
 import com.facebook.buck.core.model.BuildTarget;
-import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Optional;
-import java.util.stream.StreamSupport;
 
 /**
  * Interface to allow looking up parents and children of build files. E.g. for a directory structure
@@ -44,17 +42,4 @@ public abstract class BuildFileTree {
    * @return the base path if there is one.
    */
   public abstract Optional<Path> getBasePathOfAncestorTarget(Path filePath);
-
-  /**
-   * Returns the base paths for zero or more targets.
-   *
-   * @param targets targets to return base paths for
-   * @return base paths for targets
-   */
-  protected static Collection<Path> collectBasePaths(Iterable<? extends BuildTarget> targets) {
-
-    return StreamSupport.stream(targets.spliterator(), false)
-        .map(BuildTarget::getBasePath)
-        .collect(ImmutableSet.toImmutableSet());
-  }
 }
