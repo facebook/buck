@@ -45,7 +45,6 @@ import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.LinkerMapMode;
 import com.facebook.buck.cxx.toolchain.StripStyle;
-import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.versions.Version;
@@ -225,31 +224,31 @@ public class AppleBundleDescription
 
     // Propagate platform flavors.  Need special handling for watch to map the pseudo-flavor
     // watch to the actual watch platform (simulator or device) so can't use
-    // BuildTargets.propagateFlavorsInDomainIfNotPresent()
+    // Flavors.propagateFlavorsInDomainIfNotPresent()
     {
       FluentIterable<BuildTarget> targetsWithPlatformFlavors =
           depsExcludingBinary.filter(
-              BuildTargets.containsFlavors(cxxPlatformsProvider.getCxxPlatforms())::test);
+              Flavors.containsFlavors(cxxPlatformsProvider.getCxxPlatforms())::test);
 
       FluentIterable<BuildTarget> targetsWithoutPlatformFlavors =
           depsExcludingBinary.filter(
-              BuildTargets.containsFlavors(cxxPlatformsProvider.getCxxPlatforms()).negate()::test);
+              Flavors.containsFlavors(cxxPlatformsProvider.getCxxPlatforms()).negate()::test);
 
       FluentIterable<BuildTarget> watchTargets =
           targetsWithoutPlatformFlavors
-              .filter(BuildTargets.containsFlavor(WATCH)::test)
+              .filter(Flavors.containsFlavor(WATCH)::test)
               .transform(
                   input -> input.withoutFlavors(WATCH).withAppendedFlavors(actualWatchFlavor));
 
       targetsWithoutPlatformFlavors =
-          targetsWithoutPlatformFlavors.filter(BuildTargets.containsFlavor(WATCH).negate()::test);
+          targetsWithoutPlatformFlavors.filter(Flavors.containsFlavor(WATCH).negate()::test);
 
       // Gather all the deps now that we've added platform flavors to everything.
       depsExcludingBinary =
           targetsWithPlatformFlavors
               .append(watchTargets)
               .append(
-                  BuildTargets.propagateFlavorDomains(
+                  Flavors.propagateFlavorDomains(
                       buildTarget,
                       ImmutableSet.of(cxxPlatformsProvider.getCxxPlatforms()),
                       targetsWithoutPlatformFlavors));
@@ -257,13 +256,13 @@ public class AppleBundleDescription
 
     // Propagate some flavors
     depsExcludingBinary =
-        BuildTargets.propagateFlavorsInDomainIfNotPresent(
+        Flavors.propagateFlavorsInDomainIfNotPresent(
             StripStyle.FLAVOR_DOMAIN, buildTarget, depsExcludingBinary);
     depsExcludingBinary =
-        BuildTargets.propagateFlavorsInDomainIfNotPresent(
+        Flavors.propagateFlavorsInDomainIfNotPresent(
             AppleDebugFormat.FLAVOR_DOMAIN, buildTarget, depsExcludingBinary);
     depsExcludingBinary =
-        BuildTargets.propagateFlavorsInDomainIfNotPresent(
+        Flavors.propagateFlavorsInDomainIfNotPresent(
             LinkerMapMode.FLAVOR_DOMAIN, buildTarget, depsExcludingBinary);
 
     if (fatBinaryInfo.isPresent()) {

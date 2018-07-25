@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.model;
+package com.facebook.buck.apple;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -25,6 +25,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.model.BuildTargetFactory;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -32,7 +33,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import org.junit.Test;
 
-public class BuildTargetsTest {
+public class FlavorsTest {
 
   private static final Path ROOT = Paths.get("/opt/src/buck");
 
@@ -50,8 +51,7 @@ public class BuildTargetsTest {
     FlavorDomain<?> domain = new FlavorDomain<>("test", ImmutableMap.of(flavor, "something"));
     BuildTarget child = BuildTargetFactory.newInstance("//:child");
     ImmutableSortedSet<BuildTarget> result =
-        BuildTargets.propagateFlavorDomains(
-            parent, ImmutableList.of(domain), ImmutableList.of(child));
+        Flavors.propagateFlavorDomains(parent, ImmutableList.of(domain), ImmutableList.of(child));
     assertEquals(ImmutableSortedSet.of(child.withAppendedFlavors(flavor)), result);
   }
 
@@ -64,8 +64,7 @@ public class BuildTargetsTest {
         new FlavorDomain<>("test", ImmutableMap.of(flavor, "something", flavor2, "something2"));
     BuildTarget child = BuildTargetFactory.newInstance("//:child");
     ImmutableSortedSet<BuildTarget> result =
-        BuildTargets.propagateFlavorDomains(
-            parent, ImmutableList.of(domain), ImmutableList.of(child));
+        Flavors.propagateFlavorDomains(parent, ImmutableList.of(domain), ImmutableList.of(child));
     assertEquals(ImmutableSortedSet.of(child.withAppendedFlavors(flavor, flavor2)), result);
   }
 
@@ -76,8 +75,7 @@ public class BuildTargetsTest {
     FlavorDomain<?> domain = new FlavorDomain<>("test", ImmutableMap.of(flavor, "something"));
     BuildTarget child = BuildTargetFactory.newInstance("//:child");
     try {
-      BuildTargets.propagateFlavorDomains(
-          parent, ImmutableList.of(domain), ImmutableList.of(child));
+      Flavors.propagateFlavorDomains(parent, ImmutableList.of(domain), ImmutableList.of(child));
       fail("should have thrown");
     } catch (HumanReadableException e) {
       assertTrue(e.getMessage().contains("no flavor for"));
@@ -91,8 +89,7 @@ public class BuildTargetsTest {
     FlavorDomain<?> domain = new FlavorDomain<>("test", ImmutableMap.of(flavor, "something"));
     BuildTarget child = BuildTargetFactory.newInstance("//:child#flavor");
     try {
-      BuildTargets.propagateFlavorDomains(
-          parent, ImmutableList.of(domain), ImmutableList.of(child));
+      Flavors.propagateFlavorDomains(parent, ImmutableList.of(domain), ImmutableList.of(child));
       fail("should have thrown");
     } catch (HumanReadableException e) {
       assertTrue(e.getMessage().contains("already has flavor"));
