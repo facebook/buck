@@ -82,7 +82,8 @@ public class CalculateSourceAbi extends AbstractBuildRule
   @Override
   public ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
-    return jarBuildStepsFactory.getBuildStepsForAbiJar(context, buildableContext, getBuildTarget());
+    return jarBuildStepsFactory.getBuildStepsForAbiJar(
+        context, getProjectFilesystem(), buildableContext, getBuildTarget());
   }
 
   @Override
@@ -127,7 +128,7 @@ public class CalculateSourceAbi extends AbstractBuildRule
   public ImmutableList<? extends Step> getPipelinedBuildSteps(
       BuildContext context, BuildableContext buildableContext, JavacPipelineState state) {
     return jarBuildStepsFactory.getPipelinedBuildStepsForAbiJar(
-        getBuildTarget(), context, buildableContext, state);
+        getBuildTarget(), context, getProjectFilesystem(), buildableContext, state);
   }
 
   @Override
@@ -154,6 +155,6 @@ public class CalculateSourceAbi extends AbstractBuildRule
   public ImmutableList<SourcePath> getInputsAfterBuildingLocally(
       BuildContext context, CellPathResolver cellPathResolver) {
     return jarBuildStepsFactory.getInputsAfterBuildingLocally(
-        context, ruleFinder, cellPathResolver, getBuildTarget());
+        context, getProjectFilesystem(), ruleFinder, cellPathResolver, getBuildTarget());
   }
 }

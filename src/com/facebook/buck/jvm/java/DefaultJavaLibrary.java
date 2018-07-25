@@ -358,7 +358,11 @@ public class DefaultJavaLibrary extends AbstractBuildRule
 
     steps.addAll(
         jarBuildStepsFactory.getBuildStepsForLibraryJar(
-            context, buildableContext, getBuildTarget(), pathToClassHashes));
+            context,
+            getProjectFilesystem(),
+            buildableContext,
+            getBuildTarget(),
+            pathToClassHashes));
 
     unusedDependenciesFinderFactory.ifPresent(factory -> steps.add(factory.create()));
 
@@ -373,7 +377,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
         JavaLibraryRules.getPathToClassHashes(getBuildTarget(), getProjectFilesystem());
     buildableContext.recordArtifact(pathToClassHashes);
     return jarBuildStepsFactory.getPipelinedBuildStepsForLibraryJar(
-        context, buildableContext, state, pathToClassHashes);
+        context, getProjectFilesystem(), buildableContext, state, pathToClassHashes);
   }
 
   @Override
@@ -473,7 +477,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
   public ImmutableList<SourcePath> getInputsAfterBuildingLocally(
       BuildContext context, CellPathResolver cellPathResolver) {
     return jarBuildStepsFactory.getInputsAfterBuildingLocally(
-        context, ruleFinder, cellPathResolver, getBuildTarget());
+        context, getProjectFilesystem(), ruleFinder, cellPathResolver, getBuildTarget());
   }
 
   @Override

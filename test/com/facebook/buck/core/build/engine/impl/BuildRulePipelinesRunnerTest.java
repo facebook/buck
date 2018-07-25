@@ -32,6 +32,7 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.pipeline.RulePipelineState;
 import com.facebook.buck.core.rules.pipeline.RulePipelineStateFactory;
 import com.facebook.buck.core.rules.pipeline.SupportsPipelining;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableList;
@@ -307,7 +308,8 @@ public class BuildRulePipelinesRunnerTest {
     private boolean isClosed;
 
     @SuppressWarnings("unused")
-    public TestPipelineState(BuildContext context, BuildTarget firstTarget) {}
+    public TestPipelineState(
+        BuildContext buildContext, ProjectFilesystem filesystem, BuildTarget buildTarget) {}
 
     @Override
     public void close() {

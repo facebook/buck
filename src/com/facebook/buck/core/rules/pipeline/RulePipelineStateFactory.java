@@ -18,7 +18,8 @@ package com.facebook.buck.core.rules.pipeline;
 
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 
 public interface RulePipelineStateFactory<T extends RulePipelineState> {
-  T newInstance(BuildContext context, BuildTarget firstTarget);
+  T newInstance(BuildContext context, ProjectFilesystem filesystem, BuildTarget firstTarget);
 }

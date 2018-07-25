@@ -116,7 +116,9 @@ public class BuildRulePipelinesRunner {
     BuildRulePipeline<T> pipeline =
         new BuildRulePipeline<>(
             rootPipelineStage,
-            rootRule.getPipelineStateFactory().newInstance(context, rootRule.getBuildTarget()));
+            rootRule
+                .getPipelineStateFactory()
+                .newInstance(context, rootRule.getProjectFilesystem(), rootRule.getBuildTarget()));
     return new RunnableWithFuture<Optional<BuildResult>>() {
       @Override
       public ListenableFuture<Optional<BuildResult>> getFuture() {
