@@ -13,12 +13,12 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.facebook.buck.model;
+package com.facebook.buck.parser;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.parser.SingletonBuildTargetPattern;
+import com.facebook.buck.model.BuildTargetFactory;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import org.junit.Test;
