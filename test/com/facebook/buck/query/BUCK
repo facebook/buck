@@ -91,6 +91,7 @@ standard_java_test(
         "//src/com/facebook/buck/worker:worker_job_params",
         "//src/com/facebook/buck/worker:worker_pool_factory",
         "//src/com/facebook/buck/worker:worker_process",
+        "//test/com/facebook/buck/core/model:testutil",
         "//test/com/facebook/buck/core/model/targetgraph:testutil",
         "//test/com/facebook/buck/jvm/java:testutil",
         "//test/com/facebook/buck/model:testutil",

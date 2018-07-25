@@ -19,8 +19,8 @@ package com.facebook.buck.event.listener;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.model.BuildId;
+import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.event.ActionGraphEvent;
-import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.util.Ansi;
 import com.google.common.collect.ImmutableMap;
 import java.util.Optional;

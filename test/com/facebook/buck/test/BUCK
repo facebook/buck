@@ -29,6 +29,7 @@ java_library(
         "//src/com/facebook/buck/util/environment:platform",
         "//src/com/facebook/buck/util/sha1:sha1",
         "//src/com/facebook/buck/util/versioncontrol:versioncontrol",
+        "//test/com/facebook/buck/core/model:testutil",
         "//test/com/facebook/buck/model:testutil",
         "//third-party/java/guava:guava",
         "//third-party/java/immutables:immutables",

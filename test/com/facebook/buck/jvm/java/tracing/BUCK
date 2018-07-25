@@ -9,6 +9,7 @@ java_test(
         "//third-party/java/jdk:compiler-tree-api",
     ],
     deps = [
+        "//test/com/facebook/buck/core/model:testutil",
         "//src-gen:thrift",
         "//src/com/facebook/buck/android:utils",
         "//src/com/facebook/buck/config:config",

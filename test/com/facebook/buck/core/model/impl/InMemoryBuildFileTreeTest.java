@@ -20,7 +20,7 @@ import static com.facebook.buck.io.file.MorePaths.pathWithPlatformSeparators;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.core.model.BuildTargetFactory;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;

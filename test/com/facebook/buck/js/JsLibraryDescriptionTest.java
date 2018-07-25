@@ -28,6 +28,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeFalse;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.UserFlavor;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -40,7 +41,6 @@ import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.js.JsFile.JsFileDev;
 import com.facebook.buck.js.JsLibrary.Files;
-import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.macros.LocationMacro;
 import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.util.RichStream;

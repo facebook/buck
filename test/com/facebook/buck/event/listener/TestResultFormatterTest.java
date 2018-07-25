@@ -20,7 +20,7 @@ import static org.hamcrest.CoreMatchers.containsString;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.test.FakeTestResults;
 import com.facebook.buck.test.TestCaseSummary;
 import com.facebook.buck.test.TestResultSummary;

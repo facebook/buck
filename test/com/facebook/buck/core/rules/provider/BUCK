@@ -5,6 +5,7 @@ java_test(
     srcs = glob(["*Test.java"]),
     has_immutable_types = True,
     deps = [
+        "//test/com/facebook/buck/core/model:testutil",
         "//test/com/facebook/buck/core/rules/provider:testutil",
         "//test/com/facebook/buck/model:testutil",
         "//test/com/facebook/buck/rules:testutil",

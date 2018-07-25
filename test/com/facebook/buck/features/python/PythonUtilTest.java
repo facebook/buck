@@ -19,12 +19,12 @@ package com.facebook.buck.features.python;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
-import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;

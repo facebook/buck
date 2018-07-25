@@ -17,7 +17,7 @@
 package com.facebook.buck.test;
 
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.test.result.type.ResultType;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;

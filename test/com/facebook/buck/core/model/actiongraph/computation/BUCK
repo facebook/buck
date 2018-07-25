@@ -33,6 +33,7 @@ java_test(
         "//src/com/facebook/buck/versions:versions",
         "//test/com/facebook/buck/cli:testutil",
         "//test/com/facebook/buck/core/cell:testutil",
+        "//test/com/facebook/buck/core/model:testutil",
         "//test/com/facebook/buck/core/model/targetgraph:testutil",
         "//test/com/facebook/buck/core/sourcepath:testutil",
         "//test/com/facebook/buck/cxx:testutil",

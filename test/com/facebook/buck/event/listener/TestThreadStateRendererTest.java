@@ -21,11 +21,11 @@ import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.test.event.TestStatusMessageEvent;
 import com.facebook.buck.core.test.event.TestSummaryEvent;
 import com.facebook.buck.event.LeafEvent;
 import com.facebook.buck.event.TestEventConfigurator;
-import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.step.StepEvent;
 import com.facebook.buck.test.TestRuleEvent;
 import com.facebook.buck.test.TestStatusMessage;

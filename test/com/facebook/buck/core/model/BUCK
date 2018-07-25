@@ -1,0 +1,29 @@
+load("//tools/build_rules:java_rules.bzl", "standard_java_test")
+
+java_library(
+    name = "testutil",
+    srcs = glob(
+        ["*.java"],
+        exclude = [
+            "*Test.java",
+        ],
+    ),
+    exported_deps = [
+        "//src/com/facebook/buck/core/model/impl:impl",
+    ],
+    visibility = ["//test/..."],
+    deps = [
+        "//src/com/facebook/buck/util:util",
+        "//test/com/facebook/buck/testutil:testutil",
+        "//third-party/java/jsr:jsr305",
+    ],
+)
+
+standard_java_test(
+    name = "model",
+    deps = [
+        ":testutil",
+        "//third-party/java/guava:guava",
+        "//third-party/java/junit:junit",
+    ],
+)

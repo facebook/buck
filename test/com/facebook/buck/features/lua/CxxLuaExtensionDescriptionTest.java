@@ -18,11 +18,11 @@ package com.facebook.buck.features.lua;
 
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
-import com.facebook.buck.model.BuildTargetFactory;
 import java.nio.file.Paths;
 import org.hamcrest.Matchers;
 import org.junit.Test;

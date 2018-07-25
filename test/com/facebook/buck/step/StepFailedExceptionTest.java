@@ -20,7 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.Verbosity;
 import java.io.IOException;

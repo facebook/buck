@@ -19,7 +19,7 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.core.model.BuildTargetFactory;
 import com.google.common.collect.ImmutableMap;
 import org.hamcrest.Matchers;
 import org.hamcrest.junit.ExpectedException;

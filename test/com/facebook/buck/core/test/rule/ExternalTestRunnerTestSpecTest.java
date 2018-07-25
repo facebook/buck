@@ -18,7 +18,7 @@ package com.facebook.buck.core.test.rule;
 
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;

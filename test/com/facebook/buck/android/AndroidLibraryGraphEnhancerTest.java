@@ -26,6 +26,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
@@ -37,7 +38,6 @@ import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavacFactoryHelper;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacToJarStepFactory;
-import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.DependencyMode;

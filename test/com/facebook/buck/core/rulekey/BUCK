@@ -15,6 +15,7 @@ java_test(
         "//src/com/facebook/buck/log:log",
         "//src/com/facebook/buck/rules/keys:keys",
         "//src/com/facebook/buck/util/cache/impl:impl",
+        "//test/com/facebook/buck/core/model:testutil",
         "//test/com/facebook/buck/core/rules:testutil",
         "//test/com/facebook/buck/core/rules/resolver/impl:testutil",
         "//test/com/facebook/buck/core/sourcepath:testutil",

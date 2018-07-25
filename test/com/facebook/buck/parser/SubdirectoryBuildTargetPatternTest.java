@@ -18,8 +18,8 @@ package com.facebook.buck.parser;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import java.nio.file.Paths;
 import org.junit.Test;

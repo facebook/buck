@@ -19,12 +19,12 @@ package com.facebook.buck.features.haskell;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
-import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.query.Query;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;

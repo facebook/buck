@@ -117,6 +117,7 @@ java_library(
 standard_java_test(
     name = "listener",
     deps = [
+        "//test/com/facebook/buck/core/model:testutil",
         "//src/com/facebook/buck/core/model/impl:impl",
         "//src-gen:thrift",
         "//src/com/facebook/buck/android:helpers",

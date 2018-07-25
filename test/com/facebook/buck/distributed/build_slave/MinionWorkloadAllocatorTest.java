@@ -24,6 +24,7 @@ import static org.easymock.EasyMock.verify;
 
 import com.facebook.buck.core.build.engine.impl.DefaultRuleDepsCache;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.distributed.NoopArtifactCacheByBuildRule;
 import com.facebook.buck.distributed.build_slave.MinionWorkloadAllocator.WorkloadAllocationResult;
@@ -32,7 +33,6 @@ import com.facebook.buck.distributed.thrift.MinionType;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.distributed.thrift.WorkUnit;
 import com.facebook.buck.event.listener.NoOpCoordinatorBuildRuleEventsPublisher;
-import com.facebook.buck.model.BuildTargetFactory;
 import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 import java.util.Arrays;

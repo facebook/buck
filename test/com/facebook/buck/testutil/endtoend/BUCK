@@ -21,6 +21,7 @@ java_library(
         "//src/com/facebook/buck/util:process_executor",
         "//src/com/facebook/buck/util:util",
         "//src/com/facebook/buck/util/environment:platform",
+        "//test/com/facebook/buck/core/model:testutil",
         "//test/com/facebook/buck/model:testutil",
         "//test/com/facebook/buck/testutil:testutil",
         "//third-party/java/junit:junit",

@@ -14,17 +14,12 @@
  * under the License.
  */
 
-package com.facebook.buck.model;
+package com.facebook.buck.core.model;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.Flavor;
-import com.facebook.buck.core.model.FlavorDomain;
-import com.facebook.buck.core.model.FlavorDomainException;
-import com.facebook.buck.core.model.InternalFlavor;
 import com.google.common.collect.ImmutableMap;
 import java.util.Optional;
 import org.junit.Test;

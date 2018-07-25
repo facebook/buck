@@ -19,7 +19,7 @@ package com.facebook.buck.rules.visibility;
 import static com.facebook.buck.core.cell.TestCellBuilder.createCellRoots;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
 import org.junit.Test;

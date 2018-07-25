@@ -26,6 +26,7 @@ standard_java_test(
         "//src/com/facebook/buck/util/cache/impl:impl",
         "//src/com/facebook/buck/util/environment:platform",
         "//test/com/facebook/buck/artifact_cache:testutil",
+        "//test/com/facebook/buck/core/model:testutil",
         "//test/com/facebook/buck/core/rules/resolver/impl:testutil",
         "//test/com/facebook/buck/distributed/testutil:testutil",
         "//test/com/facebook/buck/event:testutil",

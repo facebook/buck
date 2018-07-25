@@ -19,6 +19,7 @@ package com.facebook.buck.features.python;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.config.FakeBuckConfig;
+import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
@@ -26,7 +27,6 @@ import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
 import com.facebook.buck.cxx.CxxLibraryBuilder;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkStrategy;
-import com.facebook.buck.model.BuildTargetFactory;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import org.hamcrest.Matchers;

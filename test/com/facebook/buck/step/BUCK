@@ -100,6 +100,7 @@ standard_java_test(
         "//src/com/facebook/buck/util/versioncontrol:versioncontrol",
         "//src/com/facebook/buck/versions:types",
         "//src/com/facebook/buck/worker:worker_process",
+        "//test/com/facebook/buck/core/model:testutil",
         "//test/com/facebook/buck/event:testutil",
         "//test/com/facebook/buck/model:testutil",
         "//test/com/facebook/buck/step:testutil",

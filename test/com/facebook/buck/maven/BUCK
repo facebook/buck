@@ -131,6 +131,7 @@ java_test(
         ["testdata/**"],
     ),
     deps = [
+        "//test/com/facebook/buck/core/model:testutil",
         "//src/com/facebook/buck/core/model/impl:impl",
         "//test/com/facebook/buck/config:FakeBuckConfig",
         "//src/com/facebook/buck/io/file:file",

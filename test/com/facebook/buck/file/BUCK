@@ -206,6 +206,7 @@ standard_java_test(
         "//test/com/facebook/buck/core/build/buildable/context:testutil",
         "//test/com/facebook/buck/core/build/context:testutil",
         "//test/com/facebook/buck/core/cell:testutil",
+        "//test/com/facebook/buck/core/model:testutil",
         "//test/com/facebook/buck/core/model/targetgraph:testutil",
         "//test/com/facebook/buck/core/rules:testutil",
         "//test/com/facebook/buck/core/rules/resolver/impl:testutil",

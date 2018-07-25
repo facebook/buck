@@ -18,7 +18,7 @@ package com.facebook.buck.parser;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.core.model.BuildTargetFactory;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import org.junit.Test;

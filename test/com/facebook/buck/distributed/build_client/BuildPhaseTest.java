@@ -37,6 +37,7 @@ import com.facebook.buck.core.build.engine.delegate.LocalCachingBuildEngineDeleg
 import com.facebook.buck.core.build.engine.impl.DefaultRuleDepsCache;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.actiongraph.ActionGraph;
 import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
 import com.facebook.buck.core.model.graph.ActionAndTargetGraphs;
@@ -74,7 +75,6 @@ import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.distributed.thrift.StreamLogs;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
-import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.module.TestBuckModuleManagerFactory;
 import com.facebook.buck.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.rules.keys.DefaultRuleKeyCache;

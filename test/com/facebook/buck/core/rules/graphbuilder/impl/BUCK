@@ -10,6 +10,7 @@ java_test(
         "//src/com/facebook/buck/core/rules/graphbuilder/impl:impl",
         "//test/com/facebook/buck/core/cell:testutil",
         "//test/com/facebook/buck/core/graph/transformation:testutil",
+        "//test/com/facebook/buck/core/model:testutil",
         "//test/com/facebook/buck/core/model/targetgraph:testutil",
         "//test/com/facebook/buck/core/rules/provider:testutil",
         "//test/com/facebook/buck/core/rules/resolver/impl:testutil",

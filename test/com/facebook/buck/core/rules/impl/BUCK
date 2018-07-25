@@ -15,6 +15,7 @@ java_test(
         "//src/com/facebook/buck/util/hashing:hashing",
         "//test/com/facebook/buck/core/build/buildable/context:testutil",
         "//test/com/facebook/buck/core/build/context:testutil",
+        "//test/com/facebook/buck/core/model:testutil",
         "//test/com/facebook/buck/core/model/targetgraph:testutil",
         "//test/com/facebook/buck/core/rules/resolver/impl:testutil",
         "//test/com/facebook/buck/core/sourcepath:testutil",
