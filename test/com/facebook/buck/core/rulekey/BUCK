@@ -1,0 +1,28 @@
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library", "java_test")
+
+java_test(
+    name = "rulekey",
+    srcs = glob(["*Test.java"]),
+    has_immutable_types = True,
+    deps = [
+        "//src/com/facebook/buck/core/build/buildable/context:context",
+        "//src/com/facebook/buck/core/build/context:context",
+        "//src/com/facebook/buck/core/exceptions:exceptions",
+        "//src/com/facebook/buck/core/model:model",
+        "//src/com/facebook/buck/core/rulekey:rulekey",
+        "//src/com/facebook/buck/core/rules/resolver/impl:impl",
+        "//src/com/facebook/buck/core/sourcepath/resolver/impl:impl",
+        "//src/com/facebook/buck/log:log",
+        "//src/com/facebook/buck/rules/keys:keys",
+        "//src/com/facebook/buck/util/cache/impl:impl",
+        "//test/com/facebook/buck/core/rules:testutil",
+        "//test/com/facebook/buck/core/rules/resolver/impl:testutil",
+        "//test/com/facebook/buck/core/sourcepath:testutil",
+        "//test/com/facebook/buck/jvm/java:testutil",
+        "//test/com/facebook/buck/model:testutil",
+        "//test/com/facebook/buck/rules:testutil",
+        "//test/com/facebook/buck/rules/keys:testutil",
+        "//test/com/facebook/buck/testutil:testutil",
+        "//third-party/java/junit:junit",
+    ],
+)
