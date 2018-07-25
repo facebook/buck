@@ -248,8 +248,8 @@ class NewNativeTargetProjectMutator {
   }
 
   public NewNativeTargetProjectMutator setPreBuildRunScriptPhasesFromTargetNodes(
-      Iterable<TargetNode<?, ?>> nodes,
-      Function<? super TargetNode<?, ?>, BuildRuleResolver> buildRuleResolverForNode) {
+      Iterable<TargetNode<?>> nodes,
+      Function<? super TargetNode<?>, BuildRuleResolver> buildRuleResolverForNode) {
     preBuildRunScriptPhases = createScriptsForTargetNodes(nodes, buildRuleResolverForNode);
     return this;
   }
@@ -266,8 +266,8 @@ class NewNativeTargetProjectMutator {
   }
 
   public NewNativeTargetProjectMutator setPostBuildRunScriptPhasesFromTargetNodes(
-      Iterable<TargetNode<?, ?>> nodes,
-      Function<? super TargetNode<?, ?>, BuildRuleResolver> buildRuleResolverForNode) {
+      Iterable<TargetNode<?>> nodes,
+      Function<? super TargetNode<?>, BuildRuleResolver> buildRuleResolverForNode) {
     postBuildRunScriptPhases = createScriptsForTargetNodes(nodes, buildRuleResolverForNode);
     return this;
   }
@@ -680,11 +680,11 @@ class NewNativeTargetProjectMutator {
   }
 
   private ImmutableList<PBXShellScriptBuildPhase> createScriptsForTargetNodes(
-      Iterable<TargetNode<?, ?>> nodes,
-      Function<? super TargetNode<?, ?>, BuildRuleResolver> buildRuleResolverForNode)
+      Iterable<TargetNode<?>> nodes,
+      Function<? super TargetNode<?>, BuildRuleResolver> buildRuleResolverForNode)
       throws IllegalStateException {
     ImmutableList.Builder<PBXShellScriptBuildPhase> builder = ImmutableList.builder();
-    for (TargetNode<?, ?> node : nodes) {
+    for (TargetNode<?> node : nodes) {
       PBXShellScriptBuildPhase shellScriptBuildPhase = new PBXShellScriptBuildPhase();
       boolean nodeIsPrebuildScript =
           node.getDescription() instanceof XcodePrebuildScriptDescription;
@@ -723,8 +723,8 @@ class NewNativeTargetProjectMutator {
   }
 
   private String generateXcodeShellScriptForJsBundle(
-      TargetNode<?, ?> targetNode,
-      Function<? super TargetNode<?, ?>, BuildRuleResolver> buildRuleResolverForNode) {
+      TargetNode<?> targetNode,
+      Function<? super TargetNode<?>, BuildRuleResolver> buildRuleResolverForNode) {
     Preconditions.checkArgument(targetNode.getDescription() instanceof JsBundleOutputsDescription);
 
     ST template;
@@ -758,10 +758,10 @@ class NewNativeTargetProjectMutator {
 
   private void collectJsBundleFiles(
       ImmutableList.Builder<CopyInXcode> builder,
-      ImmutableList<TargetNode<?, ?>> scriptPhases,
+      ImmutableList<TargetNode<?>> scriptPhases,
       Cell cell,
-      Function<? super TargetNode<?, ?>, BuildRuleResolver> buildRuleResolverForNode) {
-    for (TargetNode<?, ?> targetNode : scriptPhases) {
+      Function<? super TargetNode<?>, BuildRuleResolver> buildRuleResolverForNode) {
+    for (TargetNode<?> targetNode : scriptPhases) {
       if (targetNode.getDescription() instanceof JsBundleOutputsDescription) {
         BuildRuleResolver resolver = buildRuleResolverForNode.apply(targetNode);
         BuildRule rule = resolver.getRule(targetNode.getBuildTarget());
@@ -794,9 +794,9 @@ class NewNativeTargetProjectMutator {
 
   public void collectFilesToCopyInXcode(
       ImmutableList.Builder<CopyInXcode> builder,
-      ImmutableList<TargetNode<?, ?>> scriptPhases,
+      ImmutableList<TargetNode<?>> scriptPhases,
       Cell cell,
-      Function<? super TargetNode<?, ?>, BuildRuleResolver> buildRuleResolverForNode) {
+      Function<? super TargetNode<?>, BuildRuleResolver> buildRuleResolverForNode) {
     collectJsBundleFiles(builder, scriptPhases, cell, buildRuleResolverForNode);
   }
 }

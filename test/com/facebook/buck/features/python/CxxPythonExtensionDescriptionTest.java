@@ -232,16 +232,17 @@ public class CxxPythonExtensionDescriptionTest {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildTarget target = BuildTargetFactory.newInstance("//:target");
     CxxPythonExtensionDescription desc =
-        new CxxPythonExtensionBuilder(
-                target,
-                FlavorDomain.of(
-                    "Python Platform",
-                    createPy2Platform(Optional.of(PYTHON2_DEP_TARGET)),
-                    createPy3Platform(Optional.of(PYTHON3_DEP_TARGET))),
-                new CxxBuckConfig(FakeBuckConfig.builder().build()),
-                CxxTestUtils.createDefaultPlatforms())
-            .build()
-            .getDescription();
+        (CxxPythonExtensionDescription)
+            new CxxPythonExtensionBuilder(
+                    target,
+                    FlavorDomain.of(
+                        "Python Platform",
+                        createPy2Platform(Optional.of(PYTHON2_DEP_TARGET)),
+                        createPy3Platform(Optional.of(PYTHON3_DEP_TARGET))),
+                    new CxxBuckConfig(FakeBuckConfig.builder().build()),
+                    CxxTestUtils.createDefaultPlatforms())
+                .build()
+                .getDescription();
     CxxPythonExtensionDescriptionArg constructorArg =
         CxxPythonExtensionDescriptionArg.builder().setName("target").build();
     ImmutableSortedSet.Builder<BuildTarget> builder = ImmutableSortedSet.naturalOrder();

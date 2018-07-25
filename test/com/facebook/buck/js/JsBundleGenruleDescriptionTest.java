@@ -694,9 +694,9 @@ public class JsBundleGenruleDescriptionTest {
     }
 
     @SuppressWarnings("unchecked")
-    TargetNode<JsBundleGenruleDescriptionArg, ?> targetNode() {
-      TargetNode<?, ?> targetNode = scenario.targetGraph.get(target);
-      return (TargetNode<JsBundleGenruleDescriptionArg, ?>) targetNode;
+    TargetNode<JsBundleGenruleDescriptionArg> targetNode() {
+      TargetNode<?> targetNode = scenario.targetGraph.get(target);
+      return (TargetNode<JsBundleGenruleDescriptionArg>) targetNode;
     }
 
     JsBundleOutputs jsBundle(Flavor... extraFlavors) {

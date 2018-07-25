@@ -237,10 +237,10 @@ public class AppleBundleDescriptionTest {
   @Test
   public void metadataTraversalForFrameworkDependenciesAreTerminated() {
     BuildTarget binaryTarget = BuildTargetFactory.newInstance("//:binary");
-    TargetNode<?, ?> binaryNode = new AppleBinaryBuilder(binaryTarget).build();
+    TargetNode<?> binaryNode = new AppleBinaryBuilder(binaryTarget).build();
 
     BuildTarget bundleTarget = BuildTargetFactory.newInstance("//:bundle");
-    TargetNode<?, ?> bundleNode =
+    TargetNode<?> bundleNode =
         new AppleBundleBuilder(bundleTarget)
             .setExtension(Either.ofLeft(AppleBundleExtension.BUNDLE))
             .setInfoPlist(FakeSourcePath.of("Info.plist"))

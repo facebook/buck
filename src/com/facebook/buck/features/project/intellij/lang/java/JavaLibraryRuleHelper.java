@@ -37,7 +37,7 @@ public class JavaLibraryRuleHelper {
   }
 
   public static <T extends JavaLibraryDescription.CoreArg> void addCompiledShadowIfNeeded(
-      IjProjectConfig projectConfig, TargetNode<T, ?> targetNode, ModuleBuildContext context) {
+      IjProjectConfig projectConfig, TargetNode<T> targetNode, ModuleBuildContext context) {
     if (projectConfig.isExcludeArtifactsEnabled()) {
       return;
     }
@@ -51,7 +51,7 @@ public class JavaLibraryRuleHelper {
   }
 
   public static <T extends JavaLibraryDescription.CoreArg> Optional<String> getLanguageLevel(
-      IjProjectConfig projectConfig, TargetNode<T, ?> targetNode) {
+      IjProjectConfig projectConfig, TargetNode<T> targetNode) {
 
     JavaLibraryDescription.CoreArg arg = targetNode.getConstructorArg();
 
@@ -71,7 +71,7 @@ public class JavaLibraryRuleHelper {
   }
 
   public static <T extends JavaLibraryDescription.CoreArg> void addNonSourceBuildTargets(
-      TargetNode<T, ?> targetNode, ModuleBuildContext context) {
+      TargetNode<T> targetNode, ModuleBuildContext context) {
     T arg = targetNode.getConstructorArg();
     if (arg.getSrcs().stream().anyMatch(src -> src instanceof BuildTargetSourcePath)) {
       context.addNonSourceBuildTarget(targetNode.getBuildTarget());

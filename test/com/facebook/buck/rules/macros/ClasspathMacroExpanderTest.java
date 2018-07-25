@@ -79,10 +79,10 @@ public class ClasspathMacroExpanderTest {
 
   @Test
   public void shouldIncludeTransitiveDependencies() throws Exception {
-    TargetNode<?, ?> depNode =
+    TargetNode<?> depNode =
         getLibraryBuilder("//exciting:dep").addSrc(Paths.get("Dep.java")).build();
 
-    TargetNode<?, ?> ruleNode =
+    TargetNode<?> ruleNode =
         getLibraryBuilder("//exciting:target")
             .addSrc(Paths.get("Other.java"))
             .addDep(depNode.getBuildTarget())
@@ -129,9 +129,9 @@ public class ClasspathMacroExpanderTest {
 
   @Test
   public void extractRuleKeyAppendables() throws Exception {
-    TargetNode<?, ?> depNode =
+    TargetNode<?> depNode =
         getLibraryBuilder("//exciting:dep").addSrc(Paths.get("Dep.java")).build();
-    TargetNode<?, ?> ruleNode =
+    TargetNode<?> ruleNode =
         getLibraryBuilder("//exciting:target")
             .addSrc(Paths.get("Other.java"))
             .addDep(depNode.getBuildTarget())

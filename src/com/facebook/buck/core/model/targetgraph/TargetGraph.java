@@ -34,18 +34,17 @@ import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
 /** Represents the graph of {@link TargetNode}s constructed by parsing the build files. */
-public class TargetGraph extends DirectedAcyclicGraph<TargetNode<?, ?>> {
+public class TargetGraph extends DirectedAcyclicGraph<TargetNode<?>> {
 
   public static final TargetGraph EMPTY =
       new TargetGraph(new MutableDirectedGraph<>(), ImmutableMap.of());
 
-  private final ImmutableMap<BuildTarget, TargetNode<?, ?>> targetsToNodes;
+  private final ImmutableMap<BuildTarget, TargetNode<?>> targetsToNodes;
 
   private OptionalInt cachedHashCode = OptionalInt.empty();
 
   public TargetGraph(
-      MutableDirectedGraph<TargetNode<?, ?>> graph,
-      ImmutableMap<BuildTarget, TargetNode<?, ?>> index) {
+      MutableDirectedGraph<TargetNode<?>> graph, ImmutableMap<BuildTarget, TargetNode<?>> index) {
     super(graph);
     this.targetsToNodes = index;
 
@@ -53,16 +52,16 @@ public class TargetGraph extends DirectedAcyclicGraph<TargetNode<?, ?>> {
   }
 
   private void verifyVisibilityIntegrity() {
-    for (TargetNode<?, ?> node : getNodes()) {
-      for (TargetNode<?, ?> dep : getOutgoingNodesFor(node)) {
+    for (TargetNode<?> node : getNodes()) {
+      for (TargetNode<?> dep : getOutgoingNodesFor(node)) {
         dep.isVisibleToOrThrow(node);
       }
     }
   }
 
   @Nullable
-  protected TargetNode<?, ?> getInternal(BuildTarget target) {
-    TargetNode<?, ?> node = targetsToNodes.get(target);
+  protected TargetNode<?> getInternal(BuildTarget target) {
+    TargetNode<?> node = targetsToNodes.get(target);
     if (node == null) {
       node = targetsToNodes.get(ImmutableBuildTarget.of(target.getUnflavoredBuildTarget()));
       if (node == null) {
@@ -73,12 +72,12 @@ public class TargetGraph extends DirectedAcyclicGraph<TargetNode<?, ?>> {
     return node;
   }
 
-  public Optional<TargetNode<?, ?>> getOptional(BuildTarget target) {
+  public Optional<TargetNode<?>> getOptional(BuildTarget target) {
     return Optional.ofNullable(getInternal(target));
   }
 
-  public TargetNode<?, ?> get(BuildTarget target) {
-    TargetNode<?, ?> node = getInternal(target);
+  public TargetNode<?> get(BuildTarget target) {
+    TargetNode<?> node = getInternal(target);
     if (node == null) {
       throw new NoSuchTargetException(target);
     }
@@ -92,16 +91,16 @@ public class TargetGraph extends DirectedAcyclicGraph<TargetNode<?, ?>> {
    * method will always return null, unlike {@code getOptional}, which may return the node for a
    * differently flavored target ({@see VersionedTargetGraph#getInternal}).
    */
-  public Optional<TargetNode<?, ?>> getExactOptional(BuildTarget target) {
+  public Optional<TargetNode<?>> getExactOptional(BuildTarget target) {
     return Optional.ofNullable(targetsToNodes.get(target));
   }
 
-  public Iterable<TargetNode<?, ?>> getAll(Iterable<BuildTarget> targets) {
+  public Iterable<TargetNode<?>> getAll(Iterable<BuildTarget> targets) {
     return Iterables.transform(targets, this::get);
   }
 
   /** Returns a stream of target nodes corresponding to passed build targets. */
-  public Stream<TargetNode<?, ?>> streamAll(Collection<BuildTarget> targets) {
+  public Stream<TargetNode<?>> streamAll(Collection<BuildTarget> targets) {
     return targets.stream().map(this::get);
   }
 
@@ -138,13 +137,13 @@ public class TargetGraph extends DirectedAcyclicGraph<TargetNode<?, ?>> {
    * @param roots An iterable containing the roots of the new subgraph.
    * @return A subgraph of the current graph.
    */
-  public <T> TargetGraph getSubgraph(Iterable<? extends TargetNode<? extends T, ?>> roots) {
-    MutableDirectedGraph<TargetNode<?, ?>> subgraph = new MutableDirectedGraph<>();
-    Map<BuildTarget, TargetNode<?, ?>> index = new HashMap<>();
+  public <T> TargetGraph getSubgraph(Iterable<? extends TargetNode<? extends T>> roots) {
+    MutableDirectedGraph<TargetNode<?>> subgraph = new MutableDirectedGraph<>();
+    Map<BuildTarget, TargetNode<?>> index = new HashMap<>();
 
-    new AbstractBreadthFirstTraversal<TargetNode<?, ?>>(roots) {
+    new AbstractBreadthFirstTraversal<TargetNode<?>>(roots) {
       @Override
-      public Iterable<TargetNode<?, ?>> visit(TargetNode<?, ?> node) {
+      public Iterable<TargetNode<?>> visit(TargetNode<?> node) {
         subgraph.addNode(node);
         MoreMaps.putCheckEquals(index, node.getBuildTarget(), node);
         if (node.getBuildTarget().isFlavored()) {
@@ -153,9 +152,8 @@ public class TargetGraph extends DirectedAcyclicGraph<TargetNode<?, ?>> {
           MoreMaps.putCheckEquals(
               index, unflavoredBuildTarget, targetsToNodes.get(unflavoredBuildTarget));
         }
-        ImmutableSet<TargetNode<?, ?>> dependencies =
-            ImmutableSet.copyOf(getAll(node.getParseDeps()));
-        for (TargetNode<?, ?> dependency : dependencies) {
+        ImmutableSet<TargetNode<?>> dependencies = ImmutableSet.copyOf(getAll(node.getParseDeps()));
+        for (TargetNode<?> dependency : dependencies) {
           subgraph.addEdge(node, dependency);
         }
         return dependencies;

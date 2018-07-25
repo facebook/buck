@@ -14,7 +14,6 @@
  * under the License.
  */
 
-
 package com.facebook.buck.core.rules.graphbuilder.impl;
 
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -31,19 +30,19 @@ import javax.annotation.concurrent.Immutable;
 @Immutable
 class TargetNodeWrapper {
 
-  private final TargetNode<?, ?> targetNode;
+  private final TargetNode<?> targetNode;
   private final int hashCode;
 
-  private TargetNodeWrapper(TargetNode<?, ?> targetNode) {
+  private TargetNodeWrapper(TargetNode<?> targetNode) {
     this.targetNode = targetNode;
     this.hashCode = targetNode.hashCode();
   }
 
-  public static TargetNodeWrapper of(TargetNode<?, ?> targetNode) {
+  public static TargetNodeWrapper of(TargetNode<?> targetNode) {
     return new TargetNodeWrapper(targetNode);
   }
 
-  public TargetNode<?, ?> getTargetNode() {
+  public TargetNode<?> getTargetNode() {
     return targetNode;
   }
 

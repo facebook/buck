@@ -51,21 +51,21 @@ public class AndroidInstrumentationApkDescriptionTest {
   @Test
   public void testNoDxRulesBecomeFirstOrderDeps() {
     // Build up the original APK rule.
-    TargetNode<?, ?> transitiveDepNode =
+    TargetNode<?> transitiveDepNode =
         JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//exciting:dep"))
             .addSrc(Paths.get("Dep.java"))
             .build();
-    TargetNode<?, ?> dep =
+    TargetNode<?> dep =
         JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//exciting:target"))
             .addSrc(Paths.get("Other.java"))
             .addDep(transitiveDepNode.getBuildTarget())
             .build();
-    TargetNode<?, ?> keystore =
+    TargetNode<?> keystore =
         KeystoreBuilder.createBuilder(BuildTargetFactory.newInstance("//:keystore"))
             .setStore(FakeSourcePath.of("store"))
             .setProperties(FakeSourcePath.of("properties"))
             .build();
-    TargetNode<?, ?> androidBinary =
+    TargetNode<?> androidBinary =
         AndroidBinaryBuilder.createBuilder(BuildTargetFactory.newInstance("//:apk"))
             .setManifest(FakeSourcePath.of("manifest.xml"))
             .setKeystore(keystore.getBuildTarget())
@@ -73,7 +73,7 @@ public class AndroidInstrumentationApkDescriptionTest {
             .setOriginalDeps(ImmutableSortedSet.of(dep.getBuildTarget()))
             .build();
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
-    TargetNode<?, ?> androidInstrumentationApk =
+    TargetNode<?> androidInstrumentationApk =
         AndroidInstrumentationApkBuilder.createBuilder(target)
             .setManifest(FakeSourcePath.of("manifest.xml"))
             .setApk(androidBinary.getBuildTarget())

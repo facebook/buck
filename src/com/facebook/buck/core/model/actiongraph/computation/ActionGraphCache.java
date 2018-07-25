@@ -416,9 +416,9 @@ public class ActionGraphCache {
     }
 
     LOG.debug("start target graph walk");
-    new AbstractBottomUpTraversal<TargetNode<?, ?>, RuntimeException>(targetGraph) {
+    new AbstractBottomUpTraversal<TargetNode<?>, RuntimeException>(targetGraph) {
       @Override
-      public void visit(TargetNode<?, ?> node) {
+      public void visit(TargetNode<?> node) {
         // If we're loading this node from cache, we don't need to wait on our children, as the
         // entire subgraph will be loaded from cache.
         CompletableFuture<BuildRule>[] depFutures =
@@ -475,9 +475,9 @@ public class ActionGraphCache {
     }
 
     LOG.debug("start target graph walk");
-    new AbstractBottomUpTraversal<TargetNode<?, ?>, RuntimeException>(targetGraph) {
+    new AbstractBottomUpTraversal<TargetNode<?>, RuntimeException>(targetGraph) {
       @Override
-      public void visit(TargetNode<?, ?> node) {
+      public void visit(TargetNode<?> node) {
         if (shouldInstrumentGraphBuilding) {
           Clock clock = new DefaultClock();
           try (Scope ignored =

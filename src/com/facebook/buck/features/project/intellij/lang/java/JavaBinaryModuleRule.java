@@ -45,13 +45,13 @@ public class JavaBinaryModuleRule extends BaseIjModuleRule<JavaBinaryDescription
   }
 
   @Override
-  public void apply(TargetNode<JavaBinaryDescriptionArg, ?> target, ModuleBuildContext context) {
+  public void apply(TargetNode<JavaBinaryDescriptionArg> target, ModuleBuildContext context) {
     context.addDeps(target.getBuildDeps(), DependencyType.PROD);
     saveMetaInfDirectoryForIntellijPlugin(target, context);
   }
 
   private void saveMetaInfDirectoryForIntellijPlugin(
-      TargetNode<JavaBinaryDescriptionArg, ?> target, ModuleBuildContext context) {
+      TargetNode<JavaBinaryDescriptionArg> target, ModuleBuildContext context) {
     ImmutableSet<String> intellijPluginLabels = projectConfig.getIntellijPluginLabels();
     if (intellijPluginLabels.isEmpty()) {
       return;
@@ -64,7 +64,7 @@ public class JavaBinaryModuleRule extends BaseIjModuleRule<JavaBinaryDescription
   }
 
   @Override
-  public IjModuleType detectModuleType(TargetNode<JavaBinaryDescriptionArg, ?> target) {
+  public IjModuleType detectModuleType(TargetNode<JavaBinaryDescriptionArg> target) {
     ImmutableSet<String> intellijPluginLabels = projectConfig.getIntellijPluginLabels();
     if (intellijPluginLabels.isEmpty()) {
       return IjModuleType.JAVA_MODULE;

@@ -112,24 +112,24 @@ public final class AppleBuildRules {
     LINKING,
   }
 
-  public static ImmutableSet<TargetNode<?, ?>> getRecursiveTargetNodeDependenciesOfTypes(
+  public static ImmutableSet<TargetNode<?>> getRecursiveTargetNodeDependenciesOfTypes(
       TargetGraph targetGraph,
       Optional<AppleDependenciesCache> cache,
       RecursiveDependenciesMode mode,
-      TargetNode<?, ?> targetNode,
+      TargetNode<?> targetNode,
       Optional<ImmutableSet<Class<? extends DescriptionWithTargetGraph<?>>>> descriptionClasses) {
     LOG.verbose(
         "Getting recursive dependencies of node %s, mode %s, including only types %s\n",
         targetNode, mode, descriptionClasses);
-    Predicate<TargetNode<?, ?>> isDependencyNode =
+    Predicate<TargetNode<?>> isDependencyNode =
         descriptionClasses
             .map(
                 classes ->
-                    (Predicate<TargetNode<?, ?>>)
+                    (Predicate<TargetNode<?>>)
                         node -> classes.contains(node.getDescription().getClass()))
             .orElse(x -> true);
 
-    ImmutableSet<TargetNode<?, ?>> result =
+    ImmutableSet<TargetNode<?>> result =
         getRecursiveTargetNodeDependenciesOfTypes(
             targetGraph, cache, mode, targetNode, isDependencyNode, Optional.empty());
 
@@ -146,19 +146,19 @@ public final class AppleBuildRules {
         || description instanceof AppleResourceDescription;
   }
 
-  public static ImmutableSet<TargetNode<?, ?>> getRecursiveTargetNodeDependenciesOfTypes(
+  public static ImmutableSet<TargetNode<?>> getRecursiveTargetNodeDependenciesOfTypes(
       TargetGraph targetGraph,
       Optional<AppleDependenciesCache> cache,
       RecursiveDependenciesMode mode,
-      TargetNode<?, ?> targetNode,
-      Predicate<TargetNode<?, ?>> isDependencyNode,
+      TargetNode<?> targetNode,
+      Predicate<TargetNode<?>> isDependencyNode,
       Optional<AppleCxxPlatform> appleCxxPlatform) {
 
     @SuppressWarnings("unchecked")
-    GraphTraversable<TargetNode<?, ?>> graphTraversable =
+    GraphTraversable<TargetNode<?>> graphTraversable =
         node -> {
           // Handle resource exporting behavior of AppleResource.getResourceFromDeps
-          Optional<Iterable<TargetNode<?, ?>>> iterable =
+          Optional<Iterable<TargetNode<?>>> iterable =
               TargetNodes.castArg(node, AppleResourceDescriptionArg.class)
                   .map(TargetNode::getConstructorArg)
                   .map(arg -> targetGraph.getAll(arg.getResourcesFromDeps()));
@@ -173,13 +173,13 @@ public final class AppleBuildRules {
 
           LOG.verbose("Finding children of node: %s", node);
 
-          ImmutableSortedSet<TargetNode<?, ?>> defaultDeps;
+          ImmutableSortedSet<TargetNode<?>> defaultDeps;
           // Subset of dependencies from the "exported_deps" field.
-          ImmutableSortedSet<TargetNode<?, ?>> exportedDeps;
+          ImmutableSortedSet<TargetNode<?>> exportedDeps;
           if (!cache.isPresent()) {
-            ImmutableSortedSet.Builder<TargetNode<?, ?>> defaultDepsBuilder =
+            ImmutableSortedSet.Builder<TargetNode<?>> defaultDepsBuilder =
                 ImmutableSortedSet.naturalOrder();
-            ImmutableSortedSet.Builder<TargetNode<?, ?>> exportedDepsBuilder =
+            ImmutableSortedSet.Builder<TargetNode<?>> exportedDepsBuilder =
                 ImmutableSortedSet.naturalOrder();
             addDirectAndExportedDeps(
                 targetGraph, node, defaultDepsBuilder, exportedDepsBuilder, appleCxxPlatform);
@@ -193,12 +193,12 @@ public final class AppleBuildRules {
           if (node.getDescription() instanceof AppleBundleDescription) {
             AppleBundleDescriptionArg arg = (AppleBundleDescriptionArg) node.getConstructorArg();
 
-            ImmutableSortedSet.Builder<TargetNode<?, ?>> editedDeps =
+            ImmutableSortedSet.Builder<TargetNode<?>> editedDeps =
                 ImmutableSortedSet.naturalOrder();
-            ImmutableSortedSet.Builder<TargetNode<?, ?>> editedExportedDeps =
+            ImmutableSortedSet.Builder<TargetNode<?>> editedExportedDeps =
                 ImmutableSortedSet.naturalOrder();
             ImmutableSortedSet<BuildTarget> binaryTargets = arg.getBinaryTargets();
-            for (TargetNode<?, ?> rule : defaultDeps) {
+            for (TargetNode<?> rule : defaultDeps) {
               if (binaryTargets.contains(rule.getBuildTarget())) {
                 addDirectAndExportedDeps(
                     targetGraph,
@@ -211,8 +211,8 @@ public final class AppleBuildRules {
               }
             }
 
-            ImmutableSortedSet<TargetNode<?, ?>> newDefaultDeps = editedDeps.build();
-            ImmutableSortedSet<TargetNode<?, ?>> newExportedDeps = editedExportedDeps.build();
+            ImmutableSortedSet<TargetNode<?>> newDefaultDeps = editedDeps.build();
+            ImmutableSortedSet<TargetNode<?>> newExportedDeps = editedExportedDeps.build();
             LOG.verbose(
                 "Transformed deps for bundle %s: %s -> %s, exported deps %s -> %s",
                 node, defaultDeps, newDefaultDeps, exportedDeps, newExportedDeps);
@@ -225,7 +225,7 @@ public final class AppleBuildRules {
             LOG.verbose("Exported deps for node %s mode %s: %s", node, mode, exportedDeps);
           }
 
-          ImmutableSortedSet<TargetNode<?, ?>> deps = ImmutableSortedSet.of();
+          ImmutableSortedSet<TargetNode<?>> deps = ImmutableSortedSet.of();
 
           if (node != targetNode) {
             switch (mode) {
@@ -236,7 +236,7 @@ public final class AppleBuildRules {
                   boolean nodeIsCxxLibrary = node.getDescription() instanceof CxxLibraryDescription;
                   if (nodeIsAppleLibrary || nodeIsCxxLibrary) {
                     if (AppleLibraryDescription.isNotStaticallyLinkedLibraryNode(
-                        (TargetNode<CxxLibraryDescription.CommonArg, ?>) node)) {
+                        (TargetNode<CxxLibraryDescription.CommonArg>) node)) {
                       deps = exportedDeps;
                     } else {
                       deps = defaultDeps;
@@ -262,7 +262,7 @@ public final class AppleBuildRules {
                   boolean nodeIsCxxLibrary = node.getDescription() instanceof CxxLibraryDescription;
                   if (nodeIsAppleLibrary || nodeIsCxxLibrary) {
                     if (!AppleLibraryDescription.isNotStaticallyLinkedLibraryNode(
-                        (TargetNode<CxxLibraryDescription.CommonArg, ?>) node)) {
+                        (TargetNode<CxxLibraryDescription.CommonArg>) node)) {
                       deps = defaultDeps;
                     }
                   } else if (!shouldStopRecursiveDependenciesTraversalAtNodeType(
@@ -283,11 +283,11 @@ public final class AppleBuildRules {
           return deps.iterator();
         };
 
-    ImmutableSet.Builder<TargetNode<?, ?>> filteredRules = ImmutableSet.builder();
-    AcyclicDepthFirstPostOrderTraversal<TargetNode<?, ?>> traversal =
+    ImmutableSet.Builder<TargetNode<?>> filteredRules = ImmutableSet.builder();
+    AcyclicDepthFirstPostOrderTraversal<TargetNode<?>> traversal =
         new AcyclicDepthFirstPostOrderTraversal<>(graphTraversable);
     try {
-      for (TargetNode<?, ?> node : traversal.traverse(ImmutableList.of(targetNode))) {
+      for (TargetNode<?> node : traversal.traverse(ImmutableList.of(targetNode))) {
         if (node != targetNode && isDependencyNode.test(node)) {
           filteredRules.add(node);
         }
@@ -300,11 +300,11 @@ public final class AppleBuildRules {
     return filteredRules.build();
   }
 
-  public static ImmutableSet<TargetNode<?, ?>> getRecursiveTargetNodeDependenciesOfTypes(
+  public static ImmutableSet<TargetNode<?>> getRecursiveTargetNodeDependenciesOfTypes(
       TargetGraph targetGraph,
       Optional<AppleDependenciesCache> cache,
       RecursiveDependenciesMode mode,
-      TargetNode<?, ?> input,
+      TargetNode<?> input,
       ImmutableSet<Class<? extends DescriptionWithTargetGraph<?>>> descriptionClasses) {
     return getRecursiveTargetNodeDependenciesOfTypes(
         targetGraph, cache, mode, input, Optional.of(descriptionClasses));
@@ -312,9 +312,9 @@ public final class AppleBuildRules {
 
   static void addDirectAndExportedDeps(
       TargetGraph targetGraph,
-      TargetNode<?, ?> targetNode,
-      ImmutableSortedSet.Builder<TargetNode<?, ?>> directDepsBuilder,
-      ImmutableSortedSet.Builder<TargetNode<?, ?>> exportedDepsBuilder,
+      TargetNode<?> targetNode,
+      ImmutableSortedSet.Builder<TargetNode<?>> directDepsBuilder,
+      ImmutableSortedSet.Builder<TargetNode<?>> exportedDepsBuilder,
       Optional<AppleCxxPlatform> appleCxxPlatform) {
     directDepsBuilder.addAll(targetGraph.getAll(targetNode.getBuildDepsStream()::iterator));
     if (targetNode.getDescription() instanceof AppleLibraryDescription
@@ -322,7 +322,7 @@ public final class AppleBuildRules {
       CxxLibraryDescription.CommonArg arg =
           (CxxLibraryDescription.CommonArg) targetNode.getConstructorArg();
       LOG.verbose("Exported deps of node %s: %s", targetNode, arg.getExportedDeps());
-      Iterable<TargetNode<?, ?>> exportedNodes = targetGraph.getAll(arg.getExportedDeps());
+      Iterable<TargetNode<?>> exportedNodes = targetGraph.getAll(arg.getExportedDeps());
       directDepsBuilder.addAll(exportedNodes);
       exportedDepsBuilder.addAll(exportedNodes);
     }
@@ -345,11 +345,9 @@ public final class AppleBuildRules {
     }
   }
 
-  public static ImmutableSet<TargetNode<?, ?>> getSchemeBuildableTargetNodes(
-      TargetGraph targetGraph,
-      Optional<AppleDependenciesCache> cache,
-      TargetNode<?, ?> targetNode) {
-    Iterable<TargetNode<?, ?>> targetNodes =
+  public static ImmutableSet<TargetNode<?>> getSchemeBuildableTargetNodes(
+      TargetGraph targetGraph, Optional<AppleDependenciesCache> cache, TargetNode<?> targetNode) {
+    Iterable<TargetNode<?>> targetNodes =
         Iterables.concat(
             getRecursiveTargetNodeDependenciesOfTypes(
                 targetGraph,
@@ -367,7 +365,7 @@ public final class AppleBuildRules {
   public static <T> ImmutableSet<AppleAssetCatalogDescriptionArg> collectRecursiveAssetCatalogs(
       TargetGraph targetGraph,
       Optional<AppleDependenciesCache> cache,
-      Iterable<TargetNode<T, ?>> targetNodes) {
+      Iterable<TargetNode<T>> targetNodes) {
     return RichStream.from(targetNodes)
         .flatMap(
             input ->
@@ -385,7 +383,7 @@ public final class AppleBuildRules {
   public static <T> ImmutableSet<AppleWrapperResourceArg> collectRecursiveWrapperResources(
       TargetGraph targetGraph,
       Optional<AppleDependenciesCache> cache,
-      Iterable<TargetNode<T, ?>> targetNodes) {
+      Iterable<TargetNode<T>> targetNodes) {
     return RichStream.from(targetNodes)
         .flatMap(
             input ->
@@ -405,7 +403,7 @@ public final class AppleBuildRules {
       TargetGraph targetGraph,
       Optional<AppleDependenciesCache> cache,
       ImmutableSet<Class<? extends DescriptionWithTargetGraph<?>>> descriptionClasses,
-      Collection<TargetNode<?, ?>> targetNodes) {
+      Collection<TargetNode<?>> targetNodes) {
     return RichStream.from(targetNodes)
         .flatMap(
             targetNode ->
@@ -421,7 +419,7 @@ public final class AppleBuildRules {
   }
 
   public static ImmutableSet<AppleAssetCatalogDescriptionArg> collectDirectAssetCatalogs(
-      TargetGraph targetGraph, TargetNode<?, ?> targetNode) {
+      TargetGraph targetGraph, TargetNode<?> targetNode) {
     return RichStream.from(targetGraph.getAll(targetNode.getBuildDeps()))
         .filter(node -> node.getDescription() instanceof AppleAssetCatalogDescription)
         .map(node -> (AppleAssetCatalogDescriptionArg) node.getConstructorArg())

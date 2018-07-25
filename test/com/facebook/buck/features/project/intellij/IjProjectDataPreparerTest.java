@@ -76,13 +76,13 @@ public class IjProjectDataPreparerTest {
 
   @Test
   public void testWriteModule() throws Exception {
-    TargetNode<?, ?> guavaTargetNode =
+    TargetNode<?> guavaTargetNode =
         JavaLibraryBuilder.createBuilder(
                 BuildTargetFactory.newInstance("//third_party/guava:guava"))
             .addSrc(Paths.get("third_party/guava/src/Collections.java"))
             .build();
 
-    TargetNode<?, ?> baseTargetNode =
+    TargetNode<?> baseTargetNode =
         JavaLibraryBuilder.createBuilder(
                 BuildTargetFactory.newInstance("//java/com/example/base:base"))
             .addDep(guavaTargetNode.getBuildTarget())
@@ -129,32 +129,32 @@ public class IjProjectDataPreparerTest {
   @Test
   @SuppressWarnings("unchecked")
   public void testDependencies() {
-    TargetNode<?, ?> hamcrestTargetNode =
+    TargetNode<?> hamcrestTargetNode =
         PrebuiltJarBuilder.createBuilder(
                 BuildTargetFactory.newInstance("//third-party/hamcrest:hamcrest"))
             .setBinaryJar(Paths.get("third-party/hamcrest/hamcrest.jar"))
             .build();
 
-    TargetNode<?, ?> guavaTargetNode =
+    TargetNode<?> guavaTargetNode =
         PrebuiltJarBuilder.createBuilder(
                 BuildTargetFactory.newInstance("//third-party/guava:guava"))
             .setBinaryJar(Paths.get("third-party/guava/guava.jar"))
             .build();
 
-    TargetNode<?, ?> baseTargetNode =
+    TargetNode<?> baseTargetNode =
         JavaLibraryBuilder.createBuilder(
                 BuildTargetFactory.newInstance("//java/com/example/base:base"))
             .addDep(guavaTargetNode.getBuildTarget())
             .addSrc(Paths.get("java/com/example/base/Base.java"))
             .build();
 
-    TargetNode<?, ?> baseGenruleTarget =
+    TargetNode<?> baseGenruleTarget =
         GenruleBuilder.newGenruleBuilder(
                 BuildTargetFactory.newInstance("//java/com/example/base:genrule"))
             .setOut("out")
             .build();
 
-    TargetNode<?, ?> baseInlineTestsTargetNode =
+    TargetNode<?> baseInlineTestsTargetNode =
         JavaLibraryBuilder.createBuilder(
                 BuildTargetFactory.newInstance("//java/com/example/base:tests"))
             .addDep(hamcrestTargetNode.getBuildTarget())
@@ -162,7 +162,7 @@ public class IjProjectDataPreparerTest {
             .addSrcTarget(baseGenruleTarget.getBuildTarget())
             .build();
 
-    TargetNode<?, ?> baseTestsTargetNode =
+    TargetNode<?> baseTestsTargetNode =
         JavaTestBuilder.createBuilder(
                 BuildTargetFactory.newInstance("//javatests/com/example/base:base"))
             .addDep(baseTargetNode.getBuildTarget())
@@ -268,7 +268,7 @@ public class IjProjectDataPreparerTest {
   public void testEmptyRootModule() {
 
     Path baseTargetSrcFilePath = Paths.get("java/com/example/base/Base.java");
-    TargetNode<?, ?> baseTargetNode =
+    TargetNode<?> baseTargetNode =
         JavaLibraryBuilder.createBuilder(
                 BuildTargetFactory.newInstance("//java/com/example/base:base"))
             .addSrc(baseTargetSrcFilePath)
@@ -306,20 +306,20 @@ public class IjProjectDataPreparerTest {
 
   @Test
   public void testModuleIndex() {
-    TargetNode<?, ?> guavaTargetNode =
+    TargetNode<?> guavaTargetNode =
         PrebuiltJarBuilder.createBuilder(
                 BuildTargetFactory.newInstance("//third-party/guava:guava"))
             .setBinaryJar(Paths.get("third-party/guava/guava.jar"))
             .build();
 
-    TargetNode<?, ?> baseTargetNode =
+    TargetNode<?> baseTargetNode =
         JavaLibraryBuilder.createBuilder(
                 BuildTargetFactory.newInstance("//java/com/example/base:base"))
             .addDep(guavaTargetNode.getBuildTarget())
             .addSrc(Paths.get("java/com/example/base/Base.java"))
             .build();
 
-    TargetNode<?, ?> baseTestsTargetNode =
+    TargetNode<?> baseTestsTargetNode =
         JavaTestBuilder.createBuilder(
                 BuildTargetFactory.newInstance("//javatests/com/example/base:base"))
             .addDep(baseTargetNode.getBuildTarget())
@@ -381,24 +381,24 @@ public class IjProjectDataPreparerTest {
     FakeProjectFilesystem filesystemForExcludesTest =
         new FakeProjectFilesystem(FakeClock.doNotCare(), Paths.get(".").toAbsolutePath(), paths);
 
-    TargetNode<?, ?> guavaTargetNode =
+    TargetNode<?> guavaTargetNode =
         PrebuiltJarBuilder.createBuilder(BuildTargetFactory.newInstance("//lib:guava"))
             .setBinaryJar(Paths.get("lib/guava.jar"))
             .build();
 
-    TargetNode<?, ?> srcTargetNode =
+    TargetNode<?> srcTargetNode =
         JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//java/com/src:src"))
             .addDep(guavaTargetNode.getBuildTarget())
             .addSrc(Paths.get("java/com/src/Source.java"))
             .build();
 
-    TargetNode<?, ?> src2TargetNode =
+    TargetNode<?> src2TargetNode =
         JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//java/com:src2"))
             .addDep(guavaTargetNode.getBuildTarget())
             .addSrc(Paths.get("java/com/src2/Code.java"))
             .build();
 
-    TargetNode<?, ?> rootTargetNode =
+    TargetNode<?> rootTargetNode =
         JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:root")).build();
 
     IjModuleGraph moduleGraph =
@@ -432,14 +432,14 @@ public class IjProjectDataPreparerTest {
 
   @Test
   public void testCreatePackageLookupPahtSet() {
-    TargetNode<?, ?> guavaTargetNode =
+    TargetNode<?> guavaTargetNode =
         PrebuiltJarBuilder.createBuilder(BuildTargetFactory.newInstance("//lib:guava"))
             .setBinaryJar(Paths.get("lib/guava.jar"))
             .build();
 
     Path sourcePath = Paths.get("java/com/src/Source.java");
     Path subSourcePath = Paths.get("java/com/src/subpackage/SubSource.java");
-    TargetNode<?, ?> srcTargetNode =
+    TargetNode<?> srcTargetNode =
         JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//java/com/src:src"))
             .addDep(guavaTargetNode.getBuildTarget())
             .addSrc(sourcePath)

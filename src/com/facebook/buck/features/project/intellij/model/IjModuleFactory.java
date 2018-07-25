@@ -31,7 +31,7 @@ public interface IjModuleFactory {
    */
   @SuppressWarnings(
       "rawtypes") // https://github.com/immutables/immutables/issues/548 requires us to use
-  // TargetNode not TargetNode<?, ?>
+  // TargetNode not TargetNode<?>
   IjModule createModule(
       Path moduleBasePath, ImmutableSet<TargetNode> targetNodes, Set<Path> excludes);
 }

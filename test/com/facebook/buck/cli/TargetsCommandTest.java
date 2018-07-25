@@ -95,11 +95,10 @@ public class TargetsCommandTest {
   private ListeningExecutorService executor;
   private CapturingConsoleEventListener capturingConsoleEventListener;
 
-  private Stream<TargetNode<?, ?>> buildTargetNodes(
-      ProjectFilesystem filesystem, String buildTarget) {
-    SortedSet<TargetNode<?, ?>> buildRules = new TreeSet<>();
+  private Stream<TargetNode<?>> buildTargetNodes(ProjectFilesystem filesystem, String buildTarget) {
+    SortedSet<TargetNode<?>> buildRules = new TreeSet<>();
     BuildTarget target = BuildTargetFactory.newInstance(filesystem.getRootPath(), buildTarget);
-    TargetNode<?, ?> node = JavaLibraryBuilder.createBuilder(target).build();
+    TargetNode<?> node = JavaLibraryBuilder.createBuilder(target).build();
     buildRules.add(node);
     return buildRules.stream();
   }
@@ -144,7 +143,7 @@ public class TargetsCommandTest {
   @Test
   public void testJsonOutputForBuildTarget() throws IOException, BuildFileParseException {
     // run `buck targets` on the build file and parse the observed JSON.
-    Stream<TargetNode<?, ?>> nodes = buildTargetNodes(filesystem, "//:test-library");
+    Stream<TargetNode<?>> nodes = buildTargetNodes(filesystem, "//:test-library");
 
     targetsCommand.printJsonForTargets(
         params, executor, nodes, ImmutableMap.of(), ImmutableSet.of());
@@ -214,7 +213,7 @@ public class TargetsCommandTest {
   @Test
   public void testJsonOutputForMissingBuildTarget() throws BuildFileParseException {
     // nonexistent target should not exist.
-    Stream<TargetNode<?, ?>> buildRules = buildTargetNodes(filesystem, "//:nonexistent");
+    Stream<TargetNode<?>> buildRules = buildTargetNodes(filesystem, "//:nonexistent");
     targetsCommand.printJsonForTargets(
         params, executor, buildRules, ImmutableMap.of(), ImmutableSet.of());
 
@@ -238,26 +237,26 @@ public class TargetsCommandTest {
   @Test
   public void testGetMatchingBuildTargets() {
     BuildTarget prebuiltJarTarget = BuildTargetFactory.newInstance("//empty:empty");
-    TargetNode<?, ?> prebuiltJarNode =
+    TargetNode<?> prebuiltJarNode =
         PrebuiltJarBuilder.createBuilder(prebuiltJarTarget)
             .setBinaryJar(Paths.get("spoof"))
             .build();
 
     BuildTarget javaLibraryTarget = BuildTargetFactory.newInstance("//javasrc:java-library");
-    TargetNode<?, ?> javaLibraryNode =
+    TargetNode<?> javaLibraryNode =
         JavaLibraryBuilder.createBuilder(javaLibraryTarget)
             .addSrc(Paths.get("javasrc/JavaLibrary.java"))
             .addDep(prebuiltJarTarget)
             .build();
 
     BuildTarget javaTestTarget = BuildTargetFactory.newInstance("//javatest:test-java-library");
-    TargetNode<?, ?> javaTestNode =
+    TargetNode<?> javaTestNode =
         JavaTestBuilder.createBuilder(javaTestTarget)
             .addSrc(Paths.get("javatest/TestJavaLibrary.java"))
             .addDep(javaLibraryTarget)
             .build();
 
-    ImmutableSet<TargetNode<?, ?>> nodes =
+    ImmutableSet<TargetNode<?>> nodes =
         ImmutableSet.of(prebuiltJarNode, javaLibraryNode, javaTestNode);
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(nodes);
@@ -266,7 +265,7 @@ public class TargetsCommandTest {
 
     // No target depends on the referenced file.
     referencedFiles = ImmutableSet.of(Paths.get("excludesrc/CannotFind.java"));
-    SortedMap<String, TargetNode<?, ?>> matchingBuildRules =
+    SortedMap<String, TargetNode<?>> matchingBuildRules =
         targetsCommand.getMatchingNodes(
             targetGraph,
             Optional.of(referencedFiles),
@@ -389,17 +388,17 @@ public class TargetsCommandTest {
   @Test
   public void testGetMatchingAppleLibraryBuildTarget() {
     BuildTarget libraryTarget = BuildTargetFactory.newInstance("//foo:lib");
-    TargetNode<?, ?> libraryNode =
+    TargetNode<?> libraryNode =
         AppleLibraryBuilder.createBuilder(libraryTarget)
             .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("foo/foo.m"))))
             .build();
 
-    ImmutableSet<TargetNode<?, ?>> nodes = ImmutableSet.of(libraryNode);
+    ImmutableSet<TargetNode<?>> nodes = ImmutableSet.of(libraryNode);
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(nodes);
 
     // No target depends on the referenced file.
-    SortedMap<String, TargetNode<?, ?>> matchingBuildRules =
+    SortedMap<String, TargetNode<?>> matchingBuildRules =
         targetsCommand.getMatchingNodes(
             targetGraph,
             Optional.of(ImmutableSet.of(Paths.get("foo/bar.m"))),
@@ -424,25 +423,25 @@ public class TargetsCommandTest {
   @Test
   public void testGetMatchingAppleTestBuildTarget() {
     BuildTarget libraryTarget = BuildTargetFactory.newInstance("//foo:lib");
-    TargetNode<?, ?> libraryNode =
+    TargetNode<?> libraryNode =
         AppleLibraryBuilder.createBuilder(libraryTarget)
             .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("foo/foo.m"))))
             .build();
 
     BuildTarget testTarget = BuildTargetFactory.newInstance("//foo:xctest");
-    TargetNode<?, ?> testNode =
+    TargetNode<?> testNode =
         AppleTestBuilder.createBuilder(testTarget)
             .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("foo/testfoo.m"))))
             .setDeps(ImmutableSortedSet.of(libraryTarget))
             .setInfoPlist(FakeSourcePath.of("Info.plist"))
             .build();
 
-    ImmutableSet<TargetNode<?, ?>> nodes = ImmutableSet.of(libraryNode, testNode);
+    ImmutableSet<TargetNode<?>> nodes = ImmutableSet.of(libraryNode, testNode);
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(nodes);
 
     // No target depends on the referenced file.
-    SortedMap<String, TargetNode<?, ?>> matchingBuildRules =
+    SortedMap<String, TargetNode<?>> matchingBuildRules =
         targetsCommand.getMatchingNodes(
             targetGraph,
             Optional.of(ImmutableSet.of(Paths.get("foo/bar.m"))),
@@ -480,12 +479,12 @@ public class TargetsCommandTest {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     Path resDir = Paths.get("some/resources/dir");
     BuildTarget androidResourceTarget = BuildTargetFactory.newInstance("//:res");
-    TargetNode<?, ?> androidResourceNode =
+    TargetNode<?> androidResourceNode =
         AndroidResourceBuilder.createBuilder(androidResourceTarget).setRes(resDir).build();
 
     Path genSrc = resDir.resolve("foo.txt");
     BuildTarget genTarget = BuildTargetFactory.newInstance("//:gen");
-    TargetNode<?, ?> genNode =
+    TargetNode<?> genNode =
         GenruleBuilder.newGenruleBuilder(genTarget)
             .setSrcs(ImmutableList.of(FakeSourcePath.of(projectFilesystem, genSrc)))
             .setOut("out")
@@ -493,7 +492,7 @@ public class TargetsCommandTest {
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(androidResourceNode, genNode);
 
-    SortedMap<String, TargetNode<?, ?>> matchingBuildRules;
+    SortedMap<String, TargetNode<?>> matchingBuildRules;
 
     // Specifying a resource under the resource directory causes a match.
     matchingBuildRules =
@@ -541,34 +540,34 @@ public class TargetsCommandTest {
     BuildTarget testLibraryTarget = BuildTargetFactory.newInstance("//testlib:testlib");
     BuildTarget testLibraryTestTarget = BuildTargetFactory.newInstance("//testlib:testlib-xctest");
 
-    TargetNode<?, ?> libraryNode =
+    TargetNode<?> libraryNode =
         AppleLibraryBuilder.createBuilder(libraryTarget)
             .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("foo/foo.m"))))
             .setTests(ImmutableSortedSet.of(libraryTestTarget1, libraryTestTarget2))
             .build();
 
-    TargetNode<?, ?> libraryTestNode1 =
+    TargetNode<?> libraryTestNode1 =
         AppleTestBuilder.createBuilder(libraryTestTarget1)
             .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("foo/testfoo1.m"))))
             .setDeps(ImmutableSortedSet.of(libraryTarget))
             .setInfoPlist(FakeSourcePath.of("Info.plist"))
             .build();
 
-    TargetNode<?, ?> libraryTestNode2 =
+    TargetNode<?> libraryTestNode2 =
         AppleTestBuilder.createBuilder(libraryTestTarget2)
             .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("foo/testfoo2.m"))))
             .setDeps(ImmutableSortedSet.of(testLibraryTarget))
             .setInfoPlist(FakeSourcePath.of("Info.plist"))
             .build();
 
-    TargetNode<?, ?> testLibraryNode =
+    TargetNode<?> testLibraryNode =
         AppleLibraryBuilder.createBuilder(testLibraryTarget)
             .setSrcs(
                 ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("testlib/testlib.m"))))
             .setTests(ImmutableSortedSet.of(testLibraryTestTarget))
             .build();
 
-    TargetNode<?, ?> testLibraryTestNode =
+    TargetNode<?> testLibraryTestNode =
         AppleTestBuilder.createBuilder(testLibraryTestTarget)
             .setSrcs(
                 ImmutableSortedSet.of(
@@ -577,14 +576,14 @@ public class TargetsCommandTest {
             .setInfoPlist(FakeSourcePath.of("Info.plist"))
             .build();
 
-    ImmutableSet<TargetNode<?, ?>> nodes =
+    ImmutableSet<TargetNode<?>> nodes =
         ImmutableSet.of(
             libraryNode, libraryTestNode1, libraryTestNode2, testLibraryNode, testLibraryTestNode);
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(nodes);
 
     // No target depends on the referenced file.
-    SortedMap<String, TargetNode<?, ?>> matchingBuildRules =
+    SortedMap<String, TargetNode<?>> matchingBuildRules =
         targetsCommand.getMatchingNodes(
             targetGraph,
             Optional.of(ImmutableSet.of(Paths.get("foo/bar.m"))),

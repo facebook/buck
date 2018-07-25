@@ -84,7 +84,7 @@ public class GenruleDescriptionTest {
             GenruleDescriptionArg.class,
             declaredDeps,
             instance);
-    TargetNode<GenruleDescriptionArg, GenruleDescription> targetNode =
+    TargetNode<GenruleDescriptionArg> targetNode =
         new TargetNodeFactory(new DefaultTypeCoercerFactory())
             .createFromObject(
                 Hashing.sha1().hashString(buildTarget.getFullyQualifiedName(), UTF_8),
@@ -108,16 +108,16 @@ public class GenruleDescriptionTest {
 
   @Test
   public void testClasspathTransitiveDepsBecomeFirstOrderDeps() {
-    TargetNode<?, ?> transitiveDepNode =
+    TargetNode<?> transitiveDepNode =
         JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//exciting:dep"))
             .addSrc(Paths.get("Dep.java"))
             .build();
-    TargetNode<?, ?> depNode =
+    TargetNode<?> depNode =
         JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//exciting:target"))
             .addSrc(Paths.get("Other.java"))
             .addDep(transitiveDepNode.getBuildTarget())
             .build();
-    TargetNode<?, ?> genruleNode =
+    TargetNode<?> genruleNode =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:rule"))
             .setOut("out")
             .setCmd(StringWithMacrosUtils.format("%s", ClasspathMacro.of(depNode.getBuildTarget())))

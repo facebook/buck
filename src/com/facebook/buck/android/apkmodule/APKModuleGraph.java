@@ -354,11 +354,11 @@ public class APKModuleGraph implements AddsToRuleKey {
   private APKModule generateRootModule() {
     Set<BuildTarget> rootTargets = new HashSet<>();
     if (targetGraph != TargetGraph.EMPTY) {
-      new AbstractBreadthFirstTraversal<TargetNode<?, ?>>(targetGraph.get(target)) {
+      new AbstractBreadthFirstTraversal<TargetNode<?>>(targetGraph.get(target)) {
         @Override
-        public Iterable<TargetNode<?, ?>> visit(TargetNode<?, ?> node) {
+        public Iterable<TargetNode<?>> visit(TargetNode<?> node) {
 
-          ImmutableSet.Builder<TargetNode<?, ?>> depsBuilder = ImmutableSet.builder();
+          ImmutableSet.Builder<TargetNode<?>> depsBuilder = ImmutableSet.builder();
           for (BuildTarget depTarget : node.getBuildDeps()) {
             if (!isSeedTarget(depTarget)) {
               depsBuilder.add(targetGraph.get(depTarget));
@@ -387,11 +387,11 @@ public class APKModuleGraph implements AddsToRuleKey {
       String seedModuleName = seedConfig.getKey();
       for (BuildTarget seedTarget : seedConfig.getValue()) {
         targetToContainingApkModuleNameMap.put(seedTarget, seedModuleName);
-        new AbstractBreadthFirstTraversal<TargetNode<?, ?>>(targetGraph.get(seedTarget)) {
+        new AbstractBreadthFirstTraversal<TargetNode<?>>(targetGraph.get(seedTarget)) {
           @Override
-          public ImmutableSet<TargetNode<?, ?>> visit(TargetNode<?, ?> node) {
+          public ImmutableSet<TargetNode<?>> visit(TargetNode<?> node) {
 
-            ImmutableSet.Builder<TargetNode<?, ?>> depsBuilder = ImmutableSet.builder();
+            ImmutableSet.Builder<TargetNode<?>> depsBuilder = ImmutableSet.builder();
             for (BuildTarget depTarget : node.getBuildDeps()) {
               if (!isInRootModule(depTarget) && !isSeedTarget(depTarget)) {
                 depsBuilder.add(targetGraph.get(depTarget));

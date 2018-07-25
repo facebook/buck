@@ -272,11 +272,10 @@ public abstract class TargetNodeTranslator {
     return modified;
   }
 
-  @SuppressWarnings("unchecked")
   private <A> Optional<A> translateConstructorArg(
       CellPathResolver cellPathResolver,
       BuildTargetPatternParser<BuildTargetPattern> pattern,
-      TargetNode<A, ?> node) {
+      TargetNode<A> node) {
     A constructorArg = node.getConstructorArg();
     if (node.getDescription() instanceof TargetTranslatorOverridingDescription) {
       return ((TargetTranslatorOverridingDescription<A>) node.getDescription())
@@ -300,7 +299,7 @@ public abstract class TargetNodeTranslator {
    * @return a copy of the given {@link TargetNode} with all found {@link BuildTarget}s translated,
    *     or {@link Optional#empty()} if the node requires no translation.
    */
-  public <A> Optional<TargetNode<A, ?>> translateNode(TargetNode<A, ?> node) {
+  public <A> Optional<TargetNode<A>> translateNode(TargetNode<A> node) {
     CellPathResolver cellPathResolver = node.getCellNames();
     BuildTargetPatternParser<BuildTargetPattern> pattern =
         BuildTargetPatternParser.forBaseName(node.getBuildTarget().getBaseName());

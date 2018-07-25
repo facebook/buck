@@ -166,7 +166,7 @@ public abstract class AbstractNodeBuilder<
     return rule;
   }
 
-  public TargetNode<TArg, TDescription> build(ProjectFilesystem filesystem) {
+  public TargetNode<TArg> build(ProjectFilesystem filesystem) {
     try {
       HashCode hash =
           rawHashCode == null
@@ -174,7 +174,7 @@ public abstract class AbstractNodeBuilder<
               : rawHashCode;
       TargetNodeFactory factory = new TargetNodeFactory(TYPE_COERCER_FACTORY);
       TArg populatedArg = getPopulatedArg();
-      TargetNode<TArg, TDescription> node =
+      TargetNode<TArg> node =
           factory
               .createFromObject(
                   // This hash will do in a pinch.
@@ -196,12 +196,12 @@ public abstract class AbstractNodeBuilder<
     }
   }
 
-  public TargetNode<TArg, TDescription> build() {
+  public TargetNode<TArg> build() {
     return build(filesystem);
   }
 
   public BuildRuleParams createBuildRuleParams(BuildRuleResolver resolver) {
-    TargetNode<?, ?> node = build();
+    TargetNode<?> node = build();
     return TestBuildRuleParams.create()
         .withDeclaredDeps(resolver.getAllRules(node.getDeclaredDeps()))
         .withExtraDeps(resolver.getAllRules(node.getExtraDeps()));

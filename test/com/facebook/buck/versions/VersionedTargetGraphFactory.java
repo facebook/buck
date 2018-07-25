@@ -27,10 +27,9 @@ public class VersionedTargetGraphFactory {
 
   private VersionedTargetGraphFactory() {}
 
-  public static VersionedTargetGraph newInstance(
-      ImmutableMap<BuildTarget, TargetNode<?, ?>> index) {
+  public static VersionedTargetGraph newInstance(ImmutableMap<BuildTarget, TargetNode<?>> index) {
     VersionedTargetGraph.Builder builder = VersionedTargetGraph.builder();
-    for (Map.Entry<BuildTarget, TargetNode<?, ?>> ent : index.entrySet()) {
+    for (Map.Entry<BuildTarget, TargetNode<?>> ent : index.entrySet()) {
       builder.addNode(ent.getKey(), ent.getValue());
       for (BuildTarget dep : ent.getValue().getBuildDeps()) {
         builder.addEdge(ent.getValue(), Preconditions.checkNotNull(index.get(dep), dep));
@@ -39,7 +38,7 @@ public class VersionedTargetGraphFactory {
     return builder.build();
   }
 
-  public static VersionedTargetGraph newInstance(ImmutableList<TargetNode<?, ?>> nodes) {
+  public static VersionedTargetGraph newInstance(ImmutableList<TargetNode<?>> nodes) {
     return newInstance(
         nodes.stream().collect(ImmutableMap.toImmutableMap(TargetNode::getBuildTarget, n -> n)));
   }

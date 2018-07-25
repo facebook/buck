@@ -101,8 +101,8 @@ public class BuckQueryEnvironment implements QueryEnvironment {
 
   // Query execution is single threaded, however the buildTransitiveClosure implementation
   // traverses the graph in parallel.
-  private MutableDirectedGraph<TargetNode<?, ?>> graph = MutableDirectedGraph.createConcurrent();
-  private Map<BuildTarget, TargetNode<?, ?>> targetsToNodes = new ConcurrentHashMap<>();
+  private MutableDirectedGraph<TargetNode<?>> graph = MutableDirectedGraph.createConcurrent();
+  private Map<BuildTarget, TargetNode<?>> targetsToNodes = new ConcurrentHashMap<>();
 
   @VisibleForTesting
   protected BuckQueryEnvironment(
@@ -176,7 +176,7 @@ public class BuckQueryEnvironment implements QueryEnvironment {
         params.getTypeCoercerFactory());
   }
 
-  public DirectedAcyclicGraph<TargetNode<?, ?>> getTargetGraph() {
+  public DirectedAcyclicGraph<TargetNode<?>> getTargetGraph() {
     return new DirectedAcyclicGraph<>(graph);
   }
 
@@ -215,7 +215,7 @@ public class BuckQueryEnvironment implements QueryEnvironment {
     return evaluateQuery(QueryExpression.parse(query, this));
   }
 
-  TargetNode<?, ?> getNode(QueryTarget target) throws QueryException {
+  TargetNode<?> getNode(QueryTarget target) throws QueryException {
     if (!(target instanceof QueryBuildTarget)) {
       throw new IllegalArgumentException(
           String.format(
@@ -238,10 +238,9 @@ public class BuckQueryEnvironment implements QueryEnvironment {
     return queryBuildTarget;
   }
 
-  public ImmutableSet<QueryTarget> getTargetsFromTargetNodes(
-      Iterable<TargetNode<?, ?>> targetNodes) {
+  public ImmutableSet<QueryTarget> getTargetsFromTargetNodes(Iterable<TargetNode<?>> targetNodes) {
     ImmutableSortedSet.Builder<QueryTarget> builder = ImmutableSortedSet.naturalOrder();
-    for (TargetNode<?, ?> targetNode : targetNodes) {
+    for (TargetNode<?> targetNode : targetNodes) {
       builder.add(getOrCreateQueryBuildTarget(targetNode.getBuildTarget()));
     }
     return builder.build();
@@ -255,9 +254,9 @@ public class BuckQueryEnvironment implements QueryEnvironment {
     return builder.build();
   }
 
-  public ImmutableSet<TargetNode<?, ?>> getNodesFromQueryTargets(Iterable<QueryTarget> input)
+  public ImmutableSet<TargetNode<?>> getNodesFromQueryTargets(Iterable<QueryTarget> input)
       throws QueryException {
-    ImmutableSet.Builder<TargetNode<?, ?>> builder = ImmutableSet.builder();
+    ImmutableSet.Builder<TargetNode<?>> builder = ImmutableSet.builder();
     for (QueryTarget target : input) {
       builder.add(getNode(target));
     }
@@ -268,7 +267,7 @@ public class BuckQueryEnvironment implements QueryEnvironment {
   public ImmutableSet<QueryTarget> getFwdDeps(Iterable<QueryTarget> targets) throws QueryException {
     ImmutableSet.Builder<QueryTarget> result = new ImmutableSet.Builder<>();
     for (QueryTarget target : targets) {
-      TargetNode<?, ?> node = getNode(target);
+      TargetNode<?> node = getNode(target);
       result.addAll(getTargetsFromTargetNodes(graph.getOutgoingNodesFor(node)));
     }
     return result.build();
@@ -278,7 +277,7 @@ public class BuckQueryEnvironment implements QueryEnvironment {
   public Set<QueryTarget> getReverseDeps(Iterable<QueryTarget> targets) throws QueryException {
     Set<QueryTarget> result = new LinkedHashSet<>();
     for (QueryTarget target : targets) {
-      TargetNode<?, ?> node = getNode(target);
+      TargetNode<?> node = getNode(target);
       result.addAll(getTargetsFromTargetNodes(graph.getIncomingNodesFor(node)));
     }
     return result;
@@ -286,7 +285,7 @@ public class BuckQueryEnvironment implements QueryEnvironment {
 
   @Override
   public Set<QueryTarget> getInputs(QueryTarget target) throws QueryException {
-    TargetNode<?, ?> node = getNode(target);
+    TargetNode<?> node = getNode(target);
     return node.getInputs()
         .stream()
         .map(path -> PathSourcePath.of(node.getFilesystem(), path))
@@ -297,15 +296,15 @@ public class BuckQueryEnvironment implements QueryEnvironment {
   @Override
   public ImmutableSet<QueryTarget> getTransitiveClosure(Set<QueryTarget> targets)
       throws QueryException {
-    Set<TargetNode<?, ?>> nodes = new LinkedHashSet<>();
+    Set<TargetNode<?>> nodes = new LinkedHashSet<>();
     for (QueryTarget target : targets) {
       nodes.add(getNode(target));
     }
     ImmutableSet.Builder<QueryTarget> result = ImmutableSet.builder();
 
-    new AbstractBreadthFirstTraversal<TargetNode<?, ?>>(nodes) {
+    new AbstractBreadthFirstTraversal<TargetNode<?>>(nodes) {
       @Override
-      public Iterable<TargetNode<?, ?>> visit(TargetNode<?, ?> node) {
+      public Iterable<TargetNode<?>> visit(TargetNode<?> node) {
         result.add(getOrCreateQueryBuildTarget(node.getBuildTarget()));
         return node.getParseDeps()
             .stream()
@@ -353,7 +352,7 @@ public class BuckQueryEnvironment implements QueryEnvironment {
 
     GraphTraversable<BuildTarget> traversable =
         target -> {
-          TargetNode<?, ?> node =
+          TargetNode<?> node =
               Preconditions.checkNotNull(
                   targetsToNodes.get(target),
                   "Node %s should have been discovered by `discoverNewTargetsConcurrently`.",
@@ -376,7 +375,7 @@ public class BuckQueryEnvironment implements QueryEnvironment {
         new AcyclicDepthFirstPostOrderTraversal<>(traversable);
     try {
       for (BuildTarget buildTarget : targetNodeTraversal.traverse(newBuildTargets)) {
-        TargetNode<?, ?> node =
+        TargetNode<?> node =
             Preconditions.checkNotNull(
                 targetsToNodes.get(buildTarget), "Couldn't find TargetNode for %s", buildTarget);
         graph.addNode(node);

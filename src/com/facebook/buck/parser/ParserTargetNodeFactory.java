@@ -26,7 +26,7 @@ import java.util.function.Function;
 
 /** Creates {@link TargetNode} instances for the parser. */
 public interface ParserTargetNodeFactory<T> {
-  TargetNode<?, ?> createTargetNode(
+  TargetNode<?> createTargetNode(
       Cell cell,
       Path buildFile,
       BuildTarget target,

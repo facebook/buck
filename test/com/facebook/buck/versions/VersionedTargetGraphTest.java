@@ -33,9 +33,9 @@ public class VersionedTargetGraphTest {
 
   @Test
   public void getNodeWithExtraFlavors() {
-    TargetNode<?, ?> node = createTargetNode("bar");
+    TargetNode<?> node = createTargetNode("bar");
     TargetGraph graph = VersionedTargetGraphFactory.newInstance(ImmutableList.of(node));
-    TargetNode<?, ?> result =
+    TargetNode<?> result =
         graph.get(node.getBuildTarget().withAppendedFlavors(InternalFlavor.of("hello")));
     assertThat(result, Matchers.notNullValue());
     assertThat(
@@ -46,9 +46,9 @@ public class VersionedTargetGraphTest {
 
   @Test
   public void getNodeWithExtraFlavorsOnFlavoredNode() {
-    TargetNode<?, ?> node = createTargetNode("bar#hello");
+    TargetNode<?> node = createTargetNode("bar#hello");
     TargetGraph graph = VersionedTargetGraphFactory.newInstance(ImmutableList.of(node));
-    TargetNode<?, ?> result =
+    TargetNode<?> result =
         graph.get(node.getBuildTarget().withAppendedFlavors(InternalFlavor.of("world")));
     assertThat(result, Matchers.notNullValue());
     assertThat(
@@ -59,10 +59,10 @@ public class VersionedTargetGraphTest {
 
   @Test
   public void getNodeWithExtraFlavorsWithMultipleCandidatesWithSubsetRelation() {
-    TargetNode<?, ?> node1 = createTargetNode("bar#hello");
-    TargetNode<?, ?> node2 = createTargetNode("bar#hello,bye");
+    TargetNode<?> node1 = createTargetNode("bar#hello");
+    TargetNode<?> node2 = createTargetNode("bar#hello,bye");
     TargetGraph graph = VersionedTargetGraphFactory.newInstance(ImmutableList.of(node1, node2));
-    TargetNode<?, ?> result =
+    TargetNode<?> result =
         graph.get(node2.getBuildTarget().withAppendedFlavors(InternalFlavor.of("world")));
     assertThat(result, Matchers.notNullValue());
     assertThat(
@@ -74,8 +74,8 @@ public class VersionedTargetGraphTest {
 
   @Test(expected = IllegalStateException.class)
   public void getNodeWithExtraFlavorsWithMultipleAmbiguousCandidates() {
-    TargetNode<?, ?> node1 = createTargetNode("bar#one,two");
-    TargetNode<?, ?> node2 = createTargetNode("bar#two,three");
+    TargetNode<?> node1 = createTargetNode("bar#one,two");
+    TargetNode<?> node2 = createTargetNode("bar#two,three");
     TargetGraph graph = VersionedTargetGraphFactory.newInstance(ImmutableList.of(node1, node2));
     graph.get(
         node2
@@ -86,15 +86,14 @@ public class VersionedTargetGraphTest {
 
   @Test
   public void getNodeWithNonVersionExtraFlavorsFallsBackToUnversioned() {
-    TargetNode<?, ?> node = createTargetNode("bar#hello");
-    TargetNode<?, ?> versionedNode = createTargetNode("bar#version");
+    TargetNode<?> node = createTargetNode("bar#hello");
+    TargetNode<?> versionedNode = createTargetNode("bar#version");
     TargetGraph graph =
         VersionedTargetGraphFactory.newInstance(
             ImmutableMap.of(
                 node.getBuildTarget().withFlavors(), node,
                 versionedNode.getBuildTarget(), versionedNode));
-    TargetNode<?, ?> result =
-        graph.get(node.getBuildTarget().withFlavors(InternalFlavor.of("world")));
+    TargetNode<?> result = graph.get(node.getBuildTarget().withFlavors(InternalFlavor.of("world")));
     assertThat(result, Matchers.notNullValue());
     assertThat(
         result.getBuildTarget().getFlavors(),
@@ -102,19 +101,19 @@ public class VersionedTargetGraphTest {
     assertNodeCreatedFrom(result, node);
   }
 
-  private void assertNodeCreatedFrom(TargetNode<?, ?> node, TargetNode<?, ?> parent) {
+  private void assertNodeCreatedFrom(TargetNode<?> node, TargetNode<?> parent) {
     assertThat(
         node.getSelectedVersions().orElseThrow(RuntimeException::new).keySet(),
         Matchers.contains(parent.getBuildTarget()));
   }
 
-  private TargetNode<?, ?> createTargetNode(String name, TargetNode<?, ?>... deps) {
+  private TargetNode<?> createTargetNode(String name, TargetNode<?>... deps) {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:" + name);
     JavaLibraryBuilder targetNodeBuilder = JavaLibraryBuilder.createBuilder(buildTarget);
     // Use the selected versions field to embed the original build target name.  We'll use this to
     // verify the correct node was recovered from the target graph.
     targetNodeBuilder.setSelectedVersions(ImmutableMap.of(buildTarget, Version.of("1.0")));
-    for (TargetNode<?, ?> dep : deps) {
+    for (TargetNode<?> dep : deps) {
       targetNodeBuilder.addDep(dep.getBuildTarget());
     }
     return targetNodeBuilder.build();

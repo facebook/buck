@@ -128,13 +128,13 @@ public class GraphEnhancementQueryEnvironmentTest {
 
   private GraphEnhancementQueryEnvironment buildQueryEnvironmentWithGraph() {
     // Set up target graph: lib -> sublib -> bottom
-    TargetNode<JavaLibraryDescriptionArg, ?> bottomNode =
+    TargetNode<JavaLibraryDescriptionArg> bottomNode =
         JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:bottom")).build();
-    TargetNode<JavaLibraryDescriptionArg, ?> sublibNode =
+    TargetNode<JavaLibraryDescriptionArg> sublibNode =
         JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:sublib"))
             .addDep(bottomNode.getBuildTarget())
             .build();
-    TargetNode<JavaLibraryDescriptionArg, ?> libNode =
+    TargetNode<JavaLibraryDescriptionArg> libNode =
         JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:lib"))
             .addDep(sublibNode.getBuildTarget())
             .build();

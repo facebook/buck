@@ -41,13 +41,13 @@ public class KotlinLibraryModuleRule extends BaseIjModuleRule<KotlinLibraryDescr
   }
 
   @Override
-  public void apply(TargetNode<KotlinLibraryDescriptionArg, ?> target, ModuleBuildContext context) {
+  public void apply(TargetNode<KotlinLibraryDescriptionArg> target, ModuleBuildContext context) {
     addDepsAndSources(target, false /* wantsPackagePrefix */, context);
     context.setCompilerOutputPath(moduleFactoryResolver.getCompilerOutputPath(target));
   }
 
   @Override
-  public IjModuleType detectModuleType(TargetNode<KotlinLibraryDescriptionArg, ?> targetNode) {
+  public IjModuleType detectModuleType(TargetNode<KotlinLibraryDescriptionArg> targetNode) {
     return IjModuleType.UNKNOWN_MODULE;
   }
 }

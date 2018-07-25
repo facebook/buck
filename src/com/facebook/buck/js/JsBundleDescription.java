@@ -323,7 +323,7 @@ public class JsBundleDescription
   @Override
   public void addAppleBundleResources(
       AppleBundleResources.Builder builder,
-      TargetNode<JsBundleDescriptionArg, ?> targetNode,
+      TargetNode<JsBundleDescriptionArg> targetNode,
       ProjectFilesystem filesystem,
       BuildRuleResolver resolver) {
     JsBundleOutputs bundle =
@@ -383,7 +383,7 @@ public class JsBundleDescription
       new AbstractBreadthFirstTraversal<BuildTarget>(deps) {
         @Override
         public Iterable<BuildTarget> visit(BuildTarget target) throws RuntimeException {
-          TargetNode<?, ?> targetNode = targetGraph.get(target);
+          TargetNode<?> targetNode = targetGraph.get(target);
           DescriptionWithTargetGraph<?> description = targetNode.getDescription();
 
           if (description instanceof JsLibraryDescription) {

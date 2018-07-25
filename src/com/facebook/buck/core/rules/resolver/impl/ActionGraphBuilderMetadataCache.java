@@ -56,12 +56,12 @@ final class ActionGraphBuilderMetadataCache {
       extends CacheLoader<Pair<BuildTarget, Class<?>>, Optional<?>> {
     @Override
     public Optional<?> load(Pair<BuildTarget, Class<?>> key) {
-      TargetNode<?, ?> node = targetGraph.get(key.getFirst());
+      TargetNode<?> node = targetGraph.get(key.getFirst());
       return load(node, key.getSecond());
     }
 
     @SuppressWarnings("unchecked")
-    private <T, U> Optional<U> load(TargetNode<T, ?> node, Class<U> metadataClass) {
+    private <T, U> Optional<U> load(TargetNode<T> node, Class<U> metadataClass) {
       T arg = node.getConstructorArg();
       if (metadataClass.isAssignableFrom(arg.getClass())) {
         return Optional.of(metadataClass.cast(arg));

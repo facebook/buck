@@ -239,7 +239,7 @@ public class AndroidResourceDescription
   }
 
   public static Optional<SourcePath> getResDirectoryForProject(
-      ActionGraphBuilder graphBuilder, TargetNode<AndroidResourceDescriptionArg, ?> node) {
+      ActionGraphBuilder graphBuilder, TargetNode<AndroidResourceDescriptionArg> node) {
     AndroidResourceDescriptionArg arg = node.getConstructorArg();
     if (arg.getProjectRes().isPresent()) {
       return Optional.of(PathSourcePath.of(node.getFilesystem(), arg.getProjectRes().get()));
@@ -255,7 +255,7 @@ public class AndroidResourceDescription
   }
 
   public static Optional<SourcePath> getAssetsDirectoryForProject(
-      ActionGraphBuilder graphBuilder, TargetNode<AndroidResourceDescriptionArg, ?> node) {
+      ActionGraphBuilder graphBuilder, TargetNode<AndroidResourceDescriptionArg> node) {
     AndroidResourceDescriptionArg arg = node.getConstructorArg();
     if (arg.getProjectAssets().isPresent()) {
       return Optional.of(PathSourcePath.of(node.getFilesystem(), arg.getProjectAssets().get()));
@@ -271,7 +271,7 @@ public class AndroidResourceDescription
   }
 
   private static Optional<SourcePath> getResDirectory(
-      ActionGraphBuilder graphBuilder, TargetNode<AndroidResourceDescriptionArg, ?> node) {
+      ActionGraphBuilder graphBuilder, TargetNode<AndroidResourceDescriptionArg> node) {
     return collectInputSourcePaths(
             graphBuilder,
             node.getBuildTarget(),
@@ -281,7 +281,7 @@ public class AndroidResourceDescription
   }
 
   private static Optional<SourcePath> getAssetsDirectory(
-      ActionGraphBuilder graphBuilder, TargetNode<AndroidResourceDescriptionArg, ?> node) {
+      ActionGraphBuilder graphBuilder, TargetNode<AndroidResourceDescriptionArg> node) {
     return collectInputSourcePaths(
             graphBuilder,
             node.getBuildTarget(),

@@ -284,7 +284,7 @@ public class CxxGenruleDescriptionTest {
                 .toString()));
   }
 
-  private static <U> U extractArg(TargetNode<?, ?> node, Class<U> clazz) {
+  private static <U> U extractArg(TargetNode<?> node, Class<U> clazz) {
     return TargetNodes.castArg(node, clazz)
         .orElseThrow(
             () ->

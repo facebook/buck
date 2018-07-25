@@ -37,7 +37,6 @@ import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.jvm.java.KeystoreBuilder;
-import com.facebook.buck.jvm.java.KeystoreDescription;
 import com.facebook.buck.jvm.java.KeystoreDescriptionArg;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.step.ExecutionContext;
@@ -77,13 +76,13 @@ public class DuplicateResourcesTest {
 
   private FakeProjectFilesystem filesystem;
 
-  private TargetNode<AndroidResourceDescriptionArg, AndroidResourceDescription> mainRes;
-  private TargetNode<AndroidResourceDescriptionArg, AndroidResourceDescription> directDepRes;
-  private TargetNode<AndroidResourceDescriptionArg, AndroidResourceDescription> transitiveDepRes;
-  private TargetNode<AndroidResourceDescriptionArg, AndroidResourceDescription> bottomDepRes;
-  private TargetNode<AndroidLibraryDescriptionArg, AndroidLibraryDescription> transitiveDepLib;
-  private TargetNode<AndroidLibraryDescriptionArg, AndroidLibraryDescription> library;
-  private TargetNode<KeystoreDescriptionArg, KeystoreDescription> keystore;
+  private TargetNode<AndroidResourceDescriptionArg> mainRes;
+  private TargetNode<AndroidResourceDescriptionArg> directDepRes;
+  private TargetNode<AndroidResourceDescriptionArg> transitiveDepRes;
+  private TargetNode<AndroidResourceDescriptionArg> bottomDepRes;
+  private TargetNode<AndroidLibraryDescriptionArg> transitiveDepLib;
+  private TargetNode<AndroidLibraryDescriptionArg> library;
+  private TargetNode<KeystoreDescriptionArg> keystore;
 
   /*
    * Builds up the following dependency graph, which an android_binary can depend on how it likes:
@@ -159,7 +158,7 @@ public class DuplicateResourcesTest {
   public void testDuplicateResoucesFavorCloserDependencyWithLibraryDep() {
     assumeFalse("Android SDK paths don't work on Windows", Platform.detect() == Platform.WINDOWS);
 
-    TargetNode<AndroidBinaryDescriptionArg, AndroidBinaryDescription> binary =
+    TargetNode<AndroidBinaryDescriptionArg> binary =
         makeBinaryWithDeps(ImmutableSortedSet.of(mainResTarget, androidLibraryTarget));
 
     ImmutableList<String> command = getAaptStepShellCommand(binary);
@@ -171,7 +170,7 @@ public class DuplicateResourcesTest {
   public void testDuplicateResoucesFavorCloserDependencyWithTwoLibraryDeps() {
     assumeFalse("Android SDK paths don't work on Windows", Platform.detect() == Platform.WINDOWS);
 
-    TargetNode<AndroidBinaryDescriptionArg, AndroidBinaryDescription> binary =
+    TargetNode<AndroidBinaryDescriptionArg> binary =
         makeBinaryWithDeps(
             ImmutableSortedSet.of(mainResTarget, androidLibraryTarget, transitiveDepLibTarget));
 
@@ -184,7 +183,7 @@ public class DuplicateResourcesTest {
   public void testDuplicateResoucesFavorCloserDependencyWithResourceDep() {
     assumeFalse("Android SDK paths don't work on Windows", Platform.detect() == Platform.WINDOWS);
 
-    TargetNode<AndroidBinaryDescriptionArg, AndroidBinaryDescription> binary =
+    TargetNode<AndroidBinaryDescriptionArg> binary =
         makeBinaryWithDeps(ImmutableSortedSet.of(mainResTarget, directDepResTarget));
 
     ImmutableList<String> command = getAaptStepShellCommand(binary);
@@ -196,7 +195,7 @@ public class DuplicateResourcesTest {
   public void testDuplicateResoucesFavorCloserDependencyWithOnlyResourceDep() {
     assumeFalse("Android SDK paths don't work on Windows", Platform.detect() == Platform.WINDOWS);
 
-    TargetNode<AndroidBinaryDescriptionArg, AndroidBinaryDescription> binary =
+    TargetNode<AndroidBinaryDescriptionArg> binary =
         makeBinaryWithDeps(ImmutableSortedSet.of(directDepResTarget));
 
     ImmutableList<String> command = getAaptStepShellCommand(binary);
@@ -226,7 +225,7 @@ public class DuplicateResourcesTest {
         Matchers.contains(expectedSubslice));
   }
 
-  private TargetNode<AndroidBinaryDescriptionArg, AndroidBinaryDescription> makeBinaryWithDeps(
+  private TargetNode<AndroidBinaryDescriptionArg> makeBinaryWithDeps(
       ImmutableSortedSet<BuildTarget> deps) {
     return AndroidBinaryBuilder.createBuilder(androidBinaryTarget)
         .setOriginalDeps(deps)
@@ -236,7 +235,7 @@ public class DuplicateResourcesTest {
   }
 
   private ImmutableList<String> getAaptStepShellCommand(
-      TargetNode<AndroidBinaryDescriptionArg, AndroidBinaryDescription> binary) {
+      TargetNode<AndroidBinaryDescriptionArg> binary) {
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(
             binary,

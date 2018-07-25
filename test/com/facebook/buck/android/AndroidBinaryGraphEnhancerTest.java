@@ -86,19 +86,19 @@ public class AndroidBinaryGraphEnhancerTest {
   public void testCreateDepsForPreDexing() {
     // Create three Java rules, :dep1, :dep2, and :lib. :lib depends on :dep1 and :dep2.
     BuildTarget javaDep1BuildTarget = BuildTargetFactory.newInstance("//java/com/example:dep1");
-    TargetNode<?, ?> javaDep1Node =
+    TargetNode<?> javaDep1Node =
         JavaLibraryBuilder.createBuilder(javaDep1BuildTarget)
             .addSrc(Paths.get("java/com/example/Dep1.java"))
             .build();
 
     BuildTarget javaDep2BuildTarget = BuildTargetFactory.newInstance("//java/com/example:dep2");
-    TargetNode<?, ?> javaDep2Node =
+    TargetNode<?> javaDep2Node =
         JavaLibraryBuilder.createBuilder(javaDep2BuildTarget)
             .addSrc(Paths.get("java/com/example/Dep2.java"))
             .build();
 
     BuildTarget javaLibBuildTarget = BuildTargetFactory.newInstance("//java/com/example:lib");
-    TargetNode<?, ?> javaLibNode =
+    TargetNode<?> javaLibNode =
         JavaLibraryBuilder.createBuilder(javaLibBuildTarget)
             .addSrc(Paths.get("java/com/example/Lib.java"))
             .addDep(javaDep1Node.getBuildTarget())
@@ -389,7 +389,7 @@ public class AndroidBinaryGraphEnhancerTest {
 
   @Test
   public void testResourceRulesBecomeDepsOfAaptPackageResources() {
-    TargetNode<?, ?> resourceNode =
+    TargetNode<?> resourceNode =
         AndroidResourceBuilder.createBuilder(BuildTargetFactory.newInstance("//:resource"))
             .setRDotJavaPackage("package")
             .setRes(Paths.get("res"))

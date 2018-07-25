@@ -434,7 +434,7 @@ public class CxxTestDescriptionTest {
     Path resource = filesystem.getPath("resource");
     filesystem.touch(resource);
     for (CxxTestType framework : CxxTestType.values()) {
-      TargetNode<?, ?> cxxTestWithResources =
+      TargetNode<?> cxxTestWithResources =
           createTestBuilder()
               .setFramework(framework)
               .setResources(ImmutableSortedSet.of(resource))

@@ -443,7 +443,7 @@ public class DistBuildStateTest {
       KnownBuildRuleTypesProvider knownBuildRuleTypesProvider, Cell cell, Optional<Parser> parser) {
     BuckEventBus eventBus = BuckEventBusForTests.newInstance();
 
-    Function<? super TargetNode<?, ?>, ? extends Map<String, Object>> nodeToRawNode;
+    Function<? super TargetNode<?>, ? extends Map<String, Object>> nodeToRawNode;
     if (parser.isPresent()) {
       nodeToRawNode =
           input -> {

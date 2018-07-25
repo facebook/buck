@@ -347,7 +347,7 @@ public class QueryCommand extends AbstractCommand {
   private void printDotOutput(
       CommandRunnerParams params, BuckQueryEnvironment env, Set<QueryTarget> queryResult)
       throws IOException, QueryException {
-    Builder<TargetNode<?, ?>> dotBuilder =
+    Builder<TargetNode<?>> dotBuilder =
         Dot.builder(env.getTargetGraph(), "result_graph")
             .setNodesToFilter(env.getNodesFromQueryTargets(queryResult)::contains)
             .setNodeToName(targetNode -> targetNode.getBuildTarget().getFullyQualifiedName())
@@ -379,7 +379,7 @@ public class QueryCommand extends AbstractCommand {
       Set<QueryTarget> queryResult,
       OutputFormat outputFormat)
       throws QueryException {
-    Map<TargetNode<?, ?>, Integer> ranks =
+    Map<TargetNode<?>, Integer> ranks =
         computeRanks(
             env.getTargetGraph(),
             env.getNodesFromQueryTargets(queryResult)::contains,
@@ -395,15 +395,14 @@ public class QueryCommand extends AbstractCommand {
     }
   }
 
-  private void printRankOutputAsPlainText(
-      Map<TargetNode<?, ?>, Integer> ranks, PrintStream stdOut) {
+  private void printRankOutputAsPlainText(Map<TargetNode<?>, Integer> ranks, PrintStream stdOut) {
     ranks
         .entrySet()
         .stream()
         // sort by rank and target nodes to break ties in order to make output deterministic
         .sorted(
-            Comparator.comparing(Entry<TargetNode<?, ?>, Integer>::getValue)
-                .thenComparing(Comparator.comparing(Entry<TargetNode<?, ?>, Integer>::getKey)))
+            Comparator.comparing(Entry<TargetNode<?>, Integer>::getValue)
+                .thenComparing(Comparator.comparing(Entry<TargetNode<?>, Integer>::getKey)))
         .forEach(
             entry -> {
               int rank = entry.getValue();
@@ -424,7 +423,7 @@ public class QueryCommand extends AbstractCommand {
           CommandRunnerParams params,
           BuckQueryEnvironment env,
           OutputFormat outputFormat,
-          Set<Entry<TargetNode<?, ?>, Integer>> rankEntries) {
+          Set<Entry<TargetNode<?>, Integer>> rankEntries) {
     PatternsMatcher patternsMatcher = new PatternsMatcher(outputAttributes());
     // since some nodes differ in their flavors but ultimately have the same attributes, immutable
     // resulting map is created only after duplicates are merged by using regular HashMap
@@ -456,26 +455,26 @@ public class QueryCommand extends AbstractCommand {
         Comparator.<String>comparingInt(rankIndex::get).thenComparing(Comparator.naturalOrder()));
   }
 
-  private Map<TargetNode<?, ?>, Integer> computeRanks(
-      DirectedAcyclicGraph<TargetNode<?, ?>> graph,
-      Predicate<TargetNode<?, ?>> shouldContainNode,
+  private Map<TargetNode<?>, Integer> computeRanks(
+      DirectedAcyclicGraph<TargetNode<?>> graph,
+      Predicate<TargetNode<?>> shouldContainNode,
       OutputFormat outputFormat) {
-    Map<TargetNode<?, ?>, Integer> ranks = new HashMap<>();
-    for (TargetNode<?, ?> root : ImmutableSortedSet.copyOf(graph.getNodesWithNoIncomingEdges())) {
+    Map<TargetNode<?>, Integer> ranks = new HashMap<>();
+    for (TargetNode<?> root : ImmutableSortedSet.copyOf(graph.getNodesWithNoIncomingEdges())) {
       ranks.put(root, 0);
-      new AbstractBreadthFirstTraversal<TargetNode<?, ?>>(root) {
+      new AbstractBreadthFirstTraversal<TargetNode<?>>(root) {
 
         @Override
-        public Iterable<TargetNode<?, ?>> visit(TargetNode<?, ?> node) {
+        public Iterable<TargetNode<?>> visit(TargetNode<?> node) {
           if (!shouldContainNode.test(node)) {
             return ImmutableSet.of();
           }
 
           int nodeRank = Preconditions.checkNotNull(ranks.get(node));
-          ImmutableSortedSet<TargetNode<?, ?>> sinks =
+          ImmutableSortedSet<TargetNode<?>> sinks =
               ImmutableSortedSet.copyOf(
                   Sets.filter(graph.getOutgoingNodesFor(node), shouldContainNode::test));
-          for (TargetNode<?, ?> sink : sinks) {
+          for (TargetNode<?> sink : sinks) {
             if (!ranks.containsKey(sink)) {
               ranks.put(sink, nodeRank + 1);
             } else {
@@ -535,7 +534,7 @@ public class QueryCommand extends AbstractCommand {
       if (!(target instanceof QueryBuildTarget)) {
         continue;
       }
-      TargetNode<?, ?> node = env.getNode(target);
+      TargetNode<?> node = env.getNode(target);
       try {
         Optional<SortedMap<String, Object>> attributes =
             getAttributes(params, env, patternsMatcher, node);
@@ -561,7 +560,7 @@ public class QueryCommand extends AbstractCommand {
       CommandRunnerParams params,
       BuckQueryEnvironment env,
       PatternsMatcher patternsMatcher,
-      TargetNode<?, ?> node) {
+      TargetNode<?> node) {
     SortedMap<String, Object> targetNodeAttributes =
         params.getParser().getTargetNodeRawAttributes(env.getParserState(), params.getCell(), node);
     if (targetNodeAttributes == null) {
@@ -583,7 +582,7 @@ public class QueryCommand extends AbstractCommand {
     return Optional.of(attributes);
   }
 
-  private static String toPresentationForm(TargetNode<?, ?> node) {
+  private static String toPresentationForm(TargetNode<?> node) {
     return node.getBuildTarget().getUnflavoredBuildTarget().getFullyQualifiedName();
   }
 

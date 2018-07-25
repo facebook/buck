@@ -37,7 +37,7 @@ public interface BuildRuleKey {
 
   BuildTarget getBuildTarget();
 
-  TargetNode<?, ?> getTargetNode();
+  TargetNode<?> getTargetNode();
 
   BuildRuleCreationContextWithTargetGraph getBuildRuleCreationContext();
 }

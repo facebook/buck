@@ -45,19 +45,19 @@ public class FakeTargetNodeBuilder
     return this;
   }
 
-  public FakeTargetNodeBuilder setDeps(TargetNode<?, ?>... deps) {
+  public FakeTargetNodeBuilder setDeps(TargetNode<?>... deps) {
     getArgForPopulating()
         .setDeps(Stream.of(deps).map(x -> x.getBuildTarget()).collect(Collectors.toList()));
     return this;
   }
 
-  public FakeTargetNodeBuilder setExtraDeps(TargetNode<?, ?>... deps) {
+  public FakeTargetNodeBuilder setExtraDeps(TargetNode<?>... deps) {
     description.setExtraDeps(
         Stream.of(deps).map(x -> x.getBuildTarget()).collect(Collectors.toSet()));
     return this;
   }
 
-  public FakeTargetNodeBuilder setTargetGraphOnlyDeps(TargetNode<?, ?>... deps) {
+  public FakeTargetNodeBuilder setTargetGraphOnlyDeps(TargetNode<?>... deps) {
     description.setTargetGraphOnlyDeps(
         Stream.of(deps).map(x -> x.getBuildTarget()).collect(Collectors.toSet()));
     return this;
@@ -80,7 +80,7 @@ public class FakeTargetNodeBuilder
     return new FakeTargetNodeBuilder(new FakeDescription(rule), rule.getBuildTarget());
   }
 
-  public static TargetNode<FakeTargetNodeArg, FakeDescription> build(BuildRule rule) {
+  public static TargetNode<FakeTargetNodeArg> build(BuildRule rule) {
     return newBuilder(rule).build();
   }
 

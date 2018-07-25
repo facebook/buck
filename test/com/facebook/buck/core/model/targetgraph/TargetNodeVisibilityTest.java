@@ -68,8 +68,8 @@ public class TargetNodeVisibilityTest {
 
   @Test
   public void testVisibilityPublic() throws NoSuchBuildTargetException {
-    TargetNode<?, ?> publicTargetNode = createTargetNode(publicTarget, PUBLIC);
-    TargetNode<?, ?> orcaRule = createTargetNode(orcaTarget, DEFAULT);
+    TargetNode<?> publicTargetNode = createTargetNode(publicTarget, PUBLIC);
+    TargetNode<?> orcaRule = createTargetNode(orcaTarget, DEFAULT);
 
     assertTrue(publicTargetNode.isVisibleTo(orcaRule));
     assertFalse(orcaRule.isVisibleTo(publicTargetNode));
@@ -77,10 +77,10 @@ public class TargetNodeVisibilityTest {
 
   @Test
   public void testVisibilityNonPublic() throws NoSuchBuildTargetException {
-    TargetNode<?, ?> nonPublicTargetNode1 = createTargetNode(nonPublicTarget1, ORCA);
-    TargetNode<?, ?> nonPublicTargetNode2 = createTargetNode(nonPublicTarget2, ORCA);
-    TargetNode<?, ?> orcaRule = createTargetNode(orcaTarget, DEFAULT);
-    TargetNode<?, ?> publicTargetNode = createTargetNode(publicTarget, PUBLIC);
+    TargetNode<?> nonPublicTargetNode1 = createTargetNode(nonPublicTarget1, ORCA);
+    TargetNode<?> nonPublicTargetNode2 = createTargetNode(nonPublicTarget2, ORCA);
+    TargetNode<?> orcaRule = createTargetNode(orcaTarget, DEFAULT);
+    TargetNode<?> publicTargetNode = createTargetNode(publicTarget, PUBLIC);
 
     assertTrue(
         shouldBeVisibleMessage(nonPublicTargetNode1, orcaTarget),
@@ -97,8 +97,8 @@ public class TargetNodeVisibilityTest {
 
   @Test
   public void testVisibilityNonPublicFailure() throws NoSuchBuildTargetException {
-    TargetNode<?, ?> nonPublicTargetNode1 = createTargetNode(nonPublicTarget1, ORCA);
-    TargetNode<?, ?> publicTargetNode = createTargetNode(publicTarget, PUBLIC);
+    TargetNode<?> nonPublicTargetNode1 = createTargetNode(nonPublicTarget1, ORCA);
+    TargetNode<?> publicTargetNode = createTargetNode(publicTarget, PUBLIC);
 
     try {
       nonPublicTargetNode1.isVisibleToOrThrow(publicTargetNode);
@@ -114,10 +114,10 @@ public class TargetNodeVisibilityTest {
 
   @Test
   public void testVisibilityMix() throws NoSuchBuildTargetException {
-    TargetNode<?, ?> nonPublicTargetNode1 = createTargetNode(nonPublicTarget1, ORCA);
-    TargetNode<?, ?> nonPublicTargetNode2 = createTargetNode(nonPublicTarget2, ORCA);
-    TargetNode<?, ?> publicTargetNode = createTargetNode(publicTarget, PUBLIC);
-    TargetNode<?, ?> orcaRule = createTargetNode(orcaTarget, DEFAULT);
+    TargetNode<?> nonPublicTargetNode1 = createTargetNode(nonPublicTarget1, ORCA);
+    TargetNode<?> nonPublicTargetNode2 = createTargetNode(nonPublicTarget2, ORCA);
+    TargetNode<?> publicTargetNode = createTargetNode(publicTarget, PUBLIC);
+    TargetNode<?> orcaRule = createTargetNode(orcaTarget, DEFAULT);
 
     assertTrue(
         shouldBeVisibleMessage(nonPublicTargetNode1, orcaTarget),
@@ -133,10 +133,10 @@ public class TargetNodeVisibilityTest {
 
   @Test
   public void testVisibilityMixFailure() throws NoSuchBuildTargetException {
-    TargetNode<?, ?> nonPublicTargetNode1 = createTargetNode(nonPublicTarget1, ORCA);
-    TargetNode<?, ?> nonPublicTargetNode2 = createTargetNode(nonPublicTarget2, SOME_OTHER);
-    TargetNode<?, ?> publicTargetNode = createTargetNode(publicTarget, PUBLIC);
-    TargetNode<?, ?> orcaRule = createTargetNode(orcaTarget, DEFAULT);
+    TargetNode<?> nonPublicTargetNode1 = createTargetNode(nonPublicTarget1, ORCA);
+    TargetNode<?> nonPublicTargetNode2 = createTargetNode(nonPublicTarget2, SOME_OTHER);
+    TargetNode<?> publicTargetNode = createTargetNode(publicTarget, PUBLIC);
+    TargetNode<?> orcaRule = createTargetNode(orcaTarget, DEFAULT);
 
     publicTargetNode.isVisibleToOrThrow(orcaRule);
     nonPublicTargetNode1.isVisibleToOrThrow(orcaRule);
@@ -157,25 +157,25 @@ public class TargetNodeVisibilityTest {
   public void testVisibilityForDirectory() throws NoSuchBuildTargetException {
     BuildTarget libTarget =
         BuildTargetFactory.newInstance(filesystem.getRootPath(), "//lib", "lib");
-    TargetNode<?, ?> targetInSpecifiedDirectory =
+    TargetNode<?> targetInSpecifiedDirectory =
         createTargetNode(
             BuildTargetFactory.newInstance(filesystem.getRootPath(), "//src/com/facebook", "test"),
             DEFAULT);
-    TargetNode<?, ?> targetUnderSpecifiedDirectory =
+    TargetNode<?> targetUnderSpecifiedDirectory =
         createTargetNode(
             BuildTargetFactory.newInstance(
                 filesystem.getRootPath(), "//src/com/facebook/buck", "test"),
             DEFAULT);
-    TargetNode<?, ?> targetInOtherDirectory =
+    TargetNode<?> targetInOtherDirectory =
         createTargetNode(
             BuildTargetFactory.newInstance(filesystem.getRootPath(), "//src/com/instagram", "test"),
             DEFAULT);
-    TargetNode<?, ?> targetInParentDirectory =
+    TargetNode<?> targetInParentDirectory =
         createTargetNode(
             BuildTargetFactory.newInstance(filesystem.getRootPath(), "//", "test"), DEFAULT);
 
     // Build rule that visible to targets in or under directory src/com/facebook
-    TargetNode<?, ?> directoryTargetNode =
+    TargetNode<?> directoryTargetNode =
         createTargetNode(libTarget, ImmutableList.of("//src/com/facebook/..."));
     assertTrue(directoryTargetNode.isVisibleTo(targetInSpecifiedDirectory));
     assertTrue(directoryTargetNode.isVisibleTo(targetUnderSpecifiedDirectory));
@@ -183,7 +183,7 @@ public class TargetNodeVisibilityTest {
     assertFalse(directoryTargetNode.isVisibleTo(targetInParentDirectory));
 
     // Build rule that's visible to all targets, equals to PUBLIC.
-    TargetNode<?, ?> pubicTargetNode = createTargetNode(libTarget, ImmutableList.of("//..."));
+    TargetNode<?> pubicTargetNode = createTargetNode(libTarget, ImmutableList.of("//..."));
     assertTrue(pubicTargetNode.isVisibleTo(targetInSpecifiedDirectory));
     assertTrue(pubicTargetNode.isVisibleTo(targetUnderSpecifiedDirectory));
     assertTrue(pubicTargetNode.isVisibleTo(targetInOtherDirectory));
@@ -192,14 +192,14 @@ public class TargetNodeVisibilityTest {
 
   @Test
   public void testOnlyWithinViewIsVisible() throws NoSuchBuildTargetException {
-    TargetNode<?, ?> publicTargetNode = createTargetNode(publicTarget, PUBLIC, ORCA);
-    TargetNode<?, ?> publicOrcaRule = createTargetNode(orcaTarget, PUBLIC, SOME_OTHER);
+    TargetNode<?> publicTargetNode = createTargetNode(publicTarget, PUBLIC, ORCA);
+    TargetNode<?> publicOrcaRule = createTargetNode(orcaTarget, PUBLIC, SOME_OTHER);
 
     assertTrue(publicOrcaRule.isVisibleTo(publicTargetNode));
     assertFalse(publicTargetNode.isVisibleTo(publicOrcaRule));
   }
 
-  private String shouldBeVisibleMessage(TargetNode<?, ?> rule, BuildTarget target) {
+  private String shouldBeVisibleMessage(TargetNode<?> rule, BuildTarget target) {
     return String.format(
         "%1$s should be visible to %2$s because the visibility list of %1$s contains %2$s",
         rule.getBuildTarget(), target);
@@ -227,13 +227,13 @@ public class TargetNodeVisibilityTest {
     interface AbstractFakeRuleDescriptionArg extends CommonDescriptionArg {}
   }
 
-  private static TargetNode<?, ?> createTargetNode(
+  private static TargetNode<?> createTargetNode(
       BuildTarget buildTarget, ImmutableList<String> visibilities)
       throws NoSuchBuildTargetException {
     return createTargetNode(buildTarget, visibilities, DEFAULT);
   }
 
-  private static TargetNode<?, ?> createTargetNode(
+  private static TargetNode<?> createTargetNode(
       BuildTarget buildTarget, ImmutableList<String> visibilities, ImmutableList<String> withinView)
       throws NoSuchBuildTargetException {
     VisibilityPatternParser parser = new VisibilityPatternParser();

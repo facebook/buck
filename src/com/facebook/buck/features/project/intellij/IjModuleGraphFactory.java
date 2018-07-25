@@ -65,7 +65,7 @@ public final class IjModuleGraphFactory {
       int minimumPathDepth,
       ImmutableSet<String> ignoredTargetLabels) {
 
-    Stream<TargetNode<?, ?>> nodes =
+    Stream<TargetNode<?>> nodes =
         targetGraph
             .getNodes()
             .stream()
@@ -84,7 +84,7 @@ public final class IjModuleGraphFactory {
             // Maybe one day someone will fix this.
             .filter(targetNode -> isInRootCell(projectFilesystem, targetNode));
 
-    ImmutableListMultimap<Path, TargetNode<?, ?>> baseTargetPathMultimap =
+    ImmutableListMultimap<Path, TargetNode<?>> baseTargetPathMultimap =
         (projectConfig.getProjectRoot().isEmpty()
                 ? nodes
                 : nodes.filter(
@@ -121,14 +121,14 @@ public final class IjModuleGraphFactory {
     return moduleByBuildTarget.build();
   }
 
-  private static boolean shouldConvertToIjModule(String projectRoot, TargetNode<?, ?> targetNode) {
+  private static boolean shouldConvertToIjModule(String projectRoot, TargetNode<?> targetNode) {
     return targetNode.getBuildTarget().getBasePath().startsWith(projectRoot);
   }
 
   private static AggregationTree createAggregationTree(
       IjProjectConfig projectConfig,
       AggregationModuleFactory aggregationModuleFactory,
-      ImmutableListMultimap<Path, TargetNode<?, ?>> targetNodesByBasePath) {
+      ImmutableListMultimap<Path, TargetNode<?>> targetNodesByBasePath) {
     Map<Path, AggregationModule> pathToAggregationModuleMap =
         targetNodesByBasePath
             .asMap()
@@ -185,7 +185,7 @@ public final class IjModuleGraphFactory {
                 // all BuildTarget's are merged into IJModule
                 // if a BuildTarget is not built from Java sources, it will also be added as a
                 // library
-                TargetNode<?, ?> targetNode = targetGraph.get(depTarget);
+                TargetNode<?> targetNode = targetGraph.get(depTarget);
                 elements.add(libraryFactory.getLibrary(targetNode).orElse(null));
               }
               return elements.stream();
@@ -235,7 +235,7 @@ public final class IjModuleGraphFactory {
 
       for (Map.Entry<BuildTarget, DependencyType> entry : module.getDependencies().entrySet()) {
         BuildTarget depBuildTarget = entry.getKey();
-        TargetNode<?, ?> depTargetNode = targetGraph.get(depBuildTarget);
+        TargetNode<?> depTargetNode = targetGraph.get(depBuildTarget);
 
         CommonDescriptionArg arg = (CommonDescriptionArg) depTargetNode.getConstructorArg();
         if (arg.labelsContainsAnyOf(ignoredTargetLabels)) {
@@ -335,7 +335,7 @@ public final class IjModuleGraphFactory {
   }
 
   private static boolean isInRootCell(
-      ProjectFilesystem projectFilesystem, TargetNode<?, ?> targetNode) {
+      ProjectFilesystem projectFilesystem, TargetNode<?> targetNode) {
     return targetNode.getFilesystem().equals(projectFilesystem);
   }
 

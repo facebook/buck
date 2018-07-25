@@ -62,7 +62,7 @@ public class AppleResourceDescription
   @Override
   public void addAppleBundleResources(
       AppleBundleResources.Builder builder,
-      TargetNode<AppleResourceDescriptionArg, ?> targetNode,
+      TargetNode<AppleResourceDescriptionArg> targetNode,
       ProjectFilesystem filesystem,
       BuildRuleResolver resolver) {
     AppleResourceDescriptionArg appleResource = targetNode.getConstructorArg();

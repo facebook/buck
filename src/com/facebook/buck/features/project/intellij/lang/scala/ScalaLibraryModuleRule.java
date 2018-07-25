@@ -41,12 +41,12 @@ public class ScalaLibraryModuleRule extends BaseIjModuleRule<ScalaLibraryDescrip
   }
 
   @Override
-  public void apply(TargetNode<ScalaLibraryDescriptionArg, ?> target, ModuleBuildContext context) {
+  public void apply(TargetNode<ScalaLibraryDescriptionArg> target, ModuleBuildContext context) {
     addDepsAndSources(target, false /* wantsPackagePrefix */, context);
   }
 
   @Override
-  public IjModuleType detectModuleType(TargetNode<ScalaLibraryDescriptionArg, ?> targetNode) {
+  public IjModuleType detectModuleType(TargetNode<ScalaLibraryDescriptionArg> targetNode) {
     return IjModuleType.UNKNOWN_MODULE;
   }
 }

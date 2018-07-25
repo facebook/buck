@@ -57,14 +57,14 @@ public class JavaBinaryTest {
         .build();
 
     // prebuilt_jar //third_party/guava:guava
-    TargetNode<?, ?> guavaNode =
+    TargetNode<?> guavaNode =
         PrebuiltJarBuilder.createBuilder(
                 BuildTargetFactory.newInstance("//third_party/guava:guava"))
             .setBinaryJar(PATH_TO_GUAVA_JAR)
             .build();
 
     // java_library //java/com/facebook/base:base
-    TargetNode<?, ?> libraryNode =
+    TargetNode<?> libraryNode =
         JavaLibraryBuilder.createBuilder(
                 BuildTargetFactory.newInstance("//java/com/facebook/base:base"))
             .addSrc(Paths.get("java/com/facebook/base/Base.java"))

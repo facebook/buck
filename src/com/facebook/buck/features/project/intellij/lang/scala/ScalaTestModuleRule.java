@@ -41,12 +41,12 @@ public class ScalaTestModuleRule extends BaseIjModuleRule<ScalaTestDescriptionAr
   }
 
   @Override
-  public void apply(TargetNode<ScalaTestDescriptionArg, ?> target, ModuleBuildContext context) {
+  public void apply(TargetNode<ScalaTestDescriptionArg> target, ModuleBuildContext context) {
     addDepsAndTestSources(target, false /* wantsPackagePrefix */, context);
   }
 
   @Override
-  public IjModuleType detectModuleType(TargetNode<ScalaTestDescriptionArg, ?> targetNode) {
+  public IjModuleType detectModuleType(TargetNode<ScalaTestDescriptionArg> targetNode) {
     return IjModuleType.UNKNOWN_MODULE;
   }
 }

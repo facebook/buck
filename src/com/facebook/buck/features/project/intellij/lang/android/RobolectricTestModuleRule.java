@@ -41,15 +41,14 @@ public class RobolectricTestModuleRule extends AndroidModuleRule<RobolectricTest
   }
 
   @Override
-  public void apply(
-      TargetNode<RobolectricTestDescriptionArg, ?> target, ModuleBuildContext context) {
+  public void apply(TargetNode<RobolectricTestDescriptionArg> target, ModuleBuildContext context) {
     super.apply(target, context);
     addDepsAndTestSources(target, true /* wantsPackagePrefix */, context);
     JavaLibraryRuleHelper.addCompiledShadowIfNeeded(projectConfig, target, context);
   }
 
   @Override
-  public IjModuleType detectModuleType(TargetNode<RobolectricTestDescriptionArg, ?> targetNode) {
+  public IjModuleType detectModuleType(TargetNode<RobolectricTestDescriptionArg> targetNode) {
     return IjModuleType.ANDROID_MODULE;
   }
 }

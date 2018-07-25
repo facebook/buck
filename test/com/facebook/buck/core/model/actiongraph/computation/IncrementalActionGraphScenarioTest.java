@@ -1265,7 +1265,7 @@ public class IncrementalActionGraphScenarioTest {
         result.getActionGraphBuilder());
   }
 
-  private ActionGraphAndBuilder createActionGraph(TargetNode<?, ?>... nodes) {
+  private ActionGraphAndBuilder createActionGraph(TargetNode<?>... nodes) {
     // Use newInstanceExact for cases where we don't want unflavored versions of nodes to get added
     // implicitly.
     return createActionGraph(TargetGraphFactory.newInstanceExact(nodes));
@@ -1281,10 +1281,10 @@ public class IncrementalActionGraphScenarioTest {
         result.getActionGraphBuilder());
   }
 
-  private TargetNode<?, ?>[] buildNodes(AbstractNodeBuilder<?, ?, ?, ?>... builders) {
+  private TargetNode<?>[] buildNodes(AbstractNodeBuilder<?, ?, ?, ?>... builders) {
     return RichStream.from(builders)
         .map(builder -> builder.build(filesystem))
-        .toArray(TargetNode<?, ?>[]::new);
+        .toArray(TargetNode<?>[]::new);
   }
 
   private static PythonPlatform createPy2Platform(Optional<BuildTarget> cxxLibrary) {

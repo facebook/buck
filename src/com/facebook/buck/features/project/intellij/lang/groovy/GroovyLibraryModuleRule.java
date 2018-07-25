@@ -41,13 +41,13 @@ public class GroovyLibraryModuleRule extends BaseIjModuleRule<GroovyLibraryDescr
 
   @Override
   public void apply(
-      TargetNode<GroovyLibraryDescription.CoreArg, ?> target, ModuleBuildContext context) {
+      TargetNode<GroovyLibraryDescription.CoreArg> target, ModuleBuildContext context) {
     addDepsAndSources(target, false /* wantsPackagePrefix */, context);
     context.setCompilerOutputPath(moduleFactoryResolver.getCompilerOutputPath(target));
   }
 
   @Override
-  public IjModuleType detectModuleType(TargetNode<GroovyLibraryDescription.CoreArg, ?> targetNode) {
+  public IjModuleType detectModuleType(TargetNode<GroovyLibraryDescription.CoreArg> targetNode) {
     return IjModuleType.UNKNOWN_MODULE;
   }
 }

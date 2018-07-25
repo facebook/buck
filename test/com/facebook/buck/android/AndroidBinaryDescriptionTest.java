@@ -47,22 +47,22 @@ public class AndroidBinaryDescriptionTest {
 
   @Test
   public void testNoDxRulesBecomeFirstOrderDeps() {
-    TargetNode<?, ?> transitiveDepNode =
+    TargetNode<?> transitiveDepNode =
         JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//exciting:dep"))
             .addSrc(Paths.get("Dep.java"))
             .build();
-    TargetNode<?, ?> depNode =
+    TargetNode<?> depNode =
         JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//exciting:target"))
             .addSrc(Paths.get("Other.java"))
             .addDep(transitiveDepNode.getBuildTarget())
             .build();
-    TargetNode<?, ?> keystoreNode =
+    TargetNode<?> keystoreNode =
         KeystoreBuilder.createBuilder(BuildTargetFactory.newInstance("//:keystore"))
             .setStore(FakeSourcePath.of("store"))
             .setProperties(FakeSourcePath.of("properties"))
             .build();
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
-    TargetNode<?, ?> androidBinaryNode =
+    TargetNode<?> androidBinaryNode =
         AndroidBinaryBuilder.createBuilder(target)
             .setManifest(FakeSourcePath.of("manifest.xml"))
             .setKeystore(BuildTargetFactory.newInstance("//:keystore"))

@@ -146,12 +146,12 @@ public class QueryCacheTest {
     BuildTarget targetA = BuildTargetFactory.newInstance("//app:a");
     BuildTarget targetB = BuildTargetFactory.newInstance("//app:b");
 
-    TargetNode<?, ?> foo =
+    TargetNode<?> foo =
         AndroidLibraryBuilder.createBuilder(fooTarget)
             .addDep(targetA)
             .setDepsQuery(declared)
             .build();
-    TargetNode<?, ?> bar =
+    TargetNode<?> bar =
         AndroidLibraryBuilder.createBuilder(barTarget)
             .addDep(targetB)
             .setDepsQuery(declared)

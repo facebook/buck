@@ -65,8 +65,7 @@ public class TargetNodeTest {
   public void testIgnoreNonBuildTargetOrPathOrSourcePathArgument()
       throws NoSuchBuildTargetException {
 
-    TargetNode<ExampleDescriptionArg, ExampleDescription> targetNode =
-        createTargetNode(TARGET_THREE);
+    TargetNode<ExampleDescriptionArg> targetNode = createTargetNode(TARGET_THREE);
 
     assertTrue(targetNode.getExtraDeps().isEmpty());
     assertTrue(targetNode.getDeclaredDeps().isEmpty());
@@ -94,7 +93,7 @@ public class TargetNodeTest {
             "source",
             "AnotherClass.java");
 
-    TargetNode<ExampleDescriptionArg, ExampleDescription> targetNode =
+    TargetNode<ExampleDescriptionArg> targetNode =
         createTargetNode(TARGET_THREE, depsTargets, rawNode);
 
     assertThat(
@@ -122,13 +121,11 @@ public class TargetNodeTest {
 
     ProjectFilesystem rootOne = FakeProjectFilesystem.createJavaOnlyFilesystem("/one");
     BuildTarget buildTargetOne = BuildTargetFactory.newInstance(rootOne.getRootPath(), "//foo:bar");
-    TargetNode<ExampleDescriptionArg, ExampleDescription> targetNodeOne =
-        createTargetNode(buildTargetOne);
+    TargetNode<ExampleDescriptionArg> targetNodeOne = createTargetNode(buildTargetOne);
 
     ProjectFilesystem rootTwo = FakeProjectFilesystem.createJavaOnlyFilesystem("/two");
     BuildTarget buildTargetTwo = BuildTargetFactory.newInstance(rootTwo.getRootPath(), "//foo:bar");
-    TargetNode<ExampleDescriptionArg, ExampleDescription> targetNodeTwo =
-        createTargetNode(buildTargetTwo);
+    TargetNode<ExampleDescriptionArg> targetNodeTwo = createTargetNode(buildTargetTwo);
 
     boolean isVisible = targetNodeOne.isVisibleTo(targetNodeTwo);
 
@@ -185,8 +182,8 @@ public class TargetNodeTest {
     }
   }
 
-  private static TargetNode<ExampleDescriptionArg, ExampleDescription> createTargetNode(
-      BuildTarget buildTarget) throws NoSuchBuildTargetException {
+  private static TargetNode<ExampleDescriptionArg> createTargetNode(BuildTarget buildTarget)
+      throws NoSuchBuildTargetException {
     ImmutableMap<String, Object> rawNode =
         ImmutableMap.of(
             "name",
@@ -203,7 +200,7 @@ public class TargetNodeTest {
     return createTargetNode(buildTarget, ImmutableSet.of(), rawNode);
   }
 
-  private static TargetNode<ExampleDescriptionArg, ExampleDescription> createTargetNode(
+  private static TargetNode<ExampleDescriptionArg> createTargetNode(
       BuildTarget buildTarget,
       ImmutableSet<BuildTarget> declaredDeps,
       ImmutableMap<String, Object> rawNode)

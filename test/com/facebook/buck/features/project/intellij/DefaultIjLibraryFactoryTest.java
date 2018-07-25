@@ -44,14 +44,14 @@ public class DefaultIjLibraryFactoryTest {
 
   private SourcePathResolver sourcePathResolver;
   private Path guavaJarPath;
-  private TargetNode<?, ?> guava;
+  private TargetNode<?> guava;
   private IjLibrary guavaLibrary;
-  private TargetNode<?, ?> androidSupport;
+  private TargetNode<?> androidSupport;
   private PathSourcePath androidSupportBinaryPath;
   private PathSourcePath androidSupportResClassPath;
   private IjLibrary androidSupportLibrary;
   private IjLibrary baseLibrary;
-  private TargetNode<?, ?> base;
+  private TargetNode<?> base;
   private PathSourcePath androidSupportBinaryJarPath;
   private PathSourcePath baseOutputPath;
   private IjLibraryFactoryResolver libraryFactoryResolver;
@@ -94,7 +94,7 @@ public class DefaultIjLibraryFactoryTest {
           }
 
           @Override
-          public Optional<SourcePath> getPathIfJavaLibrary(TargetNode<?, ?> targetNode) {
+          public Optional<SourcePath> getPathIfJavaLibrary(TargetNode<?> targetNode) {
             if (targetNode.equals(base)) {
               return Optional.of(baseOutputPath);
             }

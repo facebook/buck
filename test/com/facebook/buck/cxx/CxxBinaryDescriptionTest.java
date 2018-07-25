@@ -109,7 +109,7 @@ public class CxxBinaryDescriptionTest {
     }
   }
 
-  private TargetNode<CxxBinaryDescriptionArg, ?> mkSandboxNode(BuildTarget libTarget) {
+  private TargetNode<CxxBinaryDescriptionArg> mkSandboxNode(BuildTarget libTarget) {
     Optional<Map.Entry<Flavor, CxxLibraryDescription.Type>> type =
         CxxLibraryDescription.getLibType(libTarget);
     Set<Flavor> flavors = Sets.newHashSet(libTarget.getFlavors());

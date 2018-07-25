@@ -35,7 +35,7 @@ public class QueryTargetAccessor {
   private QueryTargetAccessor() {}
 
   public static <T> ImmutableSet<QueryTarget> getTargetsInAttribute(
-      TypeCoercerFactory typeCoercerFactory, TargetNode<T, ?> node, String attribute) {
+      TypeCoercerFactory typeCoercerFactory, TargetNode<T> node, String attribute) {
     Class<?> constructorArgClass = node.getConstructorArg().getClass();
     ParamInfo info =
         CoercedTypeCache.INSTANCE
@@ -73,7 +73,7 @@ public class QueryTargetAccessor {
   /** Filters the objects in the given attribute that satisfy the given predicate. */
   public static <T> ImmutableSet<Object> filterAttributeContents(
       TypeCoercerFactory typeCoercerFactory,
-      TargetNode<T, ?> node,
+      TargetNode<T> node,
       String attribute,
       Predicate<Object> predicate) {
     Class<?> constructorArgClass = node.getConstructorArg().getClass();

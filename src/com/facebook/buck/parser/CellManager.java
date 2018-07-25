@@ -60,7 +60,7 @@ class CellManager {
         "From %s, unable to find cell rooted at: %s", target, target.getCellPath());
   }
 
-  void registerInputsUnderSymlinks(Path buildFile, TargetNode<?, ?> node) throws IOException {
+  void registerInputsUnderSymlinks(Path buildFile, TargetNode<?> node) throws IOException {
     Cell currentCell = getCell(node.getBuildTarget());
     symlinkCache.registerInputsUnderSymlinks(
         currentCell, getCell(node.getBuildTarget()), buildFile, node);

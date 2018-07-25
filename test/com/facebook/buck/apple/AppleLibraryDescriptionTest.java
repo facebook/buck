@@ -100,7 +100,7 @@ public class AppleLibraryDescriptionTest {
     SourcePath swiftSourcePath = FakeSourcePath.of("bar.swift");
 
     BuildTarget binaryTarget = BuildTargetFactory.newInstance("//:library");
-    TargetNode<?, ?> binaryNode =
+    TargetNode<?> binaryNode =
         new AppleLibraryBuilder(binaryTarget)
             .setSrcs(
                 ImmutableSortedSet.of(
@@ -131,7 +131,7 @@ public class AppleLibraryDescriptionTest {
   @Test
   public void modularObjcFlags() {
     BuildTarget libTarget = BuildTargetFactory.newInstance("//:library");
-    TargetNode<AppleLibraryDescriptionArg, ?> libNode =
+    TargetNode<AppleLibraryDescriptionArg> libNode =
         new AppleLibraryBuilder(libTarget)
             .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("foo.m"))))
             .setCompilerFlags(ImmutableList.of("-DDEBUG=1"))

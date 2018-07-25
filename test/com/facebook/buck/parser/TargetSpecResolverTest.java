@@ -82,7 +82,7 @@ public class TargetSpecResolverTest {
   private KnownBuildRuleTypesProvider knownBuildRuleTypesProvider;
   private ListeningExecutorService executorService;
   private TargetSpecResolver targetNodeTargetSpecResolver;
-  private FlavorEnhancer<TargetNode<?, ?>> flavorEnhancer;
+  private FlavorEnhancer<TargetNode<?>> flavorEnhancer;
 
   @Before
   public void setUp() throws Exception {

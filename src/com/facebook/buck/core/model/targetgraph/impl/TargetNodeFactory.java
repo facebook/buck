@@ -58,7 +58,7 @@ public class TargetNodeFactory implements NodeCopier {
    * Capture and Helper Methods</a>.
    */
   @SuppressWarnings("unchecked")
-  public <T, U extends DescriptionWithTargetGraph<T>> TargetNode<T, U> createFromObject(
+  public <T, U extends DescriptionWithTargetGraph<T>> TargetNode<T> createFromObject(
       HashCode rawInputsHashCode,
       U description,
       Object constructorArg,
@@ -82,7 +82,7 @@ public class TargetNodeFactory implements NodeCopier {
   }
 
   @SuppressWarnings("unchecked")
-  private <T, U extends DescriptionWithTargetGraph<T>> TargetNode<T, U> create(
+  private <T, U extends DescriptionWithTargetGraph<T>> TargetNode<T> create(
       HashCode rawInputsHashCode,
       U description,
       T constructorArg,
@@ -189,8 +189,8 @@ public class TargetNodeFactory implements NodeCopier {
 
   @SuppressWarnings("unchecked")
   @Override
-  public <T, U extends DescriptionWithTargetGraph<T>> TargetNode<T, U> copyNodeWithDescription(
-      TargetNode<?, ?> originalNode, U description) {
+  public <T> TargetNode<T> copyNodeWithDescription(
+      TargetNode<?> originalNode, DescriptionWithTargetGraph<T> description) {
     try {
       return create(
           originalNode.getRawInputsHashCode(),
@@ -212,8 +212,8 @@ public class TargetNodeFactory implements NodeCopier {
   }
 
   @Override
-  public <T, U extends DescriptionWithTargetGraph<T>> TargetNode<T, U> copyNodeWithFlavors(
-      TargetNode<T, U> originalNode, ImmutableSet<Flavor> flavors) {
+  public <T> TargetNode<T> copyNodeWithFlavors(
+      TargetNode<T> originalNode, ImmutableSet<Flavor> flavors) {
     try {
       return create(
           originalNode.getRawInputsHashCode(),

@@ -52,7 +52,7 @@ public class JavaTestModuleRule extends BaseIjModuleRule<JavaTestDescription.Cor
   }
 
   @Override
-  public void apply(TargetNode<JavaTestDescription.CoreArg, ?> target, ModuleBuildContext context) {
+  public void apply(TargetNode<JavaTestDescription.CoreArg> target, ModuleBuildContext context) {
     Optional<Path> presetResourcesRoot = target.getConstructorArg().getResourcesRoot();
     ImmutableSortedSet<SourcePath> resources = target.getConstructorArg().getResources();
     ImmutableSet<Path> resourcePaths;
@@ -81,7 +81,7 @@ public class JavaTestModuleRule extends BaseIjModuleRule<JavaTestDescription.Cor
   }
 
   @Override
-  public IjModuleType detectModuleType(TargetNode<JavaTestDescription.CoreArg, ?> targetNode) {
+  public IjModuleType detectModuleType(TargetNode<JavaTestDescription.CoreArg> targetNode) {
     return IjModuleType.JAVA_MODULE;
   }
 }

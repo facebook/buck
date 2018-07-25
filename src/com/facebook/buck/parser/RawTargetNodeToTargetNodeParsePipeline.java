@@ -37,7 +37,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
 
 public class RawTargetNodeToTargetNodeParsePipeline
-    extends ConvertingPipelineWithPerfEventScope<RawTargetNode, TargetNode<?, ?>> {
+    extends ConvertingPipelineWithPerfEventScope<RawTargetNode, TargetNode<?>> {
 
   private static final Logger LOG = Logger.get(RawTargetNodeToTargetNodeParsePipeline.class);
 
@@ -48,7 +48,7 @@ public class RawTargetNodeToTargetNodeParsePipeline
 
   /** Create new pipeline for parsing Buck files. */
   public RawTargetNodeToTargetNodeParsePipeline(
-      Cache<BuildTarget, TargetNode<?, ?>> cache,
+      Cache<BuildTarget, TargetNode<?>> cache,
       ListeningExecutorService executorService,
       RawTargetNodePipeline rawTargetNodePipeline,
       BuckEventBus eventBus,
@@ -76,14 +76,14 @@ public class RawTargetNodeToTargetNodeParsePipeline
   }
 
   @Override
-  protected TargetNode<?, ?> computeNodeInScope(
+  protected TargetNode<?> computeNodeInScope(
       Cell cell,
       BuildTarget buildTarget,
       RawTargetNode rawNode,
       AtomicLong processedBytes,
       Function<PerfEventId, Scope> perfEventScopeFunction)
       throws BuildTargetException {
-    TargetNode<?, ?> targetNode =
+    TargetNode<?> targetNode =
         rawTargetNodeToTargetNodeFactory.createTargetNode(
             cell,
             cell.getAbsolutePathToBuildFile(buildTarget),

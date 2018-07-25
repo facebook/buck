@@ -39,7 +39,7 @@ public class CxxLocationMacroExpanderTest {
   public void expandCxxGenrule() throws Exception {
     CxxGenruleBuilder builder =
         new CxxGenruleBuilder(BuildTargetFactory.newInstance("//:rule")).setOut("out.txt");
-    TargetNode<?, ?> node = builder.build();
+    TargetNode<?> node = builder.build();
     TargetGraph targetGraph = TargetGraphFactory.newInstance(node);
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
     SourcePathResolver pathResolver =

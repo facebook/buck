@@ -43,7 +43,7 @@ public class RawTargetNodeToTargetNodeFactory implements ParserTargetNodeFactory
   private final ConstructorArgMarshaller marshaller;
   private final TargetNodeFactory targetNodeFactory;
   private final PackageBoundaryChecker packageBoundaryChecker;
-  private final TargetNodeListener<TargetNode<?, ?>> nodeListener;
+  private final TargetNodeListener<TargetNode<?>> nodeListener;
   private final SelectorListResolver selectorListResolver;
 
   public RawTargetNodeToTargetNodeFactory(
@@ -51,7 +51,7 @@ public class RawTargetNodeToTargetNodeFactory implements ParserTargetNodeFactory
       ConstructorArgMarshaller marshaller,
       TargetNodeFactory targetNodeFactory,
       PackageBoundaryChecker packageBoundaryChecker,
-      TargetNodeListener<TargetNode<?, ?>> nodeListener,
+      TargetNodeListener<TargetNode<?>> nodeListener,
       SelectorListResolver selectorListResolver) {
     this.knownBuildRuleTypesProvider = knownBuildRuleTypesProvider;
     this.marshaller = marshaller;
@@ -62,7 +62,7 @@ public class RawTargetNodeToTargetNodeFactory implements ParserTargetNodeFactory
   }
 
   @Override
-  public TargetNode<?, ?> createTargetNode(
+  public TargetNode<?> createTargetNode(
       Cell cell,
       Path buildFile,
       BuildTarget target,
@@ -83,7 +83,7 @@ public class RawTargetNodeToTargetNodeFactory implements ParserTargetNodeFactory
             configureRawTargetNodeAttributes(
                 selectorListResolver, target, rawTargetNode.getAttributes().getAll()));
 
-    TargetNode<?, ?> targetNode =
+    TargetNode<?> targetNode =
         targetNodeFactory.createFromObject(
             rawTargetNode.getHashCode(),
             description,

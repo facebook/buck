@@ -42,7 +42,7 @@ import org.immutables.value.Value;
 @BuckStyleTuple
 @SuppressWarnings(
     "rawtypes") // https://github.com/immutables/immutables/issues/548 requires us to use TargetNode
-// not TargetNode<?, ?>
+// not TargetNode<?>
 abstract class AbstractFlavorSearchTargetNodeFinder {
 
   /** @return a map of nodes indexed by their "base" target. */
@@ -99,10 +99,10 @@ abstract class AbstractFlavorSearchTargetNodeFinder {
     return flavorMapBuilder.build();
   }
 
-  public Optional<TargetNode<?, ?>> get(BuildTarget target) {
+  public Optional<TargetNode<?>> get(BuildTarget target) {
 
     // If this node is in the graph under the given name, return it.
-    TargetNode<?, ?> node = getBuildTargetIndex().get(target);
+    TargetNode<?> node = getBuildTargetIndex().get(target);
     if (node != null) {
       return Optional.of(node);
     }

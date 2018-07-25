@@ -289,7 +289,7 @@ public class NewNativeTargetProjectMutatorTest {
     PBXBuildPhase copyFilesPhase = new PBXCopyFilesBuildPhase(specBuilder.build());
     mutator.setCopyFilesPhases(ImmutableList.of(copyFilesPhase));
 
-    TargetNode<?, ?> postbuildNode =
+    TargetNode<?> postbuildNode =
         XcodePostbuildScriptBuilder.createBuilder(BuildTargetFactory.newInstance("//foo:script"))
             .setCmd("echo \"hello world!\"")
             .build();
@@ -335,7 +335,7 @@ public class NewNativeTargetProjectMutatorTest {
   public void testScriptBuildPhase() throws NoSuchBuildTargetException {
     NewNativeTargetProjectMutator mutator = mutatorWithCommonDefaults();
 
-    TargetNode<?, ?> prebuildNode =
+    TargetNode<?> prebuildNode =
         XcodePrebuildScriptBuilder.createBuilder(BuildTargetFactory.newInstance("//foo:script"))
             .setSrcs(ImmutableSortedSet.of(FakeSourcePath.of("script/input.png")))
             .setOutputs(ImmutableSortedSet.of("helloworld.txt"))
@@ -369,7 +369,7 @@ public class NewNativeTargetProjectMutatorTest {
     NewNativeTargetProjectMutator mutator =
         mutator(DefaultSourcePathResolver.from(new SourcePathRuleFinder(scenario.graphBuilder)));
 
-    TargetNode<?, ?> jsBundleNode = scenario.targetGraph.get(depBuildTarget);
+    TargetNode<?> jsBundleNode = scenario.targetGraph.get(depBuildTarget);
 
     mutator.setPostBuildRunScriptPhasesFromTargetNodes(
         ImmutableList.of(jsBundleNode), x -> scenario.graphBuilder);
@@ -403,7 +403,7 @@ public class NewNativeTargetProjectMutatorTest {
     NewNativeTargetProjectMutator mutator =
         mutator(DefaultSourcePathResolver.from(new SourcePathRuleFinder(scenario.graphBuilder)));
 
-    TargetNode<?, ?> jsBundleGenruleNode = scenario.targetGraph.get(depBuildTarget);
+    TargetNode<?> jsBundleGenruleNode = scenario.targetGraph.get(depBuildTarget);
 
     mutator.setPostBuildRunScriptPhasesFromTargetNodes(
         ImmutableList.of(jsBundleGenruleNode), x -> scenario.graphBuilder);

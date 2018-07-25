@@ -60,7 +60,7 @@ import org.junit.Test;
  */
 public class BuildRuleContextWithEnvironmentTest {
 
-  private MutableDirectedGraph<TargetNode<?, ?>> mutableTargetGraph;
+  private MutableDirectedGraph<TargetNode<?>> mutableTargetGraph;
   private ActionGraphBuilder graphBuilder;
   private ProjectFilesystem projectFilesystem;
   private CellPathResolver cellPathResolver;

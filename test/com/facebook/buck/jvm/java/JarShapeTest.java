@@ -37,12 +37,12 @@ public class JarShapeTest {
 
   @Test
   public void shouldOnlyIncludeGivenJarInASingleJar() throws NoSuchBuildTargetException {
-    TargetNode<?, ?> depNode =
+    TargetNode<?> depNode =
         JavaLibraryBuilder.createBuilder("//:dep")
             .addSrc(FakeSourcePath.of("SomeFile.java"))
             .build();
 
-    TargetNode<?, ?> libNode =
+    TargetNode<?> libNode =
         JavaLibraryBuilder.createBuilder("//:lib")
             .addSrc(FakeSourcePath.of("Library.java"))
             .addDep(depNode.getBuildTarget())
@@ -63,12 +63,12 @@ public class JarShapeTest {
 
   @Test
   public void aMavenJarWithoutMavenTransitiveDepsIsAnUberJar() throws NoSuchBuildTargetException {
-    TargetNode<?, ?> depNode =
+    TargetNode<?> depNode =
         JavaLibraryBuilder.createBuilder("//:dep")
             .addSrc(FakeSourcePath.of("SomeFile.java"))
             .build();
 
-    TargetNode<?, ?> libNode =
+    TargetNode<?> libNode =
         JavaLibraryBuilder.createBuilder("//:lib")
             .addSrc(FakeSourcePath.of("Library.java"))
             .addDep(depNode.getBuildTarget())
@@ -89,18 +89,18 @@ public class JarShapeTest {
 
   @Test
   public void shouldBeAbleToCreateAMavenJar() throws NoSuchBuildTargetException {
-    TargetNode<?, ?> depNode =
+    TargetNode<?> depNode =
         JavaLibraryBuilder.createBuilder("//:dep")
             .addSrc(FakeSourcePath.of("SomeFile.java"))
             .build();
 
-    TargetNode<?, ?> mavenDepNode =
+    TargetNode<?> mavenDepNode =
         JavaLibraryBuilder.createBuilder("//:maven-dep")
             .addSrc(FakeSourcePath.of("SomeFile.java"))
             .setMavenCoords("com.example:somelib:1.0")
             .build();
 
-    TargetNode<?, ?> libNode =
+    TargetNode<?> libNode =
         JavaLibraryBuilder.createBuilder("//:lib")
             .addSrc(FakeSourcePath.of("Library.java"))
             .addDep(depNode.getBuildTarget())
@@ -124,20 +124,20 @@ public class JarShapeTest {
   @Test
   public void shouldCorrectlyExcludeMavenDepsWhichAreDepsOfSelf()
       throws NoSuchBuildTargetException {
-    TargetNode<?, ?> deepMavenDepNode =
+    TargetNode<?> deepMavenDepNode =
         JavaLibraryBuilder.createBuilder("//:deep-maven")
             .addSrc(FakeSourcePath.of("SomeFile.java"))
             .setMavenCoords("com.example:cheese:2.0")
             .build();
 
-    TargetNode<?, ?> mavenDepNode =
+    TargetNode<?> mavenDepNode =
         JavaLibraryBuilder.createBuilder("//:maven-dep")
             .addSrc(FakeSourcePath.of("SomeFile.java"))
             .setMavenCoords("com.example:somelib:1.0")
             .addDep(deepMavenDepNode.getBuildTarget())
             .build();
 
-    TargetNode<?, ?> libNode =
+    TargetNode<?> libNode =
         JavaLibraryBuilder.createBuilder("//:lib")
             .addSrc(FakeSourcePath.of("Library.java"))
             .addDep(deepMavenDepNode.getBuildTarget())

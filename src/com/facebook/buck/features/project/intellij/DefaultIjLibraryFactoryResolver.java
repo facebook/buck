@@ -61,7 +61,7 @@ class DefaultIjLibraryFactoryResolver implements IjLibraryFactoryResolver {
   }
 
   @Override
-  public Optional<SourcePath> getPathIfJavaLibrary(TargetNode<?, ?> targetNode) {
+  public Optional<SourcePath> getPathIfJavaLibrary(TargetNode<?> targetNode) {
     BuildRule rule = buildRuleResolver.getRule(targetNode.getBuildTarget());
     if (!(rule instanceof JavaLibrary)) {
       return Optional.empty();

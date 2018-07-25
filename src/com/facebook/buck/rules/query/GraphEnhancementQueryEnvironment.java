@@ -121,7 +121,7 @@ public class GraphEnhancementQueryEnvironment implements QueryEnvironment {
 
   @Override
   public Set<QueryTarget> getInputs(QueryTarget target) {
-    TargetNode<?, ?> node = getNode(target);
+    TargetNode<?> node = getNode(target);
     return node.getInputs()
         .stream()
         .map(path -> PathSourcePath.of(node.getFilesystem(), path))
@@ -172,7 +172,7 @@ public class GraphEnhancementQueryEnvironment implements QueryEnvironment {
         typeCoercerFactory, getNode(target), attribute, predicate);
   }
 
-  private TargetNode<?, ?> getNode(QueryTarget target) {
+  private TargetNode<?> getNode(QueryTarget target) {
     Preconditions.checkState(target instanceof QueryBuildTarget);
     Preconditions.checkArgument(targetGraph.isPresent());
     BuildTarget buildTarget = ((QueryBuildTarget) target).getBuildTarget();

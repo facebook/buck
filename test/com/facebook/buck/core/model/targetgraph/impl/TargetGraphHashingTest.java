@@ -71,7 +71,7 @@ public class TargetGraphHashingTest {
     FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     BuckEventBus eventBus = new DefaultBuckEventBus(new IncrementingFakeClock(), new BuildId());
 
-    TargetNode<?, ?> node =
+    TargetNode<?> node =
         createJavaLibraryTargetNodeWithSrcs(
             BuildTargetFactory.newInstance("//foo:lib"),
             HashCode.fromLong(64738),
@@ -120,12 +120,12 @@ public class TargetGraphHashingTest {
     FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     BuckEventBus eventBus = new DefaultBuckEventBus(new IncrementingFakeClock(), new BuildId());
 
-    TargetNode<?, ?> nodeA =
+    TargetNode<?> nodeA =
         createJavaLibraryTargetNodeWithSrcs(
             BuildTargetFactory.newInstance("//foo:lib"),
             HashCode.fromLong(64738),
             ImmutableSet.of(Paths.get("foo/FooLib.java")));
-    TargetNode<?, ?> nodeB =
+    TargetNode<?> nodeB =
         createJavaLibraryTargetNodeWithSrcs(
             BuildTargetFactory.newInstance("//bar:lib"),
             HashCode.fromLong(49152),
@@ -182,10 +182,10 @@ public class TargetGraphHashingTest {
 
   private TargetGraph createGraphWithANodeAndADep(
       BuildTarget nodeTarget, HashCode nodeHash, BuildTarget depTarget, HashCode depHash) {
-    TargetNode<?, ?> dep =
+    TargetNode<?> dep =
         createJavaLibraryTargetNodeWithSrcs(
             depTarget, depHash, ImmutableSet.of(Paths.get("dep/DepLib.java")));
-    TargetNode<?, ?> node =
+    TargetNode<?> node =
         createJavaLibraryTargetNodeWithSrcs(
             nodeTarget, nodeHash, ImmutableSet.of(Paths.get("foo/FooLib.java")), dep);
     return TargetGraphFactory.newInstance(node, dep);
@@ -245,7 +245,7 @@ public class TargetGraphHashingTest {
   public void hashingSourceThrowsError() throws Exception {
     BuckEventBus eventBus = new DefaultBuckEventBus(new IncrementingFakeClock(), new BuildId());
 
-    TargetNode<?, ?> node =
+    TargetNode<?> node =
         createJavaLibraryTargetNodeWithSrcs(
             BuildTargetFactory.newInstance("//foo:lib"),
             HashCode.fromLong(64738),
@@ -263,13 +263,10 @@ public class TargetGraphHashingTest {
         .hashTargetGraph();
   }
 
-  private static TargetNode<?, ?> createJavaLibraryTargetNodeWithSrcs(
-      BuildTarget buildTarget,
-      HashCode hashCode,
-      ImmutableSet<Path> srcs,
-      TargetNode<?, ?>... deps) {
+  private static TargetNode<?> createJavaLibraryTargetNodeWithSrcs(
+      BuildTarget buildTarget, HashCode hashCode, ImmutableSet<Path> srcs, TargetNode<?>... deps) {
     JavaLibraryBuilder targetNodeBuilder = JavaLibraryBuilder.createBuilder(buildTarget, hashCode);
-    for (TargetNode<?, ?> dep : deps) {
+    for (TargetNode<?> dep : deps) {
       targetNodeBuilder.addDep(dep.getBuildTarget());
     }
     for (Path src : srcs) {

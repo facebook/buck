@@ -104,7 +104,7 @@ public class SingleThreadedActionGraphBuilder extends AbstractActionGraphBuilder
     return computeIfAbsent(
         target,
         (ignored) -> {
-          TargetNode<?, ?> node = targetGraph.get(target);
+          TargetNode<?> node = targetGraph.get(target);
           BuildRule rule =
               buildRuleGenerator.transform(
                   toolchainProviderResolver.apply(target), targetGraph, this, node);

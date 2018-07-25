@@ -51,13 +51,13 @@ import java.util.stream.IntStream;
 
 /** Used to determine owners of specific files */
 final class OwnersReport {
-  final ImmutableSetMultimap<TargetNode<?, ?>, Path> owners;
+  final ImmutableSetMultimap<TargetNode<?>, Path> owners;
   final ImmutableSet<Path> inputsWithNoOwners;
   final ImmutableSet<String> nonExistentInputs;
   final ImmutableSet<String> nonFileInputs;
 
   private OwnersReport(
-      SetMultimap<TargetNode<?, ?>, Path> owners,
+      SetMultimap<TargetNode<?>, Path> owners,
       Set<Path> inputsWithNoOwners,
       Set<String> nonExistentInputs,
       Set<String> nonFileInputs) {
@@ -106,7 +106,7 @@ final class OwnersReport {
       return this;
     }
 
-    SetMultimap<TargetNode<?, ?>, Path> updatedOwners = TreeMultimap.create(owners);
+    SetMultimap<TargetNode<?>, Path> updatedOwners = TreeMultimap.create(owners);
     updatedOwners.putAll(other.owners);
 
     return new OwnersReport(
@@ -118,7 +118,7 @@ final class OwnersReport {
 
   @VisibleForTesting
   static OwnersReport generateOwnersReport(
-      Cell rootCell, TargetNode<?, ?> targetNode, String filePath) {
+      Cell rootCell, TargetNode<?> targetNode, String filePath) {
     Path file = rootCell.getFilesystem().getPathForRelativePath(filePath);
     if (!Files.exists(file)) {
       return new OwnersReport(
@@ -169,13 +169,13 @@ final class OwnersReport {
     }
 
     private OwnersReport getReportForBasePath(
-        Map<Path, ImmutableSet<TargetNode<?, ?>>> map,
+        Map<Path, ImmutableSet<TargetNode<?>>> map,
         ListeningExecutorService executor,
         Cell cell,
         Path basePath,
         Path cellRelativePath) {
       Path buckFile = cell.getFilesystem().resolve(basePath).resolve(cell.getBuildFileName());
-      ImmutableSet<TargetNode<?, ?>> targetNodes =
+      ImmutableSet<TargetNode<?>> targetNodes =
           map.computeIfAbsent(
               buckFile,
               basePath1 -> {
@@ -268,7 +268,7 @@ final class OwnersReport {
 
         // Path from buck file to target nodes. We keep our own cache here since the manner that we
         // are calling the parser does not make use of its internal caches.
-        Map<Path, ImmutableSet<TargetNode<?, ?>>> map = new HashMap<>();
+        Map<Path, ImmutableSet<TargetNode<?>>> map = new HashMap<>();
         for (Path absolutePath : entry.getValue()) {
           Path cellRelativePath = cell.getFilesystem().relativize(absolutePath);
           ImmutableSet<Path> basePaths = getAllBasePathsForPath(buildFileTree, cellRelativePath);

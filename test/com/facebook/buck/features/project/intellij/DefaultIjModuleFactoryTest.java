@@ -85,7 +85,7 @@ public class DefaultIjModuleFactoryTest {
     Path moduleBasePath = Paths.get("java/com/example/base");
     BuildTarget buildTargetGuava = BuildTargetFactory.newInstance("//third-party/guava:guava");
 
-    TargetNode<?, ?> javaLibBase =
+    TargetNode<?> javaLibBase =
         JavaLibraryBuilder.createBuilder(
                 BuildTargetFactory.newInstance("//java/com/example/base:base"))
             .addSrc(moduleBasePath.resolve("File.java"))
@@ -106,14 +106,14 @@ public class DefaultIjModuleFactoryTest {
     BuildTarget buildTargetGuava = BuildTargetFactory.newInstance("//third-party/guava:guava");
     BuildTarget buildTargetJunit = BuildTargetFactory.newInstance("//third-party/junit:junit");
 
-    TargetNode<?, ?> javaLibBase =
+    TargetNode<?> javaLibBase =
         JavaLibraryBuilder.createBuilder(
                 BuildTargetFactory.newInstance("//test/com/example/base:base"))
             .addSrc(moduleBasePath.resolve("File.java"))
             .addDep(buildTargetGuava)
             .build();
 
-    TargetNode<?, ?> javaLibExtra =
+    TargetNode<?> javaLibExtra =
         JavaLibraryBuilder.createBuilder(
                 BuildTargetFactory.newInstance("//test/com/example/base:extra"))
             .addSrc(moduleBasePath.resolve("File2.java"))
@@ -139,7 +139,7 @@ public class DefaultIjModuleFactoryTest {
     Path moduleBasePath = Paths.get("test/com/example/base");
     BuildTarget buildTargetJunit = BuildTargetFactory.newInstance("//third-party/junit:junit");
 
-    TargetNode<?, ?> javaTestExtra =
+    TargetNode<?> javaTestExtra =
         JavaTestBuilder.createBuilder(
                 BuildTargetFactory.newInstance("//test/com/example/base:extra"))
             .addSrc(moduleBasePath.resolve("base/File.java"))
@@ -161,14 +161,14 @@ public class DefaultIjModuleFactoryTest {
     BuildTarget buildTargetGuava = BuildTargetFactory.newInstance("//third-party:guava");
     BuildTarget buildTargetJunit = BuildTargetFactory.newInstance("//third-party:junit");
 
-    TargetNode<?, ?> javaLibBase =
+    TargetNode<?> javaLibBase =
         JavaLibraryBuilder.createBuilder(
                 BuildTargetFactory.newInstance("//java/com/example/base:base"))
             .addSrc(moduleBasePath.resolve("base/File.java"))
             .addDep(buildTargetGuava)
             .build();
 
-    TargetNode<?, ?> javaTestBase =
+    TargetNode<?> javaTestBase =
         JavaTestBuilder.createBuilder(
                 BuildTargetFactory.newInstance("//java/com/example/test:test"))
             .addSrc(moduleBasePath.resolve("test/TestFile.java"))
@@ -198,14 +198,14 @@ public class DefaultIjModuleFactoryTest {
     BuildTarget buildTargetHamcrest = BuildTargetFactory.newInstance("//third-party:hamcrest");
     BuildTarget buildTargetJunit = BuildTargetFactory.newInstance("//third-party:junit");
 
-    TargetNode<?, ?> javaLibBase =
+    TargetNode<?> javaLibBase =
         JavaLibraryBuilder.createBuilder(
                 BuildTargetFactory.newInstance("//java/com/example/base:base"))
             .addSrc(moduleBasePath.resolve("base/File.java"))
             .addDep(buildTargetGuava)
             .build();
 
-    TargetNode<?, ?> javaTestBase =
+    TargetNode<?> javaTestBase =
         JavaTestBuilder.createBuilder(
                 BuildTargetFactory.newInstance("//java/com/example/base:test"))
             .addSrc(moduleBasePath.resolve("base/TestFile.java"))
@@ -214,7 +214,7 @@ public class DefaultIjModuleFactoryTest {
             .addDep(buildTargetGuava)
             .build();
 
-    TargetNode<?, ?> javaTest =
+    TargetNode<?> javaTest =
         JavaTestBuilder.createBuilder(
                 BuildTargetFactory.newInstance("//java/com/example/test:test"))
             .addSrc(moduleBasePath.resolve("test/TestFile2.java"))
@@ -248,14 +248,14 @@ public class DefaultIjModuleFactoryTest {
     Path moduleBasePath = Paths.get("java/com/example");
     BuildTarget buildTargetGuava = BuildTargetFactory.newInstance("//third-party:guava");
 
-    TargetNode<?, ?> javaLibBase =
+    TargetNode<?> javaLibBase =
         JavaLibraryBuilder.createBuilder(
                 BuildTargetFactory.newInstance("//java/com/example/base:base"))
             .addDep(buildTargetGuava)
             .build();
 
     BuildTarget keystoreTarget = BuildTargetFactory.newInstance("//java/com/example/test:keystore");
-    TargetNode<?, ?> androidBinary =
+    TargetNode<?> androidBinary =
         AndroidBinaryBuilder.createBuilder(
                 BuildTargetFactory.newInstance("//java/com/example/test:test"))
             .setManifest(FakeSourcePath.of("java/com/example/test/AndroidManifest.xml"))
@@ -287,13 +287,13 @@ public class DefaultIjModuleFactoryTest {
     BuildTarget genruleBuildTarget =
         BuildTargetFactory.newInstance("//java/com/example/base:genrule");
 
-    TargetNode<?, ?> javaLibWithGenrule =
+    TargetNode<?> javaLibWithGenrule =
         JavaLibraryBuilder.createBuilder(
                 BuildTargetFactory.newInstance("//java/com/example/base:base_genrule"))
             .addSrcTarget(genruleBuildTarget)
             .build();
 
-    TargetNode<?, ?> javaLibWithAnnotationProcessor =
+    TargetNode<?> javaLibWithAnnotationProcessor =
         JavaLibraryBuilder.createBuilder(
                 BuildTargetFactory.newInstance("//java/com/example/base:base_annotation"))
             .addSrc(Paths.get("java/com/example/base/Base.java"))
@@ -328,7 +328,7 @@ public class DefaultIjModuleFactoryTest {
   public void testJavaLibrary() {
     IjModuleFactory factory = createIjModuleFactory();
 
-    TargetNode<?, ?> javaLib =
+    TargetNode<?> javaLib =
         JavaLibraryBuilder.createBuilder(
                 BuildTargetFactory.newInstance("//java/com/example/base:base"))
             .addSrc(Paths.get("java/com/example/base/File.java"))
@@ -353,7 +353,7 @@ public class DefaultIjModuleFactoryTest {
   public void testGroovyLibrary() {
     IjModuleFactory factory = createIjModuleFactory();
 
-    TargetNode<?, ?> groovyLib =
+    TargetNode<?> groovyLib =
         GroovyLibraryBuilder.createBuilder(
                 BuildTargetFactory.newInstance("//groovy/com/example/base:base"))
             .addSrc(Paths.get("groovy/com/example/base/File.groovy"))
@@ -378,7 +378,7 @@ public class DefaultIjModuleFactoryTest {
   public void testKotlinLibrary() {
     IjModuleFactory factory = createIjModuleFactory();
 
-    TargetNode<?, ?> kotlinLib =
+    TargetNode<?> kotlinLib =
         FauxKotlinLibraryBuilder.createBuilder(
                 BuildTargetFactory.newInstance("//kotlin/com/example/base:base"))
             .addSrc(Paths.get("kotlin/com/example/base/File.kt"))
@@ -403,7 +403,7 @@ public class DefaultIjModuleFactoryTest {
   public void testScalaLibrary() {
     IjModuleFactory factory = createIjModuleFactory();
 
-    TargetNode<?, ?> scalaLib =
+    TargetNode<?> scalaLib =
         FauxKotlinLibraryBuilder.createBuilder(
                 BuildTargetFactory.newInstance("//scala/com/example/base:base"))
             .addSrc(Paths.get("scala/com/example/base/File.scala"))
@@ -428,7 +428,7 @@ public class DefaultIjModuleFactoryTest {
   public void testJavaLibraryInRoot() {
     IjModuleFactory factory = createIjModuleFactory();
 
-    TargetNode<?, ?> javaLib =
+    TargetNode<?> javaLib =
         JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:base"))
             .addSrc(Paths.get("File.java"))
             .build();
@@ -452,13 +452,13 @@ public class DefaultIjModuleFactoryTest {
   public void testJavaLibrariesWithParentBasePath() {
     IjModuleFactory factory = createIjModuleFactory();
 
-    TargetNode<?, ?> javaLib1 =
+    TargetNode<?> javaLib1 =
         JavaLibraryBuilder.createBuilder(
                 BuildTargetFactory.newInstance("//java/com/example/base:core"))
             .addSrc(Paths.get("java/com/example/base/src1/File.java"))
             .build();
 
-    TargetNode<?, ?> javaLib2 =
+    TargetNode<?> javaLib2 =
         JavaLibraryBuilder.createBuilder(
                 BuildTargetFactory.newInstance("//java/com/example/base:more"))
             .addSrc(Paths.get("java/com/example/base/src2/File.java"))
@@ -481,13 +481,13 @@ public class DefaultIjModuleFactoryTest {
   public void testJavaLibraryAndTestLibraryResultInOnlyOneFolder() {
     IjModuleFactory factory = createIjModuleFactory();
 
-    TargetNode<?, ?> javaLib =
+    TargetNode<?> javaLib =
         JavaLibraryBuilder.createBuilder(
                 BuildTargetFactory.newInstance("//third-party/example:core"))
             .addSrc(Paths.get("third-party/example/File.java"))
             .build();
 
-    TargetNode<?, ?> javaTest =
+    TargetNode<?> javaTest =
         JavaTestBuilder.createBuilder(BuildTargetFactory.newInstance("//third-party/example:test"))
             .addSrc(Paths.get("third-party/example/TestFile.java"))
             .addDep(javaLib.getBuildTarget())
@@ -507,7 +507,7 @@ public class DefaultIjModuleFactoryTest {
   public void testAndroidLibrary() {
     IjModuleFactory factory = createIjModuleFactory();
 
-    TargetNode<?, ?> androidLib =
+    TargetNode<?> androidLib =
         AndroidLibraryBuilder.createBuilder(
                 BuildTargetFactory.newInstance("//java/com/example/base:base"))
             .addSrc(Paths.get("java/com/example/base/File.java"))
@@ -525,12 +525,12 @@ public class DefaultIjModuleFactoryTest {
   public void testAndroidLibraries() {
     IjModuleFactory factory = createIjModuleFactory();
 
-    TargetNode<?, ?> javaLib =
+    TargetNode<?> javaLib =
         JavaLibraryBuilder.createBuilder(
                 BuildTargetFactory.newInstance("//java/com/example/base:base"))
             .build();
 
-    TargetNode<?, ?> androidLib =
+    TargetNode<?> androidLib =
         AndroidLibraryBuilder.createBuilder(
                 BuildTargetFactory.newInstance("//java/com/example/base:more"))
             .build();
@@ -549,7 +549,7 @@ public class DefaultIjModuleFactoryTest {
 
     String manifestName = "Manifest.xml";
     SourcePath manifestPath = FakeSourcePath.of(manifestName);
-    TargetNode<?, ?> androidBinary =
+    TargetNode<?> androidBinary =
         AndroidBinaryBuilder.createBuilder(
                 BuildTargetFactory.newInstance("//java/com/example:droid"))
             .setManifest(manifestPath)
@@ -571,13 +571,13 @@ public class DefaultIjModuleFactoryTest {
     IjModuleFactory factory = createIjModuleFactory();
 
     Path moduleBasePath = Paths.get("java/com/example");
-    TargetNode<?, ?> defaultJavaNode =
+    TargetNode<?> defaultJavaNode =
         JavaLibraryBuilder.createBuilder(
                 BuildTargetFactory.newInstance("//java/com/example/base:base"))
             .addSrc(Paths.get("java/com/example/base/Base.java"))
             .build();
 
-    TargetNode<?, ?> java8Node =
+    TargetNode<?> java8Node =
         JavaLibraryBuilder.createBuilder(
                 BuildTargetFactory.newInstance("//java/com/example/base2:base2"))
             .addSrc(Paths.get("java/com/example/base2/Base2.java"))
@@ -600,13 +600,13 @@ public class DefaultIjModuleFactoryTest {
     IjModuleFactory factory = createIjModuleFactory();
 
     Path moduleBasePath = Paths.get("java/com/example");
-    TargetNode<?, ?> defaultJavaNode =
+    TargetNode<?> defaultJavaNode =
         JavaLibraryBuilder.createBuilder(
                 BuildTargetFactory.newInstance("//java/com/example/base:base"))
             .addSrc(Paths.get("java/com/example/base/Base.java"))
             .build();
 
-    TargetNode<?, ?> java8Node =
+    TargetNode<?> java8Node =
         JavaLibraryBuilder.createBuilder(
                 BuildTargetFactory.newInstance("//java/com/example/base2:base2"))
             .addSrc(Paths.get("java/com/example/base2/Base2.java"))
@@ -629,7 +629,7 @@ public class DefaultIjModuleFactoryTest {
     SourcePath androidSupportBinaryPath = FakeSourcePath.of("third_party/java/support/support.aar");
     Path androidSupportSourcesPath = Paths.get("third_party/java/support/support-sources.jar");
     String androidSupportJavadocUrl = "file:///support/docs";
-    TargetNode<?, ?> androidPrebuiltAar =
+    TargetNode<?> androidPrebuiltAar =
         AndroidPrebuiltAarBuilder.createBuilder(
                 BuildTargetFactory.newInstance("//third_party/java/support:support"))
             .setBinaryAar(androidSupportBinaryPath)
@@ -648,7 +648,7 @@ public class DefaultIjModuleFactoryTest {
           }
 
           @Override
-          public Optional<SourcePath> getPathIfJavaLibrary(TargetNode<?, ?> targetNode) {
+          public Optional<SourcePath> getPathIfJavaLibrary(TargetNode<?> targetNode) {
             if (targetNode.equals(androidPrebuiltAar)) {
               return Optional.of(androidSupportBinaryPath);
             }
@@ -696,50 +696,50 @@ public class DefaultIjModuleFactoryTest {
             projectFilesystem,
             new IjModuleFactoryResolver() {
               @Override
-              public Optional<Path> getDummyRDotJavaPath(TargetNode<?, ?> targetNode) {
+              public Optional<Path> getDummyRDotJavaPath(TargetNode<?> targetNode) {
                 return Optional.empty();
               }
 
               @Override
               public Path getAndroidManifestPath(
-                  TargetNode<AndroidBinaryDescriptionArg, ?> targetNode) {
+                  TargetNode<AndroidBinaryDescriptionArg> targetNode) {
                 return ((PathSourcePath) targetNode.getConstructorArg().getManifest().get())
                     .getRelativePath();
               }
 
               @Override
               public Optional<Path> getLibraryAndroidManifestPath(
-                  TargetNode<AndroidLibraryDescription.CoreArg, ?> targetNode) {
+                  TargetNode<AndroidLibraryDescription.CoreArg> targetNode) {
                 return Optional.empty();
               }
 
               @Override
               public Optional<Path> getProguardConfigPath(
-                  TargetNode<AndroidBinaryDescriptionArg, ?> targetNode) {
+                  TargetNode<AndroidBinaryDescriptionArg> targetNode) {
                 return Optional.empty();
               }
 
               @Override
               public Optional<Path> getAndroidResourcePath(
-                  TargetNode<AndroidResourceDescriptionArg, ?> targetNode) {
+                  TargetNode<AndroidResourceDescriptionArg> targetNode) {
                 return Optional.empty();
               }
 
               @Override
               public Optional<Path> getAssetsPath(
-                  TargetNode<AndroidResourceDescriptionArg, ?> targetNode) {
+                  TargetNode<AndroidResourceDescriptionArg> targetNode) {
                 return Optional.empty();
               }
 
               @Override
               public Optional<Path> getAnnotationOutputPath(
-                  TargetNode<? extends JvmLibraryArg, ?> targetNode) {
+                  TargetNode<? extends JvmLibraryArg> targetNode) {
                 return Optional.empty();
               }
 
               @Override
               public Optional<Path> getCompilerOutputPath(
-                  TargetNode<? extends JvmLibraryArg, ?> targetNode) {
+                  TargetNode<? extends JvmLibraryArg> targetNode) {
                 return Optional.empty();
               }
             },
@@ -753,7 +753,7 @@ public class DefaultIjModuleFactoryTest {
     IjModuleFactory factory = createIjModuleFactory();
 
     String sourceName = "cpp/lib/foo.cpp";
-    TargetNode<?, ?> cxxLibrary =
+    TargetNode<?> cxxLibrary =
         new CxxLibraryBuilder(BuildTargetFactory.newInstance("//cpp/lib:foo"))
             .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of(sourceName))))
             .build();

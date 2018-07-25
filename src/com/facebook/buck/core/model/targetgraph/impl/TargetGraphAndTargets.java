@@ -26,9 +26,9 @@ import java.util.Iterator;
 
 public class TargetGraphAndTargets {
   private final TargetGraph targetGraph;
-  private final ImmutableSet<TargetNode<?, ?>> projectRoots;
+  private final ImmutableSet<TargetNode<?>> projectRoots;
 
-  public TargetGraphAndTargets(TargetGraph targetGraph, Iterable<TargetNode<?, ?>> projectRoots) {
+  public TargetGraphAndTargets(TargetGraph targetGraph, Iterable<TargetNode<?>> projectRoots) {
     this.targetGraph = targetGraph;
     this.projectRoots = ImmutableSet.copyOf(projectRoots);
   }
@@ -37,7 +37,7 @@ public class TargetGraphAndTargets {
     return targetGraph;
   }
 
-  public ImmutableSet<TargetNode<?, ?>> getProjectRoots() {
+  public ImmutableSet<TargetNode<?>> getProjectRoots() {
     return projectRoots;
   }
 
@@ -45,7 +45,7 @@ public class TargetGraphAndTargets {
    * @param nodes Nodes whose test targets we would like to find
    * @return A set of all test targets that test the targets in {@code nodes}.
    */
-  public static ImmutableSet<BuildTarget> getExplicitTestTargets(Iterator<TargetNode<?, ?>> nodes) {
+  public static ImmutableSet<BuildTarget> getExplicitTestTargets(Iterator<TargetNode<?>> nodes) {
     return RichStream.from(nodes)
         .flatMap(node -> TargetNodes.getTestTargetsForNode(node).stream())
         .toImmutableSet();
@@ -58,11 +58,11 @@ public class TargetGraphAndTargets {
       ImmutableSet<BuildTarget> explicitTests) {
     // Get the roots of the main graph. This contains all the targets in the project slice, or all
     // the valid project roots if a project slice is not specified.
-    Iterable<TargetNode<?, ?>> projectRoots = projectGraph.getAll(graphRoots);
+    Iterable<TargetNode<?>> projectRoots = projectGraph.getAll(graphRoots);
 
     // Optionally get the roots of the test graph. This contains all the tests that cover the roots
     // of the main graph or their dependencies.
-    Iterable<TargetNode<?, ?>> associatedTests = ImmutableSet.of();
+    Iterable<TargetNode<?>> associatedTests = ImmutableSet.of();
     if (isWithTests) {
       associatedTests = projectGraph.getAll(explicitTests);
     }

@@ -46,7 +46,7 @@ public class AndroidBinaryModuleRule extends AndroidModuleRule<AndroidBinaryDesc
   }
 
   @Override
-  public void apply(TargetNode<AndroidBinaryDescriptionArg, ?> target, ModuleBuildContext context) {
+  public void apply(TargetNode<AndroidBinaryDescriptionArg> target, ModuleBuildContext context) {
     super.apply(target, context);
     context.addDeps(target.getBuildDeps(), DependencyType.PROD);
 
@@ -63,7 +63,7 @@ public class AndroidBinaryModuleRule extends AndroidModuleRule<AndroidBinaryDesc
   }
 
   @Override
-  public IjModuleType detectModuleType(TargetNode<AndroidBinaryDescriptionArg, ?> targetNode) {
+  public IjModuleType detectModuleType(TargetNode<AndroidBinaryDescriptionArg> targetNode) {
     return IjModuleType.ANDROID_MODULE;
   }
 }

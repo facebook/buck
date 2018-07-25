@@ -48,12 +48,12 @@ import org.junit.Test;
 
 public class JavaLibraryClasspathProviderTest extends AbiCompilationModeTest {
 
-  private TargetNode<?, ?> aNode;
-  private TargetNode<?, ?> bNode;
-  private TargetNode<?, ?> cNode;
-  private TargetNode<?, ?> dNode;
-  private TargetNode<?, ?> eNode;
-  private TargetNode<?, ?> zNode;
+  private TargetNode<?> aNode;
+  private TargetNode<?> bNode;
+  private TargetNode<?> cNode;
+  private TargetNode<?> dNode;
+  private TargetNode<?> eNode;
+  private TargetNode<?> zNode;
 
   private BuildRule a;
   private BuildRule b;
@@ -187,7 +187,7 @@ public class JavaLibraryClasspathProviderTest extends AbiCompilationModeTest {
 
   @Test
   public void getTransitiveClasspathDeps() throws Exception {
-    TargetNode<?, ?> noOutputNode =
+    TargetNode<?> noOutputNode =
         makeRule("//no:output", ImmutableSet.of(), ImmutableSet.of(zNode), filesystem);
 
     TargetGraph targetGraph =
@@ -232,20 +232,20 @@ public class JavaLibraryClasspathProviderTest extends AbiCompilationModeTest {
     return resolver.getAbsolutePath(lib.getSourcePathToOutput());
   }
 
-  private TargetNode<?, ?> makeRule(
+  private TargetNode<?> makeRule(
       String target,
       Iterable<String> srcs,
-      Iterable<TargetNode<?, ?>> deps,
+      Iterable<TargetNode<?>> deps,
       ProjectFilesystem filesystem)
       throws Exception {
     return makeRule(target, srcs, deps, null, filesystem);
   }
 
-  private TargetNode<?, ?> makeRule(
+  private TargetNode<?> makeRule(
       String target,
       Iterable<String> srcs,
-      Iterable<TargetNode<?, ?>> deps,
-      @Nullable Iterable<TargetNode<?, ?>> exportedDeps,
+      Iterable<TargetNode<?>> deps,
+      @Nullable Iterable<TargetNode<?>> exportedDeps,
       ProjectFilesystem filesystem) {
     JavaLibraryBuilder builder;
     BuildTarget parsedTarget = BuildTargetFactory.newInstance(target);
@@ -255,12 +255,12 @@ public class JavaLibraryClasspathProviderTest extends AbiCompilationModeTest {
     for (String src : srcs) {
       builder.addSrc(filesystem.getBuckPaths().getGenDir().resolve(src));
     }
-    for (TargetNode<?, ?> dep : deps) {
+    for (TargetNode<?> dep : deps) {
       builder.addDep(dep.getBuildTarget());
     }
 
     if (exportedDeps != null) {
-      for (TargetNode<?, ?> dep : exportedDeps) {
+      for (TargetNode<?> dep : exportedDeps) {
         builder.addExportedDep(dep.getBuildTarget());
       }
     }

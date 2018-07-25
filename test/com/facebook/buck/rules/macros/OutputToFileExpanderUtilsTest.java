@@ -57,7 +57,7 @@ public class OutputToFileExpanderUtilsTest {
     StringExpander source = new StringExpander<>(Macro.class, StringArg.of(text));
     BuildTarget target = BuildTargetFactory.newInstance("//some:example");
     JavaLibraryBuilder builder = JavaLibraryBuilder.createBuilder(target);
-    TargetNode<?, ?> node = builder.build();
+    TargetNode<?> node = builder.build();
     ActionGraphBuilder graphBuilder =
         new TestActionGraphBuilder(TargetGraphFactory.newInstance(node));
     builder.build(graphBuilder, filesystem);

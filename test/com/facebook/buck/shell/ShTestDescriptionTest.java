@@ -97,7 +97,7 @@ public class ShTestDescriptionTest {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     Path resource = filesystem.getPath("resource");
     filesystem.touch(resource);
-    TargetNode<?, ?> shTestWithResources =
+    TargetNode<?> shTestWithResources =
         new ShTestBuilder(target)
             .setTest(FakeSourcePath.of(filesystem, "some_test"))
             .setResources(ImmutableSortedSet.of(resource))

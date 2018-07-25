@@ -81,7 +81,7 @@ public class RawTargetNodeToTargetNodeFactoryTest {
             (file, targetNode) -> {},
             new DefaultSelectorListResolver(new TestSelectableResolver()));
 
-    TargetNode<?, ?> targetNode =
+    TargetNode<?> targetNode =
         factory.createTargetNode(
             cell,
             Paths.get("a/b/BUCK"),

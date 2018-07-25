@@ -54,18 +54,18 @@ import org.junit.Test;
 
 public class XCodeProjectCommandHelperTest {
 
-  private TargetNode<?, ?> barLibNode;
-  private TargetNode<?, ?> fooLibNode;
-  private TargetNode<?, ?> fooBinBinaryNode;
-  private TargetNode<?, ?> fooBinNode;
-  private TargetNode<?, ?> bazLibNode;
-  private TargetNode<?, ?> bazTestNode;
-  private TargetNode<?, ?> fooTestNode;
-  private TargetNode<?, ?> fooBinTestNode;
-  private TargetNode<?, ?> quxBinNode;
-  private TargetNode<?, ?> workspaceNode;
-  private TargetNode<?, ?> workspaceExtraTestNode;
-  private TargetNode<?, ?> smallWorkspaceNode;
+  private TargetNode<?> barLibNode;
+  private TargetNode<?> fooLibNode;
+  private TargetNode<?> fooBinBinaryNode;
+  private TargetNode<?> fooBinNode;
+  private TargetNode<?> bazLibNode;
+  private TargetNode<?> bazTestNode;
+  private TargetNode<?> fooTestNode;
+  private TargetNode<?> fooBinTestNode;
+  private TargetNode<?> quxBinNode;
+  private TargetNode<?> workspaceNode;
+  private TargetNode<?> workspaceExtraTestNode;
+  private TargetNode<?> smallWorkspaceNode;
 
   private TargetGraph targetGraph;
 

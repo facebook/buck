@@ -43,7 +43,7 @@ public interface Parser {
 
   DaemonicParserState getPermState();
 
-  ImmutableSet<TargetNode<?, ?>> getAllTargetNodes(
+  ImmutableSet<TargetNode<?>> getAllTargetNodes(
       BuckEventBus eventBus,
       Cell cell,
       boolean enableProfiling,
@@ -51,7 +51,7 @@ public interface Parser {
       Path buildFile)
       throws BuildFileParseException;
 
-  TargetNode<?, ?> getTargetNode(
+  TargetNode<?> getTargetNode(
       BuckEventBus eventBus,
       Cell cell,
       boolean enableProfiling,
@@ -59,15 +59,15 @@ public interface Parser {
       BuildTarget target)
       throws BuildFileParseException;
 
-  TargetNode<?, ?> getTargetNode(PerBuildState perBuildState, BuildTarget target)
+  TargetNode<?> getTargetNode(PerBuildState perBuildState, BuildTarget target)
       throws BuildFileParseException;
 
-  ListenableFuture<TargetNode<?, ?>> getTargetNodeJob(
-      PerBuildState perBuildState, BuildTarget target) throws BuildTargetException;
+  ListenableFuture<TargetNode<?>> getTargetNodeJob(PerBuildState perBuildState, BuildTarget target)
+      throws BuildTargetException;
 
   @Nullable
   SortedMap<String, Object> getTargetNodeRawAttributes(
-      PerBuildState state, Cell cell, TargetNode<?, ?> targetNode) throws BuildFileParseException;
+      PerBuildState state, Cell cell, TargetNode<?> targetNode) throws BuildFileParseException;
 
   /**
    * @deprecated Prefer {@link #getTargetNodeRawAttributes(PerBuildState, Cell, TargetNode)} and
@@ -80,7 +80,7 @@ public interface Parser {
       Cell cell,
       boolean enableProfiling,
       ListeningExecutorService executor,
-      TargetNode<?, ?> targetNode)
+      TargetNode<?> targetNode)
       throws BuildFileParseException;
 
   TargetGraph buildTargetGraph(

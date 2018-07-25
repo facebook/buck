@@ -83,8 +83,8 @@ public class ActionGraphCacheTest {
   private static final boolean CHECK_GRAPHS = true;
   private static final boolean NOT_CHECK_GRAPHS = false;
 
-  private TargetNode<?, ?> nodeA;
-  private TargetNode<?, ?> nodeB;
+  private TargetNode<?> nodeA;
+  private TargetNode<?> nodeB;
   private TargetGraph targetGraph1;
   private TargetGraph targetGraph2;
 
@@ -524,9 +524,9 @@ public class ActionGraphCacheTest {
       CloseableMemoizedSupplier<ForkJoinPool> poolSupplier) {
     ActionGraphCache cache = new ActionGraphCache(1);
 
-    TargetNode<?, ?> originalNode3 = createCacheableTargetNode("C");
-    TargetNode<?, ?> originalNode2 = createCacheableTargetNode("B", originalNode3);
-    TargetNode<?, ?> originalNode1 = createCacheableTargetNode("A", originalNode2);
+    TargetNode<?> originalNode3 = createCacheableTargetNode("C");
+    TargetNode<?> originalNode2 = createCacheableTargetNode("B", originalNode3);
+    TargetNode<?> originalNode1 = createCacheableTargetNode("A", originalNode2);
     targetGraph1 = TargetGraphFactory.newInstance(originalNode1, originalNode2, originalNode3);
 
     ActionGraphAndBuilder originalResult =
@@ -550,10 +550,10 @@ public class ActionGraphCacheTest {
     BuildRule originalBuildRule3 =
         originalResult.getActionGraphBuilder().getRule(originalNode3.getBuildTarget());
 
-    TargetNode<?, ?> newNode4 = createCacheableTargetNode("D");
-    TargetNode<?, ?> newNode3 = createCacheableTargetNode("C");
-    TargetNode<?, ?> newNode2 = createCacheableTargetNode("B", newNode3);
-    TargetNode<?, ?> newNode1 = createCacheableTargetNode("A", newNode2, newNode4);
+    TargetNode<?> newNode4 = createCacheableTargetNode("D");
+    TargetNode<?> newNode3 = createCacheableTargetNode("C");
+    TargetNode<?> newNode2 = createCacheableTargetNode("B", newNode3);
+    TargetNode<?> newNode1 = createCacheableTargetNode("A", newNode2, newNode4);
     targetGraph2 = TargetGraphFactory.newInstance(newNode1, newNode2, newNode3, newNode4);
 
     ActionGraphAndBuilder newResult =
@@ -578,17 +578,17 @@ public class ActionGraphCacheTest {
         originalBuildRule3, newResult.getActionGraphBuilder().getRule(newNode3.getBuildTarget()));
   }
 
-  private TargetNode<?, ?> createCacheableTargetNode(String name, TargetNode<?, ?>... deps) {
+  private TargetNode<?> createCacheableTargetNode(String name, TargetNode<?>... deps) {
     return FakeTargetNodeBuilder.newBuilder(BuildTargetFactory.newInstance("//foo:" + name))
         .setDeps(deps)
         .setProducesCacheableSubgraph(true)
         .build();
   }
 
-  private TargetNode<?, ?> createTargetNode(String name, TargetNode<?, ?>... deps) {
+  private TargetNode<?> createTargetNode(String name, TargetNode<?>... deps) {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:" + name);
     JavaLibraryBuilder targetNodeBuilder = JavaLibraryBuilder.createBuilder(buildTarget);
-    for (TargetNode<?, ?> dep : deps) {
+    for (TargetNode<?> dep : deps) {
       targetNodeBuilder.addDep(dep.getBuildTarget());
     }
     return targetNodeBuilder.build();

@@ -32,7 +32,7 @@ public interface TargetNodeSpec {
   TargetType getTargetType();
 
   /** @return the targets which should be built according to this spec */
-  ImmutableMap<BuildTarget, Optional<TargetNode<?, ?>>> filter(Iterable<TargetNode<?, ?>> nodes);
+  ImmutableMap<BuildTarget, Optional<TargetNode<?>>> filter(Iterable<TargetNode<?>> nodes);
 
   /**
    * @return a {@link BuildFileSpec} representing the build files to parse to search for explicit

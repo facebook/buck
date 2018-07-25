@@ -60,7 +60,7 @@ public class DefaultParserTargetNodeFactory
   private final KnownBuildRuleTypesProvider knownBuildRuleTypesProvider;
   private final ConstructorArgMarshaller marshaller;
   private final PackageBoundaryChecker packageBoundaryChecker;
-  private final TargetNodeListener<TargetNode<?, ?>> nodeListener;
+  private final TargetNodeListener<TargetNode<?>> nodeListener;
   private final TargetNodeFactory targetNodeFactory;
   private final VisibilityPatternFactory visibilityPatternFactory;
   private final RuleKeyConfiguration ruleKeyConfiguration;
@@ -70,7 +70,7 @@ public class DefaultParserTargetNodeFactory
       KnownBuildRuleTypesProvider knownBuildRuleTypesProvider,
       ConstructorArgMarshaller marshaller,
       PackageBoundaryChecker packageBoundaryChecker,
-      TargetNodeListener<TargetNode<?, ?>> nodeListener,
+      TargetNodeListener<TargetNode<?>> nodeListener,
       TargetNodeFactory targetNodeFactory,
       VisibilityPatternFactory visibilityPatternFactory,
       RuleKeyConfiguration ruleKeyConfiguration,
@@ -89,7 +89,7 @@ public class DefaultParserTargetNodeFactory
       KnownBuildRuleTypesProvider knownBuildRuleTypesProvider,
       ConstructorArgMarshaller marshaller,
       LoadingCache<Cell, BuildFileTree> buildFileTrees,
-      TargetNodeListener<TargetNode<?, ?>> nodeListener,
+      TargetNodeListener<TargetNode<?>> nodeListener,
       TargetNodeFactory targetNodeFactory,
       VisibilityPatternFactory visibilityPatternFactory,
       RuleKeyConfiguration ruleKeyConfiguration) {
@@ -124,7 +124,7 @@ public class DefaultParserTargetNodeFactory
   }
 
   @Override
-  public TargetNode<?, ?> createTargetNode(
+  public TargetNode<?> createTargetNode(
       Cell cell,
       Path buildFile,
       BuildTarget target,
@@ -183,7 +183,7 @@ public class DefaultParserTargetNodeFactory
     }
   }
 
-  private TargetNode<?, ?> createTargetNodeFromObject(
+  private TargetNode<?> createTargetNodeFromObject(
       Cell cell,
       Path buildFile,
       BuildTarget target,
@@ -196,7 +196,7 @@ public class DefaultParserTargetNodeFactory
       Function<PerfEventId, SimplePerfEvent.Scope> perfEventScope)
       throws IOException {
     try (SimplePerfEvent.Scope scope = perfEventScope.apply(PerfEventId.of("CreatedTargetNode"))) {
-      TargetNode<?, ?> node =
+      TargetNode<?> node =
           targetNodeFactory.createFromObject(
               hashRawNode(rawNode),
               description,

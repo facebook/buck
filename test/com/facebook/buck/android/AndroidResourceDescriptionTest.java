@@ -173,7 +173,7 @@ public class AndroidResourceDescriptionTest {
     filesystem.createNewFile(Paths.get("assets/picasa.ini"));
 
     BuildTarget target = BuildTargetFactory.newInstance("//:res");
-    TargetNode<?, ?> targetNode =
+    TargetNode<?> targetNode =
         AndroidResourceBuilder.createBuilder(target, filesystem)
             .setRDotJavaPackage("com.example")
             .setRes(FakeSourcePath.of(filesystem, "res"))

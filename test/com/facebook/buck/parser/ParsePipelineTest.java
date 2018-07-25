@@ -122,7 +122,7 @@ public class ParsePipelineTest {
   public void speculativeDepsTraversal() throws Exception {
     Fixture fixture = createMultiThreadedFixture("pipeline_test");
     Cell cell = fixture.getCell();
-    TargetNode<?, ?> libTargetNode =
+    TargetNode<?> libTargetNode =
         fixture
             .getTargetNodeParsePipeline()
             .getNode(
@@ -142,7 +142,7 @@ public class ParsePipelineTest {
   public void speculativeDepsTraversalWhenGettingAllNodes() throws Exception {
     Fixture fixture = createMultiThreadedFixture("pipeline_test");
     Cell cell = fixture.getCell();
-    ImmutableSet<TargetNode<?, ?>> libTargetNodes =
+    ImmutableSet<TargetNode<?>> libTargetNodes =
         fixture
             .getTargetNodeParsePipeline()
             .getAllNodes(cell, fixture.getCell().getFilesystem().resolve("BUCK"), new AtomicLong());
@@ -361,8 +361,7 @@ public class ParsePipelineTest {
     private final ProjectBuildFileParserPool projectBuildFileParserPool;
     private final Cell cell;
     private final KnownBuildRuleTypes knownBuildRuleTypes;
-    private final TypedParsePipelineCache<BuildTarget, TargetNode<?, ?>>
-        targetNodeParsePipelineCache;
+    private final TypedParsePipelineCache<BuildTarget, TargetNode<?>> targetNodeParsePipelineCache;
     private final RawNodeParsePipelineCache rawNodeParsePipelineCache;
     private final ListeningExecutorService executorService;
     private final Set<CloseRecordingProjectBuildFileParserDecorator> projectBuildFileParsers;
@@ -411,7 +410,7 @@ public class ParsePipelineTest {
                 return buildFileParser;
               },
               false);
-      TargetNodeListener<TargetNode<?, ?>> nodeListener = (buildFile, node) -> {};
+      TargetNodeListener<TargetNode<?>> nodeListener = (buildFile, node) -> {};
       LoadingCache<Cell, BuildFileTree> buildFileTrees =
           CacheBuilder.newBuilder()
               .build(
@@ -463,8 +462,7 @@ public class ParsePipelineTest {
       return knownBuildRuleTypes;
     }
 
-    public TypedParsePipelineCache<BuildTarget, TargetNode<?, ?>>
-        getTargetNodeParsePipelineCache() {
+    public TypedParsePipelineCache<BuildTarget, TargetNode<?>> getTargetNodeParsePipelineCache() {
       return targetNodeParsePipelineCache;
     }
 

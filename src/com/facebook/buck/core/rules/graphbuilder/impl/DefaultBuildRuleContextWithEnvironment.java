@@ -50,7 +50,7 @@ public abstract class DefaultBuildRuleContextWithEnvironment
   }
 
   /** @return the {@link TargetNode} of the current desired {@link BuildRule} */
-  protected TargetNode<?, ?> getCurrentNode() {
+  protected TargetNode<?> getCurrentNode() {
     return getKey().getTargetNode();
   }
 

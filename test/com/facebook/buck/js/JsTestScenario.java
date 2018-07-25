@@ -91,7 +91,7 @@ public class JsTestScenario {
   }
 
   public static class Builder {
-    private final Set<TargetNode<?, ?>> nodes = new LinkedHashSet<>();
+    private final Set<TargetNode<?>> nodes = new LinkedHashSet<>();
     private final BuildTarget workerTarget;
     private final ProjectFilesystem filesystem;
 
@@ -249,7 +249,7 @@ public class JsTestScenario {
     public JsTestScenario build() {
       TargetGraph graph = TargetGraphFactory.newInstance(nodes);
       ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(graph);
-      for (TargetNode<?, ?> node : nodes) {
+      for (TargetNode<?> node : nodes) {
         graphBuilder.requireRule(node.getBuildTarget());
       }
       return new JsTestScenario(graph, graphBuilder, workerTarget, filesystem);

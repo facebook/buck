@@ -49,7 +49,7 @@ public class AndroidLibraryModuleRule extends AndroidModuleRule<AndroidLibraryDe
 
   @Override
   public void apply(
-      TargetNode<AndroidLibraryDescription.CoreArg, ?> target, ModuleBuildContext context) {
+      TargetNode<AndroidLibraryDescription.CoreArg> target, ModuleBuildContext context) {
     super.apply(target, context);
     addDepsAndSources(target, true /* wantsPackagePrefix */, context);
     JavaLibraryRuleHelper.addCompiledShadowIfNeeded(projectConfig, target, context);
@@ -78,7 +78,7 @@ public class AndroidLibraryModuleRule extends AndroidModuleRule<AndroidLibraryDe
 
   @Override
   public void applyDuringAggregation(
-      AggregationContext context, TargetNode<AndroidLibraryDescription.CoreArg, ?> targetNode) {
+      AggregationContext context, TargetNode<AndroidLibraryDescription.CoreArg> targetNode) {
     super.applyDuringAggregation(context, targetNode);
 
     Optional<String> languageLevel =
@@ -89,8 +89,7 @@ public class AndroidLibraryModuleRule extends AndroidModuleRule<AndroidLibraryDe
   }
 
   @Override
-  public IjModuleType detectModuleType(
-      TargetNode<AndroidLibraryDescription.CoreArg, ?> targetNode) {
+  public IjModuleType detectModuleType(TargetNode<AndroidLibraryDescription.CoreArg> targetNode) {
     return IjModuleType.ANDROID_MODULE;
   }
 }

@@ -48,8 +48,7 @@ public class AndroidResourceModuleRule extends AndroidModuleRule<AndroidResource
   }
 
   @Override
-  public void apply(
-      TargetNode<AndroidResourceDescriptionArg, ?> target, ModuleBuildContext context) {
+  public void apply(TargetNode<AndroidResourceDescriptionArg> target, ModuleBuildContext context) {
     super.apply(target, context);
 
     IjModuleAndroidFacet.Builder androidFacetBuilder = context.getOrCreateAndroidFacetBuilder();
@@ -92,13 +91,13 @@ public class AndroidResourceModuleRule extends AndroidModuleRule<AndroidResource
   }
 
   @Override
-  public IjModuleType detectModuleType(TargetNode<AndroidResourceDescriptionArg, ?> targetNode) {
+  public IjModuleType detectModuleType(TargetNode<AndroidResourceDescriptionArg> targetNode) {
     return IjModuleType.ANDROID_RESOURCES_MODULE;
   }
 
   @Override
   public void applyDuringAggregation(
-      AggregationContext context, TargetNode<AndroidResourceDescriptionArg, ?> targetNode) {
+      AggregationContext context, TargetNode<AndroidResourceDescriptionArg> targetNode) {
     super.applyDuringAggregation(context, targetNode);
     context.addAggregationKey("package", targetNode.getConstructorArg().getPackage());
   }

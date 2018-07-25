@@ -34,13 +34,13 @@ public class AndroidLibraryTest {
   @Test
   public void testAndroidAnnotation() {
     BuildTarget processorTarget = BuildTargetFactory.newInstance("//java/processor:processor");
-    TargetNode<?, ?> processorNode =
+    TargetNode<?> processorNode =
         JavaLibraryBuilder.createBuilder(processorTarget)
             .addSrc(Paths.get("java/processor/processor.java"))
             .build();
 
     BuildTarget libTarget = BuildTargetFactory.newInstance("//java/lib:lib");
-    TargetNode<?, ?> libraryNode =
+    TargetNode<?> libraryNode =
         AndroidLibraryBuilder.createBuilder(libTarget)
             .addProcessor("MyProcessor")
             .addProcessorBuildTarget(processorNode.getBuildTarget())

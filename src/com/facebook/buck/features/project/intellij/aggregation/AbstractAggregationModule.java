@@ -36,7 +36,7 @@ abstract class AbstractAggregationModule {
 
   @SuppressWarnings(
       "rawtypes") // https://github.com/immutables/immutables/issues/548 requires us to use
-  // TargetNode not TargetNode<?, ?>
+  // TargetNode not TargetNode<?>
   public abstract ImmutableSet<TargetNode> getTargets();
 
   /**

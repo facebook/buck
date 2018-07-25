@@ -25,9 +25,8 @@ import com.google.common.collect.ImmutableSet;
  * <p>Primarily just used to break dependency between TargetNode and TargetNodeFactory.
  */
 public interface NodeCopier {
-  <T, U extends DescriptionWithTargetGraph<T>> TargetNode<T, U> copyNodeWithDescription(
-      TargetNode<?, ?> node, U description);
+  <T> TargetNode<T> copyNodeWithDescription(
+      TargetNode<?> node, DescriptionWithTargetGraph<T> description);
 
-  <T, U extends DescriptionWithTargetGraph<T>> TargetNode<T, U> copyNodeWithFlavors(
-      TargetNode<T, U> node, ImmutableSet<Flavor> flavors);
+  <T> TargetNode<T> copyNodeWithFlavors(TargetNode<T> node, ImmutableSet<Flavor> flavors);
 }

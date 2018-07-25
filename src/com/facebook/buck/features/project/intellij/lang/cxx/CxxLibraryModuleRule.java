@@ -42,7 +42,7 @@ public class CxxLibraryModuleRule extends BaseIjModuleRule<CxxLibraryDescription
   }
 
   @Override
-  public void apply(TargetNode<CxxLibraryDescriptionArg, ?> target, ModuleBuildContext context) {
+  public void apply(TargetNode<CxxLibraryDescriptionArg> target, ModuleBuildContext context) {
     addSourceFolders(
         SourceFolder.FACTORY,
         getSourceFoldersToInputsIndex(target.getInputs()),
@@ -51,7 +51,7 @@ public class CxxLibraryModuleRule extends BaseIjModuleRule<CxxLibraryDescription
   }
 
   @Override
-  public IjModuleType detectModuleType(TargetNode<CxxLibraryDescriptionArg, ?> targetNode) {
+  public IjModuleType detectModuleType(TargetNode<CxxLibraryDescriptionArg> targetNode) {
     return IjModuleType.UNKNOWN_MODULE;
   }
 }

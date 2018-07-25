@@ -29,12 +29,10 @@ import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.DefaultBuckEventBus;
 import com.facebook.buck.features.python.PythonTestBuilder;
-import com.facebook.buck.features.python.PythonTestDescription;
 import com.facebook.buck.features.python.PythonTestDescriptionArg;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.shell.ExportFileBuilder;
-import com.facebook.buck.shell.ExportFileDescription;
 import com.facebook.buck.shell.ExportFileDescriptionArg;
 import com.facebook.buck.util.cache.CacheStats;
 import com.facebook.buck.util.cache.InstrumentingCacheStatsTracker;
@@ -193,21 +191,21 @@ public class VersionedTargetGraphCacheTest {
   }
 
   private TargetGraphAndBuildTargets createSimpleGraph(String basePath) {
-    TargetNode<?, ?> root = new VersionRootBuilder(String.format("//%s:root", basePath)).build();
-    TargetNode<ExportFileDescriptionArg, ExportFileDescription> v1 =
+    TargetNode<?> root = new VersionRootBuilder(String.format("//%s:root", basePath)).build();
+    TargetNode<ExportFileDescriptionArg> v1 =
         new ExportFileBuilder(BuildTargetFactory.newInstance(String.format("//%s:v1", basePath)))
             .build();
-    TargetNode<ExportFileDescriptionArg, ExportFileDescription> v2 =
+    TargetNode<ExportFileDescriptionArg> v2 =
         new ExportFileBuilder(BuildTargetFactory.newInstance(String.format("//%s:v2", basePath)))
             .build();
-    TargetNode<VersionedAliasDescriptionArg, AbstractVersionedAliasDescription> alias =
+    TargetNode<VersionedAliasDescriptionArg> alias =
         new VersionedAliasBuilder(versionedAlias)
             .setVersions(
                 ImmutableMap.of(
                     version1, v1.getBuildTarget(),
                     version2, v2.getBuildTarget()))
             .build();
-    TargetNode<PythonTestDescriptionArg, PythonTestDescription> pythonTest =
+    TargetNode<PythonTestDescriptionArg> pythonTest =
         PythonTestBuilder.create(
                 BuildTargetFactory.newInstance(String.format("//%s:test", basePath)))
             .setDeps(ImmutableSortedSet.of(alias.getBuildTarget()))

@@ -284,20 +284,20 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
 
     BuildTarget libraryOneTarget = BuildTargetFactory.newInstance("//:libone");
-    TargetNode<?, ?> libraryOne =
+    TargetNode<?> libraryOne =
         createJavaLibraryBuilder(libraryOneTarget)
             .addSrc(Paths.get("java/src/com/libone/Bar.java"))
             .build();
 
     BuildTarget libraryTwoTarget = BuildTargetFactory.newInstance("//:libtwo");
-    TargetNode<?, ?> libraryTwo =
+    TargetNode<?> libraryTwo =
         createJavaLibraryBuilder(libraryTwoTarget)
             .addSrc(Paths.get("java/src/com/libtwo/Foo.java"))
             .addDep(libraryOne.getBuildTarget())
             .build();
 
     BuildTarget parentTarget = BuildTargetFactory.newInstance("//:parent");
-    TargetNode<?, ?> parent =
+    TargetNode<?> parent =
         createJavaLibraryBuilder(parentTarget)
             .addSrc(Paths.get("java/src/com/parent/Meh.java"))
             .addDep(libraryTwo.getBuildTarget())
@@ -323,20 +323,20 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
   @Test
   public void testGetClasspathDeps() {
     BuildTarget libraryOneTarget = BuildTargetFactory.newInstance("//:libone");
-    TargetNode<?, ?> libraryOne =
+    TargetNode<?> libraryOne =
         createJavaLibraryBuilder(libraryOneTarget)
             .addSrc(Paths.get("java/src/com/libone/Bar.java"))
             .build();
 
     BuildTarget libraryTwoTarget = BuildTargetFactory.newInstance("//:libtwo");
-    TargetNode<?, ?> libraryTwo =
+    TargetNode<?> libraryTwo =
         createJavaLibraryBuilder(libraryTwoTarget)
             .addSrc(Paths.get("java/src/com/libtwo/Foo.java"))
             .addDep(libraryOne.getBuildTarget())
             .build();
 
     BuildTarget parentTarget = BuildTargetFactory.newInstance("//:parent");
-    TargetNode<?, ?> parent =
+    TargetNode<?> parent =
         createJavaLibraryBuilder(parentTarget)
             .addSrc(Paths.get("java/src/com/parent/Meh.java"))
             .addDep(libraryTwo.getBuildTarget())
@@ -361,13 +361,13 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
   @Test
   public void testClasspathForJavacCommand() {
     BuildTarget libraryOneTarget = BuildTargetFactory.newInstance("//:libone");
-    TargetNode<?, ?> libraryOne =
+    TargetNode<?> libraryOne =
         createJavaLibraryBuilder(libraryOneTarget)
             .addSrc(Paths.get("java/src/com/libone/Bar.java"))
             .build();
 
     BuildTarget libraryTwoTarget = BuildTargetFactory.newInstance("//:libtwo");
-    TargetNode<?, ?> libraryTwo =
+    TargetNode<?> libraryTwo =
         createJavaLibraryBuilder(libraryTwoTarget)
             .addSrc(Paths.get("java/src/com/libtwo/Foo.java"))
             .addDep(libraryOne.getBuildTarget())
@@ -480,73 +480,73 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
   @Test
   public void testBuildDeps() {
     BuildTarget sourceDepExportFileTarget = BuildTargetFactory.newInstance("//:source_dep");
-    TargetNode<?, ?> sourceDepExportFileNode =
+    TargetNode<?> sourceDepExportFileNode =
         new ExportFileBuilder(sourceDepExportFileTarget).build();
 
     BuildTarget depExportFileTarget = BuildTargetFactory.newInstance("//:dep_file");
-    TargetNode<?, ?> depExportFileNode = new ExportFileBuilder(depExportFileTarget).build();
+    TargetNode<?> depExportFileNode = new ExportFileBuilder(depExportFileTarget).build();
 
     BuildTarget depLibraryExportedDepTarget =
         BuildTargetFactory.newInstance("//:dep_library_exported_dep");
-    TargetNode<?, ?> depLibraryExportedDepNode =
+    TargetNode<?> depLibraryExportedDepNode =
         createJavaLibraryBuilder(depLibraryExportedDepTarget)
             .addSrc(Paths.get("DepExportedDep.java"))
             .build();
     BuildTarget depLibraryTarget = BuildTargetFactory.newInstance("//:dep_library");
-    TargetNode<?, ?> depLibraryNode =
+    TargetNode<?> depLibraryNode =
         createJavaLibraryBuilder(depLibraryTarget)
             .addSrc(Paths.get("Dep.java"))
             .addExportedDep(depLibraryExportedDepTarget)
             .build();
     BuildTarget depProvidedDepLibraryTarget =
         BuildTargetFactory.newInstance("//:dep_provided_dep_library");
-    TargetNode<?, ?> depProvidedDepLibraryNode =
+    TargetNode<?> depProvidedDepLibraryNode =
         createJavaLibraryBuilder(depProvidedDepLibraryTarget)
             .addSrc(Paths.get("DepProvidedDep.java"))
             .build();
 
     BuildTarget exportedDepLibraryExportedDepTarget =
         BuildTargetFactory.newInstance("//:exported_dep_library_exported_dep");
-    TargetNode<?, ?> exportedDepLibraryExportedDepNode =
+    TargetNode<?> exportedDepLibraryExportedDepNode =
         createJavaLibraryBuilder(exportedDepLibraryExportedDepTarget)
             .addSrc(Paths.get("ExportedDepExportedDep.java"))
             .build();
     BuildTarget exportedDepLibraryTarget =
         BuildTargetFactory.newInstance("//:exported_dep_library");
-    TargetNode<?, ?> exportedDepLibraryNode =
+    TargetNode<?> exportedDepLibraryNode =
         createJavaLibraryBuilder(exportedDepLibraryTarget)
             .addSrc(Paths.get("ExportedDep.java"))
             .addExportedDep(exportedDepLibraryExportedDepTarget)
             .build();
     BuildTarget exportedProvidedDepLibraryTarget =
         BuildTargetFactory.newInstance("//:exported_provided_dep_library");
-    TargetNode<?, ?> exportedProvidedDepLibraryNode =
+    TargetNode<?> exportedProvidedDepLibraryNode =
         createJavaLibraryBuilder(exportedProvidedDepLibraryTarget)
             .addSrc(Paths.get("ExportedProvidedDep.java"))
             .build();
 
     BuildTarget providedDepLibraryExportedDepTarget =
         BuildTargetFactory.newInstance("//:provided_dep_library_exported_dep");
-    TargetNode<?, ?> providedDepLibraryExportedDepNode =
+    TargetNode<?> providedDepLibraryExportedDepNode =
         createJavaLibraryBuilder(providedDepLibraryExportedDepTarget)
             .addSrc(Paths.get("ProvidedDepExportedDep.java"))
             .build();
     BuildTarget providedDepLibraryTarget =
         BuildTargetFactory.newInstance("//:provided_dep_library");
-    TargetNode<?, ?> providedDepLibraryNode =
+    TargetNode<?> providedDepLibraryNode =
         createJavaLibraryBuilder(providedDepLibraryTarget)
             .addSrc(Paths.get("ProvidedDep.java"))
             .addExportedDep(providedDepLibraryExportedDepTarget)
             .build();
 
     BuildTarget resourceDepPrebuiltJarTarget = BuildTargetFactory.newInstance("//:resource_dep");
-    TargetNode<?, ?> resourceDepPrebuiltJarNode =
+    TargetNode<?> resourceDepPrebuiltJarNode =
         PrebuiltJarBuilder.createBuilder(resourceDepPrebuiltJarTarget)
             .setBinaryJar(Paths.get("binary.jar"))
             .build();
 
     BuildTarget libraryTarget = BuildTargetFactory.newInstance("//:lib");
-    TargetNode<?, ?> libraryNode =
+    TargetNode<?> libraryNode =
         createJavaLibraryBuilder(libraryTarget)
             .addSrc(DefaultBuildTargetSourcePath.of(sourceDepExportFileTarget))
             .addDep(depLibraryTarget)
@@ -636,19 +636,19 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
 
     BuildTarget nonIncludedTarget = BuildTargetFactory.newInstance("//:not_included");
-    TargetNode<?, ?> notIncludedNode =
+    TargetNode<?> notIncludedNode =
         createJavaLibraryBuilder(nonIncludedTarget)
             .addSrc(Paths.get("java/src/com/not_included/Raz.java"))
             .build();
 
     BuildTarget includedTarget = BuildTargetFactory.newInstance("//:included");
-    TargetNode<?, ?> includedNode =
+    TargetNode<?> includedNode =
         createJavaLibraryBuilder(includedTarget)
             .addSrc(Paths.get("java/src/com/included/Rofl.java"))
             .build();
 
     BuildTarget libraryOneTarget = BuildTargetFactory.newInstance("//:libone");
-    TargetNode<?, ?> libraryOneNode =
+    TargetNode<?> libraryOneNode =
         createJavaLibraryBuilder(libraryOneTarget)
             .addDep(notIncludedNode.getBuildTarget())
             .addDep(includedNode.getBuildTarget())
@@ -657,7 +657,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
             .build();
 
     BuildTarget libraryTwoTarget = BuildTargetFactory.newInstance("//:libtwo");
-    TargetNode<?, ?> libraryTwoNode =
+    TargetNode<?> libraryTwoNode =
         createJavaLibraryBuilder(libraryTwoTarget)
             .addSrc(Paths.get("java/src/com/libtwo/Foo.java"))
             .addDep(libraryOneNode.getBuildTarget())
@@ -665,7 +665,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
             .build();
 
     BuildTarget parentTarget = BuildTargetFactory.newInstance("//:parent");
-    TargetNode<?, ?> parentNode =
+    TargetNode<?> parentNode =
         createJavaLibraryBuilder(parentTarget)
             .addSrc(Paths.get("java/src/com/parent/Meh.java"))
             .addDep(libraryTwoNode.getBuildTarget())
@@ -922,11 +922,11 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
 
     // Setup a Java library which builds against another Java library dep.
-    TargetNode<JavaLibraryDescriptionArg, ?> depNode =
+    TargetNode<JavaLibraryDescriptionArg> depNode =
         createJavaLibraryBuilder(BuildTargetFactory.newInstance("//:dep"), filesystem)
             .addSrc(Paths.get("Source.java"))
             .build();
-    TargetNode<?, ?> libraryNode =
+    TargetNode<?> libraryNode =
         createJavaLibraryBuilder(BuildTargetFactory.newInstance("//:lib"), filesystem)
             .addDep(depNode.getBuildTarget())
             .build();
@@ -1009,15 +1009,15 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
     // Setup a Java library which builds against another Java library dep exporting another Java
     // library dep.
 
-    TargetNode<JavaLibraryDescriptionArg, ?> exportedDepNode =
+    TargetNode<JavaLibraryDescriptionArg> exportedDepNode =
         createJavaLibraryBuilder(BuildTargetFactory.newInstance("//:edep"), filesystem)
             .addSrc(Paths.get("Source1.java"))
             .build();
-    TargetNode<?, ?> depNode =
+    TargetNode<?> depNode =
         createJavaLibraryBuilder(BuildTargetFactory.newInstance("//:dep"), filesystem)
             .addExportedDep(exportedDepNode.getBuildTarget())
             .build();
-    TargetNode<?, ?> libraryNode =
+    TargetNode<?> libraryNode =
         createJavaLibraryBuilder(BuildTargetFactory.newInstance("//:lib"), filesystem)
             .addDep(depNode.getBuildTarget())
             .build();
@@ -1104,19 +1104,19 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
 
     // Setup a Java library which builds against another Java library dep exporting another Java
     // library dep.
-    TargetNode<JavaLibraryDescriptionArg, ?> exportedDepNode =
+    TargetNode<JavaLibraryDescriptionArg> exportedDepNode =
         createJavaLibraryBuilder(BuildTargetFactory.newInstance("//:edep"), filesystem)
             .addSrc(Paths.get("Source1.java"))
             .build();
-    TargetNode<?, ?> dep2Node =
+    TargetNode<?> dep2Node =
         createJavaLibraryBuilder(BuildTargetFactory.newInstance("//:dep2"), filesystem)
             .addExportedDep(exportedDepNode.getBuildTarget())
             .build();
-    TargetNode<?, ?> dep1Node =
+    TargetNode<?> dep1Node =
         createJavaLibraryBuilder(BuildTargetFactory.newInstance("//:dep1"), filesystem)
             .addExportedDep(dep2Node.getBuildTarget())
             .build();
-    TargetNode<?, ?> libraryNode =
+    TargetNode<?> libraryNode =
         createJavaLibraryBuilder(BuildTargetFactory.newInstance("//:lib"), filesystem)
             .addDep(dep1Node.getBuildTarget())
             .build();
@@ -1338,11 +1338,11 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
   public void testWhenJavacJarIsProvidedAJavacInMemoryStepIsAdded() {
     BuildTarget libraryOneTarget = BuildTargetFactory.newInstance("//:libone");
     BuildTarget javacTarget = BuildTargetFactory.newInstance("//langtools:javac");
-    TargetNode<?, ?> javacNode =
+    TargetNode<?> javacNode =
         PrebuiltJarBuilder.createBuilder(javacTarget)
             .setBinaryJar(Paths.get("java/src/com/libone/JavacJar.jar"))
             .build();
-    TargetNode<?, ?> ruleNode =
+    TargetNode<?> ruleNode =
         createJavaLibraryBuilder(libraryOneTarget)
             .addSrc(Paths.get("java/src/com/libone/Bar.java"))
             .setCompiler(DefaultBuildTargetSourcePath.of(javacTarget))

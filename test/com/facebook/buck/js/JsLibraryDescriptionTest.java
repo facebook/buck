@@ -378,7 +378,7 @@ public class JsLibraryDescriptionTest {
                 FakeSourcePath.of("arbitrary/source"))
             .build();
 
-    TargetNode<?, ?> node = scenario.targetGraph.get(target);
+    TargetNode<?> node = scenario.targetGraph.get(target);
     assertThat(x, in(node.getBuildDeps()));
 
     JsLibrary lib = scenario.graphBuilder.getRuleWithType(target, JsLibrary.class);
@@ -422,7 +422,7 @@ public class JsLibraryDescriptionTest {
                 FakeSourcePath.of("arbitrary/source"))
             .build();
 
-    TargetNode<?, ?> node = scenario.targetGraph.get(target);
+    TargetNode<?> node = scenario.targetGraph.get(target);
     assertThat(x, in(node.getBuildDeps()));
 
     JsLibrary lib = scenario.graphBuilder.getRuleWithType(target, JsLibrary.class);

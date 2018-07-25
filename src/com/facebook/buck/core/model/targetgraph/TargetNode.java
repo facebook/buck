@@ -40,8 +40,7 @@ import java.util.stream.Stream;
  * responsible for processing the raw (python) inputs of a build rule, and gathering any build
  * targets and paths referenced from those inputs.
  */
-public interface TargetNode<T, U extends DescriptionWithTargetGraph<T>>
-    extends Comparable<TargetNode<?, ?>>, ObeysVisibility, HasBuildTarget {
+public interface TargetNode<T> extends Comparable<TargetNode<?>>, ObeysVisibility, HasBuildTarget {
 
   @Override
   BuildTarget getBuildTarget();
@@ -51,7 +50,7 @@ public interface TargetNode<T, U extends DescriptionWithTargetGraph<T>>
   /** @return A hash of the raw input from the build file used to construct the node. */
   HashCode getRawInputsHashCode();
 
-  U getDescription();
+  DescriptionWithTargetGraph<T> getDescription();
 
   T getConstructorArg();
 
@@ -100,13 +99,13 @@ public interface TargetNode<T, U extends DescriptionWithTargetGraph<T>>
    */
   Stream<BuildTarget> getBuildDepsStream();
 
-  boolean isVisibleTo(TargetNode<?, ?> viewer);
+  boolean isVisibleTo(TargetNode<?> viewer);
 
-  void isVisibleToOrThrow(TargetNode<?, ?> viewer);
+  void isVisibleToOrThrow(TargetNode<?> viewer);
 
   RuleType getBuildRuleType();
 
-  TargetNode<T, U> copy();
+  TargetNode<T> copy();
 
   /**
    * This method copies this target node with applying logic in {@link
@@ -115,24 +114,24 @@ public interface TargetNode<T, U extends DescriptionWithTargetGraph<T>>
    *
    * <p>Note that this method strips away selected versions, and may be buggy because of it.
    */
-  TargetNode<T, U> copyWithFlavors(ImmutableSet<Flavor> flavors);
+  TargetNode<T> copyWithFlavors(ImmutableSet<Flavor> flavors);
 
   /**
    * This method copies this target node without applying logic in {@link
    * com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription}
    */
-  TargetNode<T, U> withFlavors(ImmutableSet<Flavor> flavors);
+  TargetNode<T> withFlavors(ImmutableSet<Flavor> flavors);
 
-  TargetNode<T, U> withBuildTarget(BuildTarget buildTarget);
+  TargetNode<T> withBuildTarget(BuildTarget buildTarget);
 
-  TargetNode<T, U> withConstructorArg(T constructorArg);
+  TargetNode<T> withConstructorArg(T constructorArg);
 
-  TargetNode<T, U> withDeclaredDeps(Iterable<? extends BuildTarget> declaredDeps);
+  TargetNode<T> withDeclaredDeps(Iterable<? extends BuildTarget> declaredDeps);
 
-  TargetNode<T, U> withExtraDeps(ImmutableSortedSet<BuildTarget> extraDeps);
+  TargetNode<T> withExtraDeps(ImmutableSortedSet<BuildTarget> extraDeps);
 
-  TargetNode<T, U> withTargetGraphOnlyDeps(ImmutableSortedSet<BuildTarget> targetGraphOnlyDeps);
+  TargetNode<T> withTargetGraphOnlyDeps(ImmutableSortedSet<BuildTarget> targetGraphOnlyDeps);
 
-  TargetNode<T, U> withSelectedVersions(
+  TargetNode<T> withSelectedVersions(
       Optional<? extends ImmutableMap<BuildTarget, Version>> selectedVersions);
 }

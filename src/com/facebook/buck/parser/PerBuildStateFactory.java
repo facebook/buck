@@ -68,7 +68,7 @@ public class PerBuildStateFactory {
     SymlinkCache symlinkCache = new SymlinkCache(eventBus, daemonicParserState);
     CellManager cellManager = new CellManager(symlinkCache);
 
-    TargetNodeListener<TargetNode<?, ?>> symlinkCheckers = cellManager::registerInputsUnderSymlinks;
+    TargetNodeListener<TargetNode<?>> symlinkCheckers = cellManager::registerInputsUnderSymlinks;
     ParserConfig parserConfig = rootCell.getBuckConfig().getView(ParserConfig.class);
     int numParsingThreads = parserConfig.getNumParsingThreads();
     DefaultProjectBuildFileParserFactory projectBuildFileParserFactory =
@@ -92,7 +92,7 @@ public class PerBuildStateFactory {
 
     AtomicLong parseProcessedBytes = new AtomicLong();
 
-    ParsePipeline<TargetNode<?, ?>> targetNodeParsePipeline;
+    ParsePipeline<TargetNode<?>> targetNodeParsePipeline;
 
     if (parserConfig.getEnableConfigurableAttributes()) {
       ListeningExecutorService pipelineExecutorService =

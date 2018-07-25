@@ -73,14 +73,14 @@ public class QueryTargetsMacroExpanderTest {
     handler = new MacroHandler(ImmutableMap.of("query_targets", expander));
     filesystem = new FakeProjectFilesystem(tmp.getRoot());
     cellNames = TestCellBuilder.createCellRoots(filesystem);
-    TargetNode<?, ?> depNode =
+    TargetNode<?> depNode =
         JavaLibraryBuilder.createBuilder(
                 BuildTargetFactory.newInstance(filesystem.getRootPath(), "//exciting:dep"),
                 filesystem)
             .addSrc(Paths.get("Dep.java"))
             .build();
 
-    TargetNode<?, ?> ruleNode =
+    TargetNode<?> ruleNode =
         JavaLibraryBuilder.createBuilder(
                 BuildTargetFactory.newInstance(filesystem.getRootPath(), "//exciting:target"),
                 filesystem)

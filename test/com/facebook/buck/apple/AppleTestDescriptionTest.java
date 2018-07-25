@@ -167,7 +167,7 @@ public class AppleTestDescriptionTest {
             .isUiTest(true)
             .setTestHostApp(Optional.of(testHostBundleTarget));
 
-    TargetNode<AppleTestDescriptionArg, AppleTestDescription> testNode = testBuilder.build();
+    TargetNode<AppleTestDescriptionArg> testNode = testBuilder.build();
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(
             testNode, testHostBundleBuilder.build(), testHostBinaryBuilder.build());
@@ -175,8 +175,7 @@ public class AppleTestDescriptionTest {
 
     // with app tests there is a binary to use as -bundle_loader linker arg
     TestHostInfo testHostInfo =
-        testNode
-            .getDescription()
+        ((AppleTestDescription) testNode.getDescription())
             .createTestHostInfo(
                 testTarget,
                 false,
@@ -191,8 +190,7 @@ public class AppleTestDescriptionTest {
 
     // with UITests there is no binary to use as -bundle_loader linker arg
     testHostInfo =
-        testNode
-            .getDescription()
+        ((AppleTestDescription) testNode.getDescription())
             .createTestHostInfo(
                 testTarget,
                 true,
@@ -245,7 +243,7 @@ public class AppleTestDescriptionTest {
             .setTestHostApp(Optional.of(testHostBundleTarget))
             .setUiTestTargetApp(Optional.of(uiTestTargetBundleTarget));
 
-    TargetNode<AppleTestDescriptionArg, AppleTestDescription> testNode = testBuilder.build();
+    TargetNode<AppleTestDescriptionArg> testNode = testBuilder.build();
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(
             testNode,
@@ -256,8 +254,7 @@ public class AppleTestDescriptionTest {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
 
     TestHostInfo testHostInfo =
-        testNode
-            .getDescription()
+        ((AppleTestDescription) testNode.getDescription())
             .createTestHostInfo(
                 testTarget,
                 false,
@@ -271,8 +268,7 @@ public class AppleTestDescriptionTest {
     assertFalse(testHostInfo.getUiTestTargetAppBinarySourcePath().isPresent());
 
     testHostInfo =
-        testNode
-            .getDescription()
+        ((AppleTestDescription) testNode.getDescription())
             .createTestHostInfo(
                 testTarget,
                 true,

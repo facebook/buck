@@ -76,15 +76,15 @@ public class PublisherTest {
         BuildTargetFactory.newInstance("//:b").withFlavors(JavaLibrary.MAVEN_JAR);
     BuildTarget targetC = BuildTargetFactory.newInstance("//:c");
 
-    TargetNode<?, ?> depNode =
+    TargetNode<?> depNode =
         JavaLibraryBuilder.createBuilder(targetC).addSrc(Paths.get("c.java")).build();
-    TargetNode<?, ?> publishableANode =
+    TargetNode<?> publishableANode =
         JavaLibraryBuilder.createBuilder(publishableTargetA)
             .addSrc(Paths.get("a.java"))
             .setMavenCoords(MVN_COORDS_A)
             .addDep(targetC)
             .build();
-    TargetNode<?, ?> publishableBNode =
+    TargetNode<?> publishableBNode =
         JavaLibraryBuilder.createBuilder(publishableTargetB)
             .addSrc(Paths.get("b.java"))
             .setMavenCoords(MVN_COORDS_B)
@@ -129,20 +129,20 @@ public class PublisherTest {
     BuildTarget targetC = BuildTargetFactory.newInstance("//:c");
     BuildTarget targetD = BuildTargetFactory.newInstance("//:d");
 
-    TargetNode<?, ?> transitiveDepNode =
+    TargetNode<?> transitiveDepNode =
         JavaLibraryBuilder.createBuilder(targetD).addSrc(Paths.get("d.java")).build();
-    TargetNode<?, ?> depNode =
+    TargetNode<?> depNode =
         JavaLibraryBuilder.createBuilder(targetC)
             .addSrc(Paths.get("c.java"))
             .addDep(targetD)
             .build();
-    TargetNode<?, ?> publishableANode =
+    TargetNode<?> publishableANode =
         JavaLibraryBuilder.createBuilder(publishableTargetA)
             .addSrc(Paths.get("a.java"))
             .setMavenCoords(MVN_COORDS_A)
             .addDep(targetC)
             .build();
-    TargetNode<?, ?> publishableBNode =
+    TargetNode<?> publishableBNode =
         JavaLibraryBuilder.createBuilder(publishableTargetB)
             .addSrc(Paths.get("b.java"))
             .setMavenCoords(MVN_COORDS_B)
@@ -189,25 +189,25 @@ public class PublisherTest {
     BuildTarget targetD = BuildTargetFactory.newInstance("//:d");
     BuildTarget targetE = BuildTargetFactory.newInstance("//:e");
 
-    TargetNode<?, ?> transitiveDepNode =
+    TargetNode<?> transitiveDepNode =
         JavaLibraryBuilder.createBuilder(targetE).addSrc(Paths.get("e.java")).build();
-    TargetNode<?, ?> dep1Node =
+    TargetNode<?> dep1Node =
         JavaLibraryBuilder.createBuilder(targetC)
             .addSrc(Paths.get("c.java"))
             .addDep(targetE)
             .build();
-    TargetNode<?, ?> dep2Node =
+    TargetNode<?> dep2Node =
         JavaLibraryBuilder.createBuilder(targetD)
             .addSrc(Paths.get("d.java"))
             .addDep(targetE)
             .build();
-    TargetNode<?, ?> publishableANode =
+    TargetNode<?> publishableANode =
         JavaLibraryBuilder.createBuilder(publishableTargetA)
             .addSrc(Paths.get("a.java"))
             .setMavenCoords(MVN_COORDS_A)
             .addDep(targetC)
             .build();
-    TargetNode<?, ?> publishableBNode =
+    TargetNode<?> publishableBNode =
         JavaLibraryBuilder.createBuilder(publishableTargetB)
             .addSrc(Paths.get("b.java"))
             .setMavenCoords(MVN_COORDS_B)

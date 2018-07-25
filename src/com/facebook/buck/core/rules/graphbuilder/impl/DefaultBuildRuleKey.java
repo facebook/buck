@@ -38,7 +38,7 @@ public abstract class DefaultBuildRuleKey implements BuildRuleKey {
   }
 
   @Override
-  public TargetNode<?, ?> getTargetNode() {
+  public TargetNode<?> getTargetNode() {
     return getTargetNodeWrapper().getTargetNode();
   }
 

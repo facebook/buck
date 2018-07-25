@@ -46,9 +46,8 @@ abstract class AbstractBuildTargetSpec implements TargetNodeSpec {
   }
 
   @Override
-  public ImmutableMap<BuildTarget, Optional<TargetNode<?, ?>>> filter(
-      Iterable<TargetNode<?, ?>> nodes) {
-    Optional<TargetNode<?, ?>> firstMatchingNode =
+  public ImmutableMap<BuildTarget, Optional<TargetNode<?>>> filter(Iterable<TargetNode<?>> nodes) {
+    Optional<TargetNode<?>> firstMatchingNode =
         StreamSupport.stream(nodes.spliterator(), false)
             .filter(
                 input ->

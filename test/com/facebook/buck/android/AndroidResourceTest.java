@@ -65,7 +65,7 @@ public class AndroidResourceTest {
           projectFilesystem.createNewFile(
               Paths.get("java/src/com/facebook/base/assets/drawable/B.xml"));
 
-          TargetNode<?, ?> resourceNode =
+          TargetNode<?> resourceNode =
               AndroidResourceBuilder.createBuilder(buildTarget, projectFilesystem)
                   .setRes(FakeSourcePath.of(projectFilesystem, "java/src/com/facebook/base/res"))
                   .setRDotJavaPackage("com.facebook")
@@ -177,12 +177,12 @@ public class AndroidResourceTest {
   public void testInputRuleKeyChangesIfDependencySymbolsChanges() throws Exception {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
 
-    TargetNode<?, ?> depNode =
+    TargetNode<?> depNode =
         AndroidResourceBuilder.createBuilder(BuildTargetFactory.newInstance("//:dep"), filesystem)
             .setManifest(FakeSourcePath.of("manifest"))
             .setRes(Paths.get("res"))
             .build();
-    TargetNode<?, ?> resourceNode =
+    TargetNode<?> resourceNode =
         AndroidResourceBuilder.createBuilder(BuildTargetFactory.newInstance("//:rule"), filesystem)
             .setDeps(ImmutableSortedSet.of(depNode.getBuildTarget()))
             .build();

@@ -84,7 +84,7 @@ public class JavaDepsFinder {
 
   /** Java dependency information that is extracted from a {@link TargetGraph}. */
   public static class DependencyInfo {
-    public final HashMultimap<String, TargetNode<?, ?>> symbolToProviders = HashMultimap.create();
+    public final HashMultimap<String, TargetNode<?>> symbolToProviders = HashMultimap.create();
   }
 
   public DependencyInfo findDependencyInfoForGraph(TargetGraph graph) {
@@ -95,7 +95,7 @@ public class JavaDepsFinder {
     // Currently, we traverse the entire target graph using a single thread. However, the work to
     // visit each node could be done in parallel, so long as the updates to the above collections
     // were thread-safe.
-    for (TargetNode<?, ?> node : graph.getNodes()) {
+    for (TargetNode<?> node : graph.getNodes()) {
       if (!RULES_TO_VISIT.contains(node.getBuildRuleType())) {
         continue;
       }
@@ -114,7 +114,7 @@ public class JavaDepsFinder {
     return dependencyInfo;
   }
 
-  private Symbols getJavaFileFeatures(TargetNode<?, ?> node) {
+  private Symbols getJavaFileFeatures(TargetNode<?> node) {
     // Build a JavaLibrarySymbolsFinder to create the JavaFileFeatures. By making use of Buck's
     // build cache, we can often avoid running a Java parser.
     BuildTarget buildTarget = node.getBuildTarget();

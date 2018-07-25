@@ -23,7 +23,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 public interface HasAppleBundleResourcesDescription<T> {
   void addAppleBundleResources(
       AppleBundleResources.Builder builder,
-      TargetNode<T, ?> targetNode,
+      TargetNode<T> targetNode,
       ProjectFilesystem filesystem,
       BuildRuleResolver resolver);
 }

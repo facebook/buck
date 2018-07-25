@@ -510,7 +510,7 @@ public class TestCommand extends BuildCommand {
 
           LOG.debug("Got explicit build targets %s", targetGraphAndBuildTargets.getBuildTargets());
           ImmutableSet.Builder<BuildTarget> testTargetsBuilder = ImmutableSet.builder();
-          for (TargetNode<?, ?> node :
+          for (TargetNode<?> node :
               targetGraphAndBuildTargets
                   .getTargetGraph()
                   .getAll(targetGraphAndBuildTargets.getBuildTargets())) {

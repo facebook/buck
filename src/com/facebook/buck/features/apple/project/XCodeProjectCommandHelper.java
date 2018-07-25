@@ -240,7 +240,7 @@ public class XCodeProjectCommandHelper {
     }
 
     if (dryRun) {
-      for (TargetNode<?, ?> targetNode : targetGraphAndTargets.getTargetGraph().getNodes()) {
+      for (TargetNode<?> targetNode : targetGraphAndTargets.getTargetGraph().getNodes()) {
         console.getStdOut().println(targetNode.toString());
       }
 
@@ -413,10 +413,10 @@ public class XCodeProjectCommandHelper {
     LOG.debug("Generating workspace for config targets %s", targets);
     ImmutableSet.Builder<BuildTarget> requiredBuildTargetsBuilder = ImmutableSet.builder();
     for (BuildTarget inputTarget : targets) {
-      TargetNode<?, ?> inputNode = targetGraphAndTargets.getTargetGraph().get(inputTarget);
+      TargetNode<?> inputNode = targetGraphAndTargets.getTargetGraph().get(inputTarget);
       XcodeWorkspaceConfigDescriptionArg workspaceArgs;
       if (inputNode.getDescription() instanceof XcodeWorkspaceConfigDescription) {
-        TargetNode<XcodeWorkspaceConfigDescriptionArg, ?> castedWorkspaceNode =
+        TargetNode<XcodeWorkspaceConfigDescriptionArg> castedWorkspaceNode =
             castToXcodeWorkspaceTargetNode(inputNode);
         workspaceArgs = castedWorkspaceNode.getConstructorArg();
       } else if (canGenerateImplicitWorkspaceForDescription(inputNode.getDescription())) {
@@ -518,11 +518,11 @@ public class XCodeProjectCommandHelper {
   }
 
   @SuppressWarnings(value = "unchecked")
-  private static TargetNode<XcodeWorkspaceConfigDescriptionArg, ?> castToXcodeWorkspaceTargetNode(
-      TargetNode<?, ?> targetNode) {
+  private static TargetNode<XcodeWorkspaceConfigDescriptionArg> castToXcodeWorkspaceTargetNode(
+      TargetNode<?> targetNode) {
     Preconditions.checkArgument(
         targetNode.getDescription() instanceof XcodeWorkspaceConfigDescription);
-    return (TargetNode<XcodeWorkspaceConfigDescriptionArg, ?>) targetNode;
+    return (TargetNode<XcodeWorkspaceConfigDescriptionArg>) targetNode;
   }
 
   private void checkForAndKillXcodeIfRunning(IDEForceKill forceKill)
@@ -625,7 +625,7 @@ public class XCodeProjectCommandHelper {
 
   @VisibleForTesting
   static ImmutableSet<BuildTarget> getRootsFromPredicate(
-      TargetGraph projectGraph, Predicate<TargetNode<?, ?>> rootsPredicate) {
+      TargetGraph projectGraph, Predicate<TargetNode<?>> rootsPredicate) {
     return projectGraph
         .getNodes()
         .stream()
@@ -717,11 +717,11 @@ public class XCodeProjectCommandHelper {
   @VisibleForTesting
   static ImmutableSet<BuildTarget> replaceWorkspacesWithSourceTargetsIfPossible(
       ImmutableSet<BuildTarget> buildTargets, TargetGraph projectGraph) {
-    Iterable<TargetNode<?, ?>> targetNodes = projectGraph.getAll(buildTargets);
+    Iterable<TargetNode<?>> targetNodes = projectGraph.getAll(buildTargets);
     ImmutableSet.Builder<BuildTarget> resultBuilder = ImmutableSet.builder();
-    for (TargetNode<?, ?> node : targetNodes) {
+    for (TargetNode<?> node : targetNodes) {
       if (node.getDescription() instanceof XcodeWorkspaceConfigDescription) {
-        TargetNode<XcodeWorkspaceConfigDescriptionArg, ?> castedWorkspaceNode =
+        TargetNode<XcodeWorkspaceConfigDescriptionArg> castedWorkspaceNode =
             castToXcodeWorkspaceTargetNode(node);
         Optional<BuildTarget> srcTarget = castedWorkspaceNode.getConstructorArg().getSrcTarget();
         if (srcTarget.isPresent()) {
@@ -752,7 +752,7 @@ public class XCodeProjectCommandHelper {
    *     tests
    */
   private static XcodeWorkspaceConfigDescriptionArg createImplicitWorkspaceArgs(
-      TargetNode<?, ?> sourceTargetNode) {
+      TargetNode<?> sourceTargetNode) {
     return XcodeWorkspaceConfigDescriptionArg.builder()
         .setName("dummy")
         .setSrcTarget(sourceTargetNode.getBuildTarget())
@@ -771,8 +771,8 @@ public class XCodeProjectCommandHelper {
       TargetGraph projectGraph,
       boolean shouldIncludeDependenciesTests,
       FocusedModuleTargetMatcher focusedModules) {
-    Iterable<TargetNode<?, ?>> projectRoots = projectGraph.getAll(buildTargets);
-    Iterable<TargetNode<?, ?>> nodes;
+    Iterable<TargetNode<?>> projectRoots = projectGraph.getAll(buildTargets);
+    Iterable<TargetNode<?>> nodes;
     if (shouldIncludeDependenciesTests) {
       nodes = projectGraph.getSubgraph(projectRoots).getNodes();
     } else {
@@ -805,14 +805,14 @@ public class XCodeProjectCommandHelper {
               targetGraph, new DefaultTargetNodeToBuildRuleTransformer(), cellProvider);
     }
 
-    public ActionGraphBuilder getActionGraphBuilderWhileRequiringSubgraph(TargetNode<?, ?> root) {
+    public ActionGraphBuilder getActionGraphBuilderWhileRequiringSubgraph(TargetNode<?> root) {
       TargetGraph subgraph = targetGraph.getSubgraph(ImmutableList.of(root));
 
       try {
         synchronized (this) {
-          new AbstractBottomUpTraversal<TargetNode<?, ?>, NoSuchBuildTargetException>(subgraph) {
+          new AbstractBottomUpTraversal<TargetNode<?>, NoSuchBuildTargetException>(subgraph) {
             @Override
-            public void visit(TargetNode<?, ?> node) throws NoSuchBuildTargetException {
+            public void visit(TargetNode<?> node) throws NoSuchBuildTargetException {
               graphBuilder.requireRule(node.getBuildTarget());
             }
           }.traverse();

@@ -45,8 +45,8 @@ public class DefaultTargetNodeToBuildRuleTransformer implements TargetNodeToBuil
       ToolchainProvider toolchainProvider,
       TargetGraph targetGraph,
       ActionGraphBuilder graphBuilder,
-      TargetNode<T, U> targetNode) {
-    U description = targetNode.getDescription();
+      TargetNode<T> targetNode) {
+    DescriptionWithTargetGraph<T> description = targetNode.getDescription();
     T arg = targetNode.getConstructorArg();
 
     Set<BuildTarget> extraDeps = targetNode.getExtraDeps();

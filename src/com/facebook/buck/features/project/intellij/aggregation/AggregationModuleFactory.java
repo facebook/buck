@@ -22,5 +22,5 @@ import java.nio.file.Path;
 
 public interface AggregationModuleFactory {
   AggregationModule createAggregationModule(
-      Path moduleBasePath, ImmutableSet<TargetNode<?, ?>> targetNodes);
+      Path moduleBasePath, ImmutableSet<TargetNode<?>> targetNodes);
 }

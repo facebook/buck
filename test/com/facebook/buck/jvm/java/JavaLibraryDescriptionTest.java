@@ -45,12 +45,12 @@ public class JavaLibraryDescriptionTest extends AbiCompilationModeTest {
   public void setUp() throws NoSuchBuildTargetException {
     javaBuckConfig = getJavaBuckConfigWithCompilationMode();
 
-    TargetNode<?, ?> exportedNode =
+    TargetNode<?> exportedNode =
         JavaLibraryBuilder.createBuilder(
                 BuildTargetFactory.newInstance("//:exported_rule"), javaBuckConfig)
             .addSrc(Paths.get("java/src/com/exported_rule/foo.java"))
             .build();
-    TargetNode<?, ?> exportingNode =
+    TargetNode<?> exportingNode =
         JavaLibraryBuilder.createBuilder(
                 BuildTargetFactory.newInstance("//:exporting_rule"), javaBuckConfig)
             .addSrc(Paths.get("java/src/com/exporting_rule/bar.java"))

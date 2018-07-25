@@ -40,14 +40,12 @@ import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.DefaultJavaPackageFinder;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
-import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.jvm.java.JavaLibraryDescriptionArg;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.FakeBuildEngine;
 import com.facebook.buck.rules.FakeTestRule;
 import com.facebook.buck.shell.GenruleBuilder;
-import com.facebook.buck.shell.GenruleDescription;
 import com.facebook.buck.shell.GenruleDescriptionArg;
 import com.facebook.buck.step.DefaultStepRunner;
 import com.facebook.buck.step.ExecutionContext;
@@ -109,13 +107,13 @@ public class TestRunningTest {
   public void testGeneratedSourceFile() {
     BuildTarget genSrcTarget = BuildTargetFactory.newInstance("//:gensrc");
 
-    TargetNode<GenruleDescriptionArg, GenruleDescription> sourceGenerator =
+    TargetNode<GenruleDescriptionArg> sourceGenerator =
         GenruleBuilder.newGenruleBuilder(genSrcTarget)
             .setOut("com/facebook/GeneratedFile.java")
             .build();
 
     BuildTarget javaLibraryTarget = BuildTargetFactory.newInstance("//:lib");
-    TargetNode<JavaLibraryDescriptionArg, JavaLibraryDescription> javaLibraryNode =
+    TargetNode<JavaLibraryDescriptionArg> javaLibraryNode =
         JavaLibraryBuilder.createBuilder(javaLibraryTarget).addSrcTarget(genSrcTarget).build();
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(sourceGenerator, javaLibraryNode);
@@ -150,7 +148,7 @@ public class TestRunningTest {
     Path pathToNonGenFile = Paths.get("package/src/SourceFile1.java");
 
     BuildTarget javaLibraryTarget = BuildTargetFactory.newInstance("//foo:bar");
-    TargetNode<JavaLibraryDescriptionArg, JavaLibraryDescription> javaLibraryNode =
+    TargetNode<JavaLibraryDescriptionArg> javaLibraryNode =
         JavaLibraryBuilder.createBuilder(javaLibraryTarget).addSrc(pathToNonGenFile).build();
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(javaLibraryNode);
@@ -179,7 +177,7 @@ public class TestRunningTest {
     Path pathToNonGenFile = Paths.get("package/src/SourceFile1.java");
 
     BuildTarget javaLibraryTarget = BuildTargetFactory.newInstance("//foo:bar");
-    TargetNode<JavaLibraryDescriptionArg, JavaLibraryDescription> javaLibraryNode =
+    TargetNode<JavaLibraryDescriptionArg> javaLibraryNode =
         JavaLibraryBuilder.createBuilder(javaLibraryTarget).addSrc(pathToNonGenFile).build();
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(javaLibraryNode);
@@ -203,7 +201,7 @@ public class TestRunningTest {
     Path pathToNonGenFile = Paths.get("java/package/src/SourceFile1.java");
 
     BuildTarget javaLibraryTarget = BuildTargetFactory.newInstance("//foo:bar");
-    TargetNode<JavaLibraryDescriptionArg, JavaLibraryDescription> javaLibraryNode =
+    TargetNode<JavaLibraryDescriptionArg> javaLibraryNode =
         JavaLibraryBuilder.createBuilder(javaLibraryTarget).addSrc(pathToNonGenFile).build();
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(javaLibraryNode);
@@ -235,7 +233,7 @@ public class TestRunningTest {
   public void testMixedSourceFile() {
     BuildTarget genSrcTarget = BuildTargetFactory.newInstance("//:gensrc");
 
-    TargetNode<GenruleDescriptionArg, GenruleDescription> sourceGenerator =
+    TargetNode<GenruleDescriptionArg> sourceGenerator =
         GenruleBuilder.newGenruleBuilder(genSrcTarget)
             .setOut("com/facebook/GeneratedFile.java")
             .build();
@@ -244,7 +242,7 @@ public class TestRunningTest {
     Path pathToNonGenFile2 = Paths.get("package/src-gen/SourceFile2.java");
 
     BuildTarget javaLibraryTarget = BuildTargetFactory.newInstance("//foo:bar");
-    TargetNode<JavaLibraryDescriptionArg, JavaLibraryDescription> javaLibraryNode =
+    TargetNode<JavaLibraryDescriptionArg> javaLibraryNode =
         JavaLibraryBuilder.createBuilder(javaLibraryTarget)
             .addSrc(pathToNonGenFile1)
             .addSrc(pathToNonGenFile2)

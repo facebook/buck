@@ -63,13 +63,13 @@ public class DistBuildTargetGraphCodec {
 
   private ListeningExecutorService cpuExecutor;
   private final ParserTargetNodeFactory<Map<String, Object>> parserTargetNodeFactory;
-  private final Function<? super TargetNode<?, ?>, ? extends Map<String, Object>> nodeToRawNode;
+  private final Function<? super TargetNode<?>, ? extends Map<String, Object>> nodeToRawNode;
   private Set<String> topLevelTargets;
 
   public DistBuildTargetGraphCodec(
       ListeningExecutorService cpuExecutor,
       ParserTargetNodeFactory<Map<String, Object>> parserTargetNodeFactory,
-      Function<? super TargetNode<?, ?>, ? extends Map<String, Object>> nodeToRawNode,
+      Function<? super TargetNode<?>, ? extends Map<String, Object>> nodeToRawNode,
       Set<String> topLevelTargets) {
     this.cpuExecutor = cpuExecutor;
     this.parserTargetNodeFactory = parserTargetNodeFactory;
@@ -78,11 +78,11 @@ public class DistBuildTargetGraphCodec {
   }
 
   public BuildJobStateTargetGraph dump(
-      Collection<TargetNode<?, ?>> targetNodes, DistBuildCellIndexer cellIndexer)
+      Collection<TargetNode<?>> targetNodes, DistBuildCellIndexer cellIndexer)
       throws InterruptedException {
     List<ListenableFuture<BuildJobStateTargetNode>> targetNodeFutures = new LinkedList<>();
 
-    for (TargetNode<?, ?> targetNode : targetNodes) {
+    for (TargetNode<?> targetNode : targetNodes) {
       targetNodeFutures.add(asyncSerializeTargetNode(cellIndexer, targetNode));
     }
 
@@ -101,7 +101,7 @@ public class DistBuildTargetGraphCodec {
   }
 
   private ListenableFuture<BuildJobStateTargetNode> asyncSerializeTargetNode(
-      DistBuildCellIndexer cellIndexer, TargetNode<?, ?> targetNode) {
+      DistBuildCellIndexer cellIndexer, TargetNode<?> targetNode) {
     return cpuExecutor.submit(
         () -> {
           Map<String, Object> rawTargetNode = nodeToRawNode.apply(targetNode);
@@ -155,8 +155,8 @@ public class DistBuildTargetGraphCodec {
       BuildJobStateTargetGraph remoteTargetGraph, Function<Integer, Cell> cellLookup)
       throws InterruptedException {
 
-    ConcurrentMap<BuildTarget, TargetNode<?, ?>> index = new ConcurrentHashMap<>();
-    ConcurrentMap<BuildTarget, TargetNode<?, ?>> graphNodes = new ConcurrentHashMap<>();
+    ConcurrentMap<BuildTarget, TargetNode<?>> index = new ConcurrentHashMap<>();
+    ConcurrentMap<BuildTarget, TargetNode<?>> graphNodes = new ConcurrentHashMap<>();
     ConcurrentMap<BuildTarget, Boolean> buildTargets = new ConcurrentHashMap<>();
 
     List<ListenableFuture<Void>> processRemoteBuildTargetFutures = new LinkedList<>();
@@ -175,10 +175,10 @@ public class DistBuildTargetGraphCodec {
 
     Preconditions.checkArgument(topLevelTargets.size() == buildTargets.size());
 
-    ImmutableMap<BuildTarget, TargetNode<?, ?>> targetNodeIndex = ImmutableMap.copyOf(index);
+    ImmutableMap<BuildTarget, TargetNode<?>> targetNodeIndex = ImmutableMap.copyOf(index);
 
-    MutableDirectedGraph<TargetNode<?, ?>> mutableTargetGraph = new MutableDirectedGraph<>();
-    for (TargetNode<?, ?> targetNode : graphNodes.values()) {
+    MutableDirectedGraph<TargetNode<?>> mutableTargetGraph = new MutableDirectedGraph<>();
+    for (TargetNode<?> targetNode : graphNodes.values()) {
       mutableTargetGraph.addNode(targetNode);
       for (BuildTarget dep : targetNode.getParseDeps()) {
         mutableTargetGraph.addEdge(
@@ -201,8 +201,8 @@ public class DistBuildTargetGraphCodec {
 
   private ListenableFuture<Void> asyncProcessRemoteBuildTarget(
       Function<Integer, Cell> cellLookup,
-      ConcurrentMap<BuildTarget, TargetNode<?, ?>> index,
-      ConcurrentMap<BuildTarget, TargetNode<?, ?>> graphNodes,
+      ConcurrentMap<BuildTarget, TargetNode<?>> index,
+      ConcurrentMap<BuildTarget, TargetNode<?>> graphNodes,
       ConcurrentMap<BuildTarget, Boolean> buildTargets,
       BuildJobStateTargetNode remoteNode) {
     return cpuExecutor.submit(
@@ -223,7 +223,7 @@ public class DistBuildTargetGraphCodec {
           Path buildFilePath =
               projectFilesystem.resolve(target.getBasePath()).resolve(cell.getBuildFileName());
 
-          TargetNode<?, ?> targetNode =
+          TargetNode<?> targetNode =
               parserTargetNodeFactory.createTargetNode(
                   cell,
                   buildFilePath,
@@ -237,7 +237,7 @@ public class DistBuildTargetGraphCodec {
           if (target.isFlavored()) {
             BuildTarget unflavoredTarget =
                 ImmutableBuildTarget.of(target.getUnflavoredBuildTarget());
-            TargetNode<?, ?> unflavoredTargetNode =
+            TargetNode<?> unflavoredTargetNode =
                 parserTargetNodeFactory.createTargetNode(
                     cell,
                     buildFilePath,

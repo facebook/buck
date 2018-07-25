@@ -80,7 +80,7 @@ class FineGrainedJavaDependencySuggester {
    * @throws IllegalArgumentException
    */
   void suggestRefactoring() {
-    TargetNode<?, ?> suggestedNode = graph.get(suggestedTarget);
+    TargetNode<?> suggestedNode = graph.get(suggestedTarget);
     if (!(suggestedNode.getConstructorArg() instanceof JavaLibraryDescription.CoreArg)) {
       console.printErrorText(
           String.format("'%s' does not correspond to a Java rule", suggestedTarget));
@@ -218,7 +218,7 @@ class FineGrainedJavaDependencySuggester {
       JavaDepsFinder.DependencyInfo dependencyInfo,
       MutableDirectedGraph<String> symbolsDependencies,
       String visibilityArg) {
-    TargetNode<?, ?> suggestedNode = graph.get(suggestedTarget);
+    TargetNode<?> suggestedNode = graph.get(suggestedTarget);
     SortedSet<String> deps = new TreeSet<>(LOCAL_DEPS_FIRST_COMPARATOR);
     SortedSet<PathSourcePath> srcs = new TreeSet<>();
     for (String providedSymbol : namedComponent.symbols) {
@@ -238,7 +238,7 @@ class FineGrainedJavaDependencySuggester {
           continue;
         }
 
-        Set<TargetNode<?, ?>> depProviders = dependencyInfo.symbolToProviders.get(requiredSymbol);
+        Set<TargetNode<?>> depProviders = dependencyInfo.symbolToProviders.get(requiredSymbol);
         if (depProviders == null || depProviders.size() == 0) {
           console.getStdErr().printf("# Suspicious: no provider for '%s'\n", requiredSymbol);
           continue;
@@ -248,7 +248,7 @@ class FineGrainedJavaDependencySuggester {
             FluentIterable.from(depProviders)
                 .filter(provider -> provider.isVisibleTo(suggestedNode))
                 .toSet();
-        TargetNode<?, ?> depProvider;
+        TargetNode<?> depProvider;
         if (depProviders.size() == 1) {
           depProvider = Iterables.getOnlyElement(depProviders);
         } else {

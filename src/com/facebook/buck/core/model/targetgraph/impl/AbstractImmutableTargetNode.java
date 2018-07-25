@@ -49,8 +49,7 @@ import org.immutables.value.Value;
  */
 @BuckStyleImmutable
 @Value.Immutable(builder = false, prehash = true)
-abstract class AbstractImmutableTargetNode<T, U extends DescriptionWithTargetGraph<T>>
-    implements TargetNode<T, U> {
+abstract class AbstractImmutableTargetNode<T> implements TargetNode<T> {
 
   @Value.Parameter
   @Override
@@ -72,7 +71,7 @@ abstract class AbstractImmutableTargetNode<T, U extends DescriptionWithTargetGra
   @Value.Parameter
   @Value.Auxiliary
   @Override
-  public abstract U getDescription();
+  public abstract DescriptionWithTargetGraph<T> getDescription();
 
   @Value.Parameter
   @Override
@@ -157,12 +156,12 @@ abstract class AbstractImmutableTargetNode<T, U extends DescriptionWithTargetGra
   }
 
   @Override
-  public boolean isVisibleTo(TargetNode<?, ?> viewer) {
+  public boolean isVisibleTo(TargetNode<?> viewer) {
     return getVisibilityChecker().isVisibleTo(viewer);
   }
 
   @Override
-  public void isVisibleToOrThrow(TargetNode<?, ?> viewer) {
+  public void isVisibleToOrThrow(TargetNode<?> viewer) {
     if (!isVisibleTo(viewer)) {
       throw new HumanReadableException(
           "%s depends on %s, which is not visible", viewer, getBuildTarget());
@@ -175,7 +174,7 @@ abstract class AbstractImmutableTargetNode<T, U extends DescriptionWithTargetGra
   }
 
   @Override
-  public int compareTo(TargetNode<?, ?> o) {
+  public int compareTo(TargetNode<?> o) {
     return getBuildTarget().compareTo(o.getBuildTarget());
   }
 
@@ -185,17 +184,17 @@ abstract class AbstractImmutableTargetNode<T, U extends DescriptionWithTargetGra
   }
 
   @Override
-  public TargetNode<T, U> copy() {
+  public TargetNode<T> copy() {
     return ImmutableTargetNode.copyOf(this);
   }
 
   @Override
-  public TargetNode<T, U> copyWithFlavors(ImmutableSet<Flavor> flavors) {
+  public TargetNode<T> copyWithFlavors(ImmutableSet<Flavor> flavors) {
     return getNodeCopier().copyNodeWithFlavors(ImmutableTargetNode.copyOf(this), flavors);
   }
 
   @Override
-  public TargetNode<T, U> withFlavors(ImmutableSet<Flavor> flavors) {
+  public TargetNode<T> withFlavors(ImmutableSet<Flavor> flavors) {
     return ImmutableTargetNode.copyOf(this).withBuildTarget(getBuildTarget().withFlavors(flavors));
   }
 }

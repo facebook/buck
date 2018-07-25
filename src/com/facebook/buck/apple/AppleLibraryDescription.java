@@ -986,7 +986,7 @@ public class AppleLibraryDescription
   }
 
   public static boolean isNotStaticallyLinkedLibraryNode(
-      TargetNode<CxxLibraryDescription.CommonArg, ?> node) {
+      TargetNode<CxxLibraryDescription.CommonArg> node) {
     SortedSet<Flavor> flavors = node.getBuildTarget().getFlavors();
     if (LIBRARY_TYPE.getFlavor(flavors).isPresent()) {
       return flavors.contains(CxxDescriptionEnhancer.SHARED_FLAVOR)

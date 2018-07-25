@@ -30,9 +30,9 @@ import com.facebook.buck.features.project.intellij.aggregation.AggregationContex
 public interface IjModuleRule<T extends CommonDescriptionArg> {
   Class<? extends DescriptionWithTargetGraph<?>> getDescriptionClass();
 
-  void apply(TargetNode<T, ?> targetNode, ModuleBuildContext context);
+  void apply(TargetNode<T> targetNode, ModuleBuildContext context);
 
-  IjModuleType detectModuleType(TargetNode<T, ?> targetNode);
+  IjModuleType detectModuleType(TargetNode<T> targetNode);
 
-  void applyDuringAggregation(AggregationContext context, TargetNode<T, ?> targetNode);
+  void applyDuringAggregation(AggregationContext context, TargetNode<T> targetNode);
 }

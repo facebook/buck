@@ -32,49 +32,49 @@ public interface IjModuleFactoryResolver {
    *     found (the structure will be the same as the package path of the R class). A path should be
    *     returned only if the given TargetNode requires the R.class to compile.
    */
-  Optional<Path> getDummyRDotJavaPath(TargetNode<?, ?> targetNode);
+  Optional<Path> getDummyRDotJavaPath(TargetNode<?> targetNode);
 
   /**
    * @param targetNode node describing the Android binary to get the manifest of.
    * @return path on disk to the AndroidManifest.
    */
-  Path getAndroidManifestPath(TargetNode<AndroidBinaryDescriptionArg, ?> targetNode);
+  Path getAndroidManifestPath(TargetNode<AndroidBinaryDescriptionArg> targetNode);
 
   /**
    * @param targetNode node describing the Android library to get the manifest of.
    * @return path on disk to the AndroidManifest.
    */
   Optional<Path> getLibraryAndroidManifestPath(
-      TargetNode<AndroidLibraryDescription.CoreArg, ?> targetNode);
+      TargetNode<AndroidLibraryDescription.CoreArg> targetNode);
 
   /**
    * @param targetNode node describing the Android binary to get the Proguard config of.
    * @return path on disk to the proguard config.
    */
-  Optional<Path> getProguardConfigPath(TargetNode<AndroidBinaryDescriptionArg, ?> targetNode);
+  Optional<Path> getProguardConfigPath(TargetNode<AndroidBinaryDescriptionArg> targetNode);
 
   /**
    * @param targetNode node describing the Android resources to get the path of.
    * @return path on disk to the resources folder.
    */
-  Optional<Path> getAndroidResourcePath(TargetNode<AndroidResourceDescriptionArg, ?> targetNode);
+  Optional<Path> getAndroidResourcePath(TargetNode<AndroidResourceDescriptionArg> targetNode);
 
   /**
    * @param targetNode node describing the Android assets to get the path of.
    * @return path on disk to the assets folder.
    */
-  Optional<Path> getAssetsPath(TargetNode<AndroidResourceDescriptionArg, ?> targetNode);
+  Optional<Path> getAssetsPath(TargetNode<AndroidResourceDescriptionArg> targetNode);
 
   /**
    * @param targetNode node which may use annotation processors.
    * @return path to the annotation processor output if any annotation proceessors are configured
    *     for the given node.
    */
-  Optional<Path> getAnnotationOutputPath(TargetNode<? extends JvmLibraryArg, ?> targetNode);
+  Optional<Path> getAnnotationOutputPath(TargetNode<? extends JvmLibraryArg> targetNode);
 
   /**
    * @param targetNode node which may specify it's own compiler output path.
    * @return path to the classes that make up the compiler output.
    */
-  Optional<Path> getCompilerOutputPath(TargetNode<? extends JvmLibraryArg, ?> targetNode);
+  Optional<Path> getCompilerOutputPath(TargetNode<? extends JvmLibraryArg> targetNode);
 }

@@ -34,10 +34,10 @@ public class DefaultAggregationModuleFactory implements AggregationModuleFactory
   @Override
   @SuppressWarnings({"unchecked", "rawtypes"})
   public AggregationModule createAggregationModule(
-      Path moduleBasePath, ImmutableSet<TargetNode<?, ?>> targetNodes) {
+      Path moduleBasePath, ImmutableSet<TargetNode<?>> targetNodes) {
     AggregationContext context = new AggregationContext();
 
-    for (TargetNode<?, ?> targetNode : targetNodes) {
+    for (TargetNode<?> targetNode : targetNodes) {
       Class<?> nodeType = targetNode.getDescription().getClass();
       IjModuleRule<?> rule =
           Preconditions.checkNotNull(typeRegistry.getModuleRuleByTargetNodeType(nodeType));

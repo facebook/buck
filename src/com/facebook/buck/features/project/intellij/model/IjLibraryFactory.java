@@ -29,5 +29,5 @@ public abstract class IjLibraryFactory {
    * @return if the target is of a type that can be mapped to an {@link IjLibrary} (Jar/Aar) or if
    *     the target's output is a .jar an instance is returned.
    */
-  public abstract Optional<IjLibrary> getLibrary(TargetNode<?, ?> target);
+  public abstract Optional<IjLibrary> getLibrary(TargetNode<?> target);
 }

@@ -150,7 +150,7 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
         new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:cxxlib"))
             .setSoname("somelib.so")
             .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("test/bar.cpp"))));
-    TargetNode<CxxLibraryDescriptionArg, ?> cxxLibraryDescription = cxxLibraryBuilder.build();
+    TargetNode<CxxLibraryDescriptionArg> cxxLibraryDescription = cxxLibraryBuilder.build();
     TargetGraph targetGraph = TargetGraphFactory.newInstance(cxxLibraryDescription);
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
@@ -346,12 +346,12 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
         new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:cxxlib1"))
             .setSoname("somelib.so")
             .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("test/bar.cpp"))));
-    TargetNode<CxxLibraryDescriptionArg, ?> cxxLibraryDescription1 = cxxLibraryBuilder1.build();
+    TargetNode<CxxLibraryDescriptionArg> cxxLibraryDescription1 = cxxLibraryBuilder1.build();
     CxxLibraryBuilder cxxLibraryBuilder2 =
         new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:cxxlib2"))
             .setSoname("somelib.so")
             .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("test/bar2.cpp"))));
-    TargetNode<CxxLibraryDescriptionArg, ?> cxxLibraryDescription2 = cxxLibraryBuilder2.build();
+    TargetNode<CxxLibraryDescriptionArg> cxxLibraryDescription2 = cxxLibraryBuilder2.build();
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(
             ImmutableList.of(cxxLibraryDescription1, cxxLibraryDescription2));

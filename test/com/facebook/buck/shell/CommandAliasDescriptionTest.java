@@ -194,7 +194,7 @@ public class CommandAliasDescriptionTest {
   @Test
   public void addsMacrosToParseDeps() {
     BuildTarget envTarget = BuildTargetFactory.newInstance("//:for-env");
-    TargetNode<CommandAliasDescriptionArg, CommandAliasDescription> targetNode =
+    TargetNode<CommandAliasDescriptionArg> targetNode =
         builder()
             .setExe(delegate)
             .setArgs(
@@ -216,7 +216,7 @@ public class CommandAliasDescriptionTest {
       StringWithMacrosUtils.format("pears=%s", LocationMacro.of(macroTarget))
     };
     BuildTarget innerCommand = BuildTargetFactory.newInstance("//inner:command");
-    TargetNode<?, ?> innerCommandAlias =
+    TargetNode<?> innerCommandAlias =
         builder.subBuilder(delegate).setExe(innerCommand).setArgs(delegateArgs).build();
 
     CommandAliasBuilder.BuildResult result =
@@ -237,7 +237,7 @@ public class CommandAliasDescriptionTest {
             "apples", StringWithMacrosUtils.format("some"),
             "pears", StringWithMacrosUtils.format("%s", LocationMacro.of(macroTarget)));
     BuildTarget innerCommand = BuildTargetFactory.newInstance("//inner:command");
-    TargetNode<?, ?> innerCommandAlias =
+    TargetNode<?> innerCommandAlias =
         builder.subBuilder(delegate).setExe(innerCommand).setEnv(delegateEnv).build();
 
     CommandAliasBuilder.BuildResult result =
@@ -327,7 +327,7 @@ public class CommandAliasDescriptionTest {
 
     BuildTarget innerExe = BuildTargetFactory.newInstance("//sub:command");
     String[] args = {"ab", "cd"};
-    TargetNode<?, ?> subCommand =
+    TargetNode<?> subCommand =
         builder
             .subBuilder(delegate)
             .setExe(innerExe)

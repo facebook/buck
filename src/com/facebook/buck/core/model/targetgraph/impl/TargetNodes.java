@@ -33,7 +33,7 @@ public class TargetNodes {
    *
    * <p>Otherwise, returns an empty set.
    */
-  public static ImmutableSortedSet<BuildTarget> getTestTargetsForNode(TargetNode<?, ?> node) {
+  public static ImmutableSortedSet<BuildTarget> getTestTargetsForNode(TargetNode<?> node) {
     if (node.getConstructorArg() instanceof HasTests) {
       return ((HasTests) node.getConstructorArg()).getTests();
     } else {
@@ -43,9 +43,9 @@ public class TargetNodes {
 
   /** Type safe checked cast of the constructor arg. */
   @SuppressWarnings("unchecked")
-  public static <V> Optional<TargetNode<V, ?>> castArg(TargetNode<?, ?> node, Class<V> cls) {
+  public static <V> Optional<TargetNode<V>> castArg(TargetNode<?> node, Class<V> cls) {
     if (cls.isInstance(node.getConstructorArg())) {
-      return Optional.of((TargetNode<V, ?>) node.copy());
+      return Optional.of((TargetNode<V>) node.copy());
     } else {
       return Optional.empty();
     }

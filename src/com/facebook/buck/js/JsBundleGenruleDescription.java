@@ -161,7 +161,7 @@ public class JsBundleGenruleDescription
   @Override
   public void addAppleBundleResources(
       AppleBundleResources.Builder builder,
-      TargetNode<JsBundleGenruleDescriptionArg, ?> targetNode,
+      TargetNode<JsBundleGenruleDescriptionArg> targetNode,
       ProjectFilesystem filesystem,
       BuildRuleResolver resolver) {
     if (!targetNode.getConstructorArg().getSkipResources()) {

@@ -51,7 +51,7 @@ public class TransitiveDepsClosureResolver {
     }
 
     ImmutableSet<BuildTarget> exportedDeps = ImmutableSet.of();
-    TargetNode<?, ?> targetNode = targetGraph.get(buildTarget);
+    TargetNode<?> targetNode = targetGraph.get(buildTarget);
     if (targetNode.getConstructorArg() instanceof JavaLibraryDescription.CoreArg) {
       JavaLibraryDescription.CoreArg arg =
           (JavaLibraryDescription.CoreArg) targetNode.getConstructorArg();

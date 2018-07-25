@@ -77,7 +77,7 @@ public class AaptPackageResourcesTest {
   public void setUp() throws NoSuchBuildTargetException {
     filesystem = new FakeProjectFilesystem();
 
-    TargetNode<?, ?> resourceNode =
+    TargetNode<?> resourceNode =
         AndroidResourceBuilder.createBuilder(
                 BuildTargetFactory.newInstance("//:resource1"), filesystem)
             .setRDotJavaPackage("package1")
@@ -85,7 +85,7 @@ public class AaptPackageResourcesTest {
             .setAssets(FakeSourcePath.of(filesystem, "asset1"))
             .build();
 
-    TargetNode<?, ?> resourceNode2 =
+    TargetNode<?> resourceNode2 =
         AndroidResourceBuilder.createBuilder(
                 BuildTargetFactory.newInstance("//:resource2"), filesystem)
             .setRDotJavaPackage("package2")

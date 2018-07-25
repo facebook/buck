@@ -65,7 +65,7 @@ class SymlinkCache {
   }
 
   public void registerInputsUnderSymlinks(
-      Cell currentCell, Cell targetCell, Path buildFile, TargetNode<?, ?> node) throws IOException {
+      Cell currentCell, Cell targetCell, Path buildFile, TargetNode<?> node) throws IOException {
     Map<Path, Path> newSymlinksEncountered =
         inputFilesUnderSymlink(node.getInputs(), node.getFilesystem());
     Optional<ImmutableList<Path>> readOnlyPaths =

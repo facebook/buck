@@ -51,7 +51,7 @@ import javax.annotation.concurrent.ThreadSafe;
  */
 @ThreadSafe
 public class TargetNodeParsePipeline
-    extends ConvertingPipelineWithPerfEventScope<Map<String, Object>, TargetNode<?, ?>> {
+    extends ConvertingPipelineWithPerfEventScope<Map<String, Object>, TargetNode<?>> {
 
   private static final Logger LOG = Logger.get(TargetNodeParsePipeline.class);
 
@@ -69,7 +69,7 @@ public class TargetNodeParsePipeline
    * @param speculativeDepsTraversal whether to automatically schedule parsing of nodes' deps in the
    */
   public TargetNodeParsePipeline(
-      Cache<BuildTarget, TargetNode<?, ?>> cache,
+      Cache<BuildTarget, TargetNode<?>> cache,
       ParserTargetNodeFactory<Map<String, Object>> targetNodeDelegate,
       ListeningExecutorService executorService,
       BuckEventBus eventBus,
@@ -95,14 +95,14 @@ public class TargetNodeParsePipeline
   }
 
   @Override
-  protected TargetNode<?, ?> computeNodeInScope(
+  protected TargetNode<?> computeNodeInScope(
       Cell cell,
       BuildTarget buildTarget,
       Map<String, Object> rawNode,
       AtomicLong processedBytes,
       Function<PerfEventId, Scope> perfEventScopeFunction)
       throws BuildTargetException {
-    TargetNode<?, ?> targetNode =
+    TargetNode<?> targetNode =
         delegate.createTargetNode(
             cell,
             cell.getAbsolutePathToBuildFile(buildTarget),

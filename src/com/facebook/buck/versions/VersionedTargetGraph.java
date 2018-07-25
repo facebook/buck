@@ -37,14 +37,14 @@ public class VersionedTargetGraph extends TargetGraph {
   private final FlavorSearchTargetNodeFinder nodeFinder;
 
   private VersionedTargetGraph(
-      MutableDirectedGraph<TargetNode<?, ?>> graph, FlavorSearchTargetNodeFinder nodeFinder) {
+      MutableDirectedGraph<TargetNode<?>> graph, FlavorSearchTargetNodeFinder nodeFinder) {
     super(
         graph,
         graph
             .getNodes()
             .stream()
             .collect(ImmutableMap.toImmutableMap(TargetNode::getBuildTarget, n -> n)));
-    for (TargetNode<?, ?> node : graph.getNodes()) {
+    for (TargetNode<?> node : graph.getNodes()) {
       Preconditions.checkArgument(
           !TargetGraphVersionTransformations.getVersionedNode(node).isPresent());
     }
@@ -53,7 +53,7 @@ public class VersionedTargetGraph extends TargetGraph {
 
   @Nullable
   @Override
-  protected TargetNode<?, ?> getInternal(BuildTarget target) {
+  protected TargetNode<?> getInternal(BuildTarget target) {
     return nodeFinder.get(target).map(n -> n.withFlavors(target.getFlavors())).orElse(null);
   }
 
@@ -63,20 +63,20 @@ public class VersionedTargetGraph extends TargetGraph {
 
   public static class Builder {
 
-    private final MutableDirectedGraph<TargetNode<?, ?>> graph =
+    private final MutableDirectedGraph<TargetNode<?>> graph =
         MutableDirectedGraph.createConcurrent();
-    private final Map<BuildTarget, TargetNode<?, ?>> index = new ConcurrentHashMap<>();
+    private final Map<BuildTarget, TargetNode<?>> index = new ConcurrentHashMap<>();
 
     private Builder() {}
 
-    public Builder addNode(BuildTarget baseTarget, TargetNode<?, ?> node) {
+    public Builder addNode(BuildTarget baseTarget, TargetNode<?> node) {
       index.put(baseTarget, node);
       graph.addNode(node);
       return this;
     }
 
     @Nullable
-    private TargetNode<?, ?> getVersionedSubGraphParent(TargetNode<?, ?> node) {
+    private TargetNode<?> getVersionedSubGraphParent(TargetNode<?> node) {
 
       // If this node is a root node in the versioned subgraph, there's no dependent and we return
       // `null`.
@@ -90,13 +90,13 @@ public class VersionedTargetGraph extends TargetGraph {
       return Iterables.getFirst(ImmutableSortedSet.copyOf(graph.getIncomingNodesFor(node)), null);
     }
 
-    private HumanReadableException getUnexpectedVersionedNodeError(TargetNode<?, ?> node) {
+    private HumanReadableException getUnexpectedVersionedNodeError(TargetNode<?> node) {
       String msg =
           String.format(
               "Found versioned node %s from unversioned, top-level target:%s",
               node.getBuildTarget(), System.lineSeparator());
-      ArrayList<TargetNode<?, ?>> trace = new ArrayList<>();
-      for (TargetNode<?, ?> n = node; n != null; n = getVersionedSubGraphParent(n)) {
+      ArrayList<TargetNode<?>> trace = new ArrayList<>();
+      for (TargetNode<?> n = node; n != null; n = getVersionedSubGraphParent(n)) {
         trace.add(n);
       }
       msg +=
@@ -107,15 +107,15 @@ public class VersionedTargetGraph extends TargetGraph {
       return new HumanReadableException(msg);
     }
 
-    private void checkGraph(TraversableGraph<TargetNode<?, ?>> graph) {
-      for (TargetNode<?, ?> node : graph.getNodes()) {
+    private void checkGraph(TraversableGraph<TargetNode<?>> graph) {
+      for (TargetNode<?> node : graph.getNodes()) {
         if (TargetGraphVersionTransformations.getVersionedNode(node).isPresent()) {
           throw getUnexpectedVersionedNodeError(node);
         }
       }
     }
 
-    public Builder addEdge(TargetNode<?, ?> src, TargetNode<?, ?> dst) {
+    public Builder addEdge(TargetNode<?> src, TargetNode<?> dst) {
       graph.addEdge(src, dst);
       return this;
     }

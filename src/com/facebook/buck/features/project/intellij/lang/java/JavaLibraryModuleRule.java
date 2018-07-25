@@ -54,8 +54,7 @@ public class JavaLibraryModuleRule extends BaseIjModuleRule<JavaLibraryDescripti
   }
 
   @Override
-  public void apply(
-      TargetNode<JavaLibraryDescription.CoreArg, ?> target, ModuleBuildContext context) {
+  public void apply(TargetNode<JavaLibraryDescription.CoreArg> target, ModuleBuildContext context) {
     Optional<Path> presetResourcesRoot = target.getConstructorArg().getResourcesRoot();
     ImmutableSortedSet<SourcePath> resources = target.getConstructorArg().getResources();
     ImmutableSet<Path> resourcePaths;
@@ -84,13 +83,13 @@ public class JavaLibraryModuleRule extends BaseIjModuleRule<JavaLibraryDescripti
   }
 
   @Override
-  public IjModuleType detectModuleType(TargetNode<JavaLibraryDescription.CoreArg, ?> targetNode) {
+  public IjModuleType detectModuleType(TargetNode<JavaLibraryDescription.CoreArg> targetNode) {
     return IjModuleType.JAVA_MODULE;
   }
 
   @Override
   public void applyDuringAggregation(
-      AggregationContext context, TargetNode<JavaLibraryDescription.CoreArg, ?> targetNode) {
+      AggregationContext context, TargetNode<JavaLibraryDescription.CoreArg> targetNode) {
     super.applyDuringAggregation(context, targetNode);
 
     Optional<String> languageLevel =

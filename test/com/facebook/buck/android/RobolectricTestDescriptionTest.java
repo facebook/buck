@@ -45,18 +45,18 @@ public class RobolectricTestDescriptionTest extends AbiCompilationModeTest {
 
   @Test
   public void rulesExportedFromDepsBecomeFirstOrderDeps() {
-    TargetNode<?, ?> exportedNode =
+    TargetNode<?> exportedNode =
         JavaLibraryBuilder.createBuilder(
                 BuildTargetFactory.newInstance("//:exported_rule"), javaBuckConfig)
             .addSrc(Paths.get("java/src/com/exported_rule/foo.java"))
             .build();
-    TargetNode<?, ?> exportingNode =
+    TargetNode<?> exportingNode =
         JavaLibraryBuilder.createBuilder(
                 BuildTargetFactory.newInstance("//:exporting_rule"), javaBuckConfig)
             .addSrc(Paths.get("java/src/com/exporting_rule/bar.java"))
             .addExportedDep(exportedNode.getBuildTarget())
             .build();
-    TargetNode<?, ?> robolectricTestNode =
+    TargetNode<?> robolectricTestNode =
         RobolectricTestBuilder.createBuilder(
                 BuildTargetFactory.newInstance("//:rule"), javaBuckConfig)
             .addDep(exportingNode.getBuildTarget())
@@ -84,18 +84,18 @@ public class RobolectricTestDescriptionTest extends AbiCompilationModeTest {
 
   @Test
   public void rulesExportedFromProvidedDepsBecomeFirstOrderDeps() {
-    TargetNode<?, ?> exportedNode =
+    TargetNode<?> exportedNode =
         JavaLibraryBuilder.createBuilder(
                 BuildTargetFactory.newInstance("//:exported_rule"), javaBuckConfig)
             .addSrc(Paths.get("java/src/com/exported_rule/foo.java"))
             .build();
-    TargetNode<?, ?> exportingNode =
+    TargetNode<?> exportingNode =
         JavaLibraryBuilder.createBuilder(
                 BuildTargetFactory.newInstance("//:exporting_rule"), javaBuckConfig)
             .addSrc(Paths.get("java/src/com/exporting_rule/bar.java"))
             .addExportedDep(exportedNode.getBuildTarget())
             .build();
-    TargetNode<?, ?> robolectricTestNode =
+    TargetNode<?> robolectricTestNode =
         RobolectricTestBuilder.createBuilder(
                 BuildTargetFactory.newInstance("//:rule"), javaBuckConfig)
             .addProvidedDep(exportingNode.getBuildTarget())

@@ -66,13 +66,13 @@ public class QueryPathsMacroExpanderTest {
 
   @Test
   public void sourcePathsToOutputsGivenByDefault() throws MacroException {
-    TargetNode<?, ?> depNode =
+    TargetNode<?> depNode =
         JavaLibraryBuilder.createBuilder(
                 BuildTargetFactory.newInstance(filesystem.getRootPath(), "//some:dep"), filesystem)
             .addSrc(Paths.get("Dep.java"))
             .build();
 
-    TargetNode<?, ?> targetNode =
+    TargetNode<?> targetNode =
         JavaLibraryBuilder.createBuilder(
                 BuildTargetFactory.newInstance(filesystem.getRootPath(), "//some:target"),
                 filesystem)
@@ -115,7 +115,7 @@ public class QueryPathsMacroExpanderTest {
 
   @Test
   public void canReturnInputsToRulesViaInputQueryFunction() throws MacroException {
-    TargetNode<?, ?> node =
+    TargetNode<?> node =
         JavaLibraryBuilder.createBuilder(
                 BuildTargetFactory.newInstance(filesystem.getRootPath(), "//some:dep"), filesystem)
             .addSrc(Paths.get("Dep.java"))
@@ -140,13 +140,13 @@ public class QueryPathsMacroExpanderTest {
 
   @Test
   public void shouldDeclareDeps() {
-    TargetNode<?, ?> dep =
+    TargetNode<?> dep =
         JavaLibraryBuilder.createBuilder(
                 BuildTargetFactory.newInstance(filesystem.getRootPath(), "//some:dep"), filesystem)
             .addSrc(Paths.get("Dep.java"))
             .build();
 
-    TargetNode<?, ?> target =
+    TargetNode<?> target =
         GenruleBuilder.newGenruleBuilder(
                 BuildTargetFactory.newInstance(filesystem.getRootPath(), "//some:target"),
                 filesystem)

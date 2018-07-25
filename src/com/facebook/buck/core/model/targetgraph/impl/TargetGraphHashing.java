@@ -61,14 +61,14 @@ public class TargetGraphHashing {
   private final BuckEventBus eventBus;
   private final TargetGraph targetGraph;
   private final FileHashLoader fileHashLoader;
-  private final Iterable<TargetNode<?, ?>> roots;
+  private final Iterable<TargetNode<?>> roots;
   private final ListeningExecutorService executor;
 
   public TargetGraphHashing(
       BuckEventBus eventBus,
       TargetGraph targetGraph,
       FileHashLoader fileHashLoader,
-      Iterable<TargetNode<?, ?>> roots,
+      Iterable<TargetNode<?>> roots,
       ListeningExecutorService executor) {
     this.eventBus = eventBus;
     this.targetGraph = targetGraph;
@@ -101,7 +101,7 @@ public class TargetGraphHashing {
      *
      * @return the partial {@link Hasher}.
      */
-    private Hasher startNode(TargetNode<?, ?> node) {
+    private Hasher startNode(TargetNode<?> node) {
       Hasher hasher = Hashing.sha1().newHasher();
 
       // Hash the node's build target and rules.
@@ -146,7 +146,7 @@ public class TargetGraphHashing {
      *     of a list of {@link BuildTarget} and {@link HashCode} pairs.
      */
     private ListenableFuture<List<Pair<BuildTarget, HashCode>>> getDepPairsFuture(
-        TargetNode<?, ?> node) {
+        TargetNode<?> node) {
       return Futures.allAsList(
           node.getParseDeps()
               .stream()
@@ -159,7 +159,7 @@ public class TargetGraphHashing {
               .collect(Collectors.toList()));
     }
 
-    private ListenableFuture<HashCode> getHash(TargetNode<?, ?> node) {
+    private ListenableFuture<HashCode> getHash(TargetNode<?> node) {
       // NOTE: Our current implementation starts *all* the target node hashes in parallel, and
       // and only starts synchronizing near the end, when nodes need to incorporate the hashes of
       // their dependencies.  As such, we're basically trading off the extra memory required to

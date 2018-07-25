@@ -38,7 +38,7 @@ public abstract class AndroidModuleRule<T extends CommonDescriptionArg>
   }
 
   @Override
-  public void apply(TargetNode<T, ?> target, ModuleBuildContext context) {
+  public void apply(TargetNode<T> target, ModuleBuildContext context) {
     context
         .getOrCreateAndroidFacetBuilder()
         .setAndroidProjectType(androidProjectType)

@@ -1877,12 +1877,12 @@ public class DefaultParserTest {
 
     // First, only load one target from the build file so the file is parsed, but only one of the
     // TargetNodes will be cached.
-    TargetNode<?, ?> targetNode =
+    TargetNode<?> targetNode =
         parser.getTargetNode(eventBus, cell, false, executorService, fooLib1Target);
     assertThat(targetNode.getBuildTarget(), equalTo(fooLib1Target));
 
     // Now, try to load the entire build file and get all TargetNodes.
-    ImmutableSet<TargetNode<?, ?>> targetNodes =
+    ImmutableSet<TargetNode<?>> targetNodes =
         parser.getAllTargetNodes(eventBus, cell, false, executorService, testFooBuckFile);
     assertThat(targetNodes.size(), equalTo(2));
     assertThat(
@@ -1901,7 +1901,7 @@ public class DefaultParserTest {
     Files.write(testFooBuckFile, "java_library(name = 'lib')\n".getBytes(UTF_8));
     BuildTarget fooLibTarget = BuildTargetFactory.newInstance(cellRoot, "//foo", "lib");
 
-    TargetNode<?, ?> targetNode =
+    TargetNode<?> targetNode =
         parser.getTargetNode(eventBus, cell, false, executorService, fooLibTarget);
     assertThat(targetNode.getBuildTarget(), equalTo(fooLibTarget));
 
@@ -2201,7 +2201,7 @@ public class DefaultParserTest {
     BuckConfig config = FakeBuckConfig.builder().setFilesystem(filesystem).build();
 
     Cell cell = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();
-    TargetNode<GenruleDescriptionArg, ?> node =
+    TargetNode<GenruleDescriptionArg> node =
         TargetNodes.castArg(
                 parser.getTargetNode(eventBus, cell, false, executorService, buildTarget),
                 GenruleDescriptionArg.class)
@@ -2688,7 +2688,7 @@ public class DefaultParserTest {
 
     Cell cell = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();
 
-    ImmutableSet<TargetNode<?, ?>> targetNodes =
+    ImmutableSet<TargetNode<?>> targetNodes =
         parser.getAllTargetNodes(eventBus, cell, false, executorService, buckFile);
     assertEquals(1, targetNodes.size());
     // in Skylark the type of str is "string" and in Python DSL it's "<type 'str'>"
@@ -2749,7 +2749,7 @@ public class DefaultParserTest {
         parser.buildTargetGraph(eventBus, cell, false, executorService, buildTargetsList);
 
     ImmutableMap.Builder<BuildTarget, HashCode> toReturn = ImmutableMap.builder();
-    for (TargetNode<?, ?> node : targetGraph.getNodes()) {
+    for (TargetNode<?> node : targetGraph.getNodes()) {
       toReturn.put(node.getBuildTarget(), node.getRawInputsHashCode());
     }
 

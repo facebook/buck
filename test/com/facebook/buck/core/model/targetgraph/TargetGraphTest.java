@@ -31,15 +31,15 @@ import org.junit.rules.ExpectedException;
 
 public class TargetGraphTest {
 
-  private TargetNode<?, ?> nodeA;
-  private TargetNode<?, ?> nodeB;
-  private TargetNode<?, ?> nodeC;
-  private TargetNode<?, ?> nodeD;
-  private TargetNode<?, ?> nodeE;
-  private TargetNode<?, ?> nodeF;
-  private TargetNode<?, ?> nodeG;
-  private TargetNode<?, ?> nodeH;
-  private TargetNode<?, ?> nodeI;
+  private TargetNode<?> nodeA;
+  private TargetNode<?> nodeB;
+  private TargetNode<?> nodeC;
+  private TargetNode<?> nodeD;
+  private TargetNode<?> nodeE;
+  private TargetNode<?> nodeF;
+  private TargetNode<?> nodeG;
+  private TargetNode<?> nodeH;
+  private TargetNode<?> nodeI;
   private TargetGraph targetGraph;
 
   @Rule public ExpectedException expectedException = ExpectedException.none();
@@ -71,44 +71,44 @@ public class TargetGraphTest {
 
   @Test
   public void testEmptySubgraph() {
-    ImmutableSet<TargetNode<?, ?>> roots = ImmutableSet.of();
-    ImmutableSet<TargetNode<?, ?>> expectedNodes = ImmutableSet.of();
+    ImmutableSet<TargetNode<?>> roots = ImmutableSet.of();
+    ImmutableSet<TargetNode<?>> expectedNodes = ImmutableSet.of();
     checkSubgraph(roots, expectedNodes);
   }
 
   @Test
   public void testCompleteSubgraph() {
-    ImmutableSet<TargetNode<?, ?>> roots = ImmutableSet.of(nodeA, nodeB);
-    ImmutableSet<TargetNode<?, ?>> expectedNodes = targetGraph.getNodes();
+    ImmutableSet<TargetNode<?>> roots = ImmutableSet.of(nodeA, nodeB);
+    ImmutableSet<TargetNode<?>> expectedNodes = targetGraph.getNodes();
     checkSubgraph(roots, expectedNodes);
   }
 
   @Test
   public void testSubgraphWithAllRoots() {
-    ImmutableSet<TargetNode<?, ?>> roots = targetGraph.getNodes();
-    ImmutableSet<TargetNode<?, ?>> expectedNodes = targetGraph.getNodes();
+    ImmutableSet<TargetNode<?>> roots = targetGraph.getNodes();
+    ImmutableSet<TargetNode<?>> expectedNodes = targetGraph.getNodes();
     checkSubgraph(roots, expectedNodes);
   }
 
   @Test
   public void testSubgraphWithoutEdges() {
-    ImmutableSet<TargetNode<?, ?>> roots = ImmutableSet.of(nodeF, nodeH, nodeI);
-    ImmutableSet<TargetNode<?, ?>> expectedNodes = ImmutableSet.of(nodeF, nodeH, nodeI);
+    ImmutableSet<TargetNode<?>> roots = ImmutableSet.of(nodeF, nodeH, nodeI);
+    ImmutableSet<TargetNode<?>> expectedNodes = ImmutableSet.of(nodeF, nodeH, nodeI);
     checkSubgraph(roots, expectedNodes);
   }
 
   @Test
   public void testPartialSubgraph1() {
-    ImmutableSet<TargetNode<?, ?>> roots = ImmutableSet.of(nodeB, nodeD, nodeH);
-    ImmutableSet<TargetNode<?, ?>> expectedNodes =
+    ImmutableSet<TargetNode<?>> roots = ImmutableSet.of(nodeB, nodeD, nodeH);
+    ImmutableSet<TargetNode<?>> expectedNodes =
         ImmutableSet.of(nodeB, nodeD, nodeE, nodeF, nodeG, nodeH, nodeI);
     checkSubgraph(roots, expectedNodes);
   }
 
   @Test
   public void testPartialSubgraph2() {
-    ImmutableSet<TargetNode<?, ?>> roots = ImmutableSet.of(nodeD);
-    ImmutableSet<TargetNode<?, ?>> expectedNodes = ImmutableSet.of(nodeD, nodeF, nodeG, nodeI);
+    ImmutableSet<TargetNode<?>> roots = ImmutableSet.of(nodeD);
+    ImmutableSet<TargetNode<?>> expectedNodes = ImmutableSet.of(nodeD, nodeF, nodeG, nodeI);
     checkSubgraph(roots, expectedNodes);
   }
 
@@ -131,22 +131,22 @@ public class TargetGraphTest {
     expectedException.expectMessage(
         "Required target for rule '//foo:bar#baz' was not found in the target graph.");
     // Force the Iterable to evaluate and throw.
-    Iterable<TargetNode<?, ?>> allNodes =
+    Iterable<TargetNode<?>> allNodes =
         targetGraph.getAll(ImmutableSet.of(BuildTargetFactory.newInstance("//foo:bar#baz")));
-    for (TargetNode<?, ?> node : allNodes) {
+    for (TargetNode<?> node : allNodes) {
       node.toString();
     }
   }
 
   @Test
   public void testBasicEqualityCorrectness() {
-    TargetNode<?, ?> child1 = createTargetNode("B");
-    TargetNode<?, ?> child2 = createTargetNode("C");
-    TargetNode<?, ?> root = createTargetNode("A", child1, child2);
+    TargetNode<?> child1 = createTargetNode("B");
+    TargetNode<?> child2 = createTargetNode("C");
+    TargetNode<?> root = createTargetNode("A", child1, child2);
 
-    TargetNode<?, ?> dupChild1 = createTargetNode("B");
-    TargetNode<?, ?> dupChild2 = createTargetNode("C");
-    TargetNode<?, ?> anotherRoot = createTargetNode("A", dupChild2, dupChild1);
+    TargetNode<?> dupChild1 = createTargetNode("B");
+    TargetNode<?> dupChild2 = createTargetNode("C");
+    TargetNode<?> anotherRoot = createTargetNode("A", dupChild2, dupChild1);
 
     TargetGraph graph1 = TargetGraphFactory.newInstance(child1, child2, root);
     TargetGraph graph2 = TargetGraphFactory.newInstance(dupChild2, anotherRoot, dupChild1);
@@ -158,21 +158,21 @@ public class TargetGraphTest {
   }
 
   private void checkSubgraph(
-      ImmutableSet<TargetNode<?, ?>> roots, ImmutableSet<TargetNode<?, ?>> expectedNodes) {
+      ImmutableSet<TargetNode<?>> roots, ImmutableSet<TargetNode<?>> expectedNodes) {
     TargetGraph subgraph = targetGraph.getSubgraph(roots);
     assertEquals(
         "Subgraph should contain the roots and their dependencies",
         expectedNodes,
         subgraph.getNodes());
 
-    for (TargetNode<?, ?> node : subgraph.getNodes()) {
+    for (TargetNode<?> node : subgraph.getNodes()) {
       assertEquals(
           "Subgraph should have the same edges as the original graph",
           targetGraph.getOutgoingNodesFor(node),
           subgraph.getOutgoingNodesFor(node));
     }
 
-    for (TargetNode<?, ?> node : subgraph.getNodes()) {
+    for (TargetNode<?> node : subgraph.getNodes()) {
       assertEquals(
           "subgraph.get should return a node containing the specified BuildTarget",
           node,
@@ -180,10 +180,10 @@ public class TargetGraphTest {
     }
   }
 
-  private TargetNode<?, ?> createTargetNode(String name, TargetNode<?, ?>... deps) {
+  private TargetNode<?> createTargetNode(String name, TargetNode<?>... deps) {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo: " + name);
     JavaLibraryBuilder targetNodeBuilder = JavaLibraryBuilder.createBuilder(buildTarget);
-    for (TargetNode<?, ?> dep : deps) {
+    for (TargetNode<?> dep : deps) {
       targetNodeBuilder.addDep(dep.getBuildTarget());
     }
     return targetNodeBuilder.build();

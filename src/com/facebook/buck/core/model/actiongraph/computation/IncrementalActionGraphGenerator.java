@@ -61,7 +61,7 @@ public class IncrementalActionGraphGenerator {
       // invalidation walk over the new target graph.
       Map<BuildTarget, Boolean> explored = new HashMap<>();
       Set<UnflavoredBuildTarget> invalidTargets = new HashSet<>();
-      for (TargetNode<?, ?> root : targetGraph.getNodesWithNoIncomingEdges()) {
+      for (TargetNode<?> root : targetGraph.getNodesWithNoIncomingEdges()) {
         invalidateChangedTargets(root, targetGraph, explored, invalidTargets);
       }
 
@@ -104,7 +104,7 @@ public class IncrementalActionGraphGenerator {
   }
 
   private boolean invalidateChangedTargets(
-      TargetNode<?, ?> node,
+      TargetNode<?> node,
       TargetGraph targetGraph,
       Map<BuildTarget, Boolean> explored,
       Set<UnflavoredBuildTarget> invalidTargets) {
@@ -114,7 +114,7 @@ public class IncrementalActionGraphGenerator {
 
     // Recursively check if any node in a child subgraph causes invalidation of its parent chain.
     boolean ancestorInvalidated = false;
-    for (TargetNode<?, ?> child : targetGraph.getOutgoingNodesFor(node)) {
+    for (TargetNode<?> child : targetGraph.getOutgoingNodesFor(node)) {
       // Note: We can't short circuit here since we need to also make sure things inside child
       // subgraphs get properly invalidated in turn.
       ancestorInvalidated |= invalidateChangedTargets(child, targetGraph, explored, invalidTargets);
@@ -135,9 +135,9 @@ public class IncrementalActionGraphGenerator {
     return invalidateParent;
   }
 
-  private boolean shouldInvalidateParentChain(TargetNode<?, ?> targetNode) {
+  private boolean shouldInvalidateParentChain(TargetNode<?> targetNode) {
     if (lastTargetGraph != null) {
-      Optional<TargetNode<?, ?>> previousTargetNode =
+      Optional<TargetNode<?>> previousTargetNode =
           lastTargetGraph.getExactOptional(targetNode.getBuildTarget());
       if (previousTargetNode.isPresent()) {
         Preconditions.checkState(

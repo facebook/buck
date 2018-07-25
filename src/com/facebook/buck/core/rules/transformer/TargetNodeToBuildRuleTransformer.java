@@ -29,5 +29,5 @@ public interface TargetNodeToBuildRuleTransformer {
       ToolchainProvider toolchainProvider,
       TargetGraph targetGraph,
       ActionGraphBuilder graphBuilder,
-      TargetNode<T, U> targetNode);
+      TargetNode<T> targetNode);
 }

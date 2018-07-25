@@ -28,7 +28,7 @@ class ModuleAggregator {
 
   @SuppressWarnings(
       "rawtypes") // https://github.com/immutables/immutables/issues/548 requires us to use
-  // TargetNode not TargetNode<?, ?>
+  // TargetNode not TargetNode<?>
   public static AggregationModule aggregate(
       AggregationModule rootModule, Collection<AggregationModule> modulesToAggregate) {
 

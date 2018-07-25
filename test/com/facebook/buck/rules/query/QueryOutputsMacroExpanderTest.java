@@ -23,7 +23,6 @@ import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.cell.resolver.CellPathResolver;
 import com.facebook.buck.core.model.targetgraph.FakeTargetNodeArg;
 import com.facebook.buck.core.model.targetgraph.FakeTargetNodeBuilder;
-import com.facebook.buck.core.model.targetgraph.FakeTargetNodeBuilder.FakeDescription;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -77,14 +76,14 @@ public class QueryOutputsMacroExpanderTest {
     handler = new MacroHandler(ImmutableMap.of("query_outputs", expander));
     filesystem = new FakeProjectFilesystem(tmp.getRoot());
     cellNames = TestCellBuilder.createCellRoots(filesystem);
-    TargetNode<?, ?> depNode =
+    TargetNode<?> depNode =
         JavaLibraryBuilder.createBuilder(
                 BuildTargetFactory.newInstance(filesystem.getRootPath(), "//exciting:dep"),
                 filesystem)
             .addSrc(Paths.get("Dep.java"))
             .build();
 
-    TargetNode<?, ?> ruleNode =
+    TargetNode<?> ruleNode =
         JavaLibraryBuilder.createBuilder(
                 BuildTargetFactory.newInstance(filesystem.getRootPath(), "//exciting:target"),
                 filesystem)
@@ -92,8 +91,8 @@ public class QueryOutputsMacroExpanderTest {
             .addDep(depNode.getBuildTarget())
             .build();
 
-    TargetNode<?, ?> noopNode1 = newNoopNode("//fake:no-op-1");
-    TargetNode<?, ?> noopNode2 = newNoopNode("//fake:no-op-2");
+    TargetNode<?> noopNode1 = newNoopNode("//fake:no-op-1");
+    TargetNode<?> noopNode2 = newNoopNode("//fake:no-op-2");
 
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(depNode, ruleNode, noopNode2, noopNode1);
@@ -193,7 +192,7 @@ public class QueryOutputsMacroExpanderTest {
     return filesystem.resolve(Paths.get("buck-out", "gen", relativePath)).toString();
   }
 
-  private TargetNode<FakeTargetNodeArg, FakeDescription> newNoopNode(String buildTarget) {
+  private TargetNode<FakeTargetNodeArg> newNoopNode(String buildTarget) {
     return FakeTargetNodeBuilder.build(
         new NoopBuildRule(
             BuildTargetFactory.newInstance(filesystem.getRootPath(), buildTarget), filesystem) {

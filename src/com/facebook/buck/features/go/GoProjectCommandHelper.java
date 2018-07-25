@@ -159,7 +159,7 @@ public class GoProjectCommandHelper {
     }
 
     if (projectGeneratorParameters.isDryRun()) {
-      for (TargetNode<?, ?> targetNode : targetGraphAndTargets.getTargetGraph().getNodes()) {
+      for (TargetNode<?> targetNode : targetGraphAndTargets.getTargetGraph().getNodes()) {
         console.getStdOut().println(targetNode.toString());
       }
 
@@ -301,7 +301,7 @@ public class GoProjectCommandHelper {
   private Map<BuildTargetSourcePath, Path> findCodeGenerationTargets(
       TargetGraphAndTargets targetGraphAndTargets) {
     Map<BuildTargetSourcePath, Path> generatedPackages = new HashMap<>();
-    for (TargetNode<?, ?> targetNode : targetGraphAndTargets.getTargetGraph().getNodes()) {
+    for (TargetNode<?> targetNode : targetGraphAndTargets.getTargetGraph().getNodes()) {
       Object constructorArg = targetNode.getConstructorArg();
       if (constructorArg instanceof GoLibraryDescriptionArg) {
         Optional<String> packageNameArg =
@@ -391,8 +391,8 @@ public class GoProjectCommandHelper {
    */
   private ImmutableSet<BuildTarget> getExplicitTestTargets(
       ImmutableSet<BuildTarget> buildTargets, TargetGraph projectGraph) {
-    Iterable<TargetNode<?, ?>> projectRoots = projectGraph.getAll(buildTargets);
-    Iterable<TargetNode<?, ?>> nodes;
+    Iterable<TargetNode<?>> projectRoots = projectGraph.getAll(buildTargets);
+    Iterable<TargetNode<?>> nodes;
     if (isWithDependenciesTests()) {
       nodes = projectGraph.getSubgraph(projectRoots).getNodes();
     } else {

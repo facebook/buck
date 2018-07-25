@@ -47,7 +47,7 @@ public class DefaultIjModuleFactory implements IjModuleFactory {
   @Override
   @SuppressWarnings(
       "rawtypes") // https://github.com/immutables/immutables/issues/548 requires us to use
-  // TargetNode not TargetNode<?, ?>
+  // TargetNode not TargetNode<?>
   public IjModule createModule(
       Path moduleBasePath, ImmutableSet<TargetNode> targetNodes, Set<Path> excludes) {
     return createModuleUsingSortedTargetNodes(
@@ -65,7 +65,7 @@ public class DefaultIjModuleFactory implements IjModuleFactory {
     ModuleBuildContext context = new ModuleBuildContext(moduleBuildTargets);
 
     Set<Class<?>> seenTypes = new HashSet<>();
-    for (TargetNode<?, ?> targetNode : targetNodes) {
+    for (TargetNode<?> targetNode : targetNodes) {
       Class<?> nodeType = targetNode.getDescription().getClass();
       seenTypes.add(nodeType);
       IjModuleRule<?> rule =

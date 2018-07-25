@@ -48,7 +48,7 @@ class DefaultIjLibraryFactory extends IjLibraryFactory {
 
   /** Rule describing how to create a {@link IjLibrary} from a {@link TargetNode}. */
   private interface IjLibraryRule {
-    void applyRule(TargetNode<?, ?> targetNode, IjLibrary.Builder library);
+    void applyRule(TargetNode<?> targetNode, IjLibrary.Builder library);
   }
 
   /**
@@ -59,11 +59,11 @@ class DefaultIjLibraryFactory extends IjLibraryFactory {
   abstract class TypedIjLibraryRule<T> implements IjLibraryRule {
     abstract Class<? extends DescriptionWithTargetGraph<?>> getDescriptionClass();
 
-    abstract void apply(TargetNode<T, ?> targetNode, IjLibrary.Builder library);
+    abstract void apply(TargetNode<T> targetNode, IjLibrary.Builder library);
 
     @Override
     @SuppressWarnings({"unchecked", "rawtypes"})
-    public void applyRule(TargetNode<?, ?> targetNode, IjLibrary.Builder library) {
+    public void applyRule(TargetNode<?> targetNode, IjLibrary.Builder library) {
       apply((TargetNode) targetNode, library);
     }
   }
@@ -72,7 +72,7 @@ class DefaultIjLibraryFactory extends IjLibraryFactory {
       new HashMap<>();
   private Set<String> uniqueLibraryNamesSet = new HashSet<>();
   private IjLibraryFactoryResolver libraryFactoryResolver;
-  private Map<TargetNode<?, ?>, Optional<IjLibrary>> libraryCache;
+  private Map<TargetNode<?>, Optional<IjLibrary>> libraryCache;
 
   public DefaultIjLibraryFactory(IjLibraryFactoryResolver libraryFactoryResolver) {
     this.libraryFactoryResolver = libraryFactoryResolver;
@@ -89,7 +89,7 @@ class DefaultIjLibraryFactory extends IjLibraryFactory {
   }
 
   @Override
-  public Optional<IjLibrary> getLibrary(TargetNode<?, ?> target) {
+  public Optional<IjLibrary> getLibrary(TargetNode<?> target) {
     Optional<IjLibrary> library = libraryCache.get(target);
     if (library == null) {
       library = createLibrary(target);
@@ -98,7 +98,7 @@ class DefaultIjLibraryFactory extends IjLibraryFactory {
     return library;
   }
 
-  private Optional<IjLibraryRule> getRule(TargetNode<?, ?> targetNode) {
+  private Optional<IjLibraryRule> getRule(TargetNode<?> targetNode) {
     IjLibraryRule rule = libraryRuleIndex.get(targetNode.getDescription().getClass());
     if (rule == null) {
       rule =
@@ -111,7 +111,7 @@ class DefaultIjLibraryFactory extends IjLibraryFactory {
     return Optional.ofNullable(rule);
   }
 
-  private Optional<IjLibrary> createLibrary(TargetNode<?, ?> targetNode) {
+  private Optional<IjLibrary> createLibrary(TargetNode<?> targetNode) {
     return getRule(targetNode)
         .map(
             rule -> {
@@ -136,7 +136,7 @@ class DefaultIjLibraryFactory extends IjLibraryFactory {
     }
 
     @Override
-    public void applyRule(TargetNode<?, ?> targetNode, IjLibrary.Builder library) {
+    public void applyRule(TargetNode<?> targetNode, IjLibrary.Builder library) {
       library.addBinaryJars(binaryJarPath);
     }
   }
@@ -151,7 +151,7 @@ class DefaultIjLibraryFactory extends IjLibraryFactory {
 
     @Override
     public void apply(
-        TargetNode<AndroidPrebuiltAarDescriptionArg, ?> targetNode, IjLibrary.Builder library) {
+        TargetNode<AndroidPrebuiltAarDescriptionArg> targetNode, IjLibrary.Builder library) {
       Optional<SourcePath> libraryPath = libraryFactoryResolver.getPathIfJavaLibrary(targetNode);
       libraryPath.ifPresent(path -> library.addBinaryJars(libraryFactoryResolver.getPath(path)));
 
@@ -183,8 +183,7 @@ class DefaultIjLibraryFactory extends IjLibraryFactory {
     }
 
     @Override
-    public void apply(
-        TargetNode<PrebuiltJarDescriptionArg, ?> targetNode, IjLibrary.Builder library) {
+    public void apply(TargetNode<PrebuiltJarDescriptionArg> targetNode, IjLibrary.Builder library) {
       PrebuiltJarDescriptionArg arg = targetNode.getConstructorArg();
       library.addBinaryJars(libraryFactoryResolver.getPath(arg.getBinaryJar()));
       if (!(arg.getBinaryJar() instanceof PathSourcePath)) {

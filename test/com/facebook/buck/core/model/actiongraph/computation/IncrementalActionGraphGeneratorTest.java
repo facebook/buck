@@ -80,7 +80,7 @@ public class IncrementalActionGraphGeneratorTest {
 
   @Test
   public void cacheableRuleCached() {
-    TargetNode<?, ?> node = createTargetNode("test1");
+    TargetNode<?> node = createTargetNode("test1");
     setUpTargetGraphAndResolver(node);
 
     generator.populateActionGraphBuilderWithCachedRules(eventBus, targetGraph, graphBuilder);
@@ -98,7 +98,7 @@ public class IncrementalActionGraphGeneratorTest {
 
   @Test
   public void uncacheableRuleNotCached() {
-    TargetNode<?, ?> node = createUncacheableTargetNode("test1");
+    TargetNode<?> node = createUncacheableTargetNode("test1");
     setUpTargetGraphAndResolver(node);
 
     generator.populateActionGraphBuilderWithCachedRules(eventBus, targetGraph, graphBuilder);
@@ -116,8 +116,8 @@ public class IncrementalActionGraphGeneratorTest {
 
   @Test
   public void cacheableRuleWithUncacheableChildNotCached() {
-    TargetNode<?, ?> childNode = createUncacheableTargetNode("child");
-    TargetNode<?, ?> parentNode = createTargetNode("parent", childNode);
+    TargetNode<?> childNode = createUncacheableTargetNode("child");
+    TargetNode<?> parentNode = createTargetNode("parent", childNode);
     setUpTargetGraphAndResolver(parentNode, childNode);
 
     generator.populateActionGraphBuilderWithCachedRules(eventBus, targetGraph, graphBuilder);
@@ -142,13 +142,13 @@ public class IncrementalActionGraphGeneratorTest {
 
   @Test
   public void buildRuleForUnchangedTargetLoadedFromCache() {
-    TargetNode<?, ?> originalNode = createTargetNode("test1");
+    TargetNode<?> originalNode = createTargetNode("test1");
     setUpTargetGraphAndResolver(originalNode);
 
     generator.populateActionGraphBuilderWithCachedRules(eventBus, targetGraph, graphBuilder);
     BuildRule originalBuildRule = graphBuilder.requireRule(originalNode.getBuildTarget());
 
-    TargetNode<?, ?> newNode = createTargetNode("test1");
+    TargetNode<?> newNode = createTargetNode("test1");
     assertEquals(originalNode, newNode);
     setUpTargetGraphAndResolver(newNode);
 
@@ -162,14 +162,14 @@ public class IncrementalActionGraphGeneratorTest {
 
   @Test
   public void buildRuleForChangedTargetNotLoadedFromCache() {
-    TargetNode<?, ?> originalNode = createTargetNode("test1");
+    TargetNode<?> originalNode = createTargetNode("test1");
     setUpTargetGraphAndResolver(originalNode);
 
     generator.populateActionGraphBuilderWithCachedRules(eventBus, targetGraph, graphBuilder);
     BuildRule originalBuildRule = graphBuilder.requireRule(originalNode.getBuildTarget());
 
-    TargetNode<?, ?> depNode = createTargetNode("test2");
-    TargetNode<?, ?> newNode = createTargetNode("test1", depNode);
+    TargetNode<?> depNode = createTargetNode("test2");
+    TargetNode<?> newNode = createTargetNode("test1", depNode);
     setUpTargetGraphAndResolver(newNode, depNode);
 
     generator.populateActionGraphBuilderWithCachedRules(eventBus, targetGraph, graphBuilder);
@@ -182,15 +182,15 @@ public class IncrementalActionGraphGeneratorTest {
 
   @Test
   public void changedRuleWithUnchangedFlavoredChildNotLoadedFromCache() {
-    TargetNode<?, ?> depNode = createTargetNode("test#flavor");
-    TargetNode<?, ?> parentNode = createTargetNode("test", "label1", depNode);
+    TargetNode<?> depNode = createTargetNode("test#flavor");
+    TargetNode<?> parentNode = createTargetNode("test", "label1", depNode);
     setUpTargetGraphAndResolver(parentNode, depNode);
 
     generator.populateActionGraphBuilderWithCachedRules(eventBus, targetGraph, graphBuilder);
     graphBuilder.requireRule(depNode.getBuildTarget());
     BuildRule originalParentRule = graphBuilder.requireRule(parentNode.getBuildTarget());
 
-    TargetNode<?, ?> newParentNode = createTargetNode("test", "label2", depNode);
+    TargetNode<?> newParentNode = createTargetNode("test", "label2", depNode);
     setUpTargetGraphAndResolver(newParentNode, depNode);
 
     generator.populateActionGraphBuilderWithCachedRules(eventBus, targetGraph, graphBuilder);
@@ -202,13 +202,13 @@ public class IncrementalActionGraphGeneratorTest {
 
   @Test
   public void newFlavoredRuleWithoutPreviouslyPresentUnflavoredRuleInvalidatesUnflavoredRule() {
-    TargetNode<?, ?> originalNode = createTargetNode("test");
+    TargetNode<?> originalNode = createTargetNode("test");
     setUpTargetGraphAndResolver(originalNode);
 
     generator.populateActionGraphBuilderWithCachedRules(eventBus, targetGraph, graphBuilder);
     graphBuilder.requireRule(originalNode.getBuildTarget());
 
-    TargetNode<?, ?> newNode = createTargetNode("test#flavor");
+    TargetNode<?> newNode = createTargetNode("test#flavor");
     setUpTargetGraphAndResolver(newNode);
 
     generator.populateActionGraphBuilderWithCachedRules(eventBus, targetGraph, graphBuilder);
@@ -219,9 +219,9 @@ public class IncrementalActionGraphGeneratorTest {
 
   @Test
   public void allParentChainsForChangedTargetInvalidated() {
-    TargetNode<?, ?> originalChildNode = createTargetNode("child");
-    TargetNode<?, ?> originalParentNode1 = createTargetNode("parent1", originalChildNode);
-    TargetNode<?, ?> originalParentNode2 = createTargetNode("parent2", originalChildNode);
+    TargetNode<?> originalChildNode = createTargetNode("child");
+    TargetNode<?> originalParentNode1 = createTargetNode("parent1", originalChildNode);
+    TargetNode<?> originalParentNode2 = createTargetNode("parent2", originalChildNode);
     setUpTargetGraphAndResolver(originalParentNode1, originalParentNode2, originalChildNode);
 
     generator.populateActionGraphBuilderWithCachedRules(eventBus, targetGraph, graphBuilder);
@@ -231,9 +231,9 @@ public class IncrementalActionGraphGeneratorTest {
     BuildRule originalParentBuildRule2 =
         graphBuilder.requireRule(originalParentNode2.getBuildTarget());
 
-    TargetNode<?, ?> newChildNode = createTargetNode("child", "new_label");
-    TargetNode<?, ?> newParentNode1 = createTargetNode("parent1", newChildNode);
-    TargetNode<?, ?> newParentNode2 = createTargetNode("parent2", newChildNode);
+    TargetNode<?> newChildNode = createTargetNode("child", "new_label");
+    TargetNode<?> newParentNode1 = createTargetNode("parent1", newChildNode);
+    TargetNode<?> newParentNode2 = createTargetNode("parent2", newChildNode);
     setUpTargetGraphAndResolver(newParentNode1, newParentNode2, newChildNode);
 
     ActionGraphBuilder newGraphBuilder = createActionGraphBuilder(targetGraph);
@@ -255,7 +255,7 @@ public class IncrementalActionGraphGeneratorTest {
     BuildTarget parentTarget = BuildTargetFactory.newInstance("//:test");
     BuildTarget childTarget1 = parentTarget.withFlavors(InternalFlavor.of("flav1"));
     BuildTarget childTarget2 = parentTarget.withFlavors(InternalFlavor.of("flav2"));
-    TargetNode<?, ?> node =
+    TargetNode<?> node =
         FakeTargetNodeBuilder.newBuilder(
                 new FakeDescription() {
                   @Override
@@ -293,9 +293,9 @@ public class IncrementalActionGraphGeneratorTest {
 
   @Test
   public void changedCacheableNodeInvalidatesParentChain() {
-    TargetNode<?, ?> originalChildNode1 = createTargetNode("child1");
-    TargetNode<?, ?> originalChildNode2 = createTargetNode("child2");
-    TargetNode<?, ?> originalParentNode =
+    TargetNode<?> originalChildNode1 = createTargetNode("child1");
+    TargetNode<?> originalChildNode2 = createTargetNode("child2");
+    TargetNode<?> originalParentNode =
         createTargetNode("parent", originalChildNode1, originalChildNode2);
     setUpTargetGraphAndResolver(originalParentNode, originalChildNode1, originalChildNode2);
 
@@ -304,9 +304,9 @@ public class IncrementalActionGraphGeneratorTest {
     BuildRule originalChildRule2 = graphBuilder.requireRule(originalChildNode2.getBuildTarget());
     BuildRule originalParentRule = graphBuilder.requireRule(originalParentNode.getBuildTarget());
 
-    TargetNode<?, ?> newChildNode1 = createTargetNode("child1", "new_label");
-    TargetNode<?, ?> newChildNode2 = createTargetNode("child2");
-    TargetNode<?, ?> newParentNode = createTargetNode("parent", newChildNode1, newChildNode2);
+    TargetNode<?> newChildNode1 = createTargetNode("child1", "new_label");
+    TargetNode<?> newChildNode2 = createTargetNode("child2");
+    TargetNode<?> newParentNode = createTargetNode("parent", newChildNode1, newChildNode2);
     setUpTargetGraphAndResolver(newParentNode, newChildNode1, newChildNode2);
 
     generator.populateActionGraphBuilderWithCachedRules(eventBus, targetGraph, graphBuilder);
@@ -326,9 +326,9 @@ public class IncrementalActionGraphGeneratorTest {
 
   @Test
   public void uncacheableNodeInvalidatesParentChain() {
-    TargetNode<?, ?> originalChildNode1 = createUncacheableTargetNode("child1");
-    TargetNode<?, ?> originalChildNode2 = createTargetNode("child2");
-    TargetNode<?, ?> originalParentNode =
+    TargetNode<?> originalChildNode1 = createUncacheableTargetNode("child1");
+    TargetNode<?> originalChildNode2 = createTargetNode("child2");
+    TargetNode<?> originalParentNode =
         createTargetNode("parent", originalChildNode1, originalChildNode2);
     setUpTargetGraphAndResolver(originalParentNode, originalChildNode1, originalChildNode2);
 
@@ -337,9 +337,9 @@ public class IncrementalActionGraphGeneratorTest {
     BuildRule originalChildRule2 = graphBuilder.requireRule(originalChildNode2.getBuildTarget());
     BuildRule originalParentRule = graphBuilder.requireRule(originalParentNode.getBuildTarget());
 
-    TargetNode<?, ?> newChildNode1 = createUncacheableTargetNode("child1");
-    TargetNode<?, ?> newChildNode2 = createTargetNode("child2");
-    TargetNode<?, ?> newParentNode = createTargetNode("parent", newChildNode1, newChildNode2);
+    TargetNode<?> newChildNode1 = createUncacheableTargetNode("child1");
+    TargetNode<?> newChildNode2 = createTargetNode("child2");
+    TargetNode<?> newParentNode = createTargetNode("parent", newChildNode1, newChildNode2);
     setUpTargetGraphAndResolver(newParentNode, newChildNode1, newChildNode2);
 
     generator.populateActionGraphBuilderWithCachedRules(eventBus, targetGraph, graphBuilder);
@@ -359,11 +359,10 @@ public class IncrementalActionGraphGeneratorTest {
 
   @Test
   public void allTargetGraphDepTypesAddedToIndexForCachedNode() {
-    TargetNode<?, ?> declaredChildNode = createTargetNodeBuilder("declared").build();
-    TargetNode<?, ?> extraChildNode = createTargetNodeBuilder("extra").build();
-    TargetNode<?, ?> targetGraphOnlyChildNode =
-        createTargetNodeBuilder("target_graph_only").build();
-    TargetNode<?, ?> parentNode =
+    TargetNode<?> declaredChildNode = createTargetNodeBuilder("declared").build();
+    TargetNode<?> extraChildNode = createTargetNodeBuilder("extra").build();
+    TargetNode<?> targetGraphOnlyChildNode = createTargetNodeBuilder("target_graph_only").build();
+    TargetNode<?> parentNode =
         createTargetNodeBuilder("parent")
             .setDeps(declaredChildNode)
             .setExtraDeps(extraChildNode)
@@ -393,7 +392,7 @@ public class IncrementalActionGraphGeneratorTest {
   public void cachedNodeUsesLastRuleResolverForRuntimeDeps() {
     BuildTarget parentTarget = BuildTargetFactory.newInstance("//:test");
     BuildTarget childTarget = parentTarget.withFlavors(InternalFlavor.of("child"));
-    TargetNode<?, ?> node =
+    TargetNode<?> node =
         FakeTargetNodeBuilder.newBuilder(
                 new FakeDescription() {
                   @Override
@@ -435,7 +434,7 @@ public class IncrementalActionGraphGeneratorTest {
     BuildTarget parentTarget = BuildTargetFactory.newInstance("//:test");
     BuildTarget childTarget1 = parentTarget.withFlavors(InternalFlavor.of("flav1"));
     BuildTarget childTarget2 = parentTarget.withFlavors(InternalFlavor.of("flav2"));
-    TargetNode<?, ?> node =
+    TargetNode<?> node =
         FakeTargetNodeBuilder.newBuilder(
                 new FakeDescription() {
                   @Override
@@ -478,7 +477,7 @@ public class IncrementalActionGraphGeneratorTest {
     BuildTarget rootTarget1 = BuildTargetFactory.newInstance("//:test1");
     BuildTarget childTarget1 = rootTarget1.withFlavors(InternalFlavor.of("child1"));
     BuildTarget childTarget2 = rootTarget1.withFlavors(InternalFlavor.of("child2"));
-    TargetNode<?, ?> node1 =
+    TargetNode<?> node1 =
         FakeTargetNodeBuilder.newBuilder(
                 new FakeDescription() {
                   @Override
@@ -501,7 +500,7 @@ public class IncrementalActionGraphGeneratorTest {
                 rootTarget1)
             .build();
     BuildTarget rootTarget2 = BuildTargetFactory.newInstance("//:test2");
-    TargetNode<?, ?> node2 = FakeTargetNodeBuilder.newBuilder(rootTarget2).build();
+    TargetNode<?> node2 = FakeTargetNodeBuilder.newBuilder(rootTarget2).build();
     setUpTargetGraphAndResolver(node1, node2);
 
     generator.populateActionGraphBuilderWithCachedRules(eventBus, targetGraph, graphBuilder);
@@ -523,7 +522,7 @@ public class IncrementalActionGraphGeneratorTest {
   public void lastRuleResolverInvalidatedAfterTargetGraphWalk() {
     expectedException.expect(IllegalStateException.class);
 
-    TargetNode<?, ?> node = createTargetNode("node");
+    TargetNode<?> node = createTargetNode("node");
     setUpTargetGraphAndResolver(node);
 
     generator.populateActionGraphBuilderWithCachedRules(eventBus, targetGraph, graphBuilder);
@@ -540,7 +539,7 @@ public class IncrementalActionGraphGeneratorTest {
 
   @Test
   public void actionGraphEventsRaised() throws InterruptedException {
-    TargetNode<?, ?> node = createTargetNode("test1");
+    TargetNode<?> node = createTargetNode("test1");
     setUpTargetGraphAndResolver(node);
 
     generator.populateActionGraphBuilderWithCachedRules(eventBus, targetGraph, graphBuilder);
@@ -566,22 +565,22 @@ public class IncrementalActionGraphGeneratorTest {
     return FakeTargetNodeBuilder.newBuilder(new FakeDescription(), buildTarget);
   }
 
-  private TargetNode<?, ?> createTargetNode(String name, TargetNode<?, ?>... deps) {
+  private TargetNode<?> createTargetNode(String name, TargetNode<?>... deps) {
     return createTargetNode(name, null, deps);
   }
 
-  private TargetNode<?, ?> createTargetNode(String name, String label, TargetNode<?, ?>... deps) {
+  private TargetNode<?> createTargetNode(String name, String label, TargetNode<?>... deps) {
     return createTargetNode(name, label, new FakeDescription(), deps);
   }
 
-  private TargetNode<?, ?> createTargetNode(
-      String name, String label, FakeDescription description, TargetNode<?, ?>... deps) {
+  private TargetNode<?> createTargetNode(
+      String name, String label, FakeDescription description, TargetNode<?>... deps) {
     FakeTargetNodeBuilder targetNodeBuilder =
         FakeTargetNodeBuilder.newBuilder(
                 description, BuildTargetFactory.newInstance("//test:" + name))
             .setProducesCacheableSubgraph(true);
 
-    for (TargetNode<?, ?> dep : deps) {
+    for (TargetNode<?> dep : deps) {
       targetNodeBuilder.getArgForPopulating().addDeps(dep.getBuildTarget());
     }
     if (label != null) {
@@ -590,13 +589,13 @@ public class IncrementalActionGraphGeneratorTest {
     return targetNodeBuilder.build();
   }
 
-  private TargetNode<?, ?> createUncacheableTargetNode(String target) {
+  private TargetNode<?> createUncacheableTargetNode(String target) {
     return FakeTargetNodeBuilder.newBuilder(BuildTargetFactory.newInstance("//test:" + target))
         .setProducesCacheableSubgraph(false)
         .build();
   }
 
-  private void setUpTargetGraphAndResolver(TargetNode<?, ?>... nodes) {
+  private void setUpTargetGraphAndResolver(TargetNode<?>... nodes) {
     // Use {@code newInstanceExact} instead of {@code newInstance}, as some tests assume unflavored
     // versions of flavored nodes don't get automatically added.
     targetGraph = TargetGraphFactory.newInstanceExact(nodes);

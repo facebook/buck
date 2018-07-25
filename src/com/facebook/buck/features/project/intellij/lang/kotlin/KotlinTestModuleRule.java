@@ -41,12 +41,12 @@ public class KotlinTestModuleRule extends BaseIjModuleRule<KotlinTestDescription
   }
 
   @Override
-  public void apply(TargetNode<KotlinTestDescriptionArg, ?> target, ModuleBuildContext context) {
+  public void apply(TargetNode<KotlinTestDescriptionArg> target, ModuleBuildContext context) {
     addDepsAndTestSources(target, false /* wantsPackagePrefix */, context);
   }
 
   @Override
-  public IjModuleType detectModuleType(TargetNode<KotlinTestDescriptionArg, ?> targetNode) {
+  public IjModuleType detectModuleType(TargetNode<KotlinTestDescriptionArg> targetNode) {
     return IjModuleType.UNKNOWN_MODULE;
   }
 }

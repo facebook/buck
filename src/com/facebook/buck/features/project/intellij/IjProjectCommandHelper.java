@@ -190,7 +190,7 @@ public class IjProjectCommandHelper {
     }
 
     if (projectGeneratorParameters.isDryRun()) {
-      for (TargetNode<?, ?> targetNode : targetGraphAndTargets.getTargetGraph().getNodes()) {
+      for (TargetNode<?> targetNode : targetGraphAndTargets.getTargetGraph().getNodes()) {
         console.getStdOut().println(targetNode.toString());
       }
 
@@ -325,7 +325,7 @@ public class IjProjectCommandHelper {
         .stream()
         .filter(
             input -> {
-              TargetNode<?, ?> targetNode = targetGraph.get(input);
+              TargetNode<?> targetNode = targetGraph.get(input);
               return targetNode != null && isTargetWithAnnotations(targetNode);
             })
         .collect(ImmutableSet.toImmutableSet());
@@ -340,7 +340,7 @@ public class IjProjectCommandHelper {
                 + "work correctly with IntelliJ. Please fix the errors and run this command again.\n");
   }
 
-  private static boolean isTargetWithAnnotations(TargetNode<?, ?> target) {
+  private static boolean isTargetWithAnnotations(TargetNode<?> target) {
     if (target.getDescription() instanceof JavaLibraryDescription) {
       return false;
     }
@@ -423,8 +423,8 @@ public class IjProjectCommandHelper {
    */
   private ImmutableSet<BuildTarget> getExplicitTestTargets(
       ImmutableSet<BuildTarget> buildTargets, TargetGraph projectGraph) {
-    Iterable<TargetNode<?, ?>> projectRoots = projectGraph.getAll(buildTargets);
-    Iterable<TargetNode<?, ?>> nodes;
+    Iterable<TargetNode<?>> projectRoots = projectGraph.getAll(buildTargets);
+    Iterable<TargetNode<?>> nodes;
     if (isWithDependenciesTests()) {
       nodes = projectGraph.getSubgraph(projectRoots).getNodes();
     } else {

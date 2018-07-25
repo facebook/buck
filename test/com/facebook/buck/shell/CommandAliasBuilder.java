@@ -54,12 +54,12 @@ public class CommandAliasBuilder
   private static final CommandAliasDescription aliasBinaryDescription =
       new CommandAliasDescription(Platform.UNKNOWN);
   private final CommandAliasDescription commandAliasDescription;
-  private final Set<TargetNode<?, ?>> nodes;
+  private final Set<TargetNode<?>> nodes;
   private final ImmutableSortedMap.Builder<Platform, BuildTarget> platformExeBuilder =
       ImmutableSortedMap.naturalOrder();
 
   private CommandAliasBuilder(
-      BuildTarget target, CommandAliasDescription description, Set<TargetNode<?, ?>> nodes) {
+      BuildTarget target, CommandAliasDescription description, Set<TargetNode<?>> nodes) {
     super(description, target);
     this.commandAliasDescription = description;
     this.nodes = nodes;
@@ -83,7 +83,7 @@ public class CommandAliasBuilder
     return this;
   }
 
-  public CommandAliasBuilder setExe(TargetNode<?, ?> commandNode) {
+  public CommandAliasBuilder setExe(TargetNode<?> commandNode) {
     nodes.add(commandNode);
     getArgForPopulating().setExe(commandNode.getBuildTarget());
     return this;
@@ -127,7 +127,7 @@ public class CommandAliasBuilder
     return this;
   }
 
-  public CommandAliasBuilder setPlatformExe(Platform platform, TargetNode<?, ?> commandNode) {
+  public CommandAliasBuilder setPlatformExe(Platform platform, TargetNode<?> commandNode) {
     nodes.add(commandNode);
     platformExeBuilder.put(platform, commandNode.getBuildTarget());
     getArgForPopulating().setPlatformExe(platformExeBuilder.build());
@@ -139,7 +139,7 @@ public class CommandAliasBuilder
         GenruleBuilder.newGenruleBuilder(target, filesystem).setOut("arbitrary-file").build());
   }
 
-  public CommandAliasBuilder addTarget(TargetNode<?, ?> targetNode) {
+  public CommandAliasBuilder addTarget(TargetNode<?> targetNode) {
     nodes.add(targetNode);
     return this;
   }

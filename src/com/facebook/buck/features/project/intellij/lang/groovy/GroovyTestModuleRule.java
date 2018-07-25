@@ -41,12 +41,12 @@ public class GroovyTestModuleRule extends BaseIjModuleRule<GroovyTestDescription
   }
 
   @Override
-  public void apply(TargetNode<GroovyTestDescriptionArg, ?> target, ModuleBuildContext context) {
+  public void apply(TargetNode<GroovyTestDescriptionArg> target, ModuleBuildContext context) {
     addDepsAndTestSources(target, false /* wantsPackagePrefix */, context);
   }
 
   @Override
-  public IjModuleType detectModuleType(TargetNode<GroovyTestDescriptionArg, ?> targetNode) {
+  public IjModuleType detectModuleType(TargetNode<GroovyTestDescriptionArg> targetNode) {
     return IjModuleType.UNKNOWN_MODULE;
   }
 }

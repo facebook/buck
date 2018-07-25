@@ -140,7 +140,7 @@ public class ActionGraphBuilderTest {
   @Test
   public void testRequireNonExistingBuildRule() {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
-    TargetNode<?, ?> library = JavaLibraryBuilder.createBuilder(target).build();
+    TargetNode<?> library = JavaLibraryBuilder.createBuilder(target).build();
     TargetGraph targetGraph = TargetGraphFactory.newInstance(library);
     ActionGraphBuilder graphBuilder = actionGraphBuilderFactory.create(targetGraph);
 
@@ -153,7 +153,7 @@ public class ActionGraphBuilderTest {
   public void testRequireExistingBuildRule() {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     JavaLibraryBuilder builder = JavaLibraryBuilder.createBuilder(target);
-    TargetNode<?, ?> library = builder.build();
+    TargetNode<?> library = builder.build();
     TargetGraph targetGraph = TargetGraphFactory.newInstance(library);
     ActionGraphBuilder graphBuilder = actionGraphBuilderFactory.create(targetGraph);
     BuildRule existing = graphBuilder.requireRule(target);
@@ -178,7 +178,7 @@ public class ActionGraphBuilderTest {
   public void getRuleWithTypeWrongType() {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     JavaLibraryBuilder builder = JavaLibraryBuilder.createBuilder(target);
-    TargetNode<?, ?> library = builder.build();
+    TargetNode<?> library = builder.build();
     TargetGraph targetGraph = TargetGraphFactory.newInstance(library);
     ActionGraphBuilder graphBuilder = actionGraphBuilderFactory.create(targetGraph);
     graphBuilder.requireRule(target);
@@ -229,7 +229,7 @@ public class ActionGraphBuilderTest {
   @Test
   public void accessingSameTargetWithinSameThreadActsAsIfItDoesNotExist() {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
-    TargetNode<?, ?> library = JavaLibraryBuilder.createBuilder(target).build();
+    TargetNode<?> library = JavaLibraryBuilder.createBuilder(target).build();
     TargetGraph targetGraph = TargetGraphFactory.newInstance(library);
     ActionGraphBuilder graphBuilder =
         actionGraphBuilderFactory.create(
@@ -240,7 +240,7 @@ public class ActionGraphBuilderTest {
                   ToolchainProvider toolchainProvider,
                   TargetGraph targetGraph,
                   ActionGraphBuilder graphBuilder,
-                  TargetNode<T, U> targetNode) {
+                  TargetNode<T> targetNode) {
                 Assert.assertFalse(graphBuilder.getRuleOptional(target).isPresent());
                 return graphBuilder.computeIfAbsent(target, FakeBuildRule::new);
               }
@@ -253,10 +253,10 @@ public class ActionGraphBuilderTest {
     Assume.assumeTrue(classUnderTest == MultiThreadedActionGraphBuilder.class);
 
     BuildTarget target1 = BuildTargetFactory.newInstance("//foo:bar1");
-    TargetNode<?, ?> library1 = JavaLibraryBuilder.createBuilder(target1).build();
+    TargetNode<?> library1 = JavaLibraryBuilder.createBuilder(target1).build();
 
     BuildTarget target2 = BuildTargetFactory.newInstance("//foo:bar2");
-    TargetNode<?, ?> library2 = JavaLibraryBuilder.createBuilder(target2).build();
+    TargetNode<?> library2 = JavaLibraryBuilder.createBuilder(target2).build();
     TargetGraph targetGraph = TargetGraphFactory.newInstance(library1, library2);
 
     CountDownLatch jobsStarted = new CountDownLatch(2);
@@ -273,7 +273,7 @@ public class ActionGraphBuilderTest {
                   ToolchainProvider toolchainProvider,
                   TargetGraph targetGraph,
                   ActionGraphBuilder graphBuilder,
-                  TargetNode<T, U> targetNode) {
+                  TargetNode<T> targetNode) {
                 Boolean existing = transformCalls.put(targetNode.getBuildTarget(), true);
                 assertEquals("Should only be called once for each build target", null, existing);
                 try {
@@ -324,22 +324,22 @@ public class ActionGraphBuilderTest {
      * <p>proper behaviour is to use one of the threads blocked on bar0,...bar3 to execute bar4.
      */
     BuildTarget target4 = BuildTargetFactory.newInstance("//foo:bar4");
-    TargetNode<?, ?> library4 = JavaLibraryBuilder.createBuilder(target4).build();
+    TargetNode<?> library4 = JavaLibraryBuilder.createBuilder(target4).build();
 
     BuildTarget target3 = BuildTargetFactory.newInstance("//foo:bar3");
-    TargetNode<?, ?> library3 =
+    TargetNode<?> library3 =
         JavaLibraryBuilder.createBuilder(target3).addExportedDep(target4).build();
 
     BuildTarget target2 = BuildTargetFactory.newInstance("//foo:bar2");
-    TargetNode<?, ?> library2 =
+    TargetNode<?> library2 =
         JavaLibraryBuilder.createBuilder(target2).addExportedDep(target4).build();
 
     BuildTarget target1 = BuildTargetFactory.newInstance("//foo:bar1");
-    TargetNode<?, ?> library1 =
+    TargetNode<?> library1 =
         JavaLibraryBuilder.createBuilder(target1).addExportedDep(target4).build();
 
     BuildTarget target0 = BuildTargetFactory.newInstance("//foo:bar0");
-    TargetNode<?, ?> library0 =
+    TargetNode<?> library0 =
         JavaLibraryBuilder.createBuilder(target0).addExportedDep(target4).build();
 
     TargetGraph targetGraph =
@@ -362,7 +362,7 @@ public class ActionGraphBuilderTest {
                     ToolchainProvider toolchainProvider,
                     TargetGraph targetGraph,
                     ActionGraphBuilder graphBuilder,
-                    TargetNode<T, U> targetNode) {
+                    TargetNode<T> targetNode) {
 
                   jobsStarted.countDown();
 

@@ -363,7 +363,7 @@ public class InstallCommand extends BuildCommand {
               .first()
               .get();
 
-      TargetNode<?, ?> node =
+      TargetNode<?> node =
           params
               .getParser()
               .getTargetNode(

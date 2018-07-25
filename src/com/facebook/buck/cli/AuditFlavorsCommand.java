@@ -89,11 +89,11 @@ public class AuditFlavorsCommand extends AbstractCommand {
       throw new CommandLineException("must specify at least one build target");
     }
 
-    ImmutableList.Builder<TargetNode<?, ?>> builder = ImmutableList.builder();
+    ImmutableList.Builder<TargetNode<?>> builder = ImmutableList.builder();
     try (CommandThreadManager pool =
         new CommandThreadManager("Audit", getConcurrencyLimit(params.getBuckConfig()))) {
       for (BuildTarget target : targets) {
-        TargetNode<?, ?> targetNode =
+        TargetNode<?> targetNode =
             params
                 .getParser()
                 .getTargetNode(
@@ -110,7 +110,7 @@ public class AuditFlavorsCommand extends AbstractCommand {
           .post(ConsoleEvent.severe(MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
       return ExitCode.PARSE_ERROR;
     }
-    ImmutableList<TargetNode<?, ?>> targetNodes = builder.build();
+    ImmutableList<TargetNode<?>> targetNodes = builder.build();
 
     if (shouldGenerateJsonOutput()) {
       printJsonFlavors(targetNodes, params);
@@ -126,10 +126,9 @@ public class AuditFlavorsCommand extends AbstractCommand {
     return true;
   }
 
-  private void printFlavors(
-      ImmutableList<TargetNode<?, ?>> targetNodes, CommandRunnerParams params) {
+  private void printFlavors(ImmutableList<TargetNode<?>> targetNodes, CommandRunnerParams params) {
     DirtyPrintStreamDecorator stdout = params.getConsole().getStdOut();
-    for (TargetNode<?, ?> node : targetNodes) {
+    for (TargetNode<?> node : targetNodes) {
       DescriptionWithTargetGraph<?> description = node.getDescription();
       stdout.println(node.getBuildTarget().getFullyQualifiedName());
       if (description instanceof Flavored) {
@@ -165,10 +164,10 @@ public class AuditFlavorsCommand extends AbstractCommand {
   }
 
   private void printJsonFlavors(
-      ImmutableList<TargetNode<?, ?>> targetNodes, CommandRunnerParams params) throws IOException {
+      ImmutableList<TargetNode<?>> targetNodes, CommandRunnerParams params) throws IOException {
     DirtyPrintStreamDecorator stdout = params.getConsole().getStdOut();
     SortedMap<String, SortedMap<String, SortedMap<String, String>>> targetsJson = new TreeMap<>();
-    for (TargetNode<?, ?> node : targetNodes) {
+    for (TargetNode<?> node : targetNodes) {
       DescriptionWithTargetGraph<?> description = node.getDescription();
       SortedMap<String, SortedMap<String, String>> flavorDomainsJson = new TreeMap<>();
 

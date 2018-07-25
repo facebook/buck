@@ -44,9 +44,9 @@ public class DepsFunctionTest {
 
   @Test
   public void testFilterArgumentDoesNotLimitDeps() throws Exception {
-    TargetNode<?, ?> b =
+    TargetNode<?> b =
         JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:b")).build();
-    TargetNode<?, ?> a =
+    TargetNode<?> a =
         JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:a"))
             .addDep(b.getBuildTarget())
             .build();
@@ -67,13 +67,13 @@ public class DepsFunctionTest {
 
   @Test
   public void testFilterArgumentLimitsDeps() throws Exception {
-    TargetNode<?, ?> c =
+    TargetNode<?> c =
         JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//foo:c")).build();
-    TargetNode<?, ?> b =
+    TargetNode<?> b =
         JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//bar:b"))
             .addDep(c.getBuildTarget())
             .build();
-    TargetNode<?, ?> a =
+    TargetNode<?> a =
         JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//foo:a"))
             .addDep(b.getBuildTarget())
             .build();
