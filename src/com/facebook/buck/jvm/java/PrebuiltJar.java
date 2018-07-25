@@ -42,6 +42,7 @@ import com.facebook.buck.jvm.core.HasClasspathEntries;
 import com.facebook.buck.jvm.core.JavaAbiInfo;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.rules.modern.impl.ModernBuildableSupport;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
@@ -292,8 +293,9 @@ public class PrebuiltJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
     buildableContext.recordArtifact(pathToClassHashes);
 
     JavaLibraryRules.addAccumulateClassNamesStep(
+        ModernBuildableSupport.newCellRelativePathFactory(
+            context.getBuildCellRootPath(), getProjectFilesystem()),
         getProjectFilesystem(),
-        context,
         steps,
         Optional.of(context.getSourcePathResolver().getRelativePath(getSourcePathToOutput())),
         pathToClassHashes);

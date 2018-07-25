@@ -35,6 +35,7 @@ import com.facebook.buck.jvm.core.HasJavaAbi;
 import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
 import com.facebook.buck.jvm.java.abi.source.api.SourceOnlyAbiRuleInfoFactory;
+import com.facebook.buck.rules.modern.impl.ModernBuildableSupport;
 import com.facebook.buck.step.Step;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -247,8 +248,9 @@ public class JarBuildStepsFactory
         buildableContext);
 
     JavaLibraryRules.addAccumulateClassNamesStep(
+        ModernBuildableSupport.newCellRelativePathFactory(
+            context.getBuildCellRootPath(), projectFilesystem),
         projectFilesystem,
-        context,
         steps,
         Optional.ofNullable(getSourcePathToOutput(buildTarget))
             .map(context.getSourcePathResolver()::getRelativePath),
@@ -274,8 +276,9 @@ public class JarBuildStepsFactory
             buildableContext);
 
     JavaLibraryRules.addAccumulateClassNamesStep(
+        ModernBuildableSupport.newCellRelativePathFactory(
+            context.getBuildCellRootPath(), projectFilesystem),
         projectFilesystem,
-        context,
         steps,
         Optional.ofNullable(getSourcePathToOutput(libraryTarget))
             .map(context.getSourcePathResolver()::getRelativePath),

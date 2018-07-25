@@ -16,18 +16,17 @@
 
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
-import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.HasJavaAbi;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.google.common.collect.ImmutableList.Builder;
@@ -48,15 +47,12 @@ public class JavaLibraryRules {
   private JavaLibraryRules() {}
 
   static void addAccumulateClassNamesStep(
+      BuildCellRelativePathFactory cellRelativePathFactory,
       ProjectFilesystem filesystem,
-      BuildContext buildContext,
       Builder<Step> steps,
       Optional<Path> pathToClasses,
       Path pathToClassHashes) {
-    steps.add(
-        MkdirStep.of(
-            BuildCellRelativePath.fromCellRelativePath(
-                buildContext.getBuildCellRootPath(), filesystem, pathToClassHashes.getParent())));
+    steps.add(MkdirStep.of(cellRelativePathFactory.from(pathToClassHashes.getParent())));
     steps.add(new AccumulateClassNamesStep(filesystem, pathToClasses, pathToClassHashes));
   }
 
