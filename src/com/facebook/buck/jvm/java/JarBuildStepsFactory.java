@@ -194,6 +194,7 @@ public class JarBuildStepsFactory
     CompileToJarStepFactory compileToJarStepFactory = (CompileToJarStepFactory) configuredCompiler;
     compileToJarStepFactory.createCompileToJarStep(
         context,
+        projectFilesystem,
         buildTarget,
         compilerParameters,
         resourcesParameters,
@@ -215,6 +216,7 @@ public class JarBuildStepsFactory
     ((JavacToJarStepFactory) configuredCompiler)
         .createPipelinedCompileToJarStep(
             context,
+            projectFilesystem,
             buildTarget,
             state,
             getResourcesParameters(),
@@ -238,6 +240,7 @@ public class JarBuildStepsFactory
     CompileToJarStepFactory compileToJarStepFactory = (CompileToJarStepFactory) configuredCompiler;
     compileToJarStepFactory.createCompileToJarStep(
         context,
+        projectFilesystem,
         buildTarget,
         compilerParameters,
         resourcesParameters,
@@ -268,6 +271,7 @@ public class JarBuildStepsFactory
     ((JavacToJarStepFactory) configuredCompiler)
         .createPipelinedCompileToJarStep(
             context,
+            projectFilesystem,
             libraryTarget,
             state,
             getResourcesParameters(),

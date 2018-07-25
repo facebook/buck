@@ -45,6 +45,7 @@ public class JavacStep implements Step {
 
   private final boolean ownsPipelineObject;
   private final SourcePathResolver resolver;
+  private final ProjectFilesystem filesystem;
 
   public JavacStep(
       Javac javac,
@@ -61,30 +62,35 @@ public class JavacStep implements Step {
             javac,
             javacOptions,
             invokingRule,
-            filesystem,
             classpathChecker,
             compilerParameters,
             abiJarParameters,
             libraryJarParameters),
         invokingRule,
         true,
-        resolver);
+        resolver,
+        filesystem);
   }
 
   public JavacStep(
-      JavacPipelineState pipeline, BuildTarget invokingRule, SourcePathResolver resolver) {
-    this(pipeline, invokingRule, false, resolver);
+      JavacPipelineState pipeline,
+      BuildTarget invokingRule,
+      SourcePathResolver resolver,
+      ProjectFilesystem filesystem) {
+    this(pipeline, invokingRule, false, resolver, filesystem);
   }
 
   private JavacStep(
       JavacPipelineState pipeline,
       BuildTarget invokingRule,
       boolean ownsPipelineObject,
-      SourcePathResolver resolver) {
+      SourcePathResolver resolver,
+      ProjectFilesystem filesystem) {
     this.pipeline = pipeline;
     this.invokingRule = invokingRule;
     this.ownsPipelineObject = ownsPipelineObject;
     this.resolver = resolver;
+    this.filesystem = filesystem;
   }
 
   @Override
@@ -95,7 +101,7 @@ public class JavacStep implements Step {
     String firstOrderStderr;
     Optional<String> returnedStderr;
     try {
-      Javac.Invocation invocation = pipeline.getJavacInvocation(resolver, context);
+      Javac.Invocation invocation = pipeline.getJavacInvocation(resolver, filesystem, context);
       if (JavaAbis.isSourceAbiTarget(invokingRule)) {
         declaredDepsBuildResult = invocation.buildSourceAbiJar();
       } else if (JavaAbis.isSourceOnlyAbiTarget(invokingRule)) {
@@ -194,7 +200,7 @@ public class JavacStep implements Step {
   @VisibleForTesting
   ImmutableList<String> getOptions(
       ExecutionContext context, ImmutableSortedSet<Path> buildClasspathEntries) {
-    return pipeline.getOptions(context, buildClasspathEntries, resolver);
+    return pipeline.getOptions(context, buildClasspathEntries, filesystem, resolver);
   }
 
   /** @return The classpath entries used to invoke javac. */

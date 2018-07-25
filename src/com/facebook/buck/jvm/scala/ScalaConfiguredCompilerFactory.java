@@ -72,7 +72,6 @@ public class ScalaConfiguredCompilerFactory extends ConfiguredCompilerFactory {
 
     return new ScalacToJarStepFactory(
         ruleFinder,
-        projectFilesystem,
         getScalac(buildRuleResolver),
         buildRuleResolver.getRule(scalaBuckConfig.getScalaLibraryTarget()),
         scalaBuckConfig.getCompilerFlags(),

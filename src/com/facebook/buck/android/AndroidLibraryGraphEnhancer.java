@@ -128,11 +128,7 @@ public class AndroidLibraryGraphEnhancer {
 
               JavacToJarStepFactory compileToJarStepFactory =
                   new JavacToJarStepFactory(
-                      ruleFinder,
-                      projectFilesystem,
-                      javac,
-                      javacOptions,
-                      ExtraClasspathProvider.EMPTY);
+                      ruleFinder, javac, javacOptions, ExtraClasspathProvider.EMPTY);
 
               return new DummyRDotJava(
                   dummyRDotJavaBuildTarget,

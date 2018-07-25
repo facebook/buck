@@ -97,14 +97,13 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
 
   KotlincToJarStepFactory(
       SourcePathRuleFinder ruleFinder,
-      ProjectFilesystem projectFilesystem,
       Kotlinc kotlinc,
       ImmutableSortedSet<Path> kotlinHomeLibraries,
       ImmutableList<String> extraArguments,
       ExtraClasspathProvider extraClassPath,
       Javac javac,
       JavacOptions javacOptions) {
-    super(ruleFinder, projectFilesystem);
+    super(ruleFinder);
     this.kotlinc = kotlinc;
     this.kotlinHomeLibraries = kotlinHomeLibraries;
     this.extraArguments = extraArguments;
@@ -116,6 +115,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
   @Override
   public void createCompileStep(
       BuildContext buildContext,
+      ProjectFilesystem projectFilesystem,
       BuildTarget invokingRule,
       CompilerParameters parameters,
       /* output params */
@@ -264,11 +264,16 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
 
     new JavacToJarStepFactory(
             ruleFinder,
-            projectFilesystem,
             javac,
             javacOptions.withAnnotationProcessingParams(AnnotationProcessingParams.EMPTY),
             extraClassPath)
-        .createCompileStep(buildContext, invokingRule, javacParameters, steps, buildableContext);
+        .createCompileStep(
+            buildContext,
+            projectFilesystem,
+            invokingRule,
+            javacParameters,
+            steps,
+            buildableContext);
   }
 
   private void addAnnotationGenFolderStep(

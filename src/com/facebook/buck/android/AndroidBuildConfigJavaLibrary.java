@@ -72,7 +72,7 @@ class AndroidBuildConfigJavaLibrary extends DefaultJavaLibrary implements Androi
             projectFilesystem,
             buildTarget,
             new JavacToJarStepFactory(
-                ruleFinder, projectFilesystem, javac, javacOptions, ExtraClasspathProvider.EMPTY),
+                ruleFinder, javac, javacOptions, ExtraClasspathProvider.EMPTY),
             /* srcs */ ImmutableSortedSet.of(androidBuildConfig.getSourcePathToOutput()),
             ImmutableSortedSet.of(),
             ResourcesParameters.of(),

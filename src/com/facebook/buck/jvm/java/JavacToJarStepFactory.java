@@ -51,11 +51,10 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
 
   public JavacToJarStepFactory(
       SourcePathRuleFinder ruleFinder,
-      ProjectFilesystem projectFilesystem,
       Javac javac,
       JavacOptions javacOptions,
       ExtraClasspathProvider extraClasspathProvider) {
-    super(ruleFinder, projectFilesystem);
+    super(ruleFinder);
     this.javac = javac;
     this.javacOptions = javacOptions;
     this.extraClasspathProvider = extraClasspathProvider;
@@ -73,7 +72,6 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
         javac,
         buildTimeOptions,
         invokingRule,
-        projectFilesystem,
         new ClasspathChecker(),
         compilerParameters,
         abiJarParameters,
@@ -83,6 +81,7 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
   @Override
   public void createCompileStep(
       BuildContext context,
+      ProjectFilesystem projectFilesystem,
       BuildTarget invokingRule,
       CompilerParameters parameters,
       /* output params */
@@ -139,6 +138,7 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
 
   public final void createPipelinedCompileToJarStep(
       BuildContext context,
+      ProjectFilesystem projectFilesystem,
       BuildTarget target,
       JavacPipelineState pipeline,
       ResourcesParameters resourcesParameters,
@@ -149,7 +149,8 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
     CompilerParameters compilerParameters = pipeline.getCompilerParameters();
 
     if (!pipeline.isRunning()) {
-      addCompilerSetupSteps(context, target, compilerParameters, resourcesParameters, steps);
+      addCompilerSetupSteps(
+          context, projectFilesystem, target, compilerParameters, resourcesParameters, steps);
     }
 
     Optional<JarParameters> jarParameters =
@@ -158,25 +159,28 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
             : pipeline.getAbiJarParameters();
 
     if (jarParameters.isPresent()) {
-      addJarSetupSteps(context, jarParameters.get(), steps);
+      addJarSetupSteps(projectFilesystem, context, jarParameters.get(), steps);
     }
 
     // Only run javac if there are .java files to compile or we need to shovel the manifest file
     // into the built jar.
     if (!compilerParameters.getSourceFilePaths().isEmpty()) {
-      recordDepFileIfNecessary(target, compilerParameters, buildableContext);
+      recordDepFileIfNecessary(projectFilesystem, target, compilerParameters, buildableContext);
 
       // This adds the javac command, along with any supporting commands.
-      createPipelinedCompileStep(context, pipeline, target, steps, buildableContext);
+      createPipelinedCompileStep(
+          context, projectFilesystem, pipeline, target, steps, buildableContext);
     }
 
     if (jarParameters.isPresent()) {
-      addJarCreationSteps(compilerParameters, steps, buildableContext, jarParameters.get());
+      addJarCreationSteps(
+          projectFilesystem, compilerParameters, steps, buildableContext, jarParameters.get());
     }
   }
 
   @Override
   public void createCompileToJarStepImpl(
+      ProjectFilesystem projectFilesystem,
       BuildContext context,
       BuildTarget invokingRule,
       CompilerParameters compilerParameters,
@@ -238,6 +242,7 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
               libraryJarParameters));
     } else {
       super.createCompileToJarStepImpl(
+          projectFilesystem,
           context,
           invokingRule,
           compilerParameters,
@@ -251,6 +256,7 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
 
   public void createPipelinedCompileStep(
       BuildContext context,
+      ProjectFilesystem projectFilesystem,
       JavacPipelineState pipeline,
       BuildTarget invokingRule,
       Builder<Step> steps,
@@ -277,7 +283,8 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
       }
     }
 
-    steps.add(new JavacStep(pipeline, invokingRule, context.getSourcePathResolver()));
+    steps.add(
+        new JavacStep(pipeline, invokingRule, context.getSourcePathResolver(), projectFilesystem));
   }
 
   private static void addAnnotationGenFolderStep(

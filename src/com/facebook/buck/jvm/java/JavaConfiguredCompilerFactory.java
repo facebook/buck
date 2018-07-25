@@ -77,7 +77,6 @@ public class JavaConfiguredCompilerFactory extends ConfiguredCompilerFactory {
 
     return new JavacToJarStepFactory(
         ruleFinder,
-        projectFilesystem,
         getJavac(buildRuleResolver, arg),
         javacOptions,
         extraClasspathProviderSupplier.apply(toolchainProvider));

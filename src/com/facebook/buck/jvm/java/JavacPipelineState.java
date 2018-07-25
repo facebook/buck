@@ -48,7 +48,6 @@ public class JavacPipelineState implements RulePipelineState {
   private final CompilerParameters compilerParameters;
   private final JavacOptions javacOptions;
   private final BuildTarget invokingRule;
-  private final ProjectFilesystem filesystem;
   private final Javac javac;
   private final ClasspathChecker classpathChecker;
   @Nullable private final JarParameters abiJarParameters;
@@ -64,7 +63,6 @@ public class JavacPipelineState implements RulePipelineState {
       Javac javac,
       JavacOptions javacOptions,
       BuildTarget invokingRule,
-      ProjectFilesystem filesystem,
       ClasspathChecker classpathChecker,
       CompilerParameters compilerParameters,
       @Nullable JarParameters abiJarParameters,
@@ -72,7 +70,6 @@ public class JavacPipelineState implements RulePipelineState {
     this.javac = javac;
     this.javacOptions = javacOptions;
     this.invokingRule = invokingRule;
-    this.filesystem = filesystem;
     this.classpathChecker = classpathChecker;
     this.compilerParameters = compilerParameters;
     this.abiJarParameters = abiJarParameters;
@@ -84,7 +81,8 @@ public class JavacPipelineState implements RulePipelineState {
   }
 
   /** Get the invocation instance. */
-  public Javac.Invocation getJavacInvocation(SourcePathResolver resolver, ExecutionContext context)
+  public Javac.Invocation getJavacInvocation(
+      SourcePathResolver resolver, ProjectFilesystem filesystem, ExecutionContext context)
       throws IOException {
     if (invocation == null) {
       javacOptions.validateOptions(classpathChecker::validateClasspath);
@@ -118,7 +116,7 @@ public class JavacPipelineState implements RulePipelineState {
           ImmutableList.copyOf(
               javacOptions
                   .getAnnotationProcessingParams()
-                  .getAnnotationProcessors(this.filesystem, resolver)
+                  .getAnnotationProcessors(filesystem, resolver)
                   .stream()
                   .map(ResolvedJavacPluginProperties::getJavacPluginJsr199Fields)
                   .collect(Collectors.toList()));
@@ -129,7 +127,8 @@ public class JavacPipelineState implements RulePipelineState {
                   javacExecutionContext,
                   resolver,
                   invokingRule,
-                  getOptions(context, compilerParameters.getClasspathEntries(), resolver),
+                  getOptions(
+                      context, compilerParameters.getClasspathEntries(), filesystem, resolver),
                   pluginFields,
                   compilerParameters.getSourceFilePaths(),
                   compilerParameters.getPathToSourcesList(),
@@ -189,6 +188,7 @@ public class JavacPipelineState implements RulePipelineState {
   ImmutableList<String> getOptions(
       ExecutionContext context,
       ImmutableSortedSet<Path> buildClasspathEntries,
+      ProjectFilesystem filesystem,
       SourcePathResolver resolver) {
     return getOptions(
         javacOptions,

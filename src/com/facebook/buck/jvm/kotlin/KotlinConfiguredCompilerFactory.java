@@ -62,7 +62,6 @@ public class KotlinConfiguredCompilerFactory extends ConfiguredCompilerFactory {
       ToolchainProvider toolchainProvider) {
     return new KotlincToJarStepFactory(
         ruleFinder,
-        projectFilesystem,
         kotlinBuckConfig.getKotlinc(),
         kotlinBuckConfig.getKotlinHomeLibraries(),
         Preconditions.checkNotNull((KotlinLibraryDescription.CoreArg) args)

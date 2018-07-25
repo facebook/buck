@@ -43,11 +43,10 @@ class GroovycToJarStepFactory extends CompileToJarStepFactory implements AddsToR
 
   public GroovycToJarStepFactory(
       SourcePathRuleFinder ruleFinder,
-      ProjectFilesystem projectFilesystem,
       Tool groovyc,
       Optional<ImmutableList<String>> extraArguments,
       JavacOptions javacOptions) {
-    super(ruleFinder, projectFilesystem);
+    super(ruleFinder);
     this.groovyc = groovyc;
     this.extraArguments = extraArguments;
     this.javacOptions = javacOptions;
@@ -56,6 +55,7 @@ class GroovycToJarStepFactory extends CompileToJarStepFactory implements AddsToR
   @Override
   public void createCompileStep(
       BuildContext buildContext,
+      ProjectFilesystem projectFilesystem,
       BuildTarget invokingRule,
       CompilerParameters parameters,
       /* output params */
