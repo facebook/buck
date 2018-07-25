@@ -46,7 +46,6 @@ public class GroovyConfiguredCompilerFactory extends ConfiguredCompilerFactory {
     GroovyLibraryDescription.CoreArg groovyArgs =
         (GroovyLibraryDescription.CoreArg) Preconditions.checkNotNull(args);
     return new GroovycToJarStepFactory(
-        ruleFinder,
         Preconditions.checkNotNull(groovyBuckConfig).getGroovyCompiler().get(),
         Optional.of(groovyArgs.getExtraGroovycArguments()),
         javacOptions);

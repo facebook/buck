@@ -42,11 +42,7 @@ class GroovycToJarStepFactory extends CompileToJarStepFactory implements AddsToR
   @AddToRuleKey private final JavacOptions javacOptions;
 
   public GroovycToJarStepFactory(
-      SourcePathRuleFinder ruleFinder,
-      Tool groovyc,
-      Optional<ImmutableList<String>> extraArguments,
-      JavacOptions javacOptions) {
-    super(ruleFinder);
+      Tool groovyc, Optional<ImmutableList<String>> extraArguments, JavacOptions javacOptions) {
     this.groovyc = groovyc;
     this.extraArguments = extraArguments;
     this.javacOptions = javacOptions;

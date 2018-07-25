@@ -58,7 +58,6 @@ public class ScalacToJarStepFactory extends CompileToJarStepFactory implements A
   private final JavacOptions javacOptions;
 
   public ScalacToJarStepFactory(
-      SourcePathRuleFinder ruleFinder,
       Tool scalac,
       BuildRule scalaLibraryTarget,
       ImmutableList<String> configCompilerFlags,
@@ -67,7 +66,6 @@ public class ScalacToJarStepFactory extends CompileToJarStepFactory implements A
       Javac javac,
       JavacOptions javacOptions,
       ExtraClasspathProvider extraClassPath) {
-    super(ruleFinder);
     this.scalac = scalac;
     this.scalaLibraryTarget = scalaLibraryTarget;
     this.configCompilerFlags = configCompilerFlags;
@@ -143,7 +141,7 @@ public class ScalacToJarStepFactory extends CompileToJarStepFactory implements A
                       .build())
               .setSourceFilePaths(javaSourceFiles)
               .build();
-      new JavacToJarStepFactory(ruleFinder, javac, javacOptions, extraClassPath)
+      new JavacToJarStepFactory(javac, javacOptions, extraClassPath)
           .createCompileStep(
               context, projectFilesystem, invokingRule, javacParameters, steps, buildableContext);
     }

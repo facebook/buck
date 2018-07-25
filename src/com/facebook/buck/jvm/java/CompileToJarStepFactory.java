@@ -19,7 +19,6 @@ package com.facebook.buck.jvm.java;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.shell.BashStep;
@@ -43,11 +42,7 @@ import javax.annotation.Nullable;
 
 /** Provides a base implementation for post compile steps. */
 public abstract class CompileToJarStepFactory implements ConfiguredCompiler {
-  protected final SourcePathRuleFinder ruleFinder;
-
-  protected CompileToJarStepFactory(SourcePathRuleFinder ruleFinder) {
-    this.ruleFinder = ruleFinder;
-  }
+  protected CompileToJarStepFactory() {}
 
   public final void createCompileToJarStep(
       BuildContext context,

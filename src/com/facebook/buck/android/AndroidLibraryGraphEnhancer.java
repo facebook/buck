@@ -127,8 +127,7 @@ public class AndroidLibraryGraphEnhancer {
               SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
 
               JavacToJarStepFactory compileToJarStepFactory =
-                  new JavacToJarStepFactory(
-                      ruleFinder, javac, javacOptions, ExtraClasspathProvider.EMPTY);
+                  new JavacToJarStepFactory(javac, javacOptions, ExtraClasspathProvider.EMPTY);
 
               return new DummyRDotJava(
                   dummyRDotJavaBuildTarget,

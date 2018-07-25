@@ -50,11 +50,7 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
   @AddToRuleKey private final ExtraClasspathProvider extraClasspathProvider;
 
   public JavacToJarStepFactory(
-      SourcePathRuleFinder ruleFinder,
-      Javac javac,
-      JavacOptions javacOptions,
-      ExtraClasspathProvider extraClasspathProvider) {
-    super(ruleFinder);
+      Javac javac, JavacOptions javacOptions, ExtraClasspathProvider extraClasspathProvider) {
     this.javac = javac;
     this.javacOptions = javacOptions;
     this.extraClasspathProvider = extraClasspathProvider;

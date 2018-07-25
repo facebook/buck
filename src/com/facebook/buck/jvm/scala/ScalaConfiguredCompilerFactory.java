@@ -71,7 +71,6 @@ public class ScalaConfiguredCompilerFactory extends ConfiguredCompilerFactory {
       ToolchainProvider toolchainProvider) {
 
     return new ScalacToJarStepFactory(
-        ruleFinder,
         getScalac(buildRuleResolver),
         buildRuleResolver.getRule(scalaBuckConfig.getScalaLibraryTarget()),
         scalaBuckConfig.getCompilerFlags(),

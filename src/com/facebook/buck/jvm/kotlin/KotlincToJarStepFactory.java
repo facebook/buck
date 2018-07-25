@@ -24,7 +24,6 @@ import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.BuildCellRelativePath;
@@ -96,14 +95,12 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
   private final JavacOptions javacOptions;
 
   KotlincToJarStepFactory(
-      SourcePathRuleFinder ruleFinder,
       Kotlinc kotlinc,
       ImmutableSortedSet<Path> kotlinHomeLibraries,
       ImmutableList<String> extraArguments,
       ExtraClasspathProvider extraClassPath,
       Javac javac,
       JavacOptions javacOptions) {
-    super(ruleFinder);
     this.kotlinc = kotlinc;
     this.kotlinHomeLibraries = kotlinHomeLibraries;
     this.extraArguments = extraArguments;
@@ -263,7 +260,6 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
             .build();
 
     new JavacToJarStepFactory(
-            ruleFinder,
             javac,
             javacOptions.withAnnotationProcessingParams(AnnotationProcessingParams.EMPTY),
             extraClassPath)
