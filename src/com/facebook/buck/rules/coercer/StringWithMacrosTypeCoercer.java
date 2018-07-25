@@ -17,9 +17,9 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.resolver.CellPathResolver;
+import com.facebook.buck.core.macros.MacroFinderAutomaton;
+import com.facebook.buck.core.macros.MacroMatchResult;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.model.macros.MacroFinderAutomaton;
-import com.facebook.buck.model.macros.MacroMatchResult;
 import com.facebook.buck.rules.macros.Macro;
 import com.facebook.buck.rules.macros.MacroContainer;
 import com.facebook.buck.rules.macros.StringWithMacros;

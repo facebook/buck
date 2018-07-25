@@ -18,10 +18,10 @@ package com.facebook.buck.rules.macros;
 
 import com.facebook.buck.core.cell.resolver.CellPathResolver;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.macros.MacroException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
-import com.facebook.buck.model.macros.MacroException;
 import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.query.NoopQueryEvaluator;
 import com.facebook.buck.query.QueryBuildTarget;

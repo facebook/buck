@@ -20,6 +20,8 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.cell.resolver.CellPathResolver;
+import com.facebook.buck.core.macros.MacroException;
+import com.facebook.buck.core.macros.MacroMatchResult;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
@@ -30,8 +32,6 @@ import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
-import com.facebook.buck.model.macros.MacroException;
-import com.facebook.buck.model.macros.MacroMatchResult;
 import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;

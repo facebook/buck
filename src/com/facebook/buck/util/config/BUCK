@@ -6,8 +6,8 @@ java_immutables_library(
     visibility = ["PUBLIC"],
     deps = [
         "//src/com/facebook/buck/core/exceptions:exceptions",
+        "//src/com/facebook/buck/core/macros:macros",
         "//src/com/facebook/buck/log:api",
-        "//src/com/facebook/buck/model/macros:macros",
         "//src/com/facebook/buck/util:exceptions",
         "//src/com/facebook/buck/util:util",
         "//third-party/java/ini4j:ini4j",

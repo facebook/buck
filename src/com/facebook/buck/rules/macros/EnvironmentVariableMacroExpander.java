@@ -16,9 +16,9 @@
 package com.facebook.buck.rules.macros;
 
 import com.facebook.buck.core.cell.resolver.CellPathResolver;
+import com.facebook.buck.core.macros.MacroException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
-import com.facebook.buck.model.macros.MacroException;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;

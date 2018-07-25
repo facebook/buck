@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright 2015-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -14,16 +14,9 @@
  * under the License.
  */
 
-package com.facebook.buck.model.macros;
+package com.facebook.buck.core.macros;
 
-/** Used by MacroFinder to process a string containing macros. */
-public interface MacroCombiner<T> {
-  /** Returns the combined result. */
-  T build();
-
-  /** Add a non-macro containing substring. */
-  void addString(String part);
-
-  /** Add the expanded form of a macro. */
-  void add(T expanded);
+/** Interface to define replacement behavior for @{link MacroFinder}. */
+public interface MacroReplacer<T> {
+  T replace(MacroMatchResult matchResult) throws MacroException;
 }

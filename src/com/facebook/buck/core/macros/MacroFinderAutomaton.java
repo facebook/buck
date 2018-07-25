@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.model.macros;
+package com.facebook.buck.core.macros;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.UnmodifiableIterator;

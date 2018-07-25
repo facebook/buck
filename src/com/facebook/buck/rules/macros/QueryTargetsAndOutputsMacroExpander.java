@@ -17,6 +17,7 @@
 package com.facebook.buck.rules.macros;
 
 import com.facebook.buck.core.cell.resolver.CellPathResolver;
+import com.facebook.buck.core.macros.MacroException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -24,7 +25,6 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.model.macros.MacroException;
 import com.facebook.buck.query.QueryBuildTarget;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.query.Query;

@@ -17,10 +17,10 @@
 package com.facebook.buck.util.config;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.model.macros.MacroException;
-import com.facebook.buck.model.macros.MacroFinder;
-import com.facebook.buck.model.macros.MacroReplacer;
-import com.facebook.buck.model.macros.StringMacroCombiner;
+import com.facebook.buck.core.macros.MacroException;
+import com.facebook.buck.core.macros.MacroFinder;
+import com.facebook.buck.core.macros.MacroReplacer;
+import com.facebook.buck.core.macros.StringMacroCombiner;
 import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.Optionals;
 import com.google.common.base.Joiner;

@@ -16,8 +16,8 @@
 
 package com.facebook.buck.rules.macros;
 
-import com.facebook.buck.model.macros.MacroMatchResult;
-import com.facebook.buck.model.macros.MacroReplacer;
+import com.facebook.buck.core.macros.MacroMatchResult;
+import com.facebook.buck.core.macros.MacroReplacer;
 import com.google.common.collect.ImmutableList;
 import java.util.function.Function;
 
