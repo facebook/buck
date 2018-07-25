@@ -16,7 +16,6 @@ from __future__ import print_function
 import contextlib
 import ctypes
 import fnmatch
-import imp
 import json
 import logging
 import optparse
@@ -27,6 +26,11 @@ import sys
 import time
 import traceback
 import unittest
+import warnings
+
+with warnings.catch_warnings():
+    warnings.filterwarnings("ignore", category=DeprecationWarning)
+    import imp
 
 try:
     from StringIO import StringIO
