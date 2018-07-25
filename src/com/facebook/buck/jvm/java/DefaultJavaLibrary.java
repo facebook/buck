@@ -354,11 +354,25 @@ public class DefaultJavaLibrary extends AbstractBuildRule
 
     steps.addAll(
         jarBuildStepsFactory.getBuildStepsForLibraryJar(
-            context, buildableContext, getBuildTarget()));
+            context,
+            buildableContext,
+            getBuildTarget(),
+            JavaLibraryRules.getPathToClassHashes(getBuildTarget(), getProjectFilesystem())));
 
     unusedDependenciesFinderFactory.ifPresent(factory -> steps.add(factory.create()));
 
     return steps.build();
+  }
+
+  @Override
+  public ImmutableList<? extends Step> getPipelinedBuildSteps(
+      BuildContext context, BuildableContext buildableContext, JavacPipelineState state) {
+    // TODO(cjhopman): unusedDependenciesFinder is broken.
+    return jarBuildStepsFactory.getPipelinedBuildStepsForLibraryJar(
+        context,
+        buildableContext,
+        state,
+        JavaLibraryRules.getPathToClassHashes(getBuildTarget(), getProjectFilesystem()));
   }
 
   @Override
@@ -475,12 +489,5 @@ public class DefaultJavaLibrary extends AbstractBuildRule
   @Override
   public SupportsPipelining<JavacPipelineState> getPreviousRuleInPipeline() {
     return sourceAbi;
-  }
-
-  @Override
-  public ImmutableList<? extends Step> getPipelinedBuildSteps(
-      BuildContext context, BuildableContext buildableContext, JavacPipelineState state) {
-    return jarBuildStepsFactory.getPipelinedBuildStepsForLibraryJar(
-        context, buildableContext, state);
   }
 }

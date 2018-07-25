@@ -224,8 +224,10 @@ public class JarBuildStepsFactory
   }
 
   public ImmutableList<Step> getBuildStepsForLibraryJar(
-      BuildContext context, BuildableContext buildableContext, BuildTarget buildTarget) {
-
+      BuildContext context,
+      BuildableContext buildableContext,
+      BuildTarget buildTarget,
+      Path pathToClassHashes) {
     Preconditions.checkArgument(buildTarget.equals(libraryTarget));
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
@@ -245,18 +247,22 @@ public class JarBuildStepsFactory
         buildableContext);
 
     JavaLibraryRules.addAccumulateClassNamesStep(
-        buildTarget,
         projectFilesystem,
-        getSourcePathToOutput(buildTarget),
         buildableContext,
         context,
-        steps);
+        steps,
+        Optional.ofNullable(getSourcePathToOutput(buildTarget))
+            .map(context.getSourcePathResolver()::getRelativePath),
+        pathToClassHashes);
 
     return steps.build();
   }
 
   public ImmutableList<Step> getPipelinedBuildStepsForLibraryJar(
-      BuildContext context, BuildableContext buildableContext, JavacPipelineState state) {
+      BuildContext context,
+      BuildableContext buildableContext,
+      JavacPipelineState state,
+      Path pathToClassHashes) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
     ((JavacToJarStepFactory) configuredCompiler)
         .createPipelinedCompileToJarStep(
@@ -269,12 +275,13 @@ public class JarBuildStepsFactory
             buildableContext);
 
     JavaLibraryRules.addAccumulateClassNamesStep(
-        libraryTarget,
         projectFilesystem,
-        getSourcePathToOutput(libraryTarget),
         buildableContext,
         context,
-        steps);
+        steps,
+        Optional.ofNullable(getSourcePathToOutput(libraryTarget))
+            .map(context.getSourcePathResolver()::getRelativePath),
+        pathToClassHashes);
 
     return steps.build();
   }

@@ -31,7 +31,7 @@ import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
-import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -41,7 +41,6 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
-import javax.annotation.Nullable;
 
 /** Common utilities for working with {@link JavaLibrary} objects. */
 public class JavaLibraryRules {
@@ -50,24 +49,17 @@ public class JavaLibraryRules {
   private JavaLibraryRules() {}
 
   static void addAccumulateClassNamesStep(
-      BuildTarget target,
       ProjectFilesystem filesystem,
-      @Nullable SourcePath sourcePathToOutput,
       BuildableContext buildableContext,
       BuildContext buildContext,
-      ImmutableList.Builder<Step> steps) {
-
-    Path pathToClassHashes = JavaLibraryRules.getPathToClassHashes(target, filesystem);
+      Builder<Step> steps,
+      Optional<Path> pathToClasses,
+      Path pathToClassHashes) {
     steps.add(
         MkdirStep.of(
             BuildCellRelativePath.fromCellRelativePath(
                 buildContext.getBuildCellRootPath(), filesystem, pathToClassHashes.getParent())));
-    steps.add(
-        new AccumulateClassNamesStep(
-            filesystem,
-            Optional.ofNullable(sourcePathToOutput)
-                .map(buildContext.getSourcePathResolver()::getRelativePath),
-            pathToClassHashes));
+    steps.add(new AccumulateClassNamesStep(filesystem, pathToClasses, pathToClassHashes));
     buildableContext.recordArtifact(pathToClassHashes);
   }
 
@@ -80,7 +72,7 @@ public class JavaLibraryRules {
     return new JavaLibrary.Data(classHashes);
   }
 
-  private static Path getPathToClassHashes(BuildTarget buildTarget, ProjectFilesystem filesystem) {
+  static Path getPathToClassHashes(BuildTarget buildTarget, ProjectFilesystem filesystem) {
     return BuildTargets.getGenPath(filesystem, buildTarget, "%s.classes.txt");
   }
 
