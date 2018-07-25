@@ -287,13 +287,16 @@ public class PrebuiltJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
     }
     buildableContext.recordArtifact(copiedBinaryJar);
 
+    Path pathToClassHashes =
+        JavaLibraryRules.getPathToClassHashes(getBuildTarget(), getProjectFilesystem());
+    buildableContext.recordArtifact(pathToClassHashes);
+
     JavaLibraryRules.addAccumulateClassNamesStep(
         getProjectFilesystem(),
-        buildableContext,
         context,
         steps,
         Optional.of(context.getSourcePathResolver().getRelativePath(getSourcePathToOutput())),
-        JavaLibraryRules.getPathToClassHashes(getBuildTarget(), getProjectFilesystem()));
+        pathToClassHashes);
 
     return steps.build();
   }

@@ -16,7 +16,6 @@
 
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -50,7 +49,6 @@ public class JavaLibraryRules {
 
   static void addAccumulateClassNamesStep(
       ProjectFilesystem filesystem,
-      BuildableContext buildableContext,
       BuildContext buildContext,
       Builder<Step> steps,
       Optional<Path> pathToClasses,
@@ -60,7 +58,6 @@ public class JavaLibraryRules {
             BuildCellRelativePath.fromCellRelativePath(
                 buildContext.getBuildCellRootPath(), filesystem, pathToClassHashes.getParent())));
     steps.add(new AccumulateClassNamesStep(filesystem, pathToClasses, pathToClassHashes));
-    buildableContext.recordArtifact(pathToClassHashes);
   }
 
   static JavaLibrary.Data initializeFromDisk(BuildTarget buildTarget, ProjectFilesystem filesystem)

@@ -248,7 +248,6 @@ public class JarBuildStepsFactory
 
     JavaLibraryRules.addAccumulateClassNamesStep(
         projectFilesystem,
-        buildableContext,
         context,
         steps,
         Optional.ofNullable(getSourcePathToOutput(buildTarget))
@@ -276,7 +275,6 @@ public class JarBuildStepsFactory
 
     JavaLibraryRules.addAccumulateClassNamesStep(
         projectFilesystem,
-        buildableContext,
         context,
         steps,
         Optional.ofNullable(getSourcePathToOutput(libraryTarget))
