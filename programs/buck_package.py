@@ -109,7 +109,7 @@ class BuckPackage(BuckTool):
     def _get_resource(self, resource):
         resource_path = os.path.join(self._get_resource_subdir(), resource.basename)
         if not os.path.exists(os.path.dirname(resource_path)):
-            os.makedirs(os.path.dirname(resource_path))
+            self.__create_dir(os.path.dirname(resource_path))
         if not os.path.exists(resource_path):
             self._unpack_resource(resource_path, resource.name, resource.executable)
         return resource_path
@@ -119,7 +119,7 @@ class BuckPackage(BuckTool):
             return
 
         if pkg_resources.resource_isdir(__name__, resource_name):
-            os.mkdir(resource_path)
+            self.__create_dir(resource_path)
             for f in pkg_resources.resource_listdir(__name__, resource_name):
                 if f == "":
                     # TODO(beng): Figure out why this happens
