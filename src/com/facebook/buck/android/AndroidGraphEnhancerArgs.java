@@ -113,7 +113,7 @@ public interface AndroidGraphEnhancerArgs extends HasDuplicateAndroidResourceTyp
 
   @Value.Default
   default boolean isAllowRDotJavaInSecondaryDex() {
-    return false;
+    return true;
   }
 
   Optional<String> getKeepResourcePattern();
