@@ -123,12 +123,17 @@ java_immutables_library(
     ],
 )
 
-java_library(
+java_immutables_library(
     name = "rule_pattern",
     srcs = [
+        "AbstractImmediateDirectoryBuildTargetPattern.java",
+        "AbstractSingletonBuildTargetPattern.java",
+        "AbstractSubdirectoryBuildTargetPattern.java",
         "BuildTargetParseException.java",
         "BuildTargetParser.java",
+        "BuildTargetPattern.java",
         "BuildTargetPatternParser.java",
+        "FlavorParser.java",
     ],
     exported_deps = [
         "//src/com/facebook/buck/model:model",
@@ -145,6 +150,8 @@ java_library(
         "//src/com/facebook/buck/core/cell/resolver:resolver",
         "//src/com/facebook/buck/core/exceptions:exceptions",
         "//src/com/facebook/buck/core/model/impl:impl",
+        "//src/com/facebook/buck/io/file:file",
+        "//src/com/facebook/buck/log:api",
         "//src/com/facebook/buck/util:exceptions",
         "//src/com/facebook/buck/util:util",
         "//third-party/java/guava:guava",

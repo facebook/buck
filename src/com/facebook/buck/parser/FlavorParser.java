@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.model;
+package com.facebook.buck.parser;
 
 import com.facebook.buck.log.Logger;
 import com.google.common.base.Splitter;

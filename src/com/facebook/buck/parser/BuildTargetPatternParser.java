@@ -18,10 +18,6 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.resolver.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.model.BuildTargetPattern;
-import com.facebook.buck.model.ImmediateDirectoryBuildTargetPattern;
-import com.facebook.buck.model.SingletonBuildTargetPattern;
-import com.facebook.buck.model.SubdirectoryBuildTargetPattern;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import java.nio.file.Path;
