@@ -210,7 +210,6 @@ public class AndroidPrebuiltAarDescription
         /* prebuiltJar */ prebuiltJar,
         /* unzipRule */ unzipAar,
         new JavacToJarStepFactory(
-            pathResolver,
             ruleFinder,
             projectFilesystem,
             JavacFactory.getDefault(toolchainProvider).create(ruleFinder, null),

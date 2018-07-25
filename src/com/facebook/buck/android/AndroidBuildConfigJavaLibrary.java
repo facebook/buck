@@ -22,7 +22,6 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.common.BuildDeps;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.jvm.core.JavaLibrary;
@@ -57,7 +56,6 @@ class AndroidBuildConfigJavaLibrary extends DefaultJavaLibrary implements Androi
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      SourcePathResolver resolver,
       SourcePathRuleFinder ruleFinder,
       Javac javac,
       JavacOptions javacOptions,
@@ -74,12 +72,7 @@ class AndroidBuildConfigJavaLibrary extends DefaultJavaLibrary implements Androi
             projectFilesystem,
             buildTarget,
             new JavacToJarStepFactory(
-                resolver,
-                ruleFinder,
-                projectFilesystem,
-                javac,
-                javacOptions,
-                ExtraClasspathProvider.EMPTY),
+                ruleFinder, projectFilesystem, javac, javacOptions, ExtraClasspathProvider.EMPTY),
             /* srcs */ ImmutableSortedSet.of(androidBuildConfig.getSourcePathToOutput()),
             ImmutableSortedSet.of(),
             ResourcesParameters.of(),

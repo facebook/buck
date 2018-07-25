@@ -538,7 +538,6 @@ public abstract class DefaultJavaLibraryRules {
   ConfiguredCompiler getConfiguredCompiler() {
     return getConfiguredCompilerFactory()
         .configure(
-            getSourcePathResolver(),
             getSourcePathRuleFinder(),
             getProjectFilesystem(),
             getArgs(),
@@ -551,7 +550,6 @@ public abstract class DefaultJavaLibraryRules {
   ConfiguredCompiler getConfiguredCompilerForSourceOnlyAbi() {
     return getConfiguredCompilerFactory()
         .configure(
-            getSourcePathResolver(),
             getSourcePathRuleFinder(),
             getProjectFilesystem(),
             getArgs(),

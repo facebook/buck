@@ -197,12 +197,7 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
     JavacToJarStepFactory compileStepFactory =
         new JavacToJarStepFactory(
-            context.getSourcePathResolver(),
-            ruleFinder,
-            getProjectFilesystem(),
-            javac,
-            javacOptions,
-            ExtraClasspathProvider.EMPTY);
+            ruleFinder, getProjectFilesystem(), javac, javacOptions, ExtraClasspathProvider.EMPTY);
 
     compileStepFactory.createCompileStep(
         context, getBuildTarget(), compilerParameters, steps, buildableContext);

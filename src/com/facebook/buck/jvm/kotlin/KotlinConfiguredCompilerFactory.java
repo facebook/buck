@@ -18,7 +18,6 @@ package com.facebook.buck.jvm.kotlin;
 
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.ConfiguredCompiler;
 import com.facebook.buck.jvm.java.ConfiguredCompilerFactory;
@@ -55,7 +54,6 @@ public class KotlinConfiguredCompilerFactory extends ConfiguredCompilerFactory {
 
   @Override
   public ConfiguredCompiler configure(
-      SourcePathResolver sourcePathResolver,
       SourcePathRuleFinder ruleFinder,
       ProjectFilesystem projectFilesystem,
       @Nullable JvmLibraryArg args,
@@ -63,7 +61,6 @@ public class KotlinConfiguredCompilerFactory extends ConfiguredCompilerFactory {
       BuildRuleResolver buildRuleResolver,
       ToolchainProvider toolchainProvider) {
     return new KotlincToJarStepFactory(
-        sourcePathResolver,
         ruleFinder,
         projectFilesystem,
         kotlinBuckConfig.getKotlinc(),

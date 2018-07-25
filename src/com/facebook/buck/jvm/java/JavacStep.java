@@ -44,6 +44,7 @@ public class JavacStep implements Step {
   private final BuildTarget invokingRule;
 
   private final boolean ownsPipelineObject;
+  private final SourcePathResolver resolver;
 
   public JavacStep(
       Javac javac,
@@ -60,25 +61,30 @@ public class JavacStep implements Step {
             javac,
             javacOptions,
             invokingRule,
-            resolver,
             filesystem,
             classpathChecker,
             compilerParameters,
             abiJarParameters,
             libraryJarParameters),
         invokingRule,
-        true);
+        true,
+        resolver);
   }
 
-  public JavacStep(JavacPipelineState pipeline, BuildTarget invokingRule) {
-    this(pipeline, invokingRule, false);
+  public JavacStep(
+      JavacPipelineState pipeline, BuildTarget invokingRule, SourcePathResolver resolver) {
+    this(pipeline, invokingRule, false, resolver);
   }
 
   private JavacStep(
-      JavacPipelineState pipeline, BuildTarget invokingRule, boolean ownsPipelineObject) {
+      JavacPipelineState pipeline,
+      BuildTarget invokingRule,
+      boolean ownsPipelineObject,
+      SourcePathResolver resolver) {
     this.pipeline = pipeline;
     this.invokingRule = invokingRule;
     this.ownsPipelineObject = ownsPipelineObject;
+    this.resolver = resolver;
   }
 
   @Override
@@ -89,7 +95,7 @@ public class JavacStep implements Step {
     String firstOrderStderr;
     Optional<String> returnedStderr;
     try {
-      Javac.Invocation invocation = pipeline.getJavacInvocation(context);
+      Javac.Invocation invocation = pipeline.getJavacInvocation(resolver, context);
       if (JavaAbis.isSourceAbiTarget(invokingRule)) {
         declaredDepsBuildResult = invocation.buildSourceAbiJar();
       } else if (JavaAbis.isSourceOnlyAbiTarget(invokingRule)) {
@@ -188,7 +194,7 @@ public class JavacStep implements Step {
   @VisibleForTesting
   ImmutableList<String> getOptions(
       ExecutionContext context, ImmutableSortedSet<Path> buildClasspathEntries) {
-    return pipeline.getOptions(context, buildClasspathEntries);
+    return pipeline.getOptions(context, buildClasspathEntries, resolver);
   }
 
   /** @return The classpath entries used to invoke javac. */

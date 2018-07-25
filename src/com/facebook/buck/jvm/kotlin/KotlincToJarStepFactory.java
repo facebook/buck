@@ -96,7 +96,6 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
   private final JavacOptions javacOptions;
 
   KotlincToJarStepFactory(
-      SourcePathResolver resolver,
       SourcePathRuleFinder ruleFinder,
       ProjectFilesystem projectFilesystem,
       Kotlinc kotlinc,
@@ -105,7 +104,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
       ExtraClasspathProvider extraClassPath,
       Javac javac,
       JavacOptions javacOptions) {
-    super(resolver, ruleFinder, projectFilesystem);
+    super(ruleFinder, projectFilesystem);
     this.kotlinc = kotlinc;
     this.kotlinHomeLibraries = kotlinHomeLibraries;
     this.extraArguments = extraArguments;
@@ -190,7 +189,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
             classesOutput,
             sourcesOutput,
             parameters.getWorkingDirectory(),
-            resolver);
+            buildContext.getSourcePathResolver());
       }
 
       steps.add(
@@ -264,7 +263,6 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
             .build();
 
     new JavacToJarStepFactory(
-            resolver,
             ruleFinder,
             projectFilesystem,
             javac,

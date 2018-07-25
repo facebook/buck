@@ -25,7 +25,6 @@ import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -51,13 +50,12 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
   @AddToRuleKey private final ExtraClasspathProvider extraClasspathProvider;
 
   public JavacToJarStepFactory(
-      SourcePathResolver resolver,
       SourcePathRuleFinder ruleFinder,
       ProjectFilesystem projectFilesystem,
       Javac javac,
       JavacOptions javacOptions,
       ExtraClasspathProvider extraClasspathProvider) {
-    super(resolver, ruleFinder, projectFilesystem);
+    super(ruleFinder, projectFilesystem);
     this.javac = javac;
     this.javacOptions = javacOptions;
     this.extraClasspathProvider = extraClasspathProvider;
@@ -75,7 +73,6 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
         javac,
         buildTimeOptions,
         invokingRule,
-        resolver,
         projectFilesystem,
         new ClasspathChecker(),
         compilerParameters,
@@ -111,7 +108,7 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
             javac,
             buildTimeOptions,
             invokingRule,
-            resolver,
+            context.getSourcePathResolver(),
             projectFilesystem,
             new ClasspathChecker(),
             parameters,
@@ -233,7 +230,7 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
               javac,
               buildTimeOptions,
               invokingRule,
-              resolver,
+              context.getSourcePathResolver(),
               projectFilesystem,
               new ClasspathChecker(),
               compilerParameters,
@@ -280,7 +277,7 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
       }
     }
 
-    steps.add(new JavacStep(pipeline, invokingRule));
+    steps.add(new JavacStep(pipeline, invokingRule, context.getSourcePathResolver()));
   }
 
   private static void addAnnotationGenFolderStep(

@@ -27,8 +27,6 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaAbis;
@@ -132,7 +130,6 @@ public class AndroidBuildConfigDescription
     // This fixes the issue, but deviates from the common pattern where a build rule has at most
     // one flavored version of itself for a given flavor.
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     BuildTarget buildConfigBuildTarget;
     if (!buildTarget.isFlavored()) {
       // android_build_config() case.
@@ -170,7 +167,6 @@ public class AndroidBuildConfigDescription
         buildTarget,
         projectFilesystem,
         javaLibraryParams,
-        pathResolver,
         ruleFinder,
         javac,
         javacOptions,

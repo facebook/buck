@@ -18,7 +18,6 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import java.util.function.Function;
@@ -69,7 +68,6 @@ public class JavaConfiguredCompilerFactory extends ConfiguredCompilerFactory {
 
   @Override
   public ConfiguredCompiler configure(
-      SourcePathResolver sourcePathResolver,
       SourcePathRuleFinder ruleFinder,
       ProjectFilesystem projectFilesystem,
       @Nullable JvmLibraryArg arg,
@@ -78,7 +76,6 @@ public class JavaConfiguredCompilerFactory extends ConfiguredCompilerFactory {
       ToolchainProvider toolchainProvider) {
 
     return new JavacToJarStepFactory(
-        sourcePathResolver,
         ruleFinder,
         projectFilesystem,
         getJavac(buildRuleResolver, arg),

@@ -24,7 +24,6 @@ import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.filesystem.PathOrGlobMatcher;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -59,7 +58,6 @@ public class ScalacToJarStepFactory extends CompileToJarStepFactory implements A
   private final JavacOptions javacOptions;
 
   public ScalacToJarStepFactory(
-      SourcePathResolver resolver,
       SourcePathRuleFinder ruleFinder,
       ProjectFilesystem projectFilesystem,
       Tool scalac,
@@ -70,7 +68,7 @@ public class ScalacToJarStepFactory extends CompileToJarStepFactory implements A
       Javac javac,
       JavacOptions javacOptions,
       ExtraClasspathProvider extraClassPath) {
-    super(resolver, ruleFinder, projectFilesystem);
+    super(ruleFinder, projectFilesystem);
     this.scalac = scalac;
     this.scalaLibraryTarget = scalaLibraryTarget;
     this.configCompilerFlags = configCompilerFlags;
@@ -111,7 +109,7 @@ public class ScalacToJarStepFactory extends CompileToJarStepFactory implements A
                           input ->
                               "-Xplugin:" + context.getSourcePathResolver().getRelativePath(input)))
                   .build(),
-              resolver,
+              context.getSourcePathResolver(),
               outputDirectory,
               sourceFilePaths,
               ImmutableSortedSet.<Path>naturalOrder()
@@ -145,8 +143,7 @@ public class ScalacToJarStepFactory extends CompileToJarStepFactory implements A
                       .build())
               .setSourceFilePaths(javaSourceFiles)
               .build();
-      new JavacToJarStepFactory(
-              resolver, ruleFinder, projectFilesystem, javac, javacOptions, extraClassPath)
+      new JavacToJarStepFactory(ruleFinder, projectFilesystem, javac, javacOptions, extraClassPath)
           .createCompileStep(context, invokingRule, javacParameters, steps, buildableContext);
     }
   }

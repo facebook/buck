@@ -22,7 +22,6 @@ import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.jvm.java.AnnotationProcessingParams;
@@ -129,7 +128,6 @@ public class AndroidLibraryGraphEnhancer {
 
               JavacToJarStepFactory compileToJarStepFactory =
                   new JavacToJarStepFactory(
-                      DefaultSourcePathResolver.from(ruleFinder),
                       ruleFinder,
                       projectFilesystem,
                       javac,
