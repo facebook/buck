@@ -14,19 +14,13 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
+package com.facebook.buck.step;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.step.AbstractExecutionStep;
-import com.facebook.buck.step.ExecutionContext;
-import com.facebook.buck.step.Step;
-import com.facebook.buck.step.StepExecutionResult;
-import com.facebook.buck.step.StepExecutionResults;
-import com.facebook.buck.step.TestExecutionContext;
 import org.junit.Test;
 
-/** Unit test for {@link AbstractExecutionStep}. */
+/** Unit test for {@link com.facebook.buck.step.AbstractExecutionStep}. */
 public class AbstractExecutionStepTest {
 
   @Test
