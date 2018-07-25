@@ -8,7 +8,6 @@ java_test(
         ":testutil",
         "//test/com/facebook/buck/core/model:testutil",
         "//test/com/facebook/buck/io/filesystem:testutil",
-        "//test/com/facebook/buck/model:testutil",
         "//test/com/facebook/buck/util/config:testutil",
         "//third-party/java/jimfs:jimfs",
         "//third-party/java/junit:junit",

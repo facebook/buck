@@ -30,6 +30,7 @@ java_library_with_plugins(
     deps = [
         "//src/com/facebook/buck/apple/clang:clang",
         "//src/com/facebook/buck/core/cell/resolver:resolver",
+        "//src/com/facebook/buck/core/model:model",
         "//src/com/facebook/buck/core/model/impl:impl",
         "//src/com/facebook/buck/core/rules/common:common",
         "//src/com/facebook/buck/core/sourcepath/resolver/impl:impl",
@@ -48,7 +49,6 @@ java_library_with_plugins(
         "//src/com/facebook/buck/json:steps",
         "//src/com/facebook/buck/jvm/java:support",
         "//src/com/facebook/buck/log:api",
-        "//src/com/facebook/buck/model:model",
         "//src/com/facebook/buck/model/macros:macros",
         "//src/com/facebook/buck/parser:rule_pattern",
         "//src/com/facebook/buck/rules/args:args",

@@ -6,7 +6,6 @@ standard_java_test(
         "//src/com/facebook/buck/core/test/rule:rule",
         "//src/com/facebook/buck/util/json:json",
         "//test/com/facebook/buck/core/model:testutil",
-        "//test/com/facebook/buck/model:testutil",
         "//third-party/java/guava:guava",
         "//third-party/java/hamcrest:hamcrest-junit",
         "//third-party/java/junit:junit",

@@ -5,6 +5,7 @@ buck_module(
     srcs = glob(["*.java"]),
     provided_deps = [
         "//src/com/facebook/buck/core/description/arg:arg",
+        "//src/com/facebook/buck/core/model:model",
         "//src/com/facebook/buck/core/model/impl:impl",
         "//src/com/facebook/buck/core/model/targetgraph:targetgraph",
         "//src/com/facebook/buck/core/rules:rules",
@@ -14,7 +15,6 @@ buck_module(
         "//src/com/facebook/buck/jvm/java:steps",
         "//src/com/facebook/buck/jvm/java:support",
         "//src/com/facebook/buck/jvm/java/toolchain:toolchain",
-        "//src/com/facebook/buck/model:model",
         "//src/com/facebook/buck/parser:rule_pattern",
         "//src/com/facebook/buck/shell:steps",
         "//src/com/facebook/buck/step:step",

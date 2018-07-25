@@ -10,6 +10,7 @@ java_immutables_library(
     deps = [
         "//src/com/facebook/buck/android:utils_api",
         "//src/com/facebook/buck/core/cell/resolver:resolver",
+        "//src/com/facebook/buck/core/model:model",
         "//src/com/facebook/buck/core/rulekey:rulekey",
         "//src/com/facebook/buck/event:interfaces",
         "//src/com/facebook/buck/event/external:external_lib",
@@ -17,7 +18,6 @@ java_immutables_library(
         "//src/com/facebook/buck/io/filesystem:filesystem",
         "//src/com/facebook/buck/jvm/core:packagefinder",
         "//src/com/facebook/buck/log:api",
-        "//src/com/facebook/buck/model:model",
         "//src/com/facebook/buck/toolchain:toolchain",
         "//src/com/facebook/buck/util:exceptions",
         "//src/com/facebook/buck/util:process_executor",

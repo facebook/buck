@@ -11,12 +11,12 @@ java_library(
         "//test/com/facebook/buck/jvm/java/tracing:tracing",
     ],
     deps = [
+        "//src/com/facebook/buck/core/model:model",
         "//src/com/facebook/buck/event:interfaces",
         "//src/com/facebook/buck/event/external:external_lib",
         "//src/com/facebook/buck/jvm/java:javac-sink",
         "//src/com/facebook/buck/jvm/java/plugin:plugin",
         "//src/com/facebook/buck/jvm/java/plugin/api:api",
-        "//src/com/facebook/buck/model:model",
         "//src/com/facebook/buck/util:util",
         "//third-party/java/guava:guava",
         "//third-party/java/jsr:jsr305",

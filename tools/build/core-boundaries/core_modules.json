@@ -96,7 +96,6 @@
   "//src/com/facebook/buck/log:appendablelogrecord",
   "//src/com/facebook/buck/log:log",
   "//src/com/facebook/buck/model/macros:macros",
-  "//src/com/facebook/buck/model:model",
   "//src/com/facebook/buck/module:module",
   "//src/com/facebook/buck/module/annotationprocessor:annotationprocessor",
   "//src/com/facebook/buck/module/annotationprocessor:annotationprocessor-lib",

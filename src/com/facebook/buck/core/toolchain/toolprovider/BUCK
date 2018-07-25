@@ -6,8 +6,8 @@ java_library(
     ],
     visibility = ["PUBLIC"],
     deps = [
+        "//src/com/facebook/buck/core/model:model",
         "//src/com/facebook/buck/core/rules:rules",
-        "//src/com/facebook/buck/model:model",
         "//third-party/java/guava:guava",
     ],
 )

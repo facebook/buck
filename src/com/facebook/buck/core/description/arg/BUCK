@@ -14,8 +14,8 @@ java_library(
         "Hint.java",
     ],
     exported_deps = [
+        "//src/com/facebook/buck/core/model:model",
         "//src/com/facebook/buck/core/sourcepath:sourcepath",
-        "//src/com/facebook/buck/model:model",
         "//src/com/facebook/buck/rules/query:types",
         "//third-party/java/guava:guava",
         "//third-party/java/immutables:immutables",

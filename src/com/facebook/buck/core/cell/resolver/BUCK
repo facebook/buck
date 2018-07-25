@@ -4,7 +4,7 @@ java_library(
         "CellPathResolver.java",
     ],
     exported_deps = [
-        "//src/com/facebook/buck/model:model",
+        "//src/com/facebook/buck/core/model:model",
         "//third-party/java/guava:guava",
     ],
     visibility = [
