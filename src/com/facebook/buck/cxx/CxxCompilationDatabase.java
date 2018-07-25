@@ -21,6 +21,7 @@ import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
@@ -31,7 +32,6 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -87,7 +87,7 @@ public class CxxCompilationDatabase extends AbstractBuildRule implements HasRunt
     LOG.debug("Creating compilation database %s with runtime deps %s", buildTarget, runtimeDeps);
     this.compileRules = compileRules;
     this.outputJsonFile =
-        BuildTargets.getGenPath(
+        BuildTargetPaths.getGenPath(
             getProjectFilesystem(),
             buildTarget,
             Paths.get("__%s", "compile_commands.json").toString());

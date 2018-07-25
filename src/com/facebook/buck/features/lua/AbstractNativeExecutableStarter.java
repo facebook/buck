@@ -19,6 +19,7 @@ package com.facebook.buck.features.lua;
 import com.facebook.buck.core.cell.resolver.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
@@ -48,7 +49,6 @@ import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.file.WriteFile;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.util.Escaper;
@@ -133,14 +133,14 @@ abstract class AbstractNativeExecutableStarter implements Starter, NativeLinkTar
                                   templateTarget,
                                   getProjectFilesystem(),
                                   getNativeStarterCxxSourceTemplate(),
-                                  BuildTargets.getGenPath(
+                                  BuildTargetPaths.getGenPath(
                                       getProjectFilesystem(),
                                       templateTarget,
                                       "%s/native-starter.cpp.in"),
                                   /* executable */ false));
 
                   Path output =
-                      BuildTargets.getGenPath(
+                      BuildTargetPaths.getGenPath(
                           getProjectFilesystem(), target, "%s/native-starter.cpp");
                   return WriteStringTemplateRule.from(
                       getProjectFilesystem(),

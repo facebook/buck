@@ -15,6 +15,7 @@ java_library_with_plugins(
     deps = [
         "//src/com/facebook/buck/config:config",
         "//src/com/facebook/buck/core/cell/resolver:resolver",
+        "//src/com/facebook/buck/core/model/impl:impl",
         "//src/com/facebook/buck/core/rules:rules",
         "//src/com/facebook/buck/core/rules/impl:impl",
         "//src/com/facebook/buck/core/sourcepath/resolver/impl:impl",

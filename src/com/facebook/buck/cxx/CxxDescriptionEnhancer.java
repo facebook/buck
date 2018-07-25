@@ -23,6 +23,7 @@ import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.UserFlavor;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.model.impl.ImmutableBuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.RuleKeyObjectSink;
@@ -59,7 +60,6 @@ import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.json.JsonConcatenate;
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.FileListableLinkerInputArg;
 import com.facebook.buck.rules.args.RuleKeyAppendableFunction;
@@ -279,12 +279,12 @@ public class CxxDescriptionEnhancer {
       BuildTarget target,
       HeaderVisibility headerVisibility,
       Flavor... flavors) {
-    return BuildTargets.getGenPath(
+    return BuildTargetPaths.getGenPath(
         filesystem, createHeaderSymlinkTreeTarget(target, headerVisibility, flavors), "%s");
   }
 
   public static Path getSandboxSymlinkTreePath(ProjectFilesystem filesystem, BuildTarget target) {
-    return BuildTargets.getGenPath(filesystem, target, "%s");
+    return BuildTargetPaths.getGenPath(filesystem, target, "%s");
   }
 
   public static Flavor getHeaderSymlinkTreeFlavor(HeaderVisibility headerVisibility) {
@@ -680,7 +680,7 @@ public class CxxDescriptionEnhancer {
       basename = getStaticLibraryBasename(target, suffix, uniqueLibraryNameEnabled);
     }
     String name = String.format("lib%s.%s", basename, extension);
-    return BuildTargets.getGenPath(
+    return BuildTargetPaths.getGenPath(
             filesystem, createStaticLibraryBuildTarget(target, platform, pic), "%s")
         .resolve(name);
   }
@@ -730,13 +730,13 @@ public class CxxDescriptionEnhancer {
 
   public static Path getSharedLibraryPath(
       ProjectFilesystem filesystem, BuildTarget sharedLibraryTarget, String soname) {
-    return BuildTargets.getGenPath(filesystem, sharedLibraryTarget, "%s/" + soname);
+    return BuildTargetPaths.getGenPath(filesystem, sharedLibraryTarget, "%s/" + soname);
   }
 
   private static Path getBinaryOutputPath(
       BuildTarget target, ProjectFilesystem filesystem, Optional<String> extension) {
     String format = extension.map(ext -> "%s." + ext).orElse("%s");
-    return BuildTargets.getGenPath(filesystem, target, format);
+    return BuildTargetPaths.getGenPath(filesystem, target, format);
   }
 
   @VisibleForTesting
@@ -1252,7 +1252,7 @@ public class CxxDescriptionEnhancer {
   /** @return the {@link Path} to use for the symlink tree of headers. */
   public static Path getSharedLibrarySymlinkTreePath(
       ProjectFilesystem filesystem, BuildTarget target, Flavor platform) {
-    return BuildTargets.getGenPath(
+    return BuildTargetPaths.getGenPath(
         filesystem, createSharedLibrarySymlinkTreeTarget(target, platform), "%s");
   }
 
@@ -1319,7 +1319,7 @@ public class CxxDescriptionEnhancer {
 
   private static Path getBinaryWithSharedLibrariesSymlinkTreePath(
       ProjectFilesystem filesystem, BuildTarget target, Flavor platform) {
-    return BuildTargets.getGenPath(
+    return BuildTargetPaths.getGenPath(
         filesystem, createBinaryWithSharedLibrariesSymlinkTreeTarget(target, platform), "%s");
   }
 

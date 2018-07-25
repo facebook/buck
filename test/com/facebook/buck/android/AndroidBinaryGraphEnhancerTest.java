@@ -37,6 +37,7 @@ import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -57,7 +58,6 @@ import com.facebook.buck.jvm.java.FakeJavac;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.jvm.java.JavacFactoryHelper;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.facebook.buck.rules.coercer.ManifestEntries;
@@ -346,7 +346,8 @@ public class AndroidBinaryGraphEnhancerTest {
         "The only classpath entry to dex should be the one from the AndroidBuildConfigJavaLibrary"
             + " created via graph enhancement.",
         ImmutableSet.of(
-            BuildTargets.getGenPath(projectFilesystem, enhancedBuildConfigTarget, "lib__%s__output")
+            BuildTargetPaths.getGenPath(
+                    projectFilesystem, enhancedBuildConfigTarget, "lib__%s__output")
                 .resolve(enhancedBuildConfigTarget.getShortNameAndFlavorPostfix() + ".jar")),
         result
             .getClasspathEntriesToDex()

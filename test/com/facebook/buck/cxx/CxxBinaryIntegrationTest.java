@@ -37,6 +37,7 @@ import com.facebook.buck.core.build.engine.BuildRuleStatus;
 import com.facebook.buck.core.build.engine.BuildRuleSuccessType;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
@@ -51,7 +52,6 @@ import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
@@ -618,12 +618,14 @@ public class CxxBinaryIntegrationTest {
     assertTrue(
         Files.exists(
             workspace.getPath(
-                BuildTargets.getGenPath(filesystem, inputBuildTarget, "infer-%s/infer-deps.txt"))));
+                BuildTargetPaths.getGenPath(
+                    filesystem, inputBuildTarget, "infer-%s/infer-deps.txt"))));
 
     Set<String> loggedDeps =
         getUniqueLines(
             workspace.getFileContents(
-                BuildTargets.getGenPath(filesystem, inputBuildTarget, "infer-%s/infer-deps.txt")));
+                BuildTargetPaths.getGenPath(
+                    filesystem, inputBuildTarget, "infer-%s/infer-deps.txt")));
 
     String sanitizedChainDepOne = sanitize("chain_dep_one.c.o");
     String sanitizedTopChain = sanitize("top_chain.c.o");
@@ -652,7 +654,7 @@ public class CxxBinaryIntegrationTest {
                 + "\t"
                 + "[infer-analyze]\t"
                 + basePath.resolve(
-                    BuildTargets.getGenPath(
+                    BuildTargetPaths.getGenPath(
                         filesystem, analyzeTopChainTarget, "infer-analysis-%s")),
             captureTopChainTarget.getFullyQualifiedName()
                 + "\t"
@@ -660,12 +662,12 @@ public class CxxBinaryIntegrationTest {
                 + sanitizedTopChain
                 + "]\t"
                 + basePath.resolve(
-                    BuildTargets.getGenPath(filesystem, captureTopChainTarget, "infer-out-%s")),
+                    BuildTargetPaths.getGenPath(filesystem, captureTopChainTarget, "infer-out-%s")),
             analyzeChainDepOneTarget.getFullyQualifiedName()
                 + "\t"
                 + "[default, infer-analyze]\t"
                 + basePath.resolve(
-                    BuildTargets.getGenPath(
+                    BuildTargetPaths.getGenPath(
                         filesystem, analyzeChainDepOneTarget, "infer-analysis-%s")),
             captureChainDepOneTarget.getFullyQualifiedName()
                 + "\t"
@@ -673,12 +675,13 @@ public class CxxBinaryIntegrationTest {
                 + sanitizedChainDepOne
                 + "]\t"
                 + basePath.resolve(
-                    BuildTargets.getGenPath(filesystem, captureChainDepOneTarget, "infer-out-%s")),
+                    BuildTargetPaths.getGenPath(
+                        filesystem, captureChainDepOneTarget, "infer-out-%s")),
             analyzeChainDepTwoTarget.getFullyQualifiedName()
                 + "\t"
                 + "[default, infer-analyze]\t"
                 + basePath.resolve(
-                    BuildTargets.getGenPath(
+                    BuildTargetPaths.getGenPath(
                         filesystem, analyzeChainDepTwoTarget, "infer-analysis-%s")),
             captureChainDepTwoTarget.getFullyQualifiedName()
                 + "\t"
@@ -686,7 +689,8 @@ public class CxxBinaryIntegrationTest {
                 + sanitizedChainDepTwo
                 + "]\t"
                 + basePath.resolve(
-                    BuildTargets.getGenPath(filesystem, captureChainDepTwoTarget, "infer-out-%s")));
+                    BuildTargetPaths.getGenPath(
+                        filesystem, captureChainDepTwoTarget, "infer-out-%s")));
 
     assertEquals(expectedOutput, loggedDeps);
   }
@@ -750,7 +754,8 @@ public class CxxBinaryIntegrationTest {
     ProjectFilesystem filesystem =
         TestProjectFilesystems.createProjectFilesystem(primary.getDestPath());
     String reportPath =
-        BuildTargets.getGenPath(filesystem, inputBuildTarget, "infer-%s/report.json").toString();
+        BuildTargetPaths.getGenPath(filesystem, inputBuildTarget, "infer-%s/report.json")
+            .toString();
     List<Object> bugs = InferHelper.loadInferReport(primary, reportPath);
     Assert.assertThat(
         "2 bugs expected in " + reportPath + " not found", bugs.size(), Matchers.equalTo(2));
@@ -791,12 +796,14 @@ public class CxxBinaryIntegrationTest {
     assertTrue(
         Files.exists(
             workspace.getPath(
-                BuildTargets.getGenPath(filesystem, inputBuildTarget, "infer-%s/infer-deps.txt"))));
+                BuildTargetPaths.getGenPath(
+                    filesystem, inputBuildTarget, "infer-%s/infer-deps.txt"))));
 
     Set<String> loggedDeps =
         getUniqueLines(
             workspace.getFileContents(
-                BuildTargets.getGenPath(filesystem, inputBuildTarget, "infer-%s/infer-deps.txt")));
+                BuildTargetPaths.getGenPath(
+                    filesystem, inputBuildTarget, "infer-%s/infer-deps.txt")));
 
     BuildTarget analyzeMainTarget =
         BuildTargetFactory.newInstance("//foo:binary_with_diamond_deps#infer-analyze");
@@ -830,46 +837,46 @@ public class CxxBinaryIntegrationTest {
             InferLogLine.fromBuildTarget(
                     analyzeMainTarget,
                     basePath.resolve(
-                        BuildTargets.getGenPath(
+                        BuildTargetPaths.getGenPath(
                             filesystem, analyzeMainTarget, "infer-analysis-%s")))
                 .toString(),
             InferLogLine.fromBuildTarget(
                     srcWithDepsTarget,
                     basePath.resolve(
-                        BuildTargets.getGenPath(filesystem, srcWithDepsTarget, "infer-out-%s")))
+                        BuildTargetPaths.getGenPath(filesystem, srcWithDepsTarget, "infer-out-%s")))
                 .toString(),
             InferLogLine.fromBuildTarget(
                     analyzeDepOneTarget,
                     basePath.resolve(
-                        BuildTargets.getGenPath(
+                        BuildTargetPaths.getGenPath(
                             filesystem, analyzeDepOneTarget, "infer-analysis-%s")))
                 .toString(),
             InferLogLine.fromBuildTarget(
                     depOneTarget,
                     basePath.resolve(
-                        BuildTargets.getGenPath(filesystem, depOneTarget, "infer-out-%s")))
+                        BuildTargetPaths.getGenPath(filesystem, depOneTarget, "infer-out-%s")))
                 .toString(),
             InferLogLine.fromBuildTarget(
                     analyzeDepTwoTarget,
                     basePath.resolve(
-                        BuildTargets.getGenPath(
+                        BuildTargetPaths.getGenPath(
                             filesystem, analyzeDepTwoTarget, "infer-analysis-%s")))
                 .toString(),
             InferLogLine.fromBuildTarget(
                     depTwoTarget,
                     basePath.resolve(
-                        BuildTargets.getGenPath(filesystem, depTwoTarget, "infer-out-%s")))
+                        BuildTargetPaths.getGenPath(filesystem, depTwoTarget, "infer-out-%s")))
                 .toString(),
             InferLogLine.fromBuildTarget(
                     analyzeSimpleLibTarget,
                     basePath.resolve(
-                        BuildTargets.getGenPath(
+                        BuildTargetPaths.getGenPath(
                             filesystem, analyzeSimpleLibTarget, "infer-analysis-%s")))
                 .toString(),
             InferLogLine.fromBuildTarget(
                     simpleCppTarget,
                     basePath.resolve(
-                        BuildTargets.getGenPath(filesystem, simpleCppTarget, "infer-out-%s")))
+                        BuildTargetPaths.getGenPath(filesystem, simpleCppTarget, "infer-out-%s")))
                 .toString());
 
     assertEquals(expectedOutput, loggedDeps);
@@ -909,12 +916,14 @@ public class CxxBinaryIntegrationTest {
     assertTrue(
         Files.exists(
             workspace.getPath(
-                BuildTargets.getGenPath(filesystem, inputBuildTarget, "infer-%s/infer-deps.txt"))));
+                BuildTargetPaths.getGenPath(
+                    filesystem, inputBuildTarget, "infer-%s/infer-deps.txt"))));
 
     Set<String> loggedDeps =
         getUniqueLines(
             workspace.getFileContents(
-                BuildTargets.getGenPath(filesystem, inputBuildTarget, "infer-%s/infer-deps.txt")));
+                BuildTargetPaths.getGenPath(
+                    filesystem, inputBuildTarget, "infer-%s/infer-deps.txt")));
 
     String sanitizedSimpleCpp = sanitize("simple.cpp.o");
     String sanitizedDepOne = sanitize("dep_one.c.o");
@@ -939,22 +948,22 @@ public class CxxBinaryIntegrationTest {
             InferLogLine.fromBuildTarget(
                     srcWithDepsTarget,
                     basePath.resolve(
-                        BuildTargets.getGenPath(filesystem, srcWithDepsTarget, "infer-out-%s")))
+                        BuildTargetPaths.getGenPath(filesystem, srcWithDepsTarget, "infer-out-%s")))
                 .toString(),
             InferLogLine.fromBuildTarget(
                     depOneTarget,
                     basePath.resolve(
-                        BuildTargets.getGenPath(filesystem, depOneTarget, "infer-out-%s")))
+                        BuildTargetPaths.getGenPath(filesystem, depOneTarget, "infer-out-%s")))
                 .toString(),
             InferLogLine.fromBuildTarget(
                     depTwoTarget,
                     basePath.resolve(
-                        BuildTargets.getGenPath(filesystem, depTwoTarget, "infer-out-%s")))
+                        BuildTargetPaths.getGenPath(filesystem, depTwoTarget, "infer-out-%s")))
                 .toString(),
             InferLogLine.fromBuildTarget(
                     simpleCppTarget,
                     basePath.resolve(
-                        BuildTargets.getGenPath(filesystem, simpleCppTarget, "infer-out-%s")))
+                        BuildTargetPaths.getGenPath(filesystem, simpleCppTarget, "infer-out-%s")))
                 .toString());
 
     assertEquals(expectedOutput, loggedDeps);
@@ -998,7 +1007,7 @@ public class CxxBinaryIntegrationTest {
         "This file was expected to exist because it's declared as runtime dep",
         Files.exists(
             workspace.getPath(
-                BuildTargets.getGenPath(
+                BuildTargetPaths.getGenPath(
                         filesystem,
                         BuildTargetFactory.newInstance(
                             "//foo:simple_lib#default,infer-capture-" + sanitize("simple.cpp.o")),
@@ -1008,7 +1017,7 @@ public class CxxBinaryIntegrationTest {
         "This file was expected to exist because it's declared as runtime dep",
         Files.exists(
             workspace.getPath(
-                BuildTargets.getGenPath(
+                BuildTargetPaths.getGenPath(
                         filesystem,
                         BuildTargetFactory.newInstance(
                             "//foo:diamond_dep_one#default,infer-capture-"
@@ -1019,7 +1028,7 @@ public class CxxBinaryIntegrationTest {
         "This file was expected to exist because it's declared as runtime dep",
         Files.exists(
             workspace.getPath(
-                BuildTargets.getGenPath(
+                BuildTargetPaths.getGenPath(
                         filesystem,
                         BuildTargetFactory.newInstance(
                             "//foo:diamond_dep_two#default,infer-capture-"
@@ -1030,7 +1039,7 @@ public class CxxBinaryIntegrationTest {
         "This file was expected to exist because it's declared as runtime dep",
         Files.exists(
             workspace.getPath(
-                BuildTargets.getGenPath(
+                BuildTargetPaths.getGenPath(
                         filesystem,
                         BuildTargetFactory.newInstance(
                             "//foo:binary_with_diamond_deps#default,infer-capture-"
@@ -1113,12 +1122,14 @@ public class CxxBinaryIntegrationTest {
     assertTrue(
         Files.exists(
             workspace.getPath(
-                BuildTargets.getGenPath(filesystem, inputBuildTarget, "infer-%s/infer-deps.txt"))));
+                BuildTargetPaths.getGenPath(
+                    filesystem, inputBuildTarget, "infer-%s/infer-deps.txt"))));
 
     Set<String> loggedDeps =
         getUniqueLines(
             workspace.getFileContents(
-                BuildTargets.getGenPath(filesystem, inputBuildTarget, "infer-%s/infer-deps.txt")));
+                BuildTargetPaths.getGenPath(
+                    filesystem, inputBuildTarget, "infer-%s/infer-deps.txt")));
 
     String sanitizedSimpleCpp = sanitize("simple.cpp.o");
     String sanitizedDepOne = sanitize("dep_one.c.o");
@@ -1146,28 +1157,28 @@ public class CxxBinaryIntegrationTest {
                 + sanitizedSrcWithDeps
                 + "]\t"
                 + basePath.resolve(
-                    BuildTargets.getGenPath(filesystem, srcWithDepsTarget, "infer-out-%s")),
+                    BuildTargetPaths.getGenPath(filesystem, srcWithDepsTarget, "infer-out-%s")),
             depOneTarget.getFullyQualifiedName()
                 + "\t"
                 + "[default, infer-capture-"
                 + sanitizedDepOne
                 + "]\t"
                 + basePath.resolve(
-                    BuildTargets.getGenPath(filesystem, depOneTarget, "infer-out-%s")),
+                    BuildTargetPaths.getGenPath(filesystem, depOneTarget, "infer-out-%s")),
             depTwoTarget.getFullyQualifiedName()
                 + "\t"
                 + "[default, infer-capture-"
                 + sanitizedDepTwo
                 + "]\t"
                 + basePath.resolve(
-                    BuildTargets.getGenPath(filesystem, depTwoTarget, "infer-out-%s")),
+                    BuildTargetPaths.getGenPath(filesystem, depTwoTarget, "infer-out-%s")),
             simpleCppTarget.getFullyQualifiedName()
                 + "\t"
                 + "[default, infer-capture-"
                 + sanitizedSimpleCpp
                 + "]\t"
                 + basePath.resolve(
-                    BuildTargets.getGenPath(filesystem, simpleCppTarget, "infer-out-%s")));
+                    BuildTargetPaths.getGenPath(filesystem, simpleCppTarget, "infer-out-%s")));
 
     assertEquals(expectedOutput, loggedDeps);
   }
@@ -1195,7 +1206,7 @@ public class CxxBinaryIntegrationTest {
         "Cfg file for chain_dep_one.c should not exist",
         Files.exists(
             workspace.getPath(
-                BuildTargets.getGenPath(
+                BuildTargetPaths.getGenPath(
                         filesystem,
                         BuildTargetFactory.newInstance(
                             "//foo:chain_dep_one#default,infer-capture-"
@@ -1208,7 +1219,7 @@ public class CxxBinaryIntegrationTest {
         "Expected cfg for chain_dep_two.c not found",
         Files.exists(
             workspace.getPath(
-                BuildTargets.getGenPath(
+                BuildTargetPaths.getGenPath(
                         filesystem,
                         BuildTargetFactory.newInstance(
                             "//foo:chain_dep_two#default,infer-capture-"
@@ -1219,7 +1230,7 @@ public class CxxBinaryIntegrationTest {
         "Expected cfg for top_chain.c not found",
         Files.exists(
             workspace.getPath(
-                BuildTargets.getGenPath(
+                BuildTargetPaths.getGenPath(
                         filesystem,
                         BuildTargetFactory.newInstance(
                             "//foo:binary_with_chain_deps#infer-analyze"),
@@ -1249,7 +1260,7 @@ public class CxxBinaryIntegrationTest {
         "Expected cfg for chain_dep_one.c not found",
         Files.exists(
             workspace.getPath(
-                BuildTargets.getGenPath(
+                BuildTargetPaths.getGenPath(
                         filesystem,
                         BuildTargetFactory.newInstance(
                             "//foo:chain_dep_one#default,infer-capture-"
@@ -1260,7 +1271,7 @@ public class CxxBinaryIntegrationTest {
         "Expected cfg for chain_dep_two.c not found",
         Files.exists(
             workspace.getPath(
-                BuildTargets.getGenPath(
+                BuildTargetPaths.getGenPath(
                         filesystem,
                         BuildTargetFactory.newInstance(
                             "//foo:chain_dep_two#default,infer-capture-"
@@ -1271,7 +1282,7 @@ public class CxxBinaryIntegrationTest {
         "Expected cfg for top_chain.c not found",
         Files.exists(
             workspace.getPath(
-                BuildTargets.getGenPath(
+                BuildTargetPaths.getGenPath(
                         filesystem,
                         BuildTargetFactory.newInstance(
                             filesystem.getRootPath(), "//foo:binary_with_chain_deps#infer-analyze"),
@@ -1323,7 +1334,7 @@ public class CxxBinaryIntegrationTest {
         "Expected specs file for func_ret_null() in chain_dep_two.c not found",
         Files.exists(
             workspace.getPath(
-                BuildTargets.getGenPath(
+                BuildTargetPaths.getGenPath(
                     filesystem,
                     BuildTargetFactory.newInstance("//foo:chain_dep_two#default,infer-analyze"),
                     "infer-analysis-%s/specs/mockedSpec.specs"))));
@@ -1347,7 +1358,8 @@ public class CxxBinaryIntegrationTest {
     workspace.runBuckCommand("build", inputBuildTarget.getFullyQualifiedName()).assertSuccess();
 
     String reportPath =
-        BuildTargets.getGenPath(filesystem, inputBuildTarget, "infer-%s/report.json").toString();
+        BuildTargetPaths.getGenPath(filesystem, inputBuildTarget, "infer-%s/report.json")
+            .toString();
     List<Object> bugs = InferHelper.loadInferReport(workspace, reportPath);
 
     // check that the merge step has merged a total of 3 bugs, one for each target
@@ -1372,7 +1384,7 @@ public class CxxBinaryIntegrationTest {
     workspace.runBuckCommand("build", inputBuildTarget.getFullyQualifiedName()).assertSuccess();
 
     String specsPathList =
-        BuildTargets.getGenPath(
+        BuildTargetPaths.getGenPath(
                 filesystem,
                 inputBuildTarget.withFlavors(
                     CxxInferEnhancer.InferFlavors.INFER_ANALYZE.getFlavor()),
@@ -1491,7 +1503,7 @@ public class CxxBinaryIntegrationTest {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:simple");
     workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
 
-    Path outputPath = workspace.getPath(BuildTargets.getGenPath(filesystem, target, "%s"));
+    Path outputPath = workspace.getPath(BuildTargetPaths.getGenPath(filesystem, target, "%s"));
 
     /*
      * Check that building after clean will use the cache
@@ -1521,7 +1533,7 @@ public class CxxBinaryIntegrationTest {
         .runBuckCommand("build", "-c", "cxx.cache_binaries=true", target.getFullyQualifiedName())
         .assertSuccess();
 
-    Path outputPath = workspace.getPath(BuildTargets.getGenPath(filesystem, target, "%s"));
+    Path outputPath = workspace.getPath(BuildTargetPaths.getGenPath(filesystem, target, "%s"));
 
     /*
      * Check that building after clean will use the cache
@@ -2274,10 +2286,10 @@ public class CxxBinaryIntegrationTest {
 
     Path strippedPath =
         workspace.getPath(
-            BuildTargets.getGenPath(
+            BuildTargetPaths.getGenPath(
                 filesystem, strippedTarget.withAppendedFlavors(CxxStrip.RULE_FLAVOR), "%s"));
     Path unstrippedPath =
-        workspace.getPath(BuildTargets.getGenPath(filesystem, unstrippedTarget, "%s"));
+        workspace.getPath(BuildTargetPaths.getGenPath(filesystem, unstrippedTarget, "%s"));
 
     String strippedOut =
         workspace.runCommand("dsymutil", "-s", strippedPath.toString()).getStdout().orElse("");
@@ -2321,10 +2333,10 @@ public class CxxBinaryIntegrationTest {
 
     Path strippedPath =
         workspace.getPath(
-            BuildTargets.getGenPath(
+            BuildTargetPaths.getGenPath(
                 filesystem, strippedTarget.withAppendedFlavors(CxxStrip.RULE_FLAVOR), "%s"));
     Path unstrippedPath =
-        workspace.getPath(BuildTargets.getGenPath(filesystem, unstrippedTarget, "%s"));
+        workspace.getPath(BuildTargetPaths.getGenPath(filesystem, unstrippedTarget, "%s"));
 
     assertThat(Files.exists(strippedPath), Matchers.equalTo(true));
     assertThat(Files.exists(unstrippedPath), Matchers.equalTo(false));
@@ -2378,10 +2390,10 @@ public class CxxBinaryIntegrationTest {
     BuildTarget binaryWithLinkerMap = target;
 
     Path binaryWithLinkerMapPath =
-        workspace.getPath(BuildTargets.getGenPath(filesystem, binaryWithLinkerMap, "%s"));
+        workspace.getPath(BuildTargetPaths.getGenPath(filesystem, binaryWithLinkerMap, "%s"));
     Path linkerMapPath =
         workspace.getPath(
-            BuildTargets.getGenPath(filesystem, binaryWithLinkerMap, "%s-LinkMap.txt"));
+            BuildTargetPaths.getGenPath(filesystem, binaryWithLinkerMap, "%s-LinkMap.txt"));
     assertThat(Files.exists(binaryWithLinkerMapPath), Matchers.equalTo(true));
     assertThat(Files.exists(linkerMapPath), Matchers.equalTo(true));
 
@@ -2395,10 +2407,10 @@ public class CxxBinaryIntegrationTest {
     BuildTarget binaryWithoutLinkerMap = withoutLinkerMapTarget;
 
     Path binaryWithoutLinkerMapPath =
-        workspace.getPath(BuildTargets.getGenPath(filesystem, binaryWithoutLinkerMap, "%s"));
+        workspace.getPath(BuildTargetPaths.getGenPath(filesystem, binaryWithoutLinkerMap, "%s"));
     linkerMapPath =
         workspace.getPath(
-            BuildTargets.getGenPath(filesystem, binaryWithoutLinkerMap, "%s-LinkMap.txt"));
+            BuildTargetPaths.getGenPath(filesystem, binaryWithoutLinkerMap, "%s-LinkMap.txt"));
     assertThat(Files.exists(binaryWithoutLinkerMapPath), Matchers.equalTo(true));
     assertThat(Files.exists(linkerMapPath), Matchers.equalTo(false));
   }

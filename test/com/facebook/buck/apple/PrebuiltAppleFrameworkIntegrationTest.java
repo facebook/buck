@@ -27,10 +27,10 @@ import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -68,7 +68,8 @@ public class PrebuiltAppleFrameworkIntegrationTest {
     ProcessResult result = workspace.runBuckCommand("build", target.getFullyQualifiedName());
     result.assertSuccess();
 
-    assertTrue(Files.exists(workspace.getPath(BuildTargets.getGenPath(filesystem, target, "%s"))));
+    assertTrue(
+        Files.exists(workspace.getPath(BuildTargetPaths.getGenPath(filesystem, target, "%s"))));
   }
 
   @Test
@@ -84,7 +85,7 @@ public class PrebuiltAppleFrameworkIntegrationTest {
     ProcessResult result = workspace.runBuckCommand("build", target.getFullyQualifiedName());
     result.assertSuccess();
 
-    Path testBinaryPath = workspace.getPath(BuildTargets.getGenPath(filesystem, target, "%s"));
+    Path testBinaryPath = workspace.getPath(BuildTargetPaths.getGenPath(filesystem, target, "%s"));
     assertTrue(Files.exists(testBinaryPath));
 
     ProcessExecutor.Result otoolResult =
@@ -111,7 +112,7 @@ public class PrebuiltAppleFrameworkIntegrationTest {
 
     Path includedFramework =
         workspace
-            .getPath(BuildTargets.getGenPath(filesystem, target, "%s"))
+            .getPath(BuildTargetPaths.getGenPath(filesystem, target, "%s"))
             .resolve("TestAppBundle.app")
             .resolve("Frameworks")
             .resolve("BuckTest.framework");
@@ -131,7 +132,7 @@ public class PrebuiltAppleFrameworkIntegrationTest {
     ProcessResult result = workspace.runBuckCommand("build", target.getFullyQualifiedName());
     result.assertSuccess();
 
-    Path testBinaryPath = workspace.getPath(BuildTargets.getGenPath(filesystem, target, "%s"));
+    Path testBinaryPath = workspace.getPath(BuildTargetPaths.getGenPath(filesystem, target, "%s"));
 
     ProcessExecutor.Result otoolResult =
         workspace.runCommand("otool", "-L", testBinaryPath.toString());

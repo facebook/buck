@@ -24,11 +24,11 @@ import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -100,7 +100,7 @@ public class BuiltinApplePackageIntegrationTest {
 
     ZipInspector zipInspector =
         new ZipInspector(
-            workspace.getPath(BuildTargets.getGenPath(filesystem, packageTarget, "%s.ipa")));
+            workspace.getPath(BuildTargetPaths.getGenPath(filesystem, packageTarget, "%s.ipa")));
     zipInspector.assertFileExists("Payload/DemoApp.app/DemoApp");
     zipInspector.assertFileDoesNotExist("WatchKitSupport");
     zipInspector.assertFileDoesNotExist("WatchKitSupport2");
@@ -127,7 +127,7 @@ public class BuiltinApplePackageIntegrationTest {
 
     ZipInspector zipInspector =
         new ZipInspector(
-            workspace.getPath(BuildTargets.getGenPath(filesystem, packageTarget, "%s.ipa")));
+            workspace.getPath(BuildTargetPaths.getGenPath(filesystem, packageTarget, "%s.ipa")));
     zipInspector.assertFileExists("SwiftSupport/iphonesimulator/libswiftCore.dylib");
   }
 
@@ -146,7 +146,7 @@ public class BuiltinApplePackageIntegrationTest {
 
     ZipInspector zipInspector =
         new ZipInspector(
-            workspace.getPath(BuildTargets.getGenPath(filesystem, packageTarget, "%s.ipa")));
+            workspace.getPath(BuildTargetPaths.getGenPath(filesystem, packageTarget, "%s.ipa")));
     zipInspector.assertFileDoesNotExist("SwiftSupport");
   }
 
@@ -180,7 +180,7 @@ public class BuiltinApplePackageIntegrationTest {
         .getUnarchiver()
         .extractArchive(
             new DefaultProjectFilesystemFactory(),
-            workspace.getPath(BuildTargets.getGenPath(filesystem, packageTarget, "%s.ipa")),
+            workspace.getPath(BuildTargetPaths.getGenPath(filesystem, packageTarget, "%s.ipa")),
             destination,
             ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);
 
@@ -214,7 +214,7 @@ public class BuiltinApplePackageIntegrationTest {
         .getUnarchiver()
         .extractArchive(
             new DefaultProjectFilesystemFactory(),
-            workspace.getPath(BuildTargets.getGenPath(filesystem, packageTarget, "%s.ipa")),
+            workspace.getPath(BuildTargetPaths.getGenPath(filesystem, packageTarget, "%s.ipa")),
             destination,
             ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);
 
@@ -239,7 +239,7 @@ public class BuiltinApplePackageIntegrationTest {
         .getUnarchiver()
         .extractArchive(
             new DefaultProjectFilesystemFactory(),
-            workspace.getPath(BuildTargets.getGenPath(filesystem, packageTarget, "%s.ipa")),
+            workspace.getPath(BuildTargetPaths.getGenPath(filesystem, packageTarget, "%s.ipa")),
             workspace.getDestPath(),
             ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);
 

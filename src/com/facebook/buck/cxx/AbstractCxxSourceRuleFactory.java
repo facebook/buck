@@ -20,6 +20,7 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rulekey.RuleKeyObjectSink;
@@ -45,7 +46,6 @@ import com.facebook.buck.cxx.toolchain.Preprocessor;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SanitizedArg;
 import com.facebook.buck.rules.args.StringArg;
@@ -288,7 +288,7 @@ abstract class AbstractCxxSourceRuleFactory {
   /** @return the output path for an object file compiled from the source with the given name. */
   @VisibleForTesting
   Path getCompileOutputPath(BuildTarget target, String name) {
-    return BuildTargets.getGenPath(getProjectFilesystem(), target, "%s")
+    return BuildTargetPaths.getGenPath(getProjectFilesystem(), target, "%s")
         .resolve(getCompileOutputName(name));
   }
 
@@ -688,7 +688,7 @@ abstract class AbstractCxxSourceRuleFactory {
       Path sourcePath =
           Paths.get(getPathResolver().getSourcePathName(getBaseBuildTarget(), source.getPath()));
       Path sandboxPath =
-          BuildTargets.getGenPath(getProjectFilesystem(), sandboxTree.getBuildTarget(), "%s");
+          BuildTargetPaths.getGenPath(getProjectFilesystem(), sandboxTree.getBuildTarget(), "%s");
       ExplicitBuildTargetSourcePath path =
           ExplicitBuildTargetSourcePath.of(
               sandboxTree.getBuildTarget(), sandboxPath.resolve(sourcePath));

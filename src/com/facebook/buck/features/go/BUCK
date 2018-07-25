@@ -11,6 +11,7 @@ buck_module(
         "//src/com/facebook/buck/core/cell/resolver:resolver",
         "//src/com/facebook/buck/core/description/arg:arg",
         "//src/com/facebook/buck/core/model/actiongraph:actiongraph",
+        "//src/com/facebook/buck/core/model/impl:impl",
         "//src/com/facebook/buck/core/model/targetgraph/impl:impl",
         "//src/com/facebook/buck/core/rules:rules",
         "//src/com/facebook/buck/core/rules/impl:impl",

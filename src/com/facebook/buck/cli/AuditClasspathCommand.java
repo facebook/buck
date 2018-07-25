@@ -92,7 +92,7 @@ public class AuditClasspathCommand extends AbstractCommand {
   public ExitCode runWithoutHelp(CommandRunnerParams params)
       throws IOException, InterruptedException {
     // Create a TargetGraph that is composed of the transitive closure of all of the dependent
-    // BuildRules for the specified BuildTargets.
+    // BuildRules for the specified BuildTargetPaths.
     ImmutableSet<BuildTarget> targets =
         getArgumentsFormattedAsBuildTargets(params.getBuckConfig())
             .stream()

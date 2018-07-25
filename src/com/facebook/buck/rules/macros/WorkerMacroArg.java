@@ -78,7 +78,7 @@ public class WorkerMacroArg extends ProxyArg {
       }
     }
 
-    // extract the BuildTargets referenced in any macros
+    // extract the BuildTargetPaths referenced in any macros
     ImmutableList.Builder<BuildTarget> targetsBuilder = new ImmutableList.Builder<>();
     macroHandler.extractParseTimeDeps(
         target, cellNames, unexpanded, targetsBuilder, new ImmutableSet.Builder<>());

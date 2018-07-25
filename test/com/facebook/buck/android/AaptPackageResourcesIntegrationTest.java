@@ -18,10 +18,10 @@ package com.facebook.buck.android;
 
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -66,7 +66,7 @@ public class AaptPackageResourcesIntegrationTest {
     workspace.runBuckBuild(MAIN_BUILD_TARGET).assertSuccess();
     Path aaptOutput =
         workspace.getPath(
-            BuildTargets.getGenPath(
+            BuildTargetPaths.getGenPath(
                 filesystem,
                 BuildTargetFactory.newInstance(MAIN_BUILD_TARGET)
                     .withFlavors(AndroidBinaryResourcesGraphEnhancer.AAPT_PACKAGE_FLAVOR),

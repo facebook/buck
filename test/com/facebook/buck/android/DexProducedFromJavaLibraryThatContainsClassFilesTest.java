@@ -28,6 +28,7 @@ import com.facebook.buck.core.build.buildable.context.FakeBuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.context.FakeBuildContext;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
@@ -42,7 +43,6 @@ import com.facebook.buck.jvm.java.DefaultJavaLibrary;
 import com.facebook.buck.jvm.java.FakeJavaLibrary;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
@@ -82,7 +82,7 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest {
         };
     graphBuilder.addToIndex(javaLibraryRule);
     Path jarOutput =
-        BuildTargets.getGenPath(filesystem, javaLibraryRule.getBuildTarget(), "%s.jar");
+        BuildTargetPaths.getGenPath(filesystem, javaLibraryRule.getBuildTarget(), "%s.jar");
     javaLibraryRule.setOutputFile(jarOutput.toString());
 
     BuildContext context =
@@ -91,7 +91,7 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest {
     FakeBuildableContext buildableContext = new FakeBuildableContext();
 
     Path dexOutput =
-        BuildTargets.getGenPath(
+        BuildTargetPaths.getGenPath(
             filesystem,
             javaLibraryRule.getBuildTarget().withFlavors(AndroidBinaryGraphEnhancer.DEX_FLAVOR),
             "%s.dex.jar");
@@ -146,7 +146,7 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest {
     MoreAsserts.assertContainsOne(
         "The generated .dex.jar file should be in the set of recorded artifacts.",
         buildableContext.getRecordedArtifacts(),
-        BuildTargets.getGenPath(filesystem, buildTarget, "%s.dex.jar"));
+        BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s.dex.jar"));
 
     BuildOutputInitializer<DexProducedFromJavaLibrary.BuildOutput> outputInitializer =
         preDex.getBuildOutputInitializer();
@@ -188,7 +188,7 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest {
             DxStep.DX);
     List<Step> steps = preDex.getBuildSteps(context, buildableContext);
 
-    Path dexOutput = BuildTargets.getGenPath(projectFilesystem, buildTarget, "%s.dex.jar");
+    Path dexOutput = BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s.dex.jar");
 
     ExecutionContext executionContext = TestExecutionContext.newBuilder().build();
 
@@ -231,7 +231,7 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest {
             DxStep.DX);
     assertNull(preDexWithClasses.getSourcePathToOutput());
     assertEquals(
-        BuildTargets.getGenPath(projectFilesystem, buildTarget, "%s.dex.jar"),
+        BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s.dex.jar"),
         preDexWithClasses.getPathToDex());
   }
 

@@ -24,6 +24,7 @@ import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.HasOutputName;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
@@ -38,7 +39,6 @@ import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.WriteToFileArg;
 import com.facebook.buck.rules.macros.WorkerMacroArg;
@@ -189,7 +189,8 @@ public class Genrule extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.cmdExe = cmdExe;
 
     this.out = out;
-    this.pathToOutDirectory = BuildTargets.getGenPath(getProjectFilesystem(), buildTarget, "%s");
+    this.pathToOutDirectory =
+        BuildTargetPaths.getGenPath(getProjectFilesystem(), buildTarget, "%s");
     this.pathToOutFile = this.pathToOutDirectory.resolve(out);
     this.isCacheable = isCacheable;
     this.environmentExpansionSeparator = environmentExpansionSeparator.orElse(" ");
@@ -201,10 +202,10 @@ public class Genrule extends AbstractBuildRuleWithDeclaredAndExtraDeps
     }
 
     this.pathToTmpDirectory =
-        BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s__tmp");
+        BuildTargetPaths.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s__tmp");
 
     this.pathToSrcDirectory =
-        BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s__srcs");
+        BuildTargetPaths.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s__srcs");
     this.type = super.getType() + (type.isPresent() ? "_" + type.get() : "");
     this.isWorkerGenrule = this.isWorkerGenrule();
     this.enableSandboxingInGenrule = enableSandboxingInGenrule;

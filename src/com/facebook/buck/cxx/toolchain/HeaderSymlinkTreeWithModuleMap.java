@@ -21,12 +21,12 @@ import com.facebook.buck.apple.clang.UmbrellaHeader;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.WriteFileStep;
 import com.google.common.collect.ImmutableList;
@@ -104,7 +104,7 @@ public final class HeaderSymlinkTreeWithModuleMap extends HeaderSymlinkTree {
                                 .map(x -> x.getFileName().toString())
                                 .collect(ImmutableList.toImmutableList()))
                         .render(),
-                    BuildTargets.getGenPath(
+                    BuildTargetPaths.getGenPath(
                         getProjectFilesystem(), getBuildTarget(), "%s/" + umbrellaHeaderPath),
                     false));
           }
@@ -121,7 +121,8 @@ public final class HeaderSymlinkTreeWithModuleMap extends HeaderSymlinkTree {
   }
 
   static Path moduleMapPath(ProjectFilesystem filesystem, BuildTarget target, String moduleName) {
-    return BuildTargets.getGenPath(filesystem, target, "%s/" + moduleName + "/module.modulemap");
+    return BuildTargetPaths.getGenPath(
+        filesystem, target, "%s/" + moduleName + "/module.modulemap");
   }
 
   private static boolean containsSwiftHeader(ImmutableSortedSet<Path> paths, String moduleName) {

@@ -19,11 +19,11 @@ package com.facebook.buck.android;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.jvm.java.testutil.AbiCompilationModeTest;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -83,7 +83,7 @@ public class AndroidExopackageBinaryIntegrationTest extends AbiCompilationModeTe
     ZipInspector zipInspector =
         new ZipInspector(
             workspace.getPath(
-                BuildTargets.getGenPath(
+                BuildTargetPaths.getGenPath(
                     filesystem, BuildTargetFactory.newInstance(DEX_EXOPACKAGE_TARGET), "%s.apk")));
     zipInspector.assertFileDoesNotExist("assets/secondary-program-dex-jars/metadata.txt");
     zipInspector.assertFileDoesNotExist("assets/secondary-program-dex-jars/secondary-1.dex.jar");
@@ -95,7 +95,7 @@ public class AndroidExopackageBinaryIntegrationTest extends AbiCompilationModeTe
     // It would be better if we could call getExopackageInfo on the app rule.
     Path secondaryDir =
         workspace.resolve(
-            BuildTargets.getScratchPath(
+            BuildTargetPaths.getScratchPath(
                 filesystem,
                 BuildTargetFactory.newInstance(DEX_EXOPACKAGE_TARGET)
                     .withFlavors(InternalFlavor.of("dex"), InternalFlavor.of("dex_merge")),
@@ -138,7 +138,7 @@ public class AndroidExopackageBinaryIntegrationTest extends AbiCompilationModeTe
     ZipInspector zipInspector =
         new ZipInspector(
             workspace.getPath(
-                BuildTargets.getGenPath(
+                BuildTargetPaths.getGenPath(
                     filesystem,
                     BuildTargetFactory.newInstance(DEX_AND_NATIVE_EXOPACKAGE_TARGET),
                     "%s.apk")));
@@ -252,7 +252,7 @@ public class AndroidExopackageBinaryIntegrationTest extends AbiCompilationModeTe
     zipInspector =
         new ZipInspector(
             workspace.getPath(
-                BuildTargets.getGenPath(
+                BuildTargetPaths.getGenPath(
                     filesystem, BuildTargetFactory.newInstance(DEX_EXOPACKAGE_TARGET), "%s.apk")));
     zipInspector.assertFileDoesNotExist("lib/armeabi-v7a/libnative_cxx_lib.so");
     zipInspector.assertFileExists("assets/lib/armeabi-v7a/libnative_cxx_lib.so");

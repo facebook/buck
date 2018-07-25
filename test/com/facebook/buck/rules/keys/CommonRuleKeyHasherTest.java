@@ -22,6 +22,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.type.RuleType;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
@@ -31,7 +32,6 @@ import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.keys.hasher.RuleKeyHasher;
 import com.facebook.buck.rules.keys.hasher.RuleKeyHasher.Container;
 import com.facebook.buck.rules.keys.hasher.RuleKeyHasher.Wrapper;
@@ -366,12 +366,12 @@ public final class CommonRuleKeyHasherTest {
           ForwardingBuildTargetSourcePath.of(
               TARGET_1,
               ExplicitBuildTargetSourcePath.of(
-                  TARGET_2, BuildTargets.getGenPath(filesystem1, TARGET_2, "%s.out")));
+                  TARGET_2, BuildTargetPaths.getGenPath(filesystem1, TARGET_2, "%s.out")));
       ForwardingBuildTargetSourcePath forwardingSourcePath2 =
           ForwardingBuildTargetSourcePath.of(
               TARGET_1,
               ExplicitBuildTargetSourcePath.of(
-                  TARGET_2, BuildTargets.getGenPath(filesystem2, TARGET_2, "%s.out")));
+                  TARGET_2, BuildTargetPaths.getGenPath(filesystem2, TARGET_2, "%s.out")));
       assertEquals(
           newHasher().putBuildTargetSourcePath(forwardingSourcePath1).hash(),
           newHasher().putBuildTargetSourcePath(forwardingSourcePath2).hash());

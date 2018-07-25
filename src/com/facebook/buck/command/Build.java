@@ -204,7 +204,7 @@ public class Build implements Closeable {
   }
 
   /**
-   * * Converts given BuildTargets into BuildRules
+   * * Converts given BuildTargetPaths into BuildRules
    *
    * @param targetish
    * @return

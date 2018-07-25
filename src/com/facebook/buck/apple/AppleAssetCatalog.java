@@ -22,6 +22,7 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
@@ -32,7 +33,6 @@ import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
@@ -111,10 +111,10 @@ public class AppleAssetCatalog extends AbstractBuildRule {
     this.actool = actool;
     this.assetCatalogDirs = assetCatalogDirs;
     this.outputDir =
-        BuildTargets.getGenPath(getProjectFilesystem(), buildTarget, "%s")
+        BuildTargetPaths.getGenPath(getProjectFilesystem(), buildTarget, "%s")
             .resolve(bundleName + BUNDLE_DIRECTORY_EXTENSION);
     this.outputPlist =
-        BuildTargets.getScratchPath(getProjectFilesystem(), buildTarget, "%s-output.plist");
+        BuildTargetPaths.getScratchPath(getProjectFilesystem(), buildTarget, "%s-output.plist");
     this.appIcon = appIcon;
     this.launchImage = launchImage;
     this.compilationOptions = compilationOptions;

@@ -34,7 +34,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * Allocates and keeps track of what BuildTargets are allocated to which Minions. This class is
+ * Allocates and keeps track of what BuildTargetPaths are allocated to which Minions. This class is
  * thread safe.
  */
 public class MinionWorkloadAllocator {

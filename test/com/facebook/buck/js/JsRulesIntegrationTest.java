@@ -28,10 +28,10 @@ import com.facebook.buck.android.AssumeAndroidPlatform;
 import com.facebook.buck.apple.AppleNativeIntegrationTestUtils;
 import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.testutil.PredicateMatcher;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -243,7 +243,7 @@ public class JsRulesIntegrationTest {
     workspace.runBuckBuild(target.getFullyQualifiedName()).assertSuccess();
     ZipInspector zipInspector =
         new ZipInspector(
-            workspace.getPath(BuildTargets.getGenPath(projectFilesystem, target, "%s.apk")));
+            workspace.getPath(BuildTargetPaths.getGenPath(projectFilesystem, target, "%s.apk")));
 
     zipInspector.assertFileExists("assets/fruit-salad-in-a-bundle.js");
     zipInspector.assertFileExists("res/drawable-mdpi-v4/pixel.gif");
@@ -350,7 +350,7 @@ public class JsRulesIntegrationTest {
     workspace.runBuckBuild(target.getFullyQualifiedName()).assertSuccess();
     ZipInspector zipInspector =
         new ZipInspector(
-            workspace.getPath(BuildTargets.getGenPath(projectFilesystem, target, "%s.apk")));
+            workspace.getPath(BuildTargetPaths.getGenPath(projectFilesystem, target, "%s.apk")));
 
     zipInspector.assertFileExists("assets/postprocessed.txt");
     zipInspector.assertFileExists("res/drawable-mdpi-v4/pixel.gif");

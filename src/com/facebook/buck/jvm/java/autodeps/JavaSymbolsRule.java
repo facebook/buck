@@ -21,6 +21,7 @@ import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
@@ -32,7 +33,6 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -69,7 +69,7 @@ final class JavaSymbolsRule extends AbstractBuildRule implements InitializableFr
     super(javaLibraryBuildTarget.withFlavors(JAVA_SYMBOLS), projectFilesystem);
     this.symbolsFinder = symbolsFinder;
     this.outputPath =
-        BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "__%s__.json");
+        BuildTargetPaths.getGenPath(getProjectFilesystem(), getBuildTarget(), "__%s__.json");
     this.outputInitializer = new BuildOutputInitializer<>(getBuildTarget(), this);
   }
 

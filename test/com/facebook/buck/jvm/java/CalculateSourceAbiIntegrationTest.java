@@ -22,10 +22,10 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -70,7 +70,7 @@ public class CalculateSourceAbiIntegrationTest {
 
     Path abiJarPath =
         filesystem.getPathForRelativePath(
-            BuildTargets.getGenPath(filesystem, abiTarget, "lib__%s__output/lib-abi.jar"));
+            BuildTargetPaths.getGenPath(filesystem, abiTarget, "lib__%s__output/lib-abi.jar"));
     assertTrue(Files.exists(abiJarPath));
 
     // Check that the jar has an entry for the generated class
@@ -122,7 +122,8 @@ public class CalculateSourceAbiIntegrationTest {
 
     Path abiJarPath =
         filesystem.getPathForRelativePath(
-            BuildTargets.getGenPath(filesystem, abiTarget, "lib__%s__output/lib-stripped-abi.jar"));
+            BuildTargetPaths.getGenPath(
+                filesystem, abiTarget, "lib__%s__output/lib-stripped-abi.jar"));
     assertTrue(Files.exists(abiJarPath));
 
     // Check that the jar does not have an entry for the removed class

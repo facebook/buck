@@ -19,6 +19,7 @@ package com.facebook.buck.features.haskell;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
@@ -38,7 +39,6 @@ import com.facebook.buck.cxx.toolchain.PicType;
 import com.facebook.buck.cxx.toolchain.Preprocessor;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.AbstractExecutionStep;
@@ -202,18 +202,19 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
   }
 
   private Path getObjectDir() {
-    return BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s")
+    return BuildTargetPaths.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s")
         .resolve("objects");
   }
 
   private Path getInterfaceDir() {
-    return BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s")
+    return BuildTargetPaths.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s")
         .resolve("interfaces");
   }
 
   /** @return the path where the compiler places generated FFI stub files. */
   private Path getStubDir() {
-    return BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s").resolve("stubs");
+    return BuildTargetPaths.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s")
+        .resolve("stubs");
   }
 
   private Iterable<String> getPackageNameArgs() {

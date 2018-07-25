@@ -22,6 +22,7 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.core.build.context.FakeBuildContext;
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
@@ -35,7 +36,6 @@ import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.jvm.java.JavaFileParser;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
@@ -103,7 +103,7 @@ public class JavaSymbolsRuleTest {
     try (JsonParser parser =
         ObjectMappers.createParser(
             projectFilesystem.resolve(
-                BuildTargets.getGenPath(
+                BuildTargetPaths.getGenPath(
                     javaSymbolsRule.getProjectFilesystem(),
                     buildTarget.withFlavors(JavaSymbolsRule.JAVA_SYMBOLS),
                     "__%s__.json")))) {

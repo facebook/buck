@@ -22,6 +22,7 @@ import static javax.xml.bind.DatatypeConverter.printBase64Binary;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
@@ -37,7 +38,6 @@ import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacPluginJsr199Fields;
 import com.facebook.buck.jvm.java.JavacToJarStepFactory;
 import com.facebook.buck.jvm.java.ResolvedJavacPluginProperties;
-import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.CopyStep.DirectoryMode;
@@ -125,21 +125,23 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
     Path pathToSrcsList = parameters.getPathToSourcesList();
 
     Path stubsOutput =
-        BuildTargets.getAnnotationPath(projectFilesystem, invokingRule, "__%s_stubs__");
+        BuildTargetPaths.getAnnotationPath(projectFilesystem, invokingRule, "__%s_stubs__");
     Path sourcesOutput =
-        BuildTargets.getAnnotationPath(projectFilesystem, invokingRule, "__%s_sources__");
+        BuildTargetPaths.getAnnotationPath(projectFilesystem, invokingRule, "__%s_sources__");
     Path classesOutput =
-        BuildTargets.getAnnotationPath(projectFilesystem, invokingRule, "__%s_classes__");
+        BuildTargetPaths.getAnnotationPath(projectFilesystem, invokingRule, "__%s_classes__");
     Path kaptGeneratedOutput =
-        BuildTargets.getAnnotationPath(projectFilesystem, invokingRule, "__%s_kapt_generated__");
+        BuildTargetPaths.getAnnotationPath(
+            projectFilesystem, invokingRule, "__%s_kapt_generated__");
     Path incrementalDataOutput =
-        BuildTargets.getAnnotationPath(projectFilesystem, invokingRule, "__%s_incremental_data__");
+        BuildTargetPaths.getAnnotationPath(
+            projectFilesystem, invokingRule, "__%s_incremental_data__");
     Path tmpFolder =
-        BuildTargets.getScratchPath(projectFilesystem, invokingRule, "__%s_gen_sources__");
+        BuildTargetPaths.getScratchPath(projectFilesystem, invokingRule, "__%s_gen_sources__");
     Path genOutputFolder =
-        BuildTargets.getGenPath(projectFilesystem, invokingRule, "__%s_gen_sources__");
+        BuildTargetPaths.getGenPath(projectFilesystem, invokingRule, "__%s_gen_sources__");
     Path genOutput =
-        BuildTargets.getGenPath(
+        BuildTargetPaths.getGenPath(
             projectFilesystem, invokingRule, "__%s_gen_sources__/generated" + SRC_ZIP);
     boolean generatingCode = !javacOptions.getAnnotationProcessingParams().isEmpty();
 

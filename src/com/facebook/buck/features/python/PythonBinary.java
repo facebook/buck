@@ -17,6 +17,7 @@
 package com.facebook.buck.features.python;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
@@ -27,7 +28,6 @@ import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.features.python.toolchain.PythonPlatform;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.model.BuildTargets;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
@@ -74,7 +74,7 @@ public abstract class PythonBinary extends AbstractBuildRule
     if (!legacyOutputPath) {
       target = target.withFlavors();
     }
-    return BuildTargets.getGenPath(filesystem, target, "%s" + extension);
+    return BuildTargetPaths.getGenPath(filesystem, target, "%s" + extension);
   }
 
   final Path getBinPath() {

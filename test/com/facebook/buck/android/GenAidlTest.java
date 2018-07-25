@@ -25,6 +25,7 @@ import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.context.FakeBuildContext;
 import com.facebook.buck.core.description.DescriptionCache;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
@@ -38,7 +39,6 @@ import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
 import com.facebook.buck.shell.ShellStep;
@@ -132,7 +132,7 @@ public class GenAidlTest {
             .withBuildCellRootPath(stubFilesystem.getRootPath());
     List<Step> steps = genAidlRule.getBuildSteps(buildContext, new FakeBuildableContext());
 
-    Path outputDirectory = BuildTargets.getScratchPath(stubFilesystem, target, "__%s.aidl");
+    Path outputDirectory = BuildTargetPaths.getScratchPath(stubFilesystem, target, "__%s.aidl");
     assertEquals(
         RmStep.of(
                 BuildCellRelativePath.fromCellRelativePath(

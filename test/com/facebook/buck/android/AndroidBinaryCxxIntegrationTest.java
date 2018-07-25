@@ -16,11 +16,11 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.jvm.java.testutil.AbiCompilationModeTest;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -57,7 +57,7 @@ public class AndroidBinaryCxxIntegrationTest extends AbiCompilationModeTest {
     ZipInspector zipInspector =
         new ZipInspector(
             workspace.getPath(
-                BuildTargets.getGenPath(
+                BuildTargetPaths.getGenPath(
                     filesystem, BuildTargetFactory.newInstance(target), "%s.apk")));
     zipInspector.assertFileExists("assets/lib/x86/libnative_cxx_libasset.so");
     zipInspector.assertFileDoesNotExist("lib/x86/libnative_cxx_libasset.so");
@@ -74,7 +74,7 @@ public class AndroidBinaryCxxIntegrationTest extends AbiCompilationModeTest {
     ZipInspector zipInspector =
         new ZipInspector(
             workspace.getPath(
-                BuildTargets.getGenPath(
+                BuildTargetPaths.getGenPath(
                     filesystem, BuildTargetFactory.newInstance(target), "%s.apk")));
     zipInspector.assertFileDoesNotExist("assets/lib/x86/libnative_cxx_libasset.so");
     zipInspector.assertFileExists("lib/x86/libnative_cxx_libasset.so");
@@ -88,7 +88,7 @@ public class AndroidBinaryCxxIntegrationTest extends AbiCompilationModeTest {
     ZipInspector zipInspector =
         new ZipInspector(
             workspace.getPath(
-                BuildTargets.getGenPath(
+                BuildTargetPaths.getGenPath(
                     filesystem, BuildTargetFactory.newInstance(target), "%s.apk")));
     zipInspector.assertFileExists("lib/armeabi-v7a/libnative_cxx_lib.so");
     zipInspector.assertFileExists("lib/armeabi-v7a/libgnustl_shared.so");
@@ -104,7 +104,7 @@ public class AndroidBinaryCxxIntegrationTest extends AbiCompilationModeTest {
     ZipInspector zipInspector =
         new ZipInspector(
             workspace.getPath(
-                BuildTargets.getGenPath(
+                BuildTargetPaths.getGenPath(
                     filesystem, BuildTargetFactory.newInstance(target), "%s.apk")));
     zipInspector.assertFileExists("lib/armeabi-v7a/libnative_cxx_lib.so");
     zipInspector.assertFileDoesNotExist("lib/armeabi-v7a/libgnustl_shared.so");
@@ -120,7 +120,7 @@ public class AndroidBinaryCxxIntegrationTest extends AbiCompilationModeTest {
     ZipInspector zipInspector =
         new ZipInspector(
             workspace.getPath(
-                BuildTargets.getGenPath(
+                BuildTargetPaths.getGenPath(
                     filesystem, BuildTargetFactory.newInstance(target), "%s.apk")));
     zipInspector.assertFileDoesNotExist("lib/armeabi-v7a/libnative_cxx_lib.so");
     zipInspector.assertFileExists("lib/armeabi-v7a/libgnustl_shared.so");
@@ -141,7 +141,7 @@ public class AndroidBinaryCxxIntegrationTest extends AbiCompilationModeTest {
     ZipInspector zipInspector =
         new ZipInspector(
             workspace.getPath(
-                BuildTargets.getGenPath(
+                BuildTargetPaths.getGenPath(
                     filesystem, BuildTargetFactory.newInstance(target), "%s.apk")));
     zipInspector.assertFileExists("lib/armeabi-v7a/libnative_cxx_lib.so");
     zipInspector.assertFileExists("lib/armeabi-v7a/libc++_shared.so");
@@ -157,7 +157,7 @@ public class AndroidBinaryCxxIntegrationTest extends AbiCompilationModeTest {
     ZipInspector zipInspector =
         new ZipInspector(
             workspace.getPath(
-                BuildTargets.getGenPath(
+                BuildTargetPaths.getGenPath(
                     filesystem, BuildTargetFactory.newInstance(target), "%s.apk")));
     if (AssumeAndroidPlatform.isArmAvailable()) {
       zipInspector.assertFileExists("lib/armeabi/libnative_cxx_lib.so");
@@ -174,7 +174,7 @@ public class AndroidBinaryCxxIntegrationTest extends AbiCompilationModeTest {
     ZipInspector zipInspector =
         new ZipInspector(
             workspace.getPath(
-                BuildTargets.getGenPath(
+                BuildTargetPaths.getGenPath(
                     filesystem, BuildTargetFactory.newInstance(target), "%s.apk")));
     zipInspector.assertFileDoesNotExist("lib/armeabi-v7a/libgnustl_shared.so");
     zipInspector.assertFileDoesNotExist("lib/x86/libgnustl_shared.so");
@@ -188,7 +188,7 @@ public class AndroidBinaryCxxIntegrationTest extends AbiCompilationModeTest {
     ZipInspector zipInspector =
         new ZipInspector(
             workspace.getPath(
-                BuildTargets.getGenPath(
+                BuildTargetPaths.getGenPath(
                     filesystem, BuildTargetFactory.newInstance(target), "%s.apk")));
     zipInspector.assertFileExists("lib/x86/libnative_cxx_foo1.so");
     zipInspector.assertFileExists("lib/x86/libnative_cxx_foo2.so");
@@ -202,7 +202,7 @@ public class AndroidBinaryCxxIntegrationTest extends AbiCompilationModeTest {
     ZipInspector zipInspector =
         new ZipInspector(
             workspace.getPath(
-                BuildTargets.getGenPath(
+                BuildTargetPaths.getGenPath(
                     filesystem, BuildTargetFactory.newInstance(target), "%s.apk")));
     zipInspector.assertFileDoesNotExist("lib/x86/libnative_cxx_headeronly.so");
   }
@@ -214,7 +214,7 @@ public class AndroidBinaryCxxIntegrationTest extends AbiCompilationModeTest {
     ZipInspector zipInspector =
         new ZipInspector(
             workspace.getPath(
-                BuildTargets.getGenPath(
+                BuildTargetPaths.getGenPath(
                     filesystem, BuildTargetFactory.newInstance(target), "%s.apk")));
     zipInspector.assertFileDoesNotExist("lib/armeabi-v7a/libnative_cxx_x86-only.so");
     zipInspector.assertFileDoesNotExist("lib/armeabi-v7a/libgnustl_shared.so");

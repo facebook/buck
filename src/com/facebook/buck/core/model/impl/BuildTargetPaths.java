@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.model;
+package com.facebook.buck.core.model.impl;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.io.filesystem.BuckPaths;
@@ -23,10 +23,10 @@ import com.google.common.base.Preconditions;
 import java.nio.file.Path;
 
 /** Static helpers for working with build targets. */
-public class BuildTargets {
+public class BuildTargetPaths {
 
   /** Utility class: do not instantiate. */
-  private BuildTargets() {}
+  private BuildTargetPaths() {}
 
   /**
    * Return a path to a file in the buck-out/bin/ directory. {@code format} will be prepended with

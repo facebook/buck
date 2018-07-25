@@ -21,6 +21,7 @@ import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.HasOutputName;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
@@ -35,7 +36,6 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.shell.ExportFileDescription.Mode;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
@@ -131,7 +131,8 @@ public class ExportFile extends AbstractBuildRule
 
   private Path getCopiedPath() {
     Preconditions.checkState(mode == ExportFileDescription.Mode.COPY);
-    return BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s").resolve(name);
+    return BuildTargetPaths.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s")
+        .resolve(name);
   }
 
   @Override

@@ -26,8 +26,8 @@ import static org.junit.Assert.fail;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -63,7 +63,7 @@ public class ParserIntegrationTest {
 
     workspace.verify(
         Paths.get("base_genrule_output.expected"),
-        BuildTargets.getGenPath(filesystem, target, "%s"));
+        BuildTargetPaths.getGenPath(filesystem, target, "%s"));
   }
 
   /**

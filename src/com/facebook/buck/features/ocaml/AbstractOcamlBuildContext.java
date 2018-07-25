@@ -17,6 +17,7 @@
 package com.facebook.buck.features.ocaml;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
@@ -32,7 +33,6 @@ import com.facebook.buck.cxx.CxxSource;
 import com.facebook.buck.cxx.toolchain.Preprocessor;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.util.MoreIterables;
@@ -170,13 +170,13 @@ abstract class AbstractOcamlBuildContext implements AddsToRuleKey {
   }
 
   private static Path getArchiveNativeOutputPath(BuildTarget target, ProjectFilesystem filesystem) {
-    return BuildTargets.getGenPath(
+    return BuildTargetPaths.getGenPath(
         filesystem, target, "%s/lib" + target.getShortName() + OcamlCompilables.OCAML_CMXA);
   }
 
   private static Path getArchiveBytecodeOutputPath(
       BuildTarget target, ProjectFilesystem filesystem) {
-    return BuildTargets.getGenPath(
+    return BuildTargetPaths.getGenPath(
         filesystem, target, "%s/lib" + target.getShortName() + OcamlCompilables.OCAML_CMA);
   }
 
@@ -186,7 +186,7 @@ abstract class AbstractOcamlBuildContext implements AddsToRuleKey {
 
   public Path getNativePluginOutput() {
     BuildTarget target = getBuildTarget();
-    return BuildTargets.getGenPath(
+    return BuildTargetPaths.getGenPath(
         getProjectFilesystem(),
         target,
         "%s/lib" + target.getShortName() + OcamlCompilables.OCAML_CMXS);
@@ -197,7 +197,7 @@ abstract class AbstractOcamlBuildContext implements AddsToRuleKey {
     if (isLibrary) {
       return getArchiveNativeOutputPath(target, filesystem);
     } else {
-      return BuildTargets.getScratchPath(
+      return BuildTargetPaths.getScratchPath(
           filesystem, target, "%s/" + target.getShortName() + ".opt");
     }
   }
@@ -211,7 +211,7 @@ abstract class AbstractOcamlBuildContext implements AddsToRuleKey {
     if (isLibrary) {
       return getArchiveBytecodeOutputPath(target, filesystem);
     } else {
-      return BuildTargets.getScratchPath(filesystem, target, "%s/" + target.getShortName());
+      return BuildTargetPaths.getScratchPath(filesystem, target, "%s/" + target.getShortName());
     }
   }
 

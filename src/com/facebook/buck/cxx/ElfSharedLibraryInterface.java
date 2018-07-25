@@ -19,6 +19,7 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
@@ -36,7 +37,6 @@ import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTarget;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
@@ -199,7 +199,7 @@ abstract class ElfSharedLibraryInterface extends AbstractBuildRule
   }
 
   private Path getOutputDir() {
-    return BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s");
+    return BuildTargetPaths.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s");
   }
 
   private Path getOutput() {
@@ -207,7 +207,7 @@ abstract class ElfSharedLibraryInterface extends AbstractBuildRule
   }
 
   protected Path getScratchDir() {
-    return BuildTargets.getScratchPath(getProjectFilesystem(), getBuildTarget(), "%s");
+    return BuildTargetPaths.getScratchPath(getProjectFilesystem(), getBuildTarget(), "%s");
   }
 
   // We only care about sections relevant to dynamic linking.

@@ -27,12 +27,12 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.apple.clang.HeaderMap;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.HeaderVisibility;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -111,11 +111,11 @@ public class CxxCompilationDatabaseIntegrationTest {
 
     Path rootPath = tmp.getRoot();
     assertEquals(
-        BuildTargets.getGenPath(filesystem, target, "__%s/compile_commands.json"),
+        BuildTargetPaths.getGenPath(filesystem, target, "__%s/compile_commands.json"),
         rootPath.relativize(compilationDatabase));
 
     Path binaryHeaderSymlinkTreeFolder =
-        BuildTargets.getGenPath(
+        BuildTargetPaths.getGenPath(
             filesystem,
             target.withFlavors(
                 InternalFlavor.of("default"), CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR),
@@ -171,12 +171,14 @@ public class CxxCompilationDatabaseIntegrationTest {
                     .collect(Collectors.toList()))
             .addAll(MORE_COMPILER_SPECIFIC_FLAGS)
             .add("-o")
-            .add(BuildTargets.getGenPath(filesystem, compilationTarget, "%s/foo.cpp.o").toString())
+            .add(
+                BuildTargetPaths.getGenPath(filesystem, compilationTarget, "%s/foo.cpp.o")
+                    .toString())
             .add("-c")
             .add("-MD")
             .add("-MF")
             .add(
-                BuildTargets.getGenPath(filesystem, compilationTarget, "%s/foo.cpp.o.dep")
+                BuildTargetPaths.getGenPath(filesystem, compilationTarget, "%s/foo.cpp.o.dep")
                     .toString())
             .add(Paths.get(path).toString())
             .build());
@@ -190,11 +192,11 @@ public class CxxCompilationDatabaseIntegrationTest {
     Path compilationDatabase = workspace.buildAndReturnOutput(target.getFullyQualifiedName());
     Path rootPath = tmp.getRoot();
     assertEquals(
-        BuildTargets.getGenPath(filesystem, target, "__%s/compile_commands.json"),
+        BuildTargetPaths.getGenPath(filesystem, target, "__%s/compile_commands.json"),
         rootPath.relativize(compilationDatabase));
 
     Path headerSymlinkTreeFolder =
-        BuildTargets.getGenPath(
+        BuildTargetPaths.getGenPath(
             filesystem,
             target.withFlavors(
                 InternalFlavor.of("default"), CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR),
@@ -252,12 +254,14 @@ public class CxxCompilationDatabaseIntegrationTest {
                     .collect(Collectors.toList()))
             .addAll(MORE_COMPILER_SPECIFIC_FLAGS)
             .add("-o")
-            .add(BuildTargets.getGenPath(filesystem, compilationTarget, "%s/bar.cpp.o").toString())
+            .add(
+                BuildTargetPaths.getGenPath(filesystem, compilationTarget, "%s/bar.cpp.o")
+                    .toString())
             .add("-c")
             .add("-MD")
             .add("-MF")
             .add(
-                BuildTargets.getGenPath(filesystem, compilationTarget, "%s/bar.cpp.o.dep")
+                BuildTargetPaths.getGenPath(filesystem, compilationTarget, "%s/bar.cpp.o.dep")
                     .toString())
             .add(Paths.get(path).toString())
             .build());
@@ -270,11 +274,11 @@ public class CxxCompilationDatabaseIntegrationTest {
     Path compilationDatabase = workspace.buildAndReturnOutput(target.getFullyQualifiedName());
     Path rootPath = tmp.getRoot();
     assertEquals(
-        BuildTargets.getGenPath(filesystem, target, "__%s/compile_commands.json"),
+        BuildTargetPaths.getGenPath(filesystem, target, "__%s/compile_commands.json"),
         rootPath.relativize(compilationDatabase));
 
     Path binaryHeaderSymlinkTreeFolder =
-        BuildTargets.getGenPath(
+        BuildTargetPaths.getGenPath(
             filesystem,
             target.withFlavors(
                 InternalFlavor.of("default"), CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR),
@@ -305,12 +309,14 @@ public class CxxCompilationDatabaseIntegrationTest {
             .add("-fdebug-prefix-map=" + rootPath + "=.")
             .addAll(MORE_COMPILER_SPECIFIC_FLAGS)
             .add("-o")
-            .add(BuildTargets.getGenPath(filesystem, compilationTarget, "%s/test.cpp.o").toString())
+            .add(
+                BuildTargetPaths.getGenPath(filesystem, compilationTarget, "%s/test.cpp.o")
+                    .toString())
             .add("-c")
             .add("-MD")
             .add("-MF")
             .add(
-                BuildTargets.getGenPath(filesystem, compilationTarget, "%s/test.cpp.o.dep")
+                BuildTargetPaths.getGenPath(filesystem, compilationTarget, "%s/test.cpp.o.dep")
                     .toString())
             .add(Paths.get(path).toString())
             .build());
@@ -324,12 +330,12 @@ public class CxxCompilationDatabaseIntegrationTest {
     Path compilationDatabase = workspace.buildAndReturnOutput(target.getFullyQualifiedName());
     Path rootPath = tmp.getRoot();
     assertEquals(
-        BuildTargets.getGenPath(
+        BuildTargetPaths.getGenPath(
             filesystem, target, "uber-compilation-database-%s/compile_commands.json"),
         rootPath.relativize(compilationDatabase));
 
     Path binaryHeaderSymlinkTreeFolder =
-        BuildTargets.getGenPath(
+        BuildTargetPaths.getGenPath(
             filesystem,
             target.withFlavors(
                 InternalFlavor.of("default"), CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR),
@@ -360,12 +366,14 @@ public class CxxCompilationDatabaseIntegrationTest {
             .add("-fdebug-prefix-map=" + rootPath + "=.")
             .addAll(MORE_COMPILER_SPECIFIC_FLAGS)
             .add("-o")
-            .add(BuildTargets.getGenPath(filesystem, compilationTarget, "%s/test.cpp.o").toString())
+            .add(
+                BuildTargetPaths.getGenPath(filesystem, compilationTarget, "%s/test.cpp.o")
+                    .toString())
             .add("-c")
             .add("-MD")
             .add("-MF")
             .add(
-                BuildTargets.getGenPath(filesystem, compilationTarget, "%s/test.cpp.o.dep")
+                BuildTargetPaths.getGenPath(filesystem, compilationTarget, "%s/test.cpp.o.dep")
                     .toString())
             .add(Paths.get(path).toString())
             .build());
@@ -389,7 +397,7 @@ public class CxxCompilationDatabaseIntegrationTest {
     workspace.buildAndReturnOutput(target.getFullyQualifiedName());
 
     Path headerSymlinkTreeFolder =
-        BuildTargets.getGenPath(
+        BuildTargetPaths.getGenPath(
             filesystem,
             target.withFlavors(
                 InternalFlavor.of("default"), CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR),
@@ -503,7 +511,7 @@ public class CxxCompilationDatabaseIntegrationTest {
 
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildTarget headerTarget = BuildTargetFactory.newInstance("//dep1:header");
-    Path header = workspace.getPath(BuildTargets.getGenPath(filesystem, headerTarget, "%s"));
+    Path header = workspace.getPath(BuildTargetPaths.getGenPath(filesystem, headerTarget, "%s"));
     assertThat(Files.exists(header), is(true));
   }
 
@@ -530,7 +538,7 @@ public class CxxCompilationDatabaseIntegrationTest {
 
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildTarget sourceTarget = BuildTargetFactory.newInstance("//dep1:source");
-    Path source = workspace.getPath(BuildTargets.getGenPath(filesystem, sourceTarget, "%s"));
+    Path source = workspace.getPath(BuildTargetPaths.getGenPath(filesystem, sourceTarget, "%s"));
     assertThat(Files.exists(source), is(true));
   }
 

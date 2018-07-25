@@ -19,6 +19,7 @@ package com.facebook.buck.swift;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
@@ -37,7 +38,6 @@ import com.facebook.buck.cxx.toolchain.Preprocessor;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.FileListableLinkerInputArg;
 import com.facebook.buck.rules.args.SourcePathArg;
@@ -143,7 +143,7 @@ public class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
                 getProjectFilesystem()
                     .getRootPath()
                     .resolve(
-                        BuildTargets.getScratchPath(
+                        BuildTargetPaths.getScratchPath(
                             getProjectFilesystem(), getBuildTarget(), "%s__filelist.txt")))
             : Optional.empty();
 

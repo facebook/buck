@@ -36,6 +36,7 @@ import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.FlavorDomainException;
 import com.facebook.buck.core.model.Flavored;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -65,7 +66,6 @@ import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.swift.SwiftLibraryDescription;
@@ -381,7 +381,7 @@ public class AppleTestDescription
               .withAppendedFlavors(UNZIP_XCTOOL_FLAVOR)
               .withAppendedFlavors(InternalFlavor.of(sha1Hash));
       Path outputDirectory =
-          BuildTargets.getGenPath(projectFilesystem, unzipXctoolTarget, "%s/unzipped");
+          BuildTargetPaths.getGenPath(projectFilesystem, unzipXctoolTarget, "%s/unzipped");
       graphBuilder.computeIfAbsent(
           unzipXctoolTarget,
           ignored -> {

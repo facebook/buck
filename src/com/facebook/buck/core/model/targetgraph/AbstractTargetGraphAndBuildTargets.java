@@ -21,7 +21,7 @@ import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableSet;
 import org.immutables.value.Value;
 
-/** Holds a TargetGraph and a set of BuildTargets. */
+/** Holds a TargetGraph and a set of BuildTargetPaths. */
 @Value.Immutable(copy = true)
 @BuckStyleImmutable
 interface AbstractTargetGraphAndBuildTargets {

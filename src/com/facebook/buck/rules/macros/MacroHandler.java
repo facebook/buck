@@ -172,7 +172,7 @@ public class MacroHandler {
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder)
       throws MacroException {
 
-    // Iterate over all macros found in the string, collecting all `BuildTargets` each expander
+    // Iterate over all macros found in the string, collecting all `BuildTargetPaths` each expander
     // extract for their respective macros.
     for (MacroMatchResult matchResult : getMacroMatchResults(blob)) {
       getExpander(matchResult.getMacroType())
@@ -195,7 +195,7 @@ public class MacroHandler {
 
     ImmutableList.Builder<Object> targets = ImmutableList.builder();
 
-    // Iterate over all macros found in the string, collecting all `BuildTargets` each expander
+    // Iterate over all macros found in the string, collecting all `BuildTargetPaths` each expander
     // extract for their respective macros.
     for (MacroMatchResult matchResult : getMacroMatchResults(blob)) {
       MacroExpander expander = getExpander(matchResult.getMacroType());

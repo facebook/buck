@@ -30,13 +30,13 @@ import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.cxx.toolchain.DebugPathSanitizer;
 import com.facebook.buck.cxx.toolchain.MungingDebugPathSanitizer;
 import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.TestConsole;
@@ -124,7 +124,7 @@ public class ObjectPathsAbsolutifierIntegrationTest {
     result.assertSuccess();
 
     Path relativeSanitizedObjectFilePath =
-        BuildTargets.getGenPath(
+        BuildTargetPaths.getGenPath(
                 filesystem,
                 target.withFlavors(
                     platformFlavor, InternalFlavor.of("compile-" + sanitize("main.c.o"))),
@@ -135,7 +135,7 @@ public class ObjectPathsAbsolutifierIntegrationTest {
 
     Path sanitizedBinaryPath =
         workspace.getPath(
-            BuildTargets.getGenPath(filesystem, target.withFlavors(platformFlavor), "%s"));
+            BuildTargetPaths.getGenPath(filesystem, target.withFlavors(platformFlavor), "%s"));
     Path unsanizitedBinaryPath =
         workspace.getPath(
             filesystem.getBuckPaths().getScratchDir().resolve(sanitizedBinaryPath.getFileName()));
@@ -269,14 +269,14 @@ public class ObjectPathsAbsolutifierIntegrationTest {
 
     workspace.verify(
         Paths.get("DemoApp_output.expected"),
-        BuildTargets.getGenPath(
+        BuildTargetPaths.getGenPath(
             filesystem,
             target.withAppendedFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
             "%s"));
 
     Path appPath =
         workspace.getPath(
-            BuildTargets.getGenPath(
+            BuildTargetPaths.getGenPath(
                     filesystem,
                     target.withAppendedFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
                     "%s")

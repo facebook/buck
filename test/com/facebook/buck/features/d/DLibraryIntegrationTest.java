@@ -18,8 +18,8 @@ package com.facebook.buck.features.d;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
@@ -50,7 +50,7 @@ public class DLibraryIntegrationTest {
         workspace.runCommand(
             workspace
                 .resolve(
-                    BuildTargets.getGenPath(
+                    BuildTargetPaths.getGenPath(
                         new FakeProjectFilesystem(),
                         BuildTargetFactory.newInstance("//:greet")
                             .withFlavors(DBinaryDescription.BINARY_FLAVOR),

@@ -22,10 +22,10 @@ import com.facebook.buck.core.build.engine.buildinfo.BuildInfo.MetadataKey;
 import com.facebook.buck.core.build.engine.type.MetadataStorage;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.timing.Clock;
 import com.facebook.buck.util.timing.FakeClock;
@@ -82,15 +82,15 @@ public class DefaultOnDiskBuildInfoIntegrationTest {
     recorder.addMetadata("artifact_key0", "value0");
     recorder.addMetadata("artifact_key1", "value1");
 
-    Path filePath = BuildTargets.getGenPath(projectFilesystem, buildTarget, "%s/some.file");
-    Path dirPath = BuildTargets.getGenPath(projectFilesystem, buildTarget, "%s/some_dir");
+    Path filePath = BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s/some.file");
+    Path dirPath = BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s/some_dir");
     Path subDir = dirPath.resolve("sub_dir");
     Path emptySubDir = dirPath.resolve("empty_sub_dir");
     Path fileWithinDirPath = subDir.resolve("some_inner.path");
     Path otherPathWithinDir = subDir.resolve("other.file");
     Path symlinkedDirPath =
-        BuildTargets.getScratchPath(projectFilesystem, buildTarget, "%s/symlinked_dir");
-    Path symlinkPath = BuildTargets.getGenPath(projectFilesystem, buildTarget, "%s/symlink");
+        BuildTargetPaths.getScratchPath(projectFilesystem, buildTarget, "%s/symlinked_dir");
+    Path symlinkPath = BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s/symlink");
     Path fileInSymlinkedDirPath = symlinkedDirPath.resolve("file_in_symlink");
     Path fileViaSymlinkPath = symlinkPath.resolve("file_in_symlink");
 

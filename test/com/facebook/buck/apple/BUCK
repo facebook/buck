@@ -160,6 +160,7 @@ java_test(
     deps = [
         "//src/com/facebook/buck/apple/toolchain:toolchain",
         "//src/com/facebook/buck/cli:cli",
+        "//src/com/facebook/buck/core/model/impl:impl",
         "//src/com/facebook/buck/cxx:rules",
         "//src/com/facebook/buck/cxx/toolchain/impl:impl",
         "//src/com/facebook/buck/io:io",
@@ -198,6 +199,7 @@ java_test(
         "//src/com/facebook/buck/apple/toolchain/impl:impl",
         "//src/com/facebook/buck/config:config",
         "//src/com/facebook/buck/core/cell:cell",
+        "//src/com/facebook/buck/core/model/impl:impl",
         "//src/com/facebook/buck/core/rules:rules",
         "//src/com/facebook/buck/core/sourcepath/resolver/impl:impl",
         "//src/com/facebook/buck/core/util/immutables:immutables",

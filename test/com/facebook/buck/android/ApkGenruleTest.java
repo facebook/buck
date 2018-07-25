@@ -23,6 +23,7 @@ import com.facebook.buck.core.build.buildable.context.FakeBuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.context.FakeBuildContext;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.model.targetgraph.TestBuildRuleCreationContextFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
@@ -40,7 +41,6 @@ import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.jvm.java.Keystore;
 import com.facebook.buck.jvm.java.KeystoreBuilder;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.macros.StringWithMacrosUtils;
@@ -261,7 +261,7 @@ public class ApkGenruleTest {
             .put(
                 "APK",
                 projectFilesystem
-                    .resolve(BuildTargets.getGenPath(projectFilesystem, apkTarget, "%s.apk"))
+                    .resolve(BuildTargetPaths.getGenPath(projectFilesystem, apkTarget, "%s.apk"))
                     .toString())
             .put("OUT", expectedApkOutput.toString())
             .build(),

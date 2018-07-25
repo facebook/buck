@@ -20,10 +20,10 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.jvm.java.testutil.AbiCompilationModeTest;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -55,7 +55,7 @@ public class AndroidPrebuiltAarIntegrationTest extends AbiCompilationModeTest {
     ZipInspector zipInspector =
         new ZipInspector(
             workspace.getPath(
-                BuildTargets.getGenPath(
+                BuildTargetPaths.getGenPath(
                     TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath()),
                     BuildTargetFactory.newInstance(target),
                     "%s.apk")));
@@ -84,7 +84,7 @@ public class AndroidPrebuiltAarIntegrationTest extends AbiCompilationModeTest {
 
     String rDotTxt =
         workspace.getFileContents(
-            BuildTargets.getScratchPath(
+            BuildTargetPaths.getScratchPath(
                 TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath()),
                 BuildTargetFactory.newInstance(target)
                     .withFlavors(AndroidPrebuiltAarDescription.AAR_UNZIP_FLAVOR),

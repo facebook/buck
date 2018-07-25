@@ -19,6 +19,7 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.attr.HasPostBuildSteps;
 import com.facebook.buck.core.rules.impl.AbstractBuildRule;
@@ -27,7 +28,6 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.json.JsonConcatenateStep;
-import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.google.common.collect.ImmutableList;
@@ -54,7 +54,7 @@ class CxxInferComputeReport extends AbstractBuildRule implements HasPostBuildSte
     super(buildTarget, projectFilesystem);
     this.analysisToReport = analysisToReport;
     this.outputDirectory =
-        BuildTargets.getGenPath(getProjectFilesystem(), this.getBuildTarget(), "infer-%s");
+        BuildTargetPaths.getGenPath(getProjectFilesystem(), this.getBuildTarget(), "infer-%s");
     this.reportOutput = this.outputDirectory.resolve("report.json");
     this.projectFilesystem = getProjectFilesystem();
   }

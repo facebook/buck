@@ -26,6 +26,7 @@ import com.facebook.buck.core.build.buildable.context.FakeBuildableContext;
 import com.facebook.buck.core.build.context.FakeBuildContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
@@ -41,7 +42,6 @@ import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.event.BuckEventBusForTests.CapturingConsoleEventListener;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
@@ -104,7 +104,7 @@ public class ExportFileTest {
         steps,
         TestExecutionContext.newInstance());
     assertEquals(
-        BuildTargets.getGenPath(projectFilesystem, target, "%s").resolve("example.html"),
+        BuildTargetPaths.getGenPath(projectFilesystem, target, "%s").resolve("example.html"),
         pathResolver.getRelativePath(exportFile.getSourcePathToOutput()));
   }
 
@@ -134,7 +134,7 @@ public class ExportFileTest {
         steps,
         TestExecutionContext.newInstance());
     assertEquals(
-        BuildTargets.getGenPath(projectFilesystem, target, "%s").resolve("fish"),
+        BuildTargetPaths.getGenPath(projectFilesystem, target, "%s").resolve("fish"),
         pathResolver.getRelativePath(exportFile.getSourcePathToOutput()));
   }
 
@@ -167,7 +167,7 @@ public class ExportFileTest {
         steps,
         TestExecutionContext.newInstance());
     assertEquals(
-        BuildTargets.getGenPath(projectFilesystem, target, "%s").resolve("fish"),
+        BuildTargetPaths.getGenPath(projectFilesystem, target, "%s").resolve("fish"),
         pathResolver.getRelativePath(exportFile.getSourcePathToOutput()));
   }
 

@@ -20,6 +20,7 @@ import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
@@ -28,7 +29,6 @@ import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.coercer.ManifestEntries;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
@@ -134,7 +134,7 @@ public class Aapt2Link extends AbstractBuildRule {
         manifestEntries);
 
     Path linkTreePath =
-        BuildTargets.getScratchPath(getProjectFilesystem(), getBuildTarget(), "%s/link-tree");
+        BuildTargetPaths.getScratchPath(getProjectFilesystem(), getBuildTarget(), "%s/link-tree");
 
     // Need to reverse the order of the rules because aapt2 allows later resources
     // to override earlier ones, but aapt gives the earlier ones precedence.
@@ -189,26 +189,28 @@ public class Aapt2Link extends AbstractBuildRule {
   }
 
   private Path getFinalManifestPath() {
-    return BuildTargets.getGenPath(
+    return BuildTargetPaths.getGenPath(
         getProjectFilesystem(), getBuildTarget(), "%s/AndroidManifest.xml");
   }
 
   private Path getResourceApkPath() {
-    return BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s/resource-apk.ap_");
+    return BuildTargetPaths.getGenPath(
+        getProjectFilesystem(), getBuildTarget(), "%s/resource-apk.ap_");
   }
 
   private Path getProguardConfigPath() {
-    return BuildTargets.getGenPath(
+    return BuildTargetPaths.getGenPath(
         getProjectFilesystem(), getBuildTarget(), "%s/proguard-for-resources.pro");
   }
 
   private Path getRDotTxtPath() {
-    return BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s/R.txt");
+    return BuildTargetPaths.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s/R.txt");
   }
 
   /** Directory containing R.java files produced by aapt2 link. */
   private Path getInitialRDotJavaDir() {
-    return BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s/initial-rdotjava");
+    return BuildTargetPaths.getGenPath(
+        getProjectFilesystem(), getBuildTarget(), "%s/initial-rdotjava");
   }
 
   public AaptOutputInfo getAaptOutputInfo() {

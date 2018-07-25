@@ -19,6 +19,7 @@ package com.facebook.buck.cxx.toolchain.linker;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
@@ -32,7 +33,6 @@ import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.file.FileScrubber;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
@@ -185,7 +185,7 @@ public class GnuLinker extends DelegatingTool implements Linker {
     }
 
     private Path getLinkerScript() {
-      return BuildTargets.getGenPath(
+      return BuildTargetPaths.getGenPath(
           getProjectFilesystem(), getBuildTarget(), "%s/linker_script.txt");
     }
 

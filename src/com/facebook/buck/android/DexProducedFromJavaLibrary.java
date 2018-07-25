@@ -22,6 +22,7 @@ import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
@@ -35,7 +36,6 @@ import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaLibrary;
-import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -245,7 +245,7 @@ public class DexProducedFromJavaLibrary extends AbstractBuildRuleWithDeclaredAnd
 
   private static Path getMetadataPath(
       ProjectFilesystem projectFilesystem, BuildTarget buildTarget, String key) {
-    return BuildTargets.getGenPath(projectFilesystem, buildTarget, "%s/metadata/" + key);
+    return BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s/metadata/" + key);
   }
 
   private void writeMetadataValues(
@@ -310,7 +310,7 @@ public class DexProducedFromJavaLibrary extends AbstractBuildRuleWithDeclaredAnd
   }
 
   public Path getPathToDex() {
-    return BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s.dex.jar");
+    return BuildTargetPaths.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s.dex.jar");
   }
 
   public boolean hasOutput() {

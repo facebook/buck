@@ -28,6 +28,7 @@ import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.Flavored;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.UnflavoredBuildTarget;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -58,7 +59,6 @@ import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.swift.toolchain.SwiftPlatform;
@@ -292,7 +292,7 @@ public class SwiftLibraryDescription
           swiftPlatform.get().getSwiftc(),
           args.getFrameworks(),
           args.getModuleName().orElse(buildTarget.getShortName()),
-          BuildTargets.getGenPath(projectFilesystem, buildTarget, "%s"),
+          BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s"),
           args.getSrcs(),
           args.getVersion(),
           RichStream.from(args.getCompilerFlags())
@@ -450,7 +450,7 @@ public class SwiftLibraryDescription
         swiftPlatform.getSwiftc(),
         args.getFrameworks(),
         args.getModuleName().orElse(buildTarget.getShortName()),
-        BuildTargets.getGenPath(projectFilesystem, buildTarget, "%s"),
+        BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s"),
         args.getSrcs(),
         args.getVersion(),
         RichStream.from(args.getCompilerFlags())

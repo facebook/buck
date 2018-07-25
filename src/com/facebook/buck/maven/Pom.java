@@ -16,11 +16,11 @@
 
 package com.facebook.buck.maven;
 
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.jvm.core.HasMavenCoordinates;
 import com.facebook.buck.jvm.java.MavenPublishable;
-import com.facebook.buck.model.BuildTargets;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
@@ -100,7 +100,8 @@ public class Pom {
   private static Path getPomPath(HasMavenCoordinates rule) {
     return rule.getProjectFilesystem()
         .resolve(
-            BuildTargets.getGenPath(rule.getProjectFilesystem(), rule.getBuildTarget(), "%s.pom"));
+            BuildTargetPaths.getGenPath(
+                rule.getProjectFilesystem(), rule.getBuildTarget(), "%s.pom"));
   }
 
   @VisibleForTesting

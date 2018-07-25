@@ -20,8 +20,8 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -72,11 +72,11 @@ public class WorkerToolRuleIntegrationTest {
             target3.getFullyQualifiedName())
         .assertSuccess();
     workspace.verify(
-        Paths.get("test1_output.expected"), BuildTargets.getGenPath(filesystem, target1, "%s"));
+        Paths.get("test1_output.expected"), BuildTargetPaths.getGenPath(filesystem, target1, "%s"));
     workspace.verify(
-        Paths.get("test2_output.expected"), BuildTargets.getGenPath(filesystem, target2, "%s"));
+        Paths.get("test2_output.expected"), BuildTargetPaths.getGenPath(filesystem, target2, "%s"));
     workspace.verify(
-        Paths.get("test3_output.expected"), BuildTargets.getGenPath(filesystem, target3, "%s"));
+        Paths.get("test3_output.expected"), BuildTargetPaths.getGenPath(filesystem, target3, "%s"));
   }
 
   /**
@@ -95,9 +95,9 @@ public class WorkerToolRuleIntegrationTest {
         .assertSuccess();
 
     String contents =
-        workspace.getFileContents(BuildTargets.getGenPath(filesystem, target1, "%s/output.txt"))
+        workspace.getFileContents(BuildTargetPaths.getGenPath(filesystem, target1, "%s/output.txt"))
             + workspace.getFileContents(
-                BuildTargets.getGenPath(filesystem, target2, "%s/output.txt"));
+                BuildTargetPaths.getGenPath(filesystem, target2, "%s/output.txt"));
     ImmutableSet<String> processIDs = ImmutableSet.copyOf(contents.trim().split("\\s+"));
     assertThat(processIDs.size(), Matchers.equalTo(2));
   }
@@ -120,12 +120,14 @@ public class WorkerToolRuleIntegrationTest {
 
     workspace.runBuckdCommand("build", fullyQualifiedName).assertSuccess();
     String contents =
-        workspace.getFileContents(BuildTargets.getGenPath(filesystem, target1, "%s/output.txt"));
+        workspace.getFileContents(
+            BuildTargetPaths.getGenPath(filesystem, target1, "%s/output.txt"));
     workspace.replaceFileContents("test6.input", "1", "2");
     workspace.runBuckdCommand("build", fullyQualifiedName).assertSuccess();
     workspace.getBuildLog().assertTargetBuiltLocally(fullyQualifiedName);
     contents +=
-        workspace.getFileContents(BuildTargets.getGenPath(filesystem, target1, "%s/output.txt"));
+        workspace.getFileContents(
+            BuildTargetPaths.getGenPath(filesystem, target1, "%s/output.txt"));
 
     ImmutableSet<String> processIDs = ImmutableSet.copyOf(contents.trim().split("\\s+"));
     assertThat(processIDs.size(), Matchers.equalTo(1));
@@ -139,14 +141,16 @@ public class WorkerToolRuleIntegrationTest {
 
     workspace.runBuckdCommand("build", fullyQualifiedName).assertSuccess();
     String contents =
-        workspace.getFileContents(BuildTargets.getGenPath(filesystem, target1, "%s/output.txt"));
+        workspace.getFileContents(
+            BuildTargetPaths.getGenPath(filesystem, target1, "%s/output.txt"));
     workspace.replaceFileContents("test6.input", "1", "2");
     workspace.replaceFileContents("concurrent_tool.sh", "sleep 1", "sleep 2");
 
     workspace.runBuckdCommand("build", fullyQualifiedName).assertSuccess();
     workspace.getBuildLog().assertTargetBuiltLocally(fullyQualifiedName);
     contents +=
-        workspace.getFileContents(BuildTargets.getGenPath(filesystem, target1, "%s/output.txt"));
+        workspace.getFileContents(
+            BuildTargetPaths.getGenPath(filesystem, target1, "%s/output.txt"));
 
     ImmutableSet<String> processIDs = ImmutableSet.copyOf(contents.trim().split("\\s+"));
     assertThat(processIDs.size(), Matchers.equalTo(2));
@@ -162,9 +166,9 @@ public class WorkerToolRuleIntegrationTest {
         .runBuckBuild(target1.getFullyQualifiedName(), target2.getFullyQualifiedName())
         .assertSuccess();
     workspace.verify(
-        Paths.get("test8_output.expected"), BuildTargets.getGenPath(filesystem, target1, "%s"));
+        Paths.get("test8_output.expected"), BuildTargetPaths.getGenPath(filesystem, target1, "%s"));
     workspace.verify(
-        Paths.get("test9_output.expected"), BuildTargets.getGenPath(filesystem, target2, "%s"));
+        Paths.get("test9_output.expected"), BuildTargetPaths.getGenPath(filesystem, target2, "%s"));
   }
 
   @Test

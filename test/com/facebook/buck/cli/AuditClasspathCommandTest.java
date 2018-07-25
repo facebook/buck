@@ -23,6 +23,7 @@ import com.facebook.buck.android.AndroidBinaryBuilder;
 import com.facebook.buck.android.AndroidLibraryBuilder;
 import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -32,7 +33,6 @@ import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.jvm.java.JavaTestBuilder;
 import com.facebook.buck.jvm.java.KeystoreBuilder;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.CloseableMemoizedSupplier;
 import com.facebook.buck.util.json.ObjectMappers;
@@ -140,14 +140,14 @@ public class AuditClasspathCommandTest {
         Sets.newTreeSet(
             Arrays.asList(
                 root.resolve(
-                        BuildTargets.getGenPath(
+                        BuildTargetPaths.getGenPath(
                                 params.getCell().getFilesystem(),
                                 androidLibraryTarget,
                                 "lib__%s__output")
                             .resolve(androidLibraryTarget.getShortName() + ".jar"))
                     .toString(),
                 root.resolve(
-                        BuildTargets.getGenPath(
+                        BuildTargetPaths.getGenPath(
                                 params.getCell().getFilesystem(),
                                 javaLibraryTarget,
                                 "lib__%s__output")
@@ -175,7 +175,7 @@ public class AuditClasspathCommandTest {
 
     expectedPaths.add(
         root.resolve(
-                BuildTargets.getGenPath(
+                BuildTargetPaths.getGenPath(
                         params.getCell().getFilesystem(), testJavaCompiledJar, "lib__%s__output")
                     .resolve(testJavaCompiledJar.getShortNameAndFlavorPostfix() + ".jar"))
             .toString());
@@ -228,17 +228,17 @@ public class AuditClasspathCommandTest {
             EXPECTED_JSON,
             objectMapper.valueToTree(
                 root.resolve(
-                    BuildTargets.getGenPath(
+                    BuildTargetPaths.getGenPath(
                             params.getCell().getFilesystem(), javaTarget, "lib__%s__output")
                         .resolve(javaTarget.getShortName() + ".jar"))),
             objectMapper.valueToTree(
                 root.resolve(
-                    BuildTargets.getGenPath(
+                    BuildTargetPaths.getGenPath(
                             params.getCell().getFilesystem(), androidTarget, "lib__%s__output")
                         .resolve(androidTarget.getShortName() + ".jar"))),
             objectMapper.valueToTree(
                 root.resolve(
-                    BuildTargets.getGenPath(
+                    BuildTargetPaths.getGenPath(
                             params.getCell().getFilesystem(), javaTarget, "lib__%s__output")
                         .resolve(javaTarget.getShortName() + ".jar"))));
     assertEquals(expected, console.getTextWrittenToStdOut());
@@ -284,14 +284,14 @@ public class AuditClasspathCommandTest {
     ImmutableSortedSet<String> expectedPaths =
         ImmutableSortedSet.of(
             root.resolve(
-                    BuildTargets.getGenPath(
+                    BuildTargetPaths.getGenPath(
                             params.getCell().getFilesystem(),
                             androidLibrary.getBuildTarget(),
                             "lib__%s__output")
                         .resolve(androidLibrary.getBuildTarget().getShortName() + ".jar"))
                 .toString(),
             root.resolve(
-                    BuildTargets.getGenPath(
+                    BuildTargetPaths.getGenPath(
                             params.getCell().getFilesystem(),
                             javaLibrary.getBuildTarget(),
                             "lib__%s__output")
@@ -343,21 +343,21 @@ public class AuditClasspathCommandTest {
             EXPECTED_JSON,
             objectMapper.valueToTree(
                 root.resolve(
-                    BuildTargets.getGenPath(
+                    BuildTargetPaths.getGenPath(
                             params.getCell().getFilesystem(),
                             javaLibrary.getBuildTarget(),
                             "lib__%s__output")
                         .resolve(javaLibrary.getBuildTarget().getShortName() + ".jar"))),
             objectMapper.valueToTree(
                 root.resolve(
-                    BuildTargets.getGenPath(
+                    BuildTargetPaths.getGenPath(
                             params.getCell().getFilesystem(),
                             androidLibrary.getBuildTarget(),
                             "lib__%s__output")
                         .resolve(androidLibrary.getBuildTarget().getShortName() + ".jar"))),
             objectMapper.valueToTree(
                 root.resolve(
-                    BuildTargets.getGenPath(
+                    BuildTargetPaths.getGenPath(
                             params.getCell().getFilesystem(),
                             javaLibrary.getBuildTarget(),
                             "lib__%s__output")

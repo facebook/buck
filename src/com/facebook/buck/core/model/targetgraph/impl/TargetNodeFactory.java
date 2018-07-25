@@ -99,7 +99,7 @@ public class TargetNodeFactory implements NodeCopier {
         ImmutableSortedSet.naturalOrder();
     ImmutableSet.Builder<Path> pathsBuilder = ImmutableSet.builder();
 
-    // Scan the input to find possible BuildTargets, necessary for loading dependent rules.
+    // Scan the input to find possible BuildTargetPaths, necessary for loading dependent rules.
     for (ParamInfo info :
         CoercedTypeCache.INSTANCE
             .getAllParamInfo(typeCoercerFactory, description.getConstructorArgType())

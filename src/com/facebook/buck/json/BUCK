@@ -10,6 +10,7 @@ java_library(
     visibility = ["PUBLIC"],
     deps = [
         ":steps",
+        "//src/com/facebook/buck/core/model/impl:impl",
         "//src/com/facebook/buck/core/rules/impl:impl",
         "//src/com/facebook/buck/io:io",
         "//src/com/facebook/buck/model:model",

@@ -29,11 +29,11 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.jvm.java.testutil.AbiCompilationModeTest;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
@@ -104,7 +104,7 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
     ZipInspector zipInspector =
         new ZipInspector(
             workspace.getPath(
-                BuildTargets.getGenPath(
+                BuildTargetPaths.getGenPath(
                     filesystem, BuildTargetFactory.newInstance(SIMPLE_TARGET), "%s.apk")));
 
     zipInspector.assertFileExists("assets/secondary-program-dex-jars/metadata.txt");
@@ -146,7 +146,7 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
     ZipInspector zipInspector =
         new ZipInspector(
             workspace.getPath(
-                BuildTargets.getGenPath(
+                BuildTargetPaths.getGenPath(
                     filesystem, BuildTargetFactory.newInstance(RAW_DEX_TARGET), "%s.apk")));
     zipInspector.assertFileDoesNotExist("assets/secondary-program-dex-jars/metadata.txt");
 
@@ -278,7 +278,7 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
     DexInspector dexInspector =
         new DexInspector(
             workspace.getPath(
-                BuildTargets.getGenPath(
+                BuildTargetPaths.getGenPath(
                     filesystem, BuildTargetFactory.newInstance(target), "%s.apk")));
 
     dexInspector.assertTypeExists("Lcom/facebook/sample/Dep;");
@@ -343,7 +343,7 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
 
     Path mapping =
         workspace.getPath(
-            BuildTargets.getGenPath(
+            BuildTargetPaths.getGenPath(
                 filesystem, BuildTargetFactory.newInstance(target), "%s/proguard/mapping.txt"));
     assertTrue(Files.exists(mapping));
   }
@@ -368,7 +368,8 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
     // Iterate over each of the entries, expecting to see all zeros in the time fields.
     Path apk =
         workspace.getPath(
-            BuildTargets.getGenPath(filesystem, BuildTargetFactory.newInstance(target), "%s.apk"));
+            BuildTargetPaths.getGenPath(
+                filesystem, BuildTargetFactory.newInstance(target), "%s.apk"));
     Date dosEpoch = new Date(ZipUtil.dosToJavaTime(ZipConstants.DOS_FAKE_TIME));
     try (ZipInputStream is = new ZipInputStream(Files.newInputStream(apk))) {
       for (ZipEntry entry = is.getNextEntry(); entry != null; entry = is.getNextEntry()) {
@@ -383,7 +384,8 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
     workspace.runBuckCommand("build", target).assertSuccess();
     Path pathToZip =
         workspace.getPath(
-            BuildTargets.getGenPath(filesystem, BuildTargetFactory.newInstance(target), "%s.apk"));
+            BuildTargetPaths.getGenPath(
+                filesystem, BuildTargetFactory.newInstance(target), "%s.apk"));
     ZipFile file = new ZipFile(pathToZip.toFile());
     ZipEntry metadata = file.getEntry("assets/lib/metadata.txt");
     assertNotNull(metadata);
@@ -527,7 +529,7 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
 
     Path generatedConfig =
         workspace.getPath(
-            BuildTargets.getGenPath(
+            BuildTargetPaths.getGenPath(
                 filesystem,
                 BuildTargetFactory.newInstance(target)
                     .withFlavors(AndroidBinaryGraphEnhancer.NATIVE_LIBRARY_PROGUARD_FLAVOR),
@@ -535,7 +537,7 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
 
     Path proguardDir =
         workspace.getPath(
-            BuildTargets.getGenPath(
+            BuildTargetPaths.getGenPath(
                 filesystem, BuildTargetFactory.newInstance(target), "%s/proguard"));
 
     Path proguardCommandLine = proguardDir.resolve("command-line.txt");
@@ -553,7 +555,7 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
 
     Path generatedConfig =
         workspace.getPath(
-            BuildTargets.getGenPath(
+            BuildTargetPaths.getGenPath(
                 filesystem,
                 BuildTargetFactory.newInstance(target)
                     .withFlavors(AndroidBinaryGraphEnhancer.NATIVE_LIBRARY_PROGUARD_FLAVOR),
@@ -561,7 +563,7 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
 
     Path proguardDir =
         workspace.getPath(
-            BuildTargets.getGenPath(
+            BuildTargetPaths.getGenPath(
                 filesystem, BuildTargetFactory.newInstance(target), "%s/proguard"));
 
     Path proguardCommandLine = proguardDir.resolve("command-line.txt");

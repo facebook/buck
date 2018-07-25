@@ -18,6 +18,7 @@ package com.facebook.buck.features.haskell;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
@@ -32,7 +33,6 @@ import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -144,7 +144,7 @@ public class HaskellPackageRule extends AbstractBuildRuleWithDeclaredAndExtraDep
   }
 
   private Path getPackageDb() {
-    return BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s");
+    return BuildTargetPaths.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s");
   }
 
   private WriteFileStep getWriteRegistrationFileStep(
@@ -213,7 +213,8 @@ public class HaskellPackageRule extends AbstractBuildRuleWithDeclaredAndExtraDep
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
     // Setup the scratch dir.
-    Path scratchDir = BuildTargets.getScratchPath(getProjectFilesystem(), getBuildTarget(), "%s");
+    Path scratchDir =
+        BuildTargetPaths.getScratchPath(getProjectFilesystem(), getBuildTarget(), "%s");
 
     steps.addAll(
         MakeCleanDirectoryStep.of(

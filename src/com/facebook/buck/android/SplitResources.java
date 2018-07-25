@@ -21,6 +21,7 @@ import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
@@ -31,7 +32,6 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
@@ -79,7 +79,7 @@ public class SplitResources extends AbstractBuildRule {
   }
 
   private Path getOutputDirectory() {
-    return BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s/");
+    return BuildTargetPaths.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s/");
   }
 
   @Override
@@ -135,7 +135,7 @@ public class SplitResources extends AbstractBuildRule {
   }
 
   public Path getScratchDirectory() {
-    return BuildTargets.getScratchPath(getProjectFilesystem(), getBuildTarget(), "%s/");
+    return BuildTargetPaths.getScratchPath(getProjectFilesystem(), getBuildTarget(), "%s/");
   }
 
   private class SplitResourcesStep implements Step {

@@ -26,6 +26,7 @@ import com.facebook.buck.core.model.FlavorConvertible;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.Flavored;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -59,7 +60,6 @@ import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
@@ -594,7 +594,7 @@ public class HaskellLibraryDescription
     String name =
         CxxDescriptionEnhancer.getSharedLibrarySoname(
             Optional.empty(), target.withFlavors(), platform.getCxxPlatform());
-    Path outputPath = BuildTargets.getGenPath(projectFilesystem, target, "%s").resolve(name);
+    Path outputPath = BuildTargetPaths.getGenPath(projectFilesystem, target, "%s").resolve(name);
 
     return HaskellDescriptionUtils.createLinkRule(
         target,

@@ -29,10 +29,10 @@ import com.facebook.buck.apple.AppleTestBuilder;
 import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.cxx.toolchain.LinkerMapMode;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
-import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -69,7 +69,7 @@ public class SwiftTestIOSIntegrationTest {
     Path binaryOutput =
         workspace
             .getPath(
-                BuildTargets.getGenPath(
+                BuildTargetPaths.getGenPath(
                     filesystem,
                     target.withAppendedFlavors(
                         InternalFlavor.of("iphonesimulator-x86_64"),
@@ -117,7 +117,7 @@ public class SwiftTestIOSIntegrationTest {
     Path binaryOutput =
         workspace
             .getPath(
-                BuildTargets.getGenPath(
+                BuildTargetPaths.getGenPath(
                     filesystem,
                     target.withAppendedFlavors(
                         InternalFlavor.of("iphonesimulator-x86_64"),
@@ -172,7 +172,7 @@ public class SwiftTestIOSIntegrationTest {
     Path binaryOutput =
         workspace
             .getPath(
-                BuildTargets.getGenPath(
+                BuildTargetPaths.getGenPath(
                     filesystem,
                     target.withAppendedFlavors(
                         InternalFlavor.of("macosx-x86_64"),

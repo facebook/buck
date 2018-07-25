@@ -53,8 +53,8 @@ public final class IjModuleGraphFactory {
    *
    * @param targetGraph graph whose nodes will be converted to {@link IjModule}s.
    * @return map which for every BuildTarget points to the corresponding IjModule. Multiple
-   *     BuildTarget can point to one IjModule (many:one mapping), the BuildTargets which can't be
-   *     prepresented in IntelliJ are missing from this mapping.
+   *     BuildTarget can point to one IjModule (many:one mapping), the BuildTargetPaths which can't
+   *     be prepresented in IntelliJ are missing from this mapping.
    */
   private static ImmutableMap<BuildTarget, IjModule> createModules(
       ProjectFilesystem projectFilesystem,

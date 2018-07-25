@@ -68,7 +68,7 @@ public class AuditMbrIsolationCommand extends AbstractCommand {
       throws IOException, InterruptedException {
     try {
       // Create a TargetGraph that is composed of the transitive closure of all of the dependent
-      // BuildRules for the specified BuildTargets.
+      // BuildRules for the specified BuildTargetPaths.
       ImmutableSet<BuildTarget> targets = convertArgumentsToBuildTargets(params, getArguments());
 
       if (targets.isEmpty()) {

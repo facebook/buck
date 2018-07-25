@@ -19,6 +19,7 @@ package com.facebook.buck.features.go;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
@@ -33,7 +34,6 @@ import com.facebook.buck.cxx.CxxPrepareForLinkStep;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.step.Step;
@@ -81,7 +81,7 @@ public class GoBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps implemen
     this.mainObject = mainObject;
     this.platform = platform;
     this.output =
-        BuildTargets.getGenPath(
+        BuildTargetPaths.getGenPath(
             getProjectFilesystem(), buildTarget, "%s/" + buildTarget.getShortName());
     this.linkerFlags = linkerFlags;
   }
@@ -151,13 +151,13 @@ public class GoBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps implemen
           getProjectFilesystem()
               .getRootPath()
               .resolve(
-                  BuildTargets.getScratchPath(
+                  BuildTargetPaths.getScratchPath(
                       getProjectFilesystem(), getBuildTarget(), "%s.argsfile"));
       Path fileListPath =
           getProjectFilesystem()
               .getRootPath()
               .resolve(
-                  BuildTargets.getScratchPath(
+                  BuildTargetPaths.getScratchPath(
                       getProjectFilesystem(), getBuildTarget(), "%s__filelist.txt"));
       steps.addAll(
           CxxPrepareForLinkStep.create(

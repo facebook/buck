@@ -17,6 +17,7 @@
 package com.facebook.buck.shell;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
@@ -30,7 +31,6 @@ import com.facebook.buck.core.toolchain.tool.DelegatingTool;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.file.WriteFile;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.model.BuildTargets;
 import com.google.common.hash.HashCode;
 import java.nio.file.Path;
 import java.util.SortedSet;
@@ -64,7 +64,7 @@ public class DefaultWorkerTool extends WriteFile
         buildTarget,
         projectFilesystem,
         "",
-        BuildTargets.getGenPath(projectFilesystem, buildTarget, "%s/worker.file"),
+        BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s/worker.file"),
         false);
     this.actualTool = tool;
     this.tool =
@@ -90,7 +90,7 @@ public class DefaultWorkerTool extends WriteFile
 
   @Override
   public Path getTempDir() {
-    return BuildTargets.getScratchPath(getProjectFilesystem(), getBuildTarget(), "%s__worker");
+    return BuildTargetPaths.getScratchPath(getProjectFilesystem(), getBuildTarget(), "%s__worker");
   }
 
   @Override

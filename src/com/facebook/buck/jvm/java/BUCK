@@ -199,6 +199,7 @@ java_immutables_library(
         "//src/com/facebook/buck/android:utils",
         "//src/com/facebook/buck/config:config",
         "//src/com/facebook/buck/core/description:description",
+        "//src/com/facebook/buck/core/model/impl:impl",
         "//src/com/facebook/buck/core/rules:rules",
         "//src/com/facebook/buck/core/rules/common:common",
         "//src/com/facebook/buck/core/sourcepath/resolver/impl:impl",

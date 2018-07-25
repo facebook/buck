@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.HasOutputName;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
@@ -28,7 +29,6 @@ import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.model.BuildTargets;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableSortedMap;
@@ -108,9 +108,9 @@ abstract class AbstractResourcesParameters implements AddsToRuleKey {
                       .resolve(((HasOutputName) underlyingRule.get()).getOutputName()));
         } else {
           Path genOutputParent =
-              BuildTargets.getGenPath(filesystem, underlyingTarget, "%s").getParent();
+              BuildTargetPaths.getGenPath(filesystem, underlyingTarget, "%s").getParent();
           Path scratchOutputParent =
-              BuildTargets.getScratchPath(filesystem, underlyingTarget, "%s").getParent();
+              BuildTargetPaths.getScratchPath(filesystem, underlyingTarget, "%s").getParent();
           Optional<Path> outputPath =
               MorePaths.stripPrefix(relativePathToResource, genOutputParent)
                   .map(Optional::of)

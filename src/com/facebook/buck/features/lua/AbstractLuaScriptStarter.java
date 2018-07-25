@@ -18,6 +18,7 @@ package com.facebook.buck.features.lua;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
@@ -28,7 +29,6 @@ import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.facebook.buck.file.WriteFile;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.util.Escaper;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMap;
@@ -89,7 +89,7 @@ abstract class AbstractLuaScriptStarter implements Starter {
                     templateTarget,
                     getProjectFilesystem(),
                     getPureStarterTemplate(),
-                    BuildTargets.getGenPath(
+                    BuildTargetPaths.getGenPath(
                         getProjectFilesystem(), templateTarget, "%s/starter.lua.in"),
                     /* executable */ false));
 

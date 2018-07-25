@@ -22,9 +22,9 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -57,7 +57,7 @@ public class AndroidBinaryFlavorsIntegrationTest {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     ProcessResult result = workspace.runBuckCommand("targets", "--show-output", target);
     Path path =
-        BuildTargets.getScratchPath(
+        BuildTargetPaths.getScratchPath(
             filesystem,
             BuildTargetFactory.newInstance(target),
             PackageStringAssets.STRING_ASSETS_DIR_FORMAT);
@@ -71,7 +71,7 @@ public class AndroidBinaryFlavorsIntegrationTest {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     ProcessResult result = workspace.runBuckCommand("targets", "--show-output", target);
     Path path =
-        BuildTargets.getScratchPath(
+        BuildTargetPaths.getScratchPath(
             filesystem,
             BuildTargetFactory.newInstance(target),
             PackageStringAssets.STRING_ASSETS_DIR_FORMAT);

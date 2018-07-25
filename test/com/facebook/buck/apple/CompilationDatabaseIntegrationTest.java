@@ -23,13 +23,13 @@ import static org.junit.Assert.assertNotNull;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.cxx.CxxCompilationDatabaseEntry;
 import com.facebook.buck.cxx.CxxCompilationDatabaseUtils;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -88,7 +88,7 @@ public class CompilationDatabaseIntegrationTest {
         CxxCompilationDatabaseUtils.parseCompilationDatabaseJsonFile(compilationDatabase);
 
     String pathToPrivateHeaders =
-        BuildTargets.getGenPath(
+        BuildTargetPaths.getGenPath(
                 filesystem,
                 target.withFlavors(
                     InternalFlavor.of("iphonesimulator-x86_64"),
@@ -96,7 +96,7 @@ public class CompilationDatabaseIntegrationTest {
                 "%s.hmap")
             .toString();
     String pathToPublicHeaders =
-        BuildTargets.getGenPath(
+        BuildTargetPaths.getGenPath(
                 filesystem,
                 target.withFlavors(
                     CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR,
@@ -158,7 +158,7 @@ public class CompilationDatabaseIntegrationTest {
         CxxCompilationDatabaseUtils.parseCompilationDatabaseJsonFile(compilationDatabase);
 
     String pathToPrivateHeaders =
-        BuildTargets.getGenPath(
+        BuildTargetPaths.getGenPath(
                 filesystem,
                 target.withFlavors(
                     InternalFlavor.of("iphonesimulator-x86_64"),
@@ -166,7 +166,7 @@ public class CompilationDatabaseIntegrationTest {
                 "%s.hmap")
             .toString();
     String pathToPublicHeaders =
-        BuildTargets.getGenPath(
+        BuildTargetPaths.getGenPath(
                 filesystem,
                 BuildTargetFactory.newInstance("//Libraries/EXExample:EXExample")
                     .withAppendedFlavors(
@@ -265,7 +265,7 @@ public class CompilationDatabaseIntegrationTest {
     }
 
     String output =
-        BuildTargets.getGenPath(filesystem, outputTarget, "%s").resolve(outputPath).toString();
+        BuildTargetPaths.getGenPath(filesystem, outputTarget, "%s").resolve(outputPath).toString();
     commandArgs.add("-Xclang");
     commandArgs.add("-fdebug-compilation-dir");
     commandArgs.add("-Xclang");

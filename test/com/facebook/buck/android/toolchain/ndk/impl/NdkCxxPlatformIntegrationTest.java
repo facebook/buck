@@ -29,12 +29,12 @@ import com.facebook.buck.android.AssumeAndroidPlatform;
 import com.facebook.buck.android.toolchain.ndk.NdkCompilerType;
 import com.facebook.buck.android.toolchain.ndk.NdkCxxRuntime;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -181,7 +181,8 @@ public class NdkCxxPlatformIntegrationTest {
     workspace.runBuckBuild(target.getFullyQualifiedName()).assertSuccess();
     Path lib =
         workspace.getPath(
-            BuildTargets.getGenPath(filesystem, target, "%s/lib" + target.getShortName() + ".a"));
+            BuildTargetPaths.getGenPath(
+                filesystem, target, "%s/lib" + target.getShortName() + ".a"));
     String contents = MorePaths.asByteSource(lib).asCharSource(Charsets.ISO_8859_1).read();
 
     // Verify that the working directory is sanitized.
@@ -203,7 +204,7 @@ public class NdkCxxPlatformIntegrationTest {
     longPwdWorkspace.runBuckBuild(target.getFullyQualifiedName()).assertSuccess();
     lib =
         longPwdWorkspace.getPath(
-            BuildTargets.getGenPath(
+            BuildTargetPaths.getGenPath(
                 longPwdFilesystem, target, "%s/lib" + target.getShortName() + ".a"));
     String movedContents = MorePaths.asByteSource(lib).asCharSource(Charsets.ISO_8859_1).read();
     assertEquals(contents, movedContents);

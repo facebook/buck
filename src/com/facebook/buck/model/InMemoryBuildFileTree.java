@@ -51,9 +51,9 @@ public class InMemoryBuildFileTree extends BuildFileTree {
   private final Map<Path, Node> basePathToNodeIndex;
 
   /**
-   * Creates an InMemoryBuildFileTree from the base paths in the given BuildTargets.
+   * Creates an InMemoryBuildFileTree from the base paths in the given BuildTargetPaths.
    *
-   * @param targets BuildTargets to get base paths from.
+   * @param targets BuildTargetPaths to get base paths from.
    */
   public InMemoryBuildFileTree(Iterable<BuildTarget> targets) {
     this(collectBasePaths(targets));

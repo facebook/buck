@@ -25,6 +25,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -62,7 +63,6 @@ import com.facebook.buck.features.python.toolchain.PythonPlatformsProvider;
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.toolchain.ToolchainProvider;
@@ -120,7 +120,7 @@ public class LuaBinaryDescription
 
   private static Path getNativeLibsSymlinkTreeRoot(
       BuildTarget target, ProjectFilesystem filesystem) {
-    return BuildTargets.getGenPath(filesystem, getNativeLibsSymlinkTreeTarget(target), "%s");
+    return BuildTargetPaths.getGenPath(filesystem, getNativeLibsSymlinkTreeTarget(target), "%s");
   }
 
   private static BuildTarget getModulesSymlinkTreeTarget(BuildTarget target) {
@@ -128,7 +128,7 @@ public class LuaBinaryDescription
   }
 
   private static Path getModulesSymlinkTreeRoot(BuildTarget target, ProjectFilesystem filesystem) {
-    return BuildTargets.getGenPath(filesystem, getModulesSymlinkTreeTarget(target), "%s");
+    return BuildTargetPaths.getGenPath(filesystem, getModulesSymlinkTreeTarget(target), "%s");
   }
 
   private static BuildTarget getPythonModulesSymlinkTreeTarget(BuildTarget target) {
@@ -137,12 +137,12 @@ public class LuaBinaryDescription
 
   private static Path getPythonModulesSymlinkTreeRoot(
       BuildTarget target, ProjectFilesystem filesystem) {
-    return BuildTargets.getGenPath(filesystem, getPythonModulesSymlinkTreeTarget(target), "%s");
+    return BuildTargetPaths.getGenPath(filesystem, getPythonModulesSymlinkTreeTarget(target), "%s");
   }
 
   private Path getOutputPath(
       BuildTarget target, ProjectFilesystem filesystem, LuaPlatform luaPlatform) {
-    return BuildTargets.getGenPath(filesystem, target, "%s" + luaPlatform.getExtension());
+    return BuildTargetPaths.getGenPath(filesystem, target, "%s" + luaPlatform.getExtension());
   }
 
   private Iterable<BuildTarget> getNativeStarterDepTargets(LuaPlatform luaPlatform) {

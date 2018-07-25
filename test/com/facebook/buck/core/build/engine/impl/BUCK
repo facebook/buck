@@ -9,6 +9,7 @@ java_test(
         "//src/com/facebook/buck/core/build/distributed/synchronization/impl:impl",
         "//src/com/facebook/buck/core/build/engine/cache/manager:manager",
         "//src/com/facebook/buck/core/build/event:event",
+        "//src/com/facebook/buck/core/model/impl:impl",
         "//src/com/facebook/buck/core/rules/pipeline:pipeline",
         "//src/com/facebook/buck/core/rules/schedule:schedule",
         "//src/com/facebook/buck/core/sourcepath/resolver/impl:impl",

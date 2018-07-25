@@ -91,9 +91,9 @@ public class Flavors {
    *
    * @param domain the flavor domain to be propagated.
    * @param buildTarget the build target containing the flavors to be propagated
-   * @param deps list of BuildTargets to propagate the flavors to. If a target already contains one
-   *     or more flavors in domain, it is left unchanged.
-   * @return the list of BuildTargets with any flavors propagated.
+   * @param deps list of BuildTargetPaths to propagate the flavors to. If a target already contains
+   *     one or more flavors in domain, it is left unchanged.
+   * @return the list of BuildTargetPaths with any flavors propagated.
    */
   public static FluentIterable<BuildTarget> propagateFlavorsInDomainIfNotPresent(
       FlavorDomain<?> domain, BuildTarget buildTarget, FluentIterable<BuildTarget> deps) {

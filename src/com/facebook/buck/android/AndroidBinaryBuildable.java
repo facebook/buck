@@ -28,6 +28,7 @@ import com.facebook.buck.android.toolchain.AndroidSdkLocation;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -35,7 +36,6 @@ import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -244,7 +244,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
         SourcePath resourcePath = moduleResourceApkPaths.get(module);
 
         Path moduleResDirectory =
-            BuildTargets.getScratchPath(
+            BuildTargetPaths.getScratchPath(
                 getProjectFilesystem(), buildTarget, "__module_res_" + module.getName() + "_%s__");
 
         Path unpackDirectory = moduleResDirectory.resolve("assets").resolve(module.getName());
@@ -320,15 +320,16 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
               apkCompressionLevel));
     } else {
       Path tempBundleConfig =
-          BuildTargets.getGenPath(getProjectFilesystem(), buildTarget, "__BundleConfig__%s__.pb");
+          BuildTargetPaths.getGenPath(
+              getProjectFilesystem(), buildTarget, "__BundleConfig__%s__.pb");
       steps.add(new GenerateBundleConfigStep(getProjectFilesystem(), tempBundleConfig));
 
       Path tempAssets =
-          BuildTargets.getGenPath(getProjectFilesystem(), buildTarget, "__assets__%s__.pb");
+          BuildTargetPaths.getGenPath(getProjectFilesystem(), buildTarget, "__assets__%s__.pb");
       steps.add(new GenerateAssetsStep(getProjectFilesystem(), tempAssets, allAssetDirectories));
 
       Path tempNative =
-          BuildTargets.getGenPath(getProjectFilesystem(), buildTarget, "__native__%s__.pb");
+          BuildTargetPaths.getGenPath(getProjectFilesystem(), buildTarget, "__native__%s__.pb");
       steps.add(
           new GenerateNativeStep(
               getProjectFilesystem(), tempNative, nativeLibraryDirectoriesBuilder.build()));
@@ -596,13 +597,13 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
   }
 
   public Path getManifestPath() {
-    return BuildTargets.getGenPath(
+    return BuildTargetPaths.getGenPath(
         getProjectFilesystem(), getBuildTarget(), "%s/AndroidManifest.xml");
   }
 
   /** All native-libs-as-assets are copied to this directory before running apkbuilder. */
   private Path getPathForNativeLibsAsAssets() {
-    return BuildTargets.getScratchPath(
+    return BuildTargetPaths.getScratchPath(
         getProjectFilesystem(), getBuildTarget(), "__native_libs_as_assets_%s__");
   }
 
@@ -621,12 +622,12 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
   }
 
   private String getUnsignedApkPath() {
-    return BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s.unsigned.apk")
+    return BuildTargetPaths.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s.unsigned.apk")
         .toString();
   }
 
   private Path getRedexedApkPath() {
-    Path path = BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s__redex");
+    Path path = BuildTargetPaths.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s__redex");
     return path.resolve(getBuildTarget().getShortName() + ".redex.apk");
   }
 
@@ -634,7 +635,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
    * Directory of text files used by proguard. Unforunately, this contains both inputs and outputs.
    */
   private Path getProguardTextFilesPath() {
-    return BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s/proguard");
+    return BuildTargetPaths.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s/proguard");
   }
 
   @VisibleForTesting

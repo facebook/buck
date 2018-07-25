@@ -22,6 +22,7 @@ import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorDomain;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.model.impl.ImmutableBuildTarget;
 import com.facebook.buck.core.model.impl.ImmutableUnflavoredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
@@ -47,7 +48,6 @@ import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
@@ -304,7 +304,7 @@ public class HaskellGhciDescription
               graphBuilder,
               new SourcePathRuleFinder(graphBuilder),
               ruleTarget,
-              BuildTargets.getGenPath(projectFilesystem, ruleTarget, "%s")
+              BuildTargetPaths.getGenPath(projectFilesystem, ruleTarget, "%s")
                   .resolve("libghci_dependencies.so"),
               ImmutableMap.of(),
               Optional.of("libghci_dependencies.so"),

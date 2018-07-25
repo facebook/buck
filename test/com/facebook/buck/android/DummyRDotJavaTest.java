@@ -23,6 +23,7 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.core.build.buildable.context.FakeBuildableContext;
 import com.facebook.buck.core.build.context.FakeBuildContext;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
@@ -40,7 +41,6 @@ import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacStep;
 import com.facebook.buck.jvm.java.JavacToJarStepFactory;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -103,13 +103,13 @@ public class DummyRDotJavaTest {
     assertEquals("DummyRDotJava returns an incorrect number of Steps.", 12, steps.size());
 
     Path rDotJavaSrcFolder =
-        BuildTargets.getScratchPath(
+        BuildTargetPaths.getScratchPath(
             filesystem, dummyRDotJava.getBuildTarget(), "__%s_rdotjava_src__");
     Path rDotJavaBinFolder =
-        BuildTargets.getScratchPath(
+        BuildTargetPaths.getScratchPath(
             filesystem, dummyRDotJava.getBuildTarget(), "__%s_rdotjava_bin__");
     Path rDotJavaOutputFolder =
-        BuildTargets.getGenPath(
+        BuildTargetPaths.getGenPath(
             filesystem, dummyRDotJava.getBuildTarget(), "__%s_dummyrdotjava_output__");
     String rDotJavaOutputJar =
         MorePaths.pathWithPlatformSeparators(
@@ -150,7 +150,7 @@ public class DummyRDotJavaTest {
                             .setWorkingDirectory(Paths.get("working"))
                             .setSourceFilePaths(javaSourceFiles)
                             .setPathToSourcesList(
-                                BuildTargets.getGenPath(
+                                BuildTargetPaths.getGenPath(
                                     filesystem, dummyRDotJava.getBuildTarget(), "__%s__srcs"))
                             .setClasspathEntries(ImmutableSortedSet.of())
                             .build(),
@@ -190,7 +190,7 @@ public class DummyRDotJavaTest {
             /* useOldStyleableFormat */ false,
             /* skipNonUnionRDotJava */ false);
     assertEquals(
-        BuildTargets.getScratchPath(
+        BuildTargetPaths.getScratchPath(
             dummyRDotJava.getProjectFilesystem(),
             dummyRDotJava.getBuildTarget(),
             "__%s_rdotjava_bin__"),

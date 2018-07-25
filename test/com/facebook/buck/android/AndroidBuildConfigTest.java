@@ -23,12 +23,12 @@ import com.facebook.buck.core.build.buildable.context.FakeBuildableContext;
 import com.facebook.buck.core.build.context.FakeBuildContext;
 import com.facebook.buck.core.description.DescriptionCache;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.TestBuildRuleParams;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -55,7 +55,7 @@ public class AndroidBuildConfigTest {
     assertEquals(
         ExplicitBuildTargetSourcePath.of(
             BUILD_TARGET,
-            BuildTargets.getGenPath(filesystem, BUILD_TARGET, "__%s__/BuildConfig.java")),
+            BuildTargetPaths.getGenPath(filesystem, BUILD_TARGET, "__%s__/BuildConfig.java")),
         buildConfig.getSourcePathToOutput());
   }
 
@@ -73,7 +73,7 @@ public class AndroidBuildConfigTest {
             /* javaPackage */ "com.example",
             /* useConstantExpressions */ false,
             /* constants */ Suppliers.ofInstance(BuildConfigFields.of()),
-            BuildTargets.getGenPath(filesystem, BUILD_TARGET, "__%s__/BuildConfig.java"));
+            BuildTargetPaths.getGenPath(filesystem, BUILD_TARGET, "__%s__/BuildConfig.java"));
     assertEquals(expectedStep, generateBuildConfigStep);
   }
 

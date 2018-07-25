@@ -20,6 +20,7 @@ import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
@@ -34,7 +35,6 @@ import com.facebook.buck.cxx.toolchain.LinkerMapMode;
 import com.facebook.buck.cxx.toolchain.StripStyle;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MoveStep;
 import com.facebook.buck.step.fs.RmStep;
@@ -91,7 +91,7 @@ public class AppleDsym extends AbstractBuildRule
 
   public static Path getDsymOutputPath(BuildTarget target, ProjectFilesystem filesystem) {
     AppleDsym.checkFlavorCorrectness(target);
-    return BuildTargets.getGenPath(
+    return BuildTargetPaths.getGenPath(
         filesystem, target, "%s." + AppleBundleExtension.DSYM.toFileExtension());
   }
 

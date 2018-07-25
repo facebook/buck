@@ -17,6 +17,7 @@ package com.facebook.buck.features.project.intellij;
 
 import com.facebook.buck.core.description.arg.CommonDescriptionArg;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -35,7 +36,6 @@ import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.jvm.java.JvmLibraryArg;
-import com.facebook.buck.model.BuildTargets;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
@@ -314,7 +314,7 @@ public abstract class BaseIjModuleRule<T extends CommonDescriptionArg> implement
         .map(labelToGeneratedSourcesMap::get)
         .filter(Objects::nonNull)
         .map(pattern -> pattern.replaceAll("%name%", buildTarget.getShortNameAndFlavorPostfix()))
-        .map(path -> BuildTargets.getGenPath(projectFilesystem, buildTarget, path))
+        .map(path -> BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, path))
         .collect(ImmutableSet.toImmutableSet());
   }
 

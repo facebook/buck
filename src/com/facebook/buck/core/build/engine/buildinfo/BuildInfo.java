@@ -17,9 +17,9 @@
 package com.facebook.buck.core.build.engine.buildinfo;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.model.BuildTargets;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
@@ -111,7 +111,7 @@ public class BuildInfo {
    */
   @VisibleForTesting
   public static Path getPathToMetadataDirectory(BuildTarget target, ProjectFilesystem filesystem) {
-    return BuildTargets.getScratchPath(filesystem, target, ".%s/metadata/");
+    return BuildTargetPaths.getScratchPath(filesystem, target, ".%s/metadata/");
   }
 
   public static Path getPathToArtifactMetadataDirectory(

@@ -16,11 +16,11 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.jvm.java.testutil.AbiCompilationModeTest;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -60,7 +60,7 @@ public class AndroidBinaryModularIntegrationTest extends AbiCompilationModeTest 
     ZipInspector zipInspector =
         new ZipInspector(
             workspace.getPath(
-                BuildTargets.getGenPath(
+                BuildTargetPaths.getGenPath(
                     filesystem, BuildTargetFactory.newInstance(target), "%s.apk")));
     zipInspector.assertFileExists("assets/prebuilt/libs.txt");
     zipInspector.assertFileExists("assets/prebuilt/libs.xzs");
@@ -75,7 +75,7 @@ public class AndroidBinaryModularIntegrationTest extends AbiCompilationModeTest 
     ZipInspector zipInspector =
         new ZipInspector(
             workspace.getPath(
-                BuildTargets.getGenPath(
+                BuildTargetPaths.getGenPath(
                     filesystem, BuildTargetFactory.newInstance(target), "%s.apk")));
     zipInspector.assertFileExists("assets/lib/libs.xzs");
     zipInspector.assertFileExists("assets/lib/metadata.txt");
@@ -96,7 +96,7 @@ public class AndroidBinaryModularIntegrationTest extends AbiCompilationModeTest 
     ZipInspector zipInspector =
         new ZipInspector(
             workspace.getPath(
-                BuildTargets.getGenPath(
+                BuildTargetPaths.getGenPath(
                     filesystem, BuildTargetFactory.newInstance(target), "%s.apk")));
     zipInspector.assertFileExists("assets/lib/libs.xzs");
     zipInspector.assertFileExists("assets/lib/metadata.txt");
@@ -117,7 +117,7 @@ public class AndroidBinaryModularIntegrationTest extends AbiCompilationModeTest 
     ZipInspector zipInspector =
         new ZipInspector(
             workspace.getPath(
-                BuildTargets.getGenPath(
+                BuildTargetPaths.getGenPath(
                     filesystem, BuildTargetFactory.newInstance(target), "%s.apk")));
     zipInspector.assertFileExists("assets/native.cxx.libasset/libs.xzs");
     zipInspector.assertFileExists("assets/native.cxx.libasset/libs.txt");
@@ -141,7 +141,7 @@ public class AndroidBinaryModularIntegrationTest extends AbiCompilationModeTest 
     ZipInspector zipInspector =
         new ZipInspector(
             workspace.getPath(
-                BuildTargets.getGenPath(
+                BuildTargetPaths.getGenPath(
                     filesystem, BuildTargetFactory.newInstance(target), "%s.apk")));
     zipInspector.assertFileExists("assets/native.cxx.libasset/libs.xzs");
     zipInspector.assertFileExists("assets/native.cxx.libasset/libs.txt");
@@ -165,7 +165,7 @@ public class AndroidBinaryModularIntegrationTest extends AbiCompilationModeTest 
     ZipInspector zipInspector =
         new ZipInspector(
             workspace.getPath(
-                BuildTargets.getGenPath(
+                BuildTargetPaths.getGenPath(
                     filesystem, BuildTargetFactory.newInstance(target), "%s.apk")));
     zipInspector.assertFileExists("assets/native.cxx.foo1/libs.xzs");
     zipInspector.assertFileExists("assets/native.cxx.foo1/libs.txt");
@@ -191,7 +191,7 @@ public class AndroidBinaryModularIntegrationTest extends AbiCompilationModeTest 
     ZipInspector zipInspector =
         new ZipInspector(
             workspace.getPath(
-                BuildTargets.getGenPath(
+                BuildTargetPaths.getGenPath(
                     filesystem, BuildTargetFactory.newInstance(target), "%s.apk")));
     zipInspector.assertFileExists("assets/native.cxx.foo1/libs.xzs");
     zipInspector.assertFileExists("assets/native.cxx.foo1/libs.txt");
@@ -217,7 +217,7 @@ public class AndroidBinaryModularIntegrationTest extends AbiCompilationModeTest 
     ZipInspector zipInspector =
         new ZipInspector(
             workspace.getPath(
-                BuildTargets.getGenPath(
+                BuildTargetPaths.getGenPath(
                     filesystem, BuildTargetFactory.newInstance(target), "%s.apk")));
     String module = "small_with_no_resource_deps";
     zipInspector.assertFileExists("assets/" + module + "/" + module + "2.dex");
@@ -236,7 +236,7 @@ public class AndroidBinaryModularIntegrationTest extends AbiCompilationModeTest 
     ZipInspector zipInspector =
         new ZipInspector(
             workspace.getPath(
-                BuildTargets.getGenPath(
+                BuildTargetPaths.getGenPath(
                     filesystem, BuildTargetFactory.newInstance(target), "%s.apk")));
     String module = "small_with_no_resource_deps";
     zipInspector.assertFileExists("assets/" + module + "/" + module + "2.dex");
@@ -250,7 +250,7 @@ public class AndroidBinaryModularIntegrationTest extends AbiCompilationModeTest 
     ZipInspector zipInspector =
         new ZipInspector(
             workspace.getPath(
-                BuildTargets.getGenPath(
+                BuildTargetPaths.getGenPath(
                     filesystem, BuildTargetFactory.newInstance(target), "%s.apk")));
     String module = "small_with_no_resource_deps";
     zipInspector.assertFileExists("assets/" + module + "/" + module + "2.dex");
@@ -263,7 +263,7 @@ public class AndroidBinaryModularIntegrationTest extends AbiCompilationModeTest 
     ZipInspector zipInspector =
         new ZipInspector(
             workspace.getPath(
-                BuildTargets.getGenPath(
+                BuildTargetPaths.getGenPath(
                     filesystem, BuildTargetFactory.newInstance(target), "%s.apk")));
     String module = "java.com.sample.small.small_with_no_resource_deps";
     zipInspector.assertFileExists("assets/" + module + "/" + module + "2.dex");
@@ -276,7 +276,7 @@ public class AndroidBinaryModularIntegrationTest extends AbiCompilationModeTest 
     ZipInspector zipInspector =
         new ZipInspector(
             workspace.getPath(
-                BuildTargets.getGenPath(
+                BuildTargetPaths.getGenPath(
                     filesystem, BuildTargetFactory.newInstance(target), "%s.apk")));
     String module = "java.com.sample.small.small_with_no_resource_deps";
     zipInspector.assertFileExists("assets/" + module + "/" + module + "2.dex");

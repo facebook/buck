@@ -19,10 +19,10 @@ package com.facebook.buck.jvm.java;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -60,7 +60,7 @@ public class CleanClasspathIntegrationTest {
         "example.jar should be written. This should not be on the classpath on the next build.",
         Files.isRegularFile(
             workspace.getPath(
-                BuildTargets.getGenPath(filesystem, target, "lib__%s__output/example.jar"))));
+                BuildTargetPaths.getGenPath(filesystem, target, "lib__%s__output/example.jar"))));
 
     // Overwrite the existing BUCK file, redefining the java_library rule to exclude Bar.java from
     // its srcs.

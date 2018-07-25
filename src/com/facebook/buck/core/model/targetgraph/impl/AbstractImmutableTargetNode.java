@@ -94,8 +94,8 @@ abstract class AbstractImmutableTargetNode<T> implements TargetNode<T> {
   public abstract ImmutableSortedSet<BuildTarget> getExtraDeps();
 
   /**
-   * BuildTargets which, when changed, may change the BuildRules produced by this TargetNode, but
-   * whose steps don't need executing in order to build this TargetNode's BuildRules.
+   * BuildTargetPaths which, when changed, may change the BuildRules produced by this TargetNode,
+   * but whose steps don't need executing in order to build this TargetNode's BuildRules.
    *
    * <p>A TargetNode may require metadata from other targets in order to be constructed, but may not
    * actually require those targets' build output. For example, some targets may execute queries

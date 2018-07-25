@@ -20,6 +20,7 @@ import com.facebook.buck.core.cell.resolver.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
@@ -42,7 +43,6 @@ import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.SourceList;
@@ -150,7 +150,8 @@ abstract class DDescriptionUtils {
         buildTarget,
         Linker.LinkType.EXECUTABLE,
         Optional.empty(),
-        BuildTargets.getGenPath(projectFilesystem, buildTarget, "%s/" + buildTarget.getShortName()),
+        BuildTargetPaths.getGenPath(
+            projectFilesystem, buildTarget, "%s/" + buildTarget.getShortName()),
         ImmutableList.of(),
         Linker.LinkableDepType.STATIC,
         CxxLinkOptions.of(),
@@ -193,7 +194,7 @@ abstract class DDescriptionUtils {
         "d_src",
         target,
         projectFilesystem,
-        BuildTargets.getGenPath(projectFilesystem, target, "%s"),
+        BuildTargetPaths.getGenPath(projectFilesystem, target, "%s"),
         MoreMaps.transformKeys(
             sources.toNameMap(target, pathResolver, "srcs"),
             MorePaths.toPathFn(projectFilesystem.getRootPath().getFileSystem())),
@@ -278,8 +279,8 @@ abstract class DDescriptionUtils {
   }
 
   /**
-   * Generates BuildTargets and BuildRules to compile D sources to object files, and returns a list
-   * of SourcePaths referring to the generated object files.
+   * Generates BuildTargetPaths and BuildRules to compile D sources to object files, and returns a
+   * list of SourcePaths referring to the generated object files.
    *
    * @param sources source files to compile
    * @param compilerFlags flags to pass to the compiler

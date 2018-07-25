@@ -20,6 +20,7 @@ import com.facebook.buck.core.cell.resolver.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
@@ -40,7 +41,6 @@ import com.facebook.buck.graph.DirectedAcyclicGraph;
 import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.graph.TopologicalSort;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
@@ -263,7 +263,7 @@ public class Omnibus {
                 graphBuilder,
                 ruleFinder,
                 dummyOmnibusTarget,
-                BuildTargets.getGenPath(projectFilesystem, dummyOmnibusTarget, "%s")
+                BuildTargetPaths.getGenPath(projectFilesystem, dummyOmnibusTarget, "%s")
                     .resolve(omnibusSoname),
                 ImmutableMap.of(),
                 Optional.of(omnibusSoname),
@@ -379,7 +379,7 @@ public class Omnibus {
                   ruleFinder,
                   rootTarget,
                   output.orElse(
-                      BuildTargets.getGenPath(projectFilesystem, rootTarget, "%s")
+                      BuildTargetPaths.getGenPath(projectFilesystem, rootTarget, "%s")
                           .resolve(
                               rootSoname.orElse(
                                   String.format(
@@ -406,7 +406,7 @@ public class Omnibus {
                   ruleFinder,
                   rootTarget,
                   output.orElse(
-                      BuildTargets.getGenPath(projectFilesystem, rootTarget, "%s")
+                      BuildTargetPaths.getGenPath(projectFilesystem, rootTarget, "%s")
                           .resolve(rootTarget.getShortName())),
                   ImmutableMap.of(),
                   argsBuilder.build(),
@@ -609,7 +609,7 @@ public class Omnibus {
                 graphBuilder,
                 ruleFinder,
                 omnibusTarget,
-                BuildTargets.getGenPath(projectFilesystem, omnibusTarget, "%s")
+                BuildTargetPaths.getGenPath(projectFilesystem, omnibusTarget, "%s")
                     .resolve(omnibusSoname),
                 ImmutableMap.of(),
                 Optional.of(omnibusSoname),

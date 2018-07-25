@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
@@ -31,7 +32,6 @@ import com.facebook.buck.jvm.java.JavaOptions;
 import com.facebook.buck.jvm.java.JavaTest;
 import com.facebook.buck.jvm.java.TestType;
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -147,14 +147,14 @@ public class RobolectricTest extends JavaTest {
   @VisibleForTesting
   static Path getResourceDirectoriesPath(
       ProjectFilesystem projectFilesystem, BuildTarget buildTarget) {
-    return BuildTargets.getGenPath(
+    return BuildTargetPaths.getGenPath(
         projectFilesystem, buildTarget, "%s/robolectric-resource-directories");
   }
 
   @VisibleForTesting
   static Path getAssetDirectoriesPath(
       ProjectFilesystem projectFilesystem, BuildTarget buildTarget) {
-    return BuildTargets.getGenPath(
+    return BuildTargetPaths.getGenPath(
         projectFilesystem, buildTarget, "%s/robolectric-asset-directories");
   }
 
