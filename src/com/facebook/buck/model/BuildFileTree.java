@@ -27,12 +27,9 @@ import java.util.Optional;
  *
  * <p>foo/BUCK is the parent of foo/bar/baz/BUCK and foo/bar/qux/BUCK.
  */
-public abstract class BuildFileTree {
-  /** No-arg constructor, provided so that subclasses can be constructed. */
-  protected BuildFileTree() {}
-
+public interface BuildFileTree {
   /** @return paths relative to BuildTarget that contain their own build files. E.g. */
-  public abstract Collection<Path> getChildPaths(BuildTarget target);
+  Collection<Path> getChildPaths(BuildTarget target);
 
   /**
    * Returns the base path for a given path. The base path is the nearest directory at or above
@@ -41,5 +38,5 @@ public abstract class BuildFileTree {
    * @param filePath the path whose base path to find.
    * @return the base path if there is one.
    */
-  public abstract Optional<Path> getBasePathOfAncestorTarget(Path filePath);
+  Optional<Path> getBasePathOfAncestorTarget(Path filePath);
 }

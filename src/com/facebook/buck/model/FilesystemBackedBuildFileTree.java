@@ -44,7 +44,7 @@ import java.util.Optional;
  *
  * <p>foo/BUCK is the parent of foo/bar/baz/BUCK and foo/bar/qux/BUCK.
  */
-public class FilesystemBackedBuildFileTree extends BuildFileTree {
+public class FilesystemBackedBuildFileTree implements BuildFileTree {
   private final ProjectFilesystem projectFilesystem;
   private final String buildFileName;
   private final LoadingCache<Path, Boolean> pathExistenceCache;

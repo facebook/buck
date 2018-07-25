@@ -41,7 +41,7 @@ import javax.annotation.Nullable;
  * A tree of build files that reflects their tree structure in the filesystem. This makes it
  * possible to see which build files are "under" other build files.
  */
-public class InMemoryBuildFileTree extends BuildFileTree {
+public class InMemoryBuildFileTree implements BuildFileTree {
 
   private static final Comparator<Path> PATH_COMPARATOR =
       (a, b) ->
