@@ -17,10 +17,10 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.model.BuildFileTree;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.util.Optionals;

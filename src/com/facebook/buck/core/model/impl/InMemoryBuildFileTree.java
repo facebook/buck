@@ -14,8 +14,9 @@
  * under the License.
  */
 
-package com.facebook.buck.model;
+package com.facebook.buck.core.model.impl;
 
+import com.facebook.buck.core.model.BuildFileTree;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.io.file.MorePaths;
 import com.google.common.annotations.VisibleForTesting;

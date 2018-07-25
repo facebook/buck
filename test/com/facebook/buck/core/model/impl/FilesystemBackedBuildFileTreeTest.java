@@ -14,14 +14,16 @@
  * under the License.
  */
 
-package com.facebook.buck.model;
+package com.facebook.buck.core.model.impl;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
+import com.facebook.buck.core.model.BuildFileTree;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
+import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.config.Config;
 import com.facebook.buck.util.config.ConfigBuilder;

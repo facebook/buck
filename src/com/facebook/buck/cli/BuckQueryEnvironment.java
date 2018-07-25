@@ -20,7 +20,9 @@ import static com.facebook.buck.util.concurrent.MoreFutures.propagateCauseIfInst
 
 import com.facebook.buck.cli.OwnersReport.Builder;
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.model.BuildFileTree;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.impl.FilesystemBackedBuildFileTree;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodes;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
@@ -34,8 +36,6 @@ import com.facebook.buck.graph.GraphTraversable;
 import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.model.BuildFileTree;
-import com.facebook.buck.model.FilesystemBackedBuildFileTree;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserMessages;
 import com.facebook.buck.parser.PerBuildState;

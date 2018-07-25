@@ -44,6 +44,7 @@ java_immutables_library(
         "//src/com/facebook/buck/core/description/arg:arg",
         "//src/com/facebook/buck/core/rulekey/calculator:calculator",
         "//src/com/facebook/buck/core/rules/config/impl:impl",
+        "//src/com/facebook/buck/core/model/impl:impl",
         "//src/com/facebook/buck/core/rules/knowntypes:knowntypes",
         "//src/com/facebook/buck/core/sourcepath/resolver/impl:impl",
         "//src/com/facebook/buck/core/build/engine/buildinfo:buildinfo",

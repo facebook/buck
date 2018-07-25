@@ -14,9 +14,8 @@
  * under the License.
  */
 
-package com.facebook.buck.model;
+package com.facebook.buck.core.model;
 
-import com.facebook.buck.core.model.BuildTarget;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Optional;
