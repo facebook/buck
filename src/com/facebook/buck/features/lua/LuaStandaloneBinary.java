@@ -109,7 +109,7 @@ public class LuaStandaloneBinary extends AbstractBuildRuleWithDeclaredAndExtraDe
     SourcePathResolver resolver = context.getSourcePathResolver();
 
     steps.add(
-        new ShellStep(Optional.of(getBuildTarget()), getProjectFilesystem().getRootPath()) {
+        new ShellStep(getProjectFilesystem().getRootPath()) {
 
           @Override
           protected Optional<String> getStdin(ExecutionContext context) {

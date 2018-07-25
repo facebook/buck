@@ -16,7 +16,6 @@
 
 package com.facebook.buck.features.go;
 
-import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.features.go.GoListStep.FileType;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -34,31 +33,27 @@ public class FilteredSourceFiles implements Iterable<Path> {
   private final ImmutableMap<Path, GoListStep> filterSteps;
 
   public FilteredSourceFiles(
-      List<Path> rawSrcFiles,
-      BuildTarget buildTarget,
-      GoPlatform platform,
-      List<FileType> fileTypes) {
-    this(rawSrcFiles, ImmutableList.of(), buildTarget, platform, fileTypes);
+      List<Path> rawSrcFiles, GoPlatform platform, List<FileType> fileTypes) {
+    this(rawSrcFiles, ImmutableList.of(), platform, fileTypes);
   }
 
   public FilteredSourceFiles(
       List<Path> rawSrcFiles,
       List<Path> extraSrcFiles,
-      BuildTarget buildTarget,
       GoPlatform platform,
       List<FileType> fileTypes) {
     this.rawSrcFiles = ImmutableList.copyOf(rawSrcFiles);
     this.extraSrcFiles = ImmutableList.copyOf(extraSrcFiles);
-    filterSteps = createFilterSteps(buildTarget, platform, fileTypes);
+    filterSteps = createFilterSteps(platform, fileTypes);
   }
 
   private ImmutableMap<Path, GoListStep> createFilterSteps(
-      BuildTarget buildTarget, GoPlatform platform, List<FileType> fileTypes) {
+      GoPlatform platform, List<FileType> fileTypes) {
     HashMap<Path, GoListStep> filterSteps = new HashMap<>();
     for (Path srcFile : rawSrcFiles) {
       Path absPath = srcFile.getParent();
       if (!filterSteps.containsKey(absPath)) {
-        filterSteps.put(absPath, new GoListStep(buildTarget, absPath, platform, fileTypes));
+        filterSteps.put(absPath, new GoListStep(absPath, platform, fileTypes));
       }
     }
     return ImmutableMap.copyOf(filterSteps);

@@ -226,7 +226,7 @@ public class RustCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
                 getBuildTarget().getCellPath(),
                 resolver))
         .add(
-            new ShellStep(Optional.of(getBuildTarget()), getProjectFilesystem().getRootPath()) {
+            new ShellStep(getProjectFilesystem().getRootPath()) {
 
               @Override
               protected ImmutableList<String> getShellCommandInternal(
@@ -285,7 +285,7 @@ public class RustCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
                 env.putAll(compiler.getEnvironment(buildContext.getSourcePathResolver()));
 
                 Path root = getProjectFilesystem().getRootPath();
-                Path basePath = getBuildTarget().get().getBasePath();
+                Path basePath = getBuildTarget().getBasePath();
 
                 // These need to be set as absolute paths - the intended use
                 // is within an `include!(concat!(env!("..."), "...")`

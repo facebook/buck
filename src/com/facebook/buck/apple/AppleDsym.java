@@ -143,7 +143,6 @@ public class AppleDsym extends AbstractBuildRule
                     context.getBuildCellRootPath(), getProjectFilesystem(), dsymOutputPath))
             .withRecursive(true),
         new DsymStep(
-            getBuildTarget(),
             getProjectFilesystem(),
             dsymutil.getEnvironment(context.getSourcePathResolver()),
             dsymutil.getCommandPrefix(context.getSourcePathResolver()),

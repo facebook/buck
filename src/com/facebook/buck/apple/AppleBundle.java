@@ -1011,7 +1011,6 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
           BuildTargets.getScratchPath(getProjectFilesystem(), getBuildTarget(), "%s.storyboardc");
       stepsBuilder.add(
           new IbtoolStep(
-              getBuildTarget(),
               getProjectFilesystem(),
               ibtool.getEnvironment(resolver),
               ibtool.getCommandPrefix(resolver),
@@ -1022,7 +1021,6 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
       stepsBuilder.add(
           new IbtoolStep(
-              getBuildTarget(),
               getProjectFilesystem(),
               ibtool.getEnvironment(resolver),
               ibtool.getCommandPrefix(resolver),
@@ -1040,7 +1038,6 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
       Path compiledStoryboardPath = destinationPath.getParent().resolve(compiledStoryboardFilename);
       stepsBuilder.add(
           new IbtoolStep(
-              getBuildTarget(),
               getProjectFilesystem(),
               ibtool.getEnvironment(resolver),
               ibtool.getCommandPrefix(resolver),
@@ -1082,7 +1079,6 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
         LOG.debug("Compiling XIB %s to NIB %s", sourcePath, destinationPath);
         stepsBuilder.add(
             new IbtoolStep(
-                getBuildTarget(),
                 getProjectFilesystem(),
                 ibtool.getEnvironment(resolver),
                 ibtool.getCommandPrefix(resolver),

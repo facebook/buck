@@ -90,7 +90,6 @@ public class DCompileBuildRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
     steps.add(
         new DCompileStep(
-            getBuildTarget(),
             getProjectFilesystem().getRootPath(),
             compiler.getEnvironment(context.getSourcePathResolver()),
             compiler.getCommandPrefix(context.getSourcePathResolver()),

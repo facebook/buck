@@ -16,7 +16,6 @@
 
 package com.facebook.buck.features.go;
 
-import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.google.common.collect.ImmutableList;
@@ -24,7 +23,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Streams;
 import java.nio.file.Path;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -38,7 +36,6 @@ public class GoTestMainStep extends ShellStep {
   private final Path output;
 
   public GoTestMainStep(
-      BuildTarget buildTarget,
       Path workingDirectory,
       ImmutableMap<String, String> environment,
       ImmutableList<String> generatorCommandPrefix,
@@ -47,7 +44,7 @@ public class GoTestMainStep extends ShellStep {
       Path packageName,
       Iterable<Path> testFiles,
       Path output) {
-    super(Optional.of(buildTarget), workingDirectory);
+    super(workingDirectory);
     this.environment = environment;
     this.generatorCommandPrefix = generatorCommandPrefix;
     this.coverageMode = coverageMode;

@@ -16,7 +16,6 @@
 
 package com.facebook.buck.features.dotnet;
 
-import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
@@ -29,7 +28,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Optional;
 
 public class CsharpLibraryCompile extends ShellStep {
   private static final Path CSC = Paths.get("csc");
@@ -40,13 +38,12 @@ public class CsharpLibraryCompile extends ShellStep {
   private final ImmutableListMultimap<Path, String> resources;
 
   public CsharpLibraryCompile(
-      BuildTarget buildTarget,
       Path output,
       ImmutableSortedSet<Path> srcs,
       ImmutableList<Either<Path, String>> references,
       ImmutableListMultimap<Path, String> resources,
       FrameworkVersion version) {
-    super(Optional.of(buildTarget), output.getParent());
+    super(output.getParent());
     this.references = references;
     this.resources = resources;
     this.version = version;

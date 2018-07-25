@@ -77,7 +77,6 @@ public class HalideCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 
     commands.add(
         new HalideCompilerStep(
-            getBuildTarget(),
             projectFilesystem.getRootPath(),
             halideCompiler.getEnvironment(context.getSourcePathResolver()),
             halideCompiler.getCommandPrefix(context.getSourcePathResolver()),

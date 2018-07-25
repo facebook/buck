@@ -26,7 +26,6 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.features.python.toolchain.PythonVersion;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
-import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -77,7 +76,6 @@ public class PexStepTest {
   public void testCommandLine() {
     PexStep step =
         new PexStep(
-            BuildTargetFactory.newInstance("//dummy:target"),
             new FakeProjectFilesystem(),
             PEX_ENVIRONMENT,
             PEX_COMMAND,
@@ -106,7 +104,6 @@ public class PexStepTest {
   public void testCommandLineNoZipSafe() {
     PexStep step =
         new PexStep(
-            BuildTargetFactory.newInstance("//dummy:target"),
             new FakeProjectFilesystem(),
             PEX_ENVIRONMENT,
             PEX_COMMAND,
@@ -148,7 +145,6 @@ public class PexStepTest {
 
     PexStep step =
         new PexStep(
-            BuildTargetFactory.newInstance("//dummy:target"),
             TestProjectFilesystems.createProjectFilesystem(tmpDir.getRoot()),
             PEX_ENVIRONMENT,
             PEX_COMMAND,
@@ -194,7 +190,6 @@ public class PexStepTest {
   public void testArgs() {
     PexStep step =
         new PexStep(
-            BuildTargetFactory.newInstance("//dummy:target"),
             new FakeProjectFilesystem(),
             PEX_ENVIRONMENT,
             ImmutableList.<String>builder().add("build").add("--some", "--args").build(),

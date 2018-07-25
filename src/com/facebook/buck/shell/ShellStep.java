@@ -16,7 +16,6 @@
 
 package com.facebook.buck.shell;
 
-import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.step.ExecutionContext;
@@ -46,15 +45,11 @@ import java.util.function.Function;
 import javax.annotation.Nullable;
 
 public abstract class ShellStep implements Step {
-
   private static final Logger LOG = Logger.get(ShellStep.class);
   private static final OperatingSystemMXBean OS_JMX = ManagementFactory.getOperatingSystemMXBean();
 
   /** Defined lazily by {@link #getShellCommand(com.facebook.buck.step.ExecutionContext)}. */
   @Nullable private ImmutableList<String> shellCommandArgs;
-
-  /** Target using this shell step. */
-  Optional<BuildTarget> buildTarget;
 
   /**
    * If specified, working directory will be different from build cell root. This should be relative
@@ -77,8 +72,7 @@ public abstract class ShellStep implements Step {
   private long startTime = 0L;
   private long endTime = 0L;
 
-  protected ShellStep(Optional<BuildTarget> buildTarget, Path workingDirectory) {
-    this.buildTarget = buildTarget;
+  protected ShellStep(Path workingDirectory) {
     this.workingDirectory = Preconditions.checkNotNull(workingDirectory);
     this.stdout = Optional.empty();
     this.stderr = Optional.empty();
@@ -317,9 +311,5 @@ public abstract class ShellStep implements Step {
   @SuppressWarnings("unused")
   protected Optional<Consumer<Process>> getTimeoutHandler(ExecutionContext context) {
     return Optional.empty();
-  }
-
-  public Optional<BuildTarget> getBuildTarget() {
-    return buildTarget;
   }
 }

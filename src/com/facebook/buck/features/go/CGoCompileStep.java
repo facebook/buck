@@ -22,10 +22,10 @@ import com.facebook.buck.step.ExecutionContext;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
-import java.util.Optional;
 
 public class CGoCompileStep extends ShellStep {
 
+  private final BuildTarget buildTarget;
   private final ImmutableMap<String, String> environment;
   private final ImmutableList<String> cgoCommandPrefix;
   private final ImmutableList<String> cgoCompilerFlags;
@@ -42,7 +42,8 @@ public class CGoCompileStep extends ShellStep {
       ImmutableList<Path> srcs,
       GoPlatform platform,
       Path outputDir) {
-    super(Optional.of(buildTarget), workingDirectory);
+    super(workingDirectory);
+    this.buildTarget = buildTarget;
     this.environment = environment;
     this.cgoCommandPrefix = cgoCommandPrefix;
     this.cgoCompilerFlags = cgoCompilerFlags;
@@ -60,7 +61,7 @@ public class CGoCompileStep extends ShellStep {
         .add("-objdir", outputDir.toString())
         .addAll(cgoCompilerFlags)
         .add("--")
-        .add("-I" + getBuildTarget().get().getBasePath().toString())
+        .add("-I" + buildTarget.getBasePath().toString())
         .addAll(srcs.stream().map(Object::toString).iterator())
         .build();
   }

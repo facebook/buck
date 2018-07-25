@@ -17,7 +17,6 @@
 package com.facebook.buck.shell;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.shell.programrunner.DirectProgramRunner;
 import com.facebook.buck.shell.programrunner.ProgramRunner;
@@ -26,7 +25,6 @@ import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -59,23 +57,18 @@ public abstract class AbstractGenruleStep extends ShellStep {
 
   public AbstractGenruleStep(
       ProjectFilesystem projectFilesystem,
-      BuildTarget buildTarget,
       CommandString commandString,
       Path workingDirectory,
       ProgramRunner programRunner) {
-    super(Optional.of(buildTarget), workingDirectory);
+    super(workingDirectory);
     this.projectFilesystem = projectFilesystem;
     this.commandString = commandString;
     this.programRunner = programRunner;
   }
 
   public AbstractGenruleStep(
-      ProjectFilesystem projectFilesystem,
-      BuildTarget buildTarget,
-      CommandString commandString,
-      Path workingDirectory) {
-    this(
-        projectFilesystem, buildTarget, commandString, workingDirectory, new DirectProgramRunner());
+      ProjectFilesystem projectFilesystem, CommandString commandString, Path workingDirectory) {
+    this(projectFilesystem, commandString, workingDirectory, new DirectProgramRunner());
   }
 
   @Override
@@ -170,8 +163,7 @@ public abstract class AbstractGenruleStep extends ShellStep {
   }
 
   private ExecutionArgsAndCommand getExecutionArgsAndCommand(Platform platform) {
-    Preconditions.checkArgument(getBuildTarget().isPresent(), "buildTarget must not be empty");
-    return commandString.getCommandAndExecutionArgs(platform, getBuildTarget().get());
+    return commandString.getCommandAndExecutionArgs(platform);
   }
 
   protected abstract void addEnvironmentVariables(
@@ -224,8 +216,7 @@ public abstract class AbstractGenruleStep extends ShellStep {
       this.cmdExe = cmdExe;
     }
 
-    public ExecutionArgsAndCommand getCommandAndExecutionArgs(
-        Platform platform, BuildTarget buildTarget) {
+    private ExecutionArgsAndCommand getCommandAndExecutionArgs(Platform platform) {
       // The priority sequence is
       //   "cmd.exe /c winCommand" (Windows Only)
       //   "/bin/bash -e -c shCommand" (Non-windows Only)
@@ -237,9 +228,7 @@ public abstract class AbstractGenruleStep extends ShellStep {
         } else if (!cmd.orElse("").isEmpty()) {
           command = cmd.get();
         } else {
-          throw new HumanReadableException(
-              "You must specify either cmd_exe or cmd for genrule %s.",
-              buildTarget.getFullyQualifiedName());
+          throw new HumanReadableException("You must specify either cmd_exe or cmd for genrule.");
         }
         return new ExecutionArgsAndCommand(ShellType.CMD_EXE, command);
       } else {
@@ -248,9 +237,7 @@ public abstract class AbstractGenruleStep extends ShellStep {
         } else if (!cmd.orElse("").isEmpty()) {
           command = cmd.get();
         } else {
-          throw new HumanReadableException(
-              "You must specify either bash or cmd for genrule %s.",
-              buildTarget.getFullyQualifiedName());
+          throw new HumanReadableException("You must specify either bash or cmd for genrule.");
         }
         return new ExecutionArgsAndCommand(ShellType.BASH, command);
       }

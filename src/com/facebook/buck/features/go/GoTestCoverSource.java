@@ -117,7 +117,6 @@ public class GoTestCoverSource extends AbstractBuildRule {
     for (Map.Entry<SourcePath, SourcePath> entry : coveredSources.entrySet()) {
       steps.add(
           new GoTestCoverStep(
-              getBuildTarget(),
               getProjectFilesystem().getRootPath(),
               context.getSourcePathResolver().getAbsolutePath(entry.getKey()),
               genDir.resolve(context.getSourcePathResolver().getAbsolutePath(entry.getValue())),

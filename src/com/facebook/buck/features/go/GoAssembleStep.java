@@ -16,14 +16,12 @@
 
 package com.facebook.buck.features.go;
 
-import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Optional;
 
 public class GoAssembleStep extends ShellStep {
 
@@ -36,7 +34,6 @@ public class GoAssembleStep extends ShellStep {
   private final Path output;
 
   public GoAssembleStep(
-      BuildTarget buildTarget,
       Path workingDirectory,
       ImmutableMap<String, String> environment,
       ImmutableList<String> asmCommandPrefix,
@@ -45,7 +42,7 @@ public class GoAssembleStep extends ShellStep {
       ImmutableList<Path> includeDirectories,
       GoPlatform platform,
       Path output) {
-    super(Optional.of(buildTarget), workingDirectory);
+    super(workingDirectory);
     this.environment = environment;
     this.asmCommandPrefix = asmCommandPrefix;
     this.flags = flags;

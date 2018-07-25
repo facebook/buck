@@ -16,14 +16,12 @@
 
 package com.facebook.buck.features.go;
 
-import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.Escaper;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class GoLinkStep extends ShellStep {
@@ -54,7 +52,6 @@ public class GoLinkStep extends ShellStep {
   private final Path output;
 
   public GoLinkStep(
-      BuildTarget buildTarget,
       Path workingDirectory,
       ImmutableMap<String, String> environment,
       ImmutableList<String> cxxLinkCommandPrefix,
@@ -65,7 +62,7 @@ public class GoLinkStep extends ShellStep {
       Path mainArchive,
       LinkMode linkMode,
       Path output) {
-    super(Optional.of(buildTarget), workingDirectory);
+    super(workingDirectory);
     this.environment = environment;
     this.cxxLinkCommandPrefix = cxxLinkCommandPrefix;
     this.linkCommandPrefix = linkCommandPrefix;

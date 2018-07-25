@@ -256,7 +256,6 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
             .build();
 
     return new InstrumentationStep(
-        getBuildTarget(),
         getProjectFilesystem(),
         javaRuntimeLauncher.getCommandPrefix(pathResolver),
         jvmArgs,

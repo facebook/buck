@@ -690,18 +690,14 @@ public class GenruleTest {
       genrule.createGenruleStep(buildContext).getShellCommand(linuxExecutionContext);
     } catch (HumanReadableException e) {
       assertEquals(
-          String.format(
-              "You must specify either bash or cmd for genrule %s.", genrule.getBuildTarget()),
-          e.getHumanReadableErrorMessage());
+          "You must specify either bash or cmd for genrule.", e.getHumanReadableErrorMessage());
     }
 
     try {
       genrule.createGenruleStep(buildContext).getShellCommand(windowsExecutionContext);
     } catch (HumanReadableException e) {
       assertEquals(
-          String.format(
-              "You must specify either cmd_exe or cmd for genrule %s.", genrule.getBuildTarget()),
-          e.getHumanReadableErrorMessage());
+          "You must specify either cmd_exe or cmd for genrule.", e.getHumanReadableErrorMessage());
     }
   }
 

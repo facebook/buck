@@ -260,7 +260,6 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
             .build();
 
     return new JUnitStep(
-        getBuildTarget(),
         getProjectFilesystem(),
         nativeLibsEnvironment,
         testRuleTimeoutMs,

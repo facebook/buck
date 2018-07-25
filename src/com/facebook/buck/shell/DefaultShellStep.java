@@ -16,14 +16,12 @@
 
 package com.facebook.buck.shell;
 
-import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.step.ExecutionContext;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 public class DefaultShellStep extends ShellStep {
 
@@ -31,17 +29,14 @@ public class DefaultShellStep extends ShellStep {
   private ImmutableList<String> args;
 
   public DefaultShellStep(
-      BuildTarget buildTarget,
-      Path workingDirectory,
-      List<String> args,
-      Map<String, String> environment) {
-    super(Optional.of(buildTarget), workingDirectory);
+      Path workingDirectory, List<String> args, Map<String, String> environment) {
+    super(workingDirectory);
     this.args = ImmutableList.copyOf(args);
     this.environment = ImmutableMap.copyOf(environment);
   }
 
-  public DefaultShellStep(BuildTarget buildTarget, Path workingDirectory, List<String> args) {
-    this(buildTarget, workingDirectory, args, ImmutableMap.of());
+  public DefaultShellStep(Path workingDirectory, List<String> args) {
+    this(workingDirectory, args, ImmutableMap.of());
   }
 
   @Override

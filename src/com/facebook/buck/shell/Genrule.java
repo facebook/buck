@@ -310,7 +310,6 @@ public class Genrule extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
     return new AbstractGenruleStep(
         getProjectFilesystem(),
-        getBuildTarget(),
         new CommandString(
             Arg.flattenToSpaceSeparatedString(cmd, sourcePathResolver),
             Arg.flattenToSpaceSeparatedString(bash, sourcePathResolver),

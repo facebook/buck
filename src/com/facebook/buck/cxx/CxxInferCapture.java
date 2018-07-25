@@ -146,10 +146,7 @@ class CxxInferCapture extends AbstractBuildRule implements SupportsDependencyFil
         .add(new WriteArgFileStep(context.getSourcePathResolver(), inputRelativePath))
         .add(
             new DefaultShellStep(
-                getBuildTarget(),
-                getProjectFilesystem().getRootPath(),
-                frontendCommand,
-                ImmutableMap.of()))
+                getProjectFilesystem().getRootPath(), frontendCommand, ImmutableMap.of()))
         .build();
   }
 

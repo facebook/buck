@@ -96,7 +96,6 @@ public class CsharpLibrary extends AbstractBuildRuleWithDeclaredAndExtraDeps {
                 context.getBuildCellRootPath(), getProjectFilesystem(), output.getParent())));
     steps.add(
         new CsharpLibraryCompile(
-            getBuildTarget(),
             filesystem.resolve(output),
             sourceFiles,
             references,

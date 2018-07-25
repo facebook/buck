@@ -16,13 +16,11 @@
 
 package com.facebook.buck.features.go;
 
-import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
-import java.util.Optional;
 
 public class GoTestCoverStep extends ShellStep {
 
@@ -50,14 +48,13 @@ public class GoTestCoverStep extends ShellStep {
   private final Path targetFile;
 
   public GoTestCoverStep(
-      BuildTarget buildTarget,
       Path workingDirectory,
       Path sourceFile,
       Path targetFile,
       ImmutableMap<String, String> environment,
       ImmutableList<String> generatorCommandPrefix,
       Mode coverageMode) {
-    super(Optional.of(buildTarget), workingDirectory);
+    super(workingDirectory);
     this.environment = environment;
     this.generatorCommandPrefix = generatorCommandPrefix;
     this.coverageMode = coverageMode;

@@ -174,7 +174,6 @@ public class GoBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps implemen
 
     steps.add(
         new GoLinkStep(
-            getBuildTarget(),
             getProjectFilesystem().getRootPath(),
             environment.build(),
             cxxLinkerCommand,

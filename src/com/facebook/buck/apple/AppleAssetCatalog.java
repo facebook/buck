@@ -138,7 +138,6 @@ public class AppleAssetCatalog extends AbstractBuildRule {
         context.getSourcePathResolver().getAllAbsolutePaths(assetCatalogDirs);
     stepsBuilder.add(
         new ActoolStep(
-            getBuildTarget(),
             getProjectFilesystem().getRootPath(),
             applePlatformName,
             targetSDKVersion,

@@ -16,7 +16,6 @@
 
 package com.facebook.buck.features.ocaml;
 
-import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
@@ -96,9 +95,8 @@ public class OcamlMLCompileStep extends ShellStep {
   private final Args args;
   private final SourcePathResolver resolver;
 
-  public OcamlMLCompileStep(
-      BuildTarget buildTarget, Path workingDirectory, SourcePathResolver resolver, Args args) {
-    super(Optional.of(buildTarget), workingDirectory);
+  public OcamlMLCompileStep(Path workingDirectory, SourcePathResolver resolver, Args args) {
+    super(workingDirectory);
     this.resolver = resolver;
     this.args = args;
   }

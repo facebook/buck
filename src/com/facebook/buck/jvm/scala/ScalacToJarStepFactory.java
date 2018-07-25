@@ -101,7 +101,6 @@ public class ScalacToJarStepFactory extends CompileToJarStepFactory implements A
     if (sourceFilePaths.stream().anyMatch(SCALA_PATH_MATCHER::matches)) {
       steps.add(
           new ScalacStep(
-              invokingRule,
               scalac,
               ImmutableList.<String>builder()
                   .addAll(configCompilerFlags)

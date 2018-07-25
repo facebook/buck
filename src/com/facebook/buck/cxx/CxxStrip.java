@@ -134,7 +134,6 @@ public class CxxStrip extends AbstractBuildRule implements SupportsInputBasedRul
             context.getSourcePathResolver().getAbsolutePath(unstrippedBinary),
             output),
         new StripSymbolsStep(
-            getBuildTarget(),
             output,
             strip.getCommandPrefix(context.getSourcePathResolver()),
             strip.getEnvironment(context.getSourcePathResolver()),

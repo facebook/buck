@@ -312,7 +312,6 @@ public class PreDexMerge extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     Path primaryDexPath = getPrimaryDexPath();
     steps.add(
         new SmartDexingStep(
-            getBuildTarget(),
             androidPlatformTarget,
             context,
             getProjectFilesystem(),
@@ -430,7 +429,6 @@ public class PreDexMerge extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     // This will combine the pre-dexed files and the R.class files into a single classes.dex file.
     steps.add(
         new DxStep(
-            getBuildTarget(),
             getProjectFilesystem(),
             androidPlatformTarget,
             primaryDexPath,

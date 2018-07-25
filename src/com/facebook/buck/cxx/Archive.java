@@ -227,7 +227,6 @@ public class Archive extends AbstractBuildRule implements SupportsInputBasedRule
     if (archiver.isRanLibStepRequired()) {
       builder.add(
           new RanlibStep(
-              getBuildTarget(),
               getProjectFilesystem(),
               ranlib.get().getEnvironment(resolver),
               ranlib.get().getCommandPrefix(resolver),

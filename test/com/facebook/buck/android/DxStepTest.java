@@ -23,7 +23,6 @@ import com.facebook.buck.android.DxStep.Option;
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.cli.VerbosityParser;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -84,7 +83,6 @@ public class DxStepTest {
 
       DxStep dx =
           new DxStep(
-              BuildTargetFactory.newInstance("//dummy:target"),
               filesystem,
               androidPlatformTarget,
               SAMPLE_OUTPUT_PATH,
@@ -113,12 +111,7 @@ public class DxStepTest {
       ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
 
       DxStep dx =
-          new DxStep(
-              BuildTargetFactory.newInstance("//dummy:target"),
-              filesystem,
-              androidPlatformTarget,
-              SAMPLE_OUTPUT_PATH,
-              SAMPLE_FILES_TO_DEX);
+          new DxStep(filesystem, androidPlatformTarget, SAMPLE_OUTPUT_PATH, SAMPLE_FILES_TO_DEX);
 
       String expected =
           String.format(
@@ -142,7 +135,6 @@ public class DxStepTest {
 
       DxStep dx =
           new DxStep(
-              BuildTargetFactory.newInstance("//dummy:target"),
               filesystem,
               androidPlatformTarget,
               SAMPLE_OUTPUT_PATH,
@@ -171,12 +163,7 @@ public class DxStepTest {
       ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
 
       DxStep dx =
-          new DxStep(
-              BuildTargetFactory.newInstance("//dummy:target"),
-              filesystem,
-              androidPlatformTarget,
-              SAMPLE_OUTPUT_PATH,
-              SAMPLE_FILES_TO_DEX);
+          new DxStep(filesystem, androidPlatformTarget, SAMPLE_OUTPUT_PATH, SAMPLE_FILES_TO_DEX);
 
       String expected =
           String.format(
@@ -204,12 +191,7 @@ public class DxStepTest {
       ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
 
       DxStep dx =
-          new DxStep(
-              BuildTargetFactory.newInstance("//dummy:target"),
-              filesystem,
-              androidPlatformTarget,
-              SAMPLE_OUTPUT_PATH,
-              SAMPLE_FILES_TO_DEX);
+          new DxStep(filesystem, androidPlatformTarget, SAMPLE_OUTPUT_PATH, SAMPLE_FILES_TO_DEX);
 
       String expected =
           String.format(
@@ -239,7 +221,6 @@ public class DxStepTest {
 
       DxStep dx =
           new DxStep(
-              BuildTargetFactory.newInstance("//dummy:target"),
               filesystem,
               androidPlatformTarget,
               SAMPLE_OUTPUT_PATH,

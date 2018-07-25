@@ -15,7 +15,6 @@
  */
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.shell.DefaultShellStep;
 import com.facebook.buck.step.ExecutionContext;
@@ -27,7 +26,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 
 class StripSymbolsStep implements Step {
-  private final BuildTarget target;
+
   private final Path input;
   private final ImmutableList<String> stripCommandPrefix;
   private final ImmutableMap<String, String> stripEnvironment;
@@ -35,13 +34,11 @@ class StripSymbolsStep implements Step {
   private final ProjectFilesystem projectFilesystem;
 
   public StripSymbolsStep(
-      BuildTarget target,
       Path input,
       ImmutableList<String> stripCommandPrefix,
       ImmutableMap<String, String> stripEnvironment,
       ImmutableList<String> stripToolArgs,
       ProjectFilesystem projectFilesystem) {
-    this.target = target;
     this.input = input;
     this.stripCommandPrefix = stripCommandPrefix;
     this.stripEnvironment = stripEnvironment;
@@ -53,7 +50,6 @@ class StripSymbolsStep implements Step {
   public StepExecutionResult execute(ExecutionContext context)
       throws IOException, InterruptedException {
     return (new DefaultShellStep(
-            target,
             projectFilesystem.getRootPath(),
             ImmutableList.<String>builder()
                 .addAll(stripCommandPrefix)

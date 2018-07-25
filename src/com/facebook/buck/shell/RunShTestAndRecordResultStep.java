@@ -17,7 +17,6 @@
 package com.facebook.buck.shell;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -37,8 +36,6 @@ import java.util.Optional;
 import java.util.function.Consumer;
 
 public class RunShTestAndRecordResultStep implements Step {
-
-  private final BuildTarget buildTarget;
   private final ProjectFilesystem filesystem;
   private final ImmutableList<String> command;
   private final ImmutableMap<String, String> env;
@@ -47,14 +44,12 @@ public class RunShTestAndRecordResultStep implements Step {
   private final String testCaseName;
 
   public RunShTestAndRecordResultStep(
-      BuildTarget buildTarget,
       ProjectFilesystem filesystem,
       ImmutableList<String> command,
       ImmutableMap<String, String> env,
       Optional<Long> testRuleTimeoutMs,
       String testCaseName,
       Path pathToTestResultFile) {
-    this.buildTarget = buildTarget;
     this.filesystem = filesystem;
     this.command = command;
     this.env = env;
@@ -91,7 +86,7 @@ public class RunShTestAndRecordResultStep implements Step {
               /* stderr */ null);
     } else {
       ShellStep test =
-          new ShellStep(Optional.of(buildTarget), filesystem.getRootPath()) {
+          new ShellStep(filesystem.getRootPath()) {
             boolean timedOut = false;
 
             @Override

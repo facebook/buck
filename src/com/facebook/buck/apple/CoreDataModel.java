@@ -40,7 +40,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Optional;
 
 public class CoreDataModel extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 
@@ -90,7 +89,7 @@ public class CoreDataModel extends AbstractBuildRuleWithDeclaredAndExtraDeps {
                 context.getBuildCellRootPath(), getProjectFilesystem(), outputDir)));
     for (SourcePath dataModelPath : dataModelPaths) {
       stepsBuilder.add(
-          new ShellStep(Optional.of(getBuildTarget()), getProjectFilesystem().getRootPath()) {
+          new ShellStep(getProjectFilesystem().getRootPath()) {
             @Override
             protected ImmutableList<String> getShellCommandInternal(
                 ExecutionContext executionContext) {

@@ -289,7 +289,7 @@ public class ResourcesFilter extends AbstractBuildRule
     commandLineBuilder.add(Escaper.escapeAsBashString(getFilterResourcesDataPath()));
     commandLineBuilder.add(Escaper.escapeAsBashString(getRDotJsonPath()));
     String commandLine = Joiner.on(' ').join(commandLineBuilder.build());
-    steps.add(new BashStep(getBuildTarget(), getProjectFilesystem().getRootPath(), commandLine));
+    steps.add(new BashStep(getProjectFilesystem().getRootPath(), commandLine));
   }
 
   private Path getFilterResourcesDataPath() {
@@ -339,7 +339,6 @@ public class ResourcesFilter extends AbstractBuildRule
       ImmutableBiMap<Path, Path> resSourceToDestDirMap) {
     FilterResourcesSteps.Builder filterResourcesStepBuilder =
         FilterResourcesSteps.builder()
-            .setTarget(getBuildTarget())
             .setProjectFilesystem(getProjectFilesystem())
             .setInResToOutResDirMap(resSourceToDestDirMap)
             .setResourceFilter(resourceFilter);

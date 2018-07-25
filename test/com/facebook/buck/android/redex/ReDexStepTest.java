@@ -24,7 +24,6 @@ import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
-import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.step.ExecutionContext;
@@ -67,7 +66,6 @@ public class ReDexStepTest {
 
     ReDexStep redex =
         new ReDexStep(
-            BuildTargetFactory.newInstance("//dummy:target"),
             workingDirectory,
             AndroidSdkLocation.of(sdkDirectory),
             redexBinaryArgs,

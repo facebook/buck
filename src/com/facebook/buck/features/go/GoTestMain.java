@@ -91,13 +91,11 @@ public class GoTestMain extends AbstractBuildRuleWithDeclaredAndExtraDeps {
         new FilteredSourceFiles(
             GoCompile.getSourceFiles(testSources, context),
             ImmutableList.of(),
-            getBuildTarget(),
             platform,
             ImmutableList.of(FileType.GoFiles, FileType.TestGoFiles, FileType.XTestGoFiles));
     steps.addAll(filteredSrcs.getFilterSteps());
     steps.add(
         new GoTestMainStep(
-            getBuildTarget(),
             getProjectFilesystem().getRootPath(),
             testMainGen.getEnvironment(context.getSourcePathResolver()),
             testMainGen.getCommandPrefix(context.getSourcePathResolver()),

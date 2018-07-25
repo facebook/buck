@@ -45,7 +45,6 @@ import java.nio.file.FileVisitResult;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.Optional;
 
 /** This provides a way for android_binary rules to generate proguard config based on the */
 public class NativeLibraryProguardGenerator extends AbstractBuildRuleWithDeclaredAndExtraDeps {
@@ -90,15 +89,15 @@ public class NativeLibraryProguardGenerator extends AbstractBuildRuleWithDeclare
             MakeCleanDirectoryStep.of(
                 BuildCellRelativePath.fromCellRelativePath(
                     context.getBuildCellRootPath(), getProjectFilesystem(), outputDir)))
-        .add(new RunConfigGenStep(getBuildTarget(), context.getSourcePathResolver()))
+        .add(new RunConfigGenStep(context.getSourcePathResolver()))
         .build();
   }
 
   private class RunConfigGenStep extends ShellStep {
     private final SourcePathResolver pathResolver;
 
-    RunConfigGenStep(BuildTarget buildTarget, SourcePathResolver sourcePathResolver) {
-      super(Optional.of(buildTarget), getProjectFilesystem().getRootPath());
+    RunConfigGenStep(SourcePathResolver sourcePathResolver) {
+      super(getProjectFilesystem().getRootPath());
       this.pathResolver = sourcePathResolver;
     }
 

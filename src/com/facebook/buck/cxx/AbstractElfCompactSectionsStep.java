@@ -108,7 +108,6 @@ abstract class AbstractElfCompactSectionsStep implements Step {
     ImmutableMap<String, Long> addresses = getNewSectionAddresses();
     Step objcopy =
         new DefaultShellStep(
-            getBuildTarget(),
             getOutputFilesystem().getRootPath(),
             /* args */ getObjcopyCommand(addresses),
             /* env */ ImmutableMap.of());

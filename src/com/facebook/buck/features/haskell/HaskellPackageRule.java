@@ -51,7 +51,6 @@ import java.nio.file.Path;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -238,7 +237,6 @@ public class HaskellPackageRule extends AbstractBuildRuleWithDeclaredAndExtraDep
     // Initialize the package DB.
     steps.add(
         new GhcPkgStep(
-            getBuildTarget(),
             context.getSourcePathResolver(),
             ImmutableList.of("init", packageDb.toString()),
             ImmutableMap.of()));
@@ -255,7 +253,6 @@ public class HaskellPackageRule extends AbstractBuildRuleWithDeclaredAndExtraDep
     ImmutableList<String> ghcPkgCmd = ghcPkgCmdBuilder.build();
     steps.add(
         new GhcPkgStep(
-            getBuildTarget(),
             context.getSourcePathResolver(),
             ghcPkgCmd,
             ImmutableMap.of(
@@ -301,11 +298,8 @@ public class HaskellPackageRule extends AbstractBuildRuleWithDeclaredAndExtraDep
     private final ImmutableMap<String, String> env;
 
     public GhcPkgStep(
-        BuildTarget buildTarget,
-        SourcePathResolver resolver,
-        ImmutableList<String> args,
-        ImmutableMap<String, String> env) {
-      super(Optional.of(buildTarget), getProjectFilesystem().getRootPath());
+        SourcePathResolver resolver, ImmutableList<String> args, ImmutableMap<String, String> env) {
+      super(getProjectFilesystem().getRootPath());
       this.resolver = resolver;
       this.args = args;
       this.env = env;

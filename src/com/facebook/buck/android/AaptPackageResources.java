@@ -184,7 +184,6 @@ public class AaptPackageResources extends AbstractBuildRule {
 
     steps.add(
         new AaptStep(
-            getBuildTarget(),
             androidPlatformTarget,
             getProjectFilesystem().getRootPath(),
             getAndroidManifestXml(),

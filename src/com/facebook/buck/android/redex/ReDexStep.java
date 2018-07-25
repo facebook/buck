@@ -19,7 +19,6 @@ package com.facebook.buck.android.redex;
 import com.facebook.buck.android.KeystoreProperties;
 import com.facebook.buck.android.toolchain.AndroidSdkLocation;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
-import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -53,7 +52,6 @@ public class ReDexStep extends ShellStep {
 
   @VisibleForTesting
   ReDexStep(
-      BuildTarget buildTarget,
       Path workingDirectory,
       AndroidSdkLocation androidSdkLocation,
       List<String> redexBinaryArgs,
@@ -67,7 +65,7 @@ public class ReDexStep extends ShellStep {
       Path proguardCommandLine,
       Path seeds,
       SourcePathResolver pathResolver) {
-    super(Optional.of(buildTarget), workingDirectory);
+    super(workingDirectory);
     this.androidSdkLocation = androidSdkLocation;
     this.redexBinaryArgs = ImmutableList.copyOf(redexBinaryArgs);
     this.redexEnvironmentVariables = ImmutableMap.copyOf(redexEnvironmentVariables);
@@ -83,7 +81,6 @@ public class ReDexStep extends ShellStep {
   }
 
   public static ImmutableList<Step> createSteps(
-      BuildTarget target,
       ProjectFilesystem filesystem,
       AndroidSdkLocation androidSdkLocation,
       SourcePathResolver resolver,
@@ -98,7 +95,6 @@ public class ReDexStep extends ShellStep {
     Tool redexBinary = redexOptions.getRedex();
     ReDexStep redexStep =
         new ReDexStep(
-            target,
             filesystem.getRootPath(),
             androidSdkLocation,
             redexBinary.getCommandPrefix(resolver),

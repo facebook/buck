@@ -36,7 +36,6 @@ import com.facebook.buck.zip.ZipScrubberStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
-import java.util.Optional;
 import java.util.SortedSet;
 import javax.annotation.Nullable;
 
@@ -77,7 +76,6 @@ public class Aapt2Compile extends AbstractBuildRule {
                 getOutputPath().getParent())));
     steps.add(
         new Aapt2CompileStep(
-            getBuildTarget(),
             getProjectFilesystem().getRootPath(),
             androidPlatformTarget,
             context.getSourcePathResolver().getAbsolutePath(resDir),
@@ -104,12 +102,11 @@ public class Aapt2Compile extends AbstractBuildRule {
     private final Path outputPath;
 
     Aapt2CompileStep(
-        BuildTarget buildTarget,
         Path workingDirectory,
         AndroidPlatformTarget androidPlatformTarget,
         Path resDirPath,
         Path outputPath) {
-      super(Optional.of(buildTarget), workingDirectory);
+      super(workingDirectory);
       this.androidPlatformTarget = androidPlatformTarget;
       this.resDirPath = resDirPath;
       this.outputPath = outputPath;

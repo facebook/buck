@@ -18,7 +18,6 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.shell.ShellStep;
@@ -29,7 +28,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Optional;
 import java.util.Set;
 
 public class AidlStep extends ShellStep {
@@ -42,12 +40,11 @@ public class AidlStep extends ShellStep {
 
   public AidlStep(
       ProjectFilesystem filesystem,
-      BuildTarget buildTarget,
       ToolchainProvider toolchainProvider,
       Path aidlFilePath,
       Set<String> importDirectoryPaths,
       Path destinationDirectory) {
-    super(Optional.of(buildTarget), filesystem.getRootPath());
+    super(filesystem.getRootPath());
 
     this.filesystem = filesystem;
     this.toolchainProvider = toolchainProvider;
@@ -94,8 +91,7 @@ public class AidlStep extends ShellStep {
   private void verifyImportPaths(ProjectFilesystem filesystem, Set<String> importDirectoryPaths) {
     for (String path : importDirectoryPaths) {
       if (!filesystem.exists(Paths.get(path))) {
-        throw new HumanReadableException(
-            "%s: Cannot find import path: %s", getBuildTarget().get(), path);
+        throw new HumanReadableException("Cannot find import path: %s", path);
       }
     }
   }

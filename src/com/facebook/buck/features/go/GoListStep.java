@@ -16,7 +16,6 @@
 
 package com.facebook.buck.features.go;
 
-import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.ProcessExecutor.Option;
@@ -26,7 +25,6 @@ import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -43,12 +41,8 @@ public class GoListStep extends ShellStep {
   private final List<FileType> fileTypes;
   private final GoPlatform platform;
 
-  public GoListStep(
-      BuildTarget buildTarget,
-      Path workingDirectory,
-      GoPlatform platform,
-      List<FileType> fileTypes) {
-    super(Optional.of(buildTarget), workingDirectory);
+  public GoListStep(Path workingDirectory, GoPlatform platform, List<FileType> fileTypes) {
+    super(workingDirectory);
     this.platform = platform;
     this.fileTypes = fileTypes;
   }

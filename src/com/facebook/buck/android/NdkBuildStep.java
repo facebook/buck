@@ -17,7 +17,6 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
-import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
@@ -27,7 +26,6 @@ import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.nio.file.Path;
-import java.util.Optional;
 import java.util.function.Function;
 
 public class NdkBuildStep extends ShellStep {
@@ -42,7 +40,6 @@ public class NdkBuildStep extends ShellStep {
   private final Function<String, String> macroExpander;
 
   public NdkBuildStep(
-      BuildTarget buildTarget,
       ProjectFilesystem filesystem,
       AndroidNdk androidNdk,
       Path root,
@@ -51,7 +48,7 @@ public class NdkBuildStep extends ShellStep {
       Path binDirectory,
       Iterable<String> flags,
       Function<String, String> macroExpander) {
-    super(Optional.of(buildTarget), filesystem.getRootPath());
+    super(filesystem.getRootPath());
 
     this.filesystem = filesystem;
     this.androidNdk = androidNdk;

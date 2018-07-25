@@ -17,7 +17,6 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.io.ExecutableFinder;
@@ -368,12 +367,9 @@ public class FilterResourcesSteps {
    * @see <a href="http://www.imagemagick.org/script/index.php">ImageMagick</a>
    */
   static class ImageMagickScaler implements ImageScaler {
-
-    private final BuildTarget target;
     private final Path workingDirectory;
 
-    public ImageMagickScaler(BuildTarget target, Path workingDirectory) {
-      this.target = target;
+    public ImageMagickScaler(Path workingDirectory) {
       this.workingDirectory = workingDirectory;
     }
 
@@ -389,7 +385,6 @@ public class FilterResourcesSteps {
         throws IOException, InterruptedException {
       Step convertStep =
           new BashStep(
-              target,
               workingDirectory,
               "convert",
               "-adaptive-resize",
@@ -460,8 +455,6 @@ public class FilterResourcesSteps {
   }
 
   public static class Builder {
-
-    private BuildTarget target;
     @Nullable private ProjectFilesystem filesystem;
     @Nullable private ImmutableBiMap<Path, Path> inResDirToOutResDirMap;
     @Nullable private ResourceFilter resourceFilter;
@@ -472,11 +465,6 @@ public class FilterResourcesSteps {
 
     private Builder() {
       this.localizedStringFileName = Optional.empty();
-    }
-
-    public Builder setTarget(BuildTarget target) {
-      this.target = target;
-      return this;
     }
 
     public Builder setProjectFilesystem(ProjectFilesystem filesystem) {
@@ -531,7 +519,7 @@ public class FilterResourcesSteps {
           resourceFilter.getDensities(),
           DefaultDrawableFinder.getInstance(),
           resourceFilter.shouldDownscale()
-              ? new ImageMagickScaler(target, filesystem.getRootPath())
+              ? new ImageMagickScaler(filesystem.getRootPath())
               : null);
     }
   }

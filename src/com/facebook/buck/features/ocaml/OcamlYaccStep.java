@@ -16,14 +16,12 @@
 
 package com.facebook.buck.features.ocaml;
 
-import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
-import java.util.Optional;
 
 /** A yacc step which processes .mly files and outputs .ml and mli files */
 public class OcamlYaccStep extends ShellStep {
@@ -44,9 +42,8 @@ public class OcamlYaccStep extends ShellStep {
 
   private final Args args;
 
-  public OcamlYaccStep(
-      BuildTarget buildTarget, Path workingDirectory, SourcePathResolver resolver, Args args) {
-    super(Optional.of(buildTarget), workingDirectory);
+  public OcamlYaccStep(Path workingDirectory, SourcePathResolver resolver, Args args) {
+    super(workingDirectory);
     this.resolver = resolver;
     this.args = args;
   }

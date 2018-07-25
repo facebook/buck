@@ -23,7 +23,6 @@ import com.android.tools.r8.Diagnostic;
 import com.android.tools.r8.DiagnosticsHandler;
 import com.android.tools.r8.OutputMode;
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
-import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.shell.ShellStep;
@@ -108,13 +107,11 @@ public class DxStep extends ShellStep {
    *     files, or a directory of .class files.
    */
   public DxStep(
-      BuildTarget target,
       ProjectFilesystem filesystem,
       AndroidPlatformTarget androidPlatformTarget,
       Path outputDexFile,
       Iterable<Path> filesToDex) {
     this(
-        target,
         filesystem,
         androidPlatformTarget,
         outputDexFile,
@@ -131,7 +128,6 @@ public class DxStep extends ShellStep {
    * @param dexTool the tool used to perform dexing.
    */
   public DxStep(
-      BuildTarget target,
       ProjectFilesystem filesystem,
       AndroidPlatformTarget androidPlatformTarget,
       Path outputDexFile,
@@ -139,7 +135,6 @@ public class DxStep extends ShellStep {
       EnumSet<Option> options,
       String dexTool) {
     this(
-        target,
         filesystem,
         androidPlatformTarget,
         outputDexFile,
@@ -159,7 +154,6 @@ public class DxStep extends ShellStep {
    * @param dexTool the tool used to perform dexing.
    */
   public DxStep(
-      BuildTarget buildTarget,
       ProjectFilesystem filesystem,
       AndroidPlatformTarget androidPlatformTarget,
       Path outputDexFile,
@@ -168,7 +162,7 @@ public class DxStep extends ShellStep {
       Optional<String> maxHeapSize,
       String dexTool,
       boolean intermediate) {
-    super(Optional.of(buildTarget), filesystem.getRootPath());
+    super(filesystem.getRootPath());
     this.filesystem = filesystem;
     this.androidPlatformTarget = androidPlatformTarget;
     this.outputDexFile = filesystem.resolve(outputDexFile);

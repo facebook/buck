@@ -155,7 +155,6 @@ public class PythonTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
                     getPathToTestOutputDirectory())))
         .add(
             new PythonRunTestsStep(
-                getBuildTarget(),
                 getProjectFilesystem().getRootPath(),
                 getBuildTarget().getFullyQualifiedName(),
                 binary

@@ -24,7 +24,6 @@ import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.core.build.buildable.context.FakeBuildableContext;
 import com.facebook.buck.core.build.context.FakeBuildContext;
 import com.facebook.buck.jvm.java.JavaCompilationConstants;
-import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
@@ -114,7 +113,6 @@ public class ProGuardObfuscateStepTest {
 
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
     ProGuardObfuscateStep.create(
-        BuildTargetFactory.newInstance("//dummy:target"),
         androidPlatformTarget,
         JavaCompilationConstants.DEFAULT_JAVA_COMMAND_PREFIX,
         new FakeProjectFilesystem(),
@@ -149,7 +147,6 @@ public class ProGuardObfuscateStepTest {
 
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
     ProGuardObfuscateStep.create(
-        BuildTargetFactory.newInstance("//dummy:target"),
         androidPlatformTarget,
         JavaCompilationConstants.DEFAULT_JAVA_COMMAND_PREFIX,
         new FakeProjectFilesystem(),
@@ -182,7 +179,6 @@ public class ProGuardObfuscateStepTest {
       String expectedPath) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
     ProGuardObfuscateStep.create(
-        BuildTargetFactory.newInstance("//dummy:target"),
         androidPlatformTarget,
         JavaCompilationConstants.DEFAULT_JAVA_COMMAND_PREFIX,
         new FakeProjectFilesystem(),

@@ -260,7 +260,6 @@ abstract class ElfSharedLibraryInterface extends AbstractBuildRule
     Pair<ProjectFilesystem, Path> input = getInput(context, steps);
     steps.add(
         new ElfExtractSectionsStep(
-            getBuildTarget(),
             objcopy.getCommandPrefix(context.getSourcePathResolver()),
             getSections(),
             input.getFirst(),

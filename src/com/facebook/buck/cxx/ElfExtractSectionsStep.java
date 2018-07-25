@@ -16,14 +16,12 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
-import java.util.Optional;
 
 /** A step which extracts specific sections from an ELF file into a new ELF file. */
 class ElfExtractSectionsStep extends ShellStep {
@@ -36,14 +34,13 @@ class ElfExtractSectionsStep extends ShellStep {
   private final Path output;
 
   public ElfExtractSectionsStep(
-      BuildTarget buildTarget,
       ImmutableList<String> objcopyPrefix,
       ImmutableSet<String> sections,
       ProjectFilesystem inputFilesystem,
       Path input,
       ProjectFilesystem outputFilesystem,
       Path output) {
-    super(Optional.of(buildTarget), outputFilesystem.getRootPath());
+    super(outputFilesystem.getRootPath());
     this.objcopyPrefix = objcopyPrefix;
     this.sections = sections;
     this.inputFilesystem = inputFilesystem;

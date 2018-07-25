@@ -17,12 +17,10 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
-import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
-import java.util.Optional;
 
 public class ZipalignStep extends ShellStep {
 
@@ -31,12 +29,11 @@ public class ZipalignStep extends ShellStep {
   private final Path outputFile;
 
   public ZipalignStep(
-      BuildTarget buildTarget,
       Path workingDirectory,
       AndroidPlatformTarget androidPlatformTarget,
       Path inputFile,
       Path outputFile) {
-    super(Optional.of(buildTarget), workingDirectory);
+    super(workingDirectory);
     this.androidPlatformTarget = androidPlatformTarget;
     this.inputFile = inputFile;
     this.outputFile = outputFile;

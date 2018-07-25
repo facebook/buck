@@ -16,7 +16,6 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
@@ -31,12 +30,11 @@ public class InstrumentationStep extends ShellStep {
   private Optional<Long> testRuleTimeoutMs;
 
   public InstrumentationStep(
-      BuildTarget buildTarget,
       ProjectFilesystem filesystem,
       ImmutableList<String> javaRuntimeLauncher,
       AndroidInstrumentationTestJVMArgs jvmArgs,
       Optional<Long> testRuleTimeoutMs) {
-    super(Optional.of(buildTarget), filesystem.getRootPath());
+    super(filesystem.getRootPath());
     this.javaRuntimeLauncher = javaRuntimeLauncher;
     this.jvmArgs = jvmArgs;
     this.testRuleTimeoutMs = testRuleTimeoutMs;

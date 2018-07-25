@@ -16,14 +16,12 @@
 
 package com.facebook.buck.features.ocaml;
 
-import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
-import java.util.Optional;
 
 /** Runs ocamllex to generate .ml files from .mll */
 public class OcamlLexStep extends ShellStep {
@@ -43,9 +41,8 @@ public class OcamlLexStep extends ShellStep {
   private final SourcePathResolver resolver;
   private final Args args;
 
-  public OcamlLexStep(
-      BuildTarget buildTarget, Path workingDirectory, SourcePathResolver resolver, Args args) {
-    super(Optional.of(buildTarget), workingDirectory);
+  public OcamlLexStep(Path workingDirectory, SourcePathResolver resolver, Args args) {
+    super(workingDirectory);
     this.resolver = resolver;
     this.args = args;
   }

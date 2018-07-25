@@ -16,14 +16,12 @@
 
 package com.facebook.buck.features.go;
 
-import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
-import java.util.Optional;
 
 public class CGoGenerateImportStep extends ShellStep {
   @AddToRuleKey private final ImmutableList<String> cgoCommandPrefix;
@@ -34,14 +32,13 @@ public class CGoGenerateImportStep extends ShellStep {
   private final Path outputFile;
 
   public CGoGenerateImportStep(
-      BuildTarget buildTarget,
       Path workingDirectory,
       ImmutableList<String> cgoCommandPrefix,
       GoPlatform platform,
       Path packageName,
       Path bin,
       Path outputFile) {
-    super(Optional.of(buildTarget), workingDirectory);
+    super(workingDirectory);
     this.cgoCommandPrefix = cgoCommandPrefix;
     this.packageName = packageName;
     this.bin = bin;

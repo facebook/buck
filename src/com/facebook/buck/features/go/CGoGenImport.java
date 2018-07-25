@@ -85,7 +85,6 @@ public class CGoGenImport extends AbstractBuildRule {
                 context.getBuildCellRootPath(), getProjectFilesystem(), genDir)));
     steps.add(
         new CGoGenerateImportStep(
-            getBuildTarget(),
             getProjectFilesystem().getRootPath(),
             cgo.getCommandPrefix(pathResolver),
             platform,

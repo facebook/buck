@@ -16,7 +16,6 @@
 
 package com.facebook.buck.features.go;
 
-import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
@@ -43,7 +42,6 @@ public class GoCompileStep extends ShellStep {
   private static final Logger LOG = Logger.get(GoCompileStep.class);
 
   public GoCompileStep(
-      BuildTarget buildTarget,
       Path workingDirectory,
       ImmutableMap<String, String> environment,
       ImmutableList<String> compilerCommandPrefix,
@@ -56,7 +54,7 @@ public class GoCompileStep extends ShellStep {
       boolean allowExternalReferences,
       GoPlatform platform,
       Path output) {
-    super(Optional.of(buildTarget), workingDirectory);
+    super(workingDirectory);
     this.environment = environment;
     this.compilerCommandPrefix = compilerCommandPrefix;
     this.flags = flags;

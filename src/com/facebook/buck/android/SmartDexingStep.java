@@ -18,7 +18,6 @@ package com.facebook.buck.android;
 import com.facebook.buck.android.DxStep.Option;
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.core.build.context.BuildContext;
-import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.DefaultStepRunner;
@@ -95,7 +94,6 @@ public class SmartDexingStep implements Step {
   private final ListeningExecutorService executorService;
   private final OptionalInt xzCompressionLevel;
   private final Optional<String> dxMaxHeapSize;
-  private final BuildTarget target;
   private final String dexTool;
 
   /**
@@ -111,7 +109,6 @@ public class SmartDexingStep implements Step {
    * @param executorService The thread pool to execute the dx command on.
    */
   public SmartDexingStep(
-      BuildTarget target,
       AndroidPlatformTarget androidPlatformTarget,
       BuildContext buildContext,
       ProjectFilesystem filesystem,
@@ -126,7 +123,6 @@ public class SmartDexingStep implements Step {
       OptionalInt xzCompressionLevel,
       Optional<String> dxMaxHeapSize,
       String dexTool) {
-    this.target = target;
     this.androidPlatformTarget = androidPlatformTarget;
     this.buildContext = buildContext;
     this.filesystem = filesystem;
@@ -312,7 +308,6 @@ public class SmartDexingStep implements Step {
         .map(
             outputInputsPair ->
                 new DxPseudoRule(
-                    target,
                     androidPlatformTarget,
                     buildContext,
                     filesystem,
@@ -344,7 +339,7 @@ public class SmartDexingStep implements Step {
    */
   @VisibleForTesting
   static class DxPseudoRule {
-    private final BuildTarget target;
+
     private final AndroidPlatformTarget androidPlatformTarget;
     private final BuildContext buildContext;
     private final ProjectFilesystem filesystem;
@@ -359,7 +354,6 @@ public class SmartDexingStep implements Step {
     private final String dexTool;
 
     public DxPseudoRule(
-        BuildTarget target,
         AndroidPlatformTarget androidPlatformTarget,
         BuildContext buildContext,
         ProjectFilesystem filesystem,
@@ -371,7 +365,6 @@ public class SmartDexingStep implements Step {
         OptionalInt xzCompressionLevel,
         Optional<String> dxMaxHeapSize,
         String dexTool) {
-      this.target = target;
       this.androidPlatformTarget = androidPlatformTarget;
       this.buildContext = buildContext;
       this.filesystem = filesystem;
@@ -424,7 +417,6 @@ public class SmartDexingStep implements Step {
       Preconditions.checkState(newInputsHash != null, "Must call checkIsCached first!");
 
       createDxStepForDxPseudoRule(
-          target,
           androidPlatformTarget,
           steps,
           buildContext,
@@ -448,7 +440,6 @@ public class SmartDexingStep implements Step {
    * unpacking.
    */
   static void createDxStepForDxPseudoRule(
-      BuildTarget target,
       AndroidPlatformTarget androidPlatformTarget,
       ImmutableList.Builder<Step> steps,
       BuildContext context,
@@ -466,7 +457,6 @@ public class SmartDexingStep implements Step {
       Path tempDexJarOutput = Paths.get(output.replaceAll("\\.jar\\.xz$", ".tmp.jar"));
       steps.add(
           new DxStep(
-              target,
               filesystem,
               androidPlatformTarget,
               tempDexJarOutput,
@@ -507,7 +497,6 @@ public class SmartDexingStep implements Step {
       Path tempDexJarOutput = Paths.get(output.replaceAll("\\.jar\\.xzs\\.tmp~$", ".tmp.jar"));
       steps.add(
           new DxStep(
-              target,
               filesystem,
               androidPlatformTarget,
               tempDexJarOutput,
@@ -539,7 +528,6 @@ public class SmartDexingStep implements Step {
         || output.endsWith("classes.dex")) {
       steps.add(
           new DxStep(
-              target,
               filesystem,
               androidPlatformTarget,
               outputPath,

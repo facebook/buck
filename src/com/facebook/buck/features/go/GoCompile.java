@@ -170,15 +170,10 @@ public class GoCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     } else {
       FilteredSourceFiles filteredCompileSrcs =
           new FilteredSourceFiles(
-              rawCompileSrcs,
-              getSourceFiles(generatedSrcs, context),
-              getBuildTarget(),
-              platform,
-              goFileTypes);
+              rawCompileSrcs, getSourceFiles(generatedSrcs, context), platform, goFileTypes);
       steps.addAll(filteredCompileSrcs.getFilterSteps());
       steps.add(
           new GoCompileStep(
-              getBuildTarget(),
               getProjectFilesystem().getRootPath(),
               compiler.getEnvironment(pathResolver),
               compiler.getCommandPrefix(pathResolver),
@@ -196,8 +191,7 @@ public class GoCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     ImmutableList.Builder<Path> asmOutputs = ImmutableList.builder();
 
     FilteredSourceFiles filteredAsmSrcs =
-        new FilteredSourceFiles(
-            rawAsmSrcs, getBuildTarget(), platform, Arrays.asList(FileType.SFiles));
+        new FilteredSourceFiles(rawAsmSrcs, platform, Arrays.asList(FileType.SFiles));
     steps.addAll(filteredAsmSrcs.getFilterSteps());
 
     if (!rawAsmSrcs.isEmpty()) {
@@ -240,7 +234,6 @@ public class GoCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
       Path asmOutputPath = asmOutputDir.resolve(getBuildTarget().getShortName() + ".o");
       steps.add(
           new GoAssembleStep(
-              getBuildTarget(),
               getProjectFilesystem().getRootPath(),
               assembler.getEnvironment(pathResolver),
               assembler.getCommandPrefix(pathResolver),
@@ -258,7 +251,6 @@ public class GoCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     if (!rawAsmSrcs.isEmpty() || !extraAsmOutputs.isEmpty()) {
       steps.add(
           new GoPackStep(
-              getBuildTarget(),
               getProjectFilesystem().getRootPath(),
               packer.getEnvironment(pathResolver),
               packer.getCommandPrefix(pathResolver),

@@ -225,6 +225,7 @@ public class JarBuildStepsFactory
 
   public ImmutableList<Step> getBuildStepsForLibraryJar(
       BuildContext context, BuildableContext buildableContext, BuildTarget buildTarget) {
+
     Preconditions.checkArgument(buildTarget.equals(libraryTarget));
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 

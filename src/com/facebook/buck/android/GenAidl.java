@@ -118,7 +118,6 @@ public class GenAidl extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     AidlStep command =
         new AidlStep(
             getProjectFilesystem(),
-            target,
             toolchainProvider,
             context.getSourcePathResolver().getAbsolutePath(aidlFilePath),
             ImmutableSet.of(importPath),

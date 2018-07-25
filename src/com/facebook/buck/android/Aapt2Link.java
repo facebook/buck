@@ -164,7 +164,6 @@ public class Aapt2Link extends AbstractBuildRule {
 
     steps.add(
         new Aapt2LinkStep(
-            getBuildTarget(),
             getProjectFilesystem().resolve(linkTreePath),
             symlinkPaths.build(),
             dependencyResourceApks
@@ -229,11 +228,10 @@ public class Aapt2Link extends AbstractBuildRule {
     private final List<Path> compiledResourceApkPaths;
 
     Aapt2LinkStep(
-        BuildTarget buildTarget,
         Path workingDirectory,
         List<Path> compiledResourcePaths,
         List<Path> compiledResourceApkPaths) {
-      super(Optional.of(buildTarget), workingDirectory);
+      super(workingDirectory);
       this.compiledResourcePaths = compiledResourcePaths;
       this.compiledResourceApkPaths = compiledResourceApkPaths;
     }

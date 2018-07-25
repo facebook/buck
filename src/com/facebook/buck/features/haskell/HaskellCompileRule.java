@@ -275,8 +275,8 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
 
     private BuildContext buildContext;
 
-    public GhcStep(BuildTarget buildTarget, Path rootPath, BuildContext buildContext) {
-      super(Optional.of(buildTarget), rootPath);
+    public GhcStep(Path rootPath, BuildContext buildContext) {
+      super(rootPath);
       this.buildContext = buildContext;
     }
 
@@ -360,7 +360,7 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
         .add(prepareOutputDir("object", getObjectDir(), getObjectSuffix()))
         .add(prepareOutputDir("interface", getInterfaceDir(), getInterfaceSuffix()))
         .add(prepareOutputDir("stub", getStubDir(), "h"))
-        .add(new GhcStep(getBuildTarget(), getProjectFilesystem().getRootPath(), buildContext));
+        .add(new GhcStep(getProjectFilesystem().getRootPath(), buildContext));
 
     return steps.build();
   }
