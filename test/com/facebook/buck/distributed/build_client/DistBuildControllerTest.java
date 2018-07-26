@@ -268,7 +268,7 @@ public class DistBuildControllerTest {
     job.setStampedeId(stampedeId);
 
     StampedeExecutionResult executionResult = runBuildWithController(controller);
-    assertEquals(ExitCode.PREPARATION_STEP_FAILED.getCode(), executionResult.exitCode);
+    assertEquals(ExitCode.PREPARATION_STEP_FAILED.getCode(), executionResult.getExitCode());
   }
 
   @Test
@@ -306,7 +306,7 @@ public class DistBuildControllerTest {
         createController(Futures.immediateFailedFuture(new Exception("Async preparation failed")));
 
     StampedeExecutionResult executionResult = runBuildWithController(controller);
-    assertEquals(ExitCode.PREPARATION_ASYNC_STEP_FAILED.getCode(), executionResult.exitCode);
+    assertEquals(ExitCode.PREPARATION_ASYNC_STEP_FAILED.getCode(), executionResult.getExitCode());
   }
 
   @Test
@@ -331,7 +331,7 @@ public class DistBuildControllerTest {
         runBuildWithController(createController(Futures.immediateFuture(buildJobState)));
 
     assertEquals(
-        ExitCode.DISTRIBUTED_BUILD_STEP_LOCAL_EXCEPTION.getCode(), executionResult.exitCode);
+        ExitCode.DISTRIBUTED_BUILD_STEP_LOCAL_EXCEPTION.getCode(), executionResult.getExitCode());
   }
 
   /**
@@ -480,7 +480,7 @@ public class DistBuildControllerTest {
     verify(mockEventBus);
 
     assertEquals(
-        ExitCode.DISTRIBUTED_BUILD_STEP_REMOTE_FAILURE.getCode(), executionResult.exitCode);
+        ExitCode.DISTRIBUTED_BUILD_STEP_REMOTE_FAILURE.getCode(), executionResult.getExitCode());
     assertEquals(
         ExitCode.DISTRIBUTED_BUILD_STEP_REMOTE_FAILURE.getCode(),
         finishedEvent.getValue().getExitCode());

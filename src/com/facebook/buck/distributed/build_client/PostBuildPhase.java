@@ -114,7 +114,7 @@ public class PostBuildPhase {
       consoleEventsDispatcher.postDistBuildStatusEvent(finalJob, buildSlaveStatusList, "FAILED");
     }
 
-    return new StampedeExecutionResult(
+    return StampedeExecutionResult.of(
         finalJob.getStatus().equals(BuildStatus.FINISHED_SUCCESSFULLY)
             ? 0
             : ExitCode.DISTRIBUTED_BUILD_STEP_REMOTE_FAILURE.getCode());

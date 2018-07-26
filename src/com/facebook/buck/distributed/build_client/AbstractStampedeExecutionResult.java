@@ -16,22 +16,24 @@
 
 package com.facebook.buck.distributed.build_client;
 
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import java.util.Optional;
+import org.immutables.value.Value;
 
 /** Result of a distributed build execution. */
-public class StampedeExecutionResult {
-  public final int exitCode;
-  public final Optional<Throwable> exception;
-  public final Optional<String> errorStage;
+@Value.Immutable
+@BuckStyleImmutable
+abstract class AbstractStampedeExecutionResult {
 
-  public StampedeExecutionResult(int exitCode) {
-    this(exitCode, Optional.empty(), Optional.empty());
-  }
+  @Value.Parameter
+  public abstract int getExitCode();
 
-  public StampedeExecutionResult(
-      int exitCode, Optional<Throwable> exception, Optional<String> errorStage) {
-    this.exitCode = exitCode;
-    this.exception = exception;
-    this.errorStage = errorStage;
+  public abstract Optional<Throwable> getException();
+
+  public abstract Optional<String> getErrorStage();
+
+  @Value.Default
+  public boolean getHandleGracefully() {
+    return false;
   }
 }
