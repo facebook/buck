@@ -26,6 +26,7 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
+import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.cxx.CxxLibrary;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
 import com.facebook.buck.cxx.HeaderSymlinkTreeWithHeaderMap;
@@ -35,6 +36,7 @@ import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.HeaderVisibility;
 import com.facebook.buck.cxx.toolchain.Preprocessor;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.swift.SwiftBitcodeCompile;
 import com.facebook.buck.swift.SwiftBuckConfig;
 import com.facebook.buck.swift.SwiftCompile;
 import com.facebook.buck.swift.SwiftDescriptions;
@@ -62,7 +64,8 @@ public class AppleLibraryDescriptionSwiftEnhancer {
       CxxPlatform platform,
       AppleCxxPlatform applePlatform,
       SwiftBuckConfig swiftBuckConfig,
-      ImmutableSet<CxxPreprocessorInput> inputs) {
+      ImmutableSet<CxxPreprocessorInput> inputs,
+      boolean moduleOnly) {
 
     SourcePathRuleFinder rulePathFinder = new SourcePathRuleFinder(graphBuilder);
     SwiftLibraryDescriptionArg.Builder delegateArgsBuilder = SwiftLibraryDescriptionArg.builder();
@@ -104,7 +107,22 @@ public class AppleLibraryDescriptionSwiftEnhancer {
         swiftArgs,
         preprocessor,
         preprocessorFlags,
-        underlyingModule.isPresent());
+        underlyingModule.isPresent(),
+        moduleOnly);
+  }
+
+  public static BuildRule createSwiftBitcodeCompileRule(
+      BuildTarget buildTarget,
+      ProjectFilesystem projectFilesystem,
+      Tool swiftCompiler,
+      SwiftCompile moduleRule,
+      String filename) {
+    return new SwiftBitcodeCompile(
+        buildTarget,
+        projectFilesystem,
+        swiftCompiler,
+        moduleRule,
+        filename);
   }
 
   /**
@@ -141,9 +159,11 @@ public class AppleLibraryDescriptionSwiftEnhancer {
       SourcePathRuleFinder ruleFinder,
       ActionGraphBuilder graphBuilder,
       CxxPlatform cxxPlatform,
+      SwiftBuckConfig swiftBuckConfig,
       HeaderVisibility headerVisibility) {
     ImmutableMap<Path, SourcePath> headers =
-        getObjCGeneratedHeader(buildTarget, graphBuilder, cxxPlatform, headerVisibility);
+        getObjCGeneratedHeader(
+            buildTarget, graphBuilder, cxxPlatform, swiftBuckConfig, headerVisibility);
 
     Path outputPath = BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s");
     HeaderSymlinkTreeWithHeaderMap headerMapRule =
@@ -157,9 +177,13 @@ public class AppleLibraryDescriptionSwiftEnhancer {
       BuildTarget buildTarget,
       ActionGraphBuilder graphBuilder,
       CxxPlatform cxxPlatform,
+      SwiftBuckConfig swiftBuckConfig,
       HeaderVisibility headerVisibility) {
-    BuildTarget swiftCompileTarget = createBuildTargetForSwiftCompile(buildTarget, cxxPlatform);
-    SwiftCompile compile = (SwiftCompile) graphBuilder.requireRule(swiftCompileTarget);
+    BuildTarget swiftModuleTarget =
+        swiftBuckConfig.shouldSplitSwiftModuleGeneration()
+            ? createBuildTargetForSwiftModule(buildTarget, cxxPlatform)
+            : createBuildTargetForSwiftCompile(buildTarget, cxxPlatform);
+    SwiftCompile compile = (SwiftCompile) graphBuilder.requireRule(swiftModuleTarget);
 
     Path objCImportPath = getObjCGeneratedHeaderSourceIncludePath(headerVisibility, compile);
     SourcePath objCGeneratedPath = compile.getObjCGeneratedHeaderPath();
@@ -197,6 +221,14 @@ public class AppleLibraryDescriptionSwiftEnhancer {
     Preconditions.checkNotNull(appleLibType);
 
     return buildTarget.withFlavors(appleLibType.getFlavor(), cxxPlatform.getFlavor());
+  }
+
+  public static BuildTarget createBuildTargetForSwiftModule(
+      BuildTarget target, CxxPlatform cxxPlatform) {
+    // `target` is not necessarily flavored with just `apple_library` flavors, that's because
+    // Swift compile rules can be required by other rules (e.g., `apple_test`, `apple_binary` etc).
+    return target.withFlavors(
+        AppleLibraryDescription.Type.SWIFT_MODULE.getFlavor(), cxxPlatform.getFlavor());
   }
 
   public static BuildTarget createBuildTargetForSwiftCompile(

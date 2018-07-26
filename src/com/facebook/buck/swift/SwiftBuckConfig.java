@@ -31,6 +31,7 @@ public class SwiftBuckConfig {
   public static final String PROJECT_WMO = "project_wmo";
   public static final String PROJECT_EMBED_RUNTIME = "project_embed_runtime";
   public static final String PROJECT_ADD_AST_PATHS = "project_add_ast_paths";
+  public static final String SPLIT_SWIFT_MODULE_GENERATION = "split_swift_module_generation";
 
   private final BuckConfig delegate;
 
@@ -82,5 +83,13 @@ public class SwiftBuckConfig {
    */
   public boolean getProjectAddASTPaths() {
     return delegate.getBooleanValue(SECTION_NAME, PROJECT_ADD_AST_PATHS, false);
+  }
+
+  /*
+   * If enabled, swift libraries will be built in two separate steps, ie. one that builds the
+   * *.swiftmodule file and another that builds an *.o file.
+   */
+  public boolean shouldSplitSwiftModuleGeneration() {
+    return delegate.getBooleanValue(SECTION_NAME, SPLIT_SWIFT_MODULE_GENERATION, false);
   }
 }

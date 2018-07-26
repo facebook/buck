@@ -59,7 +59,6 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Streams;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.function.Function;
@@ -100,6 +99,7 @@ public class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   @AddToRuleKey private final PreprocessorFlags cxxDeps;
 
   @AddToRuleKey private final boolean importUnderlyingModule;
+  @AddToRuleKey private final boolean moduleOnly;
 
   SwiftCompile(
       CxxPlatform cxxPlatform,
@@ -118,7 +118,8 @@ public class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
       Optional<SourcePath> bridgingHeader,
       Preprocessor preprocessor,
       PreprocessorFlags cxxDeps,
-      boolean importUnderlyingModule) {
+      boolean importUnderlyingModule,
+      boolean moduleOnly) {
     super(buildTarget, projectFilesystem, params);
     this.cxxPlatform = cxxPlatform;
     this.frameworks = frameworks;
@@ -158,6 +159,7 @@ public class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     this.bridgingHeader = bridgingHeader;
     this.cPreprocessor = preprocessor;
     this.cxxDeps = cxxDeps;
+    this.moduleOnly = moduleOnly;
     performChecks(buildTarget);
   }
 
@@ -211,19 +213,48 @@ public class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
             .anyMatch(SwiftDescriptions.SWIFT_MAIN_FILENAME::equalsIgnoreCase);
 
     compilerCommand.add(
-        "-c",
         enableObjcInterop ? "-enable-objc-interop" : "",
         hasMainEntry ? "" : "-parse-as-library",
         "-serialize-debugging-options",
         "-module-name",
-        moduleName,
-        "-emit-module",
-        "-emit-module-path",
-        modulePath.toString(),
-        "-emit-objc-header-path",
-        headerPath.toString(),
-        "-o",
-        objectFilePath.toString());
+        moduleName);
+
+    if (swiftBuckConfig.shouldSplitSwiftModuleGeneration()) {
+      compilerCommand.add(
+          "-emit-module",
+          "-emit-module-path",
+          modulePath.toString(),
+          "-emit-objc-header",
+          "-emit-objc-header-path",
+          headerPath.toString());
+
+      if (moduleOnly) {
+        compilerCommand.add("-emit-bc");
+        compilerCommand.add("-num-threads", "1");
+        this.srcs
+            .stream()
+            .map(
+                input -> getBitcodePath(resolver.getAbsolutePath(input).getFileName().toString())
+            )
+            .forEach(
+                x -> {
+                  compilerCommand.add("-o");
+                  compilerCommand.add(x.toString());
+                });
+      } else {
+        compilerCommand.add("-c", "-emit-object", "-o", objectFilePath.toString());
+      }
+    } else {
+      compilerCommand.add(
+          "-c",
+          "-emit-module",
+          "-emit-module-path",
+          modulePath.toString(),
+          "-emit-objc-header-path",
+          headerPath.toString(),
+          "-o",
+          objectFilePath.toString());
+    }
 
     // Do not use swiftBuckConfig's version by definition
     version.ifPresent(
@@ -316,8 +347,8 @@ public class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     return new Step() {
       @Override
       public StepExecutionResult execute(ExecutionContext context) throws IOException {
-        if (Files.notExists(swiftFileListPath.getParent())) {
-          Files.createDirectories(swiftFileListPath.getParent());
+        if (java.nio.file.Files.notExists(swiftFileListPath.getParent())) {
+          java.nio.file.Files.createDirectories(swiftFileListPath.getParent());
         }
         MostFiles.writeLinesToFile(relativePaths, swiftFileListPath);
         return StepExecutionResults.SUCCESS;
@@ -409,6 +440,9 @@ public class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   /** @return List of {@link SourcePath} to the output object file(s) (i.e., .o file) */
   public ImmutableList<SourcePath> getObjectPaths() {
     // Ensures that users of the object path can depend on this build target
+    if (moduleOnly) {
+      return ImmutableList.of();
+    }
     return objectPaths
         .stream()
         .map(objectPath -> ExplicitBuildTargetSourcePath.of(getBuildTarget(), objectPath))
@@ -432,4 +466,15 @@ public class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   public SourcePath getOutputPath() {
     return ExplicitBuildTargetSourcePath.of(getBuildTarget(), outputPath);
   }
+
+  public Path getBitcodePath(String filename) {
+    return outputPath.resolve(filename + ".bc");
+  }
+
+  /**
+   * @return Compiler flags read from external resources.
+   */
+  public ImmutableList<? extends Arg> getCompilerFlags() {
+    return compilerFlags;
+}
 }
