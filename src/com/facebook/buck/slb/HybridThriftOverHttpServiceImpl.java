@@ -16,7 +16,6 @@
 
 package com.facebook.buck.slb;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.io.ByteStreams;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -58,7 +57,15 @@ public class HybridThriftOverHttpServiceImpl<
       HybridThriftRequestHandler<ThriftRequest> request,
       HybridThriftResponseHandler<ThriftResponse> responseHandler) {
     final SettableFuture<ThriftResponse> future = SettableFuture.create();
-    args.getExecutor().submit(() -> future.set(makeRequestSync(request, responseHandler)));
+    args.getExecutor()
+        .submit(
+            () -> {
+              try {
+                future.set(makeRequestSync(request, responseHandler));
+              } catch (Throwable e) {
+                future.setException(e);
+              }
+            });
     return future;
   }
 
@@ -101,8 +108,8 @@ public class HybridThriftOverHttpServiceImpl<
     }
   }
 
-  @VisibleForTesting
-  static <ThriftRequest extends TBase<?, ?>> void writeToStream(
+  /** Writes the HTTP body into a stream in Hybrid Thrift over HTTP format. */
+  public static <ThriftRequest extends TBase<?, ?>> void writeToStream(
       DataOutputStream outputStream,
       byte[] serializedThriftData,
       HybridThriftRequestHandler<ThriftRequest> request)
@@ -116,8 +123,8 @@ public class HybridThriftOverHttpServiceImpl<
     }
   }
 
-  @VisibleForTesting
-  static <ThriftResponse extends TBase<?, ?>> ThriftResponse readFromStream(
+  /** Reads a HTTP body stream in Hybrid Thrift over HTTP format. */
+  public static <ThriftResponse extends TBase<?, ?>> ThriftResponse readFromStream(
       DataInputStream bodyStream,
       ThriftProtocol protocol,
       HybridThriftResponseHandler<ThriftResponse> responseHandler)

@@ -17,7 +17,7 @@
 package com.facebook.buck.slb;
 
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import java.util.concurrent.ScheduledExecutorService;
+import com.google.common.util.concurrent.ListeningExecutorService;
 import org.immutables.value.Value;
 
 @Value.Immutable
@@ -30,7 +30,7 @@ abstract class AbstractHybridThriftOverHttpServiceArgs {
   public abstract HttpService getService();
 
   @Value.Parameter
-  public abstract ScheduledExecutorService getExecutor();
+  public abstract ListeningExecutorService getExecutor();
 
   @Value.Default
   public ThriftProtocol getThriftProtocol() {

@@ -58,8 +58,8 @@ public abstract class HybridThriftResponseHandler<ThriftResponse extends TBase<?
   public abstract int getTotalPayloads();
 
   /** Size bytes of the nth payload. */
-  public abstract long getPayloadSizeBytes(int payloadIndex);
+  public abstract long getPayloadSizeBytes(int index);
 
   /** Where to write the nth payload. */
-  public abstract OutputStream getStreamForPayload(int payloadIndex);
+  public abstract OutputStream getStreamForPayload(int index);
 }
