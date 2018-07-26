@@ -28,6 +28,7 @@ import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.testutil.TestLogSink;
+import com.facebook.buck.util.CreateSymlinksForTests;
 import com.facebook.buck.util.FakeProcess;
 import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
@@ -163,8 +164,8 @@ public class AppleToolchainDiscoveryTest {
         Paths.get("test/com/facebook/buck/apple/testdata/xcode-toolchain-discovery");
     Files.deleteIfExists(symlink);
     Files.deleteIfExists(xcodeSymlink);
-    Files.createSymbolicLink(symlink, root.toAbsolutePath());
-    Files.createSymbolicLink(xcodeSymlink, root.toAbsolutePath());
+    CreateSymlinksForTests.createSymLink(symlink, root.toAbsolutePath());
+    CreateSymlinksForTests.createSymLink(xcodeSymlink, root.toAbsolutePath());
 
     BuckConfig buckConfig =
         FakeBuckConfig.builder()

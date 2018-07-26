@@ -27,6 +27,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.RichStream;
+import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -92,13 +93,19 @@ public class MorePathsTest {
             pathToDesiredLinkUnderProjectRoot,
             pathToExistingFileUnderProjectRoot,
             projectFilesystem);
-    assertEquals("biz.txt", relativePath.toString());
 
     Path absolutePathToDesiredLinkUnderProjectRoot =
         projectFilesystem.resolve(pathToDesiredLinkUnderProjectRoot);
     assertTrue(Files.isSymbolicLink(absolutePathToDesiredLinkUnderProjectRoot));
+
     Path targetOfSymbolicLink = Files.readSymbolicLink(absolutePathToDesiredLinkUnderProjectRoot);
-    assertEquals(relativePath, targetOfSymbolicLink);
+
+    validateSymlinklTarget(
+        pathToExistingFileUnderProjectRoot,
+        pathToDesiredLinkUnderProjectRoot,
+        absolutePathToDesiredLinkUnderProjectRoot,
+        targetOfSymbolicLink,
+        relativePath);
 
     Path absolutePathToExistingFileUnderProjectRoot =
         projectFilesystem.resolve(pathToExistingFileUnderProjectRoot);
@@ -122,13 +129,19 @@ public class MorePathsTest {
             pathToDesiredLinkUnderProjectRoot,
             pathToExistingFileUnderProjectRoot,
             projectFilesystem);
-    assertEquals(Paths.get("../../biz.txt").toString(), relativePath.toString());
 
     Path absolutePathToDesiredLinkUnderProjectRoot =
         projectFilesystem.resolve(pathToDesiredLinkUnderProjectRoot);
     assertTrue(Files.isSymbolicLink(absolutePathToDesiredLinkUnderProjectRoot));
+
     Path targetOfSymbolicLink = Files.readSymbolicLink(absolutePathToDesiredLinkUnderProjectRoot);
-    assertEquals(relativePath, targetOfSymbolicLink);
+
+    validateSymlinklTarget(
+        pathToExistingFileUnderProjectRoot,
+        pathToDesiredLinkUnderProjectRoot,
+        absolutePathToDesiredLinkUnderProjectRoot,
+        targetOfSymbolicLink,
+        relativePath);
 
     Path absolutePathToExistingFileUnderProjectRoot =
         projectFilesystem.resolve(pathToExistingFileUnderProjectRoot);
@@ -153,13 +166,19 @@ public class MorePathsTest {
             pathToDesiredLinkUnderProjectRoot,
             pathToExistingFileUnderProjectRoot,
             projectFilesystem);
-    assertEquals(Paths.get("../../foo/bar/baz/biz.txt").toString(), relativePath.toString());
 
     Path absolutePathToDesiredLinkUnderProjectRoot =
         projectFilesystem.resolve(pathToDesiredLinkUnderProjectRoot);
     assertTrue(Files.isSymbolicLink(absolutePathToDesiredLinkUnderProjectRoot));
+
     Path targetOfSymbolicLink = Files.readSymbolicLink(absolutePathToDesiredLinkUnderProjectRoot);
-    assertEquals(relativePath, targetOfSymbolicLink);
+
+    validateSymlinklTarget(
+        pathToExistingFileUnderProjectRoot,
+        pathToDesiredLinkUnderProjectRoot,
+        absolutePathToDesiredLinkUnderProjectRoot,
+        targetOfSymbolicLink,
+        relativePath);
 
     Path absolutePathToExistingFileUnderProjectRoot =
         projectFilesystem.resolve(pathToExistingFileUnderProjectRoot);
@@ -342,5 +361,27 @@ public class MorePathsTest {
         MorePaths.splitOnCommonPrefix(ImmutableList.of(first, second, third));
 
     assertFalse(result.isPresent());
+  }
+
+  private void validateSymlinklTarget(
+      Path pathToExistingFileUnderProjectRoot,
+      Path pathToDesiredLinkUnderProjectRoot,
+      Path absolutePathToDesiredLinkUnderProjectRoot,
+      Path targetOfSymbolicLink,
+      Path relativePath) {
+    if (Platform.detect() == Platform.WINDOWS) {
+      // On Windows Files.readSymbolicLink returns the absolute path to the target.
+      Path relToLinkTargetPath =
+          MorePaths.getRelativePath(
+              pathToExistingFileUnderProjectRoot, pathToDesiredLinkUnderProjectRoot.getParent());
+      Path absolutePathToTargetUnderProjectRoot =
+          absolutePathToDesiredLinkUnderProjectRoot
+              .getParent()
+              .resolve(relToLinkTargetPath)
+              .normalize();
+      assertEquals(absolutePathToTargetUnderProjectRoot, targetOfSymbolicLink);
+    } else {
+      assertEquals(relativePath, targetOfSymbolicLink);
+    }
   }
 }

@@ -8,6 +8,7 @@ java_library(
         "//src/com/facebook/buck/cli/bootstrapper/filesystem:filesystem_lib",
         "//src/com/facebook/buck/core/exceptions:exceptions",
         "//src/com/facebook/buck/io/filesystem:filesystem",
+        "//src/com/facebook/buck/io/windowsfs:windowsfs",
         "//src/com/facebook/buck/log:api",
         "//src/com/facebook/buck/util:exceptions",
         "//src/com/facebook/buck/util:util",

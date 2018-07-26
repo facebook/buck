@@ -19,6 +19,7 @@ package com.facebook.buck.io.file;
 import com.facebook.buck.cli.bootstrapper.filesystem.BuckUnixPath;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.windowsfs.WindowsFS;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.types.Pair;
@@ -31,6 +32,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.FileSystem;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Objects;
@@ -141,27 +143,6 @@ public class MorePaths {
       path = path.normalize();
     }
     return path;
-  }
-
-  /**
-   * Creates a symlink at {@code pathToProjectRoot.resolve(pathToDesiredLinkUnderProjectRoot)} that
-   * points to {@code pathToProjectRoot.resolve(pathToExistingFileUnderProjectRoot)} using a
-   * relative symlink. Both params must be relative to the project root.
-   *
-   * @param pathToDesiredLinkUnderProjectRoot must reference a file, not a directory.
-   * @param pathToExistingFileUnderProjectRoot must reference a file, not a directory.
-   * @return the relative path from the new symlink that was created to the existing file.
-   */
-  public static Path createRelativeSymlink(
-      Path pathToDesiredLinkUnderProjectRoot,
-      Path pathToExistingFileUnderProjectRoot,
-      Path pathToProjectRoot)
-      throws IOException {
-    Path target =
-        getRelativePath(
-            pathToExistingFileUnderProjectRoot, pathToDesiredLinkUnderProjectRoot.getParent());
-    Files.createSymbolicLink(pathToProjectRoot.resolve(pathToDesiredLinkUnderProjectRoot), target);
-    return target;
   }
 
   /**
@@ -383,5 +364,36 @@ public class MorePaths {
                     ? p.getFileSystem().getPath("")
                     : p.subpath(commonPrefix, p.getNameCount()))
         .toImmutableList();
+  }
+
+  /**
+   * Creates a symlink.
+   *
+   * @param winFS WindowsFS object that creates symlink on Windows using different permission level
+   *     implementations.
+   * @param symLink the symlink to create.
+   * @param target the target of the symlink.
+   * @throws IOException
+   */
+  public static void createSymLink(@Nullable WindowsFS winFS, Path symLink, Path target)
+      throws IOException {
+    if (Platform.detect() == Platform.WINDOWS) {
+      Preconditions.checkNotNull(winFS);
+      target = MorePaths.normalize(symLink.getParent().resolve(target));
+      winFS.createSymbolicLink(symLink, target, isDirectory(target));
+    } else {
+      Files.createSymbolicLink(symLink, target);
+    }
+  }
+
+  /**
+   * Returns whether a path is a directory..
+   *
+   * @param path An absolute file name
+   * @param linkOptions Link options
+   * @return Whether the path is a directory.
+   */
+  public static boolean isDirectory(Path path, LinkOption... linkOptions) {
+    return Files.isDirectory(normalize(path).toAbsolutePath(), linkOptions);
   }
 }

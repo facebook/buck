@@ -33,6 +33,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.testutil.FakeProjectFileHashCache;
 import com.facebook.buck.testutil.FileHashEntryMatcher;
+import com.facebook.buck.util.CreateSymlinksForTests;
 import com.facebook.buck.util.cache.ProjectFileHashCache;
 import com.facebook.buck.util.config.RawConfig;
 import com.facebook.buck.util.environment.Platform;
@@ -81,7 +82,8 @@ public class RecordingFileHashLoaderTest {
 
     Path symlinkAbsPath = projectFilesystem.resolve("link");
     Path symlinkRelPath = projectFilesystem.relativize(symlinkAbsPath);
-    Files.createSymbolicLink(symlinkAbsPath, fileAbsPath);
+    CreateSymlinksForTests.createSymLink(symlinkAbsPath, fileAbsPath);
+
     symlinkAbsPath.toFile().setExecutable(true);
 
     RecordedFileHashes recordedFileHashes = new RecordedFileHashes(0);
@@ -136,7 +138,7 @@ public class RecordingFileHashLoaderTest {
 
     Path symlinkAbsPath = cellRootFs.resolve("link");
     Path symlinkRelPath = cellRootFs.relativize(symlinkAbsPath);
-    Files.createSymbolicLink(symlinkAbsPath, fileAbsPath);
+    CreateSymlinksForTests.createSymLink(symlinkAbsPath, fileAbsPath);
     symlinkAbsPath.toFile().setExecutable(true);
 
     RecordedFileHashes recordedFileHashes = new RecordedFileHashes(0);
@@ -207,8 +209,8 @@ public class RecordingFileHashLoaderTest {
     Path symlinkAbsPath = cell1.resolve("link");
     Path symlinkRelPath = cell1.relativize(symlinkAbsPath);
 
-    Files.createSymbolicLink(symlinkAbsPath, intermediateSymLinkRelPath);
-    Files.createSymbolicLink(intermediateSymLinkAbsPath, externalFile);
+    CreateSymlinksForTests.createSymLink(symlinkAbsPath, intermediateSymLinkRelPath);
+    CreateSymlinksForTests.createSymLink(intermediateSymLinkAbsPath, externalFile);
 
     RecordedFileHashes recordedFileHashes = new RecordedFileHashes(0);
     BuildJobStateFileHashes fileHashes = recordedFileHashes.getRemoteFileHashes();
@@ -261,7 +263,7 @@ public class RecordingFileHashLoaderTest {
     Path externalFile = externalDir.newFile("externalfile").toPath();
     Path symlinkAbsPath = projectFilesystem.resolve("linktoexternal");
     Path symlinkRelPath = projectFilesystem.relativize(symlinkAbsPath);
-    Files.createSymbolicLink(symlinkAbsPath, externalFile);
+    CreateSymlinksForTests.createSymLink(symlinkAbsPath, externalFile);
 
     RecordedFileHashes recordedFileHashes = new RecordedFileHashes(0);
     BuildJobStateFileHashes fileHashes = recordedFileHashes.getRemoteFileHashes();
@@ -298,7 +300,8 @@ public class RecordingFileHashLoaderTest {
 
     externalDir.newFile("externalfile");
     Path symlinkRoot = projectFilesystem.resolve("linktoexternaldir");
-    Files.createSymbolicLink(symlinkRoot, externalDir.getRoot().toPath());
+    CreateSymlinksForTests.createSymLink(symlinkRoot, externalDir.getRoot().toPath());
+
     Path fileWithinSymlink =
         projectFilesystem.relativize(
             symlinkRoot.resolve("externalfile")); // /project/linktoexternaldir/externalfile
@@ -342,7 +345,7 @@ public class RecordingFileHashLoaderTest {
     Path externalFile = externalDir.getRoot().toPath().resolve("externalfile");
     Path symlinkAbsPath = projectFilesystem.resolve("linktoexternal");
     Path symlinkRelPath = projectFilesystem.relativize(symlinkAbsPath);
-    Files.createSymbolicLink(symlinkAbsPath, externalFile);
+    CreateSymlinksForTests.createSymLink(symlinkAbsPath, externalFile);
 
     RecordedFileHashes recordedFileHashes = new RecordedFileHashes(0);
     BuildJobStateFileHashes fileHashes = recordedFileHashes.getRemoteFileHashes();
@@ -392,10 +395,10 @@ public class RecordingFileHashLoaderTest {
     realExternalFile.toFile().createNewFile();
 
     Path dirE = projectFilesystem.resolve("e");
-    Files.createSymbolicLink(dirE, externalDirX);
+    CreateSymlinksForTests.createSymLink(dirE, externalDirX);
 
     Path dirA = projectFilesystem.resolve("a");
-    Files.createSymbolicLink(dirA, dirE.resolve("f"));
+    CreateSymlinksForTests.createSymLink(dirA, dirE.resolve("f"));
 
     Path relPathToRecord = projectFilesystem.relativize(dirA.resolve("b"));
 

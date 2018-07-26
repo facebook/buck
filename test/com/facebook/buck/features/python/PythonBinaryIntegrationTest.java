@@ -43,6 +43,7 @@ import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.CreateSymlinksForTests;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.config.Config;
 import com.facebook.buck.util.config.Configs;
@@ -149,8 +150,9 @@ public class PythonBinaryIntegrationTest {
             .getStdout()
             .trim();
     Path link = workspace.getPath("link");
-    Files.createSymbolicLink(
+    CreateSymlinksForTests.createSymLink(
         link, workspace.getPath(Splitter.on(" ").splitToList(output).get(1)).toAbsolutePath());
+
     ProcessExecutor.Result result =
         workspace.runCommand(
             new PythonInterpreterFromConfig(getPythonBuckConfig(), new ExecutableFinder())

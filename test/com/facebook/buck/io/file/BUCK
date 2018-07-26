@@ -11,6 +11,7 @@ standard_java_test(
         "//test/com/facebook/buck/io/filesystem:testutil",
         "//test/com/facebook/buck/testutil:testutil",
         "//test/com/facebook/buck/testutil/integration:util",
+        "//test/com/facebook/buck/util:testutil",
         "//third-party/java/guava:guava",
         "//third-party/java/jimfs:jimfs",
         "//third-party/java/junit:junit",

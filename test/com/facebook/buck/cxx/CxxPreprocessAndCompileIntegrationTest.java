@@ -43,6 +43,7 @@ import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.CreateSymlinksForTests;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
@@ -143,7 +144,7 @@ public class CxxPreprocessAndCompileIntegrationTest {
 
     // Setup up a symlink to our working directory.
     Path symlinkedRoot = folder.getRoot().toPath().resolve("symlinked-root");
-    java.nio.file.Files.createSymbolicLink(symlinkedRoot, tmp.getRoot());
+    CreateSymlinksForTests.createSymLink(symlinkedRoot, tmp.getRoot());
 
     // Run the build, setting PWD to the above symlink.  Typically, this causes compilers to use
     // the symlinked directory, even though it's not the right project root.

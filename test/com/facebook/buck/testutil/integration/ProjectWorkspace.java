@@ -44,6 +44,7 @@ import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
+import com.facebook.buck.io.windowsfs.WindowsFS;
 import com.facebook.buck.jvm.java.JavaCompilationConstants;
 import com.facebook.buck.module.TestBuckModuleManagerFactory;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
@@ -211,8 +212,10 @@ public class ProjectWorkspace extends AbstractWorkspace {
   private void createSymlinkToBuckTestRepository(Path bucklib) throws IOException {
     for (String directory : TEST_CELL_DIRECTORIES_TO_LINK) {
       Path directoryPath = bucklib.resolve(directory);
-      Files.createSymbolicLink(
-          directoryPath, Paths.get(TEST_CELL_LOCATION).resolve(directory).toAbsolutePath());
+      MorePaths.createSymLink(
+          new WindowsFS(),
+          directoryPath,
+          Paths.get(TEST_CELL_LOCATION).resolve(directory).toAbsolutePath());
     }
   }
 

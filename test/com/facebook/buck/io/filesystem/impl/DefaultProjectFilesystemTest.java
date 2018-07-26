@@ -33,6 +33,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ZipInspector;
+import com.facebook.buck.util.CreateSymlinksForTests;
 import com.facebook.buck.util.config.Config;
 import com.facebook.buck.util.config.ConfigBuilder;
 import com.facebook.buck.util.environment.Platform;
@@ -136,7 +137,7 @@ public class DefaultProjectFilesystemTest {
     Assume.assumeTrue("System supports symlinks", !Platform.detect().equals(Platform.WINDOWS));
     Files.createDirectory(tmp.getRoot().resolve("real_dir"));
     // Create a relative symbolic link.
-    Files.createSymbolicLink(
+    CreateSymlinksForTests.createSymLink(
         tmp.getRoot().resolve("symlinked_dir"), filesystem.getPath("real_dir"));
     filesystem.mkdirs(filesystem.getPath("symlinked_dir"));
   }
@@ -379,7 +380,8 @@ public class DefaultProjectFilesystemTest {
   public void testWalkFileTreeFollowsSymlinks() throws IOException {
     tmp.newFolder("dir");
     tmp.newFile("dir/file.txt");
-    Files.createSymbolicLink(tmp.getRoot().resolve("linkdir"), tmp.getRoot().resolve("dir"));
+    CreateSymlinksForTests.createSymLink(
+        tmp.getRoot().resolve("linkdir"), tmp.getRoot().resolve("dir"));
 
     ImmutableList.Builder<Path> filePaths = ImmutableList.builder();
 
@@ -545,7 +547,7 @@ public class DefaultProjectFilesystemTest {
   @Test
   public void testIsSymLinkReturnsTrueForSymLink() throws IOException {
     Path rootPath = tmp.getRoot();
-    Files.createSymbolicLink(rootPath.resolve("foo"), rootPath.resolve("bar"));
+    CreateSymlinksForTests.createSymLink(rootPath.resolve("foo"), rootPath.resolve("bar"));
     assertTrue(filesystem.isSymLink(Paths.get("foo")));
   }
 

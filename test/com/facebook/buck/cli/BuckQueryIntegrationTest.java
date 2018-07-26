@@ -23,8 +23,8 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.CreateSymlinksForTests;
 import java.io.IOException;
-import java.nio.file.Files;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
@@ -44,7 +44,7 @@ public class BuckQueryIntegrationTest {
     // We can't have symlinks checked into the Buck repo, so we have to create the one we're using
     // for the test below here.
     workspace.move("symlinks/a/BUCK.disabled", "symlinks/a/BUCK");
-    Files.createSymbolicLink(
+    CreateSymlinksForTests.createSymLink(
         workspace.resolve("symlinks/a/inputs"),
         workspace.getDestPath().getFileSystem().getPath("real_inputs"));
   }

@@ -22,6 +22,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.testutil.TemporaryPaths;
+import com.facebook.buck.util.CreateSymlinksForTests;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -105,7 +106,7 @@ public class ExecutableFinderTest {
     Path dir2 = tmp.newFolder("bar");
     createExecutable("bar/blech_target");
     Path file1 = dir2.resolve("blech");
-    Files.createSymbolicLink(file1, Paths.get("blech_target"));
+    CreateSymlinksForTests.createSymLink(file1, Paths.get("blech_target"));
 
     assertEquals(
         Optional.of(file1),
@@ -121,7 +122,7 @@ public class ExecutableFinderTest {
     tmp.newFolder("unsearched");
     Path binary = createExecutable("unsearched/binary");
     Path file1 = dir2.resolve("blech");
-    Files.createSymbolicLink(file1, binary);
+    CreateSymlinksForTests.createSymLink(file1, binary);
 
     assertEquals(
         Optional.of(file1),

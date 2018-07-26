@@ -32,6 +32,7 @@ import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.ZipArchive;
+import com.facebook.buck.util.CreateSymlinksForTests;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.unarchive.ArchiveFormat;
 import com.facebook.buck.util.unarchive.ExistingFileMode;
@@ -165,7 +166,7 @@ public class ZipStepTest {
 
     Path toZip = tmp.newFolder("zipdir");
     Path path = toZip.resolve("file.txt");
-    Files.createSymbolicLink(path, target);
+    CreateSymlinksForTests.createSymLink(path, target);
 
     ZipStep step =
         new ZipStep(

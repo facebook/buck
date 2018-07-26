@@ -32,6 +32,7 @@ import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.CreateSymlinksForTests;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -266,12 +267,12 @@ public class AppleSdkDiscoveryTest {
     // Create a dangling symlink
     File toDelete = File.createTempFile("foo", "bar");
     Path symlink = sdksDir.resolve("NonExistent1.0.sdk");
-    Files.createSymbolicLink(symlink, toDelete.toPath());
+    CreateSymlinksForTests.createSymLink(symlink, toDelete.toPath());
     assertTrue(toDelete.delete());
 
     // Also create a working symlink
     Path actualSdkPath = root.resolve("MacOSX10.9.sdk");
-    Files.createSymbolicLink(sdksDir.resolve("MacOSX10.9.sdk"), actualSdkPath);
+    CreateSymlinksForTests.createSymLink(sdksDir.resolve("MacOSX10.9.sdk"), actualSdkPath);
 
     ImmutableMap<String, AppleToolchain> toolchains =
         ImmutableMap.of("com.apple.dt.toolchain.XcodeDefault", getDefaultToolchain(root));
@@ -612,7 +613,7 @@ public class AppleSdkDiscoveryTest {
     Path sdksDir = root.resolve("Platforms/MacOSX.platform/Developer/SDKs");
 
     Files.createDirectories(sdksDir);
-    Files.createSymbolicLink(sdksDir.resolve("MacOSX10.9.sdk"), actualSdkPath);
+    CreateSymlinksForTests.createSymLink(sdksDir.resolve("MacOSX10.9.sdk"), actualSdkPath);
 
     ImmutableMap<String, AppleToolchain> toolchains =
         ImmutableMap.of("com.apple.dt.toolchain.XcodeDefault", getDefaultToolchain(root));
@@ -661,9 +662,12 @@ public class AppleSdkDiscoveryTest {
     Files.createDirectories(sdksDir);
 
     // create relative symlink
-    Files.createSymbolicLink(sdksDir.resolve("MacOSX10.9.sdk"), fileSystem.getPath("MacOSX.sdk"));
+
+    CreateSymlinksForTests.createSymLink(
+        sdksDir.resolve("MacOSX10.9.sdk"), fileSystem.getPath("MacOSX.sdk"));
+
     // create absolute symlink
-    Files.createSymbolicLink(sdksDir.resolve("MacOSX.sdk"), actualSdkPath);
+    CreateSymlinksForTests.createSymLink(sdksDir.resolve("MacOSX.sdk"), actualSdkPath);
 
     ImmutableMap<String, AppleToolchain> toolchains =
         ImmutableMap.of("com.apple.dt.toolchain.XcodeDefault", getDefaultToolchain(root));
@@ -689,7 +693,8 @@ public class AppleSdkDiscoveryTest {
 
     Path sdksDir = root.resolve("Platforms/MacOSX.platform/Developer/SDKs");
     Files.createDirectories(sdksDir);
-    Files.createSymbolicLink(sdksDir.resolve("MacOSX.sdk"), fileSystem.getPath("does_not_exist"));
+    CreateSymlinksForTests.createSymLink(
+        sdksDir.resolve("MacOSX.sdk"), fileSystem.getPath("does_not_exist"));
 
     ImmutableMap<String, AppleToolchain> toolchains =
         ImmutableMap.of("com.apple.dt.toolchain.XcodeDefault", getDefaultToolchain(root));
@@ -799,7 +804,7 @@ public class AppleSdkDiscoveryTest {
 
       Path actual = sdkDir.resolve(String.format("%s.sdk", sdk));
       Path link = sdkDir.resolve(String.format("%s%s.sdk", sdk, version));
-      Files.createSymbolicLink(link, actual);
+      CreateSymlinksForTests.createSymLink(link, actual);
     }
   }
 }

@@ -16,6 +16,8 @@
 
 package com.facebook.buck.rules.modern.builders;
 
+import com.facebook.buck.io.file.MorePaths;
+import com.facebook.buck.io.windowsfs.WindowsFS;
 import com.facebook.buck.rules.modern.builders.MultiThreadedBlobUploader.UploadData;
 import com.facebook.buck.rules.modern.builders.MultiThreadedBlobUploader.UploadResult;
 import com.facebook.buck.rules.modern.builders.Protocol.DirectoryNode;
@@ -225,7 +227,8 @@ public class LocalContentAddressedStorage implements ContentAddressedStorage {
       InputStream getData(Protocol.Digest digest) throws IOException;
 
       default void materializeSymlink(Path root, SymlinkNode symlink) throws IOException {
-        Files.createSymbolicLink(root.resolve(symlink.getName()), Paths.get(symlink.getTarget()));
+        MorePaths.createSymLink(
+            new WindowsFS(), root.resolve(symlink.getName()), Paths.get(symlink.getTarget()));
       }
     }
 

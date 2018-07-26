@@ -34,12 +34,12 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.CreateSymlinksForTests;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -68,9 +68,11 @@ public class CompilationDatabaseIntegrationTest {
 
     Path platforms = workspace.getPath("xcode-developer-dir/Platforms");
     Path sdk = platforms.resolve("iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk");
-    Files.createSymbolicLink(sdk.getParent().resolve("iPhoneOS8.0.sdk"), sdk.getFileName());
+    CreateSymlinksForTests.createSymLink(
+        sdk.getParent().resolve("iPhoneOS8.0.sdk"), sdk.getFileName());
     sdk = platforms.resolve("iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk");
-    Files.createSymbolicLink(sdk.getParent().resolve("iPhoneSimulator8.0.sdk"), sdk.getFileName());
+    CreateSymlinksForTests.createSymLink(
+        sdk.getParent().resolve("iPhoneSimulator8.0.sdk"), sdk.getFileName());
   }
 
   @Test

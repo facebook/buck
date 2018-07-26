@@ -23,6 +23,7 @@ import static org.easymock.EasyMock.verify;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.testutil.PathNormalizer;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.facebook.eden.thrift.EdenError;
 import com.facebook.eden.thrift.SHA1Result;
@@ -56,7 +57,9 @@ public class EdenMountTest {
     EdenClientPool pool = new EdenClientPool(thriftClient);
     Path pathToBuck = fs.getPath("/home/mbolin/src/buck");
     Files.createDirectories(pathToBuck.resolve(".eden"));
-    Files.createSymbolicLink(pathToBuck.resolve(".eden").resolve("root"), pathToBuck);
+    Files.createSymbolicLink(
+        PathNormalizer.toWindowsPathIfNeeded(pathToBuck.resolve(".eden").resolve("root")),
+        PathNormalizer.toWindowsPathIfNeeded(pathToBuck));
 
     Optional<EdenMount> mount = EdenMount.createEdenMountForProjectRoot(pathToBuck, pool);
     assertTrue("Should find mount for path.", mount.isPresent());

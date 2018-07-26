@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.rules.modern.builders.FileTreeBuilder.TreeBuilder;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.TemporaryPaths;
+import com.facebook.buck.util.CreateSymlinksForTests;
 import com.facebook.buck.util.MoreIterables;
 import com.facebook.buck.util.function.ThrowingSupplier;
 import com.google.common.base.Preconditions;
@@ -149,7 +150,7 @@ public class FileInputsAdderTest {
     Path subdir = tmp.newFolder("subdir1");
     Path file1 = tmp.newFile("file1");
     Path link1 = subdir.resolve("link1");
-    Files.createSymbolicLink(link1, file1);
+    CreateSymlinksForTests.createSymLink(link1, file1);
 
     fileHashes.put(file1, HashCode.fromInt(1));
 
@@ -166,7 +167,7 @@ public class FileInputsAdderTest {
   public void testAddExternalLink() throws IOException {
     Path link1 = tmp.getRoot().resolve("link1");
     Path absoluteTarget = tmp.getRoot().getParent().resolve("other_random_place");
-    Files.createSymbolicLink(link1, absoluteTarget);
+    CreateSymlinksForTests.createSymLink(link1, absoluteTarget);
 
     adder.addInput(link1);
 
@@ -181,7 +182,7 @@ public class FileInputsAdderTest {
     Path file1 = tmp.newFile("subdir1/file1");
     Path link1 = tmp.getRoot().resolve("link1");
 
-    Files.createSymbolicLink(link1, subdir);
+    CreateSymlinksForTests.createSymLink(link1, subdir);
     fileHashes.put(file1, HashCode.fromInt(1));
 
     adder.addInput(link1.resolve("file1"));

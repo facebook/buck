@@ -91,6 +91,7 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.toolchain.ToolchainCreationContext;
 import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.util.CloseableMemoizedSupplier;
+import com.facebook.buck.util.CreateSymlinksForTests;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.config.ConfigBuilder;
@@ -1922,7 +1923,7 @@ public class DefaultParserTest {
     tempDir.newFile("bar/Bar.java");
     tempDir.newFolder("foo");
     Path rootPath = tempDir.getRoot().toRealPath();
-    Files.createSymbolicLink(rootPath.resolve("foo/bar"), rootPath.resolve("bar"));
+    CreateSymlinksForTests.createSymLink(rootPath.resolve("foo/bar"), rootPath.resolve("bar"));
 
     Path testBuckFile = rootPath.resolve("foo").resolve("BUCK");
     Files.write(
@@ -1974,7 +1975,7 @@ public class DefaultParserTest {
     tempDir.newFolder("foo");
     Path bazSourceFile = tempDir.newFile("bar/Baz.java");
     Path rootPath = tempDir.getRoot().toRealPath();
-    Files.createSymbolicLink(rootPath.resolve("foo/bar"), rootPath.resolve("bar"));
+    CreateSymlinksForTests.createSymLink(rootPath.resolve("foo/bar"), rootPath.resolve("bar"));
 
     Path testBuckFile = rootPath.resolve("foo").resolve("BUCK");
     Files.write(
@@ -2038,7 +2039,7 @@ public class DefaultParserTest {
     tempDir.newFile("bar/Bar.java");
     tempDir.newFolder("foo");
     Path rootPath = tempDir.getRoot().toRealPath();
-    Files.createSymbolicLink(rootPath.resolve("foo/bar"), rootPath.resolve("bar"));
+    CreateSymlinksForTests.createSymLink(rootPath.resolve("foo/bar"), rootPath.resolve("bar"));
 
     Path testBuckFile = rootPath.resolve("foo").resolve("BUCK");
     Files.write(
@@ -2067,7 +2068,7 @@ public class DefaultParserTest {
     tempDir.newFile("bar/Bar.java");
     tempDir.newFolder("foo");
 
-    Files.createSymbolicLink(rootPath.resolve("foo/bar"), rootPath.resolve("bar"));
+    CreateSymlinksForTests.createSymLink(rootPath.resolve("foo/bar"), rootPath.resolve("bar"));
 
     Path testBuckFile = rootPath.resolve("foo").resolve("BUCK");
     Files.write(

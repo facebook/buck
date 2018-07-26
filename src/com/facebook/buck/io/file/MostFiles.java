@@ -16,6 +16,7 @@
 
 package com.facebook.buck.io.file;
 
+import com.facebook.buck.io.windowsfs.WindowsFS;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Charsets;
@@ -73,6 +74,8 @@ public final class MostFiles {
   // Unix has two illegal characters - '/', and '\0'.  Windows has ten, which includes those two.
   // The full list can be found at https://msdn.microsoft.com/en-us/library/aa365247
   private static final String ILLEGAL_FILE_NAME_CHARACTERS = "<>:\"/\\|?*\0";
+
+  private static final WindowsFS winFS = new WindowsFS();
 
   private static class FileAccessedEntry {
     public final File file;
@@ -158,7 +161,7 @@ public final class MostFiles {
             if (transformedDestPath != null) {
               if (Files.isSymbolicLink(file)) {
                 Files.deleteIfExists(transformedDestPath);
-                Files.createSymbolicLink(transformedDestPath, Files.readSymbolicLink(file));
+                MorePaths.createSymLink(winFS, transformedDestPath, Files.readSymbolicLink(file));
               } else {
                 Files.copy(file, transformedDestPath, StandardCopyOption.REPLACE_EXISTING);
               }

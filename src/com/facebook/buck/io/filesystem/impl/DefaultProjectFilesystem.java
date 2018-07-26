@@ -495,7 +495,7 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
   /** Allows {@link Files#isDirectory} to be faked in tests. */
   @Override
   public boolean isDirectory(Path child, LinkOption... linkOptions) {
-    return Files.isDirectory(resolve(child), linkOptions);
+    return MorePaths.isDirectory(getPathForRelativePath(child), linkOptions);
   }
 
   /** Allows {@link Files#isExecutable} to be faked in tests. */
@@ -867,12 +867,8 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
     if (force) {
       MostFiles.deleteRecursivelyIfExists(symLink);
     }
-    if (Platform.detect() == Platform.WINDOWS) {
-      realFile = MorePaths.normalize(symLink.getParent().resolve(realFile));
-      winFSInstance.createSymbolicLink(symLink, realFile, isDirectory(realFile));
-    } else {
-      Files.createSymbolicLink(symLink, realFile);
-    }
+
+    MorePaths.createSymLink(winFSInstance, symLink, realFile);
   }
 
   /**

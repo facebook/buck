@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.cell.name.RelativeCellName;
+import com.facebook.buck.util.CreateSymlinksForTests;
 import com.facebook.buck.util.config.ConfigBuilder;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
@@ -109,7 +110,7 @@ public class DefaultCellPathResolverTest {
     Files.createDirectories(cell2Root);
 
     Path symlinkPath = cell2Root.resolve("symlink");
-    Files.createSymbolicLink(symlinkPath, cell2Root);
+    CreateSymlinksForTests.createSymLink(symlinkPath, cell2Root);
 
     DefaultCellPathResolver cellPathResolver =
         DefaultCellPathResolver.of(

@@ -371,7 +371,7 @@ class NonPreDexedDexBuildable extends AbstractBuildRule {
                 Path symlinkPath = getProjectFilesystem().resolve(entry.getFirst());
                 Path symlinkTarget = getProjectFilesystem().resolve(entry.getSecond());
                 java.nio.file.Files.createDirectories(symlinkPath.getParent());
-                java.nio.file.Files.createSymbolicLink(symlinkPath, symlinkTarget);
+                getProjectFilesystem().createSymLink(symlinkPath, symlinkTarget, false);
               }
               return StepExecutionResults.SUCCESS;
             }
