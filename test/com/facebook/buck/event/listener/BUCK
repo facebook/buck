@@ -189,6 +189,8 @@ standard_java_test(
         "//src/com/facebook/buck/shell:worker_tool",
         "//src/com/facebook/buck/slb:slb",
         "//src/com/facebook/buck/step:step",
+        "//src/com/facebook/buck/support/bgtasks:bgtasks",
+        "//test/com/facebook/buck/support/bgtasks:testutil",
         "//src/com/facebook/buck/swift:swift",
         "//src/com/facebook/buck/test:config",
         "//src/com/facebook/buck/test:test",

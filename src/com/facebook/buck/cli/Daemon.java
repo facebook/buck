@@ -44,6 +44,8 @@ import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.keys.DefaultRuleKeyCache;
 import com.facebook.buck.rules.keys.RuleKeyCacheRecycler;
+import com.facebook.buck.support.bgtasks.BackgroundTaskManager;
+import com.facebook.buck.support.bgtasks.SynchronousBackgroundTaskManager;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.cache.ProjectFileHashCache;
 import com.facebook.buck.util.cache.impl.DefaultFileHashCache;
@@ -81,6 +83,8 @@ final class Daemon implements Closeable {
   private final RuleKeyCacheRecycler<RuleKey> defaultRuleKeyFactoryCacheRecycler;
   private final ImmutableMap<Path, WatchmanCursor> cursor;
   private final KnownBuildRuleTypesProvider knownBuildRuleTypesProvider;
+
+  private final BackgroundTaskManager bgTaskManager;
 
   Daemon(
       Cell rootCell,
@@ -153,6 +157,8 @@ final class Daemon implements Closeable {
     }
     LOG.debug("Using Watchman Cursor: %s", cursor);
     persistentWorkerPools = new ConcurrentHashMap<>();
+
+    this.bgTaskManager = new SynchronousBackgroundTaskManager(true);
   }
 
   Cell getRootCell() {
@@ -194,6 +200,10 @@ final class Daemon implements Closeable {
     }
 
     return port >= 0 ? OptionalInt.of(port) : OptionalInt.empty();
+  }
+
+  BackgroundTaskManager getBgTaskManager() {
+    return bgTaskManager;
   }
 
   Optional<WebServer> getWebServer() {

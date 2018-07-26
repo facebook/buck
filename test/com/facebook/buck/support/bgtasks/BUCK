@@ -1,0 +1,22 @@
+load("//tools/build_rules:java_rules.bzl", "java_test")
+
+java_test(
+    name = "bgtasks",
+    srcs = glob(["*Test.java"]),
+    deps = [
+        ":testutil",
+        "//third-party/java/junit:junit",
+    ],
+)
+
+java_library(
+    name = "testutil",
+    srcs = glob(
+        ["*.java"],
+        exclude = ["*Test.java"],
+    ),
+    exported_deps = [
+        "//src/com/facebook/buck/support/bgtasks:bgtasks",
+    ],
+    visibility = ["//test/..."],
+)

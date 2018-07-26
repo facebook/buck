@@ -114,6 +114,9 @@ import com.facebook.buck.rules.keys.config.impl.ConfigRuleKeyConfigurationFactor
 import com.facebook.buck.sandbox.SandboxExecutionStrategyFactory;
 import com.facebook.buck.sandbox.impl.PlatformSandboxExecutionStrategyFactory;
 import com.facebook.buck.step.ExecutorPool;
+import com.facebook.buck.support.bgtasks.BackgroundTaskManager;
+import com.facebook.buck.support.bgtasks.BackgroundTaskManager.Notification;
+import com.facebook.buck.support.bgtasks.SynchronousBackgroundTaskManager;
 import com.facebook.buck.test.TestConfig;
 import com.facebook.buck.test.TestResultSummaryVerbosity;
 import com.facebook.buck.toolchain.ToolchainProviderFactory;
@@ -778,6 +781,12 @@ public final class Main {
         TRASH_CLEANER.startCleaningDirectory(filesystem.getBuckPaths().getTrashDir());
       }
 
+      BackgroundTaskManager bgTaskManager =
+          daemon.isPresent()
+              ? daemon.map(Daemon::getBgTaskManager).get()
+              : new SynchronousBackgroundTaskManager(false);
+      bgTaskManager.notify(Notification.COMMAND_START);
+
       ImmutableList<BuckEventListener> eventListeners = ImmutableList.of();
 
       ImmutableList.Builder<ProjectFileHashCache> allCaches = ImmutableList.builder();
@@ -1053,8 +1062,8 @@ public final class Main {
                   clock,
                   consoleListener,
                   counterRegistry,
-                  commandEventListeners
-                  );
+                  commandEventListeners,
+                  bgTaskManager);
 
           if (buckConfig.isBuckConfigLocalWarningEnabled() && !console.getVerbosity().isSilent()) {
             ImmutableList<Path> localConfigFiles =
@@ -1253,6 +1262,8 @@ public final class Main {
 
           // TODO(buck_team): refactor eventListeners for RAII
           flushAndCloseEventListeners(console, eventListeners);
+
+          bgTaskManager.notify(Notification.COMMAND_END);
         }
       }
     }
@@ -1675,8 +1686,8 @@ public final class Main {
       Clock clock,
       AbstractConsoleEventBusListener consoleEventBusListener,
       CounterRegistry counterRegistry,
-      Iterable<BuckEventListener> commandSpecificEventListeners
-      ) {
+      Iterable<BuckEventListener> commandSpecificEventListeners,
+      BackgroundTaskManager bgTaskManager) {
     ImmutableList.Builder<BuckEventListener> eventListenersBuilder =
         ImmutableList.<BuckEventListener>builder()
             .add(consoleEventBusListener)
@@ -1691,7 +1702,7 @@ public final class Main {
       try {
         ChromeTraceBuildListener chromeTraceBuildListener =
             new ChromeTraceBuildListener(
-                projectFilesystem, invocationInfo, clock, chromeTraceConfig);
+                projectFilesystem, invocationInfo, clock, chromeTraceConfig, bgTaskManager);
         eventListenersBuilder.add(chromeTraceBuildListener);
         fileEventBus.ifPresent(bus -> bus.register(chromeTraceBuildListener));
       } catch (IOException e) {

@@ -41,7 +41,6 @@ import com.facebook.buck.event.chrome_trace.ChromeTraceEvent;
 import com.facebook.buck.event.chrome_trace.ChromeTraceEvent.Phase;
 import com.facebook.buck.event.chrome_trace.ChromeTraceWriter;
 import com.facebook.buck.io.WatchmanOverflowEvent;
-import com.facebook.buck.io.file.PathListing;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.AnnotationProcessingEvent;
 import com.facebook.buck.jvm.java.tracing.JavacPhaseEvent;
@@ -51,17 +50,17 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.parser.ParseEvent;
 import com.facebook.buck.parser.events.ParseBuckFileEvent;
 import com.facebook.buck.step.StepEvent;
+import com.facebook.buck.support.bgtasks.BackgroundTask;
+import com.facebook.buck.support.bgtasks.BackgroundTaskManager;
+import com.facebook.buck.support.bgtasks.ImmutableBackgroundTask;
 import com.facebook.buck.test.external.ExternalTestRunEvent;
 import com.facebook.buck.test.external.ExternalTestSpecCalculationEvent;
 import com.facebook.buck.util.Optionals;
 import com.facebook.buck.util.ProcessResourceConsumption;
-import com.facebook.buck.util.Threads;
 import com.facebook.buck.util.concurrent.MostExecutors;
 import com.facebook.buck.util.perf.PerfStatsTracking;
 import com.facebook.buck.util.perf.ProcessTracker;
 import com.facebook.buck.util.timing.Clock;
-import com.facebook.buck.util.trace.uploader.launcher.UploaderLauncher;
-import com.facebook.buck.util.trace.uploader.types.CompressionType;
 import com.facebook.buck.util.unit.SizeUnit;
 import com.facebook.buck.util.zip.BestCompressionGZIPOutputStream;
 import com.google.common.annotations.VisibleForTesting;
@@ -78,14 +77,12 @@ import java.io.OutputStream;
 import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadInfo;
 import java.lang.management.ThreadMXBean;
-import java.net.URI;
 import java.nio.file.Path;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Optional;
-import java.util.OptionalInt;
 import java.util.Set;
 import java.util.TimeZone;
 import java.util.concurrent.ExecutionException;
@@ -112,7 +109,6 @@ public class ChromeTraceBuildListener implements BuckEventListener {
               });
 
   private static final Logger LOG = Logger.get(ChromeTraceBuildListener.class);
-  private static final int TIMEOUT_SECONDS = 30;
 
   private final ProjectFilesystem projectFilesystem;
   private final Clock clock;
@@ -126,6 +122,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
   private final ThreadMXBean threadMXBean;
 
   private final ExecutorService outputExecutor;
+  private final BackgroundTaskManager bgTaskManager;
 
   private final BuildId buildId;
 
@@ -133,7 +130,8 @@ public class ChromeTraceBuildListener implements BuckEventListener {
       ProjectFilesystem projectFilesystem,
       InvocationInfo invocationInfo,
       Clock clock,
-      ChromeTraceBuckConfig config)
+      ChromeTraceBuckConfig config,
+      BackgroundTaskManager bgTaskManager)
       throws IOException {
     this(
         projectFilesystem,
@@ -142,7 +140,8 @@ public class ChromeTraceBuildListener implements BuckEventListener {
         Locale.US,
         TimeZone.getDefault(),
         ManagementFactory.getThreadMXBean(),
-        config);
+        config,
+        bgTaskManager);
   }
 
   @VisibleForTesting
@@ -153,7 +152,8 @@ public class ChromeTraceBuildListener implements BuckEventListener {
       Locale locale,
       TimeZone timeZone,
       ThreadMXBean threadMXBean,
-      ChromeTraceBuckConfig config)
+      ChromeTraceBuckConfig config,
+      BackgroundTaskManager bgTaskManager)
       throws IOException {
     this.logDirectoryPath = invocationInfo.getLogDirectoryPath();
     this.projectFilesystem = projectFilesystem;
@@ -170,6 +170,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
         };
     this.threadMXBean = threadMXBean;
     this.config = config;
+    this.bgTaskManager = bgTaskManager;
     this.outputExecutor =
         MostExecutors.newSingleThreadExecutor(new CommandThreadFactory(getClass().getName()));
     TracePathAndStream tracePathAndStream = createPathAndStream(invocationInfo.getBuildId());
@@ -210,30 +211,6 @@ public class ChromeTraceBuildListener implements BuckEventListener {
         "ProjectFilesystemDelegate", projectFilesystem.getDelegateDetails());
   }
 
-  @VisibleForTesting
-  void deleteOldTraces() {
-    if (!projectFilesystem.exists(logDirectoryPath)) {
-      return;
-    }
-
-    Path traceDirectory = projectFilesystem.getPathForRelativePath(logDirectoryPath);
-
-    try {
-      for (Path path :
-          PathListing.listMatchingPathsWithFilters(
-              traceDirectory,
-              "build.*.trace",
-              PathListing.GET_PATH_MODIFIED_TIME,
-              PathListing.FilterMode.EXCLUDE,
-              OptionalInt.of(config.getMaxTraces()),
-              Optional.empty())) {
-        projectFilesystem.deleteFileAtPath(path);
-      }
-    } catch (IOException e) {
-      LOG.error(e, "Couldn't list paths in trace directory %s", traceDirectory);
-    }
-  }
-
   private TracePathAndStream createPathAndStream(BuildId buildId) {
     String filenameTime = dateFormat.get().format(new Date(clock.currentTimeMillis()));
     String traceName = String.format("build.%s.%s.trace", filenameTime, buildId);
@@ -254,28 +231,27 @@ public class ChromeTraceBuildListener implements BuckEventListener {
   }
 
   @Override
-  public void close() throws IOException {
-    LOG.debug("Writing Chrome trace to %s", tracePath);
-    outputExecutor.shutdown();
-    try {
-      if (!outputExecutor.awaitTermination(TIMEOUT_SECONDS, TimeUnit.SECONDS)) {
-        LOG.warn("Failed to log buck trace %s.  Trace might be corrupt", tracePath);
-      }
-    } catch (InterruptedException e) {
-      Threads.interruptCurrentThread();
-    }
+  public void close() {
+    ChromeTraceBuildListenerCloseArgs args =
+        ChromeTraceBuildListenerCloseArgs.of(
+            outputExecutor,
+            tracePath,
+            chromeTraceWriter,
+            traceStream,
+            config,
+            logDirectoryPath,
+            buildId,
+            projectFilesystem);
 
-    chromeTraceWriter.writeEnd();
-    chromeTraceWriter.close();
-    traceStream.close();
-    uploadTraceIfConfigured(this.buildId);
+    ChromeTraceBuildListenerCloseAction closeAction = new ChromeTraceBuildListenerCloseAction();
 
-    String symlinkName = config.getCompressTraces() ? "build.trace.gz" : "build.trace";
-    Path symlinkPath = projectFilesystem.getBuckPaths().getLogDir().resolve(symlinkName);
-    projectFilesystem.createSymLink(
-        projectFilesystem.resolve(symlinkPath), projectFilesystem.resolve(tracePath), true);
+    BackgroundTask<ChromeTraceBuildListenerCloseArgs> task =
+        ImmutableBackgroundTask.<ChromeTraceBuildListenerCloseArgs>builder()
+            .setAction(closeAction)
+            .setActionArgs(args)
+            .build();
 
-    deleteOldTraces();
+    bgTaskManager.schedule(task, "ChromeTraceBuildListener_close");
   }
 
   @Subscribe
@@ -935,19 +911,6 @@ public class ChromeTraceBuildListener implements BuckEventListener {
               }
               return null;
             });
-  }
-
-  private void uploadTraceIfConfigured(BuildId buildId) {
-    Optional<URI> traceUploadUri = config.getTraceUploadUriIfEnabled();
-    if (!traceUploadUri.isPresent()) {
-      return;
-    }
-
-    Path fullPath = projectFilesystem.resolve(tracePath);
-    Path logFile = projectFilesystem.resolve(logDirectoryPath.resolve("upload-build-trace.log"));
-
-    UploaderLauncher.uploadInBackground(
-        buildId, fullPath, "default", traceUploadUri.get(), logFile, CompressionType.GZIP);
   }
 
   private static class TracePathAndStream {
