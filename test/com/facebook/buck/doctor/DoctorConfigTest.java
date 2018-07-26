@@ -65,7 +65,7 @@ public class DoctorConfigTest {
                         "report_upload_path",
                         testPath,
                         "slb_server_pool",
-                        "http://buck-frontend-dual.05.atn1.facebook.com")))
+                        "https://stampede-frontend-prod.internal.tfbnw.net")))
             .build();
     DoctorConfig config = DoctorConfig.of(buckConfig);
     assertThat(config.getReportUploadPath(), Matchers.equalTo(testPath));
