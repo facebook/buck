@@ -40,6 +40,8 @@ abstract class AbstractClientSideSlbConfig {
   public static final int LATENCY_CHECK_TIME_RANGE_MILLIS = ERROR_CHECK_TIME_RANGE_MILLIS;
   public static final int MAX_ACCEPTABLE_LATENCY_MILLIS = (int) TimeUnit.SECONDS.toMillis(1);
 
+  public static final int MIN_SAMPLES_TO_REPORT_ERROR_DEFAULT_VALUE = 1;
+
   public abstract Clock getClock();
 
   public abstract ImmutableList<URI> getServerPool();
@@ -79,5 +81,10 @@ abstract class AbstractClientSideSlbConfig {
   @Value.Default
   public float getMaxErrorPercentage() {
     return MAX_ERROR_PERCENTAGE;
+  }
+
+  @Value.Default
+  public int getMinSamplesToReportError() {
+    return MIN_SAMPLES_TO_REPORT_ERROR_DEFAULT_VALUE;
   }
 }

@@ -16,6 +16,8 @@
 
 package com.facebook.buck.slb;
 
+import static com.facebook.buck.slb.AbstractClientSideSlbConfig.MIN_SAMPLES_TO_REPORT_ERROR_DEFAULT_VALUE;
+
 import java.net.URI;
 import org.junit.Assert;
 import org.junit.Test;
@@ -53,7 +55,8 @@ public class ServerHealthStateTest {
   @Test
   public void testAgainstMemoryLeak() {
     int maxSamples = 42;
-    ServerHealthState state = new ServerHealthState(SERVER, maxSamples);
+    ServerHealthState state =
+        new ServerHealthState(SERVER, maxSamples, MIN_SAMPLES_TO_REPORT_ERROR_DEFAULT_VALUE);
     for (int i = 0; i < maxSamples * 2; ++i) {
       reportSamples(state, NOW_MILLIS, 1);
     }

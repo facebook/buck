@@ -29,8 +29,8 @@ import org.junit.Test;
 public class ServerHealthManagerTest {
   private static final ImmutableList<URI> SERVERS =
       ImmutableList.of(
-          URI.create("http://localhost:4242"),
           URI.create("http://localhost:8484"),
+          URI.create("http://localhost:4242"),
           URI.create("http://localhost:2121"));
 
   private static final long NOW_MILLIS = 1409702151000L;
@@ -40,6 +40,7 @@ public class ServerHealthManagerTest {
   private static final int RANGE_MILLIS = 42;
   private static final float MAX_ERROR_PERCENTAGE = 0.1f;
   private static final int MAX_ACCEPTABLE_LATENCY_MILLIS = 42;
+  private static final int MIN_SAMPLES_TO_REPORT_ERROR = 5;
 
   private BuckEventBus eventBus;
 
@@ -55,10 +56,18 @@ public class ServerHealthManagerTest {
     Assert.assertNotNull(server);
   }
 
+  @Test
+  public void testFastestServerIsAlwaysReturned() throws IOException {
+    ServerHealthManager manager = newServerHealthManager();
+    URI server = manager.getBestServer();
+    Assert.assertNotNull(server);
+    Assert.assertEquals(SERVERS.get(0), server);
+  }
+
   @Test(expected = NoHealthyServersException.class)
   public void testExceptionThrownIfServersAreUnhealthy() throws IOException {
     ServerHealthManager manager = newServerHealthManager();
-    reportErrorToAll(manager, 1);
+    reportErrorToAll(manager, 10);
     manager.getBestServer();
     Assert.fail("All servers have errors so an exception was expected.");
   }
@@ -72,14 +81,18 @@ public class ServerHealthManagerTest {
   }
 
   @Test
-  public void testFastestServerIsAlwaysReturned() throws IOException {
+  public void testExceptionIsNotThrownIfSamplesTooFew() throws IOException {
     ServerHealthManager manager = newServerHealthManager();
-    for (int i = 0; i < SERVERS.size(); ++i) {
-      manager.reportPingLatency(SERVERS.get(i), i);
-    }
+    reportErrorToAll(manager, MIN_SAMPLES_TO_REPORT_ERROR - 1);
+    manager.getBestServer();
+  }
 
-    URI server = manager.getBestServer();
-    Assert.assertEquals(SERVERS.get(0), server);
+  @Test(expected = NoHealthyServersException.class)
+  public void testExceptionIsThrownIfSamplesTooMuch() throws IOException {
+    ServerHealthManager manager = newServerHealthManager();
+    reportErrorToAll(manager, MIN_SAMPLES_TO_REPORT_ERROR + 1);
+    manager.getBestServer();
+    Assert.fail("All servers have high latency so an exception was expected.");
   }
 
   private void reportLatencyToAll(ServerHealthManager manager, int latencyMillis) {
@@ -95,6 +108,7 @@ public class ServerHealthManagerTest {
         MAX_ERROR_PERCENTAGE,
         RANGE_MILLIS,
         MAX_ACCEPTABLE_LATENCY_MILLIS,
+        MIN_SAMPLES_TO_REPORT_ERROR,
         eventBus,
         NOW_FAKE_CLOCK);
   }

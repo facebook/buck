@@ -43,6 +43,7 @@ public class SlbBuckConfig {
   private static final String LATENCY_CHECK_TIME_RANGE_MILLIS =
       "slb_latency_check_time_range_millis";
   private static final String MAX_ACCEPTABLE_LATENCY_MILLIS = "slb_max_acceptable_latency_millis";
+  private static final String MIN_SAMPLES_TO_REPORT_ERROR = "slb_min_samples_to_report_error";
 
   private final String parentSection;
   private final BuckConfig buckConfig;
@@ -146,6 +147,10 @@ public class SlbBuckConfig {
           buckConfig.getFloat(parentSection, MAX_ERROR_PERCENTAGE).get());
     }
 
+    if (buckConfig.getValue(parentSection, MIN_SAMPLES_TO_REPORT_ERROR).isPresent()) {
+      configBuilder.setMinSamplesToReportError(
+          buckConfig.getInteger(parentSection, MIN_SAMPLES_TO_REPORT_ERROR).getAsInt());
+    }
     return configBuilder.build();
   }
 }

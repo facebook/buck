@@ -16,6 +16,8 @@
 
 package com.facebook.buck.slb;
 
+import static com.facebook.buck.slb.AbstractClientSideSlbConfig.MIN_SAMPLES_TO_REPORT_ERROR_DEFAULT_VALUE;
+
 import com.google.common.base.Preconditions;
 import java.net.URI;
 import java.util.LinkedList;
@@ -26,23 +28,36 @@ public class ServerHealthState {
   private static final int MAX_STORED_SAMPLES = 100;
 
   private final int maxSamplesStored;
+  // This value sets how many samples we must in the sliding window before we determine the server
+  // is unhealthy. It is to avoid cases when one error is dims the server unhealthy.
+  private final int minSamplesToReportError;
   private final URI server;
   private final List<LatencySample> pingLatencies;
   private final List<RequestSample> requests;
+  private float lastReportedErrorPercentage;
+  private int lastReportedSamples;
+  private long lastReportedLatency;
 
   public ServerHealthState(URI server) {
-    this(server, MAX_STORED_SAMPLES);
+    this(server, MAX_STORED_SAMPLES, MIN_SAMPLES_TO_REPORT_ERROR_DEFAULT_VALUE);
   }
 
-  public ServerHealthState(URI server, int maxSamplesStored) {
+  public ServerHealthState(URI server, int minSamplesToReportError) {
+    this(server, MAX_STORED_SAMPLES, minSamplesToReportError);
+  }
+
+  public ServerHealthState(URI server, int maxSamplesStored, int minSamplesToReportError) {
     Preconditions.checkArgument(
         maxSamplesStored > 0,
         "The maximum number of samples stored must be positive instead of [%s].",
         maxSamplesStored);
     this.maxSamplesStored = maxSamplesStored;
+    this.minSamplesToReportError = minSamplesToReportError;
     this.server = server;
     this.pingLatencies = new LinkedList<>();
     this.requests = new LinkedList<>();
+    this.lastReportedLatency = 0;
+    this.lastReportedErrorPercentage = 0;
   }
 
   /**
@@ -125,12 +140,13 @@ public class ServerHealthState {
         }
       }
     }
+    lastReportedSamples = requestCount;
+    lastReportedErrorPercentage =
+        (requestCount == 0 || requestCount < minSamplesToReportError)
+            ? 0
+            : (errorCount / ((float) requestCount));
 
-    if (requestCount == 0) {
-      return 0;
-    } else {
-      return errorCount / ((float) requestCount);
-    }
+    return lastReportedErrorPercentage;
   }
 
   public URI getServer() {
@@ -152,11 +168,8 @@ public class ServerHealthState {
       }
     }
 
-    if (count > 0) {
-      return sum / count;
-    } else {
-      return -1;
-    }
+    lastReportedLatency = (count > 0) ? sum / count : -1;
+    return lastReportedLatency;
   }
 
   public String toString(long nowMillis, int timeRangeMillis) {
@@ -168,6 +181,18 @@ public class ServerHealthState {
         + ", errorCount="
         + getErrorPercentage(nowMillis, timeRangeMillis)
         + '}';
+  }
+
+  public float getLastReportedErrorPercentage() {
+    return lastReportedErrorPercentage;
+  }
+
+  public int getLastReportedSamples() {
+    return lastReportedSamples;
+  }
+
+  public long getLastReportedLatency() {
+    return lastReportedLatency;
   }
 
   private static final class RequestSample {

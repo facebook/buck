@@ -17,7 +17,6 @@
 package com.facebook.buck.slb;
 
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.timing.Clock;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.base.Joiner;
@@ -25,11 +24,9 @@ import com.google.common.base.Preconditions;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -38,9 +35,9 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 public class ServerHealthManager {
-  private static final Logger LOG = Logger.get(ServerHealthManager.class);
   public static final int CACHE_TIME_MS = 1000;
 
   private static final Comparator<Pair<URI, Long>> LATENCY_COMPARATOR =
@@ -63,9 +60,9 @@ public class ServerHealthManager {
       float maxErrorPercentage,
       int latencyCheckTimeRangeMillis,
       int maxAcceptableLatencyMillis,
+      int minSamplesToReportError,
       BuckEventBus eventBus,
       Clock clock) {
-    LOG.getClass();
     this.errorCheckTimeRangeMillis = errorCheckTimeRangeMillis;
     this.maxErrorPercentage = maxErrorPercentage;
     this.latencyCheckTimeRangeMillis = latencyCheckTimeRangeMillis;
@@ -73,7 +70,7 @@ public class ServerHealthManager {
     this.clock = clock;
     this.servers = new ConcurrentHashMap<>();
     for (URI server : servers) {
-      this.servers.put(server, new ServerHealthState(server));
+      this.servers.put(server, new ServerHealthState(server, minSamplesToReportError));
     }
     this.eventBus = eventBus;
     this.getBestServerCache =
@@ -116,9 +113,23 @@ public class ServerHealthManager {
       }
       throw new NoHealthyServersException(
           String.format(
-              "No servers available. Too many errors reported by all servers in the pool: [%s]",
+              "No servers available. High latency/errors reported: [%s]",
               Joiner.on(", ")
-                  .join(FluentIterable.from(servers.keySet()).transform(Object::toString))));
+                  .join(
+                      servers
+                          .entrySet()
+                          .stream()
+                          .map(
+                              e ->
+                                  String.format(
+                                      "%s (%d ms limit: %dms, error %.2f in last %d requests",
+                                      e.getKey().toString(),
+                                      e.getValue().getLastReportedLatency(),
+                                      maxAcceptableLatencyMillis,
+                                      e.getValue().getLastReportedErrorPercentage(),
+                                      e.getValue().getLastReportedSamples()))
+                          .sorted()
+                          .collect(Collectors.toList()))));
     } catch (ExecutionException e) {
       throw new RuntimeException(e);
     }
@@ -149,7 +160,7 @@ public class ServerHealthManager {
         return Optional.empty();
       }
 
-      Collections.sort(serverLatencies, LATENCY_COMPARATOR);
+      serverLatencies.sort(LATENCY_COMPARATOR);
       URI bestServer = serverLatencies.get(0).getFirst();
       Preconditions.checkNotNull(allPerServerData.get(bestServer)).setBestServer(true);
       return Optional.of(bestServer);

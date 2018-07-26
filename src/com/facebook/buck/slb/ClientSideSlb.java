@@ -97,6 +97,7 @@ public class ClientSideSlb implements HttpLoadBalancer {
             config.getMaxErrorPercentage(),
             config.getLatencyCheckTimeRangeMillis(),
             config.getMaxAcceptableLatencyMillis(),
+            config.getMinSamplesToReportError(),
             config.getEventBus(),
             this.clock);
     this.pingClient = pingClient;
