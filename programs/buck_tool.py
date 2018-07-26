@@ -385,6 +385,28 @@ class BuckTool(object):
         args, etc. from the daemon, and raise an exception that tells __main__ to run that binary
         """
         with Tracing("buck", args={"command": sys.argv[1:]}):
+            if os.name == "nt":
+                # Windows now support the VT100 sequences that are used by the Superconsole, but our
+                # process must opt into this behavior to enable it.
+
+                import ctypes
+
+                kernel32 = ctypes.windll.kernel32
+
+                STD_OUTPUT_HANDLE = -11
+                ENABLE_VIRTUAL_TERMINAL_PROCESSING = 0x0004
+
+                # These calls can fail because we're not output to a terminal or we're not on a new
+                # enough version of Windows. That's fine because we fail silently, and the
+                # Superconsole wasn't going to work anyways.
+                handle = kernel32.GetStdHandle(STD_OUTPUT_HANDLE)
+                console_mode = ctypes.c_uint(0)
+
+                if kernel32.GetConsoleMode(handle, ctypes.byref(console_mode)):
+                    kernel32.SetConsoleMode(
+                        handle, console_mode.value | ENABLE_VIRTUAL_TERMINAL_PROCESSING
+                    )
+
             argv = sys.argv[1:]
             if len(argv) == 0 or argv[0] != "run":
                 return run_fn(argv, env)
