@@ -273,10 +273,25 @@ public class PreDexMerge extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     buildableContext.recordArtifact(paths.successDir);
     buildableContext.recordArtifact(paths.additionalJarfilesSubdir);
 
+    final ImmutableSet<String> primaryDexPatterns;
+    if (dexSplitMode.isAllowRDotJavaInSecondaryDex()) {
+      primaryDexPatterns = dexSplitMode.getPrimaryDexPatterns();
+    } else {
+      primaryDexPatterns =
+          ImmutableSet.<String>builder()
+              .addAll(dexSplitMode.getPrimaryDexPatterns())
+              .add(
+                  "/R^",
+                  "/R$",
+                  // Pin this to the primary for test apps with no primary dex classes.
+                  // The exact match makes it fairly efficient.
+                  "^com/facebook/buck_generated/AppWithoutResourcesStub^")
+              .build();
+    }
     PreDexedFilesSorter preDexedFilesSorter =
         new PreDexedFilesSorter(
             dexFilesToMergeBuilder.build(),
-            dexSplitMode.getPrimaryDexPatterns(),
+            primaryDexPatterns,
             apkModuleGraph,
             paths.scratchDir,
             // We kind of overload the "getLinearAllocHardLimit" parameter

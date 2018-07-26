@@ -565,7 +565,8 @@ public class AndroidBinaryGraphEnhancer {
       // the best.  For secondary dexes, scale the estimate by a factor of 8 because R.java
       // classes are relatively small but consume a lot of field-id space.  The constant value
       // 8 was determined empirically and unscientifically.
-      int weightFactor = rtype.equals("_primarydex") ? 1 : 8;
+      int weightFactor =
+          !dexSplitMode.isAllowRDotJavaInSecondaryDex() || rtype.equals("_primarydex") ? 1 : 8;
       DexProducedFromJavaLibrary dexJar =
           new DexProducedFromJavaLibrary(
               splitJarTarget.withAppendedFlavors(dexFlavor, rtypeFlavor, getDexFlavor(dexTool)),
