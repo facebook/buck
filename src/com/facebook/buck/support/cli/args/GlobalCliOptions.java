@@ -30,6 +30,7 @@ public class GlobalCliOptions {
   public static final String PROFILE_PARSER_LONG_ARG = "--profile-buck-parser";
   public static final String NUM_THREADS_LONG_ARG = "--num-threads";
   public static final String CONFIG_LONG_ARG = "--config";
+  public static final String CONFIG_FILE_LONG_ARG = "--config-file";
   public static final String SKYLARK_PROFILE_LONG_ARG = "--skylark-profile-output";
   public static final String VERBOSE_LONG_ARG = "--verbose";
   public static final String VERBOSE_SHORT_ARG = "-v";
@@ -48,6 +49,7 @@ public class GlobalCliOptions {
           PROFILE_PARSER_LONG_ARG,
           NUM_THREADS_LONG_ARG,
           CONFIG_LONG_ARG,
+          CONFIG_FILE_LONG_ARG,
           VERBOSE_LONG_ARG,
           SKYLARK_PROFILE_LONG_ARG);
 
@@ -58,5 +60,9 @@ public class GlobalCliOptions {
       return GLOBAL_OPTIONS.contains(namedOption.name());
     }
     return false;
+  }
+
+  public static boolean isGlobalOption(String name) {
+    return GLOBAL_OPTIONS.contains(name);
   }
 }

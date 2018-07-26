@@ -19,6 +19,7 @@ package com.facebook.buck.cli;
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
@@ -28,7 +29,13 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ExitCode;
 import com.google.common.base.Joiner;
+import com.google.common.base.Splitter;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.List;
 import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
@@ -118,6 +125,87 @@ public class MainIntegrationTest {
       // other exceptions are not expected
       throw e;
     }
+  }
+
+  @Test
+  public void testConfigFileOverride() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "includes_override", tmp);
+    workspace.setUp();
+
+    Path arg = tmp.newFile("buckconfig");
+    Files.write(arg, ImmutableList.of("[buildfile]", "  includes = //includes.py"));
+
+    workspace.runBuckCommand("targets", "--config-file", arg.toString(), "//...").assertSuccess();
+
+    workspace.runBuckCommand("targets", "--config-file", "//=" + arg, "//...").assertSuccess();
+
+    workspace.runBuckCommand("targets", "--config-file", "repo//=" + arg, "//...").assertSuccess();
+  }
+
+  @Test
+  public void testConfigFileOverrideWithMultipleFiles() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "alias", tmp);
+    workspace.setUp();
+    String myServer = "//:my_server";
+    String myClient = "//:my_client";
+
+    Path arg1 = tmp.newFile("buckconfig1");
+    Files.write(arg1, ImmutableList.of("[alias]", "  server = " + myServer));
+    Path arg2 = tmp.newFile("buckconfig2");
+    Files.write(arg2, ImmutableList.of("[alias]", "  client = " + myClient));
+
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "audit",
+            "alias",
+            "--list-map",
+            "--config-file",
+            arg1.toString(),
+            "--config-file",
+            arg2.toString());
+    result.assertSuccess();
+
+    // Remove trailing newline from stdout before passing to Splitter.
+    String stdout = result.getStdout();
+    assertTrue(stdout.endsWith("\n"));
+    stdout = stdout.substring(0, stdout.length() - 1);
+
+    List<String> aliases = Splitter.on('\n').splitToList(stdout);
+    assertEquals(
+        ImmutableSet.of(
+            "foo = //:foo_example",
+            "bar = //:bar_example",
+            "server = " + myServer,
+            "client = " + myClient),
+        ImmutableSet.copyOf(aliases));
+  }
+
+  @Test
+  public void testConfigOverridesOrderShouldMatter() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "includes_override", tmp);
+    workspace.setUp();
+
+    Path arg1 = tmp.newFile("buckconfig1");
+    Files.write(arg1, ImmutableList.of("[buildfile]", "  includes = //invalid_includes.py"));
+    Path arg2 = tmp.newFile("buckconfig2");
+    Files.write(arg2, ImmutableList.of("[buildfile]", "  includes = //includes.py"));
+
+    workspace
+        .runBuckCommand(
+            "targets",
+            "--config",
+            "buildfile.includes=//invalid_includes.py",
+            "--config-file",
+            arg1.toString(),
+            "--config",
+            "buildfile.includes=//invalid_includes.py",
+            "--config-file",
+            arg2.toString(),
+            "//...")
+        .assertSuccess();
   }
 
   private String getUsageString() {

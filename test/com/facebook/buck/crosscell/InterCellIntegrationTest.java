@@ -98,12 +98,14 @@ import org.hamcrest.Matchers;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.pf4j.PluginManager;
 
 /** Cross-cell related integration tests that don't fit anywhere else. */
 public class InterCellIntegrationTest {
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Test
   public void ensureThatNormalBuildsWorkAsExpected() throws IOException {
@@ -470,6 +472,33 @@ public class InterCellIntegrationTest {
     ProcessResult result = primary.runBuckBuild("--config", "secondary//cxx.cc=", "//:cxxbinary");
 
     result.assertSuccess();
+  }
+
+  @Test
+  public void shouldBeAbleToUseCommandLineConfigFileOverrides() throws IOException {
+    assumeThat(Platform.detect(), is(not(WINDOWS)));
+
+    Pair<ProjectWorkspace, ProjectWorkspace> cells =
+        prepare("inter-cell/export-file/primary", "inter-cell/export-file/secondary");
+    ProjectWorkspace primary = cells.getFirst();
+    ProjectWorkspace secondary = cells.getSecond();
+    TestDataHelper.overrideBuckconfig(
+        secondary, ImmutableMap.of("cxx", ImmutableMap.of("cc", "/does/not/exist")));
+
+    Path arg = tmp.newFile("buckconfig");
+    Files.write(arg, ImmutableList.of("[cxx]", "  cc ="));
+
+    ProcessResult result =
+        primary.runBuckBuild("--config-file", "secondary//=" + arg, "//:cxxbinary");
+
+    result.assertSuccess();
+
+    thrown.expect(HumanReadableException.class);
+    thrown.expectMessage(
+        "Overridden cxx:cc path not found: /does/not/exist\n\n"
+            + "This error happened while trying to get dependency 'secondary//:cxxlib' of target '//:cxxbinary'");
+    // This should throw
+    primary.runBuckBuild("//:cxxbinary");
   }
 
   @Test
