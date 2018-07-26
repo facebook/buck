@@ -27,7 +27,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeThat;
 
 import com.facebook.buck.android.AssumeAndroidPlatform;
@@ -348,12 +347,8 @@ public class InterCellIntegrationTest {
   @Test
   public void xCellVisibilityShouldWorkAsExpected()
       throws IOException, InterruptedException, BuildFileParseException {
-    try {
-      parseTargetForXCellVisibility("//:not-visible-target");
-      fail("Did not expect parsing to succeed");
-    } catch (HumanReadableException expected) {
-      // Everything is as it should be.
-    }
+    thrown.expect(HumanReadableException.class);
+    parseTargetForXCellVisibility("//:not-visible-target");
   }
 
   @Test
@@ -447,9 +442,8 @@ public class InterCellIntegrationTest {
     result.assertSuccess();
   }
 
-  @SuppressWarnings("PMD.EmptyCatchBlock")
   @Test
-  public void shouldBeAbleToUseCommandLineConfigOverrides() throws IOException {
+  public void testCommandLineConfigOverridesShouldSucceed() throws IOException {
     assumeThat(Platform.detect(), is(not(WINDOWS)));
 
     Pair<ProjectWorkspace, ProjectWorkspace> cells =
@@ -459,23 +453,32 @@ public class InterCellIntegrationTest {
     TestDataHelper.overrideBuckconfig(
         secondary, ImmutableMap.of("cxx", ImmutableMap.of("cc", "/does/not/exist")));
 
-    try {
-      primary.runBuckBuild("//:cxxbinary");
-      fail("Did not expect to finish building");
-    } catch (HumanReadableException expected) {
-      assertEquals(
-          expected.getMessage(),
-          "Overridden cxx:cc path not found: /does/not/exist\n\n"
-              + "This error happened while trying to get dependency 'secondary//:cxxlib' of target '//:cxxbinary'");
-    }
-
     ProcessResult result = primary.runBuckBuild("--config", "secondary//cxx.cc=", "//:cxxbinary");
 
     result.assertSuccess();
   }
 
   @Test
-  public void shouldBeAbleToUseCommandLineConfigFileOverrides() throws IOException {
+  public void testCommandLineConfigOverridesShouldFail() throws IOException {
+    assumeThat(Platform.detect(), is(not(WINDOWS)));
+
+    Pair<ProjectWorkspace, ProjectWorkspace> cells =
+        prepare("inter-cell/export-file/primary", "inter-cell/export-file/secondary");
+    ProjectWorkspace primary = cells.getFirst();
+    ProjectWorkspace secondary = cells.getSecond();
+    TestDataHelper.overrideBuckconfig(
+        secondary, ImmutableMap.of("cxx", ImmutableMap.of("cc", "/does/not/exist")));
+
+    thrown.expect(HumanReadableException.class);
+    thrown.expectMessage(
+        "Overridden cxx:cc path not found: /does/not/exist\n\n"
+            + "This error happened while trying to get dependency 'secondary//:cxxlib' of target '//:cxxbinary'");
+    // This should throw
+    primary.runBuckBuild("//:cxxbinary");
+  }
+
+  @Test
+  public void testCommandLineConfigOverridesWithConfigFile() throws IOException {
     assumeThat(Platform.detect(), is(not(WINDOWS)));
 
     Pair<ProjectWorkspace, ProjectWorkspace> cells =
@@ -492,13 +495,6 @@ public class InterCellIntegrationTest {
         primary.runBuckBuild("--config-file", "secondary//=" + arg, "//:cxxbinary");
 
     result.assertSuccess();
-
-    thrown.expect(HumanReadableException.class);
-    thrown.expectMessage(
-        "Overridden cxx:cc path not found: /does/not/exist\n\n"
-            + "This error happened while trying to get dependency 'secondary//:cxxlib' of target '//:cxxbinary'");
-    // This should throw
-    primary.runBuckBuild("//:cxxbinary");
   }
 
   @Test
@@ -513,13 +509,6 @@ public class InterCellIntegrationTest {
         primary, ImmutableMap.of("cxx", ImmutableMap.of("cc", "/does/not/exist")));
     TestDataHelper.overrideBuckconfig(
         secondary, ImmutableMap.of("cxx", ImmutableMap.of("cc", "/does/not/exist")));
-
-    try {
-      primary.runBuckBuild("//:cxxbinary");
-      fail("Did not expect to finish building");
-    } catch (HumanReadableException expected) {
-      assertEquals(expected.getMessage(), "Overridden cxx:cc path not found: /does/not/exist");
-    }
 
     ProcessResult result = primary.runBuckBuild("--config", "cxx.cc=", "//:cxxbinary");
 
@@ -614,23 +603,28 @@ public class InterCellIntegrationTest {
 
   @Test
   public void childCellWithCellMappingNotInRootCellShouldThrowError() throws IOException {
+    thrown.expect(HumanReadableException.class);
+    thrown.expectMessage("repositories.third must exist in the root cell's cell mappings.");
+
     ProjectWorkspace root = createWorkspace("inter-cell/validation/root");
     ProjectWorkspace second = createWorkspace("inter-cell/validation/root");
     ProjectWorkspace third = createWorkspace("inter-cell/validation/root");
     registerCell(root, "second", second);
     registerCell(second, "third", third);
 
-    // should fail if "third" is not specified in root
-    try {
-      root.runBuckBuild("//:dummy");
-      fail("Should have thrown a HumanReadableException.");
-    } catch (HumanReadableException e) {
-      assertThat(
-          e.getHumanReadableErrorMessage(),
-          containsString("repositories.third must exist in the root cell's cell mappings."));
-    }
+    // should fail since "third" is not specified in root
+    root.runBuckBuild("//:dummy");
+  }
 
-    // and succeeds when it is
+  @Test
+  public void childCellWithCellMappingInRootCellShouldSucceed() throws IOException {
+    ProjectWorkspace root = createWorkspace("inter-cell/validation/root");
+    ProjectWorkspace second = createWorkspace("inter-cell/validation/root");
+    ProjectWorkspace third = createWorkspace("inter-cell/validation/root");
+    registerCell(root, "second", second);
+    registerCell(second, "third", third);
+
+    // now that "third" is registered in root, should succeed
     registerCell(root, "third", third);
     ProcessResult result = root.runBuckBuild("//:dummy");
     result.assertSuccess();
@@ -638,29 +632,19 @@ public class InterCellIntegrationTest {
 
   @Test
   public void childCellWithCellMappingThatDiffersFromRootCellShouldThrowError() throws IOException {
+    thrown.expect(HumanReadableException.class);
+    thrown.expectMessage(
+        "repositories.third must point to the same directory as the root cell's cell "
+            + "mapping:");
     ProjectWorkspace root = createWorkspace("inter-cell/validation/root");
     ProjectWorkspace second = createWorkspace("inter-cell/validation/root");
     ProjectWorkspace third = createWorkspace("inter-cell/validation/root");
     registerCell(root, "second", second);
     registerCell(second, "third", third);
-
-    // should fail if "third" is not mapped to third in the root.
     registerCell(root, "third", second);
-    try {
-      root.runBuckBuild("//:dummy");
-      fail("Should have thrown a HumanReadableException.");
-    } catch (HumanReadableException e) {
-      assertThat(
-          e.getHumanReadableErrorMessage(),
-          containsString(
-              "repositories.third must point to the same directory as the root cell's cell "
-                  + "mapping:"));
-    }
 
-    // and succeeds when it is
-    registerCell(root, "third", third);
-    ProcessResult result = root.runBuckBuild("//:dummy");
-    result.assertSuccess();
+    // should fail since we mapped "third" to wrong cell
+    root.runBuckBuild("//:dummy");
   }
 
   @Test
