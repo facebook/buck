@@ -1,0 +1,4 @@
+java_library(
+    name = "glob",
+    srcs = glob(["**/*.java"]),
+)

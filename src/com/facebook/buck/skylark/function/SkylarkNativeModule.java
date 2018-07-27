@@ -150,6 +150,13 @@ public class SkylarkNativeModule {
                       + "Please use an empty list ([]) instead."));
       return SkylarkList.MutableList.empty();
     }
+    if (parseContext.getPackageContext().getPackageIdentifier().getRunfilesPath().isEmpty()
+        && include.stream().anyMatch(str -> str.matches("(\\*\\/)*\\*\\*\\/.*"))) {
+      // Matches any of "**/", "*/**/" globs
+      throw new EvalException(
+          ast.getLocation(), "Recursive globs are prohibited at top-level directory");
+    }
+
     try {
       return SkylarkList.MutableList.copyOf(
           env,

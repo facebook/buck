@@ -444,6 +444,15 @@ def glob(
     if search_base is None:
         search_base = Path(build_env.dirname)
 
+    if build_env.dirname == build_env.project_root and any(
+        # match anything equivalent to recursive glob on all dirs e.g. "**/", "*/**/", "*/*/**/"
+        re.match(re.compile("^(\*\/)*\*\*\/"), pattern)
+        for pattern in includes
+    ):
+        fail(
+            "Recursive globs are prohibited at top-level directory", build_env=build_env
+        )
+
     results = None
     if not includes:
         results = []

@@ -576,4 +576,15 @@ public class ParserIntegrationTest {
             .assertSuccess();
     assertThat(result.getStderr(), not(containsString("Warning raised by BUCK file parser")));
   }
+
+  @Test
+  public void parseErrorIfTopLevelRecursiveGlob() throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "top_level_recursive_glob", temporaryFolder);
+    workspace.setUp();
+    assertParseFailedWithSubstrings(
+        workspace.runBuckCommand("build", "//:glob"),
+        "Recursive globs are prohibited at top-level directory");
+  }
 }
