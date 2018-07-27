@@ -18,7 +18,7 @@ package com.facebook.buck.parser;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.ConfigView;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import com.facebook.buck.io.WatchmanWatcher;
+import com.facebook.buck.io.watchman.WatchmanWatcher;
 import com.facebook.buck.parser.api.Syntax;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;

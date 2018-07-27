@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright 2018-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -14,15 +14,16 @@
  * under the License.
  */
 
-package com.facebook.buck.io;
+package com.facebook.buck.io.watchman;
 
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.event.WatchmanStatusEvent;
-import com.facebook.buck.io.WatchmanFactory.Capability;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.PathOrGlobMatcher;
+import com.facebook.buck.io.watchman.AbstractWatchmanPathEvent.Kind;
+import com.facebook.buck.io.watchman.WatchmanFactory.Capability;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.Threads;
 import com.facebook.buck.util.concurrent.MostExecutors;
@@ -393,7 +394,7 @@ public class WatchmanWatcher {
               return;
             }
             Boolean fileNew = (Boolean) file.get("new");
-            WatchmanPathEvent.Kind kind = WatchmanPathEvent.Kind.MODIFY;
+            Kind kind = WatchmanPathEvent.Kind.MODIFY;
             if (fileNew != null && fileNew) {
               kind = WatchmanPathEvent.Kind.CREATE;
             }

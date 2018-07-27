@@ -14,12 +14,15 @@
  * under the License.
  */
 
-package com.facebook.buck.io;
+package com.facebook.buck.io.watchman;
 
 import java.util.Map;
 import java.util.Optional;
 
-/** A {@link WatchmanClient} that simply returns a value passed in a constructor. */
+/**
+ * A {@link com.facebook.buck.io.watchman.WatchmanClient} that simply returns a value passed in a
+ * constructor.
+ */
 public class StubWatchmanClient implements WatchmanClient {
 
   private final Optional<? extends Map<String, ?>> result;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright 2018-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -14,17 +14,20 @@
  * under the License.
  */
 
-package com.facebook.buck.io;
+package com.facebook.buck.io.watchman;
 
-import java.io.IOException;
-import java.util.Map;
-import java.util.Optional;
+import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import org.immutables.value.Value;
 
-/** Testable interface for a Watchman client. */
-public interface WatchmanClient extends AutoCloseable {
-  Optional<? extends Map<String, ? extends Object>> queryWithTimeout(
-      long timeoutNanos, Object... query) throws IOException, InterruptedException;
+@Value.Immutable(builder = false, copy = false)
+@BuckStyleTuple
+interface AbstractWatchmanDiagnostic {
+  enum Level {
+    WARNING,
+    ERROR
+  }
 
-  @Override
-  void close() throws IOException;
+  Level getLevel();
+
+  String getMessage();
 }

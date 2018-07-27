@@ -28,7 +28,7 @@ import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypesFactory;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.event.ConsoleEvent;
-import com.facebook.buck.io.WatchmanDiagnosticEvent;
+import com.facebook.buck.io.watchman.WatchmanDiagnosticEvent;
 import com.facebook.buck.json.PythonDslProjectBuildFileParser;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.options.ProjectBuildFileParserOptions;

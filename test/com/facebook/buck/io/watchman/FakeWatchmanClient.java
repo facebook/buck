@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright 2018-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.io;
+package com.facebook.buck.io.watchman;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-/** Fake implementation of {@link WatchmanClient} for tests. */
+/** Fake implementation of {@link com.facebook.buck.io.watchman.WatchmanClient} for tests. */
 public class FakeWatchmanClient implements WatchmanClient {
   private final long queryElapsedTimeNanos;
   private final Map<? extends List<? extends Object>, ? extends Map<String, ? extends Object>>

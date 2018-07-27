@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright 2018-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -13,10 +13,26 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.facebook.buck.io;
 
-public class WatchmanWatcherException extends RuntimeException {
-  public WatchmanWatcherException(String message) {
-    super(message);
+package com.facebook.buck.io.watchman;
+
+public class WatchmanCursor {
+  private String watchmanCursor;
+
+  public WatchmanCursor(String initialCursor) {
+    this.watchmanCursor = initialCursor;
+  }
+
+  public void set(String newCursor) {
+    watchmanCursor = newCursor;
+  }
+
+  public String get() {
+    return watchmanCursor;
+  }
+
+  @Override
+  public String toString() {
+    return watchmanCursor;
   }
 }

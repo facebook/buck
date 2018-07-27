@@ -3,14 +3,15 @@ load("//tools/build_rules:java_rules.bzl", "standard_java_test")
 standard_java_test(
     name = "impl",
     deps = [
-        "//src/com/facebook/buck/io:watchman",
         "//src/com/facebook/buck/io/filesystem/skylark:skylark",
+        "//src/com/facebook/buck/io/watchman:watchman",
         "//src/com/facebook/buck/skylark/function:function",
         "//src/com/facebook/buck/skylark/io:io",
         "//src/com/facebook/buck/skylark/io/impl:impl",
         "//src/com/facebook/buck/util:process_executor",
         "//test/com/facebook/buck/cli:testutil",
         "//test/com/facebook/buck/io:testutil",
+        "//test/com/facebook/buck/io/watchman:testutil",
         "//test/com/facebook/buck/testutil:testutil",
         "//test/com/facebook/buck/util/timing:testutil",
         "//third-party/java/bazel:skylark-lang",

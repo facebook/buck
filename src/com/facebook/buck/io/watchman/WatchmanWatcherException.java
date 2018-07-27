@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright 2018-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -13,18 +13,10 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+package com.facebook.buck.io.watchman;
 
-package com.facebook.buck.io;
-
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
-import java.util.Optional;
-import org.immutables.value.Value;
-
-@Value.Immutable
-@BuckStyleTuple
-interface AbstractProjectWatch {
-
-  String getWatchRoot();
-
-  Optional<String> getProjectPrefix();
+public class WatchmanWatcherException extends RuntimeException {
+  public WatchmanWatcherException(String message) {
+    super(message);
+  }
 }

@@ -34,7 +34,7 @@ limitations under the License.
 
 package com.facebook.buck.io.unixsocket;
 
-import com.facebook.buck.io.Transport;
+import com.facebook.buck.io.watchman.Transport;
 import com.sun.jna.LastErrorException;
 import java.io.IOException;
 import java.io.InputStream;

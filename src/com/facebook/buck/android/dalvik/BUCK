@@ -37,7 +37,7 @@ java_binary(
         "//src/com/facebook/buck/graph:graph",
         "//src/com/facebook/buck/io:executable-finder",
         "//src/com/facebook/buck/io:io",
-        "//src/com/facebook/buck/io:transport",
+        "//src/com/facebook/buck/io/watchman:transport",
         "//src/com/facebook/buck/jvm/core:core",
         "//src/com/facebook/buck/jvm/java/classes:classes",
         "//src/com/facebook/buck/parser:rule_pattern",

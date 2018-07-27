@@ -23,12 +23,12 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.cli.TestWithBuckd;
-import com.facebook.buck.io.StubWatchmanClient;
-import com.facebook.buck.io.Watchman;
-import com.facebook.buck.io.WatchmanClient;
-import com.facebook.buck.io.WatchmanFactory;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.skylark.SkylarkFilesystem;
+import com.facebook.buck.io.watchman.StubWatchmanClient;
+import com.facebook.buck.io.watchman.Watchman;
+import com.facebook.buck.io.watchman.WatchmanClient;
+import com.facebook.buck.io.watchman.WatchmanFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.TestConsole;

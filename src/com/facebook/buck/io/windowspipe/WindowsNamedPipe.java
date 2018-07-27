@@ -16,7 +16,7 @@
 
 package com.facebook.buck.io.windowspipe;
 
-import com.facebook.buck.io.Transport;
+import com.facebook.buck.io.watchman.Transport;
 import com.sun.jna.Memory;
 import com.sun.jna.Pointer;
 import com.sun.jna.platform.win32.WinBase;

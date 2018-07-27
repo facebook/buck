@@ -21,7 +21,7 @@ import com.facebook.buck.core.cell.CellPathResolverView;
 import com.facebook.buck.core.cell.CellProvider;
 import com.facebook.buck.core.cell.DistBuildCellParams;
 import com.facebook.buck.core.cell.resolver.CellPathResolver;
-import com.facebook.buck.io.WatchmanFactory;
+import com.facebook.buck.io.watchman.WatchmanFactory;
 import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
 import com.facebook.buck.rules.keys.config.impl.ConfigRuleKeyConfigurationFactory;
 import com.facebook.buck.toolchain.ToolchainProvider;

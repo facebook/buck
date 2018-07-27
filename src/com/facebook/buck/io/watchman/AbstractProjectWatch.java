@@ -14,20 +14,17 @@
  * under the License.
  */
 
-package com.facebook.buck.io;
+package com.facebook.buck.io.watchman;
 
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import java.util.Optional;
 import org.immutables.value.Value;
 
-@Value.Immutable(builder = false, copy = false)
+@Value.Immutable
 @BuckStyleTuple
-interface AbstractWatchmanDiagnostic {
-  enum Level {
-    WARNING,
-    ERROR
-  }
+interface AbstractProjectWatch {
 
-  Level getLevel();
+  String getWatchRoot();
 
-  String getMessage();
+  Optional<String> getProjectPrefix();
 }

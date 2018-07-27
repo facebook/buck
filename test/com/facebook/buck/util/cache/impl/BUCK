@@ -4,8 +4,8 @@ standard_java_test(
     name = "impl",
     deps = [
         "//src/com/facebook/buck/io:io",
-        "//src/com/facebook/buck/io:watchman",
         "//src/com/facebook/buck/io/filesystem:filesystem",
+        "//src/com/facebook/buck/io/watchman:watchman",
         "//src/com/facebook/buck/util:util",
         "//src/com/facebook/buck/util/cache:cache",
         "//src/com/facebook/buck/util/cache/impl:impl",
@@ -25,7 +25,7 @@ java_library(
     srcs = ["CacheBenchmark.java"],
     exported_deps = [
         "//src/com/facebook/buck/io:io",
-        "//src/com/facebook/buck/io:watchman",
+        "//src/com/facebook/buck/io/watchman:watchman",
         "//src/com/facebook/buck/util/cache:cache",
         "//src/com/facebook/buck/util/cache/impl:impl",
         "//test/com/facebook/buck/testutil:testutil",

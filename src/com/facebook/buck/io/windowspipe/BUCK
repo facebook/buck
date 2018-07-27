@@ -3,7 +3,7 @@ java_library(
     srcs = glob(["*.java"]),
     visibility = ["PUBLIC"],
     deps = [
-        "//src/com/facebook/buck/io:transport",
+        "//src/com/facebook/buck/io/watchman:transport",
         "//third-party/java/guava:guava",
         "//third-party/java/jna:jna",
         "//third-party/java/jna:jna-platform",

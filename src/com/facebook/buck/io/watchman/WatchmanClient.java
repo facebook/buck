@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright 2018-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -14,25 +14,17 @@
  * under the License.
  */
 
-package com.facebook.buck.io;
+package com.facebook.buck.io.watchman;
 
-public class WatchmanCursor {
-  private String watchmanCursor;
+import java.io.IOException;
+import java.util.Map;
+import java.util.Optional;
 
-  public WatchmanCursor(String initialCursor) {
-    this.watchmanCursor = initialCursor;
-  }
-
-  public void set(String newCursor) {
-    watchmanCursor = newCursor;
-  }
-
-  public String get() {
-    return watchmanCursor;
-  }
+/** Testable interface for a Watchman client. */
+public interface WatchmanClient extends AutoCloseable {
+  Optional<? extends Map<String, ? extends Object>> queryWithTimeout(
+      long timeoutNanos, Object... query) throws IOException, InterruptedException;
 
   @Override
-  public String toString() {
-    return watchmanCursor;
-  }
+  void close() throws IOException;
 }

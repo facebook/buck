@@ -16,8 +16,8 @@
 
 package com.facebook.buck.skylark.io.impl;
 
-import com.facebook.buck.io.ProjectWatch;
-import com.facebook.buck.io.WatchmanClient;
+import com.facebook.buck.io.watchman.ProjectWatch;
+import com.facebook.buck.io.watchman.WatchmanClient;
 import com.facebook.buck.skylark.io.Globber;
 import com.facebook.buck.skylark.io.GlobberFactory;
 import com.google.common.collect.ImmutableMap;

@@ -18,8 +18,8 @@ package com.facebook.buck.cli;
 
 import static org.junit.Assume.assumeFalse;
 
-import com.facebook.buck.io.Watchman;
-import com.facebook.buck.io.WatchmanFactory;
+import com.facebook.buck.io.watchman.Watchman;
+import com.facebook.buck.io.watchman.WatchmanFactory;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.timing.FakeClock;

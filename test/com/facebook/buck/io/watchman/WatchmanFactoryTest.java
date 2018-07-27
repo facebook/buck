@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright 2018-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -14,11 +14,12 @@
  * under the License.
  */
 
-package com.facebook.buck.io;
+package com.facebook.buck.io.watchman;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.io.WatchmanFactory.InitialWatchmanClientFactory;
+import com.facebook.buck.io.FakeExecutableFinder;
+import com.facebook.buck.io.watchman.WatchmanFactory.InitialWatchmanClientFactory;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.FakeListeningProcessExecutor;

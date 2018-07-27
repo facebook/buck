@@ -22,8 +22,8 @@ import com.facebook.buck.core.exceptions.handler.HumanReadableExceptionAugmentor
 import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypesProvider;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
-import com.facebook.buck.io.WatchmanFactory;
 import com.facebook.buck.io.filesystem.skylark.SkylarkFilesystem;
+import com.facebook.buck.io.watchman.WatchmanFactory;
 import com.facebook.buck.json.HybridProjectBuildFileParser;
 import com.facebook.buck.json.PythonDslProjectBuildFileParser;
 import com.facebook.buck.json.TargetCountVerificationParserDelegate;

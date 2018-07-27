@@ -4,7 +4,7 @@ java_library(
     visibility = ["PUBLIC"],
     deps = [
         "//src/com/facebook/buck/io:io",
-        "//src/com/facebook/buck/io:watchman",
+        "//src/com/facebook/buck/io/watchman:watchman",
         "//src/com/facebook/buck/skylark/io:io",
         "//src/com/facebook/buck/util:util",
         "//third-party/java/bazel:skylark-lang",

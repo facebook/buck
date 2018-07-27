@@ -16,7 +16,7 @@
 
 package com.facebook.buck.skylark.io.impl;
 
-import com.facebook.buck.io.WatchmanClient;
+import com.facebook.buck.io.watchman.WatchmanClient;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;

@@ -18,9 +18,9 @@ package com.facebook.buck.parser.options;
 
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import com.facebook.buck.io.Watchman;
-import com.facebook.buck.io.WatchmanFactory;
 import com.facebook.buck.io.filesystem.PathOrGlobMatcher;
+import com.facebook.buck.io.watchman.Watchman;
+import com.facebook.buck.io.watchman.WatchmanFactory;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;

@@ -11,8 +11,8 @@ java_immutables_library(
     deps = [
         "//src/com/facebook/buck/core/model/targetgraph:targetgraph",
         "//src/com/facebook/buck/io:io",
-        "//src/com/facebook/buck/io:watchman",
         "//src/com/facebook/buck/io/filesystem:filesystem",
+        "//src/com/facebook/buck/io/watchman:watchman",
         "//third-party/java/guava:guava",
     ],
 )
