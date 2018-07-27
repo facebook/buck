@@ -27,7 +27,7 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -64,7 +64,7 @@ public class PrebuiltAppleFrameworkFlavored extends AbstractBuildRuleWithDeclare
     this.frameworkName =
         MoreFiles.getNameWithoutExtension(pathResolver.getAbsolutePath(frameworkPath));
     this.out =
-        BuildTargets.getGenPath(getProjectFilesystem(), buildTarget, "%s")
+        BuildTargetPaths.getGenPath(getProjectFilesystem(), buildTarget, "%s")
             .resolve(pathResolver.getAbsolutePath(frameworkPath).getFileName().toString());
   }
 

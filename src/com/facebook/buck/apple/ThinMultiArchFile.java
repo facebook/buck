@@ -29,7 +29,7 @@ import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.cxx.HasAppleDebugSymbolDeps;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.shell.DefaultShellStep;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
@@ -61,7 +61,7 @@ public class ThinMultiArchFile extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.lipo = lipo;
     this.maybeFatBinary = maybeFatBinary;
     this.targetArchitecture = targetArchitecture;
-    this.output = BuildTargets.getGenPath(projectFilesystem, buildTarget, "%s");
+    this.output = BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s");
   }
 
   @Override
@@ -81,7 +81,7 @@ public class ThinMultiArchFile extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   private void lipoBinaries(BuildContext context, ImmutableList.Builder<Step> steps) {
     Path scratchPath =
-        BuildTargets.getScratchPath(getProjectFilesystem(), getBuildTarget(), "%s__lipo__")
+        BuildTargetPaths.getScratchPath(getProjectFilesystem(), getBuildTarget(), "%s__lipo__")
             .resolve("universal.a");
 
     steps.add(
@@ -98,7 +98,6 @@ public class ThinMultiArchFile extends AbstractBuildRuleWithDeclaredAndExtraDeps
         getProjectFilesystem().resolve(scratchPath).toString());
     steps.add(
         new DefaultShellStep(
-            getBuildTarget(),
             getProjectFilesystem().getRootPath(),
             createCommand.build(),
             lipo.getEnvironment(context.getSourcePathResolver())));
@@ -113,7 +112,6 @@ public class ThinMultiArchFile extends AbstractBuildRuleWithDeclaredAndExtraDeps
         getProjectFilesystem().resolve(output).toString());
     steps.add(
         new DefaultShellStep(
-            getBuildTarget(),
             getProjectFilesystem().getRootPath(),
             commandBuilder.build(),
             lipo.getEnvironment(context.getSourcePathResolver())));
