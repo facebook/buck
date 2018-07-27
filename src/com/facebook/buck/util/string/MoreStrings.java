@@ -33,6 +33,16 @@ public final class MoreStrings {
   /** Utility class: do not instantiate. */
   private MoreStrings() {}
 
+  /**
+   * Joins the les passed in with the platform line separator.
+   *
+   * @param lines the lines that need to be joined.
+   * @return String, containing the joined lines using the platform line separator as delimiter.
+   */
+  public static String linesToText(String... lines) {
+    return String.join(System.lineSeparator(), lines);
+  }
+
   public static boolean isEmpty(CharSequence sequence) {
     return sequence.length() == 0;
   }

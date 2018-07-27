@@ -16,6 +16,8 @@
 
 package com.facebook.buck.util;
 
+import static com.facebook.buck.util.string.MoreStrings.linesToText;
+
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.exceptions.handler.HumanReadableExceptionAugmentor;
 import com.facebook.buck.event.ConsoleEvent;
@@ -111,7 +113,8 @@ public class ErrorLogger {
           public void logUserVisibleInternalError(String message) {
             // TODO(cjhopman): This should be colored to make it obviously different from a user
             // error.
-            dispatcher.post(ConsoleEvent.severe("Buck encountered an internal error\n" + message));
+            dispatcher.post(
+                ConsoleEvent.severe(linesToText("Buck encountered an internal error", message)));
           }
 
           @Override
@@ -148,7 +151,7 @@ public class ErrorLogger {
       return context.isEmpty()
           ? Optional.empty()
           : Optional.of(
-              Joiner.on("\n")
+              Joiner.on(System.lineSeparator())
                   .join(context.stream().map(c -> indent + c).collect(Collectors.toList())));
     }
 
@@ -175,13 +178,15 @@ public class ErrorLogger {
         // TODO(cjhopman): Is this message helpful? What's a smaller directory?
         message =
             "Loop detected in your directory, which may be caused by circular symlink. "
-                + "You may consider running the command in a smaller directory.\n";
+                + "You may consider running the command in a smaller directory."
+                + System.lineSeparator();
       }
 
       if (rootCause instanceof OutOfMemoryError) {
         message =
             "Buck ran out of memory, you may consider increasing heap size with java args "
-                + "(see https://buckbuild.com/concept/buckjavaargs.html)\n";
+                + "(see https://buckbuild.com/concept/buckjavaargs.html)"
+                + System.lineSeparator();
       }
 
       if (suppressStackTraces) {
@@ -230,7 +235,7 @@ public class ErrorLogger {
       messageBuilder.append(getMessage(suppressStackTraces));
       Optional<String> context = getContext(indent);
       if (context.isPresent()) {
-        messageBuilder.append("\n");
+        messageBuilder.append(System.lineSeparator());
         messageBuilder.append(context.get());
       }
       return errorAugmentor.getAugmentedError(messageBuilder.toString());
@@ -281,7 +286,7 @@ public class ErrorLogger {
     // If there's a parent, print the parent's stack trace and then filter out it and its
     // suppressed exceptions. This allows us to elide stack frames that are shared between the
     // root cause and its parent.
-    return Pattern.compile(".*?\nCaused by: ", Pattern.DOTALL)
+    return Pattern.compile(".*?" + System.lineSeparator() + "Caused by: ", Pattern.DOTALL)
         .matcher(Throwables.getStackTraceAsString(parent))
         .replaceFirst("");
   }

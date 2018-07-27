@@ -48,7 +48,6 @@ import com.facebook.buck.util.timing.Clock;
 import com.facebook.buck.util.types.Pair;
 import com.facebook.buck.util.unit.SizeUnit;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
@@ -75,7 +74,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.GuardedBy;
@@ -513,7 +511,7 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
     if (!formattedLine.isEmpty()) {
       // Split log messages at newlines and add each line individually to keep the line count
       // consistent.
-      lines.addAll(Splitter.on("\n").split(formattedLine));
+      lines.addAll(Splitter.on(System.lineSeparator()).split(formattedLine));
     }
   }
 
@@ -657,7 +655,7 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
               locale,
               "%d " + convertToAllCapsIfNeeded("updated"),
               cacheRateStats.getUpdatedRulesCount()));
-      jobSummary = Joiner.on(", ").join(columns);
+      jobSummary = String.join(", ", columns);
     }
 
     return Strings.isNullOrEmpty(jobSummary) ? Optional.empty() : Optional.of(jobSummary);
@@ -699,7 +697,7 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
               "%.1f%% " + convertToAllCapsIfNeeded("cache errors"),
               cacheRateStats.getCacheErrorRate()));
     }
-    return parseLine + " " + Joiner.on(", ").join(columns);
+    return parseLine + " " + String.join(", ", columns);
   }
 
   @Subscribe
@@ -912,7 +910,8 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
       }
     }
     ImmutableList<String> slowRulesLogs = slowRulesLogsBuilder.build();
-    LOG.info(slowRulesLogs.stream().collect(Collectors.joining("\n")));
+    LOG.info(String.join(System.lineSeparator(), slowRulesLogs));
+
     if (showSlowRulesInConsole) {
       lines.addAll(slowRulesLogs);
     }

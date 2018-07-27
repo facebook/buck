@@ -16,6 +16,7 @@
 
 package com.facebook.buck.testutil;
 
+import static com.facebook.buck.util.string.MoreStrings.linesToText;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
@@ -73,9 +74,9 @@ public class FakeProjectFilesystemTest {
   @Test
   public void testReadLines() throws IOException {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
-    filesystem.writeContentsToPath("line one.\nline two.\n", Paths.get("A.txt"));
+    filesystem.writeContentsToPath(linesToText("line one.", "line two.", ""), Paths.get("A.txt"));
     filesystem.writeLinesToPath(ImmutableList.of(), Paths.get("B.txt"));
-    filesystem.writeContentsToPath("\n", Paths.get("C.txt"));
+    filesystem.writeContentsToPath(System.lineSeparator(), Paths.get("C.txt"));
 
     MoreAsserts.assertIterablesEquals(
         ImmutableList.of("line one.", "line two."), filesystem.readLines(Paths.get("A.txt")));

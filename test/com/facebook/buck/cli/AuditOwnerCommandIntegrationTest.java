@@ -15,7 +15,8 @@
  */
 package com.facebook.buck.cli;
 
-import static org.junit.Assert.assertEquals;
+import static com.facebook.buck.util.MoreStringsForTests.equalToIgnoringPlatformNewlines;
+import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -38,7 +39,9 @@ public class AuditOwnerCommandIntegrationTest {
 
     ProcessResult result = workspace.runBuckCommand("audit", "owner", "example/1.txt");
     result.assertSuccess();
-    assertEquals(workspace.getFileContents("stdout-one"), result.getStdout());
+    assertThat(
+        workspace.getFileContents("stdout-one"),
+        equalToIgnoringPlatformNewlines(result.getStdout()));
   }
 
   @Test
@@ -57,6 +60,8 @@ public class AuditOwnerCommandIntegrationTest {
             isPlatformWindows ? "example\\1.txt" : "example/1.txt",
             isPlatformWindows ? "example\\lib\\2.txt" : "example/lib/2.txt");
     result.assertSuccess();
-    assertEquals(workspace.getFileContents(expectedJson), result.getStdout());
+    assertThat(
+        workspace.getFileContents(expectedJson),
+        equalToIgnoringPlatformNewlines(result.getStdout()));
   }
 }

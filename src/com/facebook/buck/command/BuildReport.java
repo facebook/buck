@@ -16,6 +16,8 @@
 
 package com.facebook.buck.command;
 
+import static com.facebook.buck.util.string.MoreStrings.linesToText;
+
 import com.facebook.buck.core.build.engine.BuildResult;
 import com.facebook.buck.core.build.engine.BuildRuleSuccessType;
 import com.facebook.buck.core.exceptions.handler.HumanReadableExceptionAugmentor;
@@ -83,16 +85,17 @@ public class BuildReport {
 
       report.append(
           String.format(
-              "%s %s%s%s\n",
+              "%s %s%s%s",
               successIndicator,
               rule.getBuildTarget(),
               successType != null ? " " + successType : "",
               outputFile != null ? " " + pathResolver.getRelativePath(outputFile) : ""));
+      report.append(System.lineSeparator());
     }
 
     if (!buildExecutionResult.getFailures().isEmpty()
         && console.getVerbosity().shouldPrintStandardInformation()) {
-      report.append("\n ** Summary of failures encountered during the build **\n");
+      report.append(linesToText("", " ** Summary of failures encountered during the build **", ""));
       for (BuildResult failureResult : buildExecutionResult.getFailures()) {
         Throwable failure = Preconditions.checkNotNull(failureResult.getFailure());
         new ErrorLogger(

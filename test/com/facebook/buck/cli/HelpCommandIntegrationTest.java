@@ -16,6 +16,8 @@
 
 package com.facebook.buck.cli;
 
+import static com.facebook.buck.util.string.MoreStrings.linesToText;
+
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -36,46 +38,47 @@ public class HelpCommandIntegrationTest {
     ProcessResult result = workspace.runBuckCommand("help");
 
     result.assertSuccess(
-        "Description:\n"
-            + "  Buck build tool\n"
-            + "\n"
-            + "Usage:\n"
-            + "  buck [<options>]\n"
-            + "  buck <command> --help\n"
-            + "  buck <command> [<command-options>]\n"
-            + "\n"
-            + "Available commands:\n"
-            + "  audit          lists the inputs for the specified target\n"
-            + "  build          builds the specified target\n"
-            + "  cache          makes calls to the artifact cache\n"
-            + "  cachedelete    Delete artifacts from the local and remote cache\n"
-            + "  clean          deletes any generated files and caches\n"
-            + "  distbuild      attaches to a distributed build (experimental)\n"
-            + "  doctor         debug and fix issues of Buck commands\n"
-            + "  fetch          downloads remote resources to your local machine\n"
-            + "  fix            attempts to fix errors encountered in the previous build\n"
-            + "  help           shows this screen (or the help page of the specified command) and exits.\n"
-            + "  install        builds and installs an application\n"
-            + "  kill           kill buckd for the current project\n"
-            + "  killall        kill all buckd processes\n"
-            + "  machoutils     provides some utils for Mach O binary files\n"
-            + "  parser-cache   Load and save state of the parser cache\n"
-            + "  project        generates project configuration files for an IDE\n"
-            + "  publish        builds and publishes a library to a central repository\n"
-            + "  query          provides facilities to query information about the target nodes graph\n"
-            + "  rage           debug and fix issues of Buck commands\n"
-            + "  root           prints the absolute path to the root of the current buck project\n"
-            + "  run            runs a target as a command\n"
-            + "  server         query and control the http server\n"
-            + "  suggest        suggests a refactoring for the specified build target\n"
-            + "  targets        prints the list of buildable targets\n"
-            + "  test           builds and runs the tests for the specified target\n"
-            + "  uninstall      uninstalls an APK\n"
-            + "  verify-caches  Verify contents of internal Buck in-memory caches.\n"
-            + "\n"
-            + "Options:\n"
-            + " --flagfile FILE : File to read command line arguments from.\n"
-            + " --help (-h)     : Shows this screen and exits.\n"
-            + " --version (-V)  : Show version number.");
+        linesToText(
+            "Description:",
+            "  Buck build tool",
+            "",
+            "Usage:",
+            "  buck [<options>]",
+            "  buck <command> --help",
+            "  buck <command> [<command-options>]",
+            "",
+            "Available commands:",
+            "  audit          lists the inputs for the specified target",
+            "  build          builds the specified target",
+            "  cache          makes calls to the artifact cache",
+            "  cachedelete    Delete artifacts from the local and remote cache",
+            "  clean          deletes any generated files and caches",
+            "  distbuild      attaches to a distributed build (experimental)",
+            "  doctor         debug and fix issues of Buck commands",
+            "  fetch          downloads remote resources to your local machine",
+            "  fix            attempts to fix errors encountered in the previous build",
+            "  help           shows this screen (or the help page of the specified command) and exits.",
+            "  install        builds and installs an application",
+            "  kill           kill buckd for the current project",
+            "  killall        kill all buckd processes",
+            "  machoutils     provides some utils for Mach O binary files",
+            "  parser-cache   Load and save state of the parser cache",
+            "  project        generates project configuration files for an IDE",
+            "  publish        builds and publishes a library to a central repository",
+            "  query          provides facilities to query information about the target nodes graph",
+            "  rage           debug and fix issues of Buck commands",
+            "  root           prints the absolute path to the root of the current buck project",
+            "  run            runs a target as a command",
+            "  server         query and control the http server",
+            "  suggest        suggests a refactoring for the specified build target",
+            "  targets        prints the list of buildable targets",
+            "  test           builds and runs the tests for the specified target",
+            "  uninstall      uninstalls an APK",
+            "  verify-caches  Verify contents of internal Buck in-memory caches.",
+            "",
+            "Options:",
+            " --flagfile FILE : File to read command line arguments from.",
+            " --help (-h)     : Shows this screen and exits.",
+            " --version (-V)  : Show version number."));
   }
 }

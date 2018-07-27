@@ -148,11 +148,15 @@ public class TestCommandIntegrationTest {
     Assert.assertThat(
         result.getStderr(),
         Matchers.matchesPattern(
-            Pattern.compile(".*PASS.*?MockTest\n.*", Pattern.MULTILINE | Pattern.DOTALL)));
+            Pattern.compile(
+                ".*PASS.*?MockTest" + System.lineSeparator() + ".*",
+                Pattern.MULTILINE | Pattern.DOTALL)));
     Assert.assertThat(
         result.getStderr(),
         Matchers.matchesPattern(
-            Pattern.compile(".*PASS.*?MockTest2\n.*", Pattern.MULTILINE | Pattern.DOTALL)));
+            Pattern.compile(
+                ".*PASS.*?MockTest2" + System.lineSeparator() + ".*",
+                Pattern.MULTILINE | Pattern.DOTALL)));
     Assert.assertThat(result.getStderr(), Matchers.containsString("TESTS PASSED"));
   }
 }

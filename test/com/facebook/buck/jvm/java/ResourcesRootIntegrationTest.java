@@ -44,7 +44,7 @@ public class ResourcesRootIntegrationTest {
     ProcessExecutor.Result result = workspace.runJar(supWorldJar);
     assertEquals(
         "SupWorld should print the resource file's contents.",
-        "nuthin much\n",
+        "nuthin much" + System.lineSeparator(),
         result.getStdout().get());
     assertEquals("", result.getStderr().get());
   }

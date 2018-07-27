@@ -16,6 +16,7 @@
 
 package com.facebook.buck.shell;
 
+import static com.facebook.buck.util.string.MoreStrings.linesToText;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.event.ConsoleEvent;
@@ -52,8 +53,9 @@ public class ShellStepTest {
           "V2", "$foo'bar'");
 
   private static final Path PATH = Paths.get("/tmp/a b");
-  private static final String ERROR_MSG = "some syntax error\ncompilation failed\n";
-  private static final String OUTPUT_MSG = "processing data...\n";
+  private static final String ERROR_MSG =
+      linesToText("some syntax error", "compilation failed", "");
+  private static final String OUTPUT_MSG = "processing data..." + System.lineSeparator();
   private static final int EXIT_FAILURE = 1;
   private static final int EXIT_SUCCESS = 0;
 

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.util;
 
+import static com.facebook.buck.util.string.MoreStrings.linesToText;
 import static org.junit.Assert.*;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
@@ -84,20 +85,21 @@ public class ErrorLoggerTest {
     LoggedErrors errors =
         logException(new BuckExecutionException(new HumanReadableException("message"), "context"));
     assertNull(errors.userVisibleInternal);
-    assertEquals("message\n" + "    context", errors.userVisible);
+    assertEquals(linesToText("message", "    context"), errors.userVisible);
   }
 
   @Test
   public void addsErrorMessageAugmentations() {
     String rawMessage =
-        "\u001B[1mmain.cpp:1:13: \u001B[0m\u001B[0;1;31merror: \u001B[0m\u001B[1mexpected '}'\u001B[0m\n"
-            + "int main() {\n"
-            + "\u001B[0;1;32m            ^\n"
-            + "\u001B[0m\u001B[1mmain.cpp:1:12: \u001B[0m\u001B[0;1;30mnote: \u001B[0mto match this '{'\u001B[0m\n"
-            + "int main() {\n"
-            + "\u001B[0;1;32m           ^\n"
-            + "\u001B[0m1 error generated.";
-    String expected = rawMessage + "\n    context\nTry adding '}'!";
+        linesToText(
+            "\u001B[1mmain.cpp:1:13: \u001B[0m\u001B[0;1;31merror: \u001B[0m\u001B[1mexpected '}'\u001B[0m",
+            "int main() {",
+            "\u001B[0;1;32m            ^",
+            "\u001B[0m\u001B[1mmain.cpp:1:12: \u001B[0m\u001B[0;1;30mnote: \u001B[0mto match this '{'\u001B[0m",
+            "int main() {",
+            "\u001B[0;1;32m           ^",
+            "\u001B[0m1 error generated.");
+    String expected = linesToText(rawMessage, "    context", "Try adding '}'!");
 
     LoggedErrors errors =
         logException(new BuckExecutionException(new HumanReadableException(rawMessage), "context"));
@@ -108,15 +110,16 @@ public class ErrorLoggerTest {
   @Test
   public void addsErrorMessageAugmentationsToInternalErrors() {
     String rawMessage =
-        "\u001B[1mmain.cpp:1:13: \u001B[0m\u001B[0;1;31merror: \u001B[0m\u001B[1mexpected '}'\u001B[0m\n"
-            + "int main() {\n"
-            + "\u001B[0;1;32m            ^\n"
-            + "\u001B[0m\u001B[1mmain.cpp:1:12: \u001B[0m\u001B[0;1;30mnote: \u001B[0mto match this '{'\u001B[0m\n"
-            + "int main() {\n"
-            + "\u001B[0;1;32m           ^\n"
-            + "\u001B[0m1 error generated.";
+        linesToText(
+            "\u001B[1mmain.cpp:1:13: \u001B[0m\u001B[0;1;31merror: \u001B[0m\u001B[1mexpected '}'\u001B[0m",
+            "int main() {",
+            "\u001B[0;1;32m            ^",
+            "\u001B[0m\u001B[1mmain.cpp:1:12: \u001B[0m\u001B[0;1;30mnote: \u001B[0mto match this '{'\u001B[0m",
+            "int main() {",
+            "\u001B[0;1;32m           ^",
+            "\u001B[0m1 error generated.");
     String expected =
-        "java.lang.RuntimeException: " + rawMessage + "\n    context\nTry adding '}'!";
+        linesToText("java.lang.RuntimeException: " + rawMessage, "    context", "Try adding '}'!");
 
     LoggedErrors errors =
         logException(new BuckExecutionException(new RuntimeException(rawMessage), "context"));
@@ -150,9 +153,10 @@ public class ErrorLoggerTest {
 
     assertNull(errors.userVisible);
     assertEquals(
-        "Buck ran out of memory, you may consider increasing heap size with java args "
-            + "(see https://buckbuild.com/concept/buckjavaargs.html)\n"
-            + "java.lang.OutOfMemoryError: No more memory!",
+        linesToText(
+            "Buck ran out of memory, you may consider increasing heap size with java args "
+                + "(see https://buckbuild.com/concept/buckjavaargs.html)",
+            "java.lang.OutOfMemoryError: No more memory!"),
         errors.userVisibleInternal);
   }
 
@@ -163,9 +167,10 @@ public class ErrorLoggerTest {
 
     assertNull(errors.userVisible);
     assertEquals(
-        "Loop detected in your directory, which may be caused by circular symlink. "
-            + "You may consider running the command in a smaller directory.\n"
-            + "java.nio.file.FileSystemLoopException: It's a loop!",
+        linesToText(
+            "Loop detected in your directory, which may be caused by circular symlink. "
+                + "You may consider running the command in a smaller directory.",
+            "java.nio.file.FileSystemLoopException: It's a loop!"),
         errors.userVisibleInternal);
   }
 

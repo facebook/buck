@@ -50,6 +50,7 @@ import com.facebook.buck.util.ErrorLogger;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.Threads;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.string.MoreStrings;
 import com.facebook.buck.util.timing.Clock;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
@@ -365,7 +366,17 @@ public class Build implements Closeable {
               ? "Failure report is empty."
               :
               // Remove trailing newline from build report.
-              buildReportText.substring(0, buildReportText.length() - 1);
+              // Note: In error cases the buildReportText doesn't end with new-line character,
+              // but with '.'.
+              buildReportText.endsWith(System.lineSeparator())
+                  ? MoreStrings.withoutSuffix(buildReportText, System.lineSeparator())
+                  :
+                  // The error message always gets a '.' at the end, so, to avoid duplication
+                  // remove the trailing '.' if one is present.
+                  buildReportText.endsWith(".")
+                      ? MoreStrings.withoutSuffix(buildReportText, ".")
+                      : buildReportText;
+
       eventBus.post(ConsoleEvent.info(buildReportText));
       exitCode = buildExecutionResult.getFailures().isEmpty() ? 0 : 1;
       if (exitCode != 0) {

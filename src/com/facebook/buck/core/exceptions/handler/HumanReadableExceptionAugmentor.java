@@ -66,13 +66,15 @@ public class HumanReadableExceptionAugmentor {
         try {
           Matcher innerMatcher = augmentation.getKey().matcher(matcher.group(0));
           String replacement = innerMatcher.replaceAll(augmentation.getValue());
-          ret.append("\n");
+          ret.append(System.lineSeparator());
           ret.append(replacement);
         } catch (Exception e) {
           ret.append(
               String.format(
-                  "\nCould not replace text \"%s\" with regex \"%s\": %s",
-                  matcher.group(0), augmentation.getValue(), e.getMessage()));
+                  System.lineSeparator() + "Could not replace text \"%s\" with regex \"%s\": %s",
+                  matcher.group(0),
+                  augmentation.getValue(),
+                  e.getMessage()));
         }
       }
     }

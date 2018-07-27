@@ -205,9 +205,13 @@ public class DoctorReportHelper {
     }
 
     if (response.getSuggestions().isEmpty()) {
-      output.println(console.getAnsi().asWarningText("\n:: No available suggestions right now."));
+      output.println(
+          console
+              .getAnsi()
+              .asWarningText(System.lineSeparator() + ":: No available suggestions right now."));
     } else {
-      output.println(console.getAnsi().asInformationText("\n:: Suggestions"));
+      output.println(
+          console.getAnsi().asInformationText(System.lineSeparator() + ":: Suggestions"));
       response.getSuggestions().forEach(this::prettyPrintSuggestion);
     }
     output.println();
@@ -226,7 +230,7 @@ public class DoctorReportHelper {
           console
               .getStdOut()
               .printf(
-                  "=> Report was uploaded to %s\n\n", submitResult.getReportSubmitLocation().get());
+                  "=> Report was uploaded to %s%n%n", submitResult.getReportSubmitLocation().get());
         } else {
           console.getStdOut().printf("%s", submitResult.getReportSubmitLocation().get());
         }
@@ -234,7 +238,7 @@ public class DoctorReportHelper {
     } else {
       console
           .getStdOut()
-          .printf("=> Report saved at %s\n", submitResult.getReportSubmitLocation().get());
+          .printf("=> Report saved at %s%n", submitResult.getReportSubmitLocation().get());
     }
   }
 

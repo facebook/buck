@@ -62,7 +62,7 @@ public class DoctorReportHelperTest {
         DoctorEndpointResponse.of(Optional.of(errorMessage), ImmutableList.of());
 
     helper.presentResponse(response);
-    assertEquals("=> " + errorMessage + "\n", console.getTextWrittenToStdOut());
+    assertEquals("=> " + errorMessage + System.lineSeparator(), console.getTextWrittenToStdOut());
   }
 
   @Test
@@ -80,7 +80,9 @@ public class DoctorReportHelperTest {
         DoctorEndpointResponse.of(Optional.empty(), ImmutableList.of());
 
     helper.presentResponse(response);
-    assertEquals("\n:: No available suggestions right now.\n\n", console.getTextWrittenToStdOut());
+    assertEquals(
+        String.format("%n:: No available suggestions right now.%n%n"),
+        console.getTextWrittenToStdOut());
   }
 
   @Test

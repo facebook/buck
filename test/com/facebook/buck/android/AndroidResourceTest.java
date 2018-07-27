@@ -137,7 +137,7 @@ public class AndroidResourceTest {
             /* manifestFile */ null,
             /* hasWhitelistedStrings */ false);
     projectFilesystem.writeContentsToPath(
-        "com.example.android\n",
+        "com.example.android" + System.lineSeparator(),
         resolver.getRelativePath(androidResource.getPathToRDotJavaPackageFile()));
     androidResource.initializeFromDisk(resolver);
     assertEquals("com.example.android", androidResource.getRDotJavaPackage());
@@ -168,7 +168,8 @@ public class AndroidResourceTest {
             /* manifestFile */ FakeSourcePath.of(projectFilesystem, "foo/AndroidManifest.xml"),
             /* hasWhitelistedStrings */ false);
     projectFilesystem.writeContentsToPath(
-        "com.ex.pkg\n", resolver.getRelativePath(androidResource.getPathToRDotJavaPackageFile()));
+        "com.ex.pkg" + System.lineSeparator(),
+        resolver.getRelativePath(androidResource.getPathToRDotJavaPackageFile()));
     androidResource.initializeFromDisk(resolver);
     assertEquals("com.ex.pkg", androidResource.getRDotJavaPackage());
   }

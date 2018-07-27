@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cli;
 
+import static com.facebook.buck.util.string.MoreStrings.linesToText;
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
@@ -50,10 +51,10 @@ public class BuildKeepGoingIntegrationTest {
 
     ProcessResult result = buildTwoGoodRulesAndAssertSuccess(workspace);
     String expectedReport =
-        "OK   //:rule_with_output BUILT_LOCALLY "
-            + GENRULE_OUTPUT_PATH
-            + "\n"
-            + "OK   //:rule_without_output BUILT_LOCALLY\n";
+        linesToText(
+            "OK   //:rule_with_output BUILT_LOCALLY " + GENRULE_OUTPUT_PATH,
+            "OK   //:rule_without_output BUILT_LOCALLY",
+            "");
     assertThat(result.getStderr(), containsString(expectedReport));
   }
 
@@ -67,10 +68,10 @@ public class BuildKeepGoingIntegrationTest {
             .runBuckBuild("--keep-going", "//:rule_with_output", "//:failing_rule")
             .assertFailure();
     String expectedReport =
-        "OK   //:rule_with_output BUILT_LOCALLY "
-            + GENRULE_OUTPUT_PATH
-            + "\n"
-            + "FAIL //:failing_rule\n";
+        linesToText(
+            "OK   //:rule_with_output BUILT_LOCALLY " + GENRULE_OUTPUT_PATH,
+            "FAIL //:failing_rule",
+            "");
     assertThat(result.getStderr(), containsString(expectedReport));
     Path outputFile = workspace.getPath(GENRULE_OUTPUT);
     assertTrue(Files.exists(outputFile));
@@ -84,28 +85,28 @@ public class BuildKeepGoingIntegrationTest {
 
     ProcessResult result1 = buildTwoGoodRulesAndAssertSuccess(workspace);
     String expectedReport1 =
-        "OK   //:rule_with_output BUILT_LOCALLY "
-            + GENRULE_OUTPUT_PATH
-            + "\n"
-            + "OK   //:rule_without_output BUILT_LOCALLY\n";
+        linesToText(
+            "OK   //:rule_with_output BUILT_LOCALLY " + GENRULE_OUTPUT_PATH,
+            "OK   //:rule_without_output BUILT_LOCALLY",
+            "");
     assertThat(result1.getStderr(), containsString(expectedReport1));
 
     ProcessResult result2 = buildTwoGoodRulesAndAssertSuccess(workspace);
     String expectedReport2 =
-        "OK   //:rule_with_output MATCHING_RULE_KEY "
-            + GENRULE_OUTPUT_PATH
-            + "\n"
-            + "OK   //:rule_without_output MATCHING_RULE_KEY\n";
+        linesToText(
+            "OK   //:rule_with_output MATCHING_RULE_KEY " + GENRULE_OUTPUT_PATH,
+            "OK   //:rule_without_output MATCHING_RULE_KEY",
+            "");
     assertThat(result2.getStderr(), containsString(expectedReport2));
 
     workspace.runBuckCommand("clean", "--keep-cache").assertSuccess();
 
     ProcessResult result3 = buildTwoGoodRulesAndAssertSuccess(workspace);
     String expectedReport3 =
-        "OK   //:rule_with_output FETCHED_FROM_CACHE "
-            + GENRULE_OUTPUT_PATH
-            + "\n"
-            + "OK   //:rule_without_output BUILT_LOCALLY\n";
+        linesToText(
+            "OK   //:rule_with_output FETCHED_FROM_CACHE " + GENRULE_OUTPUT_PATH,
+            "OK   //:rule_without_output BUILT_LOCALLY",
+            "");
     assertThat(result3.getStderr(), containsString(expectedReport3));
   }
 
@@ -125,8 +126,7 @@ public class BuildKeepGoingIntegrationTest {
         .assertFailure();
 
     assertTrue(Files.exists(buildReport));
-    String buildReportContents =
-        new String(Files.readAllBytes(buildReport), Charsets.UTF_8).replace("\r\n", "\n");
+    String buildReportContents = new String(Files.readAllBytes(buildReport), Charsets.UTF_8);
     assertEquals(workspace.getFileContents("expected_build_report.json"), buildReportContents);
   }
 

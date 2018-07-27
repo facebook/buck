@@ -52,7 +52,9 @@ public class DotTest {
         .writeOutput(output);
 
     String dotGraph = output.toString();
-    List<String> lines = ImmutableList.copyOf(Splitter.on('\n').omitEmptyStrings().split(dotGraph));
+    List<String> lines =
+        ImmutableList.copyOf(
+            Splitter.on(System.lineSeparator()).omitEmptyStrings().split(dotGraph));
 
     assertEquals("digraph the_graph {", lines.get(0));
 
@@ -101,7 +103,9 @@ public class DotTest {
         .writeOutput(output);
 
     String dotGraph = output.toString();
-    List<String> lines = ImmutableList.copyOf(Splitter.on('\n').omitEmptyStrings().split(dotGraph));
+    List<String> lines =
+        ImmutableList.copyOf(
+            Splitter.on(System.lineSeparator()).omitEmptyStrings().split(dotGraph));
 
     assertEquals("digraph the_graph {", lines.get(0));
 
@@ -130,7 +134,9 @@ public class DotTest {
         .writeOutput(output);
 
     String dotGraph = output.toString();
-    List<String> lines = ImmutableList.copyOf(Splitter.on('\n').omitEmptyStrings().split(dotGraph));
+    List<String> lines =
+        ImmutableList.copyOf(
+            Splitter.on(System.lineSeparator()).omitEmptyStrings().split(dotGraph));
 
     assertEquals("digraph the_graph {", lines.get(0));
 
@@ -163,7 +169,9 @@ public class DotTest {
         .writeOutput(output);
 
     String dotGraph = output.toString();
-    List<String> lines = ImmutableList.copyOf(Splitter.on('\n').omitEmptyStrings().split(dotGraph));
+    List<String> lines =
+        ImmutableList.copyOf(
+            Splitter.on(System.lineSeparator()).omitEmptyStrings().split(dotGraph));
 
     assertEquals("digraph the_graph {", lines.get(0));
 
@@ -199,7 +207,9 @@ public class DotTest {
         .writeOutput(output);
 
     String dotGraph = output.toString();
-    List<String> lines = ImmutableList.copyOf(Splitter.on('\n').omitEmptyStrings().split(dotGraph));
+    List<String> lines =
+        ImmutableList.copyOf(
+            Splitter.on(System.lineSeparator()).omitEmptyStrings().split(dotGraph));
 
     // remove attributes because we are not interested what styles and colors are default
     lines = lines.stream().map(p -> p.replaceAll(" \\[.*\\]", "")).collect(Collectors.toList());

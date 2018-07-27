@@ -75,6 +75,6 @@ public class AuditActionGraphCommandIntegrationTest {
     String json = result.getStdout();
     Assert.assertThat(json, Matchers.startsWith("digraph "));
     Assert.assertThat(json, Matchers.containsString("\"//:bin\" -> \"//:other\""));
-    Assert.assertThat(json, Matchers.endsWith("}\n"));
+    Assert.assertThat(json, Matchers.endsWith("}" + System.lineSeparator()));
   }
 }

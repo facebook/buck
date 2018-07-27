@@ -16,7 +16,8 @@
 
 package com.facebook.buck.cli;
 
-import static org.junit.Assert.assertEquals;
+import static com.facebook.buck.util.MoreStringsForTests.equalToIgnoringPlatformNewlines;
+import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -45,7 +46,9 @@ public class AuditInputCommandIntegrationTest {
     // Print all of the inputs to the rule.
     ProcessResult result = workspace.runBuckCommand("audit", "input", "//example:foo");
     result.assertSuccess();
-    assertEquals(workspace.getFileContents(expectedStdout), result.getStdout());
+    assertThat(
+        workspace.getFileContents(expectedStdout),
+        equalToIgnoringPlatformNewlines(result.getStdout()));
   }
 
   @Test
@@ -57,7 +60,9 @@ public class AuditInputCommandIntegrationTest {
     // Print all of the inputs to the rule in JSON format.
     ProcessResult result = workspace.runBuckCommand("audit", "input", "//example:foo", "--json");
     result.assertSuccess();
-    assertEquals(workspace.getFileContents(expectedStdoutJson), result.getStdout());
+    assertThat(
+        workspace.getFileContents(expectedStdoutJson),
+        equalToIgnoringPlatformNewlines(result.getStdout()));
   }
 
   @Test
@@ -66,9 +71,11 @@ public class AuditInputCommandIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "audit_input_no_src", tmp);
     workspace.setUp();
 
-    // Print all of the inputs to the rule.
+    // Print all of the inputs to thAe rule.
     ProcessResult result = workspace.runBuckCommand("audit", "input", "//example:foo.plist");
     result.assertSuccess();
-    assertEquals(workspace.getFileContents(expectedStdout), result.getStdout());
+    assertThat(
+        workspace.getFileContents(expectedStdout),
+        equalToIgnoringPlatformNewlines(result.getStdout()));
   }
 }

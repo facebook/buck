@@ -153,7 +153,8 @@ public class AuditClasspathCommandTest {
                                 "lib__%s__output")
                             .resolve(javaLibraryTarget.getShortName() + ".jar"))
                     .toString()));
-    String expectedClasspath = Joiner.on("\n").join(expectedPaths) + "\n";
+    String expectedClasspath =
+        String.join(System.lineSeparator(), expectedPaths) + System.lineSeparator();
 
     assertEquals(expectedClasspath, console.getTextWrittenToStdOut());
     assertEquals("", console.getTextWrittenToStdErr());
@@ -179,7 +180,7 @@ public class AuditClasspathCommandTest {
                         params.getCell().getFilesystem(), testJavaCompiledJar, "lib__%s__output")
                     .resolve(testJavaCompiledJar.getShortNameAndFlavorPostfix() + ".jar"))
             .toString());
-    expectedClasspath = Joiner.on("\n").join(expectedPaths) + "\n";
+    expectedClasspath = String.join(System.lineSeparator(), expectedPaths) + System.lineSeparator();
     assertEquals(expectedClasspath, console.getTextWrittenToStdOut());
     assertEquals("", console.getTextWrittenToStdErr());
   }
@@ -297,7 +298,8 @@ public class AuditClasspathCommandTest {
                             "lib__%s__output")
                         .resolve(javaLibrary.getBuildTarget().getShortName() + ".jar"))
                 .toString());
-    String expectedClasspath = Joiner.on("\n").join(expectedPaths) + "\n";
+    String expectedClasspath =
+        String.join(System.lineSeparator(), expectedPaths) + System.lineSeparator();
     assertEquals(expectedClasspath, console.getTextWrittenToStdOut());
     assertEquals("", console.getTextWrittenToStdErr());
   }

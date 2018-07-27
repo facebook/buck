@@ -197,27 +197,27 @@ public class DistBuildPostBuildAnalysis {
         new ThrowingPrintWriter(new BufferedOutputStream(Files.newOutputStream(outputLogFile)))) {
 
       // General information.
-      writer.printf("Build UUID: %s\n", buildId.toString());
-      writer.printf("StampedeID: %s\n", stampedeId.getId());
+      writer.printf("Build UUID: %s%n", buildId.toString());
+      writer.printf("StampedeID: %s%n", stampedeId.getId());
       writer.printf(
-          "BuildSlave Server RunIDs: %s\n",
+          "BuildSlave Server RunIDs: %s%n",
           String.join(", ", remoteBuildRulesByRunIdAndName.keySet()));
       writer.println();
 
       // Summary stats.
       writer.printf(
-          "Number of local CacheMisses after successful remote build: %d\n",
+          "Number of local CacheMisses after successful remote build: %d%n",
           results.numLocalCacheMissesWithSuccessfulRemoteBuild());
       writer.printf(
-          "Number of Mismatching DefaultRuleKeys: %d\n", results.numMismatchingDefaultRuleKeys());
+          "Number of Mismatching DefaultRuleKeys: %d%n", results.numMismatchingDefaultRuleKeys());
       writer.printf(
-          "Number of Mismatching InputRuleKeys: %d\n", results.numMismatchingInputRuleKeys());
+          "Number of Mismatching InputRuleKeys: %d%n", results.numMismatchingInputRuleKeys());
       writer.printf(
-          "Number of BuildRule failures in local build: %d\n", results.numLocalFailedRules());
+          "Number of BuildRule failures in local build: %d%n", results.numLocalFailedRules());
       writer.printf(
-          "Number of BuildRule failures in remote build: %d\n", results.numRemoteFailedRules());
+          "Number of BuildRule failures in remote build: %d%n", results.numRemoteFailedRules());
       writer.printf(
-          "Number of BuildRules producing CacheMisses on multiple slaves: %d\n",
+          "Number of BuildRules producing CacheMisses on multiple slaves: %d%n",
           results.numMultiSlaveCacheMisses());
 
       // Per-rule information.
@@ -366,7 +366,7 @@ public class DistBuildPostBuildAnalysis {
       if (getInputRuleKey().length() > 0) {
         lines.add(String.format("InputRuleKey: %s", getInputRuleKey()));
       }
-      return String.join("\n", lines);
+      return String.join(System.lineSeparator(), lines);
     }
   }
 
@@ -412,7 +412,7 @@ public class DistBuildPostBuildAnalysis {
       if (wasInputRuleKeyMismatch()) {
         lines.add(String.format("Mismatching InputRuleKey: %s", logEntry().getInputRuleKey()));
       }
-      return String.join("\n", lines);
+      return String.join(System.lineSeparator(), lines);
     }
   }
 
@@ -512,7 +512,7 @@ public class DistBuildPostBuildAnalysis {
       }
 
       lines.add("");
-      return String.join("\n", lines);
+      return String.join(System.lineSeparator(), lines);
     }
   }
 

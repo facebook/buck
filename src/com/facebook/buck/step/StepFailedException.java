@@ -35,7 +35,7 @@ public class StepFailedException extends Exception implements WrapsException, Ex
 
   @Override
   public String getMessage() {
-    return getCause().getMessage() + "\n  " + getContext().get();
+    return getCause().getMessage() + System.lineSeparator() + "  " + getContext().get();
   }
 
   /** Creates a StepFailedException based on a StepExecutionResult. */
@@ -51,7 +51,9 @@ public class StepFailedException extends Exception implements WrapsException, Ex
     messageBuilder.append(String.format("Command failed with exit code %d.", exitCode));
     executionResult
         .getStderr()
-        .ifPresent(stderr -> messageBuilder.append("\nstderr: ").append(stderr));
+        .ifPresent(
+            stderr ->
+                messageBuilder.append(System.lineSeparator()).append("stderr: ").append(stderr));
     return createForFailingStepWithException(
         step, context, new HumanReadableException(messageBuilder.toString()), Optional.empty());
   }

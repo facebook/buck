@@ -91,7 +91,9 @@ public class DefaultStepRunnerTest {
       fail("Should have thrown a StepFailedException!");
     } catch (StepFailedException e) {
       assertTrue(
-          e.getMessage(), e.getMessage().startsWith("#yolo\n" + "  When running <explode>."));
+          e.getMessage(),
+          e.getMessage()
+              .startsWith("#yolo" + System.lineSeparator() + "  When running <explode>."));
     }
   }
 

@@ -29,7 +29,7 @@ public class TestConsoleTest {
     console.getStdOut().println("foo");
     console.getStdErr().println("bar");
 
-    assertEquals("foo\n", console.getTextWrittenToStdOut());
-    assertEquals("bar\n", console.getTextWrittenToStdErr());
+    assertEquals("foo" + System.lineSeparator(), console.getTextWrittenToStdOut());
+    assertEquals("bar" + System.lineSeparator(), console.getTextWrittenToStdErr());
   }
 }

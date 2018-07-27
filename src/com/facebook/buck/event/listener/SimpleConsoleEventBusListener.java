@@ -38,7 +38,6 @@ import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.environment.ExecutionEnvironment;
 import com.facebook.buck.util.timing.Clock;
-import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.eventbus.Subscribe;
 import java.nio.file.Path;
@@ -349,7 +348,7 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
     if (stringList.size() == 0) {
       return;
     }
-    console.getStdErr().println(Joiner.on("\n").join(stringList));
+    console.getStdErr().println(String.join(System.lineSeparator(), stringList));
   }
 
   @Override

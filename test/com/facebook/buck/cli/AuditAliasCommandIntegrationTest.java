@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cli;
 
+import static com.facebook.buck.util.string.MoreStrings.withoutSuffix;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -55,10 +56,10 @@ public class AuditAliasCommandIntegrationTest {
 
     // Remove trailing newline from stdout before passing to Splitter.
     String stdout = result.getStdout();
-    assertTrue(stdout.endsWith("\n"));
-    stdout = stdout.substring(0, stdout.length() - 1);
+    assertTrue(stdout.endsWith(System.lineSeparator()));
+    stdout = withoutSuffix(stdout, System.lineSeparator());
 
-    List<String> aliases = Splitter.on('\n').splitToList(stdout);
+    List<String> aliases = Splitter.on(System.lineSeparator()).splitToList(stdout);
     assertEquals(
         "Aliases that appear in both .buckconfig and .buckconfig.local should appear only once.",
         3,
@@ -73,10 +74,9 @@ public class AuditAliasCommandIntegrationTest {
 
     // Remove trailing newline from stdout before passing to Splitter.
     String stdout = result.getStdout();
-    assertTrue(stdout.endsWith("\n"));
-    stdout = stdout.substring(0, stdout.length() - 1);
+    stdout = withoutSuffix(stdout, System.lineSeparator());
 
-    List<String> aliases = Splitter.on('\n').splitToList(stdout);
+    List<String> aliases = Splitter.on(System.lineSeparator()).splitToList(stdout);
     assertEquals(
         "Aliases that appear in both .buckconfig and .buckconfig.local should appear only once.",
         3,

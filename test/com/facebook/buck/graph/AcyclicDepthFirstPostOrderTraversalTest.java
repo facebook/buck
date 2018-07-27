@@ -16,6 +16,7 @@
 
 package com.facebook.buck.graph;
 
+import static com.facebook.buck.util.string.MoreStrings.linesToText;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
@@ -101,7 +102,8 @@ public class AcyclicDepthFirstPostOrderTraversalTest {
       assertThat(
           e.getMessage(),
           Matchers.containsString(
-              "The following circular dependency has been found:\nF -> C -> E -> F"));
+              linesToText(
+                  "The following circular dependency has been found:", "F -> C -> E -> F")));
       assertEquals(ImmutableList.of("F", "C", "E", "F"), e.getCycle());
     }
   }
@@ -118,7 +120,8 @@ public class AcyclicDepthFirstPostOrderTraversalTest {
     } catch (CycleException e) {
       assertThat(
           e.getMessage(),
-          Matchers.containsString("The following circular dependency has been found:\nA -> A"));
+          Matchers.containsString(
+              linesToText("The following circular dependency has been found:", "A -> A")));
       assertEquals(ImmutableList.of("A", "A"), e.getCycle());
     }
   }
@@ -152,7 +155,8 @@ public class AcyclicDepthFirstPostOrderTraversalTest {
       assertThat(
           e.getMessage(),
           Matchers.containsString(
-              "The following circular dependency has been found:\nA -> B -> D -> A"));
+              linesToText(
+                  "The following circular dependency has been found:", "A -> B -> D -> A")));
       assertEquals(ImmutableList.of("A", "B", "D", "A"), e.getCycle());
     }
   }

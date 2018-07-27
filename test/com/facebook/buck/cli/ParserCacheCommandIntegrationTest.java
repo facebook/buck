@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cli;
 
+import static com.facebook.buck.util.string.MoreStrings.linesToText;
 import static org.hamcrest.junit.MatcherAssert.assertThat;
 import static org.junit.Assume.assumeTrue;
 
@@ -66,10 +67,11 @@ public class ParserCacheCommandIntegrationTest {
     assertThat(
         runBuckResult.getStdout(),
         Matchers.containsString(
-            "//Apps:TestAppsLibrary\n"
-                + "//Libraries/Dep1:Dep1_1\n"
-                + "//Libraries/Dep1:Dep1_2\n"
-                + "bar//Dep2:Dep2"));
+            linesToText(
+                "//Apps:TestAppsLibrary",
+                "//Libraries/Dep1:Dep1_1",
+                "//Libraries/Dep1:Dep1_2",
+                "bar//Dep2:Dep2")));
 
     // Save the parser cache to a file.
     NamedTemporaryFile tempFile = new NamedTemporaryFile("parser_data", null);
@@ -95,10 +97,11 @@ public class ParserCacheCommandIntegrationTest {
     assertThat(
         runBuckResult.getStdout(),
         Matchers.containsString(
-            "//Apps:TestAppsLibrary\n"
-                + "//Libraries/Dep1:Dep1_1\n"
-                + "//Libraries/Dep1:Dep1_2\n"
-                + "bar//Dep2:Dep2"));
+            linesToText(
+                "//Apps:TestAppsLibrary",
+                "//Libraries/Dep1:Dep1_1",
+                "//Libraries/Dep1:Dep1_2",
+                "bar//Dep2:Dep2")));
   }
 
   @Test
@@ -115,10 +118,11 @@ public class ParserCacheCommandIntegrationTest {
     assertThat(
         runBuckResult.getStdout(),
         Matchers.containsString(
-            "//Apps:TestAppsLibrary\n"
-                + "//Libraries/Dep1:Dep1_1\n"
-                + "//Libraries/Dep1:Dep1_2\n"
-                + "bar//Dep2:Dep2"));
+            linesToText(
+                "//Apps:TestAppsLibrary",
+                "//Libraries/Dep1:Dep1_1",
+                "//Libraries/Dep1:Dep1_2",
+                "bar//Dep2:Dep2")));
 
     // Save the parser cache to a file.
     NamedTemporaryFile tempFile = new NamedTemporaryFile("parser_data", null);

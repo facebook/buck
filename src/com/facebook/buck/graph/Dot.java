@@ -137,7 +137,8 @@ public class Dot<T> {
   public void writeOutput(Appendable output) throws IOException {
     // Sorting the edges to have deterministic output and be able to test this.
     ImmutableSet.Builder<String> builder = ImmutableSet.builder();
-    output.append("digraph " + graphName + " {\n");
+    output.append("digraph " + graphName + " {");
+    output.append(System.lineSeparator());
 
     if (bfsSorted) {
       for (T root : ImmutableSortedSet.copyOf(graph.getNodesWithNoIncomingEdges())) {
@@ -181,7 +182,8 @@ public class Dot<T> {
     for (String line : builder.build()) {
       output.append(line);
     }
-    output.append("}\n");
+    output.append("}");
+    output.append(System.lineSeparator());
   }
 
   private static String escape(String str) {
@@ -226,13 +228,13 @@ public class Dot<T> {
                   .collect(Collectors.joining(","));
     }
     return String.format(
-        "  %s [style=filled,color=%s%s];\n",
+        "  %s [style=filled,color=%s%s];%n",
         escape(source), Dot.colorFromType(sourceType), extraAttributes);
   }
 
   private static <T> String printEdge(T sourceN, T sinkN, Function<T, String> nodeToName) {
     String sourceName = nodeToName.apply(sourceN);
     String sinkName = nodeToName.apply(sinkN);
-    return String.format("  %s -> %s;\n", escape(sourceName), escape(sinkName));
+    return String.format("  %s -> %s;%n", escape(sourceName), escape(sinkName));
   }
 }

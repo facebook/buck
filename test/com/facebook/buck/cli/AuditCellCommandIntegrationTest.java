@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cli;
 
+import static com.facebook.buck.util.string.MoreStrings.withoutSuffix;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -59,10 +60,9 @@ public class AuditCellCommandIntegrationTest {
 
     // Remove trailing newline from stdout before passing to Splitter.
     String stdout = result.getStdout();
-    assertTrue(stdout.endsWith("\n"));
-    stdout = stdout.substring(0, stdout.length() - 1);
+    stdout = withoutSuffix(stdout, System.lineSeparator());
 
-    List<String> cells = Splitter.on('\n').splitToList(stdout);
+    List<String> cells = Splitter.on(System.lineSeparator()).splitToList(stdout);
     assertEquals("Cells that appear in both .buckconfig should appear.", 1, cells.size());
     assertEquals(
         ImmutableSet.of(String.format("secondary: %s", secondary.getDestPath())),

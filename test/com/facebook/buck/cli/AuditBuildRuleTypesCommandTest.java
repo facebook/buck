@@ -91,7 +91,9 @@ public class AuditBuildRuleTypesCommandTest {
         console, KnownBuildRuleTypes.of(DESCRIPTIONS), false);
 
     List<String> buildRuleTypes =
-        Splitter.on('\n').omitEmptyStrings().splitToList(console.getTextWrittenToStdOut());
+        Splitter.on(System.lineSeparator())
+            .omitEmptyStrings()
+            .splitToList(console.getTextWrittenToStdOut());
 
     assertEquals(KNOWN_RULE_TYPES, buildRuleTypes);
   }

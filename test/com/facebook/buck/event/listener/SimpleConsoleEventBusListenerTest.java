@@ -16,6 +16,7 @@
 package com.facebook.buck.event.listener;
 
 import static com.facebook.buck.event.TestEventConfigurator.configureTestEventAtTime;
+import static com.facebook.buck.util.string.MoreStrings.linesToText;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.artifact_cache.CacheResult;
@@ -61,7 +62,8 @@ import org.junit.Test;
 
 public class SimpleConsoleEventBusListenerTest {
   private static final StampedeId STAMPEDE_ID_ONE = new StampedeId().setId("stampedeIdOne");
-  private static final String STAMPEDE_ID_ONE_MESSAGE = "StampedeId=[stampedeIdOne]\n";
+  private static final String STAMPEDE_ID_ONE_MESSAGE =
+      "StampedeId=[stampedeIdOne]" + System.lineSeparator();
   private static final String TARGET_ONE = "TARGET_ONE";
   private static final String TARGET_TWO = "TARGET_TWO";
   private static final String SEVERE_MESSAGE = "This is a sample severe message.";
@@ -115,7 +117,7 @@ public class SimpleConsoleEventBusListenerTest {
             TimeUnit.MILLISECONDS,
             threadId));
 
-    expectedOutput += "PARSING BUCK FILES: FINISHED IN 0.4s\n";
+    expectedOutput += "PARSING BUCK FILES: FINISHED IN 0.4s" + System.lineSeparator();
     assertOutput(expectedOutput, console);
 
     BuildRuleEvent.Started started = BuildRuleEvent.started(fakeRule, durationTracker);
@@ -161,20 +163,20 @@ public class SimpleConsoleEventBusListenerTest {
             threadId));
 
     expectedOutput +=
-        "BUILT  0.4s //banana:stand\n"
-            + FINISHED_DOWNLOAD_STRING
-            + ", 100.0% CACHE MISS"
-            + "\n"
-            + "BUILDING: FINISHED IN 1.2s\n"
-            + "WAITING FOR HTTP CACHE UPLOADS 0.00 BYTES (0 COMPLETE/0 FAILED/1 UPLOADING/1 PENDING)\n"
-            + "BUILD SUCCEEDED\n";
+        linesToText(
+            "BUILT  0.4s //banana:stand",
+            FINISHED_DOWNLOAD_STRING + ", 100.0% CACHE MISS",
+            "BUILDING: FINISHED IN 1.2s",
+            "WAITING FOR HTTP CACHE UPLOADS 0.00 BYTES (0 COMPLETE/0 FAILED/1 UPLOADING/1 PENDING)",
+            "BUILD SUCCEEDED",
+            "");
     assertOutput(expectedOutput, console);
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
             ConsoleEvent.severe(SEVERE_MESSAGE), 1500L, TimeUnit.MILLISECONDS, threadId));
 
-    expectedOutput += SEVERE_MESSAGE + "\n";
+    expectedOutput += SEVERE_MESSAGE + System.lineSeparator();
     assertOutput(expectedOutput, console);
 
     InstallEvent.Started installEventStarted =
@@ -191,7 +193,7 @@ public class SimpleConsoleEventBusListenerTest {
             TimeUnit.MILLISECONDS,
             threadId));
 
-    expectedOutput += "INSTALLING: FINISHED IN 1.5s\n";
+    expectedOutput += "INSTALLING: FINISHED IN 1.5s" + System.lineSeparator();
     assertOutput(expectedOutput, console);
 
     long artifactSizeOne = SizeUnit.MEGABYTES.toBytes(1.5);
@@ -210,7 +212,8 @@ public class SimpleConsoleEventBusListenerTest {
             HttpArtifactCacheEvent.newShutdownEvent(), 6000L, TimeUnit.MILLISECONDS, threadId));
 
     expectedOutput +=
-        "HTTP CACHE UPLOAD: FINISHED 1.50 MBYTES (1 COMPLETE/1 FAILED/0 UPLOADING/0 PENDING)\n";
+        "HTTP CACHE UPLOAD: FINISHED 1.50 MBYTES (1 COMPLETE/1 FAILED/0 UPLOADING/0 PENDING)"
+            + System.lineSeparator();
     assertOutput(expectedOutput, console);
   }
 
@@ -240,9 +243,12 @@ public class SimpleConsoleEventBusListenerTest {
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
 
-    expectedOutput += "BUILDING: FINISHED IN 1.0s 0/10 JOBS, 0 UPDATED\n";
-    expectedOutput += "BUILD SUCCEEDED\n";
-    assertOutput(FINISHED_DOWNLOAD_STRING + ", 0.0% CACHE MISS" + "\n" + expectedOutput, console);
+    expectedOutput +=
+        linesToText("BUILDING: FINISHED IN 1.0s 0/10 JOBS, 0 UPDATED", "BUILD SUCCEEDED", "");
+
+    assertOutput(
+        FINISHED_DOWNLOAD_STRING + ", 0.0% CACHE MISS" + System.lineSeparator() + expectedOutput,
+        console);
   }
 
   @Test
@@ -267,7 +273,7 @@ public class SimpleConsoleEventBusListenerTest {
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
 
-    expectedOutput += "PARSING BUCK FILES: FINISHED IN 0.2s\n";
+    expectedOutput += "PARSING BUCK FILES: FINISHED IN 0.2s" + System.lineSeparator();
     assertOutput(expectedOutput, console);
 
     ActionGraphEvent.Started actionGraphStarted = ActionGraphEvent.started();
@@ -291,10 +297,14 @@ public class SimpleConsoleEventBusListenerTest {
             600L,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
-    expectedOutput += "CREATING ACTION GRAPH: FINISHED IN 0.2s\n";
-    expectedOutput += FINISHED_DOWNLOAD_STRING + ", 0.0% CACHE MISS" + "\n";
-    expectedOutput += "BUILDING: FINISHED IN 0.1s\n";
-    expectedOutput += "BUILD SUCCEEDED\n";
+    expectedOutput +=
+        linesToText(
+            "CREATING ACTION GRAPH: FINISHED IN 0.2s",
+            FINISHED_DOWNLOAD_STRING + ", 0.0% CACHE MISS",
+            "BUILDING: FINISHED IN 0.1s",
+            "BUILD SUCCEEDED",
+            "");
+
     assertOutput(expectedOutput, console);
   }
 
@@ -327,7 +337,7 @@ public class SimpleConsoleEventBusListenerTest {
             TimeUnit.MILLISECONDS,
             threadId));
 
-    expectedOutput += "PARSING BUCK FILES: FINISHED IN 0.4s\n";
+    expectedOutput += "PARSING BUCK FILES: FINISHED IN 0.4s" + System.lineSeparator();
     assertOutput(expectedOutput, console);
 
     BuildRuleEvent.Started started = BuildRuleEvent.started(fakeRule, durationTracker);
@@ -364,11 +374,11 @@ public class SimpleConsoleEventBusListenerTest {
             threadId));
 
     expectedOutput +=
-        FINISHED_DOWNLOAD_STRING
-            + ", 100.0% CACHE MISS"
-            + "\n"
-            + "BUILDING: FINISHED IN 1.2s\n"
-            + "BUILD SUCCEEDED\n";
+        linesToText(
+            FINISHED_DOWNLOAD_STRING + ", 100.0% CACHE MISS",
+            "BUILDING: FINISHED IN 1.2s",
+            "BUILD SUCCEEDED",
+            "");
     assertOutput(expectedOutput, console);
   }
 

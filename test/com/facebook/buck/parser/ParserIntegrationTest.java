@@ -16,6 +16,7 @@
 
 package com.facebook.buck.parser;
 
+import static com.facebook.buck.util.string.MoreStrings.linesToText;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.in;
 import static org.hamcrest.Matchers.is;
@@ -116,18 +117,24 @@ public class ParserIntegrationTest {
           is(
               in(
                   ImmutableSet.of(
-                      "Buck can't handle circular dependencies.\n"
-                          + "The following circular dependency has been found:\n"
-                          + "//:C -> //:E -> //:F -> //:C\n\n"
-                          + "Please break the circular dependency and try again.",
-                      "Buck can't handle circular dependencies.\n"
-                          + "The following circular dependency has been found:\n"
-                          + "//:E -> //:F -> //:C -> //:E\n\n"
-                          + "Please break the circular dependency and try again.",
-                      "Buck can't handle circular dependencies.\n"
-                          + "The following circular dependency has been found:\n"
-                          + "//:F -> //:C -> //:E -> //:F\n\n"
-                          + "Please break the circular dependency and try again."))));
+                      linesToText(
+                          "Buck can't handle circular dependencies.",
+                          "The following circular dependency has been found:",
+                          "//:C -> //:E -> //:F -> //:C",
+                          "",
+                          "Please break the circular dependency and try again."),
+                      linesToText(
+                          "Buck can't handle circular dependencies.",
+                          "The following circular dependency has been found:",
+                          "//:E -> //:F -> //:C -> //:E",
+                          "",
+                          "Please break the circular dependency and try again."),
+                      linesToText(
+                          "Buck can't handle circular dependencies.",
+                          "The following circular dependency has been found:",
+                          "//:F -> //:C -> //:E -> //:F",
+                          "",
+                          "Please break the circular dependency and try again.")))));
       return;
     }
     fail("An exception should have been thrown because of a circular dependency.");
@@ -190,7 +197,7 @@ public class ParserIntegrationTest {
 
     ProcessResult result = workspace.runBuckCommand("targets", "//:root");
     result.assertSuccess("buck should parse build files with a different name");
-    assertEquals("//:root\n", result.getStdout());
+    assertEquals("//:root" + System.lineSeparator(), result.getStdout());
   }
 
   @Test

@@ -8,7 +8,9 @@ java_library(
     name = "constants",
     srcs = CONSTANT_SRCS,
     visibility = ["PUBLIC"],
-    deps = [],
+    deps = [
+        "//src/com/facebook/buck/util/string:string",
+    ],
 )
 
 EXCEPTION_SRCS = glob(["exceptions/*.java"])
@@ -21,6 +23,7 @@ java_library(
     ],
     visibility = ["PUBLIC"],
     deps = [
+        "//src/com/facebook/buck/util/string:string",
         "//third-party/java/jsr:jsr305",
     ],
 )
@@ -58,6 +61,7 @@ java_immutables_library(
         "//src/com/facebook/buck/io/filesystem:filesystem",
         "//src/com/facebook/buck/log:api",
         "//src/com/facebook/buck/util/environment:platform",
+        "//src/com/facebook/buck/util/string:string",
         "//third-party/java/nuprocess:nuprocess",
     ],
 )
@@ -119,6 +123,7 @@ java_library(
         "//src/com/facebook/buck/io:io",
         "//src/com/facebook/buck/io/filesystem:filesystem",
         "//src/com/facebook/buck/util:util",
+        "//src/com/facebook/buck/util/string:string",
         "//src/com/facebook/buck/util/unarchive:unarchive",
         "//third-party/java/guava:guava",
     ],
@@ -152,6 +157,7 @@ java_immutables_library(
         "//src/com/facebook/buck/log:api",
         "//src/com/facebook/buck/util/environment:platform",
         "//src/com/facebook/buck/util/function:function",
+        "//src/com/facebook/buck/util/string:string",
         "//third-party/java/guava:guava",
         "//third-party/java/infer-annotations:infer-annotations",
         "//third-party/java/jackson:jackson-annotations",

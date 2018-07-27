@@ -16,8 +16,8 @@
 
 package com.facebook.buck.cli;
 
+import static com.facebook.buck.util.MoreStringsForTests.equalToIgnoringPlatformNewlines;
 import static org.hamcrest.Matchers.containsString;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.testutil.ProcessResult;
@@ -54,7 +54,9 @@ public class AuditDependenciesCommandIntegrationTest {
     // Print all of the inputs to the rule.
     ProcessResult result = workspace.runBuckCommand("audit", "dependencies", "//example:one");
     result.assertSuccess();
-    assertEquals(workspace.getFileContents("stdout-one"), result.getStdout());
+    assertThat(
+        workspace.getFileContents("stdout-one"),
+        equalToIgnoringPlatformNewlines(result.getStdout()));
   }
 
   @Test
@@ -67,7 +69,9 @@ public class AuditDependenciesCommandIntegrationTest {
     ProcessResult result =
         workspace.runBuckCommand("audit", "dependencies", "--transitive", "//example:one");
     result.assertSuccess();
-    assertEquals(workspace.getFileContents("stdout-one-transitive"), result.getStdout());
+    assertThat(
+        workspace.getFileContents("stdout-one-transitive"),
+        equalToIgnoringPlatformNewlines(result.getStdout()));
   }
 
   @Test
@@ -80,7 +84,9 @@ public class AuditDependenciesCommandIntegrationTest {
     ProcessResult result =
         workspace.runBuckCommand("audit", "dependencies", "--json", "//example:one");
     result.assertSuccess();
-    assertEquals(workspace.getFileContents("stdout-one.json"), result.getStdout());
+    assertThat(
+        workspace.getFileContents("stdout-one.json"),
+        equalToIgnoringPlatformNewlines(result.getStdout()));
   }
 
   @Test
@@ -92,7 +98,9 @@ public class AuditDependenciesCommandIntegrationTest {
     // Print all of the inputs to the rule.
     ProcessResult result = workspace.runBuckCommand("audit", "dependencies", "//example:five");
     result.assertSuccess();
-    assertEquals(workspace.getFileContents("stdout-five"), result.getStdout());
+    assertThat(
+        workspace.getFileContents("stdout-five"),
+        equalToIgnoringPlatformNewlines(result.getStdout()));
   }
 
   @Test
@@ -105,7 +113,9 @@ public class AuditDependenciesCommandIntegrationTest {
     ProcessResult result =
         workspace.runBuckCommand("audit", "dependencies", "--include-tests", "//example:four");
     result.assertSuccess();
-    assertEquals(workspace.getFileContents("stdout-four-tests"), result.getStdout());
+    assertThat(
+        workspace.getFileContents("stdout-four-tests"),
+        equalToIgnoringPlatformNewlines(result.getStdout()));
   }
 
   @Test
@@ -119,7 +129,9 @@ public class AuditDependenciesCommandIntegrationTest {
         workspace.runBuckCommand(
             "audit", "dependencies", "--include-tests", "--transitive", "//example:one");
     result.assertSuccess();
-    assertEquals(workspace.getFileContents("stdout-one-transitive-tests"), result.getStdout());
+    assertThat(
+        workspace.getFileContents("stdout-one-transitive-tests"),
+        equalToIgnoringPlatformNewlines(result.getStdout()));
   }
 
   @Test
@@ -134,7 +146,9 @@ public class AuditDependenciesCommandIntegrationTest {
         workspace.runBuckCommand(
             "audit", "dependencies", "--include-tests", "--transitive", "//lib/lib1:lib1");
     result.assertSuccess();
-    assertEquals(workspace.getFileContents("stdout-lib1-transitive-tests"), result.getStdout());
+    assertThat(
+        workspace.getFileContents("stdout-lib1-transitive-tests"),
+        equalToIgnoringPlatformNewlines(result.getStdout()));
   }
 
   @Test
@@ -148,7 +162,9 @@ public class AuditDependenciesCommandIntegrationTest {
         workspace.runBuckCommand(
             "audit", "dependencies", "--json", "//example:two", "//example:three");
     result.assertSuccess();
-    assertEquals(workspace.getFileContents("stdout-two-three.json"), result.getStdout());
+    assertThat(
+        workspace.getFileContents("stdout-two-three.json"),
+        equalToIgnoringPlatformNewlines(result.getStdout()));
   }
 
   @Test
@@ -168,8 +184,9 @@ public class AuditDependenciesCommandIntegrationTest {
             "//example:two",
             "//example:three");
     result.assertSuccess();
-    assertEquals(
-        workspace.getFileContents("stdout-one-two-three-transitive.json"), result.getStdout());
+    assertThat(
+        workspace.getFileContents("stdout-one-two-three-transitive.json"),
+        equalToIgnoringPlatformNewlines(result.getStdout()));
   }
 
   @Test
@@ -182,7 +199,9 @@ public class AuditDependenciesCommandIntegrationTest {
     ProcessResult result =
         workspace.runBuckCommand("audit", "dependencies", "//example:two", "//example:three");
     result.assertSuccess();
-    assertEquals(workspace.getFileContents("stdout-two-three"), result.getStdout());
+    assertThat(
+        workspace.getFileContents("stdout-two-three"),
+        equalToIgnoringPlatformNewlines(result.getStdout()));
   }
 
   @Test
@@ -196,7 +215,9 @@ public class AuditDependenciesCommandIntegrationTest {
         workspace.runBuckCommand(
             "audit", "dependencies", "--transitive", "//example:two", "//example:three");
     result.assertSuccess();
-    assertEquals(workspace.getFileContents("stdout-two-three-transitive"), result.getStdout());
+    assertThat(
+        workspace.getFileContents("stdout-two-three-transitive"),
+        equalToIgnoringPlatformNewlines(result.getStdout()));
   }
 
   @Test
@@ -209,7 +230,9 @@ public class AuditDependenciesCommandIntegrationTest {
     ProcessResult result =
         workspace.runBuckCommand("audit", "dependencies", "//example:app-target");
     result.assertSuccess();
-    assertEquals(workspace.getFileContents("stdout-app-target-extra-deps"), result.getStdout());
+    assertThat(
+        workspace.getFileContents("stdout-app-target-extra-deps"),
+        equalToIgnoringPlatformNewlines(result.getStdout()));
   }
 
   @Test
@@ -222,6 +245,8 @@ public class AuditDependenciesCommandIntegrationTest {
     ProcessResult result =
         workspace.runBuckCommand("audit", "dependencies", "--transitive", "//example:app-library");
     result.assertSuccess();
-    assertEquals(workspace.getFileContents("stdout-app-library-transitive"), result.getStdout());
+    assertThat(
+        workspace.getFileContents("stdout-app-library-transitive"),
+        equalToIgnoringPlatformNewlines(result.getStdout()));
   }
 }

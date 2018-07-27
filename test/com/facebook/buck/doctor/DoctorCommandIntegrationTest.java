@@ -175,7 +175,8 @@ public class DoctorCommandIntegrationTest {
 
     assertEquals(response, doctorResponse);
     assertEquals(
-        "\n:: Suggestions\n- [Error] Suggestion no1\n- [Warning][Area] Suggestion no2\n\n",
+        String.format(
+            "%n:: Suggestions%n- [Error] Suggestion no1%n- [Warning][Area] Suggestion no2%n%n"),
         ((TestConsole) helper.getConsole()).getTextWrittenToStdOut());
   }
 
@@ -337,7 +338,9 @@ public class DoctorCommandIntegrationTest {
             Optional.empty());
     report.collectAndSubmitResult();
 
-    assertThat(reporter.getDefectReport().getExtraInfo(), Matchers.equalTo(Optional.of("Extra\n")));
+    assertThat(
+        reporter.getDefectReport().getExtraInfo(),
+        Matchers.equalTo(Optional.of("Extra" + System.lineSeparator())));
     assertThat(
         reporter
             .getDefectReport()

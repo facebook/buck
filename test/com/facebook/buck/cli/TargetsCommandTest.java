@@ -218,7 +218,7 @@ public class TargetsCommandTest {
         params, executor, buildRules, ImmutableMap.of(), ImmutableSet.of());
 
     String output = console.getTextWrittenToStdOut();
-    assertEquals("[\n]\n", output);
+    assertEquals("[" + System.lineSeparator() + "]" + System.lineSeparator(), output);
     assertThat(
         capturingConsoleEventListener.getLogMessages(),
         contains("unable to find rule for target //:nonexistent"));

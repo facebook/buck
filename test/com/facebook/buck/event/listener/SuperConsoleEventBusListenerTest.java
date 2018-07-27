@@ -1741,7 +1741,7 @@ public class SuperConsoleEventBusListenerTest {
             testingLine),
         ImmutableList.of(),
         Optional.of(
-            Joiner.on('\n')
+            Joiner.on(System.lineSeparator())
                 .join(
                     "RESULTS FOR ALL TESTS",
                     "PASS    <100ms  1 Passed   0 Skipped   0 Failed   TestClass",
@@ -2029,7 +2029,7 @@ public class SuperConsoleEventBusListenerTest {
             testingLine),
         ImmutableList.of(),
         Optional.of(
-            Joiner.on('\n')
+            Joiner.on(System.lineSeparator())
                 .join(
                     "RESULTS FOR ALL TESTS",
                     "ASSUME  <100ms  0 Passed   1 Skipped   0 Failed   TestClass",
@@ -2335,7 +2335,7 @@ public class SuperConsoleEventBusListenerTest {
             testingLine),
         ImmutableList.of(),
         Optional.of(
-            Joiner.on('\n')
+            Joiner.on(System.lineSeparator())
                 .join(
                     "RESULTS FOR ALL TESTS",
                     "FAIL    <100ms  0 Passed   0 Skipped   1 Failed   TestClass",

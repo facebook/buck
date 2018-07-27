@@ -16,6 +16,8 @@
 
 package com.facebook.buck.testutil;
 
+import static com.facebook.buck.util.string.MoreStrings.withoutSuffix;
+
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.io.filesystem.CopySourceMode;
@@ -523,8 +525,8 @@ public class FakeProjectFilesystem extends DefaultProjectFilesystem {
   public void writeLinesToPath(Iterable<String> lines, Path path, FileAttribute<?>... attrs) {
     StringBuilder builder = new StringBuilder();
     if (!Iterables.isEmpty(lines)) {
-      Joiner.on('\n').appendTo(builder, lines);
-      builder.append('\n');
+      Joiner.on(System.lineSeparator()).appendTo(builder, lines);
+      builder.append(System.lineSeparator());
     }
     writeContentsToPath(builder.toString(), path, attrs);
   }
@@ -617,8 +619,11 @@ public class FakeProjectFilesystem extends DefaultProjectFilesystem {
       return ImmutableList.of();
     }
     String content = contents.get();
-    content = content.endsWith("\n") ? content.substring(0, content.length() - 1) : content;
-    return Splitter.on('\n').splitToList(content);
+    content =
+        content.endsWith(System.lineSeparator())
+            ? withoutSuffix(content, System.lineSeparator())
+            : content;
+    return Splitter.on(System.lineSeparator()).splitToList(content);
   }
 
   @Override

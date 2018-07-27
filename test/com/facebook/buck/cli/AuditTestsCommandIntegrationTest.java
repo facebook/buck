@@ -16,8 +16,8 @@
 
 package com.facebook.buck.cli;
 
+import static com.facebook.buck.util.MoreStringsForTests.equalToIgnoringPlatformNewlines;
 import static org.hamcrest.Matchers.containsString;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.testutil.ProcessResult;
@@ -54,7 +54,9 @@ public class AuditTestsCommandIntegrationTest {
     // Print all of the inputs to the rule.
     ProcessResult result = workspace.runBuckCommand("audit", "tests", "//example:one");
     result.assertSuccess();
-    assertEquals(workspace.getFileContents("stdout-one"), result.getStdout());
+    assertThat(
+        workspace.getFileContents("stdout-one"),
+        equalToIgnoringPlatformNewlines(result.getStdout()));
   }
 
   @Test
@@ -67,7 +69,9 @@ public class AuditTestsCommandIntegrationTest {
     ProcessResult result =
         workspace.runBuckCommand("audit", "tests", "//example:four", "//example:six");
     result.assertSuccess();
-    assertEquals(workspace.getFileContents("stdout-four-six"), result.getStdout());
+    assertThat(
+        workspace.getFileContents("stdout-four-six"),
+        equalToIgnoringPlatformNewlines(result.getStdout()));
   }
 
   @Test
@@ -79,7 +83,9 @@ public class AuditTestsCommandIntegrationTest {
     // Print all of the inputs to the rule.
     ProcessResult result = workspace.runBuckCommand("audit", "tests", "//lib/lib1:lib1");
     result.assertSuccess();
-    assertEquals(workspace.getFileContents("stdout-lib1"), result.getStdout());
+    assertThat(
+        workspace.getFileContents("stdout-lib1"),
+        equalToIgnoringPlatformNewlines(result.getStdout()));
   }
 
   @Test
@@ -102,7 +108,7 @@ public class AuditTestsCommandIntegrationTest {
             "//example:six");
     result.assertSuccess();
     String expected = workspace.getFileContents("stdout-one-two-three-four-five-six.json");
-    assertEquals(expected, result.getStdout());
+    assertThat(expected, equalToIgnoringPlatformNewlines(result.getStdout()));
   }
 
   @Test
@@ -115,6 +121,8 @@ public class AuditTestsCommandIntegrationTest {
     ProcessResult result =
         workspace.runBuckCommand("audit", "tests", "//example:four", "//example:seven");
     result.assertSuccess();
-    assertEquals(workspace.getFileContents("stdout-four-seven"), result.getStdout());
+    assertThat(
+        workspace.getFileContents("stdout-four-seven"),
+        equalToIgnoringPlatformNewlines(result.getStdout()));
   }
 }

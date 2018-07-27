@@ -41,7 +41,8 @@ public class ProcessExecutorTest {
     String cmd = Platform.detect() == Platform.WINDOWS ? "cmd /C echo Hello" : "echo Hello";
     ProcessExecutorParams params = ProcessExecutorParams.ofCommand(makeCommandArray(cmd));
     ProcessExecutor.Result result = executor.launchAndExecute(params);
-    assertEquals(ansi.asHighlightedFailureText("Hello\n"), result.getStdout().get());
+    assertEquals(
+        ansi.asHighlightedFailureText("Hello" + System.lineSeparator()), result.getStdout().get());
     assertEquals("", result.getStderr().get());
   }
 
@@ -61,7 +62,7 @@ public class ProcessExecutorTest {
             /* stdin */ Optional.empty(),
             /* timeOutMs */ Optional.empty(),
             /* timeOutHandler */ Optional.empty());
-    assertEquals("Hello\n", result.getStdout().get());
+    assertEquals("Hello" + System.lineSeparator(), result.getStdout().get());
     assertEquals("", result.getStderr().get());
   }
 

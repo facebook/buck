@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.cli;
 
+import static com.facebook.buck.util.MoreStringsForTests.equalToIgnoringPlatformNewlines;
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
@@ -51,7 +52,9 @@ public class AuditConfigCommandIntegrationTest {
             "ignored_section.short_value",
             "ignored_section.long_value");
     result.assertSuccess();
-    assertEquals(workspace.getFileContents("stdout-config"), result.getStdout());
+    assertThat(
+        workspace.getFileContents("stdout-config"),
+        equalToIgnoringPlatformNewlines(result.getStdout()));
     assertThat(result.getStderr(), containsString("missing_section is not a valid section string"));
   }
 
@@ -71,7 +74,9 @@ public class AuditConfigCommandIntegrationTest {
             "ignored_section.short_value",
             "ignored_section.long_value");
     result.assertSuccess();
-    assertEquals(workspace.getFileContents("stdout-config.json").trim(), result.getStdout());
+    assertThat(
+        workspace.getFileContents("stdout-config.json").trim(),
+        equalToIgnoringPlatformNewlines(result.getStdout()));
     assertThat(result.getStderr(), containsString("missing_section is not a valid section string"));
   }
 
@@ -85,7 +90,9 @@ public class AuditConfigCommandIntegrationTest {
         workspace.runBuckCommand(
             "audit", "config", "--json", "missing_section.badvalue", "ignored_section");
     result.assertSuccess();
-    assertEquals(workspace.getFileContents("stdout-config.json").trim(), result.getStdout());
+    assertThat(
+        workspace.getFileContents("stdout-config.json").trim(),
+        equalToIgnoringPlatformNewlines(result.getStdout()));
     assertThat(result.getStderr(), containsString("missing_section is not a valid section string"));
   }
 
@@ -106,7 +113,9 @@ public class AuditConfigCommandIntegrationTest {
             "ignored_section.short_value",
             "ignored_section.long_value");
     result.assertSuccess();
-    assertEquals(workspace.getFileContents("stdout-buckconfig"), result.getStdout());
+    assertThat(
+        workspace.getFileContents("stdout-buckconfig"),
+        equalToIgnoringPlatformNewlines(result.getStdout()));
     assertThat(result.getStderr(), containsString("missing_section is not a valid section string"));
   }
 
@@ -119,7 +128,9 @@ public class AuditConfigCommandIntegrationTest {
     ProcessResult result =
         workspace.runBuckCommand("audit", "config", "secondary//second_section.some_property");
     result.assertSuccess();
-    assertEquals(workspace.getFileContents("stdout-cell-buckconfig"), result.getStdout());
+    assertThat(
+        workspace.getFileContents("stdout-cell-buckconfig"),
+        equalToIgnoringPlatformNewlines(result.getStdout()));
   }
 
   @Test

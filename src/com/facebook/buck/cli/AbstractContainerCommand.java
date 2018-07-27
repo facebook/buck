@@ -119,7 +119,7 @@ public abstract class AbstractContainerCommand extends CommandWithPluginManager 
       }
       String name = subCommand.name().toLowerCase();
       stream.printf(
-          "  %s%s  %s\n",
+          "  %s%s  %s%n",
           name,
           Strings.repeat(" ", lengthOfLongestCommand - name.length()),
           command.getShortDescription());

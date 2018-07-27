@@ -98,6 +98,7 @@ java_test(
         "//src/com/facebook/buck/util/json:json",
         "//src/com/facebook/buck/util/network/hostname:hostname",
         "//src/com/facebook/buck/util/sha1:sha1",
+        "//src/com/facebook/buck/util/string:string",
         "//src/com/facebook/buck/util/trace:trace",
         "//src/com/facebook/buck/util/unit:unit",
         "//src/com/facebook/buck/util/versioncontrol:versioncontrol",
@@ -245,6 +246,7 @@ java_test(
         "//src/com/facebook/buck/util/json:json",
         "//src/com/facebook/buck/util/network/hostname:hostname",
         "//src/com/facebook/buck/util/sha1:sha1",
+        "//src/com/facebook/buck/util/string:string",
         "//src/com/facebook/buck/util/trace:trace",
         "//src/com/facebook/buck/util/unit:unit",
         "//src/com/facebook/buck/util/versioncontrol:versioncontrol",
@@ -389,6 +391,7 @@ java_test(
         "//src/com/facebook/buck/util/environment:platform",
         "//src/com/facebook/buck/util/network/hostname:hostname",
         "//src/com/facebook/buck/util/sha1:sha1",
+        "//src/com/facebook/buck/util/string:string",
         "//src/com/facebook/buck/util/trace:trace",
         "//src/com/facebook/buck/util/unit:unit",
         "//src/com/facebook/buck/util/versioncontrol:versioncontrol",
@@ -511,6 +514,7 @@ java_library(
         "//src/com/facebook/buck/util/environment:platform",
         "//src/com/facebook/buck/util/network/hostname:hostname",
         "//src/com/facebook/buck/util/sha1:sha1",
+        "//src/com/facebook/buck/util/string:string",
         "//src/com/facebook/buck/util/trace:trace",
         "//src/com/facebook/buck/util/unit:unit",
         "//src/com/facebook/buck/util/versioncontrol:versioncontrol",
@@ -569,5 +573,6 @@ java_test(
     ],
     deps = [
         ":parser_benchmark_lib",
+        "//src/com/facebook/buck/util/string:string",
     ],
 )
