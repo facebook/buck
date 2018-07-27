@@ -23,6 +23,7 @@ import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypesProvider;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.filesystem.skylark.SkylarkFilesystem;
+import com.facebook.buck.io.watchman.Capability;
 import com.facebook.buck.io.watchman.WatchmanFactory;
 import com.facebook.buck.json.HybridProjectBuildFileParser;
 import com.facebook.buck.json.PythonDslProjectBuildFileParser;
@@ -108,7 +109,7 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
     boolean watchmanGlobStatResults =
         parserConfig.getWatchmanGlobSanityCheck() == ParserConfig.WatchmanGlobSanityCheck.STAT;
     boolean watchmanUseGlobGenerator =
-        cell.getWatchman().getCapabilities().contains(WatchmanFactory.Capability.GLOB_GENERATOR);
+        cell.getWatchman().getCapabilities().contains(Capability.GLOB_GENERATOR);
     Optional<String> pythonModuleSearchPath = parserConfig.getPythonModuleSearchPath();
 
     ProjectBuildFileParserOptions buildFileParserOptions =

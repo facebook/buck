@@ -83,6 +83,7 @@
   "//src/com/facebook/buck/io/file:file",
   "//src/com/facebook/buck/io/filesystem:filesystem",
   "//src/com/facebook/buck/io/unixsocket:unixsocket",
+  "//src/com/facebook/buck/io/watchman:capability",
   "//src/com/facebook/buck/io/windowsfs:windowsfs",
   "//src/com/facebook/buck/io/windowspipe:windowspipe",
   "//src/com/facebook/buck/io:executable-finder",

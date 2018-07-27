@@ -344,10 +344,10 @@ public class WatchmanFactoryTest {
 
     assertEquals(
         ImmutableSet.of(
-            WatchmanFactory.Capability.DIRNAME,
-            WatchmanFactory.Capability.SUPPORTS_PROJECT_WATCH,
-            WatchmanFactory.Capability.WILDMATCH_GLOB,
-            WatchmanFactory.Capability.WILDMATCH_MULTISLASH),
+            Capability.DIRNAME,
+            Capability.SUPPORTS_PROJECT_WATCH,
+            Capability.WILDMATCH_GLOB,
+            Capability.WILDMATCH_MULTISLASH),
         watchman.getCapabilities());
 
     assertEquals(ImmutableMap.of(root, "c:0:0:1"), watchman.getClockIds());
@@ -397,12 +397,12 @@ public class WatchmanFactoryTest {
 
     assertEquals(
         ImmutableSet.of(
-            WatchmanFactory.Capability.DIRNAME,
-            WatchmanFactory.Capability.SUPPORTS_PROJECT_WATCH,
-            WatchmanFactory.Capability.WILDMATCH_GLOB,
-            WatchmanFactory.Capability.WILDMATCH_MULTISLASH,
-            WatchmanFactory.Capability.GLOB_GENERATOR,
-            WatchmanFactory.Capability.CLOCK_SYNC_TIMEOUT),
+            Capability.DIRNAME,
+            Capability.SUPPORTS_PROJECT_WATCH,
+            Capability.WILDMATCH_GLOB,
+            Capability.WILDMATCH_MULTISLASH,
+            Capability.GLOB_GENERATOR,
+            Capability.CLOCK_SYNC_TIMEOUT),
         watchman.getCapabilities());
 
     assertEquals(ImmutableMap.of(root, "c:0:0:1"), watchman.getClockIds());

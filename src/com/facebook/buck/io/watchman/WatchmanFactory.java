@@ -488,17 +488,4 @@ public class WatchmanFactory {
     }
     return Optional.of((Map<String, Object>) response);
   }
-
-  /**
-   * Various <a href="https://facebook.github.io/watchman/docs/capabilities.html">capabilities</a>
-   * supported by different versions of Watchman.
-   */
-  public enum Capability {
-    DIRNAME,
-    SUPPORTS_PROJECT_WATCH,
-    WILDMATCH_GLOB,
-    WILDMATCH_MULTISLASH,
-    GLOB_GENERATOR,
-    CLOCK_SYNC_TIMEOUT
-  }
 }

@@ -1,40 +1,45 @@
 load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
 
-TRANSPORT_SRCS = [
-    "Transport.java",
-]
-
 java_library(
     name = "transport",
-    srcs = TRANSPORT_SRCS,
+    srcs = [
+        "Transport.java",
+    ],
     visibility = [
         "PUBLIC",
     ],
 )
 
-WATCHMAN_SRCS = [
-    "AbstractWatchmanDiagnostic.java",
-    "AbstractProjectWatch.java",
-    "AbstractWatchmanQuery.java",
-    "Watchman.java",
-    "WatchmanClient.java",
-    "WatchmanCursor.java",
-    "WatchmanDiagnosticEvent.java",
-    "WatchmanDiagnosticEventListener.java",
-    "WatchmanEvent.java",
-    "WatchmanFactory.java",
-    "WatchmanTransportClient.java",
-    "WatchmanWatcher.java",
-    "WatchmanWatcherException.java",
-]
+java_library(
+    name = "capability",
+    srcs = [
+        "Capability.java",
+    ],
+    visibility = ["PUBLIC"],
+)
 
 java_immutables_library(
     name = "watchman",
-    srcs = WATCHMAN_SRCS,
+    srcs = [
+        "AbstractProjectWatch.java",
+        "AbstractWatchmanDiagnostic.java",
+        "AbstractWatchmanQuery.java",
+        "Watchman.java",
+        "WatchmanClient.java",
+        "WatchmanCursor.java",
+        "WatchmanDiagnosticEvent.java",
+        "WatchmanDiagnosticEventListener.java",
+        "WatchmanEvent.java",
+        "WatchmanFactory.java",
+        "WatchmanTransportClient.java",
+        "WatchmanWatcher.java",
+        "WatchmanWatcherException.java",
+    ],
     visibility = [
         "PUBLIC",
     ],
     deps = [
+        ":capability",
         ":transport",
         "//src/com/facebook/buck/core/model:model",
         "//src/com/facebook/buck/event:event",

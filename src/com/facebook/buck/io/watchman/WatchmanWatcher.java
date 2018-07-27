@@ -23,7 +23,6 @@ import com.facebook.buck.event.WatchmanStatusEvent;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.PathOrGlobMatcher;
 import com.facebook.buck.io.watchman.AbstractWatchmanPathEvent.Kind;
-import com.facebook.buck.io.watchman.WatchmanFactory.Capability;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.Threads;
 import com.facebook.buck.util.concurrent.MostExecutors;
@@ -172,7 +171,7 @@ public class WatchmanWatcher {
           if (ignorePath.isAbsolute()) {
             ignorePath = MorePaths.relativize(projectRoot, ignorePath);
           }
-          if (watchmanCapabilities.contains(WatchmanFactory.Capability.DIRNAME)) {
+          if (watchmanCapabilities.contains(Capability.DIRNAME)) {
             excludeAnyOf.add(Lists.newArrayList("dirname", ignorePath.toString()));
           } else {
             excludeAnyOf.add(

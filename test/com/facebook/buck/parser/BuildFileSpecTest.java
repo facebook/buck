@@ -24,11 +24,11 @@ import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
+import com.facebook.buck.io.watchman.Capability;
 import com.facebook.buck.io.watchman.FakeWatchmanClient;
 import com.facebook.buck.io.watchman.ProjectWatch;
 import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.io.watchman.WatchmanClient;
-import com.facebook.buck.io.watchman.WatchmanFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.config.Config;
 import com.facebook.buck.util.config.ConfigBuilder;
@@ -254,9 +254,7 @@ public class BuildFileSpecTest {
             filesystem.getRootPath(),
             ProjectWatch.of(watchRoot.toString(), Optional.of("project-name"))),
         ImmutableSet.of(
-            WatchmanFactory.Capability.SUPPORTS_PROJECT_WATCH,
-            WatchmanFactory.Capability.DIRNAME,
-            WatchmanFactory.Capability.WILDMATCH_GLOB),
+            Capability.SUPPORTS_PROJECT_WATCH, Capability.DIRNAME, Capability.WILDMATCH_GLOB),
         ImmutableMap.of(),
         Optional.of(Paths.get(".watchman-sock"))) {
       @Override

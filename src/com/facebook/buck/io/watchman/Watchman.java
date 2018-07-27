@@ -16,7 +16,6 @@
 
 package com.facebook.buck.io.watchman;
 
-import com.facebook.buck.io.watchman.WatchmanFactory.Capability;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -79,7 +78,7 @@ public abstract class Watchman {
   }
 
   public boolean hasWildmatchGlob() {
-    return capabilities.contains(WatchmanFactory.Capability.WILDMATCH_GLOB);
+    return capabilities.contains(Capability.WILDMATCH_GLOB);
   }
 
   public Optional<Path> getTransportPath() {
