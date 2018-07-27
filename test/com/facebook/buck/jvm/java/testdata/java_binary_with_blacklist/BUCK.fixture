@@ -1,7 +1,7 @@
 java_library(
     name = "lib",
     srcs = glob(["*.java"]),
-    resources = glob(["**/*.txt"]),
+    resources = glob(["com/**/*.txt"]),
 )
 
 java_binary(

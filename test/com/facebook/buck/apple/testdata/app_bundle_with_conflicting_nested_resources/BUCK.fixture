@@ -1,6 +1,6 @@
 apple_resource(
     name = "DemoAppResources",
-    files = glob(["**/*.png"]),
+    files = glob(["*/*.png"]),
     variants = [
         "aa.lproj/Localizable.strings",
         "bb.lproj/Localizable.strings",

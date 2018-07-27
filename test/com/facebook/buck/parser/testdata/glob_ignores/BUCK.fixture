@@ -1,4 +1,7 @@
 java_library(
     name = "root_module",
-    srcs = glob(["**/*.java"]),
+    srcs = glob([
+        "*.java",
+        "*/*.java",
+    ]),
 )

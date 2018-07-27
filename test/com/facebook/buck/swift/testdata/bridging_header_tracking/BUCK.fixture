@@ -1,7 +1,7 @@
 apple_library(
     name = "LibObjC",
     srcs = glob([
-        "**/*.m",
+        "*/*.m",
     ]),
     exported_headers = glob([
         "LibObjC/**/*.h",
@@ -46,7 +46,7 @@ apple_library(
 apple_library(
     name = "LibObjCUsesLibSwift",
     srcs = glob([
-        "**/*.m",
+        "*/*.m",
     ]),
     exported_headers = glob([
         "LibObjCUsesLibSwift/**/*.h",

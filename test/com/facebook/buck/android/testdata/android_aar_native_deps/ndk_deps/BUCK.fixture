@@ -6,7 +6,7 @@ android_resource(
 
 android_library(
     name = "lib",
-    srcs = glob(["**/*.java"]),
+    srcs = glob(["*.java"]),
 )
 
 android_aar(

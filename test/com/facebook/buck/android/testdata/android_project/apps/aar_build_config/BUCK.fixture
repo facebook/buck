@@ -9,7 +9,7 @@ android_build_config(
 
 android_library(
     name = "lib",
-    srcs = glob(["**/*.java"]),
+    srcs = glob(["*.java"]),
     deps = [
         ":build_config",
     ],
