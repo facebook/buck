@@ -16,14 +16,42 @@
 
 package com.facebook.buck.io.filesystem;
 
+import com.facebook.buck.io.file.MorePaths;
+import com.facebook.buck.io.watchman.Capability;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import java.io.File;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.nio.file.PathMatcher;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 
-public class PathOrGlobMatcher {
+public class PathOrGlobMatcher implements com.facebook.buck.io.filesystem.PathMatcher {
+
+  @Override
+  public ImmutableList<?> toWatchmanMatchQuery(Path projectRoot, Set<Capability> capabilities) {
+    switch (getType()) {
+      case PATH:
+        Path ignorePath = getPath();
+        if (ignorePath.isAbsolute()) {
+          ignorePath = MorePaths.relativize(projectRoot, ignorePath);
+        }
+        if (capabilities.contains(Capability.DIRNAME)) {
+          return ImmutableList.of("dirname", ignorePath.toString());
+        } else {
+          return ImmutableList.of("match", ignorePath + File.separator + "*", "wholename");
+        }
+      case GLOB:
+        String ignoreGlob = getGlob();
+        return ImmutableList.of(
+            "match", ignoreGlob, "wholename", ImmutableMap.of("includedotfiles", true));
+      default:
+        throw new RuntimeException(String.format("Unsupported type: '%s'", getType()));
+    }
+  }
 
   public enum Type {
     PATH,
@@ -92,6 +120,7 @@ public class PathOrGlobMatcher {
         "%s type=%s basePath=%s globPattern=%s", super.toString(), type, basePath, globPattern);
   }
 
+  @Override
   public boolean matches(Path path) {
     switch (type) {
       case PATH:

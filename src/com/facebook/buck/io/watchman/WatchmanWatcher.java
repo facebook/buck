@@ -20,7 +20,6 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.event.WatchmanStatusEvent;
-import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.PathOrGlobMatcher;
 import com.facebook.buck.io.watchman.AbstractWatchmanPathEvent.Kind;
 import com.facebook.buck.log.Logger;
@@ -33,7 +32,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.eventbus.EventBus;
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -165,29 +163,7 @@ public class WatchmanWatcher {
     // because watchman's .git cookie magic is done before the query
     // is applied.
     for (PathOrGlobMatcher ignorePathOrGlob : ignorePaths) {
-      switch (ignorePathOrGlob.getType()) {
-        case PATH:
-          Path ignorePath = ignorePathOrGlob.getPath();
-          if (ignorePath.isAbsolute()) {
-            ignorePath = MorePaths.relativize(projectRoot, ignorePath);
-          }
-          if (watchmanCapabilities.contains(Capability.DIRNAME)) {
-            excludeAnyOf.add(Lists.newArrayList("dirname", ignorePath.toString()));
-          } else {
-            excludeAnyOf.add(
-                Lists.newArrayList("match", ignorePath + File.separator + "*", "wholename"));
-          }
-          break;
-        case GLOB:
-          String ignoreGlob = ignorePathOrGlob.getGlob();
-          excludeAnyOf.add(
-              Lists.newArrayList(
-                  "match", ignoreGlob, "wholename", ImmutableMap.of("includedotfiles", true)));
-          break;
-        default:
-          throw new RuntimeException(
-              String.format("Unsupported type: '%s'", ignorePathOrGlob.getType()));
-      }
+      excludeAnyOf.add(ignorePathOrGlob.toWatchmanMatchQuery(projectRoot, watchmanCapabilities));
     }
 
     // Note that we use LinkedHashMap so insertion order is preserved. That

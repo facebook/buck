@@ -18,7 +18,6 @@ package com.facebook.buck.io.file;
 
 import com.facebook.buck.cli.bootstrapper.filesystem.BuckUnixPath;
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.windowsfs.WindowsFS;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.environment.Platform;
@@ -42,8 +41,8 @@ import javax.annotation.Nullable;
 
 /**
  * Common functions that are done with a {@link Path}. If a function is going to take a {@link
- * ProjectFilesystem}, then it should be in {@link com.facebook.buck.io.MoreProjectFilesystems}
- * instead.
+ * com.facebook.buck.io.filesystem.ProjectFilesystem}, then it should be in {@link
+ * com.facebook.buck.io.MoreProjectFilesystems} instead.
  */
 public class MorePaths {
 
