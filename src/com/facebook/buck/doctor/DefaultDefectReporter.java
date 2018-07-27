@@ -203,6 +203,10 @@ public class DefaultDefectReporter implements DefectReporter {
       Request.Builder requestBuilder = new Request.Builder();
       requestBuilder.addHeader(
           REQUEST_PROTOCOL_VERSION, doctorConfig.getProtocolVersion().name().toLowerCase());
+      for (Map.Entry<String, String> entry :
+          doctorConfig.getEndpointExtraRequestHeaders().entrySet()) {
+        requestBuilder.addHeader(entry.getKey(), entry.getValue());
+      }
       requestBuilder.post(
           new RequestBody() {
             @Override

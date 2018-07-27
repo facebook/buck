@@ -173,9 +173,15 @@ public class DoctorReportHelper {
         requestBody = formBody.build();
       }
 
-      Request httpRequest =
-          new Request.Builder().url(doctorConfig.getEndpointUrl().get()).post(requestBody).build();
-      httpResponse = httpClient.newCall(httpRequest).execute();
+      Request.Builder requestBuilder = new Request.Builder();
+      requestBuilder.url(doctorConfig.getEndpointUrl().get()).post(requestBody);
+
+      for (Map.Entry<String, String> entry :
+          doctorConfig.getEndpointExtraRequestHeaders().entrySet()) {
+        requestBuilder.addHeader(entry.getKey(), entry.getValue());
+      }
+
+      httpResponse = httpClient.newCall(requestBuilder.build()).execute();
     } catch (IOException e) {
       return createErrorDoctorEndpointResponse(
           "Failed to perform the request to "
