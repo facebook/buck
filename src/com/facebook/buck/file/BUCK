@@ -12,6 +12,7 @@ java_library_with_plugins(
         "HttpFile.java",
         "HttpFileBinary.java",
         "HttpFileDescription.java",
+        "OutputFilePublisher.java",
         "RemoteFile.java",
         "RemoteFileBinary.java",
         "RemoteFileDescription.java",
@@ -51,6 +52,7 @@ java_library_with_plugins(
         "//src/com/facebook/buck/zip:zip",
         "//third-party/java/guava:guava",
         "//third-party/java/infer-annotations:infer-annotations",
+        "//third-party/java/okhttp:okhttp",
     ],
 )
 
