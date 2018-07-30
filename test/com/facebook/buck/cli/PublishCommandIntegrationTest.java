@@ -176,12 +176,11 @@ public class PublishCommandIntegrationTest {
             getMockRepoUrl(),
             "//src/foo:src-archive");
     result.assertSuccess();
-//    assertTrue(result.getStderr().contains("buck-out/gen/src/foo/src-archive__/src-archive.zip"));
-//    assertTrue(
-//        result
-//            .getStderr()
-//            .contains(
-//                "src/foo/90ca326e8172d39b0e1920c3047eb58952a206f1e796a132ff107aa83e3e1c32/src-archive.zip"));
+    List<String> putRequestsPaths = requestsHandler.getPutRequestsPaths();
+    assertThat(
+        putRequestsPaths,
+        hasItem(
+            "/src/foo/90ca326e8172d39b0e1920c3047eb58952a206f1e796a132ff107aa83e3e1c32/src-archive.zip"));
   }
 
   @Test

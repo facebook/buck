@@ -95,11 +95,8 @@ public class OutputFilePublisher implements Supplier<Integer> {
   }
 
   HttpUrl buildUrl(BuildTarget target, String sha, String fileName) {
-    return new HttpUrl.Builder()
-        .scheme(repoBase.getProtocol())
-        .host(repoBase.getHost())
-        .port(repoBase.getPort())
-        .addPathSegments(repoBase.getPath())
+    return HttpUrl.get(repoBase)
+        .newBuilder()
         .addPathSegments(target.getBasePath().toString())
         .addPathSegment(sha)
         .addPathSegment(fileName)
