@@ -55,7 +55,7 @@ import com.facebook.buck.features.python.toolchain.PythonVersion;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
-import com.facebook.buck.rules.coercer.SourceList;
+import com.facebook.buck.rules.coercer.SourceSortedSet;
 import com.facebook.buck.testutil.AllExistingProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
@@ -211,7 +211,8 @@ public class LuaBinaryDescriptionTest {
     PythonLibraryBuilder pythonLibraryBuilder =
         new PythonLibraryBuilder(BuildTargetFactory.newInstance("//:dep"))
             .setSrcs(
-                SourceList.ofUnnamedSources(ImmutableSortedSet.of(FakeSourcePath.of("foo.py"))));
+                SourceSortedSet.ofUnnamedSources(
+                    ImmutableSortedSet.of(FakeSourcePath.of("foo.py"))));
     LuaBinaryBuilder luaBinaryBuilder =
         new LuaBinaryBuilder(BuildTargetFactory.newInstance("//:rule"))
             .setMainModule("hello.world")
@@ -300,7 +301,8 @@ public class LuaBinaryDescriptionTest {
     PythonLibraryBuilder pythonLibraryBuilder =
         new PythonLibraryBuilder(BuildTargetFactory.newInstance("//:dep"))
             .setSrcs(
-                SourceList.ofUnnamedSources(ImmutableSortedSet.of(FakeSourcePath.of("foo.py"))));
+                SourceSortedSet.ofUnnamedSources(
+                    ImmutableSortedSet.of(FakeSourcePath.of("foo.py"))));
     LuaBinaryBuilder luaBinaryBuilder =
         new LuaBinaryBuilder(BuildTargetFactory.newInstance("//:rule"))
             .setMainModule("hello.world")

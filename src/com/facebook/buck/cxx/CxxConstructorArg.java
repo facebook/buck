@@ -30,7 +30,7 @@ import com.facebook.buck.core.sourcepath.SourceWithFlags;
 import com.facebook.buck.cxx.toolchain.HasSystemFrameworkAndLibraries;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
-import com.facebook.buck.rules.coercer.SourceList;
+import com.facebook.buck.rules.coercer.SourceSortedSet;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -54,8 +54,8 @@ public interface CxxConstructorArg
   }
 
   @Value.Default
-  default SourceList getHeaders() {
-    return SourceList.EMPTY;
+  default SourceSortedSet getHeaders() {
+    return SourceSortedSet.EMPTY;
   }
 
   /**
@@ -86,7 +86,7 @@ public interface CxxConstructorArg
   }
 
   @Value.Default
-  default PatternMatchedCollection<SourceList> getPlatformHeaders() {
+  default PatternMatchedCollection<SourceSortedSet> getPlatformHeaders() {
     return PatternMatchedCollection.of();
   }
 

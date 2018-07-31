@@ -63,7 +63,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
-import com.facebook.buck.rules.coercer.SourceList;
+import com.facebook.buck.rules.coercer.SourceSortedSet;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.RuleKeyFieldLoader;
 import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
@@ -111,7 +111,7 @@ public class PythonBinaryDescriptionTest {
     PythonLibraryBuilder libBuilder =
         new PythonLibraryBuilder(BuildTargetFactory.newInstance("//:lib"))
             .setSrcs(
-                SourceList.ofUnnamedSources(
+                SourceSortedSet.ofUnnamedSources(
                     ImmutableSortedSet.of(
                         DefaultBuildTargetSourcePath.of(genruleBuilder.getTarget()))));
     PythonBinaryBuilder binaryBuilder =
@@ -275,7 +275,7 @@ public class PythonBinaryDescriptionTest {
       PythonLibraryBuilder pythonLibraryBuilder =
           new PythonLibraryBuilder(BuildTargetFactory.newInstance("//:lib"))
               .setSrcs(
-                  SourceList.ofUnnamedSources(
+                  SourceSortedSet.ofUnnamedSources(
                       ImmutableSortedSet.of(FakeSourcePath.of("something.py"))))
               .setDeps(ImmutableSortedSet.of(cxxBinaryBuilder.getTarget()));
       PythonBinaryBuilder pythonBinaryBuilder =
@@ -515,7 +515,7 @@ public class PythonBinaryDescriptionTest {
     PythonLibraryBuilder pythonLibraryBuilder =
         new PythonLibraryBuilder(BuildTargetFactory.newInstance("//:lib"))
             .setSrcs(
-                SourceList.ofUnnamedSources(
+                SourceSortedSet.ofUnnamedSources(
                     ImmutableSortedSet.of(FakeSourcePath.of("prebuilt.so"))))
             .setDeps(ImmutableSortedSet.of(cxxLibraryBuilder.getTarget()));
     PythonBuckConfig config =
@@ -843,11 +843,11 @@ public class PythonBinaryDescriptionTest {
     SourcePath libASrc = FakeSourcePath.of("libA.py");
     PythonLibraryBuilder libraryABuilder =
         PythonLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:libA"))
-            .setSrcs(SourceList.ofUnnamedSources(ImmutableSortedSet.of(libASrc)));
+            .setSrcs(SourceSortedSet.ofUnnamedSources(ImmutableSortedSet.of(libASrc)));
     SourcePath libBSrc = FakeSourcePath.of("libB.py");
     PythonLibraryBuilder libraryBBuilder =
         PythonLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:libB"))
-            .setSrcs(SourceList.ofUnnamedSources(ImmutableSortedSet.of(libBSrc)));
+            .setSrcs(SourceSortedSet.ofUnnamedSources(ImmutableSortedSet.of(libBSrc)));
     PythonBinaryBuilder binaryBuilder =
         PythonBinaryBuilder.create(BuildTargetFactory.newInstance("//:bin"))
             .setMainModule("main")
@@ -886,14 +886,14 @@ public class PythonBinaryDescriptionTest {
                 BuildTargetFactory.newInstance("//:libA"),
                 PythonTestUtils.PYTHON_PLATFORMS,
                 cxxPlatforms)
-            .setSrcs(SourceList.ofUnnamedSources(ImmutableSortedSet.of(libASrc)));
+            .setSrcs(SourceSortedSet.ofUnnamedSources(ImmutableSortedSet.of(libASrc)));
     SourcePath libBSrc = FakeSourcePath.of("libB.py");
     PythonLibraryBuilder libraryBBuilder =
         new PythonLibraryBuilder(
                 BuildTargetFactory.newInstance("//:libB"),
                 PythonTestUtils.PYTHON_PLATFORMS,
                 cxxPlatforms)
-            .setSrcs(SourceList.ofUnnamedSources(ImmutableSortedSet.of(libBSrc)));
+            .setSrcs(SourceSortedSet.ofUnnamedSources(ImmutableSortedSet.of(libBSrc)));
     PythonBinaryBuilder binaryBuilder =
         PythonBinaryBuilder.create(
                 BuildTargetFactory.newInstance("//:bin"),

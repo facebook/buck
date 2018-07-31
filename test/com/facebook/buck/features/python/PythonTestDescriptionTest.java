@@ -48,7 +48,7 @@ import com.facebook.buck.io.AlwaysFoundExecutableFinder;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
-import com.facebook.buck.rules.coercer.SourceList;
+import com.facebook.buck.rules.coercer.SourceSortedSet;
 import com.facebook.buck.rules.coercer.VersionMatchedCollection;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.RuleKeyFieldLoader;
@@ -81,7 +81,8 @@ public class PythonTestDescriptionTest {
     PythonTestBuilder builder =
         PythonTestBuilder.create(BuildTargetFactory.newInstance("//:bin"))
             .setSrcs(
-                SourceList.ofUnnamedSources(ImmutableSortedSet.of(FakeSourcePath.of("blah.py"))));
+                SourceSortedSet.ofUnnamedSources(
+                    ImmutableSortedSet.of(FakeSourcePath.of("blah.py"))));
     TargetGraph targetGraph = TargetGraphFactory.newInstance(builder.build());
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
     PythonTest testRule = builder.build(graphBuilder, filesystem, targetGraph);
@@ -111,7 +112,7 @@ public class PythonTestDescriptionTest {
     // base name.
     PythonTestBuilder normalBuilder =
         PythonTestBuilder.create(target)
-            .setSrcs(SourceList.ofUnnamedSources(ImmutableSortedSet.of(source)));
+            .setSrcs(SourceSortedSet.ofUnnamedSources(ImmutableSortedSet.of(source)));
     TargetGraph normalTargetGraph = TargetGraphFactory.newInstance(normalBuilder.build());
     PythonTest normal =
         normalBuilder.build(
@@ -124,7 +125,7 @@ public class PythonTestDescriptionTest {
     String baseModule = "blah";
     PythonTestBuilder withBaseModuleBuilder =
         PythonTestBuilder.create(target)
-            .setSrcs(SourceList.ofUnnamedSources(ImmutableSortedSet.of(source)))
+            .setSrcs(SourceSortedSet.ofUnnamedSources(ImmutableSortedSet.of(source)))
             .setBaseModule(baseModule);
     TargetGraph withBaseModuleTargetGraph =
         TargetGraphFactory.newInstance(withBaseModuleBuilder.build());
@@ -168,13 +169,13 @@ public class PythonTestDescriptionTest {
     PythonTestBuilder builder =
         PythonTestBuilder.create(target)
             .setPlatformSrcs(
-                PatternMatchedCollection.<SourceList>builder()
+                PatternMatchedCollection.<SourceSortedSet>builder()
                     .add(
                         Pattern.compile(PythonTestUtils.PYTHON_PLATFORM.getFlavor().toString()),
-                        SourceList.ofUnnamedSources(ImmutableSortedSet.of(matchedSource)))
+                        SourceSortedSet.ofUnnamedSources(ImmutableSortedSet.of(matchedSource)))
                     .add(
                         Pattern.compile("won't match anything"),
-                        SourceList.ofUnnamedSources(ImmutableSortedSet.of(unmatchedSource)))
+                        SourceSortedSet.ofUnnamedSources(ImmutableSortedSet.of(unmatchedSource)))
                     .build());
     TargetGraph targetGraph = TargetGraphFactory.newInstance(builder.build());
     PythonTest test =
@@ -194,13 +195,13 @@ public class PythonTestDescriptionTest {
     PythonTestBuilder builder =
         PythonTestBuilder.create(target)
             .setPlatformResources(
-                PatternMatchedCollection.<SourceList>builder()
+                PatternMatchedCollection.<SourceSortedSet>builder()
                     .add(
                         Pattern.compile(PythonTestUtils.PYTHON_PLATFORM.getFlavor().toString()),
-                        SourceList.ofUnnamedSources(ImmutableSortedSet.of(matchedSource)))
+                        SourceSortedSet.ofUnnamedSources(ImmutableSortedSet.of(matchedSource)))
                     .add(
                         Pattern.compile("won't match anything"),
-                        SourceList.ofUnnamedSources(ImmutableSortedSet.of(unmatchedSource)))
+                        SourceSortedSet.ofUnnamedSources(ImmutableSortedSet.of(unmatchedSource)))
                     .build());
     TargetGraph targetGraph = TargetGraphFactory.newInstance(builder.build());
     PythonTest test =
@@ -380,13 +381,13 @@ public class PythonTestDescriptionTest {
     PythonTestBuilder builder =
         PythonTestBuilder.create(target)
             .setVersionedSrcs(
-                VersionMatchedCollection.<SourceList>builder()
+                VersionMatchedCollection.<SourceSortedSet>builder()
                     .add(
                         ImmutableMap.of(depBuilder.getTarget(), Version.of("1.0")),
-                        SourceList.ofUnnamedSources(ImmutableSortedSet.of(matchedSource)))
+                        SourceSortedSet.ofUnnamedSources(ImmutableSortedSet.of(matchedSource)))
                     .add(
                         ImmutableMap.of(depBuilder.getTarget(), Version.of("2.0")),
-                        SourceList.ofUnnamedSources(ImmutableSortedSet.of(unmatchedSource)))
+                        SourceSortedSet.ofUnnamedSources(ImmutableSortedSet.of(unmatchedSource)))
                     .build())
             .setSelectedVersions(ImmutableMap.of(depBuilder.getTarget(), Version.of("1.0")));
     TargetGraph targetGraph = TargetGraphFactory.newInstance(depBuilder.build(), builder.build());
@@ -410,13 +411,13 @@ public class PythonTestDescriptionTest {
     PythonTestBuilder builder =
         PythonTestBuilder.create(target)
             .setVersionedResources(
-                VersionMatchedCollection.<SourceList>builder()
+                VersionMatchedCollection.<SourceSortedSet>builder()
                     .add(
                         ImmutableMap.of(depBuilder.getTarget(), Version.of("1.0")),
-                        SourceList.ofUnnamedSources(ImmutableSortedSet.of(matchedSource)))
+                        SourceSortedSet.ofUnnamedSources(ImmutableSortedSet.of(matchedSource)))
                     .add(
                         ImmutableMap.of(depBuilder.getTarget(), Version.of("2.0")),
-                        SourceList.ofUnnamedSources(ImmutableSortedSet.of(unmatchedSource)))
+                        SourceSortedSet.ofUnnamedSources(ImmutableSortedSet.of(unmatchedSource)))
                     .build())
             .setSelectedVersions(ImmutableMap.of(depBuilder.getTarget(), Version.of("1.0")));
     TargetGraph targetGraph = TargetGraphFactory.newInstance(depBuilder.build(), builder.build());
@@ -466,11 +467,11 @@ public class PythonTestDescriptionTest {
     SourcePath libASrc = FakeSourcePath.of("libA.py");
     PythonLibraryBuilder libraryABuilder =
         PythonLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:libA"))
-            .setSrcs(SourceList.ofUnnamedSources(ImmutableSortedSet.of(libASrc)));
+            .setSrcs(SourceSortedSet.ofUnnamedSources(ImmutableSortedSet.of(libASrc)));
     SourcePath libBSrc = FakeSourcePath.of("libB.py");
     PythonLibraryBuilder libraryBBuilder =
         PythonLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:libB"))
-            .setSrcs(SourceList.ofUnnamedSources(ImmutableSortedSet.of(libBSrc)));
+            .setSrcs(SourceSortedSet.ofUnnamedSources(ImmutableSortedSet.of(libBSrc)));
     PythonTestBuilder binaryBuilder =
         PythonTestBuilder.create(BuildTargetFactory.newInstance("//:bin"))
             .setPlatformDeps(
@@ -508,14 +509,14 @@ public class PythonTestDescriptionTest {
                 BuildTargetFactory.newInstance("//:libA"),
                 PythonTestUtils.PYTHON_PLATFORMS,
                 cxxPlatforms)
-            .setSrcs(SourceList.ofUnnamedSources(ImmutableSortedSet.of(libASrc)));
+            .setSrcs(SourceSortedSet.ofUnnamedSources(ImmutableSortedSet.of(libASrc)));
     SourcePath libBSrc = FakeSourcePath.of("libB.py");
     PythonLibraryBuilder libraryBBuilder =
         new PythonLibraryBuilder(
                 BuildTargetFactory.newInstance("//:libB"),
                 PythonTestUtils.PYTHON_PLATFORMS,
                 cxxPlatforms)
-            .setSrcs(SourceList.ofUnnamedSources(ImmutableSortedSet.of(libBSrc)));
+            .setSrcs(SourceSortedSet.ofUnnamedSources(ImmutableSortedSet.of(libBSrc)));
     PythonTestBuilder binaryBuilder =
         PythonTestBuilder.create(
                 BuildTargetFactory.newInstance("//:bin"),

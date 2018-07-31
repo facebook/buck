@@ -25,7 +25,7 @@ import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
-import com.facebook.buck.rules.coercer.SourceList;
+import com.facebook.buck.rules.coercer.SourceSortedSet;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
@@ -44,7 +44,7 @@ public class PythonUtilTest {
             "srcs",
             target.getBasePath(),
             ImmutableList.of(
-                SourceList.ofNamedSources(
+                SourceSortedSet.ofNamedSources(
                     ImmutableSortedMap.of("hello.py", FakeSourcePath.of("goodbye.py")))));
     assertEquals(
         ImmutableMap.<Path, SourcePath>of(

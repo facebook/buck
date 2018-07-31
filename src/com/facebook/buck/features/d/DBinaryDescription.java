@@ -41,7 +41,7 @@ import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatforms;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.SourcePathArg;
-import com.facebook.buck.rules.coercer.SourceList;
+import com.facebook.buck.rules.coercer.SourceSortedSet;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.versions.VersionRoot;
 import com.google.common.collect.ImmutableCollection;
@@ -142,7 +142,7 @@ public class DBinaryDescription
   @BuckStyleImmutable
   @Value.Immutable
   interface AbstractDBinaryDescriptionArg extends CommonDescriptionArg, HasDeclaredDeps {
-    SourceList getSrcs();
+    SourceSortedSet getSrcs();
 
     ImmutableList<String> getLinkerFlags();
   }

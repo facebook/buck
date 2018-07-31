@@ -21,7 +21,7 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
-import com.facebook.buck.rules.coercer.SourceList;
+import com.facebook.buck.rules.coercer.SourceSortedSet;
 import com.facebook.buck.util.RichStream;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -39,11 +39,11 @@ public class LuaUtil {
       SourcePathResolver resolver,
       String parameter,
       String baseModule,
-      Iterable<SourceList> inputs) {
+      Iterable<SourceSortedSet> inputs) {
 
     ImmutableMap.Builder<String, SourcePath> moduleNamesAndSourcePaths = ImmutableMap.builder();
 
-    for (SourceList input : inputs) {
+    for (SourceSortedSet input : inputs) {
       ImmutableMap<String, SourcePath> namesAndSourcePaths;
       if (input.getUnnamedSources().isPresent()) {
         namesAndSourcePaths =

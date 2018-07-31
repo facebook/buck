@@ -28,7 +28,7 @@ import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.parser.BuildTargetPattern;
 import com.facebook.buck.parser.BuildTargetPatternParser;
-import com.facebook.buck.rules.coercer.AbstractSourceList.Type;
+import com.facebook.buck.rules.coercer.AbstractSourceSortedSet.Type;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.versions.FixedTargetNodeTranslator;
 import com.facebook.buck.versions.TargetNodeTranslator;
@@ -41,7 +41,7 @@ import java.util.Optional;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
-public class SourceListTest {
+public class SourceSortedSetTest {
 
   private static final CellPathResolver CELL_PATH_RESOLVER =
       TestCellPathResolver.get(new FakeProjectFilesystem());
@@ -59,11 +59,11 @@ public class SourceListTest {
         translator.translate(
             CELL_PATH_RESOLVER,
             PATTERN,
-            SourceList.ofNamedSources(
+            SourceSortedSet.ofNamedSources(
                 ImmutableSortedMap.of("name", DefaultBuildTargetSourcePath.of(target)))),
         Matchers.equalTo(
             Optional.of(
-                SourceList.ofNamedSources(
+                SourceSortedSet.ofNamedSources(
                     ImmutableSortedMap.of("name", DefaultBuildTargetSourcePath.of(newTarget))))));
   }
 
@@ -72,8 +72,8 @@ public class SourceListTest {
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     TargetNodeTranslator translator =
         new FixedTargetNodeTranslator(new DefaultTypeCoercerFactory(), ImmutableMap.of());
-    SourceList list =
-        SourceList.ofNamedSources(
+    SourceSortedSet list =
+        SourceSortedSet.ofNamedSources(
             ImmutableSortedMap.of("name", DefaultBuildTargetSourcePath.of(target)));
     assertThat(
         translator.translate(CELL_PATH_RESOLVER, PATTERN, list),
@@ -91,11 +91,11 @@ public class SourceListTest {
         translator.translate(
             CELL_PATH_RESOLVER,
             PATTERN,
-            SourceList.ofUnnamedSources(
+            SourceSortedSet.ofUnnamedSources(
                 ImmutableSortedSet.of(DefaultBuildTargetSourcePath.of(target)))),
         Matchers.equalTo(
             Optional.of(
-                SourceList.ofUnnamedSources(
+                SourceSortedSet.ofUnnamedSources(
                     ImmutableSortedSet.of(DefaultBuildTargetSourcePath.of(newTarget))))));
   }
 
@@ -104,8 +104,9 @@ public class SourceListTest {
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     TargetNodeTranslator translator =
         new FixedTargetNodeTranslator(new DefaultTypeCoercerFactory(), ImmutableMap.of());
-    SourceList list =
-        SourceList.ofUnnamedSources(ImmutableSortedSet.of(DefaultBuildTargetSourcePath.of(target)));
+    SourceSortedSet list =
+        SourceSortedSet.ofUnnamedSources(
+            ImmutableSortedSet.of(DefaultBuildTargetSourcePath.of(target)));
     assertThat(
         translator.translate(CELL_PATH_RESOLVER, PATTERN, list),
         Matchers.equalTo(Optional.empty()));
@@ -113,20 +114,21 @@ public class SourceListTest {
 
   @Test
   public void testConcatOfEmptyListCreatesEmptyList() {
-    assertTrue(SourceList.concat(Collections.emptyList()).isEmpty());
+    assertTrue(SourceSortedSet.concat(Collections.emptyList()).isEmpty());
   }
 
   @Test
   public void testConcatOfDifferentTypesThrowsExceptionForUnnamed() {
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
-    SourceList unnamedList =
-        SourceList.ofUnnamedSources(ImmutableSortedSet.of(DefaultBuildTargetSourcePath.of(target)));
-    SourceList namedList =
-        SourceList.ofNamedSources(
+    SourceSortedSet unnamedList =
+        SourceSortedSet.ofUnnamedSources(
+            ImmutableSortedSet.of(DefaultBuildTargetSourcePath.of(target)));
+    SourceSortedSet namedList =
+        SourceSortedSet.ofNamedSources(
             ImmutableSortedMap.of("name", DefaultBuildTargetSourcePath.of(target)));
 
     try {
-      SourceList.concat(Arrays.asList(unnamedList, namedList));
+      SourceSortedSet.concat(Arrays.asList(unnamedList, namedList));
     } catch (IllegalStateException e) {
       assertEquals("Expected unnamed source list, got: NAMED", e.getMessage());
     }
@@ -135,14 +137,15 @@ public class SourceListTest {
   @Test
   public void testConcatOfDifferentTypesThrowsExceptionForNamed() {
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
-    SourceList unnamedList =
-        SourceList.ofUnnamedSources(ImmutableSortedSet.of(DefaultBuildTargetSourcePath.of(target)));
-    SourceList namedList =
-        SourceList.ofNamedSources(
+    SourceSortedSet unnamedList =
+        SourceSortedSet.ofUnnamedSources(
+            ImmutableSortedSet.of(DefaultBuildTargetSourcePath.of(target)));
+    SourceSortedSet namedList =
+        SourceSortedSet.ofNamedSources(
             ImmutableSortedMap.of("name", DefaultBuildTargetSourcePath.of(target)));
 
     try {
-      SourceList.concat(Arrays.asList(namedList, unnamedList));
+      SourceSortedSet.concat(Arrays.asList(namedList, unnamedList));
     } catch (IllegalStateException e) {
       assertEquals("Expected named source list, got: UNNAMED", e.getMessage());
     }
@@ -154,10 +157,12 @@ public class SourceListTest {
     BuildTarget target2 = BuildTargetFactory.newInstance("//:rule2");
     SourcePath sourcePath1 = DefaultBuildTargetSourcePath.of(target1);
     SourcePath sourcePath2 = DefaultBuildTargetSourcePath.of(target2);
-    SourceList unnamedList1 = SourceList.ofUnnamedSources(ImmutableSortedSet.of(sourcePath1));
-    SourceList unnamedList2 = SourceList.ofUnnamedSources(ImmutableSortedSet.of(sourcePath2));
+    SourceSortedSet unnamedList1 =
+        SourceSortedSet.ofUnnamedSources(ImmutableSortedSet.of(sourcePath1));
+    SourceSortedSet unnamedList2 =
+        SourceSortedSet.ofUnnamedSources(ImmutableSortedSet.of(sourcePath2));
 
-    SourceList result = SourceList.concat(Arrays.asList(unnamedList1, unnamedList2));
+    SourceSortedSet result = SourceSortedSet.concat(Arrays.asList(unnamedList1, unnamedList2));
 
     assertEquals(Type.UNNAMED, result.getType());
     assertEquals(2, result.getUnnamedSources().get().size());
@@ -172,10 +177,12 @@ public class SourceListTest {
     SourcePath sourcePath1 = DefaultBuildTargetSourcePath.of(target1);
     SourcePath sourcePath2 = DefaultBuildTargetSourcePath.of(target2);
 
-    SourceList namedList1 = SourceList.ofNamedSources(ImmutableSortedMap.of("name1", sourcePath1));
-    SourceList namedList2 = SourceList.ofNamedSources(ImmutableSortedMap.of("name2", sourcePath2));
+    SourceSortedSet namedList1 =
+        SourceSortedSet.ofNamedSources(ImmutableSortedMap.of("name1", sourcePath1));
+    SourceSortedSet namedList2 =
+        SourceSortedSet.ofNamedSources(ImmutableSortedMap.of("name2", sourcePath2));
 
-    SourceList result = SourceList.concat(Arrays.asList(namedList1, namedList2));
+    SourceSortedSet result = SourceSortedSet.concat(Arrays.asList(namedList1, namedList2));
 
     assertEquals(Type.NAMED, result.getType());
     assertEquals(2, result.getNamedSources().get().size());

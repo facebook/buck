@@ -26,7 +26,7 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.CxxGenruleDescription;
-import com.facebook.buck.rules.coercer.SourceList;
+import com.facebook.buck.rules.coercer.SourceSortedSet;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -49,7 +49,7 @@ abstract class AbstractHaskellSources implements AddsToRuleKey {
       SourcePathRuleFinder ruleFinder,
       HaskellPlatform platform,
       String parameter,
-      SourceList sources) {
+      SourceSortedSet sources) {
     HaskellSources.Builder builder = HaskellSources.builder();
     for (Map.Entry<String, SourcePath> ent :
         sources.toNameMap(target, pathResolver, parameter).entrySet()) {

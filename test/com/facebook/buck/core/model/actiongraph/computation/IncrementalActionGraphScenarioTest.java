@@ -83,7 +83,7 @@ import com.facebook.buck.features.python.toolchain.PythonVersion;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.PrebuiltJarBuilder;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
-import com.facebook.buck.rules.coercer.SourceList;
+import com.facebook.buck.rules.coercer.SourceSortedSet;
 import com.facebook.buck.rules.keys.ContentAgnosticRuleKeyFactory;
 import com.facebook.buck.rules.keys.RuleKeyFieldLoader;
 import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
@@ -590,7 +590,7 @@ public class IncrementalActionGraphScenarioTest {
     PythonLibraryBuilder libraryBuilder =
         new PythonLibraryBuilder(libraryTarget, pythonPlatforms, CxxPlatformUtils.DEFAULT_PLATFORMS)
             .setSrcs(
-                SourceList.ofUnnamedSources(
+                SourceSortedSet.ofUnnamedSources(
                     ImmutableSortedSet.of(FakeSourcePath.of("something.py"))));
 
     BuildTarget binaryTarget = BuildTargetFactory.newInstance("//:python_binary");
@@ -617,7 +617,7 @@ public class IncrementalActionGraphScenarioTest {
     PythonLibraryBuilder libraryBuilder =
         new PythonLibraryBuilder(libraryTarget, pythonPlatforms, CxxPlatformUtils.DEFAULT_PLATFORMS)
             .setSrcs(
-                SourceList.ofUnnamedSources(
+                SourceSortedSet.ofUnnamedSources(
                     ImmutableSortedSet.of(FakeSourcePath.of("something.py"))));
 
     BuildTarget binaryTarget = BuildTargetFactory.newInstance("//:python_binary");
@@ -647,7 +647,7 @@ public class IncrementalActionGraphScenarioTest {
     PythonLibraryBuilder libraryBuilder =
         new PythonLibraryBuilder(libraryTarget, pythonPlatforms, CxxPlatformUtils.DEFAULT_PLATFORMS)
             .setSrcs(
-                SourceList.ofUnnamedSources(
+                SourceSortedSet.ofUnnamedSources(
                     ImmutableSortedSet.of(FakeSourcePath.of("something.py"))));
 
     BuildTarget binaryTarget = BuildTargetFactory.newInstance("//:python_binary");
@@ -662,7 +662,7 @@ public class IncrementalActionGraphScenarioTest {
     PythonLibraryBuilder newLibraryBuilder =
         new PythonLibraryBuilder(libraryTarget, pythonPlatforms, CxxPlatformUtils.DEFAULT_PLATFORMS)
             .setSrcs(
-                SourceList.ofUnnamedSources(
+                SourceSortedSet.ofUnnamedSources(
                     ImmutableSortedSet.of(
                         FakeSourcePath.of("something.py"), FakeSourcePath.of("new.py"))));
     ActionGraphAndBuilder newResult = createActionGraph(binaryBuilder, newLibraryBuilder);
@@ -1012,14 +1012,16 @@ public class IncrementalActionGraphScenarioTest {
     PythonLibraryBuilder libraryBuilder =
         PythonLibraryBuilder.createBuilder(libraryTarget)
             .setSrcs(
-                SourceList.ofUnnamedSources(ImmutableSortedSet.of(FakeSourcePath.of("lib.py"))));
+                SourceSortedSet.ofUnnamedSources(
+                    ImmutableSortedSet.of(FakeSourcePath.of("lib.py"))));
 
     BuildTarget testTarget = BuildTargetFactory.newInstance("//:test");
     PythonTestBuilder testBuilder =
         PythonTestBuilder.create(testTarget)
             .setDeps(ImmutableSortedSet.of(libraryTarget))
             .setSrcs(
-                SourceList.ofUnnamedSources(ImmutableSortedSet.of(FakeSourcePath.of("test.py"))));
+                SourceSortedSet.ofUnnamedSources(
+                    ImmutableSortedSet.of(FakeSourcePath.of("test.py"))));
 
     ActionGraphAndBuilder result = createActionGraph(testBuilder, libraryBuilder);
     ImmutableMap<BuildRule, RuleKey> ruleKeys = getRuleKeys(result);

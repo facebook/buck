@@ -51,7 +51,7 @@ import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
-import com.facebook.buck.rules.coercer.SourceList;
+import com.facebook.buck.rules.coercer.SourceSortedSet;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.query.QueryUtils;
 import com.facebook.buck.toolchain.ToolchainProvider;
@@ -378,8 +378,8 @@ public class HaskellBinaryDescription
   interface AbstractHaskellBinaryDescriptionArg extends CommonDescriptionArg, HasDepsQuery {
 
     @Value.Default
-    default SourceList getSrcs() {
-      return SourceList.EMPTY;
+    default SourceSortedSet getSrcs() {
+      return SourceSortedSet.EMPTY;
     }
 
     ImmutableList<String> getCompilerFlags();

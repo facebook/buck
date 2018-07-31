@@ -24,7 +24,7 @@ import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
-import com.facebook.buck.rules.coercer.SourceList;
+import com.facebook.buck.rules.coercer.SourceSortedSet;
 import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
@@ -60,7 +60,7 @@ public class HaskellLibraryBuilder
         CxxPlatformUtils.DEFAULT_CONFIG);
   }
 
-  public HaskellLibraryBuilder setSrcs(SourceList srcs) {
+  public HaskellLibraryBuilder setSrcs(SourceSortedSet srcs) {
     getArgForPopulating().setSrcs(srcs);
     return this;
   }

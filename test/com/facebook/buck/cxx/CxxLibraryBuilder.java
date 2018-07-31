@@ -31,7 +31,7 @@ import com.facebook.buck.cxx.toolchain.InferBuckConfig;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
-import com.facebook.buck.rules.coercer.SourceList;
+import com.facebook.buck.rules.coercer.SourceSortedSet;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosUtils;
 import com.facebook.buck.toolchain.ToolchainProvider;
@@ -91,16 +91,16 @@ public class CxxLibraryBuilder
   }
 
   public CxxLibraryBuilder setExportedHeaders(ImmutableSortedSet<SourcePath> headers) {
-    getArgForPopulating().setExportedHeaders(SourceList.ofUnnamedSources(headers));
+    getArgForPopulating().setExportedHeaders(SourceSortedSet.ofUnnamedSources(headers));
     return this;
   }
 
   public CxxLibraryBuilder setExportedHeaders(ImmutableSortedMap<String, SourcePath> headers) {
-    getArgForPopulating().setExportedHeaders(SourceList.ofNamedSources(headers));
+    getArgForPopulating().setExportedHeaders(SourceSortedSet.ofNamedSources(headers));
     return this;
   }
 
-  public CxxLibraryBuilder setExportedHeaders(SourceList headers) {
+  public CxxLibraryBuilder setExportedHeaders(SourceSortedSet headers) {
     getArgForPopulating().setExportedHeaders(headers);
     return this;
   }
@@ -200,12 +200,12 @@ public class CxxLibraryBuilder
   }
 
   public CxxLibraryBuilder setHeaders(ImmutableSortedSet<SourcePath> headers) {
-    getArgForPopulating().setHeaders(SourceList.ofUnnamedSources(headers));
+    getArgForPopulating().setHeaders(SourceSortedSet.ofUnnamedSources(headers));
     return this;
   }
 
   public CxxLibraryBuilder setHeaders(ImmutableSortedMap<String, SourcePath> headers) {
-    getArgForPopulating().setHeaders(SourceList.ofNamedSources(headers));
+    getArgForPopulating().setHeaders(SourceSortedSet.ofNamedSources(headers));
     return this;
   }
 

@@ -61,7 +61,7 @@ import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
-import com.facebook.buck.rules.coercer.SourceList;
+import com.facebook.buck.rules.coercer.SourceSortedSet;
 import com.facebook.buck.rules.coercer.VersionMatchedCollection;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.toolchain.ToolchainProvider;
@@ -501,7 +501,7 @@ public class PrebuiltCxxLibraryDescription
         if (!args.getExportedHeaders().isEmpty()) {
           return true;
         }
-        for (SourceList sourceList :
+        for (SourceSortedSet sourceList :
             args.getExportedPlatformHeaders()
                 .getMatchingValues(cxxPlatform.getFlavor().toString())) {
           if (!sourceList.isEmpty()) {
@@ -932,12 +932,12 @@ public class PrebuiltCxxLibraryDescription
     }
 
     @Value.Default
-    default SourceList getExportedHeaders() {
-      return SourceList.EMPTY;
+    default SourceSortedSet getExportedHeaders() {
+      return SourceSortedSet.EMPTY;
     }
 
     @Value.Default
-    default PatternMatchedCollection<SourceList> getExportedPlatformHeaders() {
+    default PatternMatchedCollection<SourceSortedSet> getExportedPlatformHeaders() {
       return PatternMatchedCollection.of();
     }
 

@@ -61,7 +61,7 @@ import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
-import com.facebook.buck.rules.coercer.SourceList;
+import com.facebook.buck.rules.coercer.SourceSortedSet;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.shell.AbstractGenruleDescription;
 import com.facebook.buck.util.Optionals;
@@ -174,7 +174,7 @@ public class AppleDescriptions {
       BuildTarget buildTarget,
       Function<SourcePath, Path> pathResolver,
       Path headerPathPrefix,
-      SourceList headers) {
+      SourceSortedSet headers) {
     if (headers.getUnnamedSources().isPresent()) {
       // The user specified a set of header files. For use from other targets, prepend their names
       // with the header path prefix.
@@ -188,7 +188,7 @@ public class AppleDescriptions {
 
   @VisibleForTesting
   static ImmutableSortedMap<String, SourcePath> parseAppleHeadersForUseFromTheSameTarget(
-      BuildTarget buildTarget, Function<SourcePath, Path> pathResolver, SourceList headers) {
+      BuildTarget buildTarget, Function<SourcePath, Path> pathResolver, SourceSortedSet headers) {
     if (headers.getUnnamedSources().isPresent()) {
       // The user specified a set of header files. Headers can be included from the same target
       // using only their file name without a prefix.
@@ -240,7 +240,7 @@ public class AppleDescriptions {
       AppleNativeTargetDescriptionArg arg,
       BuildTarget buildTarget,
       Consumer<ImmutableSortedSet<SourceWithFlags>> setSrcs,
-      Consumer<SourceList> setHeaders,
+      Consumer<SourceSortedSet> setHeaders,
       Consumer<String> setHeaderNamespace) {
     Path headerPathPrefix = AppleDescriptions.getHeaderPathPrefix(arg, buildTarget);
     // The resulting cxx constructor arg will have no exported headers and both headers and exported
@@ -273,7 +273,7 @@ public class AppleDescriptions {
     }
     setSrcs.accept(nonSwiftSrcs.build());
 
-    setHeaders.accept(SourceList.ofNamedSources(headerMap));
+    setHeaders.accept(SourceSortedSet.ofNamedSources(headerMap));
     // This is intentionally an empty string; we put all prefixes into
     // the header map itself.
     setHeaderNamespace.accept("");
@@ -308,11 +308,11 @@ public class AppleDescriptions {
         output::setHeaderNamespace);
     Path headerPathPrefix = AppleDescriptions.getHeaderPathPrefix(arg, buildTarget);
     output.setHeaders(
-        SourceList.ofNamedSources(
+        SourceSortedSet.ofNamedSources(
             convertAppleHeadersToPrivateCxxHeaders(
                 buildTarget, resolver::getRelativePath, headerPathPrefix, arg)));
     output.setExportedHeaders(
-        SourceList.ofNamedSources(
+        SourceSortedSet.ofNamedSources(
             convertAppleHeadersToPublicCxxHeaders(
                 buildTarget, resolver::getRelativePath, headerPathPrefix, arg)));
     if (arg.isModular()) {

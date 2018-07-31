@@ -59,7 +59,7 @@ import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
-import com.facebook.buck.rules.coercer.SourceList;
+import com.facebook.buck.rules.coercer.SourceSortedSet;
 import com.facebook.buck.util.MoreIterables;
 import com.facebook.buck.util.RichStream;
 import com.google.common.base.Preconditions;
@@ -414,7 +414,7 @@ public class HaskellDescriptionUtils {
       CxxBuckConfig cxxBuckConfig,
       ImmutableSortedSet<BuildTarget> argDeps,
       PatternMatchedCollection<ImmutableSortedSet<BuildTarget>> argPlatformDeps,
-      SourceList argSrcs,
+      SourceSortedSet argSrcs,
       ImmutableSortedSet<BuildTarget> argPreloadDeps,
       PatternMatchedCollection<ImmutableSortedSet<BuildTarget>> argPlatformPreloadDeps,
       ImmutableList<String> argCompilerFlags,

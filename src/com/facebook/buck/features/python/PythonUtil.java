@@ -44,7 +44,7 @@ import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
-import com.facebook.buck.rules.coercer.SourceList;
+import com.facebook.buck.rules.coercer.SourceSortedSet;
 import com.facebook.buck.rules.coercer.VersionMatchedCollection;
 import com.facebook.buck.rules.macros.AbstractMacroExpander;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
@@ -105,9 +105,9 @@ public class PythonUtil {
       CxxPlatform cxxPlatform,
       String parameter,
       Path baseModule,
-      SourceList items,
-      PatternMatchedCollection<SourceList> platformItems,
-      Optional<VersionMatchedCollection<SourceList>> versionItems,
+      SourceSortedSet items,
+      PatternMatchedCollection<SourceSortedSet> platformItems,
+      Optional<VersionMatchedCollection<SourceSortedSet>> versionItems,
       Optional<ImmutableMap<BuildTarget, Version>> versions) {
     return CxxGenruleDescription.fixupSourcePaths(
         graphBuilder,
@@ -143,11 +143,11 @@ public class PythonUtil {
       SourcePathResolver resolver,
       String parameter,
       Path baseModule,
-      Iterable<SourceList> inputs) {
+      Iterable<SourceSortedSet> inputs) {
 
     ImmutableMap.Builder<Path, SourcePath> moduleNamesAndSourcePaths = ImmutableMap.builder();
 
-    for (SourceList input : inputs) {
+    for (SourceSortedSet input : inputs) {
       ImmutableMap<String, SourcePath> namesAndSourcePaths;
       if (input.getUnnamedSources().isPresent()) {
         namesAndSourcePaths =

@@ -27,7 +27,7 @@ import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
-import com.facebook.buck.rules.coercer.SourceList;
+import com.facebook.buck.rules.coercer.SourceSortedSet;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosUtils;
 import com.facebook.buck.toolchain.ToolchainProvider;
@@ -105,12 +105,12 @@ public class CxxTestBuilder
   }
 
   public CxxTestBuilder setHeaders(ImmutableSortedSet<SourcePath> headers) {
-    getArgForPopulating().setHeaders(SourceList.ofUnnamedSources(headers));
+    getArgForPopulating().setHeaders(SourceSortedSet.ofUnnamedSources(headers));
     return this;
   }
 
   public CxxTestBuilder setHeaders(ImmutableSortedMap<String, SourcePath> headers) {
-    getArgForPopulating().setHeaders(SourceList.ofNamedSources(headers));
+    getArgForPopulating().setHeaders(SourceSortedSet.ofNamedSources(headers));
     return this;
   }
 

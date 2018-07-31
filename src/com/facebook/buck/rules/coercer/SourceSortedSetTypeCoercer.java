@@ -24,11 +24,12 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.List;
 
-public class SourceListTypeCoercer extends SourceListConcatable implements TypeCoercer<SourceList> {
+public class SourceSortedSetTypeCoercer extends SourceSortedSetConcatable
+    implements TypeCoercer<SourceSortedSet> {
   private final TypeCoercer<ImmutableSortedSet<SourcePath>> unnamedHeadersTypeCoercer;
   private final TypeCoercer<ImmutableSortedMap<String, SourcePath>> namedHeadersTypeCoercer;
 
-  SourceListTypeCoercer(
+  SourceSortedSetTypeCoercer(
       TypeCoercer<String> stringTypeCoercer, TypeCoercer<SourcePath> sourcePathTypeCoercer) {
     this.unnamedHeadersTypeCoercer = new SortedSetTypeCoercer<>(sourcePathTypeCoercer);
     this.namedHeadersTypeCoercer =
@@ -36,8 +37,8 @@ public class SourceListTypeCoercer extends SourceListConcatable implements TypeC
   }
 
   @Override
-  public Class<SourceList> getOutputClass() {
-    return SourceList.class;
+  public Class<SourceSortedSet> getOutputClass() {
+    return SourceSortedSet.class;
   }
 
   @Override
@@ -47,7 +48,7 @@ public class SourceListTypeCoercer extends SourceListConcatable implements TypeC
   }
 
   @Override
-  public void traverse(CellPathResolver cellRoots, SourceList object, Traversal traversal) {
+  public void traverse(CellPathResolver cellRoots, SourceSortedSet object, Traversal traversal) {
     switch (object.getType()) {
       case UNNAMED:
         unnamedHeadersTypeCoercer.traverse(cellRoots, object.getUnnamedSources().get(), traversal);
@@ -59,18 +60,18 @@ public class SourceListTypeCoercer extends SourceListConcatable implements TypeC
   }
 
   @Override
-  public SourceList coerce(
+  public SourceSortedSet coerce(
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
       Path pathRelativeToProjectRoot,
       Object object)
       throws CoerceFailedException {
     if (object instanceof List) {
-      return SourceList.ofUnnamedSources(
+      return SourceSortedSet.ofUnnamedSources(
           unnamedHeadersTypeCoercer.coerce(
               cellRoots, filesystem, pathRelativeToProjectRoot, object));
     } else {
-      return SourceList.ofNamedSources(
+      return SourceSortedSet.ofNamedSources(
           namedHeadersTypeCoercer.coerce(cellRoots, filesystem, pathRelativeToProjectRoot, object));
     }
   }

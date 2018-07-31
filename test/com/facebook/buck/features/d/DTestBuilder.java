@@ -22,7 +22,7 @@ import com.facebook.buck.core.model.targetgraph.AbstractNodeBuilder;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
-import com.facebook.buck.rules.coercer.SourceList;
+import com.facebook.buck.rules.coercer.SourceSortedSet;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import com.google.common.collect.ImmutableMap;
@@ -36,7 +36,7 @@ public class DTestBuilder
         new DTestDescription(
             createToolchain(defaultCxxPlatform), dBuckConfig, CxxPlatformUtils.DEFAULT_CONFIG),
         target);
-    getArgForPopulating().setSrcs(SourceList.EMPTY);
+    getArgForPopulating().setSrcs(SourceSortedSet.EMPTY);
   }
 
   private static ToolchainProvider createToolchain(CxxPlatform cxxPlatform) {

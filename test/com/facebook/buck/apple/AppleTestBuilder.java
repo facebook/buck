@@ -21,7 +21,7 @@ import com.facebook.buck.core.model.targetgraph.AbstractNodeBuilder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
 import com.facebook.buck.rules.coercer.FrameworkPath;
-import com.facebook.buck.rules.coercer.SourceList;
+import com.facebook.buck.rules.coercer.SourceSortedSet;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosUtils;
 import com.google.common.collect.ImmutableList;
@@ -103,17 +103,17 @@ public final class AppleTestBuilder
     return this;
   }
 
-  public AppleTestBuilder setHeaders(SourceList headers) {
+  public AppleTestBuilder setHeaders(SourceSortedSet headers) {
     getArgForPopulating().setHeaders(headers);
     return this;
   }
 
   public AppleTestBuilder setHeaders(ImmutableSortedSet<SourcePath> headers) {
-    return setHeaders(SourceList.ofUnnamedSources(headers));
+    return setHeaders(SourceSortedSet.ofUnnamedSources(headers));
   }
 
   public AppleTestBuilder setHeaders(ImmutableSortedMap<String, SourcePath> headers) {
-    return setHeaders(SourceList.ofNamedSources(headers));
+    return setHeaders(SourceSortedSet.ofNamedSources(headers));
   }
 
   public AppleTestBuilder setFrameworks(ImmutableSortedSet<FrameworkPath> frameworks) {

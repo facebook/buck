@@ -43,7 +43,7 @@ import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
-import com.facebook.buck.rules.coercer.SourceList;
+import com.facebook.buck.rules.coercer.SourceSortedSet;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
@@ -212,7 +212,8 @@ public class HaskellLibraryDescriptionTest {
                 HaskellTestUtils.DEFAULT_PLATFORMS,
                 cxxBuckConfig)
             .setSrcs(
-                SourceList.ofUnnamedSources(ImmutableSortedSet.of(FakeSourcePath.of("Test.hs"))))
+                SourceSortedSet.ofUnnamedSources(
+                    ImmutableSortedSet.of(FakeSourcePath.of("Test.hs"))))
             .setLinkWhole(true);
     ActionGraphBuilder graphBuilder =
         new TestActionGraphBuilder(TargetGraphFactory.newInstance(builder.build()));

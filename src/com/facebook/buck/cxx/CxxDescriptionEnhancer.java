@@ -67,7 +67,7 @@ import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
-import com.facebook.buck.rules.coercer.SourceList;
+import com.facebook.buck.rules.coercer.SourceSortedSet;
 import com.facebook.buck.rules.macros.AbstractMacroExpanderWithoutPrecomputedWork;
 import com.facebook.buck.rules.macros.Macro;
 import com.facebook.buck.rules.macros.OutputMacroExpander;
@@ -303,7 +303,7 @@ public class CxxDescriptionEnhancer {
       SourcePathRuleFinder ruleFinder,
       SourcePathResolver sourcePathResolver,
       String parameterName,
-      SourceList exportedHeaders) {
+      SourceSortedSet exportedHeaders) {
     return exportedHeaders.toNameMap(
         buildTarget,
         sourcePathResolver,
@@ -319,9 +319,9 @@ public class CxxDescriptionEnhancer {
       SourcePathResolver sourcePathResolver,
       CxxPlatform cxxPlatform,
       String headersParameterName,
-      SourceList headers,
+      SourceSortedSet headers,
       String platformHeadersParameterName,
-      PatternMatchedCollection<SourceList> platformHeaders) {
+      PatternMatchedCollection<SourceSortedSet> platformHeaders) {
     ImmutableMap.Builder<String, SourcePath> parsed = ImmutableMap.builder();
 
     Function<SourcePath, SourcePath> fixup =
@@ -339,7 +339,7 @@ public class CxxDescriptionEnhancer {
             fixup));
 
     // Include all platform specific headers.
-    for (SourceList sourceList :
+    for (SourceSortedSet sourceList :
         platformHeaders.getMatchingValues(cxxPlatform.getFlavor().toString())) {
       parsed.putAll(
           sourceList.toNameMap(

@@ -20,7 +20,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.AbstractNodeBuilder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
-import com.facebook.buck.rules.coercer.SourceList;
+import com.facebook.buck.rules.coercer.SourceSortedSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
@@ -46,12 +46,12 @@ public class LuaLibraryBuilder
   }
 
   public LuaLibraryBuilder setSrcs(ImmutableSortedSet<SourcePath> srcs) {
-    getArgForPopulating().setSrcs(SourceList.ofUnnamedSources(srcs));
+    getArgForPopulating().setSrcs(SourceSortedSet.ofUnnamedSources(srcs));
     return this;
   }
 
   public LuaLibraryBuilder setSrcs(ImmutableSortedMap<String, SourcePath> srcs) {
-    getArgForPopulating().setSrcs(SourceList.ofNamedSources(srcs));
+    getArgForPopulating().setSrcs(SourceSortedSet.ofNamedSources(srcs));
     return this;
   }
 

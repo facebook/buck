@@ -43,7 +43,7 @@ import com.facebook.buck.cxx.toolchain.HeaderSymlinkTree;
 import com.facebook.buck.cxx.toolchain.HeaderVisibility;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
-import com.facebook.buck.rules.coercer.SourceList;
+import com.facebook.buck.rules.coercer.SourceSortedSet;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.versions.Version;
@@ -375,8 +375,8 @@ public class CxxLibraryDescription
 
   public interface CommonArg extends LinkableCxxConstructorArg {
     @Value.Default
-    default SourceList getExportedHeaders() {
-      return SourceList.EMPTY;
+    default SourceSortedSet getExportedHeaders() {
+      return SourceSortedSet.EMPTY;
     }
 
     @Value.Check
@@ -400,7 +400,7 @@ public class CxxLibraryDescription
     }
 
     @Value.Default
-    default PatternMatchedCollection<SourceList> getExportedPlatformHeaders() {
+    default PatternMatchedCollection<SourceSortedSet> getExportedPlatformHeaders() {
       return PatternMatchedCollection.of();
     }
 

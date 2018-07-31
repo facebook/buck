@@ -33,7 +33,7 @@ import com.facebook.buck.features.python.toolchain.impl.DefaultPexToolProvider;
 import com.facebook.buck.features.python.toolchain.impl.PythonInterpreterFromConfig;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
-import com.facebook.buck.rules.coercer.SourceList;
+import com.facebook.buck.rules.coercer.SourceSortedSet;
 import com.facebook.buck.rules.coercer.VersionMatchedCollection;
 import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
 import com.facebook.buck.toolchain.ToolchainProvider;
@@ -125,18 +125,18 @@ public class PythonTestBuilder
     return create(target, PythonTestUtils.PYTHON_PLATFORMS);
   }
 
-  public PythonTestBuilder setSrcs(SourceList srcs) {
+  public PythonTestBuilder setSrcs(SourceSortedSet srcs) {
     getArgForPopulating().setSrcs(srcs);
     return this;
   }
 
-  public PythonTestBuilder setPlatformSrcs(PatternMatchedCollection<SourceList> platformSrcs) {
+  public PythonTestBuilder setPlatformSrcs(PatternMatchedCollection<SourceSortedSet> platformSrcs) {
     getArgForPopulating().setPlatformSrcs(platformSrcs);
     return this;
   }
 
   public PythonTestBuilder setPlatformResources(
-      PatternMatchedCollection<SourceList> platformResources) {
+      PatternMatchedCollection<SourceSortedSet> platformResources) {
     getArgForPopulating().setPlatformResources(platformResources);
     return this;
   }
@@ -177,13 +177,14 @@ public class PythonTestBuilder
     return this;
   }
 
-  public PythonTestBuilder setVersionedSrcs(VersionMatchedCollection<SourceList> versionedSrcs) {
+  public PythonTestBuilder setVersionedSrcs(
+      VersionMatchedCollection<SourceSortedSet> versionedSrcs) {
     getArgForPopulating().setVersionedSrcs(Optional.of(versionedSrcs));
     return this;
   }
 
   public PythonTestBuilder setVersionedResources(
-      VersionMatchedCollection<SourceList> versionedResources) {
+      VersionMatchedCollection<SourceSortedSet> versionedResources) {
     getArgForPopulating().setVersionedResources(Optional.of(versionedResources));
     return this;
   }

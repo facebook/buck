@@ -158,7 +158,7 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
           new UriTypeCoercer(),
           new FrameworkPathTypeCoercer(sourcePathTypeCoercer),
           new SourceWithFlagsListTypeCoercer(stringTypeCoercer, sourceWithFlagsTypeCoercer),
-          new SourceListTypeCoercer(stringTypeCoercer, sourcePathTypeCoercer),
+          new SourceSortedSetTypeCoercer(stringTypeCoercer, sourcePathTypeCoercer),
           new LogLevelTypeCoercer(),
           new ManifestEntriesTypeCoercer(),
           patternTypeCoercer,

@@ -23,7 +23,7 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
-import com.facebook.buck.rules.coercer.SourceList;
+import com.facebook.buck.rules.coercer.SourceSortedSet;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosUtils;
 import com.facebook.buck.util.RichStream;
@@ -99,17 +99,17 @@ public class AppleBinaryBuilder
     return this;
   }
 
-  public AppleBinaryBuilder setHeaders(SourceList headers) {
+  public AppleBinaryBuilder setHeaders(SourceSortedSet headers) {
     getArgForPopulating().setHeaders(headers);
     return this;
   }
 
   public AppleBinaryBuilder setHeaders(ImmutableSortedSet<SourcePath> headers) {
-    return setHeaders(SourceList.ofUnnamedSources(headers));
+    return setHeaders(SourceSortedSet.ofUnnamedSources(headers));
   }
 
   public AppleBinaryBuilder setHeaders(ImmutableSortedMap<String, SourcePath> headers) {
-    return setHeaders(SourceList.ofNamedSources(headers));
+    return setHeaders(SourceSortedSet.ofNamedSources(headers));
   }
 
   public AppleBinaryBuilder setFrameworks(ImmutableSortedSet<FrameworkPath> frameworks) {

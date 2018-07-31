@@ -31,7 +31,7 @@ import com.facebook.buck.cxx.toolchain.InferBuckConfig;
 import com.facebook.buck.cxx.toolchain.linker.Linker.LinkableDepType;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
-import com.facebook.buck.rules.coercer.SourceList;
+import com.facebook.buck.rules.coercer.SourceSortedSet;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosUtils;
 import com.facebook.buck.rules.query.Query;
@@ -117,12 +117,12 @@ public class CxxBinaryBuilder
   }
 
   public CxxBinaryBuilder setHeaders(ImmutableSortedSet<SourcePath> headers) {
-    getArgForPopulating().setHeaders(SourceList.ofUnnamedSources(headers));
+    getArgForPopulating().setHeaders(SourceSortedSet.ofUnnamedSources(headers));
     return this;
   }
 
   public CxxBinaryBuilder setHeaders(ImmutableSortedMap<String, SourcePath> headers) {
-    getArgForPopulating().setHeaders(SourceList.ofNamedSources(headers));
+    getArgForPopulating().setHeaders(SourceSortedSet.ofNamedSources(headers));
     return this;
   }
 

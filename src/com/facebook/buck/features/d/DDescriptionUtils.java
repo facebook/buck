@@ -45,7 +45,7 @@ import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
-import com.facebook.buck.rules.coercer.SourceList;
+import com.facebook.buck.rules.coercer.SourceSortedSet;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.MoreMaps;
 import com.google.common.base.Preconditions;
@@ -117,7 +117,7 @@ abstract class DDescriptionUtils {
       DBuckConfig dBuckConfig,
       CxxBuckConfig cxxBuckConfig,
       ImmutableList<String> compilerFlags,
-      SourceList sources,
+      SourceSortedSet sources,
       ImmutableList<String> linkerFlags,
       DIncludes includes) {
 
@@ -188,7 +188,7 @@ abstract class DDescriptionUtils {
       ProjectFilesystem projectFilesystem,
       SourcePathResolver pathResolver,
       SourcePathRuleFinder ruleFinder,
-      SourceList sources) {
+      SourceSortedSet sources) {
     Preconditions.checkState(target.getFlavors().contains(SOURCE_LINK_TREE));
     return new SymlinkTree(
         "d_src",
@@ -301,7 +301,7 @@ abstract class DDescriptionUtils {
       CxxPlatform cxxPlatform,
       DBuckConfig dBuckConfig,
       ImmutableList<String> compilerFlags,
-      SourceList sources,
+      SourceSortedSet sources,
       DIncludes includes) {
     ImmutableList.Builder<SourcePath> sourcePaths = ImmutableList.builder();
     for (Map.Entry<String, SourcePath> source :

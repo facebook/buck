@@ -39,7 +39,7 @@ import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.features.python.toolchain.PythonPlatform;
 import com.facebook.buck.features.python.toolchain.PythonPlatformsProvider;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
-import com.facebook.buck.rules.coercer.SourceList;
+import com.facebook.buck.rules.coercer.SourceSortedSet;
 import com.facebook.buck.rules.coercer.VersionMatchedCollection;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.versions.Version;
@@ -206,26 +206,26 @@ public class PythonLibraryDescription
 
   interface CoreArg extends CommonDescriptionArg, HasDeclaredDeps, HasTests {
     @Value.Default
-    default SourceList getSrcs() {
-      return SourceList.EMPTY;
+    default SourceSortedSet getSrcs() {
+      return SourceSortedSet.EMPTY;
     }
 
-    Optional<VersionMatchedCollection<SourceList>> getVersionedSrcs();
+    Optional<VersionMatchedCollection<SourceSortedSet>> getVersionedSrcs();
 
     @Value.Default
-    default PatternMatchedCollection<SourceList> getPlatformSrcs() {
+    default PatternMatchedCollection<SourceSortedSet> getPlatformSrcs() {
       return PatternMatchedCollection.of();
     }
 
     @Value.Default
-    default SourceList getResources() {
-      return SourceList.EMPTY;
+    default SourceSortedSet getResources() {
+      return SourceSortedSet.EMPTY;
     }
 
-    Optional<VersionMatchedCollection<SourceList>> getVersionedResources();
+    Optional<VersionMatchedCollection<SourceSortedSet>> getVersionedResources();
 
     @Value.Default
-    default PatternMatchedCollection<SourceList> getPlatformResources() {
+    default PatternMatchedCollection<SourceSortedSet> getPlatformResources() {
       return PatternMatchedCollection.of();
     }
 

@@ -55,7 +55,7 @@ import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
-import com.facebook.buck.rules.coercer.SourceList;
+import com.facebook.buck.rules.coercer.SourceSortedSet;
 import com.facebook.buck.rules.macros.LocationMacro;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosUtils;
@@ -148,7 +148,8 @@ public class CxxBinaryDescriptionTest {
     CxxLibraryBuilder depBuilder =
         new CxxLibraryBuilder(depTarget)
             .setExportedHeaders(
-                SourceList.ofUnnamedSources(ImmutableSortedSet.of(FakeSourcePath.of("blah.h"))))
+                SourceSortedSet.ofUnnamedSources(
+                    ImmutableSortedSet.of(FakeSourcePath.of("blah.h"))))
             .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("test.cpp"))));
     BuildTarget archiveTarget =
         depTarget.withAppendedFlavors(

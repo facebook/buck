@@ -64,7 +64,7 @@ import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
-import com.facebook.buck.rules.coercer.SourceList;
+import com.facebook.buck.rules.coercer.SourceSortedSet;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.RichStream;
@@ -1042,8 +1042,8 @@ public class HaskellLibraryDescription
   @Value.Immutable
   interface AbstractHaskellLibraryDescriptionArg extends CommonDescriptionArg, HasDeclaredDeps {
     @Value.Default
-    default SourceList getSrcs() {
-      return SourceList.EMPTY;
+    default SourceSortedSet getSrcs() {
+      return SourceSortedSet.EMPTY;
     }
 
     ImmutableList<StringWithMacros> getLinkerFlags();

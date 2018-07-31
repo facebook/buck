@@ -127,7 +127,7 @@ import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
-import com.facebook.buck.rules.coercer.SourceList;
+import com.facebook.buck.rules.coercer.SourceSortedSet;
 import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
 import com.facebook.buck.rules.macros.LocationMacro;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
@@ -2098,7 +2098,7 @@ public class ProjectGenerator {
     return BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s-" + input + ".xcconfig");
   }
 
-  private Iterable<SourcePath> getHeaderSourcePaths(SourceList headers) {
+  private Iterable<SourcePath> getHeaderSourcePaths(SourceSortedSet headers) {
     if (headers.getUnnamedSources().isPresent()) {
       return headers.getUnnamedSources().get();
     } else {

@@ -18,10 +18,10 @@ package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.rules.coercer.concat.Concatable;
 
-public class SourceListConcatable implements Concatable<SourceList> {
+public class SourceSortedSetConcatable implements Concatable<SourceSortedSet> {
 
   @Override
-  public SourceList concat(Iterable<SourceList> elements) {
-    return SourceList.concat(elements);
+  public SourceSortedSet concat(Iterable<SourceSortedSet> elements) {
+    return SourceSortedSet.concat(elements);
   }
 }

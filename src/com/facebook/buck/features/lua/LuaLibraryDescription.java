@@ -28,7 +28,7 @@ import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
-import com.facebook.buck.rules.coercer.SourceList;
+import com.facebook.buck.rules.coercer.SourceSortedSet;
 import com.facebook.buck.versions.VersionPropagator;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
@@ -84,8 +84,8 @@ public class LuaLibraryDescription
   interface AbstractLuaLibraryDescriptionArg extends CommonDescriptionArg, HasDeclaredDeps {
 
     @Value.Default
-    default SourceList getSrcs() {
-      return SourceList.EMPTY;
+    default SourceSortedSet getSrcs() {
+      return SourceSortedSet.EMPTY;
     }
 
     Optional<String> getBaseModule();

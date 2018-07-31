@@ -74,7 +74,7 @@ import com.facebook.buck.rules.args.FileListableLinkerInputArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
-import com.facebook.buck.rules.coercer.SourceList;
+import com.facebook.buck.rules.coercer.SourceSortedSet;
 import com.facebook.buck.rules.macros.LocationMacro;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosUtils;
@@ -175,7 +175,8 @@ public class CxxLibraryDescriptionTest {
     CxxLibraryBuilder sharedDepBuilder =
         new CxxLibraryBuilder(sharedDepTarget, cxxBuckConfig)
             .setExportedHeaders(
-                SourceList.ofUnnamedSources(ImmutableSortedSet.of(FakeSourcePath.of("blah.h"))))
+                SourceSortedSet.ofUnnamedSources(
+                    ImmutableSortedSet.of(FakeSourcePath.of("blah.h"))))
             .setSrcs(
                 ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("test_shared.cpp"))));
     BuildTarget sharedHeaderSymlinkTreeTarget =
@@ -187,7 +188,8 @@ public class CxxLibraryDescriptionTest {
     CxxLibraryBuilder depBuilder =
         new CxxLibraryBuilder(depTarget, cxxBuckConfig)
             .setExportedHeaders(
-                SourceList.ofUnnamedSources(ImmutableSortedSet.of(FakeSourcePath.of("blah.h"))))
+                SourceSortedSet.ofUnnamedSources(
+                    ImmutableSortedSet.of(FakeSourcePath.of("blah.h"))))
             .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("test.cpp"))));
     BuildTarget headerSymlinkTreeTarget =
         depTarget.withAppendedFlavors(
@@ -479,7 +481,8 @@ public class CxxLibraryDescriptionTest {
     CxxLibraryBuilder depBuilder =
         new CxxLibraryBuilder(depTarget, cxxBuckConfig)
             .setExportedHeaders(
-                SourceList.ofUnnamedSources(ImmutableSortedSet.of(FakeSourcePath.of("blah.h"))))
+                SourceSortedSet.ofUnnamedSources(
+                    ImmutableSortedSet.of(FakeSourcePath.of("blah.h"))))
             .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("test.cpp"))));
     BuildTarget sharedLibraryDepTarget =
         depTarget.withAppendedFlavors(

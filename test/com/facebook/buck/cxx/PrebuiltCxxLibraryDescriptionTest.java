@@ -55,7 +55,7 @@ import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.FileListableLinkerInputArg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
-import com.facebook.buck.rules.coercer.SourceList;
+import com.facebook.buck.rules.coercer.SourceSortedSet;
 import com.facebook.buck.rules.coercer.VersionMatchedCollection;
 import com.facebook.buck.rules.macros.LocationMacro;
 import com.facebook.buck.rules.macros.StringWithMacros;
@@ -407,7 +407,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
     PrebuiltCxxLibraryBuilder libBuilder =
         new PrebuiltCxxLibraryBuilder(TARGET)
             .setExportedHeaders(
-                SourceList.ofNamedSources(
+                SourceSortedSet.ofNamedSources(
                     ImmutableSortedMap.of("foo.h", FakeSourcePath.of("foo.h"))));
     TargetGraph targetGraph = TargetGraphFactory.newInstance(libBuilder.build());
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
@@ -429,14 +429,14 @@ public class PrebuiltCxxLibraryDescriptionTest {
     PrebuiltCxxLibraryBuilder libBuilder =
         new PrebuiltCxxLibraryBuilder(TARGET)
             .setExportedPlatformHeaders(
-                PatternMatchedCollection.<SourceList>builder()
+                PatternMatchedCollection.<SourceSortedSet>builder()
                     .add(
                         Pattern.compile(CXX_PLATFORM.getFlavor().toString()),
-                        SourceList.ofNamedSources(
+                        SourceSortedSet.ofNamedSources(
                             ImmutableSortedMap.of("foo.h", FakeSourcePath.of("foo.h"))))
                     .add(
                         Pattern.compile("DO NOT MATCH ANYTNING"),
-                        SourceList.ofNamedSources(
+                        SourceSortedSet.ofNamedSources(
                             ImmutableSortedMap.of("bar.h", FakeSourcePath.of("bar.h"))))
                     .build());
     TargetGraph targetGraph = TargetGraphFactory.newInstance(libBuilder.build());
@@ -490,7 +490,8 @@ public class PrebuiltCxxLibraryDescriptionTest {
         new PrebuiltCxxLibraryBuilder(TARGET)
             .setHeaderNamespace("hello")
             .setExportedHeaders(
-                SourceList.ofUnnamedSources(ImmutableSortedSet.of(FakeSourcePath.of("foo.h"))));
+                SourceSortedSet.ofUnnamedSources(
+                    ImmutableSortedSet.of(FakeSourcePath.of("foo.h"))));
     TargetGraph targetGraph = TargetGraphFactory.newInstance(libBuilder.build());
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
     PrebuiltCxxLibrary lib =
