@@ -21,8 +21,10 @@ import com.facebook.buck.core.description.DescriptionCache;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.rules.type.RuleType;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import java.util.function.Function;
 import org.immutables.value.Value;
 
 /** Provides access to rule types. */
@@ -60,5 +62,20 @@ public abstract class AbstractKnownRuleTypes {
     return ImmutableList.<BaseDescription<?>>builder()
         .addAll(getKnownBuildRuleTypes().getDescriptions())
         .build();
+  }
+
+  /** @return all descriptions organized by their {@link RuleType}. */
+  @Value.Lazy
+  protected ImmutableMap<RuleType, BaseDescription<?>> getDescriptionsByRule() {
+    return getKnownBuildRuleTypes()
+        .getDescriptions()
+        .stream()
+        .collect(ImmutableMap.toImmutableMap(DescriptionCache::getRuleType, Function.identity()));
+  }
+
+  /** @return a description by its {@link RuleType}. */
+  public BaseDescription<?> getDescription(RuleType ruleType) {
+    return Preconditions.checkNotNull(
+        getDescriptionsByRule().get(ruleType), "Cannot find a description for type %s", ruleType);
   }
 }

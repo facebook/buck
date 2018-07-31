@@ -114,7 +114,6 @@ public class PerBuildStateFactory {
               rawNodeParsePipeline,
               eventBus,
               new DefaultRawTargetNodeFactory(
-                  knownBuildRuleTypesProvider,
                   knownRuleTypesProvider,
                   marshaller,
                   new VisibilityPatternFactory(),

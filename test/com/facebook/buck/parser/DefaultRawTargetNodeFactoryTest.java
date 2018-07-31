@@ -60,7 +60,6 @@ public class DefaultRawTargetNodeFactoryTest {
 
     DefaultRawTargetNodeFactory factory =
         new DefaultRawTargetNodeFactory(
-            knownBuildRuleTypesProvider,
             knownRuleTypesProvider,
             new ConstructorArgMarshaller(new DefaultTypeCoercerFactory()),
             new VisibilityPatternFactory(),
