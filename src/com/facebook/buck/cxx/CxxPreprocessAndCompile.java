@@ -210,25 +210,6 @@ public class CxxPreprocessAndCompile extends ModernBuildRule<CxxPreprocessAndCom
     return (SourcePath path) -> false;
   }
 
-  // see com.facebook.buck.cxx.AbstractCxxSourceRuleFactory.getSandboxedCxxSource()
-  private SourcePath getOriginalInput(BuildContext context) {
-    // The current logic of handling depfiles for cxx requires that all headers files and source
-    // files are "deciphered' from links from symlink tree to original locations.
-    // It already happens in Depfiles.parseAndOutputBuckCompatibleDepfile via header normalizer.
-    // This special case is for applying the same logic for an input cxx file in the case
-    // when cxx.sandbox_sources=true.
-    if (getPreprocessorDelegate().isPresent()) {
-      Path absPath = context.getSourcePathResolver().getAbsolutePath(getInput());
-      HeaderPathNormalizer headerPathNormalizer =
-          getPreprocessorDelegate().get().getHeaderPathNormalizer(context);
-      Optional<Path> original = headerPathNormalizer.getAbsolutePathForUnnormalizedPath(absPath);
-      if (original.isPresent()) {
-        return headerPathNormalizer.getSourcePathForAbsolutePath(original.get());
-      }
-    }
-    return getInput();
-  }
-
   @Override
   public ImmutableList<SourcePath> getInputsAfterBuildingLocally(
       BuildContext context, CellPathResolver cellPathResolver) throws IOException {
@@ -266,7 +247,7 @@ public class CxxPreprocessAndCompile extends ModernBuildRule<CxxPreprocessAndCom
     }
 
     // Add the input.
-    inputs.add(getOriginalInput(context));
+    inputs.add(getInput());
 
     return inputs.build();
   }

@@ -52,26 +52,20 @@ public class CxxDependencyFileIntegrationTest {
   private BuildTarget target;
   private BuildTarget compileTarget;
 
-  @Parameterized.Parameters(name = "sandbox_sources={0},buckd={1}")
+  @Parameterized.Parameters(name = "buckd={0}")
   public static Collection<Object[]> data() {
-    return ParameterizedTests.getPermutations(
-        ImmutableList.of(false, true), ImmutableList.of(false, true));
+    return ParameterizedTests.getPermutations(ImmutableList.of(false, true));
   }
 
   @Parameterized.Parameter(value = 0)
-  public boolean sandboxSource;
-
-  @Parameterized.Parameter(value = 1)
   public boolean buckd;
 
   @Before
   public void setUp() throws IOException {
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "depfiles", tmp);
     workspace.setUp();
-    String sandboxSourcesConfig = "  sandbox_sources = " + sandboxSource + "\n";
     String posix_config =
         "[cxx]\n"
-            + sandboxSourcesConfig
             + "  cppflags = -Wall -Werror\n"
             + "  cxxppflags = -Wall -Werror\n"
             + "  cflags = -Wall -Werror\n"
