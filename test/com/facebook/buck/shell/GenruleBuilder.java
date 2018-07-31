@@ -22,12 +22,14 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.AbstractNodeBuilder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.rules.coercer.SourceSet;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosUtils;
 import com.facebook.buck.sandbox.NoSandboxExecutionStrategy;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
 import javax.annotation.Nullable;
 
@@ -116,7 +118,13 @@ public class GenruleBuilder
   }
 
   public GenruleBuilder setSrcs(@Nullable ImmutableList<SourcePath> srcs) {
-    getArgForPopulating().setSrcs(Optional.ofNullable(srcs).orElse(ImmutableList.of()));
+    return setSrcs(
+        SourceSet.ofUnnamedSources(
+            ImmutableSortedSet.copyOf(Optional.ofNullable(srcs).orElse(ImmutableList.of()))));
+  }
+
+  public GenruleBuilder setSrcs(SourceSet srcs) {
+    getArgForPopulating().setSrcs(srcs);
     return this;
   }
 

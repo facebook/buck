@@ -29,10 +29,11 @@ import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.coercer.SourceSet;
 import com.facebook.buck.sandbox.SandboxExecutionStrategy;
 import com.facebook.buck.shell.Genrule;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.function.Function;
@@ -61,7 +62,7 @@ public class ExternallyBuiltApplePackage extends Genrule {
         resolver,
         params,
         sandboxExecutionStrategy,
-        ImmutableList.of(bundle),
+        SourceSet.ofUnnamedSources(ImmutableSortedSet.of(bundle)),
         Optional.of(packageConfigAndPlatformInfo.getExpandedArg()),
         /* bash */ Optional.empty(),
         /* cmdExe */ Optional.empty(),

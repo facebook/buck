@@ -438,6 +438,14 @@ public class GenruleIntegrationTest {
     assertEquals(rulekey1, rulekey2);
   }
 
+  @Test
+  public void srcsMap() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "genrule_srcs_map", temporaryFolder);
+    workspace.setUp();
+    workspace.runBuckBuild("//:gen").assertSuccess();
+  }
+
   private Sha1HashCode buildAndGetRuleKey(String scenario, Path temporaryFolder, String target)
       throws IOException {
     ProjectWorkspace workspace =

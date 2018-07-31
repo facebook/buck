@@ -31,9 +31,9 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.common.BuildableSupport;
-import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.coercer.SourceSet;
 import com.facebook.buck.rules.macros.AbstractMacroExpander;
 import com.facebook.buck.rules.macros.ClasspathAbiMacroExpander;
 import com.facebook.buck.rules.macros.ClasspathMacroExpander;
@@ -62,6 +62,7 @@ import java.util.Comparator;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Stream;
+import org.immutables.value.Value;
 
 public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescription.CommonArg>
     implements DescriptionWithTargetGraph<T> {
@@ -183,7 +184,7 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
           context.getProjectFilesystem(),
           params.withExtraDeps(
               Stream.concat(
-                      ruleFinder.filterBuildRuleInputs(args.getSrcs()).stream(),
+                      ruleFinder.filterBuildRuleInputs(args.getSrcs().getPaths()).stream(),
                       Stream.of(cmd, bash, cmdExe)
                           .flatMap(Optionals::toStream)
                           .flatMap(input -> BuildableSupport.getDeps(input, ruleFinder)))
@@ -215,7 +216,10 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
 
     Optional<String> getType();
 
-    ImmutableList<SourcePath> getSrcs();
+    @Value.Default
+    default SourceSet getSrcs() {
+      return SourceSet.EMPTY;
+    }
 
     Optional<Boolean> getEnableSandbox();
 

@@ -580,7 +580,7 @@ public class ProjectGenerator {
     } else if (targetNode.getDescription() instanceof AbstractGenruleDescription) {
       TargetNode<AbstractGenruleDescription.CommonArg> genruleNode =
           (TargetNode<AbstractGenruleDescription.CommonArg>) targetNode;
-      genruleFiles.addAll(genruleNode.getConstructorArg().getSrcs());
+      genruleFiles.addAll(genruleNode.getConstructorArg().getSrcs().getPaths());
     }
     buckEventBus.post(ProjectGenerationEvent.processed());
     return result;

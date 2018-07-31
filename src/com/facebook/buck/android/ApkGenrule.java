@@ -31,11 +31,11 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.coercer.SourceSet;
 import com.facebook.buck.sandbox.SandboxExecutionStrategy;
 import com.facebook.buck.shell.Genrule;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
-import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -68,7 +68,7 @@ public class ApkGenrule extends Genrule implements HasInstallableApk, HasRuntime
       BuildRuleResolver resolver,
       BuildRuleParams params,
       SourcePathRuleFinder ruleFinder,
-      List<SourcePath> srcs,
+      SourceSet srcs,
       Optional<Arg> cmd,
       Optional<Arg> bash,
       Optional<Arg> cmdExe,

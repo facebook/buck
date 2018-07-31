@@ -1,0 +1,6 @@
+genrule(
+    name = "gen",
+    srcs = {"foo.txt": "bar.txt"},
+    out = "out.txt",
+    cmd = "cp $SRCDIR/foo.txt $OUT",
+)

@@ -6,7 +6,12 @@
   {param name: 'srcs' /}
   {param default: '[]' /}
   {param desc}
-  A list of files to be used in the shell command.
+  Either a list or a map of the source files which Buck makes available to the shell
+  command at the path in the <code>SRCDIR</code> environment variable.
+  If you specify a list, the source files are the names in the list.
+  If you specify a map, the source files are made available as the names in
+  the keys of the map, where the values of the map are the original source
+  file names.
   {/param}
 {/call}
 {/template}

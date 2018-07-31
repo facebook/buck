@@ -41,6 +41,7 @@ import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.WriteToFileArg;
+import com.facebook.buck.rules.coercer.SourceSet;
 import com.facebook.buck.rules.macros.WorkerMacroArg;
 import com.facebook.buck.sandbox.SandboxExecutionStrategy;
 import com.facebook.buck.sandbox.SandboxProperties;
@@ -61,13 +62,12 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMap.Builder;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
-import com.google.common.collect.Lists;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -135,7 +135,7 @@ public class Genrule extends AbstractBuildRuleWithDeclaredAndExtraDeps
   /**
    * The order in which elements are specified in the {@code srcs} attribute of a genrule matters.
    */
-  @AddToRuleKey protected final ImmutableList<SourcePath> srcs;
+  @AddToRuleKey protected final SourceSet srcs;
 
   @AddToRuleKey protected final Optional<Arg> cmd;
   @AddToRuleKey protected final Optional<Arg> bash;
@@ -165,7 +165,7 @@ public class Genrule extends AbstractBuildRuleWithDeclaredAndExtraDeps
       BuildRuleResolver buildRuleResolver,
       BuildRuleParams params,
       SandboxExecutionStrategy sandboxExecutionStrategy,
-      List<SourcePath> srcs,
+      SourceSet srcs,
       Optional<Arg> cmd,
       Optional<Arg> bash,
       Optional<Arg> cmdExe,
@@ -183,7 +183,7 @@ public class Genrule extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.androidNdk = androidNdk;
     this.buildRuleResolver = buildRuleResolver;
     this.sandboxExecutionStrategy = sandboxExecutionStrategy;
-    this.srcs = ImmutableList.copyOf(srcs);
+    this.srcs = srcs;
     this.cmd = cmd;
     this.bash = bash;
     this.cmdExe = cmdExe;
@@ -220,7 +220,7 @@ public class Genrule extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   @VisibleForTesting
-  public ImmutableList<SourcePath> getSrcs() {
+  public SourceSet getSrcs() {
     return srcs;
   }
 
@@ -233,7 +233,8 @@ public class Genrule extends AbstractBuildRuleWithDeclaredAndExtraDeps
       SourcePathResolver pathResolver, Builder<String, String> environmentVariablesBuilder) {
     environmentVariablesBuilder.put(
         "SRCS",
-        srcs.stream()
+        srcs.getPaths()
+            .stream()
             .map(pathResolver::getAbsolutePath)
             .map(Object::toString)
             .collect(Collectors.joining(this.environmentExpansionSeparator)));
@@ -331,7 +332,8 @@ public class Genrule extends AbstractBuildRuleWithDeclaredAndExtraDeps
     SandboxProperties.Builder builder = SandboxProperties.builder();
     return builder
         .addAllAllowedToReadPaths(
-            srcs.stream()
+            srcs.getPaths()
+                .stream()
                 .map(sourcePathResolver::getAbsolutePath)
                 .map(Object::toString)
                 .collect(Collectors.toList()))
@@ -468,42 +470,71 @@ public class Genrule extends AbstractBuildRuleWithDeclaredAndExtraDeps
     return commands.build();
   }
 
+  private void addLinksForNamedSources(
+      SourcePathResolver pathResolver,
+      ImmutableMap<String, SourcePath> srcs,
+      Map<Path, Path> links) {
+    srcs.forEach(
+        (name, src) -> {
+          Path absolutePath = pathResolver.getAbsolutePath(src);
+          Path target = getProjectFilesystem().relativize(absolutePath);
+          links.put(getProjectFilesystem().getPath(name), target);
+        });
+  }
+
+  private void addLinksForUnamedSources(
+      SourcePathResolver pathResolver, ImmutableSet<SourcePath> srcs, Map<Path, Path> links) {
+
+    // To preserve legacy behavior, we allow duplicate targets and just ignore all but the
+    // last.
+    Set<Path> seenTargets = new HashSet<>();
+    Path basePath = getBuildTarget().getBasePath();
+    ImmutableList.copyOf(srcs)
+        .reverse()
+        .forEach(
+            src -> {
+              Path relativePath = pathResolver.getRelativePath(src);
+              Path absolutePath = pathResolver.getAbsolutePath(src);
+              Path canonicalPath = absolutePath.normalize();
+
+              // By the time we get this far, all source paths (the keys in the map) have
+              // been converted
+              // to paths relative to the project root. We want the path relative to the
+              // build target, so
+              // strip the base path.
+              Path localPath;
+              if (absolutePath.equals(canonicalPath)) {
+                if (relativePath.startsWith(basePath) || basePath.toString().isEmpty()) {
+                  localPath = MorePaths.relativize(basePath, relativePath);
+                } else {
+                  localPath = canonicalPath.getFileName();
+                }
+              } else {
+                localPath = relativePath;
+              }
+
+              Path target = getProjectFilesystem().relativize(absolutePath);
+              if (!seenTargets.contains(target)) {
+                seenTargets.add(target);
+                links.put(localPath, target);
+              }
+            });
+  }
+
   @VisibleForTesting
   void addSymlinkCommands(BuildContext context, ImmutableList.Builder<Step> commands) {
     if (srcs.isEmpty()) {
       return;
     }
-    Path basePath = getBuildTarget().getBasePath();
 
     Map<Path, Path> linksBuilder = new HashMap<>();
-    // To preserve legacy behavior, we allow duplicate targets and just ignore all but the last.
-    Set<Path> seenTargets = new HashSet<>();
     // Symlink all sources into the temp directory so that they can be used in the genrule.
-    for (SourcePath src : Lists.reverse(srcs)) {
-      Path relativePath = context.getSourcePathResolver().getRelativePath(src);
-      Path absolutePath = context.getSourcePathResolver().getAbsolutePath(src);
-      Path canonicalPath = absolutePath.normalize();
-
-      // By the time we get this far, all source paths (the keys in the map) have been converted
-      // to paths relative to the project root. We want the path relative to the build target, so
-      // strip the base path.
-      Path localPath;
-      if (absolutePath.equals(canonicalPath)) {
-        if (relativePath.startsWith(basePath) || basePath.toString().isEmpty()) {
-          localPath = MorePaths.relativize(basePath, relativePath);
-        } else {
-          localPath = canonicalPath.getFileName();
-        }
-      } else {
-        localPath = relativePath;
-      }
-
-      Path target = getProjectFilesystem().relativize(absolutePath);
-      if (!seenTargets.contains(target)) {
-        seenTargets.add(target);
-        linksBuilder.put(localPath, target);
-      }
-    }
+    srcs.getNamedSources()
+        .ifPresent(
+            srcs -> addLinksForNamedSources(context.getSourcePathResolver(), srcs, linksBuilder));
+    srcs.getUnnamedSources()
+        .ifPresent(
+            srcs -> addLinksForUnamedSources(context.getSourcePathResolver(), srcs, linksBuilder));
     commands.add(
         new SymlinkTreeStep(
             "genrule_srcs",
