@@ -169,6 +169,7 @@ android_binary(
     manifest = "AndroidManifest.xml",
     primary_dex_patterns = [
         "/MyApplication^",
+        "/R$",
     ],
     use_split_dex = True,
     deps = [
