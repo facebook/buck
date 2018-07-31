@@ -16,6 +16,8 @@
 
 package com.facebook.buck.core.model.actiongraph.computation;
 
+import com.facebook.buck.core.description.BaseDescription;
+import com.facebook.buck.core.description.Description;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
@@ -165,7 +167,9 @@ public class IncrementalActionGraphGenerator {
     // be safe. This is
     // because we cannot generally guarantee that descriptions won't do crazy things that violate
     // our assumptions during their construction.
-    if (!targetNode.getDescription().producesCacheableSubgraph()) {
+    BaseDescription<?> description = targetNode.getDescription();
+    if ((description instanceof Description<?>)
+        && !((Description<?>) description).producesCacheableSubgraph()) {
       if (LOG.isVerboseEnabled()) {
         LOG.verbose(
             "target %s caused invalidation due to not being cacheable",

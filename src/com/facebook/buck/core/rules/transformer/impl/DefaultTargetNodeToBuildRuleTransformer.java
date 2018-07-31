@@ -29,6 +29,7 @@ import com.facebook.buck.core.rules.transformer.TargetNodeToBuildRuleTransformer
 import com.facebook.buck.rules.query.QueryCache;
 import com.facebook.buck.rules.query.QueryUtils;
 import com.facebook.buck.toolchain.ToolchainProvider;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
 import java.util.Set;
 
@@ -46,7 +47,12 @@ public class DefaultTargetNodeToBuildRuleTransformer implements TargetNodeToBuil
       TargetGraph targetGraph,
       ActionGraphBuilder graphBuilder,
       TargetNode<T> targetNode) {
-    DescriptionWithTargetGraph<T> description = targetNode.getDescription();
+    Preconditions.checkState(
+        targetNode.getDescription() instanceof DescriptionWithTargetGraph,
+        "Invalid type of target node description: %s",
+        targetNode.getDescription().getClass());
+    DescriptionWithTargetGraph<T> description =
+        (DescriptionWithTargetGraph<T>) targetNode.getDescription();
     T arg = targetNode.getConstructorArg();
 
     Set<BuildTarget> extraDeps = targetNode.getExtraDeps();

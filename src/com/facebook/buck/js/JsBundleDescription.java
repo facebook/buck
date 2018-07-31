@@ -24,6 +24,7 @@ import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.apple.AppleBundleResources;
 import com.facebook.buck.apple.AppleLibraryDescription;
 import com.facebook.buck.apple.HasAppleBundleResourcesDescription;
+import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.description.arg.CommonDescriptionArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.exceptions.HumanReadableException;
@@ -384,7 +385,7 @@ public class JsBundleDescription
         @Override
         public Iterable<BuildTarget> visit(BuildTarget target) throws RuntimeException {
           TargetNode<?> targetNode = targetGraph.get(target);
-          DescriptionWithTargetGraph<?> description = targetNode.getDescription();
+          BaseDescription<?> description = targetNode.getDescription();
 
           if (description instanceof JsLibraryDescription) {
             JsLibrary library = requireLibrary(target);

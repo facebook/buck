@@ -75,6 +75,7 @@ import com.facebook.buck.apple.xcode.xcodeproj.XCBuildConfiguration;
 import com.facebook.buck.apple.xcode.xcodeproj.XCVersionGroup;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.resolver.CellPathResolver;
+import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.description.arg.HasTests;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.macros.MacroException;
@@ -3088,7 +3089,7 @@ public class ProjectGenerator {
                 Optional.of(dependenciesCache),
                 AppleBuildRules.RecursiveDependenciesMode.LINKING,
                 targetNode,
-                ImmutableSet.<Class<? extends DescriptionWithTargetGraph<?>>>builder()
+                ImmutableSet.<Class<? extends BaseDescription<?>>>builder()
                     .addAll(AppleBuildRules.XCODE_TARGET_DESCRIPTION_CLASSES)
                     .add(PrebuiltAppleFrameworkDescription.class)
                     .build()))

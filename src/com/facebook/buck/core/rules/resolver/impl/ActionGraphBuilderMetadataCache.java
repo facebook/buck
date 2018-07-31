@@ -15,9 +15,9 @@
  */
 package com.facebook.buck.core.rules.resolver.impl;
 
+import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.description.MetadataProvidingDescription;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -67,7 +67,7 @@ final class ActionGraphBuilderMetadataCache {
         return Optional.of(metadataClass.cast(arg));
       }
 
-      DescriptionWithTargetGraph<?> description = node.getDescription();
+      BaseDescription<?> description = node.getDescription();
       if (!(description instanceof MetadataProvidingDescription)) {
         return Optional.empty();
       }

@@ -17,6 +17,7 @@
 package com.facebook.buck.core.model.targetgraph.impl;
 
 import com.facebook.buck.core.cell.resolver.CellPathResolver;
+import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.description.attr.ImplicitInputsInferringDescription;
 import com.facebook.buck.core.exceptions.HumanReadableException;
@@ -58,7 +59,7 @@ public class TargetNodeFactory implements NodeCopier {
    * Capture and Helper Methods</a>.
    */
   @SuppressWarnings("unchecked")
-  public <T, U extends DescriptionWithTargetGraph<T>> TargetNode<T> createFromObject(
+  public <T, U extends BaseDescription<T>> TargetNode<T> createFromObject(
       HashCode rawInputsHashCode,
       U description,
       Object constructorArg,
@@ -82,7 +83,7 @@ public class TargetNodeFactory implements NodeCopier {
   }
 
   @SuppressWarnings("unchecked")
-  private <T, U extends DescriptionWithTargetGraph<T>> TargetNode<T> create(
+  private <T, U extends BaseDescription<T>> TargetNode<T> create(
       HashCode rawInputsHashCode,
       U description,
       T constructorArg,
