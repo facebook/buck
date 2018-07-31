@@ -25,7 +25,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
-import java.util.zip.ZipFile;
+import java.util.Set;
 
 /** Provides access to the on-disk rule metadata (both "artifact" and "build"). */
 public interface OnDiskBuildInfo {
@@ -78,7 +78,7 @@ public interface OnDiskBuildInfo {
 
   void writeOutputHashes(FileHashCache fileHashCache) throws IOException;
 
-  void validateArtifact(ZipFile artifact);
+  void validateArtifact(Set<Path> extractedFiles);
 
   ImmutableSortedSet<Path> getOutputPaths();
 }

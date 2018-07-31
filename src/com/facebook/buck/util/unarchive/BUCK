@@ -14,5 +14,6 @@ java_library(
         "//third-party/java/commons-compress:commons-compress",
         "//third-party/java/guava:guava",
         "//third-party/java/jsr:jsr305",
+        "//third-party/java/zstd-jni:zstd-jni",
     ],
 )

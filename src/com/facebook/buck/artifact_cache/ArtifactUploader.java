@@ -29,18 +29,27 @@ import com.facebook.buck.util.CloseableHolder;
 import com.facebook.buck.util.ErrorLogger;
 import com.facebook.buck.util.NamedTemporaryFile;
 import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
-import com.facebook.buck.util.zip.Zip;
+import com.facebook.buck.util.zip.ZipConstants;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.io.ByteStreams;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import java.io.BufferedOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collection;
 import java.util.SortedSet;
+import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
+import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
+import org.apache.commons.compress.compressors.zstandard.ZstdCompressorOutputStream;
 
 /**
  * ArtifactUploader contains the logic of how to take a list of artifact paths and metadata and
@@ -54,18 +63,18 @@ public class ArtifactUploader {
       ArtifactCache artifactCache,
       BuckEventBus eventBus,
       ImmutableMap<String, String> buildMetadata,
-      SortedSet<Path> pathsToIncludeInZip,
+      SortedSet<Path> pathsToIncludeInArchive,
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem) {
-    NamedTemporaryFile zip =
-        getTemporaryArtifactZip(
-            buildTarget, projectFilesystem, ruleKeys, eventBus, pathsToIncludeInZip);
+    NamedTemporaryFile archive =
+        getTemporaryArtifactArchive(
+            buildTarget, projectFilesystem, ruleKeys, eventBus, pathsToIncludeInArchive);
 
     // Store the artifact, including any additional metadata.
     ListenableFuture<Void> storeFuture =
         artifactCache.store(
             ArtifactInfo.builder().setRuleKeys(ruleKeys).setMetadata(buildMetadata).build(),
-            BorrowablePath.borrowablePath(zip.get()));
+            BorrowablePath.borrowablePath(archive.get()));
     Futures.addCallback(
         storeFuture,
         new FutureCallback<Void>() {
@@ -100,10 +109,11 @@ public class ArtifactUploader {
 
           private void onCompletion() {
             try {
-              // The zip file may have been borrowed when storing to the cache so only close it if
+              // The archive file may have been borrowed when storing to the cache so only close it
+              // if
               // it still exists.
-              if (Files.exists(zip.get())) {
-                zip.close();
+              if (Files.exists(archive.get())) {
+                archive.close();
               }
             } catch (IOException e) {
               new ErrorLogger(
@@ -118,8 +128,8 @@ public class ArtifactUploader {
                         public void logVerbose(Throwable e) {
                           LOG.debug(
                               e,
-                              "When deleting temporary zip %s for upload of %s.",
-                              zip.get(),
+                              "When deleting temporary archive %s for upload of %s.",
+                              archive.get(),
                               buildTarget);
                         }
                       },
@@ -132,29 +142,61 @@ public class ArtifactUploader {
     return storeFuture;
   }
 
-  private static NamedTemporaryFile getTemporaryArtifactZip(
+  private static NamedTemporaryFile getTemporaryArtifactArchive(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       ImmutableSet<RuleKey> ruleKeys,
       BuckEventBus eventBus,
-      SortedSet<Path> pathsToIncludeInZip) {
+      SortedSet<Path> pathsToIncludeInArchive) {
     ArtifactCompressionEvent.Started started =
         ArtifactCompressionEvent.started(ArtifactCompressionEvent.Operation.COMPRESS, ruleKeys);
     eventBus.post(started);
-    try (CloseableHolder<NamedTemporaryFile> zip =
+    try (CloseableHolder<NamedTemporaryFile> archive =
         new CloseableHolder<>(
             new NamedTemporaryFile(
-                "buck_artifact_" + MostFiles.sanitize(buildTarget.getShortName()), ".zip"))) {
-      Zip.create(projectFilesystem, pathsToIncludeInZip, zip.get().get());
-      return zip.release();
+                "buck_artifact_" + MostFiles.sanitize(buildTarget.getShortName()), ".tar.zst"))) {
+      compress(projectFilesystem, pathsToIncludeInArchive, archive.get().get());
+      return archive.release();
     } catch (IOException e) {
       throw new BuckUncheckedExecutionException(
           e,
-          "When creating artifact zip for %s containing: \n %s.",
+          "When creating artifact archive for %s containing: \n %s.",
           buildTarget,
-          Joiner.on('\n').join(ImmutableSortedSet.copyOf(pathsToIncludeInZip)));
+          Joiner.on('\n').join(ImmutableSortedSet.copyOf(pathsToIncludeInArchive)));
     } finally {
       eventBus.post(ArtifactCompressionEvent.finished(started));
+    }
+  }
+
+  /** Archive and compress 'pathsToIncludeInArchive' into 'out', using tar+zstandard. */
+  @VisibleForTesting
+  static void compress(
+      ProjectFilesystem projectFilesystem, Collection<Path> pathsToIncludeInArchive, Path out)
+      throws IOException {
+    try (OutputStream o = new BufferedOutputStream(Files.newOutputStream(out));
+        OutputStream z = new ZstdCompressorOutputStream(o);
+        TarArchiveOutputStream archive = new TarArchiveOutputStream(z)) {
+      archive.setLongFileMode(TarArchiveOutputStream.LONGFILE_POSIX);
+      for (Path path : pathsToIncludeInArchive) {
+        boolean isRegularFile = !projectFilesystem.isDirectory(path);
+
+        // Add a file entry.
+        TarArchiveEntry e = new TarArchiveEntry(path.toString() + (isRegularFile ? "" : "/"));
+        e.setMode((int) projectFilesystem.getPosixFileMode(path));
+        e.setModTime(ZipConstants.getFakeTime());
+
+        if (isRegularFile) {
+          e.setSize(projectFilesystem.getFileSize(path));
+          archive.putArchiveEntry(e);
+          try (InputStream input = projectFilesystem.newFileInputStream(path)) {
+            ByteStreams.copy(input, archive);
+          }
+        } else {
+          archive.putArchiveEntry(e);
+        }
+        archive.closeArchiveEntry();
+      }
+      archive.finish();
     }
   }
 }

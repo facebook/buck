@@ -178,8 +178,8 @@ public class HttpArchiveDescriptionTest {
     thrown.expect(HumanReadableException.class);
     thrown.expectMessage(
         "Could not determine file type from urls of //foo/bar:baz. One url must end "
-            + "with one of .tar, .tar.bz2, .tar.gz, .tar.xz, .zip, or type must be set to one of "
-            + "tar, tar.bz2, tar.gz, tar.xz, zip");
+            + "with one of .tar, .tar.bz2, .tar.gz, .tar.xz, .tar.zst, .zip, or type must be set "
+            + "to one of tar, tar.bz2, tar.gz, tar.xz, tar.zst, zip");
     createDescrptionFromArgs(
         "//foo/bar:baz",
         HttpArchiveDescriptionArg.builder()
@@ -197,7 +197,7 @@ public class HttpArchiveDescriptionTest {
     thrown.expect(HumanReadableException.class);
     thrown.expectMessage(
         "invalid.ext is not a valid type of archive for //foo/bar:baz. type must be one of "
-            + "tar, tar.bz2, tar.gz, tar.xz, zip");
+            + "tar, tar.bz2, tar.gz, tar.xz, tar.zst, zip");
     createDescrptionFromArgs(
         "//foo/bar:baz",
         HttpArchiveDescriptionArg.builder()
