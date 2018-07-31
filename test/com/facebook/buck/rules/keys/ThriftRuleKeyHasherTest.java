@@ -18,10 +18,10 @@ package com.facebook.buck.rules.keys;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.impl.ImmutableBuildTarget;
 import com.facebook.buck.core.model.impl.ImmutableUnflavoredBuildTarget;
 import com.facebook.buck.core.rulekey.RuleKey;
-import com.facebook.buck.core.rules.type.RuleType;
 import com.facebook.buck.core.sourcepath.AbstractDefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.ForwardingBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;

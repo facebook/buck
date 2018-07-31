@@ -17,7 +17,7 @@
 package com.facebook.buck.parser.function;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.core.rules.type.RuleType;
+import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.rules.coercer.CoercedTypeCache;
 import com.facebook.buck.rules.coercer.ParamInfo;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;

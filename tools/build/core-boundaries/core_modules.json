@@ -57,8 +57,6 @@
   "//src/com/facebook/buck/core/rules/tool:tool",
   "//src/com/facebook/buck/core/rules/transformer/impl:impl",
   "//src/com/facebook/buck/core/rules/transformer:transformer",
-  "//src/com/facebook/buck/core/rules/type:type",
-  "//src/com/facebook/buck/core/rules/type/impl:impl",
   "//src/com/facebook/buck/core/rules/modern/annotations:annotations",
   "//src/com/facebook/buck/core/rules/modern:modern",
   "//src/com/facebook/buck/core/rules/provider:provider",

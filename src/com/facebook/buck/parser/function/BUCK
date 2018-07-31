@@ -4,7 +4,6 @@ java_library(
         "BuckPyFunction.java",
     ],
     exported_deps = [
-        "//src/com/facebook/buck/core/rules/type:type",
         "//src/com/facebook/buck/rules/coercer:interface",
     ],
     resources = [
@@ -15,6 +14,7 @@ java_library(
     ],
     deps = [
         "//src/com/facebook/buck/core/exceptions:exceptions",
+        "//src/com/facebook/buck/core/model:model",
         "//src/com/facebook/buck/util:util",
         "//third-party/java/guava:guava",
         "//third-party/java/stringtemplate:stringtemplate",

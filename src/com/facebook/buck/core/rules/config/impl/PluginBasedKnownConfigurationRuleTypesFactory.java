@@ -16,11 +16,11 @@
 
 package com.facebook.buck.core.rules.config.impl;
 
+import com.facebook.buck.core.model.RuleType;
+import com.facebook.buck.core.model.impl.RuleTypeFactory;
 import com.facebook.buck.core.rules.config.ConfigurationRuleDescription;
 import com.facebook.buck.core.rules.config.ConfigurationRuleDescriptionProvider;
 import com.facebook.buck.core.rules.config.KnownConfigurationRuleTypes;
-import com.facebook.buck.core.rules.type.RuleType;
-import com.facebook.buck.core.rules.type.impl.RuleTypeFactory;
 import com.google.common.collect.ImmutableMap;
 import java.util.Collection;
 import java.util.List;

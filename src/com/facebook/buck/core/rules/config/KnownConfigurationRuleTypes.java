@@ -16,7 +16,7 @@
 
 package com.facebook.buck.core.rules.config;
 
-import com.facebook.buck.core.rules.type.RuleType;
+import com.facebook.buck.core.model.RuleType;
 
 /** Registry of all known kinds of {@link ConfigurationRuleDescription}. */
 public interface KnownConfigurationRuleTypes {

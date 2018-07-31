@@ -21,13 +21,13 @@ import static com.facebook.buck.rules.keys.hasher.RuleKeyHasher.Container;
 import static com.facebook.buck.rules.keys.hasher.RuleKeyHasher.Wrapper;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rulekey.RuleKeyObjectSink;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.rules.type.RuleType;
 import com.facebook.buck.core.sourcepath.ArchiveMemberSourcePath;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;

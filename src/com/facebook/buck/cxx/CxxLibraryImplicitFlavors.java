@@ -17,7 +17,7 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.model.Flavor;
-import com.facebook.buck.core.rules.type.RuleType;
+import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.log.Logger;

@@ -17,8 +17,8 @@
 package com.facebook.buck.rules.keys.hasher;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.rulekey.RuleKey;
-import com.facebook.buck.core.rules.type.RuleType;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.ForwardingBuildTargetSourcePath;

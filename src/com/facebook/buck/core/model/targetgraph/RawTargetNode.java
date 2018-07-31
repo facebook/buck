@@ -17,7 +17,7 @@
 package com.facebook.buck.core.model.targetgraph;
 
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.rules.type.RuleType;
+import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.rules.visibility.VisibilityPattern;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;

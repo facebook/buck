@@ -16,9 +16,9 @@
 
 package com.facebook.buck.core.rules.config.impl;
 
+import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.rules.config.ConfigurationRuleDescription;
 import com.facebook.buck.core.rules.config.KnownConfigurationRuleTypes;
-import com.facebook.buck.core.rules.type.RuleType;
 import com.google.common.collect.ImmutableMap;
 
 public class DefaultKnownConfigurationRuleTypes implements KnownConfigurationRuleTypes {
