@@ -24,6 +24,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
+import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
@@ -167,6 +168,13 @@ public class HttpdForTests implements AutoCloseable {
 
     // Prefer a loopback device to going out over the NIC.
     if (!candidateLoopbacks.isEmpty()) {
+      for (InetAddress addr : candidateLoopbacks) {
+        if (addr instanceof Inet4Address) {
+          // Prefer IPv4 addresses, as IPv6 may have have loop back addresses like
+          // fe80:0:0:0:0:0:0:1%lo0, which is not supported by okhttp
+          return addr;
+        }
+      }
       return candidateLoopbacks.iterator().next();
     }
     return candidateLocal.iterator().next();

@@ -75,7 +75,7 @@ public class PublishCommandIntegrationTest {
 
   @Test
   public void testDependenciesTriggerPomGeneration() throws IOException {
-    ProcessResult result = runValidBuckPublish("publish_fatjar");
+    ProcessResult result = runValidBuckPublishMaven("publish_fatjar");
     result.assertSuccess();
     List<String> putRequestsPaths = requestsHandler.getPutRequestsPaths();
     assertThat(putRequestsPaths, hasItem(EXPECTED_PUT_URL_PATH_BASE + POM));
@@ -84,16 +84,18 @@ public class PublishCommandIntegrationTest {
 
   @Test
   public void testBasicCase() throws IOException {
-    ProcessResult result = runValidBuckPublish("publish");
+    ProcessResult result = runValidBuckPublishMaven("publish");
     result.assertSuccess();
   }
 
-  private ProcessResult runValidBuckPublish(String workspaceName) throws IOException {
+  private ProcessResult runValidBuckPublishMaven(String workspaceName) throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, workspaceName, tmp);
     workspace.setUp();
 
-    ProcessResult result = runBuckPublish(workspace, PublishCommand.INCLUDE_SOURCE_LONG_ARG);
+    ProcessResult result =
+        runBuckPublish(
+            workspace, PublishCommand.TO_MAVEN_LONG_ARG, PublishCommand.INCLUDE_SOURCE_LONG_ARG);
     result.assertSuccess();
     List<String> putRequestsPaths = requestsHandler.getPutRequestsPaths();
     assertThat(putRequestsPaths, hasItem(EXPECTED_PUT_URL_PATH_BASE + JAR));
@@ -115,17 +117,21 @@ public class PublishCommandIntegrationTest {
   }
 
   @Test
-  public void testErrorOnMultiplePublishDest() throws IOException {
+  public void testIncludeSrcNoMaven() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "publish", tmp);
     workspace.setUp();
 
     ProcessResult result =
         workspace.runBuckCommand(
-            "publish", "//:foo", "--remote-repo=http://foo.bar", "--to-maven-central");
-    result.assertExitCode("please specify only a single remote", ExitCode.COMMANDLINE_ERROR);
-    assertTrue(result.getStderr().contains(PublishCommand.REMOTE_REPO_LONG_ARG));
-    assertTrue(result.getStderr().contains(PublishCommand.TO_MAVEN_CENTRAL_LONG_ARG));
+            "publish",
+            "//:foo",
+            "--remote-repo=http://foo.bar",
+            PublishCommand.INCLUDE_SOURCE_LONG_ARG);
+    result.assertExitCode(
+        "only available when publishing to a Maven repository", ExitCode.COMMANDLINE_ERROR);
+    assertTrue(result.getStderr().contains(PublishCommand.INCLUDE_SOURCE_LONG_ARG));
+    assertTrue(result.getStderr().contains(PublishCommand.INCLUDE_DOCS_LONG_ARG));
   }
 
   @Test
@@ -136,7 +142,10 @@ public class PublishCommandIntegrationTest {
 
     ProcessResult result =
         runBuckPublish(
-            workspace, PublishCommand.INCLUDE_SOURCE_LONG_ARG, PublishCommand.DRY_RUN_LONG_ARG);
+            workspace,
+            PublishCommand.TO_MAVEN_LONG_ARG,
+            PublishCommand.INCLUDE_SOURCE_LONG_ARG,
+            PublishCommand.DRY_RUN_LONG_ARG);
     result.assertSuccess();
 
     assertTrue(requestsHandler.getPutRequestsPaths().isEmpty());
@@ -152,7 +161,26 @@ public class PublishCommandIntegrationTest {
 
   @Test
   public void testScalaPublish() throws IOException {
-    runValidBuckPublish("publish_scala");
+    runValidBuckPublishMaven("publish_scala");
+  }
+
+  @Test
+  public void testPublishFile() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "publish_zip", tmp);
+    workspace.setUp();
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "publish",
+            PublishCommand.REMOTE_REPO_SHORT_ARG,
+            getMockRepoUrl(),
+            "//src/foo:src-archive");
+    result.assertSuccess();
+    List<String> putRequestsPaths = requestsHandler.getPutRequestsPaths();
+    assertThat(
+        putRequestsPaths,
+        hasItem(
+            "/src/foo/90ca326e8172d39b0e1920c3047eb58952a206f1e796a132ff107aa83e3e1c32/src-archive.zip"));
   }
 
   @Test
@@ -166,6 +194,7 @@ public class PublishCommandIntegrationTest {
     ProcessResult result =
         workspace.runBuckCommand(
             FluentIterable.from(new String[] {"publish"})
+                .append(PublishCommand.TO_MAVEN_LONG_ARG)
                 .append(PublishCommand.INCLUDE_SOURCE_LONG_ARG)
                 .append(PublishCommand.REMOTE_REPO_SHORT_ARG, publishPath.toUri().toString())
                 .append(TARGET)
