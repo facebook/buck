@@ -180,4 +180,11 @@ public class PrebuiltCxxLibraryBuilder
         .setExportedLangPlatformPreprocessorFlags(exportedLangPlatformPreprocessorFlags);
     return this;
   }
+
+  public PrebuiltCxxLibraryBuilder setVersionedExportedPreprocessorFlags(
+      VersionMatchedCollection<ImmutableList<StringWithMacros>>
+          versionedExportedPreprocessorFlags) {
+    getArgForPopulating().setVersionedExportedPreprocessorFlags(versionedExportedPreprocessorFlags);
+    return this;
+  }
 }

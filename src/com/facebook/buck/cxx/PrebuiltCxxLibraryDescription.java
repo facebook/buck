@@ -70,6 +70,7 @@ import com.facebook.buck.versions.VersionPropagator;
 import com.google.common.base.Preconditions;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -78,10 +79,13 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.ListMultimap;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Multimaps;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
@@ -416,6 +420,72 @@ public class PrebuiltCxxLibraryDescription
       }
     }
 
+    // Build up complete list of exported preprocessor flags (including versioned flags).
+    ImmutableList.Builder<StringWithMacros> exportedPreprocessorFlagsBuilder =
+        ImmutableList.builder();
+    exportedPreprocessorFlagsBuilder.addAll(args.getExportedPreprocessorFlags());
+    selectedVersions.ifPresent(
+        versions ->
+            args.getVersionedExportedPreprocessorFlags()
+                .getMatchingValues(versions)
+                .forEach(exportedPreprocessorFlagsBuilder::addAll));
+    ImmutableList<StringWithMacros> exportedPreprocessorFlags =
+        exportedPreprocessorFlagsBuilder.build();
+
+    // Build up complete list of exported platform preprocessor flags (including versioned flags).
+    PatternMatchedCollection.Builder<ImmutableList<StringWithMacros>>
+        exportedPlatformPreprocessorFlagsBuilder = PatternMatchedCollection.builder();
+    args.getExportedPlatformPreprocessorFlags()
+        .getPatternsAndValues()
+        .forEach(
+            pair ->
+                exportedPlatformPreprocessorFlagsBuilder.add(pair.getFirst(), pair.getSecond()));
+    selectedVersions.ifPresent(
+        versions ->
+            args.getVersionedExportedPlatformPreprocessorFlags()
+                .getMatchingValues(versions)
+                .forEach(
+                    flags ->
+                        flags
+                            .getPatternsAndValues()
+                            .forEach(
+                                pair ->
+                                    exportedPlatformPreprocessorFlagsBuilder.add(
+                                        pair.getFirst(), pair.getSecond()))));
+    PatternMatchedCollection<ImmutableList<StringWithMacros>> exportedPlatformPreprocessorFlags =
+        exportedPlatformPreprocessorFlagsBuilder.build();
+
+    // Build up complete list of exported language preprocessor flags (including versioned flags).
+    ImmutableListMultimap.Builder<CxxSource.Type, StringWithMacros>
+        exportedLangPreprocessorFlagsBuilder = ImmutableListMultimap.builder();
+    args.getExportedLangPreprocessorFlags().forEach(exportedLangPreprocessorFlagsBuilder::putAll);
+    selectedVersions.ifPresent(
+        versions ->
+            args.getVersionedExportedLangPreprocessorFlags()
+                .getMatchingValues(versions)
+                .forEach(value -> value.forEach(exportedLangPreprocessorFlagsBuilder::putAll)));
+    ImmutableMap<CxxSource.Type, Collection<StringWithMacros>> exportedLangPreprocessorFlags =
+        exportedLangPreprocessorFlagsBuilder.build().asMap();
+
+    // Build up complete list of exported language-platform preprocessor flags (including versioned
+    // flags).
+    ListMultimap<CxxSource.Type, PatternMatchedCollection<ImmutableList<StringWithMacros>>>
+        exportedLangPlatformPreprocessorFlagsBuilder = ArrayListMultimap.create();
+    args.getExportedLangPlatformPreprocessorFlags()
+        .forEach(exportedLangPlatformPreprocessorFlagsBuilder::put);
+    selectedVersions.ifPresent(
+        versions ->
+            args.getVersionedExportedLangPlatformPreprocessorFlags()
+                .getMatchingValues(versions)
+                .forEach(
+                    value -> value.forEach(exportedLangPlatformPreprocessorFlagsBuilder::put)));
+    ImmutableMap<CxxSource.Type, PatternMatchedCollection<ImmutableList<StringWithMacros>>>
+        exportedLangPlatformPreprocessorFlags =
+            ImmutableMap.copyOf(
+                Maps.transformValues(
+                    exportedLangPlatformPreprocessorFlagsBuilder.asMap(),
+                    PatternMatchedCollection::concat));
+
     // Otherwise, we return the generic placeholder of this library, that dependents can use
     // get the real build rules via querying the action graph.
     PrebuiltCxxLibraryPaths paths = getPaths(buildTarget, args);
@@ -443,13 +513,14 @@ public class PrebuiltCxxLibraryDescription
 
       private ImmutableListMultimap<CxxSource.Type, Arg> getExportedPreprocessorFlags(
           CxxPlatform cxxPlatform) {
+
         return ImmutableListMultimap.copyOf(
             Multimaps.transformValues(
                 CxxFlags.getLanguageFlagsWithMacros(
-                    args.getExportedPreprocessorFlags(),
-                    args.getExportedPlatformPreprocessorFlags(),
-                    args.getExportedLangPreprocessorFlags(),
-                    args.getExportedLangPlatformPreprocessorFlags(),
+                    exportedPreprocessorFlags,
+                    exportedPlatformPreprocessorFlags,
+                    exportedLangPreprocessorFlags,
+                    exportedLangPlatformPreprocessorFlags,
                     cxxPlatform),
                 flag ->
                     CxxDescriptionEnhancer.toStringWithMacrosArgs(
@@ -902,6 +973,31 @@ public class PrebuiltCxxLibraryDescription
 
     ImmutableMap<CxxSource.Type, PatternMatchedCollection<ImmutableList<StringWithMacros>>>
         getExportedLangPlatformPreprocessorFlags();
+
+    @Value.Default
+    default VersionMatchedCollection<ImmutableList<StringWithMacros>>
+        getVersionedExportedPreprocessorFlags() {
+      return VersionMatchedCollection.of();
+    }
+
+    @Value.Default
+    default VersionMatchedCollection<PatternMatchedCollection<ImmutableList<StringWithMacros>>>
+        getVersionedExportedPlatformPreprocessorFlags() {
+      return VersionMatchedCollection.of();
+    }
+
+    @Value.Default
+    default VersionMatchedCollection<ImmutableMap<CxxSource.Type, ImmutableList<StringWithMacros>>>
+        getVersionedExportedLangPreprocessorFlags() {
+      return VersionMatchedCollection.of();
+    }
+
+    @Value.Default
+    default VersionMatchedCollection<
+            ImmutableMap<CxxSource.Type, PatternMatchedCollection<ImmutableList<StringWithMacros>>>>
+        getVersionedExportedLangPlatformPreprocessorFlags() {
+      return VersionMatchedCollection.of();
+    }
 
     ImmutableList<String> getExportedLinkerFlags();
 

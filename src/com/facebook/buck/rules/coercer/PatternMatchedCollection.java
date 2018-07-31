@@ -101,6 +101,21 @@ public class PatternMatchedCollection<T>
     return values.hashCode();
   }
 
+  /**
+   * @return a single {@link PatternMatchedCollection} formed by combining the given input {@link
+   *     PatternMatchedCollection}s.
+   */
+  public static <T> PatternMatchedCollection<T> concat(
+      Iterable<PatternMatchedCollection<T>> collections) {
+    PatternMatchedCollection.Builder<T> builder = PatternMatchedCollection.builder();
+    collections.forEach(
+        collection ->
+            collection
+                .getPatternsAndValues()
+                .forEach(pair -> builder.add(pair.getFirst(), pair.getSecond())));
+    return builder.build();
+  }
+
   public static <T> Builder<T> builder() {
     return new Builder<>();
   }

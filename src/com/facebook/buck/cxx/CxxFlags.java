@@ -32,6 +32,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
+import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
 import java.util.SortedMap;
@@ -115,7 +116,7 @@ public class CxxFlags {
   public static ImmutableListMultimap<CxxSource.Type, StringWithMacros> getLanguageFlagsWithMacros(
       ImmutableList<StringWithMacros> flags,
       PatternMatchedCollection<ImmutableList<StringWithMacros>> platformFlags,
-      ImmutableMap<CxxSource.Type, ImmutableList<StringWithMacros>> languageFlags,
+      ImmutableMap<CxxSource.Type, ? extends Collection<StringWithMacros>> languageFlags,
       ImmutableMap<CxxSource.Type, PatternMatchedCollection<ImmutableList<StringWithMacros>>>
           languagePlatformFlags,
       CxxPlatform platform) {
@@ -127,7 +128,7 @@ public class CxxFlags {
         toLanguageFlags(
             getFlagsWithMacrosWithPlatformMacroExpansion(flags, platformFlags, platform)));
 
-    for (ImmutableMap.Entry<CxxSource.Type, ImmutableList<StringWithMacros>> entry :
+    for (ImmutableMap.Entry<CxxSource.Type, ? extends Collection<StringWithMacros>> entry :
         languageFlags.entrySet()) {
       RuleKeyAppendableFunction<String, String> translateMacrosFn =
           new TranslateMacrosAppendableFunction(

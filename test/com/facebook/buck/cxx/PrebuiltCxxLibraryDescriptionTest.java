@@ -959,4 +959,32 @@ public class PrebuiltCxxLibraryDescriptionTest {
         Arg.stringify(input.getPreprocessorFlags().get(Type.C), pathResolver),
         contains("-expected"));
   }
+
+  @Test
+  public void versionedPreprocessorFlags() {
+    BuildTarget dep = BuildTargetFactory.newInstance("//:dep");
+    PrebuiltCxxLibraryBuilder depBuilder = new PrebuiltCxxLibraryBuilder(dep);
+    PrebuiltCxxLibraryBuilder builder = new PrebuiltCxxLibraryBuilder(TARGET);
+    builder.setSelectedVersions(ImmutableMap.of(dep, Version.of("1.0")));
+    builder.setVersionedExportedPreprocessorFlags(
+        VersionMatchedCollection.<ImmutableList<StringWithMacros>>builder()
+            .add(
+                ImmutableMap.of(dep, Version.of("1.0")),
+                ImmutableList.of(StringWithMacrosUtils.format("-expected")))
+            .add(
+                ImmutableMap.of(dep, Version.of("2.0")),
+                ImmutableList.of(StringWithMacrosUtils.format("-unexpected")))
+            .build());
+    TargetGraph graph = TargetGraphFactory.newInstance(depBuilder.build(), builder.build());
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(graph);
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
+    ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
+    depBuilder.build(graphBuilder, filesystem, graph);
+    PrebuiltCxxLibrary lib = (PrebuiltCxxLibrary) builder.build(graphBuilder, filesystem, graph);
+    CxxPreprocessorInput input = lib.getCxxPreprocessorInput(CXX_PLATFORM, graphBuilder);
+    assertThat(
+        Arg.stringify(input.getPreprocessorFlags().get(Type.C), pathResolver),
+        contains("-expected"));
+  }
 }
