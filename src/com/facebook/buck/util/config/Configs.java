@@ -20,8 +20,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
-import java.io.Reader;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -73,18 +71,16 @@ public final class Configs {
     Path configFile = getMainConfigurationFile(root);
 
     RawConfig.Builder builder = RawConfig.builder();
-    for (Path file : configFiles) {
-      try (Reader reader = Files.newBufferedReader(file, StandardCharsets.UTF_8)) {
-        ImmutableMap<String, ImmutableMap<String, String>> parsedConfiguration =
-            Inis.read(reader, file.toString());
-        if (file.equals(configFile)) {
-          LOG.debug("Loaded project configuration file %s", file);
-          LOG.verbose("Contents of %s: %s", file, parsedConfiguration);
-        } else {
-          LOG.debug("Loaded a configuration file %s, %s", file, parsedConfiguration);
-        }
-        builder.putAll(parsedConfiguration);
+    for (Path path : configFiles) {
+      ImmutableMap<String, ImmutableMap<String, String>> parsedConfiguration =
+          Inis.read(path.toUri().toURL());
+      if (path.equals(configFile)) {
+        LOG.debug("Loaded project configuration file %s", path);
+        LOG.verbose("Contents of %s: %s", path, parsedConfiguration);
+      } else {
+        LOG.debug("Loaded a configuration file %s, %s", path, parsedConfiguration);
       }
+      builder.putAll(parsedConfiguration);
     }
     LOG.debug("Adding configuration overrides %s", configOverrides);
     builder.putAll(configOverrides);
@@ -145,11 +141,9 @@ public final class Configs {
 
   public static ImmutableMap<String, ImmutableMap<String, String>> parseConfigFile(Path file)
       throws IOException {
-    try (Reader reader = Files.newBufferedReader(file, StandardCharsets.UTF_8)) {
-      ImmutableMap<String, ImmutableMap<String, String>> parsedConfiguration =
-          Inis.read(reader, file.toString());
-      LOG.debug("Loaded a configuration file %s: %s", file, parsedConfiguration);
-      return parsedConfiguration;
-    }
+    ImmutableMap<String, ImmutableMap<String, String>> parsedConfiguration =
+        Inis.read(file.toUri().toURL());
+    LOG.debug("Loaded a configuration file %s: %s", file, parsedConfiguration);
+    return parsedConfiguration;
   }
 }

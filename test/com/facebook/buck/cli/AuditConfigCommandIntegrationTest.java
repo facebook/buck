@@ -134,6 +134,32 @@ public class AuditConfigCommandIntegrationTest {
   }
 
   @Test
+  public void testIncludesWithCell() throws IOException {
+    // This test also verifies that the include paths are constructed relative
+    // to the buck config file that contains the include.
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "audit_config", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckCommand("audit", "config", "secondary//included_section");
+    result.assertSuccess();
+    assertThat(result.getStdout(), containsString("included_section"));
+  }
+
+  @Test
+  public void testIncludesWithKeyValueOverride() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "audit_config", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckCommand("audit", "config", "included_inline_section.included_key");
+    result.assertSuccess();
+    assertThat(result.getStdout(), containsString("real value"));
+  }
+
+  @Test
   public void testErrorOnBothTabAndJson() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "audit_config", tmp);

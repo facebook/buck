@@ -50,10 +50,7 @@ public class BuckConfigTestUtils {
       Platform platform,
       ImmutableMap<String, String> environment)
       throws IOException {
-    Config config =
-        new Config(
-            ConfigBuilder.rawFromReader(
-                reader, projectFilesystem.resolve(".buckconfig").toString()));
+    Config config = new Config(ConfigBuilder.rawFromReader(reader));
     return new BuckConfig(
         config,
         projectFilesystem,

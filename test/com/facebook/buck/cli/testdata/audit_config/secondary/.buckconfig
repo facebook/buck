@@ -3,3 +3,6 @@ some_property = some_secondary_value
 
 [repositories]
     secondary = .
+
+# All includes are relative to this file path.
+<file:../.buckconfig.include>

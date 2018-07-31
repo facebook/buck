@@ -281,24 +281,15 @@ public class BuckConfigTest {
   }
 
   @Test
-  public void testDuplicateAliasDefinitionThrows()
+  public void testDuplicateDefinitionsDefinitionOverride()
       throws InterruptedException, IOException, NoSuchBuildTargetException {
     Reader reader =
         new StringReader(
             Joiner.on('\n')
-                .join("[alias]", "foo = //java/com/example:foo", "foo = //java/com/example:foo"));
-    try {
-      BuckConfigTestUtils.createWithDefaultFilesystem(temporaryFolder, reader);
-      fail("Should have thrown HumanReadableException.");
-    } catch (HumanReadableException e) {
-      assertEquals(
-          "Throw an exception if there are duplicate definitions for an alias, "
-              + "even if the values are the same.",
-          String.format(
-              "Duplicate definition for foo in the [alias] section of %s.",
-              temporaryFolder.getRoot().resolve(".buckconfig")),
-          e.getHumanReadableErrorMessage());
-    }
+                .join("[alias]", "foo = //java/com/example:foo", "foo = //java/com/example:bar"));
+    BuckConfig config = BuckConfigTestUtils.createWithDefaultFilesystem(temporaryFolder, reader);
+    assertEquals(
+        ImmutableSet.of("//java/com/example:bar"), config.getBuildTargetForAliasAsString("foo"));
   }
 
   @Test

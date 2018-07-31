@@ -16,10 +16,11 @@
 
 package com.facebook.buck.util.config;
 
-import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.io.Reader;
+import java.net.URL;
 import org.ini4j.Config;
 import org.ini4j.Ini;
 import org.ini4j.Profile;
@@ -28,15 +29,42 @@ class Inis {
 
   private Inis() {}
 
-  public static ImmutableMap<String, ImmutableMap<String, String>> read(
-      Reader reader, String filename) throws IOException {
+  // The input to this method is passed in as a URL object in order to make
+  // include handling in the ini files sane.  Ini4j uses URL's base path
+  // in order to construct the path for the included files.
+  // So, if the ini file includes e.g. <file:../relative_file_path>, then the full
+  // path will be constructed based on the base (directory) path of the passed in
+  // config; and if the include is an absolute path, it will also be handled correctly.
+  public static ImmutableMap<String, ImmutableMap<String, String>> read(URL config)
+      throws IOException {
+    Ini ini = makeIniParser(/*enable_includes=*/ true);
+    ini.load(config);
+    return toMap(ini);
+  }
+
+  // This method should be used by tests only in order to construct an in-memory
+  // buck config.  The includes are not enabled in this case (since include
+  // location, particularly relative includes, is not well defined).
+  @VisibleForTesting
+  static ImmutableMap<String, ImmutableMap<String, String>> read(Reader reader) throws IOException {
+    Ini ini = makeIniParser(/*enable_includes=*/ false);
+    ini.load(reader);
+    return toMap(ini);
+  }
+
+  // Creates and configures ini parser.
+  private static Ini makeIniParser(boolean enable_includes) {
     Ini ini = new Ini();
     Config config = ini.getConfig();
     config.setEscape(false);
     config.setEscapeNewline(true);
-    ini.load(reader);
-    validateIni(ini, filename);
+    config.setMultiOption(false);
+    config.setInclude(enable_includes);
+    return ini;
+  }
 
+  // Converts specified (loaded) ini config to an immutable map.
+  private static ImmutableMap<String, ImmutableMap<String, String>> toMap(Ini ini) {
     ImmutableMap.Builder<String, ImmutableMap<String, String>> sectionsToEntries =
         ImmutableMap.builder();
     for (String sectionName : ini.keySet()) {
@@ -52,19 +80,5 @@ class Inis {
     }
 
     return sectionsToEntries.build();
-  }
-
-  private static void validateIni(Ini ini, String filename) {
-    // Verify that no section has the same key specified more than once.
-    for (String sectionName : ini.keySet()) {
-      Profile.Section section = ini.get(sectionName);
-      for (String propertyName : section.keySet()) {
-        if (section.getAll(propertyName).size() > 1) {
-          throw new HumanReadableException(
-              "Duplicate definition for %s in the [%s] section of %s.",
-              propertyName, sectionName, filename);
-        }
-      }
-    }
   }
 }

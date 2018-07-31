@@ -9,4 +9,13 @@ some_property = some_value
 
 [repositories]
     secondary = secondary
-    
+
+<file:.buckconfig.include>
+
+# Optional include
+<?file:.buckconfig.does.not.exist>
+
+[included_inline_section]
+  <file:.buckconfig.include.section>
+  # This value overrides included key.
+  included_key = real value
