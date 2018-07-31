@@ -31,7 +31,7 @@ public class ConfigSettingRule implements ConfigurationRule, ProvidesSelectable 
   private final ConfigSettingSelectable configSettingSelectable;
 
   public ConfigSettingRule(
-      BuckConfig buckConfig, BuildTarget buildTarget, ImmutableMap<String, Object> values) {
+      BuckConfig buckConfig, BuildTarget buildTarget, ImmutableMap<String, String> values) {
     this.buildTarget = buildTarget;
     configSettingSelectable = new ConfigSettingSelectable(buckConfig, buildTarget, values);
   }

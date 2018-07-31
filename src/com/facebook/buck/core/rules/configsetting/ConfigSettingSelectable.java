@@ -34,11 +34,11 @@ import java.util.Set;
 public class ConfigSettingSelectable implements Selectable {
 
   private final BuildTarget buildTarget;
-  private final ImmutableMap<String, Object> values;
+  private final ImmutableMap<String, String> values;
   private final boolean matches;
 
   public ConfigSettingSelectable(
-      BuckConfig buckConfig, BuildTarget buildTarget, ImmutableMap<String, Object> values) {
+      BuckConfig buckConfig, BuildTarget buildTarget, ImmutableMap<String, String> values) {
     this.buildTarget = buildTarget;
     this.values = values;
     matches = calculateMatches(buckConfig, values);
@@ -52,8 +52,8 @@ public class ConfigSettingSelectable implements Selectable {
   @Override
   public boolean refines(Selectable other) {
     Preconditions.checkState(other instanceof ConfigSettingSelectable);
-    Set<Entry<String, ?>> settings = ImmutableSet.copyOf(values.entrySet());
-    Set<Entry<String, ?>> otherSettings =
+    Set<Entry<String, String>> settings = ImmutableSet.copyOf(values.entrySet());
+    Set<Entry<String, String>> otherSettings =
         ImmutableSet.copyOf(((ConfigSettingSelectable) other).values.entrySet());
 
     if (!settings.containsAll(otherSettings)) {
@@ -72,11 +72,12 @@ public class ConfigSettingSelectable implements Selectable {
     return buildTarget;
   }
 
-  private static boolean calculateMatches(BuckConfig buckConfig, ImmutableMap<String, ?> values) {
+  private static boolean calculateMatches(
+      BuckConfig buckConfig, ImmutableMap<String, String> values) {
     if (values.isEmpty()) {
       return false;
     }
-    for (Map.Entry<String, ?> entry : values.entrySet()) {
+    for (Map.Entry<String, String> entry : values.entrySet()) {
       if (!matches(buckConfig, entry.getKey(), entry.getValue())) {
         return false;
       }
@@ -84,7 +85,7 @@ public class ConfigSettingSelectable implements Selectable {
     return true;
   }
 
-  private static boolean matches(BuckConfig buckConfig, String key, Object value) {
+  private static boolean matches(BuckConfig buckConfig, String key, String value) {
     String[] keyParts = key.split("\\.");
     Preconditions.checkArgument(
         keyParts.length == 2,
