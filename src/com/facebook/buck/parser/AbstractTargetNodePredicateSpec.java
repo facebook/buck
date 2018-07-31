@@ -48,7 +48,7 @@ abstract class AbstractTargetNodePredicateSpec implements TargetNodeSpec {
         ImmutableMap.builder();
 
     for (TargetNode<?> node : nodes) {
-      if (!onlyTests() || node.getBuildRuleType().isTestRule()) {
+      if (!onlyTests() || node.getRuleType().isTestRule()) {
         resultBuilder.put(node.getBuildTarget(), Optional.of(node));
       }
     }

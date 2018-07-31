@@ -374,7 +374,7 @@ public class InstallCommand extends BuildCommand {
                   target);
 
       if (node != null
-          && node.getBuildRuleType()
+          && node.getRuleType()
               .equals(DescriptionCache.getRuleType(AppleBundleDescription.class))) {
         for (Flavor flavor : node.getBuildTarget().getFlavors()) {
           if (ApplePlatform.needsInstallHelper(flavor.getName())) {

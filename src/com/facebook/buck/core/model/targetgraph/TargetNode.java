@@ -104,7 +104,7 @@ public interface TargetNode<T> extends Comparable<TargetNode<?>>, ObeysVisibilit
 
   void isVisibleToOrThrow(TargetNode<?> viewer);
 
-  RuleType getBuildRuleType();
+  RuleType getRuleType();
 
   TargetNode<T> copy();
 

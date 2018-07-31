@@ -336,7 +336,7 @@ public class JsLibraryDescription
         throw new HumanReadableException(
             "js_library target '%s' can only depend on other js_library targets, but one of its "
                 + "dependencies, '%s', is of type %s.",
-            baseTarget, target, targetGraph.get(target).getBuildRuleType().getName());
+            baseTarget, target, targetGraph.get(target).getRuleType().getName());
       }
 
       return (JsLibrary) rule;

@@ -498,7 +498,7 @@ public class BuckQueryEnvironment implements QueryEnvironment {
 
   @Override
   public String getTargetKind(QueryTarget target) throws QueryException {
-    return getNode(target).getBuildRuleType().getName();
+    return getNode(target).getRuleType().getName();
   }
 
   @Override

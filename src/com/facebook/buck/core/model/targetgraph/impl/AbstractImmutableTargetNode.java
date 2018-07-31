@@ -169,7 +169,7 @@ abstract class AbstractImmutableTargetNode<T> implements TargetNode<T> {
   }
 
   @Override
-  public RuleType getBuildRuleType() {
+  public RuleType getRuleType() {
     return DescriptionCache.getRuleType(getDescription());
   }
 

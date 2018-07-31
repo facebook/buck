@@ -58,7 +58,7 @@ public class FetchTargetNodeToBuildRuleTransformer implements TargetNodeToBuildR
 
   private TargetNode<?> substituteTargetNodeIfNecessary(TargetNode<?> node) {
     for (DescriptionWithTargetGraph<?> description : descriptions) {
-      if (node.getBuildRuleType().equals(DescriptionCache.getRuleType(description))) {
+      if (node.getRuleType().equals(DescriptionCache.getRuleType(description))) {
         downloadableTargets.add(node.getBuildTarget());
         return node.getNodeCopier().copyNodeWithDescription(node.copy(), description);
       }

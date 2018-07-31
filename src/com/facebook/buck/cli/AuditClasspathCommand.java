@@ -151,7 +151,7 @@ public class AuditClasspathCommand extends AbstractCommand {
       Dot.builder(targetGraph, "target_graph")
           .setNodeToName(
               targetNode -> "\"" + targetNode.getBuildTarget().getFullyQualifiedName() + "\"")
-          .setNodeToTypeName(targetNode -> targetNode.getBuildRuleType().getName())
+          .setNodeToTypeName(targetNode -> targetNode.getRuleType().getName())
           .build()
           .writeOutput(params.getConsole().getStdOut());
     } catch (IOException e) {

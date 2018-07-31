@@ -352,7 +352,7 @@ public class QueryCommand extends AbstractCommand {
         Dot.builder(env.getTargetGraph(), "result_graph")
             .setNodesToFilter(env.getNodesFromQueryTargets(queryResult)::contains)
             .setNodeToName(targetNode -> targetNode.getBuildTarget().getFullyQualifiedName())
-            .setNodeToTypeName(targetNode -> targetNode.getBuildRuleType().getName())
+            .setNodeToTypeName(targetNode -> targetNode.getRuleType().getName())
             .setBfsSorted(shouldGenerateBFSOutput());
     if (shouldOutputAttributes()) {
       PatternsMatcher patternsMatcher = new PatternsMatcher(outputAttributes());

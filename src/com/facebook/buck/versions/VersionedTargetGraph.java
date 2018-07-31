@@ -102,7 +102,7 @@ public class VersionedTargetGraph extends TargetGraph {
       msg +=
           trace
               .stream()
-              .map(n -> String.format("    %s (%s)", n, n.getBuildRuleType()))
+              .map(n -> String.format("    %s (%s)", n, n.getRuleType()))
               .collect(Collectors.joining(" depended on by" + System.lineSeparator()));
       return new HumanReadableException(msg);
     }

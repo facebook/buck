@@ -96,7 +96,7 @@ public class JavaDepsFinder {
     // visit each node could be done in parallel, so long as the updates to the above collections
     // were thread-safe.
     for (TargetNode<?> node : graph.getNodes()) {
-      if (!RULES_TO_VISIT.contains(node.getBuildRuleType())) {
+      if (!RULES_TO_VISIT.contains(node.getRuleType())) {
         continue;
       }
 

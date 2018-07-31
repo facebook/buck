@@ -141,7 +141,7 @@ public class GraphEnhancementQueryEnvironment implements QueryEnvironment {
 
   @Override
   public String getTargetKind(QueryTarget target) {
-    return getNode(target).getBuildRuleType().getName();
+    return getNode(target).getRuleType().getName();
   }
 
   @Override
