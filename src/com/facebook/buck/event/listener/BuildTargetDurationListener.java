@@ -16,10 +16,11 @@
 
 package com.facebook.buck.event.listener;
 
+import com.facebook.buck.core.build.event.BuildEvent.RuleCountCalculated;
 import com.facebook.buck.core.build.event.BuildRuleEvent;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.actiongraph.ActionGraph;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.test.rule.TestRule;
 import com.facebook.buck.event.ActionGraphEvent;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.chrome_trace.ChromeTraceEvent;
@@ -38,7 +39,7 @@ import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Iterables;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Queues;
 import com.google.common.collect.Sets;
@@ -77,6 +78,7 @@ public class BuildTargetDurationListener implements BuckEventListener {
   private final ProjectFilesystem filesystem;
 
   private Optional<ActionGraph> actionGraph = Optional.empty();
+  private Optional<ImmutableSet<BuildTarget>> targetBuildRules = Optional.empty();
   // Hold the latest one for the target
   private ConcurrentMap<String, BuildRuleInfo> buildRuleInfos = Maps.newConcurrentMap();
 
@@ -149,6 +151,11 @@ public class BuildTargetDurationListener implements BuckEventListener {
   @Subscribe
   public synchronized void actionGraphFinished(ActionGraphEvent.Finished finished) {
     actionGraph = finished.getActionGraph();
+  }
+
+  @Subscribe
+  public synchronized void ruleCountCalculated(RuleCountCalculated ruleCountCalculated) {
+    targetBuildRules = Optional.of(ruleCountCalculated.getBuildRules());
   }
 
   private Path getLogFilePath() {
@@ -276,18 +283,21 @@ public class BuildTargetDurationListener implements BuckEventListener {
                 // Render chrome trace of the critical path of the longest
                 rendersCriticalPath(buildRuleInfos);
 
-                // Compute critical path for the test targets only
-                for (TestRule testRule :
-                    Iterables.filter(actionGraph.get().getNodes(), TestRule.class)) {
-                  final String testRuleName = testRule.getFullyQualifiedName();
-                  BuildRuleInfo testRuleInfo = buildRuleInfos.get(testRuleName);
-                  if (testRuleInfo != null) {
-                    criticalPaths.add(constructBuildRuleCriticalPath(testRuleInfo));
-                  } else {
-                    LOG.warn(
-                        "Missing the test target %s in the list of BuildRuleEvent.Started.",
-                        testRuleName);
+                // Compute critical path for targets
+                if (targetBuildRules.isPresent()) {
+                  for (BuildTarget buildTarget : targetBuildRules.get()) {
+                    BuildRuleInfo buildRuleInfo =
+                        buildRuleInfos.get(buildTarget.getFullyQualifiedName());
+                    if (buildRuleInfo != null) {
+                      criticalPaths.add(constructBuildRuleCriticalPath(buildRuleInfo));
+                    } else {
+                      LOG.warn(
+                          "Could not find build rule for the target %s!",
+                          buildTarget.getFullyQualifiedName());
+                    }
                   }
+                } else {
+                  LOG.warn("There was no targets, constructions of critical paths are skipped.");
                 }
 
                 ObjectMappers.WRITER.writeValue(outputStream, criticalPaths);
