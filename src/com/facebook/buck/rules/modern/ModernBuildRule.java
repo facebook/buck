@@ -253,14 +253,15 @@ public class ModernBuildRule<T extends Buildable> extends AbstractBuildRule
               .withRecursive(true));
     }
 
-    stepBuilder.addAll(
-        MakeCleanDirectoryStep.of(
-            BuildCellRelativePath.fromCellRelativePath(
-                context.getBuildCellRootPath(), filesystem, outputPathResolver.getRootPath())));
-    stepBuilder.addAll(
-        MakeCleanDirectoryStep.of(
-            BuildCellRelativePath.fromCellRelativePath(
-                context.getBuildCellRootPath(), filesystem, outputPathResolver.getTempPath())));
+    BuildCellRelativePath rootPath =
+        BuildCellRelativePath.fromCellRelativePath(
+            context.getBuildCellRootPath(), filesystem, outputPathResolver.getRootPath());
+    BuildCellRelativePath tempPath =
+        BuildCellRelativePath.fromCellRelativePath(
+            context.getBuildCellRootPath(), filesystem, outputPathResolver.getTempPath());
+
+    stepBuilder.addAll(MakeCleanDirectoryStep.of(rootPath));
+    stepBuilder.addAll(MakeCleanDirectoryStep.of(tempPath));
 
     stepBuilder.addAll(
         buildable.getBuildSteps(
@@ -270,12 +271,10 @@ public class ModernBuildRule<T extends Buildable> extends AbstractBuildRule
             new DefaultBuildCellRelativePathFactory(
                 context.getBuildCellRootPath(), filesystem, Optional.of(outputPathResolver))));
 
-    // TODO(cjhopman): Should this delete the scratch directory? Maybe delete by default but
-    // preserve it based on verbosity. Currently, since CachingBuildEngine doesn't know what files
-    // may have been created by a BuildRule, it can't reliably clear out old state when building a
-    // rule. With ModernBuildRule, all outputs are limited to the gen/scratch roots which are unique
-    // to the rule and so the engine could reliably clean old state and then leaving the scratch
-    // directory would be fine.
+    // TODO(cjhopman): This should probably be handled by the build engine.
+    if (context.getShouldDeleteTemporaries()) {
+      stepBuilder.add(RmStep.of(tempPath).withRecursive(true));
+    }
 
     return stepBuilder.build();
   }

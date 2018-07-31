@@ -228,6 +228,7 @@ public abstract class IsolatedBuildableBuilder {
             .setBuildCellRootPath(canonicalProjectRoot)
             .setEventBus(eventBus)
             .setJavaPackageFinder(javaPackageFinder)
+            .setShouldDeleteTemporaries(buckConfig.getShouldDeleteTemporaries())
             .build();
 
     RichStream.from(cellPathResolver.getCellPaths().keySet())

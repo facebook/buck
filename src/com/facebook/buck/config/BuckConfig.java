@@ -1085,4 +1085,12 @@ public class BuckConfig implements ConfigPathGetter {
                 },
                 Entry::getValue));
   }
+
+  /**
+   * Whether to delete temporary files generated to run a build rule immediately after the rule is
+   * run.
+   */
+  public boolean getShouldDeleteTemporaries() {
+    return config.getBooleanValue("build", "delete_temporaries", false);
+  }
 }

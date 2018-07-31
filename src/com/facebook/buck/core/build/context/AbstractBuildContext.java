@@ -35,4 +35,6 @@ abstract class AbstractBuildContext {
   public abstract JavaPackageFinder getJavaPackageFinder();
 
   public abstract BuckEventBus getEventBus();
+
+  public abstract boolean getShouldDeleteTemporaries();
 }

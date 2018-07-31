@@ -43,6 +43,7 @@ public class FakeBuildContext {
         .setJavaPackageFinder(new FakeJavaPackageFinder())
         .setEventBus(BuckEventBusForTests.newInstance())
         .setBuildCellRootPath(new FakeProjectFilesystem().getRootPath())
+        .setShouldDeleteTemporaries(false)
         .build();
   }
 
@@ -52,6 +53,7 @@ public class FakeBuildContext {
         .setJavaPackageFinder(new FakeJavaPackageFinder())
         .setEventBus(buckEventBus)
         .setBuildCellRootPath(new FakeProjectFilesystem().getRootPath())
+        .setShouldDeleteTemporaries(false)
         .build();
   }
 }

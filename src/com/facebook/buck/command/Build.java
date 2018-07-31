@@ -122,6 +122,7 @@ public class Build implements Closeable {
                 .setBuildCellRootPath(rootCell.getRoot())
                 .setJavaPackageFinder(javaPackageFinder)
                 .setEventBus(executionContext.getBuckEventBus())
+                .setShouldDeleteTemporaries(rootCell.getBuckConfig().getShouldDeleteTemporaries())
                 .build())
         .setClock(clock)
         .setArtifactCache(artifactCache)

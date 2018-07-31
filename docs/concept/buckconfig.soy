@@ -730,6 +730,17 @@ osx_toolchains_override = tools.stable,tools.swift40,tools.common
 
 {call buckconfig.entry}
   {param section: 'build' /}
+  {param name: 'delete_temporaries' /}
+  {param example_value: 'false' /}
+  {param description}
+      If true, Buck deletes some temporary files immediate after executing a build rule. This is
+      useful for conserving disk space when performing large builds. By default, temporary files
+      are not deleted.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'build' /}
   {param name: 'max_depfile_cache_entries' /}
   {param example_value: '256' /}
   {param description}

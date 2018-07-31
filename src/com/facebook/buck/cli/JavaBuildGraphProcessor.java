@@ -187,6 +187,8 @@ final class JavaBuildGraphProcessor {
                         .setBuildCellRootPath(cell.getRoot())
                         .setJavaPackageFinder(executionContext.getJavaPackageFinder())
                         .setEventBus(eventBus)
+                        .setShouldDeleteTemporaries(
+                            params.getBuckConfig().getShouldDeleteTemporaries())
                         .build())
                 .setClock(params.getClock())
                 .setArtifactCache(params.getArtifactCacheFactory().newInstance())

@@ -661,6 +661,7 @@ public class TestCommand extends BuildCommand {
                   .setBuildCellRootPath(params.getCell().getRoot())
                   .setJavaPackageFinder(params.getJavaPackageFinder())
                   .setEventBus(params.getBuckEventBus())
+                  .setShouldDeleteTemporaries(params.getBuckConfig().getShouldDeleteTemporaries())
                   .build();
 
           // Once all of the rules are built, then run the tests.
