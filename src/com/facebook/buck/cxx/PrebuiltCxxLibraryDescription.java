@@ -63,6 +63,7 @@ import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.coercer.VersionMatchedCollection;
+import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.versions.Version;
 import com.facebook.buck.versions.VersionPropagator;
@@ -444,12 +445,15 @@ public class PrebuiltCxxLibraryDescription
           CxxPlatform cxxPlatform) {
         return ImmutableListMultimap.copyOf(
             Multimaps.transformValues(
-                CxxFlags.getLanguageFlags(
+                CxxFlags.getLanguageFlagsWithMacros(
                     args.getExportedPreprocessorFlags(),
                     args.getExportedPlatformPreprocessorFlags(),
                     args.getExportedLangPreprocessorFlags(),
+                    ImmutableMap.of(),
                     cxxPlatform),
-                StringArg::of));
+                flag ->
+                    CxxDescriptionEnhancer.toStringWithMacrosArgs(
+                        getBuildTarget(), cellRoots, graphBuilder, cxxPlatform, flag)));
       }
 
       @Override
@@ -885,14 +889,16 @@ public class PrebuiltCxxLibraryDescription
 
     Optional<NativeLinkable.Linkage> getPreferredLinkage();
 
-    ImmutableList<String> getExportedPreprocessorFlags();
+    ImmutableList<StringWithMacros> getExportedPreprocessorFlags();
 
     @Value.Default
-    default PatternMatchedCollection<ImmutableList<String>> getExportedPlatformPreprocessorFlags() {
+    default PatternMatchedCollection<ImmutableList<StringWithMacros>>
+        getExportedPlatformPreprocessorFlags() {
       return PatternMatchedCollection.of();
     }
 
-    ImmutableMap<CxxSource.Type, ImmutableList<String>> getExportedLangPreprocessorFlags();
+    ImmutableMap<CxxSource.Type, ImmutableList<StringWithMacros>>
+        getExportedLangPreprocessorFlags();
 
     ImmutableList<String> getExportedLinkerFlags();
 

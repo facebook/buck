@@ -28,6 +28,7 @@ import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.coercer.VersionMatchedCollection;
+import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
@@ -155,6 +156,18 @@ public class PrebuiltCxxLibraryBuilder
 
   public PrebuiltCxxLibraryBuilder setPreferredLinkage(NativeLinkable.Linkage linkage) {
     getArgForPopulating().setPreferredLinkage(linkage);
+    return this;
+  }
+
+  public PrebuiltCxxLibraryBuilder setExportedPreprocessorFlags(
+      ImmutableList<StringWithMacros> exportedPreprocessorFlags) {
+    getArgForPopulating().setExportedPreprocessorFlags(exportedPreprocessorFlags);
+    return this;
+  }
+
+  public PrebuiltCxxLibraryBuilder setExportedPlatformPreprocessorFlags(
+      PatternMatchedCollection<ImmutableList<StringWithMacros>> exportedPlatformPreprocessorFlags) {
+    getArgForPopulating().setExportedPlatformPreprocessorFlags(exportedPlatformPreprocessorFlags);
     return this;
   }
 }

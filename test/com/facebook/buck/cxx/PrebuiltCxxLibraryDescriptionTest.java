@@ -41,6 +41,7 @@ import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
+import com.facebook.buck.cxx.AbstractCxxSource.Type;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
@@ -56,6 +57,8 @@ import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.coercer.VersionMatchedCollection;
+import com.facebook.buck.rules.macros.LocationMacro;
+import com.facebook.buck.rules.macros.StringWithMacrosUtils;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.AllExistingProjectFilesystem;
@@ -896,5 +899,32 @@ public class PrebuiltCxxLibraryDescriptionTest {
     assertThat(
         Arg.stringify(nativeLinkableInput.getArgs(), pathResolver).get(0),
         Matchers.endsWith(TARGET.getBasePath().resolve("sub-dir").resolve("libfoo.a").toString()));
+  }
+
+  @Test
+  public void preprocessorFlagsLocationMacro() throws NoSuchBuildTargetException {
+    GenruleBuilder genruleBuilder =
+        GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//other:gen_lib"))
+            .setOut("libtest.a");
+    PrebuiltCxxLibraryBuilder libraryBuilder =
+        new PrebuiltCxxLibraryBuilder(TARGET)
+            .setExportedPreprocessorFlags(
+                ImmutableList.of(
+                    StringWithMacrosUtils.format(
+                        "%s", LocationMacro.of(genruleBuilder.getTarget()))));
+    TargetGraph targetGraph =
+        TargetGraphFactory.newInstance(genruleBuilder.build(), libraryBuilder.build());
+    ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
+    Genrule genrule = genruleBuilder.build(graphBuilder, filesystem, targetGraph);
+    PrebuiltCxxLibrary library =
+        (PrebuiltCxxLibrary) libraryBuilder.build(graphBuilder, filesystem, targetGraph);
+    CxxPreprocessorInput input =
+        library.getCxxPreprocessorInput(CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder);
+    assertThat(
+        Arg.stringify(input.getPreprocessorFlags().get(Type.C), pathResolver),
+        contains(pathResolver.getAbsolutePath(genrule.getSourcePathToOutput()).toString()));
   }
 }
