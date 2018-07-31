@@ -3,3 +3,9 @@ java_library(
     srcs = ["Extra.java"],
     visibility = ["PUBLIC"],
 )
+
+java_library(
+    name = "exports",
+    exported_deps = ["//modules/lib:guava"],
+    visibility = ["PUBLIC"],
+)

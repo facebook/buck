@@ -23,6 +23,7 @@ import com.facebook.buck.features.project.intellij.model.ContentRoot;
 import com.facebook.buck.features.project.intellij.model.IjLibrary;
 import com.facebook.buck.features.project.intellij.model.IjModule;
 import com.facebook.buck.features.project.intellij.model.IjProjectConfig;
+import com.facebook.buck.features.project.intellij.model.IjProjectElement;
 import com.facebook.buck.features.project.intellij.model.ModuleIndexEntry;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -226,9 +227,13 @@ public class IjProjectWriter {
    *
    * @param cleaner
    * @param targetGraphAndTargets
+   * @param moduleGraph
    * @throws IOException
    */
-  public void update(IJProjectCleaner cleaner, TargetGraphAndTargets targetGraphAndTargets)
+  public void update(
+      IJProjectCleaner cleaner,
+      TargetGraphAndTargets targetGraphAndTargets,
+      IjModuleGraph moduleGraph)
       throws IOException {
     Path projectIdeaConfigDir = projectConfig.getProjectPaths().getIdeaConfigDir();
     projectFilesystem.mkdirs(projectIdeaConfigDir);
@@ -246,17 +251,17 @@ public class IjProjectWriter {
             .filter(module -> !Sets.intersection(module.getTargets(), modulesToUpdate).isEmpty())
             .collect(ImmutableSet.toImmutableSet());
     // Find all direct dependencies of our modules
-    final ImmutableSet<BuildTarget> depsToKeep =
+    final ImmutableSet<IjProjectElement> depsToKeep =
         modulesEdited
             .stream()
-            .flatMap(module -> module.getDependencies().keySet().stream())
+            .flatMap(module -> moduleGraph.getDepsFor(module).keySet().stream())
             .collect(ImmutableSet.toImmutableSet());
     // Find all libraries which are direct deps of the modules we found above
     final ImmutableSet<IjLibrary> librariesNeeded =
         projectDataPreparer
             .getLibrariesToBeWritten()
             .stream()
-            .filter(library -> !Sets.intersection(library.getTargets(), depsToKeep).isEmpty())
+            .filter(depsToKeep::contains)
             .collect(ImmutableSet.toImmutableSet());
 
     // Write out the modules that contain our targets

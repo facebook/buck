@@ -409,6 +409,30 @@ public class ProjectIntegrationTest {
   }
 
   @Test
+  public void testBuckModuleRegenerateWithExportedLibs() throws Exception {
+    AssumeAndroidPlatform.assumeSdkIsAvailable();
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+                this, "incrementalProject", temporaryFolder.newFolder())
+            .setUp();
+    final String libraryFilePath = ".idea/libraries/__modules_lib_guava.xml";
+    final File libraryFile = workspace.getPath(libraryFilePath).toFile();
+    workspace
+        .runBuckCommand("project", "--intellij-aggregation-mode=none", "//modules/tip:tip")
+        .assertSuccess();
+    assertFalse(libraryFile.exists());
+    // Run regenerate and we should see the library file get created
+    workspace
+        .runBuckCommand(
+            "project",
+            "--intellij-aggregation-mode=none",
+            "--update",
+            "//modules/tip:tipwithexports")
+        .assertSuccess();
+    assertTrue(libraryFile.exists());
+  }
+
+  @Test
   public void testCrossCellIntelliJProject() throws Exception {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
 

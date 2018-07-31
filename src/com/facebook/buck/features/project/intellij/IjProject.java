@@ -141,7 +141,7 @@ public class IjProject {
         new IjProjectWriter(templateDataPreparer, projectConfig, projectFilesystem, modulesParser);
 
     if (updateOnly) {
-      writer.update(cleaner, targetGraphAndTargets);
+      writer.update(cleaner, targetGraphAndTargets, moduleGraph);
     } else {
       writer.write(cleaner);
     }

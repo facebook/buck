@@ -5,3 +5,8 @@ android_library(
         "//modules/dep1:dep1",
     ],
 )
+
+android_library(
+    name = "tipwithexports",
+    deps = ["//modules/extra:exports"],
+)
