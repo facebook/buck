@@ -128,14 +128,6 @@ public class GenruleDescription extends AbstractGenruleDescription<GenruleDescri
     Optional<Boolean> getExecutable();
 
     /**
-     * This functionality only exists to get around the lack of extensibility in our current build
-     * rule / build file apis. It may go away at some point. Also, make sure that you understand
-     * what {@link BuildRule.isCacheable} does with respect to caching if you decide to use this
-     * attribute
-     */
-    Optional<Boolean> getCacheable();
-
-    /**
      * This functionality only exists to facilitate migration of projects to distributed building.
      * It will likely go away in the future.
      */

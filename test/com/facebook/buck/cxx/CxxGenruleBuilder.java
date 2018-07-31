@@ -62,4 +62,9 @@ public class CxxGenruleBuilder
     getArgForPopulating().setCmd(cmd);
     return this;
   }
+
+  public CxxGenruleBuilder setCacheable(boolean cacheable) {
+    getArgForPopulating().setCacheable(cacheable);
+    return this;
+  }
 }

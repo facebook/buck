@@ -83,7 +83,5 @@ public class JarGenruleDescription extends AbstractGenruleDescription<JarGenrule
   /** jar_genrule constructor arg. */
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractJarGenruleDescriptionArg extends AbstractGenruleDescription.CommonArg {
-    Optional<Boolean> getCacheable();
-  }
+  interface AbstractJarGenruleDescriptionArg extends AbstractGenruleDescription.CommonArg {}
 }

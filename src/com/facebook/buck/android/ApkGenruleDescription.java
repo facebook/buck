@@ -112,9 +112,10 @@ public class ApkGenruleDescription extends AbstractGenruleDescription<ApkGenrule
       return Optional.of("apk");
     }
 
+    // TODO(T32241734): Cleanup uses of `is_cacheable` and remove, favoring `cacheable` instead.
     @Value.Default
     default boolean getIsCacheable() {
-      return true;
+      return getCacheable().orElse(true);
     }
   }
 

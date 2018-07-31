@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.cxx;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.model.BuildTarget;
@@ -282,6 +283,25 @@ public class CxxGenruleDescriptionTest {
             pathResolver
                 .getAbsolutePath(dep.getGenrule(CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder))
                 .toString()));
+  }
+
+  @Test
+  public void isCacheable() {
+    CxxGenruleBuilder builder =
+        new CxxGenruleBuilder(BuildTargetFactory.newInstance("//:rule"))
+            .setOut("out")
+            .setCmd(StringWithMacrosUtils.format("touch $OUT"))
+            .setCacheable(false);
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(builder.build());
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
+    CxxGenrule rule = (CxxGenrule) graphBuilder.requireRule(builder.getTarget());
+    Genrule genrule =
+        (Genrule)
+            ruleFinder
+                .getRule(rule.getGenrule(CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder))
+                .orElseThrow(AssertionError::new);
+    assertFalse(genrule.isCacheable());
   }
 
   private static <U> U extractArg(TargetNode<?> node, Class<U> clazz) {
