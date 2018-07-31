@@ -54,7 +54,7 @@ import org.junit.Test;
 
 public class AndroidBinaryNativeIntegrationTest extends AbiCompilationModeTest {
 
-  @Rule public TemporaryPaths tmpFolder = new TemporaryPaths(true);
+  @Rule public TemporaryPaths tmpFolder = new TemporaryPaths();
 
   private ProjectWorkspace workspace;
 

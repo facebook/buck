@@ -32,7 +32,7 @@ import org.junit.Rule;
 import org.junit.Test;
 
 public class AndroidBinaryCxxIntegrationTest extends AbiCompilationModeTest {
-  @Rule public TemporaryPaths tmpFolder = new TemporaryPaths(true);
+  @Rule public TemporaryPaths tmpFolder = new TemporaryPaths();
 
   private ProjectWorkspace workspace;
 

@@ -40,7 +40,7 @@ import org.junit.Rule;
 import org.junit.Test;
 
 public class GenerateManifestStepTest {
-  @Rule public TemporaryPaths tmpFolder = new TemporaryPaths(true);
+  @Rule public TemporaryPaths tmpFolder = new TemporaryPaths();
 
   @Before
   public void setUp() throws InterruptedException, IOException {

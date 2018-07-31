@@ -47,7 +47,7 @@ import org.junit.Test;
 
 public class UntarTest {
 
-  @Rule public TemporaryPaths tmpFolder = new TemporaryPaths(true);
+  @Rule public TemporaryPaths tmpFolder = new TemporaryPaths();
 
   // Windows writes files by default as executable...
   private static final boolean FilesAreExecutableByDefault = Platform.detect() == Platform.WINDOWS;

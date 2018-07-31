@@ -57,7 +57,7 @@ public class InstallTriggerIntegrationTest {
   private static final String TRIGGER_TARGET = "//:install_trigger";
   private static final String NORMAL_TARGET = "//:normal_target";
 
-  @Rule public TemporaryPaths tmpFolder = new TemporaryPaths(true);
+  @Rule public TemporaryPaths tmpFolder = new TemporaryPaths();
   private ProjectWorkspace workspace;
 
   @Before

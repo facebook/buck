@@ -34,7 +34,7 @@ import org.junit.Test;
 
 public class SwiftOSXBinaryIntegrationTest {
 
-  @Rule public TemporaryPaths tmp = new TemporaryPaths(true);
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   @Test
   public void swiftHelloWorldRunsAndPrintsMessageOnOSX() throws IOException {

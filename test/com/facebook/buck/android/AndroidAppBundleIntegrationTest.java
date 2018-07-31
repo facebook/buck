@@ -58,7 +58,7 @@ import org.junit.rules.ExpectedException;
 public class AndroidAppBundleIntegrationTest extends AbiCompilationModeTest {
 
   private ProjectWorkspace workspace;
-  @Rule public TemporaryPaths tmpFolder = new TemporaryPaths(true);
+  @Rule public TemporaryPaths tmpFolder = new TemporaryPaths();
   private ProjectFilesystem filesystem;
   @Rule public ExpectedException thrown = ExpectedException.none();
 

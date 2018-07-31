@@ -86,7 +86,7 @@ public class ModernBuildRuleStrategyIntegrationTest {
     return dataBuilder.build();
   }
 
-  @Rule public TemporaryPaths tmpFolder = new TemporaryPaths(true);
+  @Rule public TemporaryPaths tmpFolder = new TemporaryPaths();
 
   private final ModernBuildRuleConfig.Strategy strategy;
   private Optional<GrpcServer> server = Optional.empty();

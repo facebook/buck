@@ -46,7 +46,7 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 public class ParserIntegrationTest {
-  @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths(true);
+  @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
   @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Test

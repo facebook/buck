@@ -38,7 +38,7 @@ import org.junit.Test;
 
 public class AndroidBinaryAssetsIntegrationTest extends AbiCompilationModeTest {
 
-  @Rule public TemporaryPaths tmpFolder = new TemporaryPaths(true);
+  @Rule public TemporaryPaths tmpFolder = new TemporaryPaths();
 
   private ProjectWorkspace workspace;
 
