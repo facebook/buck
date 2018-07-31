@@ -49,7 +49,6 @@ public class UntarStep extends UnarchiveStep {
       case TAR_BZ2:
       case TAR_GZ:
       case TAR_XZ:
-      case TAR_ZSTD:
         break;
       case ZIP:
       default:

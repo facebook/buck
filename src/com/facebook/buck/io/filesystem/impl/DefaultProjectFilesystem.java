@@ -906,7 +906,7 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
   }
 
   @Override
-  public long getPosixFileMode(Path path) throws IOException {
+  public long getFileAttributesForZipEntry(Path path) throws IOException {
     long mode = 0;
     // Support executable files.  If we detect this file is executable, store this
     // information as 0100 in the field typically used in zip implementations for
@@ -924,12 +924,7 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
     // Propagate any additional permissions
     mode |= MorePosixFilePermissions.toMode(getPosixFilePermissions(path));
 
-    return mode;
-  }
-
-  @Override
-  public long getFileAttributesForZipEntry(Path path) throws IOException {
-    return getPosixFileMode(path) << 16;
+    return mode << 16;
   }
 
   @Override

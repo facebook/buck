@@ -301,7 +301,7 @@ public class CacheCommand extends AbstractCommand {
     ImmutableList<Path> paths;
     try {
       paths =
-          ArchiveFormat.TAR_ZSTD
+          ArchiveFormat.ZIP
               .getUnarchiver()
               .extractArchive(
                   projectFilesystemFactory,

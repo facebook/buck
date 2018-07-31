@@ -102,7 +102,6 @@ public class UntarStepTest {
         case TAR_BZ2:
         case TAR_GZ:
         case TAR_XZ:
-        case TAR_ZSTD:
         case ZIP:
           continue;
         default:

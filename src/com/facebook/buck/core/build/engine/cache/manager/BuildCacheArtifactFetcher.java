@@ -45,6 +45,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
+import java.util.zip.ZipFile;
 
 public class BuildCacheArtifactFetcher {
 
@@ -125,7 +126,7 @@ public class BuildCacheArtifactFetcher {
             }
 
             return Futures.immediateFuture(
-                extractArtifactFromCacheResult(ruleKey, lazyZipPath, filesystem, cacheResult));
+                unzipArtifactFromCacheResult(ruleKey, lazyZipPath, filesystem, cacheResult));
           }
         });
   }
@@ -171,7 +172,7 @@ public class BuildCacheArtifactFetcher {
     HashCode.fromString(ruleKeyValue);
   }
 
-  private CacheResult extractArtifactFromCacheResult(
+  private CacheResult unzipArtifactFromCacheResult(
       RuleKey ruleKey, LazyPath lazyZipPath, ProjectFilesystem filesystem, CacheResult cacheResult)
       throws IOException {
 
@@ -210,21 +211,22 @@ public class BuildCacheArtifactFetcher {
       BuildInfoStore buildInfoStore =
           buildInfoStoreManager.get(rule.getProjectFilesystem(), metadataStorage);
 
+      try (ZipFile artifact = new ZipFile(zipPath.toFile())) {
+        onDiskBuildInfo.validateArtifact(artifact);
+      }
+
       Preconditions.checkState(
           cacheResult.getMetadata().containsKey(BuildInfo.MetadataKey.ORIGIN_BUILD_ID),
           "Cache artifact for rulekey %s is missing metadata %s.",
           ruleKey,
           BuildInfo.MetadataKey.ORIGIN_BUILD_ID);
 
-      ImmutableSet<Path> extractedFiles =
-          ArchiveFormat.TAR_ZSTD
-              .getUnarchiver()
-              .extractArchive(
-                  zipPath.toAbsolutePath(),
-                  filesystem,
-                  ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);
-
-      onDiskBuildInfo.validateArtifact(extractedFiles);
+      ArchiveFormat.ZIP
+          .getUnarchiver()
+          .extractArchive(
+              zipPath.toAbsolutePath(),
+              filesystem,
+              ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);
 
       // We only delete the ZIP file when it has been unzipped successfully. Otherwise, we leave it
       // around for debugging purposes.

@@ -17,7 +17,6 @@
 package com.facebook.buck.core.build.engine.impl;
 
 import static com.google.common.util.concurrent.MoreExecutors.listeningDecorator;
-import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.easymock.EasyMock.anyObject;
 import static org.easymock.EasyMock.eq;
 import static org.easymock.EasyMock.expect;
@@ -143,7 +142,7 @@ import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.testutil.DummyFileHashCache;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.TemporaryPaths;
-import com.facebook.buck.testutil.integration.TarInspector;
+import com.facebook.buck.testutil.integration.ZipInspector;
 import com.facebook.buck.util.ErrorLogger;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.RichStream;
@@ -162,7 +161,10 @@ import com.facebook.buck.util.json.ObjectMappers;
 import com.facebook.buck.util.timing.DefaultClock;
 import com.facebook.buck.util.timing.IncrementingFakeClock;
 import com.facebook.buck.util.types.Pair;
+import com.facebook.buck.util.zip.CustomZipEntry;
+import com.facebook.buck.util.zip.CustomZipOutputStream;
 import com.facebook.buck.util.zip.ZipConstants;
+import com.facebook.buck.util.zip.ZipOutputStreams;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
@@ -179,7 +181,6 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -215,9 +216,6 @@ import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
-import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
-import org.apache.commons.compress.compressors.zstandard.ZstdCompressorOutputStream;
 import org.easymock.EasyMockSupport;
 import org.hamcrest.Matchers;
 import org.hamcrest.core.IsInstanceOf;
@@ -1747,7 +1745,7 @@ public class CachingBuildEngineTest {
           metadataDirectory.resolve(BuildInfo.MetadataKey.RECORDED_PATHS));
 
       Path artifact = tmp.newFile("artifact.zip");
-      writeEntriesToArchive(
+      writeEntriesToZip(
           artifact,
           ImmutableMap.of(
               metadataDirectory.resolve(BuildInfo.MetadataKey.RECORDED_PATHS),
@@ -1872,7 +1870,7 @@ public class CachingBuildEngineTest {
 
       // Prepopulate the cache with an artifact indexed by the input-based rule key.
       Path artifact = tmp.newFile("artifact.zip");
-      writeEntriesToArchive(
+      writeEntriesToZip(
           artifact,
           ImmutableMap.of(
               metadataDirectory.resolve(BuildInfo.MetadataKey.RECORDED_PATHS),
@@ -1935,19 +1933,14 @@ public class CachingBuildEngineTest {
                         LazyPath.ofInstance(fetchedArtifact)))
                 .getType(),
             equalTo(CacheResultType.HIT));
-
-        ImmutableMap<String, byte[]> artifactEntries = TarInspector.readTarZst(artifact);
-        ImmutableMap<String, byte[]> fetchedArtifactEntries =
-            TarInspector.readTarZst(fetchedArtifact);
-
         assertEquals(
-            Sets.union(ImmutableSet.of(metadataDirectory + "/"), artifactEntries.keySet()),
-            fetchedArtifactEntries.keySet());
-        assertThat(
-            fetchedArtifactEntries,
-            Matchers.hasEntry(
-                pathResolver.getRelativePath(rule.getSourcePathToOutput()).toString(),
-                "stuff".getBytes(UTF_8)));
+            Sets.union(
+                ImmutableSet.of(metadataDirectory + "/"),
+                new ZipInspector(artifact).getZipFileEntries()),
+            new ZipInspector(fetchedArtifact).getZipFileEntries());
+        new ZipInspector(fetchedArtifact)
+            .assertFileContents(
+                pathResolver.getRelativePath(rule.getSourcePathToOutput()), "stuff");
       }
     }
 
@@ -2277,17 +2270,12 @@ public class CachingBuildEngineTest {
       assertThat(
           cacheResult.getMetadata().get(BuildInfo.MetadataKey.DEP_FILE_RULE_KEY),
           equalTo(depFileRuleKey.toString()));
-      ImmutableMap<String, byte[]> fetchedArtifactEntries =
-          TarInspector.readTarZst(fetchedArtifact);
-      assertThat(
-          fetchedArtifactEntries,
-          Matchers.hasEntry(
-              BuildInfo.getPathToArtifactMetadataDirectory(target, filesystem)
-                  .resolve(BuildInfo.MetadataKey.DEP_FILE)
-                  .toString(),
-              ObjectMappers.WRITER
-                  .writeValueAsString(ImmutableList.of(fileToDepFileEntryString(input)))
-                  .getBytes(UTF_8)));
+      ZipInspector inspector = new ZipInspector(fetchedArtifact);
+      inspector.assertFileContents(
+          BuildInfo.getPathToArtifactMetadataDirectory(target, filesystem)
+              .resolve(BuildInfo.MetadataKey.DEP_FILE),
+          ObjectMappers.WRITER.writeValueAsString(
+              ImmutableList.of(fileToDepFileEntryString(input))));
     }
 
     @Test
@@ -3177,7 +3165,7 @@ public class CachingBuildEngineTest {
           byteArrayOutputStream.toByteArray());
       Path artifact = tmp.newFile("artifact.zip");
       Path metadataDirectory = BuildInfo.getPathToArtifactMetadataDirectory(target, filesystem);
-      writeEntriesToArchive(
+      writeEntriesToZip(
           artifact,
           ImmutableMap.of(
               output,
@@ -4518,8 +4506,8 @@ public class CachingBuildEngineTest {
 
   /**
    * Implementation of {@link ArtifactCache} that, when its fetch method is called, takes the
-   * location of requested {@link File} and writes an archive file there with the entries specified
-   * to its constructor.
+   * location of requested {@link File} and writes a zip file there with the entries specified to
+   * its constructor.
    *
    * <p>This makes it possible to react to a call to {@link ArtifactCache#store(ArtifactInfo,
    * BorrowablePath)} and ensure that there will be a zip file in place immediately after the
@@ -4540,8 +4528,7 @@ public class CachingBuildEngineTest {
     public ListenableFuture<CacheResult> fetchAsync(
         BuildTarget target, RuleKey ruleKey, LazyPath output) {
       try {
-        writeEntriesToArchive(
-            output.get(), ImmutableMap.copyOf(desiredEntries), ImmutableList.of());
+        writeEntriesToZip(output.get(), ImmutableMap.copyOf(desiredEntries), ImmutableList.of());
       } catch (IOException e) {
         throw new RuntimeException(e);
       }
@@ -4690,27 +4677,31 @@ public class CachingBuildEngineTest {
     }
   }
 
-  private static void writeEntriesToArchive(
+  private static void writeEntriesToZip(
       Path file, ImmutableMap<Path, String> entries, ImmutableList<Path> directories)
       throws IOException {
-    try (OutputStream o = new BufferedOutputStream(Files.newOutputStream(file));
-        OutputStream z = new ZstdCompressorOutputStream(o);
-        TarArchiveOutputStream archive = new TarArchiveOutputStream(z)) {
-      archive.setLongFileMode(TarArchiveOutputStream.LONGFILE_POSIX);
+    try (CustomZipOutputStream zip = ZipOutputStreams.newOutputStream(file)) {
       for (Map.Entry<Path, String> mapEntry : entries.entrySet()) {
-        TarArchiveEntry e = new TarArchiveEntry(mapEntry.getKey().toString());
-        e.setModTime(ZipConstants.getFakeTime());
-        byte[] bytes = mapEntry.getValue().getBytes(UTF_8);
-        e.setSize(bytes.length);
-        archive.putArchiveEntry(e);
-        archive.write(bytes);
-        archive.closeArchiveEntry();
+        CustomZipEntry entry = new CustomZipEntry(mapEntry.getKey());
+        // We want deterministic ZIPs, so avoid mtimes. -1 is timzeone independent, 0 is not.
+        entry.setTime(ZipConstants.getFakeTime());
+        // We set the external attributes to this magic value which seems to match the attributes
+        // of entries created by {@link InMemoryArtifactCache}.
+        entry.setExternalAttributes(33188L << 16);
+        zip.putNextEntry(entry);
+        zip.write(mapEntry.getValue().getBytes());
+        zip.closeEntry();
       }
       for (Path dir : directories) {
-        TarArchiveEntry e = new TarArchiveEntry(dir.toString() + "/");
-        e.setModTime(ZipConstants.getFakeTime());
+        CustomZipEntry entry = new CustomZipEntry(dir + "/");
+        // We want deterministic ZIPs, so avoid mtimes. -1 is timzeone independent, 0 is not.
+        entry.setTime(ZipConstants.getFakeTime());
+        // We set the external attributes to this magic value which seems to match the attributes
+        // of entries created by {@link InMemoryArtifactCache}.
+        entry.setExternalAttributes(33188L << 16);
+        zip.putNextEntry(entry);
+        zip.closeEntry();
       }
-      archive.finish();
     }
   }
 

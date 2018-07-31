@@ -45,7 +45,7 @@ import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Optional;
-import java.util.Set;
+import java.util.zip.ZipFile;
 
 /**
  * Utility for reading the metadata associated with a build rule's output. This is metadata that
@@ -249,27 +249,17 @@ public class DefaultOnDiskBuildInfo implements OnDiskBuildInfo {
   }
 
   @Override
-  public void validateArtifact(Set<Path> extractedFiles) {
+  public void validateArtifact(ZipFile artifact) {
     // TODO(bertrand): It would be good to validate OUTPUT_HASH and RECORDED_PATH_HASHES, but we
     // don't compute them if the artifact size exceeds the input rule key threshold.
-    validateArtifactHasKey(extractedFiles, BuildInfo.MetadataKey.RECORDED_PATHS);
-    validateArtifactHasKey(extractedFiles, BuildInfo.MetadataKey.OUTPUT_SIZE);
+    validateArtifactHasKey(artifact, BuildInfo.MetadataKey.RECORDED_PATHS);
+    validateArtifactHasKey(artifact, BuildInfo.MetadataKey.OUTPUT_SIZE);
   }
 
-  private void validateArtifactHasKey(Set<Path> extractedFiles, String key) {
+  private void validateArtifactHasKey(ZipFile artifact, String key) {
     Preconditions.checkState(
-        !extractedFiles.isEmpty(), "Did not extract any files, expected file for key '%s'", key);
-    Path expectedFile =
-        extractedFiles
-            .iterator()
-            .next()
-            .getFileSystem()
-            .getPath(MorePaths.pathWithUnixSeparators(metadataDirectory.resolve(key)));
-    Preconditions.checkState(
-        extractedFiles.contains(expectedFile),
-        "Artifact missing artifactMetadata for key %s (expected: '%s', found: %s)",
-        key,
-        expectedFile,
-        extractedFiles);
+        artifact.getEntry(MorePaths.pathWithUnixSeparators(metadataDirectory.resolve(key))) != null,
+        "Artifact missing artifactMetadata for key %s",
+        key);
   }
 }

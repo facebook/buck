@@ -20,6 +20,7 @@ import com.facebook.buck.io.file.MorePosixFilePermissions;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.ByteStreams;
 import java.io.BufferedInputStream;
@@ -68,12 +69,8 @@ public class Untar extends Unarchiver {
     return new Untar(Optional.of(CompressorStreamFactory.XZ));
   }
 
-  public static Untar zstdUnarchiver() {
-    return new Untar(Optional.of(CompressorStreamFactory.ZSTANDARD));
-  }
-
   @Override
-  public ImmutableSet<Path> extractArchive(
+  public ImmutableList<Path> extractArchive(
       Path archiveFile,
       ProjectFilesystem filesystem,
       Path filesystemRelativePath,
@@ -90,7 +87,7 @@ public class Untar extends Unarchiver {
   }
 
   @VisibleForTesting
-  ImmutableSet<Path> extractArchive(
+  ImmutableList<Path> extractArchive(
       Path archiveFile,
       ProjectFilesystem filesystem,
       Path filesystemRelativePath,
@@ -156,7 +153,7 @@ public class Untar extends Unarchiver {
       // Clean out directories of files that were not in the archive
       tidyDirectories(filesystem, dirsToTidy, filePaths);
     }
-    return filePaths;
+    return filePaths.asList();
   }
 
   private TarArchiveInputStream getArchiveInputStream(Path tarFile)

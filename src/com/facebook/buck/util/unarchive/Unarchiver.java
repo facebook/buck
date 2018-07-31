@@ -19,7 +19,6 @@ package com.facebook.buck.util.unarchive;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -42,7 +41,7 @@ public abstract class Unarchiver {
    * @return A list of paths to files that were created (not directories)
    * @throws IOException If the archive could not be extracted for any reason
    */
-  public abstract ImmutableSet<Path> extractArchive(
+  public abstract ImmutableList<Path> extractArchive(
       Path archiveFile,
       ProjectFilesystem filesystem,
       Path relativePath,
@@ -59,7 +58,7 @@ public abstract class Unarchiver {
    * @return A list of paths to files that were created (not directories)
    * @throws IOException If the archive could not be extracted for any reason
    */
-  public ImmutableSet<Path> extractArchive(
+  public ImmutableList<Path> extractArchive(
       Path archiveFile, ProjectFilesystem filesystem, ExistingFileMode existingFileMode)
       throws IOException {
     return extractArchive(

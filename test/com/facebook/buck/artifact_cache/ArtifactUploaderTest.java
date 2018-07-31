@@ -20,7 +20,6 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 import com.facebook.buck.artifact_cache.config.CacheReadMode;
 import com.facebook.buck.core.model.BuildTarget;
@@ -28,27 +27,18 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.file.BorrowablePath;
-import com.facebook.buck.io.file.MorePosixFilePermissions;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.facebook.buck.testutil.integration.TarInspector;
-import com.google.common.collect.ImmutableList;
+import com.facebook.buck.testutil.ZipArchive;
+import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.attribute.PosixFilePermission;
-import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
-import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
-import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
-import org.apache.commons.compress.compressors.CompressorException;
-import org.apache.commons.compress.compressors.zstandard.ZstdCompressorInputStream;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
@@ -66,17 +56,21 @@ public class ArtifactUploaderTest {
     Path file = Paths.get("file");
     filesystem.writeBytesToPath(contents, file);
 
-    Path dirFile = Paths.get("dir", "file");
-    filesystem.createParentDirs(dirFile);
+    Path dir = Paths.get("dir");
+    Path dirFile = dir.resolve("file");
+    filesystem.mkdirs(dir);
     filesystem.writeBytesToPath(contents, dirFile);
 
-    Path metadataFile =
-        Paths.get("buck-out", "bin", "foo", ".bar", "metadata", "artifact", "metadata");
-    filesystem.createParentDirs(metadataFile);
+    Path metadataDir =
+        Paths.get("buck-out")
+            .resolve("bin")
+            .resolve("foo")
+            .resolve(".bar")
+            .resolve("metadata")
+            .resolve("artifact");
+    Path metadataFile = metadataDir.resolve("metadata");
+    filesystem.mkdirs(metadataDir);
     filesystem.writeBytesToPath(contents, metadataFile);
-
-    Path dir = Paths.get("buck-out", "bin", "foo", ".bar/");
-    filesystem.mkdirs(dir);
 
     AtomicBoolean stored = new AtomicBoolean(false);
     ArtifactCache cache =
@@ -94,27 +88,29 @@ public class ArtifactUploaderTest {
             assertThat(
                 info.getMetadata().get("build-metadata"), Matchers.equalTo("build-metadata"));
 
-            // Unarchive file.
-            final ImmutableMap<String, byte[]> archiveContents;
-            try {
-              archiveContents = TarInspector.readTarZst(output.getPath());
-            } catch (IOException | CompressorException e) {
-              fail(e.getMessage());
-              return Futures.immediateFuture(null);
+            // Verify zip contents
+            try (ZipArchive zip = new ZipArchive(output.getPath(), /* forWriting */ false)) {
+              assertEquals(
+                  ImmutableSet.of(
+                      "",
+                      "dir/",
+                      "buck-out/",
+                      "buck-out/bin/",
+                      "buck-out/bin/foo/",
+                      "buck-out/bin/foo/.bar/",
+                      "buck-out/bin/foo/.bar/metadata/",
+                      "buck-out/bin/foo/.bar/metadata/artifact/"),
+                  zip.getDirNames());
+              assertEquals(
+                  ImmutableSet.of(
+                      "dir/file", "file", "buck-out/bin/foo/.bar/metadata/artifact/metadata"),
+                  zip.getFileNames());
+              assertArrayEquals(contents, zip.readFully("file"));
+              assertArrayEquals(contents, zip.readFully("dir/file"));
+            } catch (IOException e) {
+              Throwables.throwIfUnchecked(e);
+              throw new RuntimeException(e);
             }
-
-            // Verify archive contents.
-            assertEquals(
-                ImmutableSet.of(
-                    "buck-out/bin/foo/.bar/",
-                    "dir/file",
-                    "file",
-                    "buck-out/bin/foo/.bar/metadata/artifact/metadata"),
-                archiveContents.keySet());
-            assertArrayEquals(contents, archiveContents.get("file"));
-            assertArrayEquals(contents, archiveContents.get("dir/file"));
-            assertArrayEquals(
-                contents, archiveContents.get("buck-out/bin/foo/.bar/metadata/artifact/metadata"));
             return Futures.immediateFuture(null);
           }
         };
@@ -124,41 +120,10 @@ public class ArtifactUploaderTest {
         cache,
         BuckEventBusForTests.newInstance(),
         ImmutableMap.of("metadata", "metadata", "build-metadata", "build-metadata"),
-        ImmutableSortedSet.of(dir, file, dirFile, metadataFile),
+        ImmutableSortedSet.of(file, dirFile, metadataFile),
         BUILD_TARGET,
         filesystem);
 
     assertTrue(stored.get());
-  }
-
-  /** compressSavesExecutableBit asserts that compress()-ing an executable file stores the x bit. */
-  @Test
-  public void compressSavesExecutableBit() throws Exception {
-    ProjectFilesystem fs = FakeProjectFilesystem.createJavaOnlyFilesystem("/");
-
-    Path out = fs.getRootPath().resolve("out");
-    Path file = fs.getRootPath().resolve("file");
-    fs.writeContentsToPath("foo", file);
-    Files.setPosixFilePermissions(
-        fs.getPathForRelativePath(file), ImmutableSet.of(PosixFilePermission.OWNER_EXECUTE));
-
-    // Compress
-    ArtifactUploader.compress(fs, ImmutableList.of(file), out);
-
-    // Decompress+unarchive, and check that the only file is an executable.
-    try (TarArchiveInputStream fin =
-        new TarArchiveInputStream(new ZstdCompressorInputStream(Files.newInputStream(out)))) {
-      ArrayList<TarArchiveEntry> entries = new ArrayList<>();
-
-      TarArchiveEntry entry;
-      while ((entry = fin.getNextTarEntry()) != null) {
-        entries.add(entry);
-      }
-
-      assertThat(entries, Matchers.hasSize(1));
-      assertThat(
-          MorePosixFilePermissions.fromMode(entries.get(0).getMode()),
-          Matchers.contains(PosixFilePermission.OWNER_EXECUTE));
-    }
   }
 }
