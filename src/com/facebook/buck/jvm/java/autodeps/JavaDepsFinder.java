@@ -21,7 +21,7 @@ import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.core.build.engine.BuildEngine;
 import com.facebook.buck.core.build.engine.BuildEngineBuildContext;
 import com.facebook.buck.core.build.engine.BuildResult;
-import com.facebook.buck.core.description.DescriptionCache;
+import com.facebook.buck.core.description.impl.DescriptionCache;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;

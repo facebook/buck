@@ -14,8 +14,9 @@
  * under the License.
  */
 
-package com.facebook.buck.core.description;
+package com.facebook.buck.core.description.impl;
 
+import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.impl.RuleTypeFactory;
 import com.google.common.cache.CacheBuilder;

@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.core.description;
+package com.facebook.buck.core.description.impl;
 
 import static org.junit.Assert.assertEquals;
 

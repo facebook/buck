@@ -36,7 +36,7 @@ import com.facebook.buck.cli.UninstallCommand.UninstallOptions;
 import com.facebook.buck.command.Build;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.core.cell.Cell;
-import com.facebook.buck.core.description.DescriptionCache;
+import com.facebook.buck.core.description.impl.DescriptionCache;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;

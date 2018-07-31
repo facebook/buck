@@ -17,11 +17,11 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.cell.resolver.CellPathResolver;
-import com.facebook.buck.core.description.DescriptionCache;
 import com.facebook.buck.core.description.MetadataProvidingDescription;
 import com.facebook.buck.core.description.arg.HasDepsQuery;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.description.attr.ImplicitFlavorsInferringDescription;
+import com.facebook.buck.core.description.impl.DescriptionCache;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorDomain;

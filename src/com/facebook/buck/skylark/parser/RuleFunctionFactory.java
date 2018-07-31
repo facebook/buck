@@ -17,7 +17,7 @@
 package com.facebook.buck.skylark.parser;
 
 import com.facebook.buck.core.description.BaseDescription;
-import com.facebook.buck.core.description.DescriptionCache;
+import com.facebook.buck.core.description.impl.DescriptionCache;
 import com.facebook.buck.rules.coercer.CoercedTypeCache;
 import com.facebook.buck.rules.coercer.ParamInfo;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;

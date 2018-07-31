@@ -17,8 +17,8 @@
 package com.facebook.buck.core.rules.knowntypes;
 
 import com.facebook.buck.config.BuckConfig;
-import com.facebook.buck.core.description.DescriptionCache;
 import com.facebook.buck.core.description.DescriptionCreationContext;
+import com.facebook.buck.core.description.impl.DescriptionCache;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.targetgraph.DescriptionProvider;

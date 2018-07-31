@@ -16,7 +16,7 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.core.description.DescriptionCache;
+import com.facebook.buck.core.description.impl.DescriptionCache;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypes;
