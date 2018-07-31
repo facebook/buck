@@ -372,8 +372,9 @@ final class PreprocessorDelegate implements RuleKeyAppendable, HasCustomDepsLogi
       if (cxxHeaders instanceof CxxSymlinkTreeHeaders) {
         CxxSymlinkTreeHeaders symlinkTreeHeaders = (CxxSymlinkTreeHeaders) cxxHeaders;
         for (Map.Entry<Path, SourcePath> entry : symlinkTreeHeaders.getNameToPathMap().entrySet()) {
-          if (conflictingHeadersBasenameWhitelist.contains(
-              entry.getKey().getFileName().toString())) {
+          if (entry.getKey().getFileName() != null
+              && conflictingHeadersBasenameWhitelist.contains(
+                  entry.getKey().getFileName().toString())) {
             continue;
           }
           SourcePath original = headers.put(entry.getKey(), entry.getValue());
