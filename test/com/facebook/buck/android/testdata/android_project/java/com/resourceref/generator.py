@@ -3,27 +3,7 @@ import sys
 
 
 def main(argv):
-    RES_COUNT = 100
-    PACKAGES = ["com.primary", "com.secondary1", "com.secondary2"]
-    RTYPES = ["id", "string", "color"]
-
-    if argv[1] == "java":
-        print """\
-package com.resourceref;
-
-class ResourceRef {
-    int getBigSum() {
-        return 0
-"""
-        for p in PACKAGES:
-            for r in RTYPES:
-                for c in range(RES_COUNT):
-                    print "+ %s.R.%s.%s_%d" % (p, r, r, c)
-        print """\
-        ;
-    }
-}
-"""
+    RES_COUNT = 3000
 
     if argv[1] == "res":
         print """\

@@ -451,6 +451,7 @@ android_binary(
     primary_dex_patterns = [
         "/primary/R$",
     ],
+    trim_resource_ids = False,
     use_split_dex = True,
     deps = [
         "//java/com/resourceref:resourceref",
@@ -464,9 +465,10 @@ genrule(
            "$(location :app_with_big_r_dot_java)/classes.dex > $OUT",
 )
 
-genrule(
-    name = "disassemble_big_r_dot_java_secondary",
-    out = "big_r_dot_java_secondary.txt",
-    bash = "$(exe //third-party/smali:baksmali) list classes " +
-           "$(location :app_with_big_r_dot_java)/classes2.dex > $OUT",
-)
+for i in (2,3):
+    genrule(
+        name = "disassemble_big_r_dot_java_classes%d" % i,
+        out = "big_r_dot_java_secondary.txt",
+        bash = "$(exe //third-party/smali:baksmali) list classes " +
+               "$(location :app_with_big_r_dot_java)/classes%d.dex > $OUT" % i,
+    )

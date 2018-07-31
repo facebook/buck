@@ -1,6 +1,6 @@
 android_library(
     name = "resourceref",
-    srcs = [":java_src"],
+    srcs = [],
     visibility = ["PUBLIC"],
     deps = [
         ":resources_primary",

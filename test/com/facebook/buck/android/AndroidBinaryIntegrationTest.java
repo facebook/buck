@@ -20,7 +20,6 @@ import static com.facebook.buck.testutil.RegexMatcher.containsPattern;
 import static com.facebook.buck.testutil.RegexMatcher.containsRegex;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hamcrest.CoreMatchers.containsString;
-import static org.hamcrest.CoreMatchers.hasItem;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -59,7 +58,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
@@ -725,33 +723,6 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
     buildLog.assertTargetBuiltLocally(
         "//apps/multidex:app#dex,dexing,rtype__primarydex,split_uber_r_dot_java_jar");
     verifyTrimmedRDotJava(ImmutableSet.of("app_icon", "app_name", "title"));
-  }
-
-  @Test
-  public void testResourceSplitting() throws IOException {
-    ImmutableMap<String, Path> outputs =
-        workspace.buildMultipleAndReturnOutputs(
-            "//apps/multidex:disassemble_big_r_dot_java_primary",
-            "//apps/multidex:disassemble_big_r_dot_java_secondary");
-
-    Set<String> primaryClasses =
-        ImmutableSet.copyOf(
-            filesystem.readLines(
-                outputs.get("//apps/multidex:disassemble_big_r_dot_java_primary")));
-    assertThat(primaryClasses, hasItem("Lcom/primary/R$id;"));
-    assertThat(primaryClasses, hasItem("Lcom/primary/R$string;"));
-    assertThat(primaryClasses, hasItem("Lcom/primary/R$color;"));
-
-    Set<String> secondaryClasses =
-        ImmutableSet.copyOf(
-            filesystem.readLines(
-                outputs.get("//apps/multidex:disassemble_big_r_dot_java_secondary")));
-    assertThat(secondaryClasses, hasItem("Lcom/secondary1/R$id;"));
-    assertThat(secondaryClasses, hasItem("Lcom/secondary1/R$string;"));
-    assertThat(secondaryClasses, hasItem("Lcom/secondary1/R$color;"));
-    assertThat(secondaryClasses, hasItem("Lcom/secondary2/R$id;"));
-    assertThat(secondaryClasses, hasItem("Lcom/secondary2/R$string;"));
-    assertThat(secondaryClasses, hasItem("Lcom/secondary2/R$color;"));
   }
 
   private static final Pattern SMALI_PUBLIC_CLASS_PATTERN =
