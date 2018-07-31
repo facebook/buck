@@ -17,26 +17,41 @@
 package com.facebook.buck.event.listener;
 
 import static com.facebook.buck.event.listener.BuildTargetDurationListener.computeCriticalPathsUsingGraphTraversal;
-import static com.facebook.buck.event.listener.BuildTargetDurationListener.findCriticalNode;
-import static com.facebook.buck.event.listener.BuildTargetDurationListener.rendersCriticalPathTraceFile;
+import static com.facebook.buck.event.listener.BuildTargetDurationListener.constructBuildRuleCriticalPaths;
+import static com.facebook.buck.event.listener.BuildTargetDurationListener.constructBuildTargetResults;
+import static com.facebook.buck.event.listener.BuildTargetDurationListener.constructCriticalPaths;
+import static com.facebook.buck.event.listener.BuildTargetDurationListener.criticalPath;
+import static com.facebook.buck.event.listener.BuildTargetDurationListener.findCriticalNodes;
+import static com.facebook.buck.event.listener.BuildTargetDurationListener.rendersCriticalPathsTraceFile;
 
-import com.facebook.buck.event.listener.BuildTargetDurationListener.BuildRuleCriticalPath;
 import com.facebook.buck.event.listener.BuildTargetDurationListener.BuildRuleInfo;
+import com.facebook.buck.event.listener.BuildTargetDurationListener.BuildRuleInfo.Chain;
+import com.facebook.buck.event.listener.BuildTargetDurationListener.BuildRuleInfoSelectedChain;
+import com.facebook.buck.event.listener.BuildTargetDurationListener.CriticalPathEntry;
+import com.facebook.buck.testutil.TemporaryPaths;
+import com.facebook.buck.testutil.integration.ProjectWorkspace;
+import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.json.ObjectMappers;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
+import com.google.common.collect.MinMaxPriorityQueue;
+import com.google.common.collect.Sets;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Deque;
+import java.util.Iterator;
 import java.util.List;
-import java.util.Optional;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collectors;
 import org.junit.Assert;
-import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 
 /**
- * Uses following DAG to test computations in BuildTargetDurationListener.
+ * Uses following DAG to test computations in BuildTargetDurationListener. Simple:
  *
  * <pre>{
  *                             +-+
@@ -67,74 +82,60 @@ import org.junit.Test;
  * |i|[0-1]   |j|[0-2]   |k|[0-5]  |l|[0-6]   |m|[0-8]
  * +-+        +-+        +-+       +-+        +-+
  * }</pre>
+ *
+ * VeryConnected:
+ *
+ * <pre>
+ *                        +-+
+ *                        |b|[20-23]
+ *      +-+               +++
+ *      |a|[25-30]         |
+ *      +++          +-----+-----+
+ *       |           |           |
+ *       v           v           v
+ *      +++         +++         +++
+ *      |c|[3-25]   |d|[3-18]   |e|[12-20]
+ *      +++         +++         +++
+ *       |           |           |
+ *       + +---------+-+         v
+ *       | |           |        +++
+ *       v v           v        |h|[0-12]
+ *       +-+          +++       +-+
+ *       |f|[0-3]     |g|[0-3]
+ *       +-+          +-+
+ * </pre>
  */
 public class BuildTargetDurationListenerTest {
 
-  private ConcurrentMap<String, BuildRuleInfo> buildRuleInfos;
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
-  private static final String EXPECTED_JSON_OUTPUT =
-      "[{\"target-name\":\"a\","
-          + "\"target-duration\":8,"
-          + "\"critical-path\":"
-          + "[{\"rule-name\":\"l\",\"start\":0,\"finish\":6,\"duration\":6},"
-          + "{\"rule-name\":\"e\",\"start\":6,\"finish\":8,\"duration\":2},"
-          + "{\"rule-name\":\"b\",\"start\":8,\"finish\":12,\"duration\":4},"
-          + "{\"rule-name\":\"a\",\"start\":12,\"finish\":20,\"duration\":8}],"
-          + "\"critical-path-duration\":20},"
-          + "{\"target-name\":\"c\","
-          + "\"target-duration\":2,"
-          + "\"critical-path\":"
-          + "[{\"rule-name\":\"m\",\"start\":0,\"finish\":8,\"duration\":8},"
-          + "{\"rule-name\":\"f\",\"start\":8,\"finish\":9,\"duration\":1},"
-          + "{\"rule-name\":\"c\",\"start\":9,\"finish\":11,\"duration\":2}],"
-          + "\"critical-path-duration\":11}]";
-
-  private static final String EXPECTED_TRACE =
-      "[{\"cat\":\"buck\",\"name\":\"process_name\",\"ph\":\"M\",\"pid\":0,\"tid\":0,"
-          + "\"ts\":0,\"tts\":0,\"args\":{\"name\":\"Critical Path\"}},"
-          + "{\"cat\":\"buck\",\"name\":\"l\",\"ph\":\"B\",\"pid\":0,\"tid\":0,\"ts\":0,\"tts\":0,"
-          + "\"args\":{\"critical_blocking_rule\":\"None\",\"length_of_critical_path\":\"6ms\"}},"
-          + "{\"cat\":\"buck\",\"name\":\"l\",\"ph\":\"E\",\"pid\":0,\"tid\":0,\"ts\":6000,"
-          + "\"tts\":0,\"args\":{}},{\"cat\":\"buck\",\"name\":\"e\",\"ph\":\"B\",\"pid\":0,"
-          + "\"tid\":0,\"ts\":6000,\"tts\":0,\"args\":{\"critical_blocking_rule\":\"l\","
-          + "\"length_of_critical_path\":\"8ms\"}},{\"cat\":\"buck\",\"name\":\"e\",\"ph\":\"E\","
-          + "\"pid\":0,\"tid\":0,\"ts\":8000,\"tts\":0,\"args\":{}},{\"cat\":\"buck\","
-          + "\"name\":\"b\",\"ph\":\"B\",\"pid\":0,\"tid\":0,\"ts\":8000,\"tts\":0,"
-          + "\"args\":{\"critical_blocking_rule\":\"e\",\"length_of_critical_path\":\"12ms\"}},"
-          + "{\"cat\":\"buck\",\"name\":\"b\",\"ph\":\"E\",\"pid\":0,\"tid\":0,\"ts\":12000,"
-          + "\"tts\":0,\"args\":{}},{\"cat\":\"buck\",\"name\":\"a\",\"ph\":\"B\",\"pid\":0,"
-          + "\"tid\":0,\"ts\":12000,\"tts\":0,\"args\":{\"critical_blocking_rule\":\"b\","
-          + "\"length_of_critical_path\":\"20ms\"}},{\"cat\":\"buck\",\"name\":\"a\",\"ph\":\"E\","
-          + "\"pid\":0,\"tid\":0,\"ts\":20000,\"tts\":0,\"args\":{}}]";
-
-  @Before
-  public void setUp() {
-    buildRuleInfos = Maps.newConcurrentMap();
-    BuildRuleInfo a = new BuildRuleInfo("a", 12, 20);
+  private ConcurrentMap<String, BuildRuleInfo> setUpSimpleBuildRuleInfos(int kk) {
+    ConcurrentMap<String, BuildRuleInfo> buildRuleInfos = Maps.newConcurrentMap();
+    BuildRuleInfo a = new BuildRuleInfo("a", kk, 12, 20);
     a.updateDuration(8);
-    BuildRuleInfo b = new BuildRuleInfo("b", 8, 12);
+    BuildRuleInfo b = new BuildRuleInfo("b", kk, 8, 12);
     b.updateDuration(4);
-    BuildRuleInfo c = new BuildRuleInfo("c", 9, 11);
+    BuildRuleInfo c = new BuildRuleInfo("c", kk, 9, 11);
     c.updateDuration(2);
-    BuildRuleInfo d = new BuildRuleInfo("d", 2, 4);
+    BuildRuleInfo d = new BuildRuleInfo("d", kk, 2, 4);
     d.updateDuration(2);
-    BuildRuleInfo e = new BuildRuleInfo("e", 6, 8);
+    BuildRuleInfo e = new BuildRuleInfo("e", kk, 6, 8);
     e.updateDuration(2);
-    BuildRuleInfo f = new BuildRuleInfo("f", 8, 9);
+    BuildRuleInfo f = new BuildRuleInfo("f", kk, 8, 9);
     f.updateDuration(1);
-    BuildRuleInfo g = new BuildRuleInfo("g", 1, 2);
+    BuildRuleInfo g = new BuildRuleInfo("g", kk, 1, 2);
     g.updateDuration(1);
-    BuildRuleInfo h = new BuildRuleInfo("h", 0, 1);
+    BuildRuleInfo h = new BuildRuleInfo("h", kk, 0, 1);
     h.updateDuration(1);
-    BuildRuleInfo i = new BuildRuleInfo("i", 0, 1);
+    BuildRuleInfo i = new BuildRuleInfo("i", kk, 0, 1);
     i.updateDuration(1);
-    BuildRuleInfo j = new BuildRuleInfo("j", 0, 2);
+    BuildRuleInfo j = new BuildRuleInfo("j", kk, 0, 2);
     j.updateDuration(2);
-    BuildRuleInfo k = new BuildRuleInfo("k", 0, 5);
+    BuildRuleInfo k = new BuildRuleInfo("k", kk, 0, 5);
     k.updateDuration(5);
-    BuildRuleInfo l = new BuildRuleInfo("l", 0, 6);
+    BuildRuleInfo l = new BuildRuleInfo("l", kk, 0, 6);
     l.updateDuration(6);
-    BuildRuleInfo m = new BuildRuleInfo("m", 0, 8);
+    BuildRuleInfo m = new BuildRuleInfo("m", kk, 0, 8);
     m.updateDuration(8);
 
     a.addDependency("b");
@@ -179,63 +180,264 @@ public class BuildTargetDurationListenerTest {
     buildRuleInfos.put("k", k);
     buildRuleInfos.put("l", l);
     buildRuleInfos.put("m", m);
+
+    return buildRuleInfos;
   }
 
-  private void checkCriticalPath(Optional<BuildRuleInfo> critical) {
-    Assert.assertEquals("a", critical.get().ruleName);
-    // Critical path
-    Assert.assertEquals(20, buildRuleInfos.get("a").longestDependencyChainMillis);
-    Assert.assertEquals(
-        "b", buildRuleInfos.get("a").previousRuleInLongestDependencyChain.get().ruleName);
-    Assert.assertEquals(12, buildRuleInfos.get("b").longestDependencyChainMillis);
-    Assert.assertEquals(
-        "e", buildRuleInfos.get("b").previousRuleInLongestDependencyChain.get().ruleName);
-    Assert.assertEquals(8, buildRuleInfos.get("e").longestDependencyChainMillis);
-    Assert.assertEquals(
-        "l", buildRuleInfos.get("e").previousRuleInLongestDependencyChain.get().ruleName);
-    Assert.assertEquals(6, buildRuleInfos.get("l").longestDependencyChainMillis);
-    Assert.assertEquals(
-        Optional.empty(), buildRuleInfos.get("l").previousRuleInLongestDependencyChain);
+  public ConcurrentMap<String, BuildRuleInfo> setUpVeryConnectedBuildRuleInfos(int kk) {
+    ConcurrentMap<String, BuildRuleInfo> buildRuleInfos = Maps.newConcurrentMap();
+    BuildRuleInfo a = new BuildRuleInfo("a", kk, 25, 30);
+    a.updateDuration(5);
+    BuildRuleInfo b = new BuildRuleInfo("b", kk, 20, 23);
+    b.updateDuration(3);
+    BuildRuleInfo c = new BuildRuleInfo("c", kk, 3, 25);
+    c.updateDuration(22);
+    BuildRuleInfo d = new BuildRuleInfo("d", kk, 3, 18);
+    d.updateDuration(15);
+    BuildRuleInfo e = new BuildRuleInfo("e", kk, 12, 20);
+    e.updateDuration(8);
+    BuildRuleInfo f = new BuildRuleInfo("f", kk, 0, 3);
+    f.updateDuration(3);
+    BuildRuleInfo g = new BuildRuleInfo("g", kk, 0, 3);
+    g.updateDuration(3);
+    BuildRuleInfo h = new BuildRuleInfo("h", kk, 0, 12);
+    h.updateDuration(12);
 
-    Assert.assertEquals(11, buildRuleInfos.get("c").longestDependencyChainMillis);
-    Assert.assertEquals(
-        "f", buildRuleInfos.get("c").previousRuleInLongestDependencyChain.get().ruleName);
-    Assert.assertEquals(9, buildRuleInfos.get("f").longestDependencyChainMillis);
-    Assert.assertEquals(
-        "m", buildRuleInfos.get("f").previousRuleInLongestDependencyChain.get().ruleName);
-    Assert.assertEquals(8, buildRuleInfos.get("m").longestDependencyChainMillis);
-    Assert.assertEquals(
-        Optional.empty(), buildRuleInfos.get("m").previousRuleInLongestDependencyChain);
+    f.addDependent("c");
+    f.addDependent("d");
+    g.addDependent("d");
+    h.addDependent("e");
+    c.addDependent("a");
+    d.addDependent("b");
+    e.addDependent("b");
+
+    a.addDependency("c");
+    b.addDependency("d");
+    b.addDependency("e");
+    c.addDependency("f");
+    d.addDependency("f");
+    d.addDependency("g");
+    e.addDependency("h");
+
+    buildRuleInfos.put("a", a);
+    buildRuleInfos.put("b", b);
+    buildRuleInfos.put("c", c);
+    buildRuleInfos.put("d", d);
+    buildRuleInfos.put("e", e);
+    buildRuleInfos.put("f", f);
+    buildRuleInfos.put("g", g);
+    buildRuleInfos.put("h", h);
+
+    return buildRuleInfos;
+  }
+
+  private static void checkCriticalPath(
+      List<String> expectedPrev,
+      List<Long> expectedLongest,
+      Deque<CriticalPathEntry> criticalPath) {
+    Iterator<String> expectedPrevIterator = expectedPrev.iterator();
+    Iterator<Long> expectedLongestIterator = expectedLongest.iterator();
+    for (CriticalPathEntry criticalPathEntry : criticalPath) {
+      Assert.assertTrue(expectedPrevIterator.hasNext());
+      Assert.assertEquals(expectedPrevIterator.next(), criticalPathEntry.ruleName());
+      Assert.assertTrue(expectedLongestIterator.hasNext());
+      Assert.assertEquals(expectedLongestIterator.next().longValue(), criticalPathEntry.longest());
+    }
+  }
+
+  private static ImmutableList<Deque<CriticalPathEntry>> criticalPathsFor(BuildRuleInfo target) {
+    ImmutableList.Builder<Deque<CriticalPathEntry>> paths = ImmutableList.builder();
+    Set<Chain> usedChains = Sets.newHashSet();
+    for (BuildRuleInfo.Chain c : target.getChain()) {
+      paths.add(criticalPath(c, target, usedChains));
+    }
+    return paths.build();
+  }
+
+  private static void checkCriticalPathsOfVeryConnected(BuildRuleInfo a, BuildRuleInfo b) {
+    // Check path of a.
+    List<Deque<CriticalPathEntry>> criticalPathsForA = criticalPathsFor(a);
+    Assert.assertEquals(1, criticalPathsForA.size());
+    checkCriticalPath(
+        Arrays.asList("f", "c", "a"), Arrays.asList(3L, 25L, 30L), criticalPathsForA.get(0));
+
+    // Check paths of b
+    List<Deque<CriticalPathEntry>> criticalPathsForB = criticalPathsFor(b);
+    Assert.assertEquals(3, criticalPathsForB.size());
+
+    for (Deque<CriticalPathEntry> criticalPathForB : criticalPathsForB) {
+      final String starting = criticalPathForB.getFirst().ruleName();
+      switch (starting) {
+        case "f":
+          checkCriticalPath(
+              Arrays.asList("f", "d", "b"), Arrays.asList(3L, 18L, 21L), criticalPathForB);
+          break;
+        case "g":
+          checkCriticalPath(
+              Arrays.asList("g", "d", "b"), Arrays.asList(3L, 18L, 21L), criticalPathForB);
+          break;
+        case "h":
+          checkCriticalPath(
+              Arrays.asList("h", "e", "b"), Arrays.asList(12L, 20L, 23L), criticalPathForB);
+          break;
+        default:
+          Assert.fail(String.format("Unexpected starting for a critical path: %s", starting));
+      }
+    }
+
+    // Check top 3 critical paths
+    List<Deque<CriticalPathEntry>> topKPaths = constructCriticalPaths(Arrays.asList(a, b), 3);
+    Assert.assertEquals(3, topKPaths.size());
+    checkCriticalPath(Arrays.asList("f", "c", "a"), Arrays.asList(3L, 25L, 30L), topKPaths.get(0));
+    checkCriticalPath(Arrays.asList("h", "e", "b"), Arrays.asList(12L, 20L, 23L), topKPaths.get(1));
+    checkCriticalPath(Arrays.asList("f", "d", "b"), Arrays.asList(3L, 18L, 21L), topKPaths.get(2));
+  }
+
+  private static List<BuildRuleInfo> rootBuildRuleInfos(Map<String, BuildRuleInfo> buildRuleInfos) {
+    return buildRuleInfos
+        .values()
+        .stream()
+        .filter(buildRuleInfo -> buildRuleInfo.noDependent())
+        .collect(Collectors.toList());
   }
 
   @Test
   public void testTraversalGraphInterface() throws IOException {
+    ConcurrentMap<String, BuildRuleInfo> buildRuleInfos = setUpSimpleBuildRuleInfos(1);
     computeCriticalPathsUsingGraphTraversal(buildRuleInfos);
-    checkCriticalPath(findCriticalNode(buildRuleInfos.values()));
+    List<BuildRuleInfo> rootBuildRuleInfos = rootBuildRuleInfos(buildRuleInfos);
+    BuildRuleInfoSelectedChain selectedChain = findCriticalNodes(rootBuildRuleInfos, 1).poll();
+    checkCriticalPath(
+        Arrays.asList("l", "e", "b", "a"),
+        Arrays.asList(6L, 8L, 12L, 20L),
+        criticalPath(selectedChain.chain(), selectedChain.buildRuleInfo(), Sets.newHashSet()));
+  }
+
+  @Test
+  public void testMultipleCriticalPaths() throws IOException {
+    final int k = 3;
+    ConcurrentMap<String, BuildRuleInfo> buildRuleInfos = setUpVeryConnectedBuildRuleInfos(k);
+    computeCriticalPathsUsingGraphTraversal(buildRuleInfos);
+    checkCriticalPathsOfVeryConnected(buildRuleInfos.get("a"), buildRuleInfos.get("b"));
+  }
+
+  @Test
+  public void testFindCriticalNodes() throws IOException {
+    final int k = 3;
+    ConcurrentMap<String, BuildRuleInfo> buildRuleInfos = setUpVeryConnectedBuildRuleInfos(k);
+    computeCriticalPathsUsingGraphTraversal(buildRuleInfos);
+    List<BuildRuleInfo> rootBuildRuleInfos = rootBuildRuleInfos(buildRuleInfos);
+    // The most critical node should be "a"
+    Assert.assertEquals(
+        "a", findCriticalNodes(rootBuildRuleInfos, 1).poll().buildRuleInfo().getRuleName());
+
+    // Check top k critical nodes
+    MinMaxPriorityQueue<BuildRuleInfoSelectedChain> topKCriticalNodes =
+        findCriticalNodes(rootBuildRuleInfos, k);
+    Iterator<String> expectedRuleName = Arrays.asList("a", "b", "b").iterator();
+    Iterator<Long> expectedLongest = Arrays.asList(30L, 23L, 21L).iterator();
+    Iterator<String> expectedPrev = Arrays.asList("c", "e", "d").iterator();
+
+    while (!topKCriticalNodes.isEmpty()) {
+      BuildRuleInfoSelectedChain selectedChain = topKCriticalNodes.poll();
+      Assert.assertTrue(expectedRuleName.hasNext());
+      Assert.assertEquals(expectedRuleName.next(), selectedChain.buildRuleInfo().getRuleName());
+      Assert.assertTrue(expectedLongest.hasNext());
+      Assert.assertEquals(expectedLongest.next().longValue(), selectedChain.chain().getLongest());
+      Assert.assertTrue(expectedPrev.hasNext());
+      Assert.assertEquals(expectedPrev.next(), selectedChain.chain().getPrev().get().getRuleName());
+    }
   }
 
   @Test
   public void testOutputTrace() throws IOException {
+    ConcurrentMap<String, BuildRuleInfo> buildRuleInfos = setUpSimpleBuildRuleInfos(1);
     computeCriticalPathsUsingGraphTraversal(buildRuleInfos);
     BuildRuleInfo[] targets =
         new BuildRuleInfo[] {buildRuleInfos.get("a"), buildRuleInfos.get("c")};
+    List<ImmutableBuildRuleCriticalPath> criticalPaths =
+        constructBuildRuleCriticalPaths(constructCriticalPaths(Arrays.asList(targets), 2));
 
-    List<BuildRuleCriticalPath> criticalPaths =
-        Arrays.stream(targets)
-            .map(BuildTargetDurationListener::constructBuildRuleCriticalPath)
-            .collect(Collectors.toList());
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "simple", tmp);
+    workspace.setUp();
+    String data = workspace.getFileContents("expected-output.json");
+
     try (ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
       ObjectMappers.WRITER.writeValue(bos, criticalPaths);
-      Assert.assertEquals(EXPECTED_JSON_OUTPUT, bos.toString());
+      Assert.assertEquals(data.trim(), bos.toString());
     }
   }
 
   @Test
   public void testChromeTrace() throws IOException {
+    ConcurrentMap<String, BuildRuleInfo> buildRuleInfos = setUpSimpleBuildRuleInfos(1);
+    List<BuildRuleInfo> rootBuildRuleInfos = rootBuildRuleInfos(buildRuleInfos);
     computeCriticalPathsUsingGraphTraversal(buildRuleInfos);
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "simple", tmp);
+    workspace.setUp();
+    String data = workspace.getFileContents("expected-trace.json");
+
     try (ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
-      rendersCriticalPathTraceFile(buildRuleInfos, bos);
-      Assert.assertEquals(EXPECTED_TRACE, bos.toString());
+      rendersCriticalPathsTraceFile(constructCriticalPaths(rootBuildRuleInfos, 1), bos);
+      Assert.assertEquals(data.trim(), bos.toString());
+    }
+  }
+
+  @Test
+  public void testChromeTraceMultiplePaths() throws IOException {
+    final int k = 3;
+    ConcurrentMap<String, BuildRuleInfo> buildRuleInfos = setUpVeryConnectedBuildRuleInfos(k);
+    List<BuildRuleInfo> rootBuildRuleInfos = rootBuildRuleInfos(buildRuleInfos);
+    computeCriticalPathsUsingGraphTraversal(buildRuleInfos);
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "veryconnected", tmp);
+    workspace.setUp();
+    String data = workspace.getFileContents("expected-trace.json");
+
+    try (ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
+      rendersCriticalPathsTraceFile(constructCriticalPaths(rootBuildRuleInfos, k), bos);
+      Assert.assertEquals(data.trim(), bos.toString());
+    }
+  }
+
+  @Test
+  public void testOutputTraceMultiplePaths() throws IOException {
+    final int k = 3;
+    ConcurrentMap<String, BuildRuleInfo> buildRuleInfos = setUpVeryConnectedBuildRuleInfos(k);
+    List<BuildRuleInfo> rootBuildRuleInfos = rootBuildRuleInfos(buildRuleInfos);
+    computeCriticalPathsUsingGraphTraversal(buildRuleInfos);
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "veryconnected", tmp);
+    workspace.setUp();
+    String data = workspace.getFileContents("expected-output.json");
+
+    try (ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
+      ObjectMappers.WRITER.writeValue(
+          bos, constructBuildRuleCriticalPaths(constructCriticalPaths(rootBuildRuleInfos, k)));
+      Assert.assertEquals(data.trim(), bos.toString());
+    }
+  }
+
+  @Test
+  public void testTargetsBuildTimes() throws IOException {
+    final int k = 3;
+    ConcurrentMap<String, BuildRuleInfo> buildRuleInfos = setUpVeryConnectedBuildRuleInfos(k);
+    List<BuildRuleInfo> rootBuildRuleInfos = rootBuildRuleInfos(buildRuleInfos);
+    computeCriticalPathsUsingGraphTraversal(buildRuleInfos);
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "veryconnected", tmp);
+    workspace.setUp();
+    String data = workspace.getFileContents("expected-target-results.json");
+
+    try (ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
+      ObjectMappers.WRITER.writeValue(bos, constructBuildTargetResults(rootBuildRuleInfos));
+      Assert.assertEquals(data.trim(), bos.toString());
     }
   }
 }

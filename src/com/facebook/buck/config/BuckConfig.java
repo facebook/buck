@@ -475,6 +475,11 @@ public class BuckConfig implements ConfigPathGetter {
     return getBooleanValue(LOG_SECTION, "critical_path_analysis_enabled", false);
   }
 
+  public int getCriticalPathCount() {
+    return getInteger(LOG_SECTION, "critical_path_count").orElse(1);
+  }
+
+
   public boolean isBuckConfigLocalWarningEnabled() {
     return getBooleanValue(LOG_SECTION, "buckconfig_local_warning_enabled", false);
   }

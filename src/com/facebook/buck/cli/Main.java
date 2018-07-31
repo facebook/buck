@@ -1776,7 +1776,8 @@ public final class Main {
               invocationInfo,
               projectFilesystem,
               MostExecutors.newSingleThreadExecutor(
-                  new CommandThreadFactory(BuildTargetDurationListener.class.getName()))));
+                  new CommandThreadFactory(BuildTargetDurationListener.class.getName())),
+              buckConfig.getCriticalPathCount()));
     }
     eventListenersBuilder.addAll(commandSpecificEventListeners);
 
