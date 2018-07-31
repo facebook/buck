@@ -58,6 +58,7 @@ import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.coercer.VersionMatchedCollection;
 import com.facebook.buck.rules.macros.LocationMacro;
+import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosUtils;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
@@ -926,5 +927,36 @@ public class PrebuiltCxxLibraryDescriptionTest {
     assertThat(
         Arg.stringify(input.getPreprocessorFlags().get(Type.C), pathResolver),
         contains(pathResolver.getAbsolutePath(genrule.getSourcePathToOutput()).toString()));
+  }
+
+  @Test
+  public void langPlatformPreprocessorFlags() throws NoSuchBuildTargetException {
+    PrebuiltCxxLibraryBuilder libraryBuilder =
+        new PrebuiltCxxLibraryBuilder(TARGET)
+            .setExportedLangPlatformPreprocessorFlags(
+                ImmutableMap.of(
+                    Type.C,
+                    PatternMatchedCollection.<ImmutableList<StringWithMacros>>builder()
+                        .add(
+                            Pattern.compile(
+                                CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor().toString(),
+                                Pattern.LITERAL),
+                            ImmutableList.of(StringWithMacrosUtils.format("-expected")))
+                        .add(
+                            Pattern.compile("no such platform", Pattern.LITERAL),
+                            ImmutableList.of(StringWithMacrosUtils.format("-unexpected")))
+                        .build()));
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(libraryBuilder.build());
+    ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
+    PrebuiltCxxLibrary library =
+        (PrebuiltCxxLibrary) libraryBuilder.build(graphBuilder, filesystem, targetGraph);
+    CxxPreprocessorInput input =
+        library.getCxxPreprocessorInput(CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder);
+    assertThat(
+        Arg.stringify(input.getPreprocessorFlags().get(Type.C), pathResolver),
+        contains("-expected"));
   }
 }

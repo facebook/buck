@@ -31,6 +31,7 @@ import com.facebook.buck.rules.coercer.VersionMatchedCollection;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
 import java.util.regex.Pattern;
@@ -168,6 +169,15 @@ public class PrebuiltCxxLibraryBuilder
   public PrebuiltCxxLibraryBuilder setExportedPlatformPreprocessorFlags(
       PatternMatchedCollection<ImmutableList<StringWithMacros>> exportedPlatformPreprocessorFlags) {
     getArgForPopulating().setExportedPlatformPreprocessorFlags(exportedPlatformPreprocessorFlags);
+    return this;
+  }
+
+  public PrebuiltCxxLibraryBuilder setExportedLangPlatformPreprocessorFlags(
+      ImmutableMap<
+              AbstractCxxSource.Type, PatternMatchedCollection<ImmutableList<StringWithMacros>>>
+          exportedLangPlatformPreprocessorFlags) {
+    getArgForPopulating()
+        .setExportedLangPlatformPreprocessorFlags(exportedLangPlatformPreprocessorFlags);
     return this;
   }
 }

@@ -449,7 +449,7 @@ public class PrebuiltCxxLibraryDescription
                     args.getExportedPreprocessorFlags(),
                     args.getExportedPlatformPreprocessorFlags(),
                     args.getExportedLangPreprocessorFlags(),
-                    ImmutableMap.of(),
+                    args.getExportedLangPlatformPreprocessorFlags(),
                     cxxPlatform),
                 flag ->
                     CxxDescriptionEnhancer.toStringWithMacrosArgs(
@@ -899,6 +899,9 @@ public class PrebuiltCxxLibraryDescription
 
     ImmutableMap<CxxSource.Type, ImmutableList<StringWithMacros>>
         getExportedLangPreprocessorFlags();
+
+    ImmutableMap<CxxSource.Type, PatternMatchedCollection<ImmutableList<StringWithMacros>>>
+        getExportedLangPlatformPreprocessorFlags();
 
     ImmutableList<String> getExportedLinkerFlags();
 
