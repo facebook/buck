@@ -1,3 +1,0 @@
-import ext
-
-print "hello"

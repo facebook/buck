@@ -1,6 +1,0 @@
-cxx_binary(
-    name = "bin2",
-    srcs = ["src/bin2/bin2.c"],
-    headers = ["headers/bin2/bin2.h"],
-    include_dirs = ["headers/bin2"],
-)

@@ -144,8 +144,6 @@ public interface CxxConstructorArg
 
   Optional<Linker.CxxRuntimeType> getCxxRuntimeType();
 
-  ImmutableList<String> getIncludeDirs();
-
   ImmutableMap<String, Flavor> getDefaults();
 
   @Override

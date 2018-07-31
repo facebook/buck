@@ -536,8 +536,6 @@ public class CxxDescriptionEnhancer {
       ImmutableList<HeaderSymlinkTree> headerSymlinkTrees,
       ImmutableSet<FrameworkPath> frameworks,
       Iterable<CxxPreprocessorInput> cxxPreprocessorInputFromDeps,
-      ImmutableList<String> includeDirs,
-      Optional<SymlinkTree> symlinkTree,
       ImmutableSortedSet<SourcePath> rawHeaders) {
 
     // Add the private includes of any rules which this rule depends on, and which list this rule as
@@ -577,16 +575,6 @@ public class CxxDescriptionEnhancer {
 
     CxxPreprocessorInput.Builder builder = CxxPreprocessorInput.builder();
     builder.putAllPreprocessorFlags(preprocessorFlags);
-
-    // headers from #sandbox are put before #private-headers and #headers on purpose
-    // this is the only way to control windows behavior
-    if (symlinkTree.isPresent()) {
-      for (String includeDir : includeDirs) {
-        builder.addIncludes(
-            CxxSandboxInclude.from(
-                symlinkTree.get(), includeDir, CxxPreprocessables.IncludeType.LOCAL));
-      }
-    }
 
     if (!rawHeaders.isEmpty()) {
       builder.addIncludes(CxxRawHeaders.of(rawHeaders));
@@ -858,7 +846,6 @@ public class CxxDescriptionEnhancer {
         args.getLinkerExtraOutputs(),
         args.getPlatformLinkerFlags(),
         args.getCxxRuntimeType(),
-        args.getIncludeDirs(),
         args.getRawHeaders());
   }
 
@@ -895,7 +882,6 @@ public class CxxDescriptionEnhancer {
       ImmutableList<String> linkerExtraOutputs,
       PatternMatchedCollection<ImmutableList<StringWithMacros>> platformLinkerFlags,
       Optional<CxxRuntimeType> cxxRuntimeType,
-      ImmutableList<String> includeDirs,
       ImmutableSortedSet<SourcePath> rawHeaders) {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(ruleFinder);
@@ -955,8 +941,6 @@ public class CxxDescriptionEnhancer {
                 RichStream.from(deps)
                     .filter(CxxPreprocessorDep.class::isInstance)
                     .toImmutableList()),
-            includeDirs,
-            sandboxTree,
             rawHeaders);
 
     ImmutableListMultimap.Builder<CxxSource.Type, Arg> allCompilerFlagsBuilder =

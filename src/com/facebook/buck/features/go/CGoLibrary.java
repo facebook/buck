@@ -318,7 +318,6 @@ public class CGoLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps {
             args.getLinkerExtraOutputs(),
             args.getPlatformLinkerFlags(),
             Optional.empty(),
-            args.getIncludeDirs(),
             args.getRawHeaders());
 
     return cxxLinkAndCompileRules.getCxxLink();

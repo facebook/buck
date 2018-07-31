@@ -1,3 +1,0 @@
-char* hello() {
-  return "hello";
-}

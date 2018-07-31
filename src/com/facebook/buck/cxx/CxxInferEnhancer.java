@@ -283,8 +283,7 @@ public final class CxxInferEnhancer {
       CellPathResolver cellRoots,
       CxxPlatform cxxPlatform,
       CxxBinaryDescription.CommonArg args,
-      HeaderSymlinkTree headerSymlinkTree,
-      Optional<SymlinkTree> sandboxTree) {
+      HeaderSymlinkTree headerSymlinkTree) {
     ImmutableSet<BuildRule> deps = args.getCxxDeps().get(graphBuilder, cxxPlatform);
     return CxxDescriptionEnhancer.collectCxxPreprocessorInput(
         target,
@@ -308,8 +307,6 @@ public final class CxxInferEnhancer {
             cxxPlatform,
             graphBuilder,
             RichStream.from(deps).filter(CxxPreprocessorDep.class::isInstance).toImmutableList()),
-        args.getIncludeDirs(),
-        sandboxTree,
         args.getRawHeaders());
   }
 
@@ -363,8 +360,7 @@ public final class CxxInferEnhancer {
               cellRoots,
               cxxPlatform,
               (CxxBinaryDescription.CommonArg) args,
-              headerSymlinkTree,
-              sandboxTree);
+              headerSymlinkTree);
     } else if (args instanceof CxxLibraryDescription.CommonArg) {
       preprocessorInputs =
           CxxLibraryDescription.getPreprocessorInputsForBuildingLibrarySources(
@@ -376,8 +372,7 @@ public final class CxxInferEnhancer {
               cxxPlatform,
               args.getCxxDeps().get(graphBuilder, cxxPlatform),
               CxxLibraryDescription.TransitiveCxxPreprocessorInputFunction.fromLibraryRule(),
-              ImmutableList.of(headerSymlinkTree),
-              sandboxTree);
+              ImmutableList.of(headerSymlinkTree));
     } else {
       throw new IllegalStateException("Only Binary and Library args supported.");
     }

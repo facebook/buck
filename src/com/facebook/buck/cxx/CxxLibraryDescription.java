@@ -33,7 +33,6 @@ import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
-import com.facebook.buck.core.rules.impl.SymlinkTree;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
@@ -163,8 +162,7 @@ public class CxxLibraryDescription
       CxxPlatform cxxPlatform,
       ImmutableSet<BuildRule> deps,
       TransitiveCxxPreprocessorInputFunction transitivePreprocessorInputs,
-      ImmutableList<HeaderSymlinkTree> headerSymlinkTrees,
-      Optional<SymlinkTree> sandboxTree) {
+      ImmutableList<HeaderSymlinkTree> headerSymlinkTrees) {
     return CxxDescriptionEnhancer.collectCxxPreprocessorInput(
         target,
         cxxPlatform,
@@ -195,8 +193,6 @@ public class CxxLibraryDescription
                         ? CxxDeps.of()
                         : args.getPrivateCxxDeps()))
             .toOnceIterable(),
-        args.getIncludeDirs(),
-        sandboxTree,
         args.getRawHeaders());
   }
 

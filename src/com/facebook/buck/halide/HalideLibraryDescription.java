@@ -131,7 +131,6 @@ public class HalideLibraryDescription
       ImmutableMap<CxxSource.Type, ImmutableList<StringWithMacros>> langCompilerFlags,
       ImmutableList<StringWithMacros> linkerFlags,
       PatternMatchedCollection<ImmutableList<StringWithMacros>> platformLinkerFlags,
-      ImmutableList<String> includeDirs,
       ImmutableSortedSet<SourcePath> rawHeaders) {
 
     Optional<StripStyle> flavoredStripStyle = StripStyle.FLAVOR_DOMAIN.getValue(buildTarget);
@@ -183,7 +182,6 @@ public class HalideLibraryDescription
             ImmutableList.of(),
             platformLinkerFlags,
             Optional.empty(),
-            includeDirs,
             rawHeaders);
 
     buildTarget = CxxStrip.restoreStripStyleFlavorInTarget(buildTarget, flavoredStripStyle);
@@ -343,7 +341,6 @@ public class HalideLibraryDescription
           args.getLangCompilerFlags(),
           args.getLinkerFlags(),
           args.getPlatformLinkerFlags(),
-          args.getIncludeDirs(),
           args.getRawHeaders());
     } else if (flavors.contains(CxxDescriptionEnhancer.STATIC_FLAVOR)
         || flavors.contains(CxxDescriptionEnhancer.STATIC_PIC_FLAVOR)) {

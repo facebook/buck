@@ -16,7 +16,6 @@
 
 package com.facebook.buck.features.lua;
 
-import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
@@ -294,21 +293,6 @@ public class LuaBinaryIntegrationTest {
         workspace.getFileContents(
             workspace.buildAndReturnOutput("-c", "lua.package_style=inplace", "//:simple"));
     assertTrue(inplaceFirst.equals(inplaceSecond));
-  }
-
-  @Test
-  public void cxxLuaExtensionWithIncludeDirs() throws IOException {
-    assumeTrue("", sandboxSources && starterType == LuaBinaryDescription.StarterType.NATIVE);
-    workspace.runBuckBuild("//with_includes:native_with_extension").assertSuccess();
-  }
-
-  @Test
-  public void cxxLuaExtensionWithoutIncludeDirs() throws IOException {
-    assumeTrue("", sandboxSources && starterType == LuaBinaryDescription.StarterType.NATIVE);
-    workspace.replaceFileContents("with_includes/BUCK", "include_dirs", "#");
-    ProcessResult luaBinaryResult = workspace.runBuckBuild("//with_includes:native_with_extension");
-    luaBinaryResult.assertFailure();
-    assertThat(luaBinaryResult.getStderr(), containsString("extension.h"));
   }
 
   @Test

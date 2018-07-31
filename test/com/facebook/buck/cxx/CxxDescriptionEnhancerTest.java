@@ -41,7 +41,6 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import java.nio.file.Paths;
 import java.util.HashSet;
-import java.util.Optional;
 import java.util.Set;
 import org.hamcrest.Matchers;
 import org.junit.Test;
@@ -84,8 +83,6 @@ public class CxxDescriptionEnhancerTest {
             ImmutableSet.of(),
             CxxPreprocessables.getTransitiveCxxPreprocessorInput(
                 CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder, deps),
-            ImmutableList.of(),
-            Optional.empty(),
             ImmutableSortedSet.of());
 
     Set<SourcePath> roots = new HashSet<>();
@@ -155,8 +152,6 @@ public class CxxDescriptionEnhancerTest {
             ImmutableSet.of(),
             CxxPreprocessables.getTransitiveCxxPreprocessorInput(
                 CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder, deps),
-            ImmutableList.of(),
-            Optional.empty(),
             ImmutableSortedSet.of());
 
     Set<SourcePath> roots = new HashSet<>();
@@ -212,8 +207,6 @@ public class CxxDescriptionEnhancerTest {
             ImmutableSet.of(),
             CxxPreprocessables.getTransitiveCxxPreprocessorInput(
                 CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder, deps),
-            ImmutableList.of(),
-            Optional.empty(),
             ImmutableSortedSet.of());
 
     Set<SourcePath> roots = new HashSet<>();

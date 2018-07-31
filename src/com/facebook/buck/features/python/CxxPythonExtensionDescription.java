@@ -211,8 +211,6 @@ public class CxxPythonExtensionDescription
             ImmutableList.of(headerSymlinkTree),
             ImmutableSet.of(),
             CxxPreprocessables.getTransitiveCxxPreprocessorInput(cxxPlatform, graphBuilder, deps),
-            args.getIncludeDirs(),
-            sandboxTree,
             args.getRawHeaders());
 
     // Generate rule to build the object files.

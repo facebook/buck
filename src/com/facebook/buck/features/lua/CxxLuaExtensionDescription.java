@@ -173,8 +173,6 @@ public class CxxLuaExtensionDescription
                     ImmutableSet.of(),
                     CxxPreprocessables.getTransitiveCxxPreprocessorInput(
                         cxxPlatform, graphBuilder, deps),
-                    args.getIncludeDirs(),
-                    sandboxTree,
                     args.getRawHeaders()))
             .build();
 
