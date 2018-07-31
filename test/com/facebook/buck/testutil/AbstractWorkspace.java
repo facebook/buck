@@ -90,6 +90,7 @@ public abstract class AbstractWorkspace {
 
   protected static final String FIXTURE_SUFFIX = "fixture";
   protected static final String EXPECTED_SUFFIX = "expected";
+  protected static final String SKIP_SUFFIX = "win.expected";
 
   protected Path destPath;
   private final Map<String, Map<String, String>> localConfigs = new HashMap<>();

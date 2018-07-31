@@ -1,5 +1,4 @@
 * text=auto
 *.bat eol=crlf
-test/com/facebook/buck/cli/testdata/build_report/expected_failed_build_report.win.json eol=crlf
-test/com/facebook/buck/cli/testdata/build_report/expected_successful_build_report.win.json eol=crlf
-test/com/facebook/buck/cli/testdata/keep_going/expected_build_report.win.json eol=crlf
+*.win.json eol=crlf
+*.json.win.expected=crlf

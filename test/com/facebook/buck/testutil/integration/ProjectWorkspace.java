@@ -711,7 +711,7 @@ public class ProjectWorkspace extends AbstractWorkspace {
         MoreStrings.withoutSuffix(
             templatePath.relativize(expectedFile).toString(), EXPECTED_SUFFIX);
 
-    String expectedFileContent = new String(Files.readAllBytes(expectedFile), UTF_8);
+    String expectedFileContent = getFileContents(expectedFile);
     String observedFileContent = new String(Files.readAllBytes(observedFile), UTF_8);
     // It is possible, on Windows, to have Git keep "\n"-style newlines, or convert them to
     // "\r\n"-style newlines.  Support both ways by normalizing to "\n"-style newlines.
@@ -741,7 +741,7 @@ public class ProjectWorkspace extends AbstractWorkspace {
           public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
               throws IOException {
             String fileName = file.getFileName().toString();
-            if (fileName.endsWith(EXPECTED_SUFFIX)) {
+            if (fileName.endsWith(EXPECTED_SUFFIX) && !fileName.endsWith(SKIP_SUFFIX)) {
               // Get File for the file that should be written, but without the ".expected" suffix.
               Path generatedFileWithSuffix =
                   destinationSubdirectory.resolve(templateSubdirectory.relativize(file));
