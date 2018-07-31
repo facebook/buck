@@ -36,9 +36,14 @@ import com.facebook.buck.cxx.CxxLink;
 import com.facebook.buck.cxx.CxxLinkAndCompileRules;
 import com.facebook.buck.cxx.CxxLinkOptions;
 import com.facebook.buck.cxx.CxxLinkableEnhancer;
+import com.facebook.buck.cxx.CxxPreprocessables;
+import com.facebook.buck.cxx.CxxPreprocessorInput;
 import com.facebook.buck.cxx.CxxSource;
+import com.facebook.buck.cxx.CxxSymlinkTreeHeaders;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.HeaderSymlinkTree;
+import com.facebook.buck.cxx.toolchain.HeaderVisibility;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
@@ -51,7 +56,10 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Streams;
 import java.nio.file.Path;
+import java.util.Collection;
+import java.util.Map.Entry;
 import java.util.Optional;
 
 /**
@@ -100,11 +108,11 @@ public class CGoLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps {
       throw new HumanReadableException("CGoLibrary currently supports only static_pic link style.");
     }
 
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     CxxDeps allDeps =
         CxxDeps.builder().addDeps(cxxDeps).addPlatformDeps(args.getPlatformDeps()).build();
 
     // generate C sources with cgo tool (go build writes c files to _obj dir)
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     ImmutableMap<Path, SourcePath> headers =
         CxxDescriptionEnhancer.parseHeaders(
             buildTarget,
@@ -113,6 +121,16 @@ public class CGoLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps {
             pathResolver,
             Optional.of(platform.getCxxPlatform()),
             args);
+
+    HeaderSymlinkTree headerSymlinkTree =
+        getHeaderSymlinkTree(
+            buildTarget,
+            projectFilesystem,
+            ruleFinder,
+            graphBuilder,
+            platform.getCxxPlatform(),
+            cxxDeps,
+            headers);
 
     CGoGenSource genSource =
         (CGoGenSource)
@@ -128,6 +146,7 @@ public class CGoLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps {
                             .stream()
                             .map(x -> x.getSourcePath())
                             .collect(ImmutableSet.toImmutableSet()),
+                        headerSymlinkTree,
                         cgo,
                         args.getCgoCompilerFlags(),
                         platform));
@@ -259,6 +278,51 @@ public class CGoLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps {
                     .build(),
                 Preconditions.checkNotNull(cgoAllBin.getSourcePathToOutput()),
                 Preconditions.checkNotNull(allDeps.get(graphBuilder, platform.getCxxPlatform()))));
+  }
+
+  private static HeaderSymlinkTree getHeaderSymlinkTree(
+      BuildTarget buildTarget,
+      ProjectFilesystem projectFilesystem,
+      SourcePathRuleFinder ruleFinder,
+      ActionGraphBuilder graphBuilder,
+      CxxPlatform cxxPlatform,
+      Iterable<BuildTarget> cxxDeps,
+      ImmutableMap<Path, SourcePath> headers) {
+
+    ImmutableList<BuildRule> cxxDepsRules =
+        Streams.stream(cxxDeps)
+            .map(graphBuilder::requireRule)
+            .collect(ImmutableList.toImmutableList());
+
+    Collection<CxxPreprocessorInput> cxxPreprocessorInputs =
+        CxxPreprocessables.getTransitiveCxxPreprocessorInput(
+            cxxPlatform, graphBuilder, cxxDepsRules);
+
+    ImmutableMap.Builder<Path, SourcePath> allHeaders = ImmutableMap.builder();
+
+    // scan CxxDeps for headers and add them to allHeaders
+    ImmutableMap<Path, SourcePath> cxxDepsHeaders =
+        cxxPreprocessorInputs
+            .stream()
+            .flatMap(input -> input.getIncludes().stream())
+            .filter(header -> header instanceof CxxSymlinkTreeHeaders)
+            .flatMap(
+                header -> ((CxxSymlinkTreeHeaders) header).getNameToPathMap().entrySet().stream())
+            .collect(ImmutableMap.toImmutableMap(Entry::getKey, Entry::getValue));
+    allHeaders.putAll(cxxDepsHeaders);
+
+    // add headers defined within the cgo_library rule
+    allHeaders.putAll(headers);
+
+    return CxxDescriptionEnhancer.createHeaderSymlinkTree(
+        buildTarget,
+        projectFilesystem,
+        ruleFinder,
+        graphBuilder,
+        cxxPlatform,
+        allHeaders.build(),
+        HeaderVisibility.PUBLIC,
+        true);
   }
 
   private static CxxLink nativeBinCompilation(

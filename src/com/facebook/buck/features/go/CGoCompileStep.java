@@ -16,38 +16,38 @@
 
 package com.facebook.buck.features.go;
 
-import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
+import java.util.stream.Collectors;
 
 public class CGoCompileStep extends ShellStep {
 
-  private final BuildTarget buildTarget;
   private final ImmutableMap<String, String> environment;
   private final ImmutableList<String> cgoCommandPrefix;
   private final ImmutableList<String> cgoCompilerFlags;
   private final ImmutableList<Path> srcs;
+  private final ImmutableList<Path> includeDirs;
   private final GoPlatform platform;
   private final Path outputDir;
 
   public CGoCompileStep(
-      BuildTarget buildTarget,
       Path workingDirectory,
       ImmutableMap<String, String> environment,
       ImmutableList<String> cgoCommandPrefix,
       ImmutableList<String> cgoCompilerFlags,
       ImmutableList<Path> srcs,
+      ImmutableList<Path> includeDirs,
       GoPlatform platform,
       Path outputDir) {
     super(workingDirectory);
-    this.buildTarget = buildTarget;
     this.environment = environment;
     this.cgoCommandPrefix = cgoCommandPrefix;
     this.cgoCompilerFlags = cgoCompilerFlags;
     this.srcs = srcs;
+    this.includeDirs = includeDirs;
     this.outputDir = outputDir;
     this.platform = platform;
   }
@@ -61,7 +61,7 @@ public class CGoCompileStep extends ShellStep {
         .add("-objdir", outputDir.toString())
         .addAll(cgoCompilerFlags)
         .add("--")
-        .add("-I" + buildTarget.getBasePath().toString())
+        .addAll(includeDirs.stream().map(dir -> "-I" + dir.toString()).collect(Collectors.toSet()))
         .addAll(srcs.stream().map(Object::toString).iterator())
         .build();
   }
