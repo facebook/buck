@@ -240,7 +240,6 @@ public class CxxPreprocessAndCompileTest {
                         DEFAULT_PREPROCESSOR,
                         PreprocessorFlags.builder().build(),
                         DEFAULT_FRAMEWORK_PATH_SEARCH_PATH_FUNCTION,
-                        Optional.empty(),
                         /* leadingIncludePaths */ Optional.empty(),
                         Optional.of(
                             new FakeBuildRule(target.withFlavors(InternalFlavor.of("deps")))),
@@ -373,7 +372,6 @@ public class CxxPreprocessAndCompileTest {
                         DEFAULT_PREPROCESSOR,
                         flags,
                         DEFAULT_FRAMEWORK_PATH_SEARCH_PATH_FUNCTION,
-                        Optional.empty(),
                         /* leadingIncludePaths */ Optional.empty(),
                         Optional.of(
                             new FakeBuildRule(target.withFlavors(InternalFlavor.of("deps")))),
@@ -478,7 +476,6 @@ public class CxxPreprocessAndCompileTest {
                 new GccPreprocessor(preprocessorTool),
                 PreprocessorFlags.builder().build(),
                 DEFAULT_FRAMEWORK_PATH_SEARCH_PATH_FUNCTION,
-                Optional.empty(),
                 /* leadingIncludePaths */ Optional.empty(),
                 Optional.of(new FakeBuildRule(target.withFlavors(InternalFlavor.of("deps")))),
                 ImmutableSortedSet.of()),
@@ -567,7 +564,6 @@ public class CxxPreprocessAndCompileTest {
                 PREPROCESSOR_WITH_COLOR_SUPPORT,
                 PreprocessorFlags.builder().build(),
                 DEFAULT_FRAMEWORK_PATH_SEARCH_PATH_FUNCTION,
-                Optional.empty(),
                 /* leadingIncludePaths */ Optional.empty(),
                 Optional.of(new FakeBuildRule(target.withFlavors(InternalFlavor.of("deps")))),
                 ImmutableSortedSet.of()),

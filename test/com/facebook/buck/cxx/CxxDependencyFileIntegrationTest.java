@@ -72,7 +72,6 @@ public class CxxDependencyFileIntegrationTest {
             + "  cxxflags = -Wall -Werror\n";
     String windows_config =
         "[cxx]\n"
-            + "  sandbox_sources = true\n"
             + "  cc=\"C:/Program Files (x86)/Microsoft Visual Studio 14.0/VC/bin/amd64/cl.exe\"\n"
             + "  cc_type=windows\n"
             + "  cpp=\"C:/Program Files (x86)/Microsoft Visual Studio 14.0/VC/bin/amd64/cl.exe\"\n"

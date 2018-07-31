@@ -89,7 +89,6 @@ public class CxxCollectAndLogInferDependenciesStepTest {
             new GccPreprocessor(preprocessorTool),
             PreprocessorFlags.builder().build(),
             defaultFrameworkPathSearchPathFunction,
-            Optional.empty(),
             /* leadingIncludePaths */ Optional.empty(),
             Optional.of(new FakeBuildRule(buildTarget.withFlavors(InternalFlavor.of("deps")))),
             ImmutableSortedSet.of());

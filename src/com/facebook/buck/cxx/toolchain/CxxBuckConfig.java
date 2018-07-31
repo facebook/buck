@@ -70,7 +70,6 @@ public class CxxBuckConfig {
   private static final String CACHE_LINKS = "cache_links";
   private static final String CACHE_BINARIES = "cache_binaries";
   private static final String PCH_ENABLED = "pch_enabled";
-  private static final String SANDBOX_SOURCES = "sandbox_sources";
   private static final String ARCHIVE_CONTENTS = "archive_contents";
   private static final String DEBUG_PATH_SANITIZER_LIMIT = "debug_path_sanitizer_limit";
   private static final String SHOULD_REMAP_HOST_PLATFORM = "should_remap_host_platform";
@@ -407,10 +406,6 @@ public class CxxBuckConfig {
 
   public boolean isPCHEnabled() {
     return delegate.getBooleanValue(cxxSection, PCH_ENABLED, true);
-  }
-
-  public boolean sandboxSources() {
-    return delegate.getBooleanValue(cxxSection, SANDBOX_SOURCES, false);
   }
 
   public ArchiveContents getArchiveContents() {

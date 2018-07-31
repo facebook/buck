@@ -561,10 +561,6 @@ public class ProjectWorkspace extends AbstractWorkspace {
     addBuckConfigLocalOption("cache", "mode", "dir");
   }
 
-  public void setupCxxSandboxing(boolean sandboxSources) throws IOException {
-    addBuckConfigLocalOption("cxx", "sandbox_sources", Boolean.toString(sandboxSources));
-  }
-
   public void disableThreadLimitOverride() throws IOException {
     removeBuckConfigLocalOption("build", "threads");
   }

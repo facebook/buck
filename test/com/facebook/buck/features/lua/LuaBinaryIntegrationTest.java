@@ -78,21 +78,17 @@ public class LuaBinaryIntegrationTest {
   private Path lua;
   private boolean luaDevel;
 
-  @Parameterized.Parameters(name = "{0} {1} sandbox_sources={2}")
+  @Parameterized.Parameters(name = "{0} {1}")
   public static Collection<Object[]> data() {
     return ParameterizedTests.getPermutations(
         Arrays.asList(LuaBinaryDescription.StarterType.values()),
-        Arrays.asList(NativeLinkStrategy.values()),
-        ImmutableList.of(true, false));
+        Arrays.asList(NativeLinkStrategy.values()));
   }
 
   @Parameterized.Parameter public LuaBinaryDescription.StarterType starterType;
 
   @Parameterized.Parameter(value = 1)
   public NativeLinkStrategy nativeLinkStrategy;
-
-  @Parameterized.Parameter(value = 2)
-  public boolean sandboxSources;
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
@@ -146,9 +142,7 @@ public class LuaBinaryIntegrationTest {
                 ImmutableList.of(
                     "[lua]",
                     "  starter_type = " + starterType.toString().toLowerCase(),
-                    "  native_link_strategy = " + nativeLinkStrategy.toString().toLowerCase(),
-                    "[cxx]",
-                    "  sandbox_sources =" + sandboxSources)),
+                    "  native_link_strategy = " + nativeLinkStrategy.toString().toLowerCase())),
         ".buckconfig");
     LuaPlatform platform =
         getLuaBuckConfig()

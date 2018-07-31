@@ -27,9 +27,7 @@ import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.attr.HasCustomDepsLogic;
 import com.facebook.buck.core.rules.attr.SupportsDependencyFileRuleKey;
 import com.facebook.buck.core.rules.common.BuildableSupport;
-import com.facebook.buck.core.rules.impl.SymlinkTree;
 import com.facebook.buck.core.rules.modern.annotations.CustomClassBehavior;
-import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
@@ -84,8 +82,6 @@ final class PreprocessorDelegate implements RuleKeyAppendable, HasCustomDepsLogi
   // Fields that are not added to the rule key.
   private final PathSourcePath workingDir;
 
-  private final Optional<SymlinkTree> sandbox;
-
   /**
    * If present, these paths will be added first (prior to the current rule's list of paths) when
    * building the list of compiler flags, in {@link #getFlagsWithSearchPaths(Optional,
@@ -108,7 +104,6 @@ final class PreprocessorDelegate implements RuleKeyAppendable, HasCustomDepsLogi
       Preprocessor preprocessor,
       PreprocessorFlags preprocessorFlags,
       RuleKeyAppendableFunction<FrameworkPath, Path> frameworkPathSearchPathFunction,
-      Optional<SymlinkTree> sandbox,
       Optional<CxxIncludePaths> leadingIncludePaths,
       Optional<BuildRule> aggregatedDeps,
       ImmutableSortedSet<String> conflictingHeaderBasenameWhitelist) {
@@ -118,7 +113,6 @@ final class PreprocessorDelegate implements RuleKeyAppendable, HasCustomDepsLogi
     this.workingDir = workingDir;
     this.minLengthPathRepresentation = PathShortener.byRelativizingToWorkingDir(workingDir);
     this.frameworkPathSearchPathFunction = frameworkPathSearchPathFunction;
-    this.sandbox = sandbox;
     this.leadingIncludePaths = leadingIncludePaths;
     this.aggregatedDeps = aggregatedDeps;
     this.conflictingHeadersBasenameWhitelist = conflictingHeaderBasenameWhitelist;
@@ -131,7 +125,6 @@ final class PreprocessorDelegate implements RuleKeyAppendable, HasCustomDepsLogi
         this.preprocessor,
         this.preprocessorFlags,
         this.frameworkPathSearchPathFunction,
-        this.sandbox,
         Optional.of(leadingIncludePaths),
         this.aggregatedDeps,
         conflictingHeadersBasenameWhitelist);
@@ -159,13 +152,6 @@ final class PreprocessorDelegate implements RuleKeyAppendable, HasCustomDepsLogi
             if (preprocessorFlags.getPrefixHeader().isPresent()) {
               SourcePath headerPath = preprocessorFlags.getPrefixHeader().get();
               builder.addPrefixHeader(headerPath);
-            }
-            if (sandbox.isPresent()) {
-              ExplicitBuildTargetSourcePath root =
-                  ExplicitBuildTargetSourcePath.of(
-                      sandbox.get().getBuildTarget(),
-                      sandbox.get().getProjectFilesystem().relativize(sandbox.get().getRoot()));
-              builder.addSymlinkTree(root, sandbox.get().getLinks());
             }
             return builder.build();
           }
@@ -344,15 +330,7 @@ final class PreprocessorDelegate implements RuleKeyAppendable, HasCustomDepsLogi
   }
 
   @Override
-  public void appendToRuleKey(RuleKeyObjectSink sink) {
-    if (sandbox.isPresent()) {
-      ImmutableMap<Path, SourcePath> links = sandbox.get().getLinks();
-      for (Path path : ImmutableSortedSet.copyOf(links.keySet())) {
-        SourcePath source = links.get(path);
-        sink.setReflectively("sandbox(" + path + ")", source);
-      }
-    }
-  }
+  public void appendToRuleKey(RuleKeyObjectSink sink) {}
 
   @Override
   public Stream<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
@@ -443,7 +421,6 @@ final class PreprocessorDelegate implements RuleKeyAppendable, HasCustomDepsLogi
           .forEachThrowing(serializer::visitString);
       Preconditions.checkState(
           !instance.leadingIncludePaths.isPresent(), "leadingIncludePaths is not serializable.");
-      Preconditions.checkState(!instance.sandbox.isPresent(), "sandbox is not serializable.");
     }
 
     @Override
@@ -473,7 +450,6 @@ final class PreprocessorDelegate implements RuleKeyAppendable, HasCustomDepsLogi
           preprocessor,
           preprocessorFlags,
           frameworkPathSearchPathFunction,
-          Optional.empty(),
           Optional.empty(),
           Optional.empty(),
           conflictingHeadersBasenameWhitelist);

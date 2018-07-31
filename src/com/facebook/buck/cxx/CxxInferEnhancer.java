@@ -25,7 +25,6 @@ import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.rules.impl.SymlinkTree;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
@@ -346,10 +345,6 @@ public final class CxxInferEnhancer {
             headers,
             HeaderVisibility.PRIVATE,
             shouldCreateHeadersSymlinks);
-    Optional<SymlinkTree> sandboxTree = Optional.empty();
-    if (cxxBuckConfig.sandboxSources()) {
-      sandboxTree = CxxDescriptionEnhancer.createSandboxTree(target, graphBuilder, cxxPlatform);
-    }
 
     ImmutableList<CxxPreprocessorInput> preprocessorInputs;
 
@@ -399,8 +394,7 @@ public final class CxxInferEnhancer {
                         target, cellRoots, graphBuilder, cxxPlatform, f)),
             args.getPrefixHeader(),
             args.getPrecompiledHeader(),
-            PicType.PDC,
-            sandboxTree);
+            PicType.PDC);
     return factory.requireInferCaptureBuildRules(sources, inferBuckConfig);
   }
 }

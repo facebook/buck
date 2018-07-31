@@ -88,14 +88,6 @@ public class CxxBinaryBuilder
     this(target, CxxPlatformUtils.DEFAULT_PLATFORM, CxxTestUtils.createDefaultPlatforms());
   }
 
-  public CxxBinaryBuilder(BuildTarget target, CxxBuckConfig cxxBuckConfig) {
-    this(
-        target,
-        CxxPlatformUtils.DEFAULT_PLATFORM,
-        CxxTestUtils.createDefaultPlatforms(),
-        cxxBuckConfig);
-  }
-
   public CxxBinaryBuilder setDepQuery(Query depQuery) {
     getArgForPopulating().setDepsQuery(Optional.of(depQuery));
     return this;

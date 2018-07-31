@@ -130,11 +130,6 @@ public class CxxBinaryFactory {
           inferBuckConfig);
     }
 
-    if (flavors.contains(CxxDescriptionEnhancer.SANDBOX_TREE_FLAVOR)) {
-      return CxxDescriptionEnhancer.createSandboxTreeBuildRule(
-          graphBuilder, args, cxxPlatform, target, projectFilesystem);
-    }
-
     CxxLinkAndCompileRules cxxLinkAndCompileRules =
         CxxDescriptionEnhancer.createBuildRulesForCxxBinaryDescriptionArg(
             target,

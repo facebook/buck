@@ -64,8 +64,7 @@ public class AppleLibraryDescriptionTest {
   public void linkerFlagsLocationMacro() {
     assumeThat(Platform.detect(), is(Platform.MACOS));
     BuildTarget sandboxTarget =
-        BuildTargetFactory.newInstance("//:rule")
-            .withFlavors(CxxDescriptionEnhancer.SANDBOX_TREE_FLAVOR, DefaultCxxPlatforms.FLAVOR);
+        BuildTargetFactory.newInstance("//:rule").withFlavors(DefaultCxxPlatforms.FLAVOR);
     ActionGraphBuilder graphBuilder =
         new TestActionGraphBuilder(
             TargetGraphFactory.newInstance(new AppleLibraryBuilder(sandboxTarget).build()));

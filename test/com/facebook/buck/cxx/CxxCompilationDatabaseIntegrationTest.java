@@ -46,7 +46,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -55,19 +54,8 @@ import java.util.stream.Collectors;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 
-@RunWith(Parameterized.class)
 public class CxxCompilationDatabaseIntegrationTest {
-
-  @Parameterized.Parameters(name = "sandbox_sources={0}")
-  public static Collection<Object[]> data() {
-    return ImmutableList.of(new Object[] {false}, new Object[] {true});
-  }
-
-  @Parameterized.Parameter(0)
-  public boolean sandboxSources;
 
   private static final String COMPILER_PATH;
   private static final ImmutableList<String> COMPILER_SPECIFIC_FLAGS =
@@ -99,8 +87,7 @@ public class CxxCompilationDatabaseIntegrationTest {
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "compilation_database", tmp);
     workspace.setUp();
     // cxx_test requires gtest_dep to be set
-    workspace.writeContentsToPath(
-        "[cxx]\ngtest_dep = //:fake-gtest\nsandbox_sources=" + sandboxSources, ".buckconfig");
+    workspace.writeContentsToPath("[cxx]\ngtest_dep = //:fake-gtest", ".buckconfig");
   }
 
   @Test
@@ -137,8 +124,7 @@ public class CxxCompilationDatabaseIntegrationTest {
     Map<String, CxxCompilationDatabaseEntry> fileToEntry =
         CxxCompilationDatabaseUtils.parseCompilationDatabaseJsonFile(compilationDatabase);
     assertEquals(1, fileToEntry.size());
-    String path =
-        sandboxSources ? "buck-out/gen/binary_with_dep#default,sandbox/foo.cpp" : "foo.cpp";
+    String path = "foo.cpp";
     BuildTarget compilationTarget =
         target.withFlavors(
             InternalFlavor.of("default"), InternalFlavor.of("compile-" + sanitize("foo.cpp.o")));
@@ -146,9 +132,6 @@ public class CxxCompilationDatabaseIntegrationTest {
     prefixMap.put(rootPath.toString(), ".");
     if (Platform.detect() == Platform.MACOS) {
       prefixMap.put(libraryExportedHeaderSymlinkTreeFolder + "/", "");
-      if (sandboxSources) {
-        prefixMap.put("buck-out/gen/binary_with_dep#default,sandbox/", "");
-      }
     }
     assertHasEntry(
         fileToEntry,
@@ -216,8 +199,7 @@ public class CxxCompilationDatabaseIntegrationTest {
     Map<String, CxxCompilationDatabaseEntry> fileToEntry =
         CxxCompilationDatabaseUtils.parseCompilationDatabaseJsonFile(compilationDatabase);
     assertEquals(1, fileToEntry.size());
-    String path =
-        sandboxSources ? "buck-out/gen/library_with_header#default,sandbox/bar.cpp" : "bar.cpp";
+    String path = "bar.cpp";
     BuildTarget compilationTarget =
         target.withFlavors(
             InternalFlavor.of("default"),
@@ -227,9 +209,6 @@ public class CxxCompilationDatabaseIntegrationTest {
     if (Platform.detect() == Platform.MACOS) {
       prefixMap.put(headerSymlinkTreeFolder + "/", "");
       prefixMap.put(exportedHeaderSymlinkTreeFolder + "/", "");
-      if (sandboxSources) {
-        prefixMap.put("buck-out/gen/library_with_header#default,sandbox/", "");
-      }
     }
     assertHasEntry(
         fileToEntry,
@@ -287,7 +266,7 @@ public class CxxCompilationDatabaseIntegrationTest {
     Map<String, CxxCompilationDatabaseEntry> fileToEntry =
         CxxCompilationDatabaseUtils.parseCompilationDatabaseJsonFile(compilationDatabase);
     assertEquals(1, fileToEntry.size());
-    String path = sandboxSources ? "buck-out/gen/test#default,sandbox/test.cpp" : "test.cpp";
+    String path = "test.cpp";
     BuildTarget compilationTarget =
         target.withFlavors(
             InternalFlavor.of("default"), InternalFlavor.of("compile-" + sanitize("test.cpp.o")));
@@ -302,10 +281,6 @@ public class CxxCompilationDatabaseIntegrationTest {
             .add(headerSymlinkTreePath(binaryHeaderSymlinkTreeFolder).toString())
             .addAll(getExtraFlagsForHeaderMaps(filesystem))
             .addAll(COMPILER_SPECIFIC_FLAGS)
-            .addAll(
-                sandboxSources && Platform.detect() == Platform.MACOS
-                    ? ImmutableList.of("-fdebug-prefix-map=buck-out/gen/test#default,sandbox/=")
-                    : ImmutableList.of())
             .add("-fdebug-prefix-map=" + rootPath + "=.")
             .addAll(MORE_COMPILER_SPECIFIC_FLAGS)
             .add("-o")
@@ -344,7 +319,7 @@ public class CxxCompilationDatabaseIntegrationTest {
     Map<String, CxxCompilationDatabaseEntry> fileToEntry =
         CxxCompilationDatabaseUtils.parseCompilationDatabaseJsonFile(compilationDatabase);
     assertEquals(1, fileToEntry.size());
-    String path = sandboxSources ? "buck-out/gen/test#default,sandbox/test.cpp" : "test.cpp";
+    String path = "test.cpp";
     BuildTarget compilationTarget =
         target.withFlavors(
             InternalFlavor.of("default"), InternalFlavor.of("compile-" + sanitize("test.cpp.o")));
@@ -359,10 +334,6 @@ public class CxxCompilationDatabaseIntegrationTest {
             .add(headerSymlinkTreePath(binaryHeaderSymlinkTreeFolder).toString())
             .addAll(getExtraFlagsForHeaderMaps(filesystem))
             .addAll(COMPILER_SPECIFIC_FLAGS)
-            .addAll(
-                sandboxSources && Platform.detect() == Platform.MACOS
-                    ? ImmutableList.of("-fdebug-prefix-map=buck-out/gen/test#default,sandbox/=")
-                    : ImmutableList.of())
             .add("-fdebug-prefix-map=" + rootPath + "=.")
             .addAll(MORE_COMPILER_SPECIFIC_FLAGS)
             .add("-o")
@@ -440,8 +411,7 @@ public class CxxCompilationDatabaseIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "compilation_database_with_deps", tmp);
     workspace.setUp();
-    workspace.writeContentsToPath(
-        "[cxx]\ngtest_dep = //:fake-gtest\nsandbox_sources=" + sandboxSources, ".buckconfig");
+    workspace.writeContentsToPath("[cxx]\ngtest_dep = //:fake-gtest", ".buckconfig");
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
 
     // This test only fails if the directory cache is enabled and we don't update

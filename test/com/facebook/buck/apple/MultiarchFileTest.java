@@ -127,11 +127,9 @@ public class MultiarchFileTest {
   public void descriptionWithMultiplePlatformArgsShouldGenerateMultiarchFile() {
     BuildTarget target =
         BuildTargetFactory.newInstance("//foo:thing#iphoneos-i386,iphoneos-x86_64");
-    BuildTarget sandboxTarget =
-        BuildTargetFactory.newInstance("//foo:thing#iphoneos-i386,iphoneos-x86_64,sandbox");
     ActionGraphBuilder graphBuilder =
         new TestActionGraphBuilder(
-            TargetGraphFactory.newInstance(new AppleLibraryBuilder(sandboxTarget).build()));
+            TargetGraphFactory.newInstance(new AppleLibraryBuilder(target).build()));
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
     ProjectFilesystem filesystem = new FakeProjectFilesystem();

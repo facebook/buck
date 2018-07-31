@@ -21,7 +21,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.Flavor;
@@ -42,7 +41,6 @@ import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
-import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.HeaderMode;
@@ -73,41 +71,19 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
-import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ForkJoinPool;
 import java.util.regex.Pattern;
 import org.hamcrest.Matchers;
-import org.junit.Assume;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 
-@RunWith(Parameterized.class)
 public class CxxBinaryDescriptionTest {
 
-  @Parameterized.Parameters(name = "{0}")
-  public static Collection<Object[]> data() {
-    return ImmutableList.of(
-        new Object[] {"sandbox_sources=false"}, new Object[] {"sandbox_sources=true"});
-  }
-
-  private final CxxBuckConfig cxxBuckConfig;
-
-  public CxxBinaryDescriptionTest(String sandboxConfig) {
-    this.cxxBuckConfig =
-        new CxxBuckConfig(FakeBuckConfig.builder().setSections("[cxx]", sandboxConfig).build());
-  }
-
-  private TargetGraph prepopulateWithSandbox(BuildTarget libTarget) {
-    if (cxxBuckConfig.sandboxSources()) {
-      return TargetGraphFactory.newInstance(mkSandboxNode(libTarget));
-    } else {
-      return TargetGraph.EMPTY;
-    }
-  }
+  //  private TargetGraph prepopulateWithSandbox(BuildTarget libTarget) {
+  //      return TargetGraph.EMPTY;
+  //  }
 
   private TargetNode<CxxBinaryDescriptionArg> mkSandboxNode(BuildTarget libTarget) {
     Optional<Map.Entry<Flavor, CxxLibraryDescription.Type>> type =
@@ -116,18 +92,12 @@ public class CxxBinaryDescriptionTest {
     if (type.isPresent()) {
       flavors.remove(type.get().getKey());
     }
-    BuildTarget target =
-        ImmutableBuildTarget.of(
-            libTarget.getUnflavoredBuildTarget(),
-            Sets.union(
-                flavors, ImmutableSet.of(CxxLibraryDescription.Type.SANDBOX_TREE.getFlavor())));
-    return new CxxBinaryBuilder(target, cxxBuckConfig).build();
+    BuildTarget target = ImmutableBuildTarget.of(libTarget.getUnflavoredBuildTarget(), flavors);
+    return new CxxBinaryBuilder(target).build();
   }
 
   @Test
   public void createBuildRule() {
-    Assume.assumeFalse("this test is not for sandboxing", cxxBuckConfig.sandboxSources());
-
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     CxxPlatform cxxPlatform = CxxPlatformUtils.DEFAULT_PLATFORM;
 
@@ -162,7 +132,7 @@ public class CxxBinaryDescriptionTest {
     // Setup the build params we'll pass to description when generating the build rules.
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     CxxBinaryBuilder cxxBinaryBuilder =
-        new CxxBinaryBuilder(target, cxxBuckConfig)
+        new CxxBinaryBuilder(target)
             .setSrcs(
                 ImmutableSortedSet.of(
                     SourceWithFlags.of(FakeSourcePath.of("test/bar.cpp")),
@@ -251,9 +221,9 @@ public class CxxBinaryDescriptionTest {
   @Test
   public void staticPicLinkStyle() {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
-    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(prepopulateWithSandbox(target));
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(TargetGraph.EMPTY);
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    new CxxBinaryBuilder(target, cxxBuckConfig)
+    new CxxBinaryBuilder(target)
         .setSrcs(
             ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of(filesystem, "test.cpp"))))
         .build(graphBuilder, filesystem);
@@ -264,7 +234,7 @@ public class CxxBinaryDescriptionTest {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
 
     BuildTarget leafBinaryTarget = BuildTargetFactory.newInstance("//:dep");
-    CxxBinaryBuilder leafCxxBinaryBuilder = new CxxBinaryBuilder(leafBinaryTarget, cxxBuckConfig);
+    CxxBinaryBuilder leafCxxBinaryBuilder = new CxxBinaryBuilder(leafBinaryTarget);
 
     BuildTarget libraryTarget = BuildTargetFactory.newInstance("//:lib");
     CxxLibraryBuilder cxxLibraryBuilder =
@@ -272,8 +242,7 @@ public class CxxBinaryDescriptionTest {
 
     BuildTarget topLevelBinaryTarget = BuildTargetFactory.newInstance("//:bin");
     CxxBinaryBuilder topLevelCxxBinaryBuilder =
-        new CxxBinaryBuilder(topLevelBinaryTarget, cxxBuckConfig)
-            .setDeps(ImmutableSortedSet.of(libraryTarget));
+        new CxxBinaryBuilder(topLevelBinaryTarget).setDeps(ImmutableSortedSet.of(libraryTarget));
 
     ActionGraphBuilder graphBuilder =
         new TestActionGraphBuilder(
@@ -293,7 +262,7 @@ public class CxxBinaryDescriptionTest {
   @Test
   public void linkerFlagsLocationMacro() {
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
-    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(prepopulateWithSandbox(target));
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
     Genrule dep =
@@ -301,7 +270,7 @@ public class CxxBinaryDescriptionTest {
             .setOut("out")
             .build(graphBuilder);
     CxxBinaryBuilder builder =
-        new CxxBinaryBuilder(target, cxxBuckConfig)
+        new CxxBinaryBuilder(target)
             .setLinkerFlags(
                 ImmutableList.of(
                     StringWithMacrosUtils.format(
@@ -318,7 +287,7 @@ public class CxxBinaryDescriptionTest {
   @Test
   public void platformLinkerFlagsLocationMacroWithMatch() {
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
-    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(prepopulateWithSandbox(target));
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
     Genrule dep =
@@ -326,7 +295,7 @@ public class CxxBinaryDescriptionTest {
             .setOut("out")
             .build(graphBuilder);
     CxxBinaryBuilder builder =
-        new CxxBinaryBuilder(target, cxxBuckConfig)
+        new CxxBinaryBuilder(target)
             .setPlatformLinkerFlags(
                 new PatternMatchedCollection.Builder<ImmutableList<StringWithMacros>>()
                     .add(
@@ -349,7 +318,7 @@ public class CxxBinaryDescriptionTest {
   @Test
   public void platformLinkerFlagsLocationMacroWithoutMatch() {
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
-    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(prepopulateWithSandbox(target));
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
     Genrule dep =
@@ -357,7 +326,7 @@ public class CxxBinaryDescriptionTest {
             .setOut("out")
             .build(graphBuilder);
     CxxBinaryBuilder builder =
-        new CxxBinaryBuilder(target, cxxBuckConfig)
+        new CxxBinaryBuilder(target)
             .setPlatformLinkerFlags(
                 new PatternMatchedCollection.Builder<ImmutableList<StringWithMacros>>()
                     .add(
@@ -385,8 +354,7 @@ public class CxxBinaryDescriptionTest {
     CxxBinaryBuilder binaryBuilder =
         new CxxBinaryBuilder(
             BuildTargetFactory.newInstance("//:foo")
-                .withFlavors(platform.getFlavor(), InternalFlavor.of("shared")),
-            cxxBuckConfig);
+                .withFlavors(platform.getFlavor(), InternalFlavor.of("shared")));
     binaryBuilder
         .setLibraries(
             ImmutableSortedSet.of(
@@ -415,8 +383,7 @@ public class CxxBinaryDescriptionTest {
                 .withFlavors(
                     platform.getFlavor(),
                     InternalFlavor.of("shared"),
-                    StripStyle.ALL_SYMBOLS.getFlavor()),
-            cxxBuckConfig);
+                    StripStyle.ALL_SYMBOLS.getFlavor()));
     binaryBuilder.setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("foo.c"))));
     TargetGraph targetGraph = TargetGraphFactory.newInstance(binaryBuilder.build());
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);

@@ -27,7 +27,6 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.impl.NoopBuildRule;
-import com.facebook.buck.core.rules.impl.SymlinkTree;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
@@ -259,9 +258,6 @@ public class CxxLibraryFactory {
               PicType.PIC,
               transitiveCxxPreprocessorInputFunction,
               delegate);
-        case SANDBOX_TREE:
-          return CxxDescriptionEnhancer.createSandboxTreeBuildRule(
-              graphBuilder, args, platform.get(), untypedBuildTarget, projectFilesystem);
       }
       throw new RuntimeException("unhandled library build type");
     }
@@ -506,12 +502,6 @@ public class CxxLibraryFactory {
             d.getPrivateHeaderSymlinkTree(buildTarget, graphBuilder, cxxPlatform)
                 .ifPresent(h -> privateHeaderSymlinkTrees.add(h)));
 
-    Optional<SymlinkTree> sandboxTree = Optional.empty();
-    if (cxxBuckConfig.sandboxSources()) {
-      sandboxTree =
-          CxxDescriptionEnhancer.createSandboxTree(buildTarget, graphBuilder, cxxPlatform);
-    }
-
     // Create rule to build the object files.
     ImmutableMultimap<CxxSource.Type, Arg> compilerFlags =
         ImmutableListMultimap.copyOf(
@@ -546,8 +536,7 @@ public class CxxLibraryFactory {
             compilerFlags,
             args.getPrefixHeader(),
             args.getPrecompiledHeader(),
-            pic,
-            sandboxTree)
+            pic)
         .requirePreprocessAndCompileRules(
             CxxDescriptionEnhancer.parseCxxSources(
                 buildTarget, graphBuilder, ruleFinder, sourcePathResolver, cxxPlatform, args));

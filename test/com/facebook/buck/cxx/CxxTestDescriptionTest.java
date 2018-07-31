@@ -64,39 +64,14 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import java.nio.file.Path;
-import java.util.Collection;
 import java.util.Optional;
 import java.util.regex.Pattern;
 import org.hamcrest.Matchers;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 
-@RunWith(Parameterized.class)
 public class CxxTestDescriptionTest {
 
-  @Parameterized.Parameters(name = "sandbox_sources={0}")
-  public static Collection<Object[]> data() {
-    return ImmutableList.of(new Object[] {false}, new Object[] {true});
-  }
-
-  private final ImmutableMap<String, ImmutableMap<String, String>> rawConfig;
-  private final CxxBuckConfig cxxBuckConfig;
-
-  public CxxTestDescriptionTest(boolean sandboxSources) {
-    this.rawConfig =
-        ImmutableMap.of(
-            "cxx", ImmutableMap.of("sandbox_sources", Boolean.toString(sandboxSources)));
-    this.cxxBuckConfig = new CxxBuckConfig(FakeBuckConfig.builder().setSections(rawConfig).build());
-  }
-
-  private void addSandbox(
-      ActionGraphBuilder graphBuilder, ProjectFilesystem filesystem, BuildTarget libTarget)
-      throws NoSuchBuildTargetException {
-    BuildTarget target =
-        libTarget.withAppendedFlavors(CxxLibraryDescription.Type.SANDBOX_TREE.getFlavor());
-    createTestBuilder(target.toString()).build(graphBuilder, filesystem);
-  }
+  private final CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(FakeBuckConfig.builder().build());
 
   private void addFramework(ActionGraphBuilder graphBuilder, ProjectFilesystem filesystem)
       throws NoSuchBuildTargetException {
@@ -125,7 +100,6 @@ public class CxxTestDescriptionTest {
     CxxBuckConfig cxxBuckConfig =
         new CxxBuckConfig(
             FakeBuckConfig.builder()
-                .setSections(rawConfig)
                 .setSections(
                     ImmutableMap.of(
                         "cxx",
@@ -163,7 +137,6 @@ public class CxxTestDescriptionTest {
                     "TEST",
                     StringWithMacrosUtils.format(
                         "value %s", LocationMacro.of(someRule.getBuildTarget()))));
-    addSandbox(graphBuilder, filesystem, builder.getTarget());
     CxxTest cxxTest = builder.build(graphBuilder);
     TestRunningOptions options =
         TestRunningOptions.builder().setTestSelectorList(TestSelectorList.empty()).build();
@@ -202,7 +175,6 @@ public class CxxTestDescriptionTest {
                 ImmutableList.of(
                     StringWithMacrosUtils.format(
                         "value %s", LocationMacro.of(someRule.getBuildTarget()))));
-    addSandbox(graphBuilder, filesystem, builder.getTarget());
     CxxTest cxxTest = builder.build(graphBuilder);
     TestRunningOptions testOptions =
         TestRunningOptions.builder()
@@ -235,7 +207,6 @@ public class CxxTestDescriptionTest {
               .setRunTestSeparately(true)
               .setUseDefaultTestMain(true)
               .setFramework(framework);
-      addSandbox(graphBuilder, filesystem, builder.getTarget());
       CxxTest cxxTest = builder.build(graphBuilder);
       assertTrue(cxxTest.runTestSeparately());
     }
@@ -257,7 +228,6 @@ public class CxxTestDescriptionTest {
     cxxLibraryBuilder.build(graphBuilder, filesystem);
     CxxTestBuilder cxxTestBuilder =
         createTestBuilder().setDeps(ImmutableSortedSet.of(cxxLibraryTarget));
-    addSandbox(graphBuilder, filesystem, cxxTestBuilder.getTarget());
     CxxTest cxxTest = cxxTestBuilder.build(graphBuilder, filesystem);
     assertThat(
         BuildRules.getTransitiveRuntimeDeps(cxxTest, graphBuilder),
@@ -281,7 +251,6 @@ public class CxxTestDescriptionTest {
                     StringWithMacrosUtils.format(
                         "--linker-script=%s", LocationMacro.of(dep.getBuildTarget()))));
     addFramework(graphBuilder, filesystem);
-    addSandbox(graphBuilder, filesystem, builder.getTarget());
     assertThat(builder.build().getExtraDeps(), hasItem(dep.getBuildTarget()));
     CxxTest test = builder.build(graphBuilder);
     CxxLink binary =
@@ -313,7 +282,6 @@ public class CxxTestDescriptionTest {
     assertThat(builder.build().getExtraDeps(), hasItem(dep.getBuildTarget()));
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     addFramework(graphBuilder, filesystem);
-    addSandbox(graphBuilder, filesystem, builder.getTarget());
     CxxTest test = builder.build(graphBuilder);
     CxxLink binary =
         (CxxLink)
@@ -350,7 +318,6 @@ public class CxxTestDescriptionTest {
                                 "--linker-script=%s", LocationMacro.of(dep.getBuildTarget()))))
                     .build());
     addFramework(graphBuilder, filesystem);
-    addSandbox(graphBuilder, filesystem, builder.getTarget());
     assertThat(builder.build().getExtraDeps(), hasItem(dep.getBuildTarget()));
     CxxTest test = builder.build(graphBuilder);
     CxxLink binary =
@@ -386,7 +353,6 @@ public class CxxTestDescriptionTest {
                                 "--linker-script=%s", LocationMacro.of(dep.getBuildTarget()))))
                     .build());
     assertThat(builder.build().getExtraDeps(), hasItem(dep.getBuildTarget()));
-    addSandbox(graphBuilder, filesystem, builder.getTarget());
     CxxTest test = builder.build(graphBuilder);
     CxxLink binary =
         (CxxLink)
@@ -410,7 +376,6 @@ public class CxxTestDescriptionTest {
       ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
       addFramework(graphBuilder, filesystem);
       CxxTestBuilder builder = createTestBuilder().setFramework(framework);
-      addSandbox(graphBuilder, filesystem, builder.getTarget());
       CxxTest cxxTestWithoutResources = builder.build(graphBuilder, filesystem);
       RuleKey ruleKeyWithoutResource = getRuleKey(graphBuilder, cxxTestWithoutResources);
 
@@ -419,7 +384,6 @@ public class CxxTestDescriptionTest {
       addFramework(graphBuilder, filesystem);
       builder =
           createTestBuilder().setFramework(framework).setResources(ImmutableSortedSet.of(resource));
-      addSandbox(graphBuilder, filesystem, builder.getTarget());
       CxxTest cxxTestWithResources = builder.build(graphBuilder, filesystem);
       RuleKey ruleKeyWithResource = getRuleKey(graphBuilder, cxxTestWithResources);
 

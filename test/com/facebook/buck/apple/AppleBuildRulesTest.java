@@ -95,18 +95,17 @@ public class AppleBuildRulesTest {
 
   @Test
   public void testAppleTestIsXcodeTargetTestBuildRuleType() {
-    BuildTarget target = BuildTargetFactory.newInstance("//foo:xctest#iphoneos-i386");
-    BuildTarget sandboxTarget =
-        BuildTargetFactory.newInstance("//foo:xctest#iphoneos-i386")
-            .withFlavors(CxxDescriptionEnhancer.SANDBOX_TREE_FLAVOR);
+    BuildTarget testTarget = BuildTargetFactory.newInstance("//foo:xctest#iphoneos-i386");
+    BuildTarget testLibraryTarget =
+        BuildTargetFactory.newInstance("//foo:xctest#apple-test-library");
     ActionGraphBuilder graphBuilder =
         new TestActionGraphBuilder(
             TargetGraphFactory.newInstance(
-                new AppleTestBuilder(sandboxTarget)
+                new AppleTestBuilder(testLibraryTarget)
                     .setInfoPlist(FakeSourcePath.of("Info.plist"))
                     .build()));
     AppleTestBuilder appleTestBuilder =
-        new AppleTestBuilder(target)
+        new AppleTestBuilder(testTarget)
             .setContacts(ImmutableSortedSet.of())
             .setLabels(ImmutableSortedSet.of())
             .setDeps(ImmutableSortedSet.of())

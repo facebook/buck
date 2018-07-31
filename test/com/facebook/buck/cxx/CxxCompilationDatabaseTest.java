@@ -136,7 +136,6 @@ public class CxxCompilationDatabaseTest {
                             PathSourcePath.of(filesystem, Paths.get("preprocessor")))),
                     preprocessorFlags,
                     new FrameworkPathAppendableFunction(),
-                    Optional.empty(),
                     /* leadingIncludePaths */ Optional.empty(),
                     Optional.of(
                         new DependencyAggregation(

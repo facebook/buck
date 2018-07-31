@@ -1,9 +1,6 @@
 [build]
   depfiles=disabled
 
-[cxx]
-  sandbox_sources=true
-
 [cxx#windows-x86_64]
   cc=C:/tools/toolchains/vs2017_15.5/BuildTools/VC/Tools/MSVC/14.12.25827/bin/HostX64/x64/cl.exe
   cc_type=windows

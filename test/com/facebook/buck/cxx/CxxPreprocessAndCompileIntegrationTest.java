@@ -46,30 +46,18 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.CreateSymlinksForTests;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Charsets;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Files;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Collection;
 import java.util.Optional;
 import org.hamcrest.Matchers;
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-import org.junit.runners.Parameterized;
 
 public class CxxPreprocessAndCompileIntegrationTest {
-
-  @Parameterized.Parameters(name = "sandbox_sources={0}")
-  public static Collection<Object[]> data() {
-    return ImmutableList.of(new Object[] {true}, new Object[] {false});
-  }
-
-  @Parameterized.Parameter(0)
-  public boolean sandboxSource;
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths("cxx_pp_and_compile");
   @Rule public TemporaryPaths tmp_long_pwd = new TemporaryPaths("cxx_pp_and_compiler_long_pwd");
@@ -82,9 +70,6 @@ public class CxxPreprocessAndCompileIntegrationTest {
     workspace.setUp();
     workspace.writeContentsToPath(
         "[cxx]\n"
-            + "  sandbox_sources = "
-            + sandboxSource
-            + "\n"
             + "  asflags = -g\n"
             + "  cppflags = -g\n"
             + "  cflags = -g\n"
@@ -537,14 +522,7 @@ public class CxxPreprocessAndCompileIntegrationTest {
 
   @Test
   public void parentDirectoryReferenceInSource() throws IOException {
-    Assume.assumeFalse("parent directories do not work in sandbox mode", sandboxSource);
-    workspace.writeContentsToPath(
-        "[cxx]\n"
-            + "  sandbox_sources = "
-            + sandboxSource
-            + "\n"
-            + "[project]\n  check_package_boundary = false\n",
-        ".buckconfig");
+    workspace.writeContentsToPath("[project]\n  check_package_boundary = false\n", ".buckconfig");
     workspace.runBuckBuild("//parent_dir_ref:simple#default,static").assertSuccess();
   }
 
@@ -581,11 +559,7 @@ public class CxxPreprocessAndCompileIntegrationTest {
   public void ignoreVerifyHeaders() throws IOException {
     ProcessResult result =
         workspace.runBuckBuild("-c", "cxx.untracked_headers=ignore", "//:untracked_header");
-    if (sandboxSource) {
-      result.assertFailure();
-    } else {
-      result.assertSuccess();
-    }
+    result.assertSuccess();
   }
 
   @Test
@@ -599,20 +573,10 @@ public class CxxPreprocessAndCompileIntegrationTest {
             "cxx.untracked_headers_whitelist=/usr/include/stdc-predef\\.h",
             "//:untracked_header");
     result.assertFailure();
-    if (sandboxSource) {
-      assertThat(
-          result.getStderr(),
-          Matchers.anyOf(
-              // clang
-              containsString("'untracked_header.h' file not found"),
-              // gcc
-              containsString("untracked_header.h: No such file or directory")));
-    } else {
-      assertThat(
-          result.getStderr(),
-          containsString(
-              "untracked_header.cpp: included an untracked header \"untracked_header.h\""));
-    }
+    assertThat(
+        result.getStderr(),
+        containsString(
+            "untracked_header.cpp: included an untracked header \"untracked_header.h\""));
   }
 
   @Test
@@ -625,11 +589,7 @@ public class CxxPreprocessAndCompileIntegrationTest {
             "cxx.untracked_headers_whitelist="
                 + "/usr/include/stdc-predef\\.h, /usr/local/.*, untracked_.*.h",
             "//:untracked_header");
-    if (sandboxSource) {
-      result.assertFailure();
-    } else {
-      result.assertSuccess();
-    }
+    result.assertSuccess();
   }
 
   private BuildTarget getPreprocessTarget(
@@ -664,11 +624,7 @@ public class CxxPreprocessAndCompileIntegrationTest {
             "-c",
             "cxx.default_platform=iphonesimulator-x86_64",
             "//:with_xctest");
-    if (sandboxSource) {
-      result.assertFailure();
-    } else {
-      result.assertSuccess();
-    }
+    result.assertSuccess();
   }
 
   @Test

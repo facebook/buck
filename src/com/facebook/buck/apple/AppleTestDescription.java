@@ -118,8 +118,7 @@ public class AppleTestDescription
       ImmutableSet.of(
           CxxCompilationDatabase.COMPILATION_DATABASE,
           CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR,
-          CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR,
-          CxxDescriptionEnhancer.SANDBOX_TREE_FLAVOR);
+          CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR);
 
   private final ToolchainProvider toolchainProvider;
   private final AppleConfig appleConfig;

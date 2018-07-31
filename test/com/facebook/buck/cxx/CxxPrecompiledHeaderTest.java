@@ -75,7 +75,6 @@ public class CxxPrecompiledHeaderTest {
                 PreprocessorFlags.builder().build(),
                 CxxDescriptionEnhancer.frameworkPathToSearchPath(
                     CxxPlatformUtils.DEFAULT_PLATFORM, sourcePathResolver),
-                Optional.empty(),
                 /* leadingIncludePaths */ Optional.empty(),
                 Optional.of(new FakeBuildRule(target.withFlavors(InternalFlavor.of("deps")))),
                 ImmutableSortedSet.of()),
