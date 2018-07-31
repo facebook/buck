@@ -25,6 +25,7 @@ import com.facebook.buck.core.rules.config.KnownConfigurationRuleTypes;
 import com.facebook.buck.core.rules.config.impl.ConfigurationRuleSelectableResolver;
 import com.facebook.buck.core.rules.config.impl.SameThreadConfigurationRuleResolver;
 import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypesProvider;
+import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
 import com.facebook.buck.core.select.SelectableResolver;
 import com.facebook.buck.core.select.SelectorListResolver;
 import com.facebook.buck.core.select.impl.DefaultSelectorListResolver;
@@ -40,6 +41,7 @@ public class PerBuildStateFactory {
 
   private final TypeCoercerFactory typeCoercerFactory;
   private final ConstructorArgMarshaller marshaller;
+  private final KnownRuleTypesProvider knownRuleTypesProvider;
   private final KnownBuildRuleTypesProvider knownBuildRuleTypesProvider;
   private final KnownConfigurationRuleTypes knownConfigurationRuleTypes;
   private final ParserPythonInterpreterProvider parserPythonInterpreterProvider;
@@ -47,11 +49,13 @@ public class PerBuildStateFactory {
   public PerBuildStateFactory(
       TypeCoercerFactory typeCoercerFactory,
       ConstructorArgMarshaller marshaller,
+      KnownRuleTypesProvider knownRuleTypesProvider,
       KnownBuildRuleTypesProvider knownBuildRuleTypesProvider,
       KnownConfigurationRuleTypes knownConfigurationRuleTypes,
       ParserPythonInterpreterProvider parserPythonInterpreterProvider) {
     this.typeCoercerFactory = typeCoercerFactory;
     this.marshaller = marshaller;
+    this.knownRuleTypesProvider = knownRuleTypesProvider;
     this.knownBuildRuleTypesProvider = knownBuildRuleTypesProvider;
     this.knownConfigurationRuleTypes = knownConfigurationRuleTypes;
     this.parserPythonInterpreterProvider = parserPythonInterpreterProvider;
@@ -111,6 +115,7 @@ public class PerBuildStateFactory {
               eventBus,
               new DefaultRawTargetNodeFactory(
                   knownBuildRuleTypesProvider,
+                  knownRuleTypesProvider,
                   marshaller,
                   new VisibilityPatternFactory(),
                   new BuiltTargetVerifier()));
@@ -153,6 +158,7 @@ public class PerBuildStateFactory {
           new TargetNodeParsePipeline(
               daemonicParserState.getOrCreateNodeCache(TargetNode.class),
               DefaultParserTargetNodeFactory.createForParser(
+                  knownRuleTypesProvider,
                   knownBuildRuleTypesProvider,
                   marshaller,
                   daemonicParserState.getBuildFileTrees(),

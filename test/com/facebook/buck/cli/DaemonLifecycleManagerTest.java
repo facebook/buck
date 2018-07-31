@@ -34,6 +34,8 @@ import com.facebook.buck.core.rules.config.KnownConfigurationRuleTypes;
 import com.facebook.buck.core.rules.config.impl.PluginBasedKnownConfigurationRuleTypesFactory;
 import com.facebook.buck.core.rules.knowntypes.DefaultKnownBuildRuleTypesFactory;
 import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypesProvider;
+import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
+import com.facebook.buck.core.rules.knowntypes.TestKnownRuleTypesProvider;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
@@ -68,6 +70,7 @@ public class DaemonLifecycleManagerTest {
   private DaemonLifecycleManager daemonLifecycleManager;
   private KnownBuildRuleTypesProvider knownBuildRuleTypesProvider;
   private KnownConfigurationRuleTypes knownConfigurationRuleTypes;
+  private KnownRuleTypesProvider knownRuleTypesProvider;
   private BuckConfig buckConfig;
   private ExecutableFinder executableFinder;
 
@@ -82,6 +85,7 @@ public class DaemonLifecycleManagerTest {
         KnownBuildRuleTypesProvider.of(
             DefaultKnownBuildRuleTypesFactory.of(
                 executor, pluginManager, new TestSandboxExecutionStrategyFactory()));
+    knownRuleTypesProvider = TestKnownRuleTypesProvider.create(knownBuildRuleTypesProvider);
     knownConfigurationRuleTypes =
         PluginBasedKnownConfigurationRuleTypesFactory.createFromPlugins(pluginManager);
     executableFinder = new ExecutableFinder();
@@ -100,6 +104,7 @@ public class DaemonLifecycleManagerTest {
                         .build())
                 .setFilesystem(filesystem)
                 .build(),
+            knownRuleTypesProvider,
             knownBuildRuleTypesProvider,
             knownConfigurationRuleTypes,
             executableFinder,
@@ -118,6 +123,7 @@ public class DaemonLifecycleManagerTest {
                         .build())
                 .setFilesystem(filesystem)
                 .build(),
+            knownRuleTypesProvider,
             knownBuildRuleTypesProvider,
             knownConfigurationRuleTypes,
             executableFinder,
@@ -136,6 +142,7 @@ public class DaemonLifecycleManagerTest {
                         .build())
                 .setFilesystem(filesystem)
                 .build(),
+            knownRuleTypesProvider,
             knownBuildRuleTypesProvider,
             knownConfigurationRuleTypes,
             executableFinder,
@@ -158,6 +165,7 @@ public class DaemonLifecycleManagerTest {
     Object daemon =
         daemonLifecycleManager.getDaemon(
             new TestCellBuilder().setBuckConfig(buckConfig1).setFilesystem(filesystem).build(),
+            knownRuleTypesProvider,
             knownBuildRuleTypesProvider,
             knownConfigurationRuleTypes,
             executableFinder,
@@ -168,6 +176,7 @@ public class DaemonLifecycleManagerTest {
         daemon,
         daemonLifecycleManager.getDaemon(
             new TestCellBuilder().setBuckConfig(buckConfig2).setFilesystem(filesystem).build(),
+            knownRuleTypesProvider,
             knownBuildRuleTypesProvider,
             knownConfigurationRuleTypes,
             executableFinder,
@@ -193,6 +202,7 @@ public class DaemonLifecycleManagerTest {
     Object daemon1 =
         daemonLifecycleManager.getDaemon(
             new TestCellBuilder().setBuckConfig(buckConfig).setFilesystem(filesystem).build(),
+            knownRuleTypesProvider,
             knownBuildRuleTypesProvider,
             knownConfigurationRuleTypes,
             executableFinder,
@@ -201,6 +211,7 @@ public class DaemonLifecycleManagerTest {
     Object daemon2 =
         daemonLifecycleManager.getDaemon(
             new TestCellBuilder().setBuckConfig(buckConfig).setFilesystem(filesystem).build(),
+            knownRuleTypesProvider,
             knownBuildRuleTypesProvider,
             knownConfigurationRuleTypes,
             executableFinder,
@@ -221,6 +232,7 @@ public class DaemonLifecycleManagerTest {
                 .setBuckConfig(buckConfigWithDeveloperDirectory)
                 .setFilesystem(filesystem)
                 .build(),
+            knownRuleTypesProvider,
             knownBuildRuleTypesProvider,
             knownConfigurationRuleTypes,
             executableFinder,
@@ -233,6 +245,7 @@ public class DaemonLifecycleManagerTest {
                 .setBuckConfig(buckConfigWithDeveloperDirectory)
                 .setFilesystem(filesystem)
                 .build(),
+            knownRuleTypesProvider,
             knownBuildRuleTypesProvider,
             knownConfigurationRuleTypes,
             executableFinder,
@@ -279,6 +292,7 @@ public class DaemonLifecycleManagerTest {
     Object daemon1 =
         daemonLifecycleManager.getDaemon(
             new TestCellBuilder().setBuckConfig(buckConfig).setFilesystem(filesystem).build(),
+            knownRuleTypesProvider,
             knownBuildRuleTypesProvider,
             knownConfigurationRuleTypes,
             executableFinder,
@@ -286,6 +300,7 @@ public class DaemonLifecycleManagerTest {
     Object daemon2 =
         daemonLifecycleManager.getDaemon(
             new TestCellBuilder().setBuckConfig(buckConfig).setFilesystem(filesystem).build(),
+            knownRuleTypesProvider,
             knownBuildRuleTypesProvider,
             knownConfigurationRuleTypes,
             executableFinder,
@@ -299,6 +314,7 @@ public class DaemonLifecycleManagerTest {
     Object daemon3 =
         daemonLifecycleManager.getDaemon(
             cell,
+            knownRuleTypesProvider,
             knownBuildRuleTypesProvider,
             knownConfigurationRuleTypes,
             executableFinder,
@@ -307,6 +323,7 @@ public class DaemonLifecycleManagerTest {
     Object daemon4 =
         daemonLifecycleManager.getDaemon(
             cell,
+            knownRuleTypesProvider,
             knownBuildRuleTypesProvider,
             knownConfigurationRuleTypes,
             executableFinder,
@@ -354,6 +371,7 @@ public class DaemonLifecycleManagerTest {
     Object daemon1 =
         daemonLifecycleManager.getDaemon(
             new TestCellBuilder().setBuckConfig(buckConfig).setFilesystem(filesystem).build(),
+            knownRuleTypesProvider,
             knownBuildRuleTypesProvider,
             knownConfigurationRuleTypes,
             executableFinder,
@@ -361,6 +379,7 @@ public class DaemonLifecycleManagerTest {
     Object daemon2 =
         daemonLifecycleManager.getDaemon(
             new TestCellBuilder().setBuckConfig(buckConfig).setFilesystem(filesystem).build(),
+            knownRuleTypesProvider,
             knownBuildRuleTypesProvider,
             knownConfigurationRuleTypes,
             executableFinder,
@@ -375,6 +394,7 @@ public class DaemonLifecycleManagerTest {
     Object daemon3 =
         daemonLifecycleManager.getDaemon(
             cell,
+            knownRuleTypesProvider,
             knownBuildRuleTypesProvider,
             knownConfigurationRuleTypes,
             executableFinder,
@@ -383,6 +403,7 @@ public class DaemonLifecycleManagerTest {
     Object daemon4 =
         daemonLifecycleManager.getDaemon(
             cell,
+            knownRuleTypesProvider,
             knownBuildRuleTypesProvider,
             knownConfigurationRuleTypes,
             executableFinder,
@@ -413,6 +434,7 @@ public class DaemonLifecycleManagerTest {
     Daemon daemonWithBrokenAndroidSdk =
         daemonLifecycleManager.getDaemon(
             cell,
+            knownRuleTypesProvider,
             knownBuildRuleTypesProvider,
             knownConfigurationRuleTypes,
             executableFinder,
@@ -424,6 +446,7 @@ public class DaemonLifecycleManagerTest {
     Daemon daemonWithWorkingAndroidSdk =
         daemonLifecycleManager.getDaemon(
             cell,
+            knownRuleTypesProvider,
             knownBuildRuleTypesProvider,
             knownConfigurationRuleTypes,
             executableFinder,
@@ -445,6 +468,7 @@ public class DaemonLifecycleManagerTest {
     Daemon daemonWithWorkingAndroidSdk =
         daemonLifecycleManager.getDaemon(
             cell,
+            knownRuleTypesProvider,
             knownBuildRuleTypesProvider,
             knownConfigurationRuleTypes,
             executableFinder,
@@ -456,6 +480,7 @@ public class DaemonLifecycleManagerTest {
     Daemon daemonWithBrokenAndroidSdk =
         daemonLifecycleManager.getDaemon(
             cell,
+            knownRuleTypesProvider,
             knownBuildRuleTypesProvider,
             knownConfigurationRuleTypes,
             executableFinder,
@@ -478,6 +503,7 @@ public class DaemonLifecycleManagerTest {
     Daemon daemonWithBrokenAndroidSdk1 =
         daemonLifecycleManager.getDaemon(
             cell,
+            knownRuleTypesProvider,
             knownBuildRuleTypesProvider,
             knownConfigurationRuleTypes,
             executableFinder,
@@ -489,6 +515,7 @@ public class DaemonLifecycleManagerTest {
     Daemon daemonWithBrokenAndroidSdk2 =
         daemonLifecycleManager.getDaemon(
             cell,
+            knownRuleTypesProvider,
             knownBuildRuleTypesProvider,
             knownConfigurationRuleTypes,
             executableFinder,
@@ -511,6 +538,7 @@ public class DaemonLifecycleManagerTest {
     Daemon daemonWithBrokenAndroidSdk1 =
         daemonLifecycleManager.getDaemon(
             cell,
+            knownRuleTypesProvider,
             knownBuildRuleTypesProvider,
             knownConfigurationRuleTypes,
             executableFinder,
@@ -520,6 +548,7 @@ public class DaemonLifecycleManagerTest {
     Daemon daemonWithBrokenAndroidSdk2 =
         daemonLifecycleManager.getDaemon(
             cell,
+            knownRuleTypesProvider,
             knownBuildRuleTypesProvider,
             knownConfigurationRuleTypes,
             executableFinder,
@@ -542,6 +571,7 @@ public class DaemonLifecycleManagerTest {
     Object daemonWithBrokenAndroidSdk1 =
         daemonLifecycleManager.getDaemon(
             cell,
+            knownRuleTypesProvider,
             knownBuildRuleTypesProvider,
             knownConfigurationRuleTypes,
             executableFinder,
@@ -551,6 +581,7 @@ public class DaemonLifecycleManagerTest {
     Object daemonWithBrokenAndroidSdk2 =
         daemonLifecycleManager.getDaemon(
             cell,
+            knownRuleTypesProvider,
             knownBuildRuleTypesProvider,
             knownConfigurationRuleTypes,
             executableFinder,

@@ -29,6 +29,8 @@ import com.facebook.buck.core.rules.config.KnownConfigurationRuleTypes;
 import com.facebook.buck.core.rules.config.impl.PluginBasedKnownConfigurationRuleTypesFactory;
 import com.facebook.buck.core.rules.knowntypes.DefaultKnownBuildRuleTypesFactory;
 import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypesProvider;
+import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
+import com.facebook.buck.core.rules.knowntypes.TestKnownRuleTypesProvider;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.event.BuckEventBusForTests.CapturingConsoleEventListener;
@@ -109,6 +111,8 @@ public class BuckQueryEnvironmentTest {
                 new TestSandboxExecutionStrategyFactory()));
     KnownConfigurationRuleTypes knownConfigurationRuleTypes =
         PluginBasedKnownConfigurationRuleTypesFactory.createFromPlugins(pluginManager);
+    KnownRuleTypesProvider knownRuleTypesProvider =
+        TestKnownRuleTypesProvider.create(knownBuildRuleTypesProvider);
 
     ExecutableFinder executableFinder = new ExecutableFinder();
     TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
@@ -117,6 +121,7 @@ public class BuckQueryEnvironmentTest {
         new PerBuildStateFactory(
             typeCoercerFactory,
             new ConstructorArgMarshaller(typeCoercerFactory),
+            knownRuleTypesProvider,
             knownBuildRuleTypesProvider,
             knownConfigurationRuleTypes,
             new ParserPythonInterpreterProvider(parserConfig, executableFinder));

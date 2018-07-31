@@ -64,22 +64,6 @@ abstract class AbstractKnownBuildRuleTypes {
         .collect(ImmutableMap.toImmutableMap(DescriptionCache::getRuleType, d -> d));
   }
 
-  @Value.Lazy
-  protected ImmutableMap<String, RuleType> getTypesByName() {
-    return getDescriptions()
-        .stream()
-        .map(DescriptionCache::getRuleType)
-        .collect(ImmutableMap.toImmutableMap(RuleType::getName, t -> t));
-  }
-
-  public RuleType getBuildRuleType(String named) {
-    RuleType type = getTypesByName().get(named);
-    if (type == null) {
-      throw new HumanReadableException("Unable to find build rule type: " + named);
-    }
-    return type;
-  }
-
   public DescriptionWithTargetGraph<?> getDescription(RuleType buildRuleType) {
     DescriptionWithTargetGraph<?> description = getDescriptionsByType().get(buildRuleType);
     if (description == null) {

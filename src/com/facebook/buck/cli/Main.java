@@ -40,8 +40,10 @@ import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.config.KnownConfigurationRuleTypes;
 import com.facebook.buck.core.rules.config.impl.PluginBasedKnownConfigurationRuleTypesFactory;
 import com.facebook.buck.core.rules.knowntypes.DefaultKnownBuildRuleTypesFactory;
+import com.facebook.buck.core.rules.knowntypes.DefaultKnownRuleTypesFactory;
 import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypesFactory;
 import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypesProvider;
+import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.facebook.buck.counters.CounterRegistry;
 import com.facebook.buck.counters.CounterRegistryImpl;
@@ -733,6 +735,9 @@ public final class Main {
               knownBuildRuleTypesFactoryFactory.create(
                   processExecutor, pluginManager, sandboxExecutionStrategyFactory));
 
+      KnownRuleTypesProvider knownRuleTypesProvider =
+          new KnownRuleTypesProvider(new DefaultKnownRuleTypesFactory(knownBuildRuleTypesProvider));
+
       ExecutableFinder executableFinder = new ExecutableFinder();
 
       ToolchainProviderFactory toolchainProviderFactory =
@@ -763,6 +768,7 @@ public final class Main {
               ? Optional.of(
                   daemonLifecycleManager.getDaemon(
                       rootCell,
+                      knownRuleTypesProvider,
                       knownBuildRuleTypesProvider,
                       knownConfigurationRuleTypes,
                       executableFinder,
@@ -1146,6 +1152,7 @@ public final class Main {
                   filesystem,
                   buckConfig,
                   watchman,
+                  knownRuleTypesProvider,
                   knownBuildRuleTypesProvider,
                   knownConfigurationRuleTypes,
                   rootCell,
@@ -1215,6 +1222,7 @@ public final class Main {
                         buildEnvironmentDescription,
                         parserAndCaches.getActionGraphCache(),
                         knownBuildRuleTypesProvider,
+                        knownRuleTypesProvider,
                         knownConfigurationRuleTypes,
                         storeManager,
                         Optional.of(invocationInfo),
@@ -1291,6 +1299,7 @@ public final class Main {
       ProjectFilesystem filesystem,
       BuckConfig buckConfig,
       Watchman watchman,
+      KnownRuleTypesProvider knownRuleTypesProvider,
       KnownBuildRuleTypesProvider knownBuildRuleTypesProvider,
       KnownConfigurationRuleTypes knownConfigurationRuleTypes,
       Cell rootCell,
@@ -1358,6 +1367,7 @@ public final class Main {
                   new PerBuildStateFactory(
                       typeCoercerFactory,
                       new ConstructorArgMarshaller(typeCoercerFactory),
+                      knownRuleTypesProvider,
                       knownBuildRuleTypesProvider,
                       knownConfigurationRuleTypes,
                       new ParserPythonInterpreterProvider(parserConfig, executableFinder)),

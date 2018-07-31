@@ -35,6 +35,8 @@ import com.facebook.buck.core.rules.config.KnownConfigurationRuleTypes;
 import com.facebook.buck.core.rules.config.impl.PluginBasedKnownConfigurationRuleTypesFactory;
 import com.facebook.buck.core.rules.knowntypes.DefaultKnownBuildRuleTypesFactory;
 import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypesProvider;
+import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
+import com.facebook.buck.core.rules.knowntypes.TestKnownRuleTypesProvider;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -294,6 +296,8 @@ public class CleanCommandTest {
         KnownBuildRuleTypesProvider.of(
             DefaultKnownBuildRuleTypesFactory.of(
                 processExecutor, pluginManager, new TestSandboxExecutionStrategyFactory()));
+    KnownRuleTypesProvider knownRuleTypesProvider =
+        TestKnownRuleTypesProvider.create(knownBuildRuleTypesProvider);
     KnownConfigurationRuleTypes knownConfigurationRuleTypes =
         PluginBasedKnownConfigurationRuleTypesFactory.createFromPlugins(pluginManager);
     ExecutableFinder executableFinder = new ExecutableFinder();
@@ -311,6 +315,7 @@ public class CleanCommandTest {
             new PerBuildStateFactory(
                 typeCoercerFactory,
                 new ConstructorArgMarshaller(typeCoercerFactory),
+                knownRuleTypesProvider,
                 knownBuildRuleTypesProvider,
                 knownConfigurationRuleTypes,
                 new ParserPythonInterpreterProvider(parserConfig, executableFinder)),
@@ -333,6 +338,7 @@ public class CleanCommandTest {
         CommandRunnerParamsForTesting.BUILD_ENVIRONMENT_DESCRIPTION,
         new ActionGraphCache(buckConfig.getMaxActionGraphCacheEntries()),
         knownBuildRuleTypesProvider,
+        knownRuleTypesProvider,
         knownConfigurationRuleTypes,
         new BuildInfoStoreManager(),
         Optional.empty(),

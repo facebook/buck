@@ -16,7 +16,7 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypes;
+import com.facebook.buck.core.rules.knowntypes.KnownRuleTypes;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.json.ObjectMappers;
@@ -37,7 +37,7 @@ public class AuditBuildRuleTypesCommand extends AbstractCommand {
       throws IOException, InterruptedException {
     collectAndDumpBuildRuleTypesInformation(
         params.getConsole(),
-        params.getKnownBuildRuleTypesProvider().get(params.getCell()),
+        params.getKnownRuleTypesProvider().get(params.getCell()),
         generateJsonOutput);
     return ExitCode.SUCCESS;
   }
@@ -53,9 +53,9 @@ public class AuditBuildRuleTypesCommand extends AbstractCommand {
   }
 
   static void collectAndDumpBuildRuleTypesInformation(
-      Console console, KnownBuildRuleTypes knownBuildRuleTypes, boolean generateJsonOutput)
+      Console console, KnownRuleTypes knownRuleTypes, boolean generateJsonOutput)
       throws IOException {
-    Collection<String> buildRuleTypes = collectBuildRuleTypes(knownBuildRuleTypes);
+    Collection<String> buildRuleTypes = collectBuildRuleTypes(knownRuleTypes);
 
     if (generateJsonOutput) {
       dumpBuildRuleTypesInJsonFormat(console, buildRuleTypes);
@@ -64,8 +64,8 @@ public class AuditBuildRuleTypesCommand extends AbstractCommand {
     }
   }
 
-  private static Collection<String> collectBuildRuleTypes(KnownBuildRuleTypes knownBuildRuleTypes) {
-    return ImmutableSortedSet.copyOf(knownBuildRuleTypes.getTypesByName().keySet());
+  private static Collection<String> collectBuildRuleTypes(KnownRuleTypes knownRuleTypes) {
+    return ImmutableSortedSet.copyOf(knownRuleTypes.getTypesByName().keySet());
   }
 
   private static void dumpBuildRuleTypesInJsonFormat(

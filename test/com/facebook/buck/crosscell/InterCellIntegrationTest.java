@@ -41,6 +41,8 @@ import com.facebook.buck.core.rules.config.KnownConfigurationRuleTypes;
 import com.facebook.buck.core.rules.config.impl.PluginBasedKnownConfigurationRuleTypesFactory;
 import com.facebook.buck.core.rules.knowntypes.DefaultKnownBuildRuleTypesFactory;
 import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypesProvider;
+import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
+import com.facebook.buck.core.rules.knowntypes.TestKnownRuleTypesProvider;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
@@ -396,12 +398,15 @@ public class InterCellIntegrationTest {
     ParserConfig parserConfig = primary.asCell().getBuckConfig().getView(ParserConfig.class);
     KnownConfigurationRuleTypes knownConfigurationRuleTypes =
         PluginBasedKnownConfigurationRuleTypesFactory.createFromPlugins(pluginManager);
+    KnownRuleTypesProvider knownRuleTypesProvider =
+        TestKnownRuleTypesProvider.create(knownBuildRuleTypesProvider);
     TypeCoercerFactory coercerFactory = new DefaultTypeCoercerFactory();
     Parser parser =
         new DefaultParser(
             new PerBuildStateFactory(
                 coercerFactory,
                 new ConstructorArgMarshaller(coercerFactory),
+                knownRuleTypesProvider,
                 knownBuildRuleTypesProvider,
                 knownConfigurationRuleTypes,
                 new ParserPythonInterpreterProvider(parserConfig, new ExecutableFinder())),

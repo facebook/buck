@@ -35,6 +35,8 @@ import com.facebook.buck.core.rules.config.KnownConfigurationRuleTypes;
 import com.facebook.buck.core.rules.config.impl.PluginBasedKnownConfigurationRuleTypesFactory;
 import com.facebook.buck.core.rules.knowntypes.DefaultKnownBuildRuleTypesFactory;
 import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypesProvider;
+import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
+import com.facebook.buck.core.rules.knowntypes.TestKnownRuleTypesProvider;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.distributed.thrift.BuildJobState;
@@ -117,6 +119,8 @@ public class DistBuildFileHashesIntegrationTest {
                 new TestSandboxExecutionStrategyFactory()));
     KnownConfigurationRuleTypes knownConfigurationRuleTypes =
         PluginBasedKnownConfigurationRuleTypesFactory.createFromPlugins(pluginManager);
+    KnownRuleTypesProvider knownRuleTypesProvider =
+        TestKnownRuleTypesProvider.create(knownBuildRuleTypesProvider);
 
     ParserConfig parserConfig = rootCellConfig.getView(ParserConfig.class);
     TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
@@ -127,6 +131,7 @@ public class DistBuildFileHashesIntegrationTest {
             new PerBuildStateFactory(
                 typeCoercerFactory,
                 constructorArgMarshaller,
+                knownRuleTypesProvider,
                 knownBuildRuleTypesProvider,
                 knownConfigurationRuleTypes,
                 new ParserPythonInterpreterProvider(parserConfig, new ExecutableFinder())),
@@ -201,6 +206,8 @@ public class DistBuildFileHashesIntegrationTest {
                 new TestSandboxExecutionStrategyFactory()));
     KnownConfigurationRuleTypes knownConfigurationRuleTypes =
         PluginBasedKnownConfigurationRuleTypesFactory.createFromPlugins(pluginManager);
+    KnownRuleTypesProvider knownRuleTypesProvider =
+        TestKnownRuleTypesProvider.create(knownBuildRuleTypesProvider);
 
     ParserConfig parserConfig = rootCellConfig.getView(ParserConfig.class);
     TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
@@ -211,6 +218,7 @@ public class DistBuildFileHashesIntegrationTest {
             new PerBuildStateFactory(
                 typeCoercerFactory,
                 constructorArgMarshaller,
+                knownRuleTypesProvider,
                 knownBuildRuleTypesProvider,
                 knownConfigurationRuleTypes,
                 new ParserPythonInterpreterProvider(parserConfig, new ExecutableFinder())),

@@ -25,6 +25,7 @@ import com.facebook.buck.core.model.actiongraph.computation.ActionGraphCache;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.config.KnownConfigurationRuleTypes;
 import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypesProvider;
+import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.FileHashCacheEvent;
 import com.facebook.buck.httpserver.WebServer;
@@ -82,12 +83,14 @@ final class Daemon implements Closeable {
   private final ActionGraphCache actionGraphCache;
   private final RuleKeyCacheRecycler<RuleKey> defaultRuleKeyFactoryCacheRecycler;
   private final ImmutableMap<Path, WatchmanCursor> cursor;
+  private final KnownRuleTypesProvider knownRuleTypesProvider;
   private final KnownBuildRuleTypesProvider knownBuildRuleTypesProvider;
 
   private final BackgroundTaskManager bgTaskManager;
 
   Daemon(
       Cell rootCell,
+      KnownRuleTypesProvider knownRuleTypesProvider,
       KnownBuildRuleTypesProvider knownBuildRuleTypesProvider,
       KnownConfigurationRuleTypes knownConfigurationRuleTypes,
       ExecutableFinder executableFinder,
@@ -115,6 +118,7 @@ final class Daemon implements Closeable {
     this.actionGraphCache =
         new ActionGraphCache(rootCell.getBuckConfig().getMaxActionGraphCacheEntries());
     this.versionedTargetGraphCache = new VersionedTargetGraphCache();
+    this.knownRuleTypesProvider = knownRuleTypesProvider;
     this.knownBuildRuleTypesProvider = knownBuildRuleTypesProvider;
 
     typeCoercerFactory = new DefaultTypeCoercerFactory();
@@ -124,6 +128,7 @@ final class Daemon implements Closeable {
             new PerBuildStateFactory(
                 typeCoercerFactory,
                 new ConstructorArgMarshaller(typeCoercerFactory),
+                knownRuleTypesProvider,
                 knownBuildRuleTypesProvider,
                 knownConfigurationRuleTypes,
                 new ParserPythonInterpreterProvider(parserConfig, executableFinder)),
@@ -232,6 +237,10 @@ final class Daemon implements Closeable {
 
   KnownBuildRuleTypesProvider getKnownBuildRuleTypesProvider() {
     return knownBuildRuleTypesProvider;
+  }
+
+  public KnownRuleTypesProvider getKnownRuleTypesProvider() {
+    return knownRuleTypesProvider;
   }
 
   ConcurrentMap<String, WorkerProcessPool> getPersistentWorkerPools() {

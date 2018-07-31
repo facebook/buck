@@ -37,6 +37,7 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypes;
+import com.facebook.buck.core.rules.knowntypes.KnownRuleTypes;
 import com.facebook.buck.core.rules.type.RuleType;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
@@ -635,7 +636,8 @@ public class TargetsCommand extends AbstractCommand {
       try {
         KnownBuildRuleTypes knownBuildRuleTypes =
             params.getKnownBuildRuleTypesProvider().get(params.getCell());
-        RuleType type = knownBuildRuleTypes.getBuildRuleType(name);
+        KnownRuleTypes knownRuleTypes = params.getKnownRuleTypesProvider().get(params.getCell());
+        RuleType type = knownRuleTypes.getRuleType(name);
         DescriptionWithTargetGraph<?> description = knownBuildRuleTypes.getDescription(type);
         descriptionClassesBuilder.add(
             (Class<? extends DescriptionWithTargetGraph<?>>) description.getClass());
@@ -796,6 +798,7 @@ public class TargetsCommand extends AbstractCommand {
         new PerBuildStateFactory(
                 params.getTypeCoercerFactory(),
                 new ConstructorArgMarshaller(params.getTypeCoercerFactory()),
+                params.getKnownRuleTypesProvider(),
                 params.getKnownBuildRuleTypesProvider(),
                 params.getKnownConfigurationRuleTypes(),
                 new ParserPythonInterpreterProvider(

@@ -104,6 +104,7 @@ standard_java_test(
         "//test/com/facebook/buck/android/toolchain/ndk/impl:testutil",
         "//test/com/facebook/buck/config:FakeBuckConfig",
         "//test/com/facebook/buck/core/model:testutil",
+        "//test/com/facebook/buck/core/rules/knowntypes:testutil",
         "//test/com/facebook/buck/core/rules/resolver/impl:testutil",
         "//test/com/facebook/buck/event:testutil",
         "//test/com/facebook/buck/io/filesystem:testutil",

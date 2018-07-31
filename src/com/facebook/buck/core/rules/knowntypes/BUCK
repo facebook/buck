@@ -2,12 +2,7 @@ load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
 
 java_immutables_library(
     name = "knowntypes",
-    srcs = [
-        "AbstractDefaultKnownBuildRuleTypesFactory.java",
-        "AbstractKnownBuildRuleTypes.java",
-        "AbstractKnownBuildRuleTypesProvider.java",
-        "KnownBuildRuleTypesFactory.java",
-    ],
+    srcs = glob(["*.java"]),
     exported_deps = [
         "//src/com/facebook/buck/core/cell:cell",
         "//src/com/facebook/buck/core/model/targetgraph:targetgraph",

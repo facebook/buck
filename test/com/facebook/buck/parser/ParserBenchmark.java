@@ -24,6 +24,8 @@ import com.facebook.buck.core.rules.config.KnownConfigurationRuleTypes;
 import com.facebook.buck.core.rules.config.impl.PluginBasedKnownConfigurationRuleTypesFactory;
 import com.facebook.buck.core.rules.knowntypes.DefaultKnownBuildRuleTypesFactory;
 import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypesProvider;
+import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
+import com.facebook.buck.core.rules.knowntypes.TestKnownRuleTypesProvider;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.ExecutableFinder;
@@ -127,6 +129,8 @@ public class ParserBenchmark {
                 new TestSandboxExecutionStrategyFactory()));
     KnownConfigurationRuleTypes knownConfigurationRuleTypes =
         PluginBasedKnownConfigurationRuleTypesFactory.createFromPlugins(pluginManager);
+    KnownRuleTypesProvider knownRuleTypesProvider =
+        TestKnownRuleTypesProvider.create(knownBuildRuleTypesProvider);
 
     eventBus = BuckEventBusForTests.newInstance();
     executorService = MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(threadCount));
@@ -139,6 +143,7 @@ public class ParserBenchmark {
             new PerBuildStateFactory(
                 typeCoercerFactory,
                 marshaller,
+                knownRuleTypesProvider,
                 knownBuildRuleTypesProvider,
                 knownConfigurationRuleTypes,
                 new ParserPythonInterpreterProvider(parserConfig, new ExecutableFinder())),

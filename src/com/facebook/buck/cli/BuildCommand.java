@@ -755,6 +755,7 @@ public class BuildCommand extends AbstractCommand {
         new DefaultTypeCoercerFactory(PathTypeCoercer.PathExistenceVerificationMode.DO_NOT_VERIFY);
     ParserTargetNodeFactory<Map<String, Object>> parserTargetNodeFactory =
         DefaultParserTargetNodeFactory.createForDistributedBuild(
+            params.getKnownRuleTypesProvider(),
             params.getKnownBuildRuleTypesProvider(),
             new ConstructorArgMarshaller(typeCoercerFactory),
             new TargetNodeFactory(typeCoercerFactory),

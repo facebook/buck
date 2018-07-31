@@ -189,6 +189,7 @@ public class QueryCommand extends AbstractCommand {
             new PerBuildStateFactory(
                     params.getTypeCoercerFactory(),
                     new ConstructorArgMarshaller(params.getTypeCoercerFactory()),
+                    params.getKnownRuleTypesProvider(),
                     params.getKnownBuildRuleTypesProvider(),
                     params.getKnownConfigurationRuleTypes(),
                     new ParserPythonInterpreterProvider(

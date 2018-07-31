@@ -27,6 +27,8 @@ import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
 import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypes;
 import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypesProvider;
+import com.facebook.buck.core.rules.knowntypes.KnownRuleTypes;
+import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
 import com.facebook.buck.core.rules.type.RuleType;
 import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
@@ -58,6 +60,7 @@ public class DefaultParserTargetNodeFactory
     implements ParserTargetNodeFactory<Map<String, Object>> {
 
   private final KnownBuildRuleTypesProvider knownBuildRuleTypesProvider;
+  private final KnownRuleTypesProvider knownRuleTypesProvider;
   private final ConstructorArgMarshaller marshaller;
   private final PackageBoundaryChecker packageBoundaryChecker;
   private final TargetNodeListener<TargetNode<?>> nodeListener;
@@ -67,6 +70,7 @@ public class DefaultParserTargetNodeFactory
   private final BuiltTargetVerifier builtTargetVerifier;
 
   private DefaultParserTargetNodeFactory(
+      KnownRuleTypesProvider knownRuleTypesProvider,
       KnownBuildRuleTypesProvider knownBuildRuleTypesProvider,
       ConstructorArgMarshaller marshaller,
       PackageBoundaryChecker packageBoundaryChecker,
@@ -76,6 +80,7 @@ public class DefaultParserTargetNodeFactory
       RuleKeyConfiguration ruleKeyConfiguration,
       BuiltTargetVerifier builtTargetVerifier) {
     this.knownBuildRuleTypesProvider = knownBuildRuleTypesProvider;
+    this.knownRuleTypesProvider = knownRuleTypesProvider;
     this.marshaller = marshaller;
     this.packageBoundaryChecker = packageBoundaryChecker;
     this.nodeListener = nodeListener;
@@ -86,6 +91,7 @@ public class DefaultParserTargetNodeFactory
   }
 
   public static ParserTargetNodeFactory<Map<String, Object>> createForParser(
+      KnownRuleTypesProvider knownRuleTypesProvider,
       KnownBuildRuleTypesProvider knownBuildRuleTypesProvider,
       ConstructorArgMarshaller marshaller,
       LoadingCache<Cell, BuildFileTree> buildFileTrees,
@@ -94,6 +100,7 @@ public class DefaultParserTargetNodeFactory
       VisibilityPatternFactory visibilityPatternFactory,
       RuleKeyConfiguration ruleKeyConfiguration) {
     return new DefaultParserTargetNodeFactory(
+        knownRuleTypesProvider,
         knownBuildRuleTypesProvider,
         marshaller,
         new ThrowingPackageBoundaryChecker(buildFileTrees),
@@ -105,12 +112,14 @@ public class DefaultParserTargetNodeFactory
   }
 
   public static ParserTargetNodeFactory<Map<String, Object>> createForDistributedBuild(
+      KnownRuleTypesProvider knownRuleTypesProvider,
       KnownBuildRuleTypesProvider knownBuildRuleTypesProvider,
       ConstructorArgMarshaller marshaller,
       TargetNodeFactory targetNodeFactory,
       VisibilityPatternFactory visibilityPatternFactory,
       RuleKeyConfiguration ruleKeyConfiguration) {
     return new DefaultParserTargetNodeFactory(
+        knownRuleTypesProvider,
         knownBuildRuleTypesProvider,
         marshaller,
         new NoopPackageBoundaryChecker(),
@@ -131,7 +140,8 @@ public class DefaultParserTargetNodeFactory
       Map<String, Object> rawNode,
       Function<PerfEventId, SimplePerfEvent.Scope> perfEventScope) {
     KnownBuildRuleTypes knownBuildRuleTypes = knownBuildRuleTypesProvider.get(cell);
-    RuleType buildRuleType = parseBuildRuleTypeFromRawRule(knownBuildRuleTypes, rawNode);
+    KnownRuleTypes knownRuleTypes = knownRuleTypesProvider.get(cell);
+    RuleType buildRuleType = parseBuildRuleTypeFromRawRule(knownRuleTypes, rawNode);
 
     // Because of the way that the parser works, we know this can never return null.
     DescriptionWithTargetGraph<?> description = knownBuildRuleTypes.getDescription(buildRuleType);
@@ -221,8 +231,8 @@ public class DefaultParserTargetNodeFactory
   }
 
   private static RuleType parseBuildRuleTypeFromRawRule(
-      KnownBuildRuleTypes knownBuildRuleTypes, Map<String, Object> map) {
+      KnownRuleTypes knownRuleTypes, Map<String, Object> map) {
     String type = (String) Preconditions.checkNotNull(map.get(BuckPyFunction.TYPE_PROPERTY_NAME));
-    return knownBuildRuleTypes.getBuildRuleType(type);
+    return knownRuleTypes.getRuleType(type);
   }
 }

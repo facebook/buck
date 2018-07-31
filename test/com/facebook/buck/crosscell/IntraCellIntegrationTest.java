@@ -26,6 +26,8 @@ import com.facebook.buck.core.rules.config.KnownConfigurationRuleTypes;
 import com.facebook.buck.core.rules.config.impl.PluginBasedKnownConfigurationRuleTypesFactory;
 import com.facebook.buck.core.rules.knowntypes.DefaultKnownBuildRuleTypesFactory;
 import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypesProvider;
+import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
+import com.facebook.buck.core.rules.knowntypes.TestKnownRuleTypesProvider;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.parser.DefaultParser;
@@ -81,6 +83,8 @@ public class IntraCellIntegrationTest {
                 new TestSandboxExecutionStrategyFactory()));
     KnownConfigurationRuleTypes knownConfigurationRuleTypes =
         PluginBasedKnownConfigurationRuleTypesFactory.createFromPlugins(pluginManager);
+    KnownRuleTypesProvider knownRuleTypesProvider =
+        TestKnownRuleTypesProvider.create(knownBuildRuleTypesProvider);
 
     TypeCoercerFactory coercerFactory = new DefaultTypeCoercerFactory();
     ParserConfig parserConfig = cell.getBuckConfig().getView(ParserConfig.class);
@@ -89,6 +93,7 @@ public class IntraCellIntegrationTest {
             new PerBuildStateFactory(
                 coercerFactory,
                 new ConstructorArgMarshaller(coercerFactory),
+                knownRuleTypesProvider,
                 knownBuildRuleTypesProvider,
                 knownConfigurationRuleTypes,
                 new ParserPythonInterpreterProvider(parserConfig, new ExecutableFinder())),

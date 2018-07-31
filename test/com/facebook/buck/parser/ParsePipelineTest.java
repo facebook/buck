@@ -33,6 +33,8 @@ import com.facebook.buck.core.rules.knowntypes.DefaultKnownBuildRuleTypesFactory
 import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypes;
 import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypesFactory;
 import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypesProvider;
+import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
+import com.facebook.buck.core.rules.knowntypes.TestKnownRuleTypesProvider;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.ExecutableFinder;
@@ -429,10 +431,13 @@ public class ParsePipelineTest {
               eventBus);
       KnownBuildRuleTypesProvider knownBuildRuleTypesProvider =
           KnownBuildRuleTypesProvider.of(knownBuildRuleTypesFactory);
+      KnownRuleTypesProvider knownRuleTypesProvider =
+          TestKnownRuleTypesProvider.create(knownBuildRuleTypesProvider);
       this.targetNodeParsePipeline =
           new TargetNodeParsePipeline(
               this.targetNodeParsePipelineCache,
               DefaultParserTargetNodeFactory.createForParser(
+                  knownRuleTypesProvider,
                   knownBuildRuleTypesProvider,
                   constructorArgMarshaller,
                   buildFileTrees,

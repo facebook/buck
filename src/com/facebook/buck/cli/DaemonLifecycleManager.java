@@ -20,6 +20,7 @@ import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.rules.config.KnownConfigurationRuleTypes;
 import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypesProvider;
+import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
 import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.log.Logger;
@@ -48,6 +49,7 @@ class DaemonLifecycleManager {
   /** Get or create Daemon. */
   synchronized Daemon getDaemon(
       Cell rootCell,
+      KnownRuleTypesProvider knownRuleTypesProvider,
       KnownBuildRuleTypesProvider knownBuildRuleTypesProvider,
       KnownConfigurationRuleTypes knownConfigurationRuleTypes,
       ExecutableFinder executableFinder,
@@ -59,6 +61,7 @@ class DaemonLifecycleManager {
       daemon =
           new Daemon(
               rootCell,
+              knownRuleTypesProvider,
               knownBuildRuleTypesProvider,
               knownConfigurationRuleTypes,
               executableFinder,
@@ -106,6 +109,7 @@ class DaemonLifecycleManager {
         daemon =
             new Daemon(
                 rootCell,
+                knownRuleTypesProvider,
                 knownBuildRuleTypesProvider,
                 knownConfigurationRuleTypes,
                 executableFinder,
