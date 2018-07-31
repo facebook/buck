@@ -279,13 +279,12 @@ public class SmartDexingStep implements Step {
   public String getDescription(ExecutionContext context) {
     StringBuilder b = new StringBuilder();
     b.append(getShortName());
-    b.append(' ');
 
     Multimap<Path, Path> outputToInputs = outputToInputsSupplier.get();
     for (Path output : outputToInputs.keySet()) {
-      b.append("-out ");
+      b.append(" -out ");
       b.append(output);
-      b.append("-in ");
+      b.append(" -in ");
       Joiner.on(':').appendTo(b, Iterables.transform(outputToInputs.get(output), Object::toString));
     }
 
