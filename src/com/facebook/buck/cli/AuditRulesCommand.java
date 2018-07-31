@@ -107,7 +107,7 @@ public class AuditRulesCommand extends AbstractCommand {
                 params.getConsole(),
                 new ParserPythonInterpreterProvider(
                     params.getCell().getBuckConfig(), params.getExecutableFinder()),
-                params.getKnownBuildRuleTypesProvider())
+                params.getKnownRuleTypesProvider())
             .createBuildFileParser(params.getBuckEventBus(), params.getCell())) {
       /*
        * The super console does a bunch of rewriting over the top of the console such that

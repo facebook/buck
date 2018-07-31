@@ -404,7 +404,8 @@ public class ParsePipelineTest {
                                 console,
                                 new ParserPythonInterpreterProvider(
                                     input.getBuckConfig(), new ExecutableFinder()),
-                                KnownBuildRuleTypesProvider.of(knownBuildRuleTypesFactory))
+                                TestKnownRuleTypesProvider.create(
+                                    KnownBuildRuleTypesProvider.of(knownBuildRuleTypesFactory)))
                             .createBuildFileParser(eventBus, input));
                 synchronized (projectBuildFileParsers) {
                   projectBuildFileParsers.add(buildFileParser);

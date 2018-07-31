@@ -16,7 +16,7 @@
 
 package com.facebook.buck.skylark.parser;
 
-import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
+import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.skylark.function.HostInfo;
 import com.facebook.buck.skylark.function.ReadConfig;
@@ -77,7 +77,7 @@ abstract class AbstractBuckGlobals {
   abstract RuleFunctionFactory getRuleFunctionFactory();
 
   /** @return A set of rules supported by Buck. */
-  abstract ImmutableSet<DescriptionWithTargetGraph<?>> getDescriptions();
+  abstract ImmutableSet<BaseDescription<?>> getDescriptions();
 
   /**
    * @return The list of functions supporting all native Buck functions like {@code java_library}.

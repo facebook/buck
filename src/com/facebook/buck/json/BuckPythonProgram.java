@@ -17,8 +17,8 @@ package com.facebook.buck.json;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
+import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.description.DescriptionCache;
-import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.log.Logger;
@@ -80,7 +80,7 @@ class BuckPythonProgram implements AutoCloseable {
   /** Create a new instance by layout the files in a temporary directory. */
   public static BuckPythonProgram newInstance(
       TypeCoercerFactory typeCoercerFactory,
-      ImmutableSet<DescriptionWithTargetGraph<?>> descriptions,
+      ImmutableSet<BaseDescription<?>> descriptions,
       boolean cleanupEnabled)
       throws IOException {
 
@@ -126,7 +126,7 @@ class BuckPythonProgram implements AutoCloseable {
     try (Writer out = Files.newBufferedWriter(generatedRoot.resolve("generated_rules.py"), UTF_8)) {
       out.write("from buck_parser.buck import *\n\n");
       BuckPyFunction function = new BuckPyFunction(typeCoercerFactory, CoercedTypeCache.INSTANCE);
-      for (DescriptionWithTargetGraph<?> description : descriptions) {
+      for (BaseDescription<?> description : descriptions) {
         try {
           out.write(
               function.toPythonFunction(

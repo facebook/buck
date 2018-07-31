@@ -16,10 +16,12 @@
 
 package com.facebook.buck.core.rules.knowntypes;
 
+import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.description.DescriptionCache;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.rules.type.RuleType;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import org.immutables.value.Value;
 
@@ -50,5 +52,13 @@ public abstract class AbstractKnownRuleTypes {
       throw new HumanReadableException("Unable to find rule type: %s", name);
     }
     return type;
+  }
+
+  /** @return all known descriptions */
+  @Value.Lazy
+  public ImmutableList<BaseDescription<?>> getDescriptions() {
+    return ImmutableList.<BaseDescription<?>>builder()
+        .addAll(getKnownBuildRuleTypes().getDescriptions())
+        .build();
   }
 }

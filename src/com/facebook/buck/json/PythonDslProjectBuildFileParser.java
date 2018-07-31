@@ -16,7 +16,7 @@
 
 package com.facebook.buck.json;
 
-import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
+import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.PerfEventId;
@@ -773,8 +773,8 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
     }
   }
 
-  private synchronized Path getPathToBuckPy(
-      ImmutableSet<DescriptionWithTargetGraph<?>> descriptions) throws IOException {
+  private synchronized Path getPathToBuckPy(ImmutableSet<BaseDescription<?>> descriptions)
+      throws IOException {
     if (buckPythonProgram == null) {
       buckPythonProgram =
           BuckPythonProgram.newInstance(

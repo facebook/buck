@@ -19,7 +19,7 @@ package com.facebook.buck.parser;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.exceptions.handler.HumanReadableExceptionAugmentor;
-import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypesProvider;
+import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.filesystem.skylark.SkylarkFilesystem;
@@ -56,32 +56,32 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
   private final TypeCoercerFactory typeCoercerFactory;
   private final Console console;
   private final ParserPythonInterpreterProvider pythonInterpreterProvider;
-  private final KnownBuildRuleTypesProvider knownBuildRuleTypesProvider;
+  private final KnownRuleTypesProvider knownRuleTypesProvider;
   private final boolean enableProfiling;
 
   public DefaultProjectBuildFileParserFactory(
       TypeCoercerFactory typeCoercerFactory,
       Console console,
       ParserPythonInterpreterProvider pythonInterpreterProvider,
-      KnownBuildRuleTypesProvider knownBuildRuleTypesProvider,
+      KnownRuleTypesProvider knownRuleTypesProvider,
       boolean enableProfiling) {
     this.typeCoercerFactory = typeCoercerFactory;
     this.console = console;
     this.pythonInterpreterProvider = pythonInterpreterProvider;
-    this.knownBuildRuleTypesProvider = knownBuildRuleTypesProvider;
+    this.knownRuleTypesProvider = knownRuleTypesProvider;
     this.enableProfiling = enableProfiling;
   }
 
   public DefaultProjectBuildFileParserFactory(
       TypeCoercerFactory typeCoercerFactory,
       ParserPythonInterpreterProvider pythonInterpreterProvider,
-      KnownBuildRuleTypesProvider knownBuildRuleTypesProvider,
-      boolean enableProfiling) {
+      boolean enableProfiling,
+      KnownRuleTypesProvider knownRuleTypesProvider) {
     this(
         typeCoercerFactory,
         Console.createNullConsole(),
         pythonInterpreterProvider,
-        knownBuildRuleTypesProvider,
+        knownRuleTypesProvider,
         enableProfiling);
   }
 
@@ -89,9 +89,8 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
       TypeCoercerFactory typeCoercerFactory,
       Console console,
       ParserPythonInterpreterProvider pythonInterpreterProvider,
-      KnownBuildRuleTypesProvider knownBuildRuleTypesProvider) {
-    this(
-        typeCoercerFactory, console, pythonInterpreterProvider, knownBuildRuleTypesProvider, false);
+      KnownRuleTypesProvider knownRuleTypesProvider) {
+    this(typeCoercerFactory, console, pythonInterpreterProvider, knownRuleTypesProvider, false);
   }
 
   /**
@@ -124,7 +123,7 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
             .setIgnorePaths(cell.getFilesystem().getIgnorePaths())
             .setBuildFileName(cell.getBuildFileName())
             .setDefaultIncludes(parserConfig.getDefaultIncludes())
-            .setDescriptions(knownBuildRuleTypesProvider.get(cell).getDescriptions())
+            .setDescriptions(knownRuleTypesProvider.get(cell).getDescriptions())
             .setUseWatchmanGlob(useWatchmanGlob)
             .setWatchmanGlobStatResults(watchmanGlobStatResults)
             .setWatchmanUseGlobGenerator(watchmanUseGlobGenerator)

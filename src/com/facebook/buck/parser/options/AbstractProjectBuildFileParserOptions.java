@@ -16,7 +16,7 @@
 
 package com.facebook.buck.parser.options;
 
-import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
+import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.filesystem.PathOrGlobMatcher;
 import com.facebook.buck.io.watchman.Watchman;
@@ -47,7 +47,7 @@ abstract class AbstractProjectBuildFileParserOptions {
 
   abstract List<String> getDefaultIncludes();
 
-  abstract ImmutableSet<DescriptionWithTargetGraph<?>> getDescriptions();
+  abstract ImmutableSet<BaseDescription<?>> getDescriptions();
 
   abstract ImmutableMap<String, ImmutableMap<String, String>> getRawConfig();
 

@@ -79,8 +79,8 @@ public class PerBuildStateFactory {
         new DefaultProjectBuildFileParserFactory(
             typeCoercerFactory,
             parserPythonInterpreterProvider,
-            knownBuildRuleTypesProvider,
-            enableProfiling);
+            enableProfiling,
+            knownRuleTypesProvider);
     ProjectBuildFileParserPool projectBuildFileParserPool =
         new ProjectBuildFileParserPool(
             numParsingThreads, // Max parsers to create per cell.
