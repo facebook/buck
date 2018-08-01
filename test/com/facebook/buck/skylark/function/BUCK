@@ -6,7 +6,7 @@ standard_java_test(
         "//src/com/facebook/buck/core/cell:cell",
         "//src/com/facebook/buck/event:interfaces",
         "//src/com/facebook/buck/io/filesystem/skylark:skylark",
-        "//src/com/facebook/buck/parser:config",
+        "//src/com/facebook/buck/parser:parser",
         "//src/com/facebook/buck/parser/options:options",
         "//src/com/facebook/buck/rules/coercer:coercer",
         "//src/com/facebook/buck/skylark/function:function",

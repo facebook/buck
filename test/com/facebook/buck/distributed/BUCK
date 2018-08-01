@@ -39,7 +39,6 @@ standard_java_test(
         "//src/com/facebook/buck/log:log",
         "//src/com/facebook/buck/log/thrift:thrift",
         "//src/com/facebook/buck/log/views:views",
-        "//src/com/facebook/buck/parser:config",
         "//src/com/facebook/buck/parser:parser",
         "//src/com/facebook/buck/parser:rule_pattern",
         "//src/com/facebook/buck/parser/exceptions:exceptions",
