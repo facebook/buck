@@ -184,15 +184,6 @@ public class TestSelectionListTest {
   }
 
   @Test
-  public void includesOuterClassName() {
-    TestSelectorList testList =
-        new TestSelectorList.Builder().addSimpleTestSelector("com.example.Foo$Other,bar").build();
-    assertTrue(testList.possiblyIncludesClassName("com.example.Foo"));
-    assertFalse(testList.possiblyIncludesClassName("com.example.Bar"));
-    assertFalse(testList.possiblyIncludesClassName("com.example.Other"));
-  }
-
-  @Test
   public void possiblyIncludesClassNameWhenClassMatchesAndIsIncluded() {
     TestSelectorList emptyList =
         new TestSelectorList.Builder()

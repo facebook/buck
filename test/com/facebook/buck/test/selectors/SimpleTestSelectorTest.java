@@ -69,4 +69,13 @@ public class SimpleTestSelectorTest {
     assertTrue(selector.containsClassPath("com.example.Foo"));
     assertFalse(selector.containsClassPath("Foo"));
   }
+
+  @Test
+  public void shouldMatchOnlyNestedClass() {
+    TestSelector selector = new SimpleTestSelector("com.example.Foo$InnerTest", "");
+    assertTrue(selector.matchesClassName("com.example.Foo$InnerTest"));
+    assertFalse(selector.matchesClassName("com.example.Foo"));
+    assertFalse(selector.matchesClassName("com.example.Foo$OtherInner"));
+    assertFalse(selector.matchesClassName("com.Foo$InnerTest"));
+  }
 }

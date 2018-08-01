@@ -72,12 +72,7 @@ public class SimpleTestSelector implements TestSelector {
     if (className == null) {
       return true;
     }
-    int indexOfInnerClassSeparator = this.className.indexOf('$');
-    boolean outerClassMatches =
-        indexOfInnerClassSeparator != -1
-            && Objects.equals(
-                this.className.substring(0, indexOfInnerClassSeparator), thatClassName);
-    return outerClassMatches || Objects.equals(this.className, thatClassName);
+    return Objects.equals(this.className, thatClassName);
   }
 
   @Override
