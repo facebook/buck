@@ -184,6 +184,15 @@ public class TestSelectionListTest {
   }
 
   @Test
+  public void includesOuterClassName() {
+    TestSelectorList testList =
+        new TestSelectorList.Builder().addSimpleTestSelector("com.example.Foo$Other,bar").build();
+    assertTrue(testList.possiblyIncludesClassName("com.example.Foo"));
+    assertFalse(testList.possiblyIncludesClassName("com.example.Bar"));
+    assertFalse(testList.possiblyIncludesClassName("com.example.Other"));
+  }
+
+  @Test
   public void possiblyIncludesClassNameWhenClassMatchesAndIsIncluded() {
     TestSelectorList emptyList =
         new TestSelectorList.Builder()
@@ -199,6 +208,21 @@ public class TestSelectionListTest {
             .addRawSelectors("!Foo#skipMe", "!#andSkipMe", "Foo", "Bar#baz", "!#")
             .build();
     assertTrue(emptyList.possiblyIncludesClassName("Bar"));
+  }
+
+  @Test
+  public void possiblyIncludesClassNameWhenNestedClass() {
+    TestSelectorList emptyList =
+        new TestSelectorList.Builder()
+            .addRawSelectors("Foo", "Bar\\$Inner")
+            .addSimpleTestSelector("com.example.Faz$Inner,test")
+            .build();
+    assertTrue(emptyList.possiblyIncludesClassName("Bar"));
+    assertFalse(emptyList.possiblyIncludesClassName("Bar2"));
+
+    assertTrue(emptyList.possiblyIncludesClassName("Foo"));
+
+    assertTrue(emptyList.possiblyIncludesClassName("com.example.Faz"));
   }
 
   @Test

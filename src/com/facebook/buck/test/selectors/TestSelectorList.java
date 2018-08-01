@@ -81,7 +81,7 @@ public class TestSelectorList {
    */
   public boolean possiblyIncludesClassName(String className) {
     for (TestSelector testSelector : testSelectors) {
-      if (testSelector.matchesClassName(className)) {
+      if (testSelector.containsClassPath(className)) {
         if (testSelector.isInclusive()) {
           return true;
         }

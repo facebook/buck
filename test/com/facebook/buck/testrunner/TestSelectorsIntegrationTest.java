@@ -129,6 +129,21 @@ public class TestSelectorsIntegrationTest {
     assertNoTestSummaryShown(result);
   }
 
+  @Test
+  public void nestedClassTestSelectionWorks() throws IOException {
+    ProcessResult filteredTestResult =
+        workspace.runBuckCommand(
+            "test", "//test/com/example/clown:clown", "-f", "NestedClassTest$#");
+    filteredTestResult.assertSuccess(); // should run
+    assertThat(filteredTestResult.getStderr(), containsString("NO TESTS RAN"));
+
+    filteredTestResult =
+        workspace.runBuckCommand(
+            "test", "//test/com/example/clown:clown", "-f", "NestedClassTest\\$FirstInnerTest#");
+    filteredTestResult.assertSuccess(); // should run
+    assertThat(filteredTestResult.getStderr(), containsString("1 Passed"));
+  }
+
   private void assertNotCached(ProcessResult result) {
     assertThat(result.getStderr(), not(containsString("CACHED")));
   }
