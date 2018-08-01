@@ -50,7 +50,7 @@ public class StringRuleKeyHasherTest {
     }
   }
 
-  public static class ExtaTests {
+  public static class ExtraTests {
     @Test
     public void testStringEscaping() {
       assertEquals("string(\"abc\")::", newHasher().putString("abc").hash());
