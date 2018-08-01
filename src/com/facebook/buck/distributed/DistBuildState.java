@@ -32,6 +32,7 @@ import com.facebook.buck.distributed.thrift.BuildJobStateBuckConfig;
 import com.facebook.buck.distributed.thrift.BuildJobStateCell;
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashes;
 import com.facebook.buck.distributed.thrift.OrderedStringMapEntry;
+import com.facebook.buck.distributed.thrift.RemoteCommand;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
@@ -95,6 +96,7 @@ public class DistBuildState {
         targetGraphCodec,
         targetGraph,
         topLevelTargets,
+        RemoteCommand.BUILD,
         Optional.empty());
   }
 
@@ -108,6 +110,7 @@ public class DistBuildState {
       DistBuildTargetGraphCodec targetGraphCodec,
       TargetGraph targetGraph,
       ImmutableSet<BuildTarget> topLevelTargets,
+      RemoteCommand command,
       Optional<ClientStatsTracker> clientStatsTracker)
       throws IOException, InterruptedException {
     Preconditions.checkArgument(topLevelTargets.size() > 0);
@@ -129,6 +132,8 @@ public class DistBuildState {
     for (BuildTarget target : topLevelTargets) {
       jobState.addToTopLevelTargets(target.getFullyQualifiedName());
     }
+
+    jobState.setCommand(command);
 
     return jobState;
   }

@@ -209,7 +209,7 @@ public class BuildPhaseTest {
 
   @Test
   public void testCoordinatorIsRunInLocalCoordinatorMode()
-      throws IOException, InterruptedException {
+      throws IOException, InterruptedException, ExecutionException {
     // Create the full BuildPhase for local coordinator mode.
     ActionGraphBuilder graphBuilder = CustomActiongGraphBuilderFactory.createSimpleBuilder();
     ImmutableSet<BuildTarget> targets =

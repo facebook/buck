@@ -126,6 +126,11 @@ public class StampedeBuildClientTest {
     guardedLocalBuildExecutorInvoker =
         new LocalBuildExecutorInvoker() {
           @Override
+          public void initLocalBuild(
+              boolean isDownloadHeavyBuild,
+              RemoteBuildRuleCompletionWaiter remoteBuildRuleCompletionWaiter) {}
+
+          @Override
           public int executeLocalBuild(
               boolean isDownloadHeavyBuild,
               RemoteBuildRuleCompletionWaiter remoteBuildRuleCompletionWaiter,

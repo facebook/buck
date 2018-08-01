@@ -47,6 +47,7 @@ import java.util.logging.Level;
 /** High level controls the distributed build. */
 public class DistBuildController {
   private static final Logger LOG = Logger.get(DistBuildController.class);
+  private static final int MISMATCHING_RULE_PRINT_LIMIT = 100;
 
   private final BuckEventBus eventBus;
   private final ConsoleEventsDispatcher consoleEventsDispatcher;
@@ -58,6 +59,17 @@ public class DistBuildController {
 
   private final ListenableFuture<BuildJobState> asyncJobState;
   private final AtomicReference<StampedeId> stampedeIdReference;
+
+  /** Result of a distributed build execution. */
+  public static class ExecutionResult {
+    public final StampedeId stampedeId;
+    public final int exitCode;
+
+    public ExecutionResult(StampedeId stampedeId, int exitCode) {
+      this.stampedeId = stampedeId;
+      this.exitCode = exitCode;
+    }
+  }
 
   public DistBuildController(DistBuildControllerArgs args) {
     this.stampedeIdReference = args.getStampedeIdReference();
@@ -166,7 +178,9 @@ public class DistBuildController {
               distLocalBuildMode,
               invocationInfo,
               ruleKeyCalculatorFuture);
-    } catch (IOException | RuntimeException ex) { // Important: Don't swallow InterruptedException
+    } catch (IOException
+        | ExecutionException
+        | RuntimeException ex) { // Important: Don't swallow InterruptedException
       // Don't print an error here, because we might have failed due to local finishing first.
       LOG.warn(ex, "Distributed build step failed.");
       return createFailedExecutionResult(
@@ -178,6 +192,39 @@ public class DistBuildController {
       LOG.info("Fire-and-forget mode enabled, exiting with default code.");
       eventBus.post(BuildEvent.distBuildFinished(startedEvent, ExitCode.SUCCESSFUL.getCode()));
       return StampedeExecutionResult.of(ExitCode.SUCCESSFUL.getCode());
+    } else if (distLocalBuildMode.equals(DistLocalBuildMode.RULE_KEY_DIVERGENCE_CHECK)) {
+      boolean ruleKeysMismatched = buildResult.getMismatchingBuildTargets().size() > 0;
+
+      LOG.info("Rule key divergence check finished. Divergence detected: %s", ruleKeysMismatched);
+
+      if (ruleKeysMismatched) {
+        eventBus.post(
+            ConsoleEvent.severe(
+                "*** [%d] default rule keys mismatched between client and server. *** \nMismatching rule keys:",
+                buildResult.getMismatchingBuildTargets().size()));
+      } else {
+        eventBus.post(
+            ConsoleEvent.info("*** All rule keys matched between client and server ***:"));
+      }
+
+      // Outputs up to first 100 mismatching rules
+      int rulesPrinted = 0;
+      for (String mismatchingRule : buildResult.getMismatchingBuildTargets()) {
+        if (rulesPrinted == MISMATCHING_RULE_PRINT_LIMIT) {
+          eventBus.post(ConsoleEvent.severe(".... Further mismatches truncated"));
+          break;
+        }
+        eventBus.post(ConsoleEvent.severe("MISMATCHING RULE: %s", mismatchingRule));
+        rulesPrinted++;
+      }
+
+      int exitCode =
+          ruleKeysMismatched
+              ? ExitCode.RULE_KEY_CONSISTENCY_CHECK_FAILED.getCode()
+              : ExitCode.SUCCESSFUL.getCode();
+      eventBus.post(BuildEvent.distBuildFinished(startedEvent, exitCode));
+      return StampedeExecutionResult.of(exitCode);
+
     } else {
       // Send DistBuildFinished event if we reach this point without throwing.
       boolean buildSuccess =

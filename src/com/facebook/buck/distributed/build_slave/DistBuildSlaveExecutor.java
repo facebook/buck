@@ -33,6 +33,7 @@ import com.facebook.buck.distributed.DistBuildUtil;
 import com.facebook.buck.distributed.build_slave.RemoteBuildModeRunner.FinalBuildStatusSetter;
 import com.facebook.buck.distributed.thrift.BuildJob;
 import com.facebook.buck.distributed.thrift.BuildStatus;
+import com.facebook.buck.distributed.thrift.RemoteCommand;
 import com.facebook.buck.distributed.thrift.SchedulingEnvironmentType;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.parser.BuildTargetParser;
@@ -54,6 +55,7 @@ public class DistBuildSlaveExecutor {
 
   private static final Logger LOG = Logger.get(DistBuildSlaveExecutor.class);
   private static final boolean KEEP_GOING = true;
+  public static final int RULE_CALCULATION_EVENTS_PER_FRONTEND_REQUEST = 1000;
 
   private final DistBuildSlaveExecutorArgs args;
   private final DelegateAndGraphsInitializer initializer;
@@ -86,6 +88,22 @@ public class DistBuildSlaveExecutor {
   }
 
   public ExitCode buildAndReturnExitCode() throws IOException, InterruptedException {
+    if (args.getRemoteCommand() == RemoteCommand.RULE_KEY_DIVERGENCE_CHECK) {
+      return setPreparationCallbackAndRun(
+          RuleKeyDivergenceRunnerFactory.createRunner(
+              args.getStampedeId(),
+              args.getBuildSlaveRunId(),
+              args.getClock(),
+              args.getDistBuildService(),
+              initializer,
+              args.getRuleKeyConfiguration(),
+              args.getRuleKeyCacheScope(),
+              args.getExecutorService(),
+              args.getBuckEventBus(),
+              args.getState(),
+              args.getRootCell()));
+    }
+
     Optional<BuildId> clientBuildId = fetchClientBuildId();
 
     DistBuildModeRunner runner = null;

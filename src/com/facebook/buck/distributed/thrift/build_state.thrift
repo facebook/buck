@@ -81,9 +81,16 @@ struct BuildJobStateTargetGraph {
   1: optional list<BuildJobStateTargetNode> nodes;
 }
 
+enum RemoteCommand {
+    UNKNOWN = 0,
+    BUILD = 1,
+    RULE_KEY_DIVERGENCE_CHECK = 2,
+}
+
 struct BuildJobState {
   1: optional map<i32, BuildJobStateCell> cells;
   2: optional list<BuildJobStateFileHashes> fileHashes;
   3: optional BuildJobStateTargetGraph targetGraph;
   4: optional list<string> topLevelTargets;
+  5: optional RemoteCommand command;
 }

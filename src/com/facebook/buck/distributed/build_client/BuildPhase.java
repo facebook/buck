@@ -27,6 +27,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.graph.ActionAndTargetGraphs;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rulekey.calculator.ParallelRuleKeyCalculator;
+import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.distributed.BuildSlaveEventWrapper;
 import com.facebook.buck.distributed.BuildStatusUtil;
 import com.facebook.buck.distributed.ClientStatsTracker;
@@ -34,6 +35,7 @@ import com.facebook.buck.distributed.DistBuildConfig;
 import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.DistBuildUtil;
 import com.facebook.buck.distributed.DistLocalBuildMode;
+import com.facebook.buck.distributed.RuleKeyUtils;
 import com.facebook.buck.distributed.build_slave.CoordinatorBuildRuleEventsPublisher;
 import com.facebook.buck.distributed.build_slave.CoordinatorModeRunner;
 import com.facebook.buck.distributed.build_slave.DelegateAndGraphs;
@@ -50,17 +52,22 @@ import com.facebook.buck.distributed.thrift.BuildStatus;
 import com.facebook.buck.distributed.thrift.CoordinatorBuildProgress;
 import com.facebook.buck.distributed.thrift.LogLineBatchRequest;
 import com.facebook.buck.distributed.thrift.MultiGetBuildSlaveRealTimeLogsResponse;
+import com.facebook.buck.distributed.thrift.RuleKeyCalculatedEvent;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.log.InvocationInfo;
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.step.ExecutorPool;
 import com.facebook.buck.util.timing.Clock;
 import com.facebook.buck.util.timing.DefaultClock;
+import com.facebook.buck.util.types.Pair;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
+import com.google.common.collect.Sets.SetView;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -78,6 +85,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import javax.annotation.Nonnull;
 
 /** The build phase. */
 public class BuildPhase {
@@ -87,10 +95,15 @@ public class BuildPhase {
 
     private final BuildJob finalBuildJob;
     private final List<BuildSlaveStatus> buildSlaveStatusList;
+    private final Set<String> mismatchingBuildTargets;
 
-    public BuildResult(BuildJob finalBuildJob, List<BuildSlaveStatus> buildSlaveStatusList) {
+    public BuildResult(
+        BuildJob finalBuildJob,
+        List<BuildSlaveStatus> buildSlaveStatusList,
+        Set<String> mismatchingBuildTargets) {
       this.finalBuildJob = finalBuildJob;
       this.buildSlaveStatusList = buildSlaveStatusList;
+      this.mismatchingBuildTargets = mismatchingBuildTargets;
     }
 
     public BuildJob getFinalBuildJob() {
@@ -99,6 +112,10 @@ public class BuildPhase {
 
     public List<BuildSlaveStatus> getBuildSlaveStatusList() {
       return buildSlaveStatusList;
+    }
+
+    public Set<String> getMismatchingBuildTargets() {
+      return mismatchingBuildTargets;
     }
   }
 
@@ -288,7 +305,7 @@ public class BuildPhase {
       DistLocalBuildMode distLocalBuildMode,
       InvocationInfo invocationInfo,
       ListenableFuture<ParallelRuleKeyCalculator<RuleKey>> localRuleKeyCalculator)
-      throws IOException, InterruptedException {
+      throws IOException, InterruptedException, ExecutionException {
     distBuildClientStats.startTimer(PERFORM_DISTRIBUTED_BUILD);
 
     BuildJob job =
@@ -296,9 +313,24 @@ public class BuildPhase {
             stampedeId, !buildMode.equals(DISTRIBUTED_BUILD_WITH_LOCAL_COORDINATOR));
     LOG.info("Started job. Build status: " + job.getStatus());
 
+    ListenableFuture<List<Pair<BuildRule, RuleKey>>> ruleKeyPairsFutureFuture =
+        Futures.immediateFuture(null);
+
+    if (distLocalBuildMode.equals(DistLocalBuildMode.RULE_KEY_DIVERGENCE_CHECK)) {
+      ruleKeyPairsFutureFuture =
+          Futures.transformAsync(
+              localRuleKeyCalculator,
+              ruleKeyCalculator ->
+                  RuleKeyUtils.calculateDefaultRuleKeys(
+                      buildGraphs.getActionGraphAndBuilder().getActionGraphBuilder(),
+                          ruleKeyCalculator,
+                      buildExecutorArgs.getBuckEventBus(), topLevelTargets),
+              Preconditions.checkNotNull(buildExecutorArgs.getExecutors().get(ExecutorPool.CPU)));
+    }
+
     if (distLocalBuildMode.equals(DistLocalBuildMode.FIRE_AND_FORGET)) {
       LOG.info("Fire-and-forget mode: returning after build status is:started. " + job.getStatus());
-      return new BuildResult(job, ImmutableList.of());
+      return new BuildResult(job, ImmutableList.of(), ImmutableSet.of());
     }
 
     nextEventIdBySlaveRunId.clear();
@@ -351,7 +383,58 @@ public class BuildPhase {
           finalJob != null && finalJob.getStatus().equals(BuildStatus.FINISHED_SUCCESSFULLY));
     }
 
-    return new BuildResult(finalJob, buildSlaveStatusList);
+    Set<String> mismatchingBuildTargets =
+        checkForRuleKeyMismatches(distLocalBuildMode, ruleKeyPairsFutureFuture);
+
+    return new BuildResult(finalJob, buildSlaveStatusList, mismatchingBuildTargets);
+  }
+
+  @Nonnull
+  private Set<String> checkForRuleKeyMismatches(
+      DistLocalBuildMode distLocalBuildMode,
+      ListenableFuture<List<Pair<BuildRule, RuleKey>>> ruleKeyPairsFutureFuture)
+      throws ExecutionException, InterruptedException {
+    Set<String> mismatchingBuildTargets = new HashSet<>();
+    if (!distLocalBuildMode.equals(DistLocalBuildMode.RULE_KEY_DIVERGENCE_CHECK)) {
+      return mismatchingBuildTargets;
+    }
+    List<Pair<BuildRule, RuleKey>> localRuleKeyPairs = ruleKeyPairsFutureFuture.get();
+    List<RuleKeyCalculatedEvent> remoteRuleKeys =
+        buildRuleEventManager.getRuleKeyCalculatedEvents();
+
+    Map<String, String> localRulesToKeys = new HashMap<>();
+
+    for (Pair<BuildRule, RuleKey> localRuleKeyPair : localRuleKeyPairs) {
+      localRulesToKeys.put(
+          localRuleKeyPair.getFirst().getFullyQualifiedName(),
+          localRuleKeyPair.getSecond().getHashCode().toString());
+    }
+
+    Set<String> remoteBuildTargets = new HashSet<>();
+    for (RuleKeyCalculatedEvent remoteRuleAndKey : remoteRuleKeys) {
+      String remoteBuildTarget = remoteRuleAndKey.getBuildTarget();
+      remoteBuildTargets.add(remoteBuildTarget);
+      if (localRulesToKeys.containsKey(remoteBuildTarget)
+          && !localRulesToKeys
+              .get(remoteBuildTarget)
+              .equals(remoteRuleAndKey.getDefaultRuleKey())) {
+        LOG.warn(
+            "Rule key for [%s] mismatched locally and remotely. Local [%s]. Remote [%s]",
+            remoteBuildTarget,
+            localRulesToKeys.containsKey(remoteBuildTarget),
+            remoteRuleAndKey.getDefaultRuleKey());
+        mismatchingBuildTargets.add(remoteBuildTarget);
+      }
+    }
+
+    SetView<String> buildTargetsOnlyBuildInOneLocation =
+        Sets.symmetricDifference(localRulesToKeys.keySet(), remoteBuildTargets);
+    for (String buildTarget : buildTargetsOnlyBuildInOneLocation) {
+      LOG.warn("Rule [%s] was only built in one location", buildTarget);
+      mismatchingBuildTargets.add(buildTarget);
+    }
+
+    return mismatchingBuildTargets;
   }
 
   private BuildJob fetchBuildInformationFromServerAndPublishPendingEvents(
@@ -475,6 +558,10 @@ public class BuildPhase {
                 nextEventIdBySlaveRunId.put(
                     wrapper.getBuildSlaveRunId(), wrapper.getEventNumber() + 1);
                 switch (slaveEvent.getEventType()) {
+                  case RULE_KEY_CALCULATED_EVENT:
+                    buildRuleEventManager.recordRuleKeyCalculatedEvent(
+                        slaveEvent.getRuleKeyCalculatedEvent());
+                    break;
                   case CONSOLE_EVENT:
                     ConsoleEvent consoleEvent = DistBuildUtil.createConsoleEvent(slaveEvent);
                     consoleEventsDispatcher.postConsoleEvent(consoleEvent);

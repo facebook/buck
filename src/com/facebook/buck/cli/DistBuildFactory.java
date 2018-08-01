@@ -210,6 +210,7 @@ public abstract class DistBuildFactory {
             .setHealthCheckStatsTracker(healthCheckStatsTracker)
             .setRuleKeyCacheScope(ruleKeyCacheScope)
             .setMaxActionGraphParallelism(resource.getMaximumResourceAmounts().getCpu())
+            .setRemoteCommand(state.getRemoteState().getCommand())
             .setActionGraphParallelizationMode(
                 params.getBuckConfig().getActionGraphParallelizationMode())
             .build());

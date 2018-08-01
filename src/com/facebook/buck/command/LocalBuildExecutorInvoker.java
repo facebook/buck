@@ -24,6 +24,10 @@ import java.util.concurrent.atomic.AtomicReference;
  * * Triggers a local build, using the given parameters (with the rest coming from BuildCommand).
  */
 public interface LocalBuildExecutorInvoker {
+  void initLocalBuild(
+      boolean isDownloadHeavyBuild,
+      RemoteBuildRuleCompletionWaiter remoteBuildRuleCompletionWaiter);
+
   int executeLocalBuild(
       boolean isDownloadHeavyBuild,
       RemoteBuildRuleCompletionWaiter remoteBuildRuleCompletionWaiter,

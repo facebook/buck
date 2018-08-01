@@ -16,6 +16,7 @@
 package com.facebook.buck.distributed.build_client;
 
 import com.facebook.buck.command.LocalBuildExecutorInvoker;
+import com.facebook.buck.core.build.distributed.synchronization.impl.NoOpRemoteBuildRuleCompletionWaiter;
 import com.facebook.buck.core.build.distributed.synchronization.impl.RemoteBuildRuleSynchronizer;
 import com.facebook.buck.core.build.event.BuildEvent;
 import com.facebook.buck.distributed.ClientStatsTracker;
@@ -53,6 +54,7 @@ public class StampedeBuildClient {
   private final LocalBuildRunner racerBuildRunner;
   private final LocalBuildRunner synchronizedBuildRunner;
   private final DistBuildRunner distBuildRunner;
+  private final LocalBuildExecutorInvoker localBuildExecutorInvoker;
 
   @VisibleForTesting
   public StampedeBuildClient(
@@ -71,6 +73,7 @@ public class StampedeBuildClient {
       long distributedBuildThreadKillTimeoutSeconds,
       Optional<StampedeId> stampedeId) {
     stampedeId.ifPresent(this.stampedeIdReference::set);
+    this.localBuildExecutorInvoker = localBuildExecutorInvoker;
     this.eventBus = eventBus;
     this.clientStatsTracker = clientStatsTracker;
     this.remoteBuildRuleSynchronizer = remoteBuildRuleSynchronizer;
@@ -112,6 +115,7 @@ public class StampedeBuildClient {
       boolean waitGracefullyForDistributedBuildThreadToFinish,
       long distributedBuildThreadKillTimeoutSeconds,
       Optional<String> autoStampedeMessage) {
+    this.localBuildExecutorInvoker = localBuildExecutorInvoker;
     this.eventBus = eventBus;
     this.clientStatsTracker = clientStatsTracker;
     this.remoteBuildRuleSynchronizer = new RemoteBuildRuleSynchronizer();
@@ -158,6 +162,12 @@ public class StampedeBuildClient {
       eventBus.post(ConsoleEvent.info("Fire and forget build was scheduled."));
       LOG.info("Stampede build in fire-and-forget mode started remotely. Exiting local client.");
       return ExitCode.SUCCESSFUL.getCode();
+    } else if (distLocalBuildMode.equals(DistLocalBuildMode.RULE_KEY_DIVERGENCE_CHECK)) {
+      // Setup caching build engine so that ListenableFuture<ParallelRuleKeyCalculator<RuleKey>> is
+      // populated
+      localBuildExecutorInvoker.initLocalBuild(false, new NoOpRemoteBuildRuleCompletionWaiter());
+      distBuildRunner.runDistBuildSync();
+      return distBuildRunner.getExitCode();
     } else {
       // Kick off the distributed build
       distBuildRunner.runDistBuildAsync();

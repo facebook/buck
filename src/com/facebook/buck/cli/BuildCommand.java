@@ -74,6 +74,7 @@ import com.facebook.buck.distributed.thrift.BuildJobState;
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashEntry;
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashes;
 import com.facebook.buck.distributed.thrift.BuildMode;
+import com.facebook.buck.distributed.thrift.RemoteCommand;
 import com.facebook.buck.distributed.thrift.RuleKeyLogEntry;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.event.BuckEventListener;
@@ -395,7 +396,7 @@ public class BuildCommand extends AbstractCommand {
     }
 
     return buildCommand.computeDistBuildState(
-            params, graphsAndBuildTargets, executor, Optional.empty())
+            params, graphsAndBuildTargets, executor, Optional.empty(), RemoteCommand.BUILD)
         .asyncJobState;
   }
 
@@ -717,7 +718,8 @@ public class BuildCommand extends AbstractCommand {
       CommandRunnerParams params,
       GraphsAndBuildTargets graphsAndBuildTargets,
       WeightedListeningExecutorService executorService,
-      Optional<ClientStatsTracker> clientStatsTracker) {
+      Optional<ClientStatsTracker> clientStatsTracker,
+      RemoteCommand remoteCommand) {
     DistBuildCellIndexer cellIndexer = new DistBuildCellIndexer(params.getCell());
 
     // Compute the file hashes.
@@ -792,6 +794,7 @@ public class BuildCommand extends AbstractCommand {
                         targetGraphCodec,
                         targetGraphAndBuildTargets.getTargetGraph(),
                         graphsAndBuildTargets.getBuildTargets(),
+                        remoteCommand,
                         clientStatsTracker);
                 LOG.info("Finished computing serializable distributed build state.");
                 return state;
@@ -873,9 +876,17 @@ public class BuildCommand extends AbstractCommand {
     }
 
     LOG.info("Starting async file hash computation and job state serialization.");
+    RemoteCommand remoteCommand =
+        distBuildConfig.getLocalBuildMode() == DistLocalBuildMode.RULE_KEY_DIVERGENCE_CHECK
+            ? RemoteCommand.RULE_KEY_DIVERGENCE_CHECK
+            : RemoteCommand.BUILD;
     AsyncJobStateAndCells stateAndCells =
         computeDistBuildState(
-            params, graphsAndBuildTargets, executorService, Optional.of(distBuildClientStats));
+            params,
+            graphsAndBuildTargets,
+            executorService,
+            Optional.of(distBuildClientStats),
+            remoteCommand);
     ListenableFuture<BuildJobState> asyncJobState = stateAndCells.asyncJobState;
     DistBuildCellIndexer distBuildCellIndexer = stateAndCells.distBuildCellIndexer;
 
@@ -944,6 +955,20 @@ public class BuildCommand extends AbstractCommand {
 
       LocalBuildExecutorInvoker localBuildExecutorInvoker =
           new LocalBuildExecutorInvoker() {
+            @Override
+            public void initLocalBuild(
+                boolean isDownloadHeavyBuild,
+                RemoteBuildRuleCompletionWaiter remoteBuildRuleCompletionWaiter) {
+              BuildCommand.this.initLocalBuild(
+                  params,
+                  graphsAndBuildTargets,
+                  executorService,
+                  Optional.empty(),
+                  remoteBuildRuleCompletionWaiter,
+                  isDownloadHeavyBuild,
+                  ruleKeyCacheScope);
+            }
+
             @Override
             public int executeLocalBuild(
                 boolean isDownloadHeavyBuild,
@@ -1037,9 +1062,10 @@ public class BuildCommand extends AbstractCommand {
               + " and timeout elapsed. Terminating.."));
 
       int finalExitCode;
-      if (distBuildControllerInvocationArgs
-          .getDistLocalBuildMode()
-          .equals(DistLocalBuildMode.FIRE_AND_FORGET)) {
+      DistLocalBuildMode distLocalBuildMode =
+          distBuildControllerInvocationArgs.getDistLocalBuildMode();
+      if (distLocalBuildMode.equals(DistLocalBuildMode.FIRE_AND_FORGET)
+          || distLocalBuildMode.equals(DistLocalBuildMode.RULE_KEY_DIVERGENCE_CHECK)) {
         finalExitCode = localExitCode;
       } else {
         finalExitCode =
@@ -1362,6 +1388,35 @@ public class BuildCommand extends AbstractCommand {
           "Targets specified via `--just-build` must be a subset of action graph.");
     }
     return ImmutableSet.of(explicitTarget);
+  }
+
+  /** Initializes localRuleKeyCalculator (for use in rule key divergence checker) */
+  protected void initLocalBuild(
+      CommandRunnerParams params,
+      GraphsAndBuildTargets graphsAndBuildTargets,
+      WeightedListeningExecutorService executor,
+      Optional<ThriftRuleKeyLogger> ruleKeyLogger,
+      RemoteBuildRuleCompletionWaiter remoteBuildRuleCompletionWaiter,
+      boolean isDownloadHeavyBuild,
+      RuleKeyCacheScope<RuleKey> ruleKeyCacheScope) {
+    ActionGraphAndBuilder actionGraphAndBuilder =
+        graphsAndBuildTargets.getGraphs().getActionGraphAndBuilder();
+    LocalBuildExecutor builder =
+        new LocalBuildExecutor(
+            params.createBuilderArgs(),
+            getExecutionContext(),
+            actionGraphAndBuilder,
+            new LocalCachingBuildEngineDelegate(params.getFileHashCache()),
+            executor,
+            isKeepGoing(),
+            isUsingDistributedBuild(),
+            isDownloadHeavyBuild,
+            ruleKeyCacheScope,
+            getBuildEngineMode(),
+            ruleKeyLogger,
+            remoteBuildRuleCompletionWaiter);
+    localRuleKeyCalculator.set(builder.getCachingBuildEngine().getRuleKeyCalculator());
+    builder.shutdown();
   }
 
   protected ExitCode executeLocalBuild(

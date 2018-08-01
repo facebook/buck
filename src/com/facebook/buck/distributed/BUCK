@@ -35,6 +35,7 @@ COMMON_FILES = (
     "RemoteStateBasedFileHashCache.java",
     "NoopArtifactCacheByBuildRule.java",
     "StampedeLocalBuildStatusEvent.java",
+    "RuleKeyUtils.java",
 )
 
 java_immutables_library(
@@ -89,6 +90,7 @@ java_immutables_library(
         "//src/com/facebook/buck/artifact_cache:artifact_cache",
         "//src/com/facebook/buck/config:config",
         "//src/com/facebook/buck/core/build/engine/delegate:delegate",
+        "//src/com/facebook/buck/core/build/engine/impl:impl",
         "//src/com/facebook/buck/core/cell/impl:impl",
         "//src/com/facebook/buck/core/model/actiongraph:actiongraph",
         "//src/com/facebook/buck/core/model/impl:impl",

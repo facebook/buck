@@ -19,7 +19,8 @@ public enum BuildSlaveEventType implements org.apache.thrift.TEnum {
   ALL_BUILD_RULES_FINISHED_EVENT(4),
   MOST_BUILD_RULES_FINISHED_EVENT(5),
   COORDINATOR_BUILD_PROGRESS_EVENT(6),
-  BUILD_RULE_UNLOCKED_EVENT(7);
+  BUILD_RULE_UNLOCKED_EVENT(7),
+  RULE_KEY_CALCULATED_EVENT(8);
 
   private final int value;
 
@@ -56,6 +57,8 @@ public enum BuildSlaveEventType implements org.apache.thrift.TEnum {
         return COORDINATOR_BUILD_PROGRESS_EVENT;
       case 7:
         return BUILD_RULE_UNLOCKED_EVENT;
+      case 8:
+        return RULE_KEY_CALCULATED_EVENT;
       default:
         return null;
     }

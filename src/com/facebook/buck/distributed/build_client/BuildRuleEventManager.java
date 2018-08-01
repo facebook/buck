@@ -16,6 +16,7 @@
 package com.facebook.buck.distributed.build_client;
 
 import com.facebook.buck.core.build.distributed.synchronization.RemoteBuildRuleCompletionNotifier;
+import com.facebook.buck.distributed.thrift.RuleKeyCalculatedEvent;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.timing.Clock;
 import com.google.common.annotations.VisibleForTesting;
@@ -36,6 +37,9 @@ public class BuildRuleEventManager {
   private final List<TimestampedBuildRuleFinishedEvent> pendingBuildRuleFinishedEvent =
       new ArrayList<>();
 
+  @GuardedBy("this")
+  private final List<RuleKeyCalculatedEvent> ruleKeyCalculatedEvents = new ArrayList<>();
+
   private volatile boolean allBuildRulesFinishedEventReceived = false;
 
   public BuildRuleEventManager(
@@ -45,6 +49,17 @@ public class BuildRuleEventManager {
     this.remoteBuildRuleCompletionNotifier = remoteBuildRuleCompletionNotifier;
     this.clock = clock;
     this.cacheSynchronizationSafetyMarginMillis = cacheSynchronizationSafetyMarginMillis;
+  }
+
+  /** Keeps track of all received RuleKeyCalculatedEvents */
+  public synchronized void recordRuleKeyCalculatedEvent(RuleKeyCalculatedEvent event) {
+    LOG.debug(
+        String.format("Received RULE_KEY_CALCULATED_EVENT for [%s].", event.getBuildTarget()));
+    ruleKeyCalculatedEvents.add(event);
+  }
+
+  public synchronized List<RuleKeyCalculatedEvent> getRuleKeyCalculatedEvents() {
+    return ruleKeyCalculatedEvents;
   }
 
   /**

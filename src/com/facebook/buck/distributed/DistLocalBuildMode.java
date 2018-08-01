@@ -26,4 +26,6 @@ public enum DistLocalBuildMode {
   NO_WAIT_FOR_REMOTE,
   // Fire-up the remote build and exit local build.
   FIRE_AND_FORGET,
+  // Checks that rule keys match on both the client that kicked off the build and at remote workers
+  RULE_KEY_DIVERGENCE_CHECK,
 }
