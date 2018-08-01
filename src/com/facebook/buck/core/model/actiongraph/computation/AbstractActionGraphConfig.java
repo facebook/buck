@@ -44,4 +44,12 @@ public abstract class AbstractActionGraphConfig implements ConfigView<BuckConfig
         .getExperimentGroups(
             "cache", "incremental_action_graph_experiment", IncrementalActionGraphMode.class);
   }
+
+  /** Whether to parallelize action graph creation. */
+  @Value.Derived
+  public ActionGraphParallelizationMode getActionGraphParallelizationMode() {
+    return getDelegate()
+        .getEnum("build", "action_graph_parallelization", ActionGraphParallelizationMode.class)
+        .orElse(ActionGraphParallelizationMode.DEFAULT);
+  }
 }

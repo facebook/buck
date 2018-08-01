@@ -19,7 +19,6 @@ package com.facebook.buck.distributed;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-import com.facebook.buck.config.ActionGraphParallelizationMode;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.core.cell.Cell;
@@ -27,6 +26,7 @@ import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphCache;
+import com.facebook.buck.core.model.actiongraph.computation.ActionGraphParallelizationMode;
 import com.facebook.buck.core.model.actiongraph.computation.IncrementalActionGraphMode;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.rules.BuildRuleResolver;

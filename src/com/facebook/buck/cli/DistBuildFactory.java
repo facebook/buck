@@ -18,6 +18,7 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.artifact_cache.ArtifactCacheFactory;
 import com.facebook.buck.config.resources.ResourcesConfig;
+import com.facebook.buck.core.model.actiongraph.computation.ActionGraphConfig;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.distributed.DistBuildConfig;
 import com.facebook.buck.distributed.DistBuildMode;
@@ -212,7 +213,10 @@ public abstract class DistBuildFactory {
             .setMaxActionGraphParallelism(resource.getMaximumResourceAmounts().getCpu())
             .setRemoteCommand(state.getRemoteState().getCommand())
             .setActionGraphParallelizationMode(
-                params.getBuckConfig().getActionGraphParallelizationMode())
+                params
+                    .getBuckConfig()
+                    .getView(ActionGraphConfig.class)
+                    .getActionGraphParallelizationMode())
             .build());
   }
 }

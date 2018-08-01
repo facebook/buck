@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.config;
+package com.facebook.buck.core.model.actiongraph.computation;
 
 import com.facebook.buck.util.randomizedtrial.WithProbability;
 

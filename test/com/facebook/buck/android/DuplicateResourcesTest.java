@@ -20,7 +20,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeFalse;
 
-import com.facebook.buck.config.ActionGraphParallelizationMode;
 import com.facebook.buck.core.build.buildable.context.FakeBuildableContext;
 import com.facebook.buck.core.build.context.FakeBuildContext;
 import com.facebook.buck.core.cell.TestCellBuilder;
@@ -28,6 +27,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphCache;
+import com.facebook.buck.core.model.actiongraph.computation.ActionGraphParallelizationMode;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;

@@ -20,6 +20,7 @@ import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphCache;
+import com.facebook.buck.core.model.actiongraph.computation.ActionGraphConfig;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -178,7 +179,10 @@ public class AuditClasspathCommand extends AbstractCommand {
                         params.getBuckEventBus(),
                         targetGraph,
                         params.getCell().getCellProvider(),
-                        params.getBuckConfig().getActionGraphParallelizationMode(),
+                        params
+                            .getBuckConfig()
+                            .getView(ActionGraphConfig.class)
+                            .getActionGraphParallelizationMode(),
                         params.getBuckConfig().getShouldInstrumentActionGraph(),
                         params.getPoolSupplier()))
             .getActionGraphBuilder();
@@ -223,7 +227,10 @@ public class AuditClasspathCommand extends AbstractCommand {
                         params.getBuckEventBus(),
                         targetGraph,
                         params.getCell().getCellProvider(),
-                        params.getBuckConfig().getActionGraphParallelizationMode(),
+                        params
+                            .getBuckConfig()
+                            .getView(ActionGraphConfig.class)
+                            .getActionGraphParallelizationMode(),
                         params.getBuckConfig().getShouldInstrumentActionGraph(),
                         params.getPoolSupplier()))
             .getActionGraphBuilder();

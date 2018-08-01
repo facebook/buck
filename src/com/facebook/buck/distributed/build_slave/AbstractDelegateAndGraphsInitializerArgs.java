@@ -16,9 +16,9 @@
 
 package com.facebook.buck.distributed.build_slave;
 
-import com.facebook.buck.config.ActionGraphParallelizationMode;
 import com.facebook.buck.core.cell.CellProvider;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphCache;
+import com.facebook.buck.core.model.actiongraph.computation.ActionGraphParallelizationMode;
 import com.facebook.buck.core.model.actiongraph.computation.IncrementalActionGraphMode;
 import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypesProvider;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;

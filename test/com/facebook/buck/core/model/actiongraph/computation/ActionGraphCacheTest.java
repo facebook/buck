@@ -27,7 +27,6 @@ import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.config.ActionGraphParallelizationMode;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;

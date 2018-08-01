@@ -16,7 +16,6 @@
 
 package com.facebook.buck.core.model.actiongraph.computation;
 
-import com.facebook.buck.config.ActionGraphParallelizationMode;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.core.cell.CellProvider;
 import com.facebook.buck.core.model.BuildTarget;
@@ -94,6 +93,7 @@ public class ActionGraphCache {
       BuckConfig buckConfig,
       RuleKeyConfiguration ruleKeyConfiguration,
       CloseableMemoizedSupplier<ForkJoinPool> poolSupplier) {
+    ActionGraphConfig actionGraphConfig = buckConfig.getView(ActionGraphConfig.class);
     return getActionGraph(
         eventBus,
         buckConfig.isActionGraphCheckingEnabled(),
@@ -101,11 +101,11 @@ public class ActionGraphCache {
         targetGraph,
         cellProvider,
         ruleKeyConfiguration,
-        buckConfig.getActionGraphParallelizationMode(),
+        actionGraphConfig.getActionGraphParallelizationMode(),
         Optional.empty(),
         buckConfig.getShouldInstrumentActionGraph(),
-        buckConfig.getView(ActionGraphConfig.class).getIncrementalActionGraphMode(),
-        buckConfig.getView(ActionGraphConfig.class).getIncrementalActionGraphExperimentGroups(),
+        actionGraphConfig.getIncrementalActionGraphMode(),
+        actionGraphConfig.getIncrementalActionGraphExperimentGroups(),
         poolSupplier);
   }
 
@@ -118,6 +118,7 @@ public class ActionGraphCache {
       RuleKeyConfiguration ruleKeyConfiguration,
       Optional<ThriftRuleKeyLogger> ruleKeyLogger,
       CloseableMemoizedSupplier<ForkJoinPool> poolSupplier) {
+    ActionGraphConfig actionGraphConfig = buckConfig.getView(ActionGraphConfig.class);
     return getActionGraph(
         eventBus,
         buckConfig.isActionGraphCheckingEnabled(),
@@ -125,11 +126,11 @@ public class ActionGraphCache {
         targetGraph,
         cellProvider,
         ruleKeyConfiguration,
-        buckConfig.getActionGraphParallelizationMode(),
+        actionGraphConfig.getActionGraphParallelizationMode(),
         ruleKeyLogger,
         buckConfig.getShouldInstrumentActionGraph(),
-        buckConfig.getView(ActionGraphConfig.class).getIncrementalActionGraphMode(),
-        buckConfig.getView(ActionGraphConfig.class).getIncrementalActionGraphExperimentGroups(),
+        actionGraphConfig.getIncrementalActionGraphMode(),
+        actionGraphConfig.getIncrementalActionGraphExperimentGroups(),
         poolSupplier);
   }
 

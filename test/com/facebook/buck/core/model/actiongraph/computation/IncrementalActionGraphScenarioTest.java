@@ -23,7 +23,6 @@ import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
-import com.facebook.buck.config.ActionGraphParallelizationMode;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.core.build.engine.RuleDepsCache;

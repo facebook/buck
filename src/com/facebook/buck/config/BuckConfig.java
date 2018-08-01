@@ -1014,12 +1014,6 @@ public class BuckConfig implements ConfigPathGetter {
         .orElse(FileHashCacheMode.DEFAULT);
   }
 
-  /** Whether to parallelize action graph creation. */
-  public ActionGraphParallelizationMode getActionGraphParallelizationMode() {
-    return getEnum("build", "action_graph_parallelization", ActionGraphParallelizationMode.class)
-        .orElse(ActionGraphParallelizationMode.DEFAULT);
-  }
-
   public Config getConfig() {
     return config;
   }
