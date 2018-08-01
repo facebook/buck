@@ -545,6 +545,7 @@
                                         build-module-gwt,
                                         build-module-haskell,
                                         build-module-intellij,
+                                        build-module-js,
                                         build-module-lua,
                                         build-module-ocaml,
                                         build-module-python,
@@ -624,6 +625,14 @@
         <include name="com/facebook/buck/features/project/intellij/templates/*.st"/>
       </module-resources>
     </build-buck-module-jar-with-resources>
+  </target>
+
+  <target name="build-module-js" depends="compile">
+    <build-buck-module-jar module-name="js">
+      <module-javac-params>
+        <include name="com/facebook/buck/features/js/**/*.java" />
+      </module-javac-params>
+    </build-buck-module-jar>
   </target>
 
   <target name="build-module-lua" depends="compile, build-module-python">

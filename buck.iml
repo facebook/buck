@@ -14,8 +14,8 @@
       <sourceFolder url="file://$MODULE_DIR$/test/com/facebook/buck/android/toolchain/ndk/impl/testdata" type="java-test-resource" />
       <sourceFolder url="file://$MODULE_DIR$/test/com/facebook/buck/cli/testdata" type="java-test-resource" relativeOutputPath="com/facebook/buck/cli/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/.buckd" />
-      <excludeFolder url="file://$MODULE_DIR$/build" />
       <excludeFolder url="file://$MODULE_DIR$/buck-out" />
+      <excludeFolder url="file://$MODULE_DIR$/build" />
       <excludeFolder url="file://$MODULE_DIR$/src/com/facebook/buck/android/support" />
       <excludeFolder url="file://$MODULE_DIR$/src/com/facebook/buck/intellij" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/android/agent/util/testdata" />
@@ -39,6 +39,7 @@
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/event/listener/integration/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/event/listener/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/features/gwt/testdata/gwt_binary" />
+      <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/features/js/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/features/project/intellij/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/features/zip/rules/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/go/testdata" />
@@ -47,7 +48,6 @@
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/haskell/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/io/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/io/watchman/testdata" />
-      <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/js/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/jvm/groovy/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/jvm/java/abi/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/jvm/java/autodeps/testdata" />

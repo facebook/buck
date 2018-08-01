@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright 2017-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -14,14 +14,15 @@
  * under the License.
  */
 
-package com.facebook.buck.features.apple.project;
+package com.facebook.buck.features.js;
 
-import com.facebook.buck.features.js.JsModule;
-import com.facebook.buck.module.BuckModule;
+import com.facebook.buck.rules.macros.StringWithMacros;
+import java.util.Optional;
 
-/** Buck module with a project generator for XCode. */
-@BuckModule(
-    dependencies = {
-      JsModule.class,
-    })
-public class XCodeBuckModule {}
+/** Common interface for rule args that have used-defined JSON that is passed on to the worker. */
+public interface HasExtraJson {
+  /**
+   * A JSON string, optionally containing macros. Macros can be escaped for embedding into strings.
+   */
+  Optional<StringWithMacros> getExtraJson();
+}

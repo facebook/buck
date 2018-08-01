@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright 2017-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -14,14 +14,12 @@
  * under the License.
  */
 
-package com.facebook.buck.features.apple.project;
+package com.facebook.buck.features.js;
 
-import com.facebook.buck.features.js.JsModule;
-import com.facebook.buck.module.BuckModule;
+import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 
-/** Buck module with a project generator for XCode. */
-@BuckModule(
-    dependencies = {
-      JsModule.class,
-    })
-public class XCodeBuckModule {}
+/**
+ * Empty interface to mark {@link DescriptionWithTargetGraph} subclasses that return {@link
+ * JsBundleOutputs} instances from their {@link DescriptionWithTargetGraph#createBuildRule} method.
+ */
+public interface JsBundleOutputsDescription<T> extends DescriptionWithTargetGraph<T> {}

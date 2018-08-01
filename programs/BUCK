@@ -101,6 +101,7 @@ BUCK_MODULES = {
     "gwt": "//src/com/facebook/buck/features/gwt:gwt",
     "haskell": "//src/com/facebook/buck/features/haskell:haskell",
     "intellij": "//src/com/facebook/buck/features/project/intellij:intellij",
+    "js": "//src/com/facebook/buck/features/js:js",
     "lua": "//src/com/facebook/buck/features/lua:lua",
     "ocaml": "//src/com/facebook/buck/features/ocaml:ocaml",
     "python": "//src/com/facebook/buck/features/python:module",
