@@ -61,12 +61,8 @@ public class PatternTestSelectorTest {
   public void shouldThrowOnMultiHashInput() {
     assertThrowsParseException("##");
     assertThrowsParseException("a##");
-    assertThrowsParseException("#b#");
-    assertThrowsParseException("a#b#");
     assertThrowsParseException("##c");
     assertThrowsParseException("a##c");
-    assertThrowsParseException("#b#c");
-    assertThrowsParseException("a#b#c");
   }
 
   private void assertThrowsParseException(String rawSelector) {
@@ -127,6 +123,27 @@ public class PatternTestSelectorTest {
     assertTrue(selector.matches(desc1));
     assertTrue(selector.matches(desc2));
     assertFalse(selector.matches(desc3));
+  }
+
+  @Test
+  public void sholdMatchParameterizedTestMethod() {
+    TestSelector selector = PatternTestSelector.buildFromSelectorString("Foo#bar\\[Param\\]");
+
+    assertTrue(selector.matches(new TestDescription("Foo", "bar[Param]")));
+    assertTrue(selector.matches(new TestDescription("Outer$Foo", "bar[Param]")));
+    assertFalse(selector.matches(new TestDescription("Foo", "bar[NotParam]")));
+    assertFalse(selector.matches(new TestDescription("Foo", "bazzz[Param]")));
+  }
+
+  @Test
+  public void sholdMatchParameterizedTestMethodWithHash() {
+    TestSelector selector = PatternTestSelector.buildFromSelectorString("Foo#bar\\[Param#name\\]");
+
+    assertTrue(selector.matches(new TestDescription("Foo", "bar[Param#name]")));
+    assertTrue(selector.matches(new TestDescription("Outer$Foo", "bar[Param#name]")));
+    assertFalse(selector.matches(new TestDescription("Outer$Foo", "bar[Param#notname]")));
+    assertFalse(selector.matches(new TestDescription("Foo", "bar[NotParam#name]")));
+    assertFalse(selector.matches(new TestDescription("Foo", "bazzz[Param#name]")));
   }
 
   @Test
