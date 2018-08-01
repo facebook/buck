@@ -16,7 +16,6 @@
 
 package com.facebook.buck.core.model.actiongraph.computation;
 
-import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.core.cell.CellProvider;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.actiongraph.ActionGraph;
@@ -90,20 +89,19 @@ public class ActionGraphCache {
       BuckEventBus eventBus,
       TargetGraph targetGraph,
       CellProvider cellProvider,
-      BuckConfig buckConfig,
+      ActionGraphConfig actionGraphConfig,
       RuleKeyConfiguration ruleKeyConfiguration,
       CloseableMemoizedSupplier<ForkJoinPool> poolSupplier) {
-    ActionGraphConfig actionGraphConfig = buckConfig.getView(ActionGraphConfig.class);
     return getActionGraph(
         eventBus,
-        buckConfig.isActionGraphCheckingEnabled(),
-        buckConfig.isSkipActionGraphCache(),
+        actionGraphConfig.isActionGraphCheckingEnabled(),
+        actionGraphConfig.isSkipActionGraphCache(),
         targetGraph,
         cellProvider,
         ruleKeyConfiguration,
         actionGraphConfig.getActionGraphParallelizationMode(),
         Optional.empty(),
-        buckConfig.getShouldInstrumentActionGraph(),
+        actionGraphConfig.getShouldInstrumentActionGraph(),
         actionGraphConfig.getIncrementalActionGraphMode(),
         actionGraphConfig.getIncrementalActionGraphExperimentGroups(),
         poolSupplier);
@@ -114,21 +112,20 @@ public class ActionGraphCache {
       BuckEventBus eventBus,
       TargetGraph targetGraph,
       CellProvider cellProvider,
-      BuckConfig buckConfig,
+      ActionGraphConfig actionGraphConfig,
       RuleKeyConfiguration ruleKeyConfiguration,
       Optional<ThriftRuleKeyLogger> ruleKeyLogger,
       CloseableMemoizedSupplier<ForkJoinPool> poolSupplier) {
-    ActionGraphConfig actionGraphConfig = buckConfig.getView(ActionGraphConfig.class);
     return getActionGraph(
         eventBus,
-        buckConfig.isActionGraphCheckingEnabled(),
-        buckConfig.isSkipActionGraphCache(),
+        actionGraphConfig.isActionGraphCheckingEnabled(),
+        actionGraphConfig.isSkipActionGraphCache(),
         targetGraph,
         cellProvider,
         ruleKeyConfiguration,
         actionGraphConfig.getActionGraphParallelizationMode(),
         ruleKeyLogger,
-        buckConfig.getShouldInstrumentActionGraph(),
+        actionGraphConfig.getShouldInstrumentActionGraph(),
         actionGraphConfig.getIncrementalActionGraphMode(),
         actionGraphConfig.getIncrementalActionGraphExperimentGroups(),
         poolSupplier);

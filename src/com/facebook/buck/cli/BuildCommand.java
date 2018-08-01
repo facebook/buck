@@ -39,6 +39,7 @@ import com.facebook.buck.core.build.event.BuildEvent;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
+import com.facebook.buck.core.model.actiongraph.computation.ActionGraphConfig;
 import com.facebook.buck.core.model.graph.ActionAndTargetGraphs;
 import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
@@ -1355,7 +1356,7 @@ public class BuildCommand extends AbstractCommand {
                 params.getBuckEventBus(),
                 targetGraphAndBuildTargets.getTargetGraph(),
                 params.getCell().getCellProvider(),
-                params.getBuckConfig(),
+                params.getBuckConfig().getView(ActionGraphConfig.class),
                 params.getRuleKeyConfiguration(),
                 ruleKeyLogger,
                 params.getPoolSupplier());

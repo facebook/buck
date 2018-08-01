@@ -183,7 +183,10 @@ public class AuditClasspathCommand extends AbstractCommand {
                             .getBuckConfig()
                             .getView(ActionGraphConfig.class)
                             .getActionGraphParallelizationMode(),
-                        params.getBuckConfig().getShouldInstrumentActionGraph(),
+                        params
+                            .getBuckConfig()
+                            .getView(ActionGraphConfig.class)
+                            .getShouldInstrumentActionGraph(),
                         params.getPoolSupplier()))
             .getActionGraphBuilder();
     SourcePathResolver pathResolver =
@@ -231,7 +234,10 @@ public class AuditClasspathCommand extends AbstractCommand {
                             .getBuckConfig()
                             .getView(ActionGraphConfig.class)
                             .getActionGraphParallelizationMode(),
-                        params.getBuckConfig().getShouldInstrumentActionGraph(),
+                        params
+                            .getBuckConfig()
+                            .getView(ActionGraphConfig.class)
+                            .getShouldInstrumentActionGraph(),
                         params.getPoolSupplier()))
             .getActionGraphBuilder();
     SourcePathResolver pathResolver =

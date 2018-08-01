@@ -25,6 +25,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.actiongraph.ActionGraph;
 import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
+import com.facebook.buck.core.model.actiongraph.computation.ActionGraphConfig;
 import com.facebook.buck.core.model.impl.InMemoryBuildFileTree;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
@@ -409,7 +410,7 @@ public class TargetsCommand extends AbstractCommand {
                 params.getBuckEventBus(),
                 targetGraphAndTargets.getTargetGraph(),
                 params.getCell().getCellProvider(),
-                params.getBuckConfig(),
+                params.getBuckConfig().getView(ActionGraphConfig.class),
                 params.getRuleKeyConfiguration(),
                 params.getPoolSupplier());
 
@@ -922,7 +923,7 @@ public class TargetsCommand extends AbstractCommand {
                     params.getBuckEventBus(),
                     targetGraphAndTargetNodes.getFirst(),
                     params.getCell().getCellProvider(),
-                    params.getBuckConfig(),
+                    params.getBuckConfig().getView(ActionGraphConfig.class),
                     params.getRuleKeyConfiguration(),
                     params.getPoolSupplier());
         actionGraph = Optional.of(result.getActionGraph());

@@ -52,4 +52,27 @@ public abstract class AbstractActionGraphConfig implements ConfigView<BuckConfig
         .getEnum("build", "action_graph_parallelization", ActionGraphParallelizationMode.class)
         .orElse(ActionGraphParallelizationMode.DEFAULT);
   }
+
+  @Value.Derived
+  public boolean isActionGraphCheckingEnabled() {
+    return getDelegate().getBooleanValue("cache", "action_graph_cache_check_enabled", false);
+  }
+
+  /**
+   * @return whether the current invocation of Buck should skip the Action Graph cache, leaving the
+   *     cached Action Graph in memory for the next request and creating a fresh Action Graph for
+   *     the current request (which will be garbage-collected when the current request is complete).
+   *     Commonly, a one-off request, like from a linter, will specify this option so that it does
+   *     not invalidate the primary in-memory Action Graph that the user is likely relying on for
+   *     fast iterative builds.
+   */
+  @Value.Derived
+  public boolean isSkipActionGraphCache() {
+    return getDelegate().getBooleanValue("client", "skip-action-graph-cache", false);
+  }
+
+  /** Whether to instrument the action graph and record performance */
+  public boolean getShouldInstrumentActionGraph() {
+    return getDelegate().getBooleanValue("instrumentation", "action_graph", false);
+  }
 }

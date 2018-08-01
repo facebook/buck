@@ -18,6 +18,7 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.core.model.actiongraph.ActionGraph;
 import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
+import com.facebook.buck.core.model.actiongraph.computation.ActionGraphConfig;
 import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.event.ConsoleEvent;
@@ -78,7 +79,7 @@ public class AuditActionGraphCommand extends AbstractCommand {
                   params.getBuckEventBus(),
                   targetGraphAndBuildTargets.getTargetGraph(),
                   params.getCell().getCellProvider(),
-                  params.getBuckConfig(),
+                  params.getBuckConfig().getView(ActionGraphConfig.class),
                   params.getRuleKeyConfiguration(),
                   params.getPoolSupplier());
 

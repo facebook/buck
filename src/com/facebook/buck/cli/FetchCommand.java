@@ -102,7 +102,10 @@ public class FetchCommand extends BuildCommand {
                             .getBuckConfig()
                             .getView(ActionGraphConfig.class)
                             .getActionGraphParallelizationMode(),
-                        params.getBuckConfig().getShouldInstrumentActionGraph(),
+                        params
+                            .getBuckConfig()
+                            .getView(ActionGraphConfig.class)
+                            .getShouldInstrumentActionGraph(),
                         params.getPoolSupplier()));
         buildTargets = ruleGenerator.getDownloadableTargets();
       } catch (BuildFileParseException | VersionException e) {

@@ -30,6 +30,7 @@ import com.facebook.buck.core.build.engine.impl.MetadataChecker;
 import com.facebook.buck.core.build.event.BuildEvent;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
+import com.facebook.buck.core.model.actiongraph.computation.ActionGraphConfig;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -557,7 +558,7 @@ public class TestCommand extends BuildCommand {
                   params.getBuckEventBus(),
                   targetGraphAndBuildTargets.getTargetGraph(),
                   params.getCell().getCellProvider(),
-                  params.getBuckConfig(),
+                  params.getBuckConfig().getView(ActionGraphConfig.class),
                   params.getRuleKeyConfiguration(),
                   params.getPoolSupplier());
       // Look up all of the test rules in the action graph.

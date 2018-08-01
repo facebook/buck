@@ -562,10 +562,6 @@ public class BuckConfig implements ConfigPathGetter {
     return platform;
   }
 
-  public boolean isActionGraphCheckingEnabled() {
-    return getBooleanValue("cache", "action_graph_cache_check_enabled", false);
-  }
-
   public int getMaxActionGraphCacheEntries() {
     return getInteger("cache", "max_action_graph_cache_entries").orElse(1);
   }
@@ -735,18 +731,6 @@ public class BuckConfig implements ConfigPathGetter {
 
   public String getClientId() {
     return getValue("client", "id").orElse("buck");
-  }
-
-  /**
-   * @return whether the current invocation of Buck should skip the Action Graph cache, leaving the
-   *     cached Action Graph in memory for the next request and creating a fresh Action Graph for
-   *     the current request (which will be garbage-collected when the current request is complete).
-   *     Commonly, a one-off request, like from a linter, will specify this option so that it does
-   *     not invalidate the primary in-memory Action Graph that the user is likely relying on for
-   *     fast iterative builds.
-   */
-  public boolean isSkipActionGraphCache() {
-    return getBooleanValue("client", "skip-action-graph-cache", false);
   }
 
   /** @return the number of threads Buck should use. */
@@ -1029,11 +1013,6 @@ public class BuckConfig implements ConfigPathGetter {
 
   public boolean isEmbeddedCellBuckOutEnabled() {
     return getBooleanValue("project", "embedded_cell_buck_out_enabled", false);
-  }
-
-  /** Whether to instrument the action graph and record performance */
-  public boolean getShouldInstrumentActionGraph() {
-    return getBooleanValue("instrumentation", "action_graph", false);
   }
 
   public Optional<String> getPathToBuildPrehookScript() {
