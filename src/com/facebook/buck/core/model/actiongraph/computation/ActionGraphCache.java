@@ -18,7 +18,6 @@ package com.facebook.buck.core.model.actiongraph.computation;
 
 import com.facebook.buck.config.ActionGraphParallelizationMode;
 import com.facebook.buck.config.BuckConfig;
-import com.facebook.buck.config.IncrementalActionGraphMode;
 import com.facebook.buck.core.cell.CellProvider;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.actiongraph.ActionGraph;
@@ -105,8 +104,8 @@ public class ActionGraphCache {
         buckConfig.getActionGraphParallelizationMode(),
         Optional.empty(),
         buckConfig.getShouldInstrumentActionGraph(),
-        buckConfig.getIncrementalActionGraphMode(),
-        buckConfig.getIncrementalActionGraphExperimentGroups(),
+        buckConfig.getView(ActionGraphConfig.class).getIncrementalActionGraphMode(),
+        buckConfig.getView(ActionGraphConfig.class).getIncrementalActionGraphExperimentGroups(),
         poolSupplier);
   }
 
@@ -129,8 +128,8 @@ public class ActionGraphCache {
         buckConfig.getActionGraphParallelizationMode(),
         ruleKeyLogger,
         buckConfig.getShouldInstrumentActionGraph(),
-        buckConfig.getIncrementalActionGraphMode(),
-        buckConfig.getIncrementalActionGraphExperimentGroups(),
+        buckConfig.getView(ActionGraphConfig.class).getIncrementalActionGraphMode(),
+        buckConfig.getView(ActionGraphConfig.class).getIncrementalActionGraphExperimentGroups(),
         poolSupplier);
   }
 

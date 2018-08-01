@@ -23,6 +23,7 @@ import com.facebook.buck.config.resources.ResourcesConfig;
 import com.facebook.buck.core.build.engine.cache.manager.BuildInfoStoreManager;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphCache;
+import com.facebook.buck.core.model.actiongraph.computation.ActionGraphConfig;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypesProvider;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
@@ -173,9 +174,15 @@ abstract class AbstractDistBuildSlaveExecutorArgs {
         .setShouldInstrumentActionGraph(
             this.getDistBuildConfig().getBuckConfig().getShouldInstrumentActionGraph())
         .setIncrementalActionGraphMode(
-            this.getDistBuildConfig().getBuckConfig().getIncrementalActionGraphMode())
+            this.getDistBuildConfig()
+                .getBuckConfig()
+                .getView(ActionGraphConfig.class)
+                .getIncrementalActionGraphMode())
         .setIncrementalActionGraphExperimentGroups(
-            this.getDistBuildConfig().getBuckConfig().getIncrementalActionGraphExperimentGroups())
+            this.getDistBuildConfig()
+                .getBuckConfig()
+                .getView(ActionGraphConfig.class)
+                .getIncrementalActionGraphExperimentGroups())
         .setDistBuildConfig(this.getDistBuildConfig())
         .setMaxActionGraphParallelism(this.getMaxActionGraphParallelism())
         .setActionGraphParallelizationMode(this.getActionGraphParallelizationMode())

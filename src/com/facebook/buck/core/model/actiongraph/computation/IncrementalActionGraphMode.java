@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.config;
+package com.facebook.buck.core.model.actiongraph.computation;
 
 /**
  * Incremental action graph mode with A/B experiment support.
