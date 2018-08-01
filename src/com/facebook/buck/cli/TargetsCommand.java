@@ -17,6 +17,7 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.core.build.engine.impl.DefaultRuleDepsCache;
+import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.description.arg.HasTests;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildFileTree;
@@ -25,7 +26,6 @@ import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.actiongraph.ActionGraph;
 import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
 import com.facebook.buck.core.model.impl.InMemoryBuildFileTree;
-import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -37,7 +37,6 @@ import com.facebook.buck.core.rulekey.calculator.ParallelRuleKeyCalculator;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypes;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypes;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
@@ -334,7 +333,7 @@ public class TargetsCommand extends AbstractCommand {
   private ExitCode runWithExecutor(CommandRunnerParams params, ListeningExecutorService executor)
       throws IOException, InterruptedException, BuildFileParseException, CycleException,
           VersionException {
-    Optional<ImmutableSet<Class<? extends DescriptionWithTargetGraph<?>>>> descriptionClasses =
+    Optional<ImmutableSet<Class<? extends BaseDescription<?>>>> descriptionClasses =
         getDescriptionClassFromParams(params);
     if (!descriptionClasses.isPresent()) {
       return ExitCode.FATAL_GENERIC;
@@ -459,7 +458,7 @@ public class TargetsCommand extends AbstractCommand {
   private TargetGraphAndBuildTargets buildTargetGraphAndTargetsForShowRules(
       CommandRunnerParams params,
       ListeningExecutorService executor,
-      Optional<ImmutableSet<Class<? extends DescriptionWithTargetGraph<?>>>> descriptionClasses)
+      Optional<ImmutableSet<Class<? extends BaseDescription<?>>>> descriptionClasses)
       throws InterruptedException, BuildFileParseException, IOException {
     if (getArguments().isEmpty()) {
       ParserConfig parserConfig = params.getBuckConfig().getView(ParserConfig.class);
@@ -511,7 +510,7 @@ public class TargetsCommand extends AbstractCommand {
    */
   private TargetGraphAndBuildTargets filterTargetGraphAndBuildTargetsByType(
       TargetGraphAndBuildTargets targetGraphAndBuildTargets,
-      Optional<ImmutableSet<Class<? extends DescriptionWithTargetGraph<?>>>> descriptionClasses) {
+      Optional<ImmutableSet<Class<? extends BaseDescription<?>>>> descriptionClasses) {
     if (!descriptionClasses.isPresent() || descriptionClasses.get().size() == 0) {
       return targetGraphAndBuildTargets;
     }
@@ -555,7 +554,7 @@ public class TargetsCommand extends AbstractCommand {
   private SortedMap<String, TargetNode<?>> getMatchingNodes(
       CommandRunnerParams params,
       TargetGraphAndBuildTargets targetGraphAndBuildTargets,
-      Optional<ImmutableSet<Class<? extends DescriptionWithTargetGraph<?>>>> descriptionClasses)
+      Optional<ImmutableSet<Class<? extends BaseDescription<?>>>> descriptionClasses)
       throws IOException {
     PathArguments.ReferencedFiles referencedFiles =
         getReferencedFiles(params.getCell().getFilesystem().getRootPath());
@@ -627,20 +626,17 @@ public class TargetsCommand extends AbstractCommand {
   }
 
   @SuppressWarnings("unchecked")
-  private Optional<ImmutableSet<Class<? extends DescriptionWithTargetGraph<?>>>>
-      getDescriptionClassFromParams(CommandRunnerParams params) {
+  private Optional<ImmutableSet<Class<? extends BaseDescription<?>>>> getDescriptionClassFromParams(
+      CommandRunnerParams params) {
     ImmutableSet<String> types = getTypes();
-    ImmutableSet.Builder<Class<? extends DescriptionWithTargetGraph<?>>> descriptionClassesBuilder =
+    ImmutableSet.Builder<Class<? extends BaseDescription<?>>> descriptionClassesBuilder =
         ImmutableSet.builder();
     for (String name : types) {
       try {
-        KnownBuildRuleTypes knownBuildRuleTypes =
-            params.getKnownBuildRuleTypesProvider().get(params.getCell());
         KnownRuleTypes knownRuleTypes = params.getKnownRuleTypesProvider().get(params.getCell());
         RuleType type = knownRuleTypes.getRuleType(name);
-        DescriptionWithTargetGraph<?> description = knownBuildRuleTypes.getDescription(type);
-        descriptionClassesBuilder.add(
-            (Class<? extends DescriptionWithTargetGraph<?>>) description.getClass());
+        BaseDescription<?> description = knownRuleTypes.getDescription(type);
+        descriptionClassesBuilder.add((Class<? extends BaseDescription<?>>) description.getClass());
       } catch (IllegalArgumentException e) {
         params.getBuckEventBus().post(ConsoleEvent.severe("Invalid build rule type: " + name));
         return Optional.empty();
@@ -688,7 +684,7 @@ public class TargetsCommand extends AbstractCommand {
       TargetGraph graph,
       Optional<ImmutableSet<Path>> referencedFiles,
       Optional<ImmutableSet<BuildTarget>> matchingBuildTargets,
-      Optional<ImmutableSet<Class<? extends DescriptionWithTargetGraph<?>>>> descriptionClasses,
+      Optional<ImmutableSet<Class<? extends BaseDescription<?>>>> descriptionClasses,
       boolean detectTestChanges,
       String buildFileName) {
     ImmutableSet<TargetNode<?>> directOwners;
