@@ -16,7 +16,6 @@
 
 package com.facebook.buck.file.downloader.impl;
 
-import com.facebook.buck.config.DownloadConfig;
 import com.facebook.buck.file.downloader.Downloader;
 import com.facebook.buck.toolchain.ToolchainCreationContext;
 import com.facebook.buck.toolchain.ToolchainFactory;
