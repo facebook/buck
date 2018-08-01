@@ -40,5 +40,11 @@ public interface TestSelector {
    */
   boolean matches(TestDescription description);
 
+  /** @return true if the given className matches this selector */
   boolean matchesClassName(String className);
+
+  /**
+   * @return true if the given classpath may be required by any classes that matches this selector
+   */
+  boolean containsClassPath(String classPath);
 }

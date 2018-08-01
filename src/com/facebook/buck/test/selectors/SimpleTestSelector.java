@@ -80,6 +80,16 @@ public class SimpleTestSelector implements TestSelector {
     return outerClassMatches || Objects.equals(this.className, thatClassName);
   }
 
+  @Override
+  public boolean containsClassPath(String classPath) {
+    // classpath of com.example.A should match selectors matching com.example.A and
+    // com.example.A.Inner
+    if (className == null) {
+      return true;
+    }
+    return className.startsWith(classPath);
+  }
+
   private boolean matchesMethodName(String thatMethodName) {
     if (methodName == null) {
       return true;

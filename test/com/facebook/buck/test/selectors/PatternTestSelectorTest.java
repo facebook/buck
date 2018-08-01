@@ -128,4 +128,59 @@ public class PatternTestSelectorTest {
     assertTrue(selector.matches(desc2));
     assertFalse(selector.matches(desc3));
   }
+
+  @Test
+  public void shouldMatchNestedClassesWithOuterAndInnerPattern() {
+    TestSelector selector = PatternTestSelector.buildFromSelectorString("Outer\\$InnerTest");
+
+    assertTrue(selector.matchesClassName("com.example.Outer$InnerTest"));
+    assertTrue(selector.matchesClassName("com.AnotherOuter$InnerTest"));
+    assertFalse(selector.matchesClassName("com.example.Outer$AnotherInner"));
+    assertFalse(selector.matchesClassName("com.example.AnotherClass$InnerTest"));
+  }
+
+  @Test
+  public void shouldMatchNestedClassesWithOnlyInnerPattern() {
+    TestSelector selector = PatternTestSelector.buildFromSelectorString("\\$InnerTest");
+
+    assertTrue(selector.matchesClassName("com.example.Outer$InnerTest"));
+    assertTrue(selector.matchesClassName("com.AnotherOuter$InnerTest"));
+    assertTrue(selector.matchesClassName("com.example.AnotherClass$InnerTest"));
+    assertFalse(selector.matchesClassName("com.example.Outer$AnotherInner"));
+  }
+
+  @Test
+  public void shouldMatchAllClassPathsWhenClassPatternEmpty() {
+    TestSelector selector = PatternTestSelector.buildFromSelectorString("#someMethod");
+
+    assertTrue(selector.containsClassPath("com.example.Foo"));
+    assertTrue(selector.containsClassPath("com.Bar"));
+  }
+
+  @Test
+  public void shouldMatchClassPathsWithoutNestedClass() {
+    TestSelector selector = PatternTestSelector.buildFromSelectorString("FooTest$");
+
+    assertTrue(selector.containsClassPath("com.example.FooTest"));
+    assertTrue(selector.containsClassPath("com.OtherFooTest"));
+    assertFalse(selector.containsClassPath("com.example.BarTest"));
+    assertFalse(selector.containsClassPath("com.example.FooTest2"));
+
+    selector = PatternTestSelector.buildFromSelectorString("com.example.FooTest$");
+
+    assertTrue(selector.containsClassPath("com.example.FooTest"));
+    assertFalse(selector.containsClassPath("com.OtherFooTest"));
+    assertFalse(selector.containsClassPath("com.example.BarTest"));
+    assertFalse(selector.containsClassPath("com.example.FooTest2"));
+  }
+
+  @Test
+  public void shouldMatchClassPathOfOuterClass() {
+    TestSelector selector = PatternTestSelector.buildFromSelectorString("FooTest\\$Inner");
+
+    assertTrue(selector.containsClassPath("com.example.FooTest"));
+    assertTrue(selector.containsClassPath("com.OtherFooTest"));
+    assertFalse(selector.containsClassPath("com.example.BarTest"));
+    assertFalse(selector.containsClassPath("com.example.FooTest2"));
+  }
 }

@@ -172,6 +172,22 @@ public class PatternTestSelector implements TestSelector {
     return classPattern.matcher(className).find();
   }
 
+  @Override
+  public boolean containsClassPath(String classPath) {
+    if (classPattern == null) {
+      return true;
+    }
+    // Find occurrence of "\$" in the pattern, which indicates a nested class
+    String[] outerInnerPatterns = classPattern.toString().split("\\\\\\$");
+    if (outerInnerPatterns.length == 2) {
+      // If we have an outer class, we should ensure that we are treating the outer class pattern as
+      // matching the end of the classpath, so add a "$"
+      // e.g: pattern of "Foo\$Bar" means it should only match outer classpaths of "Foo", not "FooF"
+      outerInnerPatterns[0] += "$";
+    }
+    return Pattern.compile(outerInnerPatterns[0]).matcher(classPath).find();
+  }
+
   private boolean matchesMethodName(String methodName) {
     if (methodPattern == null || methodName == null) {
       return true;
