@@ -137,7 +137,7 @@ public class PerBuildStateFactory {
 
       RawTargetNodeToTargetNodeFactory rawTargetNodeToTargetNodeFactory =
           new RawTargetNodeToTargetNodeFactory(
-              knownBuildRuleTypesProvider,
+              knownRuleTypesProvider,
               marshaller,
               targetNodeFactory,
               packageBoundaryChecker,

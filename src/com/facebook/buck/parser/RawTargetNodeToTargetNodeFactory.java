@@ -17,13 +17,13 @@
 package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.RawTargetNode;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
-import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypesProvider;
+import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
 import com.facebook.buck.core.select.SelectorList;
 import com.facebook.buck.core.select.SelectorListResolver;
 import com.facebook.buck.event.PerfEventId;
@@ -39,7 +39,7 @@ import java.util.function.Function;
 /** Creates {@link TargetNode} from {@link RawTargetNode}. */
 public class RawTargetNodeToTargetNodeFactory implements ParserTargetNodeFactory<RawTargetNode> {
 
-  private final KnownBuildRuleTypesProvider knownBuildRuleTypesProvider;
+  private final KnownRuleTypesProvider knownRuleTypesProvider;
   private final ConstructorArgMarshaller marshaller;
   private final TargetNodeFactory targetNodeFactory;
   private final PackageBoundaryChecker packageBoundaryChecker;
@@ -47,13 +47,13 @@ public class RawTargetNodeToTargetNodeFactory implements ParserTargetNodeFactory
   private final SelectorListResolver selectorListResolver;
 
   public RawTargetNodeToTargetNodeFactory(
-      KnownBuildRuleTypesProvider knownBuildRuleTypesProvider,
+      KnownRuleTypesProvider knownRuleTypesProvider,
       ConstructorArgMarshaller marshaller,
       TargetNodeFactory targetNodeFactory,
       PackageBoundaryChecker packageBoundaryChecker,
       TargetNodeListener<TargetNode<?>> nodeListener,
       SelectorListResolver selectorListResolver) {
-    this.knownBuildRuleTypesProvider = knownBuildRuleTypesProvider;
+    this.knownRuleTypesProvider = knownRuleTypesProvider;
     this.marshaller = marshaller;
     this.targetNodeFactory = targetNodeFactory;
     this.packageBoundaryChecker = packageBoundaryChecker;
@@ -69,8 +69,8 @@ public class RawTargetNodeToTargetNodeFactory implements ParserTargetNodeFactory
       RawTargetNode rawTargetNode,
       Function<PerfEventId, Scope> perfEventScope) {
 
-    DescriptionWithTargetGraph<?> description =
-        knownBuildRuleTypesProvider.get(cell).getDescription(rawTargetNode.getRuleType());
+    BaseDescription<?> description =
+        knownRuleTypesProvider.get(cell).getDescription(rawTargetNode.getRuleType());
     Cell targetCell = cell.getCell(target);
     ImmutableSet.Builder<BuildTarget> declaredDeps = ImmutableSet.builder();
 
