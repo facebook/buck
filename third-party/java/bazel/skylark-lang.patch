@@ -1,18 +1,8 @@
-From 0275620aa93ace8f111218df562b87797841ea6c Mon Sep 17 00:00:00 2001
-From: Taras Tsugrii <ttsugrii@fb.com>
-Date: Thu, 12 Jul 2018 13:12:47 -0700
-Subject: [PATCH] [Buck] Patch build file to create deployable Skylark jar.
-
----
- .../java/com/google/devtools/build/lib/BUILD  |   49 +-
- .../build/lib/packages/Attribute.java         | 2362 +----------------
- 2 files changed, 45 insertions(+), 2366 deletions(-)
-
 diff --git a/src/main/java/com/google/devtools/build/lib/BUILD b/src/main/java/com/google/devtools/build/lib/BUILD
-index 6b27d1d86b..3e1994d5ad 100644
+index 1c9d30a6bc..d73399a183 100644
 --- a/src/main/java/com/google/devtools/build/lib/BUILD
 +++ b/src/main/java/com/google/devtools/build/lib/BUILD
-@@ -315,16 +315,55 @@ java_library(
+@@ -315,16 +315,54 @@ java_library(
  #
  # IMPORTANT:  NOT A PUBLIC INTERFACE. TARGETS SHOULDN'T DEPEND ON THIS.
  #
@@ -53,7 +43,6 @@ index 6b27d1d86b..3e1994d5ad 100644
 +        "//third_party:asm-commons",
 +        "//third_party:asm-util",
 +        "//third_party:auto_value",
-+        "//third_party:bytebuddy",
 +        "//third_party:guava",
 +        "//third_party:jsr305",
 +        "//src/main/java/com/google/devtools/build/lib/clock",
@@ -77,7 +66,7 @@ diff --git a/src/main/java/com/google/devtools/build/lib/packages/Attribute.java
 index 91a26c2f1e..c7afa8a21d 100644
 --- a/src/main/java/com/google/devtools/build/lib/packages/Attribute.java
 +++ b/src/main/java/com/google/devtools/build/lib/packages/Attribute.java
-@@ -14,55 +14,7 @@
+@@ -14,2299 +14,19 @@
  
  package com.google.devtools.build.lib.packages;
  
@@ -104,7 +93,7 @@ index 91a26c2f1e..c7afa8a21d 100644
 -import com.google.devtools.build.lib.events.EventHandler;
 -import com.google.devtools.build.lib.events.Location;
 -import com.google.devtools.build.lib.packages.RuleClass.Builder.RuleClassNamePredicate;
- import com.google.devtools.build.lib.skyframe.serialization.autocodec.AutoCodec;
+-import com.google.devtools.build.lib.skyframe.serialization.autocodec.AutoCodec;
 -import com.google.devtools.build.lib.skyframe.serialization.autocodec.AutoCodec.VisibleForSerialization;
 -import com.google.devtools.build.lib.skylarkbuildapi.SplitTransitionProviderApi;
 -import com.google.devtools.build.lib.syntax.ClassObject;
@@ -130,16 +119,18 @@ index 91a26c2f1e..c7afa8a21d 100644
 -import java.util.Set;
 -import java.util.concurrent.atomic.AtomicReference;
 -import javax.annotation.Nullable;
- import javax.annotation.concurrent.Immutable;
- 
- /**
-@@ -73,2240 +25,8 @@ import javax.annotation.concurrent.Immutable;
-  */
- @Immutable
- @AutoCodec
+-import javax.annotation.concurrent.Immutable;
+-
+-/**
+- * Metadata of a rule attribute. Contains the attribute name and type, and an default value to be
+- * used if none is provided in a rule declaration in a BUILD file. Attributes are immutable, and may
+- * be shared by more than one rule (for example, <code>foo_binary</code> and <code>foo_library
+- * </code> may share many attributes in common).
+- */
+-@Immutable
+-@AutoCodec
 -public final class Attribute implements Comparable<Attribute> {
-+public final class Attribute {
- 
+-
 -  public static final RuleClassNamePredicate ANY_RULE = RuleClassNamePredicate.unspecified();
 -
 -  public static final RuleClassNamePredicate NO_RULE = RuleClassNamePredicate.only();
@@ -2353,7 +2344,9 @@ index 91a26c2f1e..c7afa8a21d 100644
 -    Preconditions.checkState(isLateBound());
 -    return (LateBoundDefault<?, ?>) defaultValue;
 -  }
--
++import com.google.devtools.build.lib.skyframe.serialization.autocodec.AutoCodec;
++import javax.annotation.concurrent.Immutable;
+ 
 -  /**
 -   * Returns true iff this attribute has a computed default or a condition.
 -   *
@@ -2364,7 +2357,16 @@ index 91a26c2f1e..c7afa8a21d 100644
 -        || (defaultValue instanceof SkylarkComputedDefaultTemplate)
 -        || (condition != null);
 -  }
--
++/**
++ * Metadata of a rule attribute. Contains the attribute name and type, and an default value to be
++ * used if none is provided in a rule declaration in a BUILD file. Attributes are immutable, and may
++ * be shared by more than one rule (for example, <code>foo_binary</code> and <code>foo_library
++ * </code> may share many attributes in common).
++ */
++@Immutable
++@AutoCodec
++public final class Attribute {
+ 
 -  /**
 -   * Returns if this attribute is an implicit dependency according to the naming policy that
 -   * designates implicit attributes.
@@ -2375,11 +2377,10 @@ index 91a26c2f1e..c7afa8a21d 100644
  
    /**
     * Returns if an attribute with the given name is an implicit dependency according to the
-@@ -2316,14 +36,6 @@ public final class Attribute implements Comparable<Attribute> {
-     return name.startsWith("$");
+@@ -2317,14 +37,6 @@ public final class Attribute implements Comparable<Attribute> {
    }
  
--  /**
+   /**
 -   * Returns if this attribute is late-bound according to the naming policy that designates
 -   * late-bound attributes.
 -   */
@@ -2387,9 +2388,10 @@ index 91a26c2f1e..c7afa8a21d 100644
 -    return isLateBound(getName());
 -  }
 -
-   /**
+-  /**
     * Returns if an attribute with the given name is late-bound according to the naming policy
     * that designates late-bound attributes.
+    */
 @@ -2348,76 +60,4 @@ public final class Attribute implements Comparable<Attribute> {
      }
      return nativeAttrName;
@@ -2467,6 +2469,3 @@ index 91a26c2f1e..c7afa8a21d 100644
 -    return cloneBuilder(this.type);
 -  }
  }
--- 
-2.18.0
-

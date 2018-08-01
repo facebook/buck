@@ -1,5 +1,5 @@
 skylark-lang_deploy.jar was built using following steps:
-1) checkout 75810d5910073aa7a1550bbd36544971f3c95ae1 revision of bazel (https://github.com/ttsugriy/bazel.git)
+1) checkout c80185c1b6ea5d746b4a38b8b5b8b5ad4682bc89 revision of bazel (https://github.com/bazelbuild/bazel.git)
 2) git apply skylark-lang.patch
 3) bazel build //src/main/java/com/google/devtools/build/lib:skylark-lang_deploy.jar
 4) bazel build //src/main/java/com/google/devtools/build/lib:skylark-lang_deploy-src.jar
