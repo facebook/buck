@@ -277,8 +277,14 @@ public class XCodeProjectCommandHelper {
     return IDEForceKill.PROMPT;
   }
 
+  private ProjectTestsMode getXcodeProjectTestsMode(BuckConfig buckConfig) {
+    return buckConfig
+        .getEnum("project", "xcode_project_tests_mode", ProjectTestsMode.class)
+        .orElse(ProjectTestsMode.WITH_TESTS);
+  }
+
   private ProjectTestsMode testsMode(BuckConfig buckConfig) {
-    ProjectTestsMode parameterMode = buckConfig.xcodeProjectTestsMode();
+    ProjectTestsMode parameterMode = getXcodeProjectTestsMode(buckConfig);
 
     if (withoutTests) {
       parameterMode = ProjectTestsMode.WITHOUT_TESTS;

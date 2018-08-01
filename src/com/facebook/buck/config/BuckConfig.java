@@ -484,11 +484,6 @@ public class BuckConfig implements ConfigPathGetter {
     return getBooleanValue(LOG_SECTION, "buckconfig_local_warning_enabled", false);
   }
 
-  public ProjectTestsMode xcodeProjectTestsMode() {
-    return getEnum("project", "xcode_project_tests_mode", ProjectTestsMode.class)
-        .orElse(ProjectTestsMode.WITH_TESTS);
-  }
-
   public boolean getRestartAdbOnFailure() {
     return Boolean.parseBoolean(getValue("adb", "adb_restart_on_failure").orElse("true"));
   }
