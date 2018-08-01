@@ -102,6 +102,37 @@ reproducing builds difficult.
 {/call}
 
 {call buck.param}
+  {param name: 'config-file' /}
+  {param desc}
+
+<p>
+Enables you to specify build-configuration parameters in a file that uses the same syntax 
+as {call buck.concept_link}{param page: 'buckconfig' /}{param name: '.buckconfig' /}{/call}.
+</p>
+
+<p>
+<pre>
+{literal}
+buck build --config-file debug.buckconfig
+{/literal}
+</pre>
+</p>
+
+<p>
+This <code>--config-file</code> parameter provides functionality similar 
+to <code>--flagfile</code>, but with <code>.buckconfig</code> syntax 
+rather than command-line parameter syntax.
+</p>
+
+<p>
+Any values specified using <code>--config-file</code> override values
+specified in <code>.buckconfig</code> and <code>.buckconfig.local</code>.
+</p>
+
+  {/param}
+{/call}
+
+{call buck.param}
   {param name: 'num-threads' /}
   {param desc}
 
@@ -209,9 +240,15 @@ the <code>@</code> symbol as it is more self-describing.
 </p>
 
 <p>
+This <code>--config-file</code> parameter provides functionality similar 
+to <code>--flagfile</code>, but with <code>.buckconfig</code> syntax 
+rather than command-line parameter syntax.
+</p>
+
+<p>
 If Buck is regularly invoked with different sets of arguments, we
-recommend that you use flag files, as they can be stored in source
-control, making builds more reproducible.
+recommend that you use config files or flag files, as they can be stored
+in source control, making builds more reproducible.
 </p>
 
   {/param}
