@@ -18,9 +18,9 @@ package com.facebook.buck.features.go;
 
 import com.facebook.buck.cli.BuildCommand;
 import com.facebook.buck.cli.CommandRunnerParams;
+import com.facebook.buck.cli.ProjectTestsMode;
 import com.facebook.buck.cli.parameter_extractors.ProjectGeneratorParameters;
 import com.facebook.buck.config.BuckConfig;
-import com.facebook.buck.config.ProjectTestsMode;
 import com.facebook.buck.config.resources.ResourcesConfig;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.description.arg.HasSrcs;

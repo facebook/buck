@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.config;
+package com.facebook.buck.cli;
 
 import com.google.common.base.Preconditions;
 
