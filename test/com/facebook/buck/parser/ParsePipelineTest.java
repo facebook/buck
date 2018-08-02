@@ -29,6 +29,7 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.FilesystemBackedBuildFileTree;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
+import com.facebook.buck.core.rules.config.impl.PluginBasedKnownConfigurationRuleTypesFactory;
 import com.facebook.buck.core.rules.knowntypes.DefaultKnownBuildRuleTypesFactory;
 import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypes;
 import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypesFactory;
@@ -405,7 +406,9 @@ public class ParsePipelineTest {
                                 new ParserPythonInterpreterProvider(
                                     input.getBuckConfig(), new ExecutableFinder()),
                                 TestKnownRuleTypesProvider.create(
-                                    KnownBuildRuleTypesProvider.of(knownBuildRuleTypesFactory)))
+                                    KnownBuildRuleTypesProvider.of(knownBuildRuleTypesFactory),
+                                    PluginBasedKnownConfigurationRuleTypesFactory.createFromPlugins(
+                                        BuckPluginManagerFactory.createPluginManager())))
                             .createBuildFileParser(eventBus, input));
                 synchronized (projectBuildFileParsers) {
                   projectBuildFileParsers.add(buildFileParser);
@@ -433,7 +436,10 @@ public class ParsePipelineTest {
       KnownBuildRuleTypesProvider knownBuildRuleTypesProvider =
           KnownBuildRuleTypesProvider.of(knownBuildRuleTypesFactory);
       KnownRuleTypesProvider knownRuleTypesProvider =
-          TestKnownRuleTypesProvider.create(knownBuildRuleTypesProvider);
+          TestKnownRuleTypesProvider.create(
+              knownBuildRuleTypesProvider,
+              PluginBasedKnownConfigurationRuleTypesFactory.createFromPlugins(
+                  BuckPluginManagerFactory.createPluginManager()));
       this.targetNodeParsePipeline =
           new TargetNodeParsePipeline(
               this.targetNodeParsePipelineCache,

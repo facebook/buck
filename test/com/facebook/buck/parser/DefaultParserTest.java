@@ -321,7 +321,8 @@ public class DefaultParserTest {
                 processExecutor, pluginManager, new TestSandboxExecutionStrategyFactory()));
     knownConfigurationRuleTypes =
         PluginBasedKnownConfigurationRuleTypesFactory.createFromPlugins(pluginManager);
-    knownRuleTypesProvider = TestKnownRuleTypesProvider.create(knownBuildRuleTypesProvider);
+    knownRuleTypesProvider =
+        TestKnownRuleTypesProvider.create(knownBuildRuleTypesProvider, knownConfigurationRuleTypes);
     ParserConfig parserConfig = cell.getBuckConfig().getView(ParserConfig.class);
 
     typeCoercerFactory = new DefaultTypeCoercerFactory();

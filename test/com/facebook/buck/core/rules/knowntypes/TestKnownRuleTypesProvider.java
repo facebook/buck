@@ -16,11 +16,15 @@
 
 package com.facebook.buck.core.rules.knowntypes;
 
+import com.facebook.buck.core.rules.config.KnownConfigurationRuleTypes;
+
 public class TestKnownRuleTypesProvider {
 
   public static KnownRuleTypesProvider create(
-      KnownBuildRuleTypesProvider knownBuildRuleTypesProvider) {
+      KnownBuildRuleTypesProvider knownBuildRuleTypesProvider,
+      KnownConfigurationRuleTypes knownConfigurationRuleTypesProvider) {
     return new KnownRuleTypesProvider(
-        new DefaultKnownRuleTypesFactory(knownBuildRuleTypesProvider));
+        new DefaultKnownRuleTypesFactory(
+            knownBuildRuleTypesProvider, knownConfigurationRuleTypesProvider));
   }
 }

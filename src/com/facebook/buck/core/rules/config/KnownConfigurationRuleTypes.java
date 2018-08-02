@@ -17,10 +17,14 @@
 package com.facebook.buck.core.rules.config;
 
 import com.facebook.buck.core.model.RuleType;
+import com.google.common.collect.ImmutableList;
 
 /** Registry of all known kinds of {@link ConfigurationRuleDescription}. */
 public interface KnownConfigurationRuleTypes {
 
   /** @return {@link ConfigurationRuleDescription} associated with the given type. */
   ConfigurationRuleDescription<?> getRuleDescription(RuleType configurationRuleType);
+
+  /** @return all instances of {@link ConfigurationRuleDescription} */
+  ImmutableList<ConfigurationRuleDescription<?>> getRuleDescriptions();
 }

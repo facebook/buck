@@ -17,6 +17,7 @@
 package com.facebook.buck.core.rules.knowntypes;
 
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.rules.config.KnownConfigurationRuleTypes;
 
 /**
  * An implementation of {@link KnownRuleTypesFactory} that delegates functionality to {@link
@@ -25,13 +26,17 @@ import com.facebook.buck.core.cell.Cell;
 public class DefaultKnownRuleTypesFactory implements KnownRuleTypesFactory {
 
   private final KnownBuildRuleTypesProvider knownBuildRuleTypesProvider;
+  private final KnownConfigurationRuleTypes knownConfigurationRuleTypes;
 
-  public DefaultKnownRuleTypesFactory(KnownBuildRuleTypesProvider knownBuildRuleTypesProvider) {
+  public DefaultKnownRuleTypesFactory(
+      KnownBuildRuleTypesProvider knownBuildRuleTypesProvider,
+      KnownConfigurationRuleTypes knownConfigurationRuleTypes) {
     this.knownBuildRuleTypesProvider = knownBuildRuleTypesProvider;
+    this.knownConfigurationRuleTypes = knownConfigurationRuleTypes;
   }
 
   @Override
   public KnownRuleTypes create(Cell cell) {
-    return KnownRuleTypes.of(knownBuildRuleTypesProvider.get(cell));
+    return KnownRuleTypes.of(knownBuildRuleTypesProvider.get(cell), knownConfigurationRuleTypes);
   }
 }

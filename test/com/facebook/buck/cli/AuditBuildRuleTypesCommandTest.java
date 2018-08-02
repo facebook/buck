@@ -24,12 +24,14 @@ import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTarg
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
+import com.facebook.buck.core.rules.config.impl.DefaultKnownConfigurationRuleTypes;
 import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypes;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypes;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -74,7 +76,11 @@ public class AuditBuildRuleTypesCommandTest {
     TestConsole console = new TestConsole();
 
     AuditBuildRuleTypesCommand.collectAndDumpBuildRuleTypesInformation(
-        console, KnownRuleTypes.of(KnownBuildRuleTypes.of(DESCRIPTIONS)), true);
+        console,
+        KnownRuleTypes.of(
+            KnownBuildRuleTypes.of(DESCRIPTIONS),
+            new DefaultKnownConfigurationRuleTypes(ImmutableMap.of())),
+        true);
 
     @SuppressWarnings("PMD.LooseCoupling")
     List<String> buildRuleTypes =
@@ -89,7 +95,11 @@ public class AuditBuildRuleTypesCommandTest {
     TestConsole console = new TestConsole();
 
     AuditBuildRuleTypesCommand.collectAndDumpBuildRuleTypesInformation(
-        console, KnownRuleTypes.of(KnownBuildRuleTypes.of(DESCRIPTIONS)), false);
+        console,
+        KnownRuleTypes.of(
+            KnownBuildRuleTypes.of(DESCRIPTIONS),
+            new DefaultKnownConfigurationRuleTypes(ImmutableMap.of())),
+        false);
 
     List<String> buildRuleTypes =
         Splitter.on(System.lineSeparator())

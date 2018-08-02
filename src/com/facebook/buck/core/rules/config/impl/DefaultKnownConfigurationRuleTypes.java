@@ -19,6 +19,7 @@ package com.facebook.buck.core.rules.config.impl;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.rules.config.ConfigurationRuleDescription;
 import com.facebook.buck.core.rules.config.KnownConfigurationRuleTypes;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 public class DefaultKnownConfigurationRuleTypes implements KnownConfigurationRuleTypes {
@@ -34,5 +35,10 @@ public class DefaultKnownConfigurationRuleTypes implements KnownConfigurationRul
   @Override
   public ConfigurationRuleDescription<?> getRuleDescription(RuleType configurationRuleType) {
     return configurationRuleDescriptions.get(configurationRuleType);
+  }
+
+  @Override
+  public ImmutableList<ConfigurationRuleDescription<?>> getRuleDescriptions() {
+    return ImmutableList.copyOf(configurationRuleDescriptions.values());
   }
 }

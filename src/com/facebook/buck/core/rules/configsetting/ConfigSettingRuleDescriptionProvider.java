@@ -16,9 +16,6 @@
 
 package com.facebook.buck.core.rules.configsetting;
 
-import com.facebook.buck.core.description.DescriptionCreationContext;
-import com.facebook.buck.core.model.targetgraph.DescriptionProvider;
-import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.config.ConfigurationRuleDescription;
 import com.facebook.buck.core.rules.config.ConfigurationRuleDescriptionProvider;
 import java.util.Collection;
@@ -26,16 +23,9 @@ import java.util.Collections;
 import org.pf4j.Extension;
 
 @Extension
-public class ConfigSettingRuleDescriptionProvider
-    implements ConfigurationRuleDescriptionProvider, DescriptionProvider {
+public class ConfigSettingRuleDescriptionProvider implements ConfigurationRuleDescriptionProvider {
   @Override
   public Collection<ConfigurationRuleDescription<?>> getDescriptions() {
-    return Collections.singleton(new ConfigSettingDescription());
-  }
-
-  @Override
-  public Collection<DescriptionWithTargetGraph<?>> getDescriptions(
-      DescriptionCreationContext context) {
     return Collections.singleton(new ConfigSettingDescription());
   }
 }

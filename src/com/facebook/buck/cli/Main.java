@@ -735,8 +735,13 @@ public final class Main {
               knownBuildRuleTypesFactoryFactory.create(
                   processExecutor, pluginManager, sandboxExecutionStrategyFactory));
 
+      KnownConfigurationRuleTypes knownConfigurationRuleTypes =
+          PluginBasedKnownConfigurationRuleTypesFactory.createFromPlugins(pluginManager);
+
       KnownRuleTypesProvider knownRuleTypesProvider =
-          new KnownRuleTypesProvider(new DefaultKnownRuleTypesFactory(knownBuildRuleTypesProvider));
+          new KnownRuleTypesProvider(
+              new DefaultKnownRuleTypesFactory(
+                  knownBuildRuleTypesProvider, knownConfigurationRuleTypes));
 
       ExecutableFinder executableFinder = new ExecutableFinder();
 
@@ -759,9 +764,6 @@ public final class Main {
                   toolchainProviderFactory,
                   projectFilesystemFactory)
               .getCellByPath(filesystem.getRootPath());
-
-      KnownConfigurationRuleTypes knownConfigurationRuleTypes =
-          PluginBasedKnownConfigurationRuleTypesFactory.createFromPlugins(pluginManager);
 
       Optional<Daemon> daemon =
           context.isPresent() && (watchman != WatchmanFactory.NULL_WATCHMAN)
