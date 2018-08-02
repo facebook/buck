@@ -39,7 +39,7 @@ import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 
-public class AuditBuildRuleTypesCommandTest {
+public class AuditRuleTypesCommandTest {
 
   private static final List<String> KNOWN_RULE_TYPES =
       Arrays.asList("another_build_rule", "some_build_rule");
@@ -75,7 +75,7 @@ public class AuditBuildRuleTypesCommandTest {
 
     TestConsole console = new TestConsole();
 
-    AuditBuildRuleTypesCommand.collectAndDumpBuildRuleTypesInformation(
+    AuditRuleTypesCommand.collectAndDumpBuildRuleTypesInformation(
         console,
         KnownRuleTypes.of(
             KnownBuildRuleTypes.of(DESCRIPTIONS),
@@ -94,7 +94,7 @@ public class AuditBuildRuleTypesCommandTest {
 
     TestConsole console = new TestConsole();
 
-    AuditBuildRuleTypesCommand.collectAndDumpBuildRuleTypesInformation(
+    AuditRuleTypesCommand.collectAndDumpBuildRuleTypesInformation(
         console,
         KnownRuleTypes.of(
             KnownBuildRuleTypes.of(DESCRIPTIONS),

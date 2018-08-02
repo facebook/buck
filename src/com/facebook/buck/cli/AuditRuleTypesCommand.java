@@ -27,7 +27,7 @@ import java.io.StringWriter;
 import java.util.Collection;
 import org.kohsuke.args4j.Option;
 
-public class AuditBuildRuleTypesCommand extends AbstractCommand {
+public class AuditRuleTypesCommand extends AbstractCommand {
 
   @Option(name = "--json", usage = "Output in JSON format")
   private boolean generateJsonOutput;
