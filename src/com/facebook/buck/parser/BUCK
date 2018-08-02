@@ -19,6 +19,7 @@ java_immutables_library(
         "DefaultParserTargetNodeFactory.java",
         "DefaultProjectBuildFileParserFactory.java",
         "DefaultRawTargetNodeFactory.java",
+        "NonResolvingRawTargetNodeToTargetNodeFactory.java",
         "NoopPackageBoundaryChecker.java",
         "PackageBoundaryChecker.java",
         "ParseEvent.java",

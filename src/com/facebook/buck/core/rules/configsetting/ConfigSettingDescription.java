@@ -20,7 +20,6 @@ import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
-import com.facebook.buck.core.model.targetgraph.RawTargetNode;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.config.ConfigurationRule;
@@ -64,11 +63,11 @@ public class ConfigSettingDescription
 
   @Override
   public ConfigurationRule createConfigurationRule(
-      ConfigurationRuleResolver configurationRuleResolver, Cell cell, RawTargetNode rawTargetNode) {
-    return new ConfigSettingRule(
-        cell.getBuckConfig(),
-        rawTargetNode.getBuildTarget(),
-        rawTargetNode.getAttributes().get("values", ImmutableMap.of()));
+      ConfigurationRuleResolver configurationRuleResolver,
+      Cell cell,
+      BuildTarget buildTarget,
+      ConfigSettingArg arg) {
+    return new ConfigSettingRule(cell.getBuckConfig(), buildTarget, arg.getValues());
   }
 
   @Override

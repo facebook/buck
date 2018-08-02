@@ -119,11 +119,32 @@ public class PerBuildStateFactory {
                   new VisibilityPatternFactory(),
                   new BuiltTargetVerifier()));
 
+      PackageBoundaryChecker packageBoundaryChecker =
+          new ThrowingPackageBoundaryChecker(daemonicParserState.getBuildFileTrees());
+
+      ParserTargetNodeFactory<RawTargetNode> nonResolvingrawTargetNodeToTargetNodeFactory =
+          new NonResolvingRawTargetNodeToTargetNodeFactory(
+              knownRuleTypesProvider,
+              marshaller,
+              targetNodeFactory,
+              packageBoundaryChecker,
+              symlinkCheckers);
+
+      ParsePipeline<TargetNode<?>> nonResolvingTargetNodeParsePipeline =
+          new RawTargetNodeToTargetNodeParsePipeline(
+              daemonicParserState.getOrCreateNodeCache(TargetNode.class),
+              pipelineExecutorService,
+              rawTargetNodePipeline,
+              eventBus,
+              enableSpeculativeParsing,
+              nonResolvingrawTargetNodeToTargetNodeFactory);
+
       ConfigurationRuleResolver configurationRuleResolver =
           new SameThreadConfigurationRuleResolver(
               cellManager::getCell,
               (cell, buildTarget) ->
-                  rawTargetNodePipeline.getNode(cell, buildTarget, parseProcessedBytes),
+                  nonResolvingTargetNodeParsePipeline.getNode(
+                      cell, buildTarget, parseProcessedBytes),
               knownConfigurationRuleTypes);
 
       SelectableResolver selectableResolver =
@@ -131,9 +152,6 @@ public class PerBuildStateFactory {
 
       SelectorListResolver selectorListResolver =
           new DefaultSelectorListResolver(selectableResolver);
-
-      PackageBoundaryChecker packageBoundaryChecker =
-          new ThrowingPackageBoundaryChecker(daemonicParserState.getBuildFileTrees());
 
       RawTargetNodeToTargetNodeFactory rawTargetNodeToTargetNodeFactory =
           new RawTargetNodeToTargetNodeFactory(
@@ -151,7 +169,13 @@ public class PerBuildStateFactory {
               rawTargetNodePipeline,
               eventBus,
               enableSpeculativeParsing,
-              rawTargetNodeToTargetNodeFactory);
+              rawTargetNodeToTargetNodeFactory) {
+            @Override
+            public void close() {
+              super.close();
+              nonResolvingTargetNodeParsePipeline.close();
+            }
+          };
     } else {
       targetNodeParsePipeline =
           new TargetNodeParsePipeline(
