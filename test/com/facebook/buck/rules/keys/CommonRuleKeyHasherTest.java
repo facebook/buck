@@ -143,11 +143,14 @@ public final class CommonRuleKeyHasherTest {
                     h -> h.putSourceRoot(new SourceRoot("4")).putSourceRoot(new SourceRoot("2"))),
                 pair.apply(String.format("RuleKey<%s>", RULE_KEY_1), h -> h.putRuleKey(RULE_KEY_1)),
                 pair.apply(String.format("RuleKey<%s>", RULE_KEY_2), h -> h.putRuleKey(RULE_KEY_2)),
-                pair.apply("RuleType<>", h -> h.putRuleType(RuleType.of(""))),
-                pair.apply("RuleType<42>", h -> h.putRuleType(RuleType.of("42"))),
+                pair.apply("RuleType<>", h -> h.putRuleType(RuleType.of("", RuleType.Kind.BUILD))),
+                pair.apply(
+                    "RuleType<42>", h -> h.putRuleType(RuleType.of("42", RuleType.Kind.BUILD))),
                 pair.apply(
                     "RuleType<4>, RuleType<2>",
-                    h -> h.putRuleType(RuleType.of("4")).putRuleType(RuleType.of("2"))),
+                    h ->
+                        h.putRuleType(RuleType.of("4", RuleType.Kind.BUILD))
+                            .putRuleType(RuleType.of("2", RuleType.Kind.BUILD))),
                 pair.apply(TARGET_1.toString(), h -> h.putBuildTarget(TARGET_1)),
                 pair.apply(TARGET_2.toString(), h -> h.putBuildTarget(TARGET_2)),
                 pair.apply(
@@ -342,8 +345,8 @@ public final class CommonRuleKeyHasherTest {
     @Test
     public void testConsistencyForBuildRuleType() {
       assertEquals(
-          newHasher().putRuleType(RuleType.of("42")).hash(),
-          newHasher().putRuleType(RuleType.of("42")).hash());
+          newHasher().putRuleType(RuleType.of("42", RuleType.Kind.BUILD)).hash(),
+          newHasher().putRuleType(RuleType.of("42", RuleType.Kind.BUILD)).hash());
     }
 
     @Test

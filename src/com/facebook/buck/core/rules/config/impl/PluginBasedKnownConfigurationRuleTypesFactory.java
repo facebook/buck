@@ -45,7 +45,8 @@ public class PluginBasedKnownConfigurationRuleTypesFactory {
             .flatMap(Collection::stream)
             .collect(
                 ImmutableMap.toImmutableMap(
-                    description -> RuleTypeFactory.fromClassName(description.getClass()),
+                    description ->
+                        RuleTypeFactory.create(description.getClass(), RuleType.Kind.CONFIGURATION),
                     description -> description));
     return new DefaultKnownConfigurationRuleTypes(descriptions);
   }

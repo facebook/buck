@@ -132,8 +132,8 @@ public class RuleKeyBuilderTest {
           new SourceRoot("42"),
           RULE_KEY_1,
           RULE_KEY_2,
-          RuleType.of(""),
-          RuleType.of("42"),
+          RuleType.of("", RuleType.Kind.BUILD),
+          RuleType.of("42", RuleType.Kind.BUILD),
           TARGET_1,
           TARGET_2,
 

@@ -18,6 +18,7 @@ package com.facebook.buck.rules;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.model.RuleType;
@@ -27,22 +28,26 @@ public class BuildRuleTypeTest {
 
   @Test(expected = NullPointerException.class)
   public void typeNamesMustNotBeNull() {
-    RuleType.of(null);
+    RuleType.of(null, RuleType.Kind.BUILD);
   }
 
   @Test
   public void ruleNamesEndingWithUnderscoreTestAreTestRules() {
-    assertFalse(RuleType.of("java_library").isTestRule());
-    assertFalse(RuleType.of("genrule").isTestRule());
+    assertFalse(RuleType.of("java_library", RuleType.Kind.BUILD).isTestRule());
+    assertFalse(RuleType.of("genrule", RuleType.Kind.BUILD).isTestRule());
 
     // Does not end with _test
-    assertFalse(RuleType.of("gentest").isTestRule());
+    assertFalse(RuleType.of("gentest", RuleType.Kind.BUILD).isTestRule());
 
-    assertTrue(RuleType.of("java_test").isTestRule());
+    assertTrue(RuleType.of("java_test", RuleType.Kind.BUILD).isTestRule());
   }
 
   @Test
-  public void equalityIsBasedOnName() {
-    assertEquals(RuleType.of("foo"), RuleType.of("foo"));
+  public void equalityIsBasedOnNameAndKind() {
+    assertEquals(RuleType.of("foo", RuleType.Kind.BUILD), RuleType.of("foo", RuleType.Kind.BUILD));
+    assertNotEquals(
+        RuleType.of("foo", RuleType.Kind.BUILD), RuleType.of("bar", RuleType.Kind.BUILD));
+    assertNotEquals(
+        RuleType.of("foo", RuleType.Kind.BUILD), RuleType.of("foo", RuleType.Kind.CONFIGURATION));
   }
 }

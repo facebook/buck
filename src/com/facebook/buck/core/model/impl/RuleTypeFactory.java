@@ -22,10 +22,10 @@ import com.google.common.base.CaseFormat;
 
 public class RuleTypeFactory {
 
-  public static RuleType fromClassName(Class<?> cls) {
+  public static RuleType create(Class<?> cls, RuleType.Kind ruleKind) {
     String result = cls.getSimpleName();
     result = MoreStrings.stripPrefix(result, "Abstract").orElse(result);
     result = MoreStrings.stripSuffix(result, "Description").orElse(result);
-    return RuleType.of(CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, result));
+    return RuleType.of(CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, result), ruleKind);
   }
 }
