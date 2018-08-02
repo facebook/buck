@@ -273,8 +273,8 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
         finalJavacOptions = javacOptions;
         break;
 
-        default:
-          throw new IllegalStateException("Unexpected annotationProcessingTool " + annotationProcessingTool);
+      default:
+        throw new IllegalStateException("Unexpected annotationProcessingTool " + annotationProcessingTool);
     }
 
     new JavacToJarStepFactory(javac, finalJavacOptions, extraClassPath)
