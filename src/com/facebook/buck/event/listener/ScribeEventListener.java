@@ -23,6 +23,7 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.facebook.buck.util.network.ScribeLogger;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.google.common.eventbus.Subscribe;
 import java.util.Arrays;
@@ -36,6 +37,7 @@ public class ScribeEventListener implements BuckEventListener {
 
   private final String category;
   private final Set<String> events;
+  private final ImmutableSet<String> enabledBuildRuleFinishedStatuses;
   private final boolean enabled;
   private final ScribeLogger logger;
   private final ExecutorService dispatcher;
@@ -51,23 +53,16 @@ public class ScribeEventListener implements BuckEventListener {
     this.category = config.getCategory();
     this.events = Sets.newHashSet(config.getEvents());
     this.enabled = config.getEnabled();
+    this.enabledBuildRuleFinishedStatuses =
+        ImmutableSet.copyOf(config.getEnabledBuildRuleFinishedStatuses());
 
     this.logger = logger;
     this.dispatcher = dispatcher;
   }
 
   private void log(BuckEvent event) {
-    // Send enabled events to Scribe.
-    if (!enabled || !events.contains(event.getEventName())) {
-      return;
-    }
-
-    /*
-     * If the event is BuildRuleFinished, only send if it failed.
-     * We only want to show failed rules on the Buck build page, there are too many other ones.
-     */
-    if (event.getEventName().equals("BuildRuleFinished")
-        && !((Finished) event).getStatus().name().equals("FAIL")) {
+    // Only send enabled events to Scribe. Do nothing otherwise.
+    if (!enabled || !isEnabledEvent(event)) {
       return;
     }
 
@@ -85,5 +80,19 @@ public class ScribeEventListener implements BuckEventListener {
   @Subscribe
   public void handle(BuckEvent event) {
     log(event);
+  }
+
+  /** Returns true if the event should be sent to scribe; false otherwise. */
+  public boolean isEnabledEvent(BuckEvent event) {
+    // Only send enabled events to scribe.
+    if (!events.contains(event.getEventName())) {
+      return false;
+    }
+    // If the event is BuildRuleFinished, only send if the status is enabled.
+    if (event.getEventName().equals("BuildRuleFinished")
+        && !enabledBuildRuleFinishedStatuses.contains(((Finished) event).getStatus().name())) {
+      return false;
+    }
+    return true;
   }
 }
