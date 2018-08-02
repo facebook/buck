@@ -12,7 +12,7 @@ Instructions:
 3. Run `mvn package -DskipTests`
 
 4. Download http://repo1.maven.org/maven2/com/google/code/java-allocation-instrumenter/java-allocation-instrumenter/3.0/java-allocation-instrumenter-3.0.jar
-5. Run `java -jar ../jarjar/jarjar-1.4.jar process jarjar-rules.txt java-allocation-instrumenter-3.0.jar java-allocation-instrumenter-3.0.jar`
+5. Run `java -jar ../jarjar/jarjar-1.4.1.jar process jarjar-rules.txt java-allocation-instrumenter-3.0.jar java-allocation-instrumenter-3.0.jar`
 6. Run `unzip -p java-allocation-instrumenter-3.0.jar META-INF/MANIFEST.MF | sed -e '/Premain/d' -e '/Instrumenter/d' -e '/Main-Class/a\
 Premain-Class: com.google.caliper.shaded.monitoring.runtime.instrumentation.AllocationI\
 \ nstrumenter' > /tmp/manifest && jar ufm java-allocation-instrumenter-3.0.jar /tmp/manifest`
