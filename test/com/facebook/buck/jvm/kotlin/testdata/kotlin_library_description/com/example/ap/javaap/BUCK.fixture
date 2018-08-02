@@ -21,7 +21,7 @@ java_library(
     source = "8",
     target = "8",
     visibility = [
-        "//com/example/ap/javaap:ap",
+        "PUBLIC",
     ],
     deps = [
         "//com/example/ap/javaannotation:annotation-lib",

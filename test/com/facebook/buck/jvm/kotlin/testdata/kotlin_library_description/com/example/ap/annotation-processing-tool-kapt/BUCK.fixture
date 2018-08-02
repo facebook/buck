@@ -1,5 +1,6 @@
 kotlin_library(
     name = "kotlin",
+    annotation_processing_tool = "kapt",
     srcs = glob([
         "*.kt",
         "*.java",

@@ -162,8 +162,14 @@ public class KotlinLibraryDescription
     }
   }
 
+  public enum AnnotationProcessingTool {
+    JAVAC,
+    KAPT,
+  }
+
   public interface CoreArg extends JavaLibraryDescription.CoreArg {
     ImmutableList<String> getExtraKotlincArguments();
+    Optional<AnnotationProcessingTool> getAnnotationProcessingTool();
   }
 
   @BuckStyleImmutable
