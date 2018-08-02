@@ -1,7 +1,6 @@
-export_file(
+load("//tools/build_rules:file_alias.bzl", "file_alias")
+
+file_alias(
     name = "logging.properties",
-    src = "logging.properties.st",
-    visibility = [
-        "PUBLIC",
-    ],
+    source = "logging.properties.st",
 )

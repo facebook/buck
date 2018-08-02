@@ -1,3 +1,5 @@
+load("//tools/build_rules:file_alias.bzl", "file_alias")
+
 python_library(
     name = "typing",
     srcs = {"typing.py": "typing/python2/typing.py"},
@@ -11,7 +13,7 @@ zip_file(
     visibility = ["PUBLIC"],
 )
 
-export_file(
+file_alias(
     name = "typing.py",
-    src = "typing/python2/typing.py",
+    source = "typing/python2/typing.py",
 )

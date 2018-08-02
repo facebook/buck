@@ -1,3 +1,5 @@
+load("//tools/build_rules:file_alias.bzl", "file_alias")
+
 # Code shared between the agent and the host.
 java_library(
     name = "util",
@@ -20,9 +22,9 @@ java_library(
     ],
 )
 
-export_file(
+file_alias(
     name = "util_src",
-    src = "AgentUtil.java",
+    source = "AgentUtil.java",
     visibility = [
         "//android/com/facebook/buck/android/agent/...",
     ],

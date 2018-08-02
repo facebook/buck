@@ -1,4 +1,5 @@
 load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
+load("//tools/build_rules:file_alias.bzl", "file_alias")
 
 java_immutables_library(
     name = "builders",
@@ -52,8 +53,7 @@ java_immutables_library(
     ],
 )
 
-export_file(
+file_alias(
     name = "trampoline",
-    src = "trampoline.sh",
-    visibility = ["PUBLIC"],
+    source = "trampoline.sh",
 )
