@@ -1,3 +1,5 @@
+load("//tools/build_rules:export_files.bzl", "export_files")
+
 java_library(
     name = "moduleclass",
     srcs = glob(["*.java"]),
@@ -20,9 +22,7 @@ java_binary(
     ],
 )
 
-export_file(
-    name = "known-hash.txt",
-)
+export_files(["known-hash.txt"])
 
 # Replace real hash in the module jar with a known value
 genrule(

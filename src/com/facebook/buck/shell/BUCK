@@ -1,4 +1,5 @@
 load("//tools/build_rules:java_rules.bzl", "java_immutables_library", "java_library_with_plugins")
+load("//tools/build_rules:export_files.bzl", "export_files")
 
 java_library_with_plugins(
     name = "rules",
@@ -181,9 +182,4 @@ java_library(
     ],
 )
 
-export_file(
-    name = "sh_binary_template",
-    visibility = [
-        "PUBLIC",
-    ],
-)
+export_files(["sh_binary_template"])

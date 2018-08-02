@@ -1,3 +1,5 @@
+load("//tools/build_rules:export_files.bzl", "export_files")
+
 prebuilt_jar(
     name = "ObjCBridge",
     binary_jar = "ObjCBridge.jar",
@@ -10,13 +12,8 @@ prebuilt_jar(
     ],
 )
 
-export_file(
-    name = "libjcocoa.dylib",
-    src = "libjcocoa.dylib",
+export_files(["libjcocoa.dylib"],
     licenses = [
         "LICENSE",
-    ],
-    visibility = [
-        "PUBLIC",
     ],
 )

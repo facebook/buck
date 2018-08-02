@@ -1,4 +1,5 @@
 load("//programs:defs.bzl", "get_release_version", "get_release_timestamp")
+load("//tools/build_rules:export_files.bzl", "export_files")
 
 version = get_release_version()
 
@@ -15,12 +16,12 @@ python_binary(
     deps = [":build-lib"],
 )
 
-export_file(name = "VERIFICATION.TXT")
+export_files(["VERIFICATION.TXT"])
 
 genrule(
     name = "chocolatey",
     srcs = [
-        "//:README",
+        "//:README.md",
         "//programs:buck",
         "CHANGELOG.md",
         "buck.nuspec",
