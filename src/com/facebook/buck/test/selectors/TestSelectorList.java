@@ -171,10 +171,11 @@ public class TestSelectorList {
     }
 
     public Builder addSimpleTestSelector(String simpleSelector) {
-      String[] selectorParts = simpleSelector.split(",");
-      if (selectorParts.length != 2) {
-        throw new IllegalArgumentException();
-      }
+      // Parameterized tests can have parameterization names that contains ","s, which conflicts
+      // with the character we chose for dividing class and method names. We should split on only
+      // the first ",", which is guaranteed to be the class to method splitter, as the class name
+      // cannot contain these characters
+      String[] selectorParts = simpleSelector.split(",", 2);
       String className = selectorParts[0];
       String methodName = selectorParts[1];
       this.testSelectors.add(new SimpleTestSelector(className, methodName));
