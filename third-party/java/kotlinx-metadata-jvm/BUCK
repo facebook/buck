@@ -1,0 +1,11 @@
+prebuilt_jar(
+    name = "kotlinx-metadata-jvm",
+    binary_jar = "kotlinx-metadata-jvm-0.0.3.jar",
+    licenses = [
+        "LICENSE",
+    ],
+    source_jar = "kotlinx-metadata-jvm-0.0.3-sources.jar",
+    visibility = [
+        "//third-party/java/d8/...",
+    ],
+)

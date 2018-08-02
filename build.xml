@@ -179,6 +179,7 @@
     <include name="jimfs/jimfs-1.1.jar" />
     <include name="jopt-simple/jopt-simple-4.6.jar" />
     <include name="json-simple/json-simple-1.1.1.jar" />
+    <include name="kotlinx-metadata-jvm/kotlinx-metadata-jvm-0.0.3.jar" />
     <include name="jsr/javax.inject-1.jar" />
     <include name="jsr/jsr305.jar" />
     <include name="nuprocess/nuprocess-1.2.4.jar" />
