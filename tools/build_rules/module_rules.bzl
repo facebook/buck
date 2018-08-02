@@ -5,11 +5,10 @@ load("//tools/build_rules:java_rules.bzl", "java_library_with_plugins")
 load("//tools/build_rules:module_rules_for_tests.bzl", "convert_module_deps_to_test")
 
 def buck_module(
-    name,
-    module_deps=[],
-    module_resources=[],
-    **kwargs
-):
+        name,
+        module_deps = [],
+        module_resources = [],
+        **kwargs):
     """Declares a buck module
 
     Args:
@@ -28,7 +27,7 @@ def buck_module(
         **kwargs
     )
 
-    jar_without_hash_name = name + '_jar_without_hash'
+    jar_without_hash_name = name + "_jar_without_hash"
 
     native.java_binary(
         name = jar_without_hash_name,
@@ -37,7 +36,7 @@ def buck_module(
         ],
     )
 
-    calculate_module_hash_name = name + '_calculate_module_hash'
+    calculate_module_hash_name = name + "_calculate_module_hash"
 
     native.genrule(
         name = calculate_module_hash_name,
@@ -45,7 +44,7 @@ def buck_module(
         cmd = " ".join([
             "$(exe //py/hash:hash_files)",
             "$(location :{})".format(jar_without_hash_name),
-            "$(location //py/hash:hash_files.py) > $OUT"
+            "$(location //py/hash:hash_files.py) > $OUT",
         ]),
     )
 
@@ -56,7 +55,7 @@ def buck_module(
         cmd = " ".join([
             "$(exe //py/buck/zip:append_with_copy)",
             "$(location :{}) $OUT".format(jar_without_hash_name),
-            "META-INF/module-binary-hash.txt $(location :{})".format(calculate_module_hash_name)
+            "META-INF/module-binary-hash.txt $(location :{})".format(calculate_module_hash_name),
         ]),
         visibility = [
             "//programs:bucklib",
@@ -76,9 +75,9 @@ def buck_module(
     native.java_library(
         name = name + "_module_for_test",
         exported_deps = depset([":" + final_module_jar_name]) +
-          kwargs.get("provided_deps", []) +
-          kwargs.get("exported_provided_deps", []) +
-          convert_module_deps_to_test(module_deps),
+                        kwargs.get("provided_deps", []) +
+                        kwargs.get("exported_provided_deps", []) +
+                        convert_module_deps_to_test(module_deps),
         visibility = ["PUBLIC"],
     )
 
@@ -89,23 +88,23 @@ def buck_module(
     )
 
 def get_module_binary(module):
-  """ Returns target for module's binary """
-  return "{}-module".format(module)
+    """ Returns target for module's binary """
+    return "{}-module".format(module)
 
 def convert_modules_to_resources(buck_modules):
-  """ Converts modules to a map with resources for packaging in a Python binary """
-  result = {}
+    """ Converts modules to a map with resources for packaging in a Python binary """
+    result = {}
 
-  for k, v in buck_modules.items():
-    result["buck-modules/{}.jar".format(k)] = get_module_binary(v)
+    for k, v in buck_modules.items():
+        result["buck-modules/{}.jar".format(k)] = get_module_binary(v)
 
-  return result
+    return result
 
 def convert_modules_to_external_resources(buck_modules, modules_with_resources):
-  """ Converts modules to a map with resources to keep them outside of module jars """
-  result = {}
+    """ Converts modules to a map with resources to keep them outside of module jars """
+    result = {}
 
-  for module in modules_with_resources:
-    result["buck-modules-resources/{}".format(module)] = "{}_resources".format(buck_modules[module])
+    for module in modules_with_resources:
+        result["buck-modules-resources/{}".format(module)] = "{}_resources".format(buck_modules[module])
 
-  return result
+    return result
