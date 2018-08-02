@@ -34,7 +34,7 @@ import java.util.Optional;
 import org.immutables.value.Value;
 import org.junit.Test;
 
-public class AuditBuildRuleTypeCommandTest {
+public class AuditRuleTypeCommandTest {
 
   static class BuildRuleDescription implements DescriptionWithTargetGraph<BuildRuleDescriptionArg> {
 
@@ -72,8 +72,7 @@ public class AuditBuildRuleTypeCommandTest {
   public void buildRuleTypePrintedAsAPythonFunction() {
     TestConsole console = new TestConsole();
 
-    AuditBuildRuleTypeCommand.printPythonFunction(
-        console, DESCRIPTION, new DefaultTypeCoercerFactory());
+    AuditRuleTypeCommand.printPythonFunction(console, DESCRIPTION, new DefaultTypeCoercerFactory());
 
     assertThat(
         console.getTextWrittenToStdOut(),

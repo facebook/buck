@@ -16,10 +16,9 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.description.impl.DescriptionCache;
 import com.facebook.buck.core.model.RuleType;
-import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
-import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypes;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypes;
 import com.facebook.buck.rules.coercer.CoercedTypeCache;
 import com.facebook.buck.rules.coercer.ParamInfo;
@@ -32,19 +31,17 @@ import java.io.PrintStream;
 import java.util.function.Consumer;
 import org.kohsuke.args4j.Argument;
 
-/** Prints a requested build rule type as a Python function with all supported attributes. */
-public class AuditBuildRuleTypeCommand extends AbstractCommand {
+/** Prints a requested rule type as a Python function with all supported attributes. */
+public class AuditRuleTypeCommand extends AbstractCommand {
 
   private static final String INDENT = "    ";
 
   @Override
   public ExitCode runWithoutHelp(CommandRunnerParams params)
       throws IOException, InterruptedException {
-    KnownBuildRuleTypes knownBuildRuleTypes =
-        params.getKnownBuildRuleTypesProvider().get(params.getCell());
     KnownRuleTypes knownRuleTypes = params.getKnownRuleTypesProvider().get(params.getCell());
     RuleType buildRuleType = knownRuleTypes.getRuleType(ruleName);
-    DescriptionWithTargetGraph<?> description = knownBuildRuleTypes.getDescription(buildRuleType);
+    BaseDescription<?> description = knownRuleTypes.getDescription(buildRuleType);
     printPythonFunction(params.getConsole(), description, params.getTypeCoercerFactory());
     return ExitCode.SUCCESS;
   }
@@ -63,9 +60,7 @@ public class AuditBuildRuleTypeCommand extends AbstractCommand {
   }
 
   static void printPythonFunction(
-      Console console,
-      DescriptionWithTargetGraph<?> description,
-      TypeCoercerFactory typeCoercerFactory) {
+      Console console, BaseDescription<?> description, TypeCoercerFactory typeCoercerFactory) {
     PrintStream printStream = console.getStdOut();
     ImmutableMap<String, ParamInfo> allParamInfo =
         CoercedTypeCache.INSTANCE.getAllParamInfo(
