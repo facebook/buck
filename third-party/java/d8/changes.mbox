@@ -1,4 +1,4 @@
-From 1d82a18089498283441b221f0d18918602d0b9fc Mon Sep 17 00:00:00 2001
+From 493b9a30b31a024e2289ed1d430880892c2625cb Mon Sep 17 00:00:00 2001
 From: Gautam Korlam <gkorlam@uber.com>
 Date: Tue, 21 Nov 2017 22:52:39 -0800
 Subject: [PATCH] Compute referenced resources in D8 and bypass default
@@ -15,7 +15,7 @@ Subject: [PATCH] Compute referenced resources in D8 and bypass default
  4 files changed, 27 insertions(+), 14 deletions(-)
 
 diff --git a/src/main/java/com/android/tools/r8/D8Command.java b/src/main/java/com/android/tools/r8/D8Command.java
-index 8c6c02bb..e889fe8b 100644
+index 99b0a1e7..8e7fcad6 100644
 --- a/src/main/java/com/android/tools/r8/D8Command.java
 +++ b/src/main/java/com/android/tools/r8/D8Command.java
 @@ -150,6 +150,11 @@ public final class D8Command extends BaseCompilerCommand {
@@ -41,18 +41,18 @@ index 8c6c02bb..e889fe8b 100644
      internal.debug = getMode() == CompilationMode.DEBUG;
      internal.programConsumer = getProgramConsumer();
 diff --git a/src/main/java/com/android/tools/r8/graph/DexItemFactory.java b/src/main/java/com/android/tools/r8/graph/DexItemFactory.java
-index 4e4a78f2..8ed2a725 100644
+index 3f020093..3e19a17e 100644
 --- a/src/main/java/com/android/tools/r8/graph/DexItemFactory.java
 +++ b/src/main/java/com/android/tools/r8/graph/DexItemFactory.java
-@@ -26,6 +26,7 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
- import java.util.ArrayList;
+@@ -29,6 +29,7 @@ import java.util.ArrayList;
+ import java.util.Arrays;
  import java.util.Collection;
  import java.util.HashMap;
 +import java.util.HashSet;
  import java.util.IdentityHashMap;
  import java.util.List;
  import java.util.Map;
-@@ -815,4 +816,17 @@ public class DexItemFactory {
+@@ -860,4 +861,17 @@ public class DexItemFactory {
    synchronized public void forAllCallSites(Consumer<DexCallSite> f) {
      new ArrayList<>(callSites).forEach(f);
    }
@@ -98,10 +98,10 @@ index c75456d6..ae3c8329 100644
        }
      }
 diff --git a/src/main/java/com/android/tools/r8/utils/AndroidApiLevel.java b/src/main/java/com/android/tools/r8/utils/AndroidApiLevel.java
-index 127debef..45793dad 100644
+index 135e961d..05f6ec64 100644
 --- a/src/main/java/com/android/tools/r8/utils/AndroidApiLevel.java
 +++ b/src/main/java/com/android/tools/r8/utils/AndroidApiLevel.java
-@@ -55,7 +55,8 @@ public enum AndroidApiLevel {
+@@ -56,7 +56,8 @@ public enum AndroidApiLevel {
    }
  
    public static AndroidApiLevel getDefault() {
@@ -112,5 +112,5 @@ index 127debef..45793dad 100644
  
    public DexVersion getDexVersion() {
 -- 
-2.17.0
+2.18.0
 

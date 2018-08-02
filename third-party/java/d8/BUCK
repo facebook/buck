@@ -12,5 +12,6 @@ prebuilt_jar(
       "//third-party/java/guava:guava",
       "//third-party/java/jopt-simple:jopt-simple",
       "//third-party/java/json-simple:json-simple",
+      "//third-party/java/kotlinx-metadata-jvm:kotlinx-metadata-jvm",
     ],
 )
