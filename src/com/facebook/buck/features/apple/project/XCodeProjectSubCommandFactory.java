@@ -14,17 +14,16 @@
  * under the License.
  */
 
-package com.facebook.buck.support.cli.args;
+package com.facebook.buck.features.apple.project;
 
-/** A common interface that needs to be implemented by subcommands loaded from plugins. */
-public interface PluginBasedSubCommand {
-  /**
-   * The value of the option that identifies a subcommand from a particular plugin.
-   *
-   * <p>For example, for {@code buck project} that would be {@code intellij} or {@code xcode}.
-   */
-  String getOptionValue();
+import com.facebook.buck.cli.ProjectSubCommandFactory;
+import org.pf4j.Extension;
 
-  /** @return a phrase describing the purpose of this subcommand when displaying the help screen. */
-  String getShortDescription();
+@Extension
+public class XCodeProjectSubCommandFactory implements ProjectSubCommandFactory {
+
+  @Override
+  public XCodeProjectSubCommand createSubCommand() {
+    return new XCodeProjectSubCommand();
+  }
 }

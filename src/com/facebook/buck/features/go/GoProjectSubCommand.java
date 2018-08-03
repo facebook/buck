@@ -24,9 +24,7 @@ import com.facebook.buck.util.ExitCode;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.IOException;
 import java.util.List;
-import org.pf4j.Extension;
 
-@Extension
 public class GoProjectSubCommand extends ProjectSubCommand {
 
   @Override

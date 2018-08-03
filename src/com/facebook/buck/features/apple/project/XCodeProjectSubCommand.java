@@ -31,9 +31,7 @@ import java.io.IOException;
 import java.util.List;
 import javax.annotation.Nullable;
 import org.kohsuke.args4j.Option;
-import org.pf4j.Extension;
 
-@Extension
 public class XCodeProjectSubCommand extends ProjectSubCommand {
 
   private static final boolean DEFAULT_READ_ONLY_VALUE = false;

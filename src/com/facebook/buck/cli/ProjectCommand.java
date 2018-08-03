@@ -77,7 +77,7 @@ public class ProjectCommand extends AbstractCommand implements PluginBasedComman
               + "would be included.")
   private boolean dryRun = false;
 
-  @PluginBasedSubCommands(commandClass = ProjectSubCommand.class)
+  @PluginBasedSubCommands(factoryClass = ProjectSubCommandFactory.class)
   @SuppressFieldNotInitialized
   private ImmutableList<ProjectSubCommand> ides;
 

@@ -40,9 +40,7 @@ import org.kohsuke.args4j.OptionDef;
 import org.kohsuke.args4j.spi.OptionHandler;
 import org.kohsuke.args4j.spi.Parameters;
 import org.kohsuke.args4j.spi.Setter;
-import org.pf4j.Extension;
 
-@Extension
 public class IjProjectSubCommand extends ProjectSubCommand {
 
   @Option(name = "--process-annotations", usage = "Enable annotation processing")
