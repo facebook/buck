@@ -204,7 +204,6 @@ public abstract class DistBuildFactory {
             .setDistBuildService(service)
             .setProjectFilesystemFactory(params.getProjectFilesystemFactory())
             .setTimingStatsTracker(timingStatsTracker)
-            .setKnownBuildRuleTypesProvider(params.getKnownBuildRuleTypesProvider())
             .setKnownRuleTypesProvider(params.getKnownRuleTypesProvider())
             .setCoordinatorBuildRuleEventsPublisher(coordinatorBuildRuleEventsPublisher)
             .setMinionBuildProgressTracker(minionBuildProgressTracker)

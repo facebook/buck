@@ -25,7 +25,6 @@ import com.facebook.buck.core.model.actiongraph.computation.ActionGraphCache;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphConfig;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphParallelizationMode;
 import com.facebook.buck.core.rulekey.RuleKey;
-import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypesProvider;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.distributed.DistBuildConfig;
@@ -111,8 +110,6 @@ abstract class AbstractDistBuildSlaveExecutorArgs {
 
   public abstract ProjectFilesystemFactory getProjectFilesystemFactory();
 
-  public abstract KnownBuildRuleTypesProvider getKnownBuildRuleTypesProvider();
-
   public abstract KnownRuleTypesProvider getKnownRuleTypesProvider();
 
   public abstract CoordinatorBuildRuleEventsPublisher getCoordinatorBuildRuleEventsPublisher();
@@ -169,7 +166,6 @@ abstract class AbstractDistBuildSlaveExecutorArgs {
         .setExecutorService(this.getExecutorService())
         .setExecutors(this.getExecutors())
         .setProvider(this.getProvider())
-        .setKnownBuildRuleTypesProvider(this.getKnownBuildRuleTypesProvider())
         .setKnownRuleTypesProvider(getKnownRuleTypesProvider())
         .setShouldInstrumentActionGraph(
             this.getDistBuildConfig()

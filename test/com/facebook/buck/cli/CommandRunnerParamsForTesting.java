@@ -132,7 +132,6 @@ public class CommandRunnerParamsForTesting {
                 typeCoercerFactory,
                 new ConstructorArgMarshaller(typeCoercerFactory),
                 knownRuleTypesProvider,
-                knownBuildRuleTypesProvider,
                 knownConfigurationRuleTypes,
                 new ParserPythonInterpreterProvider(parserConfig, new ExecutableFinder())),
             parserConfig,

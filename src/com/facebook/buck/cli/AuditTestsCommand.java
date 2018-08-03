@@ -81,7 +81,6 @@ public class AuditTestsCommand extends AbstractCommand {
                     params.getTypeCoercerFactory(),
                     new ConstructorArgMarshaller(params.getTypeCoercerFactory()),
                     params.getKnownRuleTypesProvider(),
-                    params.getKnownBuildRuleTypesProvider(),
                     params.getKnownConfigurationRuleTypes(),
                     new ParserPythonInterpreterProvider(
                         params.getCell().getBuckConfig(), params.getExecutableFinder()))

@@ -268,7 +268,6 @@ public class DistBuildStateTest {
                 typeCoercerFactory,
                 constructorArgMarshaller,
                 knownRuleTypesProvider,
-                knownBuildRuleTypesProvider,
                 knownConfigurationRuleTypes,
                 new ParserPythonInterpreterProvider(parserConfig, executableFinder)),
             parserConfig,
@@ -470,7 +469,6 @@ public class DistBuildStateTest {
     ParserTargetNodeFactory<Map<String, Object>> parserTargetNodeFactory =
         DefaultParserTargetNodeFactory.createForDistributedBuild(
             knownRuleTypesProvider,
-            knownBuildRuleTypesProvider,
             new ConstructorArgMarshaller(typeCoercerFactory),
             new TargetNodeFactory(typeCoercerFactory),
             new VisibilityPatternFactory(),

@@ -407,7 +407,6 @@ public class InterCellIntegrationTest {
                 coercerFactory,
                 new ConstructorArgMarshaller(coercerFactory),
                 knownRuleTypesProvider,
-                knownBuildRuleTypesProvider,
                 knownConfigurationRuleTypes,
                 new ParserPythonInterpreterProvider(parserConfig, new ExecutableFinder())),
             parserConfig,

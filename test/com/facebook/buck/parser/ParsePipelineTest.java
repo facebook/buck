@@ -445,7 +445,6 @@ public class ParsePipelineTest {
               this.targetNodeParsePipelineCache,
               DefaultParserTargetNodeFactory.createForParser(
                   knownRuleTypesProvider,
-                  knownBuildRuleTypesProvider,
                   constructorArgMarshaller,
                   buildFileTrees,
                   nodeListener,

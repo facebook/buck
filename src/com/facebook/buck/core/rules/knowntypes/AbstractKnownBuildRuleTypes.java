@@ -19,7 +19,6 @@ package com.facebook.buck.core.rules.knowntypes;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.core.description.DescriptionCreationContext;
 import com.facebook.buck.core.description.impl.DescriptionCache;
-import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.targetgraph.DescriptionProvider;
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
@@ -62,15 +61,6 @@ abstract class AbstractKnownBuildRuleTypes {
     return getDescriptions()
         .stream()
         .collect(ImmutableMap.toImmutableMap(DescriptionCache::getRuleType, d -> d));
-  }
-
-  public DescriptionWithTargetGraph<?> getDescription(RuleType buildRuleType) {
-    DescriptionWithTargetGraph<?> description = getDescriptionsByType().get(buildRuleType);
-    if (description == null) {
-      throw new HumanReadableException(
-          "Unable to find description for build rule type: " + buildRuleType);
-    }
-    return description;
   }
 
   static KnownBuildRuleTypes createInstance(
