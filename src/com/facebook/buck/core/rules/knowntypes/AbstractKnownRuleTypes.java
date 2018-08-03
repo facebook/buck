@@ -25,6 +25,8 @@ import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.function.Function;
 import org.immutables.value.Value;
 
@@ -81,5 +83,17 @@ public abstract class AbstractKnownRuleTypes {
   public BaseDescription<?> getDescription(RuleType ruleType) {
     return Preconditions.checkNotNull(
         getDescriptionsByRule().get(ruleType), "Cannot find a description for type %s", ruleType);
+  }
+
+  // Verify that there are no duplicate rule types being defined.
+  @Value.Check
+  protected void check() {
+    Set<RuleType> types = new HashSet<>();
+    for (BaseDescription<?> description : getDescriptions()) {
+      RuleType type = DescriptionCache.getRuleType(description);
+      if (!types.add(DescriptionCache.getRuleType(description))) {
+        throw new IllegalStateException(String.format("multiple descriptions with type %s", type));
+      }
+    }
   }
 }

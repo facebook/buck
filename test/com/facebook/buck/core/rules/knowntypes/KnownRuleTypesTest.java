@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright 2018-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -17,13 +17,9 @@
 package com.facebook.buck.core.rules.knowntypes;
 
 import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.FakeBuckConfig;
-import com.facebook.buck.core.model.Flavor;
-import com.facebook.buck.core.model.InternalFlavor;
-import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
@@ -42,14 +38,13 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
-import org.hamcrest.Matchers;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.pf4j.PluginManager;
 
-public class KnownBuildRuleTypesTest {
+public class KnownRuleTypesTest {
 
   @ClassRule public static TemporaryFolder folder = new TemporaryFolder();
   @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
@@ -59,6 +54,17 @@ public class KnownBuildRuleTypesTest {
       ImmutableMap.copyOf(System.getenv());
 
   private ExecutableFinder executableFinder = new ExecutableFinder();
+
+  @Test(expected = IllegalStateException.class)
+  public void whenRegisteringDescriptionsWithSameTypeErrorIsThrown() {
+    KnownBuildRuleTypes.Builder buildRuleTypesBuilder = KnownBuildRuleTypes.builder();
+    buildRuleTypesBuilder.addDescriptions(new KnownRuleTestDescription("Foo"));
+    buildRuleTypesBuilder.addDescriptions(new KnownRuleTestDescription("Bar"));
+    buildRuleTypesBuilder.addDescriptions(new KnownRuleTestDescription("Raz"));
+    buildRuleTypesBuilder.build();
+
+    KnownRuleTypes.of(buildRuleTypesBuilder.build(), ImmutableList.of());
+  }
 
   @Test
   public void createInstanceShouldReturnDifferentInstancesIfCalledWithDifferentParameters()
@@ -79,6 +85,7 @@ public class KnownBuildRuleTypesTest {
 
     KnownBuildRuleTypes knownBuildRuleTypes1 =
         KnownBuildRuleTypesTestUtil.createInstance(buckConfig, toolchainProvider, createExecutor());
+    KnownRuleTypes knownRuleTypes1 = KnownRuleTypes.of(knownBuildRuleTypes1, ImmutableList.of());
 
     Path javac = temporaryFolder.newExecutableFile();
     ImmutableMap<String, ImmutableMap<String, String>> sections =
@@ -99,81 +106,9 @@ public class KnownBuildRuleTypesTest {
 
     KnownBuildRuleTypes knownBuildRuleTypes2 =
         KnownBuildRuleTypesTestUtil.createInstance(buckConfig, toolchainProvider, processExecutor);
+    KnownRuleTypes knownRuleTypes2 = KnownRuleTypes.of(knownBuildRuleTypes2, ImmutableList.of());
 
-    assertNotEquals(knownBuildRuleTypes1, knownBuildRuleTypes2);
-  }
-
-  @Test
-  public void canSetDefaultPlatformToDefault() throws Exception {
-    ProjectFilesystem filesystem =
-        TestProjectFilesystems.createProjectFilesystem(temporaryFolder.getRoot());
-    ImmutableMap<String, ImmutableMap<String, String>> sections =
-        ImmutableMap.of("cxx", ImmutableMap.of("default_platform", "default"));
-    BuckConfig buckConfig = FakeBuckConfig.builder().setSections(sections).build();
-
-    DefaultToolchainProvider toolchainProvider =
-        new DefaultToolchainProvider(
-            BuckPluginManagerFactory.createPluginManager(),
-            environment,
-            buckConfig,
-            filesystem,
-            createExecutor(),
-            executableFinder,
-            TestRuleKeyConfigurationFactory.create());
-
-    // This would throw if "default" weren't available as a platform.
-    KnownBuildRuleTypesTestUtil.createInstance(buckConfig, toolchainProvider, createExecutor());
-  }
-
-  @Test
-  public void canOverrideDefaultHostPlatform() throws Exception {
-    ProjectFilesystem filesystem =
-        TestProjectFilesystems.createProjectFilesystem(temporaryFolder.getRoot());
-    Flavor flavor = InternalFlavor.of("flavor");
-    String flag = "-flag";
-    ImmutableMap<String, ImmutableMap<String, String>> sections =
-        ImmutableMap.of("cxx#" + flavor, ImmutableMap.of("cflags", flag));
-    BuckConfig buckConfig = FakeBuckConfig.builder().setSections(sections).build();
-    DefaultToolchainProvider toolchainProvider =
-        new DefaultToolchainProvider(
-            BuckPluginManagerFactory.createPluginManager(),
-            environment,
-            buckConfig,
-            filesystem,
-            createExecutor(),
-            executableFinder,
-            TestRuleKeyConfigurationFactory.create());
-    CxxPlatformsProvider cxxPlatformsProvider =
-        toolchainProvider.getByName(CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class);
-    assertThat(
-        cxxPlatformsProvider.getCxxPlatforms().getValue(flavor).getCflags(),
-        Matchers.contains(flag));
-    KnownBuildRuleTypesTestUtil.createInstance(buckConfig, toolchainProvider, createExecutor());
-  }
-
-  @Test
-  public void canOverrideMultipleHostPlatforms() throws Exception {
-    ProjectFilesystem filesystem =
-        TestProjectFilesystems.createProjectFilesystem(temporaryFolder.getRoot());
-    ImmutableMap<String, ImmutableMap<String, String>> sections =
-        ImmutableMap.of(
-            "cxx#linux-x86_64", ImmutableMap.of("cache_links", "true"),
-            "cxx#macosx-x86_64", ImmutableMap.of("cache_links", "true"),
-            "cxx#windows-x86_64", ImmutableMap.of("cache_links", "true"));
-    BuckConfig buckConfig = FakeBuckConfig.builder().setSections(sections).build();
-    DefaultToolchainProvider toolchainProvider =
-        new DefaultToolchainProvider(
-            BuckPluginManagerFactory.createPluginManager(),
-            environment,
-            buckConfig,
-            filesystem,
-            createExecutor(),
-            executableFinder,
-            TestRuleKeyConfigurationFactory.create());
-
-    // It should be legal to override multiple host platforms even though
-    // only one will be practically used in a build.
-    KnownBuildRuleTypesTestUtil.createInstance(buckConfig, toolchainProvider, createExecutor());
+    assertNotEquals(knownRuleTypes1, knownRuleTypes2);
   }
 
   @Test
@@ -197,7 +132,7 @@ public class KnownBuildRuleTypesTest {
           }
         };
 
-    KnownBuildRuleTypesTestUtil.createInstance(buckConfig, toolchainProvider, createExecutor());
+    TestKnownRuleTypesFactory.create(buckConfig, toolchainProvider, createExecutor());
   }
 
   private ProcessExecutor createExecutor() throws IOException {

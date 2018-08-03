@@ -18,8 +18,6 @@ package com.facebook.buck.core.rules.knowntypes;
 
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.core.description.DescriptionCreationContext;
-import com.facebook.buck.core.description.impl.DescriptionCache;
-import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.targetgraph.DescriptionProvider;
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
@@ -28,9 +26,7 @@ import com.facebook.buck.sandbox.SandboxExecutionStrategyFactory;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.collect.ImmutableList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import org.immutables.value.Value;
 import org.pf4j.PluginManager;
 
@@ -42,18 +38,6 @@ abstract class AbstractKnownBuildRuleTypes {
   /** @return all the underlying {@link DescriptionWithTargetGraph}s. */
   @Value.Parameter
   abstract ImmutableList<DescriptionWithTargetGraph<?>> getDescriptions();
-
-  // Verify that there are no duplicate rule types being defined.
-  @Value.Check
-  protected void check() {
-    Set<RuleType> types = new HashSet<>();
-    for (DescriptionWithTargetGraph<?> description : getDescriptions()) {
-      RuleType type = DescriptionCache.getRuleType(description);
-      if (!types.add(DescriptionCache.getRuleType(description))) {
-        throw new IllegalStateException(String.format("multiple descriptions with type %s", type));
-      }
-    }
-  }
 
   static KnownBuildRuleTypes createInstance(
       BuckConfig config,
