@@ -19,7 +19,10 @@ package com.facebook.buck.cli;
 import static com.facebook.buck.util.MoreStringsForTests.normalizeNewlines;
 import static com.facebook.buck.util.string.MoreStrings.linesToText;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
@@ -79,6 +82,22 @@ public class TargetsCommandIntegrationTest {
   @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Test
+  public void testShowTargetsNamesWhenNoOptionsProvided() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "targets_command", tmp);
+    workspace.setUp();
+
+    ProcessResult resultAll =
+        workspace.runBuckCommand(
+            "targets", "-c", "parser.enable_configurable_attributes=true", "//:");
+    resultAll.assertSuccess();
+    assertEquals(
+        ImmutableSet.of("//:A", "//:B", "//:C", "//:test-library"),
+        ImmutableSet.copyOf(
+            Splitter.on(System.lineSeparator()).omitEmptyStrings().split(resultAll.getStdout())));
+  }
+
+  @Test
   public void testOutputPath() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "output_path", tmp);
@@ -94,6 +113,25 @@ public class TargetsCommandIntegrationTest {
             "//:test " + MorePaths.pathWithPlatformSeparators("buck-out/gen/test/test-output"),
             ""),
         result.getStdout());
+  }
+
+  @Test
+  public void testConfigurationRulesNotIncludedInOutputPath() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "targets_command", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "targets", "-c", "parser.enable_configurable_attributes=true", "--show-output", "//:");
+    result.assertSuccess();
+    assertEquals(
+        linesToText(
+            "//:A " + MorePaths.pathWithPlatformSeparators("buck-out/gen/A/A.txt"),
+            "//:B " + MorePaths.pathWithPlatformSeparators("buck-out/gen/B/B.txt"),
+            "//:test-library "
+                + MorePaths.pathWithPlatformSeparators("buck-out/annotation/__test-library_gen__")),
+        result.getStdout().trim());
   }
 
   @Test
@@ -117,6 +155,19 @@ public class TargetsCommandIntegrationTest {
         workspace.runBuckCommand("targets", "--show-rulekey", "//:test", "//:another-test");
     result.assertSuccess();
     parseAndVerifyTargetsAndHashes(result.getStdout(), "//:another-test", "//:test");
+  }
+
+  @Test
+  public void testConfigurationRulesNotIncludedInRuleKey() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "targets_command", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "targets", "-c", "parser.enable_configurable_attributes=true", "--show-rulekey", "//:");
+    result.assertSuccess();
+    parseAndVerifyTargetsAndHashes(result.getStdout(), "//:A", "//:B", "//:test-library");
   }
 
   @Test
@@ -190,6 +241,29 @@ public class TargetsCommandIntegrationTest {
             + MorePaths.pathWithPlatformSeparators(tmp.getRoot().toRealPath())
             + System.lineSeparator(),
         result.getStdout());
+  }
+
+  @Test
+  public void testConfigurationRulesIncludedInShowCellPath() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "targets_command", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "targets",
+            "-c",
+            "parser.enable_configurable_attributes=true",
+            "--show-cell-path",
+            "//:");
+    result.assertSuccess();
+    assertEquals(
+        linesToText(
+            "//:A " + MorePaths.pathWithPlatformSeparators(tmp.getRoot().toRealPath()),
+            "//:B " + MorePaths.pathWithPlatformSeparators(tmp.getRoot().toRealPath()),
+            "//:C " + MorePaths.pathWithPlatformSeparators(tmp.getRoot().toRealPath()),
+            "//:test-library " + MorePaths.pathWithPlatformSeparators(tmp.getRoot().toRealPath())),
+        result.getStdout().trim());
   }
 
   @Test
@@ -282,6 +356,23 @@ public class TargetsCommandIntegrationTest {
         workspace.runBuckCommand("targets", "--show-target-hash", "//:test", "//:another-test");
     result.assertSuccess();
     parseAndVerifyTargetsAndHashes(result.getStdout(), "//:another-test", "//:test");
+  }
+
+  @Test
+  public void testConfigurationRulesIncludedInShowTargetHash() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "targets_command", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "targets",
+            "-c",
+            "parser.enable_configurable_attributes=true",
+            "--show-target-hash",
+            "//:");
+    result.assertSuccess();
+    parseAndVerifyTargetsAndHashes(result.getStdout(), "//:A", "//:B", "//:C", "//:test-library");
   }
 
   @Test
@@ -592,6 +683,31 @@ public class TargetsCommandIntegrationTest {
   }
 
   @Test
+  public void testConfigurationRulesIncludedInJsonOutput() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "targets_command", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "targets", "-c", "parser.enable_configurable_attributes=true", "--json", "//:");
+    result.assertSuccess();
+
+    // Parse the observed JSON.
+    JsonNode observed =
+        ObjectMappers.READER.readTree(ObjectMappers.createParser(result.getStdout()));
+
+    System.out.println(observed);
+
+    String expectedJson = workspace.getFileContents("output_path_json.js");
+    JsonNode expected =
+        ObjectMappers.READER.readTree(ObjectMappers.createParser(normalizeNewlines(expectedJson)));
+
+    MatcherAssert.assertThat(
+        "Output from targets command should match expected JSON.", observed, equalTo(expected));
+  }
+
+  @Test
   public void testJsonOutputWithShowCellPath() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "output_path", tmp);
@@ -828,6 +944,33 @@ public class TargetsCommandIntegrationTest {
   }
 
   @Test
+  public void testConfigurationRulesNotIncludedInDotOutput() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "targets_command", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "targets",
+            "-c",
+            "parser.enable_configurable_attributes=true",
+            "--dot",
+            "--show-rulekey",
+            "--show-transitive-rulekeys",
+            "//:");
+    result.assertSuccess();
+    String output = result.getStdout().trim();
+
+    assertThat(
+        output,
+        allOf(
+            containsString(":A"),
+            containsString(":B"),
+            containsString(":test-library"),
+            not(containsString(":C"))));
+  }
+
+  @Test
   public void writesBinaryRuleKeysToDisk() throws IOException, TException {
     Path logFile = tmp.newFile("out.bin");
     ProjectWorkspace workspace =
@@ -947,7 +1090,7 @@ public class TargetsCommandIntegrationTest {
     result.assertExitCode(null, ExitCode.COMMANDLINE_ERROR);
     assertThat(
         result.getStderr(),
-        Matchers.containsString(
+        containsString(
             "Must specify at least one build target pattern. See https://buckbuild.com/concept/build_target_pattern.html"));
   }
 }
