@@ -26,7 +26,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.util.function.Function;
-import java.util.stream.Stream;
 import org.immutables.value.Value;
 
 /** Provides access to rule types. */
@@ -43,9 +42,8 @@ public abstract class AbstractKnownRuleTypes {
 
   @Value.Lazy
   public ImmutableMap<String, RuleType> getTypesByName() {
-    return Stream.concat(
-            getKnownBuildRuleTypes().getDescriptions().stream(),
-            getKnownConfigurationDescriptions().stream())
+    return getDescriptions()
+        .stream()
         .map(DescriptionCache::getRuleType)
         .collect(ImmutableMap.toImmutableMap(RuleType::getName, t -> t));
   }
@@ -74,9 +72,8 @@ public abstract class AbstractKnownRuleTypes {
   /** @return all descriptions organized by their {@link RuleType}. */
   @Value.Lazy
   protected ImmutableMap<RuleType, BaseDescription<?>> getDescriptionsByRule() {
-    return Stream.concat(
-            getKnownBuildRuleTypes().getDescriptions().stream(),
-            getKnownConfigurationDescriptions().stream())
+    return getDescriptions()
+        .stream()
         .collect(ImmutableMap.toImmutableMap(DescriptionCache::getRuleType, Function.identity()));
   }
 
