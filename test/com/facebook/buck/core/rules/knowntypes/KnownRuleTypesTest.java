@@ -23,6 +23,7 @@ import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -51,13 +52,13 @@ public class KnownRuleTypesTest {
 
   @Test(expected = IllegalStateException.class)
   public void whenRegisteringDescriptionsWithSameTypeErrorIsThrown() {
-    KnownBuildRuleTypes.Builder buildRuleTypesBuilder = KnownBuildRuleTypes.builder();
-    buildRuleTypesBuilder.addDescriptions(new KnownRuleTestDescription("Foo"));
-    buildRuleTypesBuilder.addDescriptions(new KnownRuleTestDescription("Bar"));
-    buildRuleTypesBuilder.addDescriptions(new KnownRuleTestDescription("Raz"));
-    buildRuleTypesBuilder.build();
+    ImmutableList<DescriptionWithTargetGraph<?>> buildDescriptions =
+        ImmutableList.of(
+            new KnownRuleTestDescription("Foo"),
+            new KnownRuleTestDescription("Bar"),
+            new KnownRuleTestDescription("Raz"));
 
-    KnownRuleTypes.of(buildRuleTypesBuilder.build(), ImmutableList.of());
+    KnownRuleTypes.of(buildDescriptions, ImmutableList.of());
   }
 
   @Test
@@ -70,18 +71,16 @@ public class KnownRuleTypesTest {
     DefaultToolchainProvider toolchainProvider =
         new DefaultToolchainProvider(
             pluginManager,
-            KnownBuildRuleTypesTestUtil.environment,
+            KnownRuleTypesTestUtil.environment,
             buckConfig,
             filesystem,
-            KnownBuildRuleTypesTestUtil.createExecutor(temporaryFolder),
+            KnownRuleTypesTestUtil.createExecutor(temporaryFolder),
             executableFinder,
             TestRuleKeyConfigurationFactory.create());
 
     KnownRuleTypes knownRuleTypes1 =
         TestKnownRuleTypesFactory.create(
-            buckConfig,
-            toolchainProvider,
-            KnownBuildRuleTypesTestUtil.createExecutor(temporaryFolder));
+            buckConfig, toolchainProvider, KnownRuleTypesTestUtil.createExecutor(temporaryFolder));
 
     Path javac = temporaryFolder.newExecutableFile();
     ImmutableMap<String, ImmutableMap<String, String>> sections =
@@ -91,18 +90,16 @@ public class KnownRuleTypesTest {
     toolchainProvider =
         new DefaultToolchainProvider(
             pluginManager,
-            KnownBuildRuleTypesTestUtil.environment,
+            KnownRuleTypesTestUtil.environment,
             buckConfig,
             filesystem,
-            KnownBuildRuleTypesTestUtil.createExecutor(temporaryFolder),
+            KnownRuleTypesTestUtil.createExecutor(temporaryFolder),
             executableFinder,
             TestRuleKeyConfigurationFactory.create());
 
     KnownRuleTypes knownRuleTypes2 =
         TestKnownRuleTypesFactory.create(
-            buckConfig,
-            toolchainProvider,
-            KnownBuildRuleTypesTestUtil.createExecutor(temporaryFolder));
+            buckConfig, toolchainProvider, KnownRuleTypesTestUtil.createExecutor(temporaryFolder));
 
     assertNotEquals(knownRuleTypes1, knownRuleTypes2);
   }
@@ -115,10 +112,10 @@ public class KnownRuleTypesTest {
     DefaultToolchainProvider toolchainProvider =
         new DefaultToolchainProvider(
             BuckPluginManagerFactory.createPluginManager(),
-            KnownBuildRuleTypesTestUtil.environment,
+            KnownRuleTypesTestUtil.environment,
             buckConfig,
             filesystem,
-            KnownBuildRuleTypesTestUtil.createExecutor(temporaryFolder),
+            KnownRuleTypesTestUtil.createExecutor(temporaryFolder),
             executableFinder,
             TestRuleKeyConfigurationFactory.create()) {
           @Override
@@ -129,7 +126,7 @@ public class KnownRuleTypesTest {
         };
 
     TestKnownRuleTypesFactory.create(
-        buckConfig, toolchainProvider, KnownBuildRuleTypesTestUtil.createExecutor(temporaryFolder));
+        buckConfig, toolchainProvider, KnownRuleTypesTestUtil.createExecutor(temporaryFolder));
   }
 
   @Test
@@ -143,16 +140,16 @@ public class KnownRuleTypesTest {
     DefaultToolchainProvider toolchainProvider =
         new DefaultToolchainProvider(
             BuckPluginManagerFactory.createPluginManager(),
-            KnownBuildRuleTypesTestUtil.environment,
+            KnownRuleTypesTestUtil.environment,
             buckConfig,
             filesystem,
-            KnownBuildRuleTypesTestUtil.createExecutor(temporaryFolder),
+            KnownRuleTypesTestUtil.createExecutor(temporaryFolder),
             executableFinder,
             TestRuleKeyConfigurationFactory.create());
 
     // This would throw if "default" weren't available as a platform.
     TestKnownRuleTypesFactory.create(
-        buckConfig, toolchainProvider, KnownBuildRuleTypesTestUtil.createExecutor(temporaryFolder));
+        buckConfig, toolchainProvider, KnownRuleTypesTestUtil.createExecutor(temporaryFolder));
   }
 
   @Test
@@ -167,10 +164,10 @@ public class KnownRuleTypesTest {
     DefaultToolchainProvider toolchainProvider =
         new DefaultToolchainProvider(
             BuckPluginManagerFactory.createPluginManager(),
-            KnownBuildRuleTypesTestUtil.environment,
+            KnownRuleTypesTestUtil.environment,
             buckConfig,
             filesystem,
-            KnownBuildRuleTypesTestUtil.createExecutor(temporaryFolder),
+            KnownRuleTypesTestUtil.createExecutor(temporaryFolder),
             executableFinder,
             TestRuleKeyConfigurationFactory.create());
     CxxPlatformsProvider cxxPlatformsProvider =
@@ -179,7 +176,7 @@ public class KnownRuleTypesTest {
         cxxPlatformsProvider.getCxxPlatforms().getValue(flavor).getCflags(),
         Matchers.contains(flag));
     TestKnownRuleTypesFactory.create(
-        buckConfig, toolchainProvider, KnownBuildRuleTypesTestUtil.createExecutor(temporaryFolder));
+        buckConfig, toolchainProvider, KnownRuleTypesTestUtil.createExecutor(temporaryFolder));
   }
 
   @Test
@@ -195,16 +192,16 @@ public class KnownRuleTypesTest {
     DefaultToolchainProvider toolchainProvider =
         new DefaultToolchainProvider(
             BuckPluginManagerFactory.createPluginManager(),
-            KnownBuildRuleTypesTestUtil.environment,
+            KnownRuleTypesTestUtil.environment,
             buckConfig,
             filesystem,
-            KnownBuildRuleTypesTestUtil.createExecutor(temporaryFolder),
+            KnownRuleTypesTestUtil.createExecutor(temporaryFolder),
             executableFinder,
             TestRuleKeyConfigurationFactory.create());
 
     // It should be legal to override multiple host platforms even though
     // only one will be practically used in a build.
     TestKnownRuleTypesFactory.create(
-        buckConfig, toolchainProvider, KnownBuildRuleTypesTestUtil.createExecutor(temporaryFolder));
+        buckConfig, toolchainProvider, KnownRuleTypesTestUtil.createExecutor(temporaryFolder));
   }
 }

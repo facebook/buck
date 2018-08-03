@@ -29,7 +29,6 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.attr.NoopInstallable;
 import com.facebook.buck.core.rules.common.InstallTrigger;
 import com.facebook.buck.core.rules.impl.AbstractBuildRule;
-import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypes;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypes;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
@@ -72,11 +71,9 @@ public class InstallTriggerIntegrationTest {
             knownConfigurationDescriptions) ->
             cell ->
                 KnownRuleTypes.of(
-                    KnownBuildRuleTypes.builder()
-                        .addDescriptions(new InstallTriggerDescription())
-                        .addDescriptions(
-                            new ExportFileDescription(FakeBuckConfig.builder().build()))
-                        .build(),
+                    ImmutableList.of(
+                        new InstallTriggerDescription(),
+                        new ExportFileDescription(FakeBuckConfig.builder().build())),
                     knownConfigurationDescriptions));
     workspace.setUp();
   }

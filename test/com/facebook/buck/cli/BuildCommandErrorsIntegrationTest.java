@@ -29,7 +29,6 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.impl.AbstractBuildRule;
 import com.facebook.buck.core.rules.impl.NoopBuildRule;
-import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypes;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypes;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
@@ -81,8 +80,7 @@ public class BuildCommandErrorsIntegrationTest {
             knownConfigurationDescriptions) ->
             cell ->
                 KnownRuleTypes.of(
-                    KnownBuildRuleTypes.builder().addDescriptions(mockDescription).build(),
-                    knownConfigurationDescriptions));
+                    ImmutableList.of(mockDescription), knownConfigurationDescriptions));
   }
 
   // TODO(cjhopman): Add cases for errors in other phases of the build (watchman, parsing,

@@ -34,7 +34,6 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypes;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypes;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -237,12 +236,10 @@ public class ModernBuildRuleStrategyIntegrationTest {
             knownConfigurationDescriptions) ->
             cell ->
                 KnownRuleTypes.of(
-                    KnownBuildRuleTypes.builder()
-                        .addDescriptions(
-                            new TouchOutputDescription(),
-                            new LargeDynamicsDescription(),
-                            new FailingRuleDescription())
-                        .build(),
+                    ImmutableList.of(
+                        new TouchOutputDescription(),
+                        new LargeDynamicsDescription(),
+                        new FailingRuleDescription()),
                     knownConfigurationDescriptions));
     workspace.setUp();
     workspace.addBuckConfigLocalOption("modern_build_rule", "strategy", strategy.toString());

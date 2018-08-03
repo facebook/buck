@@ -20,6 +20,7 @@ import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.description.impl.DescriptionCache;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.RuleType;
+import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.config.ConfigurationRuleDescription;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Preconditions;
@@ -36,7 +37,7 @@ import org.immutables.value.Value;
 public abstract class AbstractKnownRuleTypes {
 
   @Value.Parameter
-  public abstract KnownBuildRuleTypes getKnownBuildRuleTypes();
+  public abstract ImmutableList<DescriptionWithTargetGraph<?>> getKnownBuildDescriptions();
 
   @Value.Parameter
   public abstract ImmutableList<ConfigurationRuleDescription<?>>
@@ -66,7 +67,7 @@ public abstract class AbstractKnownRuleTypes {
   @Value.Lazy
   public ImmutableList<BaseDescription<?>> getDescriptions() {
     return ImmutableList.<BaseDescription<?>>builder()
-        .addAll(getKnownBuildRuleTypes().getDescriptions())
+        .addAll(getKnownBuildDescriptions())
         .addAll(getKnownConfigurationDescriptions())
         .build();
   }

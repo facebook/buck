@@ -16,12 +16,7 @@
 
 package com.facebook.buck.core.rules.knowntypes;
 
-import com.facebook.buck.config.BuckConfig;
-import com.facebook.buck.plugin.impl.BuckPluginManagerFactory;
-import com.facebook.buck.sandbox.SandboxExecutionStrategyFactory;
-import com.facebook.buck.sandbox.TestSandboxExecutionStrategyFactory;
 import com.facebook.buck.testutil.TemporaryPaths;
-import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.FakeProcess;
 import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
@@ -39,14 +34,13 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import org.pf4j.PluginManager;
 
-public final class KnownBuildRuleTypesTestUtil {
+public final class KnownRuleTypesTestUtil {
 
   private static final String FAKE_XCODE_DEV_PATH = "/Fake/Path/To/Xcode.app/Contents/Developer";
   static final ImmutableMap<String, String> environment = ImmutableMap.copyOf(System.getenv());
 
-  private KnownBuildRuleTypesTestUtil() {
+  private KnownRuleTypesTestUtil() {
     // Utility class.
   }
 
@@ -83,19 +77,6 @@ public final class KnownBuildRuleTypesTestUtil {
     }
 
     return Arrays.asList(pathEnv.split(File.pathSeparator));
-  }
-
-  @VisibleForTesting
-  static KnownBuildRuleTypes createInstance(
-      BuckConfig config, ToolchainProvider toolchainProvider, ProcessExecutor processExecutor) {
-
-    PluginManager pluginManager = BuckPluginManagerFactory.createPluginManager();
-
-    SandboxExecutionStrategyFactory sandboxExecutionStrategyFactory =
-        new TestSandboxExecutionStrategyFactory();
-
-    return KnownBuildRuleTypes.createInstance(
-        config, processExecutor, toolchainProvider, pluginManager, sandboxExecutionStrategyFactory);
   }
 
   static ProcessExecutor createExecutor(TemporaryPaths temporaryFolder) throws IOException {

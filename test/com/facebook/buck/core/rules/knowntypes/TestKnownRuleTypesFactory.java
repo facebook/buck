@@ -17,16 +17,29 @@
 package com.facebook.buck.core.rules.knowntypes;
 
 import com.facebook.buck.config.BuckConfig;
+import com.facebook.buck.plugin.impl.BuckPluginManagerFactory;
+import com.facebook.buck.sandbox.SandboxExecutionStrategyFactory;
+import com.facebook.buck.sandbox.TestSandboxExecutionStrategyFactory;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.collect.ImmutableList;
+import org.pf4j.PluginManager;
 
 public class TestKnownRuleTypesFactory {
 
   public static KnownRuleTypes create(
       BuckConfig config, ToolchainProvider toolchainProvider, ProcessExecutor processExecutor) {
+    PluginManager pluginManager = BuckPluginManagerFactory.createPluginManager();
+
+    SandboxExecutionStrategyFactory sandboxExecutionStrategyFactory =
+        new TestSandboxExecutionStrategyFactory();
     return KnownRuleTypes.of(
-        KnownBuildRuleTypesTestUtil.createInstance(config, toolchainProvider, processExecutor),
+        KnownBuildRuleDescriptionsFactory.createBuildDescriptions(
+            config,
+            processExecutor,
+            toolchainProvider,
+            pluginManager,
+            sandboxExecutionStrategyFactory),
         ImmutableList.of());
   }
 }

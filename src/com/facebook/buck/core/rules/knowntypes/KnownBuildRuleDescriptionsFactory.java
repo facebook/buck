@@ -20,33 +20,25 @@ import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.core.description.DescriptionCreationContext;
 import com.facebook.buck.core.model.targetgraph.DescriptionProvider;
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.sandbox.SandboxExecutionStrategy;
 import com.facebook.buck.sandbox.SandboxExecutionStrategyFactory;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.collect.ImmutableList;
 import java.util.List;
-import org.immutables.value.Value;
 import org.pf4j.PluginManager;
 
-/** A registry of all the build rules types understood by Buck. */
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractKnownBuildRuleTypes {
+/** Loads all known build rule types from plugins. */
+class KnownBuildRuleDescriptionsFactory {
 
-  /** @return all the underlying {@link DescriptionWithTargetGraph}s. */
-  @Value.Parameter
-  abstract ImmutableList<DescriptionWithTargetGraph<?>> getDescriptions();
-
-  static KnownBuildRuleTypes createInstance(
+  static ImmutableList<DescriptionWithTargetGraph<?>> createBuildDescriptions(
       BuckConfig config,
       ProcessExecutor processExecutor,
       ToolchainProvider toolchainProvider,
       PluginManager pluginManager,
       SandboxExecutionStrategyFactory sandboxExecutionStrategyFactory) {
 
-    KnownBuildRuleTypes.Builder builder = KnownBuildRuleTypes.builder();
+    ImmutableList.Builder<DescriptionWithTargetGraph<?>> builder = ImmutableList.builder();
 
     SandboxExecutionStrategy sandboxExecutionStrategy =
         sandboxExecutionStrategyFactory.create(processExecutor, config);
@@ -56,10 +48,7 @@ abstract class AbstractKnownBuildRuleTypes {
     List<DescriptionProvider> descriptionProviders =
         pluginManager.getExtensions(DescriptionProvider.class);
     for (DescriptionProvider provider : descriptionProviders) {
-      for (DescriptionWithTargetGraph<?> description :
-          provider.getDescriptions(descriptionCreationContext)) {
-        builder.addDescriptions(description);
-      }
+      builder.addAll(provider.getDescriptions(descriptionCreationContext));
     }
 
     return builder.build();

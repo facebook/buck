@@ -24,7 +24,6 @@ import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypes;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypes;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -62,9 +61,7 @@ public class ModernBuildRuleIntegrationTest {
             knownConfigurationDescriptions) ->
             cell ->
                 KnownRuleTypes.of(
-                    KnownBuildRuleTypes.builder()
-                        .addDescriptions(new TemporaryWritingDescription())
-                        .build(),
+                    ImmutableList.of(new TemporaryWritingDescription()),
                     knownConfigurationDescriptions));
     workspace.setUp();
   }
