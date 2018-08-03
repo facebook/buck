@@ -212,10 +212,6 @@ public class BuckConfig implements ConfigPathGetter {
     return config.getListWithoutComments(section, field, splitChar);
   }
 
-  public CellPathResolver getCellPathResolver() {
-    return cellPathResolver;
-  }
-
   public Optional<ImmutableList<String>> getOptionalListWithoutComments(
       String section, String field) {
     return config.getOptionalListWithoutComments(section, field);
@@ -270,7 +266,7 @@ public class BuckConfig implements ConfigPathGetter {
 
   public BuildTarget getBuildTargetForFullyQualifiedTarget(String target) {
     return BuildTargetParser.INSTANCE.parse(
-        target, BuildTargetPatternParser.fullyQualified(), getCellPathResolver());
+        target, BuildTargetPatternParser.fullyQualified(), cellPathResolver);
   }
 
   public ImmutableList<BuildTarget> getBuildTargetList(String section, String key) {
@@ -398,7 +394,7 @@ public class BuckConfig implements ConfigPathGetter {
           buildTargets =
               ImmutableSet.of(
                   BuildTargetParser.INSTANCE.parse(
-                      value, BuildTargetPatternParser.fullyQualified(), getCellPathResolver()));
+                      value, BuildTargetPatternParser.fullyQualified(), cellPathResolver));
         }
         aliasToBuildTarget.putAll(alias, buildTargets);
       }
