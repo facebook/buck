@@ -36,8 +36,6 @@ import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodes;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.rules.config.KnownConfigurationRuleTypes;
-import com.facebook.buck.core.rules.config.impl.PluginBasedKnownConfigurationRuleTypesFactory;
 import com.facebook.buck.core.rules.knowntypes.DefaultKnownBuildRuleTypesFactory;
 import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypesProvider;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
@@ -113,7 +111,6 @@ public class DistBuildStateTest {
   @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
 
   private KnownBuildRuleTypesProvider knownBuildRuleTypesProvider;
-  private KnownConfigurationRuleTypes knownConfigurationRuleTypes;
   private ProcessExecutor processExecutor;
   private ExecutableFinder executableFinder;
   private BuckModuleManager moduleManager;
@@ -129,8 +126,6 @@ public class DistBuildStateTest {
         KnownBuildRuleTypesProvider.of(
             DefaultKnownBuildRuleTypesFactory.of(
                 processExecutor, pluginManager, new TestSandboxExecutionStrategyFactory()));
-    knownConfigurationRuleTypes =
-        PluginBasedKnownConfigurationRuleTypesFactory.createFromPlugins(pluginManager);
   }
 
   @Test
@@ -261,7 +256,7 @@ public class DistBuildStateTest {
     ConstructorArgMarshaller constructorArgMarshaller =
         new ConstructorArgMarshaller(typeCoercerFactory);
     KnownRuleTypesProvider knownRuleTypesProvider =
-        TestKnownRuleTypesProvider.create(knownBuildRuleTypesProvider, knownConfigurationRuleTypes);
+        TestKnownRuleTypesProvider.create(knownBuildRuleTypesProvider, pluginManager);
     Parser parser =
         new DefaultParser(
             new PerBuildStateFactory(
@@ -462,9 +457,7 @@ public class DistBuildStateTest {
         new DefaultTypeCoercerFactory(PathTypeCoercer.PathExistenceVerificationMode.DO_NOT_VERIFY);
     KnownRuleTypesProvider knownRuleTypesProvider =
         TestKnownRuleTypesProvider.create(
-            knownBuildRuleTypesProvider,
-            PluginBasedKnownConfigurationRuleTypesFactory.createFromPlugins(
-                BuckPluginManagerFactory.createPluginManager()));
+            knownBuildRuleTypesProvider, BuckPluginManagerFactory.createPluginManager());
     ParserTargetNodeFactory<Map<String, Object>> parserTargetNodeFactory =
         DefaultParserTargetNodeFactory.createForDistributedBuild(
             knownRuleTypesProvider,

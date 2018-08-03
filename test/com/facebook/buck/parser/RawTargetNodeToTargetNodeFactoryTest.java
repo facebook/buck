@@ -28,7 +28,6 @@ import com.facebook.buck.core.model.targetgraph.RawTargetNode;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.ImmutableRawTargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
-import com.facebook.buck.core.rules.config.impl.PluginBasedKnownConfigurationRuleTypesFactory;
 import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypesProvider;
 import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypesTestUtil;
 import com.facebook.buck.core.rules.knowntypes.TestKnownRuleTypesProvider;
@@ -79,8 +78,7 @@ public class RawTargetNodeToTargetNodeFactoryTest {
             TestKnownRuleTypesProvider.create(
                 KnownBuildRuleTypesProvider.of(
                     KnownBuildRuleTypesTestUtil.createKnownBuildRuleTypesFactory()),
-                PluginBasedKnownConfigurationRuleTypesFactory.createFromPlugins(
-                    BuckPluginManagerFactory.createPluginManager())),
+                BuckPluginManagerFactory.createPluginManager()),
             new ConstructorArgMarshaller(typeCoercerFactory),
             new TargetNodeFactory(typeCoercerFactory),
             new NoopPackageBoundaryChecker(),

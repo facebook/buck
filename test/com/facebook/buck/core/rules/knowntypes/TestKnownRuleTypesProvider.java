@@ -16,15 +16,16 @@
 
 package com.facebook.buck.core.rules.knowntypes;
 
-import com.facebook.buck.core.rules.config.KnownConfigurationRuleTypes;
+import com.facebook.buck.core.rules.config.impl.PluginBasedKnownConfigurationDescriptionsFactory;
+import org.pf4j.PluginManager;
 
 public class TestKnownRuleTypesProvider {
 
   public static KnownRuleTypesProvider create(
-      KnownBuildRuleTypesProvider knownBuildRuleTypesProvider,
-      KnownConfigurationRuleTypes knownConfigurationRuleTypesProvider) {
+      KnownBuildRuleTypesProvider knownBuildRuleTypesProvider, PluginManager pluginManager) {
     return new KnownRuleTypesProvider(
         new DefaultKnownRuleTypesFactory(
-            knownBuildRuleTypesProvider, knownConfigurationRuleTypesProvider));
+            knownBuildRuleTypesProvider,
+            PluginBasedKnownConfigurationDescriptionsFactory.createFromPlugins(pluginManager)));
   }
 }

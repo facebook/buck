@@ -37,8 +37,8 @@ import com.facebook.buck.core.exceptions.handler.HumanReadableExceptionAugmentor
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphCache;
 import com.facebook.buck.core.rulekey.RuleKey;
-import com.facebook.buck.core.rules.config.KnownConfigurationRuleTypes;
-import com.facebook.buck.core.rules.config.impl.PluginBasedKnownConfigurationRuleTypesFactory;
+import com.facebook.buck.core.rules.config.ConfigurationRuleDescription;
+import com.facebook.buck.core.rules.config.impl.PluginBasedKnownConfigurationDescriptionsFactory;
 import com.facebook.buck.core.rules.knowntypes.DefaultKnownBuildRuleTypesFactory;
 import com.facebook.buck.core.rules.knowntypes.DefaultKnownRuleTypesFactory;
 import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypesFactory;
@@ -744,13 +744,13 @@ public final class Main {
               knownBuildRuleTypesFactoryFactory.create(
                   processExecutor, pluginManager, sandboxExecutionStrategyFactory));
 
-      KnownConfigurationRuleTypes knownConfigurationRuleTypes =
-          PluginBasedKnownConfigurationRuleTypesFactory.createFromPlugins(pluginManager);
+      ImmutableList<ConfigurationRuleDescription<?>> knownConfigurationDescriptions =
+          PluginBasedKnownConfigurationDescriptionsFactory.createFromPlugins(pluginManager);
 
       KnownRuleTypesProvider knownRuleTypesProvider =
           new KnownRuleTypesProvider(
               new DefaultKnownRuleTypesFactory(
-                  knownBuildRuleTypesProvider, knownConfigurationRuleTypes));
+                  knownBuildRuleTypesProvider, knownConfigurationDescriptions));
 
       ExecutableFinder executableFinder = new ExecutableFinder();
 

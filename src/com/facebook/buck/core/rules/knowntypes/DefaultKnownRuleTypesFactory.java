@@ -17,7 +17,8 @@
 package com.facebook.buck.core.rules.knowntypes;
 
 import com.facebook.buck.core.cell.Cell;
-import com.facebook.buck.core.rules.config.KnownConfigurationRuleTypes;
+import com.facebook.buck.core.rules.config.ConfigurationRuleDescription;
+import com.google.common.collect.ImmutableList;
 
 /**
  * An implementation of {@link KnownRuleTypesFactory} that delegates functionality to {@link
@@ -26,17 +27,17 @@ import com.facebook.buck.core.rules.config.KnownConfigurationRuleTypes;
 public class DefaultKnownRuleTypesFactory implements KnownRuleTypesFactory {
 
   private final KnownBuildRuleTypesProvider knownBuildRuleTypesProvider;
-  private final KnownConfigurationRuleTypes knownConfigurationRuleTypes;
+  private final ImmutableList<ConfigurationRuleDescription<?>> knownConfigurationDescriptions;
 
   public DefaultKnownRuleTypesFactory(
       KnownBuildRuleTypesProvider knownBuildRuleTypesProvider,
-      KnownConfigurationRuleTypes knownConfigurationRuleTypes) {
+      ImmutableList<ConfigurationRuleDescription<?>> knownConfigurationDescriptions) {
     this.knownBuildRuleTypesProvider = knownBuildRuleTypesProvider;
-    this.knownConfigurationRuleTypes = knownConfigurationRuleTypes;
+    this.knownConfigurationDescriptions = knownConfigurationDescriptions;
   }
 
   @Override
   public KnownRuleTypes create(Cell cell) {
-    return KnownRuleTypes.of(knownBuildRuleTypesProvider.get(cell), knownConfigurationRuleTypes);
+    return KnownRuleTypes.of(knownBuildRuleTypesProvider.get(cell), knownConfigurationDescriptions);
   }
 }

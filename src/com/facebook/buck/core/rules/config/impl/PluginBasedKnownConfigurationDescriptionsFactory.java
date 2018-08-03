@@ -16,38 +16,30 @@
 
 package com.facebook.buck.core.rules.config.impl;
 
-import com.facebook.buck.core.model.RuleType;
-import com.facebook.buck.core.model.impl.RuleTypeFactory;
 import com.facebook.buck.core.rules.config.ConfigurationRuleDescription;
 import com.facebook.buck.core.rules.config.ConfigurationRuleDescriptionProvider;
-import com.facebook.buck.core.rules.config.KnownConfigurationRuleTypes;
-import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableList;
 import java.util.Collection;
 import java.util.List;
 import org.pf4j.PluginManager;
 
 /**
- * This factory creates {@link KnownConfigurationRuleTypes} by loading instances of {@link
- * ConfigurationRuleDescriptionProvider} using plugin framework and collecting {@link
+ * This factory creates a list of {@link ConfigurationRuleDescription} by loading instances of
+ * {@link ConfigurationRuleDescriptionProvider} using plugin framework and collecting {@link
  * ConfigurationRuleDescription} from the loaded providers.
  */
-public class PluginBasedKnownConfigurationRuleTypesFactory {
+public class PluginBasedKnownConfigurationDescriptionsFactory {
 
-  public static KnownConfigurationRuleTypes createFromPlugins(PluginManager pluginManager) {
+  public static ImmutableList<ConfigurationRuleDescription<?>> createFromPlugins(
+      PluginManager pluginManager) {
 
     List<ConfigurationRuleDescriptionProvider> descriptionProviders =
         pluginManager.getExtensions(ConfigurationRuleDescriptionProvider.class);
 
-    ImmutableMap<RuleType, ConfigurationRuleDescription<?>> descriptions =
-        descriptionProviders
-            .stream()
-            .map(ConfigurationRuleDescriptionProvider::getDescriptions)
-            .flatMap(Collection::stream)
-            .collect(
-                ImmutableMap.toImmutableMap(
-                    description ->
-                        RuleTypeFactory.create(description.getClass(), RuleType.Kind.CONFIGURATION),
-                    description -> description));
-    return new DefaultKnownConfigurationRuleTypes(descriptions);
+    return descriptionProviders
+        .stream()
+        .map(ConfigurationRuleDescriptionProvider::getDescriptions)
+        .flatMap(Collection::stream)
+        .collect(ImmutableList.toImmutableList());
   }
 }

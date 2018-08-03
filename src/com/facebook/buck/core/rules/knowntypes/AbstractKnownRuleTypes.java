@@ -20,7 +20,7 @@ import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.description.impl.DescriptionCache;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.RuleType;
-import com.facebook.buck.core.rules.config.KnownConfigurationRuleTypes;
+import com.facebook.buck.core.rules.config.ConfigurationRuleDescription;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -38,13 +38,14 @@ public abstract class AbstractKnownRuleTypes {
   public abstract KnownBuildRuleTypes getKnownBuildRuleTypes();
 
   @Value.Parameter
-  public abstract KnownConfigurationRuleTypes getKnownConfigurationRuleTypes();
+  public abstract ImmutableList<ConfigurationRuleDescription<?>>
+      getKnownConfigurationDescriptions();
 
   @Value.Lazy
   public ImmutableMap<String, RuleType> getTypesByName() {
     return Stream.concat(
             getKnownBuildRuleTypes().getDescriptions().stream(),
-            getKnownConfigurationRuleTypes().getRuleDescriptions().stream())
+            getKnownConfigurationDescriptions().stream())
         .map(DescriptionCache::getRuleType)
         .collect(ImmutableMap.toImmutableMap(RuleType::getName, t -> t));
   }
@@ -66,7 +67,7 @@ public abstract class AbstractKnownRuleTypes {
   public ImmutableList<BaseDescription<?>> getDescriptions() {
     return ImmutableList.<BaseDescription<?>>builder()
         .addAll(getKnownBuildRuleTypes().getDescriptions())
-        .addAll(getKnownConfigurationRuleTypes().getRuleDescriptions())
+        .addAll(getKnownConfigurationDescriptions())
         .build();
   }
 
@@ -75,7 +76,7 @@ public abstract class AbstractKnownRuleTypes {
   protected ImmutableMap<RuleType, BaseDescription<?>> getDescriptionsByRule() {
     return Stream.concat(
             getKnownBuildRuleTypes().getDescriptions().stream(),
-            getKnownConfigurationRuleTypes().getRuleDescriptions().stream())
+            getKnownConfigurationDescriptions().stream())
         .collect(ImmutableMap.toImmutableMap(DescriptionCache::getRuleType, Function.identity()));
   }
 
