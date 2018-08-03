@@ -41,8 +41,8 @@ import com.facebook.buck.core.rules.config.ConfigurationRuleDescription;
 import com.facebook.buck.core.rules.config.impl.PluginBasedKnownConfigurationDescriptionsFactory;
 import com.facebook.buck.core.rules.knowntypes.DefaultKnownBuildRuleTypesFactory;
 import com.facebook.buck.core.rules.knowntypes.DefaultKnownRuleTypesFactory;
-import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypesFactory;
 import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypesProvider;
+import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesFactory;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.facebook.buck.counters.CounterRegistry;
@@ -352,14 +352,13 @@ public final class Main {
   private static final NonReentrantSystemExit NON_REENTRANT_SYSTEM_EXIT =
       new NonReentrantSystemExit();
 
-  public interface KnownBuildRuleTypesFactoryFactory {
-    KnownBuildRuleTypesFactory create(
-        ProcessExecutor processExecutor,
-        PluginManager pluginManager,
-        SandboxExecutionStrategyFactory sandboxExecutionStrategyFactory);
+  public interface KnownRuleTypesFactoryFactory {
+    KnownRuleTypesFactory create(
+        KnownBuildRuleTypesProvider knownBuildRuleTypesProvider,
+        ImmutableList<ConfigurationRuleDescription<?>> knownConfigurationDescriptions);
   }
 
-  private final KnownBuildRuleTypesFactoryFactory knownBuildRuleTypesFactoryFactory;
+  private final KnownRuleTypesFactoryFactory knownRuleTypesFactoryFactory;
 
   private Optional<BuckConfig> parsedRootConfig = Optional.empty();
 
@@ -376,12 +375,12 @@ public final class Main {
       PrintStream stdOut,
       PrintStream stdErr,
       InputStream stdIn,
-      KnownBuildRuleTypesFactoryFactory knownBuildRuleTypesFactoryFactory,
+      KnownRuleTypesFactoryFactory knownRuleTypesFactoryFactory,
       Optional<NGContext> context) {
     this.stdOut = stdOut;
     this.stdErr = stdErr;
     this.stdIn = stdIn;
-    this.knownBuildRuleTypesFactoryFactory = knownBuildRuleTypesFactoryFactory;
+    this.knownRuleTypesFactoryFactory = knownRuleTypesFactoryFactory;
     this.architecture = Architecture.detect();
     this.platform = Platform.detect();
     this.context = context;
@@ -402,7 +401,7 @@ public final class Main {
   @VisibleForTesting
   public Main(
       PrintStream stdOut, PrintStream stdErr, InputStream stdIn, Optional<NGContext> context) {
-    this(stdOut, stdErr, stdIn, DefaultKnownBuildRuleTypesFactory::of, context);
+    this(stdOut, stdErr, stdIn, DefaultKnownRuleTypesFactory::new, context);
   }
 
   /* Define all error handling surrounding main command */
@@ -741,7 +740,7 @@ public final class Main {
 
       KnownBuildRuleTypesProvider knownBuildRuleTypesProvider =
           KnownBuildRuleTypesProvider.of(
-              knownBuildRuleTypesFactoryFactory.create(
+              DefaultKnownBuildRuleTypesFactory.of(
                   processExecutor, pluginManager, sandboxExecutionStrategyFactory));
 
       ImmutableList<ConfigurationRuleDescription<?>> knownConfigurationDescriptions =
@@ -749,7 +748,7 @@ public final class Main {
 
       KnownRuleTypesProvider knownRuleTypesProvider =
           new KnownRuleTypesProvider(
-              new DefaultKnownRuleTypesFactory(
+              knownRuleTypesFactoryFactory.create(
                   knownBuildRuleTypesProvider, knownConfigurationDescriptions));
 
       ExecutableFinder executableFinder = new ExecutableFinder();

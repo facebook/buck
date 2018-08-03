@@ -30,6 +30,7 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.impl.AbstractBuildRule;
 import com.facebook.buck.core.rules.impl.NoopBuildRule;
 import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypes;
+import com.facebook.buck.core.rules.knowntypes.KnownRuleTypes;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -73,9 +74,12 @@ public class BuildCommandErrorsIntegrationTest {
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "errors", tmp);
     workspace.setUp();
     mockDescription = new MockDescription();
-    workspace.setKnownBuildRuleTypesFactoryFactory(
-        (processExecutor, pluginManager, sandboxExecutionStrategyFactory) ->
-            cell -> KnownBuildRuleTypes.builder().addDescriptions(mockDescription).build());
+    workspace.setKnownRuleTypesFactoryFactory(
+        (knownBuildRuleTypesProvider, knownConfigurationDescriptions) ->
+            cell ->
+                KnownRuleTypes.of(
+                    KnownBuildRuleTypes.builder().addDescriptions(mockDescription).build(),
+                    knownConfigurationDescriptions));
   }
 
   // TODO(cjhopman): Add cases for errors in other phases of the build (watchman, parsing,

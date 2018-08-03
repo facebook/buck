@@ -20,7 +20,6 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
-import com.facebook.buck.core.rules.knowntypes.DefaultKnownBuildRuleTypesFactory;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
@@ -242,7 +241,6 @@ public class AndroidAarIntegrationTest {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "android_aar_native_deps/ndk_deps", tmp);
-    workspace.setKnownBuildRuleTypesFactoryFactory(DefaultKnownBuildRuleTypesFactory::of);
     workspace.setUp();
     String target = "//:app";
     workspace.runBuckBuild(target).assertSuccess();
@@ -269,7 +267,6 @@ public class AndroidAarIntegrationTest {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "android_aar_native_deps/ndk_deps", tmp);
-    workspace.setKnownBuildRuleTypesFactoryFactory(DefaultKnownBuildRuleTypesFactory::of);
     workspace.setUp();
     String target = "//:app-16";
     workspace.runBuckBuild(target).assertSuccess();

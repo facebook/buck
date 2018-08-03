@@ -30,6 +30,7 @@ import com.facebook.buck.core.rules.attr.NoopInstallable;
 import com.facebook.buck.core.rules.common.InstallTrigger;
 import com.facebook.buck.core.rules.impl.AbstractBuildRule;
 import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypes;
+import com.facebook.buck.core.rules.knowntypes.KnownRuleTypes;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -64,13 +65,16 @@ public class InstallTriggerIntegrationTest {
   public void setUp() throws InterruptedException, IOException {
     workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "install_trigger", tmpFolder);
-    workspace.setKnownBuildRuleTypesFactoryFactory(
-        (processExecutor, pluginManager, sandboxExecutionStrategyFactory) ->
+    workspace.setKnownRuleTypesFactoryFactory(
+        (knownBuildRuleTypesProvider, knownConfigurationDescriptions) ->
             cell ->
-                KnownBuildRuleTypes.builder()
-                    .addDescriptions(new InstallTriggerDescription())
-                    .addDescriptions(new ExportFileDescription(FakeBuckConfig.builder().build()))
-                    .build());
+                KnownRuleTypes.of(
+                    KnownBuildRuleTypes.builder()
+                        .addDescriptions(new InstallTriggerDescription())
+                        .addDescriptions(
+                            new ExportFileDescription(FakeBuckConfig.builder().build()))
+                        .build(),
+                    knownConfigurationDescriptions));
     workspace.setUp();
   }
 

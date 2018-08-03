@@ -134,7 +134,7 @@ public class ProjectWorkspace extends AbstractWorkspace {
   private final boolean addBuckRepoCell;
   private final ProcessExecutor processExecutor;
   @Nullable private ProjectFilesystemAndConfig projectFilesystemAndConfig;
-  @Nullable private Main.KnownBuildRuleTypesFactoryFactory knownBuildRuleTypesFactoryFactory;
+  @Nullable private Main.KnownRuleTypesFactoryFactory knownRuleTypesFactoryFactory;
 
   private static class ProjectFilesystemAndConfig {
 
@@ -484,9 +484,9 @@ public class ProjectWorkspace extends AbstractWorkspace {
       ImmutableMap<String, String> sanizitedEnv = ImmutableMap.copyOf(envBuilder);
 
       Main main =
-          knownBuildRuleTypesFactoryFactory == null
+          knownRuleTypesFactoryFactory == null
               ? new Main(stdout, stderr, stdin, context)
-              : new Main(stdout, stderr, stdin, knownBuildRuleTypesFactoryFactory, context);
+              : new Main(stdout, stderr, stdin, knownRuleTypesFactoryFactory, context);
       ExitCode exitCode;
       try {
         exitCode =
@@ -565,9 +565,9 @@ public class ProjectWorkspace extends AbstractWorkspace {
     removeBuckConfigLocalOption("build", "threads");
   }
 
-  public void setKnownBuildRuleTypesFactoryFactory(
-      @Nullable Main.KnownBuildRuleTypesFactoryFactory knownBuildRuleTypesFactoryFactory) {
-    this.knownBuildRuleTypesFactoryFactory = knownBuildRuleTypesFactoryFactory;
+  public void setKnownRuleTypesFactoryFactory(
+      @Nullable Main.KnownRuleTypesFactoryFactory knownRuleTypesFactoryFactory) {
+    this.knownRuleTypesFactoryFactory = knownRuleTypesFactoryFactory;
   }
 
   public void resetBuildLogFile() throws IOException {
