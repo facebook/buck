@@ -116,7 +116,7 @@ public class DistBuildFileHashesIntegrationTest {
                 pluginManager,
                 new TestSandboxExecutionStrategyFactory()));
     KnownRuleTypesProvider knownRuleTypesProvider =
-        TestKnownRuleTypesProvider.create(knownBuildRuleTypesProvider, pluginManager);
+        TestKnownRuleTypesProvider.create(pluginManager);
 
     ParserConfig parserConfig = rootCellConfig.getView(ParserConfig.class);
     TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
@@ -199,7 +199,7 @@ public class DistBuildFileHashesIntegrationTest {
                 pluginManager,
                 new TestSandboxExecutionStrategyFactory()));
     KnownRuleTypesProvider knownRuleTypesProvider =
-        TestKnownRuleTypesProvider.create(knownBuildRuleTypesProvider, pluginManager);
+        TestKnownRuleTypesProvider.create(pluginManager);
 
     ParserConfig parserConfig = rootCellConfig.getView(ParserConfig.class);
     TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();

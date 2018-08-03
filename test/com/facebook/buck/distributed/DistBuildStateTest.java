@@ -256,7 +256,7 @@ public class DistBuildStateTest {
     ConstructorArgMarshaller constructorArgMarshaller =
         new ConstructorArgMarshaller(typeCoercerFactory);
     KnownRuleTypesProvider knownRuleTypesProvider =
-        TestKnownRuleTypesProvider.create(knownBuildRuleTypesProvider, pluginManager);
+        TestKnownRuleTypesProvider.create(pluginManager);
     Parser parser =
         new DefaultParser(
             new PerBuildStateFactory(
@@ -456,8 +456,7 @@ public class DistBuildStateTest {
     TypeCoercerFactory typeCoercerFactory =
         new DefaultTypeCoercerFactory(PathTypeCoercer.PathExistenceVerificationMode.DO_NOT_VERIFY);
     KnownRuleTypesProvider knownRuleTypesProvider =
-        TestKnownRuleTypesProvider.create(
-            knownBuildRuleTypesProvider, BuckPluginManagerFactory.createPluginManager());
+        TestKnownRuleTypesProvider.create(BuckPluginManagerFactory.createPluginManager());
     ParserTargetNodeFactory<Map<String, Object>> parserTargetNodeFactory =
         DefaultParserTargetNodeFactory.createForDistributedBuild(
             knownRuleTypesProvider,

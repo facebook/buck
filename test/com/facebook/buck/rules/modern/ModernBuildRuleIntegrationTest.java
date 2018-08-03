@@ -56,7 +56,10 @@ public class ModernBuildRuleIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "should_delete_temporary_files", tmpFolder);
     workspace.setKnownRuleTypesFactoryFactory(
-        (knownBuildRuleTypesProvider, knownConfigurationDescriptions) ->
+        (executor,
+            pluginManager,
+            sandboxExecutionStrategyFactory,
+            knownConfigurationDescriptions) ->
             cell ->
                 KnownRuleTypes.of(
                     KnownBuildRuleTypes.builder()

@@ -32,7 +32,6 @@ import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
 import com.facebook.buck.core.rules.knowntypes.DefaultKnownBuildRuleTypesFactory;
 import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypes;
 import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypesFactory;
-import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypesProvider;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
 import com.facebook.buck.core.rules.knowntypes.TestKnownRuleTypesProvider;
 import com.facebook.buck.event.BuckEventBus;
@@ -405,7 +404,6 @@ public class ParsePipelineTest {
                                 new ParserPythonInterpreterProvider(
                                     input.getBuckConfig(), new ExecutableFinder()),
                                 TestKnownRuleTypesProvider.create(
-                                    KnownBuildRuleTypesProvider.of(knownBuildRuleTypesFactory),
                                     BuckPluginManagerFactory.createPluginManager()))
                             .createBuildFileParser(eventBus, input));
                 synchronized (projectBuildFileParsers) {
@@ -431,11 +429,8 @@ public class ParsePipelineTest {
               this.projectBuildFileParserPool,
               executorService,
               eventBus);
-      KnownBuildRuleTypesProvider knownBuildRuleTypesProvider =
-          KnownBuildRuleTypesProvider.of(knownBuildRuleTypesFactory);
       KnownRuleTypesProvider knownRuleTypesProvider =
-          TestKnownRuleTypesProvider.create(
-              knownBuildRuleTypesProvider, BuckPluginManagerFactory.createPluginManager());
+          TestKnownRuleTypesProvider.create(BuckPluginManagerFactory.createPluginManager());
       this.targetNodeParsePipeline =
           new TargetNodeParsePipeline(
               this.targetNodeParsePipelineCache,

@@ -25,8 +25,6 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.targetgraph.RawAttributes;
 import com.facebook.buck.core.model.targetgraph.RawTargetNode;
-import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypesProvider;
-import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypesTestUtil;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
 import com.facebook.buck.core.rules.knowntypes.TestKnownRuleTypesProvider;
 import com.facebook.buck.core.select.Selector;
@@ -53,12 +51,8 @@ public class DefaultRawTargetNodeFactoryTest {
 
   @Test
   public void testCreatePopulatesNode() {
-    KnownBuildRuleTypesProvider knownBuildRuleTypesProvider =
-        KnownBuildRuleTypesProvider.of(
-            KnownBuildRuleTypesTestUtil.createKnownBuildRuleTypesFactory());
     KnownRuleTypesProvider knownRuleTypesProvider =
-        TestKnownRuleTypesProvider.create(
-            knownBuildRuleTypesProvider, BuckPluginManagerFactory.createPluginManager());
+        TestKnownRuleTypesProvider.create(BuckPluginManagerFactory.createPluginManager());
 
     DefaultRawTargetNodeFactory factory =
         new DefaultRawTargetNodeFactory(

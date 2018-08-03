@@ -17,15 +17,19 @@
 package com.facebook.buck.core.rules.knowntypes;
 
 import com.facebook.buck.core.rules.config.impl.PluginBasedKnownConfigurationDescriptionsFactory;
+import com.facebook.buck.sandbox.TestSandboxExecutionStrategyFactory;
+import com.facebook.buck.testutil.TestConsole;
+import com.facebook.buck.util.DefaultProcessExecutor;
 import org.pf4j.PluginManager;
 
 public class TestKnownRuleTypesProvider {
 
-  public static KnownRuleTypesProvider create(
-      KnownBuildRuleTypesProvider knownBuildRuleTypesProvider, PluginManager pluginManager) {
+  public static KnownRuleTypesProvider create(PluginManager pluginManager) {
     return new KnownRuleTypesProvider(
         new DefaultKnownRuleTypesFactory(
-            knownBuildRuleTypesProvider,
+            new DefaultProcessExecutor(new TestConsole()),
+            pluginManager,
+            new TestSandboxExecutionStrategyFactory(),
             PluginBasedKnownConfigurationDescriptionsFactory.createFromPlugins(pluginManager)));
   }
 }

@@ -66,7 +66,10 @@ public class InstallTriggerIntegrationTest {
     workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "install_trigger", tmpFolder);
     workspace.setKnownRuleTypesFactoryFactory(
-        (knownBuildRuleTypesProvider, knownConfigurationDescriptions) ->
+        (executor,
+            pluginManager,
+            sandboxExecutionStrategyFactory,
+            knownConfigurationDescriptions) ->
             cell ->
                 KnownRuleTypes.of(
                     KnownBuildRuleTypes.builder()

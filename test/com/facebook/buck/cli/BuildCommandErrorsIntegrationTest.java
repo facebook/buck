@@ -75,7 +75,10 @@ public class BuildCommandErrorsIntegrationTest {
     workspace.setUp();
     mockDescription = new MockDescription();
     workspace.setKnownRuleTypesFactoryFactory(
-        (knownBuildRuleTypesProvider, knownConfigurationDescriptions) ->
+        (executor,
+            pluginManager,
+            sandboxExecutionStrategyFactory,
+            knownConfigurationDescriptions) ->
             cell ->
                 KnownRuleTypes.of(
                     KnownBuildRuleTypes.builder().addDescriptions(mockDescription).build(),

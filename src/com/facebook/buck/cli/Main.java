@@ -354,7 +354,9 @@ public final class Main {
 
   public interface KnownRuleTypesFactoryFactory {
     KnownRuleTypesFactory create(
-        KnownBuildRuleTypesProvider knownBuildRuleTypesProvider,
+        ProcessExecutor executor,
+        PluginManager pluginManager,
+        SandboxExecutionStrategyFactory sandboxExecutionStrategyFactory,
         ImmutableList<ConfigurationRuleDescription<?>> knownConfigurationDescriptions);
   }
 
@@ -749,7 +751,10 @@ public final class Main {
       KnownRuleTypesProvider knownRuleTypesProvider =
           new KnownRuleTypesProvider(
               knownRuleTypesFactoryFactory.create(
-                  knownBuildRuleTypesProvider, knownConfigurationDescriptions));
+                  processExecutor,
+                  pluginManager,
+                  sandboxExecutionStrategyFactory,
+                  knownConfigurationDescriptions));
 
       ExecutableFinder executableFinder = new ExecutableFinder();
 

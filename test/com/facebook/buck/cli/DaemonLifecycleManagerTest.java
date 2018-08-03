@@ -82,8 +82,7 @@ public class DaemonLifecycleManagerTest {
         KnownBuildRuleTypesProvider.of(
             DefaultKnownBuildRuleTypesFactory.of(
                 executor, pluginManager, new TestSandboxExecutionStrategyFactory()));
-    knownRuleTypesProvider =
-        TestKnownRuleTypesProvider.create(knownBuildRuleTypesProvider, pluginManager);
+    knownRuleTypesProvider = TestKnownRuleTypesProvider.create(pluginManager);
     executableFinder = new ExecutableFinder();
   }
 

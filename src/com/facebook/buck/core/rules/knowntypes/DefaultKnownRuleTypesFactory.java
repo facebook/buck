@@ -18,26 +18,42 @@ package com.facebook.buck.core.rules.knowntypes;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.rules.config.ConfigurationRuleDescription;
+import com.facebook.buck.sandbox.SandboxExecutionStrategyFactory;
+import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.collect.ImmutableList;
+import org.pf4j.PluginManager;
 
 /**
- * An implementation of {@link KnownRuleTypesFactory} that delegates functionality to {@link
- * KnownBuildRuleTypesProvider}.
+ * An implementation of {@link KnownRuleTypesFactory} that creates {@link KnownBuildRuleTypes} for a
+ * given cell and merges it with a list of configuration rule descriptions.
  */
 public class DefaultKnownRuleTypesFactory implements KnownRuleTypesFactory {
 
-  private final KnownBuildRuleTypesProvider knownBuildRuleTypesProvider;
+  private final ProcessExecutor executor;
+  private final PluginManager pluginManager;
+  private final SandboxExecutionStrategyFactory sandboxExecutionStrategyFactory;
   private final ImmutableList<ConfigurationRuleDescription<?>> knownConfigurationDescriptions;
 
   public DefaultKnownRuleTypesFactory(
-      KnownBuildRuleTypesProvider knownBuildRuleTypesProvider,
+      ProcessExecutor executor,
+      PluginManager pluginManager,
+      SandboxExecutionStrategyFactory sandboxExecutionStrategyFactory,
       ImmutableList<ConfigurationRuleDescription<?>> knownConfigurationDescriptions) {
-    this.knownBuildRuleTypesProvider = knownBuildRuleTypesProvider;
+    this.executor = executor;
+    this.pluginManager = pluginManager;
+    this.sandboxExecutionStrategyFactory = sandboxExecutionStrategyFactory;
     this.knownConfigurationDescriptions = knownConfigurationDescriptions;
   }
 
   @Override
   public KnownRuleTypes create(Cell cell) {
-    return KnownRuleTypes.of(knownBuildRuleTypesProvider.get(cell), knownConfigurationDescriptions);
+    KnownBuildRuleTypes knownBuildRuleTypes =
+        KnownBuildRuleTypes.createInstance(
+            cell.getBuckConfig(),
+            executor,
+            cell.getToolchainProvider(),
+            pluginManager,
+            sandboxExecutionStrategyFactory);
+    return KnownRuleTypes.of(knownBuildRuleTypes, knownConfigurationDescriptions);
   }
 }

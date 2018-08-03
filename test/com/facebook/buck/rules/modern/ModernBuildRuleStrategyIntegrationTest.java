@@ -231,7 +231,10 @@ public class ModernBuildRuleStrategyIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenarioWithoutDefaultCell(
             this, "strategies", tmpFolder);
     workspace.setKnownRuleTypesFactoryFactory(
-        (knownBuildRuleTypesProvider, knownConfigurationDescriptions) ->
+        (executor,
+            pluginManager,
+            sandboxExecutionStrategyFactory,
+            knownConfigurationDescriptions) ->
             cell ->
                 KnownRuleTypes.of(
                     KnownBuildRuleTypes.builder()
