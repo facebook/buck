@@ -16,6 +16,7 @@
 
 package com.facebook.buck.distributed;
 
+import com.facebook.buck.core.cell.resolver.CellPathResolver;
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashEntry;
 import com.facebook.buck.distributed.thrift.PathWithUnixSeparators;
 import com.facebook.buck.io.ArchiveMemberPath;
@@ -62,34 +63,35 @@ public class RecordingProjectFileHashCache implements ProjectFileHashCache {
   public static RecordingProjectFileHashCache createForCellRoot(
       ProjectFileHashCache decoratedCache,
       RecordedFileHashes remoteFileHashes,
-      DistBuildConfig distBuildConfig) {
+      DistBuildConfig distBuildConfig,
+      CellPathResolver cellPathResolver) {
     return new RecordingProjectFileHashCache(
-        decoratedCache, remoteFileHashes, Optional.of(distBuildConfig));
+        decoratedCache,
+        remoteFileHashes,
+        Optional.of(distBuildConfig),
+        Optional.of(cellPathResolver));
   }
 
   public static RecordingProjectFileHashCache createForNonCellRoot(
       ProjectFileHashCache decoratedCache, RecordedFileHashes remoteFileHashes) {
-    return new RecordingProjectFileHashCache(decoratedCache, remoteFileHashes, Optional.empty());
+    return new RecordingProjectFileHashCache(
+        decoratedCache, remoteFileHashes, Optional.empty(), Optional.empty());
   }
 
   private RecordingProjectFileHashCache(
       ProjectFileHashCache delegate,
       RecordedFileHashes remoteFileHashes,
-      Optional<DistBuildConfig> distBuildConfig) {
+      Optional<DistBuildConfig> distBuildConfig,
+      Optional<CellPathResolver> cellPathResolver) {
     this.allRecordedPathsAreAbsolute = !distBuildConfig.isPresent();
     this.delegate = delegate;
     this.projectFilesystem = delegate.getFilesystem();
     this.remoteFileHashes = remoteFileHashes;
     ImmutableSet.Builder<Path> cellPaths = ImmutableSet.builder();
     cellPaths.add(MorePaths.normalize(projectFilesystem.getRootPath()));
-    distBuildConfig.ifPresent(
-        config ->
-            config
-                .getBuckConfig()
-                .getCellPathResolver()
-                .getCellPaths()
-                .values()
-                .forEach(p -> cellPaths.add(MorePaths.normalize(p))));
+    cellPathResolver.ifPresent(
+        resolver ->
+            resolver.getCellPaths().values().forEach(p -> cellPaths.add(MorePaths.normalize(p))));
     this.cellPaths = cellPaths.build();
 
     // TODO(alisdair,ruibm): Capture all .buckconfig dependencies automatically.
