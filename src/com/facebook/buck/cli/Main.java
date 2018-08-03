@@ -1233,7 +1233,6 @@ public final class Main {
                         scheduledExecutorPool.get(),
                         buildEnvironmentDescription,
                         parserAndCaches.getActionGraphCache(),
-                        knownBuildRuleTypesProvider,
                         knownRuleTypesProvider,
                         storeManager,
                         Optional.of(invocationInfo),
