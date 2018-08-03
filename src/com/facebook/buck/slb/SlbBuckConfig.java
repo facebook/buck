@@ -93,7 +93,7 @@ public class SlbBuckConfig {
               if (connection != null) {
                 remoteAddress = connection.socket().getRemoteSocketAddress().toString();
               } else {
-                LOG.warn(String.format("No available connection."));
+                LOG.warn("No available connection.");
               }
               Response response = chain.proceed(chain.request());
               if (response.code() != 200 && remoteAddress != null) {
