@@ -238,8 +238,7 @@ public class ChromeTraceBuildListenerTest {
         ObjectMappers.readValue(
             tmpDir.getRoot().toPath().resolve("buck-out").resolve("log").resolve("build.trace"),
             new TypeReference<List<ChromeTraceEvent>>() {});
-    List<ChromeTraceEvent> resultListCopy = new ArrayList<>();
-    resultListCopy.addAll(originalResultList);
+    List<ChromeTraceEvent> resultListCopy = new ArrayList<>(originalResultList);
 
     assertPreambleEvents(resultListCopy, projectFilesystem);
 
@@ -458,8 +457,7 @@ public class ChromeTraceBuildListenerTest {
         ObjectMappers.readValue(
             tmpDir.getRoot().toPath().resolve("buck-out").resolve("log").resolve("build.trace"),
             new TypeReference<List<ChromeTraceEvent>>() {});
-    List<ChromeTraceEvent> resultListCopy = new ArrayList<>();
-    resultListCopy.addAll(originalResultList);
+    List<ChromeTraceEvent> resultListCopy = new ArrayList<>(originalResultList);
     ImmutableMap<String, String> emptyArgs = ImmutableMap.of();
 
     assertPreambleEvents(resultListCopy, projectFilesystem);
