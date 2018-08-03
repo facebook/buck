@@ -28,7 +28,6 @@ import com.facebook.buck.sandbox.SandboxExecutionStrategyFactory;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -54,13 +53,6 @@ abstract class AbstractKnownBuildRuleTypes {
         throw new IllegalStateException(String.format("multiple descriptions with type %s", type));
       }
     }
-  }
-
-  @Value.Lazy
-  protected ImmutableMap<RuleType, DescriptionWithTargetGraph<?>> getDescriptionsByType() {
-    return getDescriptions()
-        .stream()
-        .collect(ImmutableMap.toImmutableMap(DescriptionCache::getRuleType, d -> d));
   }
 
   static KnownBuildRuleTypes createInstance(
