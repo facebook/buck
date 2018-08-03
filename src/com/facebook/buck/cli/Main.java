@@ -39,9 +39,7 @@ import com.facebook.buck.core.model.actiongraph.computation.ActionGraphCache;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.config.ConfigurationRuleDescription;
 import com.facebook.buck.core.rules.config.impl.PluginBasedKnownConfigurationDescriptionsFactory;
-import com.facebook.buck.core.rules.knowntypes.DefaultKnownBuildRuleTypesFactory;
 import com.facebook.buck.core.rules.knowntypes.DefaultKnownRuleTypesFactory;
-import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypesProvider;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesFactory;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
@@ -740,11 +738,6 @@ public final class Main {
       Watchman watchman =
           buildWatchman(context, parserConfig, projectWatchList, clientEnvironment, console, clock);
 
-      KnownBuildRuleTypesProvider knownBuildRuleTypesProvider =
-          KnownBuildRuleTypesProvider.of(
-              DefaultKnownBuildRuleTypesFactory.of(
-                  processExecutor, pluginManager, sandboxExecutionStrategyFactory));
-
       ImmutableList<ConfigurationRuleDescription<?>> knownConfigurationDescriptions =
           PluginBasedKnownConfigurationDescriptionsFactory.createFromPlugins(pluginManager);
 
@@ -782,16 +775,8 @@ public final class Main {
           context.isPresent() && (watchman != WatchmanFactory.NULL_WATCHMAN)
               ? Optional.of(
                   daemonLifecycleManager.getDaemon(
-                      rootCell,
-                      knownRuleTypesProvider,
-                      knownBuildRuleTypesProvider,
-                      executableFinder,
-                      console))
+                      rootCell, knownRuleTypesProvider, executableFinder, console))
               : Optional.empty();
-
-      // Used the cached provider, if present.
-      knownBuildRuleTypesProvider =
-          daemon.map(Daemon::getKnownBuildRuleTypesProvider).orElse(knownBuildRuleTypesProvider);
 
       if (!daemon.isPresent() && shouldCleanUpTrash) {
         // Clean up the trash on a background thread if this was a

@@ -36,8 +36,6 @@ import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodes;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.rules.knowntypes.DefaultKnownBuildRuleTypesFactory;
-import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypesProvider;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
 import com.facebook.buck.core.rules.knowntypes.TestKnownRuleTypesProvider;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
@@ -72,7 +70,6 @@ import com.facebook.buck.rules.coercer.PathTypeCoercer;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
 import com.facebook.buck.rules.visibility.VisibilityPatternFactory;
-import com.facebook.buck.sandbox.TestSandboxExecutionStrategyFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.TestConsole;
@@ -110,7 +107,6 @@ public class DistBuildStateTest {
 
   @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
 
-  private KnownBuildRuleTypesProvider knownBuildRuleTypesProvider;
   private ProcessExecutor processExecutor;
   private ExecutableFinder executableFinder;
   private BuckModuleManager moduleManager;
@@ -121,11 +117,6 @@ public class DistBuildStateTest {
     executableFinder = new ExecutableFinder();
     pluginManager = BuckPluginManagerFactory.createPluginManager();
     moduleManager = TestBuckModuleManagerFactory.create(pluginManager);
-
-    knownBuildRuleTypesProvider =
-        KnownBuildRuleTypesProvider.of(
-            DefaultKnownBuildRuleTypesFactory.of(
-                processExecutor, pluginManager, new TestSandboxExecutionStrategyFactory()));
   }
 
   @Test
@@ -149,7 +140,7 @@ public class DistBuildStateTest {
         DistBuildState.dump(
             new DistBuildCellIndexer(rootCellWhenSaving),
             emptyActionGraph(),
-            createDefaultCodec(knownBuildRuleTypesProvider, rootCellWhenSaving, Optional.empty()),
+            createDefaultCodec(rootCellWhenSaving, Optional.empty()),
             createTargetGraph(filesystem),
             ImmutableSet.of(BuildTargetFactory.newInstance(filesystem.getRootPath(), "//:dummy")));
 
@@ -217,7 +208,7 @@ public class DistBuildStateTest {
         DistBuildState.dump(
             new DistBuildCellIndexer(rootCellWhenSaving),
             emptyActionGraph(),
-            createDefaultCodec(knownBuildRuleTypesProvider, rootCellWhenSaving, Optional.empty()),
+            createDefaultCodec(rootCellWhenSaving, Optional.empty()),
             createTargetGraph(filesystem),
             ImmutableSet.of(BuildTargetFactory.newInstance(filesystem.getRootPath(), "//:dummy")));
     Cell rootCellWhenLoading =
@@ -278,8 +269,7 @@ public class DistBuildStateTest {
                 BuildTargetFactory.newInstance(projectFilesystem.getRootPath(), "//:lib2"),
                 BuildTargetFactory.newInstance(projectFilesystem.getRootPath(), "//:lib3")));
 
-    DistBuildTargetGraphCodec targetGraphCodec =
-        createDefaultCodec(knownBuildRuleTypesProvider, cell, Optional.of(parser));
+    DistBuildTargetGraphCodec targetGraphCodec = createDefaultCodec(cell, Optional.of(parser));
     BuildJobState dump =
         DistBuildState.dump(
             new DistBuildCellIndexer(cell),
@@ -359,7 +349,7 @@ public class DistBuildStateTest {
         DistBuildState.dump(
             new DistBuildCellIndexer(rootCellWhenSaving),
             emptyActionGraph(),
-            createDefaultCodec(knownBuildRuleTypesProvider, rootCellWhenSaving, Optional.empty()),
+            createDefaultCodec(rootCellWhenSaving, Optional.empty()),
             createCrossCellTargetGraph(cell1Filesystem, cell2Filesystem),
             ImmutableSet.of(
                 BuildTargetFactory.newInstance(cell1Filesystem.getRootPath(), "//:dummy")));
@@ -428,8 +418,7 @@ public class DistBuildStateTest {
         rootCell);
   }
 
-  public static DistBuildTargetGraphCodec createDefaultCodec(
-      KnownBuildRuleTypesProvider knownBuildRuleTypesProvider, Cell cell, Optional<Parser> parser) {
+  public static DistBuildTargetGraphCodec createDefaultCodec(Cell cell, Optional<Parser> parser) {
     BuckEventBus eventBus = BuckEventBusForTests.newInstance();
 
     Function<? super TargetNode<?>, ? extends Map<String, Object>> nodeToRawNode;
