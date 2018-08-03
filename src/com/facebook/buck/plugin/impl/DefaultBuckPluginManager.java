@@ -16,7 +16,12 @@
 
 package com.facebook.buck.plugin.impl;
 
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.plugin.BuckPluginManager;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+import java.util.List;
 import org.pf4j.CompoundPluginDescriptorFinder;
 import org.pf4j.DefaultPluginManager;
 import org.pf4j.ExtensionFinder;
@@ -26,6 +31,26 @@ import org.pf4j.PluginLoader;
 import org.pf4j.VersionManager;
 
 public class DefaultBuckPluginManager extends DefaultPluginManager implements BuckPluginManager {
+
+  private static final Logger LOG = Logger.get(DefaultBuckPluginManager.class);
+
+  private final LoadingCache<Class<?>, List<?>> extensionsCache =
+      CacheBuilder.newBuilder()
+          .build(
+              new CacheLoader<Class<?>, List<?>>() {
+                @Override
+                public List<?> load(Class<?> type) {
+                  long start = System.currentTimeMillis();
+                  try {
+                    return DefaultBuckPluginManager.super.getExtensions(type);
+                  } finally {
+                    LOG.warn(
+                        "Time to load instances of %s: %s",
+                        type, System.currentTimeMillis() - start);
+                  }
+                }
+              });
+
   @Override
   protected ExtensionFinder createExtensionFinder() {
     return new BuckExtensionFinder(this);
@@ -45,5 +70,11 @@ public class DefaultBuckPluginManager extends DefaultPluginManager implements Bu
   protected VersionManager createVersionManager() {
     // Buck modules do not support versions
     return (__, ___) -> true;
+  }
+
+  @Override
+  @SuppressWarnings("unchecked")
+  public <T> List<T> getExtensions(Class<T> type) {
+    return (List<T>) extensionsCache.getUnchecked(type);
   }
 }
