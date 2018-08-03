@@ -33,14 +33,14 @@ public class KnownRuleTypesProvider {
               new CacheLoader<Cell, KnownRuleTypes>() {
                 @Override
                 public KnownRuleTypes load(@Nonnull Cell cell) {
-                  return knownBuildRuleTypesFactory.create(cell);
+                  return knownRuleTypesFactory.create(cell);
                 }
               });
 
-  private final KnownRuleTypesFactory knownBuildRuleTypesFactory;
+  private final KnownRuleTypesFactory knownRuleTypesFactory;
 
-  public KnownRuleTypesProvider(KnownRuleTypesFactory knownBuildRuleTypesFactory) {
-    this.knownBuildRuleTypesFactory = knownBuildRuleTypesFactory;
+  public KnownRuleTypesProvider(KnownRuleTypesFactory knownRuleTypesFactory) {
+    this.knownRuleTypesFactory = knownRuleTypesFactory;
   }
 
   /** Returns {@link KnownRuleTypes} for a given {@link Cell}. */
