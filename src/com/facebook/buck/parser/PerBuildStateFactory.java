@@ -21,7 +21,6 @@ import com.facebook.buck.core.model.targetgraph.RawTargetNode;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
 import com.facebook.buck.core.rules.config.ConfigurationRuleResolver;
-import com.facebook.buck.core.rules.config.KnownConfigurationRuleTypes;
 import com.facebook.buck.core.rules.config.impl.ConfigurationRuleSelectableResolver;
 import com.facebook.buck.core.rules.config.impl.SameThreadConfigurationRuleResolver;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
@@ -41,19 +40,16 @@ public class PerBuildStateFactory {
   private final TypeCoercerFactory typeCoercerFactory;
   private final ConstructorArgMarshaller marshaller;
   private final KnownRuleTypesProvider knownRuleTypesProvider;
-  private final KnownConfigurationRuleTypes knownConfigurationRuleTypes;
   private final ParserPythonInterpreterProvider parserPythonInterpreterProvider;
 
   public PerBuildStateFactory(
       TypeCoercerFactory typeCoercerFactory,
       ConstructorArgMarshaller marshaller,
       KnownRuleTypesProvider knownRuleTypesProvider,
-      KnownConfigurationRuleTypes knownConfigurationRuleTypes,
       ParserPythonInterpreterProvider parserPythonInterpreterProvider) {
     this.typeCoercerFactory = typeCoercerFactory;
     this.marshaller = marshaller;
     this.knownRuleTypesProvider = knownRuleTypesProvider;
-    this.knownConfigurationRuleTypes = knownConfigurationRuleTypes;
     this.parserPythonInterpreterProvider = parserPythonInterpreterProvider;
   }
 
@@ -140,8 +136,7 @@ public class PerBuildStateFactory {
               cellManager::getCell,
               (cell, buildTarget) ->
                   nonResolvingTargetNodeParsePipeline.getNode(
-                      cell, buildTarget, parseProcessedBytes),
-              knownConfigurationRuleTypes);
+                      cell, buildTarget, parseProcessedBytes));
 
       SelectableResolver selectableResolver =
           new ConfigurationRuleSelectableResolver(configurationRuleResolver);

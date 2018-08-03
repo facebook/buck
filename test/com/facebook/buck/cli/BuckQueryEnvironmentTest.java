@@ -122,7 +122,6 @@ public class BuckQueryEnvironmentTest {
             typeCoercerFactory,
             new ConstructorArgMarshaller(typeCoercerFactory),
             knownRuleTypesProvider,
-            knownConfigurationRuleTypes,
             new ParserPythonInterpreterProvider(parserConfig, executableFinder));
     Parser parser =
         new DefaultParser(

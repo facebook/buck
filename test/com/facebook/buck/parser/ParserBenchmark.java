@@ -144,7 +144,6 @@ public class ParserBenchmark {
                 typeCoercerFactory,
                 marshaller,
                 knownRuleTypesProvider,
-                knownConfigurationRuleTypes,
                 new ParserPythonInterpreterProvider(parserConfig, new ExecutableFinder())),
             parserConfig,
             typeCoercerFactory,

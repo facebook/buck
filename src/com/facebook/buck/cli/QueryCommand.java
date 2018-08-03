@@ -190,7 +190,6 @@ public class QueryCommand extends AbstractCommand {
                     params.getTypeCoercerFactory(),
                     new ConstructorArgMarshaller(params.getTypeCoercerFactory()),
                     params.getKnownRuleTypesProvider(),
-                    params.getKnownConfigurationRuleTypes(),
                     new ParserPythonInterpreterProvider(
                         params.getCell().getBuckConfig(), params.getExecutableFinder()))
                 .create(

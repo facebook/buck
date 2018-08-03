@@ -307,7 +307,6 @@ public class OwnersReportTest {
             coercerFactory,
             new ConstructorArgMarshaller(coercerFactory),
             knownRuleTypesProvider,
-            knownConfigurationRuleTypes,
             new ParserPythonInterpreterProvider(parserConfig, new ExecutableFinder())),
         parserConfig,
         coercerFactory,

@@ -105,7 +105,6 @@ public class QueryCommandTest {
                 typeCoercerFactory,
                 new ConstructorArgMarshaller(typeCoercerFactory),
                 params.getKnownRuleTypesProvider(),
-                params.getKnownConfigurationRuleTypes(),
                 new ParserPythonInterpreterProvider(cell.getBuckConfig(), new ExecutableFinder()))
             .create(
                 params.getParser().getPermState(),

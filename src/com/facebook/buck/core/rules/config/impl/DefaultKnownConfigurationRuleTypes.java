@@ -33,11 +33,6 @@ public class DefaultKnownConfigurationRuleTypes implements KnownConfigurationRul
   }
 
   @Override
-  public ConfigurationRuleDescription<?> getRuleDescription(RuleType configurationRuleType) {
-    return configurationRuleDescriptions.get(configurationRuleType);
-  }
-
-  @Override
   public ImmutableList<ConfigurationRuleDescription<?>> getRuleDescriptions() {
     return ImmutableList.copyOf(configurationRuleDescriptions.values());
   }

@@ -22,7 +22,6 @@ import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.config.ConfigurationRule;
 import com.facebook.buck.core.rules.config.ConfigurationRuleDescription;
 import com.facebook.buck.core.rules.config.ConfigurationRuleResolver;
-import com.facebook.buck.core.rules.config.KnownConfigurationRuleTypes;
 import com.google.common.base.Preconditions;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiFunction;
@@ -38,17 +37,13 @@ public class SameThreadConfigurationRuleResolver implements ConfigurationRuleRes
 
   private final Function<BuildTarget, Cell> cellProvider;
   private final BiFunction<Cell, BuildTarget, TargetNode<?>> targetNodeSupplier;
-  private final KnownConfigurationRuleTypes knownConfigurationRuleTypes;
-
   private final ConcurrentHashMap<BuildTarget, ConfigurationRule> configurationRuleIndex;
 
   public SameThreadConfigurationRuleResolver(
       Function<BuildTarget, Cell> cellProvider,
-      BiFunction<Cell, BuildTarget, TargetNode<?>> targetNodeSupplier,
-      KnownConfigurationRuleTypes knownConfigurationRuleTypes) {
+      BiFunction<Cell, BuildTarget, TargetNode<?>> targetNodeSupplier) {
     this.cellProvider = cellProvider;
     this.targetNodeSupplier = targetNodeSupplier;
-    this.knownConfigurationRuleTypes = knownConfigurationRuleTypes;
     this.configurationRuleIndex = new ConcurrentHashMap<>();
   }
 
@@ -72,10 +67,12 @@ public class SameThreadConfigurationRuleResolver implements ConfigurationRuleRes
     Cell cell = cellProvider.apply(buildTarget);
     @SuppressWarnings("unchecked")
     TargetNode<T> targetNode = (TargetNode<T>) targetNodeSupplier.apply(cell, buildTarget);
-    @SuppressWarnings("unchecked")
+    Preconditions.checkState(
+        targetNode.getDescription() instanceof ConfigurationRuleDescription,
+        "Invalid type of target node description: %s",
+        targetNode.getDescription().getClass());
     ConfigurationRuleDescription<T> configurationRuleDescription =
-        (ConfigurationRuleDescription<T>)
-            knownConfigurationRuleTypes.getRuleDescription(targetNode.getRuleType());
+        (ConfigurationRuleDescription<T>) targetNode.getDescription();
     ConfigurationRule configurationRule =
         configurationRuleDescription.createConfigurationRule(
             this, cell, buildTarget, targetNode.getConstructorArg());

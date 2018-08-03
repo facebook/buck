@@ -116,7 +116,6 @@ public class TargetSpecResolverTest {
             typeCoercerFactory,
             constructorArgMarshaller,
             knownRuleTypesProvider,
-            knownConfigurationRuleTypes,
             parserPythonInterpreterProvider);
     targetNodeTargetSpecResolver = new TargetSpecResolver();
     parser =

@@ -18,7 +18,6 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.core.rules.config.KnownConfigurationRuleTypes;
 import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypesProvider;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
 import com.facebook.buck.httpserver.WebServer;
@@ -51,7 +50,6 @@ class DaemonLifecycleManager {
       Cell rootCell,
       KnownRuleTypesProvider knownRuleTypesProvider,
       KnownBuildRuleTypesProvider knownBuildRuleTypesProvider,
-      KnownConfigurationRuleTypes knownConfigurationRuleTypes,
       ExecutableFinder executableFinder,
       Console console)
       throws IOException {
@@ -63,7 +61,6 @@ class DaemonLifecycleManager {
               rootCell,
               knownRuleTypesProvider,
               knownBuildRuleTypesProvider,
-              knownConfigurationRuleTypes,
               executableFinder,
               Optional.empty());
     } else {
@@ -111,7 +108,6 @@ class DaemonLifecycleManager {
                 rootCell,
                 knownRuleTypesProvider,
                 knownBuildRuleTypesProvider,
-                knownConfigurationRuleTypes,
                 executableFinder,
                 webServer);
       }
