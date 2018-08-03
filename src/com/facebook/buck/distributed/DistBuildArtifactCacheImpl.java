@@ -290,7 +290,7 @@ public class DistBuildArtifactCacheImpl implements ArtifactCacheByBuildRule {
               "Hit [%d out of %d] targets checked in the remote cache. "
                   + "[%d] targets were uploaded from the local cache.",
               remoteContainsResults.stream().filter(r -> r).count(),
-              remoteContainsResults.stream().count(),
+              remoteContainsResults.size(),
               localUploadFutures.size());
           return null;
         },
