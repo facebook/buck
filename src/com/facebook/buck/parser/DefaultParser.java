@@ -162,8 +162,7 @@ public class DefaultParser implements Parser {
       String shortName = targetNode.getBuildTarget().getShortName();
       for (Map<String, Object> rawNode : allRawNodes) {
         if (shortName.equals(rawNode.get("name"))) {
-          SortedMap<String, Object> toReturn = new TreeMap<>();
-          toReturn.putAll(rawNode);
+          SortedMap<String, Object> toReturn = new TreeMap<>(rawNode);
           toReturn.put(
               "buck.direct_dependencies",
               targetNode
