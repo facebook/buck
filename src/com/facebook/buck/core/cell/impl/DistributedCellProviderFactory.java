@@ -38,7 +38,9 @@ import java.util.stream.Collectors;
 /** Creates a {@link CellProvider} to be used in a distributed build. */
 public class DistributedCellProviderFactory {
   public static CellProvider create(
-      DistBuildCellParams rootCell, ImmutableMap<Path, DistBuildCellParams> cellParams) {
+      DistBuildCellParams rootCell,
+      ImmutableMap<Path, DistBuildCellParams> cellParams,
+      CellPathResolver rootCellPathResolver) {
     Map<String, Path> cellPaths =
         cellParams
             .values()
@@ -95,6 +97,7 @@ public class DistributedCellProviderFactory {
                       cellProvider,
                       toolchainProvider,
                       ruleKeyConfiguration,
+                      currentCellResolver,
                       cellParam.getFilesystem(),
                       configWithResolver);
                 }),
@@ -102,6 +105,7 @@ public class DistributedCellProviderFactory {
             RootCellFactory.create(
                 cellProvider,
                 rootCellResolver,
+                rootCellPathResolver,
                 rootCell.getFilesystem(),
                 rootCell.getBuckModuleManager(),
                 rootCell.getPluginManager(),

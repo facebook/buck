@@ -24,6 +24,7 @@ import com.facebook.buck.core.cell.CellProvider;
 import com.facebook.buck.core.cell.DistBuildCellParams;
 import com.facebook.buck.core.cell.impl.DefaultCellPathResolver;
 import com.facebook.buck.core.cell.impl.DistributedCellProviderFactory;
+import com.facebook.buck.core.cell.resolver.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
@@ -163,6 +164,7 @@ public class DistBuildState {
     Path uniqueBuildRoot = Files.createTempDirectory(sandboxPath, "build");
 
     DistBuildCellParams rootCellParams = null;
+    CellPathResolver rootCellPathResolver = null;
     for (Map.Entry<Integer, BuildJobStateCell> remoteCellEntry : jobState.getCells().entrySet()) {
       BuildJobStateCell remoteCell = remoteCellEntry.getValue();
 
@@ -172,9 +174,14 @@ public class DistBuildState {
       Config config = createConfigFromRemoteAndOverride(remoteCell.getConfig(), localBuckConfig);
       ProjectFilesystem projectFilesystem =
           projectFilesystemFactory.createProjectFilesystem(cellRoot, config);
+      CellPathResolver cellPathResolver =
+          DefaultCellPathResolver.of(projectFilesystem.getRootPath(), config);
       BuckConfig buckConfig =
           createBuckConfigFromRawConfigAndEnv(
-              config, projectFilesystem, ImmutableMap.copyOf(localBuckConfig.getEnvironment()));
+              config,
+              projectFilesystem,
+              ImmutableMap.copyOf(localBuckConfig.getEnvironment()),
+              cellPathResolver);
 
       Optional<String> cellName =
           remoteCell.getCanonicalName().isEmpty()
@@ -195,12 +202,13 @@ public class DistBuildState {
 
       if (remoteCellEntry.getKey() == DistBuildCellIndexer.ROOT_CELL_INDEX) {
         rootCellParams = currentCellParams;
+        rootCellPathResolver = cellPathResolver;
       }
     }
 
     CellProvider cellProvider =
         DistributedCellProviderFactory.create(
-            Preconditions.checkNotNull(rootCellParams), cellParams.build());
+            Preconditions.checkNotNull(rootCellParams), cellParams.build(), rootCellPathResolver);
 
     ImmutableBiMap<Integer, Cell> cells =
         ImmutableBiMap.copyOf(Maps.transformValues(cellIndex.build(), cellProvider::getCellByPath));
@@ -236,14 +244,15 @@ public class DistBuildState {
   private static BuckConfig createBuckConfigFromRawConfigAndEnv(
       Config rawConfig,
       ProjectFilesystem projectFilesystem,
-      ImmutableMap<String, String> environment) {
+      ImmutableMap<String, String> environment,
+      CellPathResolver cellPathResolver) {
     return new BuckConfig(
         rawConfig,
         projectFilesystem,
         Architecture.detect(),
         Platform.detect(),
         ImmutableMap.copyOf(environment),
-        DefaultCellPathResolver.of(projectFilesystem.getRootPath(), rawConfig));
+        cellPathResolver);
   }
 
   public ImmutableMap<Integer, Cell> getCells() {

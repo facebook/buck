@@ -264,7 +264,5 @@ abstract class AbstractImmutableCell implements Cell {
   }
 
   @Override
-  public CellPathResolver getCellPathResolver() {
-    return getBuckConfig().getCellPathResolver();
-  }
+  public abstract CellPathResolver getCellPathResolver();
 }

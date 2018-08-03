@@ -155,6 +155,7 @@ public class LocalCellProviderFactory {
                     cellProvider,
                     toolchainProvider,
                     ruleKeyConfiguration,
+                    cellPathResolver,
                     cellFilesystem,
                     buckConfig);
               }

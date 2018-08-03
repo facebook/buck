@@ -47,6 +47,7 @@ class RootCellFactory {
   static Cell create(
       CellProvider cellProvider,
       CellPathResolver rootCellCellPathResolver,
+      CellPathResolver rootCellPathResolver,
       ProjectFilesystem rootFilesystem,
       BuckModuleManager moduleManager,
       PluginManager pluginManager,
@@ -76,6 +77,7 @@ class RootCellFactory {
         cellProvider,
         toolchainProvider,
         ruleKeyConfiguration,
+        rootCellPathResolver,
         rootFilesystem,
         rootConfig);
   }
@@ -102,6 +104,7 @@ class RootCellFactory {
         cellProvider,
         toolchainProvider,
         ruleKeyConfiguration,
+        rootCellCellPathResolver,
         rootFilesystem,
         rootConfig);
   }
