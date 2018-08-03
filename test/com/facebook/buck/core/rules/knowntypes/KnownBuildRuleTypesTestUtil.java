@@ -20,16 +20,21 @@ import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.sandbox.SandboxExecutionStrategyFactory;
 import com.facebook.buck.sandbox.TestSandboxExecutionStrategyFactory;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.FakeProcess;
+import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -37,6 +42,9 @@ import java.util.Set;
 import org.pf4j.PluginManager;
 
 public final class KnownBuildRuleTypesTestUtil {
+
+  private static final String FAKE_XCODE_DEV_PATH = "/Fake/Path/To/Xcode.app/Contents/Developer";
+  static final ImmutableMap<String, String> environment = ImmutableMap.copyOf(System.getenv());
 
   private KnownBuildRuleTypesTestUtil() {
     // Utility class.
@@ -88,5 +96,36 @@ public final class KnownBuildRuleTypesTestUtil {
 
     return KnownBuildRuleTypes.createInstance(
         config, processExecutor, toolchainProvider, pluginManager, sandboxExecutionStrategyFactory);
+  }
+
+  static ProcessExecutor createExecutor(TemporaryPaths temporaryFolder) throws IOException {
+    Path javac = temporaryFolder.newExecutableFile();
+    return createExecutor(javac.toString(), "");
+  }
+
+  static ProcessExecutor createExecutor(String javac, String version) {
+    Map<ProcessExecutorParams, FakeProcess> processMap = new HashMap<>();
+
+    FakeProcess process = new FakeProcess(0, "", version);
+    ProcessExecutorParams params =
+        ProcessExecutorParams.builder().setCommand(ImmutableList.of(javac, "-version")).build();
+    processMap.put(params, process);
+
+    addXcodeSelectProcess(processMap, FAKE_XCODE_DEV_PATH);
+
+    processMap.putAll(getPythonProcessMap(getPaths(environment)));
+
+    return new FakeProcessExecutor(processMap);
+  }
+
+  private static void addXcodeSelectProcess(
+      Map<ProcessExecutorParams, FakeProcess> processMap, String xcodeSelectPath) {
+
+    FakeProcess xcodeSelectOutputProcess = new FakeProcess(0, xcodeSelectPath, "");
+    ProcessExecutorParams xcodeSelectParams =
+        ProcessExecutorParams.builder()
+            .setCommand(ImmutableList.of("xcode-select", "--print-path"))
+            .build();
+    processMap.put(xcodeSelectParams, xcodeSelectOutputProcess);
   }
 }
