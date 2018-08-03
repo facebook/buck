@@ -80,14 +80,14 @@ public class PrebuiltAppleFrameworkDescription
     FlavorDomain<AppleCxxPlatform> appleCxxPlatformsFlavorDomain =
         getAppleCxxPlatformsFlavorDomain();
     return RichStream.from(flavors)
-            .filter(flavor -> !declaredPlatforms.contains(flavor))
-            .filter(flavor -> !appleCxxPlatformsFlavorDomain.getFlavors().contains(flavor))
-            .filter(flavor -> !appleCxxPlatformsFlavorDomain.getFlavors().contains(flavor))
-            .filter(flavor -> !AppleDebugFormat.FLAVOR_DOMAIN.getFlavors().contains(flavor))
-            .filter(flavor -> !AppleDescriptions.INCLUDE_FRAMEWORKS.getFlavors().contains(flavor))
-            .filter(flavor -> !StripStyle.FLAVOR_DOMAIN.getFlavors().contains(flavor))
-            .count()
-        == 0;
+        .allMatch(
+            flavor ->
+                declaredPlatforms.contains(flavor)
+                    || appleCxxPlatformsFlavorDomain.getFlavors().contains(flavor)
+                    || appleCxxPlatformsFlavorDomain.getFlavors().contains(flavor)
+                    || AppleDebugFormat.FLAVOR_DOMAIN.getFlavors().contains(flavor)
+                    || AppleDescriptions.INCLUDE_FRAMEWORKS.getFlavors().contains(flavor)
+                    || StripStyle.FLAVOR_DOMAIN.getFlavors().contains(flavor));
   }
 
   @Override
