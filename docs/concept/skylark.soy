@@ -127,14 +127,14 @@ def foo():
         performance overhead becomes noticeable.
         </p>
       </p>
-      <h3>instanceof</h3>
+      <h3>isinstance()</h3>
       <p>
-        The <code>instanceof</code> operator is not available in Skylark because it does not support
-        inheritance, but some of its usages can be replaced with the <code>type</code> operator.
+        The <code>isinstance()</code> function is not available in Skylark mostly because it does not support
+        inheritance, but some of its usages can be replaced with the <code>type</code> function.
         For example,
 
         <pre>
-        foo instanceof str
+        isinstance(foo, str)
         </pre>
 
         can be replaced with
