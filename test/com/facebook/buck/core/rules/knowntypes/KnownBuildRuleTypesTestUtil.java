@@ -17,21 +17,17 @@
 package com.facebook.buck.core.rules.knowntypes;
 
 import com.facebook.buck.config.BuckConfig;
-import com.facebook.buck.config.FakeBuckConfig;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.sandbox.SandboxExecutionStrategyFactory;
 import com.facebook.buck.sandbox.TestSandboxExecutionStrategyFactory;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.FakeProcess;
-import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.io.File;
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
@@ -45,12 +41,6 @@ public final class KnownBuildRuleTypesTestUtil {
   private KnownBuildRuleTypesTestUtil() {
     // Utility class.
   }
-
-  private static final ProcessExecutorParams XCODE_SELECT_PARAMS =
-      ProcessExecutorParams.builder()
-          .setCommand(ImmutableList.of("xcode-select", "--print-path"))
-          .build();
-  private static final FakeProcess XCODE_SELECT_PROCESS = new FakeProcess(0, "/path/to/xcode", "");
 
   private static final ImmutableMap<String, String> PYTHONS =
       ImmutableMap.of(
@@ -85,23 +75,6 @@ public final class KnownBuildRuleTypesTestUtil {
     }
 
     return Arrays.asList(pathEnv.split(File.pathSeparator));
-  }
-
-  public static KnownBuildRuleTypes getDefaultKnownBuildRuleTypes(
-      ProjectFilesystem filesystem,
-      ToolchainProvider toolchainProvider,
-      ImmutableMap<String, String> environment)
-      throws InterruptedException, IOException {
-    BuckConfig config = FakeBuckConfig.builder().setFilesystem(filesystem).build();
-    List<String> paths = getPaths(environment);
-    ProcessExecutor executor =
-        new FakeProcessExecutor(
-            ImmutableMap.<ProcessExecutorParams, FakeProcess>builder()
-                .put(XCODE_SELECT_PARAMS, XCODE_SELECT_PROCESS)
-                .putAll(getPythonProcessMap(paths))
-                .build());
-
-    return createInstance(config, toolchainProvider, executor);
   }
 
   @VisibleForTesting
