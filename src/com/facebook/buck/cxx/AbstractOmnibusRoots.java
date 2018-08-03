@@ -101,8 +101,7 @@ abstract class AbstractOmnibusRoots {
     }
 
     private ImmutableMap<BuildTarget, NativeLinkable> buildExcluded() {
-      Map<BuildTarget, NativeLinkable> excluded = new LinkedHashMap<>();
-      excluded.putAll(excludedRoots);
+      Map<BuildTarget, NativeLinkable> excluded = new LinkedHashMap<>(excludedRoots);
 
       // Find all excluded nodes reachable from the included roots.
       Map<BuildTarget, NativeLinkable> includedRootDeps = new LinkedHashMap<>();
@@ -125,8 +124,7 @@ abstract class AbstractOmnibusRoots {
       }.start();
 
       // Prepare the final map of excluded roots, starting with the pre-defined ones.
-      Map<BuildTarget, NativeLinkable> updatedExcludedRoots = new LinkedHashMap<>();
-      updatedExcludedRoots.putAll(excludedRoots);
+      Map<BuildTarget, NativeLinkable> updatedExcludedRoots = new LinkedHashMap<>(excludedRoots);
 
       // Recursively expand the excluded nodes including any preloaded deps, as we'll need this full
       // list to know which roots to exclude from omnibus linking.
