@@ -29,6 +29,8 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
 import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.module.BuckModuleManager;
+import com.facebook.buck.parser.BuildTargetParser;
+import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
 import com.facebook.buck.rules.keys.config.impl.ConfigRuleKeyConfigurationFactory;
 import com.facebook.buck.toolchain.ToolchainProvider;
@@ -137,7 +139,11 @@ public class LocalCellProviderFactory {
                         rootConfig.getArchitecture(),
                         rootConfig.getPlatform(),
                         rootConfig.getEnvironment(),
-                        cellPathResolver);
+                        target ->
+                            BuildTargetParser.INSTANCE.parse(
+                                target,
+                                BuildTargetPatternParser.fullyQualified(),
+                                cellPathResolver));
 
                 RuleKeyConfiguration ruleKeyConfiguration =
                     ConfigRuleKeyConfigurationFactory.create(buckConfig, moduleManager);

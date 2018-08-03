@@ -28,6 +28,7 @@ import com.dd.plist.NSDictionary;
 import com.dd.plist.NSObject;
 import com.facebook.buck.cli.Main;
 import com.facebook.buck.config.BuckConfig;
+import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.CellConfig;
 import com.facebook.buck.core.cell.impl.DefaultCellPathResolver;
@@ -63,7 +64,6 @@ import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.Threads;
 import com.facebook.buck.util.config.Config;
 import com.facebook.buck.util.config.Configs;
-import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.CommandMode;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.string.MoreStrings;
@@ -593,13 +593,10 @@ public class ProjectWorkspace extends AbstractWorkspace {
 
     ImmutableMap<String, String> env = ImmutableMap.copyOf(System.getenv());
     BuckConfig buckConfig =
-        new BuckConfig(
-            config,
-            filesystem,
-            Architecture.detect(),
-            Platform.detect(),
-            env,
-            rootCellCellPathResolver);
+        FakeBuckConfig.builder()
+            .setSections(config.getRawConfig())
+            .setFilesystem(filesystem)
+            .build();
 
     PluginManager pluginManager = BuckPluginManagerFactory.createPluginManager();
     ExecutableFinder executableFinder = new ExecutableFinder();

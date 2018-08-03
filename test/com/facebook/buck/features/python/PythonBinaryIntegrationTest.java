@@ -29,7 +29,6 @@ import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.FakeBuckConfig;
-import com.facebook.buck.core.cell.impl.DefaultCellPathResolver;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
@@ -47,7 +46,6 @@ import com.facebook.buck.util.CreateSymlinksForTests;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.config.Config;
 import com.facebook.buck.util.config.Configs;
-import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.unarchive.Unzip;
 import com.google.common.base.Splitter;
@@ -426,13 +424,10 @@ public class PythonBinaryIntegrationTest {
   private PythonBuckConfig getPythonBuckConfig() throws IOException {
     Config rawConfig = Configs.createDefaultConfig(tmp.getRoot());
     BuckConfig buckConfig =
-        new BuckConfig(
-            rawConfig,
-            TestProjectFilesystems.createProjectFilesystem(tmp.getRoot()),
-            Architecture.detect(),
-            Platform.detect(),
-            ImmutableMap.copyOf(System.getenv()),
-            DefaultCellPathResolver.of(tmp.getRoot(), rawConfig));
+        FakeBuckConfig.builder()
+            .setFilesystem(TestProjectFilesystems.createProjectFilesystem(tmp.getRoot()))
+            .setSections(rawConfig.getRawConfig())
+            .build();
     return new PythonBuckConfig(buckConfig);
   }
 }

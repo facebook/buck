@@ -18,7 +18,6 @@ package com.facebook.buck.config;
 
 import static java.lang.Integer.parseInt;
 
-import com.facebook.buck.core.cell.resolver.CellPathResolver;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.RuleKeyDiagnosticsMode;
@@ -28,8 +27,6 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.parser.BuildTargetParseException;
-import com.facebook.buck.parser.BuildTargetParser;
-import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.AnsiEnvironmentChecking;
 import com.facebook.buck.util.PatternAndMessage;
@@ -65,6 +62,7 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.regex.Pattern;
 
 /** Structured representation of data read from a {@code .buckconfig} file. */
@@ -83,8 +81,6 @@ public class BuckConfig implements ConfigPathGetter {
 
   private static final ImmutableMap<String, ImmutableSet<String>> IGNORE_FIELDS_FOR_DAEMON_RESTART;
 
-  private final CellPathResolver cellPathResolver;
-
   private final Architecture architecture;
 
   private final Config config;
@@ -98,6 +94,8 @@ public class BuckConfig implements ConfigPathGetter {
   private final ImmutableMap<String, String> environment;
 
   private final ConfigViewCache<BuckConfig> viewCache = new ConfigViewCache<>(this);
+
+  private final Function<String, BuildTarget> buildTargetParser;
 
   static {
     ImmutableMap.Builder<String, ImmutableSet<String>> ignoreFieldsForDaemonRestartBuilder =
@@ -129,14 +127,14 @@ public class BuckConfig implements ConfigPathGetter {
       Architecture architecture,
       Platform platform,
       ImmutableMap<String, String> environment,
-      CellPathResolver cellPathResolver) {
-    this.cellPathResolver = cellPathResolver;
+      Function<String, BuildTarget> buildTargetParser) {
     this.config = config;
     this.projectFilesystem = projectFilesystem;
     this.architecture = architecture;
 
     this.platform = platform;
     this.environment = environment;
+    this.buildTargetParser = buildTargetParser;
 
     this.aliasToBuildTargetMap =
         Suppliers.memoize(
@@ -144,8 +142,9 @@ public class BuckConfig implements ConfigPathGetter {
   }
 
   /** Returns a clone of the current config with a the argument CellPathResolver. */
-  public BuckConfig withCellPathResolver(CellPathResolver resolver) {
-    return new BuckConfig(config, projectFilesystem, architecture, platform, environment, resolver);
+  public BuckConfig withBuildTargetParser(Function<String, BuildTarget> buildTargetParser) {
+    return new BuckConfig(
+        config, projectFilesystem, architecture, platform, environment, buildTargetParser);
   }
 
   /**
@@ -265,8 +264,7 @@ public class BuckConfig implements ConfigPathGetter {
   }
 
   public BuildTarget getBuildTargetForFullyQualifiedTarget(String target) {
-    return BuildTargetParser.INSTANCE.parse(
-        target, BuildTargetPatternParser.fullyQualified(), cellPathResolver);
+    return buildTargetParser.apply(target);
   }
 
   public ImmutableList<BuildTarget> getBuildTargetList(String section, String key) {
@@ -391,10 +389,7 @@ public class BuckConfig implements ConfigPathGetter {
         } else {
           // Here we parse the alias values with a BuildTargetParser to be strict. We could be
           // looser and just grab everything between "//" and ":" and assume it's a valid base path.
-          buildTargets =
-              ImmutableSet.of(
-                  BuildTargetParser.INSTANCE.parse(
-                      value, BuildTargetPatternParser.fullyQualified(), cellPathResolver));
+          buildTargets = ImmutableSet.of(buildTargetParser.apply(value));
         }
         aliasToBuildTarget.putAll(alias, buildTargets);
       }

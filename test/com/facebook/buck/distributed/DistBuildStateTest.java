@@ -26,7 +26,6 @@ import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.TestCellBuilder;
-import com.facebook.buck.core.cell.impl.DefaultCellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.actiongraph.ActionGraph;
@@ -88,8 +87,6 @@ import com.facebook.buck.util.cache.impl.DefaultFileHashCache;
 import com.facebook.buck.util.cache.impl.StackedFileHashCache;
 import com.facebook.buck.util.config.Config;
 import com.facebook.buck.util.config.ConfigBuilder;
-import com.facebook.buck.util.environment.Architecture;
-import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -140,18 +137,15 @@ public class DistBuildStateTest {
   public void canReconstructConfig() throws IOException, InterruptedException {
     ProjectFilesystem filesystem = createJavaOnlyFilesystem("/saving");
 
-    Config config = new Config(ConfigBuilder.rawFromLines());
     BuckConfig buckConfig =
-        new BuckConfig(
-            config,
-            filesystem,
-            Architecture.detect(),
-            Platform.detect(),
-            ImmutableMap.<String, String>builder()
-                .putAll(System.getenv())
-                .put("envKey", "envValue")
-                .build(),
-            DefaultCellPathResolver.of(filesystem.getRootPath(), config));
+        FakeBuckConfig.builder()
+            .setEnvironment(
+                ImmutableMap.<String, String>builder()
+                    .putAll(System.getenv())
+                    .put("envKey", "envValue")
+                    .build())
+            .setFilesystem(filesystem)
+            .build();
     Cell rootCellWhenSaving =
         new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(buckConfig).build();
     setUp();
@@ -197,16 +191,15 @@ public class DistBuildStateTest {
             String.format("[%s]", STAMPEDE_SECTION),
             String.format("%s=%s", SERVER_BUCKCONFIG_OVERRIDE, "server-cfg"));
     BuckConfig buckConfig =
-        new BuckConfig(
-            config,
-            filesystem,
-            Architecture.detect(),
-            Platform.detect(),
-            ImmutableMap.<String, String>builder()
-                .putAll(System.getenv())
-                .put("envKey", "envValue")
-                .build(),
-            DefaultCellPathResolver.of(filesystem.getRootPath(), config));
+        FakeBuckConfig.builder()
+            .setEnvironment(
+                ImmutableMap.<String, String>builder()
+                    .putAll(System.getenv())
+                    .put("envKey", "envValue")
+                    .build())
+            .setFilesystem(filesystem)
+            .setSections(config.getRawConfig())
+            .build();
     Cell rootCellWhenSaving =
         new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(buckConfig).build();
     setUp();
@@ -215,16 +208,15 @@ public class DistBuildStateTest {
         ConfigBuilder.createFromText(
             filesystem.readFileIfItExists(filesystem.getPath("server-cfg")).get());
     BuckConfig serverBuckConfig =
-        new BuckConfig(
-            serverConfig,
-            filesystem,
-            Architecture.detect(),
-            Platform.detect(),
-            ImmutableMap.<String, String>builder()
-                .putAll(System.getenv())
-                .put("envKey", "envValue")
-                .build(),
-            DefaultCellPathResolver.of(filesystem.getRootPath(), config));
+        FakeBuckConfig.builder()
+            .setEnvironment(
+                ImmutableMap.<String, String>builder()
+                    .putAll(System.getenv())
+                    .put("envKey", "envValue")
+                    .build())
+            .setFilesystem(filesystem)
+            .setSections(serverConfig.getRawConfig())
+            .build();
 
     BuildJobState dump =
         DistBuildState.dump(
@@ -356,16 +348,16 @@ public class DistBuildStateTest {
             ConfigBuilder.rawFromLines(
                 "[cache]", "repository=somerepo", "[repositories]", "cell2 = " + cell2Root));
     BuckConfig buckConfig =
-        new BuckConfig(
-            config,
-            cell1Filesystem,
-            Architecture.detect(),
-            Platform.detect(),
-            ImmutableMap.<String, String>builder()
-                .putAll(System.getenv())
-                .put("envKey", "envValue")
-                .build(),
-            DefaultCellPathResolver.of(cell1Root, config));
+        FakeBuckConfig.builder()
+            .setEnvironment(
+                ImmutableMap.<String, String>builder()
+                    .putAll(System.getenv())
+                    .put("envKey", "envValue")
+                    .build())
+            .setFilesystem(cell1Filesystem)
+            .setSections(config.getRawConfig())
+            .setSections(config.getRawConfig())
+            .build();
     Cell rootCellWhenSaving =
         new TestCellBuilder().setFilesystem(cell1Filesystem).setBuckConfig(buckConfig).build();
     setUp();
@@ -385,16 +377,15 @@ public class DistBuildStateTest {
     Config localConfig =
         new Config(ConfigBuilder.rawFromLines("[cache]", "slb_server_pool=http://someserver:8080"));
     BuckConfig localBuckConfig =
-        new BuckConfig(
-            localConfig,
-            cell1Filesystem,
-            Architecture.detect(),
-            Platform.detect(),
-            ImmutableMap.<String, String>builder()
-                .putAll(System.getenv())
-                .put("envKey", "envValue")
-                .build(),
-            DefaultCellPathResolver.of(cell1Root, localConfig));
+        FakeBuckConfig.builder()
+            .setEnvironment(
+                ImmutableMap.<String, String>builder()
+                    .putAll(System.getenv())
+                    .put("envKey", "envValue")
+                    .build())
+            .setFilesystem(cell1Filesystem)
+            .setSections(localConfig.getRawConfig())
+            .build();
     DistBuildState distributedBuildState =
         DistBuildState.load(
             localBuckConfig,

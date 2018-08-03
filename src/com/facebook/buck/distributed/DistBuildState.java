@@ -39,6 +39,8 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.module.BuckModuleManager;
+import com.facebook.buck.parser.BuildTargetParser;
+import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.cache.ProjectFileHashCache;
 import com.facebook.buck.util.config.Config;
@@ -252,7 +254,9 @@ public class DistBuildState {
         Architecture.detect(),
         Platform.detect(),
         ImmutableMap.copyOf(environment),
-        cellPathResolver);
+        target ->
+            BuildTargetParser.INSTANCE.parse(
+                target, BuildTargetPatternParser.fullyQualified(), cellPathResolver));
   }
 
   public ImmutableMap<Integer, Cell> getCells() {

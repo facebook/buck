@@ -44,6 +44,7 @@ java_library(
         "//test/...",
     ],
     deps = [
+        ":FakeBuckConfig",
         "//src/com/facebook/buck/core/cell/impl:impl",
         "//src/com/facebook/buck/util/environment:platform",
         "//test/com/facebook/buck/io/filesystem:testutil",
@@ -68,6 +69,7 @@ java_library(
     deps = [
         "//src/com/facebook/buck/core/cell:cell",
         "//src/com/facebook/buck/core/cell/impl:impl",
+        "//src/com/facebook/buck/parser:rule_pattern",
         "//src/com/facebook/buck/util/environment:platform",
         "//test/com/facebook/buck/io/filesystem:testutil",
         "//test/com/facebook/buck/testutil:testutil",

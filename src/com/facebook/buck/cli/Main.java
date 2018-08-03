@@ -100,6 +100,8 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.module.BuckModuleManager;
 import com.facebook.buck.module.impl.BuckModuleJarHashProvider;
 import com.facebook.buck.module.impl.DefaultBuckModuleManager;
+import com.facebook.buck.parser.BuildTargetParser;
+import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.parser.DefaultParser;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
@@ -634,7 +636,14 @@ public final class Main {
           DefaultCellPathResolver.of(filesystem.getRootPath(), config);
       BuckConfig buckConfig =
           new BuckConfig(
-              config, filesystem, architecture, platform, clientEnvironment, cellPathResolver);
+              config,
+              filesystem,
+              architecture,
+              platform,
+              clientEnvironment,
+              target ->
+                  BuildTargetParser.INSTANCE.parse(
+                      target, BuildTargetPatternParser.fullyQualified(), cellPathResolver));
       // Set so that we can use some settings when we print out messages to users
       parsedRootConfig = Optional.of(buckConfig);
 

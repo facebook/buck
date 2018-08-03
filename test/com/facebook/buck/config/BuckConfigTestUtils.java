@@ -16,11 +16,9 @@
 
 package com.facebook.buck.config;
 
-import com.facebook.buck.core.cell.impl.DefaultCellPathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.testutil.TemporaryPaths;
-import com.facebook.buck.util.config.Config;
 import com.facebook.buck.util.config.ConfigBuilder;
 import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.Platform;
@@ -50,13 +48,12 @@ public class BuckConfigTestUtils {
       Platform platform,
       ImmutableMap<String, String> environment)
       throws IOException {
-    Config config = new Config(ConfigBuilder.rawFromReader(reader));
-    return new BuckConfig(
-        config,
-        projectFilesystem,
-        architecture,
-        platform,
-        environment,
-        DefaultCellPathResolver.of(projectFilesystem.getRootPath(), config));
+    return FakeBuckConfig.builder()
+        .setSections(ConfigBuilder.rawFromReader(reader))
+        .setFilesystem(projectFilesystem)
+        .setArchitecture(architecture)
+        .setPlatform(platform)
+        .setEnvironment(environment)
+        .build();
   }
 }
