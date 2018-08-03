@@ -262,7 +262,9 @@ public class ProjectCommand extends AbstractCommand implements PluginBasedComman
 
     @Override
     public Function<Iterable<String>, ImmutableList<TargetNodeSpec>> getArgsParser() {
-      return arguments -> parseArgumentsAsTargetNodeSpecs(parameters.getBuckConfig(), arguments);
+      return arguments ->
+          parseArgumentsAsTargetNodeSpecs(
+              parameters.getCell().getCellPathResolver(), parameters.getBuckConfig(), arguments);
     }
   }
 }

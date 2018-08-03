@@ -49,9 +49,9 @@ public class AuditCellCommand extends AbstractCommand {
       throws IOException, InterruptedException {
     ImmutableMap<String, Path> cellMap;
     if (getArguments().isEmpty()) {
-      cellMap = params.getBuckConfig().getCellPathResolver().getCellPaths();
+      cellMap = params.getCell().getCellPathResolver().getCellPaths();
     } else {
-      CellPathResolver cellPathResolver = params.getBuckConfig().getCellPathResolver();
+      CellPathResolver cellPathResolver = params.getCell().getCellPathResolver();
       ImmutableMap.Builder<String, Path> outputBuilder = ImmutableMap.builder();
       for (String arg : getArguments()) {
         Path cellPath = cellPathResolver.getCellPathOrThrow(Optional.of(arg));

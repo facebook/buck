@@ -208,7 +208,7 @@ public class LocalBuildExecutor implements BuildExecutor {
             args.getBuckConfig().getView(ModernBuildRuleConfig.class),
             actionGraphAndBuilder.getActionGraphBuilder(),
             args.getRootCell(),
-            args.getBuckConfig().getCellPathResolver(),
+            args.getRootCell().getCellPathResolver(),
             cachingBuildEngineDelegate.getFileHashCache(),
             args.getBuckEventBus(),
             args.getConsole()),

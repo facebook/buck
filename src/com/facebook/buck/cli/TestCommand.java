@@ -506,7 +506,10 @@ public class TestCommand extends BuildCommand {
                       params.getCell(),
                       getEnableParserProfiling(),
                       pool.getListeningExecutorService(),
-                      parseArgumentsAsTargetNodeSpecs(params.getBuckConfig(), getArguments()),
+                      parseArgumentsAsTargetNodeSpecs(
+                          params.getCell().getCellPathResolver(),
+                          params.getBuckConfig(),
+                          getArguments()),
                       parserConfig.getDefaultFlavorsMode());
 
           LOG.debug("Got explicit build targets %s", targetGraphAndBuildTargets.getBuildTargets());
@@ -592,7 +595,7 @@ public class TestCommand extends BuildCommand {
                         params.getBuckConfig().getView(ModernBuildRuleConfig.class),
                         actionGraphAndBuilder.getActionGraphBuilder(),
                         params.getCell(),
-                        params.getBuckConfig().getCellPathResolver(),
+                        params.getCell().getCellPathResolver(),
                         localCachingBuildEngineDelegate.getFileHashCache(),
                         params.getBuckEventBus(),
                         params.getConsole()),

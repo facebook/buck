@@ -495,7 +495,10 @@ public class TargetsCommand extends AbstractCommand {
                   params.getCell(),
                   getEnableParserProfiling(),
                   executor,
-                  parseArgumentsAsTargetNodeSpecs(params.getBuckConfig(), getArguments())),
+                  parseArgumentsAsTargetNodeSpecs(
+                      params.getCell().getCellPathResolver(),
+                      params.getBuckConfig(),
+                      getArguments())),
           descriptionClasses);
     }
   }
@@ -618,7 +621,10 @@ public class TargetsCommand extends AbstractCommand {
                   params.getCell(),
                   getEnableParserProfiling(),
                   executor,
-                  parseArgumentsAsTargetNodeSpecs(params.getBuckConfig(), getArguments()),
+                  parseArgumentsAsTargetNodeSpecs(
+                      params.getCell().getCellPathResolver(),
+                      params.getBuckConfig(),
+                      getArguments()),
                   parserConfig.getDefaultFlavorsMode());
     }
     return params.getBuckConfig().getTargetsVersions()

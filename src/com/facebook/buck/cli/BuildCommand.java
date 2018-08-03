@@ -1338,7 +1338,8 @@ public class BuildCommand extends AbstractCommand {
               params.getCell(),
               getEnableParserProfiling(),
               executor,
-              parseArgumentsAsTargetNodeSpecs(params.getBuckConfig(), getArguments()),
+              parseArgumentsAsTargetNodeSpecs(
+                  params.getCell().getCellPathResolver(), params.getBuckConfig(), getArguments()),
               parserConfig.getDefaultFlavorsMode());
     } catch (BuildTargetException e) {
       throw new ActionGraphCreationException(MoreExceptions.getHumanReadableOrLocalizedMessage(e));
