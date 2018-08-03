@@ -3307,7 +3307,10 @@ public class ProjectGenerator {
                 filterRecursiveLibraryDepsForCurrentProject(targetNodes))
             : targetNodesIterableToPBXFileReference(targetNodes);
     ImmutableSet<PBXFileReference> forceLoad =
-        targetNodesIterableToPBXFileReference(filterRecursiveLibraryDepsWithForceLoad(targetNodes));
+        options.shouldAddLinkedLibrariesAsFlags()
+            ? ImmutableSet.of()
+            : targetNodesIterableToPBXFileReference(
+                filterRecursiveLibraryDepsWithForceLoad(targetNodes));
     ImmutableSet<PBXFileReference> frameworks =
         filterRecursiveProjectFrameworkDependencies(targetNodes);
 
@@ -3406,7 +3409,7 @@ public class ProjectGenerator {
   private Optional<String> getFrameworkLinkerFlag(
       TargetNode<? extends AppleBundleDescriptionArg> targetNode) {
     if (isFrameworkBundle(targetNode.getConstructorArg())) {
-      return Optional.of("-framework " + getProductNameForBuildTargetNode(targetNode));
+      return Optional.of("-framework " + getProductOutputBaseName(targetNode));
     } else {
       return Optional.empty();
     }
@@ -3414,7 +3417,7 @@ public class ProjectGenerator {
 
   private Optional<String> getLibraryLinkerFlag(
       TargetNode<? extends CxxLibraryDescription.CommonArg> targetNode) {
-    return Optional.of("-l" + getProductNameForBuildTargetNode(targetNode));
+    return Optional.of("-l" + getProductOutputBaseName(targetNode));
   }
 
   private Optional<String> getForceLoadLinkerFlag(
@@ -3426,17 +3429,26 @@ public class ProjectGenerator {
       String flag =
           "-Wl,-force_load,"
               + appleConfig.getForceLoadLibraryPath(isFocusedOnTarget)
-              + "/lib"
-              + getProductNameForBuildTargetNode(targetNode)
-              + ".a";
+              + "/"
+              + getProductOutputNameWithExtension(targetNode);
       return Optional.of(flag);
     } else {
       return Optional.empty();
     }
   }
 
-  private SourceTreePath getProductsSourceTreePath(TargetNode<?> targetNode) {
+  private String getProductOutputBaseName(TargetNode<?> targetNode) {
     String productName = getProductNameForBuildTargetNode(targetNode);
+    if (targetNode.getDescription() instanceof AppleBundleDescription
+        || targetNode.getDescription() instanceof AppleTestDescription) {
+      HasAppleBundleFields arg = (HasAppleBundleFields) targetNode.getConstructorArg();
+      productName = arg.getProductName().orElse(productName);
+    }
+    return productName;
+  }
+
+  private String getProductOutputNameWithExtension(TargetNode<?> targetNode) {
+    String productName = getProductOutputBaseName(targetNode);
     String productOutputName;
 
     if (targetNode.getDescription() instanceof AppleLibraryDescription
@@ -3452,24 +3464,26 @@ public class ProjectGenerator {
     } else if (targetNode.getDescription() instanceof AppleBundleDescription
         || targetNode.getDescription() instanceof AppleTestDescription) {
       HasAppleBundleFields arg = (HasAppleBundleFields) targetNode.getConstructorArg();
-      productName = arg.getProductName().orElse(productName);
       productOutputName = productName + "." + getExtensionString(arg.getExtension());
     } else if (targetNode.getDescription() instanceof AppleBinaryDescription) {
       productOutputName = productName;
     } else if (targetNode.getDescription() instanceof PrebuiltAppleFrameworkDescription) {
       PrebuiltAppleFrameworkDescriptionArg arg =
           (PrebuiltAppleFrameworkDescriptionArg) targetNode.getConstructorArg();
-      // Prebuilt frameworks reside in the source repo, not outputs dir.
-      return new SourceTreePath(
-          PBXReference.SourceTree.SOURCE_ROOT,
-          pathRelativizer.outputPathToSourcePath(arg.getFramework()),
-          Optional.empty());
+      productOutputName = pathRelativizer.outputPathToSourcePath(arg.getFramework()).toString();
     } else {
       throw new RuntimeException("Unexpected type: " + targetNode.getDescription().getClass());
     }
+    return productOutputName;
+  }
 
-    return new SourceTreePath(
-        PBXReference.SourceTree.BUILT_PRODUCTS_DIR, Paths.get(productOutputName), Optional.empty());
+  private SourceTreePath getProductsSourceTreePath(TargetNode<?> targetNode) {
+    String productOutputName = getProductOutputNameWithExtension(targetNode);
+    PBXReference.SourceTree path = PBXReference.SourceTree.BUILT_PRODUCTS_DIR;
+    if (targetNode.getDescription() instanceof PrebuiltAppleFrameworkDescription) {
+      path = PBXReference.SourceTree.SOURCE_ROOT;
+    }
+    return new SourceTreePath(path, Paths.get(productOutputName), Optional.empty());
   }
 
   private PBXFileReference getLibraryFileReference(TargetNode<?> targetNode) {
