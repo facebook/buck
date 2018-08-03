@@ -209,8 +209,7 @@ public class ConsoleEventHandlerTest {
     try (BuckEventBus eventBus = BuckEventBusForTests.newInstance()) {
       eventBus.register(listener);
 
-      HashSet<EventKind> handledEvents = new HashSet<>();
-      handledEvents.addAll(EventKind.ALL_EVENTS);
+      HashSet<EventKind> handledEvents = new HashSet<>(EventKind.ALL_EVENTS);
       handledEvents.remove(EventKind.WARNING);
       ConsoleEventHandler eventHandler =
           new ConsoleEventHandler(
