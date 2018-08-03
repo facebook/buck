@@ -41,12 +41,11 @@ public enum JarShape {
       // We only need the first order maven deps, since maven's depenedency resolution process will
       // pull in any transitive deps. To do this, iterate over our transitive deps and pull out any
       // maven deps. Then remove _their_ deps, and we're done.lo
-      Set<JavaLibrary> toPackage = new HashSet<>();
 
       ImmutableSet<JavaLibrary> classpathDeps =
           ((HasClasspathEntries) root).getTransitiveClasspathDeps();
 
-      toPackage.addAll(classpathDeps);
+      Set<JavaLibrary> toPackage = new HashSet<>(classpathDeps);
       Set<HasMavenCoordinates> mavenDeps =
           toPackage
               .stream()
