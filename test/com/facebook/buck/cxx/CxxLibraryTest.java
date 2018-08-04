@@ -263,7 +263,7 @@ public class CxxLibraryTest {
             Optional.empty());
 
     ImmutableList.Builder<Arg> linkerArgsBuilder = ImmutableList.builder();
-    linkerArgsBuilder.add((Arg) StringArg.of("-ldl"));
+    linkerArgsBuilder.add(StringArg.of("-ldl"));
 
     ImmutableList<? extends Arg> postFlags = ImmutableList.copyOf(StringArg.from("-lfoobarbaz"));
     linkerArgsBuilder.addAll(postFlags);

@@ -32,7 +32,7 @@ public abstract class UnixUtils extends PlatformUtils {
   /** Returns a command builder for a unix platform */
   @Override
   public ImmutableList.Builder<String> getCommandBuilder() {
-    return ImmutableList.<String>builder();
+    return ImmutableList.builder();
   }
 
   /** Returns a buck command builder for a unix platform, which runs buck through its .pex file */

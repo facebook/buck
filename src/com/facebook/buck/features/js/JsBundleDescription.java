@@ -417,7 +417,7 @@ public class JsBundleDescription
               sourcePath ->
                   ruleFinder
                       .getRule(sourcePath)
-                      .<HumanReadableException>orElseThrow(
+                      .orElseThrow(
                           () ->
                               new HumanReadableException(
                                   "js_library %s has '%s' as a lib, but js_library can only have other "

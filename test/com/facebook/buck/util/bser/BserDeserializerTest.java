@@ -101,7 +101,7 @@ public class BserDeserializerTest {
     List<Object> deserialized =
         (List<Object>)
             deserializer.deserializeBserValue(getByteStream("000103090003030323034203F0"));
-    List<Object> expected = ImmutableList.<Object>of((byte) 0x23, (byte) 0x42, (byte) 0xF0);
+    List<Object> expected = ImmutableList.of((byte) 0x23, (byte) 0x42, (byte) 0xF0);
     assertThat(deserialized, equalTo(expected));
   }
 
@@ -186,15 +186,14 @@ public class BserDeserializerTest {
     // same value.
     assertThat(
         deserialized,
-        Matchers.<Map<String, Object>>contains(
-            Matchers.<Map<String, Object>>allOf(
-                Matchers.<String, Object>hasEntry("name", "fred"),
+        contains(
+            Matchers.allOf(
+                Matchers.hasEntry("name", "fred"),
                 Matchers.<String, Object>hasEntry("age", (byte) 20)),
-            Matchers.<Map<String, Object>>allOf(
-                Matchers.<String, Object>hasEntry("name", "pete"),
+            Matchers.allOf(
+                Matchers.hasEntry("name", "pete"),
                 Matchers.<String, Object>hasEntry("age", (byte) 30)),
-            Matchers.<Map<String, Object>>allOf(
-                Matchers.<String, Object>hasEntry("age", (byte) 25))));
+            Matchers.allOf(Matchers.<String, Object>hasEntry("age", (byte) 25))));
   }
 
   @Test
