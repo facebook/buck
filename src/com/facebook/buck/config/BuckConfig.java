@@ -66,7 +66,7 @@ import java.util.function.Function;
 import java.util.regex.Pattern;
 
 /** Structured representation of data read from a {@code .buckconfig} file. */
-public class BuckConfig implements ConfigPathGetter {
+public class BuckConfig {
 
   private static final String ALIAS_SECTION_HEADER = "alias";
   private static final String TEST_SECTION_HEADER = "test";
@@ -710,7 +710,6 @@ public class BuckConfig implements ConfigPathGetter {
   }
 
   /** @return the path for the given section and property. */
-  @Override
   public Optional<Path> getPath(String sectionName, String name) {
     return getPath(sectionName, name, true);
   }
