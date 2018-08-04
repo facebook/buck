@@ -208,6 +208,7 @@
     <include name="aether/aether-transport-http-1.0.2.v20150114.jar" />
     <include name="aether/aether-transport-file-1.0.2.v20150114.jar" />
     <include name="aether/aether-util-1.0.2.v20150114.jar" />
+    <include name="commons-codec/commons-codec-1.6.jar" />
     <include name="httpcomponents/httpclient-4.4.1.jar" />
     <include name="httpcomponents/httpcore-4.4.1.jar" />
     <include name="maven/maven-aether-provider-3.2.5.jar" />

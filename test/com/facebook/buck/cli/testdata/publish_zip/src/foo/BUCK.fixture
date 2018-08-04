@@ -1,0 +1,5 @@
+zip_file(
+  name = 'src-archive',
+  srcs = glob(['*.go', '*.s', '*.h']),
+  maven_coords = "com.example:foo:1.0"
+)

@@ -26,6 +26,7 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.VersionPropagator;
+import java.util.Optional;
 import org.immutables.value.Value;
 
 public class ZipFileDescription
@@ -50,7 +51,8 @@ public class ZipFileDescription
         args.getOut(),
         args.getSrcs(),
         args.getFlatten(),
-        args.getMergeSourceZips());
+        args.getMergeSourceZips(),
+        args.getMavenCoords());
   }
 
   @Override
@@ -75,5 +77,7 @@ public class ZipFileDescription
     default boolean getMergeSourceZips() {
       return true;
     }
+
+    Optional<String> getMavenCoords();
   }
 }

@@ -20,29 +20,30 @@ import static com.facebook.buck.jvm.core.JavaLibrary.MAVEN_JAR;
 import static com.facebook.buck.jvm.core.JavaLibrary.SRC_JAR;
 import static com.facebook.buck.jvm.java.Javadoc.DOC_JAR;
 
-import com.facebook.buck.core.cell.resolver.CellPathResolver;
-import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.MavenPublishable;
 import com.facebook.buck.maven.Publisher;
-import com.facebook.buck.parser.BuildTargetSpec;
-import com.facebook.buck.parser.TargetNodeSpec;
 import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.ExitCode;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSet.Builder;
 import java.io.IOException;
 import java.net.URL;
-import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.TreeMap;
+import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.deployment.DeployResult;
@@ -60,6 +61,8 @@ public class PublishCommand extends BuildCommand {
   public static final String DRY_RUN_LONG_ARG = "--dry-run";
 
   private static final String PUBLISH_GEN_PATH = "publish";
+
+  private Map<BuildTarget, List<BuildTarget>> replacedTargets;
 
   @Option(
       name = REMOTE_REPO_LONG_ARG,
@@ -141,10 +144,16 @@ public class PublishCommand extends BuildCommand {
       return exitCode;
     }
 
+    Builder<BuildTarget> builder = ImmutableSet.builder();
+    for (BuildTarget target : buildRunResult.getBuildTargets()) {
+      if (replacedTargets.containsKey(target)) {
+        builder.addAll(replacedTargets.get(target));
+      } else {
+        builder.add(target);
+      }
+    }
     // Publish starting with the given targets.
-    return publishTargets(buildRunResult.getBuildTargets(), params)
-        ? ExitCode.SUCCESS
-        : ExitCode.RUN_ERROR;
+    return publishTargets(builder.build(), params) ? ExitCode.SUCCESS : ExitCode.RUN_ERROR;
   }
 
   private boolean publishTargets(
@@ -225,36 +234,26 @@ public class PublishCommand extends BuildCommand {
   }
 
   @Override
-  public ImmutableList<TargetNodeSpec> parseArgumentsAsTargetNodeSpecs(
-      CellPathResolver cellPathResolver, BuckConfig config, Iterable<String> targetsAsArgs) {
-    ImmutableList<TargetNodeSpec> specs =
-        super.parseArgumentsAsTargetNodeSpecs(cellPathResolver, config, targetsAsArgs);
-
-    Map<BuildTarget, TargetNodeSpec> uniqueSpecs = new HashMap<>();
-    for (TargetNodeSpec spec : specs) {
-      if (!(spec instanceof BuildTargetSpec)) {
-        throw new IllegalArgumentException(
-            "Need to specify build targets explicitly when publishing. " + "Cannot modify " + spec);
-      }
-
-      BuildTargetSpec targetSpec = (BuildTargetSpec) spec;
-      Preconditions.checkNotNull(targetSpec.getBuildTarget());
-
-      BuildTarget mavenTarget = targetSpec.getBuildTarget().withFlavors(MAVEN_JAR);
-      uniqueSpecs.put(mavenTarget, targetSpec.withBuildTarget(mavenTarget));
-
-      if (includeSource) {
-        BuildTarget sourceTarget = targetSpec.getBuildTarget().withFlavors(MAVEN_JAR, SRC_JAR);
-        uniqueSpecs.put(sourceTarget, targetSpec.withBuildTarget(sourceTarget));
-      }
-
-      if (includeDocs) {
-        BuildTarget docsTarget = targetSpec.getBuildTarget().withFlavors(MAVEN_JAR, DOC_JAR);
-        uniqueSpecs.put(docsTarget, targetSpec.withBuildTarget(docsTarget));
+  protected Iterable<BuildTarget> getAdditionalTargetsToBuild(
+      GraphsAndBuildTargets graphsAndBuildTargets) {
+    ActionGraphBuilder actionGraphBuilder =
+        graphsAndBuildTargets.getGraphs().getActionGraphAndBuilder().getActionGraphBuilder();
+    replacedTargets = new TreeMap<>();
+    for (BuildTarget target : graphsAndBuildTargets.getBuildTargets()) {
+      BuildRule rule = actionGraphBuilder.getRule(target);
+      if (rule instanceof JavaLibrary) {
+        List<BuildTarget> replacement = new ArrayList<>();
+        replacement.add(target.withFlavors(MAVEN_JAR));
+        if (includeSource) {
+          replacement.add(target.withFlavors(MAVEN_JAR, SRC_JAR));
+        }
+        if (includeDocs) {
+          replacement.add(target.withFlavors(MAVEN_JAR, DOC_JAR));
+        }
+        replacedTargets.put(target, replacement);
       }
     }
-
-    return ImmutableList.copyOf(uniqueSpecs.values());
+    return replacedTargets.values().stream().flatMap(t -> t.stream()).collect(Collectors.toSet());
   }
 
   @Override

@@ -186,6 +186,22 @@ public class PublishCommandIntegrationTest {
     assertEquals("ScalaFoo.scala", srcJarContents.first().getName());
   }
 
+  @Test
+  public void testPublishZip() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "publish_zip", tmp);
+    workspace.setUp();
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "publish",
+            PublishCommand.REMOTE_REPO_SHORT_ARG,
+            getMockRepoUrl(),
+            "//src/foo:src-archive");
+    result.assertSuccess();
+    List<String> putRequestsPaths = requestsHandler.getPutRequestsPaths();
+    assertThat(putRequestsPaths, hasItem("/com/example/foo/1.0/foo-1.0.zip"));
+  }
+
   private static ImmutableSortedSet<ZipEntry> getZipFilesFiltered(File zipFile) throws IOException {
     return getZipContents(zipFile)
         .stream()

@@ -20,12 +20,15 @@ import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.HasOutputName;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.features.filebundler.CopyingFileBundler;
 import com.facebook.buck.features.filebundler.FileBundler;
 import com.facebook.buck.features.filebundler.SrcZipAwareFileBundler;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.jvm.core.HasMavenCoordinates;
+import com.facebook.buck.jvm.java.MavenPublishable;
 import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
 import com.facebook.buck.rules.modern.Buildable;
 import com.facebook.buck.rules.modern.ModernBuildRule;
@@ -35,15 +38,19 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.util.zip.ZipCompressionLevel;
 import com.facebook.buck.zip.ZipStep;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
+import java.util.Optional;
 
-public class Zip extends ModernBuildRule<Zip> implements HasOutputName, Buildable {
+public class Zip extends ModernBuildRule<Zip>
+    implements HasOutputName, Buildable, MavenPublishable {
   @AddToRuleKey private final String name;
   @AddToRuleKey private final ImmutableSortedSet<SourcePath> sources;
   @AddToRuleKey private final OutputPath output;
   @AddToRuleKey private final boolean flatten;
   @AddToRuleKey private final boolean mergeSourceZips;
+  private final Optional<String> mavenCoords;
 
   public Zip(
       SourcePathRuleFinder ruleFinder,
@@ -52,7 +59,8 @@ public class Zip extends ModernBuildRule<Zip> implements HasOutputName, Buildabl
       String outputName,
       ImmutableSortedSet<SourcePath> sources,
       boolean flatten,
-      boolean mergeSourceZips) {
+      boolean mergeSourceZips,
+      Optional<String> mavenCoords) {
     super(buildTarget, projectFilesystem, ruleFinder, Zip.class);
 
     this.name = outputName;
@@ -60,6 +68,7 @@ public class Zip extends ModernBuildRule<Zip> implements HasOutputName, Buildabl
     this.output = new OutputPath(name);
     this.flatten = flatten;
     this.mergeSourceZips = mergeSourceZips;
+    this.mavenCoords = mavenCoords;
   }
 
   @Override
@@ -108,5 +117,25 @@ public class Zip extends ModernBuildRule<Zip> implements HasOutputName, Buildabl
   @Override
   public String getOutputName() {
     return name;
+  }
+
+  @Override
+  public Iterable<HasMavenCoordinates> getMavenDeps() {
+    return ImmutableSet.of();
+  }
+
+  @Override
+  public Iterable<BuildRule> getPackagedDependencies() {
+    return ImmutableSet.of();
+  }
+
+  @Override
+  public Optional<SourcePath> getPomTemplate() {
+    return Optional.empty();
+  }
+
+  @Override
+  public Optional<String> getMavenCoords() {
+    return mavenCoords;
   }
 }
