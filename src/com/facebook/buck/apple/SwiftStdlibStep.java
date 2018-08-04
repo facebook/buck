@@ -81,8 +81,7 @@ class SwiftStdlibStep implements Step {
           "--sign", CodeSignStep.getIdentityArg(codeSignIdentitySupplier.get().get()));
     }
 
-    Map<String, String> environment = new HashMap<>();
-    environment.putAll(context.getEnvironment());
+    Map<String, String> environment = new HashMap<>(context.getEnvironment());
     environment.put("SDKROOT", sdkPath.toString());
     builder.setEnvironment(ImmutableMap.copyOf(environment));
     return builder.build();
