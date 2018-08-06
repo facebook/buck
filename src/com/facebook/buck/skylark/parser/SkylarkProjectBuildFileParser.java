@@ -202,16 +202,14 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
       ImmutableList<ImmutableMap<String, Object>> rules = parseContext.getRecordedRules();
       LOG.verbose("Got rules: %s", rules);
       LOG.verbose("Parsed %d rules from %s", rules.size(), buildFile);
-      return ParseResult.builder()
-          .setRawRules(rules)
-          .setLoadedPaths(
-              ImmutableSortedSet.<com.google.devtools.build.lib.vfs.Path>naturalOrder()
-                  .addAll(envData.getLoadedPaths())
-                  .add(buildFilePath)
-                  .build())
-          .setReadConfigurationOptions(parseContext.getAccessedConfigurationOptions())
-          .setGlobManifest(globber.createGlobManifest())
-          .build();
+      return ParseResult.of(
+          rules,
+          ImmutableSortedSet.<com.google.devtools.build.lib.vfs.Path>naturalOrder()
+              .addAll(envData.getLoadedPaths())
+              .add(buildFilePath)
+              .build(),
+          parseContext.getAccessedConfigurationOptions(),
+          globber.createGlobManifest());
     }
   }
 
