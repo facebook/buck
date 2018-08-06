@@ -66,6 +66,7 @@ import com.facebook.buck.cxx.CxxSymlinkTreeHeaders;
 import com.facebook.buck.cxx.FrameworkDependencies;
 import com.facebook.buck.cxx.HasAppleDebugSymbolDeps;
 import com.facebook.buck.cxx.HeaderSymlinkTreeWithHeaderMap;
+import com.facebook.buck.cxx.toolchain.CxxFlavorSanitizer;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.HeaderMode;
@@ -142,6 +143,7 @@ public class AppleLibraryDescription
     STATIC(CxxDescriptionEnhancer.STATIC_FLAVOR),
     MACH_O_BUNDLE(CxxDescriptionEnhancer.MACH_O_BUNDLE_FLAVOR),
     FRAMEWORK(AppleDescriptions.FRAMEWORK_FLAVOR),
+    SWIFT_MODULE(AppleDescriptions.SWIFT_MODULE_FLAVOR),
     SWIFT_COMPILE(AppleDescriptions.SWIFT_COMPILE_FLAVOR),
     SWIFT_OBJC_GENERATED_HEADER(AppleDescriptions.SWIFT_OBJC_GENERATED_HEADER_SYMLINK_TREE_FLAVOR),
     SWIFT_EXPORTED_OBJC_GENERATED_HEADER(
@@ -280,6 +282,7 @@ public class AppleLibraryDescription
                     ruleFinder,
                     graphBuilder,
                     cxxPlatform,
+                    swiftBuckConfig,
                     HeaderVisibility.PUBLIC));
           } else if (type.getValue().equals(Type.SWIFT_OBJC_GENERATED_HEADER)) {
             CxxPlatform cxxPlatform =
@@ -292,8 +295,10 @@ public class AppleLibraryDescription
                     ruleFinder,
                     graphBuilder,
                     cxxPlatform,
+                    swiftBuckConfig,
                     HeaderVisibility.PRIVATE));
-          } else if (type.getValue().equals(Type.SWIFT_COMPILE)) {
+          } else if (type.getValue().equals(Type.SWIFT_MODULE)
+              || type.getValue().equals(Type.SWIFT_COMPILE)) {
             CxxPlatform cxxPlatform =
                 cxxPlatforms.getValue(buildTarget).orElseThrow(IllegalArgumentException::new);
 
@@ -327,7 +332,8 @@ public class AppleLibraryDescription
                     cxxPlatform,
                     applePlatform,
                     swiftBuckConfig,
-                    preprocessorInputs));
+                    preprocessorInputs,
+                    type.getValue().equals(Type.SWIFT_MODULE)));
           }
 
           return Optional.empty();
@@ -685,7 +691,7 @@ public class AppleLibraryDescription
     if (targetContainsSwift(buildTarget, graphBuilder)) {
       headers.putAll(
           AppleLibraryDescriptionSwiftEnhancer.getObjCGeneratedHeader(
-              buildTarget, graphBuilder, cxxPlatform, HeaderVisibility.PUBLIC));
+              buildTarget, graphBuilder, cxxPlatform, swiftBuckConfig, HeaderVisibility.PUBLIC));
     }
 
     return CxxDescriptionEnhancer.createHeaderSymlinkTree(
@@ -825,9 +831,12 @@ public class AppleLibraryDescription
 
         case APPLE_SWIFT_MODULE_CXX_HEADERS:
           {
-            BuildTarget swiftCompileTarget =
-                baseTarget.withAppendedFlavors(Type.SWIFT_COMPILE.getFlavor());
-            SwiftCompile compile = (SwiftCompile) graphBuilder.requireRule(swiftCompileTarget);
+            Flavor swiftFlavor =
+                swiftBuckConfig.shouldSplitSwiftModuleGeneration()
+                    ? Type.SWIFT_MODULE.getFlavor()
+                    : Type.SWIFT_COMPILE.getFlavor();
+            BuildTarget swiftTarget = baseTarget.withAppendedFlavors(swiftFlavor);
+            SwiftCompile compile = (SwiftCompile) graphBuilder.requireRule(swiftTarget);
 
             CxxHeaders headers =
                 CxxHeadersDir.of(CxxPreprocessables.IncludeType.LOCAL, compile.getOutputPath());
@@ -1094,10 +1103,56 @@ public class AppleLibraryDescription
       return Optional.empty();
     }
 
-    BuildTarget swiftTarget =
-        AppleLibraryDescriptionSwiftEnhancer.createBuildTargetForSwiftCompile(target, cxxPlatform);
-    SwiftCompile compile = (SwiftCompile) graphBuilder.requireRule(swiftTarget);
-    return Optional.of(compile.getObjectPaths());
+    if (swiftBuckConfig.shouldSplitSwiftModuleGeneration()) {
+      BuildTarget moduleTarget =
+          AppleLibraryDescriptionSwiftEnhancer.createBuildTargetForSwiftModule(target, cxxPlatform);
+      SwiftCompile moduleRule = (SwiftCompile) graphBuilder.requireRule(moduleTarget);
+
+      BuildTarget metadataTarget =
+          target.withFlavors(MetadataType.APPLE_SWIFT_METADATA.getFlavor());
+      AppleLibrarySwiftMetadata metadata =
+          graphBuilder.requireMetadata(metadataTarget, AppleLibrarySwiftMetadata.class).get();
+      SourcePathResolver pathResolver =
+          DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
+      ProjectFilesystem filesystem =
+          pathResolver.getFilesystem(metadata.getSwiftSources().iterator().next().getSourcePath());
+      AppleCxxPlatform applePlatform =
+          getAppleCxxPlatformDomain().getValue(target).orElseThrow(IllegalArgumentException::new);
+      SwiftPlatform swiftPlatform = applePlatform.getSwiftPlatform().get();
+
+      return Optional.of(
+          metadata
+              .getSwiftSources()
+              .stream()
+              .map(sourceWithFlags -> sourceWithFlags.getSourcePath())
+              .map(
+                  input ->
+                      pathResolver.getAbsolutePath(input).getFileName().toString())
+              .map(
+                  filename ->
+                      graphBuilder.computeIfAbsent(
+                          target.withAppendedFlavors(
+                              cxxPlatform.getFlavor(),
+                              InternalFlavor.of(
+                                  String.format("bc-compile-%s",
+                                      CxxFlavorSanitizer.sanitize(filename + ".o")))),
+                          target1 ->
+                              AppleLibraryDescriptionSwiftEnhancer.createSwiftBitcodeCompileRule(
+                                  target1,
+                                  filesystem,
+                                  swiftPlatform.getSwiftc(),
+                                  moduleRule,
+                                  filename)))
+              .map(rule -> rule.getSourcePathToOutput())
+              .collect(ImmutableList.toImmutableList()));
+
+    } else {
+      BuildTarget swiftTarget =
+          AppleLibraryDescriptionSwiftEnhancer.createBuildTargetForSwiftCompile(
+              target, cxxPlatform);
+      SwiftCompile compile = (SwiftCompile) graphBuilder.requireRule(swiftTarget);
+      return Optional.of(compile.getObjectPaths());
+    }
   }
 
   @Override
@@ -1130,9 +1185,12 @@ public class AppleLibraryDescription
     }
 
     BuildTarget swiftTarget =
-        AppleLibraryDescriptionSwiftEnhancer.createBuildTargetForSwiftCompile(target, cxxPlatform);
+        swiftBuckConfig.shouldSplitSwiftModuleGeneration()
+            ? AppleLibraryDescriptionSwiftEnhancer.createBuildTargetForSwiftModule(
+                target, cxxPlatform)
+            : AppleLibraryDescriptionSwiftEnhancer.createBuildTargetForSwiftCompile(
+                target, cxxPlatform);
     SwiftCompile compile = (SwiftCompile) graphBuilder.requireRule(swiftTarget);
-
     return compile.getAstLinkArgs();
   }
 

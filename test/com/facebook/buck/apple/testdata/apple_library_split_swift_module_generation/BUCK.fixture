@@ -1,0 +1,11 @@
+apple_library(
+    name = "Foo",
+    srcs = ["Foo1.swift", "Foo2.swift"],
+    swift_version = "4",
+)
+
+apple_binary(
+    name = "App",
+    srcs = ["main.c"],
+    deps = [":Foo"],
+)
