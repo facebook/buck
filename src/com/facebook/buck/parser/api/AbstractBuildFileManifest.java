@@ -30,24 +30,29 @@ import org.immutables.value.Value;
 
 /** Describes the content of a build file, which includes defined targets and their metadata. */
 @BuckStyleImmutable
-@Value.Immutable
+@Value.Immutable(builder = false)
 abstract class AbstractBuildFileManifest {
   /** @return a list of targets defined in the build file. */
+  @Value.Parameter
   public abstract ImmutableList<Map<String, Object>> getTargets();
 
   /** @return a set of extension files read during parsing. */
+  @Value.Parameter
   public abstract ImmutableSortedSet<String> getIncludes();
 
   /**
    * @return a map from configuration section to configuration key to the value returned during
    *     parsing.
    */
+  @Value.Parameter
   public abstract ImmutableMap<String, Object> getConfigs();
 
   /** @return an optional map from environment variable to a value read during parsing (if any). */
+  @Value.Parameter
   public abstract Optional<ImmutableMap<String, Optional<String>>> getEnv();
 
   /** @return A mapping from a {@link GlobSpec} to the corresponding set of expanded paths. */
+  @Value.Parameter
   public abstract ImmutableMap<GlobSpec, Set<String>> getGlobManifest();
 
   /**

@@ -129,17 +129,16 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
   public BuildFileManifest getBuildFileManifest(Path buildFile, AtomicLong processedBytes)
       throws BuildFileParseException, InterruptedException, IOException {
     ParseResult parseResult = parseBuildFile(buildFile);
-    return BuildFileManifest.builder()
-        .setTargets(parseResult.getRawRules())
-        .setIncludes(
-            parseResult
-                .getLoadedPaths()
-                .stream()
-                .map(Object::toString)
-                .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())))
-        .setConfigs(parseResult.getReadConfigurationOptions())
-        .setGlobManifest(parseResult.getGlobManifest())
-        .build();
+    return BuildFileManifest.of(
+        parseResult.getRawRules(),
+        parseResult
+            .getLoadedPaths()
+            .stream()
+            .map(Object::toString)
+            .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())),
+        parseResult.getReadConfigurationOptions(),
+        Optional.empty(),
+        parseResult.getGlobManifest());
   }
 
   /**

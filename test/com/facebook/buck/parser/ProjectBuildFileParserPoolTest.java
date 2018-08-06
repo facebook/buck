@@ -40,6 +40,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
@@ -56,11 +57,12 @@ import org.junit.Test;
 public class ProjectBuildFileParserPoolTest {
 
   public static final BuildFileManifest EMPTY_BUILD_FILE_MANIFEST =
-      BuildFileManifest.builder()
-          .setTargets(ImmutableSet.of())
-          .setIncludes(ImmutableSortedSet.of())
-          .setConfigs(ImmutableMap.of())
-          .build();
+      BuildFileManifest.of(
+          ImmutableSet.of(),
+          ImmutableSortedSet.of(),
+          ImmutableMap.of(),
+          Optional.empty(),
+          ImmutableMap.of());
 
   private ProjectBuildFileParserPool createParserPool(
       int maxParsersPerCell, ProjectBuildFileParserFactory parserFactory) {

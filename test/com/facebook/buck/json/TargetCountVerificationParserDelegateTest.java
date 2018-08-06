@@ -33,6 +33,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 import org.easymock.EasyMock;
 import org.junit.Before;
@@ -109,11 +110,12 @@ public class TargetCountVerificationParserDelegateTest {
   }
 
   private BuildFileManifest toBuildFileManifest(ImmutableList<Map<String, Object>> rawTargets) {
-    return BuildFileManifest.builder()
-        .addAllTargets(rawTargets)
-        .setIncludes(ImmutableSortedSet.of())
-        .setConfigs(ImmutableMap.of())
-        .build();
+    return BuildFileManifest.of(
+        rawTargets,
+        ImmutableSortedSet.of(),
+        ImmutableMap.of(),
+        Optional.empty(),
+        ImmutableMap.of());
   }
 
   @Test
