@@ -6,7 +6,6 @@ buck_module(
     provided_deps = [
         "//src/com/facebook/buck/cli:cli",
         "//src/com/facebook/buck/config:config",
-        "//src/com/facebook/buck/config/resources:resources",
         "//src/com/facebook/buck/core/cell:cell",
         "//src/com/facebook/buck/core/cell/resolver:resolver",
         "//src/com/facebook/buck/core/description/arg:arg",
@@ -14,6 +13,7 @@ buck_module(
         "//src/com/facebook/buck/core/model/actiongraph:actiongraph",
         "//src/com/facebook/buck/core/model/impl:impl",
         "//src/com/facebook/buck/core/model/targetgraph/impl:impl",
+        "//src/com/facebook/buck/core/resources:resources",
         "//src/com/facebook/buck/core/rules:rules",
         "//src/com/facebook/buck/core/rules/impl:impl",
         "//src/com/facebook/buck/core/sourcepath/resolver/impl:impl",

@@ -20,9 +20,9 @@ import static com.facebook.buck.distributed.build_slave.BuildSlaveTimingStatsTra
 
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.command.BuildExecutor;
-import com.facebook.buck.config.resources.ResourcesConfig;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.resources.ResourcesConfig;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rulekey.calculator.ParallelRuleKeyCalculator;
 import com.facebook.buck.distributed.ArtifactCacheByBuildRule;

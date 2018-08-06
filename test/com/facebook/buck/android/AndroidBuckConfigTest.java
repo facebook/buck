@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.config.resources;
+package com.facebook.buck.core.resources;
 
 import static org.junit.Assert.assertEquals;
 
