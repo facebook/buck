@@ -67,7 +67,7 @@ buck_module(
         "rn-package.st",
     ],
     tests = [
-        "//test/com/facebook/buck/apple/project_generator:project_generator",
+        "//test/com/facebook/buck/features/apple/project:project",
     ],
     visibility = ["PUBLIC"],
 )
