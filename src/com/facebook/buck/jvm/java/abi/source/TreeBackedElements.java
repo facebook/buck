@@ -242,9 +242,7 @@ class TreeBackedElements extends ElementsExtendedImpl {
 
   static Map<? extends ExecutableElement, ? extends AnnotationValue>
       getElementValuesWithDefaultsStatic(AnnotationMirror a) {
-    Map<ExecutableElement, AnnotationValue> result = new HashMap<>();
-
-    result.putAll(a.getElementValues());
+    Map<ExecutableElement, AnnotationValue> result = new HashMap<>(a.getElementValues());
 
     TypeElement annotationType = (TypeElement) a.getAnnotationType().asElement();
     List<ExecutableElement> parameters =
