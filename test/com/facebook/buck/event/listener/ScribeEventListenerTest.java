@@ -23,6 +23,7 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.core.build.engine.BuildRuleStatus;
+import com.facebook.buck.core.build.engine.type.UploadToCacheResultType;
 import com.facebook.buck.core.build.event.BuildEvent;
 import com.facebook.buck.core.build.event.BuildEvent.Started;
 import com.facebook.buck.core.build.event.BuildRuleEvent;
@@ -146,7 +147,7 @@ public class ScribeEventListenerTest {
         CacheResult.miss(),
         Optional.empty(),
         Optional.empty(),
-        false,
+        UploadToCacheResultType.UNCACHEABLE,
         Optional.empty(),
         Optional.empty(),
         Optional.empty(),

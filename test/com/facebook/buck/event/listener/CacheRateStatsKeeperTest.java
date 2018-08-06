@@ -21,6 +21,7 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.artifact_cache.config.ArtifactCacheMode;
 import com.facebook.buck.core.build.engine.BuildRuleStatus;
+import com.facebook.buck.core.build.engine.type.UploadToCacheResultType;
 import com.facebook.buck.core.build.event.BuildEvent;
 import com.facebook.buck.core.build.event.BuildRuleEvent;
 import com.facebook.buck.core.build.stats.BuildRuleDurationTracker;
@@ -61,7 +62,7 @@ public class CacheRateStatsKeeperTest {
         cacheResult,
         Optional.empty(),
         Optional.empty(),
-        false,
+        UploadToCacheResultType.UNCACHEABLE,
         Optional.empty(),
         Optional.empty(),
         Optional.empty(),

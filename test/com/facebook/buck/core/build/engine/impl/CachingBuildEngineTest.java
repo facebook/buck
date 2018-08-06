@@ -69,6 +69,7 @@ import com.facebook.buck.core.build.engine.manifest.ManifestUtil;
 import com.facebook.buck.core.build.engine.type.BuildType;
 import com.facebook.buck.core.build.engine.type.DepFiles;
 import com.facebook.buck.core.build.engine.type.MetadataStorage;
+import com.facebook.buck.core.build.engine.type.UploadToCacheResultType;
 import com.facebook.buck.core.build.event.BuildRuleEvent;
 import com.facebook.buck.core.build.stats.BuildRuleDurationTracker;
 import com.facebook.buck.core.cell.resolver.CellPathResolver;
@@ -452,7 +453,7 @@ public class CachingBuildEngineTest {
                   CacheResult.miss(),
                   Optional.empty(),
                   Optional.of(BuildRuleSuccessType.BUILT_LOCALLY),
-                  false,
+                  UploadToCacheResultType.UNCACHEABLE,
                   Optional.empty(),
                   Optional.empty(),
                   Optional.empty(),
@@ -514,7 +515,7 @@ public class CachingBuildEngineTest {
                   CacheResult.miss(),
                   Optional.empty(),
                   Optional.of(BuildRuleSuccessType.BUILT_LOCALLY),
-                  false,
+                  UploadToCacheResultType.UNCACHEABLE,
                   Optional.empty(),
                   Optional.empty(),
                   Optional.empty(),
@@ -747,7 +748,7 @@ public class CachingBuildEngineTest {
                     CacheResult.localKeyUnchangedHit(),
                     Optional.empty(),
                     Optional.of(BuildRuleSuccessType.MATCHING_RULE_KEY),
-                    false,
+                    UploadToCacheResultType.UNCACHEABLE,
                     Optional.empty(),
                     Optional.empty(),
                     Optional.empty(),
@@ -807,7 +808,7 @@ public class CachingBuildEngineTest {
                     CacheResult.localKeyUnchangedHit(),
                     Optional.empty(),
                     Optional.of(BuildRuleSuccessType.MATCHING_RULE_KEY),
-                    false,
+                    UploadToCacheResultType.UNCACHEABLE,
                     Optional.empty(),
                     Optional.empty(),
                     Optional.empty(),
@@ -831,7 +832,7 @@ public class CachingBuildEngineTest {
                     CacheResult.localKeyUnchangedHit(),
                     Optional.empty(),
                     Optional.of(BuildRuleSuccessType.MATCHING_RULE_KEY),
-                    false,
+                    UploadToCacheResultType.UNCACHEABLE,
                     Optional.empty(),
                     Optional.empty(),
                     Optional.empty(),
@@ -903,7 +904,7 @@ public class CachingBuildEngineTest {
                     CacheResult.localKeyUnchangedHit(),
                     Optional.empty(),
                     Optional.of(BuildRuleSuccessType.MATCHING_RULE_KEY),
-                    false,
+                    UploadToCacheResultType.UNCACHEABLE,
                     Optional.empty(),
                     Optional.empty(),
                     Optional.empty(),
@@ -927,7 +928,7 @@ public class CachingBuildEngineTest {
                     CacheResult.localKeyUnchangedHit(),
                     Optional.empty(),
                     Optional.of(BuildRuleSuccessType.MATCHING_RULE_KEY),
-                    false,
+                    UploadToCacheResultType.UNCACHEABLE,
                     Optional.empty(),
                     Optional.empty(),
                     Optional.empty(),
@@ -951,7 +952,7 @@ public class CachingBuildEngineTest {
                     CacheResult.localKeyUnchangedHit(),
                     Optional.empty(),
                     Optional.of(BuildRuleSuccessType.MATCHING_RULE_KEY),
-                    false,
+                    UploadToCacheResultType.UNCACHEABLE,
                     Optional.empty(),
                     Optional.empty(),
                     Optional.empty(),

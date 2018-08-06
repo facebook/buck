@@ -31,6 +31,7 @@ import com.facebook.buck.artifact_cache.HttpArtifactCacheEventStoreData;
 import com.facebook.buck.artifact_cache.config.ArtifactCacheMode;
 import com.facebook.buck.core.build.engine.BuildRuleStatus;
 import com.facebook.buck.core.build.engine.BuildRuleSuccessType;
+import com.facebook.buck.core.build.engine.type.UploadToCacheResultType;
 import com.facebook.buck.core.build.event.BuildRuleEvent;
 import com.facebook.buck.core.build.stats.BuildRuleDurationTracker;
 import com.facebook.buck.core.model.BuildTarget;
@@ -408,7 +409,7 @@ public class DistBuildSlaveEventBusListenerTest {
             CacheResult.hit("buckcache", ArtifactCacheMode.http),
             Optional.empty(),
             Optional.of(BuildRuleSuccessType.FETCHED_FROM_CACHE),
-            false,
+            UploadToCacheResultType.UNCACHEABLE,
             Optional.empty(),
             Optional.empty(),
             Optional.empty(),
@@ -428,7 +429,7 @@ public class DistBuildSlaveEventBusListenerTest {
             CacheResult.miss(),
             Optional.empty(),
             Optional.of(BuildRuleSuccessType.BUILT_LOCALLY),
-            false,
+            UploadToCacheResultType.UNCACHEABLE,
             Optional.empty(),
             Optional.empty(),
             Optional.empty(),
@@ -449,7 +450,7 @@ public class DistBuildSlaveEventBusListenerTest {
             CacheResult.error("buckcache", ArtifactCacheMode.http, "connection error"),
             Optional.empty(),
             Optional.empty(),
-            false,
+            UploadToCacheResultType.UNCACHEABLE,
             Optional.empty(),
             Optional.empty(),
             Optional.empty(),
@@ -467,7 +468,7 @@ public class DistBuildSlaveEventBusListenerTest {
             CacheResult.miss(), // This value will be ignored, since the rule was canceled.
             Optional.empty(),
             Optional.empty(),
-            false,
+            UploadToCacheResultType.UNCACHEABLE,
             Optional.empty(),
             Optional.empty(),
             Optional.empty(),
@@ -489,7 +490,7 @@ public class DistBuildSlaveEventBusListenerTest {
             CacheResult.ignored(),
             Optional.empty(),
             Optional.of(BuildRuleSuccessType.BUILT_LOCALLY),
-            false,
+            UploadToCacheResultType.UNCACHEABLE,
             Optional.empty(),
             Optional.empty(),
             Optional.empty(),

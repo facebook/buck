@@ -24,6 +24,7 @@ import com.facebook.buck.artifact_cache.CacheResultType;
 import com.facebook.buck.artifact_cache.config.ArtifactCacheMode;
 import com.facebook.buck.core.build.engine.BuildRuleStatus;
 import com.facebook.buck.core.build.engine.BuildRuleSuccessType;
+import com.facebook.buck.core.build.engine.type.UploadToCacheResultType;
 import com.facebook.buck.core.build.event.BuildRuleEvent;
 import com.facebook.buck.core.build.stats.BuildRuleDurationTracker;
 import com.facebook.buck.core.model.BuildId;
@@ -135,7 +136,7 @@ public class MachineReadableLogJsonViewTest {
                 Optional.empty()),
             Optional.empty(),
             Optional.of(BuildRuleSuccessType.BUILT_LOCALLY),
-            false,
+            UploadToCacheResultType.UNCACHEABLE,
             Optional.of(HashCode.fromString("abcd42")),
             Optional.empty(),
             Optional.empty(),

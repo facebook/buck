@@ -21,6 +21,7 @@ import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.cli.DistBuildCommand;
 import com.facebook.buck.core.build.engine.BuildRuleStatus;
 import com.facebook.buck.core.build.engine.BuildRuleSuccessType;
+import com.facebook.buck.core.build.engine.type.UploadToCacheResultType;
 import com.facebook.buck.core.build.event.BuildRuleEvent;
 import com.facebook.buck.core.build.stats.BuildRuleDurationTracker;
 import com.facebook.buck.core.model.BuildId;
@@ -112,7 +113,7 @@ public class DistBuildPostBuildAnalysisTest {
             cacheResult,
             Optional.empty(),
             successType,
-            false,
+            UploadToCacheResultType.UNCACHEABLE,
             outputHash.map(s -> HashCode.fromString(s)),
             Optional.empty(),
             Optional.empty(),
