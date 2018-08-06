@@ -213,7 +213,7 @@ public class MorePaths {
           fileName, nameWithoutExtension, prefix);
     }
 
-    return nameWithoutExtension.substring(prefix.length(), nameWithoutExtension.length());
+    return nameWithoutExtension.substring(prefix.length());
   }
 
   public static Optional<Path> stripPrefix(Path p, Path prefix) {

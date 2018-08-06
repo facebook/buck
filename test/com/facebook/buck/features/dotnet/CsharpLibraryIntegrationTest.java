@@ -119,7 +119,7 @@ public class CsharpLibraryIntegrationTest {
         if ("PATH".equalsIgnoreCase(key)) {
           key = "PATH";
         }
-        String val = s.substring(sep + 1, s.length());
+        String val = s.substring(sep + 1);
         builder.put(key, val);
       }
       return builder.build();

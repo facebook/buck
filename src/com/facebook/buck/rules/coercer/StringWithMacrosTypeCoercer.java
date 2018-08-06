@@ -155,7 +155,7 @@ public class StringWithMacrosTypeCoercer implements TypeCoercer<StringWithMacros
 
     // Append the remaining part of the original string after the last match.
     if (lastEnd < blob.length()) {
-      parts.add(Either.ofLeft(blob.substring(lastEnd, blob.length())));
+      parts.add(Either.ofLeft(blob.substring(lastEnd)));
     }
 
     return StringWithMacros.of(parts.build());

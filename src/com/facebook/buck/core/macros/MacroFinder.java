@@ -100,7 +100,7 @@ public final class MacroFinder {
       lastEnd = matchResult.getEndIndex();
     }
     // Append the remaining part of the original string after the last match.
-    combiner.addString(blob.substring(lastEnd, blob.length()));
+    combiner.addString(blob.substring(lastEnd));
     return combiner.build();
   }
 
