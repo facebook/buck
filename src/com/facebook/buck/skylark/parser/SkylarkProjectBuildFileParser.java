@@ -335,11 +335,14 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
    */
   private ImmutableMap<String, Environment.Extension> toImportMap(
       ImmutableList<ExtensionData> dependencies) {
-    return dependencies
-        .stream()
-        .collect(
-            ImmutableMap.toImmutableMap(
-                ExtensionData::getImportString, ExtensionData::getExtension));
+    ImmutableMap.Builder<String, Environment.Extension> builder =
+        ImmutableMap.builderWithExpectedSize(dependencies.size());
+    // foreach is not used to avoid iterator overhead
+    for (int i = 0; i < dependencies.size(); ++i) {
+      ExtensionData extensionData = dependencies.get(i);
+      builder.put(extensionData.getImportString(), extensionData.getExtension());
+    }
+    return builder.build();
   }
 
   /**
