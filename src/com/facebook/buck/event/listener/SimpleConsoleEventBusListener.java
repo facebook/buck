@@ -27,7 +27,11 @@ import com.facebook.buck.core.test.event.TestRunEvent;
 import com.facebook.buck.core.test.event.TestStatusMessageEvent;
 import com.facebook.buck.distributed.DistBuildCreatedEvent;
 import com.facebook.buck.distributed.DistBuildRunEvent;
+import com.facebook.buck.distributed.DistBuildStatusEvent;
 import com.facebook.buck.distributed.build_client.StampedeConsoleEvent;
+import com.facebook.buck.distributed.thrift.BuildSlaveInfo;
+import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
+import com.facebook.buck.distributed.thrift.BuildStatus;
 import com.facebook.buck.event.ActionGraphEvent;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.InstallEvent;
@@ -42,10 +46,13 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.eventbus.Subscribe;
 import java.nio.file.Path;
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
+import javax.annotation.concurrent.GuardedBy;
 
 /**
  * Implementation of {@code AbstractConsoleEventBusListener} for terminals that don't support ansi.
@@ -57,6 +64,11 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
   private final ImmutableList.Builder<TestStatusMessage> testStatusMessageBuilder =
       ImmutableList.builder();
   private final boolean hideSucceededRules;
+
+  @GuardedBy("distBuildSlaveTrackerLock")
+  private final Map<BuildSlaveRunId, BuildStatus> distBuildSlaveTracker;
+
+  private volatile Optional<BuildStatus> stampedeBuildStatus = Optional.empty();
 
   public SimpleConsoleEventBusListener(
       Console console,
@@ -88,6 +100,8 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
             summaryVerbosity,
             locale,
             Optional.of(testLogPath));
+
+    this.distBuildSlaveTracker = new LinkedHashMap<>();
 
     if (buildId.isPresent()) {
       printLines(ImmutableList.<String>builder().add(getBuildLogLine(buildId.get())));
@@ -225,6 +239,48 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
   @Subscribe
   public void logStampedeConsoleEvent(StampedeConsoleEvent event) {
     logEvent(event.getConsoleEvent());
+  }
+
+  @Override
+  @Subscribe
+  public void onDistBuildStatusEvent(DistBuildStatusEvent event) {
+    super.onDistBuildStatusEvent(event);
+
+    ImmutableList.Builder<String> builder = ImmutableList.builder();
+
+    BuildStatus newJobStatus = event.getJob().getStatus();
+    if (!stampedeBuildStatus.isPresent() || !stampedeBuildStatus.get().equals(newJobStatus)) {
+      builder.add(String.format("STAMPEDE JOB STATUS CHANGED TO [%s]", newJobStatus));
+    }
+    stampedeBuildStatus = Optional.of(newJobStatus);
+
+    synchronized (distBuildSlaveTracker) {
+      // Don't track the status of failed or lost minions
+      for (BuildSlaveInfo slaveInfo : event.getJob().getBuildSlaves()) {
+        if (!distBuildSlaveTracker.containsKey(slaveInfo.getBuildSlaveRunId())) {
+          builder.add(
+              String.format(
+                  "STAMPEDE WORKER [%s][%s] JOINED BUILD WITH STATUS [%s]",
+                  slaveInfo.getHostname(),
+                  slaveInfo.getBuildSlaveRunId().getId(),
+                  slaveInfo.getStatus().name()));
+        } else {
+          BuildStatus existingStatus = distBuildSlaveTracker.get(slaveInfo.getBuildSlaveRunId());
+          if (!existingStatus.equals(slaveInfo.getStatus())) {
+            builder.add(
+                String.format(
+                    "STAMPEDE WORKER [%s][%s] CHANGED STATUS TO [%s]",
+                    slaveInfo.getHostname(),
+                    slaveInfo.getBuildSlaveRunId().getId(),
+                    slaveInfo.getStatus().name()));
+          }
+        }
+
+        distBuildSlaveTracker.put(slaveInfo.getBuildSlaveRunId(), slaveInfo.getStatus());
+      }
+    }
+
+    printLines(builder);
   }
 
   @Override
