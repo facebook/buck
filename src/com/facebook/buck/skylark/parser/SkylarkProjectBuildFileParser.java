@@ -258,15 +258,13 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
 
   @Nonnull
   private PackageContext createPackageContext(String basePath, Globber globber) {
-    return PackageContext.builder()
-        .setGlobber(globber)
-        .setRawConfig(options.getRawConfig())
-        .setPackageIdentifier(
-            PackageIdentifier.create(
-                RepositoryName.createFromValidStrippedName(options.getCellName()),
-                PathFragment.create(basePath)))
-        .setEventHandler(eventHandler)
-        .build();
+    return PackageContext.of(
+        globber,
+        options.getRawConfig(),
+        PackageIdentifier.create(
+            RepositoryName.createFromValidStrippedName(options.getCellName()),
+            PathFragment.create(basePath)),
+        eventHandler);
   }
 
   private ImmutableList<com.google.devtools.build.lib.vfs.Path> toLoadedPaths(

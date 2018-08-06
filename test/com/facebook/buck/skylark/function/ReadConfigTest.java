@@ -104,13 +104,11 @@ public class ReadConfigTest {
             .build();
     ParseContext parseContext =
         new ParseContext(
-            PackageContext.builder()
-                .setGlobber(NativeGlobber.create(root))
-                .setRawConfig(rawConfig)
-                .setPackageIdentifier(
-                    PackageIdentifier.create(RepositoryName.DEFAULT, PathFragment.create("pkg")))
-                .setEventHandler(eventHandler)
-                .build());
+            PackageContext.of(
+                NativeGlobber.create(root),
+                rawConfig,
+                PackageIdentifier.create(RepositoryName.DEFAULT, PathFragment.create("pkg")),
+                eventHandler));
     parseContext.setup(env);
     env.setup("read_config", ReadConfig.create());
     boolean exec = buildFileAst.exec(env, eventHandler);

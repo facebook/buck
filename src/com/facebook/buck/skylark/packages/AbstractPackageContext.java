@@ -24,21 +24,25 @@ import com.google.devtools.build.lib.events.EventHandler;
 import org.immutables.value.Value;
 
 /** Exposes package information to Skylark functions. */
-@Value.Immutable
+@Value.Immutable(builder = false)
 @BuckStyleImmutable
 abstract class AbstractPackageContext {
   /** Returns a globber instance that can resolve paths relative to current package. */
+  @Value.Parameter
   public abstract Globber getGlobber();
 
   /**
    * Returns a raw map of configuration options defined in {@code .buckconfig} file and passed
    * through a {@code --config} command line option.
    */
+  @Value.Parameter
   public abstract ImmutableMap<String, ImmutableMap<String, String>> getRawConfig();
 
   /** Returns a package identifier of the build file that is being parsed. */
+  @Value.Parameter
   public abstract PackageIdentifier getPackageIdentifier();
 
   /** @return The event handler for reporting events during package parsing. */
+  @Value.Parameter
   public abstract EventHandler getEventHandler();
 }

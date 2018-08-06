@@ -92,14 +92,11 @@ public class SkylarkNativeModuleTest {
             .useDefaultSemantics()
             .build();
     new ParseContext(
-            PackageContext.builder()
-                .setGlobber(NativeGlobber.create(root))
-                .setRawConfig(rawConfig)
-                .setPackageIdentifier(
-                    PackageIdentifier.create(
-                        RepositoryName.DEFAULT, PathFragment.create("my/package")))
-                .setEventHandler(eventHandler)
-                .build())
+            PackageContext.of(
+                NativeGlobber.create(root),
+                rawConfig,
+                PackageIdentifier.create(RepositoryName.DEFAULT, PathFragment.create("my/package")),
+                eventHandler))
         .setup(env);
     env.setup(
         "package_name",
