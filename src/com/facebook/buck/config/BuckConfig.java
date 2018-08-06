@@ -27,8 +27,6 @@ import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.util.Ansi;
-import com.facebook.buck.util.AnsiEnvironmentChecking;
 import com.facebook.buck.util.PatternAndMessage;
 import com.facebook.buck.util.cache.FileHashCacheMode;
 import com.facebook.buck.util.config.Config;
@@ -498,31 +496,6 @@ public class BuckConfig {
   /** Return Strings so as to avoid a dependency on {@link com.facebook.buck.cli.LabelSelector}! */
   public ImmutableList<String> getDefaultRawExcludedLabelSelectors() {
     return getListWithoutComments("test", "excluded_labels");
-  }
-
-  /**
-   * Create an Ansi object appropriate for the current output. First respect the user's preferences,
-   * if set. Next, respect any default provided by the caller. (This is used by buckd to tell the
-   * daemon about the client's terminal.) Finally, allow the Ansi class to autodetect whether the
-   * current output is a tty.
-   *
-   * @param defaultColor Default value provided by the caller (e.g. the client of buckd)
-   */
-  public Ansi createAnsi(Optional<String> defaultColor) {
-    String color = getValue("color", "ui").map(Optional::of).orElse(defaultColor).orElse("auto");
-
-    switch (color) {
-      case "false":
-      case "never":
-        return Ansi.withoutTty();
-      case "true":
-      case "always":
-        return Ansi.forceTty();
-      case "auto":
-      default:
-        return new Ansi(
-            AnsiEnvironmentChecking.environmentSupportsAnsiEscapes(platform, environment));
-    }
   }
 
   public Path resolvePathThatMayBeOutsideTheProjectFilesystem(@PropagatesNullable Path path) {

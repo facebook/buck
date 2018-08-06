@@ -1403,7 +1403,8 @@ public final class Main {
     } else {
       color = Optional.empty();
     }
-    return new Console(verbosity, stdOut, stdErr, buckConfig.createAnsi(color));
+    return new Console(
+        verbosity, stdOut, stdErr, buckConfig.getView(CliConfig.class).createAnsi(color));
   }
 
   private void flushAndCloseEventListeners(

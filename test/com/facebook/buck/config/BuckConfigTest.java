@@ -46,7 +46,6 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Optional;
 import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
@@ -358,29 +357,6 @@ public class BuckConfigTest {
   public void testGetAndroidTargetSdkWithSpaces() throws IOException {
     BuckConfig config = createFromText("[android]", "target = Google Inc.:Google APIs:16");
     assertEquals("Google Inc.:Google APIs:16", config.getValue("android", "target").get());
-  }
-
-  @Test
-  public void testCreateAnsi() {
-    BuckConfig windowsConfig =
-        FakeBuckConfig.builder()
-            .setArchitecture(Architecture.X86_64)
-            .setPlatform(Platform.WINDOWS)
-            .build();
-    // "auto" on Windows is equivalent to "never".
-    assertFalse(windowsConfig.createAnsi(Optional.empty()).isAnsiTerminal());
-    assertFalse(windowsConfig.createAnsi(Optional.of("auto")).isAnsiTerminal());
-    assertTrue(windowsConfig.createAnsi(Optional.of("always")).isAnsiTerminal());
-    assertFalse(windowsConfig.createAnsi(Optional.of("never")).isAnsiTerminal());
-
-    BuckConfig linuxConfig =
-        FakeBuckConfig.builder()
-            .setArchitecture(Architecture.I386)
-            .setPlatform(Platform.LINUX)
-            .build();
-    // We don't test "auto" on Linux, because the behavior would depend on how the test was run.
-    assertTrue(linuxConfig.createAnsi(Optional.of("always")).isAnsiTerminal());
-    assertFalse(linuxConfig.createAnsi(Optional.of("never")).isAnsiTerminal());
   }
 
   @Test
