@@ -134,7 +134,8 @@ public class BuildTargetDurationListener implements BuckEventListener {
         event.getBuildRule().getFullyQualifiedName(), event.getTimestamp());
     saveEndOfBuildRuleEvent(
         event.getBuildRule().getFullyQualifiedName(),
-        event.getTimestamp(),
+        event.getBeginningEvent().getNanoTime(),
+        event.getNanoTime(),
         event.getDuration().getWallMillisDuration());
   }
 
@@ -146,19 +147,24 @@ public class BuildTargetDurationListener implements BuckEventListener {
         event.getBuildRule().getFullyQualifiedName(), event.getTimestamp());
     saveEndOfBuildRuleEvent(
         event.getBuildRule().getFullyQualifiedName(),
-        event.getTimestamp(),
+        event.getBeginningEvent().getNanoTime(),
+        event.getNanoTime(),
         event.getDuration().getWallMillisDuration());
   }
 
   /** Update end of the {@link BuildRuleEvent}. */
-  private void saveEndOfBuildRuleEvent(String buildRuleName, long finishTimeMillis, long duration) {
+  private void saveEndOfBuildRuleEvent(
+      String buildRuleName, long startTimeNanos, long finishTimeNanos, long duration) {
     Preconditions.checkState(
         buildRuleInfos.containsKey(buildRuleName),
         "First, a BuildRuleEvent %s has to start in order to finish.",
         buildRuleName);
     BuildRuleInfo currentBuildRuleInfo = buildRuleInfos.get(buildRuleName);
     currentBuildRuleInfo.updateDuration(duration);
-    currentBuildRuleInfo.updateFinish(finishTimeMillis);
+    currentBuildRuleInfo.updateFinish(TimeUnit.NANOSECONDS.toMillis(finishTimeNanos));
+    currentBuildRuleInfo.addBuildRuleEventInterval(
+        TimeUnit.NANOSECONDS.toMicros(startTimeNanos),
+        TimeUnit.NANOSECONDS.toMicros(finishTimeNanos));
   }
 
   /** Save the {@link ActionGraph} */
@@ -247,11 +253,8 @@ public class BuildTargetDurationListener implements BuckEventListener {
       throws IOException {
     int threadId = 0;
     for (Deque<CriticalPathEntry> path : criticalPaths) {
-      long lastEventFinishMicros = 0;
       for (CriticalPathEntry criticalPathEntry : path) {
-        lastEventFinishMicros =
-            rendersCriticalPathEntry(
-                criticalPathEntry, traceWriter, lastEventFinishMicros, threadId);
+        rendersCriticalPathEntry(criticalPathEntry, traceWriter, threadId);
       }
       ++threadId;
     }
@@ -261,42 +264,31 @@ public class BuildTargetDurationListener implements BuckEventListener {
    * Renders rule in a similar way to {@link
    * com.facebook.buck.distributed.build_slave.DistBuildChromeTraceRenderer#renderRule}.
    */
-  private static long rendersCriticalPathEntry(
-      CriticalPathEntry criticalPathEntry,
-      ChromeTraceWriter traceWriter,
-      long lastEventFinishMicros,
-      int tid)
+  private static void rendersCriticalPathEntry(
+      CriticalPathEntry criticalPathEntry, ChromeTraceWriter traceWriter, int tid)
       throws IOException {
-
-    long startMicros =
-        Math.max(
-            TimeUnit.MILLISECONDS.toMicros(criticalPathEntry.startTimestamp()),
-            lastEventFinishMicros);
-    lastEventFinishMicros =
-        Math.max(
-            TimeUnit.MILLISECONDS.toMicros(criticalPathEntry.finishTimestamp()), startMicros + 1);
-
-    ImmutableMap<String, String> startArgs =
-        ImmutableMap.of(
-            "critical_blocking_rule",
-            criticalPathEntry.prev().map(rule -> rule.ruleName).orElse("None"),
-            "length_of_critical_path",
-            String.format("%dms", criticalPathEntry.longest()));
-
-    traceWriter.writeEvent(
-        new ChromeTraceEvent(
-            "buck", criticalPathEntry.ruleName(), Phase.BEGIN, 0, tid, startMicros, 0, startArgs));
-    traceWriter.writeEvent(
-        new ChromeTraceEvent(
-            "buck",
-            criticalPathEntry.ruleName(),
-            Phase.END,
-            0,
-            tid,
-            lastEventFinishMicros,
-            0,
-            ImmutableMap.of()));
-    return lastEventFinishMicros;
+    for (BuildRuleEventInterval interval : criticalPathEntry.intervals()) {
+      long end = interval.end() > interval.start() ? interval.end() : interval.start() + 1;
+      ImmutableMap<String, String> startArgs =
+          ImmutableMap.of(
+              "critical_blocking_rule",
+              criticalPathEntry.prev().map(rule -> rule.ruleName).orElse("None"),
+              "length_of_critical_path",
+              String.format("%dms", criticalPathEntry.longest()));
+      traceWriter.writeEvent(
+          new ChromeTraceEvent(
+              "buck",
+              criticalPathEntry.ruleName(),
+              Phase.BEGIN,
+              0,
+              tid,
+              interval.start(),
+              0,
+              startArgs));
+      traceWriter.writeEvent(
+          new ChromeTraceEvent(
+              "buck", criticalPathEntry.ruleName(), Phase.END, 0, tid, end, 0, ImmutableMap.of()));
+    }
   }
 
   @Override
@@ -442,7 +434,8 @@ public class BuildTargetDurationListener implements BuckEventListener {
             target.getDuration(),
             target.getWholeTargetDuration(),
             chain.longest,
-            chain.prev));
+            chain.prev,
+            target.intervals));
     long longest = chain.longest;
     Optional<BuildRuleInfo> prev = chain.prev;
     while (prev.isPresent()) {
@@ -467,7 +460,8 @@ public class BuildTargetDurationListener implements BuckEventListener {
               target.getDuration(),
               target.getWholeTargetDuration(),
               longest,
-              prev));
+              prev,
+              target.intervals));
     }
     return path;
   }
@@ -583,6 +577,10 @@ public class BuildTargetDurationListener implements BuckEventListener {
     @Value.Parameter
     @JsonIgnore
     Optional<BuildRuleInfo> prev();
+
+    @Value.Parameter
+    @JsonIgnore
+    List<ImmutableBuildRuleEventInterval> intervals();
   }
 
   /** Used to keep top k critical paths, and serialize as json. */
@@ -632,6 +630,16 @@ public class BuildTargetDurationListener implements BuckEventListener {
     BuildRuleInfo.Chain chain();
   }
 
+  /** An entry to hold interval of {@link BuildRuleEvent}. */
+  @Value.Immutable(copy = false, builder = false)
+  interface BuildRuleEventInterval {
+    @Value.Parameter
+    long start();
+
+    @Value.Parameter
+    long end();
+  }
+
   /**
    * Similar to {@link com.facebook.buck.distributed.build_slave.DistBuildTrace.RuleTrace} keeps
    * information regarding {@link BuildRule}. Start, End times and dependents, dependencies of this
@@ -644,6 +652,7 @@ public class BuildTargetDurationListener implements BuckEventListener {
     private long duration;
     private final Set<String> dependents;
     private final Set<String> dependencies;
+    private final List<ImmutableBuildRuleEventInterval> intervals;
 
     private MinMaxPriorityQueue<Chain> chain;
 
@@ -693,6 +702,7 @@ public class BuildTargetDurationListener implements BuckEventListener {
       this.dependencies = Sets.newHashSet();
       this.chain =
           MinMaxPriorityQueue.orderedBy(Collections.reverseOrder()).maximumSize(k).create();
+      this.intervals = Lists.newArrayList();
     }
 
     public void addDependent(String dependent) {
@@ -709,6 +719,10 @@ public class BuildTargetDurationListener implements BuckEventListener {
 
     public void updateFinish(long finishEpochMillis) {
       this.finishEpochMillis = Math.max(finishEpochMillis, this.finishEpochMillis);
+    }
+
+    public void addBuildRuleEventInterval(long startEpochMicros, long finishEpochMicros) {
+      this.intervals.add(ImmutableBuildRuleEventInterval.of(startEpochMicros, finishEpochMicros));
     }
 
     public void updateDuration(long duration) {

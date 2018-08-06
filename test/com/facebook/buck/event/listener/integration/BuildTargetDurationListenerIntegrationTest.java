@@ -96,8 +96,8 @@ public class BuildTargetDurationListenerIntegrationTest {
     final JsonNode criticalPathTraceRoot =
         readLogFile(logDir, BuildTargetDurationListener.CRITICAL_PATH_TRACE_FILE_NAME);
     assertTrue(criticalPathTraceRoot.isArray());
-    // It should only contain MetaEvent, BeginEvent and EndEvent
-    assertEquals(3, criticalPathTraceRoot.size());
+    // It should contain at least MetaEvent, BeginEvent and EndEvent events.
+    assertTrue("At least 3 events are expected", criticalPathTraceRoot.size() >= 3);
 
     assertTrue(criticalPathTraceRoot.get(0).has("ph"));
     assertEquals("M", criticalPathTraceRoot.get(0).get("ph").asText());
