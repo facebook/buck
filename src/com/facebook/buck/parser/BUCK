@@ -113,7 +113,6 @@ java_immutables_library(
         "AbstractImmediateDirectoryBuildTargetPattern.java",
         "AbstractSingletonBuildTargetPattern.java",
         "AbstractSubdirectoryBuildTargetPattern.java",
-        "BuildTargetParseException.java",
         "BuildTargetParser.java",
         "BuildTargetPattern.java",
         "BuildTargetPatternParser.java",

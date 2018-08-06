@@ -14,9 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.parser;
-
-import com.facebook.buck.core.exceptions.HumanReadableException;
+package com.facebook.buck.core.exceptions;
 
 public class BuildTargetParseException extends HumanReadableException {
 
