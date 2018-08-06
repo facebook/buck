@@ -118,6 +118,7 @@ public class HttpArchive extends AbstractBuildRuleWithDeclaredAndExtraDeps {
       case TAR_BZ2:
       case TAR_GZ:
       case TAR_XZ:
+      case TAR_ZSTD:
         return new UntarStep(filesystem, archiveFile, destinationDirectory, stripPrefix, format);
       case ZIP:
         return new UnzipStep(filesystem, archiveFile, destinationDirectory, stripPrefix);

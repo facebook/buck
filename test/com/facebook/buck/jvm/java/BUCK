@@ -1,4 +1,7 @@
-load("//tools/build_rules:java_rules.bzl", "java_test")
+load(
+    "//tools/build_rules:java_rules.bzl",
+    "java_test",
+)
 
 java_library(
     name = "testutil",
@@ -180,7 +183,9 @@ java_library(
 
 java_library(
     name = "javac-env",
-    srcs = ["JavaCompilationConstants.java"],
+    srcs = [
+        "JavaCompilationConstants.java",
+    ],
     visibility = [
         "//test/...",
     ],
@@ -381,7 +386,9 @@ java_test(
         exclude = SLOW_INTEGRATION_TESTS,
     ),
     has_immutable_types = True,
-    labels = ["long_running"],
+    labels = [
+        "long_running",
+    ],
     resources = glob(
         ["testdata/**"],
     ),
@@ -546,5 +553,6 @@ java_test(
         "//third-party/java/okio:okio",
         "//third-party/java/stringtemplate:stringtemplate",
         "//third-party/java/thrift:libthrift",
+        "//third-party/java/zstd-jni:zstd-jni",
     ],
 )

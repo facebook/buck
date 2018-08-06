@@ -20,7 +20,6 @@ import com.facebook.buck.io.file.MorePosixFilePermissions;
 import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.base.Charsets;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.io.ByteStreams;
@@ -169,7 +168,7 @@ public class Unzip extends Unarchiver {
   }
 
   private void extractFile(
-      ImmutableList.Builder<Path> filesWritten,
+      ImmutableSet.Builder<Path> filesWritten,
       ZipFile zip,
       DirectoryCreator creator,
       Path target,
@@ -252,7 +251,7 @@ public class Unzip extends Unarchiver {
 
   /** Unzips a file to a destination and returns the paths of the written files. */
   @Override
-  public ImmutableList<Path> extractArchive(
+  public ImmutableSet<Path> extractArchive(
       Path archiveFile,
       ProjectFilesystem filesystem,
       Path relativePath,
@@ -267,7 +266,7 @@ public class Unzip extends Unarchiver {
     // contents of {@code archiveFile} and then scan the existing filesystem to remove stale
     // artifacts.
 
-    ImmutableList.Builder<Path> filesWritten = ImmutableList.builder();
+    ImmutableSet.Builder<Path> filesWritten = ImmutableSet.builder();
     try (ZipFile zip = new ZipFile(archiveFile.toFile())) {
       SortedMap<Path, ZipArchiveEntry> pathMap;
       if (stripPrefix.isPresent()) {

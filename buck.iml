@@ -91,7 +91,6 @@
     <orderEntry type="library" name="slf4j-api-1.7.2" level="project" />
     <orderEntry type="library" name="soy-no-guava" level="project" />
     <orderEntry type="library" name="eclipse" level="project" />
-    <orderEntry type="library" name="commons-compress-1.8.1" level="project" />
     <orderEntry type="library" name="infer-annotations" level="project" />
     <orderEntry type="library" name="jacoco" level="project" />
     <orderEntry type="library" name="immutables-annotations" level="project" />
@@ -126,5 +125,6 @@
     <orderEntry type="library" name="netty-all-4.1.24.Final" level="project" />
     <orderEntry type="library" name="guava-20.0" level="project" />
     <orderEntry type="library" name="bundle" level="project" />
+    <orderEntry type="library" name="commons-compress-1.17" level="project" />
   </component>
 </module>

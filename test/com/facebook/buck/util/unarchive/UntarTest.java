@@ -25,6 +25,7 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -261,7 +262,7 @@ public class UntarTest {
 
     Path archivePath = getTestFilePath(format.getExtension());
     Untar unarchiver = (Untar) format.getUnarchiver();
-    ImmutableList<Path> unarchivedFiles;
+    ImmutableSet<Path> unarchivedFiles;
     if (writeSymlinksLast.isPresent()) {
       unarchivedFiles =
           unarchiver.extractArchive(
@@ -331,7 +332,7 @@ public class UntarTest {
     ImmutableList<Path> expectedDirs = expectedDirsBuilder.build();
 
     Path archivePath = getTestFilePath(format.getExtension());
-    ImmutableList<Path> unarchivedFiles =
+    ImmutableSet<Path> unarchivedFiles =
         format
             .getUnarchiver()
             .extractArchive(
@@ -398,7 +399,7 @@ public class UntarTest {
     assertOutputFileExists(getDestPath("root"), "testing");
 
     Path archivePath = getTestFilePath(format.getExtension());
-    ImmutableList<Path> unarchivedFiles =
+    ImmutableSet<Path> unarchivedFiles =
         format
             .getUnarchiver()
             .extractArchive(
@@ -450,7 +451,7 @@ public class UntarTest {
     assertOutputFileExists(getDestPath("root", "echo.sh"), "testing");
 
     Path archivePath = getTestFilePath(format.getExtension());
-    ImmutableList<Path> unarchivedFiles =
+    ImmutableSet<Path> unarchivedFiles =
         format
             .getUnarchiver()
             .extractArchive(
@@ -520,7 +521,7 @@ public class UntarTest {
     assertOutputFileExists(getDestPath("root", "echo.sh"), "testing");
 
     Path archivePath = getTestFilePath(format.getExtension());
-    ImmutableList<Path> unarchivedFiles =
+    ImmutableSet<Path> unarchivedFiles =
         format
             .getUnarchiver()
             .extractArchive(
@@ -656,7 +657,7 @@ public class UntarTest {
     assertOutputFileExists(getDestPath("root", "echo.sh"), "testing");
 
     Path archivePath = getTestFilePath(format.getExtension());
-    ImmutableList<Path> unarchivedFiles =
+    ImmutableSet<Path> unarchivedFiles =
         format
             .getUnarchiver()
             .extractArchive(

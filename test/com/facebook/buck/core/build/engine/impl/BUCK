@@ -41,8 +41,10 @@ java_test(
         "//test/com/facebook/buck/testutil/integration:util",
         "//test/com/facebook/buck/util/config:testutil",
         "//test/com/facebook/buck/util/timing:testutil",
+        "//third-party/java/commons-compress:commons-compress",
         "//third-party/java/easymock:easymock",
         "//third-party/java/junit:junit",
+        "//third-party/java/zstd-jni:zstd-jni",
     ],
 )
 
