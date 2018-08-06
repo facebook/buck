@@ -467,7 +467,7 @@ public class BuildCommandErrorsIntegrationTest {
             Constructor<?> constructor = clz.getConstructor(String.class, Throwable.class);
             obj = constructor.newInstance(message, cause);
           }
-          cause = Throwable.class.cast(obj);
+          cause = (Throwable) obj;
           // Modify the message a little so that we can differentiate the message at different
           // levels of nesting.
           message = " <- " + message + " -> ";

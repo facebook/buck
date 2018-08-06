@@ -262,7 +262,7 @@ public class IjSourceRootSimplifier {
 
       if ((parentFolder instanceof ExcludeFolder)) {
         if (hasNonPresentChildren
-            || children.stream().anyMatch(folder -> !ExcludeFolder.class.isInstance(folder))) {
+            || children.stream().anyMatch(folder -> !(folder instanceof ExcludeFolder))) {
           return Optional.empty();
         }
         return mergeAndRemoveSimilarChildren(parentFolder, children);
@@ -318,10 +318,10 @@ public class IjSourceRootSimplifier {
               .stream()
               .filter(
                   child ->
-                      SourceFolder.class.isInstance(child)
-                          || TestFolder.class.isInstance(child)
-                          || JavaResourceFolder.class.isInstance(child)
-                          || JavaTestResourceFolder.class.isInstance(child))
+                      child instanceof SourceFolder
+                          || child instanceof TestFolder
+                          || child instanceof JavaResourceFolder
+                          || child instanceof JavaTestResourceFolder)
               .collect(ImmutableList.toImmutableList());
 
       if (childrenToMerge.isEmpty()) {
