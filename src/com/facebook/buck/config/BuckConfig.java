@@ -21,7 +21,6 @@ import static java.lang.Integer.parseInt;
 import com.facebook.buck.core.exceptions.BuildTargetParseException;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.rulekey.RuleKeyDiagnosticsMode;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -449,11 +448,6 @@ public class BuckConfig {
 
   public boolean isRuleKeyLoggerEnabled() {
     return getBooleanValue(LOG_SECTION, "rule_key_logger_enabled", false);
-  }
-
-  public RuleKeyDiagnosticsMode getRuleKeyDiagnosticsMode() {
-    return getEnum(LOG_SECTION, "rule_key_diagnostics_mode", RuleKeyDiagnosticsMode.class)
-        .orElse(RuleKeyDiagnosticsMode.NEVER);
   }
 
   public boolean isMachineReadableLoggerEnabled() {

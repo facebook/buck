@@ -31,6 +31,7 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
 import com.facebook.buck.core.resources.ResourcesConfig;
 import com.facebook.buck.core.rulekey.RuleKey;
+import com.facebook.buck.core.rulekey.config.RuleKeyConfig;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
@@ -257,7 +258,8 @@ public class LocalBuildExecutor implements BuildExecutor {
         .setCodeCoverageEnabled(false)
         .setInclNoLocationClassesEnabled(false)
         .setDebugEnabled(false)
-        .setRuleKeyDiagnosticsMode(args.getBuckConfig().getRuleKeyDiagnosticsMode())
+        .setRuleKeyDiagnosticsMode(
+            args.getBuckConfig().getView(RuleKeyConfig.class).getRuleKeyDiagnosticsMode())
         .setShouldReportAbsolutePaths(false)
         .setBuckEventBus(args.getBuckEventBus())
         .setPlatform(args.getPlatform())

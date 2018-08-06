@@ -25,6 +25,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
 import com.facebook.buck.core.resources.ResourcesConfig;
 import com.facebook.buck.core.rulekey.RuleKey;
+import com.facebook.buck.core.rulekey.config.RuleKeyConfig;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.log.LogConfigSetup;
@@ -427,7 +428,8 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
             .setDefaultTestTimeoutMillis(params.getBuckConfig().getDefaultTestTimeoutMillis())
             .setInclNoLocationClassesEnabled(
                 params.getBuckConfig().getBooleanValue("test", "incl_no_location_classes", false))
-            .setRuleKeyDiagnosticsMode(params.getBuckConfig().getRuleKeyDiagnosticsMode())
+            .setRuleKeyDiagnosticsMode(
+                params.getBuckConfig().getView(RuleKeyConfig.class).getRuleKeyDiagnosticsMode())
             .setConcurrencyLimit(getConcurrencyLimit(params.getBuckConfig()))
             .setPersistentWorkerPools(params.getPersistentWorkerPools())
             .setProjectFilesystemFactory(params.getProjectFilesystemFactory());
