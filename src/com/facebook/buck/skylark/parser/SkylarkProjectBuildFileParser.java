@@ -387,12 +387,8 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
       }
       extension = new Extension(extensionEnv);
     }
-    return ExtensionData.builder()
-        .setExtension(extension)
-        .setPath(extensionPath)
-        .setDependencies(dependencies)
-        .setImportString(loadImport.getImport().getImportString())
-        .build();
+    return ExtensionData.of(
+        extension, extensionPath, dependencies, loadImport.getImport().getImportString());
   }
 
   /**
