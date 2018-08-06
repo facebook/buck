@@ -406,6 +406,9 @@ public class TargetsCommand extends AbstractCommand {
    * during resolution of configurable attribute values.
    */
   private TargetGraph getSubgraphWithoutConfigurationNodes(TargetGraph targetGraph) {
+    if (!hasConfigurationRules(targetGraph)) {
+      return targetGraph;
+    }
     List<TargetNode<?>> nonConfigurationRootNodes =
         filterNonConfigurationNodes(targetGraph.getNodesWithNoIncomingEdges().stream())
             .collect(Collectors.toList());
@@ -429,6 +432,13 @@ public class TargetsCommand extends AbstractCommand {
 
   private Stream<TargetNode<?>> filterNonConfigurationNodes(Stream<TargetNode<?>> nodes) {
     return nodes.filter(node -> node.getRuleType().getKind() != RuleType.Kind.CONFIGURATION);
+  }
+
+  private boolean hasConfigurationRules(TargetGraph targetGraph) {
+    return targetGraph
+        .getNodesWithNoIncomingEdges()
+        .stream()
+        .anyMatch(node -> node.getRuleType().getKind() == RuleType.Kind.CONFIGURATION);
   }
 
   /**
