@@ -26,10 +26,12 @@ import org.immutables.value.Value;
  * Captures {@link Environment} and information related to its parsing like all {@link
  * com.google.devtools.build.lib.vfs.Path} used in order to create this environment.
  */
-@Value.Immutable
+@Value.Immutable(builder = false)
 @BuckStyleImmutable
 abstract class AbstractEnvironmentData {
+  @Value.Parameter
   public abstract Environment getEnvironment();
 
+  @Value.Parameter
   public abstract ImmutableList<Path> getLoadedPaths();
 }

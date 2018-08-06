@@ -253,10 +253,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
           FuncallExpression.getBuiltinCallable(SkylarkNativeModule.NATIVE_MODULE, nativeFunction));
     }
 
-    return EnvironmentData.builder()
-        .setEnvironment(env)
-        .setLoadedPaths(toLoadedPaths(dependencies))
-        .build();
+    return EnvironmentData.of(env, toLoadedPaths(dependencies));
   }
 
   @Nonnull
