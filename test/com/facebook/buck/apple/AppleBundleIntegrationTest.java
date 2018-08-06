@@ -1502,7 +1502,7 @@ public class AppleBundleIntegrationTest {
 
     Path appPath =
         workspace.getPath(
-            BuildTargets.getGenPath(filesystem, target, "%s")
+            BuildTargetPaths.getGenPath(filesystem, target, "%s")
                 .resolve(target.getShortName() + ".app"));
     assertTrue(Files.exists(appPath.resolve("Frameworks")));
 
