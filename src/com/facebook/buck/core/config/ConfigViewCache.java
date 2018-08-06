@@ -13,7 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.facebook.buck.config;
+package com.facebook.buck.core.config;
 
 import com.google.common.base.Throwables;
 import com.google.common.cache.CacheBuilder;

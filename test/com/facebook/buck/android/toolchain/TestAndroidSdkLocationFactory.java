@@ -17,7 +17,7 @@
 package com.facebook.buck.android.toolchain;
 
 import com.facebook.buck.android.toolchain.impl.AndroidSdkLocationFactory;
-import com.facebook.buck.config.FakeBuckConfig;
+import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;

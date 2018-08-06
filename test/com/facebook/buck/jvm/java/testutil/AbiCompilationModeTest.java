@@ -18,7 +18,7 @@ package com.facebook.buck.jvm.java.testutil;
 
 import static org.junit.Assume.assumeThat;
 
-import com.facebook.buck.config.FakeBuckConfig;
+import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import java.io.IOException;

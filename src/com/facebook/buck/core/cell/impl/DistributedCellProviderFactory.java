@@ -16,11 +16,11 @@
 
 package com.facebook.buck.core.cell.impl;
 
-import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.core.cell.CellPathResolverView;
 import com.facebook.buck.core.cell.CellProvider;
 import com.facebook.buck.core.cell.DistBuildCellParams;
 import com.facebook.buck.core.cell.resolver.CellPathResolver;
+import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.io.watchman.WatchmanFactory;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.BuildTargetPatternParser;

@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.config.testdata.buck_py_ignore_paths.b;
+package com.facebook.buck.core.config.testdata.buck_py_ignore_paths.b;
 
 import org.junit.Test;
 

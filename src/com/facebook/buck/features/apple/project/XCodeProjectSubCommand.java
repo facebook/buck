@@ -22,7 +22,7 @@ import com.facebook.buck.cli.CommandRunnerParams;
 import com.facebook.buck.cli.CommandThreadManager;
 import com.facebook.buck.cli.ProjectSubCommand;
 import com.facebook.buck.cli.parameter_extractors.ProjectGeneratorParameters;
-import com.facebook.buck.config.BuckConfig;
+import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.step.ExecutorPool;
 import com.facebook.buck.util.ExitCode;
 import com.google.common.collect.ImmutableList;

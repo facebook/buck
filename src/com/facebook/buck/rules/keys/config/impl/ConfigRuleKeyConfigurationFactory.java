@@ -16,7 +16,7 @@
 
 package com.facebook.buck.rules.keys.config.impl;
 
-import com.facebook.buck.config.BuckConfig;
+import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.module.BuckModuleHashStrategy;
 import com.facebook.buck.module.BuckModuleManager;
 import com.facebook.buck.module.impl.DefaultBuckModuleHashStrategy;

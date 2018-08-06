@@ -17,10 +17,10 @@
 package com.facebook.buck.jvm.java.autodeps;
 
 import com.facebook.buck.android.AndroidLibraryDescription;
-import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.core.build.engine.BuildEngine;
 import com.facebook.buck.core.build.engine.BuildEngineBuildContext;
 import com.facebook.buck.core.build.engine.BuildResult;
+import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.description.impl.DescriptionCache;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.RuleType;

@@ -31,8 +31,8 @@ java_library(
     deps = [
         ":SymbolExtractor",
         "//src/com/facebook/buck/android:rules",
-        "//src/com/facebook/buck/config:config",
         "//src/com/facebook/buck/core/cell/resolver:resolver",
+        "//src/com/facebook/buck/core/config:config",
         "//src/com/facebook/buck/core/description/impl:impl",
         "//src/com/facebook/buck/core/model:model",
         "//src/com/facebook/buck/core/model/impl:impl",

@@ -50,7 +50,7 @@ java_immutables_library(
         "//src/com/facebook/buck/artifact_cache:artifact_cache",
         "//src/com/facebook/buck/build_type:build_type",
         "//src/com/facebook/buck/parser:rule_pattern",
-        "//src/com/facebook/buck/config:config",
+        "//src/com/facebook/buck/core/config:config",
         "//src/com/facebook/buck/counters:counters",
         "//src/com/facebook/buck/distributed:common",
         "//src/com/facebook/buck/distributed/build_client:build_client",

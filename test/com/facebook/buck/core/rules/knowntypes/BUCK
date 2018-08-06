@@ -14,7 +14,7 @@ java_test(
         "//src/com/facebook/buck/jvm/java/toolchain:toolchain",
         "//src/com/facebook/buck/toolchain/impl:impl",
         "//src/com/facebook/buck/versions:versions",
-        "//test/com/facebook/buck/config:FakeBuckConfig",
+        "//test/com/facebook/buck/core/config:FakeBuckConfig",
         "//test/com/facebook/buck/core/model:testutil",
         "//test/com/facebook/buck/core/rules/resolver/impl:testutil",
         "//test/com/facebook/buck/cxx:testutil",
@@ -36,7 +36,7 @@ java_immutables_library(
         exclude = ["*Test.java"],
     ),
     exported_deps = [
-        "//src/com/facebook/buck/config:config",
+        "//src/com/facebook/buck/core/config:config",
         "//src/com/facebook/buck/core/description/arg:arg",
         "//src/com/facebook/buck/core/model:model",
         "//src/com/facebook/buck/core/rules:rules",
@@ -52,7 +52,7 @@ java_immutables_library(
         "//test/...",
     ],
     deps = [
-        "//test/com/facebook/buck/config:FakeBuckConfig",
+        "//test/com/facebook/buck/core/config:FakeBuckConfig",
         "//test/com/facebook/buck/sandbox:testutil",
     ],
 )

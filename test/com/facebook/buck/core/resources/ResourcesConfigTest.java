@@ -19,8 +19,8 @@ package com.facebook.buck.core.resources;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.config.BuckConfig;
-import com.facebook.buck.config.BuckConfigTestUtils;
+import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.config.BuckConfigTestUtils;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.concurrent.ResourceAmounts;
 import com.google.common.base.Joiner;

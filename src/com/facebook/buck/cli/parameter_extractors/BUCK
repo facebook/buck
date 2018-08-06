@@ -5,7 +5,7 @@ java_library(
         "PUBLIC",
     ],
     deps = [
-        "//src/com/facebook/buck/config:config",
+        "//src/com/facebook/buck/core/config:config",
         "//src/com/facebook/buck/parser:parser",
         "//src/com/facebook/buck/util:process_executor",
         "//src/com/facebook/buck/util/config:config",

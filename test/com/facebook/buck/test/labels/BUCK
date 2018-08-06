@@ -14,7 +14,7 @@ standard_java_test(
         "//src/com/facebook/buck/android/redex:options",
         "//src/com/facebook/buck/android/toolchain/impl:impl",
         "//src/com/facebook/buck/artifact_cache:artifact_cache",
-        "//src/com/facebook/buck/config:config",
+        "//src/com/facebook/buck/core/config:config",
         "//src/com/facebook/buck/core/model:model",
         "//src/com/facebook/buck/core/rules:rules",
         "//src/com/facebook/buck/core/util/immutables:immutables",

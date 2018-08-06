@@ -6,7 +6,7 @@ standard_java_test(
         "//src/com/facebook/buck/android/toolchain:toolchain",
         "//src/com/facebook/buck/file/downloader/impl:impl",
         "//src/com/facebook/buck/util/environment:platform",
-        "//test/com/facebook/buck/config:FakeBuckConfig",
+        "//test/com/facebook/buck/core/config:FakeBuckConfig",
         "//test/com/facebook/buck/event:testutil",
         "//test/com/facebook/buck/io/filesystem:testutil",
         "//test/com/facebook/buck/testutil/integration:util",

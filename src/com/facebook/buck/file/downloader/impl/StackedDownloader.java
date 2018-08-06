@@ -17,7 +17,7 @@
 package com.facebook.buck.file.downloader.impl;
 
 import com.facebook.buck.android.toolchain.AndroidSdkLocation;
-import com.facebook.buck.config.BuckConfig;
+import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.file.downloader.Downloader;

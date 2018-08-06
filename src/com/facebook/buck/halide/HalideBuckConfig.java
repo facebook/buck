@@ -16,7 +16,7 @@
 
 package com.facebook.buck.halide;
 
-import com.facebook.buck.config.BuckConfig;
+import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.google.common.collect.ImmutableMap;

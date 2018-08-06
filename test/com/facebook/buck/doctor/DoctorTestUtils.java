@@ -18,8 +18,8 @@ package com.facebook.buck.doctor;
 
 import static com.facebook.buck.doctor.config.DoctorConfig.DEFAULT_REPORT_UPLOAD_PATH;
 
-import com.facebook.buck.config.BuckConfig;
-import com.facebook.buck.config.FakeBuckConfig;
+import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.doctor.config.BuildLogEntry;
 import com.facebook.buck.doctor.config.DoctorConfig;
 import com.facebook.buck.doctor.config.DoctorProtocolVersion;

@@ -18,7 +18,7 @@ package com.facebook.buck.event.chrome_trace;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.config.FakeBuckConfig;
+import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.testutil.TemporaryPaths;
 import org.junit.Rule;
 import org.junit.Test;

@@ -19,7 +19,7 @@ package com.facebook.buck.android.toolchain.impl;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.android.toolchain.AndroidSdkLocation;
-import com.facebook.buck.config.FakeBuckConfig;
+import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;

@@ -19,7 +19,7 @@ java_library_with_plugins(
         "//src/com/facebook/buck/android:helpers",
         "//src/com/facebook/buck/android:steps",
         "//src/com/facebook/buck/android/toolchain:toolchain",
-        "//src/com/facebook/buck/config:config",
+        "//src/com/facebook/buck/core/config:config",
         "//src/com/facebook/buck/cxx/toolchain:toolchain",
         "//src/com/facebook/buck/io:io",
         "//src/com/facebook/buck/io/filesystem:filesystem",

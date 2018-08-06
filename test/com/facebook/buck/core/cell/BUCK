@@ -26,7 +26,7 @@ java_library(
         "//src/com/facebook/buck/module:module",
         "//src/com/facebook/buck/plugin/impl:impl",
         "//src/com/facebook/buck/toolchain/impl:impl",
-        "//test/com/facebook/buck/config:FakeBuckConfig",
+        "//test/com/facebook/buck/core/config:FakeBuckConfig",
         "//test/com/facebook/buck/module:testutil",
         "//test/com/facebook/buck/testutil:testutil",
         "//third-party/java/guava:guava",

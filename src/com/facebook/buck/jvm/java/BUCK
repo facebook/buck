@@ -31,7 +31,7 @@ java_library(
     ],
     deps = [
         "//src/com/facebook/buck/android:utils",
-        "//src/com/facebook/buck/config:config",
+        "//src/com/facebook/buck/core/config:config",
         "//src/com/facebook/buck/core/model:model",
         "//src/com/facebook/buck/core/rules:rules",
         "//src/com/facebook/buck/core/toolchain/tool/impl:impl",
@@ -96,8 +96,8 @@ java_library(
         "PUBLIC",
     ],
     deps = [
-        "//src/com/facebook/buck/config:config",
         "//src/com/facebook/buck/core/cell/name:name",
+        "//src/com/facebook/buck/core/config:config",
         "//src/com/facebook/buck/core/model:model",
         "//src/com/facebook/buck/core/util/immutables:immutables",
         "//src/com/facebook/buck/event:interfaces",
@@ -197,7 +197,7 @@ java_immutables_library(
     ],
     deps = [
         "//src/com/facebook/buck/android:utils",
-        "//src/com/facebook/buck/config:config",
+        "//src/com/facebook/buck/core/config:config",
         "//src/com/facebook/buck/core/description:description",
         "//src/com/facebook/buck/core/model:model",
         "//src/com/facebook/buck/core/model/impl:impl",
@@ -270,8 +270,8 @@ java_library(
         "PUBLIC",
     ],
     deps = [
-        "//src/com/facebook/buck/config:config",
         "//src/com/facebook/buck/core/cell/name:name",
+        "//src/com/facebook/buck/core/config:config",
         "//src/com/facebook/buck/core/exceptions:exceptions",
         "//src/com/facebook/buck/core/model:model",
         "//src/com/facebook/buck/core/util/immutables:immutables",
@@ -370,7 +370,7 @@ java_library_with_plugins(
         "//src/com/facebook/buck/android:utils",
         "//src/com/facebook/buck/android/packageable:packageable",
         "//src/com/facebook/buck/artifact_cache:artifact_cache",
-        "//src/com/facebook/buck/config:config",
+        "//src/com/facebook/buck/core/config:config",
         "//src/com/facebook/buck/core/model:model",
         "//src/com/facebook/buck/core/model/impl:impl",
         "//src/com/facebook/buck/core/rules:rules",
@@ -487,7 +487,7 @@ java_immutables_library(
     ],
     deps = [
         "//src/com/facebook/buck/android:utils",
-        "//src/com/facebook/buck/config:config",
+        "//src/com/facebook/buck/core/config:config",
         "//src/com/facebook/buck/core/model:model",
         "//src/com/facebook/buck/core/rules:rules",
         "//src/com/facebook/buck/core/rules/pipeline:pipeline",

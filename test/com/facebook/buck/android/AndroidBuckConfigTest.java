@@ -19,7 +19,7 @@ package com.facebook.buck.core.resources;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.android.AndroidBuckConfig;
-import com.facebook.buck.config.FakeBuckConfig;
+import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;

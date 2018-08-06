@@ -18,7 +18,7 @@ package com.facebook.buck.features.python;
 
 import static org.junit.Assume.assumeTrue;
 
-import com.facebook.buck.config.FakeBuckConfig;
+import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.features.python.toolchain.impl.PythonPlatformsProviderFactoryUtils;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.testutil.ProcessResult;
