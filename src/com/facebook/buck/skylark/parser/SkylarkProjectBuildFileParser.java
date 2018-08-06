@@ -290,12 +290,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
       return skylarkImports
           .stream()
           .distinct() // sometimes users include the same extension multiple times...
-          .map(
-              skylarkImport ->
-                  LoadImport.builder()
-                      .setContainingLabel(containingLabel)
-                      .setImport(skylarkImport)
-                      .build())
+          .map(skylarkImport -> LoadImport.of(containingLabel, skylarkImport))
           .map(extensionDataCache::getUnchecked)
           .collect(ImmutableList.toImmutableList());
     } catch (UncheckedExecutionException e) {
@@ -452,13 +447,15 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
    * provide enough context. For instance, the same {@link SkylarkImport} can represent different
    * logical imports depending on which repository it is resolved in.
    */
-  @Value.Immutable
+  @Value.Immutable(builder = false)
   @BuckStyleImmutable
   abstract static class AbstractLoadImport {
     /** Returns a label of the file containing this import. */
+    @Value.Parameter
     abstract Label getContainingLabel();
 
     /** Returns a Skylark import. */
+    @Value.Parameter
     abstract SkylarkImport getImport();
 
     /** Returns a label of current import file. */
