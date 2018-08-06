@@ -61,6 +61,7 @@ public class DistBuildRunner {
 
   private final AtomicInteger distributedBuildExitCode;
   private final AtomicBoolean distributedBuildTerminated;
+  private final AtomicBoolean localBuildFinishedFirst;
 
   @GuardedBy("this")
   @Nullable
@@ -85,7 +86,8 @@ public class DistBuildRunner {
     this.started = started;
     this.remoteBuildSynchronizer = remoteBuildSynchronizer;
     this.buildPhaseLatches = buildPhaseLatches;
-    distributedBuildTerminated = new AtomicBoolean(false);
+    this.distributedBuildTerminated = new AtomicBoolean(false);
+    this.localBuildFinishedFirst = new AtomicBoolean(false);
     this.waitGracefullyForDistributedBuildThreadToFinish =
         waitGracefullyForDistributedBuildThreadToFinish;
     this.distributedBuildThreadKillTimeoutSeconds = distributedBuildThreadKillTimeoutSeconds;
@@ -187,6 +189,8 @@ public class DistBuildRunner {
             : String.format("failed [exitCode=%d]", localBuildExitCode);
     eventBus.post(new StampedeLocalBuildStatusEvent(statusString));
 
+    localBuildFinishedFirst.set(true);
+
     if (finishedSuccessfully() && !waitGracefullyForDistributedBuildThreadToFinish) {
       runDistributedBuildFuture.cancel(true); // Probably it's already dead
       return;
@@ -258,7 +262,7 @@ public class DistBuildRunner {
             "- STAMPEDE DISTRIBUTED BUILD FAILED AT [%s] STAGE. EXCEPTION:\n%s",
             stage.toUpperCase(), stackTrace);
 
-    if (result.getHandleGracefully()) {
+    if (result.getHandleGracefully() || localBuildFinishedFirst.get()) {
       LOG.warn(errorMessage);
     } else {
       eventBus.post(ConsoleEvent.severe(errorMessage));
