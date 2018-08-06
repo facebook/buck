@@ -218,6 +218,56 @@ public class IncrementalActionGraphGeneratorTest {
   }
 
   @Test
+  public void parentWithChildInvalidatedByOtherPartOfGraphDueToUnflavoredTarget() {
+    TargetNode<?> childNode = createTargetNode("child#original");
+    TargetNode<?> parentNode = createTargetNode("parent", childNode);
+    TargetNode<?> parentNode2 = createTargetNode("parent2", childNode);
+    setUpTargetGraphAndResolver(parentNode, parentNode2, childNode);
+
+    generator.populateActionGraphBuilderWithCachedRules(eventBus, targetGraph, graphBuilder);
+    graphBuilder.requireRule(childNode.getBuildTarget());
+    BuildRule originalParentRule = graphBuilder.requireRule(parentNode.getBuildTarget());
+    BuildRule originalParentRule2 = graphBuilder.requireRule(parentNode2.getBuildTarget());
+
+    TargetNode<?> newChildNode = createTargetNode("child#original");
+    TargetNode<?> newParentNode = createTargetNode("parent", newChildNode);
+    TargetNode<?> newParentNode2 = createTargetNode("parent2", newChildNode);
+    TargetNode<?> addedNode = createTargetNode("child#added");
+    setUpTargetGraphAndResolver(newParentNode, newParentNode2, newChildNode, addedNode);
+
+    generator.populateActionGraphBuilderWithCachedRules(eventBus, targetGraph, graphBuilder);
+    graphBuilder.requireRule(newChildNode.getBuildTarget());
+    BuildRule newParentRule = graphBuilder.requireRule(newParentNode.getBuildTarget());
+    BuildRule newParentRule2 = graphBuilder.requireRule(newParentNode2.getBuildTarget());
+    graphBuilder.requireRule(addedNode.getBuildTarget());
+
+    assertNotSame(originalParentRule, newParentRule);
+    assertNotSame(originalParentRule2, newParentRule2);
+    assertTrue(graphBuilder.getRuleOptional(newChildNode.getBuildTarget()).isPresent());
+  }
+
+  @Test
+  public void nowUnreferencedButPreviouslyReferencedSubgraphInvalidated() {
+    TargetNode<?> childNode = createTargetNode("child#original");
+    TargetNode<?> parentNode = createTargetNode("parent1", childNode);
+    setUpTargetGraphAndResolver(parentNode, childNode);
+
+    generator.populateActionGraphBuilderWithCachedRules(eventBus, targetGraph, graphBuilder);
+    graphBuilder.requireRule(childNode.getBuildTarget());
+    graphBuilder.requireRule(parentNode.getBuildTarget());
+
+    TargetNode<?> newChildNode = createTargetNode("child#new");
+    TargetNode<?> newParentNode = createTargetNode("parent2", newChildNode);
+    setUpTargetGraphAndResolver(newParentNode, newChildNode);
+
+    generator.populateActionGraphBuilderWithCachedRules(eventBus, targetGraph, graphBuilder);
+    graphBuilder.requireRule(newChildNode.getBuildTarget());
+    graphBuilder.requireRule(newParentNode.getBuildTarget());
+
+    assertFalse(graphBuilder.getRuleOptional(parentNode.getBuildTarget()).isPresent());
+  }
+
+  @Test
   public void allParentChainsForChangedTargetInvalidated() {
     TargetNode<?> originalChildNode = createTargetNode("child");
     TargetNode<?> originalParentNode1 = createTargetNode("parent1", originalChildNode);
