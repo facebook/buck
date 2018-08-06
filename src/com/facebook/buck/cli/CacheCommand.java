@@ -163,7 +163,7 @@ public class CacheCommand extends AbstractCommand {
     }
 
     int totalRuns = results.size();
-    String resultString = "";
+    StringBuilder resultString = new StringBuilder();
     int goodRuns = 0;
 
     HashMap<ArtifactCacheMode, AtomicInteger> cacheHitsPerMode = new HashMap<>();
@@ -182,7 +182,7 @@ public class CacheCommand extends AbstractCommand {
       if (r.completed) {
         goodRuns++;
       }
-      resultString += r.resultString;
+      resultString.append(r.resultString);
       ArtifactCacheMode artifactCacheMode = r.cacheResultMode.orElse(ArtifactCacheMode.unknown);
       switch (r.cacheResultType) {
         case ERROR:

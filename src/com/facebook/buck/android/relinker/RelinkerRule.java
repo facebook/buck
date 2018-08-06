@@ -146,15 +146,15 @@ class RelinkerRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
                       return false;
                     }))
             .build();
-    String res = "{\n";
+    StringBuilder res = new StringBuilder("{\n");
     if (!keep.isEmpty()) {
-      res += "global:\n";
+      res.append("global:\n");
     }
     for (String s : keep) {
-      res += "  " + s + ";\n";
+      res.append("  ").append(s).append(";\n");
     }
-    res += "local: *;\n};\n";
-    return res;
+    res.append("local: *;\n};\n");
+    return res.toString();
   }
 
   public SourcePath getLibFileSourcePath() {

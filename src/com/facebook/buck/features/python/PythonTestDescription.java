@@ -130,12 +130,12 @@ public class PythonTestDescription
    * modules.
    */
   private static String getTestModulesListContents(ImmutableSet<String> modules) {
-    String contents = "TEST_MODULES = [\n";
+    StringBuilder contents = new StringBuilder("TEST_MODULES = [\n");
     for (String module : modules) {
-      contents += String.format("    \"%s\",\n", module);
+      contents.append(String.format("    \"%s\",\n", module));
     }
-    contents += "]";
-    return contents;
+    contents.append("]");
+    return contents.toString();
   }
 
   /**

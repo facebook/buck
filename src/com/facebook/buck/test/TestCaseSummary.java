@@ -142,16 +142,16 @@ public class TestCaseSummary implements TestCaseSummaryExternalInterface<TestRes
 
     String status = ansi.asHighlightedStatusText(severityLevel, statusText);
     int paddingWidth = MAX_STATUS_WIDTH - statusText.length();
-    String padding = "";
+    StringBuilder padding = new StringBuilder(paddingWidth);
     for (int position = 0; position < paddingWidth; position++) {
-      padding += ' ';
+      padding.append(' ');
     }
 
     return String.format(
         locale,
         "%s%s %s %2d Passed  %2d Skipped  %2d Failed   %s",
         status,
-        padding,
+        padding.toString(),
         TimeFormat.formatForConsole(locale, totalTime, ansi),
         getPassedCount(),
         skippedCount,
