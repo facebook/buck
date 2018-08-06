@@ -401,7 +401,7 @@ public class QueryCommand extends AbstractCommand {
         // sort by rank and target nodes to break ties in order to make output deterministic
         .sorted(
             Comparator.comparing(Entry<TargetNode<?>, Integer>::getValue)
-                .thenComparing(Comparator.comparing(Entry<TargetNode<?>, Integer>::getKey)))
+                .thenComparing(Entry<TargetNode<?>, Integer>::getKey))
         .forEach(
             entry -> {
               int rank = entry.getValue();
