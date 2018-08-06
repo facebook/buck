@@ -1,8 +1,8 @@
 genrule(
     name = "cat",
     srcs = select({
-        "//:a": ["a.txt"],
-        "//:b": ["b.txt"],
+        ":a": ["a.txt"],
+        ":b": ["b.txt"],
     }),
     out = "cat_out.txt",
     cmd = "cat $SRCS > $OUT",

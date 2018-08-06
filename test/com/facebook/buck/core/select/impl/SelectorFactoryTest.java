@@ -26,6 +26,7 @@ import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.select.Selector;
 import com.facebook.buck.core.select.SelectorKey;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.rules.coercer.BuildTargetTypeCoercer;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.facebook.buck.rules.coercer.FlavorTypeCoercer;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -44,7 +45,7 @@ public class SelectorFactoryTest {
   @Before
   public void setUp() throws Exception {
     projectFilesystem = new FakeProjectFilesystem();
-    selectorFactory = new SelectorFactory();
+    selectorFactory = new SelectorFactory(new BuildTargetTypeCoercer()::coerce);
   }
 
   @Test

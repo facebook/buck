@@ -50,7 +50,8 @@ public class SelectorListCoercerTest {
   public void setUp() throws Exception {
     projectFilesystem = new FakeProjectFilesystem();
     cellPathResolver = TestCellPathResolver.get(projectFilesystem);
-    selectorListFactory = new SelectorListFactory(new SelectorFactory());
+    selectorListFactory =
+        new SelectorListFactory(new SelectorFactory(new BuildTargetTypeCoercer()::coerce));
   }
 
   @Test

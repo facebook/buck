@@ -17,10 +17,10 @@
 package com.facebook.buck.core.select.impl;
 
 import com.facebook.buck.core.cell.resolver.CellPathResolver;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.select.Selector;
 import com.facebook.buck.core.select.SelectorKey;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.facebook.buck.rules.coercer.TypeCoercer;
 import com.google.common.collect.ImmutableMap;
@@ -36,6 +36,12 @@ import java.util.Set;
 
 /** Factory to create {@link Selector} using raw (non-coerced) data. */
 public class SelectorFactory {
+
+  private final BuildTargetCoercer buildTargetTypeCoercer;
+
+  public SelectorFactory(BuildTargetCoercer buildTargetTypeCoercer) {
+    this.buildTargetTypeCoercer = buildTargetTypeCoercer;
+  }
 
   /** Creates a new Selector using the default error message when no conditions match. */
   public <T> Selector<T> createSelector(
@@ -82,7 +88,8 @@ public class SelectorFactory {
       } else {
         selectorKey =
             new SelectorKey(
-                BuildTargetParser.fullyQualifiedNameToBuildTarget(cellPathResolver, key));
+                buildTargetTypeCoercer.coerce(
+                    cellPathResolver, filesystem, pathRelativeToProjectRoot, key));
       }
       if (entry.getValue() == Runtime.NONE) {
         result.remove(selectorKey);
@@ -101,5 +108,14 @@ public class SelectorFactory {
         ImmutableSet.copyOf(nullConditions),
         noMatchMessage,
         foundDefaultCondition);
+  }
+
+  public interface BuildTargetCoercer {
+    BuildTarget coerce(
+        CellPathResolver cellRoots,
+        ProjectFilesystem alsoUnused,
+        Path pathRelativeToProjectRoot,
+        Object object)
+        throws CoerceFailedException;
   }
 }
