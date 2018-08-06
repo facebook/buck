@@ -16,3 +16,18 @@ genrule(
   echo foo > $OUT
   """,
 )
+
+python_binary(
+    name = "pybin",
+    main_module = "main",
+    deps = [
+        ":pylib",
+    ],
+)
+
+python_library(
+    name = "pylib",
+    srcs = [
+        "pylib.py",
+    ],
+)
