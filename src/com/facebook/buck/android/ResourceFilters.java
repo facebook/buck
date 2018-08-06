@@ -129,7 +129,7 @@ public class ResourceFilters {
         if (ResourceFilters.Density.isDensity(qualifier)) {
           density = Density.from(qualifier);
         } else {
-          othersBuilder.append((MoreStrings.isEmpty(othersBuilder) ? "" : "-") + qualifier);
+          othersBuilder.append(MoreStrings.isEmpty(othersBuilder) ? "" : "-").append(qualifier);
         }
       }
       return new Qualifiers(density, othersBuilder.toString());

@@ -148,7 +148,7 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
         .ifPresent(val -> jobNameBuilder.append(val));
     executionEnvironment
         .getenv(taskIdEnvironmentVariable)
-        .ifPresent(val -> jobNameBuilder.append("/" + val));
+        .ifPresent(val -> jobNameBuilder.append("/").append(val));
 
     return jobNameBuilder.toString();
   }

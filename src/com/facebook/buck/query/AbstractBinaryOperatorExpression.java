@@ -145,7 +145,7 @@ abstract class AbstractBinaryOperatorExpression extends QueryExpression {
     }
     result.append(operands.get(0));
     for (int i = 1; i < operands.size(); i++) {
-      result.append(" " + getOperator() + " " + operands.get(i) + ")");
+      result.append(" ").append(getOperator()).append(" ").append(operands.get(i)).append(")");
     }
     return result.toString();
   }

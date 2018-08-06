@@ -618,7 +618,10 @@ public class QueryCommand extends AbstractCommand {
   static String buildAuditDependenciesQueryExpression(
       List<String> arguments, boolean isTransitive, boolean includeTests, boolean jsonOutput) {
     StringBuilder queryBuilder = new StringBuilder("buck query ");
-    queryBuilder.append("\"" + getAuditDependenciesQueryFormat(isTransitive, includeTests) + "\" ");
+    queryBuilder
+        .append("\"")
+        .append(getAuditDependenciesQueryFormat(isTransitive, includeTests))
+        .append("\" ");
     queryBuilder.append(getEscapedArgumentsListAsString(arguments));
     if (jsonOutput) {
       queryBuilder.append(" --json");

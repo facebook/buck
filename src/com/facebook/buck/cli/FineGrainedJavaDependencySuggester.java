@@ -143,7 +143,7 @@ class FineGrainedJavaDependencySuggester {
             .transform(VisibilityPattern::getRepresentation)
             .toSortedSet(Ordering.natural());
     for (String visibility : visibilities) {
-      visibilityBuilder.append("    '" + visibility + "',\n");
+      visibilityBuilder.append("    '").append(visibility).append("',\n");
     }
     visibilityBuilder.append("  ],\n");
     String visibilityArg = visibilityBuilder.toString();
@@ -291,7 +291,7 @@ class FineGrainedJavaDependencySuggester {
     for (String dep : deps) {
       rule.append(String.format("    '%s',\n", dep));
     }
-    rule.append("  ],\n" + visibilityArg + ")\n");
+    rule.append("  ],\n").append(visibilityArg).append(")\n");
     return rule.toString();
   }
 

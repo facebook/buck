@@ -163,14 +163,27 @@ abstract class AbstractBuildConfigFields implements Iterable<Field> {
             value = "!" + value;
           }
         }
-        builder.append(prefix + "boolean " + field.getName() + " = " + value + ";\n");
+        builder
+            .append(prefix)
+            .append("boolean ")
+            .append(field.getName())
+            .append(" = ")
+            .append(value)
+            .append(";\n");
       } else {
         String typeSafeZero = PRIMITIVE_NUMERIC_TYPE_NAMES.contains(type) ? "0" : "null";
         String defaultValue = field.getValue();
         if (!useConstantExpressions) {
           defaultValue = "!Boolean.parseBoolean(null) ? " + defaultValue + " : " + typeSafeZero;
         }
-        builder.append(prefix + type + " " + field.getName() + " = " + defaultValue + ";\n");
+        builder
+            .append(prefix)
+            .append(type)
+            .append(" ")
+            .append(field.getName())
+            .append(" = ")
+            .append(defaultValue)
+            .append(";\n");
       }
     }
 

@@ -137,7 +137,7 @@ public class Dot<T> {
   public void writeOutput(Appendable output) throws IOException {
     // Sorting the edges to have deterministic output and be able to test this.
     ImmutableSet.Builder<String> builder = ImmutableSet.builder();
-    output.append("digraph " + graphName + " {");
+    output.append("digraph ").append(graphName).append(" {");
     output.append(System.lineSeparator());
 
     if (bfsSorted) {

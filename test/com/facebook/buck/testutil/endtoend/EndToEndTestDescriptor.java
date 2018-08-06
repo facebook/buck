@@ -67,7 +67,7 @@ public class EndToEndTestDescriptor {
     StringBuilder stringBuilder = new StringBuilder();
     for (String s : input) {
       if (s.length() > 0) {
-        stringBuilder.append(s.substring(0, 1).toUpperCase() + s.substring(1));
+        stringBuilder.append(s.substring(0, 1).toUpperCase()).append(s.substring(1));
       }
     }
     return stringBuilder.toString();
@@ -77,7 +77,7 @@ public class EndToEndTestDescriptor {
     StringBuilder stringBuilder = new StringBuilder();
     for (Map.Entry<String, String> entry : inputMap.entrySet()) {
       String s = entry.getValue();
-      stringBuilder.append(s.substring(0, 1).toUpperCase() + s.substring(1));
+      stringBuilder.append(s.substring(0, 1).toUpperCase()).append(s.substring(1));
     }
     return stringBuilder.toString();
   }
