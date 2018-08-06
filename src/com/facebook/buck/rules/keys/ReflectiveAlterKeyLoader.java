@@ -57,8 +57,7 @@ class ReflectiveAlterKeyLoader extends CacheLoader<Class<?>, ImmutableCollection
     }
 
     LinkedHashSet<Class<?>> superClassesAndInterfaces = new LinkedHashSet<>();
-    Queue<Class<?>> workQueue = new LinkedList<>();
-    workQueue.addAll(superClasses);
+    Queue<Class<?>> workQueue = new LinkedList<>(superClasses);
     while (!workQueue.isEmpty()) {
       Class<?> cls = workQueue.poll();
       if (superClassesAndInterfaces.add(cls)) {
