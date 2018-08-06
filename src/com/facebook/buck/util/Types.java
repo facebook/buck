@@ -25,6 +25,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.WildcardType;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
@@ -147,9 +148,7 @@ public class Types {
       if (!ret.add(current)) {
         continue;
       }
-      for (Class<?> i : current.getInterfaces()) {
-        toExpand.add(i);
-      }
+      toExpand.addAll(Arrays.asList(current.getInterfaces()));
       if (current.getSuperclass() != null) {
         toExpand.add(current.getSuperclass());
       }

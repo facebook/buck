@@ -176,9 +176,7 @@ class CxxPlatformXcodeConfigGenerator {
     if (value != null) {
       cPlusPlusFlags.add(value);
     }
-    for (String item : notProcessesCxxFlags) {
-      cPlusPlusFlags.add(item);
-    }
+    cPlusPlusFlags.addAll(notProcessesCxxFlags);
     value = Joiner.on(" ").join(cPlusPlusFlags);
     notProcessesCxxFlags.removeAll(cPlusPlusFlags);
     return value;
