@@ -60,6 +60,8 @@ public class CalculateSourceAbi extends AbstractBuildRule
   private final SourcePathRuleFinder ruleFinder;
   private final DefaultJavaAbiInfo javaAbiInfo;
 
+  private final SourcePath sourcePathToOutput;
+
   public CalculateSourceAbi(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
@@ -70,8 +72,11 @@ public class CalculateSourceAbi extends AbstractBuildRule
     this.buildDeps = buildDeps;
     this.jarBuildStepsFactory = jarBuildStepsFactory;
     this.ruleFinder = ruleFinder;
+    this.buildOutputInitializer = new BuildOutputInitializer<>(getBuildTarget(), this);
+    this.sourcePathToOutput =
+        Preconditions.checkNotNull(
+            jarBuildStepsFactory.getSourcePathToOutput(getBuildTarget(), getProjectFilesystem()));
     this.javaAbiInfo = new DefaultJavaAbiInfo(getBuildTarget(), getSourcePathToOutput());
-    buildOutputInitializer = new BuildOutputInitializer<>(getBuildTarget(), this);
   }
 
   @Override
@@ -88,7 +93,7 @@ public class CalculateSourceAbi extends AbstractBuildRule
 
   @Override
   public SourcePath getSourcePathToOutput() {
-    return Preconditions.checkNotNull(jarBuildStepsFactory.getSourcePathToOutput(getBuildTarget()));
+    return Preconditions.checkNotNull(sourcePathToOutput);
   }
 
   @Override

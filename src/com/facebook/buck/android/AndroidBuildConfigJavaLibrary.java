@@ -69,7 +69,6 @@ class AndroidBuildConfigJavaLibrary extends DefaultJavaLibrary implements Androi
                 Iterables.concat(
                     params.getBuildDeps(), ruleFinder.filterBuildRuleInputs(abiClasspath.get())))),
         new JarBuildStepsFactory(
-            projectFilesystem,
             buildTarget,
             new JavacToJarStepFactory(javac, javacOptions, ExtraClasspathProvider.EMPTY),
             /* srcs */ ImmutableSortedSet.of(androidBuildConfig.getSourcePathToOutput()),

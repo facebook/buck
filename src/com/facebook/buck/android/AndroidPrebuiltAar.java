@@ -70,7 +70,6 @@ public class AndroidPrebuiltAar extends AndroidLibrary
                     androidLibraryParams.getBuildDeps(),
                     ruleFinder.filterBuildRuleInputs(abiClasspath.get())))),
         new JarBuildStepsFactory(
-            projectFilesystem,
             androidLibraryBuildTarget,
             configuredCompiler,
             /* srcs */ ImmutableSortedSet.of(),

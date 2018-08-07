@@ -623,7 +623,6 @@ public abstract class DefaultJavaLibraryRules {
   JarBuildStepsFactory getJarBuildStepsFactory() {
     DefaultJavaLibraryClasspaths classpaths = getClasspaths();
     return new JarBuildStepsFactory(
-        getProjectFilesystem(),
         getLibraryTarget(),
         getConfiguredCompiler(),
         getSrcs(),
@@ -645,7 +644,6 @@ public abstract class DefaultJavaLibraryRules {
   JarBuildStepsFactory getJarBuildStepsFactoryForSourceOnlyAbi() {
     DefaultJavaLibraryClasspaths classpaths = getClasspathsForSourceOnlyAbi();
     return new JarBuildStepsFactory(
-        getProjectFilesystem(),
         getLibraryTarget(),
         getConfiguredCompilerForSourceOnlyAbi(),
         getSrcs(),

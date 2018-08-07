@@ -45,8 +45,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -56,8 +54,6 @@ public class JarBuildStepsFactory
     implements AddsToRuleKey, RulePipelineStateFactory<JavacPipelineState> {
   private static final Path METADATA_DIR = Paths.get("META-INF");
 
-  // TODO(cjhopman): Remove this field.
-  private final ProjectFilesystem projectFilesystemForOutputJarPaths;
   private final BuildTarget libraryTarget;
 
   @AddToRuleKey private final ConfiguredCompiler configuredCompiler;
@@ -81,10 +77,7 @@ public class JarBuildStepsFactory
   @AddToRuleKey private final AbiGenerationMode abiCompatibilityMode;
   @Nullable private final Supplier<SourceOnlyAbiRuleInfoFactory> ruleInfoFactorySupplier;
 
-  private final Map<BuildTarget, SourcePath> sourcePathsToOutput = new HashMap<>();
-
   public JarBuildStepsFactory(
-      ProjectFilesystem projectFilesystem,
       BuildTarget libraryTarget,
       ConfiguredCompiler configuredCompiler,
       ImmutableSortedSet<SourcePath> srcs,
@@ -100,7 +93,6 @@ public class JarBuildStepsFactory
       AbiGenerationMode abiGenerationMode,
       AbiGenerationMode abiCompatibilityMode,
       @Nullable Supplier<SourceOnlyAbiRuleInfoFactory> ruleInfoFactorySupplier) {
-    this.projectFilesystemForOutputJarPaths = projectFilesystem;
     this.libraryTarget = libraryTarget;
     this.configuredCompiler = configuredCompiler;
     this.srcs = srcs;
@@ -131,13 +123,10 @@ public class JarBuildStepsFactory
   }
 
   @Nullable
-  public SourcePath getSourcePathToOutput(BuildTarget buildTarget) {
-    return sourcePathsToOutput.computeIfAbsent(
-        buildTarget,
-        x ->
-            getOutputJarPath(buildTarget)
-                .map(path -> ExplicitBuildTargetSourcePath.of(buildTarget, path))
-                .orElse(null));
+  public SourcePath getSourcePathToOutput(BuildTarget buildTarget, ProjectFilesystem filesystem) {
+    return getOutputJarPath(buildTarget, filesystem)
+        .map(path -> ExplicitBuildTargetSourcePath.of(buildTarget, path))
+        .orElse(null);
   }
 
   @VisibleForTesting
@@ -203,8 +192,8 @@ public class JarBuildStepsFactory
         compilerParameters,
         resourcesParameters,
         ImmutableList.of(),
-        getAbiJarParameters(buildTarget, context, compilerParameters).orElse(null),
-        getLibraryJarParameters(context, compilerParameters).orElse(null),
+        getAbiJarParameters(buildTarget, context, filesystem, compilerParameters).orElse(null),
+        getLibraryJarParameters(context, filesystem, compilerParameters).orElse(null),
         steps,
         buildableContext);
 
@@ -252,7 +241,7 @@ public class JarBuildStepsFactory
         resourcesParameters,
         postprocessClassesCommands,
         null,
-        getLibraryJarParameters(context, compilerParameters).orElse(null),
+        getLibraryJarParameters(context, filesystem, compilerParameters).orElse(null),
         steps,
         buildableContext);
 
@@ -261,7 +250,7 @@ public class JarBuildStepsFactory
             context.getBuildCellRootPath(), filesystem),
         filesystem,
         steps,
-        Optional.ofNullable(getSourcePathToOutput(buildTarget))
+        Optional.ofNullable(getSourcePathToOutput(buildTarget, filesystem))
             .map(context.getSourcePathResolver()::getRelativePath),
         pathToClassHashes);
 
@@ -291,7 +280,7 @@ public class JarBuildStepsFactory
             context.getBuildCellRootPath(), filesystem),
         filesystem,
         steps,
-        Optional.ofNullable(getSourcePathToOutput(libraryTarget))
+        Optional.ofNullable(getSourcePathToOutput(libraryTarget, filesystem))
             .map(context.getSourcePathResolver()::getRelativePath),
         pathToClassHashes);
 
@@ -319,23 +308,29 @@ public class JarBuildStepsFactory
   }
 
   protected Optional<JarParameters> getLibraryJarParameters(
-      BuildContext context, CompilerParameters compilerParameters) {
-    return getJarParameters(context, libraryTarget, compilerParameters);
+      BuildContext context, ProjectFilesystem filesystem, CompilerParameters compilerParameters) {
+    return getJarParameters(context, filesystem, libraryTarget, compilerParameters);
   }
 
   protected Optional<JarParameters> getAbiJarParameters(
-      BuildTarget target, BuildContext context, CompilerParameters compilerParameters) {
+      BuildTarget target,
+      BuildContext context,
+      ProjectFilesystem filesystem,
+      CompilerParameters compilerParameters) {
     if (JavaAbis.isLibraryTarget(target)) {
       return Optional.empty();
     }
     Preconditions.checkState(
         JavaAbis.isSourceAbiTarget(target) || JavaAbis.isSourceOnlyAbiTarget(target));
-    return getJarParameters(context, target, compilerParameters);
+    return getJarParameters(context, filesystem, target, compilerParameters);
   }
 
   private Optional<JarParameters> getJarParameters(
-      BuildContext context, BuildTarget buildTarget, CompilerParameters compilerParameters) {
-    return getOutputJarPath(buildTarget)
+      BuildContext context,
+      ProjectFilesystem filesystem,
+      BuildTarget buildTarget,
+      CompilerParameters compilerParameters) {
+    return getOutputJarPath(buildTarget, filesystem)
         .map(
             output ->
                 JarParameters.builder()
@@ -361,17 +356,15 @@ public class JarBuildStepsFactory
         getDepOutputPathToAbiSourcePath(context.getSourcePathResolver(), ruleFinder));
   }
 
-  private Optional<Path> getOutputJarPath(BuildTarget buildTarget) {
+  private Optional<Path> getOutputJarPath(BuildTarget buildTarget, ProjectFilesystem filesystem) {
     if (!producesJar()) {
       return Optional.empty();
     }
 
     if (JavaAbis.isSourceAbiTarget(buildTarget) || JavaAbis.isSourceOnlyAbiTarget(buildTarget)) {
-      return Optional.of(
-          CompilerParameters.getAbiJarPath(buildTarget, projectFilesystemForOutputJarPaths));
+      return Optional.of(CompilerParameters.getAbiJarPath(buildTarget, filesystem));
     } else if (JavaAbis.isLibraryTarget(buildTarget)) {
-      return Optional.of(
-          DefaultJavaLibrary.getOutputJarPath(buildTarget, projectFilesystemForOutputJarPaths));
+      return Optional.of(DefaultJavaLibrary.getOutputJarPath(buildTarget, filesystem));
     } else {
       throw new IllegalArgumentException();
     }
@@ -404,7 +397,7 @@ public class JarBuildStepsFactory
     return javacToJarStepFactory.createPipelineState(
         firstRule,
         compilerParameters,
-        getAbiJarParameters(firstRule, context, compilerParameters).orElse(null),
-        getLibraryJarParameters(context, compilerParameters).orElse(null));
+        getAbiJarParameters(firstRule, context, filesystem, compilerParameters).orElse(null),
+        getLibraryJarParameters(context, filesystem, compilerParameters).orElse(null));
   }
 }

@@ -131,6 +131,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
 
   @Nullable private CalculateSourceAbi sourceAbi;
   private SourcePathRuleFinder ruleFinder;
+  private final Optional<SourcePath> sourcePathForOutputJar;
 
   public static DefaultJavaLibraryRules.Builder rulesBuilder(
       BuildTarget buildTarget,
@@ -183,6 +184,9 @@ public class DefaultJavaLibrary extends AbstractBuildRule
     this.unusedDependenciesAction = unusedDependenciesAction;
     this.unusedDependenciesFinderFactory = unusedDependenciesFinderFactory;
     this.ruleFinder = ruleFinder;
+    this.sourcePathForOutputJar =
+        Optional.ofNullable(
+            jarBuildStepsFactory.getSourcePathToOutput(getBuildTarget(), getProjectFilesystem()));
 
     // Exported deps are meant to be forwarded onto the CLASSPATH for dependents,
     // and so only make sense for java library types.
@@ -257,7 +261,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
   }
 
   private Optional<SourcePath> sourcePathForOutputJar() {
-    return Optional.ofNullable(jarBuildStepsFactory.getSourcePathToOutput(getBuildTarget()));
+    return sourcePathForOutputJar;
   }
 
   public static Path getOutputJarPath(BuildTarget target, ProjectFilesystem filesystem) {
@@ -425,7 +429,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
   @Override
   @Nullable
   public SourcePath getSourcePathToOutput() {
-    return jarBuildStepsFactory.getSourcePathToOutput(getBuildTarget());
+    return sourcePathForOutputJar.orElse(null);
   }
 
   @Override
