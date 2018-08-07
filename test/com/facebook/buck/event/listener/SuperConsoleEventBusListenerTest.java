@@ -43,6 +43,7 @@ import com.facebook.buck.core.test.event.TestRunEvent;
 import com.facebook.buck.core.test.event.TestSummaryEvent;
 import com.facebook.buck.distributed.DistBuildStatus;
 import com.facebook.buck.distributed.DistBuildStatusEvent;
+import com.facebook.buck.distributed.DistributedExitCode;
 import com.facebook.buck.distributed.StampedeLocalBuildStatusEvent;
 import com.facebook.buck.distributed.build_client.DistBuildRemoteProgressEvent;
 import com.facebook.buck.distributed.build_client.DistBuildSuperConsoleEvent;
@@ -1243,7 +1244,7 @@ public class SuperConsoleEventBusListenerTest {
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
             BuildEvent.distBuildFinished(
-                distBuildStartedEvent, com.facebook.buck.distributed.ExitCode.SUCCESSFUL.getCode()),
+                distBuildStartedEvent, DistributedExitCode.SUCCESSFUL.getCode()),
             timeMillis,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));

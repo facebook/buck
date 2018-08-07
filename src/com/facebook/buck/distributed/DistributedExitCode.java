@@ -15,8 +15,11 @@
  */
 package com.facebook.buck.distributed;
 
+import com.facebook.buck.util.ExitCode;
+import com.google.common.collect.ImmutableSet;
+
 /** Distributed build exit codes used by Stampede. */
-public enum ExitCode {
+public enum DistributedExitCode {
   /** Build finished successfully */
   SUCCESSFUL(0),
 
@@ -24,50 +27,70 @@ public enum ExitCode {
   FAILURE(1),
 
   /** Real exit code hasn't been generated yet */
-  DISTRIBUTED_PENDING_EXIT_CODE(10),
-
-  /** Real exit code hasn't been generated yet */
-  LOCAL_PENDING_EXIT_CODE(11),
-
-  /** Exception was thrown before local build finished */
-  LOCAL_BUILD_EXCEPTION_CODE(12),
+  DISTRIBUTED_PENDING_EXIT_CODE(2010),
 
   /** Local build finished before the remote build */
-  LOCAL_BUILD_FINISHED_FIRST(20),
+  LOCAL_BUILD_FINISHED_FIRST(2020),
 
   /** Forced coordinator shutdown */
-  UNEXPECTED_STOP_EXIT_CODE(42),
+  UNEXPECTED_STOP_EXIT_CODE(2042),
 
   /** GetWorkRequest failed internally */
-  GET_WORK_FAILED_EXIT_CODE(43),
+  GET_WORK_FAILED_EXIT_CODE(2043),
 
   /** ReportMinionAliveRequest failed internally */
-  I_AM_ALIVE_FAILED_EXIT_CODE(45),
+  I_AM_ALIVE_FAILED_EXIT_CODE(2045),
 
   /** All minions in build are dead * */
-  ALL_MINIONS_DEAD_EXIT_CODE(46),
+  ALL_MINIONS_DEAD_EXIT_CODE(2046),
 
   /** Coordinator detected that build had been externally set to terminal failed state */
-  BUILD_FAILED_EXTERNALLY_EXIT_CODE(47),
+  BUILD_FAILED_EXTERNALLY_EXIT_CODE(2047),
 
   /** Preparation step threw an Exception during sync steps */
-  PREPARATION_STEP_FAILED(200),
+  PREPARATION_STEP_FAILED(2060),
 
   /** Preparation step threw an Exception during async steps */
-  PREPARATION_ASYNC_STEP_FAILED(201),
+  PREPARATION_ASYNC_STEP_FAILED(2061),
 
   /** Distributed build failed because of a local Exception (e.g. failed to speak to frontend) */
-  DISTRIBUTED_BUILD_STEP_LOCAL_EXCEPTION(205),
+  DISTRIBUTED_BUILD_STEP_LOCAL_EXCEPTION(2062),
 
   /** Distributed build failed because of a remote issue (e.g. minion died) */
-  DISTRIBUTED_BUILD_STEP_REMOTE_FAILURE(206),
+  DISTRIBUTED_BUILD_STEP_REMOTE_FAILURE(2063),
 
   /** Signals that rule keys were inconsistent between Stampede client and servers */
-  RULE_KEY_CONSISTENCY_CHECK_FAILED(301);
+  RULE_KEY_CONSISTENCY_CHECK_FAILED(2064);
 
   private final int code;
 
-  ExitCode(int code) {
+  static final ImmutableSet<DistributedExitCode> INFRA_ERROR_CODES =
+      ImmutableSet.of(
+          UNEXPECTED_STOP_EXIT_CODE,
+          GET_WORK_FAILED_EXIT_CODE,
+          I_AM_ALIVE_FAILED_EXIT_CODE,
+          ALL_MINIONS_DEAD_EXIT_CODE,
+          PREPARATION_STEP_FAILED,
+          PREPARATION_ASYNC_STEP_FAILED,
+          DISTRIBUTED_BUILD_STEP_LOCAL_EXCEPTION,
+          DISTRIBUTED_BUILD_STEP_REMOTE_FAILURE);
+
+  public static boolean wasStampedeInfraFailure(DistributedExitCode exitCode) {
+    return INFRA_ERROR_CODES.contains(exitCode);
+  }
+
+  /** Given a DistributedExitCode, returns closest equivalent ExitCode. */
+  public static ExitCode convertToExitCode(DistributedExitCode distributedExitCode) {
+    if (distributedExitCode == SUCCESSFUL) {
+      return ExitCode.SUCCESS;
+    } else if (wasStampedeInfraFailure(distributedExitCode)) {
+      return ExitCode.STAMPEDE_INFRA_ERROR;
+    }
+
+    return ExitCode.BUILD_ERROR;
+  }
+
+  DistributedExitCode(int code) {
     this.code = code;
   }
 

@@ -20,7 +20,7 @@ import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.replay;
 
 import com.facebook.buck.distributed.DistBuildService;
-import com.facebook.buck.distributed.ExitCode;
+import com.facebook.buck.distributed.DistributedExitCode;
 import com.facebook.buck.distributed.build_slave.ThriftCoordinatorServer.ExitState;
 import com.facebook.buck.distributed.testutil.CustomActiongGraphBuilderFactory;
 import com.facebook.buck.distributed.thrift.BuildJob;
@@ -208,7 +208,7 @@ public class ThriftCoordinatorServerIntegrationTest {
       }
 
       Assert.assertEquals(
-          ExitCode.GET_WORK_FAILED_EXIT_CODE.getCode(),
+          DistributedExitCode.GET_WORK_FAILED_EXIT_CODE.getCode(),
           server.waitUntilBuildCompletesAndReturnExitCode());
     }
   }
@@ -244,7 +244,7 @@ public class ThriftCoordinatorServerIntegrationTest {
       }
 
       Assert.assertEquals(
-          ExitCode.GET_WORK_FAILED_EXIT_CODE.getCode(),
+          DistributedExitCode.GET_WORK_FAILED_EXIT_CODE.getCode(),
           server.waitUntilBuildCompletesAndReturnExitCode());
     }
   }
@@ -287,7 +287,8 @@ public class ThriftCoordinatorServerIntegrationTest {
       server.checkBuildStatusIsNotTerminated();
 
       Assert.assertEquals(
-          ExitCode.SUCCESSFUL.getCode(), server.waitUntilBuildCompletesAndReturnExitCode());
+          DistributedExitCode.SUCCESSFUL.getCode(),
+          server.waitUntilBuildCompletesAndReturnExitCode());
     }
   }
 
@@ -328,7 +329,7 @@ public class ThriftCoordinatorServerIntegrationTest {
       server.checkBuildStatusIsNotTerminated();
 
       Assert.assertEquals(
-          ExitCode.BUILD_FAILED_EXTERNALLY_EXIT_CODE.getCode(),
+          DistributedExitCode.BUILD_FAILED_EXTERNALLY_EXIT_CODE.getCode(),
           server.waitUntilBuildCompletesAndReturnExitCode());
     }
   }
