@@ -319,8 +319,9 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
     }
 
     boolean applyRedex = redexOptions.isPresent();
-    Path apkPath = getFinalApkPath();
     Path apkToAlign = apkToRedexAndAlign;
+    Path zipalignedApkPath = getZipalignedApkPath();
+    Path v2SignedApkPath = getFinalApkPath();
 
     if (applyRedex) {
       Path redexedApk = getRedexedApkPath();
@@ -337,9 +338,20 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
 
     steps.add(
         new ZipalignStep(
-            getProjectFilesystem().getRootPath(), androidPlatformTarget, apkToAlign, apkPath));
+            getProjectFilesystem().getRootPath(),
+            androidPlatformTarget,
+            apkToAlign,
+            zipalignedApkPath));
 
-    buildableContext.recordArtifact(apkPath);
+    steps.add(
+        new ApkSignerStep(
+            getProjectFilesystem(),
+            zipalignedApkPath,
+            v2SignedApkPath,
+            keystoreProperties,
+            applyRedex));
+
+    buildableContext.recordArtifact(v2SignedApkPath);
     return steps.build();
   }
 
@@ -650,11 +662,17 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
         getProjectFilesystem(), getBuildTarget(), "__native_libs_as_assets_%s__");
   }
 
-  /** The APK at this path will be signed, but not zipaligned. */
+  /** The APK at this path will be jar signed, but not zipaligned. */
   private Path getSignedApkPath() {
     return Paths.get(getUnsignedApkPath().replaceAll("\\.unsigned\\.apk$", ".signed.apk"));
   }
 
+  /** The APK at this path will be zipaligned and jar signed. */
+  private Path getZipalignedApkPath() {
+    return Paths.get(getUnsignedApkPath().replaceAll("\\.unsigned\\.apk$", ".zipaligned.apk"));
+  }
+
+  /** The APK at this path will be zipaligned and v2 signed. */
   Path getFinalApkPath() {
     return Paths.get(getUnsignedApkPath().replaceAll("\\.unsigned\\.apk$", ".apk"));
   }

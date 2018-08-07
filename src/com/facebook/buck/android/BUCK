@@ -489,6 +489,7 @@ java_immutables_library(
         "//src/com/facebook/buck/zip:zip",
         "//third-party/java/android:sdklib",
         "//third-party/java/aosp:aosp",
+        "//third-party/java/aosp:apksig",
         "//third-party/java/asm:asm",
         "//third-party/java/d8:d8",
         "//third-party/java/dx:dx",

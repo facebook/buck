@@ -134,6 +134,7 @@
     <include name="android/layoutlib-api-25.3.0.jar" />
     <include name="android/sdk-common-25.3.0.jar" />
     <include name="aopalliance/aopalliance.jar" />
+    <include name="aosp/apksig.jar" />
     <include name="asm/asm*-6.0.jar" />
     <include name="bazel/skylark-lang_deploy.jar" />
     <include name="bundletool/bundle.jar" />

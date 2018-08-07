@@ -27,6 +27,7 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
+import com.android.apksig.ApkVerifier;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
@@ -46,6 +47,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.hash.Hashing;
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -657,5 +659,20 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
     assertThat(withAapt, containsString("#generated"));
     assertThat(withoutAapt, containsString("-printmapping"));
     assertThat(withoutAapt, CoreMatchers.not(containsString("#generated")));
+  }
+
+  @Test
+  public void testSimpleApkSignature() throws IOException {
+    Path apkPath = workspace.buildAndReturnOutput(SIMPLE_TARGET);
+    File apkFile = filesystem.getPathForRelativePath(apkPath).toFile();
+    ApkVerifier.Builder apkVerifierBuilder = new ApkVerifier.Builder(apkFile);
+    ApkVerifier.Result result;
+    try {
+      result = apkVerifierBuilder.build().verify();
+    } catch (Exception e) {
+      throw new IOException("Failed to determine APK's minimum supported platform version", e);
+    }
+    assertTrue(result.isVerifiedUsingV1Scheme());
+    assertTrue(result.isVerifiedUsingV2Scheme());
   }
 }
