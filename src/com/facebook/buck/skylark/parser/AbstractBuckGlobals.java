@@ -18,7 +18,6 @@ package com.facebook.buck.skylark.parser;
 
 import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import com.facebook.buck.skylark.function.HostInfo;
 import com.facebook.buck.skylark.function.SkylarkNativeModule;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -99,7 +98,6 @@ abstract class AbstractBuckGlobals {
     for (BuiltinFunction ruleFunction : getBuckRuleFunctions()) {
       builder.put(ruleFunction.getName(), ruleFunction);
     }
-    builder.put("host_info", HostInfo.create());
     for (String nativeFunction : FuncallExpression.getMethodNames(SkylarkNativeModule.class)) {
       builder.put(
           nativeFunction,
