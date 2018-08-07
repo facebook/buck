@@ -28,9 +28,6 @@ import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -48,6 +45,7 @@ import java.util.Optional;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinTask;
@@ -462,31 +460,30 @@ public class VersionedTargetGraphBuilder {
       TargetNodeTranslator targetTranslator =
           new TargetNodeTranslator(typeCoercerFactory, translators) {
 
-            private final LoadingCache<BuildTarget, Optional<BuildTarget>> cache =
-                CacheBuilder.newBuilder()
-                    .build(
-                        CacheLoader.from(
-                            target -> {
-
-                              // If we're handling the root node, there's nothing to translate.
-                              if (root.getBuildTarget().equals(target)) {
-                                return Optional.empty();
-                              }
-
-                              // If this target isn't in the target graph, which can be the case
-                              // of build targets in the `tests` parameter, don't do any
-                              // translation.
-                              Optional<TargetNode<?>> node = getNodeOptional(target);
-                              if (!node.isPresent()) {
-                                return Optional.empty();
-                              }
-
-                              return getTranslateBuildTarget(getNode(target), selectedVersions);
-                            }));
+            private final ConcurrentMap<BuildTarget, Optional<BuildTarget>> cache =
+                new ConcurrentHashMap<>();
 
             @Override
             public Optional<BuildTarget> translateBuildTarget(BuildTarget target) {
-              return cache.getUnchecked(target);
+              return cache.computeIfAbsent(
+                  target,
+                  t -> {
+
+                    // If we're handling the root node, there's nothing to translate.
+                    if (root.getBuildTarget().equals(target)) {
+                      return Optional.empty();
+                    }
+
+                    // If this target isn't in the target graph, which can be the case
+                    // of build targets in the `tests` parameter, don't do any
+                    // translation.
+                    Optional<TargetNode<?>> node = getNodeOptional(target);
+                    if (!node.isPresent()) {
+                      return Optional.empty();
+                    }
+
+                    return getTranslateBuildTarget(getNode(target), selectedVersions);
+                  });
             }
 
             @Override
