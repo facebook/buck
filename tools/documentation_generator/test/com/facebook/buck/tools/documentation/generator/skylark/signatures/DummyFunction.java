@@ -17,15 +17,14 @@
 package com.facebook.buck.tools.documentation.generator.skylark.signatures;
 
 import com.google.devtools.build.lib.skylarkinterface.Param;
-import com.google.devtools.build.lib.skylarkinterface.SkylarkSignature;
-import com.google.devtools.build.lib.syntax.BuiltinFunction;
+import com.google.devtools.build.lib.skylarkinterface.SkylarkCallable;
 import com.google.devtools.build.lib.syntax.SkylarkList;
+import java.util.Collections;
 
 public class DummyFunction {
 
-  @SkylarkSignature(
+  @SkylarkCallable(
       name = "dummy",
-      returnType = SkylarkList.class,
       doc = "Returns a dummy list of strings.",
       parameters = {
         @Param(name = "seed", type = String.class, doc = "the first element of the returned list."),
@@ -33,5 +32,7 @@ public class DummyFunction {
       documented = false,
       useAst = true,
       useEnvironment = true)
-  private static final BuiltinFunction dummy = new BuiltinFunction("dummy");
+  public SkylarkList<String> dummy(String seed) {
+    return SkylarkList.createImmutable(Collections.singleton(seed));
+  }
 }

@@ -22,7 +22,7 @@ import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.reflect.ClassPath.ClassInfo;
-import com.google.devtools.build.lib.skylarkinterface.SkylarkSignature;
+import com.google.devtools.build.lib.skylarkinterface.SkylarkCallable;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import org.junit.Test;
@@ -42,8 +42,8 @@ public class SignatureCollectorTest {
     assumeTrue(Platform.detect() != Platform.WINDOWS);
 
     assertThat(
-        SignatureCollector.getSkylarkSignatures(CLASS_INFO_PREDICATE)
-            .map(SkylarkSignature::name)
+        SignatureCollector.getSkylarkCallables(CLASS_INFO_PREDICATE)
+            .map(SkylarkCallable::name)
             .collect(Collectors.toList()),
         contains("dummy"));
   }

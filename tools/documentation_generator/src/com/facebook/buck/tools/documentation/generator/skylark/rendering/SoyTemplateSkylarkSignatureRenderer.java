@@ -24,7 +24,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Streams;
 import com.google.common.io.Resources;
 import com.google.devtools.build.lib.skylarkinterface.Param;
-import com.google.devtools.build.lib.skylarkinterface.SkylarkSignature;
+import com.google.devtools.build.lib.skylarkinterface.SkylarkCallable;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
@@ -58,7 +58,7 @@ public class SoyTemplateSkylarkSignatureRenderer {
    * Renders provided Skylark signature into a soy template content similar to manually written
    * templates for all Python DSL functions.
    */
-  public String render(SkylarkSignature skylarkSignature) {
+  public String render(SkylarkCallable skylarkSignature) {
     ST stringTemplate = createTemplate(FUNCTION_TEMPLATE_NAME);
     // open and close brace characters are not allowed inside of StringTemplate loops and using
     // named parameters seems nicer than their unicode identifiers
@@ -69,7 +69,7 @@ public class SoyTemplateSkylarkSignatureRenderer {
   }
 
   /** Renders a table of contents for the Skylark functions subsection on buckbuild.com website. */
-  public String renderTableOfContents(Iterable<SkylarkSignature> signatures) {
+  public String renderTableOfContents(Iterable<SkylarkCallable> signatures) {
     ST stringTemplate = createTemplate(TABLE_OF_CONTENTS_TEMPLATE_NAME);
     stringTemplate.add("openCurly", "{");
     stringTemplate.add("closeCurly", "}");
@@ -91,7 +91,7 @@ public class SoyTemplateSkylarkSignatureRenderer {
     return Resources.toString(template, StandardCharsets.UTF_8);
   }
 
-  private static ImmutableMap<String, Object> toMap(SkylarkSignature skylarkSignature) {
+  private static ImmutableMap<String, Object> toMap(SkylarkCallable skylarkSignature) {
     ImmutableList.Builder<Param> parameters =
         ImmutableList.<Param>builder().addAll(Arrays.asList(skylarkSignature.parameters()));
     if (!skylarkSignature.extraKeywords().name().isEmpty()) {

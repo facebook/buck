@@ -19,7 +19,7 @@ package com.facebook.buck.tools.documentation.generator;
 import com.facebook.buck.tools.documentation.generator.skylark.SignatureCollector;
 import com.facebook.buck.tools.documentation.generator.skylark.rendering.SoyTemplateSkylarkSignatureRenderer;
 import com.google.common.collect.ImmutableList;
-import com.google.devtools.build.lib.skylarkinterface.SkylarkSignature;
+import com.google.devtools.build.lib.skylarkinterface.SkylarkCallable;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -29,7 +29,7 @@ import org.kohsuke.args4j.CmdLineParser;
  * Entry point of the documentation generator binary.
  *
  * <p>Executing this class produces a function Soy template for each field in a classpath annotated
- * by {@link SkylarkSignature} and a table of contents that lists all of them.
+ * by {@link SkylarkCallable} and a table of contents that lists all of them.
  *
  * <p>To use, make sure that the target with all Skylark functions is included as a dependency of
  * //tools/documentation_generator/src/com/facebook/buck/tools/documentation/generator:main and run:
@@ -52,8 +52,8 @@ public class Main {
 
     SoyTemplateSkylarkSignatureRenderer renderer = new SoyTemplateSkylarkSignatureRenderer();
 
-    ImmutableList<SkylarkSignature> skylarkSignatures =
-        SignatureCollector.getSkylarkSignatures(
+    ImmutableList<SkylarkCallable> skylarkSignatures =
+        SignatureCollector.getSkylarkCallables(
                 classInfo -> classInfo.getPackageName().contains(parsedArgs.skylarkPackage))
             .collect(ImmutableList.toImmutableList());
 
@@ -61,7 +61,7 @@ public class Main {
     Path tableOfContentsPath = destinationPath.resolve("__table_of_contents.soy");
     String tableOfContents = renderer.renderTableOfContents(skylarkSignatures);
     Files.write(tableOfContentsPath, tableOfContents.getBytes(StandardCharsets.UTF_8));
-    for (SkylarkSignature signature : skylarkSignatures) {
+    for (SkylarkCallable signature : skylarkSignatures) {
       Path functionPath = destinationPath.resolve(signature.name() + ".soy");
       String functionContent = renderer.render(signature);
       Files.write(functionPath, functionContent.getBytes(StandardCharsets.UTF_8));

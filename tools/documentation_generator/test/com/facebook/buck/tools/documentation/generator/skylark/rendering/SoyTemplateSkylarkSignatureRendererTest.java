@@ -22,21 +22,20 @@ import static org.junit.Assume.assumeTrue;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.io.Resources;
 import com.google.devtools.build.lib.skylarkinterface.Param;
-import com.google.devtools.build.lib.skylarkinterface.SkylarkSignature;
-import com.google.devtools.build.lib.syntax.BuiltinFunction;
+import com.google.devtools.build.lib.skylarkinterface.SkylarkCallable;
 import com.google.devtools.build.lib.syntax.SkylarkList;
 import java.io.IOException;
-import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
+import java.util.Map;
 import org.junit.Before;
 import org.junit.Test;
 
 public class SoyTemplateSkylarkSignatureRendererTest {
 
-  @SkylarkSignature(
+  @SkylarkCallable(
       name = "dummy",
-      returnType = SkylarkList.class,
       doc = "Returns a dummy list of strings.",
       parameters = {
         @Param(name = "seed", type = String.class, doc = "the first element of the returned list."),
@@ -44,27 +43,30 @@ public class SoyTemplateSkylarkSignatureRendererTest {
       documented = false,
       useAst = true,
       useEnvironment = true)
-  private static final BuiltinFunction dummy = new BuiltinFunction("dummy");
+  public SkylarkList<String> dummy(String seed) {
+    return SkylarkList.createImmutable(Collections.singleton(seed));
+  }
 
-  @SkylarkSignature(
+  @SkylarkCallable(
       name = "dummy",
-      returnType = SkylarkList.class,
       doc = "Returns a dummy list of strings.",
-      parameters = {},
       documented = false,
       useAst = true,
       useEnvironment = true)
-  private static final BuiltinFunction dummyWithoutArgs = new BuiltinFunction("dummy");
+  public SkylarkList<String> dummyWithoutArgs() {
+    return SkylarkList.createImmutable(Collections.emptyList());
+  }
 
-  @SkylarkSignature(
+  @SkylarkCallable(
       name = "dummy",
-      returnType = SkylarkList.class,
       doc = "Returns a dummy list of strings.",
       extraKeywords = @Param(name = "kwargs", doc = "the dummy attributes."),
       documented = false,
       useAst = true,
       useEnvironment = true)
-  private static final BuiltinFunction dummyWithKwargs = new BuiltinFunction("dummy");
+  public SkylarkList<String> dummyWithKwargs(Map<String, Object> kwargs) {
+    return SkylarkList.createImmutable(kwargs.keySet());
+  }
 
   @Before
   public void setUp() {
@@ -75,38 +77,38 @@ public class SoyTemplateSkylarkSignatureRendererTest {
   @Test
   public void rendersAnExpectedFunctionSoyTemplate() throws Exception {
     SoyTemplateSkylarkSignatureRenderer renderer = new SoyTemplateSkylarkSignatureRenderer();
-    Field dummyField = getClass().getDeclaredField("dummy");
+    Method dummyField = getClass().getMethod("dummy", String.class);
     String expectedContent = getExpectedContent("data/expected_dummy_function.soy");
-    String actualContent = renderer.render(dummyField.getAnnotation(SkylarkSignature.class));
+    String actualContent = renderer.render(dummyField.getAnnotation(SkylarkCallable.class));
     assertEquals(expectedContent, actualContent);
   }
 
   @Test
   public void rendersAnExpectedFunctionSoyTemplateWithKwargs() throws Exception {
     SoyTemplateSkylarkSignatureRenderer renderer = new SoyTemplateSkylarkSignatureRenderer();
-    Field dummyField = getClass().getDeclaredField("dummyWithKwargs");
+    Method dummyField = getClass().getMethod("dummyWithKwargs", Map.class);
     String expectedContent = getExpectedContent("data/expected_dummy_function_with_kwargs.soy");
-    String actualContent = renderer.render(dummyField.getAnnotation(SkylarkSignature.class));
+    String actualContent = renderer.render(dummyField.getAnnotation(SkylarkCallable.class));
     assertEquals(expectedContent, actualContent);
   }
 
   @Test
   public void rendersAnExpectedFunctionSoyTemplateWithoutArgs() throws Exception {
     SoyTemplateSkylarkSignatureRenderer renderer = new SoyTemplateSkylarkSignatureRenderer();
-    Field dummyField = getClass().getDeclaredField("dummyWithoutArgs");
+    Method dummyField = getClass().getMethod("dummyWithoutArgs");
     String expectedContent = getExpectedContent("data/expected_dummy_function_without_args.soy");
-    String actualContent = renderer.render(dummyField.getAnnotation(SkylarkSignature.class));
+    String actualContent = renderer.render(dummyField.getAnnotation(SkylarkCallable.class));
     assertEquals(expectedContent, actualContent);
   }
 
   @Test
   public void rendersExpectedTableOfContents() throws Exception {
     SoyTemplateSkylarkSignatureRenderer renderer = new SoyTemplateSkylarkSignatureRenderer();
-    Field dummyField = getClass().getDeclaredField("dummy");
+    Method dummyField = getClass().getMethod("dummy", String.class);
     String expectedContent = getExpectedContent("data/expected_dummy_toc.soy");
     String actualContent =
         renderer.renderTableOfContents(
-            Collections.singleton(dummyField.getAnnotation(SkylarkSignature.class)));
+            Collections.singleton(dummyField.getAnnotation(SkylarkCallable.class)));
     assertEquals(expectedContent, actualContent);
   }
 
