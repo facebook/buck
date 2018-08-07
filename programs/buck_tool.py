@@ -17,7 +17,7 @@ import traceback
 import uuid
 from subprocess import CalledProcessError, check_output
 
-from pynailgun import NailgunConnection, NailgunException
+from ng import NailgunConnection, NailgunException
 from subprocutils import which
 from timing import monotonic_time_nanos
 from tracing import Tracing

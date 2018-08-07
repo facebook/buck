@@ -1892,8 +1892,7 @@ public final class Main {
 
           if (context.isPresent()) {
             // Shut down the Nailgun server and make sure it stops trapping System.exit().
-            // We pass false for exitVM because otherwise Nailgun exits with code 0.
-            context.get().getNGServer().shutdown(/* exitVM */ false);
+            context.get().getNGServer().shutdown();
           }
 
           NON_REENTRANT_SYSTEM_EXIT.shutdownSoon(exitCode.getCode());
@@ -2081,7 +2080,7 @@ public final class Main {
     }
 
     private void killServer() {
-      server.shutdown(true);
+      server.shutdown();
     }
   }
 

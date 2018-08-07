@@ -1,6 +1,6 @@
 python_library(
     name = "ng",
-    srcs = glob(["pynailgun/*.py"]),
+    srcs = glob(["*.py"]),
     base_module = "",
     licenses = [
         "LICENSE",
