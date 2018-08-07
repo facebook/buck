@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.graph;
+package com.facebook.buck.core.util.graph;
 
 /** Minimal interface needed by {@link AbstractBottomUpTraversal} to traverse a graph. */
 public interface TraversableGraph<T> {

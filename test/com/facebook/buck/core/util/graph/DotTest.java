@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.graph;
+package com.facebook.buck.core.util.graph;
 
 import static org.junit.Assert.assertEquals;
 

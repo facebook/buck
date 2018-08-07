@@ -17,7 +17,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
+import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaTest;
 import com.google.common.collect.ImmutableSet;

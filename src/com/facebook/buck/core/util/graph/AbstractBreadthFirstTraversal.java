@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.graph;
+package com.facebook.buck.core.util.graph;
 
 /** Performs a breadth-first traversal of dependencies of a graph node. */
 public abstract class AbstractBreadthFirstTraversal<Node>

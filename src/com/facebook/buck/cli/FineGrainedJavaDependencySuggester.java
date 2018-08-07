@@ -21,7 +21,7 @@ import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.graph.MutableDirectedGraph;
+import com.facebook.buck.core.util.graph.MutableDirectedGraph;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaFileParser;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;

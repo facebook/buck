@@ -16,10 +16,10 @@
 
 package com.facebook.buck.features.project.intellij.aggregation;
 
+import com.facebook.buck.core.util.graph.AcyclicDepthFirstPostOrderTraversal;
+import com.facebook.buck.core.util.graph.GraphTraversable;
 import com.facebook.buck.features.project.intellij.model.IjModuleType;
 import com.facebook.buck.features.project.intellij.model.IjProjectConfig;
-import com.facebook.buck.graph.AcyclicDepthFirstPostOrderTraversal;
-import com.facebook.buck.graph.GraphTraversable;
 import com.facebook.buck.log.Logger;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;

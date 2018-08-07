@@ -14,13 +14,13 @@
  * under the License.
  */
 
-package com.facebook.buck.graph;
+package com.facebook.buck.core.util.graph;
 
 import static com.facebook.buck.util.string.MoreStrings.linesToText;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.graph.AcyclicDepthFirstPostOrderTraversal.CycleException;
+import com.facebook.buck.core.util.graph.AcyclicDepthFirstPostOrderTraversal.CycleException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.Multimap;

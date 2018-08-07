@@ -16,6 +16,7 @@
 
 package com.facebook.buck.features.project.intellij;
 
+import com.facebook.buck.core.util.graph.MutableDirectedGraph;
 import com.facebook.buck.features.project.intellij.lang.java.JavaPackagePathCache;
 import com.facebook.buck.features.project.intellij.model.folders.ExcludeFolder;
 import com.facebook.buck.features.project.intellij.model.folders.IjFolder;
@@ -25,7 +26,6 @@ import com.facebook.buck.features.project.intellij.model.folders.JavaTestResourc
 import com.facebook.buck.features.project.intellij.model.folders.SelfMergingOnlyFolder;
 import com.facebook.buck.features.project.intellij.model.folders.SourceFolder;
 import com.facebook.buck.features.project.intellij.model.folders.TestFolder;
-import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.google.common.base.Preconditions;

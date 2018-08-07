@@ -2,7 +2,7 @@ java_library(
     name = "graph",
     srcs = glob(["*.java"]),
     tests = [
-        "//test/com/facebook/buck/graph:graph",
+        "//test/com/facebook/buck/core/util/graph:graph",
     ],
     visibility = ["PUBLIC"],
     deps = [

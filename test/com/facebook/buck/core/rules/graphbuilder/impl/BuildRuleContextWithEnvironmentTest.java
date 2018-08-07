@@ -37,7 +37,7 @@ import com.facebook.buck.core.rules.provider.DefaultBuildRuleInfoProvider;
 import com.facebook.buck.core.rules.provider.FakeBuildRuleInfoProvider;
 import com.facebook.buck.core.rules.provider.FakeBuildRuleWithProviders;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
-import com.facebook.buck.graph.MutableDirectedGraph;
+import com.facebook.buck.core.util.graph.MutableDirectedGraph;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.testutil.FakeProjectFilesystem;

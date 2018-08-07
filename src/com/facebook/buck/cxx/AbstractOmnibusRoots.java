@@ -18,12 +18,12 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
+import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTarget;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
-import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
