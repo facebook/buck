@@ -762,7 +762,18 @@ public class ProjectGenerator {
             Optional.of(copyFilesBuildPhases),
             bundleLoaderNode);
 
-    LOG.debug("Generated iOS bundle target %s", target);
+    if (bundleLoaderNode.isPresent()) {
+      LOG.debug(
+          "Generated iOS bundle target %s with binarynode: %s bundleLoadernode: %s",
+          targetNode.getBuildTarget().getFullyQualifiedName(),
+          binaryNode.getBuildTarget().getFullyQualifiedName(),
+          bundleLoaderNode.get().getBuildTarget().getFullyQualifiedName());
+    } else {
+      LOG.debug(
+          "Generated iOS bundle target %s with binarynode: %s and without bundleloader",
+          targetNode.getBuildTarget().getFullyQualifiedName(),
+          binaryNode.getBuildTarget().getFullyQualifiedName());
+    }
     return target;
   }
 
@@ -858,7 +869,8 @@ public class ProjectGenerator {
             ImmutableSet.of(),
             Optional.empty(),
             Optional.empty());
-    LOG.debug("Generated Apple binary target %s", target);
+    LOG.debug(
+        "Generated Apple binary target %s", targetNode.getBuildTarget().getFullyQualifiedName());
     return target;
   }
 
@@ -874,7 +886,8 @@ public class ProjectGenerator {
             AppleResources.collectDirectResources(targetGraph, targetNode),
             AppleBuildRules.collectDirectAssetCatalogs(targetGraph, targetNode),
             bundleLoaderNode);
-    LOG.debug("Generated iOS library target %s", target);
+    LOG.debug(
+        "Generated iOS library target %s", targetNode.getBuildTarget().getFullyQualifiedName());
     return target;
   }
 
@@ -904,7 +917,8 @@ public class ProjectGenerator {
             ImmutableSet.of(),
             Optional.empty(),
             bundleLoaderNode);
-    LOG.debug("Generated Cxx library target %s", target);
+    LOG.debug(
+        "Generated Cxx library target %s", targetNode.getBuildTarget().getFullyQualifiedName());
     return target;
   }
 
@@ -1635,11 +1649,21 @@ public class ProjectGenerator {
     if (options.shouldForceLoadLinkWholeLibraries() || options.shouldAddLinkedLibrariesAsFlags()) {
       Iterable<String> forceLoadLibraryFlags =
           collectRecursiveLibraryLinkerFlagsWithForceLoad(
-              targetNode, depTargetNodes, bundleLoaderNode);
+              targetNode, depTargetNodes, bundleLoaderNode, false);
 
       appendConfigsBuilder.put(
-          "BUCK_LINKER_FLAGS_LIBRARY_FORCE_LOAD",
+          "BUCK_LINKER_FLAGS_LIBRARY_FORCE_LOAD_OTHER",
           Streams.stream(forceLoadLibraryFlags)
+              .map(Escaper.BASH_ESCAPER)
+              .collect(Collectors.joining(" ")));
+
+      Iterable<String> forceLoadLibraryFlagsLocal =
+          collectRecursiveLibraryLinkerFlagsWithForceLoad(
+              targetNode, depTargetNodes, bundleLoaderNode, true);
+
+      appendConfigsBuilder.put(
+          "BUCK_LINKER_FLAGS_LIBRARY_FORCE_LOAD_LOCAL",
+          Streams.stream(forceLoadLibraryFlagsLocal)
               .map(Escaper.BASH_ESCAPER)
               .collect(Collectors.joining(" ")));
     }
@@ -1681,7 +1705,8 @@ public class ProjectGenerator {
                   Stream.of(
                       "$BUCK_LINKER_FLAGS_FRAMEWORK_LOCAL",
                       "$BUCK_LINKER_FLAGS_FRAMEWORK_OTHER",
-                      "$BUCK_LINKER_FLAGS_LIBRARY_FORCE_LOAD",
+                      "$BUCK_LINKER_FLAGS_LIBRARY_FORCE_LOAD_LOCAL",
+                      "$BUCK_LINKER_FLAGS_LIBRARY_FORCE_LOAD_OTHER",
                       "$BUCK_LINKER_FLAGS_LIBRARY_LOCAL",
                       "$BUCK_LINKER_FLAGS_LIBRARY_OTHER"))
               .collect(Collectors.joining(" ")));
@@ -1689,7 +1714,11 @@ public class ProjectGenerator {
         && !options.shouldAddLinkedLibrariesAsFlags()) {
       appendConfigsBuilder.put(
           "OTHER_LDFLAGS",
-          Streams.concat(otherLdFlagsStream, Stream.of("$BUCK_LINKER_FLAGS_LIBRARY_FORCE_LOAD"))
+          Streams.concat(
+                  otherLdFlagsStream,
+                  Stream.of(
+                      "$BUCK_LINKER_FLAGS_LIBRARY_FORCE_LOAD_LOCAL",
+                      "$BUCK_LINKER_FLAGS_LIBRARY_FORCE_LOAD_OTHER"))
               .collect(Collectors.joining(" ")));
     } else if (options.shouldAddLinkedLibrariesAsFlags()) {
       appendConfigsBuilder.put(
@@ -3306,21 +3335,42 @@ public class ProjectGenerator {
             ? targetNodesIterableToPBXFileReference(
                 filterRecursiveLibraryDepsForCurrentProject(targetNodes))
             : targetNodesIterableToPBXFileReference(targetNodes);
-    ImmutableSet<PBXFileReference> forceLoad =
+    ImmutableSet<PBXFileReference> forceLoadOther =
         options.shouldAddLinkedLibrariesAsFlags()
             ? ImmutableSet.of()
             : targetNodesIterableToPBXFileReference(
-                filterRecursiveLibraryDepsWithForceLoad(targetNodes));
+                filterRecursiveLibraryDepsWithForceLoadOther(targetNodes));
+
+    ImmutableSet<PBXFileReference> forceLoadLocal =
+        options.shouldAddLinkedLibrariesAsFlags()
+            ? ImmutableSet.of()
+            : targetNodesIterableToPBXFileReference(
+                filterRecursiveLibraryDepsWithForceLoadForCurrentProject(targetNodes));
+
     ImmutableSet<PBXFileReference> frameworks =
         filterRecursiveProjectFrameworkDependencies(targetNodes);
 
     ImmutableSet.Builder<PBXFileReference> builder = ImmutableSet.builder();
-    return builder.addAll(libraries).addAll(forceLoad).addAll(frameworks).build();
+    return builder
+        .addAll(libraries)
+        .addAll(frameworks)
+        .addAll(forceLoadOther)
+        .addAll(forceLoadLocal)
+        .build();
   }
 
-  private FluentIterable<TargetNode<?>> filterRecursiveLibraryDepsWithForceLoad(
+  private FluentIterable<TargetNode<?>> filterRecursiveLibraryDepsWithForceLoadOther(
       FluentIterable<TargetNode<?>> targetNodes) {
-    return targetNodes.filter(this::isLibraryWithForceLoad);
+    return targetNodes
+        .filter(this::isLibraryWithForceLoad)
+        .filter(dep -> !isLibraryBuiltByCurrentProject(dep));
+  }
+
+  private FluentIterable<TargetNode<?>> filterRecursiveLibraryDepsWithForceLoadForCurrentProject(
+      FluentIterable<TargetNode<?>> targetNodes) {
+    return targetNodes
+        .filter(this::isLibraryWithForceLoad)
+        .filter(dep -> isLibraryBuiltByCurrentProject(dep));
   }
 
   private FluentIterable<TargetNode<?>> filterRecursiveLibraryDepsWithoutForceLoad(
@@ -3382,9 +3432,13 @@ public class ProjectGenerator {
   private ImmutableList<String> collectRecursiveLibraryLinkerFlagsWithForceLoad(
       TargetNode<?> targetNode,
       FluentIterable<TargetNode<?>> targetNodes,
-      Optional<TargetNode<AppleBundleDescriptionArg>> bundleLoaderNode) {
+      Optional<TargetNode<AppleBundleDescriptionArg>> bundleLoaderNode,
+      boolean includeLocal) {
 
-    FluentIterable<TargetNode<?>> allDeps = filterRecursiveLibraryDepsWithForceLoad(targetNodes);
+    FluentIterable<TargetNode<?>> allDeps =
+        includeLocal
+            ? filterRecursiveLibraryDepsWithForceLoadForCurrentProject(targetNodes)
+            : filterRecursiveLibraryDepsWithForceLoadOther(targetNodes);
 
     // Don't duplicate force_load params from the test host app if this is an app test.
     if (isTargetNodeApplicationTestTarget(targetNode, bundleLoaderNode)
@@ -3392,7 +3446,9 @@ public class ProjectGenerator {
       FluentIterable<TargetNode<?>> bundleLoaderDeps =
           collectRecursiveLibraryDepTargets(bundleLoaderNode.get());
       FluentIterable<TargetNode<?>> forceLoadDeps =
-          filterRecursiveLibraryDepsWithForceLoad(bundleLoaderDeps);
+          includeLocal
+              ? filterRecursiveLibraryDepsWithForceLoadForCurrentProject(bundleLoaderDeps)
+              : filterRecursiveLibraryDepsWithForceLoadOther(bundleLoaderDeps);
       Set<TargetNode<?>> directDeps = Sets.difference(allDeps.toSet(), forceLoadDeps.toSet());
       allDeps = FluentIterable.from(ImmutableSet.copyOf(directDeps));
     }
