@@ -272,7 +272,7 @@ class Jsr199JavacInvocation implements Javac.Invocation {
                   new DefaultClassUsageFileWriter()
                       .writeFile(
                           classUsageTracker,
-                          CompilerParameters.getDepFilePath(
+                          CompilerOutputPaths.getDepFilePath(
                               abiTarget, context.getProjectFilesystem()),
                           context.getProjectFilesystem(),
                           context.getCellPathResolver());
@@ -440,7 +440,7 @@ class Jsr199JavacInvocation implements Javac.Invocation {
                         new DefaultClassUsageFileWriter()
                             .writeFile(
                                 classUsageTracker,
-                                CompilerParameters.getDepFilePath(
+                                CompilerOutputPaths.getDepFilePath(
                                     libraryTarget, context.getProjectFilesystem()),
                                 context.getProjectFilesystem(),
                                 context.getCellPathResolver());

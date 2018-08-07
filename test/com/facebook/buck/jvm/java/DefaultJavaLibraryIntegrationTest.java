@@ -127,9 +127,7 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
     BuildTarget target = BuildTargetFactory.newInstance("//:no_srcs");
     ProcessResult buildResult = workspace.runBuckCommand("build", target.getFullyQualifiedName());
     buildResult.assertSuccess("Successful build should exit with 0.");
-    Path outputPath =
-        BuildTargetPaths.getGenPath(
-            filesystem, target, "lib__%s__output/" + target.getShortName() + ".jar");
+    Path outputPath = CompilerOutputPaths.of(target, filesystem).getOutputJarPath().get();
     Path outputFile = workspace.getPath(outputPath);
     assertTrue(Files.exists(outputFile));
     // TODO(mbolin): When we produce byte-for-byte identical JAR files across builds, do:
@@ -846,8 +844,8 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
 
     result.assertSuccess();
 
-    Path classesDir =
-        workspace.getPath(BuildTargetPaths.getScratchPath(filesystem, target, "lib__%s__classes"));
+    Path classesDir = workspace.getPath(CompilerOutputPaths.of(target, filesystem).getClassesDir());
+
     assertTrue(Files.exists(classesDir));
     assertTrue(Files.isDirectory(classesDir));
     ArrayList<String> classFiles = new ArrayList<>();
@@ -866,11 +864,9 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
 
     BuildTarget target = BuildTargetFactory.newInstance("//:a");
     ProcessResult result = workspace.runBuckBuild(target.getFullyQualifiedName());
-
     result.assertSuccess();
 
-    Path classesDir =
-        workspace.getPath(BuildTargetPaths.getScratchPath(filesystem, target, "lib__%s__classes"));
+    Path classesDir = workspace.getPath(CompilerOutputPaths.of(target, filesystem).getClassesDir());
 
     assertThat(Files.exists(classesDir), is(Boolean.TRUE));
     assertThat(
@@ -878,8 +874,7 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
         ImmutableList.copyOf(classesDir.toFile().listFiles()),
         hasSize(0));
 
-    Path jarPath =
-        workspace.getPath(BuildTargetPaths.getGenPath(filesystem, target, "lib__%s__output/a.jar"));
+    Path jarPath = workspace.getPath(CompilerOutputPaths.getOutputJarPath(target, filesystem));
     assertTrue(Files.exists(jarPath));
     ZipInputStream zip = new ZipInputStream(new FileInputStream(jarPath.toFile()));
     assertThat(zip.getNextEntry().getName(), is("META-INF/"));
@@ -897,8 +892,7 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
     ProcessResult result = workspace.runBuckBuild(target.getFullyQualifiedName());
     result.assertSuccess();
 
-    Path classesDir =
-        workspace.getPath(BuildTargetPaths.getScratchPath(filesystem, target, "lib__%s__classes"));
+    Path classesDir = workspace.getPath(CompilerOutputPaths.of(target, filesystem).getClassesDir());
 
     assertThat("Classes directory should exist.", Files.exists(classesDir), is(Boolean.TRUE));
     assertThat(
@@ -908,8 +902,7 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
             .collect(Collectors.toList()),
         hasSize(0));
 
-    Path jarPath =
-        workspace.getPath(BuildTargetPaths.getGenPath(filesystem, target, "lib__%s__output/a.jar"));
+    Path jarPath = workspace.getPath(CompilerOutputPaths.getOutputJarPath(target, filesystem));
     assertTrue(Files.exists(jarPath));
 
     // Check that normal and member classes were removed as expected.
@@ -931,12 +924,10 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
     ProcessResult result = workspace.runBuckBuild(target.getFullyQualifiedName());
     result.assertSuccess();
 
-    Path classesDir =
-        workspace.getPath(BuildTargetPaths.getScratchPath(filesystem, target, "lib__%s__classes"));
+    Path classesDir = workspace.getPath(CompilerOutputPaths.of(target, filesystem).getClassesDir());
 
     assertThat("Classes directory should exist.", Files.exists(classesDir), is(Boolean.TRUE));
-    Path jarPath =
-        workspace.getPath(BuildTargetPaths.getGenPath(filesystem, target, "lib__%s__output/a.jar"));
+    Path jarPath = workspace.getPath(CompilerOutputPaths.getOutputJarPath(target, filesystem));
     assertTrue("Jar should exist.", Files.exists(jarPath));
 
     // Check that normal and member classes were removed as expected.
@@ -959,8 +950,8 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
 
     result.assertSuccess();
 
-    Path classesDir =
-        workspace.getPath(BuildTargetPaths.getScratchPath(filesystem, target, "lib__%s__classes"));
+    Path classesDir = workspace.getPath(CompilerOutputPaths.of(target, filesystem).getClassesDir());
+
     assertThat(Files.exists(classesDir), is(Boolean.TRUE));
     assertThat(
         "There should be no class files in disk",
@@ -968,15 +959,15 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
         hasSize(0));
 
     Path sourcesDir =
-        workspace.getPath(BuildTargetPaths.getAnnotationPath(filesystem, target, "__%s_gen__"));
+        workspace.getPath(CompilerOutputPaths.of(target, filesystem).getAnnotationPath());
+
     assertThat(Files.exists(sourcesDir), is(Boolean.TRUE));
     assertThat(
         "There should be two source files in disk, from the two generated classes.",
         ImmutableList.copyOf(sourcesDir.toFile().listFiles()),
         hasSize(2));
 
-    Path jarPath =
-        workspace.getPath(BuildTargetPaths.getGenPath(filesystem, target, "lib__%s__output/a.jar"));
+    Path jarPath = workspace.getPath(CompilerOutputPaths.getOutputJarPath(target, filesystem));
     assertTrue(Files.exists(jarPath));
 
     ZipInspector zipInspector = new ZipInspector(jarPath);

@@ -121,8 +121,8 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
 
     ImmutableSortedSet<Path> declaredClasspathEntries = parameters.getClasspathEntries();
     ImmutableSortedSet<Path> sourceFilePaths = parameters.getSourceFilePaths();
-    Path outputDirectory = parameters.getOutputDirectory();
-    Path pathToSrcsList = parameters.getPathToSourcesList();
+    Path outputDirectory = parameters.getOutputPaths().getClassesDir();
+    Path pathToSrcsList = parameters.getOutputPaths().getPathToSourcesList();
 
     Path stubsOutput =
         BuildTargetPaths.getAnnotationPath(projectFilesystem, invokingRule, "__%s_stubs__");
@@ -187,7 +187,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
             incrementalDataOutput,
             classesOutput,
             sourcesOutput,
-            parameters.getWorkingDirectory(),
+            parameters.getOutputPaths().getWorkingDirectory(),
             buildContext.getSourcePathResolver());
       }
 
@@ -228,7 +228,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
                   .add()
                   .build(),
               projectFilesystem,
-              Optional.of(parameters.getWorkingDirectory())));
+              Optional.of(parameters.getOutputPaths().getWorkingDirectory())));
     }
 
     ImmutableSortedSet.Builder<Path> sourceBuilder =

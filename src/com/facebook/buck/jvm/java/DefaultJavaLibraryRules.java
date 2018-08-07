@@ -396,7 +396,7 @@ public abstract class DefaultJavaLibraryRules {
                       projectFilesystem,
                       buildRuleResolver,
                       getCellPathResolver(),
-                      CompilerParameters.getDepFilePath(buildTarget, projectFilesystem),
+                      CompilerOutputPaths.getDepFilePath(buildTarget, projectFilesystem),
                       Preconditions.checkNotNull(getDeps()),
                       sourcePathResolver,
                       unusedDependenciesAction));

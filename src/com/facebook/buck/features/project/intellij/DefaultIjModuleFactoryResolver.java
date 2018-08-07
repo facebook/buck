@@ -31,8 +31,7 @@ import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.features.project.intellij.model.IjModuleFactoryResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.AnnotationProcessingParams;
-import com.facebook.buck.jvm.java.CompilerParameters;
-import com.facebook.buck.jvm.java.DefaultJavaLibrary;
+import com.facebook.buck.jvm.java.CompilerOutputPaths;
 import com.facebook.buck.jvm.java.JvmLibraryArg;
 import com.facebook.buck.util.Optionals;
 import com.google.common.collect.ImmutableSet;
@@ -128,13 +127,13 @@ class DefaultIjModuleFactoryResolver implements IjModuleFactoryResolver {
       return Optional.empty();
     }
 
-    return CompilerParameters.getAnnotationPath(projectFilesystem, targetNode.getBuildTarget());
+    return CompilerOutputPaths.getAnnotationPath(projectFilesystem, targetNode.getBuildTarget());
   }
 
   @Override
   public Optional<Path> getCompilerOutputPath(TargetNode<? extends JvmLibraryArg> targetNode) {
     BuildTarget buildTarget = targetNode.getBuildTarget();
-    Path compilerOutputPath = DefaultJavaLibrary.getOutputJarPath(buildTarget, projectFilesystem);
+    Path compilerOutputPath = CompilerOutputPaths.getOutputJarPath(buildTarget, projectFilesystem);
     return Optional.of(compilerOutputPath);
   }
 

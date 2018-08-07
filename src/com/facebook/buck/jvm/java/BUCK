@@ -124,6 +124,7 @@ java_immutables_library(
     name = "support",
     srcs = [
         "AbstractAnnotationProcessingParams.java",
+        "AbstractCompilerOutputPaths.java",
         "AbstractCompilerParameters.java",
         "AbstractJarParameters.java",
         "AbstractJavaOptions.java",

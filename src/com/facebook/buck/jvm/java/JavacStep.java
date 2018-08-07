@@ -154,7 +154,7 @@ public class JavacStep implements Step {
             .getDescription(
                 getOptions(context, getClasspathEntries()),
                 pipeline.getCompilerParameters().getSourceFilePaths(),
-                pipeline.getCompilerParameters().getPathToSourcesList());
+                pipeline.getCompilerParameters().getOutputPaths().getPathToSourcesList());
 
     if (JavaAbis.isLibraryTarget(invokingRule) && pipeline.getLibraryJarParameters().isPresent()) {
       JarParameters jarParameters = pipeline.getLibraryJarParameters().get();

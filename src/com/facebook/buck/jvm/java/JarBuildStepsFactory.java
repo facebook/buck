@@ -164,9 +164,11 @@ public class JarBuildStepsFactory
   }
 
   public boolean useRulePipelining() {
-    return configuredCompiler instanceof JavacToJarStepFactory
-        && abiGenerationMode.isSourceAbi()
-        && abiGenerationMode.usesDependencies();
+    boolean usePipelining =
+        configuredCompiler instanceof JavacToJarStepFactory
+            && abiGenerationMode.isSourceAbi()
+            && abiGenerationMode.usesDependencies();
+    return usePipelining;
   }
 
   public ImmutableList<Step> getBuildStepsForAbiJar(
@@ -334,7 +336,8 @@ public class JarBuildStepsFactory
         .map(
             output ->
                 JarParameters.builder()
-                    .setEntriesToJar(ImmutableSortedSet.of(compilerParameters.getOutputDirectory()))
+                    .setEntriesToJar(
+                        ImmutableSortedSet.of(compilerParameters.getOutputPaths().getClassesDir()))
                     .setManifestFile(
                         manifestFile.map(context.getSourcePathResolver()::getAbsolutePath))
                     .setJarPath(output)
@@ -362,16 +365,16 @@ public class JarBuildStepsFactory
     }
 
     if (JavaAbis.isSourceAbiTarget(buildTarget) || JavaAbis.isSourceOnlyAbiTarget(buildTarget)) {
-      return Optional.of(CompilerParameters.getAbiJarPath(buildTarget, filesystem));
+      return Optional.of(CompilerOutputPaths.getAbiJarPath(buildTarget, filesystem));
     } else if (JavaAbis.isLibraryTarget(buildTarget)) {
-      return Optional.of(DefaultJavaLibrary.getOutputJarPath(buildTarget, filesystem));
+      return Optional.of(AbstractCompilerOutputPaths.getOutputJarPath(buildTarget, filesystem));
     } else {
       throw new IllegalArgumentException();
     }
   }
 
   private Path getDepFileRelativePath(ProjectFilesystem filesystem, BuildTarget buildTarget) {
-    return CompilerParameters.getOutputJarDirPath(buildTarget, filesystem)
+    return CompilerOutputPaths.getOutputJarDirPath(buildTarget, filesystem)
         .resolve("used-classes.json");
   }
 

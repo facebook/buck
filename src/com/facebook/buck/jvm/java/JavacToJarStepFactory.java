@@ -90,7 +90,7 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
     if (generatingCode) {
       // Javac requires that the root directory for generated sources already exist.
       addAnnotationGenFolderStep(
-          CompilerParameters.getAnnotationPath(projectFilesystem, invokingRule).get(),
+          CompilerOutputPaths.getAnnotationPath(projectFilesystem, invokingRule).get(),
           projectFilesystem,
           steps,
           buildableContext,
@@ -190,7 +190,7 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
         libraryJarParameters == null
             || libraryJarParameters
                 .getEntriesToJar()
-                .contains(compilerParameters.getOutputDirectory()));
+                .contains(compilerParameters.getOutputPaths().getClassesDir()));
 
     String spoolMode = javacOptions.getSpoolMode().name();
     // In order to use direct spooling to the Jar:
@@ -217,7 +217,7 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
       if (generatingCode) {
         // Javac requires that the root directory for generated sources already exists.
         addAnnotationGenFolderStep(
-            CompilerParameters.getAnnotationPath(projectFilesystem, invokingRule).get(),
+            CompilerOutputPaths.getAnnotationPath(projectFilesystem, invokingRule).get(),
             projectFilesystem,
             steps,
             buildableContext,
@@ -261,7 +261,7 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
     if (generatingCode) {
       // Javac requires that the root directory for generated sources already exist.
       addAnnotationGenFolderStep(
-          CompilerParameters.getAnnotationPath(projectFilesystem, invokingRule).get(),
+          CompilerOutputPaths.getAnnotationPath(projectFilesystem, invokingRule).get(),
           projectFilesystem,
           steps,
           buildableContext,
@@ -272,10 +272,10 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
         steps.add(
             SymlinkFileStep.of(
                 projectFilesystem,
-                CompilerParameters.getAnnotationPath(
+                CompilerOutputPaths.getAnnotationPath(
                         projectFilesystem, JavaAbis.getSourceAbiJar(invokingRule))
                     .get(),
-                CompilerParameters.getAnnotationPath(projectFilesystem, invokingRule).get()));
+                CompilerOutputPaths.getAnnotationPath(projectFilesystem, invokingRule).get()));
       }
     }
 

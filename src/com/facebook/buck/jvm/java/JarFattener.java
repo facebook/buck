@@ -41,6 +41,7 @@ import com.facebook.buck.step.fs.SymlinkFileStep;
 import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.util.zip.ZipCompressionLevel;
 import com.facebook.buck.zip.ZipStep;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -107,7 +108,7 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
     Path outputDir = getOutputDirectory();
-    Path fatJarDir = outputDir.resolve("fat-jar-directory");
+    Path fatJarDir = CompilerOutputPaths.getClassesDir(getBuildTarget(), getProjectFilesystem());
     steps.addAll(
         MakeCleanDirectoryStep.of(
             BuildCellRelativePath.fromCellRelativePath(
@@ -182,15 +183,16 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
             .setClasspathEntries(ImmutableSortedSet.of())
             .setSourceFilePaths(javaSourceFilePaths.build())
             .setScratchPaths(getBuildTarget(), getProjectFilesystem())
-            .setOutputDirectory(fatJarDir)
             .build();
+
+    Preconditions.checkState(compilerParameters.getOutputPaths().getClassesDir().equals(fatJarDir));
 
     steps.add(
         MkdirStep.of(
             BuildCellRelativePath.fromCellRelativePath(
                 context.getBuildCellRootPath(),
                 getProjectFilesystem(),
-                compilerParameters.getPathToSourcesList().getParent())));
+                compilerParameters.getOutputPaths().getPathToSourcesList().getParent())));
 
     JavacToJarStepFactory compileStepFactory =
         new JavacToJarStepFactory(javac, javacOptions, ExtraClasspathProvider.EMPTY);

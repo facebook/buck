@@ -131,8 +131,8 @@ public class JavacPipelineState implements RulePipelineState {
                       context, compilerParameters.getClasspathEntries(), filesystem, resolver),
                   pluginFields,
                   compilerParameters.getSourceFilePaths(),
-                  compilerParameters.getPathToSourcesList(),
-                  compilerParameters.getWorkingDirectory(),
+                  compilerParameters.getOutputPaths().getPathToSourcesList(),
+                  compilerParameters.getOutputPaths().getWorkingDirectory(),
                   compilerParameters.shouldTrackClassUsage(),
                   compilerParameters.shouldTrackJavacPhaseEvents(),
                   abiJarParameters,
@@ -194,8 +194,8 @@ public class JavacPipelineState implements RulePipelineState {
         javacOptions,
         filesystem,
         resolver,
-        compilerParameters.getOutputDirectory(),
-        CompilerParameters.getAnnotationPath(filesystem, invokingRule).get(),
+        compilerParameters.getOutputPaths().getClassesDir(),
+        compilerParameters.getOutputPaths().getAnnotationPath(),
         context,
         buildClasspathEntries);
   }

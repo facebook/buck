@@ -61,7 +61,6 @@ import com.google.common.collect.Sets;
 import com.google.common.hash.HashCode;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.Set;
 import java.util.SortedSet;
@@ -264,14 +263,6 @@ public class DefaultJavaLibrary extends AbstractBuildRule
     return sourcePathForOutputJar;
   }
 
-  public static Path getOutputJarPath(BuildTarget target, ProjectFilesystem filesystem) {
-    return Paths.get(
-        String.format(
-            "%s/%s.jar",
-            CompilerParameters.getOutputJarDirPath(target, filesystem),
-            target.getShortNameAndFlavorPostfix()));
-  }
-
   @Override
   public ImmutableSortedSet<SourcePath> getJavaSrcs() {
     return jarBuildStepsFactory.getSources();
@@ -334,7 +325,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
 
   @Override
   public Optional<Path> getGeneratedSourcePath() {
-    return CompilerParameters.getAnnotationPath(getProjectFilesystem(), getBuildTarget());
+    return CompilerOutputPaths.getAnnotationPath(getProjectFilesystem(), getBuildTarget());
   }
 
   @Override
