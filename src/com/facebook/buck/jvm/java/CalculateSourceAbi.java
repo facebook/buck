@@ -28,6 +28,7 @@ import com.facebook.buck.core.rules.attr.InitializableFromDisk;
 import com.facebook.buck.core.rules.attr.SupportsDependencyFileRuleKey;
 import com.facebook.buck.core.rules.attr.SupportsInputBasedRuleKey;
 import com.facebook.buck.core.rules.common.BuildDeps;
+import com.facebook.buck.core.rules.common.RecordArtifactVerifier;
 import com.facebook.buck.core.rules.impl.AbstractBuildRule;
 import com.facebook.buck.core.rules.pipeline.RulePipelineStateFactory;
 import com.facebook.buck.core.rules.pipeline.SupportsPipelining;
@@ -51,7 +52,6 @@ public class CalculateSourceAbi extends AbstractBuildRule
         SupportsDependencyFileRuleKey,
         SupportsInputBasedRuleKey,
         SupportsPipelining<JavacPipelineState> {
-
   @AddToRuleKey private final JarBuildStepsFactory jarBuildStepsFactory;
 
   // This will be added to the rule key by virtue of being returned from getBuildDeps.
@@ -88,7 +88,7 @@ public class CalculateSourceAbi extends AbstractBuildRule
   public ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
     return jarBuildStepsFactory.getBuildStepsForAbiJar(
-        context, getProjectFilesystem(), buildableContext, getBuildTarget());
+        context, getProjectFilesystem(), getArtifactVerifier(buildableContext), getBuildTarget());
   }
 
   @Override
@@ -133,7 +133,19 @@ public class CalculateSourceAbi extends AbstractBuildRule
   public ImmutableList<? extends Step> getPipelinedBuildSteps(
       BuildContext context, BuildableContext buildableContext, JavacPipelineState state) {
     return jarBuildStepsFactory.getPipelinedBuildStepsForAbiJar(
-        getBuildTarget(), context, getProjectFilesystem(), buildableContext, state);
+        getBuildTarget(),
+        context,
+        getProjectFilesystem(),
+        getArtifactVerifier(buildableContext),
+        state);
+  }
+
+  private RecordArtifactVerifier getArtifactVerifier(BuildableContext buildableContext) {
+    CompilerOutputPaths outputPaths =
+        CompilerOutputPaths.of(getBuildTarget(), getProjectFilesystem());
+    return new RecordArtifactVerifier(
+        ImmutableList.of(outputPaths.getOutputJarDirPath(), outputPaths.getAnnotationPath()),
+        buildableContext);
   }
 
   @Override

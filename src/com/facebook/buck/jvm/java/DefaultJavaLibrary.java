@@ -35,6 +35,7 @@ import com.facebook.buck.core.rules.attr.InitializableFromDisk;
 import com.facebook.buck.core.rules.attr.SupportsDependencyFileRuleKey;
 import com.facebook.buck.core.rules.attr.SupportsInputBasedRuleKey;
 import com.facebook.buck.core.rules.common.BuildDeps;
+import com.facebook.buck.core.rules.common.RecordArtifactVerifier;
 import com.facebook.buck.core.rules.impl.AbstractBuildRule;
 import com.facebook.buck.core.rules.pipeline.RulePipelineStateFactory;
 import com.facebook.buck.core.rules.pipeline.SupportsPipelining;
@@ -355,13 +356,21 @@ public class DefaultJavaLibrary extends AbstractBuildRule
         jarBuildStepsFactory.getBuildStepsForLibraryJar(
             context,
             getProjectFilesystem(),
-            buildableContext,
+            getArtifactVerifier(buildableContext),
             getBuildTarget(),
             pathToClassHashes));
 
     unusedDependenciesFinderFactory.ifPresent(factory -> steps.add(factory.create()));
 
     return steps.build();
+  }
+
+  private RecordArtifactVerifier getArtifactVerifier(BuildableContext buildableContext) {
+    CompilerOutputPaths outputPaths =
+        CompilerOutputPaths.of(getBuildTarget(), getProjectFilesystem());
+    return new RecordArtifactVerifier(
+        ImmutableList.of(outputPaths.getOutputJarDirPath(), outputPaths.getAnnotationPath()),
+        buildableContext);
   }
 
   @Override
@@ -372,7 +381,11 @@ public class DefaultJavaLibrary extends AbstractBuildRule
         JavaLibraryRules.getPathToClassHashes(getBuildTarget(), getProjectFilesystem());
     buildableContext.recordArtifact(pathToClassHashes);
     return jarBuildStepsFactory.getPipelinedBuildStepsForLibraryJar(
-        context, getProjectFilesystem(), buildableContext, state, pathToClassHashes);
+        context,
+        getProjectFilesystem(),
+        getArtifactVerifier(buildableContext),
+        state,
+        pathToClassHashes);
   }
 
   @Override

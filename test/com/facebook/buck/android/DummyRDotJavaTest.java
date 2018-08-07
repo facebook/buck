@@ -101,7 +101,7 @@ public class DummyRDotJavaTest {
 
     FakeBuildableContext buildableContext = new FakeBuildableContext();
     List<Step> steps = dummyRDotJava.getBuildSteps(FakeBuildContext.NOOP_CONTEXT, buildableContext);
-    assertEquals("DummyRDotJava returns an incorrect number of Steps.", 12, steps.size());
+    assertEquals("DummyRDotJava returns an incorrect number of Steps.", 14, steps.size());
 
     Path rDotJavaSrcFolder =
         DummyRDotJava.getRDotJavaSrcFolder(dummyRDotJava.getBuildTarget(), filesystem);
@@ -109,6 +109,9 @@ public class DummyRDotJavaTest {
         CompilerOutputPaths.getClassesDir(dummyRDotJava.getBuildTarget(), filesystem);
     Path rDotJavaOutputFolder =
         DummyRDotJava.getPathToOutputDir(dummyRDotJava.getBuildTarget(), filesystem);
+    Path rDotJavaAnnotationFolder =
+        CompilerOutputPaths.getAnnotationPath(filesystem, dummyRDotJava.getBuildTarget()).get();
+
     String rDotJavaOutputJar =
         MorePaths.pathWithPlatformSeparators(
             String.format(
@@ -132,6 +135,7 @@ public class DummyRDotJavaTest {
             .addAll(makeCleanDirDescription(rDotJavaBinFolder))
             .addAll(makeCleanDirDescription(rDotJavaOutputFolder))
             .add(String.format("mkdir -p %s", genFolder))
+            .addAll(makeCleanDirDescription(rDotJavaAnnotationFolder))
             .add(
                 new JavacStep(
                         DEFAULT_JAVAC,
@@ -163,7 +167,7 @@ public class DummyRDotJavaTest {
         TestExecutionContext.newInstance());
 
     assertEquals(
-        ImmutableSet.of(rDotJavaBinFolder, Paths.get(rDotJavaOutputJar)),
+        ImmutableSet.of(rDotJavaBinFolder, Paths.get(rDotJavaOutputJar), rDotJavaAnnotationFolder),
         buildableContext.getRecordedArtifacts());
   }
 

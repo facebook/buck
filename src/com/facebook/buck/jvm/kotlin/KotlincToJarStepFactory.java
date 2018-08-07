@@ -151,16 +151,13 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
           ImmutableSortedSet.<Path>naturalOrder().add(genOutput).addAll(sourceFilePaths).build();
 
       // Javac requires that the root directory for generated sources already exist.
-      addCreateFolderStep(steps, projectFilesystem, buildableContext, buildContext, stubsOutput);
-      addCreateFolderStep(steps, projectFilesystem, buildableContext, buildContext, classesOutput);
-      addCreateFolderStep(
-          steps, projectFilesystem, buildableContext, buildContext, kaptGeneratedOutput);
-      addCreateFolderStep(
-          steps, projectFilesystem, buildableContext, buildContext, incrementalDataOutput);
-      addCreateFolderStep(steps, projectFilesystem, buildableContext, buildContext, sourcesOutput);
-      addCreateFolderStep(steps, projectFilesystem, buildableContext, buildContext, tmpFolder);
-      addCreateFolderStep(
-          steps, projectFilesystem, buildableContext, buildContext, genOutputFolder);
+      addCreateFolderStep(steps, projectFilesystem, buildContext, stubsOutput);
+      addCreateFolderStep(steps, projectFilesystem, buildContext, classesOutput);
+      addCreateFolderStep(steps, projectFilesystem, buildContext, kaptGeneratedOutput);
+      addCreateFolderStep(steps, projectFilesystem, buildContext, incrementalDataOutput);
+      addCreateFolderStep(steps, projectFilesystem, buildContext, sourcesOutput);
+      addCreateFolderStep(steps, projectFilesystem, buildContext, tmpFolder);
+      addCreateFolderStep(steps, projectFilesystem, buildContext, genOutputFolder);
 
       ImmutableSortedSet<Path> allClasspaths =
           ImmutableSortedSet.<Path>naturalOrder()
@@ -394,14 +391,12 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
   private void addCreateFolderStep(
       ImmutableList.Builder<Step> steps,
       ProjectFilesystem filesystem,
-      BuildableContext buildableContext,
       BuildContext buildContext,
       Path location) {
     steps.addAll(
         MakeCleanDirectoryStep.of(
             BuildCellRelativePath.fromCellRelativePath(
                 buildContext.getBuildCellRootPath(), filesystem, location)));
-    buildableContext.recordArtifact(location);
   }
 
   private String encodeOptions(Map<String, String> options) {

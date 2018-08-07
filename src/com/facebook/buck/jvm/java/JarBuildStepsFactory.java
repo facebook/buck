@@ -16,7 +16,6 @@
 
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.cell.resolver.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
@@ -24,6 +23,7 @@ import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.rules.common.RecordArtifactVerifier;
 import com.facebook.buck.core.rules.pipeline.RulePipelineStateFactory;
 import com.facebook.buck.core.sourcepath.ArchiveMemberSourcePath;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
@@ -174,7 +174,7 @@ public class JarBuildStepsFactory
   public ImmutableList<Step> getBuildStepsForAbiJar(
       BuildContext context,
       ProjectFilesystem filesystem,
-      BuildableContext buildableContext,
+      RecordArtifactVerifier buildableContext,
       BuildTarget buildTarget) {
     Preconditions.checkState(producesJar());
     Preconditions.checkArgument(
@@ -206,7 +206,7 @@ public class JarBuildStepsFactory
       BuildTarget buildTarget,
       BuildContext context,
       ProjectFilesystem filesystem,
-      BuildableContext buildableContext,
+      RecordArtifactVerifier buildableContext,
       JavacPipelineState state) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
     ((JavacToJarStepFactory) configuredCompiler)
@@ -225,7 +225,7 @@ public class JarBuildStepsFactory
   public ImmutableList<Step> getBuildStepsForLibraryJar(
       BuildContext context,
       ProjectFilesystem filesystem,
-      BuildableContext buildableContext,
+      RecordArtifactVerifier buildableContext,
       BuildTarget buildTarget,
       Path pathToClassHashes) {
     Preconditions.checkArgument(buildTarget.equals(libraryTarget));
@@ -262,7 +262,7 @@ public class JarBuildStepsFactory
   public ImmutableList<Step> getPipelinedBuildStepsForLibraryJar(
       BuildContext context,
       ProjectFilesystem filesystem,
-      BuildableContext buildableContext,
+      RecordArtifactVerifier buildableContext,
       JavacPipelineState state,
       Path pathToClassHashes) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();

@@ -159,9 +159,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
     List<Step> steps = javaLibrary.getBuildSteps(context, new FakeBuildableContext());
 
     // Find the JavacStep and verify its bootclasspath.
-    Step step = Iterables.find(steps, command -> command instanceof JavacStep);
-    assertNotNull("Expected a JavacStep in the steplist.", step);
-    JavacStep javac = (JavacStep) step;
+    JavacStep javac = getJavacStep(steps);
     assertEquals(
         "Should compile Main.java rather than generated R.java.",
         ImmutableSet.of(src),
@@ -1342,8 +1340,9 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
                 DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder))),
             new FakeBuildableContext());
 
-    assertEquals(13, steps.size());
-    assertTrue(((JavacStep) steps.get(9)).getJavac() instanceof Jsr199Javac);
+    assertEquals(17, steps.size());
+    JavacStep javac = getJavacStep(steps);
+    assertTrue(javac.getJavac() instanceof Jsr199Javac);
   }
 
   @Test
@@ -1374,10 +1373,10 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
             FakeBuildContext.withSourcePathResolver(
                 DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder))),
             new FakeBuildableContext());
-    assertEquals(13, steps.size());
-    Javac javacStep = ((JavacStep) steps.get(9)).getJavac();
-    assertTrue(javacStep instanceof Jsr199Javac);
-    JarBackedJavac jsrJavac = ((JarBackedJavac) javacStep);
+    assertEquals(17, steps.size());
+    JavacStep javacStep = getJavacStep(steps);
+    assertTrue(javacStep.getJavac() instanceof Jsr199Javac);
+    JarBackedJavac jsrJavac = ((JarBackedJavac) javacStep.getJavac());
     assertEquals(
         RichStream.from(jsrJavac.getCompilerClassPath())
             .map(pathResolver::getRelativePath)
@@ -1388,6 +1387,12 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
   // Utilities
   private JavaLibrary getJavaLibrary(BuildRule rule) {
     return (JavaLibrary) rule;
+  }
+
+  public JavacStep getJavacStep(Iterable<Step> steps) {
+    Step step = Iterables.find(steps, command -> command instanceof JavacStep);
+    assertNotNull("Expected a JavacStep in the steplist.", step);
+    return (JavacStep) step;
   }
 
   private JavaLibraryBuilder createJavaLibraryBuilder(BuildTarget target) {

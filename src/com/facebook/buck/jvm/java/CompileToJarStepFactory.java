@@ -107,6 +107,13 @@ public abstract class CompileToJarStepFactory implements ConfiguredCompiler {
                 projectFilesystem,
                 compilerParameters.getOutputPaths().getClassesDir())));
 
+    steps.addAll(
+        MakeCleanDirectoryStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(),
+                projectFilesystem,
+                compilerParameters.getOutputPaths().getAnnotationPath())));
+
     steps.add(
         MkdirStep.of(
             BuildCellRelativePath.fromCellRelativePath(
