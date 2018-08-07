@@ -9,7 +9,7 @@ def interpreter_override_args():
     Returns:
       a list of arguments to pass to python interpreter.
     """
-    val = read_config("user", "buck_pex_interpreter", "")
+    val = native.read_config("user", "buck_pex_interpreter", "")
     if val != "":
         return ["--python-shebang", "/usr/bin/env " + val]
     else:

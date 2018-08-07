@@ -367,7 +367,7 @@ public class SkylarkProjectBuildFileParserTest {
     Path buildFile = projectFilesystem.resolve("BUCK");
     Files.write(buildFile, Arrays.asList("load('//:ext.bzl', 'ext')"));
     Path extensionFile = projectFilesystem.resolve("ext.bzl");
-    Files.write(extensionFile, Arrays.asList("ext = read_config('foo', 'bar')"));
+    Files.write(extensionFile, Arrays.asList("ext = native.read_config('foo', 'bar')"));
     try {
       parser.getBuildFileManifest(buildFile, new AtomicLong());
       fail("Parsing should have failed.");
@@ -376,7 +376,7 @@ public class SkylarkProjectBuildFileParserTest {
       assertThat(
           printEvent.getMessage(),
           equalTo(
-              "Top-level invocations of read_config are not allowed in .bzl files. "
+              "Top-level invocations of native.read_config are not allowed in .bzl files. "
                   + "Wrap it in a macro and call it from a BUCK file."));
       assertThat(printEvent.getKind(), equalTo(EventKind.ERROR));
     }

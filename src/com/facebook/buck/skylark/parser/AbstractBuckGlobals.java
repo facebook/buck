@@ -19,7 +19,6 @@ package com.facebook.buck.skylark.parser;
 import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.skylark.function.HostInfo;
-import com.facebook.buck.skylark.function.ReadConfig;
 import com.facebook.buck.skylark.function.SkylarkNativeModule;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -101,8 +100,6 @@ abstract class AbstractBuckGlobals {
       builder.put(ruleFunction.getName(), ruleFunction);
     }
     builder.put("host_info", HostInfo.create());
-    // TODO(T30129174): move read_config to SkylarkNativeModule
-    builder.put("read_config", ReadConfig.create());
     for (String nativeFunction : FuncallExpression.getMethodNames(SkylarkNativeModule.class)) {
       builder.put(
           nativeFunction,
@@ -124,8 +121,6 @@ abstract class AbstractBuckGlobals {
               .useDefaultSemantics()
               .build();
 
-      BuiltinFunction readConfigFunction = ReadConfig.create();
-      globalEnv.setup(readConfigFunction.getName(), readConfigFunction);
       if (!disableImplicitNativeRules) {
         for (BuiltinFunction buckRuleFunction : getBuckRuleFunctions()) {
           globalEnv.setup(buckRuleFunction.getName(), buckRuleFunction);
