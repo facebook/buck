@@ -1,4 +1,4 @@
-package main
+package cgo
 
 /*
 #include <lib.h>
@@ -14,7 +14,7 @@ import (
 	"fmt"
 )
 
-func test() {
+func Test() {
 	C.simple_hello()
 
 	C.print_int(5)

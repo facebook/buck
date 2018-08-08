@@ -1,5 +1,7 @@
 package cgolib
 
+import "cgoreal"
+
 func CallCgoLib() {
-	callCgo()
+	cgoreal.CallCgo()
 }

@@ -147,17 +147,10 @@ public class GoTestDescription
       ImmutableSet<SourcePath> srcs,
       ImmutableMap<Path, ImmutableMap<String, Path>> coverVariables,
       GoTestCoverStep.Mode coverageMode,
-      Path packageName,
-      Optional<BuildTarget> cgoBuildTarget) {
+      Path packageName) {
     Tool testMainGenerator =
         GoDescriptors.getTestMainGenerator(
-            goBuckConfig,
-            platform,
-            buildTarget,
-            projectFilesystem,
-            params,
-            graphBuilder,
-            cgoBuildTarget);
+            goBuckConfig, platform, buildTarget, projectFilesystem, params, graphBuilder);
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
 
@@ -304,8 +297,7 @@ public class GoTestDescription
             srcs,
             ImmutableMap.of(packageName, coverVariables),
             coverageMode,
-            packageName,
-            args.getCgo());
+            packageName);
 
     GoBinary testMain =
         GoDescriptors.createGoBinaryRule(
@@ -321,8 +313,7 @@ public class GoTestDescription
             args.getCompilerFlags(),
             args.getAssemblerFlags(),
             args.getLinkerFlags(),
-            platform,
-            args.getCgo());
+            platform);
     graphBuilder.addToIndex(testMain);
     return testMain;
   }
@@ -423,7 +414,7 @@ public class GoTestDescription
                   .stream()
                   .map(BuildRule::getBuildTarget)
                   .collect(ImmutableList.toImmutableList()),
-              libraryArg.getCgo(),
+              ImmutableList.of(),
               Arrays.asList(FileType.GoFiles, FileType.TestGoFiles));
     } else {
       testLibrary =
@@ -444,7 +435,7 @@ public class GoTestDescription
                   .stream()
                   .map(BuildRule::getBuildTarget)
                   .collect(ImmutableList.toImmutableList()),
-              args.getCgo(),
+              ImmutableList.of(),
               Arrays.asList(FileType.GoFiles, FileType.TestGoFiles, FileType.XTestGoFiles));
     }
 
@@ -482,7 +473,7 @@ public class GoTestDescription
   @BuckStyleImmutable
   @Value.Immutable
   interface AbstractGoTestDescriptionArg
-      extends CommonDescriptionArg, HasContacts, HasDeclaredDeps, HasSrcs, HasTestTimeout, HasCgo {
+      extends CommonDescriptionArg, HasContacts, HasDeclaredDeps, HasSrcs, HasTestTimeout {
     Optional<Flavor> getPlatform();
 
     Optional<BuildTarget> getLibrary();

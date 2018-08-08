@@ -147,7 +147,7 @@ public class GoLibraryDescription
                   params.getDeclaredDeps().get().stream().map(BuildRule::getBuildTarget).iterator())
               .addAll(args.getExportedDeps())
               .build(),
-          args.getCgo(),
+          ImmutableList.of(),
           Arrays.asList(FileType.GoFiles));
     }
 
@@ -178,7 +178,7 @@ public class GoLibraryDescription
   @BuckStyleImmutable
   @Value.Immutable
   interface AbstractGoLibraryDescriptionArg
-      extends CommonDescriptionArg, HasDeclaredDeps, HasSrcs, HasTests, HasCgo {
+      extends CommonDescriptionArg, HasDeclaredDeps, HasSrcs, HasTests {
     ImmutableList<String> getCompilerFlags();
 
     ImmutableList<String> getAssemblerFlags();

@@ -1,4 +1,4 @@
-package lib
+package cgo
 
 /*
 int multiply2(int i) {

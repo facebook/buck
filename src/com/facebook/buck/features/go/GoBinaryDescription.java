@@ -83,8 +83,7 @@ public class GoBinaryDescription
         args.getCompilerFlags(),
         args.getAssemblerFlags(),
         args.getLinkerFlags(),
-        platform,
-        args.getCgo());
+        platform);
   }
 
   @Override
@@ -117,8 +116,7 @@ public class GoBinaryDescription
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractGoBinaryDescriptionArg
-      extends CommonDescriptionArg, HasDeclaredDeps, HasSrcs, HasCgo {
+  interface AbstractGoBinaryDescriptionArg extends CommonDescriptionArg, HasDeclaredDeps, HasSrcs {
     Optional<Flavor> getPlatform();
 
     ImmutableList<String> getCompilerFlags();

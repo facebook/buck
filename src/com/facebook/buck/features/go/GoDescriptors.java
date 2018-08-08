@@ -124,7 +124,7 @@ abstract class GoDescriptors {
       List<String> assemblerFlags,
       GoPlatform platform,
       Iterable<BuildTarget> deps,
-      Optional<BuildTarget> cgoBuildTarget,
+      Iterable<BuildTarget> cgoDeps,
       List<FileType> goFileTypes) {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
@@ -147,8 +147,8 @@ abstract class GoDescriptors {
     ImmutableList.Builder<SourcePath> extraAsmOutputsBuilder = ImmutableList.builder();
 
     ImmutableSet.Builder<SourcePath> generatedSrcBuilder = ImmutableSet.builder();
-    if (cgoBuildTarget.isPresent()) {
-      CGoLibrary lib = getCGoLibrary(graphBuilder, platform, cgoBuildTarget.get());
+    for (BuildTarget cgoBuildTarget : cgoDeps) {
+      CGoLibrary lib = getCGoLibrary(graphBuilder, platform, cgoBuildTarget);
       generatedSrcBuilder.addAll(lib.getGeneratedGoSource());
       extraAsmOutputsBuilder.add(lib.getOutput());
 
@@ -269,8 +269,7 @@ abstract class GoDescriptors {
       List<String> compilerFlags,
       List<String> assemblerFlags,
       List<String> linkerFlags,
-      GoPlatform platform,
-      Optional<BuildTarget> cgoBuildTarget) {
+      GoPlatform platform) {
     BuildTarget libraryTarget =
         buildTarget.withAppendedFlavors(InternalFlavor.of("compile"), platform.getFlavor());
     GoCompile library =
@@ -291,7 +290,7 @@ abstract class GoDescriptors {
                 .stream()
                 .map(BuildRule::getBuildTarget)
                 .collect(ImmutableList.toImmutableList()),
-            cgoBuildTarget,
+            ImmutableList.of(),
             Arrays.asList(FileType.GoFiles));
     graphBuilder.addToIndex(library);
 
@@ -352,8 +351,7 @@ abstract class GoDescriptors {
       BuildTarget sourceBuildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams sourceParams,
-      ActionGraphBuilder graphBuilder,
-      Optional<BuildTarget> cgoBuildTarget) {
+      ActionGraphBuilder graphBuilder) {
 
     Optional<Tool> configTool = goBuckConfig.getGoTestMainGenerator(graphBuilder);
     if (configTool.isPresent()) {
@@ -393,8 +391,7 @@ abstract class GoDescriptors {
                   ImmutableList.of(),
                   ImmutableList.of(),
                   ImmutableList.of(),
-                  platform,
-                  cgoBuildTarget);
+                  platform);
             });
 
     return ((BinaryBuildRule) generator).getExecutableCommand();

@@ -17,10 +17,12 @@
 package com.facebook.buck.features.go;
 
 import com.facebook.buck.core.cell.resolver.CellPathResolver;
+import com.facebook.buck.core.description.MetadataProvidingDescription;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.Flavored;
+import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -28,26 +30,33 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.impl.NoopBuildRuleWithDeclaredAndExtraDeps;
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.CxxBinaryDescription;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatforms;
+import com.facebook.buck.features.go.GoListStep.FileType;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.types.Either;
+import com.facebook.buck.versions.Version;
 import com.facebook.buck.versions.VersionPropagator;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.Optional;
 import org.immutables.value.Value;
 
 public class CgoLibraryDescription
     implements DescriptionWithTargetGraph<CgoLibraryDescriptionArg>,
+        MetadataProvidingDescription<CgoLibraryDescriptionArg>,
         ImplicitDepsInferringDescription<CgoLibraryDescriptionArg>,
         VersionPropagator<CgoLibraryDescriptionArg>,
         Flavored {
@@ -78,6 +87,48 @@ public class CgoLibraryDescription
   }
 
   @Override
+  public <U> Optional<U> createMetadata(
+      BuildTarget buildTarget,
+      ActionGraphBuilder graphBuilder,
+      CellPathResolver cellRoots,
+      CgoLibraryDescriptionArg args,
+      Optional<ImmutableMap<BuildTarget, Version>> selectedVersions,
+      Class<U> metadataClass) {
+    Optional<GoPlatform> platform =
+        getGoToolchain().getPlatformFlavorDomain().getValue(buildTarget);
+
+    if (metadataClass.isAssignableFrom(GoLinkable.class)) {
+      Preconditions.checkState(platform.isPresent());
+
+      SourcePath output = graphBuilder.requireRule(buildTarget).getSourcePathToOutput();
+      return Optional.of(
+          metadataClass.cast(
+              GoLinkable.builder()
+                  .setGoLinkInput(
+                      ImmutableMap.of(
+                          args.getPackageName()
+                              .map(Paths::get)
+                              .orElse(goBuckConfig.getDefaultPackageName(buildTarget)),
+                          output))
+                  .setExportedDeps(ImmutableList.of())
+                  .build()));
+    } else if (buildTarget.getFlavors().contains(GoDescriptors.TRANSITIVE_LINKABLES_FLAVOR)) {
+      Preconditions.checkState(platform.isPresent());
+
+      return Optional.of(
+          metadataClass.cast(
+              GoDescriptors.requireTransitiveGoLinkables(
+                  buildTarget,
+                  graphBuilder,
+                  platform.get(),
+                  ImmutableList.of(),
+                  /* includeSelf */ true)));
+    } else {
+      return Optional.empty();
+    }
+  }
+
+  @Override
   public BuildRule createBuildRule(
       BuildRuleCreationContextWithTargetGraph context,
       BuildTarget buildTarget,
@@ -93,21 +144,41 @@ public class CgoLibraryDescription
       SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
       SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
-      return CGoLibrary.create(
-          params,
+      BuildTarget cgoLibTarget = buildTarget.withAppendedFlavors(InternalFlavor.of("cgo"));
+      CGoLibrary lib =
+          (CGoLibrary)
+              CGoLibrary.create(
+                  params,
+                  cgoLibTarget,
+                  projectFilesystem,
+                  graphBuilder,
+                  pathResolver,
+                  context.getCellPathResolver(),
+                  cxxBuckConfig,
+                  platform.get(),
+                  args,
+                  args.getDeps(),
+                  platform.get().getCGo(),
+                  args.getPackageName()
+                      .map(Paths::get)
+                      .orElse(goBuckConfig.getDefaultPackageName(buildTarget)));
+
+      return GoDescriptors.createGoCompileRule(
           buildTarget,
           projectFilesystem,
-          graphBuilder,
-          pathResolver,
-          context.getCellPathResolver(),
-          cxxBuckConfig,
-          platform.get(),
-          args,
-          args.getDeps(),
-          platform.get().getCGo(),
+          params,
+          context.getActionGraphBuilder(),
+          goBuckConfig,
           args.getPackageName()
               .map(Paths::get)
-              .orElse(goBuckConfig.getDefaultPackageName(buildTarget)));
+              .orElse(goBuckConfig.getDefaultPackageName(buildTarget)),
+          lib.getGeneratedGoSource().stream().collect(ImmutableSet.toImmutableSet()),
+          args.getGoCompilerFlags(),
+          args.getGoAssemblerFlags(),
+          platform.get(),
+          /* native go deps */ ImmutableList.of(),
+          ImmutableList.of(cgoLibTarget),
+          Arrays.asList(FileType.GoFiles, FileType.CgoFiles));
     }
 
     return new NoopBuildRuleWithDeclaredAndExtraDeps(buildTarget, projectFilesystem, params);
@@ -135,6 +206,10 @@ public class CgoLibraryDescription
   @Value.Immutable(copy = true)
   interface AbstractCgoLibraryDescriptionArg extends CxxBinaryDescription.CommonArg {
     ImmutableList<String> getCgoCompilerFlags();
+
+    ImmutableList<String> getGoCompilerFlags();
+
+    ImmutableList<String> getGoAssemblerFlags();
 
     Optional<String> getPackageName();
 

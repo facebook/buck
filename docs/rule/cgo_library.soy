@@ -60,6 +60,22 @@ This rule borrows from cxx_binary since C/C++ sources are being compiled.
 
 {call cxx_common.raw_headers_arg /}
 
+{call buck.arg}
+  {param name : 'go_compiler_flags' /}
+  {param default : '[]' /}
+  {param desc}
+  The set of additional compiler flags to pass to <code>go tool compile</code>.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name : 'go_assembler_flags' /}
+  {param default : '[]' /}
+  {param desc}
+  The set of additional assembler flags to pass to <code>go tool asm</code>.
+  {/param}
+{/call}
+
 {/param} // close args
 
 {param examples}
@@ -75,7 +91,6 @@ go_binary(
 cgo_library(
     name = "lib",
     srcs = ["cgo_source.go"],
-    headers = ["util.h"],
     deps = [":util"],
 )
 
