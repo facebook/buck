@@ -16,10 +16,12 @@
 
 package com.facebook.buck.features.project.intellij;
 
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.google.common.base.Preconditions;
-import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.file.Path;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -52,30 +54,35 @@ public class WorkspaceUpdater {
 
   private static final Logger LOG = Logger.get(WorkspaceUpdater.class);
 
-  private final File workspaceFile;
+  private final ProjectFilesystem filesystem;
+  private final Path ideaConfigDir;
 
-  public WorkspaceUpdater(Path projectIdeaConfigPath) {
-    workspaceFile = projectIdeaConfigPath.resolve("workspace.xml").toFile();
+  public WorkspaceUpdater(ProjectFilesystem filesystem, Path ideaConfigDir) {
+    this.filesystem = filesystem;
+    this.ideaConfigDir = ideaConfigDir;
   }
 
-  public File getWorkspaceFile() {
-    return workspaceFile;
+  public Path getWorkspacePath() {
+    return ideaConfigDir.resolve("workspace.xml");
   }
 
   public void updateOrCreateWorkspace() throws IOException {
     boolean workspaceUpdated = false;
     Document workspaceDocument = null;
-    if (workspaceFile.exists()) {
+    Path workspacePath = getWorkspacePath();
+    if (filesystem.exists(workspacePath)) {
       try {
         LOG.debug("Trying to update existing workspace.");
+
+        InputStream workspaceFile = filesystem.newFileInputStream(workspacePath);
         workspaceDocument = updateExistingWorkspace(workspaceFile);
         workspaceUpdated = true;
       } catch (ParserConfigurationException | SAXException | XPathExpressionException e) {
         LOG.error("Cannot update workspace.xml file, trying re-create it", e);
       }
 
-      if (!workspaceUpdated && !workspaceFile.delete()) {
-        LOG.warn("Cannot remove file: %s", workspaceFile.getAbsolutePath());
+      if (!workspaceUpdated && !filesystem.deleteFileAtPathIfExists(workspacePath)) {
+        LOG.warn("Cannot remove file: %s", filesystem.resolve(workspacePath));
         return;
       }
     }
@@ -90,13 +97,15 @@ public class WorkspaceUpdater {
     }
 
     try {
-      writeDocument(Preconditions.checkNotNull(workspaceDocument), workspaceFile);
+      writeDocument(
+          Preconditions.checkNotNull(workspaceDocument),
+          filesystem.newFileOutputStream(workspacePath));
     } catch (TransformerException e) {
-      LOG.error(e, "Cannot create workspace in %s", workspaceFile);
+      LOG.error(e, "Cannot create workspace in %s", filesystem.resolve(workspacePath));
     }
   }
 
-  private static Document updateExistingWorkspace(File workspaceFile)
+  private static Document updateExistingWorkspace(InputStream workspaceFile)
       throws ParserConfigurationException, IOException, SAXException, XPathExpressionException {
     Document workspaceDocument = parseWorkspaceFile(workspaceFile);
 
@@ -111,8 +120,9 @@ public class WorkspaceUpdater {
     return documentBuilderFactory.newDocumentBuilder();
   }
 
-  private static Document parseWorkspaceFile(File workspaceFile)
+  private static Document parseWorkspaceFile(InputStream workspaceFile)
       throws ParserConfigurationException, IOException, SAXException {
+
     Document workspaceDocument = createDocumentBuilder().parse(workspaceFile);
     workspaceDocument.setXmlStandalone(true);
     return workspaceDocument;
@@ -249,7 +259,7 @@ public class WorkspaceUpdater {
     return optionExcludedConvertedToIgnored;
   }
 
-  private static void writeDocument(Document workspaceDocument, File destination)
+  private static void writeDocument(Document workspaceDocument, OutputStream destination)
       throws TransformerException {
     Transformer transformer = TransformerFactory.newInstance().newTransformer();
     transformer.setOutputProperty(OutputKeys.INDENT, "yes");

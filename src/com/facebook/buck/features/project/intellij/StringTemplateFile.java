@@ -59,6 +59,7 @@ enum StringTemplateFile {
       throws IOException {
 
     byte[] renderedContentsBytes = contents.render().getBytes();
+    projectFilesystem.createParentDirs(path);
     if (projectFilesystem.exists(path)) {
       Sha1HashCode fileSha1 = projectFilesystem.computeSha1(path);
       Sha1HashCode contentsSha1 =
@@ -66,22 +67,25 @@ enum StringTemplateFile {
       if (fileSha1.equals(contentsSha1)) {
         return;
       }
-    }
 
-    boolean danglingTempFile = false;
-    Path tempFile =
-        projectFilesystem.createTempFile(ideaConfigDir, path.getFileName().toString(), ".tmp");
-    try {
-      danglingTempFile = true;
-      try (OutputStream outputStream = projectFilesystem.newFileOutputStream(tempFile)) {
-        outputStream.write(renderedContentsBytes);
+      boolean danglingTempFile = false;
+      Path tempFile =
+          projectFilesystem.createTempFile(ideaConfigDir, path.getFileName().toString(), ".tmp");
+      try {
+        danglingTempFile = true;
+        try (OutputStream outputStream = projectFilesystem.newFileOutputStream(tempFile)) {
+          outputStream.write(renderedContentsBytes);
+        }
+        projectFilesystem.move(tempFile, path, StandardCopyOption.REPLACE_EXISTING);
+        danglingTempFile = false;
+      } finally {
+        if (danglingTempFile) {
+          projectFilesystem.deleteFileAtPath(tempFile);
+        }
       }
-      projectFilesystem.createParentDirs(path);
-      projectFilesystem.move(tempFile, path, StandardCopyOption.REPLACE_EXISTING);
-      danglingTempFile = false;
-    } finally {
-      if (danglingTempFile) {
-        projectFilesystem.deleteFileAtPath(tempFile);
+    } else {
+      try (OutputStream outputStream = projectFilesystem.newFileOutputStream(path)) {
+        outputStream.write(renderedContentsBytes);
       }
     }
   }

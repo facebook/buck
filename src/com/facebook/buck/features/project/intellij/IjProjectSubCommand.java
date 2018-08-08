@@ -121,6 +121,12 @@ public class IjProjectSubCommand extends ProjectSubCommand {
               + "given targets, possibly updating the top-level modules list.")
   private boolean updateOnly = false;
 
+  @Option(
+      name = "--output-dir",
+      usage = "Path to output project files, defaults to your project path.")
+  @Nullable
+  private String outputDir = null;
+
   @Override
   public String getOptionValue() {
     return "intellij";
@@ -167,6 +173,7 @@ public class IjProjectSubCommand extends ProjectSubCommand {
             projectGeneratorParameters.getEnableParserProfiling(),
             processAnnotations,
             updateOnly,
+            outputDir,
             (buildTargets, disableCaching) -> runBuild(params, buildTargets, disableCaching),
             projectGeneratorParameters.getArgsParser(),
             projectGeneratorParameters);

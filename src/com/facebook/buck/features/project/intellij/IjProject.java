@@ -45,6 +45,7 @@ public class IjProject {
   private final SourcePathRuleFinder ruleFinder;
   private final ProjectFilesystem projectFilesystem;
   private final IjProjectConfig projectConfig;
+  private final ProjectFilesystem outFilesystem;
   private final IJProjectCleaner cleaner;
 
   public IjProject(
@@ -53,7 +54,8 @@ public class IjProject {
       JavaFileParser javaFileParser,
       ActionGraphBuilder graphBuilder,
       ProjectFilesystem projectFilesystem,
-      IjProjectConfig projectConfig) {
+      IjProjectConfig projectConfig,
+      ProjectFilesystem outFilesystem) {
     this.targetGraphAndTargets = targetGraphAndTargets;
     this.javaPackageFinder = javaPackageFinder;
     this.javaFileParser = javaFileParser;
@@ -62,6 +64,7 @@ public class IjProject {
     this.sourcePathResolver = DefaultSourcePathResolver.from(this.ruleFinder);
     this.projectFilesystem = projectFilesystem;
     this.projectConfig = projectConfig;
+    this.outFilesystem = outFilesystem;
     cleaner = new IJProjectCleaner(projectFilesystem);
   }
 
@@ -138,17 +141,23 @@ public class IjProject {
             androidManifestParser);
     IntellijModulesListParser modulesParser = new IntellijModulesListParser();
     IjProjectWriter writer =
-        new IjProjectWriter(templateDataPreparer, projectConfig, projectFilesystem, modulesParser);
+        new IjProjectWriter(
+            templateDataPreparer,
+            projectConfig,
+            projectFilesystem,
+            modulesParser,
+            cleaner,
+            outFilesystem);
 
     if (updateOnly) {
-      writer.update(cleaner, targetGraphAndTargets, moduleGraph);
+      writer.update(targetGraphAndTargets, moduleGraph);
     } else {
-      writer.write(cleaner);
+      writer.write();
     }
     PregeneratedCodeWriter pregeneratedCodeWriter =
         new PregeneratedCodeWriter(
-            templateDataPreparer, projectConfig, projectFilesystem, androidManifestParser);
-    pregeneratedCodeWriter.write(cleaner);
+            templateDataPreparer, projectConfig, outFilesystem, androidManifestParser, cleaner);
+    pregeneratedCodeWriter.write();
 
     if (projectConfig.getGeneratedFilesListFilename().isPresent()) {
       cleaner.writeFilesToKeepToFile(projectConfig.getGeneratedFilesListFilename().get());
