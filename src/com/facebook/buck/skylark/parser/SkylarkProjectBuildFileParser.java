@@ -60,8 +60,10 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -284,16 +286,22 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
   private ImmutableList<ExtensionData> loadExtensions(
       Label containingLabel, ImmutableList<SkylarkImport> skylarkImports)
       throws BuildFileParseException, IOException, InterruptedException {
-    try {
-      return skylarkImports
-          .stream()
-          .distinct() // sometimes users include the same extension multiple times...
-          .map(skylarkImport -> LoadImport.of(containingLabel, skylarkImport))
-          .map(extensionDataCache::getUnchecked)
-          .collect(ImmutableList.toImmutableList());
-    } catch (UncheckedExecutionException e) {
-      return propagateRootCause(e);
+    Set<SkylarkImport> processed = new HashSet<>(skylarkImports.size());
+    ImmutableList.Builder<ExtensionData> extensions =
+        ImmutableList.builderWithExpectedSize(skylarkImports.size());
+    // foreach is not used to avoid iterator overhead
+    for (int i = 0; i < skylarkImports.size(); ++i) {
+      SkylarkImport skylarkImport = skylarkImports.get(i);
+      // sometimes users include the same extension multiple times...
+      if (!processed.add(skylarkImport)) continue;
+      LoadImport loadImport = LoadImport.of(containingLabel, skylarkImport);
+      try {
+        extensions.add(extensionDataCache.getUnchecked(loadImport));
+      } catch (UncheckedExecutionException e) {
+        propagateRootCause(e);
+      }
     }
+    return extensions.build();
   }
 
   /**
@@ -306,7 +314,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
    * happening somewhere in {@link com.facebook.buck.cli.Main#main(String[])}, since this behavior
    * is not unique to parsing.
    */
-  private ImmutableList<ExtensionData> propagateRootCause(UncheckedExecutionException e)
+  private void propagateRootCause(UncheckedExecutionException e)
       throws IOException, InterruptedException {
     Throwable rootCause = Throwables.getRootCause(e);
     if (rootCause instanceof BuildFileParseException) {
