@@ -21,6 +21,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
+import com.facebook.buck.parser.api.Syntax;
 import com.facebook.buck.util.concurrent.ResourcePool;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
@@ -49,6 +50,9 @@ class ProjectBuildFileParserPool implements AutoCloseable {
   @GuardedBy("this")
   private final Map<Cell, ResourcePool<ProjectBuildFileParser>> parserResourcePools;
 
+  @GuardedBy("this")
+  private final Map<Cell, ProjectBuildFileParser> nonPooledCells;
+
   private final ProjectBuildFileParserFactory projectBuildFileParserFactory;
   private final AtomicBoolean closing;
   private final boolean enableProfiler;
@@ -62,6 +66,7 @@ class ProjectBuildFileParserPool implements AutoCloseable {
 
     this.maxParsersPerCell = maxParsersPerCell;
     this.parserResourcePools = new HashMap<>();
+    this.nonPooledCells = new HashMap<>();
     this.projectBuildFileParserFactory = projectBuildFileParserFactory;
     this.closing = new AtomicBoolean(false);
     this.enableProfiler = enableProfiler;
@@ -82,9 +87,13 @@ class ProjectBuildFileParserPool implements AutoCloseable {
       ListeningExecutorService executorService) {
     Preconditions.checkState(!closing.get());
 
-    return getResourcePoolForCell(buckEventBus, cell)
-        .scheduleOperationWithResource(
-            parser -> parser.getBuildFileManifest(buildFile, processedBytes), executorService);
+    if (shouldUsePoolForCell(cell)) {
+      return getResourcePoolForCell(buckEventBus, cell)
+          .scheduleOperationWithResource(
+              parser -> parser.getBuildFileManifest(buildFile, processedBytes), executorService);
+    }
+    ProjectBuildFileParser parser = getParserForCell(buckEventBus, cell);
+    return executorService.submit(() -> parser.getBuildFileManifest(buildFile, processedBytes));
   }
 
   private synchronized ResourcePool<ProjectBuildFileParser> getResourcePoolForCell(
@@ -99,6 +108,12 @@ class ProjectBuildFileParserPool implements AutoCloseable {
                 // recover and subsequent attempts at invoking the parser will fail.
                 ResourcePool.ResourceUsageErrorPolicy.RETIRE,
                 () -> projectBuildFileParserFactory.createBuildFileParser(buckEventBus, c)));
+  }
+
+  private synchronized ProjectBuildFileParser getParserForCell(
+      BuckEventBus buckEventBus, Cell cell) {
+    return nonPooledCells.computeIfAbsent(
+        cell, c -> projectBuildFileParserFactory.createBuildFileParser(buckEventBus, c));
   }
 
   private void reportProfile() {
@@ -134,5 +149,20 @@ class ProjectBuildFileParserPool implements AutoCloseable {
       resourcePools = ImmutableSet.copyOf(parserResourcePools.values());
     }
     resourcePools.forEach(ResourcePool::close);
+  }
+
+  /**
+   * This is a temporary work-around for not creating many instances of the Skylark parser, since
+   * they are completely unnecessary and do not improve performance. This does not really belong
+   * here and may potentially be made finer grained (per file).
+   *
+   * <p>TODO(buckteam): remove once Python DSL parser is gone.
+   */
+  private boolean shouldUsePoolForCell(Cell cell) {
+    ParserConfig parserConfig = cell.getBuckConfig().getView(ParserConfig.class);
+    // the only interpreter that benefits from pooling is Python DSL parser, which is used only in
+    // polyglot mode or if default syntax is set to Python DSL
+    return parserConfig.isPolyglotParsingEnabled()
+        || parserConfig.getDefaultBuildFileSyntax() == Syntax.PYTHON_DSL;
   }
 }
