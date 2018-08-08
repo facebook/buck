@@ -23,6 +23,7 @@ public class BuildJob implements org.apache.thrift.TBase<BuildJob, BuildJob._Fie
   private static final org.apache.thrift.protocol.TField USERNAME_FIELD_DESC = new org.apache.thrift.protocol.TField("username", org.apache.thrift.protocol.TType.STRING, (short)12);
   private static final org.apache.thrift.protocol.TField BUILD_SLAVES_FIELD_DESC = new org.apache.thrift.protocol.TField("buildSlaves", org.apache.thrift.protocol.TType.LIST, (short)13);
   private static final org.apache.thrift.protocol.TField BUILD_LABEL_FIELD_DESC = new org.apache.thrift.protocol.TField("buildLabel", org.apache.thrift.protocol.TType.STRING, (short)14);
+  private static final org.apache.thrift.protocol.TField QUEUE_TYPE_FIELD_DESC = new org.apache.thrift.protocol.TField("queueType", org.apache.thrift.protocol.TType.I32, (short)15);
 
   private static final org.apache.thrift.scheme.SchemeFactory STANDARD_SCHEME_FACTORY = new BuildJobStandardSchemeFactory();
   private static final org.apache.thrift.scheme.SchemeFactory TUPLE_SCHEME_FACTORY = new BuildJobTupleSchemeFactory();
@@ -43,6 +44,11 @@ public class BuildJob implements org.apache.thrift.TBase<BuildJob, BuildJob._Fie
   public java.lang.String username; // optional
   public java.util.List<BuildSlaveInfo> buildSlaves; // optional
   public java.lang.String buildLabel; // optional
+  /**
+   * 
+   * @see QueueType
+   */
+  public QueueType queueType; // optional
 
   /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
   public enum _Fields implements org.apache.thrift.TFieldIdEnum {
@@ -61,7 +67,12 @@ public class BuildJob implements org.apache.thrift.TBase<BuildJob, BuildJob._Fie
     BUCK_BUILD_UUID((short)11, "buckBuildUuid"),
     USERNAME((short)12, "username"),
     BUILD_SLAVES((short)13, "buildSlaves"),
-    BUILD_LABEL((short)14, "buildLabel");
+    BUILD_LABEL((short)14, "buildLabel"),
+    /**
+     * 
+     * @see QueueType
+     */
+    QUEUE_TYPE((short)15, "queueType");
 
     private static final java.util.Map<java.lang.String, _Fields> byName = new java.util.HashMap<java.lang.String, _Fields>();
 
@@ -100,6 +111,8 @@ public class BuildJob implements org.apache.thrift.TBase<BuildJob, BuildJob._Fie
           return BUILD_SLAVES;
         case 14: // BUILD_LABEL
           return BUILD_LABEL;
+        case 15: // QUEUE_TYPE
+          return QUEUE_TYPE;
         default:
           return null;
       }
@@ -140,7 +153,7 @@ public class BuildJob implements org.apache.thrift.TBase<BuildJob, BuildJob._Fie
   }
 
   // isset id assignments
-  private static final _Fields optionals[] = {_Fields.STAMPEDE_ID,_Fields.STATUS,_Fields.BUCK_VERSION,_Fields.DOT_FILES,_Fields.BUILD_MODE_INFO,_Fields.REPOSITORY,_Fields.TENANT_ID,_Fields.STATUS_MESSAGE,_Fields.BUCK_BUILD_UUID,_Fields.USERNAME,_Fields.BUILD_SLAVES,_Fields.BUILD_LABEL};
+  private static final _Fields optionals[] = {_Fields.STAMPEDE_ID,_Fields.STATUS,_Fields.BUCK_VERSION,_Fields.DOT_FILES,_Fields.BUILD_MODE_INFO,_Fields.REPOSITORY,_Fields.TENANT_ID,_Fields.STATUS_MESSAGE,_Fields.BUCK_BUILD_UUID,_Fields.USERNAME,_Fields.BUILD_SLAVES,_Fields.BUILD_LABEL,_Fields.QUEUE_TYPE};
   public static final java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
   static {
     java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new java.util.EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
@@ -170,6 +183,8 @@ public class BuildJob implements org.apache.thrift.TBase<BuildJob, BuildJob._Fie
             new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, BuildSlaveInfo.class))));
     tmpMap.put(_Fields.BUILD_LABEL, new org.apache.thrift.meta_data.FieldMetaData("buildLabel", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
+    tmpMap.put(_Fields.QUEUE_TYPE, new org.apache.thrift.meta_data.FieldMetaData("queueType", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
+        new org.apache.thrift.meta_data.EnumMetaData(org.apache.thrift.protocol.TType.ENUM, QueueType.class)));
     metaDataMap = java.util.Collections.unmodifiableMap(tmpMap);
     org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(BuildJob.class, metaDataMap);
   }
@@ -227,6 +242,9 @@ public class BuildJob implements org.apache.thrift.TBase<BuildJob, BuildJob._Fie
     if (other.isSetBuildLabel()) {
       this.buildLabel = other.buildLabel;
     }
+    if (other.isSetQueueType()) {
+      this.queueType = other.queueType;
+    }
   }
 
   public BuildJob deepCopy() {
@@ -248,6 +266,7 @@ public class BuildJob implements org.apache.thrift.TBase<BuildJob, BuildJob._Fie
     this.username = null;
     this.buildSlaves = null;
     this.buildLabel = null;
+    this.queueType = null;
   }
 
   public StampedeId getStampedeId() {
@@ -576,6 +595,38 @@ public class BuildJob implements org.apache.thrift.TBase<BuildJob, BuildJob._Fie
     }
   }
 
+  /**
+   * 
+   * @see QueueType
+   */
+  public QueueType getQueueType() {
+    return this.queueType;
+  }
+
+  /**
+   * 
+   * @see QueueType
+   */
+  public BuildJob setQueueType(QueueType queueType) {
+    this.queueType = queueType;
+    return this;
+  }
+
+  public void unsetQueueType() {
+    this.queueType = null;
+  }
+
+  /** Returns true if field queueType is set (has been assigned a value) and false otherwise */
+  public boolean isSetQueueType() {
+    return this.queueType != null;
+  }
+
+  public void setQueueTypeIsSet(boolean value) {
+    if (!value) {
+      this.queueType = null;
+    }
+  }
+
   public void setFieldValue(_Fields field, java.lang.Object value) {
     switch (field) {
     case STAMPEDE_ID:
@@ -674,6 +725,14 @@ public class BuildJob implements org.apache.thrift.TBase<BuildJob, BuildJob._Fie
       }
       break;
 
+    case QUEUE_TYPE:
+      if (value == null) {
+        unsetQueueType();
+      } else {
+        setQueueType((QueueType)value);
+      }
+      break;
+
     }
   }
 
@@ -715,6 +774,9 @@ public class BuildJob implements org.apache.thrift.TBase<BuildJob, BuildJob._Fie
     case BUILD_LABEL:
       return getBuildLabel();
 
+    case QUEUE_TYPE:
+      return getQueueType();
+
     }
     throw new java.lang.IllegalStateException();
   }
@@ -750,6 +812,8 @@ public class BuildJob implements org.apache.thrift.TBase<BuildJob, BuildJob._Fie
       return isSetBuildSlaves();
     case BUILD_LABEL:
       return isSetBuildLabel();
+    case QUEUE_TYPE:
+      return isSetQueueType();
     }
     throw new java.lang.IllegalStateException();
   }
@@ -877,6 +941,15 @@ public class BuildJob implements org.apache.thrift.TBase<BuildJob, BuildJob._Fie
         return false;
     }
 
+    boolean this_present_queueType = true && this.isSetQueueType();
+    boolean that_present_queueType = true && that.isSetQueueType();
+    if (this_present_queueType || that_present_queueType) {
+      if (!(this_present_queueType && that_present_queueType))
+        return false;
+      if (!this.queueType.equals(that.queueType))
+        return false;
+    }
+
     return true;
   }
 
@@ -931,6 +1004,10 @@ public class BuildJob implements org.apache.thrift.TBase<BuildJob, BuildJob._Fie
     hashCode = hashCode * 8191 + ((isSetBuildLabel()) ? 131071 : 524287);
     if (isSetBuildLabel())
       hashCode = hashCode * 8191 + buildLabel.hashCode();
+
+    hashCode = hashCode * 8191 + ((isSetQueueType()) ? 131071 : 524287);
+    if (isSetQueueType())
+      hashCode = hashCode * 8191 + queueType.getValue();
 
     return hashCode;
   }
@@ -1059,6 +1136,16 @@ public class BuildJob implements org.apache.thrift.TBase<BuildJob, BuildJob._Fie
     }
     if (isSetBuildLabel()) {
       lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.buildLabel, other.buildLabel);
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+    }
+    lastComparison = java.lang.Boolean.valueOf(isSetQueueType()).compareTo(other.isSetQueueType());
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    if (isSetQueueType()) {
+      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.queueType, other.queueType);
       if (lastComparison != 0) {
         return lastComparison;
       }
@@ -1199,6 +1286,16 @@ public class BuildJob implements org.apache.thrift.TBase<BuildJob, BuildJob._Fie
         sb.append("null");
       } else {
         sb.append(this.buildLabel);
+      }
+      first = false;
+    }
+    if (isSetQueueType()) {
+      if (!first) sb.append(", ");
+      sb.append("queueType:");
+      if (this.queueType == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.queueType);
       }
       first = false;
     }
@@ -1375,6 +1472,14 @@ public class BuildJob implements org.apache.thrift.TBase<BuildJob, BuildJob._Fie
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
             break;
+          case 15: // QUEUE_TYPE
+            if (schemeField.type == org.apache.thrift.protocol.TType.I32) {
+              struct.queueType = com.facebook.buck.distributed.thrift.QueueType.findByValue(iprot.readI32());
+              struct.setQueueTypeIsSet(true);
+            } else { 
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+            }
+            break;
           default:
             org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
         }
@@ -1488,6 +1593,13 @@ public class BuildJob implements org.apache.thrift.TBase<BuildJob, BuildJob._Fie
           oprot.writeFieldEnd();
         }
       }
+      if (struct.queueType != null) {
+        if (struct.isSetQueueType()) {
+          oprot.writeFieldBegin(QUEUE_TYPE_FIELD_DESC);
+          oprot.writeI32(struct.queueType.getValue());
+          oprot.writeFieldEnd();
+        }
+      }
       oprot.writeFieldStop();
       oprot.writeStructEnd();
     }
@@ -1542,7 +1654,10 @@ public class BuildJob implements org.apache.thrift.TBase<BuildJob, BuildJob._Fie
       if (struct.isSetBuildLabel()) {
         optionals.set(11);
       }
-      oprot.writeBitSet(optionals, 12);
+      if (struct.isSetQueueType()) {
+        optionals.set(12);
+      }
+      oprot.writeBitSet(optionals, 13);
       if (struct.isSetStampedeId()) {
         struct.stampedeId.write(oprot);
       }
@@ -1591,12 +1706,15 @@ public class BuildJob implements org.apache.thrift.TBase<BuildJob, BuildJob._Fie
       if (struct.isSetBuildLabel()) {
         oprot.writeString(struct.buildLabel);
       }
+      if (struct.isSetQueueType()) {
+        oprot.writeI32(struct.queueType.getValue());
+      }
     }
 
     @Override
     public void read(org.apache.thrift.protocol.TProtocol prot, BuildJob struct) throws org.apache.thrift.TException {
       org.apache.thrift.protocol.TTupleProtocol iprot = (org.apache.thrift.protocol.TTupleProtocol) prot;
-      java.util.BitSet incoming = iprot.readBitSet(12);
+      java.util.BitSet incoming = iprot.readBitSet(13);
       if (incoming.get(0)) {
         struct.stampedeId = new StampedeId();
         struct.stampedeId.read(iprot);
@@ -1667,6 +1785,10 @@ public class BuildJob implements org.apache.thrift.TBase<BuildJob, BuildJob._Fie
       if (incoming.get(11)) {
         struct.buildLabel = iprot.readString();
         struct.setBuildLabelIsSet(true);
+      }
+      if (incoming.get(12)) {
+        struct.queueType = com.facebook.buck.distributed.thrift.QueueType.findByValue(iprot.readI32());
+        struct.setQueueTypeIsSet(true);
       }
     }
   }

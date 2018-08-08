@@ -8,7 +8,7 @@
 # will likely be changed in non-compatible ways
 #
 # Whenever you change this file please run the following command to refresh the java source code:
-# $ thrift --gen java  -out src-gen/ src/com/facebook/buck/distributed/thrift/stampede.thrift
+# $ thrift --gen java:generated_annotations=undated  -out src-gen/ src/com/facebook/buck/distributed/thrift/stampede.thrift
 
 namespace java com.facebook.buck.distributed.thrift
 
@@ -185,6 +185,11 @@ struct BuildModeInfo {
   5: optional MinionRequirements minionRequirements;
 }
 
+enum QueueType {
+  DELIVERY = 1,
+  JUPITER = 2,
+}
+
 struct BuildJob {
   1: optional StampedeId stampedeId;
   3: optional BuildStatus status = BuildStatus.UNKNOWN;
@@ -201,6 +206,7 @@ struct BuildJob {
   12: optional string username;
   13: optional list<BuildSlaveInfo> buildSlaves;
   14: optional string buildLabel;
+  15: optional QueueType queueType;
 }
 
 struct Announcement {
@@ -497,6 +503,7 @@ struct EnqueueMinionsRequest {
   3: optional i32 numberOfMinions;
   4: optional MinionType minionType;
   5: optional string buildLabel;
+  6: optional string region;
 }
 
 struct EnqueueMinionsResponse {
