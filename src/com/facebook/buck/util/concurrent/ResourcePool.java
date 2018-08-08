@@ -278,26 +278,23 @@ public class ResourcePool<R extends AutoCloseable> implements AutoCloseable {
     shutdownFuture =
         Futures.transformAsync(
             closeFuture,
-            new AsyncFunction<List<Object>, Void>() {
-              @Override
-              public ListenableFuture<Void> apply(List<Object> input) throws Exception {
-                synchronized (ResourcePool.this) {
-                  if (parkedResources.size() != createdResources.size()) {
-                    LOG.error("Whoops! Some resource are still in use during shutdown.");
-                  }
-                  // Now that pending work is done we can close all resources.
-                  for (R resource : createdResources) {
-                    resource.close();
-                  }
-                  if (!resourceRequests.isEmpty()) {
-                    LOG.error(
-                        "Error shutting down ResourcePool: "
-                            + "there should be no enqueued resource requests.");
-                  }
+            input -> {
+              synchronized (ResourcePool.this) {
+                if (parkedResources.size() != createdResources.size()) {
+                  LOG.error("Whoops! Some resource are still in use during shutdown.");
                 }
-                executorService.shutdown();
-                return Futures.immediateFuture(null);
+                // Now that pending work is done we can close all resources.
+                for (R resource : createdResources) {
+                  resource.close();
+                }
+                if (!resourceRequests.isEmpty()) {
+                  LOG.error(
+                      "Error shutting down ResourcePool: "
+                          + "there should be no enqueued resource requests.");
+                }
               }
+              executorService.shutdown();
+              return Futures.immediateFuture(null);
             },
             executorService);
   }
