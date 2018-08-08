@@ -122,11 +122,6 @@ abstract class AbstractBuckPaths {
     return getBuckOut().resolve("cells");
   }
 
-  @Value.Derived
-  public Path getProjectRootDir() {
-    return getBuckOut().resolve("project_root");
-  }
-
   public Path getSymlinkPathForDir(Path unconfiguredDirInBuckOut) {
     return getConfiguredBuckOut().resolve(getBuckOut().relativize(unconfiguredDirInBuckOut));
   }

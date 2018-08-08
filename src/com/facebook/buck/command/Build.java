@@ -205,15 +205,6 @@ public class Build implements Closeable {
     symlinksCreated = true;
   }
 
-  private void createProjectRootSymlink() throws IOException {
-    for (Cell cell : rootCell.getAllCells()) {
-      ProjectFilesystem filesystem = cell.getFilesystem();
-      BuckPaths buckPaths = filesystem.getBuckPaths();
-
-      filesystem.createSymLink(buckPaths.getProjectRootDir(), filesystem.getRootPath(), true);
-    }
-  }
-
   /**
    * * Converts given BuildTargetPaths into BuildRules
    *
@@ -306,7 +297,6 @@ public class Build implements Closeable {
       throws IOException {
     // Setup symlinks required when configuring the output path.
     createConfiguredBuckOutSymlinks();
-    createProjectRootSymlink();
 
     List<BuildEngineResult> resultFutures =
         rulesToBuild
