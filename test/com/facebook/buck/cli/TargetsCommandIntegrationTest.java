@@ -16,7 +16,6 @@
 
 package com.facebook.buck.cli;
 
-import static com.facebook.buck.util.MoreStringsForTests.normalizeNewlines;
 import static com.facebook.buck.util.string.MoreStrings.linesToText;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hamcrest.Matchers.allOf;
@@ -46,6 +45,7 @@ import com.facebook.buck.util.ThriftRuleKeyDeserializer;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
@@ -59,7 +59,6 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.apache.thrift.TException;
-import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
@@ -668,18 +667,7 @@ public class TargetsCommandIntegrationTest {
     ProcessResult result =
         workspace.runBuckCommand("targets", "--json", "--show-output", "//:test");
 
-    // Parse the observed JSON.
-    JsonNode observed =
-        ObjectMappers.READER.readTree(ObjectMappers.createParser(result.getStdout()));
-
-    System.out.println(observed);
-
-    String expectedJson = workspace.getFileContents("output_path_json.js");
-    JsonNode expected =
-        ObjectMappers.READER.readTree(ObjectMappers.createParser(normalizeNewlines(expectedJson)));
-
-    MatcherAssert.assertThat(
-        "Output from targets command should match expected JSON.", observed, equalTo(expected));
+    assertJsonMatches(workspace, result.getStdout(), "output_path_json.js");
   }
 
   @Test
@@ -693,18 +681,7 @@ public class TargetsCommandIntegrationTest {
             "targets", "-c", "parser.enable_configurable_attributes=true", "--json", "//:");
     result.assertSuccess();
 
-    // Parse the observed JSON.
-    JsonNode observed =
-        ObjectMappers.READER.readTree(ObjectMappers.createParser(result.getStdout()));
-
-    System.out.println(observed);
-
-    String expectedJson = workspace.getFileContents("output_path_json.js");
-    JsonNode expected =
-        ObjectMappers.READER.readTree(ObjectMappers.createParser(normalizeNewlines(expectedJson)));
-
-    MatcherAssert.assertThat(
-        "Output from targets command should match expected JSON.", observed, equalTo(expected));
+    assertJsonMatches(workspace, result.getStdout(), "output_path_json.js");
   }
 
   @Test
@@ -850,15 +827,7 @@ public class TargetsCommandIntegrationTest {
     ProcessResult result = workspace.runBuckCommand("targets", "--json", "--show-output", "...");
     result.assertSuccess();
 
-    // Parse the observed JSON.
-    JsonNode observed =
-        ObjectMappers.READER.readTree(ObjectMappers.createParser(result.getStdout()));
-
-    String expectedJson = workspace.getFileContents("output_path_json_all.js");
-    JsonNode expected =
-        ObjectMappers.READER.readTree(ObjectMappers.createParser(normalizeNewlines(expectedJson)));
-
-    assertEquals("Output from targets command should match expected JSON.", expected, observed);
+    assertJsonMatches(workspace, result.getStdout(), "output_path_json_all.js");
   }
 
   @Test
@@ -878,15 +847,7 @@ public class TargetsCommandIntegrationTest {
             "name");
     result.assertSuccess();
 
-    // Parse the observed JSON.
-    JsonNode observed =
-        ObjectMappers.READER.readTree(ObjectMappers.createParser(result.getStdout()));
-
-    String expectedJson = workspace.getFileContents("output_path_json_all_filtered.js");
-    JsonNode expected =
-        ObjectMappers.READER.readTree(ObjectMappers.createParser(normalizeNewlines(expectedJson)));
-
-    assertEquals("Output from targets command should match expected JSON.", expected, observed);
+    assertJsonMatches(workspace, result.getStdout(), "output_path_json_all_filtered.js");
   }
 
   @Test
@@ -1092,5 +1053,19 @@ public class TargetsCommandIntegrationTest {
         result.getStderr(),
         containsString(
             "Must specify at least one build target pattern. See https://buckbuild.com/concept/build_target_pattern.html"));
+  }
+
+  private void assertJsonMatches(
+      ProjectWorkspace workspace, String actualJson, String expectedJsonFileName)
+      throws IOException {
+    ObjectMapper mapper = new ObjectMapper();
+    Object observedValue = mapper.readValue(actualJson, Object.class);
+    String observed = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(observedValue);
+
+    String expectedJson = workspace.getFileContents(expectedJsonFileName);
+    Object expectedValue = mapper.readValue(expectedJson, Object.class);
+    String expected = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(expectedValue);
+
+    assertEquals("Output from targets command should match expected JSON.", expected, observed);
   }
 }
