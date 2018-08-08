@@ -18,7 +18,9 @@ package com.facebook.buck.apple;
 
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.instanceOf;
+import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assume.assumeThat;
 
 import com.facebook.buck.apple.toolchain.AppleCxxPlatformsProvider;
 import com.facebook.buck.core.cell.TestCellPathResolver;
@@ -40,11 +42,18 @@ import com.facebook.buck.sandbox.NoSandboxExecutionStrategy;
 import com.facebook.buck.shell.ExportFileBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
+import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.types.Either;
 import com.google.common.collect.ImmutableSortedSet;
+import org.junit.Before;
 import org.junit.Test;
 
 public class ApplePackageDescriptionTest {
+
+  @Before
+  public void setUp() {
+    assumeThat(Platform.detect(), is(Platform.MACOS));
+  }
 
   @Test
   public void descriptionCreatesExternallyBuiltPackageRuleIfConfigExists() {
