@@ -126,5 +126,6 @@
     <orderEntry type="library" name="guava-20.0" level="project" />
     <orderEntry type="library" name="bundle" level="project" />
     <orderEntry type="library" name="commons-compress-1.17" level="project" />
+    <orderEntry type="library" name="apksig" level="project" />
   </component>
 </module>
