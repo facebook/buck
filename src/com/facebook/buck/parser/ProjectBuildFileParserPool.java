@@ -121,21 +121,17 @@ class ProjectBuildFileParserPool implements AutoCloseable {
       return;
     }
     synchronized (this) {
-      parserResourcePools
-          .values()
-          .forEach(
-              resourcePool -> {
-                resourcePool.callOnEachResource(
-                    parser -> {
-                      try {
-                        parser.reportProfile();
-                      } catch (IOException exception) {
-                        LOG.debug(
-                            exception,
-                            "Exception raised during reportProfile() and we're ignoring it");
-                      }
-                    });
-              });
+      for (ResourcePool<ProjectBuildFileParser> resourcePool : parserResourcePools.values()) {
+        resourcePool.callOnEachResource(
+            parser -> {
+              try {
+                parser.reportProfile();
+              } catch (IOException exception) {
+                LOG.debug(
+                    exception, "Exception raised during reportProfile() and we're ignoring it");
+              }
+            });
+      }
     }
   }
 
