@@ -1,0 +1,67 @@
+{namespace prebuilt_go_library}
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: 'prebuilt_go_library()' /}
+    {param navid: 'rule_prebuilt_go_library' /}
+    {param prettify: true /}
+    {param description}
+      A prebuilt_go_library() rule provides a Go linkable archive.
+    {/param}
+    {param content}
+
+{call buck.rule}
+{param status: 'UNFROZEN' /}
+{param overview}
+<p>
+  A prebuilt_go_library() rule provides a native library from the specified file.
+</p>
+<p>
+  {call go_common.supported_language_version /}
+</p>
+{/param}
+
+{param args}
+
+{call buck.arg}
+  {param name: 'name' /}
+  {param desc}
+  The name of the rule.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'library' /}
+  {param desc}
+  Path to the precompiled Go library - typically of the form 'foo.a'.
+  {/param}
+{/call}
+
+{call go_common.package_name_arg /}
+
+{call go_common.deps_arg /}
+
+{/param} // close args
+
+{param examples}
+
+{call go_common.more_examples /}
+
+{literal}<pre class="prettyprint lang-py">
+prebuilt_go_library(
+  name='greeting',
+  package_name='greeting',
+  library='greeting.a',
+  deps=[
+    ':join',
+  ],
+)
+</pre>{/literal}
+{/param}
+
+{/call} // close buck.rule
+
+    {/param}
+  {/call}
+{/template}
