@@ -127,5 +127,6 @@
     <orderEntry type="library" name="bundle" level="project" />
     <orderEntry type="library" name="commons-compress-1.17" level="project" />
     <orderEntry type="library" name="apksig" level="project" />
+    <orderEntry type="library" name="zstd-jni-1.3.5-2" level="project" />
   </component>
 </module>
