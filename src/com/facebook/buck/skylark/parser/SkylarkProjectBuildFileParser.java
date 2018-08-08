@@ -267,11 +267,9 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
   private ImmutableList<com.google.devtools.build.lib.vfs.Path> toLoadedPaths(
       ImmutableList<ExtensionData> dependencies) {
     // expected size is used to reduce the number of unnecessary resize invocations
-    // Stream.mapToInt(...).sum() is not used because it's ~4X slower
-    int expectedSize = dependencies.size(); // extension paths
+    int expectedSize = 0;
     for (int i = 0; i < dependencies.size(); ++i) {
-      // every dependency will add at least one more loaded path
-      expectedSize += dependencies.get(i).getDependencies().size();
+      expectedSize += dependencies.get(i).getLoadTransitiveClosureSize();
     }
     ImmutableList.Builder<com.google.devtools.build.lib.vfs.Path> loadedPathsBuilder =
         ImmutableList.builderWithExpectedSize(expectedSize);
