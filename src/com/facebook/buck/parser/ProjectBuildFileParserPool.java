@@ -139,10 +139,19 @@ class ProjectBuildFileParserPool implements AutoCloseable {
   public void close() {
     reportProfile();
     ImmutableSet<ResourcePool<ProjectBuildFileParser>> resourcePools;
+    ImmutableSet<ProjectBuildFileParser> parsers;
     synchronized (this) {
       Preconditions.checkState(!closing.get());
       closing.set(true);
       resourcePools = ImmutableSet.copyOf(parserResourcePools.values());
+      parsers = ImmutableSet.copyOf(nonPooledCells.values());
+    }
+    for (ProjectBuildFileParser parser : parsers) {
+      try {
+        parser.close();
+      } catch (InterruptedException | IOException e) {
+        throw new RuntimeException("Could not properly close a parser.", e);
+      }
     }
     resourcePools.forEach(ResourcePool::close);
   }
