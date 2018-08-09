@@ -14,16 +14,9 @@
  * under the License.
  */
 
-package com.facebook.buck.features.apple.project;
+package com.facebook.buck.features.halide;
 
-import com.facebook.buck.features.halide.HalideModule;
-import com.facebook.buck.features.js.JsModule;
 import com.facebook.buck.module.BuckModule;
 
-/** Buck module with a project generator for XCode. */
-@BuckModule(
-    dependencies = {
-      HalideModule.class,
-      JsModule.class,
-    })
-public class XCodeBuckModule {}
+@BuckModule
+public class HalideModule {}

@@ -1,17 +1,9 @@
-load("//tools/build_rules:java_rules.bzl", "java_library_with_plugins")
+load("//tools/build_rules:module_rules.bzl", "buck_module")
 
-java_library_with_plugins(
+buck_module(
     name = "halide",
     srcs = glob(["*.java"]),
-    tests = [
-        "//test/com/facebook/buck/halide:halide",
-    ],
-    visibility = [
-        "//src/com/facebook/buck/cli:main",
-        "//src/com/facebook/buck/features/apple/project:",
-        "//test/...",
-    ],
-    deps = [
+    provided_deps = [
         "//src/com/facebook/buck/apple:apple",
         "//src/com/facebook/buck/core/cell/resolver:resolver",
         "//src/com/facebook/buck/core/config:config",
@@ -40,5 +32,13 @@ java_library_with_plugins(
         "//src/com/facebook/buck/versions:versions",
         "//third-party/java/guava:guava",
         "//third-party/java/infer-annotations:infer-annotations",
+    ],
+    tests = [
+        "//test/com/facebook/buck/features/halide:halide",
+    ],
+    visibility = [
+        "//src/com/facebook/buck/cli:main",
+        "//src/com/facebook/buck/features/apple/project:",
+        "//test/...",
     ],
 )

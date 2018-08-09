@@ -546,6 +546,7 @@
                                         build-module-filegroup,
                                         build-module-go,
                                         build-module-gwt,
+                                        build-module-halide,
                                         build-module-haskell,
                                         build-module-intellij,
                                         build-module-js,
@@ -607,6 +608,14 @@
     <build-buck-module-jar module-name="gwt">
       <module-javac-params>
         <include name="com/facebook/buck/features/gwt/**/*.java" />
+      </module-javac-params>
+    </build-buck-module-jar>
+  </target>
+
+  <target name="build-module-halide" depends="compile">
+    <build-buck-module-jar module-name="halide">
+      <module-javac-params>
+        <include name="com/facebook/buck/features/halide/**/*.java" />
       </module-javac-params>
     </build-buck-module-jar>
   </target>
@@ -687,7 +696,7 @@
     </build-buck-module-jar>
   </target>
 
-  <target name="build-module-xcode" depends="compile">
+  <target name="build-module-xcode" depends="compile, build-module-halide, build-module-js">
     <build-buck-module-jar-with-resources module-name="xcode">
       <module-javac-params>
         <include name="com/facebook/buck/features/apple/project/*.java" />
@@ -695,6 +704,10 @@
       <module-resources>
         <include name="com/facebook/buck/features/apple/project/*.st"/>
       </module-resources>
+      <additional-classpath-entries>
+        <include name="js.jar"/>
+        <include name="halide.jar"/>
+      </additional-classpath-entries>
     </build-buck-module-jar-with-resources>
   </target>
 

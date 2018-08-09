@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.halide;
+package com.facebook.buck.features.halide;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;

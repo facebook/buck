@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.halide;
+package com.facebook.buck.features.halide;
 
 import com.facebook.buck.core.cell.resolver.CellPathResolver;
 import com.facebook.buck.core.exceptions.HumanReadableException;

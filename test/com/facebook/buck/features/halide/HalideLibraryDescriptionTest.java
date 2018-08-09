@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.halide;
+package com.facebook.buck.features.halide;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasItem;
