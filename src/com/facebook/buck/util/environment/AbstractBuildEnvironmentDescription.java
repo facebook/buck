@@ -16,7 +16,6 @@
 
 package com.facebook.buck.util.environment;
 
-import com.facebook.buck.build_type.BuckBuildType;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.google.common.base.StandardSystemProperty;
 import com.google.common.collect.ImmutableList;
