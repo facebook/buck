@@ -41,6 +41,7 @@ public class CoordinatorEventListener
   private final StampedeId stampedeId;
   private final String buildLabel;
   private final MinionQueueProvider minionQueueProvider;
+  private final String minionRegion;
   private boolean islocalMinionAlsoRunning;
   private volatile OptionalInt totalMinionCount = OptionalInt.empty();
 
@@ -49,12 +50,14 @@ public class CoordinatorEventListener
       StampedeId stampedeId,
       String buildLabel,
       MinionQueueProvider minionQueueProvider,
-      boolean islocalMinionAlsoRunning) {
+      boolean islocalMinionAlsoRunning,
+      String minionRegion) {
     this.service = service;
     this.stampedeId = stampedeId;
     this.buildLabel = buildLabel;
     this.minionQueueProvider = minionQueueProvider;
     this.islocalMinionAlsoRunning = islocalMinionAlsoRunning;
+    this.minionRegion = minionRegion;
   }
 
   @Override
@@ -91,7 +94,9 @@ public class CoordinatorEventListener
 
       String minionQueue = minionQueueProvider.getMinionQueue(minionType);
       LOG.info("Requesting [%d] minions of type [%s]", requiredCount, minionType.name());
-      service.enqueueMinions(stampedeId, buildLabel, requiredCount, minionQueue, minionType);
+
+      service.enqueueMinions(
+          stampedeId, buildLabel, requiredCount, minionQueue, minionType, minionRegion);
     }
   }
 

@@ -120,7 +120,7 @@ public class MultiSlaveBuildModeRunnerFactory {
                     executorService),
             executorService);
     Optional<String> minionQueue = distBuildConfig.getMinionQueue();
-
+    Optional<String> minionRegion = distBuildConfig.getMinionRegion();
     Preconditions.checkArgument(
         minionQueue.isPresent(),
         "Minion queue name is missing to be able to run in Coordinator mode.");
@@ -134,7 +134,8 @@ public class MultiSlaveBuildModeRunnerFactory {
             stampedeId,
             distBuildConfig.getBuildLabel(),
             minionQueueProvider,
-            isLocalMinionAlsoRunning);
+            isLocalMinionAlsoRunning,
+            minionRegion.orElse(null));
     MinionHealthTracker minionHealthTracker =
         new MinionHealthTracker(
             new DefaultClock(),

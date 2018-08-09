@@ -117,6 +117,7 @@ public class BuildPhaseTest {
   private static final String MINION_TYPE = "standard_type";
   private static final int POLL_MILLIS = 1;
   private static final String MINION_QUEUE_NAME = "awesome_test_queue";
+  private static final String MINION_REGION_NAME = "best_region";
   private static final int NUM_MINIONS = 2;
 
   private DistBuildService mockDistBuildService;
@@ -148,7 +149,10 @@ public class BuildPhaseTest {
     BuckConfig buckConfig =
         FakeBuckConfig.builder()
             .setSections(
-                ImmutableMap.of("stampede", ImmutableMap.of("minion_queue", MINION_QUEUE_NAME)))
+                ImmutableMap.of(
+                    "stampede",
+                    ImmutableMap.of(
+                        "minion_queue", MINION_QUEUE_NAME, "minion_region", MINION_REGION_NAME)))
             .build();
     executorArgs =
         BuildExecutorArgs.builder()
@@ -266,7 +270,8 @@ public class BuildPhaseTest {
         anyString(),
         eq(NUM_MINIONS),
         eq(MINION_QUEUE_NAME),
-        eq(MinionType.STANDARD_SPEC));
+        eq(MinionType.STANDARD_SPEC),
+        eq(MINION_REGION_NAME));
     expectLastCall()
         .andAnswer(
             () -> {
