@@ -41,10 +41,12 @@ public abstract class AbstractBuildRule implements BuildRule {
   private final BuildTarget buildTarget;
   private final ProjectFilesystem projectFilesystem;
   private final Supplier<String> typeSupplier = MoreSuppliers.memoize(this::getTypeForClass);
+  private final int hashCode;
 
   protected AbstractBuildRule(BuildTarget buildTarget, ProjectFilesystem projectFilesystem) {
     this.buildTarget = buildTarget;
     this.projectFilesystem = projectFilesystem;
+    this.hashCode = computeHashCode();
   }
 
   @Override
@@ -103,6 +105,10 @@ public abstract class AbstractBuildRule implements BuildRule {
 
   @Override
   public final int hashCode() {
+    return hashCode;
+  }
+
+  private final int computeHashCode() {
     return this.buildTarget.hashCode();
   }
 
