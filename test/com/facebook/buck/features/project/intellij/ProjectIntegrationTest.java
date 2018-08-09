@@ -423,8 +423,8 @@ public class ProjectIntegrationTest {
     workspace.setUp();
 
     Path out1Path = temporaryFolder2.newFolder("project1");
-    Path out2Path = temporaryFolder2.newFolder("project2").resolve("subdir");
-    assertTrue(out2Path.toFile().mkdirs());
+    // Make sure buck project creates a dir if it doesn't exist
+    Path out2Path = temporaryFolder2.getRoot().resolve("project2/subdir");
     workspace
         .runBuckCommand("project", "--output-dir", out1Path.toString())
         .assertSuccess("buck project should exit cleanly");

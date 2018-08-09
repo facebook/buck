@@ -68,6 +68,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
@@ -268,9 +269,10 @@ public class IjProjectCommandHelper {
         : runBuild(requiredBuildTargets);
   }
 
-  private ProjectFilesystem getProjectOutputFilesystem() {
+  private ProjectFilesystem getProjectOutputFilesystem() throws IOException {
     if (outputDir != null) {
       Path outputPath = Paths.get(outputDir).toAbsolutePath();
+      Files.createDirectories(outputPath);
       return new DefaultProjectFilesystemFactory().createProjectFilesystem(outputPath);
     } else {
       return cell.getFilesystem();
