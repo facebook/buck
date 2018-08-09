@@ -17,11 +17,17 @@
 package com.facebook.buck.util;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
+import java.util.AbstractMap;
 import java.util.HashMap;
+import java.util.Map.Entry;
+import java.util.Set;
 import org.junit.Test;
 
 public class ImmutableMapWithNullValuesTest {
@@ -123,5 +129,36 @@ public class ImmutableMapWithNullValuesTest {
         },
         map);
     assertEquals(ImmutableList.of(1, 2, 3), ImmutableList.copyOf(map.keySet()));
+  }
+
+  @Test
+  public void testMapSize() {
+    ImmutableMapWithNullValues<Integer, Integer> map =
+        ImmutableMapWithNullValues.Builder.<Integer, Integer>insertionOrder()
+            .put(1, null)
+            .put(2, 5)
+            .build();
+
+    assertEquals(2, map.size());
+  }
+
+  @Test
+  public void testMapEntrySet() {
+    ImmutableMapWithNullValues<Integer, Integer> map =
+        ImmutableMapWithNullValues.Builder.<Integer, Integer>insertionOrder()
+            .put(1, null)
+            .put(2, 5)
+            .build();
+
+    Set<Entry<Integer, Integer>> set = map.entrySet();
+
+    assertEquals(
+        ImmutableSet.of(new AbstractMap.SimpleEntry(1, null), new AbstractMap.SimpleEntry(2, 5)),
+        set);
+
+    assertTrue(set.contains(new AbstractMap.SimpleEntry<>(1, null)));
+    assertTrue(set.contains(new AbstractMap.SimpleEntry<>(2, 5)));
+    assertFalse(set.contains(new AbstractMap.SimpleEntry<>(2, null)));
+    assertFalse(set.contains(new AbstractMap.SimpleEntry<>(5, null)));
   }
 }
