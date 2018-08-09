@@ -14,8 +14,8 @@ java_library(
         "//src/com/facebook/buck/android:helpers",
         "//test/com/facebook/buck/android:utils",
         "//test/com/facebook/buck/core/config:FakeBuckConfig",
+        "//test/com/facebook/buck/core/toolchain/impl:testutil",
         "//test/com/facebook/buck/rules/keys/config:testutil",
         "//test/com/facebook/buck/testutil:testutil",
-        "//test/com/facebook/buck/toolchain/impl:testutil",
     ],
 )

@@ -16,11 +16,11 @@
 
 package com.facebook.buck.features.python.toolchain.impl;
 
+import com.facebook.buck.core.toolchain.ToolchainCreationContext;
+import com.facebook.buck.core.toolchain.ToolchainFactory;
+import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.features.python.PythonBuckConfig;
 import com.facebook.buck.features.python.toolchain.PythonInterpreter;
-import com.facebook.buck.toolchain.ToolchainCreationContext;
-import com.facebook.buck.toolchain.ToolchainFactory;
-import com.facebook.buck.toolchain.ToolchainProvider;
 import java.util.Optional;
 
 public class PythonInterpreterFactory implements ToolchainFactory<PythonInterpreter> {

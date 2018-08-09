@@ -16,9 +16,9 @@
 
 package com.facebook.buck.jvm.java.toolchain;
 
+import com.facebook.buck.core.toolchain.Toolchain;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.jvm.java.JavacProvider;
-import com.facebook.buck.toolchain.Toolchain;
 import org.immutables.value.Value;
 
 /** The java toolchain. */

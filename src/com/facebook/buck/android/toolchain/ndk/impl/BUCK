@@ -5,7 +5,7 @@ java_library_with_plugins(
     srcs = glob(["*.java"]),
     exported_deps = [
         "//src/com/facebook/buck/android/toolchain/ndk:ndk",
-        "//src/com/facebook/buck/toolchain:toolchain",
+        "//src/com/facebook/buck/core/toolchain:toolchain",
     ],
     tests = [
         "//test/com/facebook/buck/android/toolchain/ndk/impl:impl",

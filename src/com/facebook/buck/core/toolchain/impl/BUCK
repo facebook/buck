@@ -2,10 +2,10 @@ java_library(
     name = "impl",
     srcs = glob(["*.java"]),
     exported_deps = [
-        "//src/com/facebook/buck/toolchain:toolchain",
+        "//src/com/facebook/buck/core/toolchain:toolchain",
     ],
     tests = [
-        "//test/com/facebook/buck/toolchain/impl:impl",
+        "//test/com/facebook/buck/core/toolchain/impl:impl",
     ],
     visibility = ["PUBLIC"],
     deps = [

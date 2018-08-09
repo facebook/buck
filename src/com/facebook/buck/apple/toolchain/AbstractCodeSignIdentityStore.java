@@ -16,8 +16,8 @@
 
 package com.facebook.buck.apple.toolchain;
 
+import com.facebook.buck.core.toolchain.Toolchain;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import com.facebook.buck.toolchain.Toolchain;
 import com.google.common.collect.ImmutableList;
 import java.util.function.Supplier;
 import org.immutables.value.Value;

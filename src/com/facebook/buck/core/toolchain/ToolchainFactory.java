@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright 2018-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -14,12 +14,13 @@
  * under the License.
  */
 
-package com.facebook.buck.toolchain;
+package com.facebook.buck.core.toolchain;
 
-/**
- * Generic interface that indicates that a Toolchain supports somecapability.
- *
- * <p>Specific capabilities should define their own methods so that the clients can call these
- * methods or act on these toolchains in some other way.
- */
-public interface ToolchainWithCapability extends Toolchain {}
+import java.util.Optional;
+
+public interface ToolchainFactory<T extends Toolchain> {
+
+  /** @throws ToolchainInstantiationException when a toolchain cannot be created */
+  Optional<T> createToolchain(
+      ToolchainProvider toolchainProvider, ToolchainCreationContext context);
+}

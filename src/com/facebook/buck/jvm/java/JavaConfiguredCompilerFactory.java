@@ -18,7 +18,7 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.toolchain.ToolchainProvider;
+import com.facebook.buck.core.toolchain.ToolchainProvider;
 import java.util.function.Function;
 import javax.annotation.Nullable;
 

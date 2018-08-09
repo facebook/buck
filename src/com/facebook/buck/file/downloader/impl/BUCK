@@ -4,8 +4,8 @@ java_library_with_plugins(
     name = "impl",
     srcs = glob(["*.java"]),
     exported_deps = [
+        "//src/com/facebook/buck/core/toolchain:toolchain",
         "//src/com/facebook/buck/file/downloader:downloader",
-        "//src/com/facebook/buck/toolchain:toolchain",
         "//src/com/facebook/buck/util:exceptions",
     ],
     visibility = ["PUBLIC"],

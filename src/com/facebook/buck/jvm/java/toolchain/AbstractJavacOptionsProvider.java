@@ -16,9 +16,9 @@
 
 package com.facebook.buck.jvm.java.toolchain;
 
+import com.facebook.buck.core.toolchain.Toolchain;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.jvm.java.JavacOptions;
-import com.facebook.buck.toolchain.Toolchain;
 import org.immutables.value.Value;
 
 @Value.Immutable(builder = false, copy = false)

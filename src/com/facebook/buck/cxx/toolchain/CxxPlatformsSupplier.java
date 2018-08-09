@@ -17,7 +17,7 @@
 package com.facebook.buck.cxx.toolchain;
 
 import com.facebook.buck.core.model.Flavor;
-import com.facebook.buck.toolchain.ToolchainWithCapability;
+import com.facebook.buck.core.toolchain.ToolchainWithCapability;
 import com.google.common.collect.ImmutableMap;
 
 /** A toolchain that provides CXX platforms. */

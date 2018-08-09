@@ -14,19 +14,24 @@
  * under the License.
  */
 
-package com.facebook.buck.toolchain;
+package com.facebook.buck.core.toolchain;
 
-import com.facebook.buck.core.config.BuckConfig;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import org.immutables.value.Value;
 
 /**
- * A factory that is used when {@link ToolchainProvider} needs to be created without depending on a
- * specific implementation of {@link ToolchainProvider}.
+ * Contains basic information about a {@link Toolchain} that can be used to identify and construct
+ * an instance of a particular Toolchain.
  */
-public interface ToolchainProviderFactory {
-  ToolchainProvider create(
-      BuckConfig buckConfig,
-      ProjectFilesystem projectFilesystem,
-      RuleKeyConfiguration ruleKeyConfiguration);
+@Value.Immutable(builder = false, copy = false)
+@BuckStyleImmutable
+public interface AbstractToolchainDescriptor<T extends Toolchain> {
+  @Value.Parameter
+  String getName();
+
+  @Value.Parameter
+  Class<T> getToolchainClass();
+
+  @Value.Parameter
+  Class<? extends ToolchainFactory<T>> getToolchainFactoryClass();
 }

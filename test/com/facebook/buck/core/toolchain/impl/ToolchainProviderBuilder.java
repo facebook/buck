@@ -14,13 +14,13 @@
  * under the License.
  */
 
-package com.facebook.buck.toolchain.impl;
+package com.facebook.buck.core.toolchain.impl;
 
-import com.facebook.buck.toolchain.BaseToolchainProvider;
-import com.facebook.buck.toolchain.Toolchain;
-import com.facebook.buck.toolchain.ToolchainInstantiationException;
-import com.facebook.buck.toolchain.ToolchainProvider;
-import com.facebook.buck.toolchain.ToolchainWithCapability;
+import com.facebook.buck.core.toolchain.BaseToolchainProvider;
+import com.facebook.buck.core.toolchain.Toolchain;
+import com.facebook.buck.core.toolchain.ToolchainInstantiationException;
+import com.facebook.buck.core.toolchain.ToolchainProvider;
+import com.facebook.buck.core.toolchain.ToolchainWithCapability;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.util.Collection;

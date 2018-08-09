@@ -18,8 +18,8 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
+import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
-import com.facebook.buck.toolchain.ToolchainProvider;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
 

@@ -18,10 +18,10 @@ package com.facebook.buck.android.exopackage;
 
 import com.facebook.buck.android.AdbHelper;
 import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.step.AdbOptions;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TargetDeviceOptions;
-import com.facebook.buck.toolchain.ToolchainProvider;
 import java.util.function.Supplier;
 
 public class AndroidDevicesHelperFactory {

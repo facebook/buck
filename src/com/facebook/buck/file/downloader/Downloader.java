@@ -16,8 +16,8 @@
 
 package com.facebook.buck.file.downloader;
 
+import com.facebook.buck.core.toolchain.Toolchain;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.toolchain.Toolchain;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Path;

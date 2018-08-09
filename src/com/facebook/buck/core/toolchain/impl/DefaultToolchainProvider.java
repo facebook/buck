@@ -14,21 +14,21 @@
  * under the License.
  */
 
-package com.facebook.buck.toolchain.impl;
+package com.facebook.buck.core.toolchain.impl;
 
 import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.toolchain.BaseToolchainProvider;
+import com.facebook.buck.core.toolchain.Toolchain;
+import com.facebook.buck.core.toolchain.ToolchainCreationContext;
+import com.facebook.buck.core.toolchain.ToolchainDescriptor;
+import com.facebook.buck.core.toolchain.ToolchainFactory;
+import com.facebook.buck.core.toolchain.ToolchainInstantiationException;
+import com.facebook.buck.core.toolchain.ToolchainSupplier;
+import com.facebook.buck.core.toolchain.ToolchainWithCapability;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
-import com.facebook.buck.toolchain.BaseToolchainProvider;
-import com.facebook.buck.toolchain.Toolchain;
-import com.facebook.buck.toolchain.ToolchainCreationContext;
-import com.facebook.buck.toolchain.ToolchainDescriptor;
-import com.facebook.buck.toolchain.ToolchainFactory;
-import com.facebook.buck.toolchain.ToolchainInstantiationException;
-import com.facebook.buck.toolchain.ToolchainSupplier;
-import com.facebook.buck.toolchain.ToolchainWithCapability;
 import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;

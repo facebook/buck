@@ -17,8 +17,8 @@
 package com.facebook.buck.features.python.toolchain;
 
 import com.facebook.buck.core.rules.BuildRuleResolver;
+import com.facebook.buck.core.toolchain.Toolchain;
 import com.facebook.buck.core.toolchain.tool.Tool;
-import com.facebook.buck.toolchain.Toolchain;
 
 public interface PexToolProvider extends Toolchain {
   String DEFAULT_NAME = "pex-tool";

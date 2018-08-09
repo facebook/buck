@@ -14,9 +14,9 @@
  * under the License.
  */
 
-package com.facebook.buck.toolchain.impl;
+package com.facebook.buck.core.toolchain.impl;
 
-import com.facebook.buck.toolchain.Toolchain;
+import com.facebook.buck.core.toolchain.Toolchain;
 import org.immutables.value.Value;
 
 /**

@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright 2018-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -14,6 +14,11 @@
  * under the License.
  */
 
-package com.facebook.buck.toolchain;
+package com.facebook.buck.core.toolchain;
 
-public abstract class BaseToolchain implements Toolchain {}
+/**
+ * Interface indicating that the class is a toolchain.
+ *
+ * <p>Use {@link ToolchainProvider} to get a toolchain by a name.
+ */
+public interface Toolchain {}

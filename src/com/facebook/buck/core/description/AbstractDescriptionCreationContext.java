@@ -17,9 +17,9 @@
 package com.facebook.buck.core.description;
 
 import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.sandbox.SandboxExecutionStrategy;
-import com.facebook.buck.toolchain.ToolchainProvider;
 import org.immutables.value.Value;
 
 /** Contains objects that can be used during the creation of descriptions. */

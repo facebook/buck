@@ -16,9 +16,9 @@
 
 package com.facebook.buck.swift.toolchain.impl;
 
+import com.facebook.buck.core.toolchain.ToolchainDescriptor;
+import com.facebook.buck.core.toolchain.ToolchainSupplier;
 import com.facebook.buck.swift.toolchain.SwiftPlatformsProvider;
-import com.facebook.buck.toolchain.ToolchainDescriptor;
-import com.facebook.buck.toolchain.ToolchainSupplier;
 import java.util.Arrays;
 import java.util.Collection;
 import org.pf4j.Extension;

@@ -4,8 +4,8 @@ java_library(
     name = "downloader",
     srcs = glob(["*.java"]),
     exported_deps = [
+        "//src/com/facebook/buck/core/toolchain:toolchain",
         "//src/com/facebook/buck/event:interfaces",
-        "//src/com/facebook/buck/toolchain:toolchain",
     ],
     visibility = ["PUBLIC"],
     deps = [

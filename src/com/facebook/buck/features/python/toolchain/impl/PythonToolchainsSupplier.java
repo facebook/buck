@@ -16,11 +16,11 @@
 
 package com.facebook.buck.features.python.toolchain.impl;
 
+import com.facebook.buck.core.toolchain.ToolchainDescriptor;
+import com.facebook.buck.core.toolchain.ToolchainSupplier;
 import com.facebook.buck.features.python.toolchain.PexToolProvider;
 import com.facebook.buck.features.python.toolchain.PythonInterpreter;
 import com.facebook.buck.features.python.toolchain.PythonPlatformsProvider;
-import com.facebook.buck.toolchain.ToolchainDescriptor;
-import com.facebook.buck.toolchain.ToolchainSupplier;
 import java.util.Arrays;
 import java.util.Collection;
 import org.pf4j.Extension;

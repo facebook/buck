@@ -7,12 +7,12 @@ java_test(
     deps = [
         ":testutil",
         "//src/com/facebook/buck/core/sourcepath/resolver/impl:impl",
+        "//src/com/facebook/buck/core/toolchain/impl:impl",
         "//src/com/facebook/buck/cxx/toolchain:toolchain",
         "//src/com/facebook/buck/cxx/toolchain/impl:impl",
         "//src/com/facebook/buck/io/file:file",
         "//src/com/facebook/buck/jvm/java:rules",
         "//src/com/facebook/buck/jvm/java/toolchain:toolchain",
-        "//src/com/facebook/buck/toolchain/impl:impl",
         "//src/com/facebook/buck/versions:versions",
         "//test/com/facebook/buck/core/config:FakeBuckConfig",
         "//test/com/facebook/buck/core/model:testutil",

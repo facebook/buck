@@ -17,8 +17,8 @@
 package com.facebook.buck.features.go;
 
 import com.facebook.buck.core.model.FlavorDomain;
+import com.facebook.buck.core.toolchain.Toolchain;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import com.facebook.buck.toolchain.Toolchain;
 import org.immutables.value.Value;
 
 @Value.Immutable(copy = false, builder = false)
