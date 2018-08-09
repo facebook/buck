@@ -1,8 +1,6 @@
 java_library(
     name = "build_type",
-    srcs = [
-        "BuildType.java",
-    ],
+    srcs = glob(["*.java"]),
     visibility = [
         "PUBLIC",
     ],

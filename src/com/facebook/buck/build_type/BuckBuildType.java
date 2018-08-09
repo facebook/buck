@@ -24,21 +24,21 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.util.function.Supplier;
 
-public enum BuildType {
+public enum BuckBuildType {
   UNKNOWN,
   LOCAL_ANT,
   LOCAL_PEX,
   RELEASE_PEX,
   ;
 
-  private static final Logger LOG = Logger.get(BuildType.class);
+  private static final Logger LOG = Logger.get(BuckBuildType.class);
 
   /**
    * Check in runtime to see what current build type is.
    *
    * <p>To run buck in different modes you can invoke: buck run buck --config build.type=enum_value
    */
-  public static final Supplier<BuildType> CURRENT_BUILD_TYPE =
+  public static final Supplier<BuckBuildType> CURRENT_BUCK_BUILD_TYPE =
       MoreSuppliers.memoize(
           () -> {
             String buildTypeFilename = System.getProperty("buck.buck_build_type_info");
@@ -49,7 +49,7 @@ public enum BuildType {
               String contents =
                   MoreFiles.asCharSource(Paths.get(buildTypeFilename), StandardCharsets.UTF_8)
                       .readFirstLine();
-              return BuildType.valueOf(contents);
+              return BuckBuildType.valueOf(contents);
             } catch (IOException e) {
               LOG.error(e, "Failed to read build type, using LOCAL_ANT type.");
               return LOCAL_ANT;

@@ -68,7 +68,7 @@ public class DistBuildUtil {
     if (buildMode != BuildMode.DISTRIBUTED_BUILD_WITH_LOCAL_COORDINATOR
         && buildMode != BuildMode.DISTRIBUTED_BUILD_WITH_REMOTE_COORDINATOR
         && buildMode != BuildMode.LOCAL_BUILD_WITH_REMOTE_EXECUTION) {
-      return minionRequirements; // BuildType does not support minion requirements
+      return minionRequirements; // BuckBuildType does not support minion requirements
     }
 
     Preconditions.checkArgument(

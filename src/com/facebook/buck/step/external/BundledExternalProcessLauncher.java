@@ -16,7 +16,7 @@
 
 package com.facebook.buck.step.external;
 
-import com.facebook.buck.build_type.BuildType;
+import com.facebook.buck.build_type.BuckBuildType;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.util.env.BuckClasspath;
 import com.google.common.base.Preconditions;
@@ -48,8 +48,8 @@ public class BundledExternalProcessLauncher {
   }
 
   private ImmutableList<String> getCommand(EntryPoints entryPoint) {
-    BuildType buildType = BuildType.CURRENT_BUILD_TYPE.get();
-    switch (buildType) {
+    BuckBuildType buckBuildType = BuckBuildType.CURRENT_BUCK_BUILD_TYPE.get();
+    switch (buckBuildType) {
       case RELEASE_PEX:
       case LOCAL_PEX:
         return getCommandForPexBuild(entryPoint);
@@ -58,7 +58,7 @@ public class BundledExternalProcessLauncher {
       case UNKNOWN:
         return getCommandForWhenProbablyRunningUnderTest(entryPoint);
       default:
-        throw new RuntimeException("Unknown build type " + buildType);
+        throw new RuntimeException("Unknown build type " + buckBuildType);
     }
   }
 
