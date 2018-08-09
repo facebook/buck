@@ -1,4 +1,12 @@
 {
+  "foo" : {
+    "buck.base_path" : "example",
+    "buck.type" : "genrule",
+    "cmd" : "echo foo > $OUT",
+    "environment_expansion_separator" : ",",
+    "name" : "foo",
+    "out" : "foo.txt"
+  },
   "debug_keystore" : {
     "buck.base_path" : "example",
     "buck.type" : "keystore",
