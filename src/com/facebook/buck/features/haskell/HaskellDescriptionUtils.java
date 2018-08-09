@@ -585,6 +585,7 @@ public class HaskellDescriptionUtils {
         platform.getGhciLib().get(),
         platform.getGhciCxx().get(),
         platform.getGhciCc().get(),
-        platform.getGhciCpp().get());
+        platform.getGhciCpp().get(),
+        platform.getGhciPackager().get());
   }
 }

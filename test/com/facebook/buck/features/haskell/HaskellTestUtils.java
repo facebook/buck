@@ -86,6 +86,10 @@ class HaskellTestUtils {
               () -> {
                 throw new UnsupportedOperationException();
               })
+          .setGhciPackager(
+              () -> {
+                throw new UnsupportedOperationException();
+              })
           .build();
 
   public static final FlavorDomain<HaskellPlatform> DEFAULT_PLATFORMS =
@@ -127,7 +131,8 @@ class HaskellTestUtils {
             + "ghci_iserv_prof_path = fake_file\n"
             + "ghci_cxx_path = fake_file\n"
             + "ghci_cc_path = fake_file\n"
-            + "ghci_cpp_path = fake_file\n",
+            + "ghci_cpp_path = fake_file\n"
+            + "ghci_packager = fake_file\n",
         version.getMajorVersion());
   }
 }

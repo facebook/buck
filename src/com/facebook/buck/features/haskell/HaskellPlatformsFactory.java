@@ -62,6 +62,7 @@ public class HaskellPlatformsFactory {
         .setGhciCxx(haskellBuckConfig.getGhciCxx(section))
         .setGhciCc(haskellBuckConfig.getGhciCc(section))
         .setGhciCpp(haskellBuckConfig.getGhciCpp(section))
+        .setGhciPackager(haskellBuckConfig.getGhciPackager(section))
         .setLinkStyleForStubHeader(haskellBuckConfig.getLinkStyleForStubHeader(section))
         .setCxxPlatform(cxxPlatform)
         .build();

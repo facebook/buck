@@ -162,6 +162,10 @@ public class HaskellBuckConfig {
     return () -> delegate.getRequiredPath(section, "ghci_cpp_path");
   }
 
+  public Supplier<Path> getGhciPackager(String section) {
+    return () -> delegate.getRequiredPath(section, "ghci_packager");
+  }
+
   public Optional<? extends Linker.LinkableDepType> getLinkStyleForStubHeader(String section) {
     return delegate.getEnum(section, "link_style_for_stub_header", Linker.LinkableDepType.class);
   }
