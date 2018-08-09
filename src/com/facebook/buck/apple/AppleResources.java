@@ -44,9 +44,13 @@ public class AppleResources {
    * @return The recursive resource buildables.
    */
   public static ImmutableSet<AppleResourceDescriptionArg> collectRecursiveResources(
-      TargetGraph targetGraph, Optional<AppleDependenciesCache> cache, TargetNode<?> targetNode) {
+      XCodeDescriptions xcodeDescriptions,
+      TargetGraph targetGraph,
+      Optional<AppleDependenciesCache> cache,
+      TargetNode<?> targetNode) {
     return FluentIterable.from(
             AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
+                xcodeDescriptions,
                 targetGraph,
                 cache,
                 AppleBuildRules.RecursiveDependenciesMode.COPYING,
@@ -57,6 +61,7 @@ public class AppleResources {
   }
 
   public static <T> AppleBundleResources collectResourceDirsAndFiles(
+      XCodeDescriptions xcodeDescriptions,
       TargetGraph targetGraph,
       BuildRuleResolver resolver,
       Optional<AppleDependenciesCache> cache,
@@ -66,6 +71,7 @@ public class AppleResources {
 
     Iterable<TargetNode<?>> resourceNodes =
         AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
+            xcodeDescriptions,
             targetGraph,
             cache,
             AppleBuildRules.RecursiveDependenciesMode.COPYING,

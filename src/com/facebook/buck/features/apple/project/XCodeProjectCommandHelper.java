@@ -20,6 +20,8 @@ import com.facebook.buck.apple.AppleBinaryDescription;
 import com.facebook.buck.apple.AppleBundleDescription;
 import com.facebook.buck.apple.AppleConfig;
 import com.facebook.buck.apple.AppleLibraryDescription;
+import com.facebook.buck.apple.XCodeDescriptions;
+import com.facebook.buck.apple.XCodeDescriptionsFactory;
 import com.facebook.buck.cli.ProjectTestsMode;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.CellProvider;
@@ -90,6 +92,7 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import javax.annotation.concurrent.ThreadSafe;
+import org.pf4j.PluginManager;
 
 public class XCodeProjectCommandHelper {
 
@@ -98,6 +101,7 @@ public class XCodeProjectCommandHelper {
   private static final String XCODE_PROCESS_NAME = "Xcode";
 
   private final BuckEventBus buckEventBus;
+  private final PluginManager pluginManager;
   private final Parser parser;
   private final BuckConfig buckConfig;
   private final InstrumentedVersionedTargetGraphCache versionedTargetGraphCache;
@@ -125,6 +129,7 @@ public class XCodeProjectCommandHelper {
 
   public XCodeProjectCommandHelper(
       BuckEventBus buckEventBus,
+      PluginManager pluginManager,
       Parser parser,
       BuckConfig buckConfig,
       InstrumentedVersionedTargetGraphCache versionedTargetGraphCache,
@@ -149,6 +154,7 @@ public class XCodeProjectCommandHelper {
       Function<Iterable<String>, ImmutableList<TargetNodeSpec>> argsParser,
       Function<ImmutableList<String>, ExitCode> buildRunner) {
     this.buckEventBus = buckEventBus;
+    this.pluginManager = pluginManager;
     this.parser = parser;
     this.buckConfig = buckConfig;
     this.versionedTargetGraphCache = versionedTargetGraphCache;
@@ -336,6 +342,7 @@ public class XCodeProjectCommandHelper {
     ImmutableSet<BuildTarget> requiredBuildTargets =
         generateWorkspacesForTargets(
             buckEventBus,
+            pluginManager,
             cell,
             buckConfig,
             ruleKeyConfiguration,
@@ -388,6 +395,7 @@ public class XCodeProjectCommandHelper {
   @VisibleForTesting
   static ImmutableSet<BuildTarget> generateWorkspacesForTargets(
       BuckEventBus buckEventBus,
+      PluginManager pluginManager,
       Cell cell,
       BuckConfig buckConfig,
       RuleKeyConfiguration ruleKeyConfiguration,
@@ -415,6 +423,8 @@ public class XCodeProjectCommandHelper {
 
     LazyActionGraph lazyActionGraph =
         new LazyActionGraph(targetGraphAndTargets.getTargetGraph(), cell.getCellProvider());
+
+    XCodeDescriptions xcodeDescriptions = XCodeDescriptionsFactory.create(pluginManager);
 
     LOG.debug("Generating workspace for config targets %s", targets);
     ImmutableSet.Builder<BuildTarget> requiredBuildTargetsBuilder = ImmutableSet.builder();
@@ -445,6 +455,7 @@ public class XCodeProjectCommandHelper {
       CxxPlatform defaultCxxPlatform = cxxPlatformsProvider.getDefaultCxxPlatform();
       WorkspaceAndProjectGenerator generator =
           new WorkspaceAndProjectGenerator(
+              xcodeDescriptions,
               cell,
               targetGraphAndTargets.getTargetGraph(),
               workspaceArgs,

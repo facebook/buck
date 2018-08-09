@@ -121,14 +121,17 @@ public class AppleTestDescription
           CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR);
 
   private final ToolchainProvider toolchainProvider;
+  private final XCodeDescriptions xcodeDescriptions;
   private final AppleConfig appleConfig;
   private final AppleLibraryDescription appleLibraryDescription;
 
   public AppleTestDescription(
       ToolchainProvider toolchainProvider,
+      XCodeDescriptions xcodeDescriptions,
       AppleConfig appleConfig,
       AppleLibraryDescription appleLibraryDescription) {
     this.toolchainProvider = toolchainProvider;
+    this.xcodeDescriptions = xcodeDescriptions;
     this.appleConfig = appleConfig;
     this.appleLibraryDescription = appleLibraryDescription;
   }
@@ -279,6 +282,7 @@ public class AppleTestDescription
 
     AppleBundle bundle =
         AppleDescriptions.createAppleBundle(
+            xcodeDescriptions,
             getCxxPlatformsProvider(),
             appleCxxPlatformFlavorDomain,
             context.getTargetGraph(),

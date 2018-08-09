@@ -46,6 +46,7 @@ import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.DefaultCxxPlatforms;
 import com.facebook.buck.cxx.toolchain.InferBuckConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.swift.SwiftBuckConfig;
 import com.facebook.buck.swift.SwiftLibraryDescription;
 import com.facebook.buck.swift.toolchain.SwiftPlatform;
@@ -268,9 +269,12 @@ public class FakeAppleRuleDescriptions {
             new InferBuckConfig(DEFAULT_BUCK_CONFIG));
     CxxLibraryMetadataFactory cxxLibraryMetadataFactory =
         new CxxLibraryMetadataFactory(toolchainProvider);
+    XCodeDescriptions xcodeDescriptions =
+        XCodeDescriptionsFactory.create(BuckPluginManagerFactory.createPluginManager());
 
     return new AppleLibraryDescription(
         toolchainProvider,
+        xcodeDescriptions,
         SWIFT_LIBRARY_DESCRIPTION,
         DEFAULT_BUCK_CONFIG.getView(AppleConfig.class),
         new SwiftBuckConfig(DEFAULT_BUCK_CONFIG),
@@ -302,9 +306,12 @@ public class FakeAppleRuleDescriptions {
         new CxxBinaryMetadataFactory(toolchainProvider);
     CxxBinaryFlavored cxxBinaryFlavored =
         new CxxBinaryFlavored(toolchainProvider, CxxPlatformUtils.DEFAULT_CONFIG);
+    XCodeDescriptions xcodeDescriptions =
+        XCodeDescriptionsFactory.create(BuckPluginManagerFactory.createPluginManager());
 
     return new AppleBinaryDescription(
         createTestToolchainProviderForApplePlatform(DEFAULT_APPLE_CXX_PLATFORM_FLAVOR_DOMAIN),
+        xcodeDescriptions,
         SWIFT_LIBRARY_DESCRIPTION,
         DEFAULT_BUCK_CONFIG.getView(AppleConfig.class),
         cxxBinaryImplicitFlavors,
@@ -317,6 +324,7 @@ public class FakeAppleRuleDescriptions {
   public static final AppleBundleDescription BUNDLE_DESCRIPTION =
       new AppleBundleDescription(
           createTestToolchainProviderForApplePlatform(DEFAULT_APPLE_CXX_PLATFORM_FLAVOR_DOMAIN),
+          XCodeDescriptionsFactory.create(BuckPluginManagerFactory.createPluginManager()),
           BINARY_DESCRIPTION,
           LIBRARY_DESCRIPTION,
           DEFAULT_BUCK_CONFIG.getView(AppleConfig.class));
@@ -325,6 +333,7 @@ public class FakeAppleRuleDescriptions {
   public static final AppleTestDescription TEST_DESCRIPTION =
       new AppleTestDescription(
           createTestToolchainProviderForApplePlatform(DEFAULT_APPLE_CXX_PLATFORM_FLAVOR_DOMAIN),
+          XCodeDescriptionsFactory.create(BuckPluginManagerFactory.createPluginManager()),
           DEFAULT_BUCK_CONFIG.getView(AppleConfig.class),
           LIBRARY_DESCRIPTION);
 

@@ -69,9 +69,13 @@ public class AppleDescriptionProvider implements DescriptionProvider {
     SwiftLibraryDescription swiftLibraryDescription =
         new SwiftLibraryDescription(toolchainProvider, cxxBuckConfig, swiftBuckConfig);
 
+    XCodeDescriptions xcodeDescriptions =
+        XCodeDescriptionsFactory.create(context.getPluginManager());
+
     AppleLibraryDescription appleLibraryDescription =
         new AppleLibraryDescription(
             toolchainProvider,
+            xcodeDescriptions,
             swiftLibraryDescription,
             appleConfig,
             swiftBuckConfig,
@@ -83,6 +87,7 @@ public class AppleDescriptionProvider implements DescriptionProvider {
     AppleBinaryDescription appleBinaryDescription =
         new AppleBinaryDescription(
             toolchainProvider,
+            xcodeDescriptions,
             swiftLibraryDescription,
             appleConfig,
             cxxBinaryImplicitFlavors,
@@ -102,8 +107,13 @@ public class AppleDescriptionProvider implements DescriptionProvider {
         new ApplePackageDescription(
             toolchainProvider, context.getSandboxExecutionStrategy(), appleConfig),
         new AppleBundleDescription(
-            toolchainProvider, appleBinaryDescription, appleLibraryDescription, appleConfig),
-        new AppleTestDescription(toolchainProvider, appleConfig, appleLibraryDescription),
+            toolchainProvider,
+            xcodeDescriptions,
+            appleBinaryDescription,
+            appleLibraryDescription,
+            appleConfig),
+        new AppleTestDescription(
+            toolchainProvider, xcodeDescriptions, appleConfig, appleLibraryDescription),
         new SceneKitAssetsDescription());
   }
 }

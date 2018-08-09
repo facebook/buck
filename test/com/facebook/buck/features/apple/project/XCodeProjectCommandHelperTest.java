@@ -35,6 +35,7 @@ import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetGraphAndTargets;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.event.BuckEventBusForTests;
+import com.facebook.buck.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
@@ -432,6 +433,7 @@ public class XCodeProjectCommandHelperTest {
             .build();
     XCodeProjectCommandHelper.generateWorkspacesForTargets(
         BuckEventBusForTests.newInstance(),
+        BuckPluginManagerFactory.createPluginManager(),
         cell,
         FakeBuckConfig.builder().build(),
         TestRuleKeyConfigurationFactory.create(),

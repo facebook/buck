@@ -21,6 +21,7 @@ import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.sandbox.SandboxExecutionStrategy;
 import org.immutables.value.Value;
+import org.pf4j.PluginManager;
 
 /** Contains objects that can be used during the creation of descriptions. */
 @Value.Immutable(builder = false, copy = false)
@@ -34,4 +35,7 @@ interface AbstractDescriptionCreationContext {
 
   @Value.Parameter
   SandboxExecutionStrategy getSandboxExecutionStrategy();
+
+  @Value.Parameter
+  PluginManager getPluginManager();
 }

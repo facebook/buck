@@ -47,6 +47,7 @@ import com.facebook.buck.apple.InfoPlistSubstitution;
 import com.facebook.buck.apple.PrebuiltAppleFrameworkDescription;
 import com.facebook.buck.apple.PrebuiltAppleFrameworkDescriptionArg;
 import com.facebook.buck.apple.SceneKitAssetsDescription;
+import com.facebook.buck.apple.XCodeDescriptions;
 import com.facebook.buck.apple.XcodePostbuildScriptDescription;
 import com.facebook.buck.apple.XcodePrebuildScriptDescription;
 import com.facebook.buck.apple.clang.HeaderMap;
@@ -221,6 +222,7 @@ public class ProjectGenerator {
               PosixFilePermission.GROUP_READ,
               PosixFilePermission.OTHERS_READ));
 
+  private final XCodeDescriptions xcodeDescriptions;
   private final TargetGraph targetGraph;
   private final AppleDependenciesCache dependenciesCache;
   private final ProjectGenerationStateCache projGenerationStateCache;
@@ -274,6 +276,7 @@ public class ProjectGenerator {
   private final Set<BuildTarget> generatedTargets = new HashSet<>();
 
   public ProjectGenerator(
+      XCodeDescriptions xcodeDescriptions,
       TargetGraph targetGraph,
       AppleDependenciesCache dependenciesCache,
       ProjectGenerationStateCache projGenerationStateCache,
@@ -296,6 +299,7 @@ public class ProjectGenerator {
       CxxBuckConfig cxxBuckConfig,
       AppleConfig appleConfig,
       SwiftBuckConfig swiftBuckConfig) {
+    this.xcodeDescriptions = xcodeDescriptions;
     this.targetGraph = targetGraph;
     this.dependenciesCache = dependenciesCache;
     this.projGenerationStateCache = projGenerationStateCache;
@@ -721,11 +725,12 @@ public class ProjectGenerator {
     // -- copy any binary and bundle targets into this bundle
     Iterable<TargetNode<?>> copiedRules =
         AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
+            xcodeDescriptions,
             targetGraph,
             Optional.of(dependenciesCache),
             AppleBuildRules.RecursiveDependenciesMode.COPYING,
             targetNode,
-            Optional.of(AppleBuildRules.XCODE_TARGET_DESCRIPTION_CLASSES));
+            Optional.of(xcodeDescriptions.getXCodeDescriptions()));
     if (bundleRequiresRemovalOfAllTransitiveFrameworks(targetNode)) {
       copiedRules = rulesWithoutFrameworkBundles(copiedRules);
     } else if (bundleRequiresAllTransitiveFrameworks(binaryNode, bundleLoaderNode)) {
@@ -752,13 +757,19 @@ public class ProjectGenerator {
             Optional.of(infoPlistPath),
             /* includeFrameworks */ true,
             AppleResources.collectRecursiveResources(
-                targetGraph, Optional.of(dependenciesCache), targetNode),
+                xcodeDescriptions, targetGraph, Optional.of(dependenciesCache), targetNode),
             AppleResources.collectDirectResources(targetGraph, targetNode),
             AppleBuildRules.collectRecursiveAssetCatalogs(
-                targetGraph, Optional.of(dependenciesCache), ImmutableList.of(targetNode)),
+                xcodeDescriptions,
+                targetGraph,
+                Optional.of(dependenciesCache),
+                ImmutableList.of(targetNode)),
             AppleBuildRules.collectDirectAssetCatalogs(targetGraph, targetNode),
             AppleBuildRules.collectRecursiveWrapperResources(
-                targetGraph, Optional.of(dependenciesCache), ImmutableList.of(targetNode)),
+                xcodeDescriptions,
+                targetGraph,
+                Optional.of(dependenciesCache),
+                ImmutableList.of(targetNode)),
             Optional.of(copyFilesBuildPhases),
             bundleLoaderNode);
 
@@ -1882,6 +1893,7 @@ public class ProjectGenerator {
             Stream.of(node),
             // ... And recursive dependencies that gets linked in
             AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
+                    xcodeDescriptions,
                     targetGraph,
                     Optional.of(dependenciesCache),
                     AppleBuildRules.RecursiveDependenciesMode.LINKING,
@@ -2098,6 +2110,7 @@ public class ProjectGenerator {
     addCoreDataModelBuildPhase(
         targetGroup,
         AppleBuildRules.collectTransitiveBuildRules(
+            xcodeDescriptions,
             targetGraph,
             Optional.of(dependenciesCache),
             AppleBuildRules.CORE_DATA_MODEL_DESCRIPTION_CLASSES,
@@ -2108,6 +2121,7 @@ public class ProjectGenerator {
       TargetNode<? extends CxxLibraryDescription.CommonArg> targetNode, PBXGroup targetGroup) {
     ImmutableSet<AppleWrapperResourceArg> allSceneKitAssets =
         AppleBuildRules.collectTransitiveBuildRules(
+            xcodeDescriptions,
             targetGraph,
             Optional.of(dependenciesCache),
             AppleBuildRules.SCENEKIT_ASSETS_DESCRIPTION_CLASSES,
@@ -3023,6 +3037,7 @@ public class ProjectGenerator {
     ImmutableSet.Builder<Path> builder = ImmutableSet.builder();
     for (TargetNode<?> input :
         AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
+            xcodeDescriptions,
             targetGraph,
             Optional.of(dependenciesCache),
             AppleBuildRules.RecursiveDependenciesMode.BUILDING,
@@ -3054,11 +3069,12 @@ public class ProjectGenerator {
     // Visits public headers from dependencies.
     for (TargetNode<?> input :
         AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
+            xcodeDescriptions,
             targetGraph,
             Optional.of(dependenciesCache),
             AppleBuildRules.RecursiveDependenciesMode.BUILDING,
             targetNode,
-            Optional.of(AppleBuildRules.XCODE_TARGET_DESCRIPTION_CLASSES))) {
+            Optional.of(xcodeDescriptions.getXCodeDescriptions()))) {
       getAppleNativeNode(targetGraph, input)
           .ifPresent(argTargetNode -> visitor.accept(argTargetNode, HeaderVisibility.PUBLIC));
     }
@@ -3114,12 +3130,13 @@ public class ProjectGenerator {
   private Iterable<FrameworkPath> collectRecursiveFrameworkDependencies(TargetNode<?> targetNode) {
     return FluentIterable.from(
             AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
+                xcodeDescriptions,
                 targetGraph,
                 Optional.of(dependenciesCache),
                 AppleBuildRules.RecursiveDependenciesMode.LINKING,
                 targetNode,
                 ImmutableSet.<Class<? extends BaseDescription<?>>>builder()
-                    .addAll(AppleBuildRules.XCODE_TARGET_DESCRIPTION_CLASSES)
+                    .addAll(xcodeDescriptions.getXCodeDescriptions())
                     .add(PrebuiltAppleFrameworkDescription.class)
                     .build()))
         .transformAndConcat(
@@ -3153,6 +3170,7 @@ public class ProjectGenerator {
       TargetNode<?> targetNode) {
     return FluentIterable.from(
             AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
+                xcodeDescriptions,
                 targetGraph,
                 Optional.of(dependenciesCache),
                 AppleBuildRules.RecursiveDependenciesMode.BUILDING,
@@ -3170,6 +3188,7 @@ public class ProjectGenerator {
       collectRecursiveExportedPlatformPreprocessorFlags(TargetNode<?> targetNode) {
     return FluentIterable.from(
             AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
+                xcodeDescriptions,
                 targetGraph,
                 Optional.of(dependenciesCache),
                 AppleBuildRules.RecursiveDependenciesMode.BUILDING,
@@ -3190,6 +3209,7 @@ public class ProjectGenerator {
       TargetNode<?> targetNode) {
     return FluentIterable.from(
             AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
+                xcodeDescriptions,
                 targetGraph,
                 Optional.of(dependenciesCache),
                 AppleBuildRules.RecursiveDependenciesMode.LINKING,
@@ -3211,6 +3231,7 @@ public class ProjectGenerator {
       collectRecursiveExportedPlatformLinkerFlags(TargetNode<?> targetNode) {
     return FluentIterable.from(
             AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
+                xcodeDescriptions,
                 targetGraph,
                 Optional.of(dependenciesCache),
                 AppleBuildRules.RecursiveDependenciesMode.LINKING,
@@ -3290,11 +3311,12 @@ public class ProjectGenerator {
     FluentIterable<TargetNode<?>> allDeps =
         FluentIterable.from(
             AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
+                xcodeDescriptions,
                 targetGraph,
                 Optional.of(dependenciesCache),
                 AppleBuildRules.RecursiveDependenciesMode.LINKING,
                 targetNode,
-                AppleBuildRules.XCODE_TARGET_DESCRIPTION_CLASSES));
+                xcodeDescriptions.getXCodeDescriptions()));
     return allDeps.filter(this::isLibraryWithSourcesToCompile);
   }
 

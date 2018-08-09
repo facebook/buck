@@ -44,7 +44,8 @@ class KnownBuildRuleDescriptionsFactory {
         sandboxExecutionStrategyFactory.create(processExecutor, config);
 
     DescriptionCreationContext descriptionCreationContext =
-        DescriptionCreationContext.of(config, toolchainProvider, sandboxExecutionStrategy);
+        DescriptionCreationContext.of(
+            config, toolchainProvider, sandboxExecutionStrategy, pluginManager);
     List<DescriptionProvider> descriptionProviders =
         pluginManager.getExtensions(DescriptionProvider.class);
     for (DescriptionProvider provider : descriptionProviders) {

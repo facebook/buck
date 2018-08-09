@@ -49,6 +49,8 @@ import com.facebook.buck.apple.AppleTestBuilder;
 import com.facebook.buck.apple.CoreDataModelBuilder;
 import com.facebook.buck.apple.FakeAppleRuleDescriptions;
 import com.facebook.buck.apple.SceneKitAssetsBuilder;
+import com.facebook.buck.apple.XCodeDescriptions;
+import com.facebook.buck.apple.XCodeDescriptionsFactory;
 import com.facebook.buck.apple.XcodePostbuildScriptBuilder;
 import com.facebook.buck.apple.XcodePrebuildScriptBuilder;
 import com.facebook.buck.apple.clang.HeaderMap;
@@ -107,6 +109,7 @@ import com.facebook.buck.halide.HalideBuckConfig;
 import com.facebook.buck.halide.HalideLibraryBuilder;
 import com.facebook.buck.halide.HalideLibraryDescription;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
@@ -5558,8 +5561,12 @@ public class ProjectGeneratorTest {
     AppleDependenciesCache cache = new AppleDependenciesCache(targetGraph);
     ProjectGenerationStateCache projStateCache = new ProjectGenerationStateCache();
 
+    XCodeDescriptions xcodeDescriptions =
+        XCodeDescriptionsFactory.create(BuckPluginManagerFactory.createPluginManager());
+
     ProjectGenerator projectGeneratorLib2 =
         new ProjectGenerator(
+            xcodeDescriptions,
             targetGraph,
             cache,
             projStateCache,
@@ -5605,6 +5612,7 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator projectGeneratorLib1 =
         new ProjectGenerator(
+            xcodeDescriptions,
             targetGraph,
             cache,
             projStateCache,
@@ -5737,10 +5745,14 @@ public class ProjectGeneratorTest {
             .map(TargetNode::getBuildTarget)
             .collect(ImmutableSet.toImmutableSet());
 
+    XCodeDescriptions xcodeDescriptions =
+        XCodeDescriptionsFactory.create(BuckPluginManagerFactory.createPluginManager());
+
     TargetGraph targetGraph = TargetGraphFactory.newInstance(ImmutableSet.copyOf(allNodes));
     AppleDependenciesCache cache = new AppleDependenciesCache(targetGraph);
     ProjectGenerationStateCache projStateCache = new ProjectGenerationStateCache();
     return new ProjectGenerator(
+        xcodeDescriptions,
         targetGraph,
         cache,
         projStateCache,

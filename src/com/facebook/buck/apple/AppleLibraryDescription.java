@@ -190,6 +190,7 @@ public class AppleLibraryDescription
       FlavorDomain.from("C/C++ Library Type", Type.class);
 
   private final ToolchainProvider toolchainProvider;
+  private final XCodeDescriptions xcodeDescriptions;
   private final Optional<SwiftLibraryDescription> swiftDelegate;
   private final AppleConfig appleConfig;
   private final SwiftBuckConfig swiftBuckConfig;
@@ -200,6 +201,7 @@ public class AppleLibraryDescription
 
   public AppleLibraryDescription(
       ToolchainProvider toolchainProvider,
+      XCodeDescriptions xcodeDescriptions,
       SwiftLibraryDescription swiftDelegate,
       AppleConfig appleConfig,
       SwiftBuckConfig swiftBuckConfig,
@@ -208,6 +210,7 @@ public class AppleLibraryDescription
       CxxLibraryFactory cxxLibraryFactory,
       CxxLibraryMetadataFactory cxxLibraryMetadataFactory) {
     this.toolchainProvider = toolchainProvider;
+    this.xcodeDescriptions = xcodeDescriptions;
     this.cxxLibraryImplicitFlavors = cxxLibraryImplicitFlavors;
     this.cxxLibraryFlavored = cxxLibraryFlavored;
     this.cxxLibraryFactory = cxxLibraryFactory;
@@ -403,6 +406,7 @@ public class AppleLibraryDescription
     CxxPlatformsProvider cxxPlatformsProvider = getCxxPlatformsProvider();
 
     return AppleDescriptions.createAppleBundle(
+        xcodeDescriptions,
         cxxPlatformsProvider,
         getAppleCxxPlatformDomain(),
         targetGraph,

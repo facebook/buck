@@ -95,6 +95,7 @@ public class XCodeProjectSubCommand extends ProjectSubCommand {
     XCodeProjectCommandHelper xcodeProjectCommandHelper =
         new XCodeProjectCommandHelper(
             params.getBuckEventBus(),
+            params.getPluginManager(),
             params.getParser(),
             params.getBuckConfig(),
             params.getVersionedTargetGraphCache(),

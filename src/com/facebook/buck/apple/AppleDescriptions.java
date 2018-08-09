@@ -326,6 +326,7 @@ public class AppleDescriptions {
   }
 
   public static Optional<AppleAssetCatalog> createBuildRuleForTransitiveAssetCatalogDependencies(
+      XCodeDescriptions xcodeDescriptions,
       TargetGraph targetGraph,
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
@@ -340,7 +341,7 @@ public class AppleDescriptions {
 
     ImmutableSet<AppleAssetCatalogDescriptionArg> assetCatalogArgs =
         AppleBuildRules.collectRecursiveAssetCatalogs(
-            targetGraph, Optional.empty(), ImmutableList.of(targetNode));
+            xcodeDescriptions, targetGraph, Optional.empty(), ImmutableList.of(targetNode));
 
     ImmutableSortedSet.Builder<SourcePath> assetCatalogDirsBuilder =
         ImmutableSortedSet.naturalOrder();
@@ -407,6 +408,7 @@ public class AppleDescriptions {
   }
 
   public static Optional<CoreDataModel> createBuildRulesForCoreDataDependencies(
+      XCodeDescriptions xcodeDescriptions,
       TargetGraph targetGraph,
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
@@ -417,6 +419,7 @@ public class AppleDescriptions {
 
     ImmutableSet<AppleWrapperResourceArg> coreDataModelArgs =
         AppleBuildRules.collectTransitiveBuildRules(
+            xcodeDescriptions,
             targetGraph,
             Optional.empty(),
             AppleBuildRules.CORE_DATA_MODEL_DESCRIPTION_CLASSES,
@@ -442,6 +445,7 @@ public class AppleDescriptions {
   }
 
   public static Optional<SceneKitAssets> createBuildRulesForSceneKitAssetsDependencies(
+      XCodeDescriptions xcodeDescriptions,
       TargetGraph targetGraph,
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
@@ -451,6 +455,7 @@ public class AppleDescriptions {
 
     ImmutableSet<AppleWrapperResourceArg> sceneKitAssetsArgs =
         AppleBuildRules.collectTransitiveBuildRules(
+            xcodeDescriptions,
             targetGraph,
             Optional.empty(),
             AppleBuildRules.SCENEKIT_ASSETS_DESCRIPTION_CLASSES,
@@ -547,6 +552,7 @@ public class AppleDescriptions {
   }
 
   static AppleBundle createAppleBundle(
+      XCodeDescriptions xcodeDescriptions,
       CxxPlatformsProvider cxxPlatformsProvider,
       FlavorDomain<AppleCxxPlatform> appleCxxPlatforms,
       TargetGraph targetGraph,
@@ -597,6 +603,7 @@ public class AppleDescriptions {
 
     AppleBundleResources collectedResources =
         AppleResources.collectResourceDirsAndFiles(
+            xcodeDescriptions,
             targetGraph,
             graphBuilder,
             Optional.empty(),
@@ -644,6 +651,7 @@ public class AppleDescriptions {
 
     Optional<AppleAssetCatalog> assetCatalog =
         createBuildRuleForTransitiveAssetCatalogDependencies(
+            xcodeDescriptions,
             targetGraph,
             buildTargetWithoutBundleSpecificFlavors,
             projectFilesystem,
@@ -658,6 +666,7 @@ public class AppleDescriptions {
 
     Optional<CoreDataModel> coreDataModel =
         createBuildRulesForCoreDataDependencies(
+            xcodeDescriptions,
             targetGraph,
             buildTargetWithoutBundleSpecificFlavors,
             projectFilesystem,
@@ -668,6 +677,7 @@ public class AppleDescriptions {
 
     Optional<SceneKitAssets> sceneKitAssets =
         createBuildRulesForSceneKitAssetsDependencies(
+            xcodeDescriptions,
             targetGraph,
             buildTargetWithoutBundleSpecificFlavors,
             projectFilesystem,

@@ -71,16 +71,19 @@ public class AppleBundleDescription
   private static final Flavor WATCH = InternalFlavor.of("watch");
 
   private final ToolchainProvider toolchainProvider;
+  private final XCodeDescriptions xcodeDescriptions;
   private final AppleBinaryDescription appleBinaryDescription;
   private final AppleLibraryDescription appleLibraryDescription;
   private final AppleConfig appleConfig;
 
   public AppleBundleDescription(
       ToolchainProvider toolchainProvider,
+      XCodeDescriptions xcodeDescriptions,
       AppleBinaryDescription appleBinaryDescription,
       AppleLibraryDescription appleLibraryDescription,
       AppleConfig appleConfig) {
     this.toolchainProvider = toolchainProvider;
+    this.xcodeDescriptions = xcodeDescriptions;
     this.appleBinaryDescription = appleBinaryDescription;
     this.appleLibraryDescription = appleLibraryDescription;
     this.appleConfig = appleConfig;
@@ -147,6 +150,7 @@ public class AppleBundleDescription
     CxxPlatformsProvider cxxPlatformsProvider = getCxxPlatformsProvider();
 
     return AppleDescriptions.createAppleBundle(
+        xcodeDescriptions,
         cxxPlatformsProvider,
         getAppleCxxPlatformFlavorDomain(),
         context.getTargetGraph(),

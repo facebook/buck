@@ -29,6 +29,7 @@ import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -68,7 +69,11 @@ public class AppleResourcesTest {
     TargetGraph targetGraph = TargetGraphFactory.newInstance(graphNodes);
 
     assertThat(
-        AppleResources.collectRecursiveResources(targetGraph, Optional.empty(), libNode),
+        AppleResources.collectRecursiveResources(
+            XCodeDescriptionsFactory.create(BuckPluginManagerFactory.createPluginManager()),
+            targetGraph,
+            Optional.empty(),
+            libNode),
         hasItem(resourceNode.getConstructorArg()));
   }
 
@@ -100,7 +105,11 @@ public class AppleResourcesTest {
     TargetGraph targetGraph = TargetGraphFactory.newInstance(graphNodes);
 
     assertThat(
-        AppleResources.collectRecursiveResources(targetGraph, Optional.empty(), barLibNode),
+        AppleResources.collectRecursiveResources(
+            XCodeDescriptionsFactory.create(BuckPluginManagerFactory.createPluginManager()),
+            targetGraph,
+            Optional.empty(),
+            barLibNode),
         hasItems(fooResourceNode.getConstructorArg(), barResourceNode.getConstructorArg()));
   }
 }
