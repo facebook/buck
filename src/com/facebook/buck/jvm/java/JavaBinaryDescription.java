@@ -117,7 +117,7 @@ public class JavaBinaryDescription
         JavaLibraryClasspathProvider.getClasspathDeps(binaryParams.getBuildDeps());
     ImmutableSet<SourcePath> transitiveClasspaths =
         JavaLibraryClasspathProvider.getClasspathsFromLibraries(transitiveClasspathDeps);
-    BuildRule rule =
+    JavaBinary javaBinary =
         new JavaBinary(
             binaryBuildTarget,
             projectFilesystem,
@@ -136,10 +136,12 @@ public class JavaBinaryDescription
 
     // If we're packaging native libraries, construct the rule to build the fat JAR, which packages
     // up the original binary JAR and any required native libraries.
-    if (!nativeLibraries.isEmpty()) {
-      BuildRule innerJarRule = rule;
-      graphBuilder.addToIndex(innerJarRule);
-      SourcePath innerJar = innerJarRule.getSourcePathToOutput();
+    BuildRule rule;
+    if (nativeLibraries.isEmpty()) {
+      rule = javaBinary;
+    } else {
+      graphBuilder.addToIndex(javaBinary);
+      SourcePath innerJar = javaBinary.getSourcePathToOutput();
       rule =
           new JarFattener(
               buildTarget,
@@ -156,6 +158,7 @@ public class JavaBinaryDescription
                   .getByName(JavacOptionsProvider.DEFAULT_NAME, JavacOptionsProvider.class)
                   .getJavacOptions(),
               innerJar,
+              javaBinary,
               nativeLibraries,
               javaOptions.getJavaRuntimeLauncher());
     }
