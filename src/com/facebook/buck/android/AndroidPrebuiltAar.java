@@ -59,7 +59,8 @@ public class AndroidPrebuiltAar extends AndroidLibrary
       UnzipAar unzipAar,
       ConfiguredCompiler configuredCompiler,
       Iterable<PrebuiltJar> exportedDeps,
-      boolean requiredForSourceAbi) {
+      boolean requiredForSourceAbi,
+      Optional<String> mavenCoords) {
     super(
         androidLibraryBuildTarget,
         projectFilesystem,
@@ -91,7 +92,7 @@ public class AndroidPrebuiltAar extends AndroidLibrary
         ImmutableSortedSet.of(),
         JavaAbis.getClassAbiJar(androidLibraryBuildTarget),
         /* sourceOnlyAbiJar */ null,
-        /* mavenCoords */ Optional.empty(),
+        mavenCoords,
         Optional.of(
             ExplicitBuildTargetSourcePath.of(
                 unzipAar.getBuildTarget(), unzipAar.getAndroidManifest())),
