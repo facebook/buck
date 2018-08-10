@@ -16,8 +16,6 @@
 
 package com.facebook.buck.jvm.kotlin;
 
-import static org.junit.Assert.assertTrue;
-
 import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -25,10 +23,6 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -58,13 +52,17 @@ public class KotlinLibraryIntegrationTest {
 
   @Test
   public void shouldAnnotationProcessClassesUsingKapt() throws Exception {
-    ProcessResult buildResult = workspace.runBuckCommand("build", "//com/example/ap/annotation-processing-tool-kapt:kotlin");
+    ProcessResult buildResult =
+        workspace.runBuckCommand(
+            "build", "//com/example/ap/annotation-processing-tool-kapt:kotlin");
     buildResult.assertSuccess("Build should have succeeded.");
   }
 
   @Test
   public void shouldAnnotationProcessClassesUsingJavac() throws Exception {
-    ProcessResult buildResult = workspace.runBuckCommand("build", "//com/example/ap/annotation-processing-tool-javac:kotlin");
+    ProcessResult buildResult =
+        workspace.runBuckCommand(
+            "build", "//com/example/ap/annotation-processing-tool-javac:kotlin");
     buildResult.assertSuccess("Build should have succeeded.");
   }
 

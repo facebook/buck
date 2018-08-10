@@ -243,8 +243,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
 
     ImmutableSortedSet<Path> javaSourceFiles =
         ImmutableSortedSet.copyOf(
-            sources
-                .stream()
+            sources.stream()
                 .filter(input -> !PathMatchers.KOTLIN_PATH_MATCHER.matches(input))
                 .collect(Collectors.toSet()));
 
@@ -266,7 +265,8 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
 
     switch (annotationProcessingTool) {
       case KAPT:
-        finalJavacOptions = javacOptions.withAnnotationProcessingParams(AnnotationProcessingParams.EMPTY);
+        finalJavacOptions =
+            javacOptions.withAnnotationProcessingParams(AnnotationProcessingParams.EMPTY);
         break;
 
       case JAVAC:
@@ -274,7 +274,8 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
         break;
 
       default:
-        throw new IllegalStateException("Unexpected annotationProcessingTool " + annotationProcessingTool);
+        throw new IllegalStateException(
+            "Unexpected annotationProcessingTool " + annotationProcessingTool);
     }
 
     new JavacToJarStepFactory(javac, finalJavacOptions, extraClassPath)
@@ -284,8 +285,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
             invokingRule,
             javacParameters,
             steps,
-            buildableContext
-        );
+            buildableContext);
   }
 
   private void addKaptGenFolderStep(
@@ -307,10 +307,8 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
 
     ImmutableList<String> pluginFields =
         ImmutableList.copyOf(
-            javacOptions
-                .getAnnotationProcessingParams()
-                .getAnnotationProcessors(filesystem, resolver)
-                .stream()
+            javacOptions.getAnnotationProcessingParams()
+                .getAnnotationProcessors(filesystem, resolver).stream()
                 .map(ResolvedJavacPluginProperties::getJavacPluginJsr199Fields)
                 .map(JavacPluginJsr199Fields::getClasspath)
                 .flatMap(List::stream)

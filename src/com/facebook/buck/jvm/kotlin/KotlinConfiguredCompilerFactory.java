@@ -58,8 +58,8 @@ public class KotlinConfiguredCompilerFactory extends ConfiguredCompilerFactory {
       JavacOptions javacOptions,
       BuildRuleResolver buildRuleResolver,
       ToolchainProvider toolchainProvider) {
-    KotlinLibraryDescription.CoreArg kotlinArgs
-        = Preconditions.checkNotNull((KotlinLibraryDescription.CoreArg) args);
+    KotlinLibraryDescription.CoreArg kotlinArgs =
+        Preconditions.checkNotNull((KotlinLibraryDescription.CoreArg) args);
     return new KotlincToJarStepFactory(
         kotlinBuckConfig.getKotlinc(),
         kotlinBuckConfig.getKotlinHomeLibraries(),
