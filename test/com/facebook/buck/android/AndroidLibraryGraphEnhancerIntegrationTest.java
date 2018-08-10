@@ -22,6 +22,7 @@ import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.string.MoreStrings;
 import java.io.IOException;
 import org.hamcrest.Matchers;
 import org.junit.Before;
@@ -63,9 +64,10 @@ public class AndroidLibraryGraphEnhancerIntegrationTest {
     assertThat(
         result.getStderr(),
         Matchers.stringContainsInOrder(
-            "Test.java:1: error: package com.facebook.buck does not exist\n"
-                + "import com.facebook.buck.R;\n"
-                + "                        ^"));
+            MoreStrings.linesToText(
+                "Test.java:1: error: package com.facebook.buck does not exist",
+                "import com.facebook.buck.R;",
+                "                        ^")));
   }
 
   @Test
@@ -76,8 +78,9 @@ public class AndroidLibraryGraphEnhancerIntegrationTest {
     assertThat(
         result.getStderr(),
         Matchers.stringContainsInOrder(
-            "Test.java:1: error: package com.facebook.buck does not exist\n"
-                + "import com.facebook.buck.R;\n"
-                + "                        ^"));
+            MoreStrings.linesToText(
+                "Test.java:1: error: package com.facebook.buck does not exist",
+                "import com.facebook.buck.R;",
+                "                        ^")));
   }
 }

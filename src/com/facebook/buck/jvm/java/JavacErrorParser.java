@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
+import com.facebook.buck.util.string.MoreStrings;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -33,14 +34,21 @@ public class JavacErrorParser {
   private static ImmutableList<Pattern> onePartPatterns =
       ImmutableList.of(
           Pattern.compile("error: cannot access (?<symbol>\\S+)"),
-          Pattern.compile("error: package \\S+ does not exist\nimport (?<symbol>\\S+);"),
           Pattern.compile(
-              "error: package \\S+ does not exist\nimport static (?<symbol>\\S+)\\.[^.]+;"));
+              "error: package \\S+ does not exist"
+                  + System.lineSeparator()
+                  + "import (?<symbol>\\S+);"),
+          Pattern.compile(
+              "error: package \\S+ does not exist"
+                  + System.lineSeparator()
+                  + "import static (?<symbol>\\S+)\\.[^.]+;"));
 
   private static ImmutableList<Pattern> twoPartPatterns =
       ImmutableList.of(
           Pattern.compile(
-              "\\s*symbol:\\s+class (?<class>\\S+)\n\\s*location:\\s+package (?<package>\\S+)"));
+              "\\s*symbol:\\s+class (?<class>\\S+)"
+                  + System.lineSeparator()
+                  + "\\s*location:\\s+package (?<package>\\S+)"));
 
   // These patterns match missing symbols that live in the current package.  Usually, that means one
   // java package that's split up into multiple java_library rules, which depend on each other.
@@ -54,10 +62,11 @@ public class JavacErrorParser {
   private static ImmutableList<Pattern> localPackagePatterns =
       ImmutableList.of(
           Pattern.compile(
-              "^(?<file>.+):[0-9]+: error: cannot find symbol\n"
-                  + ".*\n"
-                  + ".*\n"
-                  + "\\s*symbol:\\s+(class|variable) (?<class>\\S+)"),
+              MoreStrings.linesToText(
+                  "^(?<file>.+):[0-9]+: error: cannot find symbol",
+                  ".*",
+                  ".*",
+                  "\\s*symbol:\\s+(class|variable) (?<class>\\S+)")),
           Pattern.compile("^(?<file>.+):[0-9]+: error: package (?<class>\\S+) does not exist"));
 
   public JavacErrorParser(ProjectFilesystem filesystem, JavaPackageFinder javaPackageFinder) {
