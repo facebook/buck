@@ -1,9 +1,9 @@
-build/classes
-build/src-gen/classes
-build/aosp/classes
-build/dx_classes
-build/tracing-api/classes
-build/bootstrapper/classes
+ant-out/classes
+ant-out/src-gen/classes
+ant-out/aosp/classes
+ant-out/dx_classes
+ant-out/tracing-api/classes
+ant-out/bootstrapper/classes
 src
 src-gen
 third-party/java/android/common-25.3.0.jar

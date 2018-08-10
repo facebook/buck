@@ -1,5 +1,5 @@
 # Ant
-/build/
+/ant-out/
 
 # IntelliJ build
 /build-ij/

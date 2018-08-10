@@ -5,7 +5,7 @@
   <property name="aosp.src.dir" value="third-party/java/aosp/src" />
   <property name="test.dir" value="${basedir}/test" />
   <property name="third-party.dir" value="${basedir}/third-party" />
-  <property name="build.dir" value="${basedir}/build" />
+  <property name="build.dir" value="${basedir}/ant-out" />
   <property name="build.successful.file" value="${build.dir}/successful-build" />
   <property name="classes.dir.name" value="classes" />
   <property name="classes.dir" value="${build.dir}/${classes.dir.name}" />
