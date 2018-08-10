@@ -21,6 +21,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -48,7 +49,7 @@ public class HybridThriftOverHttpServiceImplTest {
 
     Digest digestResponse = new Digest();
     HybridThriftOverHttpServiceImpl.readFromStream(
-        new DataInputStream(new ByteArrayInputStream(data)),
+        toDataInputStream(new ByteArrayInputStream(data)),
         PROTOCOL,
         HybridThriftResponseHandler.createNoPayloadHandler(digestResponse));
 
@@ -97,7 +98,7 @@ public class HybridThriftOverHttpServiceImplTest {
     Digest digestResponse = new Digest();
     ByteArrayOutputStream payload1Actual = new ByteArrayOutputStream();
     ByteArrayOutputStream payload2Actual = new ByteArrayOutputStream();
-    try (DataInputStream inputStream = new DataInputStream(new ByteArrayInputStream(data))) {
+    try (DataInputStream inputStream = toDataInputStream(new ByteArrayInputStream(data))) {
       HybridThriftOverHttpServiceImpl.readFromStream(
           inputStream,
           PROTOCOL,
@@ -136,5 +137,44 @@ public class HybridThriftOverHttpServiceImplTest {
     Assert.assertEquals(digestOriginal, digestResponse);
     Assert.assertTrue(Arrays.equals(payload1, payload1Actual.toByteArray()));
     Assert.assertTrue(Arrays.equals(payload2, payload2Actual.toByteArray()));
+  }
+
+  private static DataInputStream toDataInputStream(InputStream innerStream) {
+    InputStream readAfterCloseThrowsStream =
+        new FilterInputStream(innerStream) {
+          private boolean isClosed = false;
+
+          @Override
+          public int read() throws IOException {
+            assertNotClosed();
+            return super.read();
+          }
+
+          @Override
+          public int read(byte[] b) throws IOException {
+            assertNotClosed();
+            return super.read(b);
+          }
+
+          @Override
+          public int read(byte[] b, int off, int len) throws IOException {
+            assertNotClosed();
+            return super.read(b, off, len);
+          }
+
+          private void assertNotClosed() {
+            if (isClosed) {
+              Assert.fail("Stream already closed.");
+            }
+          }
+
+          @Override
+          public void close() throws IOException {
+            super.close();
+            isClosed = true;
+          }
+        };
+
+    return new DataInputStream(readAfterCloseThrowsStream);
   }
 }
