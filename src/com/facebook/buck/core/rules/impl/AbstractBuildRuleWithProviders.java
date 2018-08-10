@@ -22,6 +22,7 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.provider.BuildRuleInfoProvider;
+import com.facebook.buck.core.rules.provider.BuildRuleInfoProvider.ProviderKey;
 import com.facebook.buck.core.rules.provider.BuildRuleInfoProviderCollection;
 import com.facebook.buck.core.rules.provider.MissingProviderException;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
@@ -84,7 +85,7 @@ public abstract class AbstractBuildRuleWithProviders implements BuildRule {
    * @throws MissingProviderException
    */
   @Override
-  public final <T extends BuildRuleInfoProvider> T getProvider(T.ProviderKey providerKey)
+  public final <T extends BuildRuleInfoProvider> T getProvider(ProviderKey providerKey)
       throws MissingProviderException {
     return providers.get(providerKey);
   }
