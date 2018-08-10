@@ -50,16 +50,16 @@ public abstract class HybridThriftResponseHandler<ThriftResponse extends TBase<?
   }
 
   /** The thrift response. */
-  public ThriftResponse getThriftResponse() {
+  public ThriftResponse getResponse() {
     return response;
   }
 
   /** Total number of payloads expected for the current thrift response. */
   public abstract int getTotalPayloads();
 
-  /** Size bytes of the nth payload. */
+  /** Size bytes of the nth payload. Must be positive. */
   public abstract long getPayloadSizeBytes(int index);
 
-  /** Where to write the nth payload. */
+  /** Where to write the nth payload bytes to. */
   public abstract OutputStream getStreamForPayload(int index);
 }

@@ -131,7 +131,7 @@ public class HybridThriftOverHttpServiceImpl<
       HybridThriftResponseHandler<ThriftResponse> responseHandler)
       throws IOException {
 
-    ThriftResponse thriftResponse = responseHandler.getThriftResponse();
+    ThriftResponse thriftResponse = responseHandler.getResponse();
     int thriftDataSizeBytes = rawBodyStream.readInt();
     Preconditions.checkState(
         thriftDataSizeBytes >= 0,
@@ -148,6 +148,10 @@ public class HybridThriftOverHttpServiceImpl<
     int payloadCount = responseHandler.getTotalPayloads();
     for (int i = 0; i < payloadCount; ++i) {
       long payloadSizeBytes = responseHandler.getPayloadSizeBytes(i);
+      Preconditions.checkState(
+          payloadSizeBytes > 0,
+          "All HybridThrift payloads must have a positive number of bytes instead of [%d bytes].",
+          payloadSizeBytes);
       try (OutputStream outStream = responseHandler.getStreamForPayload(i)) {
         ByteStreams.copy(ByteStreams.limit(bodyStream, payloadSizeBytes), outStream);
       }
