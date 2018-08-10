@@ -1,0 +1,10 @@
+python_library(
+    name = "pathtest-lib",
+    srcs = ["pathtest.py"],
+)
+
+python_binary(
+    name = "pathtest",
+    main_module = "pathtest.pathtest",
+    deps = [":pathtest-lib"],
+)

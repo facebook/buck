@@ -40,10 +40,14 @@ import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
+import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.CreateSymlinksForTests;
+import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.util.ProcessExecutor.Result;
+import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.config.Config;
 import com.facebook.buck.util.config.Configs;
 import com.facebook.buck.util.environment.Platform;
@@ -60,6 +64,7 @@ import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.Optional;
 import org.hamcrest.Matchers;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -429,5 +434,21 @@ public class PythonBinaryIntegrationTest {
             .setSections(rawConfig.getRawConfig())
             .build();
     return new PythonBuckConfig(buckConfig);
+  }
+
+  @Test
+  public void stripsPathEarlyInInplaceBinaries() throws IOException, InterruptedException {
+    assumeThat(packageStyle, Matchers.is(PackageStyle.INPLACE));
+    Path pexPath = workspace.buildAndReturnOutput("//pathtest:pathtest");
+
+    DefaultProcessExecutor executor = new DefaultProcessExecutor(new TestConsole());
+
+    Result ret =
+        executor.launchAndExecute(
+            ProcessExecutorParams.builder()
+                .setDirectory(workspace.resolve("pathtest"))
+                .setCommand(ImmutableList.of(pexPath.toString()))
+                .build());
+    Assert.assertEquals(0, ret.getExitCode());
   }
 }
