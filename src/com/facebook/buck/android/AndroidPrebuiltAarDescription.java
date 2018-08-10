@@ -215,7 +215,8 @@ public class AndroidPrebuiltAarDescription
                 .getJavacOptions(),
             new AndroidClasspathProvider(toolchainProvider)),
         /* exportedDeps */ javaDeps,
-        args.getRequiredForSourceOnlyAbi());
+        args.getRequiredForSourceOnlyAbi(),
+        args.getMavenCoords());
   }
 
   @BuckStyleImmutable
@@ -227,6 +228,8 @@ public class AndroidPrebuiltAarDescription
     Optional<SourcePath> getSourceJar();
 
     Optional<String> getJavadocUrl();
+
+    Optional<String> getMavenCoords();
 
     @Override
     @Value.Default
