@@ -61,7 +61,6 @@ import com.google.devtools.build.lib.profiler.Profiler.Format;
 import com.google.devtools.build.lib.profiler.Profiler.ProfiledTaskKinds;
 import java.io.BufferedOutputStream;
 import java.io.Closeable;
-import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
@@ -441,7 +440,10 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
     builder.put(cellName, section, field, value);
   }
 
-  private void parseConfigFileOption(CellConfig.Builder builder, String filename) {
+  private void parseConfigFileOption(
+      ImmutableMap<RelativeCellName, Path> cellMapping,
+      CellConfig.Builder builder,
+      String filename) {
     if (filename == null) {
       return;
     }
@@ -451,12 +453,18 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
       filename = matches[1];
       if (matches[0].equals("//")) {
         cellName = RelativeCellName.ROOT_CELL_NAME;
-      } else if (matches[0].matches("^//.*")) {
-        cellName = RelativeCellName.of(ImmutableSet.of(matches[0].substring(2)));
+      } else if (matches[0].matches("^.*//")) {
+        cellName =
+            RelativeCellName.of(ImmutableSet.of(matches[0].substring(0, matches[0].length() - 2)));
       }
     }
 
-    Path path = new File(filename).toPath();
+    Path projectRoot =
+        cellMapping.get(
+            cellName.equals(RelativeCellName.ALL_CELLS_SPECIAL_NAME)
+                ? RelativeCellName.ROOT_CELL_NAME
+                : cellName);
+    Path path = projectRoot.resolve(filename);
     ImmutableMap<String, ImmutableMap<String, String>> sectionsToEntries;
 
     try {
@@ -501,12 +509,12 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
 
   @Override
   @SuppressWarnings("unchecked")
-  public CellConfig getConfigOverrides() {
+  public CellConfig getConfigOverrides(ImmutableMap<RelativeCellName, Path> cellMapping) {
     CellConfig.Builder builder = CellConfig.builder();
 
     for (Object option : configOverrides) {
       if (option instanceof String) {
-        parseConfigFileOption(builder, (String) option);
+        parseConfigFileOption(cellMapping, builder, (String) option);
       } else {
         parseConfigOption(builder, (Pair<String, String>) option);
       }

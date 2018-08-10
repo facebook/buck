@@ -478,11 +478,10 @@ public class InterCellIntegrationTest {
     TestDataHelper.overrideBuckconfig(
         secondary, ImmutableMap.of("cxx", ImmutableMap.of("cc", "/does/not/exist")));
 
-    Path arg = tmp.newFile("buckconfig");
-    Files.write(arg, ImmutableList.of("[cxx]", "  cc ="));
+    Files.write(secondary.resolve("buckconfig"), ImmutableList.of("[cxx]", "  cc ="));
 
     ProcessResult result =
-        primary.runBuckBuild("--config-file", "secondary//=" + arg, "//:cxxbinary");
+        primary.runBuckBuild("--config-file", "secondary//=buckconfig", "//:cxxbinary");
 
     result.assertSuccess();
   }

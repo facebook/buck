@@ -132,14 +132,14 @@ public class MainIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "includes_override", tmp);
     workspace.setUp();
 
-    Path arg = tmp.newFile("buckconfig");
-    Files.write(arg, ImmutableList.of("[buildfile]", "  includes = //includes.py"));
+    Files.write(
+        tmp.newFile("buckconfig"), ImmutableList.of("[buildfile]", "  includes = //includes.py"));
 
-    workspace.runBuckCommand("targets", "--config-file", arg.toString(), "//...").assertSuccess();
-
-    workspace.runBuckCommand("targets", "--config-file", "//=" + arg, "//...").assertSuccess();
-
-    workspace.runBuckCommand("targets", "--config-file", "repo//=" + arg, "//...").assertSuccess();
+    workspace.runBuckCommand("targets", "--config-file", "buckconfig", "//...").assertSuccess();
+    workspace.runBuckCommand("targets", "--config-file", "//=buckconfig", "//...").assertSuccess();
+    workspace
+        .runBuckCommand("targets", "--config-file", "repo//=buckconfig", "//...")
+        .assertSuccess();
   }
 
   @Test
@@ -150,10 +150,8 @@ public class MainIntegrationTest {
     String myServer = "//:my_server";
     String myClient = "//:my_client";
 
-    Path arg1 = tmp.newFile("buckconfig1");
-    Files.write(arg1, ImmutableList.of("[alias]", "  server = " + myServer));
-    Path arg2 = tmp.newFile("buckconfig2");
-    Files.write(arg2, ImmutableList.of("[alias]", "  client = " + myClient));
+    Files.write(tmp.newFile("buckconfig1"), ImmutableList.of("[alias]", "  server = " + myServer));
+    Files.write(tmp.newFile("buckconfig2"), ImmutableList.of("[alias]", "  client = " + myClient));
 
     ProcessResult result =
         workspace.runBuckCommand(
@@ -161,9 +159,9 @@ public class MainIntegrationTest {
             "alias",
             "--list-map",
             "--config-file",
-            arg1.toString(),
+            "buckconfig1",
             "--config-file",
-            arg2.toString());
+            "buckconfig2");
     result.assertSuccess();
 
     // Remove trailing newline from stdout before passing to Splitter.

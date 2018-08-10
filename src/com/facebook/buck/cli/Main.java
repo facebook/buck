@@ -525,12 +525,12 @@ public final class Main {
 
     try {
       ImmutableMap<Path, RawConfig> overridesByPath =
-          command.getConfigOverrides().getOverridesByPath(cellMapping);
+          command.getConfigOverrides(cellMapping).getOverridesByPath(cellMapping);
       rootCellConfigOverrides =
           Optional.ofNullable(overridesByPath.get(rootPath)).orElse(RawConfig.of());
     } catch (MalformedOverridesException exception) {
       rootCellConfigOverrides =
-          command.getConfigOverrides().getForCell(RelativeCellName.ROOT_CELL_NAME);
+          command.getConfigOverrides(cellMapping).getForCell(RelativeCellName.ROOT_CELL_NAME);
     }
     return Configs.createDefaultConfig(rootPath, rootCellConfigOverrides);
   }
@@ -763,7 +763,7 @@ public final class Main {
                   filesystem,
                   watchman,
                   buckConfig,
-                  command.getConfigOverrides(),
+                  command.getConfigOverrides(rootCellMapping),
                   rootCellCellPathResolver.getPathMapping(),
                   rootCellCellPathResolver,
                   moduleManager,

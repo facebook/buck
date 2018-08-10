@@ -287,7 +287,9 @@ public class TestCommandTest {
         command.getNumTestThreads(
             FakeBuckConfig.builder()
                 .setSections(
-                    command.getConfigOverrides().getForCell(RelativeCellName.ROOT_CELL_NAME))
+                    command
+                        .getConfigOverrides(ImmutableMap.of())
+                        .getForCell(RelativeCellName.ROOT_CELL_NAME))
                 .build()),
         Matchers.equalTo(15));
 
@@ -297,7 +299,9 @@ public class TestCommandTest {
         command.getNumTestThreads(
             FakeBuckConfig.builder()
                 .setSections(
-                    command.getConfigOverrides().getForCell(RelativeCellName.ROOT_CELL_NAME))
+                    command
+                        .getConfigOverrides(ImmutableMap.of())
+                        .getForCell(RelativeCellName.ROOT_CELL_NAME))
                 .build()),
         Matchers.equalTo(1));
   }

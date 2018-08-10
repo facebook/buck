@@ -263,7 +263,10 @@ public class CleanCommandTest {
       ImmutableMap.Builder<String, ImmutableMap<String, String>> mergeConfigBuilder =
           ImmutableMap.builder();
       mergeConfigBuilder.putAll(
-          command.getConfigOverrides().getForCell(RelativeCellName.ROOT_CELL_NAME).getValues());
+          command
+              .getConfigOverrides(ImmutableMap.of())
+              .getForCell(RelativeCellName.ROOT_CELL_NAME)
+              .getValues());
       mergeConfigBuilder.put(
           "cache", ImmutableMap.of("dir_cache_names", "testcache, warmtestcache"));
       mergeConfigBuilder.put(
@@ -274,7 +277,9 @@ public class CleanCommandTest {
       buckConfigBuilder.setSections(mergeConfigBuilder.build());
     } else {
       buckConfigBuilder.setSections(
-          command.getConfigOverrides().getForCell(RelativeCellName.ROOT_CELL_NAME));
+          command
+              .getConfigOverrides(ImmutableMap.of())
+              .getForCell(RelativeCellName.ROOT_CELL_NAME));
     }
     BuckConfig buckConfig = buckConfigBuilder.build();
     Cell cell =

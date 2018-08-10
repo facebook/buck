@@ -63,7 +63,10 @@ public class BuildCommandOptionsTest {
 
     BuckConfig buckConfig =
         FakeBuckConfig.builder()
-            .setSections(command.getConfigOverrides().getForCell(RelativeCellName.ROOT_CELL_NAME))
+            .setSections(
+                command
+                    .getConfigOverrides(ImmutableMap.of())
+                    .getForCell(RelativeCellName.ROOT_CELL_NAME))
             .build();
     assertThat(buckConfig.getNumThreads(), Matchers.equalTo(42));
   }
