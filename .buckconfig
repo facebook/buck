@@ -38,8 +38,8 @@
       .git, \
       .buckd, \
       ant-out, \
-      build-ij, \
       bin, \
+      intellij-out, \
       **/*.swp, \
       **/*#, \
       **/*$, \

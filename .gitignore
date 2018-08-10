@@ -2,7 +2,7 @@
 /ant-out/
 
 # IntelliJ build
-/build-ij/
+/intellij-out/
 
 # Buck
 /buck-out

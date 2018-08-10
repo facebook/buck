@@ -27,8 +27,8 @@
     </wildcardResourcePatterns>
     <annotationProcessing>
       <profile default="true" name="Default" enabled="true">
-        <sourceOutputDir name="build-ij/immutables" />
-        <sourceTestOutputDir name="build-ij/immutables-test" />
+        <sourceOutputDir name="intellij-out/immutables" />
+        <sourceTestOutputDir name="intellij-out/immutables-test" />
         <outputRelativeToContentRoot value="true" />
         <option name="pf4j.storageClassName" value="org.pf4j.processor.ServiceProviderExtensionStorage" />
         <processorPath>

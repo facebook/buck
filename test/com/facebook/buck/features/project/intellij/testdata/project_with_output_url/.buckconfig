@@ -11,4 +11,4 @@
 [intellij]
   jdk_name = Android SDK Version 23
   jdk_type = Android SDK
-  project_compiler_output_url = build-ij/classes
+  project_compiler_output_url = intellij-out/classes
