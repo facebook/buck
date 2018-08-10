@@ -18,7 +18,6 @@ package com.facebook.buck.core.rules.configsetting;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.config.ConfigurationRule;
 import com.facebook.buck.core.rules.config.ConfigurationRuleDescription;
 import com.facebook.buck.core.rules.config.ConfigurationRuleResolver;
@@ -28,10 +27,6 @@ import org.immutables.value.Value;
 
 /**
  * A description for {@code config_setting}.
- *
- * <p>This description provides both {@link ConfigurationRule} and {@link BuildRule}, but creating a
- * {@link BuildRule} is not implemented and only provided to avoid dealing with places where parser
- * expects build rules.
  *
  * <p>This rule should be used to create conditions for {@code select} statements.
  *
