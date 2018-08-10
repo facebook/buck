@@ -51,7 +51,8 @@ public class AndroidBinaryFilesInfo {
           new DexFilesInfo(
               dexFilesInfo.primaryDexPath,
               ImmutableSortedSet.of(),
-              dexFilesInfo.proguardTextFilesPath);
+              dexFilesInfo.proguardTextFilesPath,
+              ImmutableMap.of());
     }
     return dexFilesInfo;
   }

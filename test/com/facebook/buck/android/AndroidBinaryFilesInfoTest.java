@@ -33,6 +33,7 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.types.Either;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -68,7 +69,8 @@ public class AndroidBinaryFilesInfoTest {
         new DexFilesInfo(
             FakeSourcePath.of("primary.dex"),
             ImmutableSortedSet.of(FakeSourcePath.of("secondary_dexes")),
-            Optional.empty());
+            Optional.empty(),
+            ImmutableMap.of());
     AndroidGraphEnhancementResult enhancementResult =
         AndroidGraphEnhancementResult.builder()
             .setDexMergeRule(Either.ofLeft(preDexMerge))

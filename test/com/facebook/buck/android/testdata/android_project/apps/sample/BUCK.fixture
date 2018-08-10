@@ -24,6 +24,27 @@ android_bundle(
 )
 
 android_bundle(
+    name = "app_modular_debug",
+    application_module_configs = {
+        "small_with_no_resource_deps": ["//java/com/sample/small:small_with_no_resource_deps"],
+    },
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifest.xml",
+    module_manifest_skeleton = "ModuleManifest.xml",
+    package_type = "debug",
+    primary_dex_patterns = [
+        "/MyApplication^",
+    ],
+    use_split_dex = True,
+    deps = [
+        "//java/com/sample/app:app",
+        "//java/com/sample/lib:lib",
+        "//java/com/sample/small:small_with_no_resource_deps",
+        "//res/com/sample/base:base_with_lib_dep",
+    ],
+)
+
+android_bundle(
     name = "app_bundle_wrong_aapt_mode",
     aapt_mode = "aapt1",
     keystore = "//keystores:debug",
