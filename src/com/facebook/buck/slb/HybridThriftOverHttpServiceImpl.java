@@ -42,7 +42,7 @@ public class HybridThriftOverHttpServiceImpl<
     implements HybridThriftOverHttpService<ThriftRequest, ThriftResponse> {
 
   public static final MediaType HYBRID_THRIFT_STREAM_CONTENT_TYPE =
-      MediaType.parse("application/x-hybrid-thrift-binary");
+      Preconditions.checkNotNull(MediaType.parse("application/x-hybrid-thrift-binary"));
   public static final String PROTOCOL_HEADER = "X-Thrift-Protocol";
 
   private final HybridThriftOverHttpServiceArgs args;
@@ -145,6 +145,7 @@ public class HybridThriftOverHttpServiceImpl<
         protocol,
         ByteStreams.limit(nonCloseableStream(bodyStream), thriftDataSizeBytes),
         thriftResponse);
+    responseHandler.onResponseParsed();
     int payloadCount = responseHandler.getTotalPayloads();
     for (int i = 0; i < payloadCount; ++i) {
       long payloadSizeBytes = responseHandler.getPayloadSizeBytes(i);

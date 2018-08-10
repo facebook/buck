@@ -155,6 +155,7 @@ public class InMemoryRemoteExecutionHttpService implements HttpService {
     return createResponse(
         new FrontendResponse()
             .setType(request.getType())
+            .setWasSuccessful(true)
             .setRemoteExecutionFetchResponse(response));
   }
 
@@ -163,6 +164,7 @@ public class InMemoryRemoteExecutionHttpService implements HttpService {
     return createResponse(
         new FrontendResponse()
             .setType(responseHandler.getResponse().getType())
+            .setWasSuccessful(true)
             .setRemoteExecutionStoreResponse(new RemoteExecutionStoreResponse()));
   }
 
@@ -181,6 +183,7 @@ public class InMemoryRemoteExecutionHttpService implements HttpService {
     return createResponse(
         new FrontendResponse()
             .setType(frontendRequest.getType())
+            .setWasSuccessful(true)
             .setRemoteExecutionContainsResponse(response));
   }
 
