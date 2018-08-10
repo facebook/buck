@@ -71,83 +71,6 @@ For more examples, see the command descriptions and <strong>Examples</strong> se
   {/call}
 
   {call buck.param}
-    {param name: 'ruletype <rule>' /}
-    {param nodash: true /}
-    {param desc}
-    <p>
-    Print the Python signature for the specified rule.
-    </p>
-
-<p>
-<pre>
-{literal}
-buck audit ruletype remote_file
-{/literal}
-</pre>
-</p>
-
-<p>
-<pre>
-{literal}
-def remote_file (
-    name,
-    sha1,
-    url,
-    labels = None,
-    licenses = None,
-    out = None,
-    type = None,
-):
-    ...
-{/literal}
-</pre>
-</p>
-
-    {/param}                    
-  {/call}
-
-  {call buck.param}
-    {param name: 'ruletypes' /}
-    {param nodash: true /}
-    {param desc}
-    <p>
-    List all the rules that Buck supports, in alphabetical order.
-    </p>
-
-<p>
-<pre>
-{literal}
-buck audit ruletypes
-{/literal}
-</pre>
-</p>
-
-<p>
-<pre>
-{literal}
-android_aar
-android_app_modularity
-android_binary
-android_build_config
-android_bundle
-android_instrumentation_apk
-android_instrumentation_test
-android_library
-android_manifest
-android_prebuilt_aar
-android_resource
-apk_genrule
-apple_asset_catalog
-apple_binary
-&lt;truncated>
-{/literal}
-</pre>
-</p>
-
-    {/param}
-  {/call}
-
-  {call buck.param}
     {param name: 'classpath <targets>' /}
     {param nodash: true /}
     {param desc}
@@ -293,6 +216,83 @@ cxx.cxx&#9;/usr/bin/g++
     <p>
     List the Java modules known by Buck as well as their content hashes and dependencies.
     </p>
+    {/param}
+  {/call}
+
+  {call buck.param}
+    {param name: 'ruletype <rule>' /}
+    {param nodash: true /}
+    {param desc}
+    <p>
+    Print the Python signature for the specified rule.
+    </p>
+
+<p>
+<pre>
+{literal}
+buck audit ruletype remote_file
+{/literal}
+</pre>
+</p>
+
+<p>
+<pre>
+{literal}
+def remote_file (
+    name,
+    sha1,
+    url,
+    labels = None,
+    licenses = None,
+    out = None,
+    type = None,
+):
+    ...
+{/literal}
+</pre>
+</p>
+
+    {/param}
+  {/call}
+
+  {call buck.param}
+    {param name: 'ruletypes' /}
+    {param nodash: true /}
+    {param desc}
+    <p>
+    List all the rules that Buck supports, in alphabetical order.
+    </p>
+
+<p>
+<pre>
+{literal}
+buck audit ruletypes
+{/literal}
+</pre>
+</p>
+
+<p>
+<pre>
+{literal}
+android_aar
+android_app_modularity
+android_binary
+android_build_config
+android_bundle
+android_instrumentation_apk
+android_instrumentation_test
+android_library
+android_manifest
+android_prebuilt_aar
+android_resource
+apk_genrule
+apple_asset_catalog
+apple_binary
+&lt;truncated>
+{/literal}
+</pre>
+</p>
+
     {/param}
   {/call}
 
