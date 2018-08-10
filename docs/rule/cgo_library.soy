@@ -34,7 +34,22 @@ This rule borrows from cxx_binary since C/C++ sources are being compiled.
 
 {call go_common.package_name_arg /}
 
-{call cxx_common.srcs_arg /}
+{call buck.arg}
+  {param name : 'srcs' /}
+  {param default : '[]' /}
+  {param desc}
+  The set of source files to be compiled by this rule. .go files will be compiled with the CGO
+  compiler. Each file needs to have <code>import "C"</code> declared.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name : 'go_srcs' /}
+  {param desc}
+  The set of source files to be compiled by this rule. Go (<code>.go</code>) files are compiled with the Go
+  compiler. In contrast to the <code>srcs</code> argument, these files <em>cannot</em> have <code>import "C"</code> declared.
+  {/param}
+{/call}
 
 {call cxx_common.headers_arg /}
 
