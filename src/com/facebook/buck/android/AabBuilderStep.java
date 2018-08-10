@@ -25,9 +25,9 @@ import com.android.sdklib.build.SealedApkException;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.io.File;
 import java.io.IOException;
@@ -50,7 +50,7 @@ import java.util.zip.ZipFile;
  * apkbuilder tool:
  * https://android.googlesource.com/platform/sdk/+/fd30096196e3747986bdf8a95cc7713dd6e0b239%5E/sdkmanager/libs/sdklib/src/main/java/com/android/sdklib/build/ApkBuilderMain.java
  */
-public class AabBuilderStep extends ApkBuilderStep {
+public class AabBuilderStep implements Step {
 
   private final ProjectFilesystem filesystem;
   private final Path resourceApk;
@@ -69,6 +69,7 @@ public class AabBuilderStep extends ApkBuilderStep {
       Pattern.compile("^.+\\.so$", Pattern.CASE_INSENSITIVE);
   private static final Pattern PATTERN_BITCODELIB_EXT =
       Pattern.compile("^.+\\.bc$", Pattern.CASE_INSENSITIVE);
+  private final AppBuilderBase appBuilderBase;
   private final String moduleName = "base";
 
   /**
@@ -95,23 +96,8 @@ public class AabBuilderStep extends ApkBuilderStep {
       Path pathToKeystore,
       Supplier<KeystoreProperties> keystorePropertiesSupplier,
       boolean debugMode,
-      ImmutableList<String> javaRuntimeLauncher,
       int apkCompressionLevel,
       Path tempBundleConfig) {
-    super(
-        filesystem,
-        resourceApk,
-        pathToOutputApkFile,
-        dexFile,
-        assetDirectories,
-        nativeLibraryDirectories,
-        jarFilesThatMayContainResources,
-        zipFiles,
-        pathToKeystore,
-        keystorePropertiesSupplier,
-        debugMode,
-        javaRuntimeLauncher,
-        apkCompressionLevel);
     this.filesystem = filesystem;
     this.resourceApk = resourceApk;
     this.pathToOutputApkFile = pathToOutputApkFile;
@@ -125,6 +111,8 @@ public class AabBuilderStep extends ApkBuilderStep {
     this.debugMode = debugMode;
     this.apkCompressionLevel = apkCompressionLevel;
     this.tempBundleConfig = tempBundleConfig;
+    this.appBuilderBase =
+        new AppBuilderBase(filesystem, keystorePropertiesSupplier, pathToKeystore);
   }
 
   @Override
@@ -136,7 +124,8 @@ public class AabBuilderStep extends ApkBuilderStep {
     }
 
     try {
-      PrivateKeyAndCertificate privateKeyAndCertificate = createKeystoreProperties();
+      AppBuilderBase.PrivateKeyAndCertificate privateKeyAndCertificate =
+          appBuilderBase.createKeystoreProperties();
       File fakeResApk = filesystem.createTempFile("fake", ".txt").toFile();
       fakeResApk.createNewFile();
       @SuppressWarnings("null")
@@ -307,6 +296,11 @@ public class AabBuilderStep extends ApkBuilderStep {
       Files.copy(in, tempFilePath);
     }
     return tempFile;
+  }
+
+  @Override
+  public String getDescription(ExecutionContext context) {
+    return String.format("Build a Bundle contains following modules: %s", moduleName);
   }
 
   @Override

@@ -299,7 +299,6 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
               pathToKeystore,
               keystoreProperties,
               false,
-              javaRuntimeLauncher.getCommandPrefix(pathResolver),
               apkCompressionLevel,
               tempBundleConfig));
     }
