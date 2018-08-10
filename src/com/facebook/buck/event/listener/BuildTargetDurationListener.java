@@ -18,6 +18,8 @@ package com.facebook.buck.event.listener;
 
 import com.facebook.buck.core.build.event.BuildEvent.RuleCountCalculated;
 import com.facebook.buck.core.build.event.BuildRuleEvent;
+import com.facebook.buck.core.build.event.BuildRuleEvent.BeginningBuildRuleEvent;
+import com.facebook.buck.core.build.event.BuildRuleEvent.EndingBuildRuleEvent;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.actiongraph.ActionGraph;
 import com.facebook.buck.core.rules.BuildRule;
@@ -88,6 +90,12 @@ public class BuildTargetDurationListener implements BuckEventListener {
 
   private Optional<ActionGraph> actionGraph = Optional.empty();
   private Optional<ImmutableSet<BuildTarget>> targetBuildRules = Optional.empty();
+
+  @VisibleForTesting
+  ConcurrentMap<String, BuildRuleInfo> getBuildRuleInfos() {
+    return buildRuleInfos;
+  }
+
   // Hold the latest one for the target
   private ConcurrentMap<String, BuildRuleInfo> buildRuleInfos = Maps.newConcurrentMap();
 
@@ -133,10 +141,7 @@ public class BuildTargetDurationListener implements BuckEventListener {
         "BuildRuleEventSuspended{name=%s, time=%d}",
         event.getBuildRule().getFullyQualifiedName(), event.getTimestamp());
     saveEndOfBuildRuleEvent(
-        event.getBuildRule().getFullyQualifiedName(),
-        event.getBeginningEvent().getNanoTime(),
-        event.getNanoTime(),
-        event.getDuration().getWallMillisDuration());
+        event.getBuildRule().getFullyQualifiedName(), event.getBeginningEvent(), event);
   }
 
   /** Save end of the {@link BuildRuleEvent}. */
@@ -146,25 +151,22 @@ public class BuildTargetDurationListener implements BuckEventListener {
         "BuildRuleEventFinished{name=%s, time=%d}",
         event.getBuildRule().getFullyQualifiedName(), event.getTimestamp());
     saveEndOfBuildRuleEvent(
-        event.getBuildRule().getFullyQualifiedName(),
-        event.getBeginningEvent().getNanoTime(),
-        event.getNanoTime(),
-        event.getDuration().getWallMillisDuration());
+        event.getBuildRule().getFullyQualifiedName(), event.getBeginningEvent(), event);
   }
 
   /** Update end of the {@link BuildRuleEvent}. */
   private void saveEndOfBuildRuleEvent(
-      String buildRuleName, long startTimeNanos, long finishTimeNanos, long duration) {
+      String buildRuleName, BeginningBuildRuleEvent begin, EndingBuildRuleEvent end) {
     Preconditions.checkState(
         buildRuleInfos.containsKey(buildRuleName),
         "First, a BuildRuleEvent %s has to start in order to finish.",
         buildRuleName);
     BuildRuleInfo currentBuildRuleInfo = buildRuleInfos.get(buildRuleName);
-    currentBuildRuleInfo.updateDuration(duration);
-    currentBuildRuleInfo.updateFinish(TimeUnit.NANOSECONDS.toMillis(finishTimeNanos));
+    currentBuildRuleInfo.updateDuration(end.getDuration().getWallMillisDuration());
+    currentBuildRuleInfo.updateFinish(end.getTimestamp());
     currentBuildRuleInfo.addBuildRuleEventInterval(
-        TimeUnit.NANOSECONDS.toMicros(startTimeNanos),
-        TimeUnit.NANOSECONDS.toMicros(finishTimeNanos));
+        TimeUnit.NANOSECONDS.toMicros(begin.getNanoTime()),
+        TimeUnit.NANOSECONDS.toMicros(end.getNanoTime()));
   }
 
   /** Save the {@link ActionGraph} */

@@ -17,6 +17,7 @@
 package com.facebook.buck.event.listener.integration;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.event.listener.BuildTargetDurationListener;
@@ -128,5 +129,6 @@ public class BuildTargetDurationListenerIntegrationTest {
 
     assertTrue(targetBuildsTimesRoot.get(0).has("target-duration"));
     assertTrue(targetBuildsTimesRoot.get(0).get("target-duration").isIntegralNumber());
+    assertNotEquals(0L, targetBuildsTimesRoot.get(0).get("target-duration").longValue());
   }
 }
