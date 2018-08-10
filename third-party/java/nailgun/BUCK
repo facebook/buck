@@ -14,13 +14,3 @@ prebuilt_jar(
         "//third-party/java/jna:jna",
     ],
 )
-
-java_binary(
-    name = "nailgun-uber",
-    main_class = "com.martiansoftware.nailgun.NGServer",
-    deps = [
-        "//third-party/java/jna:jna",
-        "//third-party/java/jna:jna-platform",
-        "//third-party/java/nailgun:nailgun",
-    ],
-)
