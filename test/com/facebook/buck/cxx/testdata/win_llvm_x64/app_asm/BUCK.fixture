@@ -1,0 +1,28 @@
+cxx_library(
+    name = "add_asm",
+    srcs = ["add.asm"],
+)
+
+cxx_binary(
+    name = "app_asm",
+    srcs = ["main.c"],
+    deps = [":add_asm"],
+)
+
+genrule(
+    name = "log",
+    out = "log.txt",
+    cmd_exe = "$(exe //app_asm:app_asm#windows-x86_64) > %OUT%",
+)
+
+genrule(
+    name = "exe-out",
+    out = "app_asm.exe",
+    cmd_exe = "copy $(location //app_asm:app_asm#windows-x86_64) %OUT%",
+)
+
+genrule(
+    name = "lib-out",
+    out = "add_asm.lib",
+    cmd_exe = "copy \"$(location //app_asm:add_asm#windows-x86_64,static)\" %OUT%",
+)

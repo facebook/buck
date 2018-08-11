@@ -42,6 +42,10 @@ public class CompilerProvider extends CxxToolProvider<Compiler> {
     switch (type) {
       case CLANG:
         return new ClangCompiler(tool);
+      case CLANG_CL:
+        return new ClangClCompiler(tool);
+      case CLANG_WINDOWS:
+        return new ClangWindowsCompiler(tool);
       case GCC:
         return new GccCompiler(tool);
       case WINDOWS:

@@ -1,0 +1,12 @@
+cxx_binary(
+    name = "app_xlib",
+    srcs = ["main.c"],
+    link_style = "static",
+    deps = ["x//lib:lib"],
+)
+
+genrule(
+    name = "exe-out",
+    out = "app.exe",
+    cmd_exe = "copy $(location //app_xlib:app_xlib#windows-x86_64) %OUT%",
+)

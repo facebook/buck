@@ -22,6 +22,7 @@ import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
+import java.util.Optional;
 
 public interface ArchiverProvider {
 
@@ -44,7 +45,8 @@ public interface ArchiverProvider {
     };
   }
 
-  static ArchiverProvider from(ToolProvider toolProvider, Platform platform) {
+  /** Creates an appropriate ArchiverProvider instance for the given parameters. */
+  static ArchiverProvider from(ToolProvider toolProvider, Platform platform, Optional<Type> type) {
     return new ArchiverProvider() {
       @Override
       public Archiver resolve(BuildRuleResolver resolver) {
@@ -56,6 +58,9 @@ public interface ArchiverProvider {
           case LINUX:
             return new GnuArchiver(archiver);
           case WINDOWS:
+            if (type.isPresent() && type.get().equals(Type.LLVM_LIB)) {
+              return new ClangWindowsArchiver(archiver);
+            }
             return new WindowsArchiver(archiver);
           case UNKNOWN:
           default:
@@ -69,5 +74,13 @@ public interface ArchiverProvider {
         return toolProvider.getParseTimeDeps();
       }
     };
+  }
+
+  /**
+   * Optional type that can be specified by cxx.archiver_type to indicate the given archiver is
+   * llvm-lib.
+   */
+  enum Type {
+    LLVM_LIB,
   }
 }

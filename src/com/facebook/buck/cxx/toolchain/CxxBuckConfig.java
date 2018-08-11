@@ -59,6 +59,7 @@ public class CxxBuckConfig {
   private static final String BOOST_TEST_DEP = "boost_test_dep";
   private static final String HOST_PLATFORM = "host_platform";
   private static final String ARCHIVER_PLATFORM = "archiver_platform";
+  private static final String ARCHIVER_TYPE = "archiver_type";
   private static final String MAX_TEST_OUTPUT_SIZE = "max_test_output_size";
   private static final String LINKER_PLATFORM = "linker_platform";
   private static final String UNTRACKED_HEADERS = "untracked_headers";
@@ -264,11 +265,13 @@ public class CxxBuckConfig {
   public Optional<ArchiverProvider> getArchiverProvider(Platform defaultPlatform) {
     Optional<ToolProvider> toolProvider =
         delegate.getView(ToolConfig.class).getToolProvider(cxxSection, AR);
+    Optional<ArchiverProvider.Type> type =
+        delegate.getEnum(cxxSection, ARCHIVER_TYPE, ArchiverProvider.Type.class);
     return toolProvider.map(
         archiver -> {
           Optional<Platform> archiverPlatform =
               delegate.getEnum(cxxSection, ARCHIVER_PLATFORM, Platform.class);
-          return ArchiverProvider.from(archiver, archiverPlatform.orElse(defaultPlatform));
+          return ArchiverProvider.from(archiver, archiverPlatform.orElse(defaultPlatform), type);
         });
   }
 

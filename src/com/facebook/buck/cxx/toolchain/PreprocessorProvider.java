@@ -45,6 +45,8 @@ public class PreprocessorProvider extends CxxToolProvider<Preprocessor> {
         return new GccPreprocessor(tool);
       case WINDOWS:
         return new WindowsPreprocessor(tool);
+      case CLANG_WINDOWS:
+        return new ClangWindowsPreprocessor(tool);
         // $CASES-OMITTED$
       default:
     }

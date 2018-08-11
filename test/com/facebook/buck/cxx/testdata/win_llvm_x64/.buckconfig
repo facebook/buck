@@ -1,0 +1,63 @@
+[cxx#windows-x86_64]
+  cc=C:/tools/toolchains/LLVM/bin/clang.exe
+  cflags = \
+    -fmsc-version=1912 \
+    -fms-compatibility \
+    -fms-extensions
+  cc_type=clang_windows
+  cpp=C:/tools/toolchains/LLVM/bin/clang.exe
+  cppflags = \
+    -nostdinc \
+    -isystem C:/tools/toolchains/LLVM/lib/clang/7.0.0/include \
+    -isystem C:/tools/toolchains/vs2017_15.5/BuildTools/VC/Tools/MSVC/14.12.25827/include \
+    -isystem C:/tools/toolchains/vs2017_15.5/BuildTools/VC/Tools/MSVC/14.12.25827/atlmfc/include \
+    -isystem C:/tools/toolchains/vs2017_15.5/VC/Auxiliary/VS/include \
+    -isystem C:/tools/toolchains/vs2017_15.5/WindowsSdk/10.0.16299.91/Include/10.0.16299.0/km \
+    -isystem C:/tools/toolchains/vs2017_15.5/WindowsSdk/10.0.16299.91/Include/10.0.16299.0/shared \
+    -isystem C:/tools/toolchains/vs2017_15.5/WindowsSdk/10.0.16299.91/Include/10.0.16299.0/ucrt \
+    -isystem C:/tools/toolchains/vs2017_15.5/WindowsSdk/10.0.16299.91/Include/10.0.16299.0/um \
+    -isystem C:/tools/toolchains/vs2017_15.5/WindowsSdk/10.0.16299.91/Include/10.0.16299.0/winrt
+  cpp_type=clang_windows
+  cxx=C:/tools/toolchains/LLVM/bin/clang.exe
+  cxxflags = \
+    -fmsc-version=1912 \
+    -fms-compatibility \
+    -fms-extensions
+  cxx_type=clang_windows
+  cxxpp=C:/tools/toolchains/LLVM/bin/clang.exe
+  cxxppflags = \
+    -nostdinc \
+    -isystem C:/tools/toolchains/LLVM/lib/clang/7.0.0/include \
+    -isystem C:/tools/toolchains/vs2017_15.5/BuildTools/VC/Tools/MSVC/14.12.25827/include \
+    -isystem C:/tools/toolchains/vs2017_15.5/BuildTools/VC/Tools/MSVC/14.12.25827/atlmfc/include \
+    -isystem C:/tools/toolchains/vs2017_15.5/VC/Auxiliary/VS/include \
+    -isystem C:/tools/toolchains/vs2017_15.5/WindowsSdk/10.0.16299.91/Include/10.0.16299.0/km \
+    -isystem C:/tools/toolchains/vs2017_15.5/WindowsSdk/10.0.16299.91/Include/10.0.16299.0/shared \
+    -isystem C:/tools/toolchains/vs2017_15.5/WindowsSdk/10.0.16299.91/Include/10.0.16299.0/ucrt \
+    -isystem C:/tools/toolchains/vs2017_15.5/WindowsSdk/10.0.16299.91/Include/10.0.16299.0/um \
+    -isystem C:/tools/toolchains/vs2017_15.5/WindowsSdk/10.0.16299.91/Include/10.0.16299.0/winrt
+  cxxpp_type=clang_windows
+  ld=C:/tools/toolchains/LLVM/bin/lld-link.exe
+  ldflags = \
+    libcmt.lib \
+    /SUBSYSTEM:CONSOLE \
+    /LIBPATH:C:/tools/toolchains/LLVM/lib/clang/7.0.0/lib \
+    /LIBPATH:C:/tools/toolchains/vs2017_15.5/BuildTools/VC/Tools/MSVC/14.12.25827/lib/x64 \
+    /LIBPATH:C:/tools/toolchains/vs2017_15.5/BuildTools/VC/Tools/MSVC/14.12.25827/atlmfc/lib/x64 \
+    /LIBPATH:C:/tools/toolchains/vs2017_15.5/WindowsSdk/10.0.16299.91/Lib/10.0.16299.0/km/x64 \
+    /LIBPATH:C:/tools/toolchains/vs2017_15.5/WindowsSdk/10.0.16299.91/Lib/10.0.16299.0/ucrt/x64 \
+    /LIBPATH:C:/tools/toolchains/vs2017_15.5/WindowsSdk/10.0.16299.91/Lib/10.0.16299.0/um/x64
+  linker_platform=windows
+  ar=C:/tools/toolchains/LLVM/bin/llvm-lib.exe
+  archiver_platform=windows
+  archiver_type=llvm_lib
+  asm=C:/tools/toolchains/vs2017_15.5/BuildTools/VC/Tools/MSVC/14.12.25827/bin/HostX64/x64/ml64.exe
+  asm_type=windows_ml64
+  asmpp=C:/tools/toolchains/vs2017_15.5/BuildTools/VC/Tools/MSVC/14.12.25827/bin/HostX64/x64/ml64.exe
+  asmpp_type=windows
+
+[project]
+  windows_symlinks=yes
+
+[repositories]
+  x = xplat
