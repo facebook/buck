@@ -244,20 +244,6 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
                 .filter(input -> !PathMatchers.KOTLIN_PATH_MATCHER.matches(input))
                 .collect(Collectors.toSet()));
 
-    CompilerParameters javacParameters =
-        CompilerParameters.builder()
-            .from(parameters)
-            .setClasspathEntries(
-                ImmutableSortedSet.<Path>naturalOrder()
-                    .add(projectFilesystem.resolve(outputDirectory))
-                    .addAll(
-                        Optional.ofNullable(extraClassPath.getExtraClasspath())
-                            .orElse(ImmutableList.of()))
-                    .addAll(declaredClasspathEntries)
-                    .build())
-            .setSourceFilePaths(javaSourceFiles)
-            .build();
-
     final JavacOptions finalJavacOptions;
 
     switch (annotationProcessingTool) {
@@ -274,6 +260,20 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
         throw new IllegalStateException(
             "Unexpected annotationProcessingTool " + annotationProcessingTool);
     }
+
+    CompilerParameters javacParameters =
+        CompilerParameters.builder()
+            .from(parameters)
+            .setClasspathEntries(
+                ImmutableSortedSet.<Path>naturalOrder()
+                    .add(projectFilesystem.resolve(outputDirectory))
+                    .addAll(
+                        Optional.ofNullable(extraClassPath.getExtraClasspath())
+                            .orElse(ImmutableList.of()))
+                    .addAll(declaredClasspathEntries)
+                    .build())
+            .setSourceFilePaths(javaSourceFiles)
+            .build();
 
     new JavacToJarStepFactory(javac, finalJavacOptions, extraClassPath)
         .createCompileStep(
