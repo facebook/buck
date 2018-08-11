@@ -80,6 +80,7 @@ import java.util.Optional;
 import java.util.Set;
 import org.hamcrest.Matchers;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -90,9 +91,13 @@ public class CxxBinaryIntegrationTest {
 
   @Rule public ExpectedException thrown = ExpectedException.none();
 
+  @Before
+  public void setUp() {
+    assumeTrue(Platform.detect() != Platform.WINDOWS);
+  }
+
   @Test
   public void testInferCxxBinaryDepsCaching() throws IOException, InterruptedException {
-    assumeTrue(Platform.detect() != Platform.WINDOWS);
     ProjectWorkspace workspace = InferHelper.setupCxxInferWorkspace(this, tmp, Optional.empty());
     workspace.enableDirCache();
 
@@ -167,7 +172,6 @@ public class CxxBinaryIntegrationTest {
   @Test
   public void testInferCxxBinaryDepsInvalidateCacheWhenVersionChanges()
       throws IOException, InterruptedException {
-    assumeTrue(Platform.detect() != Platform.WINDOWS);
     ProjectWorkspace workspace = InferHelper.setupCxxInferWorkspace(this, tmp, Optional.empty());
     workspace.enableDirCache();
 
@@ -287,7 +291,6 @@ public class CxxBinaryIntegrationTest {
 
   @Test
   public void testInferCxxBinaryWithoutDeps() throws IOException, InterruptedException {
-    assumeTrue(Platform.detect() != Platform.WINDOWS);
     ProjectWorkspace workspace = InferHelper.setupCxxInferWorkspace(this, tmp, Optional.empty());
 
     CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(workspace.asCell().getBuckConfig());
@@ -374,7 +377,6 @@ public class CxxBinaryIntegrationTest {
 
   @Test
   public void testInferCxxBinaryWithDeps() throws IOException, InterruptedException {
-    assumeTrue(Platform.detect() != Platform.WINDOWS);
     ProjectWorkspace workspace = InferHelper.setupCxxInferWorkspace(this, tmp, Optional.empty());
 
     CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(workspace.asCell().getBuckConfig());
@@ -537,7 +539,6 @@ public class CxxBinaryIntegrationTest {
 
   @Test
   public void testInferCxxBinaryWithDepsEmitsAllTheDependenciesResultsDirs() throws IOException {
-    assumeTrue(Platform.detect() != Platform.WINDOWS);
     ProjectWorkspace workspace = InferHelper.setupCxxInferWorkspace(this, tmp, Optional.empty());
     ProjectFilesystem filesystem =
         TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
@@ -644,7 +645,6 @@ public class CxxBinaryIntegrationTest {
 
   @Test
   public void inferShouldBeAbleToUseMultipleXCell() throws IOException {
-    assumeTrue(Platform.detect() != Platform.WINDOWS);
 
     Path rootWorkspacePath = tmp.getRoot();
     // create infertest workspace
@@ -694,7 +694,6 @@ public class CxxBinaryIntegrationTest {
   @Test
   public void testInferCxxBinaryWithDiamondDepsEmitsAllBuildRulesInvolvedWhenCacheHit()
       throws IOException {
-    assumeTrue(Platform.detect() != Platform.WINDOWS);
     ProjectWorkspace workspace = InferHelper.setupCxxInferWorkspace(this, tmp, Optional.empty());
     workspace.enableDirCache();
     ProjectFilesystem filesystem =
@@ -814,7 +813,6 @@ public class CxxBinaryIntegrationTest {
   @Test
   public void testInferCaptureAllCxxBinaryWithDiamondDepsEmitsAllBuildRulesInvolvedWhenCacheHit()
       throws IOException {
-    assumeTrue(Platform.detect() != Platform.WINDOWS);
     ProjectWorkspace workspace = InferHelper.setupCxxInferWorkspace(this, tmp, Optional.empty());
     workspace.enableDirCache();
     ProjectFilesystem filesystem =
@@ -900,7 +898,6 @@ public class CxxBinaryIntegrationTest {
   @Test
   public void testInferCxxBinaryWithDiamondDepsHasRuntimeDepsOfAllCaptureRulesWhenCacheHits()
       throws IOException {
-    assumeTrue(Platform.detect() != Platform.WINDOWS);
     ProjectWorkspace workspace = InferHelper.setupCxxInferWorkspace(this, tmp, Optional.empty());
     workspace.enableDirCache();
     ProjectFilesystem filesystem =
@@ -978,7 +975,6 @@ public class CxxBinaryIntegrationTest {
   @Test
   public void testInferCxxBinaryWithUnusedDepsDoesNotRebuildWhenUnusedHeaderChanges()
       throws IOException, InterruptedException {
-    assumeTrue(Platform.detect() != Platform.WINDOWS);
     ProjectWorkspace workspace = InferHelper.setupCxxInferWorkspace(this, tmp, Optional.empty());
     workspace.enableDirCache();
 
@@ -1032,7 +1028,6 @@ public class CxxBinaryIntegrationTest {
   @Test
   public void testInferCxxBinaryWithDiamondDepsEmitsAllTransitiveCaptureRulesOnce()
       throws IOException {
-    assumeTrue(Platform.detect() != Platform.WINDOWS);
     ProjectWorkspace workspace = InferHelper.setupCxxInferWorkspace(this, tmp, Optional.empty());
     ProjectFilesystem filesystem =
         TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
@@ -1110,7 +1105,6 @@ public class CxxBinaryIntegrationTest {
 
   @Test
   public void testInferCxxBinarySkipsBlacklistedFiles() throws IOException {
-    assumeTrue(Platform.detect() != Platform.WINDOWS);
     ProjectWorkspace workspace =
         InferHelper.setupCxxInferWorkspace(this, tmp, Optional.of(".*one\\.c"));
     ProjectFilesystem filesystem =
@@ -1164,7 +1158,6 @@ public class CxxBinaryIntegrationTest {
 
   @Test
   public void testInferCxxBinaryRunsOnAllFilesWhenBlacklistIsNotSpecified() throws IOException {
-    assumeTrue(Platform.detect() != Platform.WINDOWS);
     ProjectWorkspace workspace = InferHelper.setupCxxInferWorkspace(this, tmp, Optional.empty());
     ProjectFilesystem filesystem =
         TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
@@ -1215,7 +1208,6 @@ public class CxxBinaryIntegrationTest {
 
   @Test
   public void testInferCxxBinaryWithCachedDepsGetsAllItsTransitiveDeps() throws IOException {
-    assumeTrue(Platform.detect() != Platform.WINDOWS);
     ProjectWorkspace workspace = InferHelper.setupCxxInferWorkspace(this, tmp, Optional.empty());
     workspace.enableDirCache();
     ProjectFilesystem filesystem =
@@ -1264,7 +1256,6 @@ public class CxxBinaryIntegrationTest {
 
   @Test
   public void testInferCxxBinaryMergesAllReportsOfDependencies() throws IOException {
-    assumeTrue(Platform.detect() != Platform.WINDOWS);
     ProjectWorkspace workspace = InferHelper.setupCxxInferWorkspace(this, tmp, Optional.empty());
     ProjectFilesystem filesystem =
         TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
@@ -1291,7 +1282,6 @@ public class CxxBinaryIntegrationTest {
 
   @Test
   public void testInferCxxBinaryWritesSpecsListFilesOfTransitiveDependencies() throws IOException {
-    assumeTrue(Platform.detect() != Platform.WINDOWS);
     ProjectWorkspace workspace = InferHelper.setupCxxInferWorkspace(this, tmp, Optional.empty());
     ProjectFilesystem filesystem =
         TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
@@ -1325,7 +1315,6 @@ public class CxxBinaryIntegrationTest {
 
   @Test
   public void testChangingCompilerPathForcesRebuild() throws Exception {
-    assumeTrue(Platform.detect() != Platform.WINDOWS);
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "simple", tmp);
     workspace.setUp();

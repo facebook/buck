@@ -16,6 +16,7 @@
 
 package com.facebook.buck.intellij.ideabuck.config;
 
+import com.facebook.buck.intellij.ideabuck.environment.Platform;
 import com.google.common.collect.ImmutableMap;
 import java.io.File;
 import java.io.IOException;
@@ -36,7 +37,8 @@ public class BuckExecutableDetectorTest {
     Path path2 = tempDirectory.resolve("path2");
     Path androidSdk = Files.createDirectories(tempDirectory.resolve("android_sdk"));
     Path platformTools = Files.createDirectories(androidSdk.resolve("platform-tools"));
-    Path expectedAdb = Files.createFile(platformTools.resolve("adb"));
+    String exeName = Platform.detect() == Platform.WINDOWS ? "adb.exe" : "adb";
+    Path expectedAdb = Files.createFile(platformTools.resolve(exeName));
     Assume.assumeTrue(
         "Should be able to make adb executable", expectedAdb.toFile().setExecutable(true));
     ImmutableMap<String, String> env =

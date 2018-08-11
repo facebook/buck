@@ -58,7 +58,7 @@ public class DebugPathSanitizerTest {
     assertThat(
         debugPathSanitizer.sanitize(
             Optional.of(Paths.get("/project/root")),
-            "a string that mentions the /project/root somewhere"),
+            "a string that mentions the " + Paths.get("/project/root somewhere")),
         equalTo("a string that mentions the . somewhere"));
   }
 
@@ -66,8 +66,9 @@ public class DebugPathSanitizerTest {
   public void sanitizeOtherDirectories() {
     assertThat(
         debugPathSanitizer.sanitize(
-            Optional.of(Paths.get("/project/root")), "-I/some/absolute/path/dir -I/another/path"),
-        equalTo("-ISYMBOLIC_NAME/dir -IOTHER_NAME"));
+            Optional.of(Paths.get("/project/root")),
+            "-I" + Paths.get("/some/absolute/path/dir") + " -I" + Paths.get("/another/path")),
+        equalTo("-I" + Paths.get("SYMBOLIC_NAME/dir") + " -IOTHER_NAME"));
   }
 
   @Test
@@ -75,7 +76,7 @@ public class DebugPathSanitizerTest {
     assertThat(
         debugPathSanitizer.sanitize(
             Optional.of(Paths.get("/project/root")),
-            "-I/another/path/with/subdirectories/something"),
-        equalTo("-IOTHER_NAME_WITH_SUFFIX/something"));
+            "-I" + Paths.get("/another/path/with/subdirectories/something")),
+        equalTo("-I" + Paths.get("OTHER_NAME_WITH_SUFFIX/something")));
   }
 }
