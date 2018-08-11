@@ -53,7 +53,7 @@ import javax.tools.Diagnostic.Kind;
  * </pre>
  */
 @SupportedAnnotationTypes({BuckModuleAnnotationProcessorConstants.BUCK_MODULE_ANNOTATION})
-@SupportedSourceVersion(SourceVersion.RELEASE_6)
+@SupportedSourceVersion(SourceVersion.RELEASE_8)
 public class BuckModuleAnnotationProcessor extends AbstractProcessor {
 
   @Override
