@@ -410,21 +410,21 @@ public class JsBundleDescription
     }
 
     private Iterable<BuildTarget> getLibraryDependencies(JsLibrary library) {
-      return library
-          .getLibraryDependencies()
-          .stream()
-          .map(
-              sourcePath ->
-                  ruleFinder
-                      .getRule(sourcePath)
-                      .<HumanReadableException>orElseThrow(
-                          () ->
-                              new HumanReadableException(
-                                  "js_library %s has '%s' as a lib, but js_library can only have other "
-                                      + "js_library targets as lib",
-                                  library.getBuildTarget(), sourcePath)))
-          .map(BuildRule::getBuildTarget)
-          .collect(ImmutableList.toImmutableList());
+      ImmutableSortedSet<SourcePath> libraryDependencies = library.getLibraryDependencies();
+      ImmutableList.Builder<BuildTarget> libraryTargets =
+          ImmutableList.builderWithExpectedSize(libraryDependencies.size());
+      for (SourcePath sourcePath : libraryDependencies) {
+        Optional<BuildRule> rule = ruleFinder.getRule(sourcePath);
+        if (rule.isPresent()) {
+          libraryTargets.add(rule.get().getBuildTarget());
+        } else {
+          throw new HumanReadableException(
+              "js_library %s has '%s' as a lib, but js_library can only have other "
+                  + "js_library targets as lib",
+              library.getBuildTarget(), sourcePath);
+        }
+      }
+      return libraryTargets.build();
     }
   }
 }
