@@ -236,14 +236,6 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
               Optional.of(parameters.getOutputPaths().getWorkingDirectory())));
     }
 
-    ImmutableSortedSet<Path> sources = sourceBuilder.build();
-
-    ImmutableSortedSet<Path> javaSourceFiles =
-        ImmutableSortedSet.copyOf(
-            sources.stream()
-                .filter(input -> !PathMatchers.KOTLIN_PATH_MATCHER.matches(input))
-                .collect(Collectors.toSet()));
-
     final JavacOptions finalJavacOptions;
 
     switch (annotationProcessingTool) {
@@ -260,6 +252,14 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
         throw new IllegalStateException(
             "Unexpected annotationProcessingTool " + annotationProcessingTool);
     }
+
+    ImmutableSortedSet<Path> sources = sourceBuilder.build();
+
+    ImmutableSortedSet<Path> javaSourceFiles =
+        ImmutableSortedSet.copyOf(
+            sources.stream()
+                .filter(input -> !PathMatchers.KOTLIN_PATH_MATCHER.matches(input))
+                .collect(Collectors.toSet()));
 
     CompilerParameters javacParameters =
         CompilerParameters.builder()
