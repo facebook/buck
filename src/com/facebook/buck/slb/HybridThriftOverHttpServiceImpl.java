@@ -19,7 +19,6 @@ package com.facebook.buck.slb;
 import com.google.common.base.Preconditions;
 import com.google.common.io.ByteStreams;
 import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.SettableFuture;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.FilterInputStream;
@@ -57,17 +56,7 @@ public class HybridThriftOverHttpServiceImpl<
   public ListenableFuture<ThriftResponse> makeRequest(
       HybridThriftRequestHandler<ThriftRequest> request,
       HybridThriftResponseHandler<ThriftResponse> responseHandler) {
-    final SettableFuture<ThriftResponse> future = SettableFuture.create();
-    args.getExecutor()
-        .submit(
-            () -> {
-              try {
-                future.set(makeRequestSync(request, responseHandler));
-              } catch (Throwable e) {
-                future.setException(e);
-              }
-            });
-    return future;
+    return args.getExecutor().submit(() -> makeRequestSync(request, responseHandler));
   }
 
   /** @inheritDoc */
