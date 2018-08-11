@@ -49,6 +49,8 @@ import com.facebook.buck.apple.AppleTestBuilder;
 import com.facebook.buck.apple.CoreDataModelBuilder;
 import com.facebook.buck.apple.FakeAppleRuleDescriptions;
 import com.facebook.buck.apple.SceneKitAssetsBuilder;
+import com.facebook.buck.apple.XCodeDescriptions;
+import com.facebook.buck.apple.XCodeDescriptionsFactory;
 import com.facebook.buck.apple.XcodePostbuildScriptBuilder;
 import com.facebook.buck.apple.XcodePrebuildScriptBuilder;
 import com.facebook.buck.apple.clang.HeaderMap;
@@ -71,10 +73,10 @@ import com.facebook.buck.apple.xcode.xcodeproj.ProductType;
 import com.facebook.buck.apple.xcode.xcodeproj.ProductTypes;
 import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
 import com.facebook.buck.apple.xcode.xcodeproj.XCBuildConfiguration;
-import com.facebook.buck.config.BuckConfig;
-import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.TestCellBuilder;
+import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
@@ -93,6 +95,7 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
+import com.facebook.buck.core.util.graph.AbstractBottomUpTraversal;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxLibraryBuilder;
 import com.facebook.buck.cxx.CxxPrecompiledHeaderBuilder;
@@ -102,11 +105,11 @@ import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
-import com.facebook.buck.graph.AbstractBottomUpTraversal;
-import com.facebook.buck.halide.HalideBuckConfig;
-import com.facebook.buck.halide.HalideLibraryBuilder;
-import com.facebook.buck.halide.HalideLibraryDescription;
+import com.facebook.buck.features.halide.HalideBuckConfig;
+import com.facebook.buck.features.halide.HalideLibraryBuilder;
+import com.facebook.buck.features.halide.HalideLibraryDescription;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
@@ -2247,12 +2250,12 @@ public class ProjectGeneratorTest {
 
     if (shouldEnableForceLoad && shouldEnableAddLibrariesAsFlags) {
       assertEquals(
-          "$(inherited) -fatal_warnings -ObjC -lhello5 -lhello3 -lhello4 -lhello1 -lhello2 $BUCK_LINKER_FLAGS_FRAMEWORK_LOCAL $BUCK_LINKER_FLAGS_FRAMEWORK_OTHER $BUCK_LINKER_FLAGS_LIBRARY_FORCE_LOAD $BUCK_LINKER_FLAGS_LIBRARY_LOCAL $BUCK_LINKER_FLAGS_LIBRARY_OTHER",
+          "$(inherited) -fatal_warnings -ObjC -lhello5 -lhello3 -lhello4 -lhello1 -lhello2 $BUCK_LINKER_FLAGS_FRAMEWORK_LOCAL $BUCK_LINKER_FLAGS_FRAMEWORK_OTHER $BUCK_LINKER_FLAGS_LIBRARY_FORCE_LOAD_LOCAL $BUCK_LINKER_FLAGS_LIBRARY_FORCE_LOAD_OTHER $BUCK_LINKER_FLAGS_LIBRARY_LOCAL $BUCK_LINKER_FLAGS_LIBRARY_OTHER",
           settings.get("OTHER_LDFLAGS"));
     } else if (shouldEnableForceLoad) {
 
       assertEquals(
-          "$(inherited) -fatal_warnings -ObjC -lhello5 -lhello3 -lhello4 -lhello1 -lhello2 $BUCK_LINKER_FLAGS_LIBRARY_FORCE_LOAD",
+          "$(inherited) -fatal_warnings -ObjC -lhello5 -lhello3 -lhello4 -lhello1 -lhello2 $BUCK_LINKER_FLAGS_LIBRARY_FORCE_LOAD_LOCAL $BUCK_LINKER_FLAGS_LIBRARY_FORCE_LOAD_OTHER",
           settings.get("OTHER_LDFLAGS"));
     } else if (shouldEnableAddLibrariesAsFlags) {
 
@@ -2267,8 +2270,12 @@ public class ProjectGeneratorTest {
 
     if (shouldEnableForceLoad || shouldEnableAddLibrariesAsFlags) {
       assertEquals(
-          "$(inherited) '-Wl,-force_load,$BUILT_PRODUCTS_DIR/libremoteForceLoadLib.a' '-Wl,-force_load,$BUILT_PRODUCTS_DIR/liblocalForceLoadlib.a'",
-          settings.get("BUCK_LINKER_FLAGS_LIBRARY_FORCE_LOAD"));
+          "$(inherited) '-Wl,-force_load,$BUILT_PRODUCTS_DIR/libremoteForceLoadLib.a'",
+          settings.get("BUCK_LINKER_FLAGS_LIBRARY_FORCE_LOAD_OTHER"));
+
+      assertEquals(
+          "$(inherited) '-Wl,-force_load,$BUILT_PRODUCTS_DIR/liblocalForceLoadlib.a'",
+          settings.get("BUCK_LINKER_FLAGS_LIBRARY_FORCE_LOAD_LOCAL"));
     }
     if (shouldEnableAddLibrariesAsFlags) {
       assertEquals(
@@ -5554,8 +5561,12 @@ public class ProjectGeneratorTest {
     AppleDependenciesCache cache = new AppleDependenciesCache(targetGraph);
     ProjectGenerationStateCache projStateCache = new ProjectGenerationStateCache();
 
+    XCodeDescriptions xcodeDescriptions =
+        XCodeDescriptionsFactory.create(BuckPluginManagerFactory.createPluginManager());
+
     ProjectGenerator projectGeneratorLib2 =
         new ProjectGenerator(
+            xcodeDescriptions,
             targetGraph,
             cache,
             projStateCache,
@@ -5601,6 +5612,7 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator projectGeneratorLib1 =
         new ProjectGenerator(
+            xcodeDescriptions,
             targetGraph,
             cache,
             projStateCache,
@@ -5733,10 +5745,14 @@ public class ProjectGeneratorTest {
             .map(TargetNode::getBuildTarget)
             .collect(ImmutableSet.toImmutableSet());
 
+    XCodeDescriptions xcodeDescriptions =
+        XCodeDescriptionsFactory.create(BuckPluginManagerFactory.createPluginManager());
+
     TargetGraph targetGraph = TargetGraphFactory.newInstance(ImmutableSet.copyOf(allNodes));
     AppleDependenciesCache cache = new AppleDependenciesCache(targetGraph);
     ProjectGenerationStateCache projStateCache = new ProjectGenerationStateCache();
     return new ProjectGenerator(
+        xcodeDescriptions,
         targetGraph,
         cache,
         projStateCache,

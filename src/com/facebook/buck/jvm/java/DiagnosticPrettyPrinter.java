@@ -71,7 +71,7 @@ public class DiagnosticPrettyPrinter {
         .append(": ");
 
     String formattedMessage = diagnostic.getMessage(Locale.getDefault());
-    String[] parts = formattedMessage.split("\n");
+    String[] parts = formattedMessage.split(System.lineSeparator());
     if (parts.length == 0) {
       parts = new String[] {""};
     }
@@ -79,13 +79,13 @@ public class DiagnosticPrettyPrinter {
     // Use the first line as a summary. With the normal Oracle JSR199 javac, the remaining lines are
     // more detailed diagnostics, which we don't normally display. With ECJ, there's no additional
     // information anyway, so it doesn't matter that we discard the remaining output.
-    builder.append(parts[0]).append("\n");
+    builder.append(parts[0]).append(System.lineSeparator());
 
     appendContext(builder, diagnostic, source);
 
     // If there was additional information in the message, append it now.
     for (int i = 1; i < parts.length; i++) {
-      builder.append("\n").append(parts[i]);
+      builder.append(System.lineSeparator()).append(parts[i]);
     }
 
     return builder.toString();
@@ -102,7 +102,7 @@ public class DiagnosticPrettyPrinter {
 
     Optional<String> line = getLine(source, diagnostic.getLineNumber());
     if (line.isPresent()) {
-      builder.append(line.get()).append("\n");
+      builder.append(line.get()).append(System.lineSeparator());
       for (long i = 1; i < diagnostic.getColumnNumber(); i++) {
         builder.append(" ");
       }

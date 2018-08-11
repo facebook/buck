@@ -740,8 +740,14 @@ public class DistBuildServiceTest {
     String buildLabel = "behold-my-glory";
     int minionCount = 21;
     String minionQueueName = "a_happy_place_indeed";
+    String minionRegion = "true_happy_place";
     distBuildService.enqueueMinions(
-        stampedeId, buildLabel, minionCount, minionQueueName, MinionType.STANDARD_SPEC);
+        stampedeId,
+        buildLabel,
+        minionCount,
+        minionQueueName,
+        MinionType.STANDARD_SPEC,
+        minionRegion);
 
     EasyMock.verify(frontendService);
     Assert.assertEquals(FrontendRequestType.ENQUEUE_MINIONS, request.getValue().getType());

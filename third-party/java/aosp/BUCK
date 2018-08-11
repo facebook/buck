@@ -1,15 +1,26 @@
-java_library(required_for_source_only_abi = True,
-    name = "aosp",
-    srcs = glob(["src/**/*.java"]),
-    licenses = [
+java_library(
+    required_for_source_only_abi=True,
+    name="aosp",
+    srcs=glob(["src/**/*.java"]),
+    licenses=[
         "NOTICE",
+        "LICENSE",
     ],
-    visibility = [
-        "PUBLIC",
-    ],
-    deps = [
+    visibility=["PUBLIC"],
+    deps=[
         "//third-party/java/android:sdklib",
         "//third-party/java/gson:gson",
         "//third-party/java/guava:guava",
     ],
+)
+
+prebuilt_jar(
+    name="apksig",
+    binary_jar="apksig.jar",
+    source_jar="apksig-sources.jar",
+    licenses=[
+        "LICENSE",
+    ],
+    visibility=["PUBLIC"],
+    deps=[],
 )

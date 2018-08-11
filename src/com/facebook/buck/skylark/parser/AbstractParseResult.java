@@ -28,7 +28,7 @@ import java.util.Set;
 import org.immutables.value.Value;
 
 /** Parse result containing build rules defined in build file and supporting metadata. */
-@Value.Immutable
+@Value.Immutable(builder = false)
 @BuckStyleImmutable
 abstract class AbstractParseResult {
   /**
@@ -37,11 +37,13 @@ abstract class AbstractParseResult {
    *
    * <p>For example {"name": "my_rule", ...}
    */
+  @Value.Parameter
   public abstract ImmutableList<Map<String, Object>> getRawRules();
   /**
    * Returns a set of extension paths that were loaded explicitly or transitively when parsing
    * current build file.
    */
+  @Value.Parameter
   public abstract ImmutableSortedSet<Path> getLoadedPaths();
 
   /**
@@ -49,9 +51,11 @@ abstract class AbstractParseResult {
    *
    * <p>The schema is section->key->value
    */
+  @Value.Parameter
   public abstract ImmutableMap<String, ImmutableMap<String, Optional<String>>>
       getReadConfigurationOptions();
 
   /** @return A mapping from a {@link GlobSpec} to the corresponding set of expanded paths. */
+  @Value.Parameter
   public abstract ImmutableMap<GlobSpec, Set<String>> getGlobManifest();
 }

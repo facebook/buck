@@ -92,7 +92,7 @@ public class ScalacToJarStepFactory extends CompileToJarStepFactory implements A
 
     ImmutableSortedSet<Path> classpathEntries = parameters.getClasspathEntries();
     ImmutableSortedSet<Path> sourceFilePaths = parameters.getSourceFilePaths();
-    Path outputDirectory = parameters.getOutputDirectory();
+    Path outputDirectory = parameters.getOutputPaths().getClassesDir();
 
     if (sourceFilePaths.stream().anyMatch(SCALA_PATH_MATCHER::matches)) {
       steps.add(

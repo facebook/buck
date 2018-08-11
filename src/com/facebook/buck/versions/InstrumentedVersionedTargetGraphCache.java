@@ -16,7 +16,7 @@
 
 package com.facebook.buck.versions;
 
-import com.facebook.buck.config.BuckConfig;
+import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;

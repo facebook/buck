@@ -1,4 +1,6 @@
-java_library(required_for_source_only_abi = True, 
+load("//tools/build_rules:file_alias.bzl", "file_alias")
+
+java_library(required_for_source_only_abi = True,
     name = "dx",
     srcs = glob(["src/**/*.java"]),
     licenses = [
@@ -8,9 +10,9 @@ java_library(required_for_source_only_abi = True,
     deps = ["//third-party/java/guava:guava"],
 )
 
-export_file(
+file_alias(
     name = "etc_dx",
-    src = "etc/dx",
+    source = "etc/dx",
     visibility = [
         "PUBLIC",
     ],

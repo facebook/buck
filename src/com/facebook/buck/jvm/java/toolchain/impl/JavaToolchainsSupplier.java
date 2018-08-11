@@ -16,12 +16,12 @@
 
 package com.facebook.buck.jvm.java.toolchain.impl;
 
+import com.facebook.buck.core.toolchain.ToolchainDescriptor;
+import com.facebook.buck.core.toolchain.ToolchainSupplier;
 import com.facebook.buck.jvm.java.toolchain.JavaCxxPlatformProvider;
 import com.facebook.buck.jvm.java.toolchain.JavaOptionsProvider;
 import com.facebook.buck.jvm.java.toolchain.JavaToolchain;
 import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
-import com.facebook.buck.toolchain.ToolchainDescriptor;
-import com.facebook.buck.toolchain.ToolchainSupplier;
 import java.util.Arrays;
 import java.util.Collection;
 import org.pf4j.Extension;

@@ -270,8 +270,7 @@ public class ShellStepTest {
     Map<String, String> subProcessEnvironment = new HashMap<>();
     subProcessEnvironment.put("PROCESS_ENVIRONMENT_VARIABLE", "PROCESS_VALUE");
     command.setProcessEnvironment(context, subProcessEnvironment, pwd.toString());
-    Map<String, String> actualProcessEnvironment = new HashMap<>();
-    actualProcessEnvironment.putAll(context.getEnvironment());
+    Map<String, String> actualProcessEnvironment = new HashMap<>(context.getEnvironment());
     actualProcessEnvironment.remove("PWD");
     assertEquals(
         "Sub-process environment should be union of client and step environments.",

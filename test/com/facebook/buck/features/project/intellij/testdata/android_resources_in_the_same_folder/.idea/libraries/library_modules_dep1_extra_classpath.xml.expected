@@ -1,7 +1,7 @@
 <component name="libraryTable">
   <library name="library_modules_dep1_extra_classpath">
     <CLASSES>
-      <root url="file://$PROJECT_DIR$/buck-out/bin/modules/dep1/__dep2#dummy_r_dot_java_rdotjava_bin__" />
+      <root url="file://$PROJECT_DIR$/buck-out/bin/modules/dep1/lib__dep2#dummy_r_dot_java__scratch/classes" />
     </CLASSES>
     <JAVADOC />
     <SOURCES />

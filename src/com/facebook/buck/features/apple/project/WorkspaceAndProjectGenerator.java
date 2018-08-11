@@ -23,6 +23,7 @@ import com.facebook.buck.apple.AppleBundleDescriptionArg;
 import com.facebook.buck.apple.AppleConfig;
 import com.facebook.buck.apple.AppleDependenciesCache;
 import com.facebook.buck.apple.AppleTestDescriptionArg;
+import com.facebook.buck.apple.XCodeDescriptions;
 import com.facebook.buck.apple.xcode.XCScheme;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
 import com.facebook.buck.core.cell.Cell;
@@ -36,12 +37,12 @@ import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodes;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
+import com.facebook.buck.core.util.graph.TopologicalSort;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
-import com.facebook.buck.graph.TopologicalSort;
-import com.facebook.buck.halide.HalideBuckConfig;
+import com.facebook.buck.features.halide.HalideBuckConfig;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
 import com.facebook.buck.swift.SwiftBuckConfig;
@@ -79,6 +80,7 @@ import java.util.stream.Stream;
 public class WorkspaceAndProjectGenerator {
   private static final Logger LOG = Logger.get(WorkspaceAndProjectGenerator.class);
 
+  private final XCodeDescriptions xcodeDescriptions;
   private final Cell rootCell;
   private final TargetGraph projectGraph;
   private final AppleDependenciesCache dependenciesCache;
@@ -111,6 +113,7 @@ public class WorkspaceAndProjectGenerator {
   private final SwiftBuckConfig swiftBuckConfig;
 
   public WorkspaceAndProjectGenerator(
+      XCodeDescriptions xcodeDescriptions,
       Cell cell,
       TargetGraph projectGraph,
       XcodeWorkspaceConfigDescriptionArg workspaceArguments,
@@ -129,6 +132,7 @@ public class WorkspaceAndProjectGenerator {
       CxxBuckConfig cxxBuckConfig,
       AppleConfig appleConfig,
       SwiftBuckConfig swiftBuckConfig) {
+    this.xcodeDescriptions = xcodeDescriptions;
     this.rootCell = cell;
     this.projectGraph = projectGraph;
     this.dependenciesCache = new AppleDependenciesCache(projectGraph);
@@ -460,6 +464,7 @@ public class WorkspaceAndProjectGenerator {
         }
         generator =
             new ProjectGenerator(
+                xcodeDescriptions,
                 projectGraph,
                 dependenciesCache,
                 projGenerationStateCache,
@@ -517,6 +522,7 @@ public class WorkspaceAndProjectGenerator {
     LOG.debug("Generating a combined project");
     ProjectGenerator generator =
         new ProjectGenerator(
+            xcodeDescriptions,
             projectGraph,
             dependenciesCache,
             projGenerationStateCache,
@@ -569,6 +575,7 @@ public class WorkspaceAndProjectGenerator {
     ImmutableSetMultimap.Builder<String, TargetNode<AppleTestDescriptionArg>>
         extraTestNodesBuilder = ImmutableSetMultimap.builder();
     addWorkspaceScheme(
+        xcodeDescriptions,
         projectGraph,
         dependenciesCache,
         workspaceName,
@@ -577,6 +584,7 @@ public class WorkspaceAndProjectGenerator {
         schemeNameToSrcTargetNodeBuilder,
         extraTestNodesBuilder);
     addExtraWorkspaceSchemes(
+        xcodeDescriptions,
         projectGraph,
         dependenciesCache,
         workspaceArguments.getExtraSchemes(),
@@ -600,6 +608,7 @@ public class WorkspaceAndProjectGenerator {
   }
 
   private static void addWorkspaceScheme(
+      XCodeDescriptions xcodeDescriptions,
       TargetGraph projectGraph,
       AppleDependenciesCache dependenciesCache,
       String schemeName,
@@ -616,6 +625,7 @@ public class WorkspaceAndProjectGenerator {
           schemeName,
           Iterables.transform(
               AppleBuildRules.getSchemeBuildableTargetNodes(
+                  xcodeDescriptions,
                   projectGraph,
                   Optional.of(dependenciesCache),
                   projectGraph.get(schemeArguments.getSrcTarget().get())),
@@ -631,6 +641,7 @@ public class WorkspaceAndProjectGenerator {
           schemeName,
           Iterables.transform(
               AppleBuildRules.getSchemeBuildableTargetNodes(
+                  xcodeDescriptions,
                   projectGraph,
                   Optional.of(dependenciesCache),
                   Preconditions.checkNotNull(projectGraph.get(extraTarget))),
@@ -647,6 +658,7 @@ public class WorkspaceAndProjectGenerator {
   }
 
   private static void addExtraWorkspaceSchemes(
+      XCodeDescriptions xcodeDescriptions,
       TargetGraph projectGraph,
       AppleDependenciesCache dependenciesCache,
       ImmutableSortedMap<String, BuildTarget> extraSchemes,
@@ -668,6 +680,7 @@ public class WorkspaceAndProjectGenerator {
           (XcodeWorkspaceConfigDescriptionArg) extraSchemeNode.get().getConstructorArg();
       String schemeName = extraSchemeEntry.getKey();
       addWorkspaceScheme(
+          xcodeDescriptions,
           projectGraph,
           dependenciesCache,
           schemeName,
@@ -797,6 +810,7 @@ public class WorkspaceAndProjectGenerator {
    * @return targets and their dependencies that should be build.
    */
   private static ImmutableSet<TargetNode<?>> getTransitiveDepsAndInputs(
+      XCodeDescriptions xcodeDescriptions,
       TargetGraph projectGraph,
       AppleDependenciesCache dependenciesCache,
       Iterable<? extends TargetNode<?>> nodes,
@@ -805,6 +819,7 @@ public class WorkspaceAndProjectGenerator {
         .transformAndConcat(
             input ->
                 AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
+                    xcodeDescriptions,
                     projectGraph,
                     Optional.of(dependenciesCache),
                     RecursiveDependenciesMode.BUILDING,
@@ -814,7 +829,7 @@ public class WorkspaceAndProjectGenerator {
         .filter(
             input ->
                 !excludes.contains(input)
-                    && AppleBuildRules.isXcodeTargetDescription(input.getDescription()))
+                    && xcodeDescriptions.isXcodeDescription(input.getDescription()))
         .toSet();
   }
 
@@ -864,7 +879,8 @@ public class WorkspaceAndProjectGenerator {
           schemeName,
           Iterables.filter(
               TopologicalSort.sort(projectGraph),
-              getTransitiveDepsAndInputs(projectGraph, dependenciesCache, testNodes, targetNodes)
+              getTransitiveDepsAndInputs(
+                      xcodeDescriptions, projectGraph, dependenciesCache, testNodes, targetNodes)
                   ::contains));
     }
   }

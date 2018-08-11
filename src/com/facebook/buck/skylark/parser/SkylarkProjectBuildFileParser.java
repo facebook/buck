@@ -60,8 +60,10 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -129,17 +131,16 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
   public BuildFileManifest getBuildFileManifest(Path buildFile, AtomicLong processedBytes)
       throws BuildFileParseException, InterruptedException, IOException {
     ParseResult parseResult = parseBuildFile(buildFile);
-    return BuildFileManifest.builder()
-        .setTargets(parseResult.getRawRules())
-        .setIncludes(
-            parseResult
-                .getLoadedPaths()
-                .stream()
-                .map(Object::toString)
-                .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())))
-        .setConfigs(parseResult.getReadConfigurationOptions())
-        .setGlobManifest(parseResult.getGlobManifest())
-        .build();
+    return BuildFileManifest.of(
+        parseResult.getRawRules(),
+        parseResult
+            .getLoadedPaths()
+            .stream()
+            .map(Object::toString)
+            .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())),
+        parseResult.getReadConfigurationOptions(),
+        Optional.empty(),
+        parseResult.getGlobManifest());
   }
 
   /**
@@ -202,16 +203,14 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
       ImmutableList<ImmutableMap<String, Object>> rules = parseContext.getRecordedRules();
       LOG.verbose("Got rules: %s", rules);
       LOG.verbose("Parsed %d rules from %s", rules.size(), buildFile);
-      return ParseResult.builder()
-          .setRawRules(rules)
-          .setLoadedPaths(
-              ImmutableSortedSet.<com.google.devtools.build.lib.vfs.Path>naturalOrder()
-                  .addAll(envData.getLoadedPaths())
-                  .add(buildFilePath)
-                  .build())
-          .setReadConfigurationOptions(parseContext.getAccessedConfigurationOptions())
-          .setGlobManifest(globber.createGlobManifest())
-          .build();
+      return ParseResult.of(
+          rules,
+          ImmutableSortedSet.<com.google.devtools.build.lib.vfs.Path>naturalOrder()
+              .addAll(envData.getLoadedPaths())
+              .add(buildFilePath)
+              .build(),
+          parseContext.getAccessedConfigurationOptions(),
+          globber.createGlobManifest());
     }
   }
 
@@ -253,29 +252,29 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
           FuncallExpression.getBuiltinCallable(SkylarkNativeModule.NATIVE_MODULE, nativeFunction));
     }
 
-    return EnvironmentData.builder()
-        .setEnvironment(env)
-        .setLoadedPaths(toLoadedPaths(dependencies))
-        .build();
+    return EnvironmentData.of(env, toLoadedPaths(dependencies));
   }
 
   @Nonnull
   private PackageContext createPackageContext(String basePath, Globber globber) {
-    return PackageContext.builder()
-        .setGlobber(globber)
-        .setRawConfig(options.getRawConfig())
-        .setPackageIdentifier(
-            PackageIdentifier.create(
-                RepositoryName.createFromValidStrippedName(options.getCellName()),
-                PathFragment.create(basePath)))
-        .setEventHandler(eventHandler)
-        .build();
+    return PackageContext.of(
+        globber,
+        options.getRawConfig(),
+        PackageIdentifier.create(
+            RepositoryName.createFromValidStrippedName(options.getCellName()),
+            PathFragment.create(basePath)),
+        eventHandler);
   }
 
   private ImmutableList<com.google.devtools.build.lib.vfs.Path> toLoadedPaths(
       ImmutableList<ExtensionData> dependencies) {
+    // expected size is used to reduce the number of unnecessary resize invocations
+    int expectedSize = 0;
+    for (int i = 0; i < dependencies.size(); ++i) {
+      expectedSize += dependencies.get(i).getLoadTransitiveClosureSize();
+    }
     ImmutableList.Builder<com.google.devtools.build.lib.vfs.Path> loadedPathsBuilder =
-        ImmutableList.builder();
+        ImmutableList.builderWithExpectedSize(expectedSize);
     for (ExtensionData extensionData : dependencies) {
       loadedPathsBuilder.add(extensionData.getPath());
       loadedPathsBuilder.addAll(toLoadedPaths(extensionData.getDependencies()));
@@ -287,21 +286,22 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
   private ImmutableList<ExtensionData> loadExtensions(
       Label containingLabel, ImmutableList<SkylarkImport> skylarkImports)
       throws BuildFileParseException, IOException, InterruptedException {
-    try {
-      return skylarkImports
-          .stream()
-          .distinct() // sometimes users include the same extension multiple times...
-          .map(
-              skylarkImport ->
-                  LoadImport.builder()
-                      .setContainingLabel(containingLabel)
-                      .setImport(skylarkImport)
-                      .build())
-          .map(extensionDataCache::getUnchecked)
-          .collect(ImmutableList.toImmutableList());
-    } catch (UncheckedExecutionException e) {
-      return propagateRootCause(e);
+    Set<SkylarkImport> processed = new HashSet<>(skylarkImports.size());
+    ImmutableList.Builder<ExtensionData> extensions =
+        ImmutableList.builderWithExpectedSize(skylarkImports.size());
+    // foreach is not used to avoid iterator overhead
+    for (int i = 0; i < skylarkImports.size(); ++i) {
+      SkylarkImport skylarkImport = skylarkImports.get(i);
+      // sometimes users include the same extension multiple times...
+      if (!processed.add(skylarkImport)) continue;
+      LoadImport loadImport = LoadImport.of(containingLabel, skylarkImport);
+      try {
+        extensions.add(extensionDataCache.getUnchecked(loadImport));
+      } catch (UncheckedExecutionException e) {
+        propagateRootCause(e);
+      }
     }
+    return extensions.build();
   }
 
   /**
@@ -314,7 +314,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
    * happening somewhere in {@link com.facebook.buck.cli.Main#main(String[])}, since this behavior
    * is not unique to parsing.
    */
-  private ImmutableList<ExtensionData> propagateRootCause(UncheckedExecutionException e)
+  private void propagateRootCause(UncheckedExecutionException e)
       throws IOException, InterruptedException {
     Throwable rootCause = Throwables.getRootCause(e);
     if (rootCause instanceof BuildFileParseException) {
@@ -335,11 +335,14 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
    */
   private ImmutableMap<String, Environment.Extension> toImportMap(
       ImmutableList<ExtensionData> dependencies) {
-    return dependencies
-        .stream()
-        .collect(
-            ImmutableMap.toImmutableMap(
-                ExtensionData::getImportString, ExtensionData::getExtension));
+    ImmutableMap.Builder<String, Environment.Extension> builder =
+        ImmutableMap.builderWithExpectedSize(dependencies.size());
+    // foreach is not used to avoid iterator overhead
+    for (int i = 0; i < dependencies.size(); ++i) {
+      ExtensionData extensionData = dependencies.get(i);
+      builder.put(extensionData.getImportString(), extensionData.getExtension());
+    }
+    return builder.build();
   }
 
   /**
@@ -385,12 +388,8 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
       }
       extension = new Extension(extensionEnv);
     }
-    return ExtensionData.builder()
-        .setExtension(extension)
-        .setPath(extensionPath)
-        .setDependencies(dependencies)
-        .setImportString(loadImport.getImport().getImportString())
-        .build();
+    return ExtensionData.of(
+        extension, extensionPath, dependencies, loadImport.getImport().getImportString());
   }
 
   /**
@@ -454,13 +453,15 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
    * provide enough context. For instance, the same {@link SkylarkImport} can represent different
    * logical imports depending on which repository it is resolved in.
    */
-  @Value.Immutable
+  @Value.Immutable(builder = false)
   @BuckStyleImmutable
   abstract static class AbstractLoadImport {
     /** Returns a label of the file containing this import. */
+    @Value.Parameter
     abstract Label getContainingLabel();
 
     /** Returns a Skylark import. */
+    @Value.Parameter
     abstract SkylarkImport getImport();
 
     /** Returns a label of current import file. */

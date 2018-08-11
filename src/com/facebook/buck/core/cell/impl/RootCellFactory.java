@@ -16,19 +16,19 @@
 
 package com.facebook.buck.core.cell.impl;
 
-import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.CellProvider;
 import com.facebook.buck.core.cell.resolver.CellPathResolver;
+import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.toolchain.ToolchainProvider;
+import com.facebook.buck.core.toolchain.ToolchainProviderFactory;
+import com.facebook.buck.core.toolchain.impl.DefaultToolchainProvider;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.module.BuckModuleManager;
 import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
 import com.facebook.buck.rules.keys.config.impl.ConfigRuleKeyConfigurationFactory;
-import com.facebook.buck.toolchain.ToolchainProvider;
-import com.facebook.buck.toolchain.ToolchainProviderFactory;
-import com.facebook.buck.toolchain.impl.DefaultToolchainProvider;
 import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
@@ -47,6 +47,7 @@ class RootCellFactory {
   static Cell create(
       CellProvider cellProvider,
       CellPathResolver rootCellCellPathResolver,
+      CellPathResolver rootCellPathResolver,
       ProjectFilesystem rootFilesystem,
       BuckModuleManager moduleManager,
       PluginManager pluginManager,
@@ -76,6 +77,7 @@ class RootCellFactory {
         cellProvider,
         toolchainProvider,
         ruleKeyConfiguration,
+        rootCellPathResolver,
         rootFilesystem,
         rootConfig);
   }
@@ -102,6 +104,7 @@ class RootCellFactory {
         cellProvider,
         toolchainProvider,
         ruleKeyConfiguration,
+        rootCellCellPathResolver,
         rootFilesystem,
         rootConfig);
   }

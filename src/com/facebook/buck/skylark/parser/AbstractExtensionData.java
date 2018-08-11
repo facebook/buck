@@ -26,14 +26,32 @@ import org.immutables.value.Value;
  * in order to load it. The main purpose of extra information is to properly captured all dependent
  * information for caching purposes.
  */
-@Value.Immutable
+@Value.Immutable(builder = false)
 @BuckStyleImmutable
 abstract class AbstractExtensionData {
+  /** @return an extension with its bindings */
+  @Value.Parameter
   public abstract Extension getExtension();
 
+  /** @return a path from which the extension was loaded from */
+  @Value.Parameter
   public abstract com.google.devtools.build.lib.vfs.Path getPath();
 
+  /** @return a list of dependencies that were required to evaluate this extension */
+  @Value.Parameter
   public abstract ImmutableList<ExtensionData> getDependencies();
 
+  /** @return a load function label that triggered load of this extension */
+  @Value.Parameter
   public abstract String getImportString();
+
+  /** @return the number of files loaded in order to parse this extension. */
+  public int getLoadTransitiveClosureSize() {
+    // Stream.mapToInt(...).sum() is not used because it's ~4X slower
+    int count = 1; // path of the extension itself
+    for (int i = 0; i < getDependencies().size(); ++i) {
+      count += getDependencies().get(i).getLoadTransitiveClosureSize();
+    }
+    return count;
+  }
 }

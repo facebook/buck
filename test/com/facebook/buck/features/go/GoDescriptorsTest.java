@@ -18,7 +18,7 @@ package com.facebook.buck.features.go;
 
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.config.FakeBuckConfig;
+import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -42,7 +42,6 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Maps;
 import java.nio.file.Paths;
 import java.util.Arrays;
-import java.util.Optional;
 import org.hamcrest.Matchers;
 import org.junit.Assert;
 import org.junit.Rule;
@@ -159,7 +158,7 @@ public class GoDescriptorsTest {
             ImmutableList.of(),
             goPlatform,
             ImmutableList.of(),
-            Optional.empty(),
+            ImmutableList.of(),
             Arrays.asList(FileType.GoFiles));
 
     Assert.assertTrue(
@@ -204,8 +203,7 @@ public class GoDescriptorsTest {
             ImmutableList.of(),
             ImmutableList.of(),
             ImmutableList.of(),
-            goPlatform,
-            Optional.empty());
+            goPlatform);
 
     System.out.println(binary.getBuildDeps());
     GoCompile compile =

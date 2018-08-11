@@ -19,9 +19,9 @@ package com.facebook.buck.cli;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.config.BuckConfig;
-import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.core.cell.name.RelativeCellName;
+import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.jvm.java.DefaultJavaPackageFinder;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.google.common.collect.ImmutableMap;
@@ -63,7 +63,10 @@ public class BuildCommandOptionsTest {
 
     BuckConfig buckConfig =
         FakeBuckConfig.builder()
-            .setSections(command.getConfigOverrides().getForCell(RelativeCellName.ROOT_CELL_NAME))
+            .setSections(
+                command
+                    .getConfigOverrides(ImmutableMap.of())
+                    .getForCell(RelativeCellName.ROOT_CELL_NAME))
             .build();
     assertThat(buckConfig.getNumThreads(), Matchers.equalTo(42));
   }

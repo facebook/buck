@@ -1,0 +1,79 @@
+load("//tools/build_rules:java_rules.bzl", "standard_java_test")
+
+standard_java_test(
+    name = "config",
+    with_test_data = True,
+    deps = [
+        ":FakeBuckConfig",
+        ":testutil",
+        "//src/com/facebook/buck/android/toolchain/impl:impl",
+        "//src/com/facebook/buck/core/cell/impl:impl",
+        "//src/com/facebook/buck/core/cell/name:name",
+        "//src/com/facebook/buck/core/config:config",
+        "//src/com/facebook/buck/cxx/toolchain/impl:impl",
+        "//src/com/facebook/buck/parser:rule_pattern",
+        "//src/com/facebook/buck/parser/exceptions:exceptions",
+        "//src/com/facebook/buck/util:exceptions",
+        "//src/com/facebook/buck/util/concurrent:concurrent",
+        "//src/com/facebook/buck/util/config:config",
+        "//src/com/facebook/buck/util/environment:platform",
+        "//test/com/facebook/buck/io/file:testutil",
+        "//test/com/facebook/buck/testutil:testutil",
+        "//test/com/facebook/buck/testutil/integration:util",
+        "//test/com/facebook/buck/util/timing:testutil",
+        "//third-party/java/easymock:easymock",
+        "//third-party/java/guava:guava",
+        "//third-party/java/junit:junit",
+    ],
+)
+
+java_library(
+    name = "testutil",
+    srcs = glob(
+        ["*.java"],
+        exclude = [
+            "*Test.java",
+            "FakeBuckConfig.java",
+        ],
+    ),
+    exported_deps = [
+        "//src/com/facebook/buck/core/config:config",
+        "//src/com/facebook/buck/util/config:config",
+    ],
+    visibility = [
+        "//test/...",
+    ],
+    deps = [
+        ":FakeBuckConfig",
+        "//src/com/facebook/buck/core/cell/impl:impl",
+        "//src/com/facebook/buck/util/environment:platform",
+        "//test/com/facebook/buck/io/filesystem:testutil",
+        "//test/com/facebook/buck/testutil:testutil",
+        "//test/com/facebook/buck/testutil/integration:util",
+        "//test/com/facebook/buck/util/config:testutil",
+        "//third-party/java/guava:guava",
+        "//third-party/java/junit:junit",
+    ],
+)
+
+java_library(
+    name = "FakeBuckConfig",
+    srcs = ["FakeBuckConfig.java"],
+    exported_deps = [
+        "//src/com/facebook/buck/core/config:config",
+        "//src/com/facebook/buck/util/config:config",
+    ],
+    visibility = [
+        "//test/...",
+    ],
+    deps = [
+        "//src/com/facebook/buck/core/cell:cell",
+        "//src/com/facebook/buck/core/cell/impl:impl",
+        "//src/com/facebook/buck/parser:rule_pattern",
+        "//src/com/facebook/buck/util/environment:platform",
+        "//test/com/facebook/buck/io/filesystem:testutil",
+        "//test/com/facebook/buck/testutil:testutil",
+        "//test/com/facebook/buck/util/config:testutil",
+        "//third-party/java/guava:guava",
+    ],
+)

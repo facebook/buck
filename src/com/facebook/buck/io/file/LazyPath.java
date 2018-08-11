@@ -20,14 +20,14 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Optional;
-import java.util.concurrent.atomic.AtomicReference;
+import javax.annotation.Nullable;
 
 /** Class is intended to provide Paths to be used by cache */
 public abstract class LazyPath {
   private static final Logger LOG = Logger.get(LazyPath.class);
-  private AtomicReference<Path> path = new AtomicReference<>();
-  private Optional<IOException> exception = Optional.empty();
+
+  private @Nullable IOException exception;
+  private @Nullable Path path;
 
   /**
    * Creates an instance with given path.
@@ -43,7 +43,7 @@ public abstract class LazyPath {
             return path;
           }
         };
-    instance.path.set(path);
+    instance.path = path;
     return instance;
   }
 
@@ -53,26 +53,22 @@ public abstract class LazyPath {
    * @return Memoized path.
    * @throws IOException
    */
-  public final Path get() throws IOException {
-    synchronized (path) {
-      Path result = path.get();
-      if (result == null) {
-        try {
-          result = create();
-          path.set(result);
-        } catch (IOException e) {
-          exception = Optional.of(e);
-          LOG.warn(
-              "Failed to initialize lazy path, exception: "
-                  + e
-                  + "\n"
-                  + "StackTrace: "
-                  + Throwables.getStackTraceAsString(e));
-          throw e;
-        }
+  public final synchronized Path get() throws IOException {
+    if (path == null) {
+      try {
+        path = create();
+      } catch (IOException e) {
+        exception = e;
+        LOG.warn(
+            "Failed to initialize lazy path, exception: "
+                + e
+                + "\n"
+                + "StackTrace: "
+                + Throwables.getStackTraceAsString(e));
+        throw e;
       }
-      return result;
     }
+    return path;
   }
 
   /**
@@ -80,12 +76,10 @@ public abstract class LazyPath {
    *
    * @return Memoized path.
    */
-  public Path getUnchecked() {
-    synchronized (path) {
-      return Preconditions.checkNotNull(
-          path.get(),
-          "get() method must be called first to set initial value before invoking getUnchecked()");
-    }
+  public synchronized Path getUnchecked() {
+    return Preconditions.checkNotNull(
+        path,
+        "get() method must be called first to set initial value before invoking getUnchecked()");
   }
 
   /**
@@ -95,22 +89,19 @@ public abstract class LazyPath {
   protected abstract Path create() throws IOException;
 
   @Override
-  public String toString() {
-    synchronized (path) {
-      Path result = path.get();
-      if (result == null) {
-        if (!exception.isPresent()) {
-          return "Lazy path uninitialized";
-        } else {
-          return "Lazy path failed to initialize: "
-              + exception.get()
-              + "\n"
-              + "Stacktrace: \n"
-              + Throwables.getStackTraceAsString(exception.get());
-        }
+  public synchronized String toString() {
+    if (path == null) {
+      if (exception == null) {
+        return "Lazy path uninitialized";
       } else {
-        return result.toString();
+        return "Lazy path failed to initialize: "
+            + exception
+            + "\n"
+            + "Stacktrace: \n"
+            + Throwables.getStackTraceAsString(exception);
       }
+    } else {
+      return path.toString();
     }
   }
 }

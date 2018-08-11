@@ -19,8 +19,8 @@ package com.facebook.buck.log;
 import static com.facebook.buck.util.MoreThrowables.getInitialCause;
 import static com.facebook.buck.util.MoreThrowables.getThrowableOrigin;
 
-import com.facebook.buck.build_type.BuildType;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.util.environment.BuckBuildType;
 import com.facebook.buck.util.network.hostname.HostnameFetching;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -63,7 +63,7 @@ abstract class AbstractErrorLogRecord {
         .put("os", System.getProperty("os.name", "unknown"))
         .put("osVersion", System.getProperty("os.version", "unknown"))
         .put("user", System.getProperty("user.name", "unknown"))
-        .put("buckBinaryBuildType", BuildType.CURRENT_BUILD_TYPE.get().toString())
+        .put("buckBinaryBuildType", BuckBuildType.CURRENT_BUCK_BUILD_TYPE.get().toString())
         .put("hostname", hostname)
         .put(
             "isSuperConsoleEnabled",

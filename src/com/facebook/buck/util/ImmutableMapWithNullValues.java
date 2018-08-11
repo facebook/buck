@@ -18,11 +18,12 @@ package com.facebook.buck.util;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.Ordering;
 import java.util.AbstractMap;
+import java.util.AbstractSet;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -34,7 +35,19 @@ import javax.annotation.Nullable;
  * object in the underlying {@link ImmutableMap} and translate it on any read path.
  */
 public final class ImmutableMapWithNullValues<K, V> extends AbstractMap<K, V> {
-  private static final Object NULL = new Object();
+  private static final Object NULL =
+      new Object() {
+        @Override
+        public int hashCode() {
+          return 0;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+          return o == this;
+        }
+      };
+
   private final Map<K, Object> delegate;
 
   private final int hashCode;
@@ -66,18 +79,71 @@ public final class ImmutableMapWithNullValues<K, V> extends AbstractMap<K, V> {
   }
 
   @Override
-  @SuppressWarnings("unchecked")
   public Set<Entry<K, V>> entrySet() {
-    return delegate
-        .entrySet()
-        .stream()
-        .map(
-            e ->
-                e.getValue() == NULL
-                    ? new AbstractMap.SimpleEntry<K, V>(e.getKey(), null)
-                    : (Map.Entry<K, V>) e)
-        // Use ImmutableSet instead of Set here to preserve iteration order:
-        .collect(ImmutableSet.toImmutableSet());
+    return new EntrySetWithNullValues<>(this, delegate.entrySet());
+  }
+
+  private static class EntrySetWithNullValues<K, V> extends AbstractSet<Entry<K, V>> {
+
+    private final ImmutableMapWithNullValues<K, V> map;
+    private final Set<Entry<K, Object>> delegateSet;
+
+    private EntrySetWithNullValues(
+        ImmutableMapWithNullValues<K, V> map, Set<Entry<K, Object>> delegateSet) {
+      this.map = map;
+      this.delegateSet = delegateSet;
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public boolean contains(Object o) {
+      if (!(o instanceof Entry)) {
+        return false;
+      }
+
+      Entry<K, Object> entry = (Entry<K, Object>) o;
+      Object val = map.delegate.get(entry.getKey());
+      if (val == null) {
+        return false;
+      }
+      Object entryVal = entry.getValue() == null ? NULL : entry.getValue();
+      return val.equals(entryVal);
+    }
+
+    class IteratorWithNullValues implements Iterator<Entry<K, V>> {
+
+      private final Iterator<Entry<K, Object>> iteratorDelegate;
+
+      IteratorWithNullValues(Iterator<Entry<K, Object>> iteratorDelegate) {
+        this.iteratorDelegate = iteratorDelegate;
+      }
+
+      @Override
+      public boolean hasNext() {
+        return iteratorDelegate.hasNext();
+      }
+
+      @Override
+      @SuppressWarnings("unchecked")
+      public Entry<K, V> next() {
+        Entry<K, Object> e = iteratorDelegate.next();
+        Entry<K, V> result =
+            e.getValue() == NULL
+                ? new AbstractMap.SimpleEntry<>(e.getKey(), null)
+                : (Map.Entry<K, V>) e;
+        return result;
+      }
+    }
+
+    @Override
+    public Iterator<Entry<K, V>> iterator() {
+      return new IteratorWithNullValues(delegateSet.iterator());
+    }
+
+    @Override
+    public int size() {
+      return delegateSet.size();
+    }
   }
 
   @Override

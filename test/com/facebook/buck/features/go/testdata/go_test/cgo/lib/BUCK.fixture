@@ -1,13 +1,14 @@
 cgo_library(
     name = "cgo_lib",
+    package_name = "cgo",
     srcs = ["double_cgo.go"],
 )
 
 go_library(
     name = "lib",
     srcs = ["quad_lib.go"],
-    cgo = ":cgo_lib",
     tests = [":all_tests"],
+    deps = [":cgo_lib"],
 )
 
 go_test(

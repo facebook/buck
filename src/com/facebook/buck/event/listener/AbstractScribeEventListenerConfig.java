@@ -15,9 +15,10 @@
  */
 package com.facebook.buck.event.listener;
 
-import com.facebook.buck.config.BuckConfig;
-import com.facebook.buck.config.ConfigView;
+import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.config.ConfigView;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.google.common.collect.ImmutableList;
 import org.immutables.value.Value;
 
 /** Strong-type configuration for [scribe_event_listener] section */
@@ -49,5 +50,17 @@ abstract class AbstractScribeEventListenerConfig implements ConfigView<BuckConfi
   @Value.Lazy
   public Iterable<String> getEvents() {
     return getDelegate().getListWithoutComments(BUILDFILE_SECTION_NAME, "events");
+  }
+
+  /**
+   * @return Statuses that allow BuildRuleFinished events to be logged to Scribe. Will return a
+   *     subset of https://fburl.com/m4o5p1mg
+   */
+  @Value.Lazy
+  public Iterable<String> getEnabledBuildRuleFinishedStatuses() {
+    ImmutableList<String> list =
+        getDelegate()
+            .getListWithoutComments(BUILDFILE_SECTION_NAME, "enabled_build_rule_finished_statuses");
+    return list.isEmpty() ? ImmutableList.of("FAIL") : list;
   }
 }

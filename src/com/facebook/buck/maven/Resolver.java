@@ -19,8 +19,8 @@ package com.facebook.buck.maven;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.eclipse.aether.util.artifact.JavaScopes.TEST;
 
-import com.facebook.buck.graph.MutableDirectedGraph;
-import com.facebook.buck.graph.TraversableGraph;
+import com.facebook.buck.core.util.graph.MutableDirectedGraph;
+import com.facebook.buck.core.util.graph.TraversableGraph;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.maven.aether.AetherUtil;
 import com.facebook.buck.util.concurrent.MostExecutors;

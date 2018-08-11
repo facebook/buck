@@ -16,16 +16,16 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.config.BuckConfig;
+import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.description.DescriptionCreationContext;
 import com.facebook.buck.core.model.targetgraph.DescriptionProvider;
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
+import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.kotlin.KotlinBuckConfig;
 import com.facebook.buck.jvm.scala.ScalaBuckConfig;
 import com.facebook.buck.sandbox.SandboxExecutionStrategy;
-import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.environment.Platform;
 import java.util.Arrays;
 import java.util.Collection;

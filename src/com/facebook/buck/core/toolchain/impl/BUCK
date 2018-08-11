@@ -1,0 +1,18 @@
+java_library(
+    name = "impl",
+    srcs = glob(["*.java"]),
+    exported_deps = [
+        "//src/com/facebook/buck/core/toolchain:toolchain",
+    ],
+    tests = [
+        "//test/com/facebook/buck/core/toolchain/impl:impl",
+    ],
+    visibility = ["PUBLIC"],
+    deps = [
+        "//src/com/facebook/buck/io:executable-finder",
+        "//src/com/facebook/buck/io:io",
+        "//src/com/facebook/buck/log:api",
+        "//src/com/facebook/buck/util:exceptions",
+        "//third-party/java/pf4j:pf4j",
+    ],
+)

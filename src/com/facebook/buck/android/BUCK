@@ -1,4 +1,5 @@
 load("//tools/build_rules:java_rules.bzl", "java_immutables_library", "java_library_with_plugins")
+load("//tools/build_rules:file_alias.bzl", "file_alias")
 
 BUCK_CONFIG_SRCS = [
     "AndroidBuckConfig.java",
@@ -21,7 +22,7 @@ java_immutables_library(
     visibility = ["PUBLIC"],
     deps = [
         "//src/com/facebook/buck/android/toolchain/ndk:ndk",
-        "//src/com/facebook/buck/config:config",
+        "//src/com/facebook/buck/core/config:config",
         "//src/com/facebook/buck/event:event",
         "//src/com/facebook/buck/event:interfaces",
         "//src/com/facebook/buck/rules/tool/config:config",
@@ -177,13 +178,14 @@ java_library_with_plugins(
         "//src/com/facebook/buck/android/resources:resources",
         "//src/com/facebook/buck/android/toolchain:toolchain",
         "//src/com/facebook/buck/android/toolchain/ndk:ndk",
-        "//src/com/facebook/buck/config:config",
         "//src/com/facebook/buck/core/cell/resolver:resolver",
+        "//src/com/facebook/buck/core/config:config",
         "//src/com/facebook/buck/core/model:model",
         "//src/com/facebook/buck/core/model/impl:impl",
         "//src/com/facebook/buck/core/rules/common:common",
         "//src/com/facebook/buck/core/rules/impl:impl",
         "//src/com/facebook/buck/core/sourcepath/resolver/impl:impl",
+        "//src/com/facebook/buck/core/util/graph:graph",
         "//src/com/facebook/buck/cxx:rules",
         "//src/com/facebook/buck/cxx/toolchain:toolchain",
         "//src/com/facebook/buck/cxx/toolchain/linker:linker",
@@ -191,7 +193,6 @@ java_library_with_plugins(
         "//src/com/facebook/buck/event:event",
         "//src/com/facebook/buck/event:interfaces",
         "//src/com/facebook/buck/event/external:external_lib",
-        "//src/com/facebook/buck/graph:graph",
         "//src/com/facebook/buck/io:io",
         "//src/com/facebook/buck/io/file:file",
         "//src/com/facebook/buck/jvm/core:core",
@@ -245,24 +246,24 @@ java_library_with_plugins(
     ],
 )
 
-export_file(
+file_alias(
     name = "android-tools-common.jar",
-    src = "//third-party/java/android:common",
+    source = "//third-party/java/android:common",
 )
 
-export_file(
+file_alias(
     name = "ddmlib.jar",
-    src = "//third-party/java/android:ddmlib",
+    source = "//third-party/java/android:ddmlib",
 )
 
-export_file(
+file_alias(
     name = "guava.jar",
-    src = "//third-party/java/guava:shaded-guava-20",
+    source = "//third-party/java/guava:shaded-guava-20",
 )
 
-export_file(
+file_alias(
     name = "kxml2.jar",
-    src = "//third-party/java/kxml2:kxml2",
+    source = "//third-party/java/kxml2:kxml2",
 )
 
 SPLIT_DEX_SRCS = [
@@ -316,7 +317,7 @@ java_immutables_library(
     name = "helpers",
     srcs = HELPERS_SRCS,
     exported_deps = [
-        "//src/com/facebook/buck/toolchain:toolchain",
+        "//src/com/facebook/buck/core/toolchain:toolchain",
     ],
     tests = [
         "//test/com/facebook/buck/android:integration1",
@@ -330,7 +331,7 @@ java_immutables_library(
         "//src/com/facebook/buck/android/agent/util:util",
         "//src/com/facebook/buck/android/apkmodule:apkmodule",
         "//src/com/facebook/buck/android/redex:options",
-        "//src/com/facebook/buck/config:config",
+        "//src/com/facebook/buck/core/config:config",
         "//src/com/facebook/buck/core/model:model",
         "//src/com/facebook/buck/core/rules/impl:impl",
         "//src/com/facebook/buck/core/sourcepath/resolver:resolver",
@@ -452,6 +453,7 @@ java_immutables_library(
         "//src/com/facebook/buck/core/rules:rules",
         "//src/com/facebook/buck/core/rules/impl:impl",
         "//src/com/facebook/buck/core/sourcepath/resolver:resolver",
+        "//src/com/facebook/buck/core/util/graph:graph",
         "//src/com/facebook/buck/cxx:rules",
         "//src/com/facebook/buck/cxx/toolchain:toolchain",
         "//src/com/facebook/buck/cxx/toolchain/elf:elf",
@@ -460,7 +462,6 @@ java_immutables_library(
         "//src/com/facebook/buck/event:event",
         "//src/com/facebook/buck/event:interfaces",
         "//src/com/facebook/buck/event/external:external_lib",
-        "//src/com/facebook/buck/graph:graph",
         "//src/com/facebook/buck/io:executable-finder",
         "//src/com/facebook/buck/io:io",
         "//src/com/facebook/buck/io/file:file",
@@ -488,6 +489,7 @@ java_immutables_library(
         "//src/com/facebook/buck/zip:zip",
         "//third-party/java/android:sdklib",
         "//third-party/java/aosp:aosp",
+        "//third-party/java/aosp:apksig",
         "//third-party/java/asm:asm",
         "//third-party/java/d8:d8",
         "//third-party/java/dx:dx",

@@ -4,9 +4,9 @@ java_immutables_library(
     name = "toolchain",
     srcs = glob(["*.java"]),
     exported_deps = [
+        "//src/com/facebook/buck/core/toolchain:toolchain",
         "//src/com/facebook/buck/cxx/toolchain:toolchain",
         "//src/com/facebook/buck/jvm/java:support",
-        "//src/com/facebook/buck/toolchain:toolchain",
     ],
     visibility = [
         "PUBLIC",

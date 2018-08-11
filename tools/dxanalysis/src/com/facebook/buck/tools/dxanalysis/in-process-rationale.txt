@@ -51,7 +51,7 @@ I wrote a static analysis tool to identify deeply immutable object types
 and find static members that are (transitively) mutable.
 I've annotated the output with justifications for why I think each is safe.
 When upgrading dx, you can look for any new unsafe members by running
-buck build //src/com/facebook/buck/tools/dxanalysis:dxanalysis && comm -23 <(java -jar buck-out/gen/src/com/facebook/buck/tools/dxanalysis/dxanalysis.jar build/dx.jar | sort) <(sort src/com/facebook/buck/tools/dxanalysis/in-process-checklist.txt)
+buck build //src/com/facebook/buck/tools/dxanalysis:dxanalysis && comm -23 <(java -jar buck-out/gen/src/com/facebook/buck/tools/dxanalysis/dxanalysis.jar ant-out/dx.jar | sort) <(sort src/com/facebook/buck/tools/dxanalysis/in-process-checklist.txt)
 
 Some of the members require a more detailed explanation, which I give here.
 

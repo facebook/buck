@@ -33,7 +33,7 @@ public final class AgentUtil {
 
   // These must match the values in the agent manifest.
   public static final String AGENT_PACKAGE_NAME = "com.facebook.buck.android.agent";
-  public static final String AGENT_VERSION_CODE = "7";
+  public static final String AGENT_VERSION_CODE = "8";
 
   /** Size in bytes of the binary data use to generate the secret key for receive-file. */
   public static final int BINARY_SECRET_KEY_SIZE = 16;
@@ -66,9 +66,12 @@ public final class AgentUtil {
               throw new IllegalArgumentException(
                   "Failed to find manifest digest in " + entry.getName());
             }
-            String prefix = "SHA1-Digest-Manifest: ";
-            if (line.startsWith(prefix)) {
-              return line.substring(prefix.length());
+            String prefix_sha1 = "SHA1-Digest-Manifest: ";
+            String prefix_sha256 = "SHA-256-Digest-Manifest: ";
+            if (line.startsWith(prefix_sha1)) {
+              return line.substring(prefix_sha1.length());
+            } else if (line.startsWith(prefix_sha256)) {
+              return line.substring(prefix_sha256.length());
             }
           }
         } finally {

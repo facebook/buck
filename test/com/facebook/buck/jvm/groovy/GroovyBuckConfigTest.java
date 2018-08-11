@@ -19,16 +19,13 @@ import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assume.assumeTrue;
 
-import com.facebook.buck.config.BuckConfig;
-import com.facebook.buck.core.cell.impl.DefaultCellPathResolver;
+import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.testutil.TemporaryPaths;
-import com.facebook.buck.util.config.Config;
 import com.facebook.buck.util.config.RawConfig;
-import com.facebook.buck.util.environment.Architecture;
-import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -105,15 +102,12 @@ public class GroovyBuckConfigTest {
       ImmutableMap<String, ImmutableMap<String, String>> rawConfig) {
     ProjectFilesystem projectFilesystem =
         TestProjectFilesystems.createProjectFilesystem(temporaryFolder.getRoot());
-    Config config = new Config(RawConfig.of(rawConfig));
     BuckConfig buckConfig =
-        new BuckConfig(
-            config,
-            projectFilesystem,
-            Architecture.detect(),
-            Platform.detect(),
-            environment,
-            DefaultCellPathResolver.of(projectFilesystem.getRootPath(), config));
+        FakeBuckConfig.builder()
+            .setSections(RawConfig.of(rawConfig))
+            .setFilesystem(projectFilesystem)
+            .setEnvironment(environment)
+            .build();
 
     return new GroovyBuckConfig(buckConfig);
   }

@@ -20,10 +20,14 @@ import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.description.impl.DescriptionCache;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.RuleType;
+import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
+import com.facebook.buck.core.rules.config.ConfigurationRuleDescription;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.function.Function;
 import org.immutables.value.Value;
 
@@ -33,12 +37,15 @@ import org.immutables.value.Value;
 public abstract class AbstractKnownRuleTypes {
 
   @Value.Parameter
-  public abstract KnownBuildRuleTypes getKnownBuildRuleTypes();
+  public abstract ImmutableList<DescriptionWithTargetGraph<?>> getKnownBuildDescriptions();
+
+  @Value.Parameter
+  public abstract ImmutableList<ConfigurationRuleDescription<?>>
+      getKnownConfigurationDescriptions();
 
   @Value.Lazy
   public ImmutableMap<String, RuleType> getTypesByName() {
-    return getKnownBuildRuleTypes()
-        .getDescriptions()
+    return getDescriptions()
         .stream()
         .map(DescriptionCache::getRuleType)
         .collect(ImmutableMap.toImmutableMap(RuleType::getName, t -> t));
@@ -60,15 +67,15 @@ public abstract class AbstractKnownRuleTypes {
   @Value.Lazy
   public ImmutableList<BaseDescription<?>> getDescriptions() {
     return ImmutableList.<BaseDescription<?>>builder()
-        .addAll(getKnownBuildRuleTypes().getDescriptions())
+        .addAll(getKnownBuildDescriptions())
+        .addAll(getKnownConfigurationDescriptions())
         .build();
   }
 
   /** @return all descriptions organized by their {@link RuleType}. */
   @Value.Lazy
   protected ImmutableMap<RuleType, BaseDescription<?>> getDescriptionsByRule() {
-    return getKnownBuildRuleTypes()
-        .getDescriptions()
+    return getDescriptions()
         .stream()
         .collect(ImmutableMap.toImmutableMap(DescriptionCache::getRuleType, Function.identity()));
   }
@@ -77,5 +84,17 @@ public abstract class AbstractKnownRuleTypes {
   public BaseDescription<?> getDescription(RuleType ruleType) {
     return Preconditions.checkNotNull(
         getDescriptionsByRule().get(ruleType), "Cannot find a description for type %s", ruleType);
+  }
+
+  // Verify that there are no duplicate rule types being defined.
+  @Value.Check
+  protected void check() {
+    Set<RuleType> types = new HashSet<>();
+    for (BaseDescription<?> description : getDescriptions()) {
+      RuleType type = DescriptionCache.getRuleType(description);
+      if (!types.add(DescriptionCache.getRuleType(description))) {
+        throw new IllegalStateException(String.format("multiple descriptions with type %s", type));
+      }
+    }
   }
 }

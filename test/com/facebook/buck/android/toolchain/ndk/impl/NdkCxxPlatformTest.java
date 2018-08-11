@@ -33,9 +33,9 @@ import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatformTargetConfiguration
 import com.facebook.buck.android.toolchain.ndk.NdkCxxRuntime;
 import com.facebook.buck.android.toolchain.ndk.NdkCxxRuntimeType;
 import com.facebook.buck.android.toolchain.ndk.TargetCpuType;
-import com.facebook.buck.config.BuckConfig;
-import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.core.cell.TestCellPathResolver;
+import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;

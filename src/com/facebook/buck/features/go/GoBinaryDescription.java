@@ -30,9 +30,9 @@ import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.toolchain.CxxPlatforms;
-import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.versions.VersionRoot;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -83,8 +83,7 @@ public class GoBinaryDescription
         args.getCompilerFlags(),
         args.getAssemblerFlags(),
         args.getLinkerFlags(),
-        platform,
-        args.getCgo());
+        platform);
   }
 
   @Override
@@ -117,8 +116,7 @@ public class GoBinaryDescription
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractGoBinaryDescriptionArg
-      extends CommonDescriptionArg, HasDeclaredDeps, HasSrcs, HasCgo {
+  interface AbstractGoBinaryDescriptionArg extends CommonDescriptionArg, HasDeclaredDeps, HasSrcs {
     Optional<Flavor> getPlatform();
 
     ImmutableList<String> getCompilerFlags();

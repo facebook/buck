@@ -37,9 +37,9 @@
     ignore = \
       .git, \
       .buckd, \
-      build, \
-      build-ij, \
+      ant-out, \
       bin, \
+      intellij-out, \
       **/*.swp, \
       **/*#, \
       **/*$, \

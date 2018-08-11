@@ -92,7 +92,7 @@ public class ProcessResult {
 
     StringBuilder failureMessageBuilder = new StringBuilder();
     if (message != null) {
-      failureMessageBuilder.append(message + " ");
+      failureMessageBuilder.append(message).append(" ");
     }
     failureMessageBuilder.append(
         String.format(

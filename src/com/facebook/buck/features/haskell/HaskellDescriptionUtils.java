@@ -31,6 +31,7 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.toolchain.tool.Tool;
+import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.cxx.Archive;
 import com.facebook.buck.cxx.CxxDeps;
 import com.facebook.buck.cxx.CxxPreprocessables;
@@ -53,7 +54,6 @@ import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables.SharedLibrariesBuilder;
 import com.facebook.buck.file.WriteFile;
-import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
@@ -585,6 +585,7 @@ public class HaskellDescriptionUtils {
         platform.getGhciLib().get(),
         platform.getGhciCxx().get(),
         platform.getGhciCc().get(),
-        platform.getGhciCpp().get());
+        platform.getGhciCpp().get(),
+        platform.getGhciPackager().get());
   }
 }

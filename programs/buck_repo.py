@@ -24,8 +24,8 @@ RESOURCES = {
     "native_exopackage_fake_path": "assets/android/native-exopackage-fakes.apk",
     "path_to_sh_binary_template": "src/com/facebook/buck/shell/sh_binary_template",
     "path_to_isolated_trampoline": "src/com/facebook/buck/rules/modern/builders/trampoline.sh",
-    "report_generator_jar": "build/report-generator.jar",
-    "testrunner_classes": "build/testrunner/classes",
+    "report_generator_jar": "ant-out/report-generator.jar",
+    "testrunner_classes": "ant-out/testrunner/classes",
     # python resources used by buck file parser.
     "path_to_pathlib_py": "third-party/py/pathlib/pathlib.py",
     "path_to_pywatchman": "third-party/py/pywatchman",
@@ -34,9 +34,9 @@ RESOURCES = {
 }
 
 BUCK_BINARY_HASH_LOCATION = os.path.join(
-    "build", "classes", "META-INF", "buck-binary-hash.txt"
+    "ant-out", "classes", "META-INF", "buck-binary-hash.txt"
 )
-BUCK_INFO_LOCATION = os.path.join("build", "buck-info.json")
+BUCK_INFO_LOCATION = os.path.join("ant-out", "buck-info.json")
 
 
 class BuckRepo(BuckTool):
@@ -99,9 +99,9 @@ class BuckRepo(BuckTool):
 
     def _get_extra_java_args(self):
         with Tracing("BuckRepo._get_extra_java_args"):
-            modules_dir = os.path.join(self.buck_dir, "build", "buck-modules")
+            modules_dir = os.path.join(self.buck_dir, "ant-out", "buck-modules")
             module_resources_dir = os.path.join(
-                self.buck_dir, "build", "buck-modules-resources"
+                self.buck_dir, "ant-out", "buck-modules-resources"
             )
             return [
                 "-Dbuck.git_dirty={0}".format(int(self._get_buck_repo_dirty())),
@@ -111,14 +111,14 @@ class BuckRepo(BuckTool):
             ]
 
     def _get_bootstrap_classpath(self):
-        return self._join_buck_dir("build/bootstrapper/bootstrapper.jar")
+        return self._join_buck_dir("ant-out/bootstrapper/bootstrapper.jar")
 
     def _unpack_modules(self):
         pass
 
     def _get_java_classpath(self):
         classpath_file_path = os.path.join(
-            self.buck_dir, "build", "classpath", "classpaths"
+            self.buck_dir, "ant-out", "classpath", "classpaths"
         )
         classpath_entries = []
         with open(classpath_file_path, "r") as classpath_file:

@@ -97,6 +97,9 @@ abstract class AbstractHaskellPlatform implements FlavorConvertible {
   /** @return The C preprocessor for GHCi targets. */
   abstract Supplier<Path> getGhciCpp();
 
+  /** @return the path for the haskell packager. */
+  abstract Supplier<Path> getGhciPackager();
+
   /** @return An optional prefix for generated Haskell package names. */
   abstract Optional<String> getPackageNamePrefix();
 

@@ -41,10 +41,10 @@ import com.facebook.buck.apple.toolchain.impl.AppleCxxPlatformsProviderFactory;
 import com.facebook.buck.apple.toolchain.impl.AppleDeveloperDirectoryProviderFactory;
 import com.facebook.buck.apple.toolchain.impl.AppleSdkLocationFactory;
 import com.facebook.buck.apple.toolchain.impl.AppleToolchainProviderFactory;
-import com.facebook.buck.config.BuckConfig;
-import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.TestCellBuilder;
+import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
@@ -58,13 +58,11 @@ import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodes;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.config.KnownConfigurationRuleTypes;
-import com.facebook.buck.core.rules.config.impl.PluginBasedKnownConfigurationRuleTypesFactory;
-import com.facebook.buck.core.rules.knowntypes.DefaultKnownBuildRuleTypesFactory;
-import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypesProvider;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
 import com.facebook.buck.core.rules.knowntypes.TestKnownRuleTypesProvider;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
+import com.facebook.buck.core.toolchain.ToolchainCreationContext;
+import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.event.FakeBuckEventListener;
@@ -85,13 +83,10 @@ import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
-import com.facebook.buck.sandbox.TestSandboxExecutionStrategyFactory;
 import com.facebook.buck.shell.GenruleDescriptionArg;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.facebook.buck.toolchain.ToolchainCreationContext;
-import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.util.CloseableMemoizedSupplier;
 import com.facebook.buck.util.CreateSymlinksForTests;
 import com.facebook.buck.util.DefaultProcessExecutor;
@@ -155,8 +150,6 @@ public class DefaultParserTest {
   private BuckEventBus eventBus;
   private Cell cell;
   private KnownRuleTypesProvider knownRuleTypesProvider;
-  private KnownBuildRuleTypesProvider knownBuildRuleTypesProvider;
-  private KnownConfigurationRuleTypes knownConfigurationRuleTypes;
   private ParseEventStartedCounter counter;
   private ListeningExecutorService executorService;
   private ExecutableFinder executableFinder;
@@ -190,8 +183,6 @@ public class DefaultParserTest {
       BuckEventBus eventBus,
       Cell cell,
       KnownRuleTypesProvider knownRuleTypesProvider,
-      KnownBuildRuleTypesProvider knownBuildRuleTypesProvider,
-      KnownConfigurationRuleTypes knownConfigurationRuleTypes,
       boolean enableProfiling,
       ListeningExecutorService executor,
       ExecutableFinder executableFinder,
@@ -202,8 +193,6 @@ public class DefaultParserTest {
                 typeCoercerFactory,
                 new ConstructorArgMarshaller(typeCoercerFactory),
                 knownRuleTypesProvider,
-                knownBuildRuleTypesProvider,
-                knownConfigurationRuleTypes,
                 new ParserPythonInterpreterProvider(cell.getBuckConfig(), executableFinder))
             .create(
                 parser.getPermState(),
@@ -315,13 +304,7 @@ public class DefaultParserTest {
 
     cell = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();
     PluginManager pluginManager = BuckPluginManagerFactory.createPluginManager();
-    knownBuildRuleTypesProvider =
-        KnownBuildRuleTypesProvider.of(
-            DefaultKnownBuildRuleTypesFactory.of(
-                processExecutor, pluginManager, new TestSandboxExecutionStrategyFactory()));
-    knownConfigurationRuleTypes =
-        PluginBasedKnownConfigurationRuleTypesFactory.createFromPlugins(pluginManager);
-    knownRuleTypesProvider = TestKnownRuleTypesProvider.create(knownBuildRuleTypesProvider);
+    knownRuleTypesProvider = TestKnownRuleTypesProvider.create(pluginManager);
     ParserConfig parserConfig = cell.getBuckConfig().getView(ParserConfig.class);
 
     typeCoercerFactory = new DefaultTypeCoercerFactory();
@@ -331,8 +314,6 @@ public class DefaultParserTest {
                 typeCoercerFactory,
                 new ConstructorArgMarshaller(typeCoercerFactory),
                 knownRuleTypesProvider,
-                knownBuildRuleTypesProvider,
-                knownConfigurationRuleTypes,
                 new ParserPythonInterpreterProvider(parserConfig, executableFinder)),
             parserConfig,
             typeCoercerFactory,
@@ -671,8 +652,6 @@ public class DefaultParserTest {
         eventBus,
         cell,
         knownRuleTypesProvider,
-        knownBuildRuleTypesProvider,
-        knownConfigurationRuleTypes,
         false,
         executorService,
         executableFinder,
@@ -694,8 +673,6 @@ public class DefaultParserTest {
         eventBus,
         cell,
         knownRuleTypesProvider,
-        knownBuildRuleTypesProvider,
-        knownConfigurationRuleTypes,
         false,
         executorService,
         executableFinder,
@@ -715,8 +692,6 @@ public class DefaultParserTest {
         eventBus,
         cell,
         knownRuleTypesProvider,
-        knownBuildRuleTypesProvider,
-        knownConfigurationRuleTypes,
         false,
         executorService,
         executableFinder,
@@ -737,8 +712,6 @@ public class DefaultParserTest {
         eventBus,
         cell,
         knownRuleTypesProvider,
-        knownBuildRuleTypesProvider,
-        knownConfigurationRuleTypes,
         false,
         executorService,
         executableFinder,
@@ -758,8 +731,6 @@ public class DefaultParserTest {
         eventBus,
         cell,
         knownRuleTypesProvider,
-        knownBuildRuleTypesProvider,
-        knownConfigurationRuleTypes,
         false,
         executorService,
         executableFinder,
@@ -780,8 +751,6 @@ public class DefaultParserTest {
         eventBus,
         cell,
         knownRuleTypesProvider,
-        knownBuildRuleTypesProvider,
-        knownConfigurationRuleTypes,
         false,
         executorService,
         executableFinder,
@@ -801,8 +770,6 @@ public class DefaultParserTest {
         eventBus,
         cell,
         knownRuleTypesProvider,
-        knownBuildRuleTypesProvider,
-        knownConfigurationRuleTypes,
         false,
         executorService,
         executableFinder,
@@ -823,8 +790,6 @@ public class DefaultParserTest {
         eventBus,
         cell,
         knownRuleTypesProvider,
-        knownBuildRuleTypesProvider,
-        knownConfigurationRuleTypes,
         false,
         executorService,
         executableFinder,
@@ -844,8 +809,6 @@ public class DefaultParserTest {
         eventBus,
         cell,
         knownRuleTypesProvider,
-        knownBuildRuleTypesProvider,
-        knownConfigurationRuleTypes,
         false,
         executorService,
         executableFinder,
@@ -868,8 +831,6 @@ public class DefaultParserTest {
         eventBus,
         cell,
         knownRuleTypesProvider,
-        knownBuildRuleTypesProvider,
-        knownConfigurationRuleTypes,
         false,
         executorService,
         executableFinder,
@@ -889,8 +850,6 @@ public class DefaultParserTest {
         eventBus,
         cell,
         knownRuleTypesProvider,
-        knownBuildRuleTypesProvider,
-        knownConfigurationRuleTypes,
         false,
         executorService,
         executableFinder,
@@ -911,8 +870,6 @@ public class DefaultParserTest {
         eventBus,
         cell,
         knownRuleTypesProvider,
-        knownBuildRuleTypesProvider,
-        knownConfigurationRuleTypes,
         false,
         executorService,
         executableFinder,
@@ -932,8 +889,6 @@ public class DefaultParserTest {
         eventBus,
         cell,
         knownRuleTypesProvider,
-        knownBuildRuleTypesProvider,
-        knownConfigurationRuleTypes,
         false,
         executorService,
         executableFinder,
@@ -954,8 +909,6 @@ public class DefaultParserTest {
         eventBus,
         cell,
         knownRuleTypesProvider,
-        knownBuildRuleTypesProvider,
-        knownConfigurationRuleTypes,
         false,
         executorService,
         executableFinder,
@@ -975,8 +928,6 @@ public class DefaultParserTest {
         eventBus,
         cell,
         knownRuleTypesProvider,
-        knownBuildRuleTypesProvider,
-        knownConfigurationRuleTypes,
         false,
         executorService,
         executableFinder,
@@ -997,8 +948,6 @@ public class DefaultParserTest {
         eventBus,
         cell,
         knownRuleTypesProvider,
-        knownBuildRuleTypesProvider,
-        knownConfigurationRuleTypes,
         false,
         executorService,
         executableFinder,
@@ -1018,8 +967,6 @@ public class DefaultParserTest {
         eventBus,
         cell,
         knownRuleTypesProvider,
-        knownBuildRuleTypesProvider,
-        knownConfigurationRuleTypes,
         false,
         executorService,
         executableFinder,
@@ -1040,8 +987,6 @@ public class DefaultParserTest {
         eventBus,
         cell,
         knownRuleTypesProvider,
-        knownBuildRuleTypesProvider,
-        knownConfigurationRuleTypes,
         false,
         executorService,
         executableFinder,
@@ -1061,8 +1006,6 @@ public class DefaultParserTest {
         eventBus,
         cell,
         knownRuleTypesProvider,
-        knownBuildRuleTypesProvider,
-        knownConfigurationRuleTypes,
         false,
         executorService,
         executableFinder,
@@ -1083,8 +1026,6 @@ public class DefaultParserTest {
         eventBus,
         cell,
         knownRuleTypesProvider,
-        knownBuildRuleTypesProvider,
-        knownConfigurationRuleTypes,
         false,
         executorService,
         executableFinder,
@@ -1104,8 +1045,6 @@ public class DefaultParserTest {
         eventBus,
         cell,
         knownRuleTypesProvider,
-        knownBuildRuleTypesProvider,
-        knownConfigurationRuleTypes,
         false,
         executorService,
         executableFinder,
@@ -1126,8 +1065,6 @@ public class DefaultParserTest {
         eventBus,
         cell,
         knownRuleTypesProvider,
-        knownBuildRuleTypesProvider,
-        knownConfigurationRuleTypes,
         false,
         executorService,
         executableFinder,
@@ -1147,8 +1084,6 @@ public class DefaultParserTest {
         eventBus,
         cell,
         knownRuleTypesProvider,
-        knownBuildRuleTypesProvider,
-        knownConfigurationRuleTypes,
         false,
         executorService,
         executableFinder,
@@ -1169,8 +1104,6 @@ public class DefaultParserTest {
         eventBus,
         cell,
         knownRuleTypesProvider,
-        knownBuildRuleTypesProvider,
-        knownConfigurationRuleTypes,
         false,
         executorService,
         executableFinder,
@@ -1191,8 +1124,6 @@ public class DefaultParserTest {
         eventBus,
         cell,
         knownRuleTypesProvider,
-        knownBuildRuleTypesProvider,
-        knownConfigurationRuleTypes,
         false,
         executorService,
         executableFinder,
@@ -1213,8 +1144,6 @@ public class DefaultParserTest {
         eventBus,
         cell,
         knownRuleTypesProvider,
-        knownBuildRuleTypesProvider,
-        knownConfigurationRuleTypes,
         false,
         executorService,
         executableFinder,
@@ -1248,8 +1177,6 @@ public class DefaultParserTest {
         eventBus,
         cell,
         knownRuleTypesProvider,
-        knownBuildRuleTypesProvider,
-        knownConfigurationRuleTypes,
         false,
         executorService,
         executableFinder,
@@ -1270,8 +1197,6 @@ public class DefaultParserTest {
         eventBus,
         cell,
         knownRuleTypesProvider,
-        knownBuildRuleTypesProvider,
-        knownConfigurationRuleTypes,
         false,
         executorService,
         executableFinder,
@@ -1291,8 +1216,6 @@ public class DefaultParserTest {
         eventBus,
         cell,
         knownRuleTypesProvider,
-        knownBuildRuleTypesProvider,
-        knownConfigurationRuleTypes,
         false,
         executorService,
         executableFinder,
@@ -1313,8 +1236,6 @@ public class DefaultParserTest {
         eventBus,
         cell,
         knownRuleTypesProvider,
-        knownBuildRuleTypesProvider,
-        knownConfigurationRuleTypes,
         false,
         executorService,
         executableFinder,
@@ -1335,8 +1256,6 @@ public class DefaultParserTest {
         eventBus,
         cell,
         knownRuleTypesProvider,
-        knownBuildRuleTypesProvider,
-        knownConfigurationRuleTypes,
         false,
         executorService,
         executableFinder,
@@ -1357,8 +1276,6 @@ public class DefaultParserTest {
         eventBus,
         cell,
         knownRuleTypesProvider,
-        knownBuildRuleTypesProvider,
-        knownConfigurationRuleTypes,
         false,
         executorService,
         executableFinder,
@@ -1378,8 +1295,6 @@ public class DefaultParserTest {
         eventBus,
         cell,
         knownRuleTypesProvider,
-        knownBuildRuleTypesProvider,
-        knownConfigurationRuleTypes,
         false,
         executorService,
         executableFinder,
@@ -1400,8 +1315,6 @@ public class DefaultParserTest {
         eventBus,
         cell,
         knownRuleTypesProvider,
-        knownBuildRuleTypesProvider,
-        knownConfigurationRuleTypes,
         false,
         executorService,
         executableFinder,
@@ -1421,8 +1334,6 @@ public class DefaultParserTest {
         eventBus,
         cell,
         knownRuleTypesProvider,
-        knownBuildRuleTypesProvider,
-        knownConfigurationRuleTypes,
         false,
         executorService,
         executableFinder,
@@ -1443,8 +1354,6 @@ public class DefaultParserTest {
         eventBus,
         cell,
         knownRuleTypesProvider,
-        knownBuildRuleTypesProvider,
-        knownConfigurationRuleTypes,
         false,
         executorService,
         executableFinder,
@@ -1464,8 +1373,6 @@ public class DefaultParserTest {
         eventBus,
         cell,
         knownRuleTypesProvider,
-        knownBuildRuleTypesProvider,
-        knownConfigurationRuleTypes,
         false,
         executorService,
         executableFinder,
@@ -1486,8 +1393,6 @@ public class DefaultParserTest {
         eventBus,
         cell,
         knownRuleTypesProvider,
-        knownBuildRuleTypesProvider,
-        knownConfigurationRuleTypes,
         false,
         executorService,
         executableFinder,
@@ -1507,8 +1412,6 @@ public class DefaultParserTest {
         eventBus,
         cell,
         knownRuleTypesProvider,
-        knownBuildRuleTypesProvider,
-        knownConfigurationRuleTypes,
         false,
         executorService,
         executableFinder,
@@ -1529,8 +1432,6 @@ public class DefaultParserTest {
         eventBus,
         cell,
         knownRuleTypesProvider,
-        knownBuildRuleTypesProvider,
-        knownConfigurationRuleTypes,
         false,
         executorService,
         executableFinder,
@@ -1550,8 +1451,6 @@ public class DefaultParserTest {
         eventBus,
         cell,
         knownRuleTypesProvider,
-        knownBuildRuleTypesProvider,
-        knownConfigurationRuleTypes,
         false,
         executorService,
         executableFinder,
@@ -1572,8 +1471,6 @@ public class DefaultParserTest {
         eventBus,
         cell,
         knownRuleTypesProvider,
-        knownBuildRuleTypesProvider,
-        knownConfigurationRuleTypes,
         false,
         executorService,
         executableFinder,
@@ -1593,8 +1490,6 @@ public class DefaultParserTest {
         eventBus,
         cell,
         knownRuleTypesProvider,
-        knownBuildRuleTypesProvider,
-        knownConfigurationRuleTypes,
         false,
         executorService,
         executableFinder,
@@ -1615,8 +1510,6 @@ public class DefaultParserTest {
         eventBus,
         cell,
         knownRuleTypesProvider,
-        knownBuildRuleTypesProvider,
-        knownConfigurationRuleTypes,
         false,
         executorService,
         executableFinder,
@@ -1775,8 +1668,6 @@ public class DefaultParserTest {
                 typeCoercerFactory,
                 new ConstructorArgMarshaller(typeCoercerFactory),
                 knownRuleTypesProvider,
-                knownBuildRuleTypesProvider,
-                knownConfigurationRuleTypes,
                 new ParserPythonInterpreterProvider(parserConfig, executableFinder)),
             parserConfig,
             typeCoercerFactory,
@@ -1899,8 +1790,6 @@ public class DefaultParserTest {
                 typeCoercerFactory,
                 new ConstructorArgMarshaller(typeCoercerFactory),
                 knownRuleTypesProvider,
-                knownBuildRuleTypesProvider,
-                knownConfigurationRuleTypes,
                 new ParserPythonInterpreterProvider(parserConfig, executableFinder)),
             cell.getBuckConfig().getView(ParserConfig.class),
             typeCoercerFactory,
@@ -2190,8 +2079,6 @@ public class DefaultParserTest {
                 typeCoercerFactory,
                 new ConstructorArgMarshaller(typeCoercerFactory),
                 knownRuleTypesProvider,
-                knownBuildRuleTypesProvider,
-                knownConfigurationRuleTypes,
                 new ParserPythonInterpreterProvider(parserConfig, executableFinder)),
             parserConfig,
             typeCoercerFactory,

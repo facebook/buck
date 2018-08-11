@@ -1,9 +1,9 @@
-build/classes
-build/src-gen/classes
-build/aosp/classes
-build/dx_classes
-build/tracing-api/classes
-build/bootstrapper/classes
+ant-out/classes
+ant-out/src-gen/classes
+ant-out/aosp/classes
+ant-out/dx_classes
+ant-out/tracing-api/classes
+ant-out/bootstrapper/classes
 src
 src-gen
 third-party/java/android/common-25.3.0.jar
@@ -12,6 +12,7 @@ third-party/java/android/layoutlib-api-25.3.0.jar
 third-party/java/android/sdk-common-25.3.0.jar
 third-party/java/android/sdklib-25.3.0.jar
 third-party/java/aopalliance/aopalliance.jar
+third-party/java/aosp/apksig.jar
 third-party/java/args4j/args4j-2.0.30.jar
 third-party/java/asm/asm-debug-all-6.0_BETA.jar
 third-party/java/closure-templates/soy-excluding-deps.jar

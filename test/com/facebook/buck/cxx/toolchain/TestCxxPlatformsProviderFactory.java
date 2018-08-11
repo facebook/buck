@@ -16,13 +16,13 @@
 
 package com.facebook.buck.cxx.toolchain;
 
-import com.facebook.buck.toolchain.impl.NamedToolchain;
+import com.facebook.buck.core.toolchain.impl.NamedToolchain;
 
 /**
  * Creates {@link CxxPlatformsProvider} with the default name.
  *
  * <p>This should be used together with {@link
- * com.facebook.buck.toolchain.impl.ToolchainProviderBuilder#withToolchain(NamedToolchain)} to
+ * com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder#withToolchain(NamedToolchain)} to
  * provide cxx platforms in tests that rely on them.
  */
 public class TestCxxPlatformsProviderFactory {

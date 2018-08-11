@@ -16,7 +16,7 @@
 
 package com.facebook.buck.features.python.toolchain;
 
-import com.facebook.buck.toolchain.Toolchain;
+import com.facebook.buck.core.toolchain.Toolchain;
 import java.nio.file.Path;
 
 public interface PythonInterpreter extends Toolchain {

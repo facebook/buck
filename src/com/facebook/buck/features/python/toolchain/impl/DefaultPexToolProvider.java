@@ -17,6 +17,7 @@
 package com.facebook.buck.features.python.toolchain.impl;
 
 import com.facebook.buck.core.rules.BuildRuleResolver;
+import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
 import com.facebook.buck.core.toolchain.tool.impl.VersionedTool;
@@ -24,7 +25,6 @@ import com.facebook.buck.features.python.PythonBuckConfig;
 import com.facebook.buck.features.python.toolchain.PexToolProvider;
 import com.facebook.buck.features.python.toolchain.PythonInterpreter;
 import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
-import com.facebook.buck.toolchain.ToolchainProvider;
 import com.google.common.base.Splitter;
 import java.nio.file.Path;
 import java.nio.file.Paths;

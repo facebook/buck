@@ -16,9 +16,9 @@
 
 package com.facebook.buck.file.downloader.impl;
 
+import com.facebook.buck.core.toolchain.ToolchainDescriptor;
+import com.facebook.buck.core.toolchain.ToolchainSupplier;
 import com.facebook.buck.file.downloader.Downloader;
-import com.facebook.buck.toolchain.ToolchainDescriptor;
-import com.facebook.buck.toolchain.ToolchainSupplier;
 import java.util.Collection;
 import java.util.Collections;
 import org.pf4j.Extension;

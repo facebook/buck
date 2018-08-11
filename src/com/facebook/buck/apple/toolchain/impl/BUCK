@@ -11,7 +11,7 @@ java_library_with_plugins(
     ],
     deps = [
         "//src/com/facebook/buck/apple:apple",
-        "//src/com/facebook/buck/config:config",
+        "//src/com/facebook/buck/core/config:config",
         "//src/com/facebook/buck/core/model:model",
         "//src/com/facebook/buck/core/toolchain/tool/impl:impl",
         "//src/com/facebook/buck/core/toolchain/toolprovider/impl:impl",

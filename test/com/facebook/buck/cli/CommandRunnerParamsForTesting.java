@@ -19,18 +19,15 @@ package com.facebook.buck.cli;
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.NoopArtifactCache;
 import com.facebook.buck.artifact_cache.SingletonArtifactCacheFactory;
-import com.facebook.buck.config.BuckConfig;
-import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.core.build.engine.cache.manager.BuildInfoStoreManager;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.TestCellBuilder;
+import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphCache;
-import com.facebook.buck.core.rules.config.KnownConfigurationRuleTypes;
-import com.facebook.buck.core.rules.config.impl.PluginBasedKnownConfigurationRuleTypesFactory;
-import com.facebook.buck.core.rules.knowntypes.DefaultKnownBuildRuleTypesFactory;
-import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypesProvider;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
 import com.facebook.buck.core.rules.knowntypes.TestKnownRuleTypesProvider;
+import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.httpserver.WebServer;
@@ -49,11 +46,9 @@ import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
-import com.facebook.buck.sandbox.TestSandboxExecutionStrategyFactory;
 import com.facebook.buck.step.ExecutorPool;
 import com.facebook.buck.testutil.FakeExecutor;
 import com.facebook.buck.testutil.TestConsole;
-import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
@@ -107,15 +102,9 @@ public class CommandRunnerParamsForTesting {
     ProcessExecutor processExecutor = new DefaultProcessExecutor(new TestConsole());
     TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
     PluginManager pluginManager = BuckPluginManagerFactory.createPluginManager();
-    KnownBuildRuleTypesProvider knownBuildRuleTypesProvider =
-        KnownBuildRuleTypesProvider.of(
-            DefaultKnownBuildRuleTypesFactory.of(
-                processExecutor, pluginManager, new TestSandboxExecutionStrategyFactory()));
     KnownRuleTypesProvider knownRuleTypesProvider =
-        TestKnownRuleTypesProvider.create(knownBuildRuleTypesProvider);
+        TestKnownRuleTypesProvider.create(pluginManager);
     ParserConfig parserConfig = cell.getBuckConfig().getView(ParserConfig.class);
-    KnownConfigurationRuleTypes knownConfigurationRuleTypes =
-        PluginBasedKnownConfigurationRuleTypesFactory.createFromPlugins(pluginManager);
 
     return CommandRunnerParams.of(
         console,
@@ -130,8 +119,6 @@ public class CommandRunnerParamsForTesting {
                 typeCoercerFactory,
                 new ConstructorArgMarshaller(typeCoercerFactory),
                 knownRuleTypesProvider,
-                knownBuildRuleTypesProvider,
-                knownConfigurationRuleTypes,
                 new ParserPythonInterpreterProvider(parserConfig, new ExecutableFinder())),
             parserConfig,
             typeCoercerFactory,
@@ -151,9 +138,7 @@ public class CommandRunnerParamsForTesting {
         new FakeExecutor(),
         BUILD_ENVIRONMENT_DESCRIPTION,
         new ActionGraphCache(config.getMaxActionGraphCacheEntries()),
-        knownBuildRuleTypesProvider,
         knownRuleTypesProvider,
-        knownConfigurationRuleTypes,
         new BuildInfoStoreManager(),
         Optional.empty(),
         Optional.empty(),

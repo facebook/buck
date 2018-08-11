@@ -17,7 +17,7 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.android.AndroidBuckConfig;
-import com.facebook.buck.config.BuckConfig;
+import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.step.AdbOptions;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.annotations.VisibleForTesting;

@@ -25,8 +25,6 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.targetgraph.RawAttributes;
 import com.facebook.buck.core.model.targetgraph.RawTargetNode;
-import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypesProvider;
-import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypesTestUtil;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
 import com.facebook.buck.core.rules.knowntypes.TestKnownRuleTypesProvider;
 import com.facebook.buck.core.select.Selector;
@@ -35,6 +33,7 @@ import com.facebook.buck.core.select.SelectorList;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.event.SimplePerfEvent;
+import com.facebook.buck.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.visibility.BuildTargetVisibilityPattern;
@@ -52,11 +51,8 @@ public class DefaultRawTargetNodeFactoryTest {
 
   @Test
   public void testCreatePopulatesNode() {
-    KnownBuildRuleTypesProvider knownBuildRuleTypesProvider =
-        KnownBuildRuleTypesProvider.of(
-            KnownBuildRuleTypesTestUtil.createKnownBuildRuleTypesFactory());
     KnownRuleTypesProvider knownRuleTypesProvider =
-        TestKnownRuleTypesProvider.create(knownBuildRuleTypesProvider);
+        TestKnownRuleTypesProvider.create(BuckPluginManagerFactory.createPluginManager());
 
     DefaultRawTargetNodeFactory factory =
         new DefaultRawTargetNodeFactory(
@@ -94,7 +90,7 @@ public class DefaultRawTargetNodeFactoryTest {
                 .build(),
             (id) -> SimplePerfEvent.scope(Optional.empty(), null, null));
 
-    assertEquals(RuleType.of("java_library"), rawTargetNode.getRuleType());
+    assertEquals(RuleType.of("java_library", RuleType.Kind.BUILD), rawTargetNode.getRuleType());
     assertEquals(buildTarget, rawTargetNode.getBuildTarget());
 
     RawAttributes attributes = rawTargetNode.getAttributes();

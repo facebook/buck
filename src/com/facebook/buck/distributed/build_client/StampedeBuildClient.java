@@ -22,11 +22,12 @@ import com.facebook.buck.core.build.event.BuildEvent;
 import com.facebook.buck.distributed.ClientStatsTracker;
 import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.DistLocalBuildMode;
-import com.facebook.buck.distributed.ExitCode;
+import com.facebook.buck.distributed.DistributedExitCode;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.util.ExitCode;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
@@ -150,7 +151,8 @@ public class StampedeBuildClient {
    *
    * @throws InterruptedException if proceedToLocalSynchronizedBuildPhase gets interrupted.
    */
-  public int build(DistLocalBuildMode distLocalBuildMode, boolean localBuildFallbackEnabled)
+  public Optional<ExitCode> build(
+      DistLocalBuildMode distLocalBuildMode, boolean localBuildFallbackEnabled)
       throws InterruptedException {
     LOG.info(
         String.format(
@@ -161,13 +163,13 @@ public class StampedeBuildClient {
       distBuildRunner.runDistBuildSync();
       eventBus.post(ConsoleEvent.info("Fire and forget build was scheduled."));
       LOG.info("Stampede build in fire-and-forget mode started remotely. Exiting local client.");
-      return ExitCode.SUCCESSFUL.getCode();
+      return Optional.of(ExitCode.SUCCESS);
     } else if (distLocalBuildMode.equals(DistLocalBuildMode.RULE_KEY_DIVERGENCE_CHECK)) {
       // Setup caching build engine so that ListenableFuture<ParallelRuleKeyCalculator<RuleKey>> is
       // populated
       localBuildExecutorInvoker.initLocalBuild(false, new NoOpRemoteBuildRuleCompletionWaiter());
       distBuildRunner.runDistBuildSync();
-      return distBuildRunner.getExitCode();
+      return Optional.of(DistributedExitCode.convertToExitCode(distBuildRunner.getExitCode()));
     } else {
       // Kick off the distributed build
       distBuildRunner.runDistBuildAsync();
@@ -201,18 +203,19 @@ public class StampedeBuildClient {
 
     distBuildRunner.printAnyFailures();
 
-    int localExitCode =
+    Optional<ExitCode> localExitCode =
         synchronizedBuildRunner.isFinished()
             ? synchronizedBuildRunner.getExitCode()
             : racerBuildRunner.getExitCode();
     LOG.info(
         String.format(
-            "All Stampede local builds finished. Final local exit code [%d]", localExitCode));
+            "All Stampede local builds finished. Final local exit code [%d]",
+            localExitCode.isPresent() ? localExitCode.get().getCode() : -1));
 
     return localExitCode;
   }
 
-  public int getDistBuildExitCode() {
+  public DistributedExitCode getDistBuildExitCode() {
     return distBuildRunner.getExitCode();
   }
 

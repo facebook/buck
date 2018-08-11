@@ -20,9 +20,11 @@ import static com.facebook.buck.jvm.java.JavaCompilationConstants.ANDROID_JAVAC_
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVA_CONFIG;
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVA_OPTIONS;
 
-import com.facebook.buck.config.FakeBuckConfig;
+import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.AbstractNodeBuilder;
+import com.facebook.buck.core.toolchain.ToolchainProvider;
+import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.TestCxxPlatformsProviderFactory;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -34,8 +36,6 @@ import com.facebook.buck.jvm.java.toolchain.JavaToolchain;
 import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.jvm.kotlin.KotlinBuckConfig;
 import com.facebook.buck.jvm.scala.ScalaBuckConfig;
-import com.facebook.buck.toolchain.ToolchainProvider;
-import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 
 public class RobolectricTestBuilder
     extends AbstractNodeBuilder<

@@ -22,7 +22,7 @@ import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rulekey.calculator.ParallelRuleKeyCalculator;
 import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.DistLocalBuildMode;
-import com.facebook.buck.distributed.ExitCode;
+import com.facebook.buck.distributed.DistributedExitCode;
 import com.facebook.buck.distributed.thrift.BuildJobState;
 import com.facebook.buck.distributed.thrift.BuildMode;
 import com.facebook.buck.distributed.thrift.BuildStatus;
@@ -59,17 +59,6 @@ public class DistBuildController {
 
   private final ListenableFuture<BuildJobState> asyncJobState;
   private final AtomicReference<StampedeId> stampedeIdReference;
-
-  /** Result of a distributed build execution. */
-  public static class ExecutionResult {
-    public final StampedeId stampedeId;
-    public final int exitCode;
-
-    public ExecutionResult(StampedeId stampedeId, int exitCode) {
-      this.stampedeId = stampedeId;
-      this.exitCode = exitCode;
-    }
-  }
 
   public DistBuildController(DistBuildControllerArgs args) {
     this.stampedeIdReference = args.getStampedeIdReference();
@@ -144,10 +133,12 @@ public class DistBuildController {
           new StampedeConsoleEvent(
               ConsoleEvent.createForMessageWithAnsiEscapeCodes(
                   Level.WARNING, console.getAnsi().asWarningText(ex.getMessage()))));
-      return createFailedExecutionResult(ExitCode.PREPARATION_STEP_FAILED, "preparation", ex, true);
+      return createFailedExecutionResult(
+          DistributedExitCode.PREPARATION_STEP_FAILED, "preparation", ex, true);
     } catch (IOException | RuntimeException ex) {
       LOG.error(ex, "Distributed build preparation steps failed.");
-      return createFailedExecutionResult(ExitCode.PREPARATION_STEP_FAILED, "preparation", ex);
+      return createFailedExecutionResult(
+          DistributedExitCode.PREPARATION_STEP_FAILED, "preparation", ex);
     }
 
     stampedeIdReference.set(stampedeIdAndPendingPrepFuture.getFirst());
@@ -164,7 +155,7 @@ public class DistBuildController {
     } catch (ExecutionException ex) {
       LOG.error(ex, "Distributed build preparation async steps failed.");
       return createFailedExecutionResult(
-          ExitCode.PREPARATION_ASYNC_STEP_FAILED, "async preparation", ex);
+          DistributedExitCode.PREPARATION_ASYNC_STEP_FAILED, "async preparation", ex);
     }
 
     BuildPhase.BuildResult buildResult = null;
@@ -184,14 +175,15 @@ public class DistBuildController {
       // Don't print an error here, because we might have failed due to local finishing first.
       LOG.warn(ex, "Distributed build step failed.");
       return createFailedExecutionResult(
-          ExitCode.DISTRIBUTED_BUILD_STEP_LOCAL_EXCEPTION, "build", ex);
+          DistributedExitCode.DISTRIBUTED_BUILD_STEP_LOCAL_EXCEPTION, "build", ex);
     }
 
     // In the case of Fire-and-Forget mode do not run post-build steps.
     if (distLocalBuildMode.equals(DistLocalBuildMode.FIRE_AND_FORGET)) {
       LOG.info("Fire-and-forget mode enabled, exiting with default code.");
-      eventBus.post(BuildEvent.distBuildFinished(startedEvent, ExitCode.SUCCESSFUL.getCode()));
-      return StampedeExecutionResult.of(ExitCode.SUCCESSFUL.getCode());
+      eventBus.post(
+          BuildEvent.distBuildFinished(startedEvent, DistributedExitCode.SUCCESSFUL.getCode()));
+      return StampedeExecutionResult.of(DistributedExitCode.SUCCESSFUL);
     } else if (distLocalBuildMode.equals(DistLocalBuildMode.RULE_KEY_DIVERGENCE_CHECK)) {
       boolean ruleKeysMismatched = buildResult.getMismatchingBuildTargets().size() > 0;
 
@@ -218,11 +210,11 @@ public class DistBuildController {
         rulesPrinted++;
       }
 
-      int exitCode =
+      DistributedExitCode exitCode =
           ruleKeysMismatched
-              ? ExitCode.RULE_KEY_CONSISTENCY_CHECK_FAILED.getCode()
-              : ExitCode.SUCCESSFUL.getCode();
-      eventBus.post(BuildEvent.distBuildFinished(startedEvent, exitCode));
+              ? DistributedExitCode.RULE_KEY_CONSISTENCY_CHECK_FAILED
+              : DistributedExitCode.SUCCESSFUL;
+      eventBus.post(BuildEvent.distBuildFinished(startedEvent, exitCode.getCode()));
       return StampedeExecutionResult.of(exitCode);
 
     } else {
@@ -232,7 +224,9 @@ public class DistBuildController {
       eventBus.post(
           BuildEvent.distBuildFinished(
               startedEvent,
-              buildSuccess ? 0 : ExitCode.DISTRIBUTED_BUILD_STEP_REMOTE_FAILURE.getCode()));
+              buildSuccess
+                  ? 0
+                  : DistributedExitCode.DISTRIBUTED_BUILD_STEP_REMOTE_FAILURE.getCode()));
 
       // Note: always returns distributed exit code 0
       // TODO(alisdair,ruibm,shivanker): consider new exit code if failed to fetch finished stats
@@ -245,17 +239,17 @@ public class DistBuildController {
   }
 
   private StampedeExecutionResult createFailedExecutionResult(
-      ExitCode exitCode, String failureStage, Throwable ex) {
+      DistributedExitCode exitCode, String failureStage, Throwable ex) {
     return createFailedExecutionResult(exitCode, failureStage, ex, false);
   }
 
   private StampedeExecutionResult createFailedExecutionResult(
-      ExitCode exitCode, String failureStage, Throwable ex, boolean handleGracefully) {
+      DistributedExitCode exitCode, String failureStage, Throwable ex, boolean handleGracefully) {
     LOG.warn("Stampede failed. Cancel async job state computation if that's still going on.");
     asyncJobState.cancel(true);
     eventBus.post(BuildEvent.distBuildFinished(startedEvent, exitCode.getCode()));
     return StampedeExecutionResult.builder()
-        .setExitCode(exitCode.getCode())
+        .setExitCode(exitCode)
         .setException(ex)
         .setErrorStage(failureStage)
         .setHandleGracefully(handleGracefully)

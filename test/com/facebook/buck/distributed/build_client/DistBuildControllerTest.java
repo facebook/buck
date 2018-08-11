@@ -28,13 +28,13 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.artifact_cache.NoopArtifactCache;
 import com.facebook.buck.command.BuildExecutorArgs;
-import com.facebook.buck.config.BuckConfig;
-import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.core.build.distributed.synchronization.impl.RemoteBuildRuleSynchronizer;
 import com.facebook.buck.core.build.engine.cache.manager.BuildInfoStoreManager;
 import com.facebook.buck.core.build.event.BuildEvent;
 import com.facebook.buck.core.build.event.BuildEvent.DistBuildFinished;
 import com.facebook.buck.core.cell.TestCellBuilder;
+import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.actiongraph.ActionGraph;
 import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
 import com.facebook.buck.core.model.graph.ActionAndTargetGraphs;
@@ -49,7 +49,7 @@ import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.DistBuildService.DistBuildRejectedException;
 import com.facebook.buck.distributed.DistBuildStatusEvent;
 import com.facebook.buck.distributed.DistLocalBuildMode;
-import com.facebook.buck.distributed.ExitCode;
+import com.facebook.buck.distributed.DistributedExitCode;
 import com.facebook.buck.distributed.thrift.BuckVersion;
 import com.facebook.buck.distributed.thrift.BuildJob;
 import com.facebook.buck.distributed.thrift.BuildJobState;
@@ -268,7 +268,7 @@ public class DistBuildControllerTest {
     job.setStampedeId(stampedeId);
 
     StampedeExecutionResult executionResult = runBuildWithController(controller);
-    assertEquals(ExitCode.PREPARATION_STEP_FAILED.getCode(), executionResult.getExitCode());
+    assertEquals(DistributedExitCode.PREPARATION_STEP_FAILED, executionResult.getExitCode());
   }
 
   @Test
@@ -306,7 +306,7 @@ public class DistBuildControllerTest {
         createController(Futures.immediateFailedFuture(new Exception("Async preparation failed")));
 
     StampedeExecutionResult executionResult = runBuildWithController(controller);
-    assertEquals(ExitCode.PREPARATION_ASYNC_STEP_FAILED.getCode(), executionResult.getExitCode());
+    assertEquals(DistributedExitCode.PREPARATION_ASYNC_STEP_FAILED, executionResult.getExitCode());
   }
 
   @Test
@@ -331,7 +331,7 @@ public class DistBuildControllerTest {
         runBuildWithController(createController(Futures.immediateFuture(buildJobState)));
 
     assertEquals(
-        ExitCode.DISTRIBUTED_BUILD_STEP_LOCAL_EXCEPTION.getCode(), executionResult.getExitCode());
+        DistributedExitCode.DISTRIBUTED_BUILD_STEP_LOCAL_EXCEPTION, executionResult.getExitCode());
   }
 
   /**
@@ -480,9 +480,9 @@ public class DistBuildControllerTest {
     verify(mockEventBus);
 
     assertEquals(
-        ExitCode.DISTRIBUTED_BUILD_STEP_REMOTE_FAILURE.getCode(), executionResult.getExitCode());
+        DistributedExitCode.DISTRIBUTED_BUILD_STEP_REMOTE_FAILURE, executionResult.getExitCode());
     assertEquals(
-        ExitCode.DISTRIBUTED_BUILD_STEP_REMOTE_FAILURE.getCode(),
+        DistributedExitCode.DISTRIBUTED_BUILD_STEP_REMOTE_FAILURE.getCode(),
         finishedEvent.getValue().getExitCode());
   }
 

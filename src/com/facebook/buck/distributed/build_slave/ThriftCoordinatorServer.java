@@ -18,7 +18,7 @@ package com.facebook.buck.distributed.build_slave;
 
 import com.facebook.buck.distributed.BuildStatusUtil;
 import com.facebook.buck.distributed.DistBuildService;
-import com.facebook.buck.distributed.ExitCode;
+import com.facebook.buck.distributed.DistributedExitCode;
 import com.facebook.buck.distributed.build_slave.MinionHealthTracker.MinionHealthStatus;
 import com.facebook.buck.distributed.build_slave.MinionHealthTracker.MinionTrackingInfo;
 import com.facebook.buck.distributed.thrift.BuildJob;
@@ -230,7 +230,8 @@ public class ThriftCoordinatorServer implements Closeable {
                 String.format("Failing build as all [%d] minions are dead", deadMinionCount);
             LOG.error(errorMessage);
             exitCodeFuture.complete(
-                ExitState.setLocally(ExitCode.ALL_MINIONS_DEAD_EXIT_CODE.getCode(), errorMessage));
+                ExitState.setLocally(
+                    DistributedExitCode.ALL_MINIONS_DEAD_EXIT_CODE.getCode(), errorMessage));
           }
         });
   }
@@ -245,11 +246,13 @@ public class ThriftCoordinatorServer implements Closeable {
 
     if (status == BuildStatus.FINISHED_SUCCESSFULLY) {
       exitCodeFuture.complete(
-          ExitState.setByServers(ExitCode.SUCCESSFUL.getCode(), "Build succeeded externally."));
+          ExitState.setByServers(
+              DistributedExitCode.SUCCESSFUL.getCode(), "Build succeeded externally."));
     } else {
       exitCodeFuture.complete(
           ExitState.setByServers(
-              ExitCode.BUILD_FAILED_EXTERNALLY_EXIT_CODE.getCode(), "Build failed externally."));
+              DistributedExitCode.BUILD_FAILED_EXTERNALLY_EXIT_CODE.getCode(),
+              "Build failed externally."));
     }
   }
 
@@ -257,7 +260,7 @@ public class ThriftCoordinatorServer implements Closeable {
     ExitState exitState =
         exitCodeFuture.getNow(
             ExitState.setLocally(
-                ExitCode.UNEXPECTED_STOP_EXIT_CODE.getCode(),
+                DistributedExitCode.UNEXPECTED_STOP_EXIT_CODE.getCode(),
                 "Forced unexpected Coordinator shutdown."));
     eventListener.onThriftServerClosing(exitState);
     synchronized (lock) {
@@ -376,7 +379,7 @@ public class ThriftCoordinatorServer implements Closeable {
                 "Failed to handle ReportMinionAliveRequest for minion [%s].",
                 request.getMinionId());
         exitCodeFuture.complete(
-            ExitState.setLocally(ExitCode.I_AM_ALIVE_FAILED_EXIT_CODE.getCode(), msg));
+            ExitState.setLocally(DistributedExitCode.I_AM_ALIVE_FAILED_EXIT_CODE.getCode(), msg));
         throw e;
       }
     }
@@ -391,7 +394,7 @@ public class ThriftCoordinatorServer implements Closeable {
             String.format(
                 "Failed to handle GetWorkRequest for minion [%s].", request.getMinionId());
         exitCodeFuture.complete(
-            ExitState.setLocally(ExitCode.GET_WORK_FAILED_EXIT_CODE.getCode(), msg));
+            ExitState.setLocally(DistributedExitCode.GET_WORK_FAILED_EXIT_CODE.getCode(), msg));
         throw e;
       }
     }

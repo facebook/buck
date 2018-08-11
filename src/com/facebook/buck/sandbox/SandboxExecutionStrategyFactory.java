@@ -16,7 +16,7 @@
 
 package com.facebook.buck.sandbox;
 
-import com.facebook.buck.config.BuckConfig;
+import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.util.ProcessExecutor;
 
 /** Factory to create a {@link SandboxExecutionStrategy}. */

@@ -29,6 +29,7 @@ import com.facebook.buck.skylark.parser.context.ParseContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.devtools.build.lib.cmdline.PackageIdentifier;
 import com.google.devtools.build.lib.cmdline.RepositoryName;
@@ -180,12 +181,11 @@ public class GlobTest {
             .useDefaultSemantics()
             .build();
     new ParseContext(
-            PackageContext.builder()
-                .setGlobber(NativeGlobber.create(root))
-                .setPackageIdentifier(
-                    PackageIdentifier.create(RepositoryName.DEFAULT, PathFragment.create("pkg")))
-                .setEventHandler(eventHandler)
-                .build())
+            PackageContext.of(
+                NativeGlobber.create(root),
+                ImmutableMap.of(),
+                PackageIdentifier.create(RepositoryName.DEFAULT, PathFragment.create("pkg")),
+                eventHandler))
         .setup(env);
     env.setup(
         "glob", FuncallExpression.getBuiltinCallable(SkylarkNativeModule.NATIVE_MODULE, "glob"));

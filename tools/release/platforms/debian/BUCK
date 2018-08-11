@@ -1,8 +1,9 @@
 load("//programs:defs.bzl", "get_release_version")
+load("//tools/build_rules:export_files.bzl", "export_files")
 
 version = get_release_version()
 
-export_file(name = "buck.equivs")
+export_files(["buck.equivs"])
 
 genrule(
     name = "update_version",
@@ -17,7 +18,7 @@ genrule(
         "Changelog",
         ":update_version",
         "//:LICENSE",
-        "//:README",
+        "//:README.md",
     ],
     out = "buck_{}_all.deb".format(version),
     cmd = " && ".join([

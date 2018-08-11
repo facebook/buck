@@ -166,7 +166,7 @@ public class ThriftRuleKeyHasherTest {
     hasher.putKey(".source_root_value");
     hasher.putRuleKey(new RuleKey(HashCode.fromString("d0c852385a66458b6e960c89fac580e5eb6d6aec")));
     hasher.putKey(".rule_key_value");
-    hasher.putRuleType(RuleType.of("sample_build_rule"));
+    hasher.putRuleType(RuleType.of("sample_build_rule", RuleType.Kind.BUILD));
     hasher.putKey(".build_rule_type_value");
     hasher.putBuildTarget(
         ImmutableBuildTarget.of(

@@ -43,7 +43,7 @@ public class RawTargetNodeToTargetNodeParsePipeline
 
   private final boolean speculativeDepsTraversal;
   private final RawTargetNodePipeline rawTargetNodePipeline;
-  private final RawTargetNodeToTargetNodeFactory rawTargetNodeToTargetNodeFactory;
+  private final ParserTargetNodeFactory<RawTargetNode> rawTargetNodeToTargetNodeFactory;
   private final SimplePerfEvent.Scope targetNodePipelineLifetimeEventScope;
 
   /** Create new pipeline for parsing Buck files. */
@@ -53,7 +53,7 @@ public class RawTargetNodeToTargetNodeParsePipeline
       RawTargetNodePipeline rawTargetNodePipeline,
       BuckEventBus eventBus,
       boolean speculativeDepsTraversal,
-      RawTargetNodeToTargetNodeFactory rawTargetNodeToTargetNodeFactory) {
+      ParserTargetNodeFactory<RawTargetNode> rawTargetNodeToTargetNodeFactory) {
     super(
         executorService,
         cache,

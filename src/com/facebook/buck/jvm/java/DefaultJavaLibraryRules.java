@@ -27,6 +27,7 @@ import com.facebook.buck.core.rules.common.BuildDeps;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
+import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.common.ResourceValidator;
 import com.facebook.buck.jvm.core.JavaAbis;
@@ -35,7 +36,6 @@ import com.facebook.buck.jvm.java.JavaBuckConfig.UnusedDependenciesAction;
 import com.facebook.buck.jvm.java.JavaLibraryDescription.CoreArg;
 import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
 import com.facebook.buck.jvm.java.abi.source.api.SourceOnlyAbiRuleInfoFactory;
-import com.facebook.buck.toolchain.ToolchainProvider;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
@@ -396,7 +396,7 @@ public abstract class DefaultJavaLibraryRules {
                       projectFilesystem,
                       buildRuleResolver,
                       getCellPathResolver(),
-                      CompilerParameters.getDepFilePath(buildTarget, projectFilesystem),
+                      CompilerOutputPaths.getDepFilePath(buildTarget, projectFilesystem),
                       Preconditions.checkNotNull(getDeps()),
                       sourcePathResolver,
                       unusedDependenciesAction));
@@ -623,7 +623,6 @@ public abstract class DefaultJavaLibraryRules {
   JarBuildStepsFactory getJarBuildStepsFactory() {
     DefaultJavaLibraryClasspaths classpaths = getClasspaths();
     return new JarBuildStepsFactory(
-        getProjectFilesystem(),
         getLibraryTarget(),
         getConfiguredCompiler(),
         getSrcs(),
@@ -645,7 +644,6 @@ public abstract class DefaultJavaLibraryRules {
   JarBuildStepsFactory getJarBuildStepsFactoryForSourceOnlyAbi() {
     DefaultJavaLibraryClasspaths classpaths = getClasspathsForSourceOnlyAbi();
     return new JarBuildStepsFactory(
-        getProjectFilesystem(),
         getLibraryTarget(),
         getConfiguredCompilerForSourceOnlyAbi(),
         getSrcs(),

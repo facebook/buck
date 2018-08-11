@@ -46,43 +46,43 @@ public class IjProjectWriter {
   private final IjProjectConfig projectConfig;
   private final ProjectFilesystem projectFilesystem;
   private final IntellijModulesListParser modulesParser;
+  private final IJProjectCleaner cleaner;
+  private final ProjectFilesystem outFilesystem;
 
   public IjProjectWriter(
       IjProjectTemplateDataPreparer projectDataPreparer,
       IjProjectConfig projectConfig,
       ProjectFilesystem projectFilesystem,
-      IntellijModulesListParser modulesParser) {
+      IntellijModulesListParser modulesParser,
+      IJProjectCleaner cleaner,
+      ProjectFilesystem outFilesystem) {
     this.projectDataPreparer = projectDataPreparer;
     this.projectConfig = projectConfig;
     this.projectFilesystem = projectFilesystem;
     this.modulesParser = modulesParser;
+    this.cleaner = cleaner;
+    this.outFilesystem = outFilesystem;
   }
 
-  public void write(IJProjectCleaner cleaner) throws IOException {
-    Path projectIdeaConfigDir = projectConfig.getProjectPaths().getIdeaConfigDir();
-    projectFilesystem.mkdirs(projectIdeaConfigDir);
+  /** Write entire project to disk */
+  public void write() throws IOException {
+    outFilesystem.mkdirs(getIdeaConfigDir());
 
-    writeProjectSettings(cleaner, projectConfig);
+    writeProjectSettings();
 
     for (IjModule module : projectDataPreparer.getModulesToBeWritten()) {
       ImmutableList<ContentRoot> contentRoots = projectDataPreparer.getContentRoots(module);
-      Path generatedModuleFile = writeModule(module, contentRoots);
-      cleaner.doNotDelete(generatedModuleFile);
+      writeModule(module, contentRoots);
     }
     for (IjLibrary library : projectDataPreparer.getLibrariesToBeWritten()) {
-      Path generatedLibraryFile = writeLibrary(library);
-      cleaner.doNotDelete(generatedLibraryFile);
+      writeLibrary(library);
     }
-    Path indexFile = writeModulesIndex(projectDataPreparer.getModuleIndexEntries());
-    cleaner.doNotDelete(indexFile);
-
-    Path workspaceFile = writeWorkspace(projectFilesystem.resolve(projectIdeaConfigDir));
-    cleaner.doNotDelete(workspaceFile);
+    writeModulesIndex(projectDataPreparer.getModuleIndexEntries());
+    writeWorkspace();
   }
 
-  private Path writeModule(IjModule module, ImmutableList<ContentRoot> contentRoots)
+  private void writeModule(IjModule module, ImmutableList<ContentRoot> contentRoots)
       throws IOException {
-    Path path = module.getModuleImlFilePath();
 
     ST moduleContents = StringTemplateFile.MODULE_TEMPLATE.getST();
 
@@ -105,16 +105,10 @@ public class IjProjectWriter {
             .map((dir) -> module.getModuleBasePath().relativize(dir))
             .orElse(null));
 
-    StringTemplateFile.writeToFile(
-        projectFilesystem,
-        moduleContents,
-        path,
-        projectConfig.getProjectPaths().getIdeaConfigDir());
-    return path;
+    writeTemplate(moduleContents, module.getModuleImlFilePath());
   }
 
-  private void writeProjectSettings(IJProjectCleaner cleaner, IjProjectConfig projectConfig)
-      throws IOException {
+  private void writeProjectSettings() throws IOException {
 
     Optional<String> sdkName = projectConfig.getProjectJdkName();
     Optional<String> sdkType = projectConfig.getProjectJdkType();
@@ -122,8 +116,6 @@ public class IjProjectWriter {
     if (!sdkName.isPresent() || !sdkType.isPresent()) {
       return;
     }
-
-    Path path = projectConfig.getProjectPaths().getIdeaConfigDir().resolve("misc.xml");
 
     ST contents = StringTemplateFile.MISC_TEMPLATE.getST();
 
@@ -135,10 +127,7 @@ public class IjProjectWriter {
     contents.add("jdkType", sdkType.get());
     contents.add("outputUrl", projectConfig.getOutputUrl().orElse(null));
 
-    StringTemplateFile.writeToFile(
-        projectFilesystem, contents, path, projectConfig.getProjectPaths().getIdeaConfigDir());
-
-    cleaner.doNotDelete(path);
+    writeTemplate(contents, getIdeaConfigDir().resolve("misc.xml"));
   }
 
   private String getLanguageLevelFromConfig() {
@@ -157,13 +146,7 @@ public class IjProjectWriter {
     return !jdkUnder15;
   }
 
-  private Path writeLibrary(IjLibrary library) throws IOException {
-    Path path =
-        projectConfig
-            .getProjectPaths()
-            .getLibrariesDir()
-            .resolve(Util.normalizeIntelliJName(library.getName()) + ".xml");
-
+  private void writeLibrary(IjLibrary library) throws IOException {
     ST contents = StringTemplateFile.LIBRARY_TEMPLATE.getST();
     IjProjectPaths projectPaths = projectConfig.getProjectPaths();
     contents.add("name", library.getName());
@@ -191,52 +174,53 @@ public class IjProjectWriter {
     contents.add("javadocUrls", library.getJavadocUrls());
     // TODO(mkosiba): support res and assets for aar.
 
-    StringTemplateFile.writeToFile(
-        projectFilesystem, contents, path, projectConfig.getProjectPaths().getIdeaConfigDir());
-    return path;
+    Path path =
+        projectConfig
+            .getProjectPaths()
+            .getLibrariesDir()
+            .resolve(Util.normalizeIntelliJName(library.getName()) + ".xml");
+    writeTemplate(contents, path);
   }
 
-  private Path writeModulesIndex(ImmutableSortedSet<ModuleIndexEntry> moduleEntries)
+  // Write modules.xml
+  private void writeModulesIndex(ImmutableSortedSet<ModuleIndexEntry> moduleEntries)
       throws IOException {
-    Path path = getModulesFilePath();
     ST moduleIndexContents = StringTemplateFile.MODULE_INDEX_TEMPLATE.getST();
     moduleIndexContents.add("modules", moduleEntries);
 
-    StringTemplateFile.writeToFile(
-        projectFilesystem,
-        moduleIndexContents,
-        path,
-        projectConfig.getProjectPaths().getIdeaConfigDir());
-    return path;
+    writeTemplate(moduleIndexContents, getIdeaConfigDir().resolve("modules.xml"));
   }
 
-  /** @return a path to the modules.xml file in the project directory */
-  private Path getModulesFilePath() throws IOException {
-    projectFilesystem.mkdirs(projectConfig.getProjectPaths().getIdeaConfigDir());
-    return projectConfig.getProjectPaths().getIdeaConfigDir().resolve("modules.xml");
+  private Path getIdeaConfigDir() {
+    return projectConfig.getProjectPaths().getIdeaConfigDir();
   }
 
-  private Path writeWorkspace(Path projectIdeaConfigDir) throws IOException {
-    WorkspaceUpdater workspaceUpdater = new WorkspaceUpdater(projectIdeaConfigDir);
+  /**
+   * Writes template to output project filesystem
+   *
+   * @param path Relative path from project root
+   */
+  private void writeTemplate(ST contents, Path path) throws IOException {
+    StringTemplateFile.writeToFile(outFilesystem, contents, path, getIdeaConfigDir());
+    cleaner.doNotDelete(path);
+  }
+
+  private void writeWorkspace() throws IOException {
+    WorkspaceUpdater workspaceUpdater = new WorkspaceUpdater(outFilesystem, getIdeaConfigDir());
     workspaceUpdater.updateOrCreateWorkspace();
-    return Paths.get(workspaceUpdater.getWorkspaceFile().toString());
+    cleaner.doNotDelete(workspaceUpdater.getWorkspacePath());
   }
 
   /**
    * Update just the roots that were passed in
    *
-   * @param cleaner
    * @param targetGraphAndTargets
    * @param moduleGraph
    * @throws IOException
    */
-  public void update(
-      IJProjectCleaner cleaner,
-      TargetGraphAndTargets targetGraphAndTargets,
-      IjModuleGraph moduleGraph)
+  public void update(TargetGraphAndTargets targetGraphAndTargets, IjModuleGraph moduleGraph)
       throws IOException {
-    Path projectIdeaConfigDir = projectConfig.getProjectPaths().getIdeaConfigDir();
-    projectFilesystem.mkdirs(projectIdeaConfigDir);
+    outFilesystem.mkdirs(getIdeaConfigDir());
     Set<BuildTarget> modulesToUpdate =
         targetGraphAndTargets
             .getProjectRoots()
@@ -267,21 +251,18 @@ public class IjProjectWriter {
     // Write out the modules that contain our targets
     for (IjModule module : modulesEdited) {
       ImmutableList<ContentRoot> contentRoots = projectDataPreparer.getContentRoots(module);
-      Path generatedModuleFile = writeModule(module, contentRoots);
-      cleaner.doNotDelete(generatedModuleFile);
+      writeModule(module, contentRoots);
     }
     // Write out the libraries that our modules depend on
     for (IjLibrary library : librariesNeeded) {
-      Path generatedLibraryFile = writeLibrary(library);
-      cleaner.doNotDelete(generatedLibraryFile);
+      writeLibrary(library);
     }
-    Path indexFile = updateModulesIndex(modulesEdited);
-    cleaner.doNotDelete(indexFile);
+    updateModulesIndex(modulesEdited);
   }
 
   /** Update the modules.xml file with any new modules from the given set */
-  private Path updateModulesIndex(ImmutableSet<IjModule> modulesEdited) throws IOException {
-    Path path = projectFilesystem.resolve(getModulesFilePath());
+  private void updateModulesIndex(ImmutableSet<IjModule> modulesEdited) throws IOException {
+    Path path = projectFilesystem.resolve(getIdeaConfigDir().resolve("modules.xml"));
     final Set<ModuleIndexEntry> existingModules = modulesParser.getAllModules(path);
     final Set<Path> existingModuleFilepaths =
         existingModules
@@ -318,6 +299,5 @@ public class IjProjectWriter {
 
     // Write out the merged set to disk
     writeModulesIndex(finalModulesBuilder.build());
-    return path;
   }
 }

@@ -17,12 +17,20 @@ package com.facebook.buck.versions;
 
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.core.cell.TestCellPathResolver;
+import com.facebook.buck.core.cell.resolver.CellPathResolver;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.parser.BuildTargetPattern;
+import com.facebook.buck.parser.BuildTargetPatternParser;
+import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.VersionMatchedCollection;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import java.util.Optional;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
@@ -39,6 +47,11 @@ public class VersionMatchedCollectionTest {
           .add(ImmutableMap.of(A, V2, B, V1), "a-2.0,b-1.0")
           .add(ImmutableMap.of(A, V2, B, V2), "a-2.0,b-2.0")
           .build();
+
+  private static final CellPathResolver CELL_PATH_RESOLVER =
+      TestCellPathResolver.get(new FakeProjectFilesystem());
+  private static final BuildTargetPatternParser<BuildTargetPattern> PATTERN =
+      BuildTargetPatternParser.fullyQualified();
 
   @Test
   public void testGetMatchingValues() {
@@ -84,5 +97,52 @@ public class VersionMatchedCollectionTest {
   public void testGetOnlyMatchingValueThrowsOnNoMatches() {
     System.out.println(
         COLLECTION.getOnlyMatchingValue("test", ImmutableMap.of(A, Version.of("3.0"))));
+  }
+
+  @Test
+  public void translatedTargets() {
+    BuildTarget target = BuildTargetFactory.newInstance("//:rule");
+    BuildTarget newTarget = BuildTargetFactory.newInstance("//something:else");
+    TargetNodeTranslator translator =
+        new FixedTargetNodeTranslator(
+            new DefaultTypeCoercerFactory(), ImmutableMap.of(target, newTarget));
+    VersionMatchedCollection<BuildTarget> collection =
+        VersionMatchedCollection.<BuildTarget>builder().add(ImmutableMap.of(), target).build();
+    assertThat(
+        translator
+            .translate(CELL_PATH_RESOLVER, PATTERN, collection)
+            .map(VersionMatchedCollection::getValues),
+        Matchers.equalTo(Optional.of(ImmutableList.of(newTarget))));
+  }
+
+  @Test
+  public void translatedTargetsInVersionMapAreNotTranslated() {
+    BuildTarget target = BuildTargetFactory.newInstance("//:rule");
+    BuildTarget newTarget = BuildTargetFactory.newInstance("//something:else");
+    TargetNodeTranslator translator =
+        new FixedTargetNodeTranslator(
+            new DefaultTypeCoercerFactory(), ImmutableMap.of(target, newTarget));
+    VersionMatchedCollection<BuildTarget> collection =
+        VersionMatchedCollection.<BuildTarget>builder()
+            .add(ImmutableMap.of(target, V1), target)
+            .build();
+    assertThat(
+        translator
+            .translate(CELL_PATH_RESOLVER, PATTERN, collection)
+            .map(VersionMatchedCollection::getValuePairs),
+        Matchers.equalTo(
+            Optional.of(ImmutableList.of(new Pair<>(ImmutableMap.of(target, V1), newTarget)))));
+  }
+
+  @Test
+  public void untranslatedTargets() {
+    BuildTarget target = BuildTargetFactory.newInstance("//:rule");
+    TargetNodeTranslator translator =
+        new FixedTargetNodeTranslator(new DefaultTypeCoercerFactory(), ImmutableMap.of());
+    VersionMatchedCollection<BuildTarget> collection =
+        VersionMatchedCollection.<BuildTarget>builder().add(ImmutableMap.of(), target).build();
+    assertThat(
+        translator.translate(CELL_PATH_RESOLVER, PATTERN, collection),
+        Matchers.equalTo(Optional.empty()));
   }
 }

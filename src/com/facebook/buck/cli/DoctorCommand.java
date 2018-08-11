@@ -125,7 +125,7 @@ public class DoctorCommand extends AbstractCommand {
 
   @Override
   public boolean isReadOnly() {
-    return false;
+    return true;
   }
 
   @Override

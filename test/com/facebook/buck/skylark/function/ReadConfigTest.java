@@ -33,6 +33,7 @@ import com.google.devtools.build.lib.events.PrintingEventHandler;
 import com.google.devtools.build.lib.packages.BazelLibrary;
 import com.google.devtools.build.lib.syntax.BuildFileAST;
 import com.google.devtools.build.lib.syntax.Environment;
+import com.google.devtools.build.lib.syntax.FuncallExpression;
 import com.google.devtools.build.lib.syntax.Mutability;
 import com.google.devtools.build.lib.syntax.ParserInputSource;
 import com.google.devtools.build.lib.syntax.Runtime;
@@ -104,15 +105,15 @@ public class ReadConfigTest {
             .build();
     ParseContext parseContext =
         new ParseContext(
-            PackageContext.builder()
-                .setGlobber(NativeGlobber.create(root))
-                .setRawConfig(rawConfig)
-                .setPackageIdentifier(
-                    PackageIdentifier.create(RepositoryName.DEFAULT, PathFragment.create("pkg")))
-                .setEventHandler(eventHandler)
-                .build());
+            PackageContext.of(
+                NativeGlobber.create(root),
+                rawConfig,
+                PackageIdentifier.create(RepositoryName.DEFAULT, PathFragment.create("pkg")),
+                eventHandler));
     parseContext.setup(env);
-    env.setup("read_config", ReadConfig.create());
+    env.setup(
+        "read_config",
+        FuncallExpression.getBuiltinCallable(SkylarkNativeModule.NATIVE_MODULE, "read_config"));
     boolean exec = buildFileAst.exec(env, eventHandler);
     if (!exec) {
       Assert.fail("Build file evaluation must have succeeded");

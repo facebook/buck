@@ -32,7 +32,7 @@ import java.io.PrintStream;
  *
  * <pre>
  *   class ExamplePluginBasedCommand extends PluginBasedCommand {
- *    {@literal @}PluginBasedSubCommands(commandClass = ExamplePluginBasedSubCommand.class)
+ *    {@literal @}PluginBasedSubCommands(factoryClass = ExamplePluginBasedSubCommandFactory.class)
  *    {@literal @}SuppressFieldNotInitialized
  *     private ImmutableList<ExamplePluginBasedSubCommand> modes;
  *
@@ -46,12 +46,25 @@ import java.io.PrintStream;
  *       return "--mode";
  *     }
  *   }
+ *
+ *   interface ExamplePluginBasedSubCommandFactory extends PluginBasedSubCommandFactory {
+ *   }
+ *
+ *   {@literal @}Extention
+ *   class SomeExamplePluginBasedSubCommand implements ExamplePluginBasedSubCommandFactory {
+ *     {@literal @}Override
+ *     SomeExamplePluginBasedSubCommand createSubCommand() {
+ *       return new SomeExamplePluginBasedSubCommand();
+ *     }
+ *   }
  * </pre>
  *
  * <p>Key points:
  *
  * <ul>
- *   <li>Plugin subcommands have to implement {@code ExamplePluginBasedSubCommand}.
+ *   <li>Sub commands needs to be instantiated using factories
+ *   <li>Plugin subcommand factories have to implement {@code PluginBasedSubCommandFactory}.
+ *   <li>Plugin subcommands have to implement {@code PluginBasedSubCommand}.
  *   <li>{@link #getTypeOptionName} is used to control which option is used to select a subcommand.
  *       The logic in this class uses that method for help screen only. The particular
  *       implementations need to use the option with that name to select a particular subcommand.

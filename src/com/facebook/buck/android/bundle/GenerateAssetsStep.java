@@ -87,16 +87,16 @@ public class GenerateAssetsStep implements Step {
     if (!assetFile.isDirectory()) {
       return;
     }
+    File[] subdirectories = assetFile.listFiles();
+    if (subdirectories == null || subdirectories.length < 1) {
+      return;
+    }
     Targeting.AbiTargeting.Builder abiTargetingBuilder = Targeting.AbiTargeting.newBuilder();
     addAbiTargeting(abiTargetingBuilder, assetFile);
     builder.addDirectory(
         TargetedAssetsDirectory.newBuilder()
             .setPath(root.relativize(assetFile.toPath()).toString())
             .setTargeting(AssetsDirectoryTargeting.newBuilder().setAbi(abiTargetingBuilder)));
-    File[] subdirectories = assetFile.listFiles();
-    if (subdirectories == null) {
-      return;
-    }
     for (File subdirectory : subdirectories) {
       processAssets(builder, subdirectory, root);
     }
@@ -113,7 +113,7 @@ public class GenerateAssetsStep implements Step {
         continue;
       }
       try {
-        readFile(builder, assetsDirectory.toPath().resolve(fileWithInfo));
+        readFile(builder, assetsDirectory.toPath());
       } catch (IOException e) {
         String errorMessage =
             String.format("Fail to add Abi Targeting in the path %s", assetFile.toPath());

@@ -18,9 +18,9 @@ package com.facebook.buck.core.model.targetgraph;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.ImmutableBuildTarget;
-import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
-import com.facebook.buck.graph.DirectedAcyclicGraph;
-import com.facebook.buck.graph.MutableDirectedGraph;
+import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
+import com.facebook.buck.core.util.graph.DirectedAcyclicGraph;
+import com.facebook.buck.core.util.graph.MutableDirectedGraph;
 import com.facebook.buck.util.MoreMaps;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;

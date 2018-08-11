@@ -16,7 +16,7 @@
 
 package com.facebook.buck.slb;
 
-import com.facebook.buck.config.BuckConfig;
+import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.timing.Clock;
@@ -93,7 +93,7 @@ public class SlbBuckConfig {
               if (connection != null) {
                 remoteAddress = connection.socket().getRemoteSocketAddress().toString();
               } else {
-                LOG.warn(String.format("No available connection."));
+                LOG.warn("No available connection.");
               }
               Response response = chain.proceed(chain.request());
               if (response.code() != 200 && remoteAddress != null) {

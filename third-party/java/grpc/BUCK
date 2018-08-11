@@ -1,3 +1,5 @@
+load("//tools/build_rules:file_alias.bzl", "file_alias")
+
 prebuilt_jar(
     name = "grpc-context",
     binary_jar = "grpc-context-1.11.0.jar",
@@ -72,8 +74,7 @@ prebuilt_jar(
     ],
 )
 
-export_file(
+file_alias(
     name="protobuf-plugin",
-    src="protoc-gen-grpc-java-1.10.1-osx-x86_64.exe",
-    visibility = ["PUBLIC"],
+    source="protoc-gen-grpc-java-1.10.1-osx-x86_64.exe",
 )

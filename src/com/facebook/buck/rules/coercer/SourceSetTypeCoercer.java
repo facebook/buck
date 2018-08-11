@@ -24,7 +24,7 @@ import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.util.List;
 
-public class SourceSetTypeCoercer implements TypeCoercer<SourceSet> {
+public class SourceSetTypeCoercer extends SourceSetConcatable implements TypeCoercer<SourceSet> {
   private final TypeCoercer<ImmutableSet<SourcePath>> unnamedHeadersTypeCoercer;
   private final TypeCoercer<ImmutableMap<String, SourcePath>> namedHeadersTypeCoercer;
 

@@ -19,8 +19,8 @@ package com.facebook.buck.event.listener;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.config.BuckConfig;
-import com.facebook.buck.config.FakeBuckConfig;
+import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.CapturingPrintStream;
 import com.facebook.buck.util.Console;

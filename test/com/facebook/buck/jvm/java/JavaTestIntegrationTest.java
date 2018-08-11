@@ -52,7 +52,21 @@ public class JavaTestIntegrationTest {
 
     result.assertFailure();
     String stderr = result.getStderr();
-    assertTrue(stderr, stderr.contains("cannot find symbol\nimport javax.annotation.Nullable;"));
+
+    // Javac emits different errors on Windows !?!
+    String lookFor;
+    if (Platform.detect() == Platform.WINDOWS) {
+      // Note: javac puts wrong line ending
+      lookFor =
+          "cannot find symbol\n"
+              + "  symbol:   class Nullable\n"
+              + "  location: package javax.annotation"
+              + System.lineSeparator()
+              + "import javax.annotation.Nullable;";
+    } else {
+      lookFor = "cannot find symbol" + System.lineSeparator() + "import javax.annotation.Nullable;";
+    }
+    assertTrue(stderr, stderr.contains(lookFor));
   }
 
   @Test
@@ -150,7 +164,8 @@ public class JavaTestIntegrationTest {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "slow_tests", temp);
     workspace.setUp();
-    workspace.writeContentsToPath("[test]\n  rule_timeout = 250", ".buckconfig");
+    workspace.writeContentsToPath(
+        "[test]" + System.lineSeparator() + "  rule_timeout = 250", ".buckconfig");
 
     ProcessResult result = workspace.runBuckCommand("test", "//:spinning");
     result.assertSpecialExitCode("test should fail", ExitCode.TEST_ERROR);
@@ -179,7 +194,8 @@ public class JavaTestIntegrationTest {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "slow_tests", temp);
     workspace.setUp();
-    workspace.writeContentsToPath("[test]\n  rule_timeout = 10000", ".buckconfig");
+    workspace.writeContentsToPath(
+        "[test]" + System.lineSeparator() + "  rule_timeout = 10000", ".buckconfig");
 
     workspace.runBuckCommand("test", "//:slow").assertSuccess();
   }

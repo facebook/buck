@@ -21,15 +21,15 @@ import com.facebook.buck.core.cell.CellProvider;
 import com.facebook.buck.core.cell.resolver.CellPathResolver;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.toolchain.ComparableToolchain;
+import com.facebook.buck.core.toolchain.ToolchainInstantiationException;
+import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.exceptions.MissingBuildFileException;
 import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
-import com.facebook.buck.toolchain.ComparableToolchain;
-import com.facebook.buck.toolchain.ToolchainInstantiationException;
-import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.RichStream;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -264,7 +264,5 @@ abstract class AbstractImmutableCell implements Cell {
   }
 
   @Override
-  public CellPathResolver getCellPathResolver() {
-    return getBuckConfig().getCellPathResolver();
-  }
+  public abstract CellPathResolver getCellPathResolver();
 }

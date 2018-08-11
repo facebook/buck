@@ -16,7 +16,7 @@
 
 package com.facebook.buck.distributed;
 
-import com.facebook.buck.config.BuckConfig;
+import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.distributed.thrift.BuildMode;
 import com.facebook.buck.distributed.thrift.MinionRequirements;
@@ -87,6 +87,7 @@ public class DistBuildConfig {
 
   private static final String MINION_QUEUE = "minion_queue";
   private static final String LOW_SPEC_MINION_QUEUE = "low_spec_minion_queue";
+  private static final String MINION_REGION = "minion_region";
 
   private static final String SOURCE_FILE_MULTI_FETCH_BUFFER_PERIOD_MS =
       "source_file_multi_fetch_buffer_period_ms";
@@ -324,6 +325,10 @@ public class DistBuildConfig {
 
   public Optional<String> getLowSpecMinionQueue() {
     return buckConfig.getValue(STAMPEDE_SECTION, LOW_SPEC_MINION_QUEUE);
+  }
+
+  public Optional<String> getMinionRegion() {
+    return buckConfig.getValue(STAMPEDE_SECTION, MINION_REGION);
   }
 
   public String getRepository() {

@@ -205,14 +205,20 @@ public class CountingRuleKeyHasherTest {
         newGuavaHasher().putRuleKey(RULE_KEY_2).hash(),
         newCountHasher().putRuleKey(RULE_KEY_2).hash());
     assertEquals(
-        newGuavaHasher().putRuleType(RuleType.of("")).hash(),
-        newCountHasher().putRuleType(RuleType.of("")).hash());
+        newGuavaHasher().putRuleType(RuleType.of("", RuleType.Kind.BUILD)).hash(),
+        newCountHasher().putRuleType(RuleType.of("", RuleType.Kind.BUILD)).hash());
     assertEquals(
-        newGuavaHasher().putRuleType(RuleType.of("42")).hash(),
-        newCountHasher().putRuleType(RuleType.of("42")).hash());
+        newGuavaHasher().putRuleType(RuleType.of("42", RuleType.Kind.BUILD)).hash(),
+        newCountHasher().putRuleType(RuleType.of("42", RuleType.Kind.BUILD)).hash());
     assertEquals(
-        newGuavaHasher().putRuleType(RuleType.of("4")).putRuleType(RuleType.of("2")).hash(),
-        newCountHasher().putRuleType(RuleType.of("4")).putRuleType(RuleType.of("2")).hash());
+        newGuavaHasher()
+            .putRuleType(RuleType.of("4", RuleType.Kind.BUILD))
+            .putRuleType(RuleType.of("2", RuleType.Kind.BUILD))
+            .hash(),
+        newCountHasher()
+            .putRuleType(RuleType.of("4", RuleType.Kind.BUILD))
+            .putRuleType(RuleType.of("2", RuleType.Kind.BUILD))
+            .hash());
     assertEquals(
         newGuavaHasher().putBuildTarget(TARGET_1).hash(),
         newCountHasher().putBuildTarget(TARGET_1).hash());
@@ -360,9 +366,11 @@ public class CountingRuleKeyHasherTest {
     assertEquals(++count, hasher.getCount());
     hasher.putRuleKey(RULE_KEY_2).putRuleKey(RULE_KEY_1);
     assertEquals(count += 2, hasher.getCount());
-    hasher.putRuleType(RuleType.of(""));
+    hasher.putRuleType(RuleType.of("", RuleType.Kind.BUILD));
     assertEquals(++count, hasher.getCount());
-    hasher.putRuleType(RuleType.of("42")).putRuleType(RuleType.of("43"));
+    hasher
+        .putRuleType(RuleType.of("42", RuleType.Kind.BUILD))
+        .putRuleType(RuleType.of("43", RuleType.Kind.BUILD));
     assertEquals(count += 2, hasher.getCount());
     hasher.putBuildTarget(TARGET_1);
     assertEquals(++count, hasher.getCount());

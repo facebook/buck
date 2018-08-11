@@ -19,7 +19,6 @@ package com.facebook.buck.android;
 import com.facebook.buck.android.packageable.AndroidPackageable;
 import com.facebook.buck.android.packageable.AndroidPackageableCollector;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.common.BuildDeps;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -36,10 +35,8 @@ import com.facebook.buck.jvm.java.RemoveClassesPatternsMatcher;
 import com.facebook.buck.jvm.java.ResourcesParameters;
 import com.facebook.buck.jvm.java.ZipArchiveDependencySupplier;
 import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Iterables;
 import java.util.Optional;
 
 /**
@@ -55,21 +52,15 @@ class AndroidBuildConfigJavaLibrary extends DefaultJavaLibrary implements Androi
   AndroidBuildConfigJavaLibrary(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      BuildRuleParams params,
       SourcePathRuleFinder ruleFinder,
       Javac javac,
       JavacOptions javacOptions,
-      ZipArchiveDependencySupplier abiClasspath,
       AndroidBuildConfig androidBuildConfig) {
     super(
         buildTarget,
         projectFilesystem,
-        new BuildDeps(
-            ImmutableSortedSet.copyOf(
-                Iterables.concat(
-                    params.getBuildDeps(), ruleFinder.filterBuildRuleInputs(abiClasspath.get())))),
+        new BuildDeps(ImmutableSortedSet.of(androidBuildConfig)),
         new JarBuildStepsFactory(
-            projectFilesystem,
             buildTarget,
             new JavacToJarStepFactory(javac, javacOptions, ExtraClasspathProvider.EMPTY),
             /* srcs */ ImmutableSortedSet.of(androidBuildConfig.getSourcePathToOutput()),
@@ -77,18 +68,17 @@ class AndroidBuildConfigJavaLibrary extends DefaultJavaLibrary implements Androi
             ResourcesParameters.of(),
             /* manifest file */ Optional.empty(),
             /* postprocessClassesCommands */ ImmutableList.of(),
-            abiClasspath,
+            new ZipArchiveDependencySupplier(ImmutableSortedSet.of()),
             /* trackClassUsage */ javacOptions.trackClassUsage(),
             /* trackJavacPhaseEvents */ javacOptions.trackJavacPhaseEvents(),
-            /* compileTimeClasspathDeps */ ImmutableSortedSet.of(
-                androidBuildConfig.getSourcePathToOutput()),
+            ImmutableSortedSet.of(),
             /* classesToRemoveFromJar */ RemoveClassesPatternsMatcher.EMPTY,
             AbiGenerationMode.CLASS,
             AbiGenerationMode.CLASS,
-            /* sourceOnlyAbiRuleInfo */ null),
+            null),
         ruleFinder,
         Optional.empty(),
-        /* firstOrderPackageableDeps */ params.getDeclaredDeps().get(),
+        ImmutableSortedSet.of(androidBuildConfig),
         /* exportedDeps */ ImmutableSortedSet.of(),
         /* providedDeps */ ImmutableSortedSet.of(),
         ImmutableSortedSet.of(),
@@ -100,10 +90,6 @@ class AndroidBuildConfigJavaLibrary extends DefaultJavaLibrary implements Androi
         UnusedDependenciesAction.IGNORE,
         Optional.empty());
     this.androidBuildConfig = androidBuildConfig;
-    Preconditions.checkState(
-        params.getBuildDeps().contains(androidBuildConfig),
-        "%s must depend on the AndroidBuildConfig whose output is in this rule's srcs.",
-        buildTarget);
   }
 
   /**

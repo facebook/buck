@@ -27,12 +27,13 @@ import com.facebook.buck.artifact_cache.ArtifactCacheConnectEvent;
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
 import com.facebook.buck.artifact_cache.config.ArtifactCacheMode;
-import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.core.build.engine.BuildRuleStatus;
 import com.facebook.buck.core.build.engine.BuildRuleSuccessType;
+import com.facebook.buck.core.build.engine.type.UploadToCacheResultType;
 import com.facebook.buck.core.build.event.BuildEvent;
 import com.facebook.buck.core.build.event.BuildRuleEvent;
 import com.facebook.buck.core.build.stats.BuildRuleDurationTracker;
+import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
@@ -238,8 +239,7 @@ public class ChromeTraceBuildListenerTest {
         ObjectMappers.readValue(
             tmpDir.getRoot().toPath().resolve("buck-out").resolve("log").resolve("build.trace"),
             new TypeReference<List<ChromeTraceEvent>>() {});
-    List<ChromeTraceEvent> resultListCopy = new ArrayList<>();
-    resultListCopy.addAll(originalResultList);
+    List<ChromeTraceEvent> resultListCopy = new ArrayList<>(originalResultList);
 
     assertPreambleEvents(resultListCopy, projectFilesystem);
 
@@ -414,7 +414,7 @@ public class ChromeTraceBuildListenerTest {
             CacheResult.miss(),
             Optional.empty(),
             Optional.of(BuildRuleSuccessType.BUILT_LOCALLY),
-            false,
+            UploadToCacheResultType.UNCACHEABLE,
             Optional.empty(),
             Optional.empty(),
             Optional.empty(),
@@ -458,8 +458,7 @@ public class ChromeTraceBuildListenerTest {
         ObjectMappers.readValue(
             tmpDir.getRoot().toPath().resolve("buck-out").resolve("log").resolve("build.trace"),
             new TypeReference<List<ChromeTraceEvent>>() {});
-    List<ChromeTraceEvent> resultListCopy = new ArrayList<>();
-    resultListCopy.addAll(originalResultList);
+    List<ChromeTraceEvent> resultListCopy = new ArrayList<>(originalResultList);
     ImmutableMap<String, String> emptyArgs = ImmutableMap.of();
 
     assertPreambleEvents(resultListCopy, projectFilesystem);

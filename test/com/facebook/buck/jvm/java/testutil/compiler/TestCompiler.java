@@ -279,8 +279,7 @@ public class TestCompiler extends ExternalResource implements AutoCloseable {
     if (javacTask == null) {
       compileClasspath();
 
-      List<String> options = new ArrayList<>();
-      options.addAll(additionalOptions);
+      List<String> options = new ArrayList<>(additionalOptions);
       options.add("-d");
       options.add(outputFolder.getRoot().toString());
       if (!classpath.isEmpty()) {

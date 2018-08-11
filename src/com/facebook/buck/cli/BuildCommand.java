@@ -30,12 +30,12 @@ import com.facebook.buck.artifact_cache.config.ArtifactCacheBuckConfig;
 import com.facebook.buck.command.Build;
 import com.facebook.buck.command.LocalBuildExecutor;
 import com.facebook.buck.command.LocalBuildExecutorInvoker;
-import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.core.build.distributed.synchronization.RemoteBuildRuleCompletionWaiter;
 import com.facebook.buck.core.build.distributed.synchronization.impl.NoOpRemoteBuildRuleCompletionWaiter;
 import com.facebook.buck.core.build.engine.delegate.LocalCachingBuildEngineDelegate;
 import com.facebook.buck.core.build.engine.type.BuildType;
 import com.facebook.buck.core.build.event.BuildEvent;
+import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
@@ -64,6 +64,7 @@ import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.DistBuildState;
 import com.facebook.buck.distributed.DistBuildTargetGraphCodec;
 import com.facebook.buck.distributed.DistLocalBuildMode;
+import com.facebook.buck.distributed.DistributedExitCode;
 import com.facebook.buck.distributed.RuleKeyNameAndType;
 import com.facebook.buck.distributed.build_client.DistBuildControllerArgs;
 import com.facebook.buck.distributed.build_client.DistBuildControllerInvocationArgs;
@@ -759,7 +760,6 @@ public class BuildCommand extends AbstractCommand {
     ParserTargetNodeFactory<Map<String, Object>> parserTargetNodeFactory =
         DefaultParserTargetNodeFactory.createForDistributedBuild(
             params.getKnownRuleTypesProvider(),
-            params.getKnownBuildRuleTypesProvider(),
             new ConstructorArgMarshaller(typeCoercerFactory),
             new TargetNodeFactory(typeCoercerFactory),
             new VisibilityPatternFactory(),
@@ -971,24 +971,22 @@ public class BuildCommand extends AbstractCommand {
             }
 
             @Override
-            public int executeLocalBuild(
+            public ExitCode executeLocalBuild(
                 boolean isDownloadHeavyBuild,
                 RemoteBuildRuleCompletionWaiter remoteBuildRuleCompletionWaiter,
                 CountDownLatch initializeBuildLatch,
                 AtomicReference<Build> buildReference)
                 throws IOException, InterruptedException {
-              return BuildCommand.this
-                  .executeLocalBuild(
-                      params,
-                      graphsAndBuildTargets,
-                      executorService,
-                      Optional.empty(),
-                      remoteBuildRuleCompletionWaiter,
-                      isDownloadHeavyBuild,
-                      Optional.of(initializeBuildLatch),
-                      ruleKeyCacheScope,
-                      buildReference)
-                  .getCode();
+              return BuildCommand.this.executeLocalBuild(
+                  params,
+                  graphsAndBuildTargets,
+                  executorService,
+                  Optional.empty(),
+                  remoteBuildRuleCompletionWaiter,
+                  isDownloadHeavyBuild,
+                  Optional.of(initializeBuildLatch),
+                  ruleKeyCacheScope,
+                  buildReference);
             }
           };
 
@@ -1032,21 +1030,24 @@ public class BuildCommand extends AbstractCommand {
       // Perform either a single phase build that waits for all remote artifacts before proceeding,
       // or a two stage build where local build first races against remote, and depending on
       // progress either completes first or falls back to build that waits for remote artifacts.
-      int localExitCode =
+      Optional<ExitCode> localExitCodeOption =
           stampedeBuildClient.build(
               distBuildConfig.getLocalBuildMode(),
               distBuildConfig.isSlowLocalBuildFallbackModeEnabled());
 
+      ExitCode localExitCode = localExitCodeOption.orElse(ExitCode.FATAL_GENERIC);
+
       // All local/distributed build steps are now finished.
       StampedeId stampedeId = stampedeBuildClient.getStampedeId();
-      int distributedBuildExitCode = stampedeBuildClient.getDistBuildExitCode();
+      DistributedExitCode distributedBuildExitCode = stampedeBuildClient.getDistBuildExitCode();
       distBuildClientStats.setStampedeId(stampedeId.getId());
-      distBuildClientStats.setDistributedBuildExitCode(distributedBuildExitCode);
+      distBuildClientStats.setDistributedBuildExitCode(distributedBuildExitCode.getCode());
 
       // Set local build stats
       distBuildClientStats.setPerformedLocalBuild(true);
       distBuildClientStats.stopTimer(PERFORM_LOCAL_BUILD);
-      distBuildClientStats.setLocalBuildExitCode(localExitCode);
+
+      distBuildClientStats.setLocalBuildExitCode(localExitCode.getCode());
       // If local build finished before hashing was complete, it's important to cancel
       // related Futures to avoid this operation blocking forever.
       asyncJobState.cancel(true);
@@ -1062,7 +1063,7 @@ public class BuildCommand extends AbstractCommand {
           ("Stampede local build executor service still running after build finished"
               + " and timeout elapsed. Terminating.."));
 
-      int finalExitCode;
+      ExitCode finalExitCode;
       DistLocalBuildMode distLocalBuildMode =
           distBuildControllerInvocationArgs.getDistLocalBuildMode();
       if (distLocalBuildMode.equals(DistLocalBuildMode.FIRE_AND_FORGET)
@@ -1082,18 +1083,26 @@ public class BuildCommand extends AbstractCommand {
                 distBuildLogStateTracker);
       }
 
-      return ExitCode.map(finalExitCode);
+      // If no local fallback, and there was a stampede infrastructure failure,
+      // then return corresponding exit code
+      if (finalExitCode != ExitCode.SUCCESS
+          && !distBuildConfig.isSlowLocalBuildFallbackModeEnabled()
+          && DistributedExitCode.wasStampedeInfraFailure(distributedBuildExitCode)) {
+        finalExitCode = ExitCode.STAMPEDE_INFRA_ERROR;
+      }
+
+      return finalExitCode;
     }
   }
 
-  private int performPostBuild(
+  private ExitCode performPostBuild(
       CommandRunnerParams params,
       DistBuildConfig distBuildConfig,
       ProjectFilesystem filesystem,
       ClientStatsTracker distBuildClientStats,
       StampedeId stampedeId,
-      int distributedBuildExitCode,
-      int localExitCode,
+      DistributedExitCode distributedBuildExitCode,
+      ExitCode localExitCode,
       DistBuildService distBuildService,
       LogStateTracker distBuildLogStateTracker)
       throws IOException {
@@ -1114,14 +1123,13 @@ public class BuildCommand extends AbstractCommand {
             localExitCode,
             distBuildLogStateTracker);
 
-    int finalExitCode = localExitCode;
+    ExitCode finalExitCode = localExitCode;
     if (!ruleKeyConsistencyChecksPassedOrSkipped) {
-      finalExitCode =
-          com.facebook.buck.distributed.ExitCode.RULE_KEY_CONSISTENCY_CHECK_FAILED.getCode();
+      finalExitCode = ExitCode.BUILD_ERROR;
     }
 
     // Post distributed build phase starts POST_DISTRIBUTED_BUILD_LOCAL_STEPS counter internally.
-    if (distributedBuildExitCode == 0) {
+    if (distributedBuildExitCode == DistributedExitCode.SUCCESSFUL) {
       distBuildClientStats.stopTimer(POST_DISTRIBUTED_BUILD_LOCAL_STEPS);
     }
 
@@ -1179,15 +1187,15 @@ public class BuildCommand extends AbstractCommand {
       ProjectFilesystem filesystem,
       ClientStatsTracker distBuildClientStats,
       StampedeId stampedeId,
-      int distributedBuildExitCode,
-      int localBuildExitCode,
+      DistributedExitCode distributedBuildExitCode,
+      ExitCode localBuildExitCode,
       LogStateTracker distBuildLogStateTracker)
       throws IOException {
     // If we are pulling down remote logs, and the distributed build finished successfully,
     // then perform analysis
     if (distBuildConfig.getLogMaterializationEnabled()
-        && distributedBuildExitCode == 0
-        && localBuildExitCode == 0) {
+        && distributedBuildExitCode == DistributedExitCode.SUCCESSFUL
+        && localBuildExitCode == ExitCode.SUCCESS) {
       distBuildClientStats.startTimer(POST_BUILD_ANALYSIS);
       DistBuildPostBuildAnalysis postBuildAnalysis =
           new DistBuildPostBuildAnalysis(
@@ -1338,7 +1346,8 @@ public class BuildCommand extends AbstractCommand {
               params.getCell(),
               getEnableParserProfiling(),
               executor,
-              parseArgumentsAsTargetNodeSpecs(params.getBuckConfig(), getArguments()),
+              parseArgumentsAsTargetNodeSpecs(
+                  params.getCell().getCellPathResolver(), params.getBuckConfig(), getArguments()),
               parserConfig.getDefaultFlavorsMode());
     } catch (BuildTargetException e) {
       throw new ActionGraphCreationException(MoreExceptions.getHumanReadableOrLocalizedMessage(e));

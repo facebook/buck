@@ -17,14 +17,14 @@
 package com.facebook.buck.android.toolchain.ndk.impl;
 
 import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatformsProvider;
-import com.facebook.buck.toolchain.impl.NamedToolchain;
+import com.facebook.buck.core.toolchain.impl.NamedToolchain;
 import com.google.common.collect.ImmutableMap;
 
 /**
  * Creates {@link NdkCxxPlatformsProvider} with the default name.
  *
  * <p>This should be used together with {@link
- * com.facebook.buck.toolchain.impl.ToolchainProviderBuilder#withToolchain(NamedToolchain)} to
+ * com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder#withToolchain(NamedToolchain)} to
  * provide NDK cxx platforms in tests that rely on them.
  */
 public class TestNdkCxxPlatformsProviderFactory {

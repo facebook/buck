@@ -18,8 +18,6 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.android.exopackage.AndroidDevicesHelperFactory;
 import com.facebook.buck.command.Build;
-import com.facebook.buck.config.BuckConfig;
-import com.facebook.buck.config.resources.ResourcesConfig;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.distributed.synchronization.impl.NoOpRemoteBuildRuleCompletionWaiter;
 import com.facebook.buck.core.build.engine.BuildEngine;
@@ -28,6 +26,7 @@ import com.facebook.buck.core.build.engine.delegate.LocalCachingBuildEngineDeleg
 import com.facebook.buck.core.build.engine.impl.CachingBuildEngine;
 import com.facebook.buck.core.build.engine.impl.MetadataChecker;
 import com.facebook.buck.core.build.event.BuildEvent;
+import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphConfig;
@@ -35,6 +34,7 @@ import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodes;
+import com.facebook.buck.core.resources.ResourcesConfig;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
@@ -506,7 +506,10 @@ public class TestCommand extends BuildCommand {
                       params.getCell(),
                       getEnableParserProfiling(),
                       pool.getListeningExecutorService(),
-                      parseArgumentsAsTargetNodeSpecs(params.getBuckConfig(), getArguments()),
+                      parseArgumentsAsTargetNodeSpecs(
+                          params.getCell().getCellPathResolver(),
+                          params.getBuckConfig(),
+                          getArguments()),
                       parserConfig.getDefaultFlavorsMode());
 
           LOG.debug("Got explicit build targets %s", targetGraphAndBuildTargets.getBuildTargets());
@@ -592,7 +595,7 @@ public class TestCommand extends BuildCommand {
                         params.getBuckConfig().getView(ModernBuildRuleConfig.class),
                         actionGraphAndBuilder.getActionGraphBuilder(),
                         params.getCell(),
-                        params.getBuckConfig().getCellPathResolver(),
+                        params.getCell().getCellPathResolver(),
                         localCachingBuildEngineDelegate.getFileHashCache(),
                         params.getBuckEventBus(),
                         params.getConsole()),

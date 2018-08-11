@@ -406,11 +406,12 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
       if (values.isEmpty()) {
         // in case Python process cannot send values due to serialization issues, it will send an
         // empty list
-        return BuildFileManifest.builder()
-            .setTargets(ImmutableList.of())
-            .setIncludes(ImmutableSortedSet.of())
-            .setConfigs(ImmutableMap.of())
-            .build();
+        return BuildFileManifest.of(
+            ImmutableList.of(),
+            ImmutableSortedSet.of(),
+            ImmutableMap.of(),
+            Optional.empty(),
+            ImmutableMap.of());
       }
       return toBuildFileManifest(values);
     } finally {
@@ -423,22 +424,20 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
 
   @SuppressWarnings("unchecked")
   private BuildFileManifest toBuildFileManifest(ImmutableList<Map<String, Object>> values) {
-    return BuildFileManifest.builder()
-        .setTargets(values.subList(0, values.size() - 3))
-        .setIncludes(
-            ImmutableSortedSet.copyOf(
-                Preconditions.checkNotNull(
-                    (List<String>) values.get(values.size() - 3).get("__includes"))))
-        .setConfigs(
+    return BuildFileManifest.of(
+        values.subList(0, values.size() - 3).asList(),
+        ImmutableSortedSet.copyOf(
             Preconditions.checkNotNull(
-                (Map<String, Object>) values.get(values.size() - 2).get("__configs")))
-        .setEnv(
+                (List<String>) values.get(values.size() - 3).get("__includes"))),
+        Preconditions.checkNotNull(
+            (Map<String, Object>) values.get(values.size() - 2).get("__configs")),
+        Optional.of(
             ImmutableMap.copyOf(
                 Maps.transformValues(
                     Preconditions.checkNotNull(
                         (Map<String, String>) values.get(values.size() - 1).get("__env")),
-                    Optional::ofNullable)))
-        .build();
+                    Optional::ofNullable))),
+        ImmutableMap.of());
   }
 
   private BuildFilePythonResult performJsonRequest(ImmutableMap<String, String> request)

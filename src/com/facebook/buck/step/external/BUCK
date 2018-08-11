@@ -1,4 +1,5 @@
 load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
+load("//tools/build_rules:file_alias.bzl", "file_alias")
 
 java_immutables_library(
     name = "external",
@@ -11,9 +12,9 @@ java_immutables_library(
         "//test/...",
     ],
     deps = [
-        "//src/com/facebook/buck/build_type:build_type",
         "//src/com/facebook/buck/io/file:file",
         "//src/com/facebook/buck/util/env:env",
+        "//src/com/facebook/buck/util/environment:environment",
         "//third-party/java/guava:guava",
         "//third-party/java/jsr:jsr305",
     ],
@@ -32,12 +33,9 @@ java_immutables_library(
     ],
 )
 
-export_file(
+file_alias(
     name = "executor_for_test",
-    src = ":executor",
-    visibility = [
-        "PUBLIC",
-    ],
+    source = ":executor",
 )
 
 java_binary(

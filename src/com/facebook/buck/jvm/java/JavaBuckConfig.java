@@ -16,8 +16,8 @@
 
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.config.BuckConfig;
-import com.facebook.buck.config.ConfigView;
+import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.config.ConfigView;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;

@@ -18,11 +18,6 @@ package com.facebook.buck.core.rules.configsetting;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
-import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
-import com.facebook.buck.core.model.targetgraph.RawTargetNode;
-import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.config.ConfigurationRule;
 import com.facebook.buck.core.rules.config.ConfigurationRuleDescription;
 import com.facebook.buck.core.rules.config.ConfigurationRuleResolver;
@@ -32,10 +27,6 @@ import org.immutables.value.Value;
 
 /**
  * A description for {@code config_setting}.
- *
- * <p>This description provides both {@link ConfigurationRule} and {@link BuildRule}, but creating a
- * {@link BuildRule} is not implemented and only provided to avoid dealing with places where parser
- * expects build rules.
  *
  * <p>This rule should be used to create conditions for {@code select} statements.
  *
@@ -53,9 +44,7 @@ import org.immutables.value.Value;
  *   )
  * </pre>
  */
-public class ConfigSettingDescription
-    implements ConfigurationRuleDescription<ConfigSettingArg>,
-        DescriptionWithTargetGraph<ConfigSettingArg> {
+public class ConfigSettingDescription implements ConfigurationRuleDescription<ConfigSettingArg> {
 
   @Override
   public Class<ConfigSettingArg> getConstructorArgType() {
@@ -64,20 +53,11 @@ public class ConfigSettingDescription
 
   @Override
   public ConfigurationRule createConfigurationRule(
-      ConfigurationRuleResolver configurationRuleResolver, Cell cell, RawTargetNode rawTargetNode) {
-    return new ConfigSettingRule(
-        cell.getBuckConfig(),
-        rawTargetNode.getBuildTarget(),
-        rawTargetNode.getAttributes().get("values", ImmutableMap.of()));
-  }
-
-  @Override
-  public BuildRule createBuildRule(
-      BuildRuleCreationContextWithTargetGraph context,
+      ConfigurationRuleResolver configurationRuleResolver,
+      Cell cell,
       BuildTarget buildTarget,
-      BuildRuleParams params,
-      ConfigSettingArg args) {
-    throw new UnsupportedOperationException();
+      ConfigSettingArg arg) {
+    return new ConfigSettingRule(cell.getBuckConfig(), buildTarget, arg.getValues());
   }
 
   @BuckStyleImmutable

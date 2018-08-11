@@ -21,6 +21,7 @@ import com.facebook.buck.core.build.engine.BuildRuleStatus;
 import com.facebook.buck.core.build.engine.BuildRuleSuccessType;
 import com.facebook.buck.core.build.engine.manifest.ManifestFetchResult;
 import com.facebook.buck.core.build.engine.manifest.ManifestStoreResult;
+import com.facebook.buck.core.build.engine.type.UploadToCacheResultType;
 import com.facebook.buck.core.build.stats.BuildRuleDiagnosticData;
 import com.facebook.buck.core.build.stats.BuildRuleDurationTracker;
 import com.facebook.buck.core.model.BuildId;
@@ -98,7 +99,7 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
       CacheResult cacheResult,
       Optional<BuildId> origin,
       Optional<BuildRuleSuccessType> successType,
-      boolean willTryUploadToCache,
+      UploadToCacheResultType uploadToCacheResultType,
       Optional<HashCode> outputHash,
       Optional<Long> outputSize,
       Optional<BuildRuleDiagnosticData> diagnosticData,
@@ -115,7 +116,7 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
         cacheResult,
         origin,
         successType,
-        willTryUploadToCache,
+        uploadToCacheResultType,
         outputHash,
         outputSize,
         diagnosticData,
@@ -228,7 +229,7 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
     private final CacheResult cacheResult;
     private final Optional<BuildId> origin;
     private final Optional<BuildRuleSuccessType> successType;
-    private final boolean willTryUploadToCache;
+    private final UploadToCacheResultType uploadToCacheResultType;
     private final BuildRuleKeys ruleKeys;
     private final Optional<HashCode> outputHash;
     private final Optional<Long> outputSize;
@@ -247,7 +248,7 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
         CacheResult cacheResult,
         Optional<BuildId> origin,
         Optional<BuildRuleSuccessType> successType,
-        boolean willTryUploadToCache,
+        UploadToCacheResultType uploadToCacheResultType,
         Optional<HashCode> outputHash,
         Optional<Long> outputSize,
         Optional<BuildRuleDiagnosticData> diagnosticData,
@@ -262,7 +263,7 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
       this.cacheResult = cacheResult;
       this.origin = origin;
       this.successType = successType;
-      this.willTryUploadToCache = willTryUploadToCache;
+      this.uploadToCacheResultType = uploadToCacheResultType;
       this.ruleKeys = ruleKeys;
       this.outputHash = outputHash;
       this.outputSize = outputSize;
@@ -301,8 +302,8 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
     }
 
     @JsonIgnore
-    public boolean isWillTryUploadToCache() {
-      return willTryUploadToCache;
+    public UploadToCacheResultType getUploadToCacheResultType() {
+      return uploadToCacheResultType;
     }
 
     @JsonView(JsonViews.MachineReadableLog.class)

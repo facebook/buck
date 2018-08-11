@@ -33,8 +33,10 @@ import com.facebook.buck.rules.modern.builders.Protocol.Digest;
 import com.facebook.buck.slb.HybridThriftOverHttpService;
 import com.facebook.buck.slb.HybridThriftRequestHandler;
 import com.facebook.buck.slb.HybridThriftResponseHandler;
+import com.facebook.buck.slb.ThriftException;
 import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.util.function.ThrowingSupplier;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
@@ -106,23 +108,60 @@ public class RemoteExecutionStorageService implements AsyncBlobFetcher, CasBlobU
     HybridThriftRequestHandler<FrontendRequest> hybridRequest =
         HybridThriftRequestHandler.createWithoutPayloads(frontendRequest);
     HybridThriftResponseHandler<FrontendResponse> hybridResponseHandler =
-        new HybridThriftResponseHandler<FrontendResponse>(new FrontendResponse()) {
-          @Override
-          public int getTotalPayloads() {
-            return 1;
-          }
-
-          @Override
-          public long getPayloadSizeBytes(int payloadIndex) {
-            return digest.getSize();
-          }
-
-          @Override
-          public OutputStream getStreamForPayload(int payloadIndex) {
-            return outputStream;
-          }
-        };
+        createFetchResponseHandler(outputStream);
     return service.makeRequest(hybridRequest, hybridResponseHandler);
+  }
+
+  /** Creates a ResponseHandler for the RemoteExecutionFetch hybrid thrift request. */
+  private static HybridThriftResponseHandler<FrontendResponse> createFetchResponseHandler(
+      final OutputStream outputStream) {
+    return new HybridThriftResponseHandler<FrontendResponse>(new FrontendResponse()) {
+      @Override
+      public void onResponseParsed() throws IOException {
+        FrontendResponse response = getResponse();
+        validateResponseOrThrow(response);
+      }
+
+      @Override
+      public int getTotalPayloads() {
+        int numberOfPayloads = getResponse().getRemoteExecutionFetchResponse().getDigestsSize();
+        Preconditions.checkState(
+            1 == numberOfPayloads,
+            "Expected to only receive one payload but got [%d] instead.",
+            numberOfPayloads);
+        return numberOfPayloads;
+      }
+
+      @Override
+      public long getPayloadSizeBytes(int payloadIndex) {
+        DigestAndContent digestAndContent =
+            getResponse().getRemoteExecutionFetchResponse().getDigests().get(payloadIndex);
+        Preconditions.checkState(
+            !digestAndContent.isSetContent(),
+            "Unexpected inlined content from the server for digest [%s:%s].",
+            digestAndContent.digest.hash,
+            digestAndContent.digest.sizeBytes);
+
+        return digestAndContent.getDigest().getSizeBytes();
+      }
+
+      @Override
+      public OutputStream getStreamForPayload(int payloadIndex) {
+        return outputStream;
+      }
+    };
+  }
+
+  /** Verifies if a server response was successful. */
+  public static void validateResponseOrThrow(FrontendResponse response) throws ThriftException {
+    if (!response.isSetWasSuccessful() || !response.isWasSuccessful()) {
+      String msg =
+          String.format(
+              "RemoteExecution request of type [%s] failed with error message [%s].",
+              response.getType(), response.getErrorMessage());
+      LOG.error(msg);
+      throw new ThriftException(msg);
+    }
   }
 
   @Override
@@ -143,7 +182,8 @@ public class RemoteExecutionStorageService implements AsyncBlobFetcher, CasBlobU
         service
             .makeRequestSync(
                 HybridThriftRequestHandler.createWithoutPayloads(frontendRequest),
-                HybridThriftResponseHandler.createNoPayloadHandler(new FrontendResponse()))
+                HybridThriftResponseHandler.createNoPayloadHandler(
+                    new FrontendResponse(), RemoteExecutionStorageService::validateResponseOrThrow))
             .getRemoteExecutionContainsResponse();
 
     return response
@@ -191,7 +231,9 @@ public class RemoteExecutionStorageService implements AsyncBlobFetcher, CasBlobU
         };
 
     service.makeRequest(
-        hybridRequest, HybridThriftResponseHandler.createNoPayloadHandler(new FrontendResponse()));
+        hybridRequest,
+        HybridThriftResponseHandler.createNoPayloadHandler(
+            new FrontendResponse(), RemoteExecutionStorageService::validateResponseOrThrow));
 
     return blobs
         .stream()

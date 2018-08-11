@@ -27,13 +27,14 @@ import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTarg
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
+import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.CxxDeps;
 import com.facebook.buck.rules.args.Arg;
-import com.facebook.buck.rules.coercer.OcamlSource;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
+import com.facebook.buck.rules.coercer.SourceSet;
 import com.facebook.buck.rules.macros.StringWithMacros;
-import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.versions.VersionRoot;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableCollection;
@@ -79,7 +80,8 @@ public class OcamlBinaryDescription
     CxxDeps allDeps =
         CxxDeps.builder().addDeps(args.getDeps()).addPlatformDeps(args.getPlatformDeps()).build();
 
-    ImmutableList<OcamlSource> srcs = args.getSrcs();
+    ImmutableList<SourcePath> srcs =
+        args.getSrcs().isPresent() ? args.getSrcs().get().getPaths() : ImmutableList.of();
 
     ImmutableList<Arg> flags =
         OcamlRuleBuilder.getFlags(
@@ -155,7 +157,7 @@ public class OcamlBinaryDescription
   @BuckStyleImmutable
   @Value.Immutable
   interface AbstractOcamlBinaryDescriptionArg extends CommonDescriptionArg, HasDeclaredDeps {
-    ImmutableList<OcamlSource> getSrcs();
+    Optional<SourceSet> getSrcs();
 
     ImmutableList<StringWithMacros> getCompilerFlags();
 

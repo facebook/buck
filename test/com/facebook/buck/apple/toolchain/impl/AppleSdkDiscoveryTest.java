@@ -28,7 +28,7 @@ import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.apple.toolchain.AppleSdk;
 import com.facebook.buck.apple.toolchain.AppleSdkPaths;
 import com.facebook.buck.apple.toolchain.AppleToolchain;
-import com.facebook.buck.config.FakeBuckConfig;
+import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;

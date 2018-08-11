@@ -18,7 +18,9 @@ package com.facebook.buck.apple;
 
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasItems;
+import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assume.assumeThat;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
@@ -27,13 +29,21 @@ import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.plugin.impl.BuckPluginManagerFactory;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
 import java.util.Set;
+import org.junit.Before;
 import org.junit.Test;
 
 public class AppleResourcesTest {
+
+  @Before
+  public void setUp() {
+    assumeThat(Platform.detect(), is(Platform.MACOS));
+  }
 
   @Test
   public void libWithSingleResourceDepReturnsResource() {
@@ -59,7 +69,11 @@ public class AppleResourcesTest {
     TargetGraph targetGraph = TargetGraphFactory.newInstance(graphNodes);
 
     assertThat(
-        AppleResources.collectRecursiveResources(targetGraph, Optional.empty(), libNode),
+        AppleResources.collectRecursiveResources(
+            XCodeDescriptionsFactory.create(BuckPluginManagerFactory.createPluginManager()),
+            targetGraph,
+            Optional.empty(),
+            libNode),
         hasItem(resourceNode.getConstructorArg()));
   }
 
@@ -91,7 +105,11 @@ public class AppleResourcesTest {
     TargetGraph targetGraph = TargetGraphFactory.newInstance(graphNodes);
 
     assertThat(
-        AppleResources.collectRecursiveResources(targetGraph, Optional.empty(), barLibNode),
+        AppleResources.collectRecursiveResources(
+            XCodeDescriptionsFactory.create(BuckPluginManagerFactory.createPluginManager()),
+            targetGraph,
+            Optional.empty(),
+            barLibNode),
         hasItems(fooResourceNode.getConstructorArg(), barResourceNode.getConstructorArg()));
   }
 }

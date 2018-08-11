@@ -30,16 +30,17 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
+import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.CxxDeps;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.rules.args.Arg;
-import com.facebook.buck.rules.coercer.OcamlSource;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
+import com.facebook.buck.rules.coercer.SourceSet;
 import com.facebook.buck.rules.macros.StringWithMacros;
-import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.versions.VersionPropagator;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -85,7 +86,8 @@ public class OcamlLibraryDescription
       SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(context.getActionGraphBuilder());
       SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
-      ImmutableList<OcamlSource> srcs = args.getSrcs();
+      ImmutableList<SourcePath> srcs =
+          args.getSrcs().isPresent() ? args.getSrcs().get().getPaths() : ImmutableList.of();
 
       ImmutableList<Arg> flags =
           OcamlRuleBuilder.getFlags(
@@ -155,7 +157,6 @@ public class OcamlLibraryDescription
             params,
             args.getLinkerFlags(),
             srcs.stream()
-                .map(OcamlSource::getSource)
                 .map(pathResolver::getAbsolutePath)
                 .filter(OcamlUtil.ext(OcamlCompilables.OCAML_C))
                 .map(ocamlLibraryBuild.getOcamlContext()::getCOutput)
@@ -253,7 +254,7 @@ public class OcamlLibraryDescription
   @BuckStyleImmutable
   @Value.Immutable
   interface AbstractOcamlLibraryDescriptionArg extends CommonDescriptionArg, HasDeclaredDeps {
-    ImmutableList<OcamlSource> getSrcs();
+    Optional<SourceSet> getSrcs();
 
     ImmutableList<StringWithMacros> getCompilerFlags();
 

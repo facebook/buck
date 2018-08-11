@@ -18,7 +18,7 @@ package com.facebook.buck.doctor;
 
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.config.FakeBuckConfig;
+import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.doctor.config.DoctorConfig;
 import com.facebook.buck.doctor.config.SourceControlInfo;
 import com.facebook.buck.doctor.config.UserLocalConfiguration;

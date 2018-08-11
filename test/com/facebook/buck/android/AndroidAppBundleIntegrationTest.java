@@ -84,7 +84,7 @@ public class AndroidAppBundleIntegrationTest extends AbiCompilationModeTest {
     Path aab =
         workspace.getPath(
             BuildTargetPaths.getGenPath(
-                filesystem, BuildTargetFactory.newInstance(target), "%s.apk"));
+                filesystem, BuildTargetFactory.newInstance(target), "%s.signed.apk"));
     Date dosEpoch = new Date(ZipUtil.dosToJavaTime(ZipConstants.DOS_FAKE_TIME));
     try (ZipInputStream is = new ZipInputStream(Files.newInputStream(aab))) {
       for (ZipEntry entry = is.getNextEntry(); entry != null; entry = is.getNextEntry()) {
@@ -164,5 +164,29 @@ public class AndroidAppBundleIntegrationTest extends AbiCompilationModeTest {
         "Android App Bundle can only be built with aapt2, but " + target + " is using aapt1.");
 
     workspace.runBuckBuild(target);
+  }
+
+  @Test
+  public void testAppBundleWithMultipleModules() throws IOException {
+    String target = "//apps/sample:app_modular_debug";
+    ProcessResult result = workspace.runBuckCommand("build", target);
+    result.assertSuccess();
+
+    Path aab =
+        workspace.getPath(
+            BuildTargetPaths.getGenPath(
+                filesystem, BuildTargetFactory.newInstance(target), "%s.signed.apk"));
+
+    ZipInspector zipInspector = new ZipInspector(aab);
+    zipInspector.assertFileExists("small_with_no_resource_deps/assets.pb");
+    zipInspector.assertFileExists("small_with_no_resource_deps/native.pb");
+    zipInspector.assertFileExists(
+        "small_with_no_resource_deps/assets/small_with_no_resource_deps/metadata.txt");
+    zipInspector.assertFileExists(
+        "small_with_no_resource_deps/assets/small_with_no_resource_deps/libs.xzs");
+    zipInspector.assertFileExists("base/dex/classes.dex");
+    zipInspector.assertFileExists("base/dex/classes2.dex");
+    zipInspector.assertFileExists("small_with_no_resource_deps/manifest/AndroidManifest.xml");
+    zipInspector.assertFileExists("small_with_no_resource_deps/resources.pb");
   }
 }

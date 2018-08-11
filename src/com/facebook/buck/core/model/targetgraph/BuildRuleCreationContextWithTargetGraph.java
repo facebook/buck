@@ -20,8 +20,8 @@ import com.facebook.buck.core.cell.resolver.CellPathResolver;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleCreationContext;
+import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.toolchain.ToolchainProvider;
 import org.immutables.value.Value;
 
 /**

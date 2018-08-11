@@ -59,6 +59,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.function.Supplier;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
@@ -73,12 +74,14 @@ public class MultiarchFileTest {
         new Object[][] {
           {
             "AppleBinaryDescription",
-            FakeAppleRuleDescriptions.BINARY_DESCRIPTION,
+            (Supplier<DescriptionWithTargetGraph<?>>)
+                () -> FakeAppleRuleDescriptions.BINARY_DESCRIPTION,
             (NodeBuilderFactory) AppleBinaryBuilder::createBuilder
           },
           {
             "AppleLibraryDescription (static)",
-            FakeAppleRuleDescriptions.LIBRARY_DESCRIPTION,
+            (Supplier<DescriptionWithTargetGraph<?>>)
+                () -> FakeAppleRuleDescriptions.LIBRARY_DESCRIPTION,
             (NodeBuilderFactory)
                 target ->
                     AppleLibraryBuilder.createBuilder(
@@ -88,7 +91,8 @@ public class MultiarchFileTest {
           },
           {
             "AppleLibraryDescription (shared)",
-            FakeAppleRuleDescriptions.LIBRARY_DESCRIPTION,
+            (Supplier<DescriptionWithTargetGraph<?>>)
+                () -> FakeAppleRuleDescriptions.LIBRARY_DESCRIPTION,
             (NodeBuilderFactory)
                 target ->
                     AppleLibraryBuilder.createBuilder(
@@ -103,7 +107,7 @@ public class MultiarchFileTest {
   public String name;
 
   @Parameterized.Parameter(1)
-  public DescriptionWithTargetGraph<?> description;
+  public Supplier<DescriptionWithTargetGraph<?>> descriptionFactory;
 
   @Parameterized.Parameter(2)
   public NodeBuilderFactory nodeBuilderFactory;
@@ -116,7 +120,7 @@ public class MultiarchFileTest {
   @Test
   public void shouldAllowMultiplePlatformFlavors() {
     assertTrue(
-        ((Flavored) description)
+        ((Flavored) descriptionFactory.get())
             .hasFlavors(
                 ImmutableSet.of(
                     InternalFlavor.of("iphoneos-i386"), InternalFlavor.of("iphoneos-x86_64"))));

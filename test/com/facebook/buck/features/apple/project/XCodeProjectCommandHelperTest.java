@@ -24,9 +24,9 @@ import com.facebook.buck.apple.AppleBundleBuilder;
 import com.facebook.buck.apple.AppleBundleExtension;
 import com.facebook.buck.apple.AppleLibraryBuilder;
 import com.facebook.buck.apple.AppleTestBuilder;
-import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.TestCellBuilder;
+import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
@@ -35,6 +35,7 @@ import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetGraphAndTargets;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.event.BuckEventBusForTests;
+import com.facebook.buck.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
@@ -432,6 +433,7 @@ public class XCodeProjectCommandHelperTest {
             .build();
     XCodeProjectCommandHelper.generateWorkspacesForTargets(
         BuckEventBusForTests.newInstance(),
+        BuckPluginManagerFactory.createPluginManager(),
         cell,
         FakeBuckConfig.builder().build(),
         TestRuleKeyConfigurationFactory.create(),

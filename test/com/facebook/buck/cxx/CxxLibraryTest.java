@@ -19,7 +19,7 @@ package com.facebook.buck.cxx;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
-import com.facebook.buck.config.FakeBuckConfig;
+import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -263,7 +263,7 @@ public class CxxLibraryTest {
             Optional.empty());
 
     ImmutableList.Builder<Arg> linkerArgsBuilder = ImmutableList.builder();
-    linkerArgsBuilder.add((Arg) StringArg.of("-ldl"));
+    linkerArgsBuilder.add(StringArg.of("-ldl"));
 
     ImmutableList<? extends Arg> postFlags = ImmutableList.copyOf(StringArg.from("-lfoobarbaz"));
     linkerArgsBuilder.addAll(postFlags);

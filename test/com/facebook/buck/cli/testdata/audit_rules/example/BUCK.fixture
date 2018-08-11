@@ -20,6 +20,13 @@ my_genrule(
     out = "baz.txt",
 )
 
+genrule(
+    name = "foo",
+    out = "foo.txt",
+    cmd = "echo foo > $OUT",
+    environment_expansion_separator = ",",
+)
+
 keystore(
     name = "debug_keystore",
     properties = "debug.keystore.properties",

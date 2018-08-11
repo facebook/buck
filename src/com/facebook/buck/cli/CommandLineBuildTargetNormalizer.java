@@ -16,7 +16,7 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.config.BuckConfig;
+import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.util.BuckCellArg;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;

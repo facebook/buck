@@ -22,7 +22,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.FlavorDomainException;
-import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
+import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import org.junit.BeforeClass;

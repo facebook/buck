@@ -16,7 +16,8 @@
 
 package com.facebook.buck.test.selectors;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import java.io.BufferedWriter;
 import java.nio.file.Files;
@@ -48,5 +49,15 @@ public class TestSelectorListBuilderTest {
 
     assertTrue(list.possiblyIncludesClassName("com.foo.Foo"));
     assertFalse(list.possiblyIncludesClassName("com.bar.Bar"));
+  }
+
+  @Test
+  public void addSimpleSelectorWithCommaParameters() {
+    TestSelectorList selectorList =
+        TestSelectorList.builder().addSimpleTestSelector("Foo,bar[param,name]").build();
+    assertTrue(selectorList.isIncluded(new TestDescription("Foo", "bar[param,name]")));
+    assertFalse(selectorList.isIncluded(new TestDescription("Foo", "bar[paramname]")));
+    assertFalse(selectorList.isIncluded(new TestDescription("Faz", "bar")));
+    assertFalse(selectorList.isIncluded(new TestDescription("Foo", "baz[param,name]")));
   }
 }

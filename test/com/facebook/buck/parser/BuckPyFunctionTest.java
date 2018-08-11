@@ -54,7 +54,8 @@ public class BuckPyFunctionTest {
   @Test
   public void nameWillBeAddedIfMissing() {
 
-    String definition = buckPyFunction.toPythonFunction(RuleType.of("bad"), NoName.class);
+    String definition =
+        buckPyFunction.toPythonFunction(RuleType.of("bad", RuleType.Kind.BUILD), NoName.class);
 
     assertTrue(definition.contains("name"));
   }
@@ -67,7 +68,8 @@ public class BuckPyFunctionTest {
 
   @Test
   public void visibilityWillBeAddedIfMissing() {
-    String definition = buckPyFunction.toPythonFunction(RuleType.of("bad"), NoVis.class);
+    String definition =
+        buckPyFunction.toPythonFunction(RuleType.of("bad", RuleType.Kind.BUILD), NoVis.class);
 
     assertTrue(definition.contains("visibility=None"));
   }
@@ -80,7 +82,8 @@ public class BuckPyFunctionTest {
 
   @Test
   public void shouldOnlyIncludeTheNameFieldOnce() {
-    String definition = buckPyFunction.toPythonFunction(RuleType.of("named"), Named.class);
+    String definition =
+        buckPyFunction.toPythonFunction(RuleType.of("named", RuleType.Kind.BUILD), Named.class);
 
     assertEquals(
         Joiner.on("\n")
@@ -123,7 +126,8 @@ public class BuckPyFunctionTest {
   @Test
   public void optionalFieldsDefaultToAbsent() {
     String definition =
-        buckPyFunction.toPythonFunction(RuleType.of("optional"), LotsOfOptions.class);
+        buckPyFunction.toPythonFunction(
+            RuleType.of("optional", RuleType.Kind.BUILD), LotsOfOptions.class);
 
     assertTrue(
         definition,
@@ -150,7 +154,8 @@ public class BuckPyFunctionTest {
 
   @Test
   public void optionalFieldsAreListedAfterMandatoryOnes() {
-    String definition = buckPyFunction.toPythonFunction(RuleType.of("either"), Either.class);
+    String definition =
+        buckPyFunction.toPythonFunction(RuleType.of("either", RuleType.Kind.BUILD), Either.class);
 
     assertEquals(
         Joiner.on("\n")
@@ -181,7 +186,7 @@ public class BuckPyFunctionTest {
 
   @Test(expected = HumanReadableException.class)
   public void visibilityOptionsMustNotBeSetAsTheyArePassedInBuildRuleParamsLater() {
-    buckPyFunction.toPythonFunction(RuleType.of("nope"), Visible.class);
+    buckPyFunction.toPythonFunction(RuleType.of("nope", RuleType.Kind.BUILD), Visible.class);
   }
 
   @BuckStyleImmutable
@@ -192,7 +197,8 @@ public class BuckPyFunctionTest {
 
   @Test
   public void shouldConvertCamelCaseFieldNameToSnakeCaseParameter() {
-    String definition = buckPyFunction.toPythonFunction(RuleType.of("case"), Dto.class);
+    String definition =
+        buckPyFunction.toPythonFunction(RuleType.of("case", RuleType.Kind.BUILD), Dto.class);
 
     assertEquals(
         Joiner.on("\n")

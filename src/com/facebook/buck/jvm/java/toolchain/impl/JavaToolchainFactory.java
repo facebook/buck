@@ -16,11 +16,11 @@
 
 package com.facebook.buck.jvm.java.toolchain.impl;
 
+import com.facebook.buck.core.toolchain.ToolchainCreationContext;
+import com.facebook.buck.core.toolchain.ToolchainFactory;
+import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.toolchain.JavaToolchain;
-import com.facebook.buck.toolchain.ToolchainCreationContext;
-import com.facebook.buck.toolchain.ToolchainFactory;
-import com.facebook.buck.toolchain.ToolchainProvider;
 import java.util.Optional;
 
 /** Creates the default, .buckconfig-based java toolchain. */

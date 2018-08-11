@@ -23,6 +23,7 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.core.cell.CellPathResolverView;
 import com.facebook.buck.core.cell.impl.DefaultCellPathResolver;
 import com.facebook.buck.core.cell.resolver.CellPathResolver;
+import com.facebook.buck.core.exceptions.BuildTargetParseException;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.testutil.FakeProjectFilesystem;

@@ -24,17 +24,13 @@ import com.facebook.buck.artifact_cache.NoopArtifactCache;
 import com.facebook.buck.artifact_cache.SingletonArtifactCacheFactory;
 import com.facebook.buck.artifact_cache.config.ArtifactCacheBuckConfig;
 import com.facebook.buck.artifact_cache.config.DirCacheEntry;
-import com.facebook.buck.config.BuckConfig;
-import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.core.build.engine.cache.manager.BuildInfoStoreManager;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.cell.name.RelativeCellName;
+import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphCache;
-import com.facebook.buck.core.rules.config.KnownConfigurationRuleTypes;
-import com.facebook.buck.core.rules.config.impl.PluginBasedKnownConfigurationRuleTypesFactory;
-import com.facebook.buck.core.rules.knowntypes.DefaultKnownBuildRuleTypesFactory;
-import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypesProvider;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
 import com.facebook.buck.core.rules.knowntypes.TestKnownRuleTypesProvider;
 import com.facebook.buck.event.BuckEventBusForTests;
@@ -53,7 +49,6 @@ import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
-import com.facebook.buck.sandbox.TestSandboxExecutionStrategyFactory;
 import com.facebook.buck.testutil.FakeExecutor;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TestConsole;
@@ -268,7 +263,10 @@ public class CleanCommandTest {
       ImmutableMap.Builder<String, ImmutableMap<String, String>> mergeConfigBuilder =
           ImmutableMap.builder();
       mergeConfigBuilder.putAll(
-          command.getConfigOverrides().getForCell(RelativeCellName.ROOT_CELL_NAME).getValues());
+          command
+              .getConfigOverrides(ImmutableMap.of())
+              .getForCell(RelativeCellName.ROOT_CELL_NAME)
+              .getValues());
       mergeConfigBuilder.put(
           "cache", ImmutableMap.of("dir_cache_names", "testcache, warmtestcache"));
       mergeConfigBuilder.put(
@@ -279,7 +277,9 @@ public class CleanCommandTest {
       buckConfigBuilder.setSections(mergeConfigBuilder.build());
     } else {
       buckConfigBuilder.setSections(
-          command.getConfigOverrides().getForCell(RelativeCellName.ROOT_CELL_NAME));
+          command
+              .getConfigOverrides(ImmutableMap.of())
+              .getForCell(RelativeCellName.ROOT_CELL_NAME));
     }
     BuckConfig buckConfig = buckConfigBuilder.build();
     Cell cell =
@@ -292,14 +292,8 @@ public class CleanCommandTest {
 
     PluginManager pluginManager = BuckPluginManagerFactory.createPluginManager();
     TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
-    KnownBuildRuleTypesProvider knownBuildRuleTypesProvider =
-        KnownBuildRuleTypesProvider.of(
-            DefaultKnownBuildRuleTypesFactory.of(
-                processExecutor, pluginManager, new TestSandboxExecutionStrategyFactory()));
     KnownRuleTypesProvider knownRuleTypesProvider =
-        TestKnownRuleTypesProvider.create(knownBuildRuleTypesProvider);
-    KnownConfigurationRuleTypes knownConfigurationRuleTypes =
-        PluginBasedKnownConfigurationRuleTypesFactory.createFromPlugins(pluginManager);
+        TestKnownRuleTypesProvider.create(pluginManager);
     ExecutableFinder executableFinder = new ExecutableFinder();
     ParserConfig parserConfig = buckConfig.getView(ParserConfig.class);
 
@@ -316,8 +310,6 @@ public class CleanCommandTest {
                 typeCoercerFactory,
                 new ConstructorArgMarshaller(typeCoercerFactory),
                 knownRuleTypesProvider,
-                knownBuildRuleTypesProvider,
-                knownConfigurationRuleTypes,
                 new ParserPythonInterpreterProvider(parserConfig, executableFinder)),
             parserConfig,
             typeCoercerFactory,
@@ -337,9 +329,7 @@ public class CleanCommandTest {
         new FakeExecutor(),
         CommandRunnerParamsForTesting.BUILD_ENVIRONMENT_DESCRIPTION,
         new ActionGraphCache(buckConfig.getMaxActionGraphCacheEntries()),
-        knownBuildRuleTypesProvider,
         knownRuleTypesProvider,
-        knownConfigurationRuleTypes,
         new BuildInfoStoreManager(),
         Optional.empty(),
         Optional.empty(),

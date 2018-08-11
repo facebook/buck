@@ -18,7 +18,7 @@ package com.facebook.buck.features.d;
 
 import static org.junit.Assume.assumeNoException;
 
-import com.facebook.buck.config.FakeBuckConfig;
+import com.facebook.buck.core.config.FakeBuckConfig;
 
 abstract class Assumptions {
   public static void assumeDCompilerUsable() {

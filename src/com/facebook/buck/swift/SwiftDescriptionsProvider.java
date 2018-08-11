@@ -16,12 +16,12 @@
 
 package com.facebook.buck.swift;
 
-import com.facebook.buck.config.BuckConfig;
+import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.description.DescriptionCreationContext;
 import com.facebook.buck.core.model.targetgraph.DescriptionProvider;
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
+import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
-import com.facebook.buck.toolchain.ToolchainProvider;
 import java.util.Collection;
 import java.util.Collections;
 import org.pf4j.Extension;

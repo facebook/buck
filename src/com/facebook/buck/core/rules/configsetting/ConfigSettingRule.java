@@ -16,7 +16,7 @@
 
 package com.facebook.buck.core.rules.configsetting;
 
-import com.facebook.buck.config.BuckConfig;
+import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.config.ConfigurationRule;
 import com.facebook.buck.core.select.ProvidesSelectable;

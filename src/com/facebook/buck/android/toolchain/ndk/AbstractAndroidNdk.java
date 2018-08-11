@@ -17,9 +17,9 @@
 package com.facebook.buck.android.toolchain.ndk;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.toolchain.ComparableToolchain;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.ExecutableFinder;
-import com.facebook.buck.toolchain.ComparableToolchain;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;

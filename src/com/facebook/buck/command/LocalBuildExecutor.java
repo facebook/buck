@@ -16,8 +16,6 @@
 package com.facebook.buck.command;
 
 import com.facebook.buck.artifact_cache.ArtifactCacheFactory;
-import com.facebook.buck.config.BuckConfig;
-import com.facebook.buck.config.resources.ResourcesConfig;
 import com.facebook.buck.core.build.distributed.synchronization.RemoteBuildRuleCompletionWaiter;
 import com.facebook.buck.core.build.engine.BuildEngineResult;
 import com.facebook.buck.core.build.engine.cache.manager.BuildInfoStoreManager;
@@ -27,9 +25,13 @@ import com.facebook.buck.core.build.engine.impl.CachingBuildEngine;
 import com.facebook.buck.core.build.engine.impl.MetadataChecker;
 import com.facebook.buck.core.build.engine.type.BuildType;
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.exceptions.BuildTargetParseException;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
+import com.facebook.buck.core.resources.ResourcesConfig;
 import com.facebook.buck.core.rulekey.RuleKey;
+import com.facebook.buck.core.rulekey.config.RuleKeyConfig;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
@@ -38,7 +40,6 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.log.thrift.ThriftRuleKeyLogger;
-import com.facebook.buck.parser.BuildTargetParseException;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.rules.keys.RuleKeyCacheScope;
 import com.facebook.buck.rules.keys.RuleKeyFactories;
@@ -208,7 +209,7 @@ public class LocalBuildExecutor implements BuildExecutor {
             args.getBuckConfig().getView(ModernBuildRuleConfig.class),
             actionGraphAndBuilder.getActionGraphBuilder(),
             args.getRootCell(),
-            args.getBuckConfig().getCellPathResolver(),
+            args.getRootCell().getCellPathResolver(),
             cachingBuildEngineDelegate.getFileHashCache(),
             args.getBuckEventBus(),
             args.getConsole()),
@@ -257,7 +258,8 @@ public class LocalBuildExecutor implements BuildExecutor {
         .setCodeCoverageEnabled(false)
         .setInclNoLocationClassesEnabled(false)
         .setDebugEnabled(false)
-        .setRuleKeyDiagnosticsMode(args.getBuckConfig().getRuleKeyDiagnosticsMode())
+        .setRuleKeyDiagnosticsMode(
+            args.getBuckConfig().getView(RuleKeyConfig.class).getRuleKeyDiagnosticsMode())
         .setShouldReportAbsolutePaths(false)
         .setBuckEventBus(args.getBuckEventBus())
         .setPlatform(args.getPlatform())

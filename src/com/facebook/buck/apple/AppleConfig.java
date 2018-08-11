@@ -17,8 +17,8 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.apple.toolchain.ApplePlatform;
-import com.facebook.buck.config.BuckConfig;
-import com.facebook.buck.config.ConfigView;
+import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.config.ConfigView;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.toolchain.tool.impl.HashedFileTool;

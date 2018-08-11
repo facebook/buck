@@ -16,14 +16,14 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.util.graph.AbstractBottomUpTraversal;
 import com.facebook.buck.event.ConsoleEvent;
-import com.facebook.buck.graph.AbstractBottomUpTraversal;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.BuildTargetPatternParser;

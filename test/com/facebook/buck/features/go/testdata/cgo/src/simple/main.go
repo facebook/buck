@@ -1,5 +1,7 @@
 package main
 
+import "cgo"
+
 func main() {
-	test()
+	cgo.Test()
 }

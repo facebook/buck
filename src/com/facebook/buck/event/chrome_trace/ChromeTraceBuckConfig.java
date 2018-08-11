@@ -19,8 +19,8 @@ package com.facebook.buck.event.chrome_trace;
 import static java.lang.Integer.parseInt;
 
 import com.facebook.buck.artifact_cache.config.ArtifactCacheBuckConfig;
-import com.facebook.buck.config.BuckConfig;
-import com.facebook.buck.config.ConfigView;
+import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.config.ConfigView;
 import com.facebook.buck.event.LogUploadMode;
 import com.facebook.buck.util.environment.NetworkInfo;
 import java.net.URI;

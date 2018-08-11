@@ -3,7 +3,7 @@ java_library(
     srcs = glob(["*.java"]),
     visibility = ["PUBLIC"],
     deps = [
-        "//src/com/facebook/buck/config:config",
+        "//src/com/facebook/buck/core/config:config",
         "//src/com/facebook/buck/sandbox:sandbox",
         "//src/com/facebook/buck/sandbox/darwin:darwin",
         "//src/com/facebook/buck/util:util",

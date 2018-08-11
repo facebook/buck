@@ -7,7 +7,7 @@ java_library(
     visibility = ["PUBLIC"],
     deps = [
         "//src/com/facebook/buck/artifact_cache/config:config",
-        "//src/com/facebook/buck/config:config",
+        "//src/com/facebook/buck/core/config:config",
         "//src/com/facebook/buck/event:event",
         "//src/com/facebook/buck/util:util",
         "//src/com/facebook/buck/util/environment:environment",

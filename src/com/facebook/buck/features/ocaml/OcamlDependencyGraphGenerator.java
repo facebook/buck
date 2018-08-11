@@ -16,8 +16,8 @@
 
 package com.facebook.buck.features.ocaml;
 
-import com.facebook.buck.graph.MutableDirectedGraph;
-import com.facebook.buck.graph.TopologicalSort;
+import com.facebook.buck.core.util.graph.MutableDirectedGraph;
+import com.facebook.buck.core.util.graph.TopologicalSort;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;

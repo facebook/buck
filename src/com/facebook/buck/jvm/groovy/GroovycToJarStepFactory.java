@@ -60,8 +60,8 @@ class GroovycToJarStepFactory extends CompileToJarStepFactory implements AddsToR
 
     ImmutableSortedSet<Path> declaredClasspathEntries = parameters.getClasspathEntries();
     ImmutableSortedSet<Path> sourceFilePaths = parameters.getSourceFilePaths();
-    Path outputDirectory = parameters.getOutputDirectory();
-    Path pathToSrcsList = parameters.getPathToSourcesList();
+    Path outputDirectory = parameters.getOutputPaths().getClassesDir();
+    Path pathToSrcsList = parameters.getOutputPaths().getPathToSourcesList();
 
     steps.add(
         new GroovycStep(

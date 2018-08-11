@@ -18,7 +18,7 @@ package com.facebook.buck.features.project.intellij;
 
 import com.facebook.buck.artifact_cache.config.ArtifactCacheBuckConfig;
 import com.facebook.buck.artifact_cache.config.DirCacheEntry;
-import com.facebook.buck.config.BuckConfig;
+import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.google.common.collect.ImmutableSortedSet;

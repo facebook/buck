@@ -18,7 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
+import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.util.Optionals;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;

@@ -31,6 +31,7 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatforms;
@@ -40,7 +41,6 @@ import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.toolchain.JavaCxxPlatformProvider;
 import com.facebook.buck.jvm.java.toolchain.JavaOptionsProvider;
 import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
-import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.versions.VersionRoot;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableCollection;
@@ -117,7 +117,7 @@ public class JavaBinaryDescription
         JavaLibraryClasspathProvider.getClasspathDeps(binaryParams.getBuildDeps());
     ImmutableSet<SourcePath> transitiveClasspaths =
         JavaLibraryClasspathProvider.getClasspathsFromLibraries(transitiveClasspathDeps);
-    BuildRule rule =
+    JavaBinary javaBinary =
         new JavaBinary(
             binaryBuildTarget,
             projectFilesystem,
@@ -136,10 +136,12 @@ public class JavaBinaryDescription
 
     // If we're packaging native libraries, construct the rule to build the fat JAR, which packages
     // up the original binary JAR and any required native libraries.
-    if (!nativeLibraries.isEmpty()) {
-      BuildRule innerJarRule = rule;
-      graphBuilder.addToIndex(innerJarRule);
-      SourcePath innerJar = innerJarRule.getSourcePathToOutput();
+    BuildRule rule;
+    if (nativeLibraries.isEmpty()) {
+      rule = javaBinary;
+    } else {
+      graphBuilder.addToIndex(javaBinary);
+      SourcePath innerJar = javaBinary.getSourcePathToOutput();
       rule =
           new JarFattener(
               buildTarget,
@@ -156,6 +158,7 @@ public class JavaBinaryDescription
                   .getByName(JavacOptionsProvider.DEFAULT_NAME, JavacOptionsProvider.class)
                   .getJavacOptions(),
               innerJar,
+              javaBinary,
               nativeLibraries,
               javaOptions.getJavaRuntimeLauncher());
     }

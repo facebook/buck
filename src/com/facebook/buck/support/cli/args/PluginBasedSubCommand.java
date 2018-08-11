@@ -16,10 +16,8 @@
 
 package com.facebook.buck.support.cli.args;
 
-import org.pf4j.ExtensionPoint;
-
 /** A common interface that needs to be implemented by subcommands loaded from plugins. */
-public interface PluginBasedSubCommand extends ExtensionPoint {
+public interface PluginBasedSubCommand {
   /**
    * The value of the option that identifies a subcommand from a particular plugin.
    *

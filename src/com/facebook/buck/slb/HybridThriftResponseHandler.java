@@ -16,6 +16,8 @@
 
 package com.facebook.buck.slb;
 
+import com.facebook.buck.util.function.ThrowingConsumer;
+import java.io.IOException;
 import java.io.OutputStream;
 import org.apache.thrift.TBase;
 
@@ -27,7 +29,27 @@ public abstract class HybridThriftResponseHandler<ThriftResponse extends TBase<?
   /** Encodes a response without out-of-band payloads. */
   public static <ThriftResponse extends TBase<?, ?>>
       HybridThriftResponseHandler<ThriftResponse> createNoPayloadHandler(ThriftResponse response) {
+    return createNoPayloadHandler(
+        response,
+        new ThrowingConsumer<ThriftResponse, IOException>() {
+          @Override
+          public void accept(ThriftResponse thriftResponse) throws IOException {
+            // no-op.
+          }
+        });
+  }
+
+  /** Encodes a response without out-of-band payloads. */
+  public static <ThriftResponse extends TBase<?, ?>>
+      HybridThriftResponseHandler<ThriftResponse> createNoPayloadHandler(
+          ThriftResponse response, ThrowingConsumer<ThriftResponse, IOException> validator) {
     return new HybridThriftResponseHandler<ThriftResponse>(response) {
+
+      @Override
+      public void onResponseParsed() throws IOException {
+        validator.accept(getResponse());
+      }
+
       @Override
       public int getTotalPayloads() {
         return 0;
@@ -50,16 +72,21 @@ public abstract class HybridThriftResponseHandler<ThriftResponse extends TBase<?
   }
 
   /** The thrift response. */
-  public ThriftResponse getThriftResponse() {
+  public ThriftResponse getResponse() {
     return response;
+  }
+
+  /** Called as soon as the thrift metadata section of the response is parsed. */
+  public void onResponseParsed() throws IOException {
+    // NoOp.
   }
 
   /** Total number of payloads expected for the current thrift response. */
   public abstract int getTotalPayloads();
 
-  /** Size bytes of the nth payload. */
+  /** Size bytes of the nth payload. Must be positive. */
   public abstract long getPayloadSizeBytes(int index);
 
-  /** Where to write the nth payload. */
+  /** Where to write the nth payload bytes to. */
   public abstract OutputStream getStreamForPayload(int index);
 }

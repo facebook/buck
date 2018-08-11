@@ -22,7 +22,7 @@ import com.facebook.buck.cli.CommandRunnerParams;
 import com.facebook.buck.cli.CommandThreadManager;
 import com.facebook.buck.cli.ProjectSubCommand;
 import com.facebook.buck.cli.parameter_extractors.ProjectGeneratorParameters;
-import com.facebook.buck.config.BuckConfig;
+import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.step.ExecutorPool;
 import com.facebook.buck.util.ExitCode;
 import com.google.common.collect.ImmutableList;
@@ -31,9 +31,7 @@ import java.io.IOException;
 import java.util.List;
 import javax.annotation.Nullable;
 import org.kohsuke.args4j.Option;
-import org.pf4j.Extension;
 
-@Extension
 public class XCodeProjectSubCommand extends ProjectSubCommand {
 
   private static final boolean DEFAULT_READ_ONLY_VALUE = false;
@@ -97,6 +95,7 @@ public class XCodeProjectSubCommand extends ProjectSubCommand {
     XCodeProjectCommandHelper xcodeProjectCommandHelper =
         new XCodeProjectCommandHelper(
             params.getBuckEventBus(),
+            params.getPluginManager(),
             params.getParser(),
             params.getBuckConfig(),
             params.getVersionedTargetGraphCache(),

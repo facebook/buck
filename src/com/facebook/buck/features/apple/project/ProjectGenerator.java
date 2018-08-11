@@ -47,6 +47,7 @@ import com.facebook.buck.apple.InfoPlistSubstitution;
 import com.facebook.buck.apple.PrebuiltAppleFrameworkDescription;
 import com.facebook.buck.apple.PrebuiltAppleFrameworkDescriptionArg;
 import com.facebook.buck.apple.SceneKitAssetsDescription;
+import com.facebook.buck.apple.XCodeDescriptions;
 import com.facebook.buck.apple.XcodePostbuildScriptDescription;
 import com.facebook.buck.apple.XcodePrebuildScriptDescription;
 import com.facebook.buck.apple.clang.HeaderMap;
@@ -99,6 +100,8 @@ import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
+import com.facebook.buck.core.util.graph.AcyclicDepthFirstPostOrderTraversal;
+import com.facebook.buck.core.util.graph.GraphTraversable;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.CxxLibraryDescription.CommonArg;
@@ -113,13 +116,11 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.ProjectGenerationEvent;
 import com.facebook.buck.event.SimplePerfEvent;
+import com.facebook.buck.features.halide.HalideBuckConfig;
+import com.facebook.buck.features.halide.HalideCompile;
+import com.facebook.buck.features.halide.HalideLibraryDescription;
+import com.facebook.buck.features.halide.HalideLibraryDescriptionArg;
 import com.facebook.buck.features.js.JsBundleOutputsDescription;
-import com.facebook.buck.graph.AcyclicDepthFirstPostOrderTraversal;
-import com.facebook.buck.graph.GraphTraversable;
-import com.facebook.buck.halide.HalideBuckConfig;
-import com.facebook.buck.halide.HalideCompile;
-import com.facebook.buck.halide.HalideLibraryDescription;
-import com.facebook.buck.halide.HalideLibraryDescriptionArg;
 import com.facebook.buck.io.MoreProjectFilesystems;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -221,6 +222,7 @@ public class ProjectGenerator {
               PosixFilePermission.GROUP_READ,
               PosixFilePermission.OTHERS_READ));
 
+  private final XCodeDescriptions xcodeDescriptions;
   private final TargetGraph targetGraph;
   private final AppleDependenciesCache dependenciesCache;
   private final ProjectGenerationStateCache projGenerationStateCache;
@@ -274,6 +276,7 @@ public class ProjectGenerator {
   private final Set<BuildTarget> generatedTargets = new HashSet<>();
 
   public ProjectGenerator(
+      XCodeDescriptions xcodeDescriptions,
       TargetGraph targetGraph,
       AppleDependenciesCache dependenciesCache,
       ProjectGenerationStateCache projGenerationStateCache,
@@ -296,6 +299,7 @@ public class ProjectGenerator {
       CxxBuckConfig cxxBuckConfig,
       AppleConfig appleConfig,
       SwiftBuckConfig swiftBuckConfig) {
+    this.xcodeDescriptions = xcodeDescriptions;
     this.targetGraph = targetGraph;
     this.dependenciesCache = dependenciesCache;
     this.projGenerationStateCache = projGenerationStateCache;
@@ -721,11 +725,12 @@ public class ProjectGenerator {
     // -- copy any binary and bundle targets into this bundle
     Iterable<TargetNode<?>> copiedRules =
         AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
+            xcodeDescriptions,
             targetGraph,
             Optional.of(dependenciesCache),
             AppleBuildRules.RecursiveDependenciesMode.COPYING,
             targetNode,
-            Optional.of(AppleBuildRules.XCODE_TARGET_DESCRIPTION_CLASSES));
+            Optional.of(xcodeDescriptions.getXCodeDescriptions()));
     if (bundleRequiresRemovalOfAllTransitiveFrameworks(targetNode)) {
       copiedRules = rulesWithoutFrameworkBundles(copiedRules);
     } else if (bundleRequiresAllTransitiveFrameworks(binaryNode, bundleLoaderNode)) {
@@ -752,17 +757,34 @@ public class ProjectGenerator {
             Optional.of(infoPlistPath),
             /* includeFrameworks */ true,
             AppleResources.collectRecursiveResources(
-                targetGraph, Optional.of(dependenciesCache), targetNode),
+                xcodeDescriptions, targetGraph, Optional.of(dependenciesCache), targetNode),
             AppleResources.collectDirectResources(targetGraph, targetNode),
             AppleBuildRules.collectRecursiveAssetCatalogs(
-                targetGraph, Optional.of(dependenciesCache), ImmutableList.of(targetNode)),
+                xcodeDescriptions,
+                targetGraph,
+                Optional.of(dependenciesCache),
+                ImmutableList.of(targetNode)),
             AppleBuildRules.collectDirectAssetCatalogs(targetGraph, targetNode),
             AppleBuildRules.collectRecursiveWrapperResources(
-                targetGraph, Optional.of(dependenciesCache), ImmutableList.of(targetNode)),
+                xcodeDescriptions,
+                targetGraph,
+                Optional.of(dependenciesCache),
+                ImmutableList.of(targetNode)),
             Optional.of(copyFilesBuildPhases),
             bundleLoaderNode);
 
-    LOG.debug("Generated iOS bundle target %s", target);
+    if (bundleLoaderNode.isPresent()) {
+      LOG.debug(
+          "Generated iOS bundle target %s with binarynode: %s bundleLoadernode: %s",
+          targetNode.getBuildTarget().getFullyQualifiedName(),
+          binaryNode.getBuildTarget().getFullyQualifiedName(),
+          bundleLoaderNode.get().getBuildTarget().getFullyQualifiedName());
+    } else {
+      LOG.debug(
+          "Generated iOS bundle target %s with binarynode: %s and without bundleloader",
+          targetNode.getBuildTarget().getFullyQualifiedName(),
+          binaryNode.getBuildTarget().getFullyQualifiedName());
+    }
     return target;
   }
 
@@ -858,7 +880,8 @@ public class ProjectGenerator {
             ImmutableSet.of(),
             Optional.empty(),
             Optional.empty());
-    LOG.debug("Generated Apple binary target %s", target);
+    LOG.debug(
+        "Generated Apple binary target %s", targetNode.getBuildTarget().getFullyQualifiedName());
     return target;
   }
 
@@ -874,7 +897,8 @@ public class ProjectGenerator {
             AppleResources.collectDirectResources(targetGraph, targetNode),
             AppleBuildRules.collectDirectAssetCatalogs(targetGraph, targetNode),
             bundleLoaderNode);
-    LOG.debug("Generated iOS library target %s", target);
+    LOG.debug(
+        "Generated iOS library target %s", targetNode.getBuildTarget().getFullyQualifiedName());
     return target;
   }
 
@@ -904,7 +928,8 @@ public class ProjectGenerator {
             ImmutableSet.of(),
             Optional.empty(),
             bundleLoaderNode);
-    LOG.debug("Generated Cxx library target %s", target);
+    LOG.debug(
+        "Generated Cxx library target %s", targetNode.getBuildTarget().getFullyQualifiedName());
     return target;
   }
 
@@ -1635,11 +1660,21 @@ public class ProjectGenerator {
     if (options.shouldForceLoadLinkWholeLibraries() || options.shouldAddLinkedLibrariesAsFlags()) {
       Iterable<String> forceLoadLibraryFlags =
           collectRecursiveLibraryLinkerFlagsWithForceLoad(
-              targetNode, depTargetNodes, bundleLoaderNode);
+              targetNode, depTargetNodes, bundleLoaderNode, false);
 
       appendConfigsBuilder.put(
-          "BUCK_LINKER_FLAGS_LIBRARY_FORCE_LOAD",
+          "BUCK_LINKER_FLAGS_LIBRARY_FORCE_LOAD_OTHER",
           Streams.stream(forceLoadLibraryFlags)
+              .map(Escaper.BASH_ESCAPER)
+              .collect(Collectors.joining(" ")));
+
+      Iterable<String> forceLoadLibraryFlagsLocal =
+          collectRecursiveLibraryLinkerFlagsWithForceLoad(
+              targetNode, depTargetNodes, bundleLoaderNode, true);
+
+      appendConfigsBuilder.put(
+          "BUCK_LINKER_FLAGS_LIBRARY_FORCE_LOAD_LOCAL",
+          Streams.stream(forceLoadLibraryFlagsLocal)
               .map(Escaper.BASH_ESCAPER)
               .collect(Collectors.joining(" ")));
     }
@@ -1681,7 +1716,8 @@ public class ProjectGenerator {
                   Stream.of(
                       "$BUCK_LINKER_FLAGS_FRAMEWORK_LOCAL",
                       "$BUCK_LINKER_FLAGS_FRAMEWORK_OTHER",
-                      "$BUCK_LINKER_FLAGS_LIBRARY_FORCE_LOAD",
+                      "$BUCK_LINKER_FLAGS_LIBRARY_FORCE_LOAD_LOCAL",
+                      "$BUCK_LINKER_FLAGS_LIBRARY_FORCE_LOAD_OTHER",
                       "$BUCK_LINKER_FLAGS_LIBRARY_LOCAL",
                       "$BUCK_LINKER_FLAGS_LIBRARY_OTHER"))
               .collect(Collectors.joining(" ")));
@@ -1689,7 +1725,11 @@ public class ProjectGenerator {
         && !options.shouldAddLinkedLibrariesAsFlags()) {
       appendConfigsBuilder.put(
           "OTHER_LDFLAGS",
-          Streams.concat(otherLdFlagsStream, Stream.of("$BUCK_LINKER_FLAGS_LIBRARY_FORCE_LOAD"))
+          Streams.concat(
+                  otherLdFlagsStream,
+                  Stream.of(
+                      "$BUCK_LINKER_FLAGS_LIBRARY_FORCE_LOAD_LOCAL",
+                      "$BUCK_LINKER_FLAGS_LIBRARY_FORCE_LOAD_OTHER"))
               .collect(Collectors.joining(" ")));
     } else if (options.shouldAddLinkedLibrariesAsFlags()) {
       appendConfigsBuilder.put(
@@ -1853,6 +1893,7 @@ public class ProjectGenerator {
             Stream.of(node),
             // ... And recursive dependencies that gets linked in
             AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
+                    xcodeDescriptions,
                     targetGraph,
                     Optional.of(dependenciesCache),
                     AppleBuildRules.RecursiveDependenciesMode.LINKING,
@@ -2069,6 +2110,7 @@ public class ProjectGenerator {
     addCoreDataModelBuildPhase(
         targetGroup,
         AppleBuildRules.collectTransitiveBuildRules(
+            xcodeDescriptions,
             targetGraph,
             Optional.of(dependenciesCache),
             AppleBuildRules.CORE_DATA_MODEL_DESCRIPTION_CLASSES,
@@ -2079,6 +2121,7 @@ public class ProjectGenerator {
       TargetNode<? extends CxxLibraryDescription.CommonArg> targetNode, PBXGroup targetGroup) {
     ImmutableSet<AppleWrapperResourceArg> allSceneKitAssets =
         AppleBuildRules.collectTransitiveBuildRules(
+            xcodeDescriptions,
             targetGraph,
             Optional.of(dependenciesCache),
             AppleBuildRules.SCENEKIT_ASSETS_DESCRIPTION_CLASSES,
@@ -2994,6 +3037,7 @@ public class ProjectGenerator {
     ImmutableSet.Builder<Path> builder = ImmutableSet.builder();
     for (TargetNode<?> input :
         AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
+            xcodeDescriptions,
             targetGraph,
             Optional.of(dependenciesCache),
             AppleBuildRules.RecursiveDependenciesMode.BUILDING,
@@ -3025,11 +3069,12 @@ public class ProjectGenerator {
     // Visits public headers from dependencies.
     for (TargetNode<?> input :
         AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
+            xcodeDescriptions,
             targetGraph,
             Optional.of(dependenciesCache),
             AppleBuildRules.RecursiveDependenciesMode.BUILDING,
             targetNode,
-            Optional.of(AppleBuildRules.XCODE_TARGET_DESCRIPTION_CLASSES))) {
+            Optional.of(xcodeDescriptions.getXCodeDescriptions()))) {
       getAppleNativeNode(targetGraph, input)
           .ifPresent(argTargetNode -> visitor.accept(argTargetNode, HeaderVisibility.PUBLIC));
     }
@@ -3085,12 +3130,13 @@ public class ProjectGenerator {
   private Iterable<FrameworkPath> collectRecursiveFrameworkDependencies(TargetNode<?> targetNode) {
     return FluentIterable.from(
             AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
+                xcodeDescriptions,
                 targetGraph,
                 Optional.of(dependenciesCache),
                 AppleBuildRules.RecursiveDependenciesMode.LINKING,
                 targetNode,
                 ImmutableSet.<Class<? extends BaseDescription<?>>>builder()
-                    .addAll(AppleBuildRules.XCODE_TARGET_DESCRIPTION_CLASSES)
+                    .addAll(xcodeDescriptions.getXCodeDescriptions())
                     .add(PrebuiltAppleFrameworkDescription.class)
                     .build()))
         .transformAndConcat(
@@ -3124,6 +3170,7 @@ public class ProjectGenerator {
       TargetNode<?> targetNode) {
     return FluentIterable.from(
             AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
+                xcodeDescriptions,
                 targetGraph,
                 Optional.of(dependenciesCache),
                 AppleBuildRules.RecursiveDependenciesMode.BUILDING,
@@ -3141,6 +3188,7 @@ public class ProjectGenerator {
       collectRecursiveExportedPlatformPreprocessorFlags(TargetNode<?> targetNode) {
     return FluentIterable.from(
             AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
+                xcodeDescriptions,
                 targetGraph,
                 Optional.of(dependenciesCache),
                 AppleBuildRules.RecursiveDependenciesMode.BUILDING,
@@ -3161,6 +3209,7 @@ public class ProjectGenerator {
       TargetNode<?> targetNode) {
     return FluentIterable.from(
             AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
+                xcodeDescriptions,
                 targetGraph,
                 Optional.of(dependenciesCache),
                 AppleBuildRules.RecursiveDependenciesMode.LINKING,
@@ -3182,6 +3231,7 @@ public class ProjectGenerator {
       collectRecursiveExportedPlatformLinkerFlags(TargetNode<?> targetNode) {
     return FluentIterable.from(
             AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
+                xcodeDescriptions,
                 targetGraph,
                 Optional.of(dependenciesCache),
                 AppleBuildRules.RecursiveDependenciesMode.LINKING,
@@ -3261,11 +3311,12 @@ public class ProjectGenerator {
     FluentIterable<TargetNode<?>> allDeps =
         FluentIterable.from(
             AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
+                xcodeDescriptions,
                 targetGraph,
                 Optional.of(dependenciesCache),
                 AppleBuildRules.RecursiveDependenciesMode.LINKING,
                 targetNode,
-                AppleBuildRules.XCODE_TARGET_DESCRIPTION_CLASSES));
+                xcodeDescriptions.getXCodeDescriptions()));
     return allDeps.filter(this::isLibraryWithSourcesToCompile);
   }
 
@@ -3306,18 +3357,42 @@ public class ProjectGenerator {
             ? targetNodesIterableToPBXFileReference(
                 filterRecursiveLibraryDepsForCurrentProject(targetNodes))
             : targetNodesIterableToPBXFileReference(targetNodes);
-    ImmutableSet<PBXFileReference> forceLoad =
-        targetNodesIterableToPBXFileReference(filterRecursiveLibraryDepsWithForceLoad(targetNodes));
+    ImmutableSet<PBXFileReference> forceLoadOther =
+        options.shouldAddLinkedLibrariesAsFlags()
+            ? ImmutableSet.of()
+            : targetNodesIterableToPBXFileReference(
+                filterRecursiveLibraryDepsWithForceLoadOther(targetNodes));
+
+    ImmutableSet<PBXFileReference> forceLoadLocal =
+        options.shouldAddLinkedLibrariesAsFlags()
+            ? ImmutableSet.of()
+            : targetNodesIterableToPBXFileReference(
+                filterRecursiveLibraryDepsWithForceLoadForCurrentProject(targetNodes));
+
     ImmutableSet<PBXFileReference> frameworks =
         filterRecursiveProjectFrameworkDependencies(targetNodes);
 
     ImmutableSet.Builder<PBXFileReference> builder = ImmutableSet.builder();
-    return builder.addAll(libraries).addAll(forceLoad).addAll(frameworks).build();
+    return builder
+        .addAll(libraries)
+        .addAll(frameworks)
+        .addAll(forceLoadOther)
+        .addAll(forceLoadLocal)
+        .build();
   }
 
-  private FluentIterable<TargetNode<?>> filterRecursiveLibraryDepsWithForceLoad(
+  private FluentIterable<TargetNode<?>> filterRecursiveLibraryDepsWithForceLoadOther(
       FluentIterable<TargetNode<?>> targetNodes) {
-    return targetNodes.filter(this::isLibraryWithForceLoad);
+    return targetNodes
+        .filter(this::isLibraryWithForceLoad)
+        .filter(dep -> !isLibraryBuiltByCurrentProject(dep));
+  }
+
+  private FluentIterable<TargetNode<?>> filterRecursiveLibraryDepsWithForceLoadForCurrentProject(
+      FluentIterable<TargetNode<?>> targetNodes) {
+    return targetNodes
+        .filter(this::isLibraryWithForceLoad)
+        .filter(dep -> isLibraryBuiltByCurrentProject(dep));
   }
 
   private FluentIterable<TargetNode<?>> filterRecursiveLibraryDepsWithoutForceLoad(
@@ -3379,9 +3454,13 @@ public class ProjectGenerator {
   private ImmutableList<String> collectRecursiveLibraryLinkerFlagsWithForceLoad(
       TargetNode<?> targetNode,
       FluentIterable<TargetNode<?>> targetNodes,
-      Optional<TargetNode<AppleBundleDescriptionArg>> bundleLoaderNode) {
+      Optional<TargetNode<AppleBundleDescriptionArg>> bundleLoaderNode,
+      boolean includeLocal) {
 
-    FluentIterable<TargetNode<?>> allDeps = filterRecursiveLibraryDepsWithForceLoad(targetNodes);
+    FluentIterable<TargetNode<?>> allDeps =
+        includeLocal
+            ? filterRecursiveLibraryDepsWithForceLoadForCurrentProject(targetNodes)
+            : filterRecursiveLibraryDepsWithForceLoadOther(targetNodes);
 
     // Don't duplicate force_load params from the test host app if this is an app test.
     if (isTargetNodeApplicationTestTarget(targetNode, bundleLoaderNode)
@@ -3389,7 +3468,9 @@ public class ProjectGenerator {
       FluentIterable<TargetNode<?>> bundleLoaderDeps =
           collectRecursiveLibraryDepTargets(bundleLoaderNode.get());
       FluentIterable<TargetNode<?>> forceLoadDeps =
-          filterRecursiveLibraryDepsWithForceLoad(bundleLoaderDeps);
+          includeLocal
+              ? filterRecursiveLibraryDepsWithForceLoadForCurrentProject(bundleLoaderDeps)
+              : filterRecursiveLibraryDepsWithForceLoadOther(bundleLoaderDeps);
       Set<TargetNode<?>> directDeps = Sets.difference(allDeps.toSet(), forceLoadDeps.toSet());
       allDeps = FluentIterable.from(ImmutableSet.copyOf(directDeps));
     }
@@ -3406,7 +3487,7 @@ public class ProjectGenerator {
   private Optional<String> getFrameworkLinkerFlag(
       TargetNode<? extends AppleBundleDescriptionArg> targetNode) {
     if (isFrameworkBundle(targetNode.getConstructorArg())) {
-      return Optional.of("-framework " + getProductNameForBuildTargetNode(targetNode));
+      return Optional.of("-framework " + getProductOutputBaseName(targetNode));
     } else {
       return Optional.empty();
     }
@@ -3414,7 +3495,7 @@ public class ProjectGenerator {
 
   private Optional<String> getLibraryLinkerFlag(
       TargetNode<? extends CxxLibraryDescription.CommonArg> targetNode) {
-    return Optional.of("-l" + getProductNameForBuildTargetNode(targetNode));
+    return Optional.of("-l" + getProductOutputBaseName(targetNode));
   }
 
   private Optional<String> getForceLoadLinkerFlag(
@@ -3426,17 +3507,26 @@ public class ProjectGenerator {
       String flag =
           "-Wl,-force_load,"
               + appleConfig.getForceLoadLibraryPath(isFocusedOnTarget)
-              + "/lib"
-              + getProductNameForBuildTargetNode(targetNode)
-              + ".a";
+              + "/"
+              + getProductOutputNameWithExtension(targetNode);
       return Optional.of(flag);
     } else {
       return Optional.empty();
     }
   }
 
-  private SourceTreePath getProductsSourceTreePath(TargetNode<?> targetNode) {
+  private String getProductOutputBaseName(TargetNode<?> targetNode) {
     String productName = getProductNameForBuildTargetNode(targetNode);
+    if (targetNode.getDescription() instanceof AppleBundleDescription
+        || targetNode.getDescription() instanceof AppleTestDescription) {
+      HasAppleBundleFields arg = (HasAppleBundleFields) targetNode.getConstructorArg();
+      productName = arg.getProductName().orElse(productName);
+    }
+    return productName;
+  }
+
+  private String getProductOutputNameWithExtension(TargetNode<?> targetNode) {
+    String productName = getProductOutputBaseName(targetNode);
     String productOutputName;
 
     if (targetNode.getDescription() instanceof AppleLibraryDescription
@@ -3452,24 +3542,26 @@ public class ProjectGenerator {
     } else if (targetNode.getDescription() instanceof AppleBundleDescription
         || targetNode.getDescription() instanceof AppleTestDescription) {
       HasAppleBundleFields arg = (HasAppleBundleFields) targetNode.getConstructorArg();
-      productName = arg.getProductName().orElse(productName);
       productOutputName = productName + "." + getExtensionString(arg.getExtension());
     } else if (targetNode.getDescription() instanceof AppleBinaryDescription) {
       productOutputName = productName;
     } else if (targetNode.getDescription() instanceof PrebuiltAppleFrameworkDescription) {
       PrebuiltAppleFrameworkDescriptionArg arg =
           (PrebuiltAppleFrameworkDescriptionArg) targetNode.getConstructorArg();
-      // Prebuilt frameworks reside in the source repo, not outputs dir.
-      return new SourceTreePath(
-          PBXReference.SourceTree.SOURCE_ROOT,
-          pathRelativizer.outputPathToSourcePath(arg.getFramework()),
-          Optional.empty());
+      productOutputName = pathRelativizer.outputPathToSourcePath(arg.getFramework()).toString();
     } else {
       throw new RuntimeException("Unexpected type: " + targetNode.getDescription().getClass());
     }
+    return productOutputName;
+  }
 
-    return new SourceTreePath(
-        PBXReference.SourceTree.BUILT_PRODUCTS_DIR, Paths.get(productOutputName), Optional.empty());
+  private SourceTreePath getProductsSourceTreePath(TargetNode<?> targetNode) {
+    String productOutputName = getProductOutputNameWithExtension(targetNode);
+    PBXReference.SourceTree path = PBXReference.SourceTree.BUILT_PRODUCTS_DIR;
+    if (targetNode.getDescription() instanceof PrebuiltAppleFrameworkDescription) {
+      path = PBXReference.SourceTree.SOURCE_ROOT;
+    }
+    return new SourceTreePath(path, Paths.get(productOutputName), Optional.empty());
   }
 
   private PBXFileReference getLibraryFileReference(TargetNode<?> targetNode) {

@@ -1,3 +1,5 @@
+load("//tools/build_rules:export_files.bzl", "export_files")
+
 python_library(
     name = "pathlib",
     srcs = [
@@ -12,9 +14,4 @@ python_library(
     ],
 )
 
-export_file(
-    name = "pathlib.py",
-    visibility = [
-        "PUBLIC",
-    ],
-)
+export_files(["pathlib.py"])

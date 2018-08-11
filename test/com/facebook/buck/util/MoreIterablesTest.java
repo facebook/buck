@@ -77,7 +77,7 @@ public class MoreIterablesTest {
     MoreIterables.forEachPair(
         lstV("l1", "l2"),
         lstV("r1", "r2"),
-        (left, right) -> builder.append("|" + left + "," + right));
+        (left, right) -> builder.append("|").append(left).append(",").append(right));
     assertEquals("|l1,r1|l2,r2", builder.toString());
   }
 

@@ -16,9 +16,9 @@
 
 package com.facebook.buck.rules.modern.builders;
 
-import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.cell.impl.DefaultCellPathResolver;
+import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
@@ -34,6 +34,8 @@ import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
+import com.facebook.buck.parser.BuildTargetParser;
+import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.rules.modern.Deserializer;
 import com.facebook.buck.rules.modern.Deserializer.DataProvider;
@@ -146,7 +148,14 @@ public abstract class IsolatedBuildableBuilder {
         DefaultCellPathResolver.of(filesystem.getRootPath(), config);
     BuckConfig buckConfig =
         new BuckConfig(
-            config, filesystem, architecture, platform, clientEnvironment, cellPathResolver);
+            config,
+            filesystem,
+            architecture,
+            platform,
+            clientEnvironment,
+            target ->
+                BuildTargetParser.INSTANCE.parse(
+                    target, BuildTargetPatternParser.fullyQualified(), cellPathResolver));
 
     this.filesystemFunction =
         (cellName) -> {

@@ -16,7 +16,9 @@
 
 package com.facebook.buck.features.python.toolchain.impl;
 
-import com.facebook.buck.config.BuckConfig;
+import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.toolchain.ToolchainCreationContext;
+import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.features.python.PythonBuckConfig;
 import com.facebook.buck.features.python.toolchain.PythonEnvironment;
 import com.facebook.buck.features.python.toolchain.PythonInterpreter;
@@ -24,8 +26,6 @@ import com.facebook.buck.features.python.toolchain.PythonPlatform;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.facebook.buck.toolchain.ToolchainCreationContext;
-import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.collect.ImmutableMap;
 

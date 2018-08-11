@@ -16,7 +16,7 @@
 
 package com.facebook.buck.features.python;
 
-import com.facebook.buck.config.FakeBuckConfig;
+import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.features.python.toolchain.PythonEnvironment;

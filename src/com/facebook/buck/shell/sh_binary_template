@@ -8,7 +8,7 @@ SCRIPT_TO_RUN=<script_to_run>
 # means it can't contain any absolute filepaths. Expose the absolute filepath of the root of
 # the project as $BUCK_REAL_ROOT, determined at runtime.
 BUCK_REAL_ROOT="$(cd `dirname $0`; pwd)"
-BUCK_TMP_ROOT="`mktemp -d -t sh_binary.XXXXXXXXXX`"
+BUCK_TMP_ROOT="$(mktemp -d $BUCK_REAL_ROOT/sh_binary.XXXXXXXXXX)"
 trap "rm -rf $BUCK_TMP_ROOT" EXIT HUP INT TERM
 
 # Setup the symlinks in a subshell to avoid modifying state (e.g. chdir).

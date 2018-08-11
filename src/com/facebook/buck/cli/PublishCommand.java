@@ -20,7 +20,8 @@ import static com.facebook.buck.jvm.core.JavaLibrary.MAVEN_JAR;
 import static com.facebook.buck.jvm.core.JavaLibrary.SRC_JAR;
 import static com.facebook.buck.jvm.java.Javadoc.DOC_JAR;
 
-import com.facebook.buck.config.BuckConfig;
+import com.facebook.buck.core.cell.resolver.CellPathResolver;
+import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
@@ -225,9 +226,9 @@ public class PublishCommand extends BuildCommand {
 
   @Override
   public ImmutableList<TargetNodeSpec> parseArgumentsAsTargetNodeSpecs(
-      BuckConfig config, Iterable<String> targetsAsArgs) {
+      CellPathResolver cellPathResolver, BuckConfig config, Iterable<String> targetsAsArgs) {
     ImmutableList<TargetNodeSpec> specs =
-        super.parseArgumentsAsTargetNodeSpecs(config, targetsAsArgs);
+        super.parseArgumentsAsTargetNodeSpecs(cellPathResolver, config, targetsAsArgs);
 
     Map<BuildTarget, TargetNodeSpec> uniqueSpecs = new HashMap<>();
     for (TargetNodeSpec spec : specs) {

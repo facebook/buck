@@ -24,7 +24,8 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
-import com.facebook.buck.config.FakeBuckConfig;
+import com.facebook.buck.core.cell.impl.DefaultCellPathResolver;
+import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashEntry;
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashes;
 import com.facebook.buck.distributed.thrift.PathWithUnixSeparators;
@@ -35,6 +36,7 @@ import com.facebook.buck.testutil.FakeProjectFileHashCache;
 import com.facebook.buck.testutil.FileHashEntryMatcher;
 import com.facebook.buck.util.CreateSymlinksForTests;
 import com.facebook.buck.util.cache.ProjectFileHashCache;
+import com.facebook.buck.util.config.Config;
 import com.facebook.buck.util.config.RawConfig;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableMap;
@@ -93,11 +95,15 @@ public class RecordingFileHashLoaderTest {
             projectFilesystem,
             ImmutableMap.of(symlinkRelPath, EXAMPLE_HASHCODE, fileRelPath, EXAMPLE_HASHCODE));
 
+    DefaultCellPathResolver cellPathResolver =
+        DefaultCellPathResolver.of(projectFilesystem.getRootPath(), new Config());
+
     RecordingProjectFileHashCache recordingLoader =
         RecordingProjectFileHashCache.createForCellRoot(
             delegateCache,
             recordedFileHashes,
-            new DistBuildConfig(FakeBuckConfig.builder().build()));
+            new DistBuildConfig(FakeBuckConfig.builder().build()),
+            cellPathResolver);
 
     recordingLoader.get(symlinkRelPath);
 
@@ -148,24 +154,21 @@ public class RecordingFileHashLoaderTest {
             cellRootFs,
             ImmutableMap.of(symlinkRelPath, EXAMPLE_HASHCODE, fileRelPath, EXAMPLE_HASHCODE));
 
+    DefaultCellPathResolver cellPathResolver =
+        DefaultCellPathResolver.of(
+            projectFilesystem.getRootPath(),
+            new Config(
+                RawConfig.builder()
+                    .put("repositories", "cell1", projectFilesystem.resolve(CELL1).toString())
+                    .put("repositories", "cell2", projectFilesystem.resolve(CELL2).toString())
+                    .build()));
+
     RecordingProjectFileHashCache recordingLoader =
         RecordingProjectFileHashCache.createForCellRoot(
             delegateCache,
             recordedFileHashes,
-            new DistBuildConfig(
-                FakeBuckConfig.builder()
-                    .setSections(
-                        RawConfig.builder()
-                            .put(
-                                "repositories",
-                                "cell1",
-                                projectFilesystem.resolve(CELL1).toString())
-                            .put(
-                                "repositories",
-                                "cell2",
-                                projectFilesystem.resolve(CELL2).toString())
-                            .build())
-                    .build()));
+            new DistBuildConfig(FakeBuckConfig.builder().build()),
+            cellPathResolver);
 
     recordingLoader.get(symlinkRelPath);
 
@@ -220,24 +223,21 @@ public class RecordingFileHashLoaderTest {
             ImmutableMap.of(
                 symlinkRelPath, EXAMPLE_HASHCODE, intermediateSymLinkRelPath, EXAMPLE_HASHCODE));
 
+    DefaultCellPathResolver cellPathResolver =
+        DefaultCellPathResolver.of(
+            projectFilesystem.getRootPath(),
+            new Config(
+                RawConfig.builder()
+                    .put("repositories", "cell1", projectFilesystem.resolve(CELL1).toString())
+                    .put("repositories", "cell2", projectFilesystem.resolve(CELL2).toString())
+                    .build()));
+
     RecordingProjectFileHashCache recordingLoader =
         RecordingProjectFileHashCache.createForCellRoot(
             delegateCache,
             recordedFileHashes,
-            new DistBuildConfig(
-                FakeBuckConfig.builder()
-                    .setSections(
-                        RawConfig.builder()
-                            .put(
-                                "repositories",
-                                "cell1",
-                                projectFilesystem.resolve(CELL1).toString())
-                            .put(
-                                "repositories",
-                                "cell2",
-                                projectFilesystem.resolve(CELL2).toString())
-                            .build())
-                    .build()));
+            new DistBuildConfig(FakeBuckConfig.builder().build()),
+            cellPathResolver);
 
     recordingLoader.get(symlinkRelPath);
 
@@ -271,11 +271,15 @@ public class RecordingFileHashLoaderTest {
         new FakeProjectFileHashCache(
             projectFilesystem, ImmutableMap.of(symlinkRelPath, EXAMPLE_HASHCODE));
 
+    DefaultCellPathResolver cellPathResolver =
+        DefaultCellPathResolver.of(projectFilesystem.getRootPath(), new Config());
+
     RecordingProjectFileHashCache recordingLoader =
         RecordingProjectFileHashCache.createForCellRoot(
             delegateCache,
             recordedFileHashes,
-            new DistBuildConfig(FakeBuckConfig.builder().build()));
+            new DistBuildConfig(FakeBuckConfig.builder().build()),
+            cellPathResolver);
 
     recordingLoader.get(symlinkRelPath);
 
@@ -313,11 +317,15 @@ public class RecordingFileHashLoaderTest {
         new FakeProjectFileHashCache(
             projectFilesystem, ImmutableMap.of(fileWithinSymlink, EXAMPLE_HASHCODE));
 
+    DefaultCellPathResolver cellPathResolver =
+        DefaultCellPathResolver.of(projectFilesystem.getRootPath(), new Config());
+
     RecordingProjectFileHashCache recordingLoader =
         RecordingProjectFileHashCache.createForCellRoot(
             delegateCache,
             recordedFileHashes,
-            new DistBuildConfig(FakeBuckConfig.builder().build()));
+            new DistBuildConfig(FakeBuckConfig.builder().build()),
+            cellPathResolver);
 
     recordingLoader.get(fileWithinSymlink);
 
@@ -353,6 +361,9 @@ public class RecordingFileHashLoaderTest {
         new FakeProjectFileHashCache(
             projectFilesystem, ImmutableMap.of()); // Hash lookup for non-existent target will fail.
 
+    DefaultCellPathResolver cellPathResolver =
+        DefaultCellPathResolver.of(projectFilesystem.getRootPath(), new Config());
+
     RecordingProjectFileHashCache.createForCellRoot(
         delegateCache,
         recordedFileHashes,
@@ -365,7 +376,8 @@ public class RecordingFileHashLoaderTest {
                         ImmutableMap.of(
                             DistBuildConfig.ALWAYS_MATERIALIZE_WHITELIST,
                             symlinkRelPath.toString())))
-                .build()));
+                .build()),
+        cellPathResolver);
 
     assertThat(fileHashes.getEntries().size(), Matchers.equalTo(1));
 
@@ -408,11 +420,15 @@ public class RecordingFileHashLoaderTest {
         new FakeProjectFileHashCache(
             projectFilesystem, ImmutableMap.of(relPathToRecord, EXAMPLE_HASHCODE));
 
+    DefaultCellPathResolver cellPathResolver =
+        DefaultCellPathResolver.of(projectFilesystem.getRootPath(), new Config());
+
     RecordingProjectFileHashCache recordingLoader =
         RecordingProjectFileHashCache.createForCellRoot(
             delegateCache,
             recordedFileHashes,
-            new DistBuildConfig(FakeBuckConfig.builder().build()));
+            new DistBuildConfig(FakeBuckConfig.builder().build()),
+            cellPathResolver);
 
     recordingLoader.get(relPathToRecord);
 
@@ -455,11 +471,15 @@ public class RecordingFileHashLoaderTest {
     expect(delegateCacheMock.get(anyObject(Path.class))).andReturn(EXAMPLE_HASHCODE).anyTimes();
     replay(delegateCacheMock);
 
+    DefaultCellPathResolver cellPathResolver =
+        DefaultCellPathResolver.of(projectFilesystem.getRootPath(), new Config());
+
     RecordingProjectFileHashCache recordingLoader =
         RecordingProjectFileHashCache.createForCellRoot(
             delegateCacheMock,
             recordedFileHashes,
-            new DistBuildConfig(FakeBuckConfig.builder().build()));
+            new DistBuildConfig(FakeBuckConfig.builder().build()),
+            cellPathResolver);
 
     recordingLoader.get(projectFilesystem.relativize(pathDirA));
 

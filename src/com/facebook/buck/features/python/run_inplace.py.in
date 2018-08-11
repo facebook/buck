@@ -31,6 +31,24 @@ STARTUP = """\
 # Wrap everything in a private function to prevent globals being captured by
 # the `runpy._run_module_as_main` below.
 def __run():
+    import sys
+
+    # We set the paths beforehand to have a minimal amount of imports before
+    # nuking PWD from sys.path. Otherwise, there can be problems if someone runs
+    # from a directory with a similarly named file, even if their code is properly
+    # namespaced. e.g. if one has foo/bar/contextlib.py and while in foo/bar runs
+    # `buck run foo/bar:bin`, runpy will fail as it tries to import
+    # foo/bar/contextlib.py. You're just out of luck if you have sys.py or os.py
+
+    # Set `argv[0]` to the executing script.
+    assert sys.argv[0] == '-c'
+    sys.argv[0] = {arg0!r}
+
+    # Replace the working directory with location of the modules directory.
+    assert sys.path[0] == ''
+    sys.path[0] = {pythonpath!r}
+
+
     import errno
     import fcntl
     import glob
@@ -38,7 +56,6 @@ def __run():
     import os.path
     import runpy
     import shutil
-    import sys
     import zipfile
 
     def setenv(var, val):
@@ -50,14 +67,6 @@ def __run():
     def restoreenv(d):
         for k, v in d.items():
             setenv(k, v)
-
-    # Set `argv[0]` to the executing script.
-    assert sys.argv[0] == '-c'
-    sys.argv[0] = {arg0!r}
-
-    # Replace the working directory with location of the modules directory.
-    assert sys.path[0] == ''
-    sys.path[0] = {pythonpath!r}
 
     restoreenv({env_vals!r})
     runpy._run_module_as_main({main_module!r}, False)

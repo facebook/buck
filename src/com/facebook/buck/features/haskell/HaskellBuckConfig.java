@@ -16,7 +16,7 @@
 
 package com.facebook.buck.features.haskell;
 
-import com.facebook.buck.config.BuckConfig;
+import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
@@ -160,6 +160,10 @@ public class HaskellBuckConfig {
 
   public Supplier<Path> getGhciCpp(String section) {
     return () -> delegate.getRequiredPath(section, "ghci_cpp_path");
+  }
+
+  public Supplier<Path> getGhciPackager(String section) {
+    return () -> delegate.getRequiredPath(section, "ghci_packager");
   }
 
   public Optional<? extends Linker.LinkableDepType> getLinkStyleForStubHeader(String section) {

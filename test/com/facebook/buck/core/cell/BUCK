@@ -22,11 +22,11 @@ java_library(
     ),
     exported_deps = [
         "//src/com/facebook/buck/core/cell/impl:impl",
+        "//src/com/facebook/buck/core/toolchain/impl:impl",
         "//src/com/facebook/buck/io/filesystem/impl:impl",
         "//src/com/facebook/buck/module:module",
         "//src/com/facebook/buck/plugin/impl:impl",
-        "//src/com/facebook/buck/toolchain/impl:impl",
-        "//test/com/facebook/buck/config:FakeBuckConfig",
+        "//test/com/facebook/buck/core/config:FakeBuckConfig",
         "//test/com/facebook/buck/module:testutil",
         "//test/com/facebook/buck/testutil:testutil",
         "//third-party/java/guava:guava",

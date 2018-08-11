@@ -17,8 +17,10 @@
 package com.facebook.buck.features.project.intellij;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.config.FakeBuckConfig;
+import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.features.project.intellij.lang.android.AndroidManifestParser;
@@ -31,6 +33,7 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.timing.AbstractFakeClock;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import org.junit.Test;
@@ -39,16 +42,18 @@ public class IjProjectWriterTest {
 
   private final long TIMESTAMP_A = 12111;
   private final long TIMESTAMP_B = 22122;
-  private final Path MODULES_XML = Paths.get("/.idea/modules.xml");
+  private final Path PROJECT_ROOT = Paths.get("projectRoot");
+  private final Path MODULES_XML = PROJECT_ROOT.resolve(".idea/modules.xml");
+  private final Path WORKSPACE_XML = PROJECT_ROOT.resolve(".idea/workspace.xml");
 
   @Test
   public void testModuleChangeOverwrite() throws IOException {
     FakeDynamicClock fakeClock = new FakeDynamicClock(TIMESTAMP_A);
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem(fakeClock);
-    write(filesystem, moduleGraph1());
+    write(filesystem, filesystem, moduleGraph1());
     assertEquals(TIMESTAMP_A, filesystem.getLastModifiedTime(MODULES_XML).toMillis());
     fakeClock.currentTime = TIMESTAMP_B;
-    write(filesystem, moduleGraph2());
+    write(filesystem, filesystem, moduleGraph2());
     assertEquals(TIMESTAMP_B, filesystem.getLastModifiedTime(MODULES_XML).toMillis());
   }
 
@@ -56,11 +61,23 @@ public class IjProjectWriterTest {
   public void testNoModuleChangeNoOverwrite() throws IOException {
     FakeDynamicClock fakeClock = new FakeDynamicClock(TIMESTAMP_A);
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem(fakeClock);
-    write(filesystem, moduleGraph1());
+    write(filesystem, filesystem, moduleGraph1());
     assertEquals(TIMESTAMP_A, filesystem.getLastModifiedTime(MODULES_XML).toMillis());
     fakeClock.currentTime = TIMESTAMP_B;
-    write(filesystem, moduleGraph1());
+    write(filesystem, filesystem, moduleGraph1());
     assertEquals(TIMESTAMP_A, filesystem.getLastModifiedTime(MODULES_XML).toMillis());
+  }
+
+  @Test
+  public void testOutputDir() throws IOException {
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+    Path tmp = Files.createTempDirectory("IjProjectWriterTest");
+    FakeProjectFilesystem outFilesystem = new FakeProjectFilesystem(tmp);
+    write(filesystem, outFilesystem, moduleGraph1());
+    assertFalse(filesystem.exists(MODULES_XML));
+    assertFalse(filesystem.exists(WORKSPACE_XML));
+    assertTrue(outFilesystem.exists(MODULES_XML));
+    assertTrue(outFilesystem.exists(WORKSPACE_XML));
   }
 
   private IjModuleGraph moduleGraph1() {
@@ -90,13 +107,16 @@ public class IjProjectWriterTest {
     return IjModuleGraphTest.createModuleGraph(ImmutableSet.of(baseTargetNode));
   }
 
-  private void write(ProjectFilesystem filesystem, IjModuleGraph moduleGraph) throws IOException {
+  private void write(
+      ProjectFilesystem filesystem, ProjectFilesystem outFilesystem, IjModuleGraph moduleGraph)
+      throws IOException {
     IjProjectTemplateDataPreparer dataPreparer = dataPreparer(filesystem, moduleGraph);
     IntellijModulesListParser parser = new IntellijModulesListParser();
     IjProjectConfig config = projectConfig();
-    IjProjectWriter writer = new IjProjectWriter(dataPreparer, config, filesystem, parser);
     IJProjectCleaner cleaner = new IJProjectCleaner(filesystem);
-    writer.write(cleaner);
+    IjProjectWriter writer =
+        new IjProjectWriter(dataPreparer, config, filesystem, parser, cleaner, outFilesystem);
+    writer.write();
   }
 
   private IjProjectTemplateDataPreparer dataPreparer(
@@ -113,7 +133,7 @@ public class IjProjectWriterTest {
         FakeBuckConfig.builder().build(),
         null,
         null,
-        "/",
+        PROJECT_ROOT.toString(),
         "modules",
         false,
         false,

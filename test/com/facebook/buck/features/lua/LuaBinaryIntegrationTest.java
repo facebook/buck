@@ -22,9 +22,8 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeThat;
 import static org.junit.Assume.assumeTrue;
 
-import com.facebook.buck.config.BuckConfig;
-import com.facebook.buck.config.FakeBuckConfig;
-import com.facebook.buck.core.cell.impl.DefaultCellPathResolver;
+import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
@@ -49,7 +48,6 @@ import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.config.Config;
 import com.facebook.buck.util.config.Configs;
-import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -300,13 +298,11 @@ public class LuaBinaryIntegrationTest {
   private LuaBuckConfig getLuaBuckConfig() throws IOException {
     Config rawConfig = Configs.createDefaultConfig(tmp.getRoot());
     BuckConfig buckConfig =
-        new BuckConfig(
-            rawConfig,
-            TestProjectFilesystems.createProjectFilesystem(tmp.getRoot()),
-            Architecture.detect(),
-            Platform.detect(),
-            ImmutableMap.of(),
-            DefaultCellPathResolver.of(tmp.getRoot(), rawConfig));
+        FakeBuckConfig.builder()
+            .setEnvironment(ImmutableMap.of())
+            .setSections(rawConfig.getRawConfig())
+            .setFilesystem(TestProjectFilesystems.createProjectFilesystem(tmp.getRoot()))
+            .build();
     return new LuaBuckConfig(buckConfig, new FakeExecutableFinder(ImmutableList.of()));
   }
 }

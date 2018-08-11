@@ -1,5 +1,7 @@
 package lib
 
+import "cgo"
+
 func Quad(i int) int {
-	return Double(Double(i))
+	return cgo.Double(cgo.Double(i))
 }

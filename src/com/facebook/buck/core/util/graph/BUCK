@@ -1,0 +1,13 @@
+java_library(
+    name = "graph",
+    srcs = glob(["*.java"]),
+    tests = [
+        "//test/com/facebook/buck/core/util/graph:graph",
+    ],
+    visibility = ["PUBLIC"],
+    deps = [
+        "//src/com/facebook/buck/util:util",
+        "//src/com/facebook/buck/util/string:string",
+        "//third-party/java/guava:guava",
+    ],
+)

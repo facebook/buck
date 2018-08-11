@@ -29,8 +29,9 @@ import static org.junit.Assert.fail;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.TestCellBuilder;
-import com.facebook.buck.core.rules.knowntypes.DefaultKnownBuildRuleTypesFactory;
-import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypesProvider;
+import com.facebook.buck.core.rules.config.impl.PluginBasedKnownConfigurationDescriptionsFactory;
+import com.facebook.buck.core.rules.knowntypes.DefaultKnownRuleTypesFactory;
+import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.skylark.SkylarkFilesystem;
@@ -69,12 +70,13 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.pf4j.PluginManager;
 
 public class SkylarkProjectBuildFileParserTest {
 
   private SkylarkProjectBuildFileParser parser;
   private ProjectFilesystem projectFilesystem;
-  private KnownBuildRuleTypesProvider knownBuildRuleTypesProvider;
+  private KnownRuleTypesProvider knownRuleTypesProvider;
 
   @Rule public ExpectedException thrown = ExpectedException.none();
   private Cell cell;
@@ -83,12 +85,14 @@ public class SkylarkProjectBuildFileParserTest {
   public void setUp() throws Exception {
     projectFilesystem = FakeProjectFilesystem.createRealTempFilesystem();
     cell = new TestCellBuilder().setFilesystem(projectFilesystem).build();
-    knownBuildRuleTypesProvider =
-        KnownBuildRuleTypesProvider.of(
-            DefaultKnownBuildRuleTypesFactory.of(
+    PluginManager pluginManager = BuckPluginManagerFactory.createPluginManager();
+    knownRuleTypesProvider =
+        new KnownRuleTypesProvider(
+            new DefaultKnownRuleTypesFactory(
                 new DefaultProcessExecutor(new TestConsole()),
-                BuckPluginManagerFactory.createPluginManager(),
-                new TestSandboxExecutionStrategyFactory()));
+                pluginManager,
+                new TestSandboxExecutionStrategyFactory(),
+                PluginBasedKnownConfigurationDescriptionsFactory.createFromPlugins(pluginManager)));
     parser = createParser(new PrintingEventHandler(EventKind.ALL_EVENTS));
   }
 
@@ -99,7 +103,7 @@ public class SkylarkProjectBuildFileParserTest {
         .setIgnorePaths(ImmutableSet.of())
         .setBuildFileName("BUCK")
         .setRawConfig(ImmutableMap.of("dummy_section", ImmutableMap.of("dummy_key", "dummy_value")))
-        .setDescriptions(knownBuildRuleTypesProvider.get(cell).getDescriptions())
+        .setDescriptions(knownRuleTypesProvider.get(cell).getDescriptions())
         .setBuildFileImportWhitelist(ImmutableList.of())
         .setPythonInterpreter("skylark");
   }
@@ -363,7 +367,7 @@ public class SkylarkProjectBuildFileParserTest {
     Path buildFile = projectFilesystem.resolve("BUCK");
     Files.write(buildFile, Arrays.asList("load('//:ext.bzl', 'ext')"));
     Path extensionFile = projectFilesystem.resolve("ext.bzl");
-    Files.write(extensionFile, Arrays.asList("ext = read_config('foo', 'bar')"));
+    Files.write(extensionFile, Arrays.asList("ext = native.read_config('foo', 'bar')"));
     try {
       parser.getBuildFileManifest(buildFile, new AtomicLong());
       fail("Parsing should have failed.");
@@ -372,7 +376,7 @@ public class SkylarkProjectBuildFileParserTest {
       assertThat(
           printEvent.getMessage(),
           equalTo(
-              "Top-level invocations of read_config are not allowed in .bzl files. "
+              "Top-level invocations of native.read_config are not allowed in .bzl files. "
                   + "Wrap it in a macro and call it from a BUCK file."));
       assertThat(printEvent.getKind(), equalTo(EventKind.ERROR));
     }
@@ -751,7 +755,7 @@ public class SkylarkProjectBuildFileParserTest {
             .setAllowEmptyGlobs(ParserConfig.DEFAULT_ALLOW_EMPTY_GLOBS)
             .setIgnorePaths(ImmutableSet.of())
             .setBuildFileName("BUCK")
-            .setDescriptions(knownBuildRuleTypesProvider.get(cell).getDescriptions())
+            .setDescriptions(knownRuleTypesProvider.get(cell).getDescriptions())
             .setBuildFileImportWhitelist(ImmutableList.of())
             .setPythonInterpreter("skylark")
             .setCellRoots(ImmutableMap.of("tp2", anotherCell))

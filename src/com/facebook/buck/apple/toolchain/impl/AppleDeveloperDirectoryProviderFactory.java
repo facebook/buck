@@ -18,11 +18,11 @@ package com.facebook.buck.apple.toolchain.impl;
 
 import com.facebook.buck.apple.AppleConfig;
 import com.facebook.buck.apple.toolchain.AppleDeveloperDirectoryProvider;
-import com.facebook.buck.config.BuckConfig;
+import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.toolchain.ToolchainCreationContext;
+import com.facebook.buck.core.toolchain.ToolchainFactory;
+import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.toolchain.ToolchainCreationContext;
-import com.facebook.buck.toolchain.ToolchainFactory;
-import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.ProcessExecutor;
 import java.nio.file.Files;
 import java.nio.file.Path;

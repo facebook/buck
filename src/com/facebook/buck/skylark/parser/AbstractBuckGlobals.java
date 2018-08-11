@@ -18,9 +18,6 @@ package com.facebook.buck.skylark.parser;
 
 import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import com.facebook.buck.skylark.function.HostInfo;
-import com.facebook.buck.skylark.function.ReadConfig;
-import com.facebook.buck.skylark.function.SkylarkExtensionFunctions;
 import com.facebook.buck.skylark.function.SkylarkNativeModule;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -32,7 +29,6 @@ import com.google.devtools.build.lib.syntax.ClassObject;
 import com.google.devtools.build.lib.syntax.Environment;
 import com.google.devtools.build.lib.syntax.FuncallExpression;
 import com.google.devtools.build.lib.syntax.Mutability;
-import com.google.devtools.build.lib.syntax.Runtime;
 import org.immutables.value.Value;
 import org.immutables.value.Value.Lazy;
 
@@ -57,7 +53,7 @@ abstract class AbstractBuckGlobals {
               .setGlobals(getBuckGlobals(true))
               .build();
       extensionEnv.setup("native", getNativeModule());
-      Runtime.setupModuleGlobals(extensionEnv, SkylarkExtensionFunctions.class);
+      extensionEnv.setup("struct", StructProvider.STRUCT);
       return extensionEnv.getGlobals();
     }
   }
@@ -102,9 +98,6 @@ abstract class AbstractBuckGlobals {
     for (BuiltinFunction ruleFunction : getBuckRuleFunctions()) {
       builder.put(ruleFunction.getName(), ruleFunction);
     }
-    builder.put("host_info", HostInfo.create());
-    // TODO(T30129174): move read_config to SkylarkNativeModule
-    builder.put("read_config", ReadConfig.create());
     for (String nativeFunction : FuncallExpression.getMethodNames(SkylarkNativeModule.class)) {
       builder.put(
           nativeFunction,
@@ -126,8 +119,6 @@ abstract class AbstractBuckGlobals {
               .useDefaultSemantics()
               .build();
 
-      BuiltinFunction readConfigFunction = ReadConfig.create();
-      globalEnv.setup(readConfigFunction.getName(), readConfigFunction);
       if (!disableImplicitNativeRules) {
         for (BuiltinFunction buckRuleFunction : getBuckRuleFunctions()) {
           globalEnv.setup(buckRuleFunction.getName(), buckRuleFunction);

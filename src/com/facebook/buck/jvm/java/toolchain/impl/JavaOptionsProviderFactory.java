@@ -16,12 +16,12 @@
 
 package com.facebook.buck.jvm.java.toolchain.impl;
 
+import com.facebook.buck.core.toolchain.ToolchainCreationContext;
+import com.facebook.buck.core.toolchain.ToolchainFactory;
+import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaOptions;
 import com.facebook.buck.jvm.java.toolchain.JavaOptionsProvider;
-import com.facebook.buck.toolchain.ToolchainCreationContext;
-import com.facebook.buck.toolchain.ToolchainFactory;
-import com.facebook.buck.toolchain.ToolchainProvider;
 import java.util.Optional;
 
 public class JavaOptionsProviderFactory implements ToolchainFactory<JavaOptionsProvider> {

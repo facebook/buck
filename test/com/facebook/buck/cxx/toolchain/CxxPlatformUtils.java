@@ -16,9 +16,8 @@
 
 package com.facebook.buck.cxx.toolchain;
 
-import com.facebook.buck.config.BuckConfig;
-import com.facebook.buck.config.FakeBuckConfig;
-import com.facebook.buck.core.cell.impl.DefaultCellPathResolver;
+import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.rules.BuildRuleResolver;
@@ -31,7 +30,6 @@ import com.facebook.buck.cxx.toolchain.linker.LinkerProvider;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.util.config.Config;
 import com.facebook.buck.util.config.Configs;
-import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableMap;
@@ -102,13 +100,11 @@ public class CxxPlatformUtils {
   private static CxxPlatform getDefaultPlatform(Path root) throws IOException {
     Config rawConfig = Configs.createDefaultConfig(root);
     BuckConfig buckConfig =
-        new BuckConfig(
-            rawConfig,
-            TestProjectFilesystems.createProjectFilesystem(root),
-            Architecture.detect(),
-            Platform.detect(),
-            ImmutableMap.of(),
-            DefaultCellPathResolver.of(root, rawConfig));
+        FakeBuckConfig.builder()
+            .setSections(rawConfig.getRawConfig())
+            .setFilesystem(TestProjectFilesystems.createProjectFilesystem(root))
+            .setEnvironment(ImmutableMap.of())
+            .build();
     return DefaultCxxPlatforms.build(Platform.detect(), new CxxBuckConfig(buckConfig));
   }
 

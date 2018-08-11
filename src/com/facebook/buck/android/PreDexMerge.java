@@ -148,7 +148,10 @@ public class PreDexMerge extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 
   public DexFilesInfo getDexFilesInfo() {
     return new DexFilesInfo(
-        getSourcePathToPrimaryDex(), getSecondaryDexSourcePaths(), Optional.empty());
+        getSourcePathToPrimaryDex(),
+        getSecondaryDexSourcePaths(),
+        Optional.empty(),
+        getMapOfModuleToSecondaryDexSourcePaths());
   }
 
   /** Wrapper class for all the paths we need when merging for a split-dex APK. */
@@ -221,6 +224,24 @@ public class PreDexMerge extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     secondaryDexDirectories.add(
         ExplicitBuildTargetSourcePath.of(getBuildTarget(), paths.additionalJarfilesDir));
     return secondaryDexDirectories.build();
+  }
+
+  ImmutableMap<String, SourcePath> getMapOfModuleToSecondaryDexSourcePaths() {
+    ImmutableMap.Builder<String, SourcePath> mapOfModuleToSecondaryDexSourcePaths =
+        ImmutableMap.builder();
+    SplitDexPaths paths = new SplitDexPaths();
+
+    for (APKModule apkModule : apkModuleGraph.getAPKModules()) {
+      if (apkModule.isRootModule()) {
+        continue;
+      }
+      mapOfModuleToSecondaryDexSourcePaths.put(
+          apkModule.getName(),
+          ExplicitBuildTargetSourcePath.of(
+              getBuildTarget(), paths.additionalJarfilesSubdir.resolve(apkModule.getName())));
+    }
+
+    return mapOfModuleToSecondaryDexSourcePaths.build();
   }
 
   private void addStepsForSplitDex(

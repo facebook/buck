@@ -94,7 +94,10 @@ public class DistBuildFileHashes {
               if (rootCell.getKnownRoots().contains(fsRootPath)) {
                 Cell cell = rootCell.getCell(fsRootPath);
                 return RecordingProjectFileHashCache.createForCellRoot(
-                    originalCache, fileHashes, new DistBuildConfig(cell.getBuckConfig()));
+                    originalCache,
+                    fileHashes,
+                    new DistBuildConfig(cell.getBuckConfig()),
+                    cell.getCellPathResolver());
               } else {
                 return RecordingProjectFileHashCache.createForNonCellRoot(
                     originalCache, fileHashes);

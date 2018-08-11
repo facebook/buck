@@ -29,7 +29,7 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.impl.AbstractBuildRule;
 import com.facebook.buck.core.rules.impl.NoopBuildRule;
-import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypes;
+import com.facebook.buck.core.rules.knowntypes.KnownRuleTypes;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -73,9 +73,14 @@ public class BuildCommandErrorsIntegrationTest {
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "errors", tmp);
     workspace.setUp();
     mockDescription = new MockDescription();
-    workspace.setKnownBuildRuleTypesFactoryFactory(
-        (processExecutor, pluginManager, sandboxExecutionStrategyFactory) ->
-            cell -> KnownBuildRuleTypes.builder().addDescriptions(mockDescription).build());
+    workspace.setKnownRuleTypesFactoryFactory(
+        (executor,
+            pluginManager,
+            sandboxExecutionStrategyFactory,
+            knownConfigurationDescriptions) ->
+            cell ->
+                KnownRuleTypes.of(
+                    ImmutableList.of(mockDescription), knownConfigurationDescriptions));
   }
 
   // TODO(cjhopman): Add cases for errors in other phases of the build (watchman, parsing,
@@ -462,7 +467,7 @@ public class BuildCommandErrorsIntegrationTest {
             Constructor<?> constructor = clz.getConstructor(String.class, Throwable.class);
             obj = constructor.newInstance(message, cause);
           }
-          cause = Throwable.class.cast(obj);
+          cause = (Throwable) obj;
           // Modify the message a little so that we can differentiate the message at different
           // levels of nesting.
           message = " <- " + message + " -> ";

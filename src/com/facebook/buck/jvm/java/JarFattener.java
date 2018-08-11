@@ -33,6 +33,8 @@ import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.jvm.core.HasClasspathEntries;
+import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
@@ -41,6 +43,7 @@ import com.facebook.buck.step.fs.SymlinkFileStep;
 import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.util.zip.ZipCompressionLevel;
 import com.facebook.buck.zip.ZipStep;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -59,7 +62,7 @@ import javax.xml.bind.JAXBException;
 
 /** Build a fat JAR that packages an inner JAR along with any required native libraries. */
 public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
-    implements BinaryBuildRule {
+    implements BinaryBuildRule, HasClasspathEntries {
 
   private static final String FAT_JAR_INNER_JAR = "inner.jar";
   private static final String FAT_JAR_NATIVE_LIBRARY_RESOURCE_ROOT = "nativelibs";
@@ -79,6 +82,7 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
   // rule key.
   private final Tool javaRuntimeLauncher;
   private final Path output;
+  private final JavaBinary innerJarRule;
 
   public JarFattener(
       BuildTarget buildTarget,
@@ -87,12 +91,14 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
       Javac javac,
       JavacOptions javacOptions,
       SourcePath innerJar,
+      JavaBinary innerJarRule,
       ImmutableMap<String, SourcePath> nativeLibraries,
       Tool javaRuntimeLauncher) {
     super(buildTarget, projectFilesystem, params);
     this.javac = javac;
     this.javacOptions = javacOptions;
     this.innerJar = innerJar;
+    this.innerJarRule = innerJarRule;
     this.nativeLibraries = nativeLibraries;
     this.javaRuntimeLauncher = javaRuntimeLauncher;
     this.output =
@@ -107,7 +113,7 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
     Path outputDir = getOutputDirectory();
-    Path fatJarDir = outputDir.resolve("fat-jar-directory");
+    Path fatJarDir = CompilerOutputPaths.getClassesDir(getBuildTarget(), getProjectFilesystem());
     steps.addAll(
         MakeCleanDirectoryStep.of(
             BuildCellRelativePath.fromCellRelativePath(
@@ -182,15 +188,16 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
             .setClasspathEntries(ImmutableSortedSet.of())
             .setSourceFilePaths(javaSourceFilePaths.build())
             .setScratchPaths(getBuildTarget(), getProjectFilesystem())
-            .setOutputDirectory(fatJarDir)
             .build();
+
+    Preconditions.checkState(compilerParameters.getOutputPaths().getClassesDir().equals(fatJarDir));
 
     steps.add(
         MkdirStep.of(
             BuildCellRelativePath.fromCellRelativePath(
                 context.getBuildCellRootPath(),
                 getProjectFilesystem(),
-                compilerParameters.getPathToSourcesList().getParent())));
+                compilerParameters.getOutputPaths().getPathToSourcesList().getParent())));
 
     JavacToJarStepFactory compileStepFactory =
         new JavacToJarStepFactory(javac, javacOptions, ExtraClasspathProvider.EMPTY);
@@ -274,4 +281,24 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
       BuildRuleResolver ruleResolver,
       SourcePathRuleFinder ruleFinder,
       SourcePathResolver pathResolver) {}
+
+  @Override
+  public ImmutableSet<SourcePath> getTransitiveClasspaths() {
+    return innerJarRule.getTransitiveClasspaths();
+  }
+
+  @Override
+  public ImmutableSet<JavaLibrary> getTransitiveClasspathDeps() {
+    return innerJarRule.getTransitiveClasspathDeps();
+  }
+
+  @Override
+  public ImmutableSet<SourcePath> getImmediateClasspaths() {
+    return innerJarRule.getImmediateClasspaths();
+  }
+
+  @Override
+  public ImmutableSet<SourcePath> getOutputClasspaths() {
+    return innerJarRule.getOutputClasspaths();
+  }
 }

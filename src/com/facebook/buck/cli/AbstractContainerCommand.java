@@ -17,15 +17,18 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.core.cell.CellConfig;
+import com.facebook.buck.core.cell.name.RelativeCellName;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.log.LogConfigSetup;
 import com.facebook.buck.step.ExecutorPool;
 import com.facebook.buck.util.ExitCode;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Optional;
@@ -132,9 +135,9 @@ public abstract class AbstractContainerCommand extends CommandWithPluginManager 
   }
 
   @Override
-  public CellConfig getConfigOverrides() {
+  public CellConfig getConfigOverrides(ImmutableMap<RelativeCellName, Path> cellMapping) {
     Optional<Command> cmd = getSubcommand();
-    return cmd.isPresent() ? cmd.get().getConfigOverrides() : CellConfig.of();
+    return cmd.isPresent() ? cmd.get().getConfigOverrides(cellMapping) : CellConfig.of();
   }
 
   @Override

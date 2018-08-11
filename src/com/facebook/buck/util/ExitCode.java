@@ -67,6 +67,8 @@ public enum ExitCode {
   FATAL_IO(13),
   /** No space on device */
   FATAL_DISK_FULL(14),
+  /** Identifies that build failed due to Stampede infra error */
+  STAMPEDE_INFRA_ERROR(15),
 
   // Other non-fatal errors 20 - 127
 

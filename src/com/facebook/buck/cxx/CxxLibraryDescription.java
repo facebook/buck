@@ -333,8 +333,7 @@ public class CxxLibraryDescription
           // Nothing to add.
           return inputs.values().stream();
         } else {
-          Map<BuildTarget, CxxPreprocessorInput> result = new LinkedHashMap<>();
-          result.putAll(inputs);
+          Map<BuildTarget, CxxPreprocessorInput> result = new LinkedHashMap<>(inputs);
           for (CxxPreprocessorDep dep : privateDepsForPlatform) {
             result.putAll(dep.getTransitiveCxxPreprocessorInput(cxxPlatform, graphBuilder));
           }

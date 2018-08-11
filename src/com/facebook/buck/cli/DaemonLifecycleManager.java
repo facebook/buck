@@ -18,8 +18,6 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.core.rules.config.KnownConfigurationRuleTypes;
-import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypesProvider;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
 import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.io.ExecutableFinder;
@@ -50,22 +48,13 @@ class DaemonLifecycleManager {
   synchronized Daemon getDaemon(
       Cell rootCell,
       KnownRuleTypesProvider knownRuleTypesProvider,
-      KnownBuildRuleTypesProvider knownBuildRuleTypesProvider,
-      KnownConfigurationRuleTypes knownConfigurationRuleTypes,
       ExecutableFinder executableFinder,
       Console console)
       throws IOException {
     Path rootPath = rootCell.getFilesystem().getRootPath();
     if (daemon == null) {
       LOG.debug("Starting up daemon for project root [%s]", rootPath);
-      daemon =
-          new Daemon(
-              rootCell,
-              knownRuleTypesProvider,
-              knownBuildRuleTypesProvider,
-              knownConfigurationRuleTypes,
-              executableFinder,
-              Optional.empty());
+      daemon = new Daemon(rootCell, knownRuleTypesProvider, executableFinder, Optional.empty());
     } else {
       // Buck daemons cache build files within a single project root, changing to a different
       // project root is not supported and will likely result in incorrect builds. The buck and
@@ -106,14 +95,7 @@ class DaemonLifecycleManager {
           webServer = Optional.empty();
           daemon.close();
         }
-        daemon =
-            new Daemon(
-                rootCell,
-                knownRuleTypesProvider,
-                knownBuildRuleTypesProvider,
-                knownConfigurationRuleTypes,
-                executableFinder,
-                webServer);
+        daemon = new Daemon(rootCell, knownRuleTypesProvider, executableFinder, webServer);
       }
     }
     return daemon;

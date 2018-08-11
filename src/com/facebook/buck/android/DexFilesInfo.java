@@ -22,6 +22,7 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.types.Either;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
@@ -37,13 +38,17 @@ class DexFilesInfo implements AddsToRuleKey {
 
   @AddToRuleKey final Optional<SourcePath> proguardTextFilesPath;
 
+  final ImmutableMap<String, SourcePath> mapOfModuleToSecondaryDexSourcePaths;
+
   DexFilesInfo(
       SourcePath primaryDexPath,
       ImmutableSortedSet<SourcePath> secondaryDexDirs,
-      Optional<SourcePath> proguardTextFilesPath) {
+      Optional<SourcePath> proguardTextFilesPath,
+      ImmutableMap<String, SourcePath> mapOfModuleToSecondaryDexSourcePaths) {
     this.primaryDexPath = primaryDexPath;
     this.secondaryDexDirs = Either.ofLeft(secondaryDexDirs);
     this.proguardTextFilesPath = proguardTextFilesPath;
+    this.mapOfModuleToSecondaryDexSourcePaths = mapOfModuleToSecondaryDexSourcePaths;
   }
 
   DexFilesInfo(
@@ -53,6 +58,7 @@ class DexFilesInfo implements AddsToRuleKey {
     this.primaryDexPath = primaryDexPath;
     this.secondaryDexDirs = Either.ofRight(secondaryDexDirs);
     this.proguardTextFilesPath = proguardTextFilesPath;
+    this.mapOfModuleToSecondaryDexSourcePaths = ImmutableMap.of();
   }
 
   public ImmutableSet<Path> getSecondaryDexDirs(
@@ -60,6 +66,10 @@ class DexFilesInfo implements AddsToRuleKey {
     return secondaryDexDirs.transform(
         set -> set.stream().map(resolver::getRelativePath).collect(ImmutableSet.toImmutableSet()),
         view -> view.getSecondaryDexDirs(filesystem, resolver));
+  }
+
+  public ImmutableMap<String, SourcePath> getMapOfModuleToSecondaryDexSourcePaths() {
+    return this.mapOfModuleToSecondaryDexSourcePaths;
   }
 
   static class DexSecondaryDexDirView implements AddsToRuleKey {

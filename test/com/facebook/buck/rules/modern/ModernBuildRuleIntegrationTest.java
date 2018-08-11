@@ -24,7 +24,7 @@ import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypes;
+import com.facebook.buck.core.rules.knowntypes.KnownRuleTypes;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.Step;
@@ -54,12 +54,15 @@ public class ModernBuildRuleIntegrationTest {
     workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "should_delete_temporary_files", tmpFolder);
-    workspace.setKnownBuildRuleTypesFactoryFactory(
-        (processExecutor, pluginManager, sandboxExecutionStrategyFactory) ->
+    workspace.setKnownRuleTypesFactoryFactory(
+        (executor,
+            pluginManager,
+            sandboxExecutionStrategyFactory,
+            knownConfigurationDescriptions) ->
             cell ->
-                KnownBuildRuleTypes.builder()
-                    .addDescriptions(new TemporaryWritingDescription())
-                    .build());
+                KnownRuleTypes.of(
+                    ImmutableList.of(new TemporaryWritingDescription()),
+                    knownConfigurationDescriptions));
     workspace.setUp();
   }
 

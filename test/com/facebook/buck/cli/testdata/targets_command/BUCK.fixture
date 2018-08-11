@@ -1,0 +1,31 @@
+java_library(
+    name = "test-library",
+    srcs = [],
+    source = "6",
+    target = "6",
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [],
+)
+
+genrule(
+    name = "A",
+    out = "A.txt",
+)
+
+genrule(
+    name = "B",
+    srcs = [
+        ":A",
+    ],
+    out = "B.txt",
+    cmd = "$(classpath :test-library)",
+)
+
+config_setting(
+    name = "C",
+    values = {
+        "a.b": "c",
+    },
+)

@@ -23,7 +23,7 @@ import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.attr.ExportDependencies;
 import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
-import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
+import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;

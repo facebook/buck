@@ -17,8 +17,8 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.jvm.java.toolchain.JavaToolchain;
-import com.facebook.buck.toolchain.ToolchainProvider;
 import javax.annotation.Nullable;
 
 public final class JavacFactory {

@@ -26,7 +26,7 @@ import com.facebook.buck.artifact_cache.config.DirCacheEntry;
 import com.facebook.buck.artifact_cache.config.HttpCacheEntry;
 import com.facebook.buck.artifact_cache.config.MultiFetchType;
 import com.facebook.buck.artifact_cache.config.SQLiteCacheEntry;
-import com.facebook.buck.config.BuckConfig;
+import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;

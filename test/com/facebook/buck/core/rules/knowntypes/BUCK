@@ -7,14 +7,14 @@ java_test(
     deps = [
         ":testutil",
         "//src/com/facebook/buck/core/sourcepath/resolver/impl:impl",
+        "//src/com/facebook/buck/core/toolchain/impl:impl",
         "//src/com/facebook/buck/cxx/toolchain:toolchain",
         "//src/com/facebook/buck/cxx/toolchain/impl:impl",
         "//src/com/facebook/buck/io/file:file",
         "//src/com/facebook/buck/jvm/java:rules",
         "//src/com/facebook/buck/jvm/java/toolchain:toolchain",
-        "//src/com/facebook/buck/toolchain/impl:impl",
         "//src/com/facebook/buck/versions:versions",
-        "//test/com/facebook/buck/config:FakeBuckConfig",
+        "//test/com/facebook/buck/core/config:FakeBuckConfig",
         "//test/com/facebook/buck/core/model:testutil",
         "//test/com/facebook/buck/core/rules/resolver/impl:testutil",
         "//test/com/facebook/buck/cxx:testutil",
@@ -29,27 +29,30 @@ java_test(
     ],
 )
 
-java_library(
+java_immutables_library(
     name = "testutil",
     srcs = glob(
         ["*.java"],
         exclude = ["*Test.java"],
     ),
     exported_deps = [
-        "//src/com/facebook/buck/config:config",
+        "//src/com/facebook/buck/core/config:config",
+        "//src/com/facebook/buck/core/description/arg:arg",
         "//src/com/facebook/buck/core/model:model",
         "//src/com/facebook/buck/core/rules:rules",
+        "//src/com/facebook/buck/core/rules/config/impl:impl",
         "//src/com/facebook/buck/core/rules/knowntypes:knowntypes",
         "//src/com/facebook/buck/plugin/impl:impl",
         "//src/com/facebook/buck/step:step",
         "//test/com/facebook/buck/testutil:testutil",
         "//test/com/facebook/buck/util:testutil",
+        "//third-party/java/junit:junit",
     ],
     visibility = [
         "//test/...",
     ],
     deps = [
-        "//test/com/facebook/buck/config:FakeBuckConfig",
+        "//test/com/facebook/buck/core/config:FakeBuckConfig",
         "//test/com/facebook/buck/sandbox:testutil",
     ],
 )

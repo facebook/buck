@@ -34,17 +34,16 @@ import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
+import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.jvm.java.CalculateClassAbi;
-import com.facebook.buck.jvm.java.JavaLibraryRules;
 import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.JavacToJarStepFactory;
 import com.facebook.buck.jvm.java.MaybeRequiredForSourceOnlyAbiArg;
 import com.facebook.buck.jvm.java.PrebuiltJar;
 import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
-import com.facebook.buck.toolchain.ToolchainProvider;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -216,8 +215,8 @@ public class AndroidPrebuiltAarDescription
                 .getJavacOptions(),
             new AndroidClasspathProvider(toolchainProvider)),
         /* exportedDeps */ javaDeps,
-        JavaLibraryRules.getAbiClasspath(graphBuilder, androidLibraryParams.getBuildDeps()),
-        args.getRequiredForSourceOnlyAbi());
+        args.getRequiredForSourceOnlyAbi(),
+        args.getMavenCoords());
   }
 
   @BuckStyleImmutable
@@ -229,6 +228,8 @@ public class AndroidPrebuiltAarDescription
     Optional<SourcePath> getSourceJar();
 
     Optional<String> getJavadocUrl();
+
+    Optional<String> getMavenCoords();
 
     @Override
     @Value.Default

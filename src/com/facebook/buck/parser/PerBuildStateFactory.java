@@ -21,10 +21,8 @@ import com.facebook.buck.core.model.targetgraph.RawTargetNode;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
 import com.facebook.buck.core.rules.config.ConfigurationRuleResolver;
-import com.facebook.buck.core.rules.config.KnownConfigurationRuleTypes;
 import com.facebook.buck.core.rules.config.impl.ConfigurationRuleSelectableResolver;
 import com.facebook.buck.core.rules.config.impl.SameThreadConfigurationRuleResolver;
-import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypesProvider;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
 import com.facebook.buck.core.select.SelectableResolver;
 import com.facebook.buck.core.select.SelectorListResolver;
@@ -42,22 +40,16 @@ public class PerBuildStateFactory {
   private final TypeCoercerFactory typeCoercerFactory;
   private final ConstructorArgMarshaller marshaller;
   private final KnownRuleTypesProvider knownRuleTypesProvider;
-  private final KnownBuildRuleTypesProvider knownBuildRuleTypesProvider;
-  private final KnownConfigurationRuleTypes knownConfigurationRuleTypes;
   private final ParserPythonInterpreterProvider parserPythonInterpreterProvider;
 
   public PerBuildStateFactory(
       TypeCoercerFactory typeCoercerFactory,
       ConstructorArgMarshaller marshaller,
       KnownRuleTypesProvider knownRuleTypesProvider,
-      KnownBuildRuleTypesProvider knownBuildRuleTypesProvider,
-      KnownConfigurationRuleTypes knownConfigurationRuleTypes,
       ParserPythonInterpreterProvider parserPythonInterpreterProvider) {
     this.typeCoercerFactory = typeCoercerFactory;
     this.marshaller = marshaller;
     this.knownRuleTypesProvider = knownRuleTypesProvider;
-    this.knownBuildRuleTypesProvider = knownBuildRuleTypesProvider;
-    this.knownConfigurationRuleTypes = knownConfigurationRuleTypes;
     this.parserPythonInterpreterProvider = parserPythonInterpreterProvider;
   }
 
@@ -119,21 +111,38 @@ public class PerBuildStateFactory {
                   new VisibilityPatternFactory(),
                   new BuiltTargetVerifier()));
 
+      PackageBoundaryChecker packageBoundaryChecker =
+          new ThrowingPackageBoundaryChecker(daemonicParserState.getBuildFileTrees());
+
+      ParserTargetNodeFactory<RawTargetNode> nonResolvingrawTargetNodeToTargetNodeFactory =
+          new NonResolvingRawTargetNodeToTargetNodeFactory(
+              knownRuleTypesProvider,
+              marshaller,
+              targetNodeFactory,
+              packageBoundaryChecker,
+              symlinkCheckers);
+
+      ParsePipeline<TargetNode<?>> nonResolvingTargetNodeParsePipeline =
+          new RawTargetNodeToTargetNodeParsePipeline(
+              daemonicParserState.getOrCreateNodeCache(TargetNode.class),
+              pipelineExecutorService,
+              rawTargetNodePipeline,
+              eventBus,
+              enableSpeculativeParsing,
+              nonResolvingrawTargetNodeToTargetNodeFactory);
+
       ConfigurationRuleResolver configurationRuleResolver =
           new SameThreadConfigurationRuleResolver(
               cellManager::getCell,
               (cell, buildTarget) ->
-                  rawTargetNodePipeline.getNode(cell, buildTarget, parseProcessedBytes),
-              knownConfigurationRuleTypes);
+                  nonResolvingTargetNodeParsePipeline.getNode(
+                      cell, buildTarget, parseProcessedBytes));
 
       SelectableResolver selectableResolver =
           new ConfigurationRuleSelectableResolver(configurationRuleResolver);
 
       SelectorListResolver selectorListResolver =
           new DefaultSelectorListResolver(selectableResolver);
-
-      PackageBoundaryChecker packageBoundaryChecker =
-          new ThrowingPackageBoundaryChecker(daemonicParserState.getBuildFileTrees());
 
       RawTargetNodeToTargetNodeFactory rawTargetNodeToTargetNodeFactory =
           new RawTargetNodeToTargetNodeFactory(
@@ -151,14 +160,19 @@ public class PerBuildStateFactory {
               rawTargetNodePipeline,
               eventBus,
               enableSpeculativeParsing,
-              rawTargetNodeToTargetNodeFactory);
+              rawTargetNodeToTargetNodeFactory) {
+            @Override
+            public void close() {
+              super.close();
+              nonResolvingTargetNodeParsePipeline.close();
+            }
+          };
     } else {
       targetNodeParsePipeline =
           new TargetNodeParsePipeline(
               daemonicParserState.getOrCreateNodeCache(TargetNode.class),
               DefaultParserTargetNodeFactory.createForParser(
                   knownRuleTypesProvider,
-                  knownBuildRuleTypesProvider,
                   marshaller,
                   daemonicParserState.getBuildFileTrees(),
                   symlinkCheckers,

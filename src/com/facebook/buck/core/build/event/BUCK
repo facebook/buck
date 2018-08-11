@@ -4,6 +4,7 @@ java_library(
     exported_deps = [
         "//src/com/facebook/buck/core/build/engine:engine",
         "//src/com/facebook/buck/core/build/engine/manifest:manifest",
+        "//src/com/facebook/buck/core/build/engine/type:type",
         "//src/com/facebook/buck/core/build/stats:stats",
         "//src/com/facebook/buck/core/model:model",
         "//src/com/facebook/buck/core/rulekey:rulekey",

@@ -35,11 +35,13 @@ import com.facebook.buck.core.rules.attr.InitializableFromDisk;
 import com.facebook.buck.core.rules.attr.SupportsDependencyFileRuleKey;
 import com.facebook.buck.core.rules.attr.SupportsInputBasedRuleKey;
 import com.facebook.buck.core.rules.common.BuildDeps;
+import com.facebook.buck.core.rules.common.RecordArtifactVerifier;
 import com.facebook.buck.core.rules.impl.AbstractBuildRule;
 import com.facebook.buck.core.rules.pipeline.RulePipelineStateFactory;
 import com.facebook.buck.core.rules.pipeline.SupportsPipelining;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.DefaultJavaAbiInfo;
@@ -49,7 +51,6 @@ import com.facebook.buck.jvm.core.JavaAbiInfo;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaBuckConfig.UnusedDependenciesAction;
 import com.facebook.buck.step.Step;
-import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.MoreSuppliers;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -61,7 +62,6 @@ import com.google.common.collect.Sets;
 import com.google.common.hash.HashCode;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.Set;
 import java.util.SortedSet;
@@ -131,6 +131,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
 
   @Nullable private CalculateSourceAbi sourceAbi;
   private SourcePathRuleFinder ruleFinder;
+  private final Optional<SourcePath> sourcePathForOutputJar;
 
   public static DefaultJavaLibraryRules.Builder rulesBuilder(
       BuildTarget buildTarget,
@@ -183,6 +184,9 @@ public class DefaultJavaLibrary extends AbstractBuildRule
     this.unusedDependenciesAction = unusedDependenciesAction;
     this.unusedDependenciesFinderFactory = unusedDependenciesFinderFactory;
     this.ruleFinder = ruleFinder;
+    this.sourcePathForOutputJar =
+        Optional.ofNullable(
+            jarBuildStepsFactory.getSourcePathToOutput(getBuildTarget(), getProjectFilesystem()));
 
     // Exported deps are meant to be forwarded onto the CLASSPATH for dependents,
     // and so only make sense for java library types.
@@ -257,15 +261,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
   }
 
   private Optional<SourcePath> sourcePathForOutputJar() {
-    return Optional.ofNullable(jarBuildStepsFactory.getSourcePathToOutput(getBuildTarget()));
-  }
-
-  public static Path getOutputJarPath(BuildTarget target, ProjectFilesystem filesystem) {
-    return Paths.get(
-        String.format(
-            "%s/%s.jar",
-            CompilerParameters.getOutputJarDirPath(target, filesystem),
-            target.getShortNameAndFlavorPostfix()));
+    return sourcePathForOutputJar;
   }
 
   @Override
@@ -330,7 +326,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
 
   @Override
   public Optional<Path> getGeneratedSourcePath() {
-    return CompilerParameters.getAnnotationPath(getProjectFilesystem(), getBuildTarget());
+    return CompilerOutputPaths.getAnnotationPath(getProjectFilesystem(), getBuildTarget());
   }
 
   @Override
@@ -360,13 +356,21 @@ public class DefaultJavaLibrary extends AbstractBuildRule
         jarBuildStepsFactory.getBuildStepsForLibraryJar(
             context,
             getProjectFilesystem(),
-            buildableContext,
+            getArtifactVerifier(buildableContext),
             getBuildTarget(),
             pathToClassHashes));
 
     unusedDependenciesFinderFactory.ifPresent(factory -> steps.add(factory.create()));
 
     return steps.build();
+  }
+
+  private RecordArtifactVerifier getArtifactVerifier(BuildableContext buildableContext) {
+    CompilerOutputPaths outputPaths =
+        CompilerOutputPaths.of(getBuildTarget(), getProjectFilesystem());
+    return new RecordArtifactVerifier(
+        ImmutableList.of(outputPaths.getOutputJarDirPath(), outputPaths.getAnnotationPath()),
+        buildableContext);
   }
 
   @Override
@@ -377,7 +381,11 @@ public class DefaultJavaLibrary extends AbstractBuildRule
         JavaLibraryRules.getPathToClassHashes(getBuildTarget(), getProjectFilesystem());
     buildableContext.recordArtifact(pathToClassHashes);
     return jarBuildStepsFactory.getPipelinedBuildStepsForLibraryJar(
-        context, getProjectFilesystem(), buildableContext, state, pathToClassHashes);
+        context,
+        getProjectFilesystem(),
+        getArtifactVerifier(buildableContext),
+        state,
+        pathToClassHashes);
   }
 
   @Override
@@ -425,7 +433,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
   @Override
   @Nullable
   public SourcePath getSourcePathToOutput() {
-    return jarBuildStepsFactory.getSourcePathToOutput(getBuildTarget());
+    return sourcePathForOutputJar.orElse(null);
   }
 
   @Override

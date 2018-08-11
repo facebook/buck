@@ -18,9 +18,9 @@ package com.facebook.buck.core.model.targetgraph;
 
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
+import com.facebook.buck.core.toolchain.ToolchainProvider;
+import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.toolchain.ToolchainProvider;
-import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 
 public class TestBuildRuleCreationContextFactory {
 

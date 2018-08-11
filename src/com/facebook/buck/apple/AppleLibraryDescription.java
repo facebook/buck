@@ -47,6 +47,7 @@ import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
+import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.CxxCompilationDatabase;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
@@ -84,7 +85,6 @@ import com.facebook.buck.swift.SwiftLibraryDescription;
 import com.facebook.buck.swift.SwiftRuntimeNativeLinkable;
 import com.facebook.buck.swift.toolchain.SwiftPlatform;
 import com.facebook.buck.swift.toolchain.SwiftPlatformsProvider;
-import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.types.Either;
 import com.facebook.buck.versions.Version;
 import com.google.common.base.Joiner;
@@ -190,6 +190,7 @@ public class AppleLibraryDescription
       FlavorDomain.from("C/C++ Library Type", Type.class);
 
   private final ToolchainProvider toolchainProvider;
+  private final XCodeDescriptions xcodeDescriptions;
   private final Optional<SwiftLibraryDescription> swiftDelegate;
   private final AppleConfig appleConfig;
   private final SwiftBuckConfig swiftBuckConfig;
@@ -200,6 +201,7 @@ public class AppleLibraryDescription
 
   public AppleLibraryDescription(
       ToolchainProvider toolchainProvider,
+      XCodeDescriptions xcodeDescriptions,
       SwiftLibraryDescription swiftDelegate,
       AppleConfig appleConfig,
       SwiftBuckConfig swiftBuckConfig,
@@ -208,6 +210,7 @@ public class AppleLibraryDescription
       CxxLibraryFactory cxxLibraryFactory,
       CxxLibraryMetadataFactory cxxLibraryMetadataFactory) {
     this.toolchainProvider = toolchainProvider;
+    this.xcodeDescriptions = xcodeDescriptions;
     this.cxxLibraryImplicitFlavors = cxxLibraryImplicitFlavors;
     this.cxxLibraryFlavored = cxxLibraryFlavored;
     this.cxxLibraryFactory = cxxLibraryFactory;
@@ -403,6 +406,7 @@ public class AppleLibraryDescription
     CxxPlatformsProvider cxxPlatformsProvider = getCxxPlatformsProvider();
 
     return AppleDescriptions.createAppleBundle(
+        xcodeDescriptions,
         cxxPlatformsProvider,
         getAppleCxxPlatformDomain(),
         targetGraph,

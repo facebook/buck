@@ -1,12 +1,11 @@
 cxx_library(
     name = "lib",
     srcs = [
-        "src/lib.c",
+        "lib.c",
     ],
-    exported_headers = {
-        "lib.h": "include/lib.h",
-    },
-    include_dirs = ["include"],
+    exported_headers = [
+        "lib.h",
+    ],
     link_style = "static",
     preferred_linkage = "static",
     visibility = ["PUBLIC"],

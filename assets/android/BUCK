@@ -1,13 +1,6 @@
-export_file(
-    name = "agent.apk",
-    visibility = [
-        "PUBLIC",
-    ],
-)
+load("//tools/build_rules:export_files.bzl", "export_files")
 
-export_file(
-    name = "native-exopackage-fakes.apk",
-    visibility = [
-        "PUBLIC",
-    ],
-)
+export_files([
+    "agent.apk",
+    "native-exopackage-fakes.apk",
+])

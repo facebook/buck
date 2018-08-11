@@ -45,7 +45,7 @@ public class WindowsUtils extends PlatformUtils {
   /** Returns a buck command builder for a unix platform, which runs programs through cmd */
   @Override
   public ImmutableList.Builder<String> getCommandBuilder() {
-    ImmutableList.Builder<String> commandBuilder = ImmutableList.<String>builder();
+    ImmutableList.Builder<String> commandBuilder = ImmutableList.builder();
     commandBuilder.add("cmd").add("/c");
     return commandBuilder;
   }

@@ -19,6 +19,7 @@ package com.facebook.buck.event.listener;
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.artifact_cache.CacheResultType;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
+import com.facebook.buck.core.build.engine.type.UploadToCacheResultType;
 import com.facebook.buck.core.build.event.BuildRuleEvent;
 import com.facebook.buck.core.build.stats.BuildRuleDurationTracker;
 import com.facebook.buck.core.model.BuildId;
@@ -123,7 +124,7 @@ public class RuleKeyLoggerListenerTest {
         null,
         Optional.empty(),
         null,
-        false,
+        UploadToCacheResultType.UNCACHEABLE,
         null,
         null,
         Optional.empty(),

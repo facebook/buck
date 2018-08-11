@@ -20,7 +20,6 @@ import com.facebook.buck.core.cell.CellProvider;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphCache;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphParallelizationMode;
 import com.facebook.buck.core.model.actiongraph.computation.IncrementalActionGraphMode;
-import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypesProvider;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.distributed.DistBuildConfig;
@@ -64,8 +63,6 @@ abstract class AbstractDelegateAndGraphsInitializerArgs {
   public abstract FileContentsProvider getProvider();
 
   public abstract KnownRuleTypesProvider getKnownRuleTypesProvider();
-
-  public abstract KnownBuildRuleTypesProvider getKnownBuildRuleTypesProvider();
 
   public abstract boolean getShouldInstrumentActionGraph();
 

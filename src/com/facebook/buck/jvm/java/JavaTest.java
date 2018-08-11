@@ -106,7 +106,7 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private static final Path TESTRUNNER_CLASSES =
       Paths.get(
           System.getProperty(
-              "buck.testrunner_classes", new File("build/testrunner/classes").getAbsolutePath()));
+              "buck.testrunner_classes", new File("ant-out/testrunner/classes").getAbsolutePath()));
 
   private final JavaLibrary compiledTestsLibrary;
 

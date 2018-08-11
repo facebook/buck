@@ -12,4 +12,8 @@ java_library(
         "//src/com/facebook/buck/rules/modern/builders/...",
         "//test/...",
     ],
+    deps = [
+        "//src/com/facebook/buck/log:api",
+        "//third-party/java/guava:guava",
+    ],
 )

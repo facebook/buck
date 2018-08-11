@@ -20,13 +20,25 @@ import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Preconditions;
 import org.immutables.value.Value;
 
-@Value.Immutable(intern = true)
+@Value.Immutable(copy = false, intern = true)
 @BuckStyleImmutable
 abstract class AbstractRuleType {
+
+  /** The kind of a rule type. */
+  public enum Kind {
+    /** Build rule types can be used during the build to produce build artifacts. */
+    BUILD,
+    /** Configuration rule types can be used during configuration phase. */
+    CONFIGURATION
+  }
 
   /** @return the name as displayed in a build file, such as "java_library" */
   @Value.Parameter
   public abstract String getName();
+
+  /** @return the kind of this type. */
+  @Value.Parameter
+  public abstract Kind getKind();
 
   @Value.Derived
   public boolean isTestRule() {

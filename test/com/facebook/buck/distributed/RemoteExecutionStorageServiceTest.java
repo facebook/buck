@@ -17,9 +17,11 @@
 package com.facebook.buck.distributed;
 
 import com.facebook.buck.distributed.testutil.InMemoryRemoteExecutionHttpService;
+import com.facebook.buck.distributed.thrift.FrontendResponse;
 import com.facebook.buck.rules.modern.builders.MultiThreadedBlobUploader.UploadData;
 import com.facebook.buck.rules.modern.builders.Protocol.Digest;
 import com.facebook.buck.rules.modern.builders.ThriftProtocol;
+import com.facebook.buck.slb.ThriftException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
@@ -47,6 +49,19 @@ public class RemoteExecutionStorageServiceTest {
     inMemoryService = new InMemoryRemoteExecutionHttpService();
     service = inMemoryService.createRemoteExecutionStorageService();
     protocol = new ThriftProtocol();
+  }
+
+  @Test
+  public void testResponseValidation() {
+    FrontendResponse response = new FrontendResponse();
+    response.setWasSuccessful(false);
+    response.setErrorMessage("topspin");
+    try {
+      RemoteExecutionStorageService.validateResponseOrThrow(response);
+      Assert.fail("Unsuccessful response should've thrown an exception.");
+    } catch (ThriftException e) {
+      Assert.assertTrue(e.getMessage().contains(response.getErrorMessage()));
+    }
   }
 
   @Test

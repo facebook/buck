@@ -17,7 +17,7 @@
 package com.facebook.buck.artifact_cache;
 
 import com.facebook.buck.artifact_cache.config.CacheReadMode;
-import com.facebook.buck.config.BuckConfig;
+import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.io.file.BorrowablePath;

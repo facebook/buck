@@ -22,9 +22,8 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
-import com.facebook.buck.config.BuckConfig;
-import com.facebook.buck.config.FakeBuckConfig;
-import com.facebook.buck.core.cell.impl.DefaultCellPathResolver;
+import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.features.python.toolchain.PythonVersion;
 import com.facebook.buck.features.python.toolchain.impl.PythonPlatformsProviderFactoryUtils;
 import com.facebook.buck.io.ExecutableFinder;
@@ -40,10 +39,8 @@ import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.VersionStringComparator;
 import com.facebook.buck.util.config.Config;
 import com.facebook.buck.util.config.Configs;
-import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.util.Collection;
 import org.junit.Before;
@@ -221,13 +218,10 @@ public class PythonTestIntegrationTest {
   private PythonBuckConfig getPythonBuckConfig() throws IOException {
     Config rawConfig = Configs.createDefaultConfig(tmp.getRoot());
     BuckConfig buckConfig =
-        new BuckConfig(
-            rawConfig,
-            TestProjectFilesystems.createProjectFilesystem(tmp.getRoot()),
-            Architecture.detect(),
-            Platform.detect(),
-            ImmutableMap.copyOf(System.getenv()),
-            DefaultCellPathResolver.of(tmp.getRoot(), rawConfig));
+        FakeBuckConfig.builder()
+            .setSections(rawConfig.getRawConfig())
+            .setFilesystem(TestProjectFilesystems.createProjectFilesystem(tmp.getRoot()))
+            .build();
     return new PythonBuckConfig(buckConfig);
   }
 }

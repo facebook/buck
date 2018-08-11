@@ -18,7 +18,7 @@ import tempfile
 
 IGNORE_PREFIXES = [
     "buck-out",
-    "build-ij",
+    "intellij-out",
     "src/com/facebook/buck/testrunner",
     "test/com/facebook/buck/rules/keys/CommonRuleKeyHasherTest.java",
     "test/com/facebook/buck/testutil/endtoend/EndToEndRunner",

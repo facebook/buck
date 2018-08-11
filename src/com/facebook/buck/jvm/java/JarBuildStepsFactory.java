@@ -16,7 +16,6 @@
 
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.cell.resolver.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
@@ -24,6 +23,7 @@ import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.rules.common.RecordArtifactVerifier;
 import com.facebook.buck.core.rules.pipeline.RulePipelineStateFactory;
 import com.facebook.buck.core.sourcepath.ArchiveMemberSourcePath;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
@@ -45,8 +45,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -56,8 +54,6 @@ public class JarBuildStepsFactory
     implements AddsToRuleKey, RulePipelineStateFactory<JavacPipelineState> {
   private static final Path METADATA_DIR = Paths.get("META-INF");
 
-  // TODO(cjhopman): Remove this field.
-  private final ProjectFilesystem projectFilesystemForOutputJarPaths;
   private final BuildTarget libraryTarget;
 
   @AddToRuleKey private final ConfiguredCompiler configuredCompiler;
@@ -81,10 +77,7 @@ public class JarBuildStepsFactory
   @AddToRuleKey private final AbiGenerationMode abiCompatibilityMode;
   @Nullable private final Supplier<SourceOnlyAbiRuleInfoFactory> ruleInfoFactorySupplier;
 
-  private final Map<BuildTarget, SourcePath> sourcePathsToOutput = new HashMap<>();
-
   public JarBuildStepsFactory(
-      ProjectFilesystem projectFilesystem,
       BuildTarget libraryTarget,
       ConfiguredCompiler configuredCompiler,
       ImmutableSortedSet<SourcePath> srcs,
@@ -100,7 +93,6 @@ public class JarBuildStepsFactory
       AbiGenerationMode abiGenerationMode,
       AbiGenerationMode abiCompatibilityMode,
       @Nullable Supplier<SourceOnlyAbiRuleInfoFactory> ruleInfoFactorySupplier) {
-    this.projectFilesystemForOutputJarPaths = projectFilesystem;
     this.libraryTarget = libraryTarget;
     this.configuredCompiler = configuredCompiler;
     this.srcs = srcs;
@@ -131,13 +123,10 @@ public class JarBuildStepsFactory
   }
 
   @Nullable
-  public SourcePath getSourcePathToOutput(BuildTarget buildTarget) {
-    return sourcePathsToOutput.computeIfAbsent(
-        buildTarget,
-        x ->
-            getOutputJarPath(buildTarget)
-                .map(path -> ExplicitBuildTargetSourcePath.of(buildTarget, path))
-                .orElse(null));
+  public SourcePath getSourcePathToOutput(BuildTarget buildTarget, ProjectFilesystem filesystem) {
+    return getOutputJarPath(buildTarget, filesystem)
+        .map(path -> ExplicitBuildTargetSourcePath.of(buildTarget, path))
+        .orElse(null);
   }
 
   @VisibleForTesting
@@ -175,15 +164,17 @@ public class JarBuildStepsFactory
   }
 
   public boolean useRulePipelining() {
-    return configuredCompiler instanceof JavacToJarStepFactory
-        && abiGenerationMode.isSourceAbi()
-        && abiGenerationMode.usesDependencies();
+    boolean usePipelining =
+        configuredCompiler instanceof JavacToJarStepFactory
+            && abiGenerationMode.isSourceAbi()
+            && abiGenerationMode.usesDependencies();
+    return usePipelining;
   }
 
   public ImmutableList<Step> getBuildStepsForAbiJar(
       BuildContext context,
       ProjectFilesystem filesystem,
-      BuildableContext buildableContext,
+      RecordArtifactVerifier buildableContext,
       BuildTarget buildTarget) {
     Preconditions.checkState(producesJar());
     Preconditions.checkArgument(
@@ -203,8 +194,8 @@ public class JarBuildStepsFactory
         compilerParameters,
         resourcesParameters,
         ImmutableList.of(),
-        getAbiJarParameters(buildTarget, context, compilerParameters).orElse(null),
-        getLibraryJarParameters(context, compilerParameters).orElse(null),
+        getAbiJarParameters(buildTarget, context, filesystem, compilerParameters).orElse(null),
+        getLibraryJarParameters(context, filesystem, compilerParameters).orElse(null),
         steps,
         buildableContext);
 
@@ -215,7 +206,7 @@ public class JarBuildStepsFactory
       BuildTarget buildTarget,
       BuildContext context,
       ProjectFilesystem filesystem,
-      BuildableContext buildableContext,
+      RecordArtifactVerifier buildableContext,
       JavacPipelineState state) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
     ((JavacToJarStepFactory) configuredCompiler)
@@ -234,7 +225,7 @@ public class JarBuildStepsFactory
   public ImmutableList<Step> getBuildStepsForLibraryJar(
       BuildContext context,
       ProjectFilesystem filesystem,
-      BuildableContext buildableContext,
+      RecordArtifactVerifier buildableContext,
       BuildTarget buildTarget,
       Path pathToClassHashes) {
     Preconditions.checkArgument(buildTarget.equals(libraryTarget));
@@ -252,7 +243,7 @@ public class JarBuildStepsFactory
         resourcesParameters,
         postprocessClassesCommands,
         null,
-        getLibraryJarParameters(context, compilerParameters).orElse(null),
+        getLibraryJarParameters(context, filesystem, compilerParameters).orElse(null),
         steps,
         buildableContext);
 
@@ -261,7 +252,7 @@ public class JarBuildStepsFactory
             context.getBuildCellRootPath(), filesystem),
         filesystem,
         steps,
-        Optional.ofNullable(getSourcePathToOutput(buildTarget))
+        Optional.ofNullable(getSourcePathToOutput(buildTarget, filesystem))
             .map(context.getSourcePathResolver()::getRelativePath),
         pathToClassHashes);
 
@@ -271,7 +262,7 @@ public class JarBuildStepsFactory
   public ImmutableList<Step> getPipelinedBuildStepsForLibraryJar(
       BuildContext context,
       ProjectFilesystem filesystem,
-      BuildableContext buildableContext,
+      RecordArtifactVerifier buildableContext,
       JavacPipelineState state,
       Path pathToClassHashes) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
@@ -291,7 +282,7 @@ public class JarBuildStepsFactory
             context.getBuildCellRootPath(), filesystem),
         filesystem,
         steps,
-        Optional.ofNullable(getSourcePathToOutput(libraryTarget))
+        Optional.ofNullable(getSourcePathToOutput(libraryTarget, filesystem))
             .map(context.getSourcePathResolver()::getRelativePath),
         pathToClassHashes);
 
@@ -319,27 +310,34 @@ public class JarBuildStepsFactory
   }
 
   protected Optional<JarParameters> getLibraryJarParameters(
-      BuildContext context, CompilerParameters compilerParameters) {
-    return getJarParameters(context, libraryTarget, compilerParameters);
+      BuildContext context, ProjectFilesystem filesystem, CompilerParameters compilerParameters) {
+    return getJarParameters(context, filesystem, libraryTarget, compilerParameters);
   }
 
   protected Optional<JarParameters> getAbiJarParameters(
-      BuildTarget target, BuildContext context, CompilerParameters compilerParameters) {
+      BuildTarget target,
+      BuildContext context,
+      ProjectFilesystem filesystem,
+      CompilerParameters compilerParameters) {
     if (JavaAbis.isLibraryTarget(target)) {
       return Optional.empty();
     }
     Preconditions.checkState(
         JavaAbis.isSourceAbiTarget(target) || JavaAbis.isSourceOnlyAbiTarget(target));
-    return getJarParameters(context, target, compilerParameters);
+    return getJarParameters(context, filesystem, target, compilerParameters);
   }
 
   private Optional<JarParameters> getJarParameters(
-      BuildContext context, BuildTarget buildTarget, CompilerParameters compilerParameters) {
-    return getOutputJarPath(buildTarget)
+      BuildContext context,
+      ProjectFilesystem filesystem,
+      BuildTarget buildTarget,
+      CompilerParameters compilerParameters) {
+    return getOutputJarPath(buildTarget, filesystem)
         .map(
             output ->
                 JarParameters.builder()
-                    .setEntriesToJar(ImmutableSortedSet.of(compilerParameters.getOutputDirectory()))
+                    .setEntriesToJar(
+                        ImmutableSortedSet.of(compilerParameters.getOutputPaths().getClassesDir()))
                     .setManifestFile(
                         manifestFile.map(context.getSourcePathResolver()::getAbsolutePath))
                     .setJarPath(output)
@@ -361,24 +359,22 @@ public class JarBuildStepsFactory
         getDepOutputPathToAbiSourcePath(context.getSourcePathResolver(), ruleFinder));
   }
 
-  private Optional<Path> getOutputJarPath(BuildTarget buildTarget) {
+  private Optional<Path> getOutputJarPath(BuildTarget buildTarget, ProjectFilesystem filesystem) {
     if (!producesJar()) {
       return Optional.empty();
     }
 
     if (JavaAbis.isSourceAbiTarget(buildTarget) || JavaAbis.isSourceOnlyAbiTarget(buildTarget)) {
-      return Optional.of(
-          CompilerParameters.getAbiJarPath(buildTarget, projectFilesystemForOutputJarPaths));
+      return Optional.of(CompilerOutputPaths.getAbiJarPath(buildTarget, filesystem));
     } else if (JavaAbis.isLibraryTarget(buildTarget)) {
-      return Optional.of(
-          DefaultJavaLibrary.getOutputJarPath(buildTarget, projectFilesystemForOutputJarPaths));
+      return Optional.of(AbstractCompilerOutputPaths.getOutputJarPath(buildTarget, filesystem));
     } else {
       throw new IllegalArgumentException();
     }
   }
 
   private Path getDepFileRelativePath(ProjectFilesystem filesystem, BuildTarget buildTarget) {
-    return CompilerParameters.getOutputJarDirPath(buildTarget, filesystem)
+    return CompilerOutputPaths.getOutputJarDirPath(buildTarget, filesystem)
         .resolve("used-classes.json");
   }
 
@@ -404,7 +400,7 @@ public class JarBuildStepsFactory
     return javacToJarStepFactory.createPipelineState(
         firstRule,
         compilerParameters,
-        getAbiJarParameters(firstRule, context, compilerParameters).orElse(null),
-        getLibraryJarParameters(context, compilerParameters).orElse(null));
+        getAbiJarParameters(firstRule, context, filesystem, compilerParameters).orElse(null),
+        getLibraryJarParameters(context, filesystem, compilerParameters).orElse(null));
   }
 }

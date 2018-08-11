@@ -26,10 +26,10 @@ import com.facebook.buck.core.model.impl.ImmutableBuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.util.graph.AcyclicDepthFirstPostOrderTraversal;
+import com.facebook.buck.core.util.graph.GraphTraversable;
+import com.facebook.buck.core.util.graph.MutableDirectedGraph;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.graph.AcyclicDepthFirstPostOrderTraversal;
-import com.facebook.buck.graph.GraphTraversable;
-import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
@@ -162,8 +162,7 @@ public class DefaultParser implements Parser {
       String shortName = targetNode.getBuildTarget().getShortName();
       for (Map<String, Object> rawNode : allRawNodes) {
         if (shortName.equals(rawNode.get("name"))) {
-          SortedMap<String, Object> toReturn = new TreeMap<>();
-          toReturn.putAll(rawNode);
+          SortedMap<String, Object> toReturn = new TreeMap<>(rawNode);
           toReturn.put(
               "buck.direct_dependencies",
               targetNode

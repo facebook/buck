@@ -16,7 +16,6 @@
 
 package com.facebook.buck.apple;
 
-import static com.facebook.buck.apple.FakeAppleRuleDescriptions.DEFAULT_IPHONEOS_I386_PLATFORM;
 import static org.hamcrest.Matchers.endsWith;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasEntry;
@@ -61,21 +60,26 @@ import org.junit.Test;
 
 public class ExternallyBuiltApplePackageTest {
 
-  private String bundleLocation = "Fake/Bundle/Location";
-  private BuildTarget buildTarget =
-      BuildTargetFactory.newInstance(Paths.get("."), "//foo", "package");
-  private ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
-  private BuildRuleParams params = TestBuildRuleParams.create();
-  private ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-  private ApplePackageConfigAndPlatformInfo config =
-      ApplePackageConfigAndPlatformInfo.of(
-          ApplePackageConfig.of("echo $SDKROOT $OUT", "api"),
-          StringArg::of,
-          DEFAULT_IPHONEOS_I386_PLATFORM);
+  private String bundleLocation;
+  private BuildTarget buildTarget;
+  private ProjectFilesystem projectFilesystem;
+  private BuildRuleParams params;
+  private ActionGraphBuilder graphBuilder;
+  private ApplePackageConfigAndPlatformInfo config;
 
   @Before
   public void setUp() {
     assumeTrue(Platform.detect() == Platform.MACOS || Platform.detect() == Platform.LINUX);
+    bundleLocation = "Fake/Bundle/Location";
+    buildTarget = BuildTargetFactory.newInstance(Paths.get("."), "//foo", "package");
+    projectFilesystem = new FakeProjectFilesystem();
+    params = TestBuildRuleParams.create();
+    graphBuilder = new TestActionGraphBuilder();
+    config =
+        ApplePackageConfigAndPlatformInfo.of(
+            ApplePackageConfig.of("echo $SDKROOT $OUT", "api"),
+            StringArg::of,
+            FakeAppleRuleDescriptions.DEFAULT_IPHONEOS_I386_PLATFORM);
   }
 
   @Test
@@ -107,7 +111,11 @@ public class ExternallyBuiltApplePackageTest {
     assertThat(
         step.getEnvironmentVariables(TestExecutionContext.newInstance()),
         hasEntry(
-            "SDKROOT", DEFAULT_IPHONEOS_I386_PLATFORM.getAppleSdkPaths().getSdkPath().toString()));
+            "SDKROOT",
+            FakeAppleRuleDescriptions.DEFAULT_IPHONEOS_I386_PLATFORM
+                .getAppleSdkPaths()
+                .getSdkPath()
+                .toString()));
   }
 
   @Test

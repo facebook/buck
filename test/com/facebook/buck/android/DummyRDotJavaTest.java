@@ -36,6 +36,7 @@ import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.AnnotationProcessingParams;
 import com.facebook.buck.jvm.java.ClasspathChecker;
+import com.facebook.buck.jvm.java.CompilerOutputPaths;
 import com.facebook.buck.jvm.java.CompilerParameters;
 import com.facebook.buck.jvm.java.ExtraClasspathProvider;
 import com.facebook.buck.jvm.java.JavacOptions;
@@ -100,17 +101,17 @@ public class DummyRDotJavaTest {
 
     FakeBuildableContext buildableContext = new FakeBuildableContext();
     List<Step> steps = dummyRDotJava.getBuildSteps(FakeBuildContext.NOOP_CONTEXT, buildableContext);
-    assertEquals("DummyRDotJava returns an incorrect number of Steps.", 12, steps.size());
+    assertEquals("DummyRDotJava returns an incorrect number of Steps.", 14, steps.size());
 
     Path rDotJavaSrcFolder =
-        BuildTargetPaths.getScratchPath(
-            filesystem, dummyRDotJava.getBuildTarget(), "__%s_rdotjava_src__");
+        DummyRDotJava.getRDotJavaSrcFolder(dummyRDotJava.getBuildTarget(), filesystem);
     Path rDotJavaBinFolder =
-        BuildTargetPaths.getScratchPath(
-            filesystem, dummyRDotJava.getBuildTarget(), "__%s_rdotjava_bin__");
+        CompilerOutputPaths.getClassesDir(dummyRDotJava.getBuildTarget(), filesystem);
     Path rDotJavaOutputFolder =
-        BuildTargetPaths.getGenPath(
-            filesystem, dummyRDotJava.getBuildTarget(), "__%s_dummyrdotjava_output__");
+        DummyRDotJava.getPathToOutputDir(dummyRDotJava.getBuildTarget(), filesystem);
+    Path rDotJavaAnnotationFolder =
+        CompilerOutputPaths.getAnnotationPath(filesystem, dummyRDotJava.getBuildTarget()).get();
+
     String rDotJavaOutputJar =
         MorePaths.pathWithPlatformSeparators(
             String.format(
@@ -134,6 +135,7 @@ public class DummyRDotJavaTest {
             .addAll(makeCleanDirDescription(rDotJavaBinFolder))
             .addAll(makeCleanDirDescription(rDotJavaOutputFolder))
             .add(String.format("mkdir -p %s", genFolder))
+            .addAll(makeCleanDirDescription(rDotJavaAnnotationFolder))
             .add(
                 new JavacStep(
                         DEFAULT_JAVAC,
@@ -145,13 +147,10 @@ public class DummyRDotJavaTest {
                         new FakeProjectFilesystem(),
                         new ClasspathChecker(),
                         CompilerParameters.builder()
-                            .setOutputDirectory(rDotJavaBinFolder)
-                            .setGeneratedCodeDirectory(Paths.get("generated"))
-                            .setWorkingDirectory(Paths.get("working"))
+                            .setScratchPaths(
+                                dummyRDotJava.getBuildTarget(),
+                                dummyRDotJava.getProjectFilesystem())
                             .setSourceFilePaths(javaSourceFiles)
-                            .setPathToSourcesList(
-                                BuildTargetPaths.getGenPath(
-                                    filesystem, dummyRDotJava.getBuildTarget(), "__%s__srcs"))
                             .setClasspathEntries(ImmutableSortedSet.of())
                             .build(),
                         null,
@@ -168,7 +167,7 @@ public class DummyRDotJavaTest {
         TestExecutionContext.newInstance());
 
     assertEquals(
-        ImmutableSet.of(rDotJavaBinFolder, Paths.get(rDotJavaOutputJar)),
+        ImmutableSet.of(rDotJavaBinFolder, Paths.get(rDotJavaOutputJar), rDotJavaAnnotationFolder),
         buildableContext.getRecordedArtifacts());
   }
 
@@ -193,7 +192,7 @@ public class DummyRDotJavaTest {
         BuildTargetPaths.getScratchPath(
             dummyRDotJava.getProjectFilesystem(),
             dummyRDotJava.getBuildTarget(),
-            "__%s_rdotjava_bin__"),
+            "lib__%s__scratch/classes"),
         dummyRDotJava.getRDotJavaBinFolder());
   }
 

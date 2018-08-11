@@ -16,23 +16,25 @@
 
 package com.facebook.buck.core.cell.impl;
 
-import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.CellConfig;
 import com.facebook.buck.core.cell.CellPathResolverView;
 import com.facebook.buck.core.cell.CellProvider;
 import com.facebook.buck.core.cell.name.RelativeCellName;
 import com.facebook.buck.core.cell.resolver.CellPathResolver;
+import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.toolchain.ToolchainProvider;
+import com.facebook.buck.core.toolchain.ToolchainProviderFactory;
 import com.facebook.buck.io.filesystem.EmbeddedCellBuckOutInfo;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
 import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.module.BuckModuleManager;
+import com.facebook.buck.parser.BuildTargetParser;
+import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
 import com.facebook.buck.rules.keys.config.impl.ConfigRuleKeyConfigurationFactory;
-import com.facebook.buck.toolchain.ToolchainProvider;
-import com.facebook.buck.toolchain.ToolchainProviderFactory;
 import com.facebook.buck.util.config.Config;
 import com.facebook.buck.util.config.Configs;
 import com.facebook.buck.util.config.RawConfig;
@@ -137,7 +139,11 @@ public class LocalCellProviderFactory {
                         rootConfig.getArchitecture(),
                         rootConfig.getPlatform(),
                         rootConfig.getEnvironment(),
-                        cellPathResolver);
+                        target ->
+                            BuildTargetParser.INSTANCE.parse(
+                                target,
+                                BuildTargetPatternParser.fullyQualified(),
+                                cellPathResolver));
 
                 RuleKeyConfiguration ruleKeyConfiguration =
                     ConfigRuleKeyConfigurationFactory.create(buckConfig, moduleManager);
@@ -155,6 +161,7 @@ public class LocalCellProviderFactory {
                     cellProvider,
                     toolchainProvider,
                     ruleKeyConfiguration,
+                    cellPathResolver,
                     cellFilesystem,
                     buckConfig);
               }

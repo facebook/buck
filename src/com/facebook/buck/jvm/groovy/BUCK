@@ -8,7 +8,7 @@ java_library_with_plugins(
     ],
     visibility = ["PUBLIC"],
     deps = [
-        "//src/com/facebook/buck/config:config",
+        "//src/com/facebook/buck/core/config:config",
         "//src/com/facebook/buck/core/description/attr:attr",
         "//src/com/facebook/buck/core/model:model",
         "//src/com/facebook/buck/core/model/targetgraph:targetgraph",

@@ -31,9 +31,8 @@ java_immutables_library(
         "PUBLIC",
     ],
     deps = [
-        "//src/com/facebook/buck/build_type:build_type",
-        "//src/com/facebook/buck/config:config",
         "//src/com/facebook/buck/core/cell/name:name",
+        "//src/com/facebook/buck/core/config:config",
         "//src/com/facebook/buck/core/util/immutables:immutables",
         "//src/com/facebook/buck/event:interfaces",
         "//src/com/facebook/buck/event/external:external_lib",

@@ -19,12 +19,10 @@ package com.facebook.buck.cli;
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.ArtifactCaches;
 import com.facebook.buck.artifact_cache.config.ArtifactCacheBuckConfig;
-import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphCache;
 import com.facebook.buck.core.rulekey.RuleKey;
-import com.facebook.buck.core.rules.config.KnownConfigurationRuleTypes;
-import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypesProvider;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.FileHashCacheEvent;
@@ -84,15 +82,12 @@ final class Daemon implements Closeable {
   private final RuleKeyCacheRecycler<RuleKey> defaultRuleKeyFactoryCacheRecycler;
   private final ImmutableMap<Path, WatchmanCursor> cursor;
   private final KnownRuleTypesProvider knownRuleTypesProvider;
-  private final KnownBuildRuleTypesProvider knownBuildRuleTypesProvider;
 
   private final BackgroundTaskManager bgTaskManager;
 
   Daemon(
       Cell rootCell,
       KnownRuleTypesProvider knownRuleTypesProvider,
-      KnownBuildRuleTypesProvider knownBuildRuleTypesProvider,
-      KnownConfigurationRuleTypes knownConfigurationRuleTypes,
       ExecutableFinder executableFinder,
       Optional<WebServer> webServerToReuse) {
     this.rootCell = rootCell;
@@ -119,7 +114,6 @@ final class Daemon implements Closeable {
         new ActionGraphCache(rootCell.getBuckConfig().getMaxActionGraphCacheEntries());
     this.versionedTargetGraphCache = new VersionedTargetGraphCache();
     this.knownRuleTypesProvider = knownRuleTypesProvider;
-    this.knownBuildRuleTypesProvider = knownBuildRuleTypesProvider;
 
     typeCoercerFactory = new DefaultTypeCoercerFactory();
     ParserConfig parserConfig = rootCell.getBuckConfig().getView(ParserConfig.class);
@@ -129,8 +123,6 @@ final class Daemon implements Closeable {
                 typeCoercerFactory,
                 new ConstructorArgMarshaller(typeCoercerFactory),
                 knownRuleTypesProvider,
-                knownBuildRuleTypesProvider,
-                knownConfigurationRuleTypes,
                 new ParserPythonInterpreterProvider(parserConfig, executableFinder)),
             parserConfig,
             typeCoercerFactory,
@@ -233,10 +225,6 @@ final class Daemon implements Closeable {
 
   ImmutableList<ProjectFileHashCache> getFileHashCaches() {
     return hashCaches;
-  }
-
-  KnownBuildRuleTypesProvider getKnownBuildRuleTypesProvider() {
-    return knownBuildRuleTypesProvider;
   }
 
   public KnownRuleTypesProvider getKnownRuleTypesProvider() {

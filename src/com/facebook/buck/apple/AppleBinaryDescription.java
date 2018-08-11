@@ -43,6 +43,7 @@ import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
+import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.CxxBinaryDescription;
 import com.facebook.buck.cxx.CxxBinaryDescriptionArg;
@@ -62,7 +63,6 @@ import com.facebook.buck.file.WriteFile;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.swift.SwiftLibraryDescription;
-import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.types.Either;
 import com.facebook.buck.versions.Version;
 import com.google.common.base.Joiner;
@@ -106,6 +106,7 @@ public class AppleBinaryDescription
           LinkerMapMode.NO_LINKER_MAP.getFlavor());
 
   private final ToolchainProvider toolchainProvider;
+  private final XCodeDescriptions xcodeDescriptions;
   private final Optional<SwiftLibraryDescription> swiftDelegate;
   private final AppleConfig appleConfig;
   private final CxxBinaryImplicitFlavors cxxBinaryImplicitFlavors;
@@ -115,6 +116,7 @@ public class AppleBinaryDescription
 
   public AppleBinaryDescription(
       ToolchainProvider toolchainProvider,
+      XCodeDescriptions xcodeDescriptions,
       SwiftLibraryDescription swiftDelegate,
       AppleConfig appleConfig,
       CxxBinaryImplicitFlavors cxxBinaryImplicitFlavors,
@@ -122,6 +124,7 @@ public class AppleBinaryDescription
       CxxBinaryMetadataFactory cxxBinaryMetadataFactory,
       CxxBinaryFlavored cxxBinaryFlavored) {
     this.toolchainProvider = toolchainProvider;
+    this.xcodeDescriptions = xcodeDescriptions;
     // TODO(T22135033): Make apple_binary not use a Swift delegate
     this.swiftDelegate = Optional.of(swiftDelegate);
     this.appleConfig = appleConfig;
@@ -356,6 +359,7 @@ public class AppleBinaryDescription
     }
     BuildTarget binaryTarget = buildTarget.withoutFlavors(APP_FLAVOR);
     return AppleDescriptions.createAppleBundle(
+        xcodeDescriptions,
         getCxxPlatformsProvider(),
         appleCxxPlatformsFlavorDomain,
         targetGraph,

@@ -18,12 +18,12 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
+import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTarget;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
-import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -101,8 +101,7 @@ abstract class AbstractOmnibusRoots {
     }
 
     private ImmutableMap<BuildTarget, NativeLinkable> buildExcluded() {
-      Map<BuildTarget, NativeLinkable> excluded = new LinkedHashMap<>();
-      excluded.putAll(excludedRoots);
+      Map<BuildTarget, NativeLinkable> excluded = new LinkedHashMap<>(excludedRoots);
 
       // Find all excluded nodes reachable from the included roots.
       Map<BuildTarget, NativeLinkable> includedRootDeps = new LinkedHashMap<>();
@@ -125,8 +124,7 @@ abstract class AbstractOmnibusRoots {
       }.start();
 
       // Prepare the final map of excluded roots, starting with the pre-defined ones.
-      Map<BuildTarget, NativeLinkable> updatedExcludedRoots = new LinkedHashMap<>();
-      updatedExcludedRoots.putAll(excludedRoots);
+      Map<BuildTarget, NativeLinkable> updatedExcludedRoots = new LinkedHashMap<>(excludedRoots);
 
       // Recursively expand the excluded nodes including any preloaded deps, as we'll need this full
       // list to know which roots to exclude from omnibus linking.

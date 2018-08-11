@@ -16,15 +16,16 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.config.BuckConfig;
-import com.facebook.buck.config.resources.ResourcesConfig;
 import com.facebook.buck.core.cell.CellConfig;
 import com.facebook.buck.core.cell.name.RelativeCellName;
 import com.facebook.buck.core.cell.resolver.CellPathResolver;
+import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
+import com.facebook.buck.core.resources.ResourcesConfig;
 import com.facebook.buck.core.rulekey.RuleKey;
+import com.facebook.buck.core.rulekey.config.RuleKeyConfig;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.log.LogConfigSetup;
@@ -60,7 +61,6 @@ import com.google.devtools.build.lib.profiler.Profiler.Format;
 import com.google.devtools.build.lib.profiler.Profiler.ProfiledTaskKinds;
 import java.io.BufferedOutputStream;
 import java.io.Closeable;
-import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
@@ -128,126 +128,6 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
       metaVar = "PATH")
   @Nullable
   private String skylarkProfile;
-
-  private void parseConfigOption(CellConfig.Builder builder, Pair<String, String> config) {
-    // Parse command-line config overrides.
-    List<String> key = Splitter.on("//").limit(2).splitToList(config.getFirst());
-    RelativeCellName cellName = RelativeCellName.ALL_CELLS_SPECIAL_NAME;
-    String configKey = key.get(0);
-    if (key.size() == 2) {
-      // Here we explicitly take the whole string as the cell name. We don't support transitive
-      // path overrides for cells.
-      if (key.get(0).length() == 0) {
-        cellName = RelativeCellName.ROOT_CELL_NAME;
-      } else {
-        cellName = RelativeCellName.of(ImmutableSet.of(key.get(0)));
-      }
-      configKey = key.get(1);
-    }
-    int separatorIndex = configKey.lastIndexOf('.');
-    if (separatorIndex < 0 || separatorIndex == configKey.length() - 1) {
-      throw new HumanReadableException(
-          "Invalid config override \"%s=%s\" Expected <section>.<field>=<value>.",
-          configKey, config.getSecond());
-    }
-    // Overrides for locations of transitive children of cells are weird as the order of overrides
-    // can affect the result (for example `-c a/b/c.k=v -c a/b//repositories.c=foo` causes an
-    // interesting problem as the a/b/c cell gets created as a side-effect of the first override,
-    // but the second override wants to change its identity).
-    // It's generally a better idea to use the .buckconfig.local mechanism when overriding
-    // repositories anyway, so here we simply disallow them.
-    String section = configKey.substring(0, separatorIndex);
-    if (section.equals("repositories")) {
-      throw new HumanReadableException(
-          "Overriding repository locations from the command line "
-              + "is not supported. Please place a .buckconfig.local in the appropriate location and "
-              + "use that instead.");
-    }
-    String value = config.getSecond();
-    String field = configKey.substring(separatorIndex + 1);
-    builder.put(cellName, section, field, value);
-  }
-
-  private void parseConfigFileOption(CellConfig.Builder builder, String filename) {
-    if (filename == null) {
-      return;
-    }
-    RelativeCellName cellName = RelativeCellName.ALL_CELLS_SPECIAL_NAME;
-    String[] matches = filename.split("=", 2);
-    if (matches.length == 2) {
-      filename = matches[1];
-      if (matches[0].equals("//")) {
-        cellName = RelativeCellName.ROOT_CELL_NAME;
-      } else if (matches[0].matches("^//.*")) {
-        cellName = RelativeCellName.of(ImmutableSet.of(matches[0].substring(2)));
-      }
-    }
-
-    Path path = new File(filename).toPath();
-    ImmutableMap<String, ImmutableMap<String, String>> sectionsToEntries;
-
-    try {
-      sectionsToEntries = Configs.parseConfigFile(path);
-    } catch (IOException e) {
-      throw new HumanReadableException(e, "File could not be read: %s", filename);
-    }
-
-    for (Map.Entry<String, ImmutableMap<String, String>> entry : sectionsToEntries.entrySet()) {
-      String section = entry.getKey();
-      for (Map.Entry<String, String> sectionEntry : entry.getValue().entrySet()) {
-        String field = sectionEntry.getKey();
-        String value = sectionEntry.getValue();
-        builder.put(cellName, section, field, value);
-      }
-    }
-    LOG.debug("Loaded a configuration file %s, %s", filename, sectionsToEntries.toString());
-  }
-
-  void saveConfigOptionInOverrides(String configOverride) {
-    if (configOverride.indexOf('=') == -1) {
-      throw new HumanReadableException(
-          "Invalid config configOverride \"%s\" Expected <section>.<field>=<value>.",
-          configOverride);
-    }
-
-    final String key;
-    Optional<String> maybeValue;
-
-    // Splitting off the key from the value
-    int index = configOverride.indexOf('=');
-    key = configOverride.substring(0, index);
-    maybeValue = Optional.of(configOverride.substring(index + 1));
-
-    if (key.length() == 0)
-      throw new HumanReadableException(
-          "Invalid config configOverride \"%s\" Expected <section>.<field>=<value>.",
-          configOverride);
-
-    maybeValue.ifPresent(value -> configOverrides.add(new Pair<String, String>(key, value)));
-  }
-
-  @Override
-  @SuppressWarnings("unchecked")
-  public CellConfig getConfigOverrides() {
-    CellConfig.Builder builder = CellConfig.builder();
-
-    for (Object option : configOverrides) {
-      if (option instanceof String) {
-        parseConfigFileOption(builder, (String) option);
-      } else {
-        parseConfigOption(builder, (Pair<String, String>) option);
-      }
-    }
-    if (numThreads != null) {
-      builder.put(
-          RelativeCellName.ALL_CELLS_SPECIAL_NAME, "build", "threads", String.valueOf(numThreads));
-    }
-    if (noCache) {
-      builder.put(RelativeCellName.ALL_CELLS_SPECIAL_NAME, "cache", "mode", "");
-    }
-
-    return builder.build();
-  }
 
   @Override
   public LogConfigSetup getLogConfig() {
@@ -375,12 +255,12 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
   }
 
   public ImmutableList<TargetNodeSpec> parseArgumentsAsTargetNodeSpecs(
-      BuckConfig config, Iterable<String> targetsAsArgs) {
+      CellPathResolver cellPathResolver, BuckConfig config, Iterable<String> targetsAsArgs) {
     ImmutableList.Builder<TargetNodeSpec> specs = ImmutableList.builder();
     CommandLineTargetNodeSpecParser parser =
         new CommandLineTargetNodeSpecParser(config, new BuildTargetPatternTargetNodeParser());
     for (String arg : targetsAsArgs) {
-      specs.addAll(parser.parse(config.getCellPathResolver(), arg));
+      specs.addAll(parser.parse(cellPathResolver, arg));
     }
     return specs.build();
   }
@@ -427,7 +307,8 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
             .setDefaultTestTimeoutMillis(params.getBuckConfig().getDefaultTestTimeoutMillis())
             .setInclNoLocationClassesEnabled(
                 params.getBuckConfig().getBooleanValue("test", "incl_no_location_classes", false))
-            .setRuleKeyDiagnosticsMode(params.getBuckConfig().getRuleKeyDiagnosticsMode())
+            .setRuleKeyDiagnosticsMode(
+                params.getBuckConfig().getView(RuleKeyConfig.class).getRuleKeyDiagnosticsMode())
             .setConcurrencyLimit(getConcurrencyLimit(params.getBuckConfig()))
             .setPersistentWorkerPools(params.getPersistentWorkerPools())
             .setProjectFilesystemFactory(params.getProjectFilesystemFactory());
@@ -518,5 +399,134 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
                     BuildTargetPatternParser.fullyQualified(),
                     params.getCell().getCellPathResolver()))
         .collect(ImmutableSet.toImmutableSet());
+  }
+
+  private void parseConfigOption(CellConfig.Builder builder, Pair<String, String> config) {
+    // Parse command-line config overrides.
+    List<String> key = Splitter.on("//").limit(2).splitToList(config.getFirst());
+    RelativeCellName cellName = RelativeCellName.ALL_CELLS_SPECIAL_NAME;
+    String configKey = key.get(0);
+    if (key.size() == 2) {
+      // Here we explicitly take the whole string as the cell name. We don't support transitive
+      // path overrides for cells.
+      if (key.get(0).length() == 0) {
+        cellName = RelativeCellName.ROOT_CELL_NAME;
+      } else {
+        cellName = RelativeCellName.of(ImmutableSet.of(key.get(0)));
+      }
+      configKey = key.get(1);
+    }
+    int separatorIndex = configKey.lastIndexOf('.');
+    if (separatorIndex < 0 || separatorIndex == configKey.length() - 1) {
+      throw new HumanReadableException(
+          "Invalid config override \"%s=%s\" Expected <section>.<field>=<value>.",
+          configKey, config.getSecond());
+    }
+    // Overrides for locations of transitive children of cells are weird as the order of overrides
+    // can affect the result (for example `-c a/b/c.k=v -c a/b//repositories.c=foo` causes an
+    // interesting problem as the a/b/c cell gets created as a side-effect of the first override,
+    // but the second override wants to change its identity).
+    // It's generally a better idea to use the .buckconfig.local mechanism when overriding
+    // repositories anyway, so here we simply disallow them.
+    String section = configKey.substring(0, separatorIndex);
+    if (section.equals("repositories")) {
+      throw new HumanReadableException(
+          "Overriding repository locations from the command line "
+              + "is not supported. Please place a .buckconfig.local in the appropriate location and "
+              + "use that instead.");
+    }
+    String value = config.getSecond();
+    String field = configKey.substring(separatorIndex + 1);
+    builder.put(cellName, section, field, value);
+  }
+
+  private void parseConfigFileOption(
+      ImmutableMap<RelativeCellName, Path> cellMapping,
+      CellConfig.Builder builder,
+      String filename) {
+    if (filename == null) {
+      return;
+    }
+    RelativeCellName cellName = RelativeCellName.ALL_CELLS_SPECIAL_NAME;
+    String[] matches = filename.split("=", 2);
+    if (matches.length == 2) {
+      filename = matches[1];
+      if (matches[0].equals("//")) {
+        cellName = RelativeCellName.ROOT_CELL_NAME;
+      } else if (matches[0].matches("^.*//")) {
+        cellName =
+            RelativeCellName.of(ImmutableSet.of(matches[0].substring(0, matches[0].length() - 2)));
+      }
+    }
+
+    Path projectRoot =
+        cellMapping.get(
+            cellName.equals(RelativeCellName.ALL_CELLS_SPECIAL_NAME)
+                ? RelativeCellName.ROOT_CELL_NAME
+                : cellName);
+    Path path = projectRoot.resolve(filename);
+    ImmutableMap<String, ImmutableMap<String, String>> sectionsToEntries;
+
+    try {
+      sectionsToEntries = Configs.parseConfigFile(path);
+    } catch (IOException e) {
+      throw new HumanReadableException(e, "File could not be read: %s", filename);
+    }
+
+    for (Map.Entry<String, ImmutableMap<String, String>> entry : sectionsToEntries.entrySet()) {
+      String section = entry.getKey();
+      for (Map.Entry<String, String> sectionEntry : entry.getValue().entrySet()) {
+        String field = sectionEntry.getKey();
+        String value = sectionEntry.getValue();
+        builder.put(cellName, section, field, value);
+      }
+    }
+    LOG.debug("Loaded a configuration file %s, %s", filename, sectionsToEntries.toString());
+  }
+
+  void saveConfigOptionInOverrides(String configOverride) {
+    if (configOverride.indexOf('=') == -1) {
+      throw new HumanReadableException(
+          "Invalid config configOverride \"%s\" Expected <section>.<field>=<value>.",
+          configOverride);
+    }
+
+    final String key;
+    Optional<String> maybeValue;
+
+    // Splitting off the key from the value
+    int index = configOverride.indexOf('=');
+    key = configOverride.substring(0, index);
+    maybeValue = Optional.of(configOverride.substring(index + 1));
+
+    if (key.length() == 0)
+      throw new HumanReadableException(
+          "Invalid config configOverride \"%s\" Expected <section>.<field>=<value>.",
+          configOverride);
+
+    maybeValue.ifPresent(value -> configOverrides.add(new Pair<String, String>(key, value)));
+  }
+
+  @Override
+  @SuppressWarnings("unchecked")
+  public CellConfig getConfigOverrides(ImmutableMap<RelativeCellName, Path> cellMapping) {
+    CellConfig.Builder builder = CellConfig.builder();
+
+    for (Object option : configOverrides) {
+      if (option instanceof String) {
+        parseConfigFileOption(cellMapping, builder, (String) option);
+      } else {
+        parseConfigOption(builder, (Pair<String, String>) option);
+      }
+    }
+    if (numThreads != null) {
+      builder.put(
+          RelativeCellName.ALL_CELLS_SPECIAL_NAME, "build", "threads", String.valueOf(numThreads));
+    }
+    if (noCache) {
+      builder.put(RelativeCellName.ALL_CELLS_SPECIAL_NAME, "cache", "mode", "");
+    }
+
+    return builder.build();
   }
 }

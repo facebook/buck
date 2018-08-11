@@ -40,6 +40,7 @@ import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
+import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
@@ -56,7 +57,6 @@ import com.facebook.buck.rules.macros.StringWithMacrosConverter;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.WriteFileStep;
-import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.Optionals;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.types.Pair;
@@ -130,12 +130,12 @@ public class PythonTestDescription
    * modules.
    */
   private static String getTestModulesListContents(ImmutableSet<String> modules) {
-    String contents = "TEST_MODULES = [\n";
+    StringBuilder contents = new StringBuilder("TEST_MODULES = [\n");
     for (String module : modules) {
-      contents += String.format("    \"%s\",\n", module);
+      contents.append(String.format("    \"%s\",\n", module));
     }
-    contents += "]";
-    return contents;
+    contents.append("]");
+    return contents.toString();
   }
 
   /**

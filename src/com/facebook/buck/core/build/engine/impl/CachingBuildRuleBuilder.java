@@ -49,6 +49,7 @@ import com.facebook.buck.core.build.engine.manifest.ManifestStoreResult;
 import com.facebook.buck.core.build.engine.type.BuildType;
 import com.facebook.buck.core.build.engine.type.DepFiles;
 import com.facebook.buck.core.build.engine.type.MetadataStorage;
+import com.facebook.buck.core.build.engine.type.UploadToCacheResultType;
 import com.facebook.buck.core.build.event.BuildRuleEvent;
 import com.facebook.buck.core.build.stats.BuildRuleDurationTracker;
 import com.facebook.buck.core.exceptions.HumanReadableException;
@@ -741,7 +742,7 @@ class CachingBuildRuleBuilder {
     Optional<Long> outputSize = Optional.empty();
     Optional<HashCode> outputHash = Optional.empty();
     Optional<BuildRuleSuccessType> successType = Optional.empty();
-    boolean shouldUploadToCache = false;
+    UploadToCacheResultType shouldUploadToCache = UploadToCacheResultType.UNCACHEABLE;
 
     try (Scope ignored = buildRuleScope()) {
       if (input.getStatus() == BuildRuleStatus.SUCCESS) {
@@ -763,12 +764,13 @@ class CachingBuildRuleBuilder {
         }
 
         // Determine if this is rule is cacheable.
-        shouldUploadToCache =
-            outputSize.isPresent()
-                && buildCacheArtifactUploader.shouldUploadToCache(success, outputSize.get());
+        if (outputSize.isPresent()) {
+          shouldUploadToCache =
+              buildCacheArtifactUploader.shouldUploadToCache(success, outputSize.get());
+        }
 
         // Upload it to the cache.
-        if (shouldUploadToCache) {
+        if (shouldUploadToCache.equals(UploadToCacheResultType.CACHEABLE)) {
           uploadToCache(success);
         }
       }

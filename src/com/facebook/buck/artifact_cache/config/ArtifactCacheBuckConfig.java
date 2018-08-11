@@ -16,10 +16,10 @@
 
 package com.facebook.buck.artifact_cache.config;
 
-import com.facebook.buck.config.BuckConfig;
-import com.facebook.buck.config.ConfigView;
-import com.facebook.buck.config.resources.ResourcesConfig;
+import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.config.ConfigView;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.resources.ResourcesConfig;
 import com.facebook.buck.slb.SlbBuckConfig;
 import com.facebook.buck.util.unit.SizeUnit;
 import com.google.common.base.Joiner;

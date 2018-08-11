@@ -1,12 +1,14 @@
 go_binary(
     name = "bin",
     srcs = ["main.go"],
-    cgo = ":cgo",
+    deps = [
+        ":cgo",
+    ],
 )
 
 cgo_library(
     name = "cgo",
-    package_name = "main",
+    package_name = "cgo",
     srcs = [":gen_cgosrc"],
     deps = ["//src/cxx:lib"],
 )

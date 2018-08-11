@@ -19,7 +19,7 @@ package com.facebook.buck.features.python.toolchain.impl;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
-import com.facebook.buck.config.FakeBuckConfig;
+import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.features.python.PythonBuckConfig;
 import com.facebook.buck.features.python.toolchain.PythonInterpreter;

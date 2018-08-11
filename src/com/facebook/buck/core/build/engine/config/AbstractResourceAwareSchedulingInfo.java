@@ -56,7 +56,7 @@ abstract class AbstractResourceAwareSchedulingInfo {
   }
 
   private boolean isRuleResourceFree(BuildRule rule) {
-    return rule.hasBuildSteps();
+    return !rule.hasBuildSteps();
   }
 
   private ResourceAmounts getResourceAmountsForRuleOrDefaultAmounts(BuildRule rule) {

@@ -24,6 +24,7 @@ import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
@@ -44,7 +45,6 @@ import com.google.common.base.Functions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
 import java.io.File;
 import java.nio.file.Paths;
 import java.util.List;
@@ -70,20 +70,16 @@ public class JavacStepTest {
         new ClasspathChecker(
             "/", ":", Paths::get, dir -> false, file -> false, (path, glob) -> ImmutableSet.of());
 
+    BuildTarget target = BuildTargetFactory.newInstance(fakeFilesystem.getRootPath(), "//foo:bar");
     JavacStep step =
         new JavacStep(
             fakeJavac,
             javacOptions,
-            BuildTargetFactory.newInstance(fakeFilesystem.getRootPath(), "//foo:bar"),
+            target,
             sourcePathResolver,
             fakeFilesystem,
             classpathChecker,
-            CompilerParameters.builder()
-                .setOutputDirectory(Paths.get("output"))
-                .setGeneratedCodeDirectory(Paths.get("generated"))
-                .setWorkingDirectory(Paths.get("working"))
-                .setPathToSourcesList(Paths.get("pathToSrcsList"))
-                .build(),
+            CompilerParameters.builder().setScratchPaths(target, fakeFilesystem).build(),
             null,
             null);
 
@@ -117,22 +113,16 @@ public class JavacStepTest {
         new ClasspathChecker(
             "/", ":", Paths::get, dir -> false, file -> false, (path, glob) -> ImmutableSet.of());
 
+    BuildTarget target = BuildTargetFactory.newInstance(fakeFilesystem.getRootPath(), "//foo:bar");
     JavacStep step =
         new JavacStep(
             fakeJavac,
             javacOptions,
-            BuildTargetFactory.newInstance(fakeFilesystem.getRootPath(), "//foo:bar"),
+            target,
             sourcePathResolver,
             fakeFilesystem,
             classpathChecker,
-            CompilerParameters.builder()
-                .setOutputDirectory(Paths.get("output"))
-                .setGeneratedCodeDirectory(Paths.get("generated"))
-                .setWorkingDirectory(Paths.get("working"))
-                .setSourceFilePaths(ImmutableSortedSet.of())
-                .setPathToSourcesList(Paths.get("pathToSrcsList"))
-                .setClasspathEntries(ImmutableSortedSet.of())
-                .build(),
+            CompilerParameters.builder().setScratchPaths(target, fakeFilesystem).build(),
             null,
             null);
 
@@ -171,22 +161,16 @@ public class JavacStepTest {
         new ClasspathChecker(
             "/", ":", Paths::get, dir -> true, file -> false, (path, glob) -> ImmutableSet.of());
 
+    BuildTarget target = BuildTargetFactory.newInstance(fakeFilesystem.getRootPath(), "//foo:bar");
     JavacStep step =
         new JavacStep(
             fakeJavac,
             javacOptions,
-            BuildTargetFactory.newInstance(fakeFilesystem.getRootPath(), "//foo:bar"),
+            target,
             sourcePathResolver,
             fakeFilesystem,
             classpathChecker,
-            CompilerParameters.builder()
-                .setOutputDirectory(Paths.get("output"))
-                .setGeneratedCodeDirectory(Paths.get("generated"))
-                .setWorkingDirectory(Paths.get("working"))
-                .setSourceFilePaths(ImmutableSortedSet.of())
-                .setPathToSourcesList(Paths.get("pathToSrcsList"))
-                .setClasspathEntries(ImmutableSortedSet.of())
-                .build(),
+            CompilerParameters.builder().setScratchPaths(target, fakeFilesystem).build(),
             null,
             null);
 
@@ -223,22 +207,16 @@ public class JavacStepTest {
         new ClasspathChecker(
             "/", ":", Paths::get, dir -> true, file -> false, (path, glob) -> ImmutableSet.of());
 
+    BuildTarget target = BuildTargetFactory.newInstance(fakeFilesystem.getRootPath(), "//foo:bar");
     JavacStep step =
         new JavacStep(
             fakeJavac,
             javacOptions,
-            BuildTargetFactory.newInstance(fakeFilesystem.getRootPath(), "//foo:bar"),
+            target,
             sourcePathResolver,
             fakeFilesystem,
             classpathChecker,
-            CompilerParameters.builder()
-                .setOutputDirectory(Paths.get("output"))
-                .setGeneratedCodeDirectory(Paths.get("generated"))
-                .setWorkingDirectory(Paths.get("working"))
-                .setSourceFilePaths(ImmutableSortedSet.of())
-                .setPathToSourcesList(Paths.get("pathToSrcsList"))
-                .setClasspathEntries(ImmutableSortedSet.of())
-                .build(),
+            CompilerParameters.builder().setScratchPaths(target, fakeFilesystem).build(),
             null,
             null);
 
@@ -281,22 +259,16 @@ public class JavacStepTest {
         new ClasspathChecker(
             "/", ":", Paths::get, dir -> false, file -> false, (path, glob) -> ImmutableSet.of());
 
+    BuildTarget target = BuildTargetFactory.newInstance(fakeFilesystem.getRootPath(), "//foo:bar");
     JavacStep step =
         new JavacStep(
             fakeJavac,
             javacOptions,
-            BuildTargetFactory.newInstance("//foo:bar"),
+            target,
             sourcePathResolver,
             fakeFilesystem,
             classpathChecker,
-            CompilerParameters.builder()
-                .setOutputDirectory(Paths.get("output"))
-                .setGeneratedCodeDirectory(Paths.get("generated"))
-                .setWorkingDirectory(Paths.get("working"))
-                .setSourceFilePaths(ImmutableSortedSet.of())
-                .setPathToSourcesList(Paths.get("pathToSrcsList"))
-                .setClasspathEntries(ImmutableSortedSet.of())
-                .build(),
+            CompilerParameters.builder().setScratchPaths(target, fakeFilesystem).build(),
             null,
             null);
 

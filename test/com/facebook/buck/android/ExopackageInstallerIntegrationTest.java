@@ -527,32 +527,32 @@ public class ExopackageInstallerIntegrationTest {
     ImmutableList<String> dexesContents = currentBuildState.secondaryDexesContents;
     if (!dexesContents.isEmpty()) {
       filesystem.deleteRecursivelyIfExists(dexDirectory);
-      String dexMetadata = "";
+      StringBuilder dexMetadata = new StringBuilder();
       String prefix = "";
       for (int i = 0; i < dexesContents.size(); i++) {
         String filename = "secondary-" + i + ".dex.jar";
         String dexContent = dexesContents.get(i);
         writeFile(dexDirectory.resolve(filename), dexContent);
         Sha1HashCode dexHash = filesystem.computeSha1(dexDirectory.resolve(filename));
-        dexMetadata += prefix + filename + " " + dexHash;
+        dexMetadata.append(prefix).append(filename).append(" ").append(dexHash);
         prefix = "\n";
         builder.addExoFile("secondary-dex/secondary-" + dexHash + ".dex.jar", dexContent);
       }
-      writeFile(dexManifest, dexMetadata);
+      writeFile(dexManifest, dexMetadata.toString());
       dexInfo =
           Optional.of(
               ExopackageInfo.DexInfo.of(
                   FakeSourcePath.of(filesystem, dexManifest),
                   FakeSourcePath.of(filesystem, dexDirectory)));
 
-      builder.addExoFile("secondary-dex/metadata.txt", dexMetadata);
+      builder.addExoFile("secondary-dex/metadata.txt", dexMetadata.toString());
     }
 
     Optional<ExopackageInfo.NativeLibsInfo> nativeLibsInfo = Optional.empty();
     ImmutableSortedMap<String, String> libsContents = currentBuildState.nativeLibsContents;
     if (!libsContents.isEmpty()) {
       filesystem.deleteRecursivelyIfExists(nativeDirectory);
-      String expectedMetadata = "";
+      StringBuilder expectedMetadata = new StringBuilder();
       String prefix = "";
       for (String k : libsContents.keySet()) {
         Path libPath = nativeDirectory.resolve(k);
@@ -562,12 +562,12 @@ public class ExopackageInstallerIntegrationTest {
           builder.addExoFile(
               "native-libs/" + device.getDeviceAbis().get(0) + "/native-" + libHash + ".so",
               libsContents.get(k));
-          expectedMetadata +=
-              prefix
-                  + k.substring(k.lastIndexOf("/") + 1, k.length() - 3)
-                  + " native-"
-                  + libHash
-                  + ".so";
+          expectedMetadata
+              .append(prefix)
+              .append(k.substring(k.lastIndexOf("/") + 1, k.length() - 3))
+              .append(" native-")
+              .append(libHash)
+              .append(".so");
           prefix = "\n";
         }
       }
@@ -579,7 +579,8 @@ public class ExopackageInstallerIntegrationTest {
                   FakeSourcePath.of(filesystem, nativeManifest),
                   FakeSourcePath.of(filesystem, nativeDirectory)));
       builder.addExoFile(
-          "native-libs/" + device.getDeviceAbis().get(0) + "/metadata.txt", expectedMetadata);
+          "native-libs/" + device.getDeviceAbis().get(0) + "/metadata.txt",
+          expectedMetadata.toString());
     }
 
     Optional<ExopackageInfo.ResourcesInfo> resourcesInfo = Optional.empty();
@@ -588,7 +589,7 @@ public class ExopackageInstallerIntegrationTest {
           ExopackageInfo.ResourcesInfo.builder();
       int n = 0;
       Iterator<String> resourcesContents = currentBuildState.resourcesContents.iterator();
-      String expectedMetadata = "";
+      StringBuilder expectedMetadata = new StringBuilder();
       String prefix = "";
       while (resourcesContents.hasNext()) {
         String fileName = "resources-" + n++ + ".apk";
@@ -602,12 +603,12 @@ public class ExopackageInstallerIntegrationTest {
             ExopackagePathAndHash.of(
                 FakeSourcePath.of(filesystem, resourcePath),
                 FakeSourcePath.of(filesystem, hashPath)));
-        expectedMetadata += prefix + "resources " + resourceHash;
+        expectedMetadata.append(prefix).append("resources ").append(resourceHash);
         prefix = "\n";
         builder.addExoFile("resources/" + resourceHash + ".apk", content);
       }
       resourcesInfo = Optional.of(resourcesInfoBuilder.build());
-      builder.addExoFile("resources/metadata.txt", expectedMetadata);
+      builder.addExoFile("resources/metadata.txt", expectedMetadata.toString());
     }
 
     Optional<ImmutableList<DexInfo>> moduleInfo = Optional.empty();

@@ -17,13 +17,13 @@
 package com.facebook.buck.jvm.java.toolchain.impl;
 
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.toolchain.ToolchainCreationContext;
+import com.facebook.buck.core.toolchain.ToolchainFactory;
+import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.toolchain.JavaCxxPlatformProvider;
-import com.facebook.buck.toolchain.ToolchainCreationContext;
-import com.facebook.buck.toolchain.ToolchainFactory;
-import com.facebook.buck.toolchain.ToolchainProvider;
 import java.util.Optional;
 
 public class JavaCxxPlatformProviderFactory implements ToolchainFactory<JavaCxxPlatformProvider> {

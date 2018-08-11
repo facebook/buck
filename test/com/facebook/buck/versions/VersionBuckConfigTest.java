@@ -17,7 +17,7 @@ package com.facebook.buck.versions;
 
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.config.FakeBuckConfig;
+import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.google.common.collect.ImmutableMap;

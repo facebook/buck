@@ -26,6 +26,6 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface PluginBasedSubCommands {
 
-  /** @return the extension point that is used to load all subcommands of this option */
-  Class<?> commandClass();
+  /** @return the extension point that is used to create all subcommands of this option */
+  Class<? extends PluginBasedSubCommandFactory<?>> factoryClass();
 }

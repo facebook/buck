@@ -19,7 +19,7 @@ package com.facebook.buck.features.rust;
 import com.facebook.buck.core.description.DescriptionCreationContext;
 import com.facebook.buck.core.model.targetgraph.DescriptionProvider;
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
-import com.facebook.buck.toolchain.ToolchainProvider;
+import com.facebook.buck.core.toolchain.ToolchainProvider;
 import java.util.Arrays;
 import java.util.Collection;
 import org.pf4j.Extension;

@@ -15,7 +15,7 @@
  */
 package com.facebook.buck.artifact_cache;
 
-import com.facebook.buck.config.BuckConfig;
+import com.facebook.buck.core.config.BuckConfig;
 
 public interface ArtifactCacheFactory {
   ArtifactCache newInstance();

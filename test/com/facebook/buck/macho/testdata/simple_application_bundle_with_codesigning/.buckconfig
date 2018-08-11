@@ -1,7 +1,0 @@
-[cxx]
-  default_platform = iphonesimulator-x86_64
-  cflags = -g
-  
-[apple]
-  provisioning_profile_search_path = provisioning_profiles
-  provisioning_profile_read_command = cat

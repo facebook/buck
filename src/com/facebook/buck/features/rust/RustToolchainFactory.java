@@ -17,11 +17,11 @@
 package com.facebook.buck.features.rust;
 
 import com.facebook.buck.core.model.FlavorDomain;
+import com.facebook.buck.core.toolchain.ToolchainCreationContext;
+import com.facebook.buck.core.toolchain.ToolchainFactory;
+import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
-import com.facebook.buck.toolchain.ToolchainCreationContext;
-import com.facebook.buck.toolchain.ToolchainFactory;
-import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.RichStream;
 import java.util.Optional;
 

@@ -79,8 +79,8 @@ public class InMemoryRemoteExecutionHttpService implements HttpService {
 
     @Override
     public int getTotalPayloads() {
-      if (getThriftResponse().getType() == FrontendRequestType.REMOTE_EXECUTION_STORE) {
-        return getThriftResponse().getRemoteExecutionStoreRequest().getDigestsSize();
+      if (getResponse().getType() == FrontendRequestType.REMOTE_EXECUTION_STORE) {
+        return getResponse().getRemoteExecutionStoreRequest().getDigestsSize();
       }
 
       return 0;
@@ -88,7 +88,7 @@ public class InMemoryRemoteExecutionHttpService implements HttpService {
 
     @Override
     public long getPayloadSizeBytes(int payloadIndex) {
-      return getThriftResponse()
+      return getResponse()
           .getRemoteExecutionStoreRequest()
           .getDigests()
           .get(payloadIndex)
@@ -100,7 +100,7 @@ public class InMemoryRemoteExecutionHttpService implements HttpService {
     public OutputStream getStreamForPayload(int index) {
       ByteArrayOutputStream stream = new ByteArrayOutputStream();
       payloads.put(
-          getThriftResponse().getRemoteExecutionStoreRequest().getDigests().get(index).getDigest(),
+          getResponse().getRemoteExecutionStoreRequest().getDigests().get(index).getDigest(),
           stream);
       return stream;
     }
@@ -131,22 +131,22 @@ public class InMemoryRemoteExecutionHttpService implements HttpService {
       }
     }
 
-    switch (responseHandler.getThriftResponse().getType()) {
+    switch (responseHandler.getResponse().getType()) {
       case REMOTE_EXECUTION_CONTAINS:
-        return handleContains(responseHandler.getThriftResponse());
+        return handleContains(responseHandler.getResponse());
       case REMOTE_EXECUTION_STORE:
         return handleStore(responseHandler);
       case REMOTE_EXECUTION_FETCH:
-        return handleFetch(responseHandler.getThriftResponse());
+        return handleFetch(responseHandler.getResponse());
       default:
         throw new IllegalStateException();
     }
   }
 
-  private HttpResponse handleFetch(FrontendRequest thriftResponse) throws IOException {
+  private HttpResponse handleFetch(FrontendRequest request) throws IOException {
     RemoteExecutionFetchResponse response = new RemoteExecutionFetchResponse();
     response.setDigests(
-        thriftResponse
+        request
             .getRemoteExecutionFetchRequest()
             .getDigests()
             .stream()
@@ -154,7 +154,8 @@ public class InMemoryRemoteExecutionHttpService implements HttpService {
             .collect(Collectors.toList()));
     return createResponse(
         new FrontendResponse()
-            .setType(thriftResponse.getType())
+            .setType(request.getType())
+            .setWasSuccessful(true)
             .setRemoteExecutionFetchResponse(response));
   }
 
@@ -162,7 +163,8 @@ public class InMemoryRemoteExecutionHttpService implements HttpService {
     storage.putAll(responseHandler.getPayloads());
     return createResponse(
         new FrontendResponse()
-            .setType(responseHandler.getThriftResponse().getType())
+            .setType(responseHandler.getResponse().getType())
+            .setWasSuccessful(true)
             .setRemoteExecutionStoreResponse(new RemoteExecutionStoreResponse()));
   }
 
@@ -181,6 +183,7 @@ public class InMemoryRemoteExecutionHttpService implements HttpService {
     return createResponse(
         new FrontendResponse()
             .setType(frontendRequest.getType())
+            .setWasSuccessful(true)
             .setRemoteExecutionContainsResponse(response));
   }
 

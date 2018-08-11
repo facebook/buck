@@ -28,6 +28,7 @@ public enum ArchiveFormat {
   TAR_BZ2(".tar.bz2", "tar.bz2", Untar.bzip2Unarchiver()),
   TAR_GZ(".tar.gz", "tar.gz", Untar.gzipUnarchiver()),
   TAR_XZ(".tar.xz", "tar.xz", Untar.xzUnarchiver()),
+  TAR_ZSTD(".tar.zst", "tar.zst", Untar.zstdUnarchiver()),
   ZIP(".zip", "zip", new Unzip());
 
   private final String extension;

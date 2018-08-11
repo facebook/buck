@@ -25,6 +25,7 @@ import com.facebook.buck.core.build.engine.buildinfo.BuildInfo;
 import com.facebook.buck.core.build.engine.buildinfo.OnDiskBuildInfo;
 import com.facebook.buck.core.build.engine.manifest.ManifestFetchResult;
 import com.facebook.buck.core.build.engine.manifest.ManifestStoreResult;
+import com.facebook.buck.core.build.engine.type.UploadToCacheResultType;
 import com.facebook.buck.core.build.event.BuildRuleEvent;
 import com.facebook.buck.core.build.stats.BuildRuleDiagnosticData;
 import com.facebook.buck.core.build.stats.BuildRuleDurationTracker;
@@ -121,7 +122,7 @@ public class BuildRuleScopeManager {
       Optional<Long> outputSize,
       Optional<HashCode> outputHash,
       Optional<BuildRuleSuccessType> successType,
-      boolean shouldUploadToCache,
+      UploadToCacheResultType UploadToCacheResultType,
       Optional<Pair<Long, Long>> ruleKeyCacheCheckTimestamps,
       Optional<Pair<Long, Long>> inputRuleKeyCacheCheckTimestamps,
       Optional<Pair<Long, Long>> manifestRuleKeyCacheCheckTimestamps,
@@ -139,7 +140,7 @@ public class BuildRuleScopeManager {
             outputSize,
             outputHash,
             successType,
-            shouldUploadToCache,
+            UploadToCacheResultType,
             ruleKeyCacheCheckTimestamps,
             inputRuleKeyCacheCheckTimestamps,
             manifestRuleKeyCacheCheckTimestamps,
@@ -208,7 +209,7 @@ public class BuildRuleScopeManager {
     private final Optional<Long> outputSize;
     private final Optional<HashCode> outputHash;
     private final Optional<BuildRuleSuccessType> successType;
-    private final boolean shouldUploadToCache;
+    private final UploadToCacheResultType uploadToCacheResultType;
     private final Optional<Pair<Long, Long>> ruleKeyCacheCheckTimestamps;
     private final Optional<Pair<Long, Long>> inputRuleKeyCacheCheckTimestamps;
     private final Optional<Pair<Long, Long>> manifestRuleKeyCacheCheckTimestamps;
@@ -219,7 +220,7 @@ public class BuildRuleScopeManager {
         Optional<Long> outputSize,
         Optional<HashCode> outputHash,
         Optional<BuildRuleSuccessType> successType,
-        boolean shouldUploadToCache,
+        UploadToCacheResultType uploadToCacheResultType,
         Optional<Pair<Long, Long>> ruleKeyCacheCheckTimestamps,
         Optional<Pair<Long, Long>> inputRuleKeyCacheCheckTimestamps,
         Optional<Pair<Long, Long>> manifestRuleKeyCacheCheckTimestamps,
@@ -228,7 +229,7 @@ public class BuildRuleScopeManager {
       this.outputSize = outputSize;
       this.outputHash = outputHash;
       this.successType = successType;
-      this.shouldUploadToCache = shouldUploadToCache;
+      this.uploadToCacheResultType = uploadToCacheResultType;
       this.ruleKeyCacheCheckTimestamps = ruleKeyCacheCheckTimestamps;
       this.inputRuleKeyCacheCheckTimestamps = inputRuleKeyCacheCheckTimestamps;
       this.manifestRuleKeyCacheCheckTimestamps = manifestRuleKeyCacheCheckTimestamps;
@@ -247,7 +248,7 @@ public class BuildRuleScopeManager {
           input.getCacheResult().orElse(CacheResult.miss()),
           onDiskBuildInfo.getBuildValue(BuildInfo.MetadataKey.ORIGIN_BUILD_ID).map(BuildId::new),
           successType,
-          shouldUploadToCache,
+          uploadToCacheResultType,
           outputHash,
           outputSize,
           getBuildRuleDiagnosticData(failureOrBuiltLocally),

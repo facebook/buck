@@ -40,6 +40,6 @@ public class DefaultAsyncTransformationEngineStackUseTest {
         (Long) 18003000L, // arithmetic series from 1 to 6000
         // https://www.wolframalpha.com/input/?i=sum+from+1+to+6000
         new DefaultAsyncTransformationEngine<>(transformer, graph.nodes().size())
-            .computeUnchecked((Long) 1L));
+            .computeUnchecked(1L));
   }
 }

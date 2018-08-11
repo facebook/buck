@@ -19,6 +19,7 @@ package com.facebook.buck.jvm.java;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.util.string.MoreStrings;
 import java.nio.file.Paths;
 import java.util.Locale;
 import javax.annotation.Nullable;
@@ -39,7 +40,9 @@ public class DiagnosticPrettyPrinterTest {
 
     // Paths should be absolute.
     assertEquals(
-        Paths.get("Example.java").toUri().getPath() + ":-1: error: Something has gone wrong.\n",
+        Paths.get("Example.java").toUri().getPath()
+            + ":-1: error: Something has gone wrong."
+            + System.lineSeparator(),
         formatted);
   }
 
@@ -50,7 +53,12 @@ public class DiagnosticPrettyPrinterTest {
 
     String formatted =
         DiagnosticPrettyPrinter.format(
-            createDiagnostic(summary + "\n" + remainder, "Example.java", "package foo", -1, -1));
+            createDiagnostic(
+                summary + System.lineSeparator() + remainder,
+                "Example.java",
+                "package foo",
+                -1,
+                -1));
 
     assertTrue(formatted, formatted.contains(summary));
     assertTrue(formatted, formatted.contains(remainder));
@@ -58,33 +66,38 @@ public class DiagnosticPrettyPrinterTest {
 
   @Test
   public void ifThereAreLineNumbersErrorContextIsDisplayed() throws Exception {
-    String code = "some line of\ncode with an\nerror";
+    String code = MoreStrings.linesToText("some line of", "code with an", "error");
     //                           123
     String formatted =
         DiagnosticPrettyPrinter.format(createDiagnostic("EOL", "Example.java", code, 2, 3));
 
-    assertTrue(formatted, formatted.contains("code with an\n  ^"));
+    assertTrue(formatted, formatted.contains(MoreStrings.linesToText("code with an", "  ^")));
   }
 
   @Test
   public void errorContextIsDisplayedAfterTheSummaryButBeforeTheRemainderOfTheMessage()
       throws Exception {
-    String code = "some line of\ncode with an\nerror";
+    String code = MoreStrings.linesToText("some line of", "code with an", "error");
     //                           123
     String formatted =
         DiagnosticPrettyPrinter.format(
             createDiagnostic(
-                "Oh noes!\nAll your build\nAre Belong to Fail", "Example.java", code, 2, 3));
+                MoreStrings.linesToText("Oh noes!", "All your build", "Are Belong to Fail"),
+                "Example.java",
+                code,
+                2,
+                3));
 
     // The path is actually prefixed with the cwd. This is close enough to the full report to do.
     assertTrue(
         formatted,
         formatted.contains(
-            "Example.java:2: error: Oh noes!\n"
-                + "code with an\n"
-                + "  ^\n"
-                + "All your build\n"
-                + "Are Belong to Fail"));
+            MoreStrings.linesToText(
+                "Example.java:2: error: Oh noes!",
+                "code with an",
+                "  ^",
+                "All your build",
+                "Are Belong to Fail")));
   }
 
   /**

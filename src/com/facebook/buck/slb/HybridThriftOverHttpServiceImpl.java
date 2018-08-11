@@ -22,6 +22,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -41,7 +42,7 @@ public class HybridThriftOverHttpServiceImpl<
     implements HybridThriftOverHttpService<ThriftRequest, ThriftResponse> {
 
   public static final MediaType HYBRID_THRIFT_STREAM_CONTENT_TYPE =
-      MediaType.parse("application/x-hybrid-thrift-binary");
+      Preconditions.checkNotNull(MediaType.parse("application/x-hybrid-thrift-binary"));
   public static final String PROTOCOL_HEADER = "X-Thrift-Protocol";
 
   private final HybridThriftOverHttpServiceArgs args;
@@ -125,27 +126,47 @@ public class HybridThriftOverHttpServiceImpl<
 
   /** Reads a HTTP body stream in Hybrid Thrift over HTTP format. */
   public static <ThriftResponse extends TBase<?, ?>> ThriftResponse readFromStream(
-      DataInputStream bodyStream,
+      DataInputStream rawBodyStream,
       ThriftProtocol protocol,
       HybridThriftResponseHandler<ThriftResponse> responseHandler)
       throws IOException {
 
-    ThriftResponse thriftResponse = responseHandler.getThriftResponse();
-    int thriftDataSizeBytes = bodyStream.readInt();
+    ThriftResponse thriftResponse = responseHandler.getResponse();
+    int thriftDataSizeBytes = rawBodyStream.readInt();
     Preconditions.checkState(
         thriftDataSizeBytes >= 0,
         "Field thriftDataSizeBytes must be non-negative. Found [%d].",
         thriftDataSizeBytes);
+    // ByteStreams.limit(..) closes the inner stream but we do not want that as we want to first
+    // read/parse the metadata thrift, then read each of the individual payloads, never closing the
+    // underlying rawBodyStream.
+    InputStream bodyStream = nonCloseableStream(rawBodyStream);
     ThriftUtil.deserialize(
-        protocol, ByteStreams.limit(bodyStream, thriftDataSizeBytes), thriftResponse);
+        protocol,
+        ByteStreams.limit(nonCloseableStream(bodyStream), thriftDataSizeBytes),
+        thriftResponse);
+    responseHandler.onResponseParsed();
     int payloadCount = responseHandler.getTotalPayloads();
     for (int i = 0; i < payloadCount; ++i) {
       long payloadSizeBytes = responseHandler.getPayloadSizeBytes(i);
+      Preconditions.checkState(
+          payloadSizeBytes > 0,
+          "All HybridThrift payloads must have a positive number of bytes instead of [%d bytes].",
+          payloadSizeBytes);
       try (OutputStream outStream = responseHandler.getStreamForPayload(i)) {
         ByteStreams.copy(ByteStreams.limit(bodyStream, payloadSizeBytes), outStream);
       }
     }
 
     return thriftResponse;
+  }
+
+  private static InputStream nonCloseableStream(InputStream streamToWrap) {
+    return new FilterInputStream(streamToWrap) {
+      @Override
+      public void close() throws IOException {
+        // Do not close the underlying stream.
+      }
+    };
   }
 }

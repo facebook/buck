@@ -16,7 +16,7 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.config.BuckConfig;
+import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Preconditions;
@@ -83,8 +83,7 @@ class TestLabelOptions {
   private Supplier<ImmutableList<LabelSelector>> supplier =
       MoreSuppliers.memoize(
           () -> {
-            TreeMap<Integer, LabelSelector> all = new TreeMap<>();
-            all.putAll(includedLabelSets);
+            TreeMap<Integer, LabelSelector> all = new TreeMap<>(includedLabelSets);
 
             // Invert the sense of anything given to --exclude.
             // This means we could --exclude !includeMe  ...lolololol

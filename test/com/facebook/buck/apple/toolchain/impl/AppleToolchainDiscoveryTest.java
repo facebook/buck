@@ -24,8 +24,8 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.apple.AppleConfig;
 import com.facebook.buck.apple.toolchain.AppleToolchain;
-import com.facebook.buck.config.BuckConfig;
-import com.facebook.buck.config.FakeBuckConfig;
+import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.testutil.TestLogSink;
 import com.facebook.buck.util.CreateSymlinksForTests;

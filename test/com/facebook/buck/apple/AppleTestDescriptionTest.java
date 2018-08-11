@@ -50,13 +50,18 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
 import org.hamcrest.Matchers;
+import org.junit.Before;
 import org.junit.Test;
 
 public class AppleTestDescriptionTest {
 
+  @Before
+  public void setUp() {
+    assumeThat(Platform.detect(), is(Platform.MACOS));
+  }
+
   @Test
   public void linkerFlagsLocationMacro() {
-    assumeThat(Platform.detect(), is(Platform.MACOS));
     GenruleBuilder depBuilder =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep")).setOut("out");
     AppleTestBuilder builder =
@@ -92,8 +97,6 @@ public class AppleTestDescriptionTest {
 
   @Test
   public void uiTestHasTestHostAndUiTestTarget() {
-    assumeThat(Platform.detect(), is(Platform.MACOS));
-
     BuildTarget testHostBinTarget = BuildTargetFactory.newInstance("//:testhostbin#macosx-x86_64");
     BuildTarget testHostBundleTarget =
         BuildTargetFactory.newInstance("//:testhostbundle#macosx-x86_64");
@@ -143,8 +146,6 @@ public class AppleTestDescriptionTest {
 
   @Test
   public void testCreateTestHostInfo() {
-    assumeThat(Platform.detect(), is(Platform.MACOS));
-
     BuildTarget testHostBinTarget = BuildTargetFactory.newInstance("//:testhostbin#macosx-x86_64");
     BuildTarget testHostBundleTarget =
         BuildTargetFactory.newInstance("//:testhostbundle#macosx-x86_64");
@@ -206,8 +207,6 @@ public class AppleTestDescriptionTest {
 
   @Test
   public void testCreateTestHostInfoWithUiTestTarget() {
-    assumeThat(Platform.detect(), is(Platform.MACOS));
-
     BuildTarget testHostBinTarget = BuildTargetFactory.newInstance("//:testhostbin#macosx-x86_64");
     BuildTarget testHostBundleTarget =
         BuildTargetFactory.newInstance("//:testhostbundle#macosx-x86_64");

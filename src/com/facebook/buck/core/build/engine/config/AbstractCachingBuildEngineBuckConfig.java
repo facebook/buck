@@ -15,12 +15,12 @@
  */
 package com.facebook.buck.core.build.engine.config;
 
-import com.facebook.buck.config.BuckConfig;
-import com.facebook.buck.config.ConfigView;
-import com.facebook.buck.config.resources.ResourcesConfig;
 import com.facebook.buck.core.build.engine.type.BuildType;
 import com.facebook.buck.core.build.engine.type.DepFiles;
 import com.facebook.buck.core.build.engine.type.MetadataStorage;
+import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.config.ConfigView;
+import com.facebook.buck.core.resources.ResourcesConfig;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import java.util.Optional;
 import org.immutables.value.Value;

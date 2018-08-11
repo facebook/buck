@@ -17,11 +17,11 @@
 package com.facebook.buck.jvm.groovy;
 
 import com.facebook.buck.core.rules.BuildRuleResolver;
+import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.jvm.java.ConfiguredCompiler;
 import com.facebook.buck.jvm.java.ConfiguredCompilerFactory;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JvmLibraryArg;
-import com.facebook.buck.toolchain.ToolchainProvider;
 import com.google.common.base.Preconditions;
 import java.util.Optional;
 import javax.annotation.Nullable;

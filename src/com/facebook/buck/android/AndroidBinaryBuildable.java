@@ -57,6 +57,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.io.Files;
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Path;
@@ -203,65 +204,26 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
 
     ImmutableSet.Builder<Path> moduleResourcesDirectories = ImmutableSet.builder();
 
+    ImmutableSet.Builder<ModuleInfo> modulesInfo = ImmutableSet.builder();
+
+    ImmutableMap<String, SourcePath> mapOfModuleToSecondaryDexSourcePaths =
+        dexFilesInfo.getMapOfModuleToSecondaryDexSourcePaths();
+
+    ModuleInfo.Builder baseModuleInfo = ModuleInfo.builder();
+    baseModuleInfo.setModuleName("base");
+
     for (APKModule module : apkModules) {
-      boolean shouldPackageAssetLibraries = packageAssetLibraries || !module.isRootModule();
-      if (!ExopackageMode.enabledForNativeLibraries(exopackageModes)
-          && nativeFilesInfo.nativeLibsDirs.isPresent()
-          && nativeFilesInfo.nativeLibsDirs.get().containsKey(module)) {
-        if (shouldPackageAssetLibraries) {
-          nativeLibraryDirectoriesBuilder.add(
-              pathResolver.getRelativePath(nativeFilesInfo.nativeLibsDirs.get().get(module)));
-        } else {
-          nativeLibraryDirectoriesBuilder.add(
-              pathResolver.getRelativePath(nativeFilesInfo.nativeLibsDirs.get().get(module)));
-          nativeLibraryDirectoriesBuilder.add(
-              pathResolver.getRelativePath(nativeFilesInfo.nativeLibsAssetsDirs.get().get(module)));
-        }
-      }
-
-      if (shouldPackageAssetLibraries) {
-        Preconditions.checkState(
-            ExopackageMode.enabledForModules(exopackageModes)
-                || !ExopackageMode.enabledForResources(exopackageModes));
-        Path pathForNativeLibsAsAssets = getPathForNativeLibsAsAssets();
-
-        Path libSubdirectory =
-            pathForNativeLibsAsAssets
-                .resolve("assets")
-                .resolve(module.isRootModule() ? "lib" : module.getName());
-
-        getStepsForNativeAssets(
-            context,
-            steps,
-            libSubdirectory,
-            module.isRootModule() ? "metadata.txt" : "libs.txt",
-            module);
-
-        nativeLibraryAsAssetDirectories.add(pathForNativeLibsAsAssets);
-      }
-
-      if (moduleResourceApkPaths.get(module) != null) {
-        SourcePath resourcePath = moduleResourceApkPaths.get(module);
-
-        Path moduleResDirectory =
-            BuildTargetPaths.getScratchPath(
-                getProjectFilesystem(), buildTarget, "__module_res_" + module.getName() + "_%s__");
-
-        Path unpackDirectory = moduleResDirectory.resolve("assets").resolve(module.getName());
-
-        steps.addAll(
-            MakeCleanDirectoryStep.of(
-                BuildCellRelativePath.fromCellRelativePath(
-                    context.getBuildCellRootPath(), getProjectFilesystem(), unpackDirectory)));
-        steps.add(
-            new UnzipStep(
-                getProjectFilesystem(),
-                context.getSourcePathResolver().getAbsolutePath(resourcePath),
-                unpackDirectory,
-                Optional.empty()));
-
-        moduleResourcesDirectories.add(moduleResDirectory);
-      }
+      processModule(
+          module,
+          nativeLibraryDirectoriesBuilder,
+          nativeLibraryAsAssetDirectories,
+          moduleResourcesDirectories,
+          steps,
+          pathResolver,
+          context,
+          mapOfModuleToSecondaryDexSourcePaths,
+          baseModuleInfo,
+          modulesInfo);
     }
 
     // If non-english strings are to be stored as assets, pass them to ApkBuilder.
@@ -324,34 +286,73 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
               getProjectFilesystem(), buildTarget, "__BundleConfig__%s__.pb");
       steps.add(new GenerateBundleConfigStep(getProjectFilesystem(), tempBundleConfig));
 
+      ImmutableSet<String> moduleNames =
+          apkModules.stream().map(APKModule::getName).collect(ImmutableSet.toImmutableSet());
+
       Path tempAssets =
-          BuildTargetPaths.getGenPath(getProjectFilesystem(), buildTarget, "__assets__%s__.pb");
-      steps.add(new GenerateAssetsStep(getProjectFilesystem(), tempAssets, allAssetDirectories));
+          BuildTargetPaths.getGenPath(
+              getProjectFilesystem(), buildTarget, "__assets__base__%s__.pb");
+      for (Path path : dexFilesInfo.getSecondaryDexDirs(getProjectFilesystem(), pathResolver)) {
+        if (path.getFileName().toString().equals("additional_dexes")) {
+          File[] assetFiles = path.toFile().listFiles();
+          if (assetFiles == null) {
+            continue;
+          }
+          for (File assetFile : assetFiles) {
+            if (!assetFile.getName().equals("assets")) {
+              continue;
+            }
+            File[] modules = assetFile.listFiles();
+            if (modules == null) {
+              continue;
+            }
+            for (File module : modules) {
+              if (moduleNames.contains(module.getName())) {
+                continue;
+              }
+              baseModuleInfo.putAssetDirectories(module.toPath(), "assets");
+            }
+          }
+        } else {
+          baseModuleInfo.putAssetDirectories(path, "");
+        }
+      }
+      steps.add(
+          new GenerateAssetsStep(
+              getProjectFilesystem(),
+              tempAssets,
+              baseModuleInfo.build().getAssetDirectories().keySet()));
 
       Path tempNative =
-          BuildTargetPaths.getGenPath(getProjectFilesystem(), buildTarget, "__native__%s__.pb");
+          BuildTargetPaths.getGenPath(
+              getProjectFilesystem(), buildTarget, "__native__base__%s__.pb");
       steps.add(
           new GenerateNativeStep(
-              getProjectFilesystem(), tempNative, nativeLibraryDirectoriesBuilder.build()));
+              getProjectFilesystem(),
+              tempNative,
+              baseModuleInfo.build().getNativeLibraryDirectories()));
+
+      baseModuleInfo
+          .setResourceApk(pathResolver.getAbsolutePath(resourceFilesInfo.resourcesApkPath))
+          .addDexFile(pathResolver.getRelativePath(dexFilesInfo.primaryDexPath))
+          .setJarFilesThatMayContainResources(thirdPartyJars)
+          .setZipFiles(zipFiles.build())
+          .setTempAssets(tempAssets)
+          .setTempNatives(tempNative);
+
+      modulesInfo.add(baseModuleInfo.build());
 
       steps.add(
           new AabBuilderStep(
               getProjectFilesystem(),
-              pathResolver.getAbsolutePath(resourceFilesInfo.resourcesApkPath),
               getSignedApkPath(),
-              pathResolver.getRelativePath(dexFilesInfo.primaryDexPath),
-              allAssetDirectories,
-              tempAssets,
-              nativeLibraryDirectoriesBuilder.build(),
-              tempNative,
-              zipFiles.build(),
-              thirdPartyJars,
               pathToKeystore,
               keystoreProperties,
               false,
-              javaRuntimeLauncher.getCommandPrefix(pathResolver),
               apkCompressionLevel,
-              tempBundleConfig));
+              tempBundleConfig,
+              modulesInfo.build(),
+              moduleNames));
     }
 
     // The `ApkBuilderStep` delegates to android tools to build a ZIP with timestamps in it, making
@@ -369,8 +370,8 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
     }
 
     boolean applyRedex = redexOptions.isPresent();
-    Path apkPath = getFinalApkPath();
     Path apkToAlign = apkToRedexAndAlign;
+    Path v2SignedApkPath = getFinalApkPath();
 
     if (applyRedex) {
       Path redexedApk = getRedexedApkPath();
@@ -385,12 +386,237 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
               redexedApk));
     }
 
-    steps.add(
-        new ZipalignStep(
-            getProjectFilesystem().getRootPath(), androidPlatformTarget, apkToAlign, apkPath));
+    if (isApk) {
+      Path zipalignedApkPath = getZipalignedApkPath();
+      steps.add(
+          new ZipalignStep(
+              getProjectFilesystem().getRootPath(),
+              androidPlatformTarget,
+              apkToAlign,
+              zipalignedApkPath));
+      steps.add(
+          new ApkSignerStep(
+              getProjectFilesystem(),
+              zipalignedApkPath,
+              v2SignedApkPath,
+              keystoreProperties,
+              applyRedex));
 
-    buildableContext.recordArtifact(apkPath);
+    } else {
+      steps.add(
+          new ZipalignStep(
+              getProjectFilesystem().getRootPath(),
+              androidPlatformTarget,
+              apkToAlign,
+              v2SignedApkPath));
+    }
+    buildableContext.recordArtifact(v2SignedApkPath);
     return steps.build();
+  }
+
+  private void processModule(
+      APKModule module,
+      ImmutableSet.Builder<Path> nativeLibraryDirectoriesBuilder,
+      ImmutableSet.Builder<Path> nativeLibraryAsAssetDirectories,
+      ImmutableSet.Builder<Path> moduleResourcesDirectories,
+      ImmutableList.Builder<Step> steps,
+      SourcePathResolver pathResolver,
+      BuildContext context,
+      ImmutableMap<String, SourcePath> mapOfModuleToSecondaryDexSourcePaths,
+      ModuleInfo.Builder baseModuleInfo,
+      ImmutableSet.Builder<ModuleInfo> modulesInfo) {
+    boolean addThisModule = false;
+    ImmutableMap.Builder<Path, String> assetDirectoriesBuilderForThisModule =
+        ImmutableMap.builder();
+    ImmutableSet.Builder<Path> nativeLibraryDirectoriesBuilderForThisModule =
+        ImmutableSet.builder();
+    Path resourcesDirectoryForThisModule = null;
+    ImmutableSet.Builder<Path> dexFileDirectoriesBuilderForThisModule = ImmutableSet.builder();
+
+    if (mapOfModuleToSecondaryDexSourcePaths.containsKey(module.getName())) {
+      addDexFileDirectories(
+          pathResolver,
+          module,
+          mapOfModuleToSecondaryDexSourcePaths,
+          dexFileDirectoriesBuilderForThisModule,
+          assetDirectoriesBuilderForThisModule);
+    }
+
+    boolean shouldPackageAssetLibraries = packageAssetLibraries || !module.isRootModule();
+    if (!ExopackageMode.enabledForNativeLibraries(exopackageModes)
+        && nativeFilesInfo.nativeLibsDirs.isPresent()
+        && nativeFilesInfo.nativeLibsDirs.get().containsKey(module)) {
+      addThisModule = true;
+      addNativeDirectory(
+          shouldPackageAssetLibraries,
+          module,
+          pathResolver,
+          nativeLibraryDirectoriesBuilder,
+          nativeLibraryDirectoriesBuilderForThisModule);
+    }
+
+    if (shouldPackageAssetLibraries) {
+      addThisModule = true;
+      addNativeLibraryAsAssetDirectory(
+          module,
+          context,
+          nativeLibraryAsAssetDirectories,
+          assetDirectoriesBuilderForThisModule,
+          steps);
+    }
+
+    if (moduleResourceApkPaths.get(module) != null) {
+      addThisModule = true;
+      resourcesDirectoryForThisModule =
+          addModuleResourceDirectory(module, context, moduleResourcesDirectories, steps);
+    }
+
+    if (!addThisModule || isApk) {
+      return;
+    }
+
+    if (module.isRootModule()) {
+      baseModuleInfo
+          .putAllAssetDirectories(assetDirectoriesBuilderForThisModule.build())
+          .addAllNativeLibraryDirectories(nativeLibraryDirectoriesBuilderForThisModule.build())
+          .addAllDexFile(dexFileDirectoriesBuilderForThisModule.build());
+    } else {
+      String moduleName = module.getName();
+      Path tempAssets =
+          BuildTargetPaths.getGenPath(
+              getProjectFilesystem(), buildTarget, "__assets__" + moduleName + "__%s__.pb");
+      steps.add(
+          new GenerateAssetsStep(
+              getProjectFilesystem(),
+              tempAssets,
+              assetDirectoriesBuilderForThisModule.build().keySet()));
+
+      Path tempNative =
+          BuildTargetPaths.getGenPath(
+              getProjectFilesystem(), buildTarget, "__native__" + moduleName + "__%s__.pb");
+      steps.add(
+          new GenerateNativeStep(
+              getProjectFilesystem(),
+              tempNative,
+              nativeLibraryDirectoriesBuilderForThisModule.build()));
+
+      modulesInfo.add(
+          ModuleInfo.of(
+              moduleName,
+              resourcesDirectoryForThisModule,
+              dexFileDirectoriesBuilderForThisModule.build(),
+              assetDirectoriesBuilderForThisModule.build(),
+              tempAssets,
+              nativeLibraryDirectoriesBuilderForThisModule.build(),
+              tempNative,
+              ImmutableSet.<Path>builder().build(),
+              ImmutableSet.<Path>builder().build()));
+    }
+  }
+
+  private void addDexFileDirectories(
+      SourcePathResolver pathResolver,
+      APKModule module,
+      ImmutableMap<String, SourcePath> mapOfModuleToSecondaryDexSourcePaths,
+      ImmutableSet.Builder<Path> dexFileDirectoriesBuilderForThisModule,
+      ImmutableMap.Builder<Path, String> assetDirectoriesBuilderForThisModule) {
+    File[] dexFiles =
+        filesystem
+            .getPathForRelativePath(
+                pathResolver.getRelativePath(
+                    mapOfModuleToSecondaryDexSourcePaths.get(module.getName())))
+            .toFile()
+            .listFiles();
+    if (dexFiles == null) {
+      return;
+    }
+    for (File dexFile : dexFiles) {
+      if (dexFile.getName().endsWith(".dex")) {
+        dexFileDirectoriesBuilderForThisModule.add(
+            filesystem.getPathForRelativePath(dexFile.toPath()));
+      } else {
+        Path current =
+            pathResolver.getRelativePath(
+                mapOfModuleToSecondaryDexSourcePaths.get(module.getName()));
+        String prefix = current.getParent().getParent().relativize(current).toString();
+        assetDirectoriesBuilderForThisModule.put(current, prefix);
+      }
+    }
+  }
+
+  private void addNativeDirectory(
+      boolean shouldPackageAssetLibraries,
+      APKModule module,
+      SourcePathResolver pathResolver,
+      ImmutableSet.Builder<Path> nativeLibraryDirectoriesBuilder,
+      ImmutableSet.Builder<Path> nativeLibraryDirectoriesBuilderForThisModule) {
+    nativeLibraryDirectoriesBuilder.add(
+        pathResolver.getRelativePath(nativeFilesInfo.nativeLibsDirs.get().get(module)));
+    nativeLibraryDirectoriesBuilderForThisModule.add(
+        pathResolver.getRelativePath(nativeFilesInfo.nativeLibsDirs.get().get(module)));
+    if (shouldPackageAssetLibraries) {
+      return;
+    }
+    nativeLibraryDirectoriesBuilder.add(
+        pathResolver.getRelativePath(nativeFilesInfo.nativeLibsAssetsDirs.get().get(module)));
+    nativeLibraryDirectoriesBuilderForThisModule.add(
+        pathResolver.getRelativePath(nativeFilesInfo.nativeLibsAssetsDirs.get().get(module)));
+  }
+
+  private void addNativeLibraryAsAssetDirectory(
+      APKModule module,
+      BuildContext context,
+      ImmutableSet.Builder<Path> nativeLibraryAsAssetDirectories,
+      ImmutableMap.Builder<Path, String> assetDirectoriesBuilderForThisModule,
+      ImmutableList.Builder<Step> steps) {
+    Preconditions.checkState(
+        ExopackageMode.enabledForModules(exopackageModes)
+            || !ExopackageMode.enabledForResources(exopackageModes));
+    Path pathForNativeLibsAsAssets = getPathForNativeLibsAsAssets();
+
+    Path libSubdirectory =
+        pathForNativeLibsAsAssets
+            .resolve("assets")
+            .resolve(module.isRootModule() ? "lib" : module.getName());
+
+    getStepsForNativeAssets(
+        context,
+        steps,
+        libSubdirectory,
+        module.isRootModule() ? "metadata.txt" : "libs.txt",
+        module);
+
+    nativeLibraryAsAssetDirectories.add(pathForNativeLibsAsAssets);
+
+    assetDirectoriesBuilderForThisModule.put(pathForNativeLibsAsAssets, "");
+  }
+
+  private Path addModuleResourceDirectory(
+      APKModule module,
+      BuildContext context,
+      ImmutableSet.Builder<Path> moduleResourcesDirectories,
+      ImmutableList.Builder<Step> steps) {
+    SourcePath resourcePath = moduleResourceApkPaths.get(module);
+
+    Path moduleResDirectory =
+        BuildTargetPaths.getScratchPath(
+            getProjectFilesystem(), buildTarget, "__module_res_" + module.getName() + "_%s__");
+
+    Path unpackDirectory = moduleResDirectory.resolve("assets").resolve(module.getName());
+
+    steps.addAll(
+        MakeCleanDirectoryStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), unpackDirectory)));
+    steps.add(
+        new UnzipStep(
+            getProjectFilesystem(),
+            context.getSourcePathResolver().getAbsolutePath(resourcePath),
+            unpackDirectory,
+            Optional.empty()));
+
+    moduleResourcesDirectories.add(moduleResDirectory);
+    return unpackDirectory;
   }
 
   private void getStepsForNativeAssets(
@@ -607,11 +833,17 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
         getProjectFilesystem(), getBuildTarget(), "__native_libs_as_assets_%s__");
   }
 
-  /** The APK at this path will be signed, but not zipaligned. */
+  /** The APK at this path will be jar signed, but not zipaligned. */
   private Path getSignedApkPath() {
     return Paths.get(getUnsignedApkPath().replaceAll("\\.unsigned\\.apk$", ".signed.apk"));
   }
 
+  /** The APK at this path will be zipaligned and jar signed. */
+  private Path getZipalignedApkPath() {
+    return Paths.get(getUnsignedApkPath().replaceAll("\\.unsigned\\.apk$", ".zipaligned.apk"));
+  }
+
+  /** The APK at this path will be zipaligned and v2 signed. */
   Path getFinalApkPath() {
     return Paths.get(getUnsignedApkPath().replaceAll("\\.unsigned\\.apk$", ".apk"));
   }

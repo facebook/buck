@@ -18,11 +18,10 @@ package com.facebook.buck.core.rules.config.impl;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.targetgraph.RawTargetNode;
+import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.config.ConfigurationRule;
 import com.facebook.buck.core.rules.config.ConfigurationRuleDescription;
 import com.facebook.buck.core.rules.config.ConfigurationRuleResolver;
-import com.facebook.buck.core.rules.config.KnownConfigurationRuleTypes;
 import com.google.common.base.Preconditions;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiFunction;
@@ -37,18 +36,14 @@ import java.util.function.Function;
 public class SameThreadConfigurationRuleResolver implements ConfigurationRuleResolver {
 
   private final Function<BuildTarget, Cell> cellProvider;
-  private final BiFunction<Cell, BuildTarget, RawTargetNode> rawTargetNodeSupplier;
-  private final KnownConfigurationRuleTypes knownConfigurationRuleTypes;
-
+  private final BiFunction<Cell, BuildTarget, TargetNode<?>> targetNodeSupplier;
   private final ConcurrentHashMap<BuildTarget, ConfigurationRule> configurationRuleIndex;
 
   public SameThreadConfigurationRuleResolver(
       Function<BuildTarget, Cell> cellProvider,
-      BiFunction<Cell, BuildTarget, RawTargetNode> rawTargetNodeSupplier,
-      KnownConfigurationRuleTypes knownConfigurationRuleTypes) {
+      BiFunction<Cell, BuildTarget, TargetNode<?>> targetNodeSupplier) {
     this.cellProvider = cellProvider;
-    this.rawTargetNodeSupplier = rawTargetNodeSupplier;
-    this.knownConfigurationRuleTypes = knownConfigurationRuleTypes;
+    this.targetNodeSupplier = targetNodeSupplier;
     this.configurationRuleIndex = new ConcurrentHashMap<>();
   }
 
@@ -65,21 +60,27 @@ public class SameThreadConfigurationRuleResolver implements ConfigurationRuleRes
 
   @Override
   public synchronized ConfigurationRule getRule(BuildTarget buildTarget) {
-    return computeIfAbsent(
-        buildTarget,
-        (ignored) -> {
-          Cell cell = cellProvider.apply(buildTarget);
-          RawTargetNode rawTargetNode = rawTargetNodeSupplier.apply(cell, buildTarget);
-          ConfigurationRuleDescription<?> configurationRuleDescription =
-              knownConfigurationRuleTypes.getRuleDescription(rawTargetNode.getRuleType());
-          ConfigurationRule configurationRule =
-              configurationRuleDescription.createConfigurationRule(this, cell, rawTargetNode);
-          Preconditions.checkState(
-              configurationRule.getBuildTarget().equals(buildTarget),
-              "Configuration rule description returned rule for '%s' instead of '%s'.",
-              configurationRule.getBuildTarget(),
-              buildTarget);
-          return configurationRule;
-        });
+    return computeIfAbsent(buildTarget, ignored -> createConfigurationRule(buildTarget));
+  }
+
+  private <T> ConfigurationRule createConfigurationRule(BuildTarget buildTarget) {
+    Cell cell = cellProvider.apply(buildTarget);
+    @SuppressWarnings("unchecked")
+    TargetNode<T> targetNode = (TargetNode<T>) targetNodeSupplier.apply(cell, buildTarget);
+    Preconditions.checkState(
+        targetNode.getDescription() instanceof ConfigurationRuleDescription,
+        "Invalid type of target node description: %s",
+        targetNode.getDescription().getClass());
+    ConfigurationRuleDescription<T> configurationRuleDescription =
+        (ConfigurationRuleDescription<T>) targetNode.getDescription();
+    ConfigurationRule configurationRule =
+        configurationRuleDescription.createConfigurationRule(
+            this, cell, buildTarget, targetNode.getConstructorArg());
+    Preconditions.checkState(
+        configurationRule.getBuildTarget().equals(buildTarget),
+        "Configuration rule description returned rule for '%s' instead of '%s'.",
+        configurationRule.getBuildTarget(),
+        buildTarget);
+    return configurationRule;
   }
 }

@@ -25,25 +25,25 @@ import static com.google.common.util.concurrent.MoreExecutors.newDirectExecutorS
 import com.facebook.buck.artifact_cache.ArtifactCaches;
 import com.facebook.buck.artifact_cache.config.ArtifactCacheBuckConfig;
 import com.facebook.buck.cli.exceptions.handlers.ExceptionHandlerRegistryFactory;
-import com.facebook.buck.config.BuckConfig;
-import com.facebook.buck.config.resources.ResourcesConfig;
 import com.facebook.buck.core.build.engine.cache.manager.BuildInfoStoreManager;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.impl.DefaultCellPathResolver;
 import com.facebook.buck.core.cell.impl.LocalCellProviderFactory;
 import com.facebook.buck.core.cell.name.RelativeCellName;
+import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.exceptions.handler.HumanReadableExceptionAugmentor;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphCache;
+import com.facebook.buck.core.resources.ResourcesConfig;
 import com.facebook.buck.core.rulekey.RuleKey;
-import com.facebook.buck.core.rules.config.KnownConfigurationRuleTypes;
-import com.facebook.buck.core.rules.config.impl.PluginBasedKnownConfigurationRuleTypesFactory;
-import com.facebook.buck.core.rules.knowntypes.DefaultKnownBuildRuleTypesFactory;
+import com.facebook.buck.core.rules.config.ConfigurationRuleDescription;
+import com.facebook.buck.core.rules.config.impl.PluginBasedKnownConfigurationDescriptionsFactory;
 import com.facebook.buck.core.rules.knowntypes.DefaultKnownRuleTypesFactory;
-import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypesFactory;
-import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypesProvider;
+import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesFactory;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
+import com.facebook.buck.core.toolchain.ToolchainProviderFactory;
+import com.facebook.buck.core.toolchain.impl.DefaultToolchainProviderFactory;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.facebook.buck.counters.CounterRegistry;
 import com.facebook.buck.counters.CounterRegistryImpl;
@@ -100,6 +100,8 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.module.BuckModuleManager;
 import com.facebook.buck.module.impl.BuckModuleJarHashProvider;
 import com.facebook.buck.module.impl.DefaultBuckModuleManager;
+import com.facebook.buck.parser.BuildTargetParser;
+import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.parser.DefaultParser;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
@@ -121,8 +123,6 @@ import com.facebook.buck.support.bgtasks.BackgroundTaskManager.Notification;
 import com.facebook.buck.support.bgtasks.SynchronousBackgroundTaskManager;
 import com.facebook.buck.test.TestConfig;
 import com.facebook.buck.test.TestResultSummaryVerbosity;
-import com.facebook.buck.toolchain.ToolchainProviderFactory;
-import com.facebook.buck.toolchain.impl.DefaultToolchainProviderFactory;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.AnsiEnvironmentChecking;
 import com.facebook.buck.util.BgProcessKiller;
@@ -350,14 +350,15 @@ public final class Main {
   private static final NonReentrantSystemExit NON_REENTRANT_SYSTEM_EXIT =
       new NonReentrantSystemExit();
 
-  public interface KnownBuildRuleTypesFactoryFactory {
-    KnownBuildRuleTypesFactory create(
-        ProcessExecutor processExecutor,
+  public interface KnownRuleTypesFactoryFactory {
+    KnownRuleTypesFactory create(
+        ProcessExecutor executor,
         PluginManager pluginManager,
-        SandboxExecutionStrategyFactory sandboxExecutionStrategyFactory);
+        SandboxExecutionStrategyFactory sandboxExecutionStrategyFactory,
+        ImmutableList<ConfigurationRuleDescription<?>> knownConfigurationDescriptions);
   }
 
-  private final KnownBuildRuleTypesFactoryFactory knownBuildRuleTypesFactoryFactory;
+  private final KnownRuleTypesFactoryFactory knownRuleTypesFactoryFactory;
 
   private Optional<BuckConfig> parsedRootConfig = Optional.empty();
 
@@ -374,12 +375,12 @@ public final class Main {
       PrintStream stdOut,
       PrintStream stdErr,
       InputStream stdIn,
-      KnownBuildRuleTypesFactoryFactory knownBuildRuleTypesFactoryFactory,
+      KnownRuleTypesFactoryFactory knownRuleTypesFactoryFactory,
       Optional<NGContext> context) {
     this.stdOut = stdOut;
     this.stdErr = stdErr;
     this.stdIn = stdIn;
-    this.knownBuildRuleTypesFactoryFactory = knownBuildRuleTypesFactoryFactory;
+    this.knownRuleTypesFactoryFactory = knownRuleTypesFactoryFactory;
     this.architecture = Architecture.detect();
     this.platform = Platform.detect();
     this.context = context;
@@ -400,7 +401,7 @@ public final class Main {
   @VisibleForTesting
   public Main(
       PrintStream stdOut, PrintStream stdErr, InputStream stdIn, Optional<NGContext> context) {
-    this(stdOut, stdErr, stdIn, DefaultKnownBuildRuleTypesFactory::of, context);
+    this(stdOut, stdErr, stdIn, DefaultKnownRuleTypesFactory::new, context);
   }
 
   /* Define all error handling surrounding main command */
@@ -524,12 +525,12 @@ public final class Main {
 
     try {
       ImmutableMap<Path, RawConfig> overridesByPath =
-          command.getConfigOverrides().getOverridesByPath(cellMapping);
+          command.getConfigOverrides(cellMapping).getOverridesByPath(cellMapping);
       rootCellConfigOverrides =
           Optional.ofNullable(overridesByPath.get(rootPath)).orElse(RawConfig.of());
     } catch (MalformedOverridesException exception) {
       rootCellConfigOverrides =
-          command.getConfigOverrides().getForCell(RelativeCellName.ROOT_CELL_NAME);
+          command.getConfigOverrides(cellMapping).getForCell(RelativeCellName.ROOT_CELL_NAME);
     }
     return Configs.createDefaultConfig(rootPath, rootCellConfigOverrides);
   }
@@ -634,7 +635,14 @@ public final class Main {
           DefaultCellPathResolver.of(filesystem.getRootPath(), config);
       BuckConfig buckConfig =
           new BuckConfig(
-              config, filesystem, architecture, platform, clientEnvironment, cellPathResolver);
+              config,
+              filesystem,
+              architecture,
+              platform,
+              clientEnvironment,
+              target ->
+                  BuildTargetParser.INSTANCE.parse(
+                      target, BuildTargetPatternParser.fullyQualified(), cellPathResolver));
       // Set so that we can use some settings when we print out messages to users
       parsedRootConfig = Optional.of(buckConfig);
 
@@ -730,13 +738,16 @@ public final class Main {
       Watchman watchman =
           buildWatchman(context, parserConfig, projectWatchList, clientEnvironment, console, clock);
 
-      KnownBuildRuleTypesProvider knownBuildRuleTypesProvider =
-          KnownBuildRuleTypesProvider.of(
-              knownBuildRuleTypesFactoryFactory.create(
-                  processExecutor, pluginManager, sandboxExecutionStrategyFactory));
+      ImmutableList<ConfigurationRuleDescription<?>> knownConfigurationDescriptions =
+          PluginBasedKnownConfigurationDescriptionsFactory.createFromPlugins(pluginManager);
 
       KnownRuleTypesProvider knownRuleTypesProvider =
-          new KnownRuleTypesProvider(new DefaultKnownRuleTypesFactory(knownBuildRuleTypesProvider));
+          new KnownRuleTypesProvider(
+              knownRuleTypesFactoryFactory.create(
+                  processExecutor,
+                  pluginManager,
+                  sandboxExecutionStrategyFactory,
+                  knownConfigurationDescriptions));
 
       ExecutableFinder executableFinder = new ExecutableFinder();
 
@@ -752,7 +763,7 @@ public final class Main {
                   filesystem,
                   watchman,
                   buckConfig,
-                  command.getConfigOverrides(),
+                  command.getConfigOverrides(rootCellMapping),
                   rootCellCellPathResolver.getPathMapping(),
                   rootCellCellPathResolver,
                   moduleManager,
@@ -760,24 +771,12 @@ public final class Main {
                   projectFilesystemFactory)
               .getCellByPath(filesystem.getRootPath());
 
-      KnownConfigurationRuleTypes knownConfigurationRuleTypes =
-          PluginBasedKnownConfigurationRuleTypesFactory.createFromPlugins(pluginManager);
-
       Optional<Daemon> daemon =
           context.isPresent() && (watchman != WatchmanFactory.NULL_WATCHMAN)
               ? Optional.of(
                   daemonLifecycleManager.getDaemon(
-                      rootCell,
-                      knownRuleTypesProvider,
-                      knownBuildRuleTypesProvider,
-                      knownConfigurationRuleTypes,
-                      executableFinder,
-                      console))
+                      rootCell, knownRuleTypesProvider, executableFinder, console))
               : Optional.empty();
-
-      // Used the cached provider, if present.
-      knownBuildRuleTypesProvider =
-          daemon.map(Daemon::getKnownBuildRuleTypesProvider).orElse(knownBuildRuleTypesProvider);
 
       if (!daemon.isPresent() && shouldCleanUpTrash) {
         // Clean up the trash on a background thread if this was a
@@ -1153,8 +1152,6 @@ public final class Main {
                   buckConfig,
                   watchman,
                   knownRuleTypesProvider,
-                  knownBuildRuleTypesProvider,
-                  knownConfigurationRuleTypes,
                   rootCell,
                   daemon,
                   buildEventBus,
@@ -1221,9 +1218,7 @@ public final class Main {
                         scheduledExecutorPool.get(),
                         buildEnvironmentDescription,
                         parserAndCaches.getActionGraphCache(),
-                        knownBuildRuleTypesProvider,
                         knownRuleTypesProvider,
-                        knownConfigurationRuleTypes,
                         storeManager,
                         Optional.of(invocationInfo),
                         parserAndCaches.getDefaultRuleKeyFactoryCacheRecycler(),
@@ -1300,8 +1295,6 @@ public final class Main {
       BuckConfig buckConfig,
       Watchman watchman,
       KnownRuleTypesProvider knownRuleTypesProvider,
-      KnownBuildRuleTypesProvider knownBuildRuleTypesProvider,
-      KnownConfigurationRuleTypes knownConfigurationRuleTypes,
       Cell rootCell,
       Optional<Daemon> daemonOptional,
       BuckEventBus buildEventBus,
@@ -1368,8 +1361,6 @@ public final class Main {
                       typeCoercerFactory,
                       new ConstructorArgMarshaller(typeCoercerFactory),
                       knownRuleTypesProvider,
-                      knownBuildRuleTypesProvider,
-                      knownConfigurationRuleTypes,
                       new ParserPythonInterpreterProvider(parserConfig, executableFinder)),
                   parserConfig,
                   typeCoercerFactory,
@@ -1412,7 +1403,8 @@ public final class Main {
     } else {
       color = Optional.empty();
     }
-    return new Console(verbosity, stdOut, stdErr, buckConfig.createAnsi(color));
+    return new Console(
+        verbosity, stdOut, stdErr, buckConfig.getView(CliConfig.class).createAnsi(color));
   }
 
   private void flushAndCloseEventListeners(
@@ -1900,8 +1892,7 @@ public final class Main {
 
           if (context.isPresent()) {
             // Shut down the Nailgun server and make sure it stops trapping System.exit().
-            // We pass false for exitVM because otherwise Nailgun exits with code 0.
-            context.get().getNGServer().shutdown(/* exitVM */ false);
+            context.get().getNGServer().shutdown();
           }
 
           NON_REENTRANT_SYSTEM_EXIT.shutdownSoon(exitCode.getCode());
@@ -2089,7 +2080,7 @@ public final class Main {
     }
 
     private void killServer() {
-      server.shutdown(true);
+      server.shutdown();
     }
   }
 

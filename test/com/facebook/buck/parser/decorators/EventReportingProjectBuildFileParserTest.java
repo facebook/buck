@@ -29,6 +29,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.eventbus.Subscribe;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 import org.hamcrest.Matchers;
 import org.junit.Before;
@@ -127,11 +128,12 @@ public class EventReportingProjectBuildFileParserTest {
   @Test
   public void getBuildFileManifestReturnsUnderlyingRules() throws Exception {
     allRulesAndMetadata =
-        BuildFileManifest.builder()
-            .setTargets(ImmutableList.of())
-            .setIncludes(ImmutableSortedSet.of())
-            .setConfigs(ImmutableMap.of())
-            .build();
+        BuildFileManifest.of(
+            ImmutableList.of(),
+            ImmutableSortedSet.of(),
+            ImmutableMap.of(),
+            Optional.empty(),
+            ImmutableMap.of());
     assertSame(allRulesAndMetadata, parser.getBuildFileManifest(SOME_PATH, processedBytes));
   }
 

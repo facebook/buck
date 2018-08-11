@@ -44,17 +44,6 @@ Note: Buck is currently tested with (and therefore supports) version 1.10 of Go.
 {/template}
 
 /***/
-{template .cgo_arg}
-{call buck.arg}
-  {param name : 'cgo' /}
-  {param default : '[]' /}
-  {param desc}
-  The cgo_library which gets compiled and linked as cgo extension.
- {/param}
-{/call}
-{/template}
-
-/***/
 {template .package_name_arg}
 {call buck.arg}
   {param name : 'package_name' /}

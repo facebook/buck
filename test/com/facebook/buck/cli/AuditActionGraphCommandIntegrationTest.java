@@ -64,6 +64,38 @@ public class AuditActionGraphCommandIntegrationTest {
 
   @Test
   @SuppressWarnings("unchecked")
+  public void dumpsNodeAndDependencyInformationWithRuntimeDepsInJsonFormat() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "audit_action_graph", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace
+            .runBuckCommand("audit", "actiongraph", "--include-runtime-deps", "//:pybin")
+            .assertSuccess();
+
+    String json = result.getStdout();
+    List<Map<String, Object>> root =
+        (List<Map<String, Object>>) ObjectMappers.readValue(json, List.class);
+    Assert.assertThat(
+        root,
+        Matchers.containsInAnyOrder(
+            ImmutableMap.builder()
+                .put("name", "//:pybin")
+                .put("type", "python_packaged_binary")
+                .put("buildDeps", ImmutableList.of())
+                .put("runtimeDeps", ImmutableList.of("//:pylib"))
+                .build(),
+            ImmutableMap.builder()
+                .put("name", "//:pylib")
+                .put("type", "python_library")
+                .put("buildDeps", ImmutableList.of())
+                .put("runtimeDeps", ImmutableList.of())
+                .build()));
+  }
+
+  @Test
+  @SuppressWarnings("unchecked")
   public void dumpsNodeAndDependencyInformationInDotFormat() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "audit_action_graph", tmp);
@@ -75,6 +107,24 @@ public class AuditActionGraphCommandIntegrationTest {
     String json = result.getStdout();
     Assert.assertThat(json, Matchers.startsWith("digraph "));
     Assert.assertThat(json, Matchers.containsString("\"//:bin\" -> \"//:other\""));
+    Assert.assertThat(json, Matchers.endsWith("}" + System.lineSeparator()));
+  }
+
+  @Test
+  @SuppressWarnings("unchecked")
+  public void dumpsNodeAndDependencyInformationWithRuntimeDepsInDotFormat() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "audit_action_graph", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace
+            .runBuckCommand("audit", "actiongraph", "--dot", "--include-runtime-deps", "//:pybin")
+            .assertSuccess();
+
+    String json = result.getStdout();
+    Assert.assertThat(json, Matchers.startsWith("digraph "));
+    Assert.assertThat(json, Matchers.containsString("\"//:pybin\" -> \"//:pylib\""));
     Assert.assertThat(json, Matchers.endsWith("}" + System.lineSeparator()));
   }
 }

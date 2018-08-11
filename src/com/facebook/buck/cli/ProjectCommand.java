@@ -17,7 +17,7 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.cli.parameter_extractors.ProjectGeneratorParameters;
-import com.facebook.buck.config.BuckConfig;
+import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.event.ProjectGenerationEvent;
 import com.facebook.buck.parser.TargetNodeSpec;
 import com.facebook.buck.support.cli.args.PluginBasedCommand;
@@ -77,7 +77,7 @@ public class ProjectCommand extends AbstractCommand implements PluginBasedComman
               + "would be included.")
   private boolean dryRun = false;
 
-  @PluginBasedSubCommands(commandClass = ProjectSubCommand.class)
+  @PluginBasedSubCommands(factoryClass = ProjectSubCommandFactory.class)
   @SuppressFieldNotInitialized
   private ImmutableList<ProjectSubCommand> ides;
 
@@ -262,7 +262,9 @@ public class ProjectCommand extends AbstractCommand implements PluginBasedComman
 
     @Override
     public Function<Iterable<String>, ImmutableList<TargetNodeSpec>> getArgsParser() {
-      return arguments -> parseArgumentsAsTargetNodeSpecs(parameters.getBuckConfig(), arguments);
+      return arguments ->
+          parseArgumentsAsTargetNodeSpecs(
+              parameters.getCell().getCellPathResolver(), parameters.getBuckConfig(), arguments);
     }
   }
 }

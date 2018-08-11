@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.support.cli.args.PluginBasedSubCommandFactory;
 import com.facebook.buck.support.cli.args.PluginBasedSubCommands;
 import com.google.common.collect.ImmutableList;
 import java.lang.reflect.Field;
@@ -114,7 +115,12 @@ public class AdditionalOptionsCmdLineParser extends CmdLineParser {
     if (f.isAnnotationPresent(PluginBasedSubCommands.class)) {
       PluginBasedSubCommands optionAnnotation = f.getAnnotation(PluginBasedSubCommands.class);
       ImmutableList<Object> commands =
-          ImmutableList.copyOf(pluginManager.getExtensions(optionAnnotation.commandClass()));
+          pluginManager
+              .getExtensions(optionAnnotation.factoryClass())
+              .stream()
+              .map(PluginBasedSubCommandFactory::createSubCommand)
+              .collect(ImmutableList.toImmutableList());
+
       new FieldSetter(bean, f).addValue(commands);
       commands.forEach(cmd -> parseAnnotations(classParser, cmd, visited));
     }

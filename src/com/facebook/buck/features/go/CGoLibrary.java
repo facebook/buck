@@ -59,7 +59,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Streams;
 import java.nio.file.Path;
 import java.util.Collection;
-import java.util.Map.Entry;
+import java.util.HashMap;
 import java.util.Optional;
 
 /**
@@ -301,14 +301,13 @@ public class CGoLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps {
     ImmutableMap.Builder<Path, SourcePath> allHeaders = ImmutableMap.builder();
 
     // scan CxxDeps for headers and add them to allHeaders
-    ImmutableMap<Path, SourcePath> cxxDepsHeaders =
-        cxxPreprocessorInputs
-            .stream()
-            .flatMap(input -> input.getIncludes().stream())
-            .filter(header -> header instanceof CxxSymlinkTreeHeaders)
-            .flatMap(
-                header -> ((CxxSymlinkTreeHeaders) header).getNameToPathMap().entrySet().stream())
-            .collect(ImmutableMap.toImmutableMap(Entry::getKey, Entry::getValue));
+    HashMap<Path, SourcePath> cxxDepsHeaders = new HashMap<Path, SourcePath>();
+    cxxPreprocessorInputs
+        .stream()
+        .flatMap(input -> input.getIncludes().stream())
+        .filter(header -> header instanceof CxxSymlinkTreeHeaders)
+        .flatMap(header -> ((CxxSymlinkTreeHeaders) header).getNameToPathMap().entrySet().stream())
+        .forEach(entry -> cxxDepsHeaders.put(entry.getKey(), entry.getValue()));
     allHeaders.putAll(cxxDepsHeaders);
 
     // add headers defined within the cgo_library rule

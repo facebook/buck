@@ -29,6 +29,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 import org.easymock.EasyMock;
 import org.easymock.EasyMockRunner;
@@ -44,11 +45,12 @@ import org.junit.runner.RunWith;
 public class HybridProjectBuildFileParserTest {
 
   private static final BuildFileManifest EMPTY_BUILD_FILE_MANIFEST =
-      BuildFileManifest.builder()
-          .setTargets(ImmutableList.of())
-          .setConfigs(ImmutableMap.of())
-          .setIncludes(ImmutableSortedSet.of())
-          .build();
+      BuildFileManifest.of(
+          ImmutableList.of(),
+          ImmutableSortedSet.of(),
+          ImmutableMap.of(),
+          Optional.empty(),
+          ImmutableMap.of());
 
   @Mock PythonDslProjectBuildFileParser pythonDslParser;
   @Mock SkylarkProjectBuildFileParser skylarkParser;

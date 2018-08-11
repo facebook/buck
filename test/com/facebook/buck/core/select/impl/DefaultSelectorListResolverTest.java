@@ -30,6 +30,7 @@ import com.facebook.buck.core.select.SelectorList;
 import com.facebook.buck.core.select.TestSelectable;
 import com.facebook.buck.core.select.TestSelectableResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.rules.coercer.BuildTargetTypeCoercer;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.facebook.buck.rules.coercer.FlavorTypeCoercer;
 import com.facebook.buck.rules.coercer.ListTypeCoercer;
@@ -239,7 +240,7 @@ public class DefaultSelectorListResolverTest {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     BuildTarget keyTarget = BuildTargetFactory.newInstance("//a:b");
     BuildTarget selectableTarget = BuildTargetFactory.newInstance("//x:y");
-    SelectorFactory selectorFactory = new SelectorFactory();
+    SelectorFactory selectorFactory = new SelectorFactory(new BuildTargetTypeCoercer()::coerce);
     ListTypeCoercer<Flavor> flavorListTypeCoercer = new ListTypeCoercer<>(new FlavorTypeCoercer());
     Selector<ImmutableList<Flavor>> selector =
         selectorFactory.createSelector(
@@ -268,7 +269,7 @@ public class DefaultSelectorListResolverTest {
   private <T> SelectorList<T> createSelectorListForCoercer(
       TypeCoercer<T> elementTypeCoercer, Map<String, ?>... selectors) throws CoerceFailedException {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
-    SelectorFactory selectorFactory = new SelectorFactory();
+    SelectorFactory selectorFactory = new SelectorFactory(new BuildTargetTypeCoercer()::coerce);
     ImmutableList.Builder<Selector<T>> selectorBuilder = ImmutableList.builder();
     for (Map<String, ?> selectorAttributes : selectors) {
       Selector<T> selector =

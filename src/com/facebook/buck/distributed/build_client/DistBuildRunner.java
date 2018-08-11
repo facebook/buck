@@ -18,17 +18,19 @@ package com.facebook.buck.distributed.build_client;
 import com.facebook.buck.core.build.distributed.synchronization.impl.RemoteBuildRuleSynchronizer;
 import com.facebook.buck.core.build.event.BuildEvent;
 import com.facebook.buck.distributed.DistBuildService;
-import com.facebook.buck.distributed.ExitCode;
+import com.facebook.buck.distributed.DistributedExitCode;
 import com.facebook.buck.distributed.StampedeLocalBuildStatusEvent;
 import com.facebook.buck.distributed.thrift.BuildStatus;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.util.ExitCode;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
+import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -36,7 +38,6 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.GuardedBy;
@@ -59,8 +60,9 @@ public class DistBuildRunner {
   private final boolean waitGracefullyForDistributedBuildThreadToFinish;
   private final long distributedBuildThreadKillTimeoutSeconds;
 
-  private final AtomicInteger distributedBuildExitCode;
+  private final AtomicReference<DistributedExitCode> distributedBuildExitCode;
   private final AtomicBoolean distributedBuildTerminated;
+  private final AtomicBoolean localBuildFinishedFirst;
 
   @GuardedBy("this")
   @Nullable
@@ -85,14 +87,14 @@ public class DistBuildRunner {
     this.started = started;
     this.remoteBuildSynchronizer = remoteBuildSynchronizer;
     this.buildPhaseLatches = buildPhaseLatches;
-    distributedBuildTerminated = new AtomicBoolean(false);
+    this.distributedBuildTerminated = new AtomicBoolean(false);
+    this.localBuildFinishedFirst = new AtomicBoolean(false);
     this.waitGracefullyForDistributedBuildThreadToFinish =
         waitGracefullyForDistributedBuildThreadToFinish;
     this.distributedBuildThreadKillTimeoutSeconds = distributedBuildThreadKillTimeoutSeconds;
 
     this.distributedBuildExitCode =
-        new AtomicInteger(
-            com.facebook.buck.distributed.ExitCode.DISTRIBUTED_PENDING_EXIT_CODE.getCode());
+        new AtomicReference<>(DistributedExitCode.DISTRIBUTED_PENDING_EXIT_CODE);
   }
 
   /** Launches dist build asynchronously */
@@ -114,7 +116,7 @@ public class DistBuildRunner {
 
     // If finally {} block is reached without an exit code being set, there was an exception
     StampedeExecutionResult result =
-        StampedeExecutionResult.of(ExitCode.DISTRIBUTED_BUILD_STEP_LOCAL_EXCEPTION.getCode());
+        StampedeExecutionResult.of(DistributedExitCode.DISTRIBUTED_BUILD_STEP_LOCAL_EXCEPTION);
 
     try {
       LOG.info("Invoking DistBuildController..");
@@ -124,14 +126,14 @@ public class DistBuildRunner {
       LOG.error(e, "Stampede distributed build failed with exception");
       result =
           StampedeExecutionResult.builder()
-              .setExitCode(ExitCode.DISTRIBUTED_BUILD_STEP_LOCAL_EXCEPTION.getCode())
+              .setExitCode(DistributedExitCode.DISTRIBUTED_BUILD_STEP_LOCAL_EXCEPTION)
               .setException(e)
               .build();
     } catch (InterruptedException e) {
       LOG.warn(e, "Stampede distributed build thread was interrupted");
       result =
           StampedeExecutionResult.builder()
-              .setExitCode(ExitCode.DISTRIBUTED_BUILD_STEP_LOCAL_EXCEPTION.getCode())
+              .setExitCode(DistributedExitCode.DISTRIBUTED_BUILD_STEP_LOCAL_EXCEPTION)
               .setException(e)
               .build();
       Thread.currentThread().interrupt();
@@ -139,16 +141,16 @@ public class DistBuildRunner {
       LOG.info("Distributed build finished with exit code: " + result.getExitCode());
 
       distributedBuildExitCode.compareAndSet(
-          ExitCode.DISTRIBUTED_PENDING_EXIT_CODE.getCode(), result.getExitCode());
+          DistributedExitCode.DISTRIBUTED_PENDING_EXIT_CODE, result.getExitCode());
 
       // If remote build succeeded, always set the code.
       // This is important for allowing post build analysis to proceed.
-      if (result.getExitCode() == 0) {
+      if (result.getExitCode() == DistributedExitCode.SUCCESSFUL) {
         distributedBuildExitCode.set(result.getExitCode());
       }
 
       if (distributedBuildExitCode.get()
-          == ExitCode.DISTRIBUTED_BUILD_STEP_LOCAL_EXCEPTION.getCode()) {
+          == DistributedExitCode.DISTRIBUTED_BUILD_STEP_LOCAL_EXCEPTION) {
         LOG.warn(
             "Received exception in distributed build monitoring thread. Attempting to terminate distributed build..");
         terminateDistributedBuildJob(
@@ -158,11 +160,12 @@ public class DistBuildRunner {
 
       // Local build should not be blocked, even if one of the distributed stages failed.
       remoteBuildSynchronizer.signalCompletionOfRemoteBuild(
-          distributedBuildExitCode.get() == ExitCode.SUCCESSFUL.getCode());
+          distributedBuildExitCode.get() == DistributedExitCode.SUCCESSFUL);
       // We probably already have sent the DistBuildFinishedEvent but in case it slipped through the
       // exceptions, send it again.
       eventBus.post(
-          BuildEvent.distBuildFinished(Preconditions.checkNotNull(started), result.getExitCode()));
+          BuildEvent.distBuildFinished(
+              Preconditions.checkNotNull(started), result.getExitCode().getCode()));
 
       // Whichever build phase is executing should now move to the final stage.
       buildPhaseLatches.forEach(latch -> latch.countDown());
@@ -177,15 +180,20 @@ public class DistBuildRunner {
    * @throws InterruptedException
    */
   public synchronized void cancelAsLocalBuildFinished(
-      boolean localBuildSucceeded, int localBuildExitCode) throws InterruptedException {
+      boolean localBuildSucceeded, Optional<ExitCode> localBuildExitCode)
+      throws InterruptedException {
     Preconditions.checkNotNull(
         runDistributedBuildFuture, "Cannot cancel build that hasn't started");
 
     String statusString =
         localBuildSucceeded
             ? "finished"
-            : String.format("failed [exitCode=%d]", localBuildExitCode);
+            : String.format(
+                "failed [exitCode=%d]",
+                localBuildExitCode.isPresent() ? localBuildExitCode.get().getCode() : -1);
     eventBus.post(new StampedeLocalBuildStatusEvent(statusString));
+
+    localBuildFinishedFirst.set(true);
 
     if (finishedSuccessfully() && !waitGracefullyForDistributedBuildThreadToFinish) {
       runDistributedBuildFuture.cancel(true); // Probably it's already dead
@@ -258,7 +266,7 @@ public class DistBuildRunner {
             "- STAMPEDE DISTRIBUTED BUILD FAILED AT [%s] STAGE. EXCEPTION:\n%s",
             stage.toUpperCase(), stackTrace);
 
-    if (result.getHandleGracefully()) {
+    if (result.getHandleGracefully() || localBuildFinishedFirst.get()) {
       LOG.warn(errorMessage);
     } else {
       eventBus.post(ConsoleEvent.severe(errorMessage));
@@ -289,20 +297,20 @@ public class DistBuildRunner {
 
   /** @return True if distributed build has finished successfully */
   public boolean finishedSuccessfully() {
-    return distributedBuildExitCode.get() == ExitCode.SUCCESSFUL.getCode();
+    return distributedBuildExitCode.get() == DistributedExitCode.SUCCESSFUL;
   }
 
   private boolean stillPending() {
-    return distributedBuildExitCode.get() == ExitCode.DISTRIBUTED_PENDING_EXIT_CODE.getCode();
+    return distributedBuildExitCode.get() == DistributedExitCode.DISTRIBUTED_PENDING_EXIT_CODE;
   }
 
   private void setLocalBuildFinishedFirstExitCode() {
     distributedBuildExitCode.compareAndSet(
-        ExitCode.DISTRIBUTED_PENDING_EXIT_CODE.getCode(),
-        ExitCode.LOCAL_BUILD_FINISHED_FIRST.getCode());
+        DistributedExitCode.DISTRIBUTED_PENDING_EXIT_CODE,
+        DistributedExitCode.LOCAL_BUILD_FINISHED_FIRST);
   }
 
-  public int getExitCode() {
+  public DistributedExitCode getExitCode() {
     return distributedBuildExitCode.get();
   }
 

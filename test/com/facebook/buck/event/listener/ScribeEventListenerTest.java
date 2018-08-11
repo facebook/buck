@@ -17,14 +17,23 @@
 package com.facebook.buck.event.listener;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.config.FakeBuckConfig;
+import com.facebook.buck.artifact_cache.CacheResult;
+import com.facebook.buck.core.build.engine.BuildRuleStatus;
+import com.facebook.buck.core.build.engine.type.UploadToCacheResultType;
 import com.facebook.buck.core.build.event.BuildEvent;
 import com.facebook.buck.core.build.event.BuildEvent.Started;
+import com.facebook.buck.core.build.event.BuildRuleEvent;
+import com.facebook.buck.core.build.stats.BuildRuleDurationTracker;
+import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildId;
+import com.facebook.buck.core.rulekey.BuildRuleKeys;
+import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.DefaultBuckEventBus;
+import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.network.FakeScribeLogger;
 import com.facebook.buck.util.timing.FakeClock;
@@ -37,6 +46,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import org.junit.Before;
 import org.junit.Test;
@@ -51,6 +61,7 @@ public class ScribeEventListenerTest {
       FakeClock.builder().currentTimeMillis(CURRENT_TIME_MILLIS).nanoTime(NANO_TIME).build();
 
   private BuckEventBus eventBus;
+  private ScribeEventListener listener;
   private FakeScribeLogger logger;
 
   @Before
@@ -62,11 +73,11 @@ public class ScribeEventListenerTest {
                 "[scribe_event_listener]",
                 "enabled = true",
                 "category = buck_events",
-                "events = BuildStarted, BuildFinished")
+                "events = BuildStarted, BuildFinished, BuildRuleFinished",
+                "enabled_build_rule_finished_statuses = FAIL")
             .build()
             .getView(ScribeEventListenerConfig.class);
-    ScribeEventListener listener =
-        new ScribeEventListener(config, logger, MoreExecutors.newDirectExecutorService());
+    listener = new ScribeEventListener(config, logger, MoreExecutors.newDirectExecutorService());
     eventBus = new DefaultBuckEventBus(FAKE_CLOCK, false, BUILD_ID, 1000);
     eventBus.register(listener);
   }
@@ -120,5 +131,31 @@ public class ScribeEventListenerTest {
       List<String> args = (List<String>) map.get("buildArgs");
       assertEquals(args.get(0), String.valueOf(i));
     }
+  }
+
+  @Test
+  public void testIsEnabledEvent() throws IOException {
+    assertTrue(listener.isEnabledEvent(finishedEvent(BuildRuleStatus.FAIL)));
+    assertFalse(listener.isEnabledEvent(finishedEvent(BuildRuleStatus.SUCCESS)));
+  }
+
+  BuildRuleEvent.Finished finishedEvent(BuildRuleStatus status) {
+    return BuildRuleEvent.finished(
+        BuildRuleEvent.started(new FakeBuildRule("//fake:rule"), new BuildRuleDurationTracker()),
+        BuildRuleKeys.of(new RuleKey("aa")),
+        status,
+        CacheResult.miss(),
+        Optional.empty(),
+        Optional.empty(),
+        UploadToCacheResultType.UNCACHEABLE,
+        Optional.empty(),
+        Optional.empty(),
+        Optional.empty(),
+        Optional.empty(),
+        Optional.empty(),
+        Optional.empty(),
+        Optional.empty(),
+        Optional.empty(),
+        Optional.empty());
   }
 }

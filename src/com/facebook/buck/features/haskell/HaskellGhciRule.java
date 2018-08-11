@@ -120,6 +120,9 @@ public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @AddToRuleKey(stringify = true)
   Path ghciCpp;
 
+  @AddToRuleKey(stringify = true)
+  Path ghciPackager;
+
   private HaskellGhciRule(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
@@ -145,7 +148,8 @@ public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
       Path ghciLib,
       Path ghciCxx,
       Path ghciCc,
-      Path ghciCpp) {
+      Path ghciCpp,
+      Path ghciPackager) {
     super(buildTarget, projectFilesystem, params);
     this.srcs = srcs;
     this.compilerFlags = compilerFlags;
@@ -169,6 +173,7 @@ public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.ghciCxx = ghciCxx;
     this.ghciCc = ghciCc;
     this.ghciCpp = ghciCpp;
+    this.ghciPackager = ghciPackager;
   }
 
   @Override
@@ -214,7 +219,8 @@ public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
       Path ghciLib,
       Path ghciCxx,
       Path ghciCc,
-      Path ghciCpp) {
+      Path ghciCpp,
+      Path ghciPackager) {
 
     ImmutableSet.Builder<BuildRule> extraDeps = ImmutableSet.builder();
 
@@ -257,7 +263,8 @@ public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
         ghciLib,
         ghciCxx,
         ghciCc,
-        ghciCpp);
+        ghciCpp,
+        ghciPackager);
   }
 
   private Path getOutputDir() {
@@ -546,6 +553,7 @@ public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
       templateArgs.put("cxx_path", ghciCxx.toRealPath().toString());
       templateArgs.put("cc_path", ghciCc.toRealPath().toString());
       templateArgs.put("cpp_path", ghciCpp.toRealPath().toString());
+      templateArgs.put("ghc_pkg_path", ghciPackager.toRealPath().toString());
       if (iservScript.isPresent()) {
         templateArgs.put("iserv_path", dir.relativize(iservScript.get()).toString());
       }

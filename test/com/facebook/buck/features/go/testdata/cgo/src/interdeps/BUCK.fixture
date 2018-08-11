@@ -15,12 +15,14 @@ go_library(
     name = "cgolib",
     package_name = "cgolib",
     srcs = ["cgolib.go"],
-    cgo = ":cgo",
+    deps = [
+        ":cgoreal",
+    ],
 )
 
 cgo_library(
-    name = "cgo",
-    package_name = "cgolib",
+    name = "cgoreal",
+    package_name = "cgoreal",
     srcs = ["cgosrc.go"],
     deps = ["//src/cxx:lib"],
 )

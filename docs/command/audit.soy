@@ -71,7 +71,7 @@ For more examples, see the command descriptions and <strong>Examples</strong> se
   {/call}
 
   {call buck.param}
-    {param name: 'buildruletype <rule>' /}
+    {param name: 'ruletype <rule>' /}
     {param nodash: true /}
     {param desc}
     <p>
@@ -81,7 +81,7 @@ For more examples, see the command descriptions and <strong>Examples</strong> se
 <p>
 <pre>
 {literal}
-buck audit buildruletype remote_file
+buck audit ruletype remote_file
 {/literal}
 </pre>
 </p>
@@ -107,17 +107,17 @@ def remote_file (
   {/call}
 
   {call buck.param}
-    {param name: 'buildruletypes' /}
+    {param name: 'ruletypes' /}
     {param nodash: true /}
     {param desc}
     <p>
-    List all the build rules that Buck supports, in alphabetical order.
+    List all the rules that Buck supports, in alphabetical order.
     </p>
 
 <p>
 <pre>
 {literal}
-buck audit buildruletypes 
+buck audit ruletypes
 {/literal}
 </pre>
 </p>

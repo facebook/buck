@@ -16,9 +16,9 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
@@ -29,7 +29,7 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.attr.NoopInstallable;
 import com.facebook.buck.core.rules.common.InstallTrigger;
 import com.facebook.buck.core.rules.impl.AbstractBuildRule;
-import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypes;
+import com.facebook.buck.core.rules.knowntypes.KnownRuleTypes;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -64,13 +64,17 @@ public class InstallTriggerIntegrationTest {
   public void setUp() throws InterruptedException, IOException {
     workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "install_trigger", tmpFolder);
-    workspace.setKnownBuildRuleTypesFactoryFactory(
-        (processExecutor, pluginManager, sandboxExecutionStrategyFactory) ->
+    workspace.setKnownRuleTypesFactoryFactory(
+        (executor,
+            pluginManager,
+            sandboxExecutionStrategyFactory,
+            knownConfigurationDescriptions) ->
             cell ->
-                KnownBuildRuleTypes.builder()
-                    .addDescriptions(new InstallTriggerDescription())
-                    .addDescriptions(new ExportFileDescription(FakeBuckConfig.builder().build()))
-                    .build());
+                KnownRuleTypes.of(
+                    ImmutableList.of(
+                        new InstallTriggerDescription(),
+                        new ExportFileDescription(FakeBuckConfig.builder().build())),
+                    knownConfigurationDescriptions));
     workspace.setUp();
   }
 

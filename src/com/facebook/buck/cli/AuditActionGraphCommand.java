@@ -20,24 +20,30 @@ import com.facebook.buck.core.model.actiongraph.ActionGraph;
 import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphConfig;
 import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
+import com.facebook.buck.core.util.graph.DirectedAcyclicGraph;
+import com.facebook.buck.core.util.graph.Dot;
+import com.facebook.buck.core.util.graph.MutableDirectedGraph;
 import com.facebook.buck.event.ConsoleEvent;
-import com.facebook.buck.graph.DirectedAcyclicGraph;
-import com.facebook.buck.graph.Dot;
-import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.util.DirtyPrintStreamDecorator;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.MoreExceptions;
+import com.facebook.buck.util.RichStream;
 import com.facebook.buck.versions.VersionException;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
+import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.SortedSet;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
 
@@ -47,6 +53,9 @@ public class AuditActionGraphCommand extends AbstractCommand {
 
   @Option(name = "--dot", usage = "Print result in graphviz dot format.")
   private boolean generateDotOutput;
+
+  @Option(name = "--include-runtime-deps", usage = "Include runtime deps in addition to build deps")
+  private boolean includeRuntimeDeps;
 
   @Argument private List<String> targetSpecs = new ArrayList<>();
 
@@ -64,7 +73,8 @@ public class AuditActionGraphCommand extends AbstractCommand {
                   params.getCell(),
                   getEnableParserProfiling(),
                   pool.getListeningExecutorService(),
-                  parseArgumentsAsTargetNodeSpecs(params.getBuckConfig(), targetSpecs),
+                  parseArgumentsAsTargetNodeSpecs(
+                      params.getCell().getCellPathResolver(), params.getBuckConfig(), targetSpecs),
                   params.getBuckConfig().getView(ParserConfig.class).getDefaultFlavorsMode());
       TargetGraphAndBuildTargets targetGraphAndBuildTargets =
           params.getBuckConfig().getBuildVersions()
@@ -82,12 +92,24 @@ public class AuditActionGraphCommand extends AbstractCommand {
                   params.getBuckConfig().getView(ActionGraphConfig.class),
                   params.getRuleKeyConfiguration(),
                   params.getPoolSupplier());
+      SourcePathRuleFinder ruleFinder =
+          new SourcePathRuleFinder(actionGraphAndBuilder.getActionGraphBuilder());
 
       // Dump the action graph.
       if (generateDotOutput) {
-        dumpAsDot(actionGraphAndBuilder.getActionGraph(), params.getConsole().getStdOut());
+        dumpAsDot(
+            actionGraphAndBuilder.getActionGraph(),
+            actionGraphAndBuilder.getActionGraphBuilder(),
+            ruleFinder,
+            includeRuntimeDeps,
+            params.getConsole().getStdOut());
       } else {
-        dumpAsJson(actionGraphAndBuilder.getActionGraph(), params.getConsole().getStdOut());
+        dumpAsJson(
+            actionGraphAndBuilder.getActionGraph(),
+            actionGraphAndBuilder.getActionGraphBuilder(),
+            ruleFinder,
+            includeRuntimeDeps,
+            params.getConsole().getStdOut());
       }
     } catch (BuildFileParseException | VersionException e) {
       // The exception should be logged with stack trace instead of only emitting the error.
@@ -115,38 +137,83 @@ public class AuditActionGraphCommand extends AbstractCommand {
    *
    * <p>The passed in stream is not closed after this operation.
    */
-  private static void dumpAsJson(ActionGraph graph, OutputStream out) throws IOException {
+  private static void dumpAsJson(
+      ActionGraph graph,
+      ActionGraphBuilder actionGraphBuilder,
+      SourcePathRuleFinder ruleFinder,
+      boolean includeRuntimeDeps,
+      OutputStream out)
+      throws IOException {
     try (JsonGenerator json =
         new JsonFactory()
             .createGenerator(out)
             .configure(JsonGenerator.Feature.AUTO_CLOSE_TARGET, false)) {
       json.writeStartArray();
       for (BuildRule node : graph.getNodes()) {
-        json.writeStartObject();
-        json.writeStringField("name", node.getFullyQualifiedName());
-        json.writeStringField("type", node.getType());
-        {
-          json.writeArrayFieldStart("buildDeps");
-          for (BuildRule dep : node.getBuildDeps()) {
-            json.writeString(dep.getFullyQualifiedName());
-          }
-          json.writeEndArray();
-        }
-        json.writeEndObject();
+        writeJsonObjectForBuildRule(json, node, actionGraphBuilder, ruleFinder, includeRuntimeDeps);
       }
       json.writeEndArray();
     }
   }
 
-  private static void dumpAsDot(ActionGraph graph, DirtyPrintStreamDecorator out)
+  private static void writeJsonObjectForBuildRule(
+      JsonGenerator json,
+      BuildRule node,
+      ActionGraphBuilder actionGraphBuilder,
+      SourcePathRuleFinder ruleFinder,
+      boolean includeRuntimeDeps)
+      throws IOException {
+    json.writeStartObject();
+    json.writeStringField("name", node.getFullyQualifiedName());
+    json.writeStringField("type", node.getType());
+    {
+      json.writeArrayFieldStart("buildDeps");
+      for (BuildRule dep : node.getBuildDeps()) {
+        json.writeString(dep.getFullyQualifiedName());
+      }
+      json.writeEndArray();
+      if (includeRuntimeDeps) {
+        json.writeArrayFieldStart("runtimeDeps");
+        for (BuildRule dep : getRuntimeDeps(node, actionGraphBuilder, ruleFinder)) {
+          json.writeString(dep.getFullyQualifiedName());
+        }
+        json.writeEndArray();
+      }
+    }
+    json.writeEndObject();
+  }
+
+  private static void dumpAsDot(
+      ActionGraph graph,
+      ActionGraphBuilder actionGraphBuilder,
+      SourcePathRuleFinder ruleFinder,
+      boolean includeRuntimeDeps,
+      DirtyPrintStreamDecorator out)
       throws IOException {
     MutableDirectedGraph<BuildRule> dag = new MutableDirectedGraph<>();
     graph.getNodes().forEach(dag::addNode);
     graph.getNodes().forEach(from -> from.getBuildDeps().forEach(to -> dag.addEdge(from, to)));
+    if (includeRuntimeDeps) {
+      graph
+          .getNodes()
+          .forEach(
+              from ->
+                  getRuntimeDeps(from, actionGraphBuilder, ruleFinder)
+                      .forEach(to -> dag.addEdge(from, to)));
+    }
     Dot.builder(new DirectedAcyclicGraph<>(dag), "action_graph")
         .setNodeToName(BuildRule::getFullyQualifiedName)
         .setNodeToTypeName(BuildRule::getType)
         .build()
         .writeOutput(out);
+  }
+
+  private static SortedSet<BuildRule> getRuntimeDeps(
+      BuildRule buildRule, ActionGraphBuilder actionGraphBuilder, SourcePathRuleFinder ruleFinder) {
+    if (!(buildRule instanceof HasRuntimeDeps)) {
+      return ImmutableSortedSet.of();
+    }
+    return actionGraphBuilder.getAllRules(
+        RichStream.from(((HasRuntimeDeps) buildRule).getRuntimeDeps(ruleFinder)).toOnceIterable());
   }
 }

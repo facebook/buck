@@ -243,7 +243,6 @@ public class DelegateAndGraphsInitializer {
     ParserTargetNodeFactory<Map<String, Object>> parserTargetNodeFactory =
         DefaultParserTargetNodeFactory.createForDistributedBuild(
             args.getKnownRuleTypesProvider(),
-            args.getKnownBuildRuleTypesProvider(),
             new ConstructorArgMarshaller(typeCoercerFactory),
             new TargetNodeFactory(typeCoercerFactory),
             new VisibilityPatternFactory(),

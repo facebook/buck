@@ -25,9 +25,8 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeNoException;
 import static org.junit.Assume.assumeTrue;
 
-import com.facebook.buck.config.BuckConfig;
-import com.facebook.buck.config.FakeBuckConfig;
-import com.facebook.buck.core.cell.impl.DefaultCellPathResolver;
+import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
@@ -36,6 +35,9 @@ import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
+import com.facebook.buck.core.toolchain.ToolchainCreationContext;
+import com.facebook.buck.core.toolchain.ToolchainProvider;
+import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxSourceRuleFactory;
 import com.facebook.buck.cxx.CxxSourceRuleFactoryHelper;
@@ -56,14 +58,10 @@ import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.facebook.buck.toolchain.ToolchainCreationContext;
-import com.facebook.buck.toolchain.ToolchainProvider;
-import com.facebook.buck.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.config.Config;
 import com.facebook.buck.util.config.Configs;
-import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -92,13 +90,10 @@ public class OCamlIntegrationTest {
     Config rawConfig = Configs.createDefaultConfig(filesystem.getRootPath());
 
     BuckConfig buckConfig =
-        new BuckConfig(
-            rawConfig,
-            filesystem,
-            Architecture.detect(),
-            Platform.detect(),
-            ImmutableMap.copyOf(System.getenv()),
-            DefaultCellPathResolver.of(filesystem.getRootPath(), rawConfig));
+        FakeBuckConfig.builder()
+            .setFilesystem(filesystem)
+            .setSections(rawConfig.getRawConfig())
+            .build();
 
     ToolchainProvider toolchainProvider =
         new ToolchainProviderBuilder()

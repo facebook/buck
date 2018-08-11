@@ -26,10 +26,6 @@ import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
-import com.facebook.buck.core.rules.config.KnownConfigurationRuleTypes;
-import com.facebook.buck.core.rules.config.impl.PluginBasedKnownConfigurationRuleTypesFactory;
-import com.facebook.buck.core.rules.knowntypes.DefaultKnownBuildRuleTypesFactory;
-import com.facebook.buck.core.rules.knowntypes.KnownBuildRuleTypesProvider;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
 import com.facebook.buck.core.rules.knowntypes.TestKnownRuleTypesProvider;
 import com.facebook.buck.event.BuckEventBus;
@@ -43,13 +39,9 @@ import com.facebook.buck.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
-import com.facebook.buck.sandbox.TestSandboxExecutionStrategyFactory;
 import com.facebook.buck.testutil.TemporaryPaths;
-import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.facebook.buck.util.DefaultProcessExecutor;
-import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -81,7 +73,6 @@ public class TargetSpecResolverTest {
   private Parser parser;
   private ParserPythonInterpreterProvider parserPythonInterpreterProvider;
   private ConstructorArgMarshaller constructorArgMarshaller;
-  private KnownBuildRuleTypesProvider knownBuildRuleTypesProvider;
   private ListeningExecutorService executorService;
   private TargetSpecResolver targetNodeTargetSpecResolver;
   private FlavorEnhancer<TargetNode<?>> flavorEnhancer;
@@ -95,29 +86,20 @@ public class TargetSpecResolverTest {
     filesystem = TestProjectFilesystems.createProjectFilesystem(cellRoot);
     cell = new TestCellBuilder().setFilesystem(filesystem).build();
     eventBus = BuckEventBusForTests.newInstance();
-    ProcessExecutor processExecutor = new DefaultProcessExecutor(new TestConsole());
     typeCoercerFactory = new DefaultTypeCoercerFactory();
     constructorArgMarshaller = new ConstructorArgMarshaller(typeCoercerFactory);
     PluginManager pluginManager = BuckPluginManagerFactory.createPluginManager();
-    knownBuildRuleTypesProvider =
-        KnownBuildRuleTypesProvider.of(
-            DefaultKnownBuildRuleTypesFactory.of(
-                processExecutor, pluginManager, new TestSandboxExecutionStrategyFactory()));
     KnownRuleTypesProvider knownRuleTypesProvider =
-        TestKnownRuleTypesProvider.create(knownBuildRuleTypesProvider);
+        TestKnownRuleTypesProvider.create(pluginManager);
     ParserConfig parserConfig = cell.getBuckConfig().getView(ParserConfig.class);
     ExecutableFinder executableFinder = new ExecutableFinder();
     parserPythonInterpreterProvider =
         new ParserPythonInterpreterProvider(parserConfig, executableFinder);
-    KnownConfigurationRuleTypes knownConfigurationRuleTypes =
-        PluginBasedKnownConfigurationRuleTypesFactory.createFromPlugins(pluginManager);
     perBuildStateFactory =
         new PerBuildStateFactory(
             typeCoercerFactory,
             constructorArgMarshaller,
             knownRuleTypesProvider,
-            knownBuildRuleTypesProvider,
-            knownConfigurationRuleTypes,
             parserPythonInterpreterProvider);
     targetNodeTargetSpecResolver = new TargetSpecResolver();
     parser =

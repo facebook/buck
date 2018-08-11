@@ -211,8 +211,7 @@ class XctoolRunTestsStep implements Step {
   }
 
   public ImmutableMap<String, String> getEnv(ExecutionContext context) {
-    Map<String, String> environment = new HashMap<>();
-    environment.putAll(context.getEnvironment());
+    Map<String, String> environment = new HashMap<>(context.getEnvironment());
     Path xcodeDeveloperDir =
         appleDeveloperDirectoryForTestsProvider.getAppleDeveloperDirectoryForTests();
     environment.put("DEVELOPER_DIR", xcodeDeveloperDir.toString());

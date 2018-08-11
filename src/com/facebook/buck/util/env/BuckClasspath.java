@@ -111,7 +111,7 @@ public class BuckClasspath {
 
   private static Path getClassLocation(Class<?> clazz) {
     // Move along, no ridiculous hacks here...
-    // Should be something like file:/Users/you/buck/build-ij/classes/production/buck/
+    // Should be something like file:/Users/you/buck/intellij-out/classes/production/buck/
     URL myLocation = clazz.getProtectionDomain().getCodeSource().getLocation();
     Preconditions.checkState(
         myLocation.getProtocol().equals("file"),

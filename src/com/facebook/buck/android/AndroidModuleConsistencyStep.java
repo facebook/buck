@@ -95,13 +95,13 @@ public class AndroidModuleConsistencyStep implements Step {
           APKModule module = classToModuleMap.get(className).iterator().next();
           if (!module.getName().equals(resultName)) {
             hasError = true;
-            errorMessage.append(
-                className
-                    + " moved from App Module: "
-                    + resultName
-                    + " to App Module: "
-                    + module.getName()
-                    + "\n");
+            errorMessage
+                .append(className)
+                .append(" moved from App Module: ")
+                .append(resultName)
+                .append(" to App Module: ")
+                .append(module.getName())
+                .append("\n");
           }
         }
       }

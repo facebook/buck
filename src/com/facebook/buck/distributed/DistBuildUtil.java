@@ -18,7 +18,7 @@ package com.facebook.buck.distributed;
 
 import static com.facebook.buck.util.BuckConstant.DIST_BUILD_SLAVE_BUCK_OUT_LOG_DIR_NAME;
 
-import com.facebook.buck.config.BuckConfig;
+import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.distributed.thrift.BuildMode;
 import com.facebook.buck.distributed.thrift.BuildSlaveConsoleEvent;
 import com.facebook.buck.distributed.thrift.BuildSlaveEvent;
@@ -68,7 +68,7 @@ public class DistBuildUtil {
     if (buildMode != BuildMode.DISTRIBUTED_BUILD_WITH_LOCAL_COORDINATOR
         && buildMode != BuildMode.DISTRIBUTED_BUILD_WITH_REMOTE_COORDINATOR
         && buildMode != BuildMode.LOCAL_BUILD_WITH_REMOTE_EXECUTION) {
-      return minionRequirements; // BuildType does not support minion requirements
+      return minionRequirements; // BuckBuildType does not support minion requirements
     }
 
     Preconditions.checkArgument(

@@ -16,16 +16,18 @@
 
 package com.facebook.buck.core.cell.impl;
 
-import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.core.cell.CellPathResolverView;
 import com.facebook.buck.core.cell.CellProvider;
 import com.facebook.buck.core.cell.DistBuildCellParams;
 import com.facebook.buck.core.cell.resolver.CellPathResolver;
+import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.toolchain.ToolchainProvider;
+import com.facebook.buck.core.toolchain.impl.DefaultToolchainProvider;
 import com.facebook.buck.io.watchman.WatchmanFactory;
+import com.facebook.buck.parser.BuildTargetParser;
+import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
 import com.facebook.buck.rules.keys.config.impl.ConfigRuleKeyConfigurationFactory;
-import com.facebook.buck.toolchain.ToolchainProvider;
-import com.facebook.buck.toolchain.impl.DefaultToolchainProvider;
 import com.google.common.base.Preconditions;
 import com.google.common.cache.CacheLoader;
 import com.google.common.collect.ImmutableMap;
@@ -38,7 +40,9 @@ import java.util.stream.Collectors;
 /** Creates a {@link CellProvider} to be used in a distributed build. */
 public class DistributedCellProviderFactory {
   public static CellProvider create(
-      DistBuildCellParams rootCell, ImmutableMap<Path, DistBuildCellParams> cellParams) {
+      DistBuildCellParams rootCell,
+      ImmutableMap<Path, DistBuildCellParams> cellParams,
+      CellPathResolver rootCellPathResolver) {
     Map<String, Path> cellPaths =
         cellParams
             .values()
@@ -71,8 +75,16 @@ public class DistributedCellProviderFactory {
                   currentCellResolver =
                       new CellPathResolverView(
                           rootCellResolver, declaredCellNames, currentCellRoot);
+                  CellPathResolver cellPathResolverForParser = currentCellResolver;
                   BuckConfig configWithResolver =
-                      cellParam.getConfig().withCellPathResolver(currentCellResolver);
+                      cellParam
+                          .getConfig()
+                          .withBuildTargetParser(
+                              target ->
+                                  BuildTargetParser.INSTANCE.parse(
+                                      target,
+                                      BuildTargetPatternParser.fullyQualified(),
+                                      cellPathResolverForParser));
                   RuleKeyConfiguration ruleKeyConfiguration =
                       ConfigRuleKeyConfigurationFactory.create(
                           configWithResolver, cellParam.getBuckModuleManager());
@@ -95,6 +107,7 @@ public class DistributedCellProviderFactory {
                       cellProvider,
                       toolchainProvider,
                       ruleKeyConfiguration,
+                      currentCellResolver,
                       cellParam.getFilesystem(),
                       configWithResolver);
                 }),
@@ -102,6 +115,7 @@ public class DistributedCellProviderFactory {
             RootCellFactory.create(
                 cellProvider,
                 rootCellResolver,
+                rootCellPathResolver,
                 rootCell.getFilesystem(),
                 rootCell.getBuckModuleManager(),
                 rootCell.getPluginManager(),

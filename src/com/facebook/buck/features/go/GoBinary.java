@@ -182,7 +182,7 @@ public class GoBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps implemen
             ImmutableList.of(linkTree.getRoot()),
             platform,
             context.getSourcePathResolver().getRelativePath(mainObject.getSourcePathToOutput()),
-            GoLinkStep.LinkMode.EXECUTABLE,
+            GoLinkStep.BuildMode.EXECUTABLE,
             output));
     return steps.build();
   }

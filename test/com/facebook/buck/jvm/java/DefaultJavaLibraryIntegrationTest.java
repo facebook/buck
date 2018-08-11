@@ -48,6 +48,7 @@ import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.ZipArchive;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
+import com.facebook.buck.testutil.integration.TarInspector;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
 import com.facebook.buck.util.ExitCode;
@@ -58,33 +59,40 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import java.io.BufferedOutputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.FileSystem;
-import java.nio.file.FileSystems;
+import java.io.OutputStream;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
-import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 import java.util.jar.Attributes;
 import java.util.jar.JarInputStream;
+import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
-import java.util.zip.ZipOutputStream;
+import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
+import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
+import org.apache.commons.compress.compressors.CompressorException;
+import org.apache.commons.compress.compressors.zstandard.ZstdCompressorOutputStream;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
@@ -111,7 +119,7 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
 
   @Test
   public void testBuildJavaLibraryWithoutSrcsAndVerifyAbi()
-      throws InterruptedException, IOException {
+      throws InterruptedException, IOException, CompressorException {
     setUpProjectWorkspaceForScenario("abi");
     workspace.enableDirCache();
 
@@ -119,9 +127,7 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
     BuildTarget target = BuildTargetFactory.newInstance("//:no_srcs");
     ProcessResult buildResult = workspace.runBuckCommand("build", target.getFullyQualifiedName());
     buildResult.assertSuccess("Successful build should exit with 0.");
-    Path outputPath =
-        BuildTargetPaths.getGenPath(
-            filesystem, target, "lib__%s__output/" + target.getShortName() + ".jar");
+    Path outputPath = CompilerOutputPaths.of(target, filesystem).getOutputJarPath().get();
     Path outputFile = workspace.getPath(outputPath);
     assertTrue(Files.exists(outputFile));
     // TODO(mbolin): When we produce byte-for-byte identical JAR files across builds, do:
@@ -162,11 +168,9 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
     Path artifactZip =
         DirArtifactCacheTestUtil.getPathForRuleKey(
             dirCache, new RuleKey(ruleKey.asHashCode()), Optional.empty());
-    FileSystem zipFs = FileSystems.newFileSystem(artifactZip, /* loader */ null);
-    Path outputInZip = zipFs.getPath("/" + outputPath);
-    new ZipOutputStream(Files.newOutputStream(outputInZip, StandardOpenOption.TRUNCATE_EXISTING))
-        .close();
-    zipFs.close();
+    HashMap<String, byte[]> archiveContents = new HashMap<>(TarInspector.readTarZst(artifactZip));
+    archiveContents.put(outputPath.toString(), emptyJarFile());
+    writeTarZst(artifactZip, archiveContents);
 
     // Run `buck build` again.
     ProcessResult buildResult2 = workspace.runBuckCommand("build", target.getFullyQualifiedName());
@@ -197,6 +201,42 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
             + "have changed, but we verify that they are the same size, as a proxy.",
         sizeOfOriginalJar,
         Files.size(outputFile));
+  }
+
+  private byte[] emptyJarFile() throws IOException {
+    ByteArrayOutputStream ostream = new ByteArrayOutputStream();
+    new JarOutputStream(ostream).close();
+    return ostream.toByteArray();
+  }
+
+  /**
+   * writeTarZst writes a .tar.zst file to 'file'.
+   *
+   * <p>For each key:value in archiveContents, a file named 'key' with contents 'value' will be
+   * created in the archive. File names ending with "/" are considered directories.
+   */
+  private void writeTarZst(Path file, Map<String, byte[]> archiveContents) throws IOException {
+    try (OutputStream o = new BufferedOutputStream(Files.newOutputStream(file));
+        OutputStream z = new ZstdCompressorOutputStream(o);
+        TarArchiveOutputStream archive = new TarArchiveOutputStream(z)) {
+      archive.setLongFileMode(TarArchiveOutputStream.LONGFILE_POSIX);
+      for (Entry<String, byte[]> mapEntry : archiveContents.entrySet()) {
+        String fileName = mapEntry.getKey();
+        byte[] fileContents = mapEntry.getValue();
+        boolean isRegularFile = !fileName.endsWith("/");
+
+        TarArchiveEntry e = new TarArchiveEntry(fileName);
+        if (isRegularFile) {
+          e.setSize(fileContents.length);
+          archive.putArchiveEntry(e);
+          archive.write(fileContents);
+        } else {
+          archive.putArchiveEntry(e);
+        }
+        archive.closeArchiveEntry();
+      }
+      archive.finish();
+    }
   }
 
   @Test
@@ -804,8 +844,8 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
 
     result.assertSuccess();
 
-    Path classesDir =
-        workspace.getPath(BuildTargetPaths.getScratchPath(filesystem, target, "lib__%s__classes"));
+    Path classesDir = workspace.getPath(CompilerOutputPaths.of(target, filesystem).getClassesDir());
+
     assertTrue(Files.exists(classesDir));
     assertTrue(Files.isDirectory(classesDir));
     ArrayList<String> classFiles = new ArrayList<>();
@@ -824,11 +864,9 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
 
     BuildTarget target = BuildTargetFactory.newInstance("//:a");
     ProcessResult result = workspace.runBuckBuild(target.getFullyQualifiedName());
-
     result.assertSuccess();
 
-    Path classesDir =
-        workspace.getPath(BuildTargetPaths.getScratchPath(filesystem, target, "lib__%s__classes"));
+    Path classesDir = workspace.getPath(CompilerOutputPaths.of(target, filesystem).getClassesDir());
 
     assertThat(Files.exists(classesDir), is(Boolean.TRUE));
     assertThat(
@@ -836,8 +874,7 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
         ImmutableList.copyOf(classesDir.toFile().listFiles()),
         hasSize(0));
 
-    Path jarPath =
-        workspace.getPath(BuildTargetPaths.getGenPath(filesystem, target, "lib__%s__output/a.jar"));
+    Path jarPath = workspace.getPath(CompilerOutputPaths.getOutputJarPath(target, filesystem));
     assertTrue(Files.exists(jarPath));
     ZipInputStream zip = new ZipInputStream(new FileInputStream(jarPath.toFile()));
     assertThat(zip.getNextEntry().getName(), is("META-INF/"));
@@ -855,8 +892,7 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
     ProcessResult result = workspace.runBuckBuild(target.getFullyQualifiedName());
     result.assertSuccess();
 
-    Path classesDir =
-        workspace.getPath(BuildTargetPaths.getScratchPath(filesystem, target, "lib__%s__classes"));
+    Path classesDir = workspace.getPath(CompilerOutputPaths.of(target, filesystem).getClassesDir());
 
     assertThat("Classes directory should exist.", Files.exists(classesDir), is(Boolean.TRUE));
     assertThat(
@@ -866,8 +902,7 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
             .collect(Collectors.toList()),
         hasSize(0));
 
-    Path jarPath =
-        workspace.getPath(BuildTargetPaths.getGenPath(filesystem, target, "lib__%s__output/a.jar"));
+    Path jarPath = workspace.getPath(CompilerOutputPaths.getOutputJarPath(target, filesystem));
     assertTrue(Files.exists(jarPath));
 
     // Check that normal and member classes were removed as expected.
@@ -889,12 +924,10 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
     ProcessResult result = workspace.runBuckBuild(target.getFullyQualifiedName());
     result.assertSuccess();
 
-    Path classesDir =
-        workspace.getPath(BuildTargetPaths.getScratchPath(filesystem, target, "lib__%s__classes"));
+    Path classesDir = workspace.getPath(CompilerOutputPaths.of(target, filesystem).getClassesDir());
 
     assertThat("Classes directory should exist.", Files.exists(classesDir), is(Boolean.TRUE));
-    Path jarPath =
-        workspace.getPath(BuildTargetPaths.getGenPath(filesystem, target, "lib__%s__output/a.jar"));
+    Path jarPath = workspace.getPath(CompilerOutputPaths.getOutputJarPath(target, filesystem));
     assertTrue("Jar should exist.", Files.exists(jarPath));
 
     // Check that normal and member classes were removed as expected.
@@ -917,8 +950,8 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
 
     result.assertSuccess();
 
-    Path classesDir =
-        workspace.getPath(BuildTargetPaths.getScratchPath(filesystem, target, "lib__%s__classes"));
+    Path classesDir = workspace.getPath(CompilerOutputPaths.of(target, filesystem).getClassesDir());
+
     assertThat(Files.exists(classesDir), is(Boolean.TRUE));
     assertThat(
         "There should be no class files in disk",
@@ -926,15 +959,15 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
         hasSize(0));
 
     Path sourcesDir =
-        workspace.getPath(BuildTargetPaths.getAnnotationPath(filesystem, target, "__%s_gen__"));
+        workspace.getPath(CompilerOutputPaths.of(target, filesystem).getAnnotationPath());
+
     assertThat(Files.exists(sourcesDir), is(Boolean.TRUE));
     assertThat(
         "There should be two source files in disk, from the two generated classes.",
         ImmutableList.copyOf(sourcesDir.toFile().listFiles()),
         hasSize(2));
 
-    Path jarPath =
-        workspace.getPath(BuildTargetPaths.getGenPath(filesystem, target, "lib__%s__output/a.jar"));
+    Path jarPath = workspace.getPath(CompilerOutputPaths.getOutputJarPath(target, filesystem));
     assertTrue(Files.exists(jarPath));
 
     ZipInspector zipInspector = new ZipInspector(jarPath);

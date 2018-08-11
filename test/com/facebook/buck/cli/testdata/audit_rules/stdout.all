@@ -17,3 +17,10 @@ genrule(
   ],
 )
 
+genrule(
+  name = "foo",
+  cmd = "echo foo > $OUT",
+  environment_expansion_separator = ",",
+  out = "foo.txt",
+)
+

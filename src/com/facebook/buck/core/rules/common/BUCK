@@ -5,7 +5,7 @@ java_library(
         "//src/com/facebook/buck/core/rules:rules",
         "//src/com/facebook/buck/core/rules/attr:attr",
         "//src/com/facebook/buck/core/rules/modern:modern",
-        "//src/com/facebook/buck/graph:graph",
+        "//src/com/facebook/buck/core/util/graph:graph",
         "//src/com/facebook/buck/rules/keys:keys",
     ],
     visibility = ["PUBLIC"],

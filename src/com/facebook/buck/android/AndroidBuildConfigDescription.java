@@ -27,19 +27,17 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.jvm.java.CalculateClassAbi;
-import com.facebook.buck.jvm.java.JavaLibraryRules;
 import com.facebook.buck.jvm.java.Javac;
 import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
-import com.facebook.buck.toolchain.ToolchainProvider;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
 import org.immutables.value.Value;
 
@@ -161,17 +159,8 @@ public class AndroidBuildConfigDescription
     graphBuilder.addToIndex(androidBuildConfig);
 
     // Create a second build rule to compile BuildConfig.java and expose it as a JavaLibrary.
-    BuildRuleParams javaLibraryParams =
-        params.withDeclaredDeps(ImmutableSortedSet.of(androidBuildConfig)).withoutExtraDeps();
     return new AndroidBuildConfigJavaLibrary(
-        buildTarget,
-        projectFilesystem,
-        javaLibraryParams,
-        ruleFinder,
-        javac,
-        javacOptions,
-        JavaLibraryRules.getAbiClasspath(graphBuilder, javaLibraryParams.getBuildDeps()),
-        androidBuildConfig);
+        buildTarget, projectFilesystem, ruleFinder, javac, javacOptions, androidBuildConfig);
   }
 
   @BuckStyleImmutable

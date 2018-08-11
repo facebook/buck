@@ -18,9 +18,9 @@ package com.facebook.buck.distributed.build_client;
 import com.facebook.buck.command.Build;
 import com.facebook.buck.command.LocalBuildExecutorInvoker;
 import com.facebook.buck.core.build.distributed.synchronization.RemoteBuildRuleCompletionWaiter;
-import com.facebook.buck.distributed.ExitCode;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.CleanBuildShutdownException;
+import com.facebook.buck.util.ExitCode;
 import com.google.common.base.Preconditions;
 import java.io.IOException;
 import java.util.Optional;
@@ -28,7 +28,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.GuardedBy;
@@ -45,7 +44,7 @@ public class LocalBuildRunner {
   private final CountDownLatch buildPhaseLatch;
   private final LocalBuildExecutorInvoker localBuildExecutorInvoker;
   private final String localBuildType;
-  private final AtomicInteger localBuildExitCode;
+  private volatile Optional<ExitCode> localBuildExitCode = Optional.empty();
   private final Optional<CountDownLatch> waitForLocalBuildCalledLatch;
 
   @GuardedBy("this")
@@ -69,7 +68,6 @@ public class LocalBuildRunner {
     this.buildReference = new AtomicReference<>(null);
     this.initializeBuildLatch = new CountDownLatch(1);
     this.buildPhaseLatch = new CountDownLatch(1);
-    this.localBuildExitCode = new AtomicInteger(ExitCode.LOCAL_PENDING_EXIT_CODE.getCode());
   }
 
   /** Starts local build in a separate thread */
@@ -83,7 +81,7 @@ public class LocalBuildRunner {
   }
 
   private void safeExecuteLocalBuild() {
-    int exitCode = com.facebook.buck.distributed.ExitCode.LOCAL_BUILD_EXCEPTION_CODE.getCode();
+    ExitCode exitCode = ExitCode.FATAL_GENERIC;
     try {
       LOG.info(String.format("Invoking LocalBuildExecutorInvoker for %s build..", localBuildType));
       exitCode =
@@ -102,25 +100,24 @@ public class LocalBuildRunner {
       Thread.currentThread().interrupt();
       return;
     } finally {
-      localBuildExitCode.set(exitCode);
+      localBuildExitCode = Optional.of(exitCode);
       String finishedMessage =
           String.format(
               "Stampede local %s build has finished with exit code [%d]",
-              localBuildType, localBuildExitCode.get());
+              localBuildType, exitCode.getCode());
       LOG.info(finishedMessage);
       buildPhaseLatch.countDown();
     }
   }
 
   /** @return exit code of local build */
-  public int getExitCode() {
-    return localBuildExitCode.get();
+  public Optional<ExitCode> getExitCode() {
+    return localBuildExitCode;
   }
 
   /** @return True if local build has finished */
   public boolean isFinished() {
-    return getExitCode()
-        != com.facebook.buck.distributed.ExitCode.LOCAL_PENDING_EXIT_CODE.getCode();
+    return localBuildExitCode.isPresent();
   }
 
   /**
@@ -178,6 +175,7 @@ public class LocalBuildRunner {
 
   /** @return True if local build finished successfully */
   public boolean finishedSuccessfully() {
-    return getExitCode() == ExitCode.SUCCESSFUL.getCode();
+    Optional<ExitCode> exitCode = getExitCode();
+    return exitCode.isPresent() && exitCode.get() == ExitCode.SUCCESS;
   }
 }

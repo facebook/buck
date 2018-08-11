@@ -11,7 +11,7 @@ java_binary(
 
 prebuilt_jar(
     name = "jarjar_prebuilt",
-    binary_jar = "jarjar-1.4.jar",
+    binary_jar = "jarjar-1.4.1.jar",
     licenses = [
         "LICENSE.txt",
     ],

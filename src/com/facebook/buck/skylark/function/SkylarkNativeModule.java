@@ -18,8 +18,10 @@ package com.facebook.buck.skylark.function;
 
 import com.facebook.buck.skylark.parser.context.ParseContext;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.devtools.build.lib.events.Event;
 import com.google.devtools.build.lib.events.Location;
+import com.google.devtools.build.lib.packages.Info;
 import com.google.devtools.build.lib.skylarkinterface.Param;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkCallable;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkModule;
@@ -31,6 +33,7 @@ import com.google.devtools.build.lib.syntax.SkylarkList;
 import com.google.devtools.build.lib.syntax.Type;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import javax.annotation.Nullable;
 
 /**
  * A class for the Skylark native module. It includes all functions provided natively by Buck and
@@ -173,6 +176,94 @@ public class SkylarkNativeModule {
     } catch (FileNotFoundException e) {
       throw new EvalException(ast.getLocation(), "Cannot find " + e.getMessage());
     }
+  }
+
+  /**
+   * Exposes a {@code read_config} for Skylark parser.
+   *
+   * <p>This is a temporary solution to simplify migration from Python DSL to Skylark and allows
+   * clients to query values from {@code .buckconfig} files and {@code --config} command line
+   * arguments.
+   *
+   * <p>Example, when buck is invoked with {@code --config user.value=my_value} an invocation of
+   * {@code read_config("user", "value", "default_value")} will return {@code my_value}.
+   */
+  @SkylarkCallable(
+      name = "read_config",
+      doc =
+          "Returns a configuration value of <code>.buckconfig</code> or <code>--config</code> flag."
+              + " For example, <code>read_config('foo', 'bar', 'baz')</code> returns"
+              + " <code>bazz</code> if Buck is invoked with <code>--config foo.bar=bazz</code> flag.",
+      parameters = {
+        @Param(
+            name = "section",
+            type = String.class,
+            doc = "the name of the .buckconfig section with the desired value."),
+        @Param(
+            name = "field",
+            type = String.class,
+            doc = "the name of the .buckconfig field with the desired value."),
+        @Param(
+            name = "defaultValue",
+            noneable = true,
+            type = String.class,
+            defaultValue = "None",
+            doc = "the value to return if the desired value is not set in the .buckconfig."),
+      },
+      documented = false, // this is an API that we should remove once select is available
+      allowReturnNones = true,
+      useAst = true,
+      useEnvironment = true)
+  public Object readConfig(
+      String section, String field, Object defaultValue, FuncallExpression ast, Environment env)
+      throws EvalException {
+    ParseContext parseContext = ParseContext.getParseContext(env, ast);
+    @Nullable
+    String value =
+        parseContext
+            .getPackageContext()
+            .getRawConfig()
+            .getOrDefault(section, ImmutableMap.of())
+            .get(field);
+
+    parseContext.recordReadConfigurationOption(section, field, value);
+    return value != null ? value : defaultValue;
+  }
+
+  @SkylarkCallable(
+      name = "host_info",
+      doc =
+          "The host_info() function is used to get processor and OS information about the host machine\n"
+              + "The <code>host_info()</code> function is used to get the current OS and processor "
+              + "architecture on the host. This will likely change as better cross compilation tooling "
+              + "comes to Buck.\n"
+              + "    <pre class=\"prettyprint lang-py\">\n"
+              + "  struct(\n"
+              + "      os=struct(\n"
+              + "          is_linux=True|False,\n"
+              + "          is_macos=True|False,\n"
+              + "          is_windows=True|False,\n"
+              + "          is_freebsd=True|False,\n"
+              + "          is_unknown=True|False,\n"
+              + "      ),\n"
+              + "      arch=struct(\n"
+              + "          is_aarch64=True|False,\n"
+              + "          is_arm=True|False,\n"
+              + "          is_armeb=True|False,\n"
+              + "          is_i386=True|False,\n"
+              + "          is_mips=True|False,\n"
+              + "          is_mips64=True|False,\n"
+              + "          is_mipsel=True|False,\n"
+              + "          is_mipsel64=True|False,\n"
+              + "          is_powerpc=True|False,\n"
+              + "          is_ppc64=True|False,\n"
+              + "          is_unknown=True|False,\n"
+              + "          is_x86_64=True|False,\n"
+              + "      ),\n"
+              + "  )</pre>\n",
+      documented = true)
+  public Info hostInfo() {
+    return HostInfo.HOST_INFO;
   }
 
   public static final SkylarkNativeModule NATIVE_MODULE = new SkylarkNativeModule();

@@ -340,7 +340,7 @@ public class DistBuildService implements Closeable {
         buildMode == BuildMode.REMOTE_BUILD
             || buildMode == BuildMode.DISTRIBUTED_BUILD_WITH_REMOTE_COORDINATOR
             || buildMode == BuildMode.DISTRIBUTED_BUILD_WITH_LOCAL_COORDINATOR,
-        "BuildType [%s=%d] is currently not supported.",
+        "BuckBuildType [%s=%d] is currently not supported.",
         buildMode.toString(),
         buildMode.ordinal());
 
@@ -850,7 +850,8 @@ public class DistBuildService implements Closeable {
       String buildLabel,
       int totalNumberOfMinions,
       String minionQueueName,
-      MinionType minionType)
+      MinionType minionType,
+      String minionRegion)
       throws IOException {
     EnqueueMinionsRequest request =
         new EnqueueMinionsRequest()
@@ -858,7 +859,8 @@ public class DistBuildService implements Closeable {
             .setNumberOfMinions(totalNumberOfMinions)
             .setMinionType(minionType)
             .setStampedeId(stampedeId)
-            .setBuildLabel(buildLabel);
+            .setBuildLabel(buildLabel)
+            .setRegion(minionRegion);
 
     FrontendRequest frontendRequest = new FrontendRequest();
     frontendRequest.setType(FrontendRequestType.ENQUEUE_MINIONS);

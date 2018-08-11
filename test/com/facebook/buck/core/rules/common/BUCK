@@ -1,0 +1,12 @@
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library", "java_test")
+
+java_test(
+    name = "common",
+    srcs = glob(["*Test.java"]),
+    deps = [
+        "//src/com/facebook/buck/core/rules/common:common",
+        "//test/com/facebook/buck/testutil:testutil",
+        "//test/com/facebook/buck/testutil/integration:util",
+        "//third-party/java/junit:junit",
+    ],
+)

@@ -99,6 +99,7 @@ BUCK_MODULES = {
     "filegroup": "//src/com/facebook/buck/features/filegroup:filegroup",
     "go": "//src/com/facebook/buck/features/go:go",
     "gwt": "//src/com/facebook/buck/features/gwt:gwt",
+    "halide": "//src/com/facebook/buck/features/halide:halide",
     "haskell": "//src/com/facebook/buck/features/haskell:haskell",
     "intellij": "//src/com/facebook/buck/features/project/intellij:intellij",
     "js": "//src/com/facebook/buck/features/js:js",

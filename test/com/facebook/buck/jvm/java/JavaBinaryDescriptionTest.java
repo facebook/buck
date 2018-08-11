@@ -16,6 +16,10 @@
 
 package com.facebook.buck.jvm.java;
 
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.instanceOf;
+import static org.hamcrest.Matchers.is;
 import static org.hamcrest.junit.MatcherAssert.assertThat;
 
 import com.facebook.buck.core.model.BuildTarget;
@@ -27,13 +31,18 @@ import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
+import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.cxx.PrebuiltCxxLibraryBuilder;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
+import java.nio.file.Paths;
 import java.util.regex.Pattern;
 import org.hamcrest.Matchers;
 import org.junit.Test;
@@ -91,5 +100,40 @@ public class JavaBinaryDescriptionTest {
     JarFattener javaBinary = (JarFattener) graphBuilder.requireRule(javaBinBuilder.getTarget());
 
     assertThat(javaBinary.getNativeLibraries().values(), Matchers.contains(lib));
+  }
+
+  @Test
+  public void fatJarClasspath() {
+    CxxPlatform cxxPlatform = CxxPlatformUtils.DEFAULT_PLATFORM;
+    SourcePath lib = FakeSourcePath.of("lib");
+
+    PrebuiltCxxLibraryBuilder cxxLibBuilder =
+        new PrebuiltCxxLibraryBuilder(BuildTargetFactory.newInstance("//:cxx_lib"))
+            .setSharedLib(lib);
+    JavaLibraryBuilder javaLibBuilder =
+        new JavaLibraryBuilder(
+                BuildTargetFactory.newInstance("//:lib"), new FakeProjectFilesystem(), null)
+            .addDep(cxxLibBuilder.getTarget())
+            .addSrc(Paths.get("test/source.java"));
+    JavaBinaryRuleBuilder javaBinBuilder =
+        new JavaBinaryRuleBuilder(
+                BuildTargetFactory.newInstance("//:bin"),
+                CxxPlatformUtils.DEFAULT_PLATFORM,
+                FlavorDomain.of("C/C++ Platform", cxxPlatform))
+            .setDefaultCxxPlatform(cxxPlatform.getFlavor())
+            .setDeps(ImmutableSortedSet.of(javaLibBuilder.getTarget()));
+
+    TargetGraph targetGraph =
+        TargetGraphFactory.newInstance(
+            cxxLibBuilder.build(), javaLibBuilder.build(), javaBinBuilder.build());
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
+
+    JarFattener jarFattener = (JarFattener) graphBuilder.requireRule(javaBinBuilder.getTarget());
+    ImmutableSet<SourcePath> transitiveClasspaths = jarFattener.getTransitiveClasspaths();
+    assertThat(transitiveClasspaths, hasSize(1));
+    SourcePath entry = Iterables.getFirst(transitiveClasspaths, null);
+    assertThat(entry, is(instanceOf(BuildTargetSourcePath.class)));
+    assertThat(
+        ((BuildTargetSourcePath) entry).getTarget(), is(equalTo(javaLibBuilder.getTarget())));
   }
 }

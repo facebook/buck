@@ -17,9 +17,9 @@
 package com.facebook.buck.core.rules.common;
 
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
-import com.facebook.buck.graph.DirectedAcyclicGraph;
-import com.facebook.buck.graph.MutableDirectedGraph;
+import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
+import com.facebook.buck.core.util.graph.DirectedAcyclicGraph;
+import com.facebook.buck.core.util.graph.MutableDirectedGraph;
 import com.google.common.collect.ImmutableSet;
 import java.util.function.Predicate;
 

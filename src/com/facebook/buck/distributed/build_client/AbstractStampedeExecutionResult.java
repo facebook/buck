@@ -17,6 +17,7 @@
 package com.facebook.buck.distributed.build_client;
 
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.distributed.DistributedExitCode;
 import java.util.Optional;
 import org.immutables.value.Value;
 
@@ -26,7 +27,7 @@ import org.immutables.value.Value;
 abstract class AbstractStampedeExecutionResult {
 
   @Value.Parameter
-  public abstract int getExitCode();
+  public abstract DistributedExitCode getExitCode();
 
   public abstract Optional<Throwable> getException();
 

@@ -135,7 +135,7 @@ public class MavenUberJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
   public SourcePath getSourcePathToOutput() {
     return ExplicitBuildTargetSourcePath.of(
         getBuildTarget(),
-        DefaultJavaLibrary.getOutputJarPath(getBuildTarget(), getProjectFilesystem()));
+        AbstractCompilerOutputPaths.getOutputJarPath(getBuildTarget(), getProjectFilesystem()));
   }
 
   @Override

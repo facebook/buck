@@ -16,9 +16,9 @@
 
 package com.facebook.buck.parser;
 
-import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.resolver.CellPathResolver;
+import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.model.BuildFileTree;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.FilesystemBackedBuildFileTree;
@@ -239,8 +239,7 @@ public class DaemonicParserState {
       Iterable<String> defaultIncludes =
           buckConfig.getView(ParserConfig.class).getDefaultIncludes();
       for (String include : defaultIncludes) {
-        dependentsOfEveryNode.add(
-            resolveIncludePath(cell, include, cell.getBuckConfig().getCellPathResolver()));
+        dependentsOfEveryNode.add(resolveIncludePath(cell, include, cell.getCellPathResolver()));
       }
 
       return getOrCreateCellState(cell)

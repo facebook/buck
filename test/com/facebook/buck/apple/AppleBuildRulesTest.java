@@ -23,8 +23,6 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
-import com.facebook.buck.core.cell.Cell;
-import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
@@ -41,6 +39,7 @@ import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
@@ -67,30 +66,14 @@ public class AppleBuildRulesTest {
   @Parameterized.Parameter(0)
   public boolean useCache;
 
+  private XCodeDescriptions xcodeDescriptions;
+
   @Before
   public void setUp() throws Exception {
     assumeTrue(Platform.detect() == Platform.MACOS || Platform.detect() == Platform.LINUX);
-  }
 
-  @Test
-  public void testAppleLibraryIsXcodeTargetDescription() {
-    Cell rootCell = (new TestCellBuilder()).build();
-    BuildTarget libraryTarget = BuildTargetFactory.newInstance(rootCell.getRoot(), "//foo", "lib");
-    TargetNode<AppleLibraryDescriptionArg> library =
-        AppleLibraryBuilder.createBuilder(libraryTarget).setSrcs(ImmutableSortedSet.of()).build();
-    assertTrue(AppleBuildRules.isXcodeTargetDescription(library.getDescription()));
-  }
-
-  @Test
-  public void testIosResourceIsNotXcodeTargetDescription() {
-    Cell rootCell = (new TestCellBuilder()).build();
-    BuildTarget resourceTarget = BuildTargetFactory.newInstance(rootCell.getRoot(), "//foo", "res");
-    TargetNode<?> resourceNode =
-        AppleResourceBuilder.createBuilder(resourceTarget)
-            .setFiles(ImmutableSet.of())
-            .setDirs(ImmutableSet.of())
-            .build();
-    assertFalse(AppleBuildRules.isXcodeTargetDescription(resourceNode.getDescription()));
+    xcodeDescriptions =
+        XCodeDescriptionsFactory.create(BuckPluginManagerFactory.createPluginManager());
   }
 
   @Test
@@ -168,6 +151,7 @@ public class AppleBuildRulesTest {
     for (int i = 0; i < (useCache ? 2 : 1); i++) {
       Iterable<TargetNode<?>> rules =
           AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
+              xcodeDescriptions,
               targetGraph,
               cache,
               AppleBuildRules.RecursiveDependenciesMode.BUILDING,
@@ -223,6 +207,7 @@ public class AppleBuildRulesTest {
     for (int i = 0; i < (useCache ? 2 : 1); i++) {
       Iterable<TargetNode<?>> rules =
           AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
+              xcodeDescriptions,
               targetGraph,
               cache,
               AppleBuildRules.RecursiveDependenciesMode.LINKING,
@@ -313,6 +298,7 @@ public class AppleBuildRulesTest {
     for (int i = 0; i < (useCache ? 2 : 1); i++) {
       Iterable<TargetNode<?>> rules =
           AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
+              xcodeDescriptions,
               targetGraph,
               cache,
               AppleBuildRules.RecursiveDependenciesMode.COPYING,
@@ -324,6 +310,7 @@ public class AppleBuildRulesTest {
 
       rules =
           AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
+              xcodeDescriptions,
               targetGraph,
               cache,
               AppleBuildRules.RecursiveDependenciesMode.COPYING,
@@ -376,6 +363,7 @@ public class AppleBuildRulesTest {
     for (int i = 0; i < (useCache ? 2 : 1); i++) {
       Iterable<TargetNode<?>> rules =
           AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
+              xcodeDescriptions,
               targetGraph,
               cache,
               AppleBuildRules.RecursiveDependenciesMode.LINKING,
@@ -427,6 +415,7 @@ public class AppleBuildRulesTest {
     for (int i = 0; i < (useCache ? 2 : 1); i++) {
       Iterable<TargetNode<?>> rules =
           AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
+              xcodeDescriptions,
               targetGraph,
               cache,
               AppleBuildRules.RecursiveDependenciesMode.COPYING,
@@ -498,6 +487,7 @@ public class AppleBuildRulesTest {
     for (int i = 0; i < (useCache ? 2 : 1); i++) {
       Iterable<TargetNode<?>> rules =
           AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
+              xcodeDescriptions,
               targetGraph,
               cache,
               AppleBuildRules.RecursiveDependenciesMode.BUILDING,

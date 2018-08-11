@@ -48,6 +48,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.devtools.build.lib.events.EventKind;
 import com.google.devtools.build.lib.syntax.EvalException;
+import com.google.devtools.build.lib.syntax.Runtime;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Optional;
@@ -244,17 +245,27 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
     }
 
     try {
-      return SkylarkProjectBuildFileParser.using(
-          buildFileParserOptions,
-          eventBus,
-          SkylarkFilesystem.using(cell.getFilesystem()),
-          buckGlobals,
-          new ConsoleEventHandler(
+      SkylarkProjectBuildFileParser skylarkParser =
+          SkylarkProjectBuildFileParser.using(
+              buildFileParserOptions,
               eventBus,
-              EventKind.ALL_EVENTS,
-              ImmutableSet.copyOf(buckGlobals.getNativeModule().getFieldNames()),
-              augmentor),
-          globberFactory);
+              SkylarkFilesystem.using(cell.getFilesystem()),
+              buckGlobals,
+              new ConsoleEventHandler(
+                  eventBus,
+                  EventKind.ALL_EVENTS,
+                  ImmutableSet.copyOf(buckGlobals.getNativeModule().getFieldNames()),
+                  augmentor),
+              globberFactory);
+
+      // All built-ins should have already been discovered. Freezing improves performance by
+      // avoiding synchronization during query operations. This operation is idempotent, so it's
+      // fine to call this multiple times.
+      // Note, that this method should be called after parser is created, to give a chance for all
+      // static initializers that register SkylarkSignature to run.
+      Runtime.getBuiltinRegistry().freeze();
+
+      return skylarkParser;
     } catch (EvalException e) {
       throw new RuntimeException(e);
     }

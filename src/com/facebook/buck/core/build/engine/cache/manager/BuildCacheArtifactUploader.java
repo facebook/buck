@@ -21,6 +21,7 @@ import com.facebook.buck.artifact_cache.ArtifactUploader;
 import com.facebook.buck.core.build.engine.BuildRuleSuccessType;
 import com.facebook.buck.core.build.engine.buildinfo.BuildInfo;
 import com.facebook.buck.core.build.engine.buildinfo.OnDiskBuildInfo;
+import com.facebook.buck.core.build.engine.type.UploadToCacheResultType;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.attr.SupportsInputBasedRuleKey;
@@ -114,24 +115,29 @@ public class BuildCacheArtifactUploader {
   }
 
   /** @return whether we should upload the given rules artifacts to cache. */
-  public boolean shouldUploadToCache(BuildRuleSuccessType successType, long outputSize) {
+  public UploadToCacheResultType shouldUploadToCache(
+      BuildRuleSuccessType successType, long outputSize) {
 
     // The success type must allow cache uploading.
     if (!successType.shouldUploadResultingArtifact()) {
-      return false;
+      return UploadToCacheResultType.UNCACHEABLE;
     }
 
     // The cache must be writable.
     if (!artifactCache.getCacheReadMode().isWritable()) {
-      return false;
+      return UploadToCacheResultType.CACHEABLE_READONLY_CACHE;
     }
 
     // If the rule is explicitly marked uncacheable, don't cache it.
     if (!rule.isCacheable()) {
-      return false;
+      return UploadToCacheResultType.UNCACHEABLE_RULE;
     }
 
     // If the rule's outputs are bigger than the preset size limit, don't cache it.
-    return !artifactCacheSizeLimit.isPresent() || outputSize <= artifactCacheSizeLimit.get();
+    if (artifactCacheSizeLimit.isPresent() && outputSize > artifactCacheSizeLimit.get()) {
+      return UploadToCacheResultType.CACHEABLE_OVER_SIZE_LIMIT;
+    }
+
+    return UploadToCacheResultType.CACHEABLE;
   }
 }

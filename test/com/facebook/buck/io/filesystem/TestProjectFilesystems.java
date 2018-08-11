@@ -24,16 +24,11 @@ public class TestProjectFilesystems {
 
   private TestProjectFilesystems() {}
 
-  public static ProjectFilesystem createProjectFilesystem(Path root, Config config)
-      throws InterruptedException {
+  public static ProjectFilesystem createProjectFilesystem(Path root, Config config) {
     return new DefaultProjectFilesystemFactory().createProjectFilesystem(root, config);
   }
 
   public static ProjectFilesystem createProjectFilesystem(Path root) {
-    try {
-      return new DefaultProjectFilesystemFactory().createProjectFilesystem(root);
-    } catch (InterruptedException e) {
-      throw new RuntimeException(e);
-    }
+    return new DefaultProjectFilesystemFactory().createProjectFilesystem(root);
   }
 }

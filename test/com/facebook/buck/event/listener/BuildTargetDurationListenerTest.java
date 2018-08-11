@@ -23,28 +23,49 @@ import static com.facebook.buck.event.listener.BuildTargetDurationListener.const
 import static com.facebook.buck.event.listener.BuildTargetDurationListener.criticalPath;
 import static com.facebook.buck.event.listener.BuildTargetDurationListener.findCriticalNodes;
 import static com.facebook.buck.event.listener.BuildTargetDurationListener.rendersCriticalPathsTraceFile;
+import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.artifact_cache.CacheResult;
+import com.facebook.buck.core.build.engine.BuildRuleStatus;
+import com.facebook.buck.core.build.engine.BuildRuleSuccessType;
+import com.facebook.buck.core.build.engine.type.UploadToCacheResultType;
+import com.facebook.buck.core.build.event.BuildRuleEvent;
+import com.facebook.buck.core.build.stats.BuildRuleDurationTracker;
+import com.facebook.buck.core.model.BuildId;
+import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.rulekey.BuildRuleKeys;
+import com.facebook.buck.core.rulekey.RuleKey;
+import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.event.listener.BuildTargetDurationListener.BuildRuleInfo;
 import com.facebook.buck.event.listener.BuildTargetDurationListener.BuildRuleInfo.Chain;
 import com.facebook.buck.event.listener.BuildTargetDurationListener.BuildRuleInfoSelectedChain;
 import com.facebook.buck.event.listener.BuildTargetDurationListener.CriticalPathEntry;
+import com.facebook.buck.log.InvocationInfo;
+import com.facebook.buck.rules.FakeTestRule;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Maps;
 import com.google.common.collect.MinMaxPriorityQueue;
 import com.google.common.collect.Sets;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Deque;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import org.junit.Assert;
 import org.junit.Rule;
@@ -113,30 +134,43 @@ public class BuildTargetDurationListenerTest {
     ConcurrentMap<String, BuildRuleInfo> buildRuleInfos = Maps.newConcurrentMap();
     BuildRuleInfo a = new BuildRuleInfo("a", kk, 12, 20);
     a.updateDuration(8);
+    a.addBuildRuleEventInterval(12000, 20000);
     BuildRuleInfo b = new BuildRuleInfo("b", kk, 8, 12);
     b.updateDuration(4);
+    b.addBuildRuleEventInterval(8000, 12000);
     BuildRuleInfo c = new BuildRuleInfo("c", kk, 9, 11);
     c.updateDuration(2);
+    c.addBuildRuleEventInterval(9000, 11000);
     BuildRuleInfo d = new BuildRuleInfo("d", kk, 2, 4);
     d.updateDuration(2);
+    d.addBuildRuleEventInterval(2000, 4000);
     BuildRuleInfo e = new BuildRuleInfo("e", kk, 6, 8);
     e.updateDuration(2);
+    e.addBuildRuleEventInterval(6000, 8000);
     BuildRuleInfo f = new BuildRuleInfo("f", kk, 8, 9);
     f.updateDuration(1);
+    f.addBuildRuleEventInterval(8000, 9000);
     BuildRuleInfo g = new BuildRuleInfo("g", kk, 1, 2);
     g.updateDuration(1);
+    g.addBuildRuleEventInterval(1000, 2000);
     BuildRuleInfo h = new BuildRuleInfo("h", kk, 0, 1);
     h.updateDuration(1);
+    h.addBuildRuleEventInterval(0, 1000);
     BuildRuleInfo i = new BuildRuleInfo("i", kk, 0, 1);
     i.updateDuration(1);
+    i.addBuildRuleEventInterval(0, 1000);
     BuildRuleInfo j = new BuildRuleInfo("j", kk, 0, 2);
     j.updateDuration(2);
+    j.addBuildRuleEventInterval(0, 2000);
     BuildRuleInfo k = new BuildRuleInfo("k", kk, 0, 5);
     k.updateDuration(5);
+    k.addBuildRuleEventInterval(0, 5000);
     BuildRuleInfo l = new BuildRuleInfo("l", kk, 0, 6);
     l.updateDuration(6);
+    l.addBuildRuleEventInterval(0, 6000);
     BuildRuleInfo m = new BuildRuleInfo("m", kk, 0, 8);
     m.updateDuration(8);
+    m.addBuildRuleEventInterval(0, 8000);
 
     a.addDependency("b");
     a.addDependency("c");
@@ -188,20 +222,28 @@ public class BuildTargetDurationListenerTest {
     ConcurrentMap<String, BuildRuleInfo> buildRuleInfos = Maps.newConcurrentMap();
     BuildRuleInfo a = new BuildRuleInfo("a", kk, 25, 30);
     a.updateDuration(5);
+    a.addBuildRuleEventInterval(25000, 30000);
     BuildRuleInfo b = new BuildRuleInfo("b", kk, 20, 23);
     b.updateDuration(3);
+    b.addBuildRuleEventInterval(20000, 23000);
     BuildRuleInfo c = new BuildRuleInfo("c", kk, 3, 25);
     c.updateDuration(22);
+    c.addBuildRuleEventInterval(3000, 25000);
     BuildRuleInfo d = new BuildRuleInfo("d", kk, 3, 18);
     d.updateDuration(15);
+    d.addBuildRuleEventInterval(3000, 18000);
     BuildRuleInfo e = new BuildRuleInfo("e", kk, 12, 20);
     e.updateDuration(8);
+    e.addBuildRuleEventInterval(12000, 20000);
     BuildRuleInfo f = new BuildRuleInfo("f", kk, 0, 3);
     f.updateDuration(3);
+    f.addBuildRuleEventInterval(0, 3000);
     BuildRuleInfo g = new BuildRuleInfo("g", kk, 0, 3);
     g.updateDuration(3);
+    g.addBuildRuleEventInterval(0, 3000);
     BuildRuleInfo h = new BuildRuleInfo("h", kk, 0, 12);
     h.updateDuration(12);
+    h.addBuildRuleEventInterval(0, 12000);
 
     f.addDependent("c");
     f.addDependent("d");
@@ -239,9 +281,9 @@ public class BuildTargetDurationListenerTest {
     Iterator<Long> expectedLongestIterator = expectedLongest.iterator();
     for (CriticalPathEntry criticalPathEntry : criticalPath) {
       Assert.assertTrue(expectedPrevIterator.hasNext());
-      Assert.assertEquals(expectedPrevIterator.next(), criticalPathEntry.ruleName());
+      assertEquals(expectedPrevIterator.next(), criticalPathEntry.ruleName());
       Assert.assertTrue(expectedLongestIterator.hasNext());
-      Assert.assertEquals(expectedLongestIterator.next().longValue(), criticalPathEntry.longest());
+      assertEquals(expectedLongestIterator.next().longValue(), criticalPathEntry.longest());
     }
   }
 
@@ -257,13 +299,13 @@ public class BuildTargetDurationListenerTest {
   private static void checkCriticalPathsOfVeryConnected(BuildRuleInfo a, BuildRuleInfo b) {
     // Check path of a.
     List<Deque<CriticalPathEntry>> criticalPathsForA = criticalPathsFor(a);
-    Assert.assertEquals(1, criticalPathsForA.size());
+    assertEquals(1, criticalPathsForA.size());
     checkCriticalPath(
         Arrays.asList("f", "c", "a"), Arrays.asList(3L, 25L, 30L), criticalPathsForA.get(0));
 
     // Check paths of b
     List<Deque<CriticalPathEntry>> criticalPathsForB = criticalPathsFor(b);
-    Assert.assertEquals(3, criticalPathsForB.size());
+    assertEquals(3, criticalPathsForB.size());
 
     for (Deque<CriticalPathEntry> criticalPathForB : criticalPathsForB) {
       final String starting = criticalPathForB.getFirst().ruleName();
@@ -287,7 +329,7 @@ public class BuildTargetDurationListenerTest {
 
     // Check top 3 critical paths
     List<Deque<CriticalPathEntry>> topKPaths = constructCriticalPaths(Arrays.asList(a, b), 3);
-    Assert.assertEquals(3, topKPaths.size());
+    assertEquals(3, topKPaths.size());
     checkCriticalPath(Arrays.asList("f", "c", "a"), Arrays.asList(3L, 25L, 30L), topKPaths.get(0));
     checkCriticalPath(Arrays.asList("h", "e", "b"), Arrays.asList(12L, 20L, 23L), topKPaths.get(1));
     checkCriticalPath(Arrays.asList("f", "d", "b"), Arrays.asList(3L, 18L, 21L), topKPaths.get(2));
@@ -328,7 +370,7 @@ public class BuildTargetDurationListenerTest {
     computeCriticalPathsUsingGraphTraversal(buildRuleInfos);
     List<BuildRuleInfo> rootBuildRuleInfos = rootBuildRuleInfos(buildRuleInfos);
     // The most critical node should be "a"
-    Assert.assertEquals(
+    assertEquals(
         "a", findCriticalNodes(rootBuildRuleInfos, 1).poll().buildRuleInfo().getRuleName());
 
     // Check top k critical nodes
@@ -341,11 +383,11 @@ public class BuildTargetDurationListenerTest {
     while (!topKCriticalNodes.isEmpty()) {
       BuildRuleInfoSelectedChain selectedChain = topKCriticalNodes.poll();
       Assert.assertTrue(expectedRuleName.hasNext());
-      Assert.assertEquals(expectedRuleName.next(), selectedChain.buildRuleInfo().getRuleName());
+      assertEquals(expectedRuleName.next(), selectedChain.buildRuleInfo().getRuleName());
       Assert.assertTrue(expectedLongest.hasNext());
-      Assert.assertEquals(expectedLongest.next().longValue(), selectedChain.chain().getLongest());
+      assertEquals(expectedLongest.next().longValue(), selectedChain.chain().getLongest());
       Assert.assertTrue(expectedPrev.hasNext());
-      Assert.assertEquals(expectedPrev.next(), selectedChain.chain().getPrev().get().getRuleName());
+      assertEquals(expectedPrev.next(), selectedChain.chain().getPrev().get().getRuleName());
     }
   }
 
@@ -365,7 +407,7 @@ public class BuildTargetDurationListenerTest {
 
     try (ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
       ObjectMappers.WRITER.writeValue(bos, criticalPaths);
-      Assert.assertEquals(data.trim(), bos.toString());
+      assertEquals(data.trim(), bos.toString());
     }
   }
 
@@ -382,7 +424,7 @@ public class BuildTargetDurationListenerTest {
 
     try (ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
       rendersCriticalPathsTraceFile(constructCriticalPaths(rootBuildRuleInfos, 1), bos);
-      Assert.assertEquals(data.trim(), bos.toString());
+      assertEquals(data.trim(), bos.toString());
     }
   }
 
@@ -400,7 +442,7 @@ public class BuildTargetDurationListenerTest {
 
     try (ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
       rendersCriticalPathsTraceFile(constructCriticalPaths(rootBuildRuleInfos, k), bos);
-      Assert.assertEquals(data.trim(), bos.toString());
+      assertEquals(data.trim(), bos.toString());
     }
   }
 
@@ -419,7 +461,7 @@ public class BuildTargetDurationListenerTest {
     try (ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
       ObjectMappers.WRITER.writeValue(
           bos, constructBuildRuleCriticalPaths(constructCriticalPaths(rootBuildRuleInfos, k)));
-      Assert.assertEquals(data.trim(), bos.toString());
+      assertEquals(data.trim(), bos.toString());
     }
   }
 
@@ -437,7 +479,56 @@ public class BuildTargetDurationListenerTest {
 
     try (ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
       ObjectMappers.WRITER.writeValue(bos, constructBuildTargetResults(rootBuildRuleInfos));
-      Assert.assertEquals(data.trim(), bos.toString());
+      assertEquals(data.trim(), bos.toString());
     }
+  }
+
+  @Test
+  public void testBuildStartFinishTimes() {
+    final String target = "//:celik";
+    BuildId buildId = new BuildId("19911501");
+    BuildTargetDurationListener listener =
+        new BuildTargetDurationListener(
+            InvocationInfo.of(
+                buildId,
+                false,
+                false,
+                "test",
+                Arrays.asList(target),
+                Arrays.asList(),
+                Paths.get(".")),
+            new FakeProjectFilesystem(),
+            Executors.newSingleThreadExecutor(),
+            1);
+    BuildRuleDurationTracker tracker = new BuildRuleDurationTracker();
+    BuildRule rule =
+        new FakeTestRule(
+            ImmutableSet.of(), BuildTargetFactory.newInstance(target), ImmutableSortedSet.of());
+    BuildRuleEvent.Started begin = BuildRuleEvent.started(rule, tracker);
+    begin.configure(0, 0, 0, 0, buildId);
+    listener.buildRuleEventStarted(begin);
+    BuildRuleEvent.Finished end =
+        BuildRuleEvent.finished(
+            begin,
+            BuildRuleKeys.of(new RuleKey("19911501")),
+            BuildRuleStatus.SUCCESS,
+            CacheResult.miss(),
+            Optional.empty(),
+            Optional.of(BuildRuleSuccessType.BUILT_LOCALLY),
+            UploadToCacheResultType.UNCACHEABLE,
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty());
+    end.configure(
+        42, TimeUnit.MILLISECONDS.toNanos(42), TimeUnit.MILLISECONDS.toNanos(42), 0, buildId);
+    listener.buildRuleEventFinished(end);
+    BuildRuleInfo buildRuleInfo = listener.getBuildRuleInfos().get(target);
+    assertEquals(42, buildRuleInfo.getWholeTargetDuration());
   }
 }

@@ -121,8 +121,6 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
     TypeCoercer<SourceWithFlags> sourceWithFlagsTypeCoercer =
         new SourceWithFlagsTypeCoercer(
             sourcePathTypeCoercer, new ListTypeCoercer<>(stringTypeCoercer));
-    TypeCoercer<OcamlSource> ocamlSourceTypeCoercer =
-        new OcamlSourceTypeCoercer(sourcePathTypeCoercer);
     TypeCoercer<Integer> intTypeCoercer = new NumberTypeCoercer<>(Integer.class);
     TypeCoercer<NeededCoverageSpec> neededCoverageSpecTypeCoercer =
         new NeededCoverageSpecTypeCoercer(
@@ -153,7 +151,6 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
 
           // other simple
           sourceWithFlagsTypeCoercer,
-          ocamlSourceTypeCoercer,
           new BuildConfigFieldsTypeCoercer(),
           new UriTypeCoercer(),
           new FrameworkPathTypeCoercer(sourcePathTypeCoercer),
@@ -385,7 +382,7 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
       return new SelectorListCoercer<>(
           new BuildTargetTypeCoercer(),
           typeCoercerForType(getSingletonTypeParameter(typeName, actualTypeArguments)),
-          new SelectorListFactory(new SelectorFactory()));
+          new SelectorListFactory(new SelectorFactory(new BuildTargetTypeCoercer()::coerce)));
     } else {
       throw new IllegalArgumentException("Unhandled type: " + typeName);
     }
