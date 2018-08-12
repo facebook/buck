@@ -1,6 +1,6 @@
 python_library(
     name = "ng",
-    srcs = glob(["*.py"]),
+    srcs = ["ng.py"],
     base_module = "",
     licenses = [
         "LICENSE",
