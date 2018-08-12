@@ -81,6 +81,7 @@ import com.facebook.buck.util.FakeInvocationInfoFactory;
 import com.facebook.buck.util.concurrent.FakeWeightedListeningExecutorService;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.timing.Clock;
 import com.facebook.buck.util.timing.DefaultClock;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -122,12 +123,14 @@ public class DistBuildControllerTest {
   private StampedeId stampedeId;
   private ClientStatsTracker distBuildClientStatsTracker;
   private InvocationInfo invocationInfo;
+  private Clock clock;
+  private RemoteBuildRuleSynchronizer remoteBuildRuleSynchronizer;
 
   @Before
   public void setUp() throws IOException, InterruptedException {
     mockDistBuildService = EasyMock.createMock(DistBuildService.class);
     mockLogStateTracker = EasyMock.createMock(LogStateTracker.class);
-    scheduler = Executors.newSingleThreadScheduledExecutor();
+    scheduler = Executors.newScheduledThreadPool(2);
     buckVersion = new BuckVersion();
     buckVersion.setGitHash("thishashisamazing");
     distBuildClientStatsTracker = new ClientStatsTracker(BUILD_LABEL, MINION_TYPE);
@@ -140,6 +143,8 @@ public class DistBuildControllerTest {
     stampedeId = new StampedeId();
     stampedeId.setId("uber-cool-stampede-id");
     invocationInfo = FakeInvocationInfoFactory.create();
+    clock = new DefaultClock();
+    remoteBuildRuleSynchronizer = new RemoteBuildRuleSynchronizer(clock, scheduler, 1000, 10000);
   }
 
   private DistBuildController createController(ListenableFuture<BuildJobState> asyncBuildJobState) {
@@ -150,7 +155,7 @@ public class DistBuildControllerTest {
             .setArtifactCacheFactory(new NoopArtifactCache.NoopArtifactCacheFactory())
             .setBuckEventBus(mockEventBus)
             .setBuildInfoStoreManager(new BuildInfoStoreManager())
-            .setClock(new DefaultClock())
+            .setClock(clock)
             .setConsole(new TestConsole())
             .setPlatform(Platform.detect())
             .setProjectFilesystemFactory(new FakeProjectFilesystemFactory())
@@ -195,7 +200,7 @@ public class DistBuildControllerTest {
             .setMaxTimeoutWaitingForLogsMillis(0)
             .setStatusPollIntervalMillis(1)
             .setLogMaterializationEnabled(true)
-            .setRemoteBuildRuleCompletionNotifier(new RemoteBuildRuleSynchronizer())
+            .setRemoteBuildRuleCompletionNotifier(remoteBuildRuleSynchronizer)
             .setStampedeIdReference(stampedeIdRef)
             .setBuildLabel(BUILD_LABEL)
             .build());
@@ -222,6 +227,7 @@ public class DistBuildControllerTest {
 
   @After
   public void tearDown() {
+    remoteBuildRuleSynchronizer.close();
     directExecutor.shutdownNow();
     scheduler.shutdownNow();
   }

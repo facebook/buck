@@ -115,11 +115,12 @@ public class StampedeBuildClient {
       ClientStatsTracker clientStatsTracker,
       boolean waitGracefullyForDistributedBuildThreadToFinish,
       long distributedBuildThreadKillTimeoutSeconds,
-      Optional<String> autoStampedeMessage) {
+      Optional<String> autoStampedeMessage,
+      RemoteBuildRuleSynchronizer remoteBuildRuleSynchronizer) {
     this.localBuildExecutorInvoker = localBuildExecutorInvoker;
     this.eventBus = eventBus;
     this.clientStatsTracker = clientStatsTracker;
-    this.remoteBuildRuleSynchronizer = new RemoteBuildRuleSynchronizer();
+    this.remoteBuildRuleSynchronizer = remoteBuildRuleSynchronizer;
     this.autoStampedeMessage = autoStampedeMessage;
     this.racerBuildRunner =
         createStampedeLocalBuildRunner(

@@ -1023,15 +1023,13 @@ class CachingBuildRuleBuilder {
           }
 
           // Once remote build has finished, download artifact from cache using default key
-          return Futures.transformAsync(
-              remoteBuildRuleCompletionWaiter.waitForBuildRuleToFinishRemotely(rule),
-              (Void v) ->
-                  Futures.transform(
-                      performRuleKeyCacheCheck(/* cacheHitExpected */ true),
-                      cacheResult -> {
-                        rulekeyCacheResult.set(cacheResult);
-                        return getBuildResultForRuleKeyCacheResult(cacheResult);
-                      }));
+          return Futures.transform(
+              remoteBuildRuleCompletionWaiter.waitForBuildRuleToAppearInCache(
+                  rule, () -> performRuleKeyCacheCheck(/* cacheHitExpected */ true)),
+              cacheResult -> {
+                rulekeyCacheResult.set(cacheResult);
+                return getBuildResultForRuleKeyCacheResult(cacheResult);
+              });
         });
   }
 

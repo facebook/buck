@@ -53,6 +53,7 @@ import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.util.ExitCode;
+import com.facebook.buck.util.timing.DefaultClock;
 import java.io.IOException;
 import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
@@ -65,6 +66,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import org.easymock.EasyMock;
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -106,7 +108,9 @@ public class StampedeBuildClientTest {
   @Before
   public void setUp() {
     mockEventBus = BuckEventBusForTests.newInstance();
-    remoteBuildRuleSynchronizer = new RemoteBuildRuleSynchronizer();
+    remoteBuildRuleSynchronizer =
+        new RemoteBuildRuleSynchronizer(
+            new DefaultClock(), Executors.newSingleThreadScheduledExecutor(), 1000, 10000);
     executorForLocalBuild = Executors.newSingleThreadExecutor();
     executorForDistBuildController = Executors.newSingleThreadExecutor();
     mockDistBuildService = EasyMock.createMock(DistBuildService.class);
@@ -174,6 +178,11 @@ public class StampedeBuildClientTest {
     distributedBuildThreadKillTimeoutSeconds = 1;
     createStampedBuildClient();
     buildClientExecutor = Executors.newSingleThreadExecutor();
+  }
+
+  @After
+  public void tearDown() {
+    remoteBuildRuleSynchronizer.close();
   }
 
   private void createStampedBuildClient(StampedeId stampedeId) {

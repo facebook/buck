@@ -35,6 +35,14 @@ public interface RemoteBuildRuleCompletionNotifier {
   void signalCompletionOfBuildRule(String buildTarget);
 
   /**
+   * Signals that for an individual build rule there is no need to wait further for remote build to
+   * put it in cache - if it is not in cache now, it will not be later.
+   *
+   * @param buildTarget
+   */
+  void signalUnlockedBuildRule(String buildTarget);
+
+  /**
    * Signals that the entire remote build has finished (and in turn all rules within it)
    *
    * @param success Indicates whether remote build finished successfully or in a failure.

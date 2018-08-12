@@ -5,6 +5,7 @@ java_library(
         "PUBLIC",
     ],
     deps = [
+        "//src/com/facebook/buck/artifact_cache:artifact_cache",
         "//src/com/facebook/buck/core/rules/impl:impl",
     ],
 )

@@ -15,10 +15,12 @@
  */
 package com.facebook.buck.core.build.distributed.synchronization.impl;
 
+import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.core.build.distributed.synchronization.RemoteBuildRuleCompletionWaiter;
 import com.facebook.buck.core.rules.BuildRule;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import java.util.function.Supplier;
 
 /** Use this implementation when running a standalone Buck build without Stampede */
 public class NoOpRemoteBuildRuleCompletionWaiter implements RemoteBuildRuleCompletionWaiter {
@@ -29,8 +31,9 @@ public class NoOpRemoteBuildRuleCompletionWaiter implements RemoteBuildRuleCompl
   }
 
   @Override
-  public ListenableFuture<Void> waitForBuildRuleToFinishRemotely(BuildRule buildRule) {
-    return Futures.immediateFuture(null);
+  public ListenableFuture<CacheResult> waitForBuildRuleToAppearInCache(
+      BuildRule buildRule, Supplier<ListenableFuture<CacheResult>> cacheCheck) {
+    return Futures.immediateFuture(CacheResult.ignored());
   }
 
   @Override

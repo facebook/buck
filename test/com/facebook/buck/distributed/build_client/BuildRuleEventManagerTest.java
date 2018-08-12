@@ -72,9 +72,9 @@ public class BuildRuleEventManagerTest {
 
   @Test
   public void testBuildRuleUnlockedEventsNotifiedImmediately() {
-    remoteBuildRuleCompletionNotifier.signalCompletionOfBuildRule(BUILD_TARGET_ONE);
+    remoteBuildRuleCompletionNotifier.signalUnlockedBuildRule(BUILD_TARGET_ONE);
     EasyMock.expectLastCall();
-    remoteBuildRuleCompletionNotifier.signalCompletionOfBuildRule(BUILD_TARGET_TWO);
+    remoteBuildRuleCompletionNotifier.signalUnlockedBuildRule(BUILD_TARGET_TWO);
     EasyMock.expectLastCall();
     EasyMock.replay(remoteBuildRuleCompletionNotifier);
 

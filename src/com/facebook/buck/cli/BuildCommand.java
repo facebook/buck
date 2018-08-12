@@ -32,6 +32,7 @@ import com.facebook.buck.command.LocalBuildExecutor;
 import com.facebook.buck.command.LocalBuildExecutorInvoker;
 import com.facebook.buck.core.build.distributed.synchronization.RemoteBuildRuleCompletionWaiter;
 import com.facebook.buck.core.build.distributed.synchronization.impl.NoOpRemoteBuildRuleCompletionWaiter;
+import com.facebook.buck.core.build.distributed.synchronization.impl.RemoteBuildRuleSynchronizer;
 import com.facebook.buck.core.build.engine.delegate.LocalCachingBuildEngineDelegate;
 import com.facebook.buck.core.build.engine.type.BuildType;
 import com.facebook.buck.core.build.event.BuildEvent;
@@ -922,7 +923,13 @@ public class BuildCommand extends AbstractCommand {
     distBuildClientStats.setIsLocalFallbackBuildEnabled(
         distBuildConfig.isSlowLocalBuildFallbackModeEnabled());
 
-    try (DistBuildService distBuildService = DistBuildFactory.newDistBuildService(params)) {
+    try (DistBuildService distBuildService = DistBuildFactory.newDistBuildService(params);
+        RemoteBuildRuleSynchronizer remoteBuildRuleSynchronizer =
+            new RemoteBuildRuleSynchronizer(
+                params.getClock(),
+                params.getScheduledExecutor(),
+                distBuildConfig.getCacheSynchronizationFirstBackoffMillis(),
+                distBuildConfig.getCacheSynchronizationMaxTotalBackoffMillis())) {
       ListeningExecutorService stampedeControllerExecutor =
           createStampedeControllerExecutorService(distBuildConfig.getControllerMaxThreadCount());
 
@@ -1023,7 +1030,8 @@ public class BuildCommand extends AbstractCommand {
               distBuildClientStats,
               waitForDistBuildThreadToFinishGracefully,
               distributedBuildThreadKillTimeoutSeconds,
-              autoDistBuildMessage);
+              autoDistBuildMessage,
+              remoteBuildRuleSynchronizer);
 
       distBuildClientStats.startTimer(PERFORM_LOCAL_BUILD);
 

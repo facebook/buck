@@ -204,6 +204,14 @@ public class DistBuildConfig {
       "cache_synchronization_safety_margin_millis";
   private static final int DEFAULT_CACHE_SYNCHRONIZATION_SAFETY_MARGIN_MILLIS = 5000;
 
+  private static final String CACHE_SYNCHRONIZATION_FIRST_BACKOFF_MILLIS =
+      "cache_synchronization_first_backoff_millis";
+  private static final long DEFAULT_CACHE_SYNCHRONIZATION_FIRST_BACKOFF_MILLIS = 1000;
+
+  private static final String CACHE_SYNCHRONIZATION_MAX_TOTAL_BACKOFF_MILLIS =
+      "cache_synchronization_max_total_backoff_millis";
+  private static final long DEFAULT_CACHE_SYNCHRONIZATION_MAX_TOTAL_BACKOFF_MILLIS = 10000;
+
   private static final String BUILD_SELECTED_TARGETS_LOCALLY = "build_selected_targets_locally";
   private static final boolean DEFAULT_BUILD_SELECTED_TARGETS_LOCALLY = true;
 
@@ -539,6 +547,18 @@ public class DistBuildConfig {
     return buckConfig
         .getInteger(STAMPEDE_SECTION, CACHE_SYNCHRONIZATION_SAFETY_MARGIN_MILLIS)
         .orElse(DEFAULT_CACHE_SYNCHRONIZATION_SAFETY_MARGIN_MILLIS);
+  }
+
+  public long getCacheSynchronizationFirstBackoffMillis() {
+    return buckConfig
+        .getLong(STAMPEDE_SECTION, CACHE_SYNCHRONIZATION_FIRST_BACKOFF_MILLIS)
+        .orElse(DEFAULT_CACHE_SYNCHRONIZATION_FIRST_BACKOFF_MILLIS);
+  }
+
+  public long getCacheSynchronizationMaxTotalBackoffMillis() {
+    return buckConfig
+        .getLong(STAMPEDE_SECTION, CACHE_SYNCHRONIZATION_MAX_TOTAL_BACKOFF_MILLIS)
+        .orElse(DEFAULT_CACHE_SYNCHRONIZATION_MAX_TOTAL_BACKOFF_MILLIS);
   }
 
   public boolean shouldBuildSelectedTargetsLocally() {

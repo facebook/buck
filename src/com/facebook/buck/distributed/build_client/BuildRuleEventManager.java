@@ -94,15 +94,15 @@ public class BuildRuleEventManager {
   }
 
   /**
-   * Records the receipt of a BuildRuleUnlocked event. As we do not expect remote machines taking
-   * part in the build to be uploading artifacts for the rule, we signal completion immediately to
-   * unlock the rule and allow local client to progress with the build.
+   * Records the receipt of a BuildRuleUnlocked event. As this indicates that remote machines taking
+   * part in the build will not be uploading artifacts for the rule, we signal immediately that rule
+   * needs to be unlocked to allow local client to progress with the build.
    *
    * @param buildTarget
    */
   public void recordBuildRuleUnlockedEvent(String buildTarget) {
     LOG.debug(String.format("Received BUILD_RULE_UNLOCKED_EVENT for [%s].", buildTarget));
-    remoteBuildRuleCompletionNotifier.signalCompletionOfBuildRule(buildTarget);
+    remoteBuildRuleCompletionNotifier.signalUnlockedBuildRule(buildTarget);
   }
 
   /** @return true if ALL_BUILD_RULES_FINISHED_EVENT received. */

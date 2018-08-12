@@ -4086,7 +4086,7 @@ public class CachingBuildEngineTest {
 
     @Test(timeout = 10000)
     public void testBuildLocallyWithImmediateRemoteSynchronization() throws Exception {
-      RemoteBuildRuleSynchronizer synchronizer = new RemoteBuildRuleSynchronizer();
+      RemoteBuildRuleSynchronizer synchronizer = createRemoteBuildRuleSynchronizer();
       synchronizer.switchToAlwaysWaitingMode();
 
       // Signal completion of the build rule before the caching build engine requests it.
@@ -4112,11 +4112,13 @@ public class CachingBuildEngineTest {
       assertTrue(
           RemoteBuildRuleSynchronizerTestUtil.buildCompletionWaitingFutureCreatedForTarget(
               synchronizer, BUILD_TARGET.getFullyQualifiedName()));
+
+      synchronizer.close();
     }
 
     @Test(timeout = 10000)
     public void testBuildLocallyWithDelayedRemoteSynchronization() throws Exception {
-      RemoteBuildRuleSynchronizer synchronizer = new RemoteBuildRuleSynchronizer();
+      RemoteBuildRuleSynchronizer synchronizer = createRemoteBuildRuleSynchronizer();
       synchronizer.switchToAlwaysWaitingMode();
 
       // Signal the completion of the build rule asynchronously.
@@ -4154,12 +4156,14 @@ public class CachingBuildEngineTest {
       assertTrue(
           RemoteBuildRuleSynchronizerTestUtil.buildCompletionWaitingFutureCreatedForTarget(
               synchronizer, BUILD_TARGET.getFullyQualifiedName()));
+
+      synchronizer.close();
     }
 
     @Test(timeout = 10000)
     public void testBuildLocallyWhenRemoteBuildNotStartedAndAlwaysWaitSetToFalse()
         throws Exception {
-      RemoteBuildRuleSynchronizer synchronizer = new RemoteBuildRuleSynchronizer();
+      RemoteBuildRuleSynchronizer synchronizer = createRemoteBuildRuleSynchronizer();
 
       assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, doBuild(synchronizer).getSuccess());
       assertTrue(buildRule.isInitializedFromDisk());
@@ -4179,11 +4183,13 @@ public class CachingBuildEngineTest {
       assertFalse(
           RemoteBuildRuleSynchronizerTestUtil.buildCompletionWaitingFutureCreatedForTarget(
               synchronizer, BUILD_TARGET.getFullyQualifiedName()));
+
+      synchronizer.close();
     }
 
     @Test(timeout = 10000)
     public void testBuildLocallyWhenRemoteBuildStartedAndAlwaysWaitSetToFalse() throws Exception {
-      RemoteBuildRuleSynchronizer synchronizer = new RemoteBuildRuleSynchronizer();
+      RemoteBuildRuleSynchronizer synchronizer = createRemoteBuildRuleSynchronizer();
 
       // Signal that the build has started, which should ensure build waits.
       synchronizer.signalStartedRemoteBuildingOfBuildRule(BUILD_TARGET.getFullyQualifiedName());
@@ -4223,6 +4229,8 @@ public class CachingBuildEngineTest {
       assertTrue(
           RemoteBuildRuleSynchronizerTestUtil.buildCompletionWaitingFutureCreatedForTarget(
               synchronizer, BUILD_TARGET.getFullyQualifiedName()));
+
+      synchronizer.close();
     }
 
     private BuildEngineBuildContext createBuildContext(BuildId buildId) {
@@ -4232,6 +4240,12 @@ public class CachingBuildEngineTest {
           .setBuildId(buildId)
           .setArtifactCache(artifactCache)
           .build();
+    }
+
+    private RemoteBuildRuleSynchronizer createRemoteBuildRuleSynchronizer() {
+      // Allow only up to 2 very quick backoffs.
+      return new RemoteBuildRuleSynchronizer(
+          new DefaultClock(), Executors.newSingleThreadScheduledExecutor(), 6, 10);
     }
 
     private void writeDepfileInput(String content) throws IOException {
