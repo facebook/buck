@@ -100,7 +100,7 @@ public class DistBuildSlaveStateRenderer implements MultiStateRenderer {
   public String renderStatusLine(long slaveID, StringBuilder lineBuilder) {
     Preconditions.checkArgument(slaveID >= 0 && slaveID < slaveStatuses.size());
     BuildSlaveStatus status = slaveStatuses.get((int) slaveID);
-    lineBuilder.append(String.format(" - ", slaveID));
+    lineBuilder.append(" - ");
 
     if (status.getTotalRulesCount() == 0) {
       ImmutableList.Builder<String> columns = new ImmutableList.Builder<>();
