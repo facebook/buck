@@ -18,7 +18,6 @@ package com.facebook.buck.rules.modern.builders;
 
 import com.facebook.buck.rules.modern.builders.Protocol.OutputDirectory;
 import com.facebook.buck.util.RichStream;
-import com.facebook.buck.util.function.ThrowingFunction;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -87,7 +86,13 @@ public class OutputsMaterializer {
                     RichStream.from(tree.getChildrenList())
                         .collect(
                             ImmutableMap.toImmutableMap(
-                                ThrowingFunction.asFunction(protocol::computeDigest),
+                                d -> {
+                                  try {
+                                    return protocol.computeDigest(d);
+                                  } catch (IOException e) {
+                                    throw new RuntimeException(e);
+                                  }
+                                },
                                 child -> child));
 
                 ImmutableList.Builder<ListenableFuture<Void>> pendingFilesBuilder =
