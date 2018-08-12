@@ -65,7 +65,7 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
       ImmutableList.builder();
   private final boolean hideSucceededRules;
 
-  @GuardedBy("distBuildSlaveTrackerLock")
+  @GuardedBy("distBuildSlaveTracker")
   private final Map<BuildSlaveRunId, BuildStatus> distBuildSlaveTracker;
 
   private volatile Optional<BuildStatus> stampedeBuildStatus = Optional.empty();
