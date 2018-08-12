@@ -239,8 +239,8 @@ public class DistBuildRunner {
   }
 
   /** Prints any infra failures to the console */
-  public void printAnyFailures() throws InterruptedException {
-    StampedeExecutionResult result = null;
+  public synchronized void printAnyFailures() throws InterruptedException {
+    StampedeExecutionResult result;
     try {
       Future<StampedeExecutionResult> executionResultFuture =
           Preconditions.checkNotNull(runDistributedBuildFuture);
