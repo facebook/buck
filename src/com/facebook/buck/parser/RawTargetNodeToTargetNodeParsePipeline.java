@@ -76,6 +76,7 @@ public class RawTargetNodeToTargetNodeParsePipeline
   }
 
   @Override
+  @SuppressWarnings("CheckReturnValue") // submit result is not used
   protected TargetNode<?> computeNodeInScope(
       Cell cell,
       BuildTarget buildTarget,

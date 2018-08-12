@@ -214,6 +214,7 @@ public class BuildPhase {
         DEFAULT_WAIT_FOR_ALL_BUILD_EVENTS_TIMEOUT_MILLIS);
   }
 
+  @SuppressWarnings("CheckReturnValue") // submit result is not used
   private void runLocalCoordinatorAsync(
       ListeningExecutorService executorService,
       StampedeId stampedeId,
