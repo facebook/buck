@@ -1,0 +1,39 @@
+/*
+ * Copyright 2018-present Facebook, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
+
+package com.facebook.buck.rules.modern.builders.thrift;
+
+import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.rules.modern.builders.IsolatedExecution;
+import java.io.IOException;
+import org.apache.thrift.transport.TTransportException;
+
+/** Factory for creating thrift-based strategies. */
+public class ThriftRemoteExecutionFactory {
+
+  /** The remote strategy connects to a remote thrift remote execution service. */
+  public static IsolatedExecution createRemote(String host, int port, BuckEventBus eventBus)
+      throws IOException, TTransportException {
+    ThriftRemoteExecutionClients clients = new ThriftRemoteExecutionClients(host, port);
+
+    return new ThriftRemoteExecution(eventBus, clients) {
+      @Override
+      public void close() throws IOException {
+        clients.close();
+      }
+    };
+  }
+}
