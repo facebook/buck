@@ -51,10 +51,12 @@ public class ServerHealthManager {
   private final int errorCheckTimeRangeMillis;
   private final BuckEventBus eventBus;
   private final LoadingCache<Object, Optional<URI>> getBestServerCache;
+  private final String serverPoolName;
 
   private final Clock clock;
 
   public ServerHealthManager(
+      String serverPoolName,
       ImmutableList<URI> servers,
       int errorCheckTimeRangeMillis,
       float maxErrorPercentage,
@@ -63,6 +65,7 @@ public class ServerHealthManager {
       int minSamplesToReportError,
       BuckEventBus eventBus,
       Clock clock) {
+    this.serverPoolName = serverPoolName;
     this.errorCheckTimeRangeMillis = errorCheckTimeRangeMillis;
     this.maxErrorPercentage = maxErrorPercentage;
     this.latencyCheckTimeRangeMillis = latencyCheckTimeRangeMillis;
@@ -136,7 +139,8 @@ public class ServerHealthManager {
   }
 
   private Optional<URI> calculateBestServer() {
-    ServerHealthManagerEventData.Builder data = ServerHealthManagerEventData.builder();
+    ServerHealthManagerEventData.Builder data =
+        ServerHealthManagerEventData.builder().setServerPoolName(serverPoolName);
     Map<URI, PerServerData.Builder> allPerServerData = new HashMap<>();
     try {
       long epochMillis = clock.currentTimeMillis();

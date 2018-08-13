@@ -48,6 +48,8 @@ abstract class AbstractClientSideSlbConfig {
 
   public abstract BuckEventBus getEventBus();
 
+  public abstract String getServerPoolName();
+
   @Value.Default
   public int getErrorCheckTimeRangeMillis() {
     return ERROR_CHECK_TIME_RANGE_MILLIS;

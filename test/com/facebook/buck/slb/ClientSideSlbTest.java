@@ -48,6 +48,7 @@ public class ClientSideSlbTest extends EasyMockSupport {
           URI.create("http://localhost:4242"),
           URI.create("http://localhost:8484"),
           URI.create("http://localhost:2121"));
+  private static final String SERVER_POOL_NAME = ClientSideSlbTest.class + "_server_pool";
 
   private BuckEventBus mockBus;
   private Clock mockClock;
@@ -77,6 +78,7 @@ public class ClientSideSlbTest extends EasyMockSupport {
             .setClock(mockClock)
             .setServerPool(SERVERS)
             .setEventBus(mockBus)
+            .setServerPoolName(SERVER_POOL_NAME)
             .build();
   }
 

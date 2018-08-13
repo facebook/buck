@@ -92,6 +92,7 @@ public class ClientSideSlb implements HttpLoadBalancer {
 
     this.healthManager =
         new ServerHealthManager(
+            config.getServerPoolName(),
             this.serverPool,
             config.getErrorCheckTimeRangeMillis(),
             config.getMaxErrorPercentage(),

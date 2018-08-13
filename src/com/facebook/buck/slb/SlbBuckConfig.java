@@ -109,6 +109,7 @@ public class SlbBuckConfig {
   private ClientSideSlbConfig createConfig(Clock clock, BuckEventBus eventBus) {
     ClientSideSlbConfig.Builder configBuilder =
         ClientSideSlbConfig.builder()
+            .setServerPoolName("buckconfig_" + parentSection)
             .setClock(clock)
             .setServerPool(getServerPool())
             .setEventBus(eventBus);

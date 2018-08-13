@@ -103,6 +103,7 @@ public class ServerHealthManagerTest {
 
   private ServerHealthManager newServerHealthManager() {
     return new ServerHealthManager(
+        "test_server_pool",
         SERVERS,
         RANGE_MILLIS,
         MAX_ERROR_PERCENTAGE,

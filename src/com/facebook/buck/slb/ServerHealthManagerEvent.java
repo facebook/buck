@@ -71,5 +71,7 @@ public class ServerHealthManagerEvent extends AbstractBuckEvent {
     }
 
     public abstract ImmutableList<PerServerData> getPerServerData();
+
+    public abstract String getServerPoolName();
   }
 }
