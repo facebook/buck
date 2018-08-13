@@ -318,38 +318,31 @@ public class BuckUnixPath implements Path {
       return other;
     }
 
-    int nameCount = getNameCount();
-    int otherNameCount = other.getNameCount();
-
     // skip matching names
-    int minCount = (nameCount > otherNameCount) ? otherNameCount : nameCount;
+    int minCount =
+        (segments.length > other.segments.length) ? other.segments.length : segments.length;
+
     int i = 0;
-    while (i < minCount) {
-      if (!getName(i).equals(other.getName(i))) {
+    for (; i < minCount; i++) {
+      // intentional reference compare
+      if (segments[i] != other.segments[i]) {
         break;
       }
-      i++;
     }
 
-    int dotdots = nameCount - i;
-    if (i < otherNameCount) {
-      // remaining name components in other
-      BuckUnixPath remainder = other.subpath(i, otherNameCount);
-      if (dotdots == 0) {
-        return remainder;
-      }
-
-      // result is a  "../" for each remaining name in base
-      // followed by the remaining names in other. If the remainder is
-      // the empty path then we don't add the final trailing slash.
+    int dotdots = segments.length - i;
+    if (i >= other.segments.length) {
+      // no remaining sections in other so result is simply a sequence of ".."
       String[] newSegments = new String[dotdots];
       Arrays.fill(newSegments, DOTDOT);
-      return new BuckUnixPath(fs, concatSegments(newSegments, remainder.segments));
+      return new BuckUnixPath(fs, newSegments);
     }
 
-    // no remaining names in other so result is simply a sequence of ".."
-    String[] newSegments = new String[dotdots];
-    Arrays.fill(newSegments, DOTDOT);
+    // result is a  "../" for each remaining name in base
+    // followed by the remaining names in other.
+    String[] newSegments = new String[dotdots + other.segments.length - i];
+    Arrays.fill(newSegments, 0, dotdots, DOTDOT);
+    System.arraycopy(other.segments, i, newSegments, dotdots, other.segments.length - i);
     return new BuckUnixPath(fs, newSegments);
   }
 
