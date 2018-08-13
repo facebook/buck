@@ -20,6 +20,7 @@ import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.CellConfig;
 import com.facebook.buck.core.cell.CellPathResolverView;
 import com.facebook.buck.core.cell.CellProvider;
+import com.facebook.buck.core.cell.InvalidCellOverrideException;
 import com.facebook.buck.core.cell.name.RelativeCellName;
 import com.facebook.buck.core.cell.resolver.CellPathResolver;
 import com.facebook.buck.core.config.BuckConfig;
@@ -64,7 +65,7 @@ public class LocalCellProviderFactory {
     ImmutableMap<Path, RawConfig> pathToConfigOverrides;
     try {
       pathToConfigOverrides = rootCellConfigOverrides.getOverridesByPath(cellPathMapping);
-    } catch (CellConfig.MalformedOverridesException e) {
+    } catch (InvalidCellOverrideException e) {
       throw new HumanReadableException(e.getMessage());
     }
 

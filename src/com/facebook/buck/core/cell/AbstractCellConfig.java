@@ -68,7 +68,7 @@ abstract class AbstractCellConfig {
    * @return 'Path'->override map
    */
   public ImmutableMap<Path, RawConfig> getOverridesByPath(
-      ImmutableMap<RelativeCellName, Path> pathMapping) throws MalformedOverridesException {
+      ImmutableMap<RelativeCellName, Path> pathMapping) throws InvalidCellOverrideException {
 
     ImmutableSet<RelativeCellName> relativeNamesOfCellsWithOverrides =
         FluentIterable.from(getValues().keySet())
@@ -77,7 +77,7 @@ abstract class AbstractCellConfig {
     ImmutableSet.Builder<Path> pathsWithOverrides = ImmutableSet.builder();
     for (RelativeCellName cellWithOverride : relativeNamesOfCellsWithOverrides) {
       if (!pathMapping.containsKey(cellWithOverride)) {
-        throw new MalformedOverridesException(
+        throw new InvalidCellOverrideException(
             String.format("Trying to override settings for unknown cell %s", cellWithOverride));
       }
       pathsWithOverrides.add(pathMapping.get(cellWithOverride));
@@ -92,7 +92,7 @@ abstract class AbstractCellConfig {
               .filter(name -> name.getLegacyName().isPresent())
               .toImmutableList();
       if (namesForPath.size() > 1) {
-        throw new MalformedOverridesException(
+        throw new InvalidCellOverrideException(
             String.format(
                 "Configuration override is ambiguous: cell rooted at %s is reachable "
                     + "as [%s]. Please override the config by placing a .buckconfig.local file in the "
@@ -156,12 +156,6 @@ abstract class AbstractCellConfig {
         values.put(cellName, cell);
       }
       return cell;
-    }
-  }
-
-  public static class MalformedOverridesException extends Exception {
-    public MalformedOverridesException(String message) {
-      super(message);
     }
   }
 }

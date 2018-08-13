@@ -74,7 +74,7 @@ public class CellConfigTest {
             .put(RelativeCellName.fromComponents("firstpath"), section, "cell", "cell")
             .build();
 
-    expectedException.expect(CellConfig.MalformedOverridesException.class);
+    expectedException.expect(InvalidCellOverrideException.class);
     expectedException.expectMessage(
         Matchers.stringContainsInOrder("root", "firstpath", "secondpath"));
     cellConfig.getOverridesByPath(
@@ -115,7 +115,7 @@ public class CellConfigTest {
             .put(RelativeCellName.fromComponents("unknown"), section, "cell", "cell")
             .build();
 
-    expectedException.expect(CellConfig.MalformedOverridesException.class);
+    expectedException.expect(InvalidCellOverrideException.class);
     expectedException.expectMessage(Matchers.stringContainsInOrder("unknown"));
     cellConfig.getOverridesByPath(
         ImmutableMap.of(
