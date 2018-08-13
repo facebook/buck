@@ -55,10 +55,9 @@ public interface BuildRuleInfoProvider {
    * }</pre>
    */
   @Value.Immutable(builder = false, copy = false, prehash = true)
-  public abstract static class ProviderKey {
+  abstract class ProviderKey {
 
     @Value.Parameter
-    @SuppressWarnings("unused") // used to generate equals properly
     protected abstract Class<?> getProviderClass();
 
     @Override
