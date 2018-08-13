@@ -105,7 +105,7 @@ public class NativeGlobberTest {
 
   @Test
   public void testMatchingDirectoryIsReturnedWhenDirsAreNotExcluded() throws Exception {
-    FileSystemUtils.createDirectoryAndParents(root.getChild("some_dir"));
+    root.getChild("some_dir").createDirectoryAndParents();
     assertThat(
         globber.run(Collections.singleton("some_dir"), Collections.emptySet(), false),
         equalTo(ImmutableSet.of("some_dir")));
@@ -113,7 +113,7 @@ public class NativeGlobberTest {
 
   @Test
   public void testMatchingDirectoryIsNotReturnedWhenDirsAreExcluded() throws Exception {
-    FileSystemUtils.createDirectoryAndParents(root.getChild("some_dir"));
+    root.getChild("some_dir").createDirectoryAndParents();
     Path buildFile = root.getChild("BUCK");
     FileSystemUtils.writeContentAsLatin1(
         buildFile, "txts = glob(['some_dir'], exclude_directories=True)");
