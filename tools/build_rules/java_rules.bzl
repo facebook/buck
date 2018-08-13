@@ -159,7 +159,7 @@ def _add_pf4j_plugin_framework(**kwargs):
 
 def _add_buck_modules_annotation_processor(**kwargs):
     kwargs["plugins"] = list(collections.uniq(kwargs.get("plugins", []) + [
-        "//src/com/facebook/buck/module/annotationprocessor:annotationprocessor",
+        "//src/com/facebook/buck/core/module/annotationprocessor:annotationprocessor",
     ]))
     return kwargs
 

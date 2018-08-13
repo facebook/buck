@@ -17,10 +17,10 @@
 package com.facebook.buck.rules.keys.config.impl;
 
 import com.facebook.buck.core.config.BuckConfig;
-import com.facebook.buck.module.BuckModuleHashStrategy;
-import com.facebook.buck.module.BuckModuleManager;
-import com.facebook.buck.module.impl.DefaultBuckModuleHashStrategy;
-import com.facebook.buck.module.impl.NoOpBuckModuleHashStrategy;
+import com.facebook.buck.core.module.BuckModuleHashStrategy;
+import com.facebook.buck.core.module.BuckModuleManager;
+import com.facebook.buck.core.module.impl.DefaultBuckModuleHashStrategy;
+import com.facebook.buck.core.module.impl.NoOpBuckModuleHashStrategy;
 import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
 
 /** Creates {@link RuleKeyConfiguration} using information from {@link BuckConfig}. */

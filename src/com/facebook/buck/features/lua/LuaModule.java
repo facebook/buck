@@ -16,8 +16,8 @@
 
 package com.facebook.buck.features.lua;
 
+import com.facebook.buck.core.module.BuckModule;
 import com.facebook.buck.features.python.PythonModule;
-import com.facebook.buck.module.BuckModule;
 
 @BuckModule(dependencies = {PythonModule.class})
 public class LuaModule {}

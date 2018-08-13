@@ -16,7 +16,7 @@
 
 package com.facebook.buck.features.dotnet;
 
-import com.facebook.buck.module.BuckModule;
+import com.facebook.buck.core.module.BuckModule;
 
 /** A modules that provides .NET build rules. */
 @BuckModule

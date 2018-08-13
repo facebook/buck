@@ -16,7 +16,7 @@
 
 package com.facebook.buck.rules.keys.config;
 
-import com.facebook.buck.module.impl.NoOpBuckModuleHashStrategy;
+import com.facebook.buck.core.module.impl.NoOpBuckModuleHashStrategy;
 import com.facebook.buck.rules.keys.config.impl.BuckVersion;
 
 public class TestRuleKeyConfigurationFactory {

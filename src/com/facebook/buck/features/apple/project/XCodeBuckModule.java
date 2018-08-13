@@ -16,9 +16,9 @@
 
 package com.facebook.buck.features.apple.project;
 
+import com.facebook.buck.core.module.BuckModule;
 import com.facebook.buck.features.halide.HalideModule;
 import com.facebook.buck.features.js.JsModule;
-import com.facebook.buck.module.BuckModule;
 
 /** Buck module with a project generator for XCode. */
 @BuckModule(

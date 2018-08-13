@@ -19,7 +19,7 @@ def buck_module(
     """
 
     kwargs["provided_deps"] = collections.uniq(kwargs.get("provided_deps", []) + [
-        "//src/com/facebook/buck/module:module",
+        "//src/com/facebook/buck/core/module:module",
     ] + module_deps)
 
     java_library_with_plugins(

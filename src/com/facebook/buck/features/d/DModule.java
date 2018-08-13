@@ -16,7 +16,7 @@
 
 package com.facebook.buck.features.d;
 
-import com.facebook.buck.module.BuckModule;
+import com.facebook.buck.core.module.BuckModule;
 
 /** A modules that provides D build rules. */
 @BuckModule

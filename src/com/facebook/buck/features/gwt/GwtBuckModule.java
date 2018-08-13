@@ -16,7 +16,7 @@
 
 package com.facebook.buck.features.gwt;
 
-import com.facebook.buck.module.BuckModule;
+import com.facebook.buck.core.module.BuckModule;
 
 /** Module that provides GWT rules. */
 @BuckModule

@@ -16,7 +16,7 @@
 
 package com.facebook.buck.features.rust;
 
-import com.facebook.buck.module.BuckModule;
+import com.facebook.buck.core.module.BuckModule;
 
 /** A modules that provides Rust build rules. */
 @BuckModule

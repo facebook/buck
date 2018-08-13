@@ -16,7 +16,7 @@
 
 package com.facebook.buck.features.project.intellij;
 
-import com.facebook.buck.module.BuckModule;
+import com.facebook.buck.core.module.BuckModule;
 
 /** Module with project generator for IntelliJ. */
 @BuckModule

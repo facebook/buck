@@ -11,7 +11,7 @@
   <property name="classes.dir" value="${build.dir}/${classes.dir.name}" />
   <property name="buck.modules.classes.dir.name" value="buck-modules-classes" />
   <property name="buck.modules.classes.dir" value="${build.dir}/${buck.modules.classes.dir.name}" />
-  <property name="buck.modules.annotation.processor.src.dir" value="com/facebook/buck/module/annotationprocessor" />
+  <property name="buck.modules.annotation.processor.src.dir" value="com/facebook/buck/core/module/annotationprocessor" />
   <property name="buck.modules.ap.classes.dir.name" value="buck-modules-ap-classes" />
   <property name="buck.modules.annotation.processor.classes.dir" value="${build.dir}/${buck.modules.ap.classes.dir.name}" />
   <property name="buck.modules.annotation.processor.jar" value="${build.dir}/buck-modules-ap.jar" />
@@ -508,12 +508,12 @@
             and are deliberately isolated from Buck's core.
           -->
           <exclude name="com/facebook/buck/cli/bootstrapper/**" />
+          <exclude name="com/facebook/buck/core/module/annotationprocessor/**" />
           <exclude name="com/facebook/buck/event/api/**" />
           <exclude name="com/facebook/buck/features/**" />
           <exclude name="com/facebook/buck/jvm/java/abi/source/**" />
           <exclude name="com/facebook/buck/jvm/java/lang/model/**" />
           <exclude name="com/facebook/buck/jvm/java/plugin/adapter/**" />
-          <exclude name="com/facebook/buck/module/annotationprocessor/**" />
           <exclude name="com/facebook/buck/testrunner/**" />
         </patternset>
       </javac-params>
@@ -535,7 +535,7 @@
       </fileset>
       <zipfileset src="${basedir}/third-party/java/stringtemplate/ST-4.0.8.jar" />
       <service type="javax.annotation.processing.Processor"
-        provider="com.facebook.buck.module.annotationprocessor.BuckModuleAnnotationProcessor"/>
+        provider="com.facebook.buck.core.module.annotationprocessor.BuckModuleAnnotationProcessor"/>
     </jar>
   </target>
 
