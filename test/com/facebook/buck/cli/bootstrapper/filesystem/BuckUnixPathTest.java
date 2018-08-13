@@ -235,7 +235,14 @@ public class BuckUnixPathTest {
     "a/././b/././c,a/b/c",
     "a/b/..,a",
     "a/b/c/../d/../e,a/b/e",
-    "a/b/./../c/../d/.,a/d"
+    "a/b/./../c/../d/.,a/d",
+    "../a/b,../a/b",
+    "../../a,../../a",
+    "../../a/../b,../../b",
+    "../a/../../b,../../b",
+    "./../../././,../..",
+    "/../,/..",
+    "/a/../../../b,/../../b"
   })
   public void normalizeMethod(String data, String expected) {
     Path path = createPath(data);

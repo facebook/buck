@@ -30,13 +30,9 @@ import java.nio.file.WatchEvent.Modifier;
 import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.Objects;
-import java.util.Set;
-import java.util.Stack;
-import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 /** Buck-specific implementation of java.nio.file.Path optimized for memory footprint */
@@ -44,6 +40,8 @@ public class BuckUnixPath implements Path {
   // Constant strings are already interned, but having the constant here makes it more obvious in
   // code below.
   private static final String DOTDOT = "..";
+  private static final String DOT = ".";
+  private static final String ROOT = "";
 
   // Java's memory layout is padded to 8 bytes on most implementations. Given that 12 bytes is
   // a class header, we can use up to 3 4-byte fields to fit into 24-byte object. Reference type
@@ -84,7 +82,7 @@ public class BuckUnixPath implements Path {
   }
 
   static BuckUnixPath rootOf(BuckFileSystem fs) {
-    return new BuckUnixPath(fs, new String[] {""});
+    return new BuckUnixPath(fs, new String[] {ROOT});
   }
 
   static BuckUnixPath emptyOf(BuckFileSystem fs) {
@@ -359,32 +357,73 @@ public class BuckUnixPath implements Path {
       return this;
     }
 
-    Set<Integer> ignore = new HashSet<>();
-    Stack<Integer> realNames = new Stack<>();
+    // segments are interned, so using == instead of .equals() to compare strings for performance
+    // if different interner is used, this function will be broken!
 
-    for (int i = 0; i < segments.length; i++) {
-      String segment = segments[i];
-      if (segment.equals(".")) {
-        ignore.add(i);
-      } else if (segment.equals("..")) {
-        if (!realNames.empty()) {
-          ignore.add(realNames.pop());
-          ignore.add(i);
-        }
-      } else if (!segment.isEmpty()) {
-        realNames.push(i);
+    // first quick pass to check if anything needs to be normalized
+    int i = segments.length - 1;
+    for (; i >= 0; i--) {
+      // intentional reference compare
+      if (segments[i] == DOT || segments[i] == DOTDOT) {
+        break;
       }
     }
 
-    if (ignore.isEmpty()) {
+    if (i < 0) {
       return this;
     }
 
-    String[] filtered =
-        IntStream.range(0, segments.length)
-            .filter(i -> !ignore.contains(i))
-            .mapToObj(i -> segments[i])
-            .toArray(String[]::new);
+    // it seems there are symbols like ".." in the path that should be normalized
+
+    // have to allocate maximum length as some of the dots (leading ones) might not be removed
+    String[] filtered = new String[segments.length];
+
+    // copy the tail which is good
+    System.arraycopy(segments, i + 1, filtered, i + 1, segments.length - i - 1);
+
+    // continue going down the array removing non-meaningful segments
+    int dotdots = 0;
+    int j = i;
+    for (; i >= 0; i--) {
+      String segment = segments[i];
+
+      // intentional reference compare
+      if (segment == DOT) {
+        continue;
+      }
+
+      // intentional reference compare
+      if (segment == DOTDOT) {
+        dotdots++;
+        continue;
+      }
+
+      if (dotdots > 0) {
+        // ignore real segment because it is swallowed by following dotdot
+        dotdots--;
+        continue;
+      }
+
+      filtered[j] = segment;
+      j--;
+    }
+
+    if (dotdots > 0) {
+      // some leading dotdots left, so copy them to the resulting array
+      j -= dotdots;
+      Arrays.fill(filtered, j + 1, j + 1 + dotdots, DOTDOT);
+    }
+
+    if (isAbsolute() && (j + 1 >= filtered.length || filtered[j + 1] != ROOT)) {
+      // Root segment was removed by .., restore it back
+      filtered[j] = DOTDOT;
+      filtered[j - 1] = ROOT;
+      j -= 2;
+    }
+
+    if (j >= 0) {
+      filtered = Arrays.copyOfRange(filtered, j + 1, filtered.length);
+    }
 
     return new BuckUnixPath(fs, filtered);
   }
