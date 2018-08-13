@@ -24,7 +24,7 @@ import com.facebook.buck.core.module.BuckModuleManager;
 import com.facebook.buck.core.module.impl.BuckModuleJarHashProvider;
 import com.facebook.buck.core.module.impl.DefaultBuckModuleManager;
 import com.facebook.buck.core.module.impl.TestExtension;
-import com.facebook.buck.plugin.impl.BuckPluginManagerFactory;
+import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
 import java.util.List;

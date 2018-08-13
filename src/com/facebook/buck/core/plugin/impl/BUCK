@@ -4,7 +4,7 @@ java_library(
         ["*.java"],
     ),
     exported_deps = [
-        "//src/com/facebook/buck/plugin:plugin",
+        "//src/com/facebook/buck/core/plugin:plugin",
         "//third-party/java/pf4j:pf4j",
     ],
     visibility = [

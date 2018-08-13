@@ -29,6 +29,7 @@ import static org.junit.Assert.fail;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.TestCellBuilder;
+import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.rules.config.impl.PluginBasedKnownConfigurationDescriptionsFactory;
 import com.facebook.buck.core.rules.knowntypes.DefaultKnownRuleTypesFactory;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
@@ -39,7 +40,6 @@ import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.options.ProjectBuildFileParserOptions;
-import com.facebook.buck.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.sandbox.TestSandboxExecutionStrategyFactory;
 import com.facebook.buck.skylark.io.GlobSpec;

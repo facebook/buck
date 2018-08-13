@@ -32,6 +32,7 @@ import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTarg
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
+import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
@@ -47,7 +48,6 @@ import com.facebook.buck.parser.ParserPythonInterpreterProvider;
 import com.facebook.buck.parser.PerBuildStateFactory;
 import com.facebook.buck.parser.TargetSpecResolver;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
-import com.facebook.buck.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;

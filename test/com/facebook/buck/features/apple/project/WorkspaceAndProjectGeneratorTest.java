@@ -52,6 +52,7 @@ import com.facebook.buck.core.model.actiongraph.computation.ActionGraphParalleli
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
@@ -64,7 +65,6 @@ import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.features.halide.HalideBuckConfig;
 import com.facebook.buck.features.halide.HalideLibraryBuilder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.shell.GenruleDescriptionArg;

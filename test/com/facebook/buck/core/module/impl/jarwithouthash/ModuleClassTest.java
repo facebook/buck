@@ -22,7 +22,7 @@ import com.facebook.buck.core.module.BuckModuleManager;
 import com.facebook.buck.core.module.impl.BuckModuleJarHashProvider;
 import com.facebook.buck.core.module.impl.DefaultBuckModuleManager;
 import com.facebook.buck.core.module.impl.TestExtension;
-import com.facebook.buck.plugin.impl.BuckPluginManagerFactory;
+import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import java.lang.reflect.Field;
 import java.util.List;

@@ -14,23 +14,8 @@
  * under the License.
  */
 
-package com.facebook.buck.plugin.impl;
+package com.facebook.buck.core.plugin;
 
 import org.pf4j.PluginManager;
 
-/**
- * Creates instances of {@link PluginManager} that are able to find extensions in Buck.
- *
- * <p>These should be one instance of {@link PluginManager} in a running app.
- */
-public class BuckPluginManagerFactory {
-
-  /** Creates a {@link PluginManager} and loads plugins. */
-  public static PluginManager createPluginManager() {
-    PluginManager pluginManager = new DefaultBuckPluginManager();
-    pluginManager.loadPlugins();
-    pluginManager.startPlugins();
-
-    return pluginManager;
-  }
-}
+public interface BuckPluginManager extends PluginManager {}

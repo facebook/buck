@@ -17,8 +17,8 @@
 package com.facebook.buck.core.rules.knowntypes;
 
 import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
-import com.facebook.buck.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.sandbox.SandboxExecutionStrategyFactory;
 import com.facebook.buck.sandbox.TestSandboxExecutionStrategyFactory;
 import com.facebook.buck.util.ProcessExecutor;

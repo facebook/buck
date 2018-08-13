@@ -16,7 +16,7 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.plugin.impl.BuckPluginManagerFactory;
+import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 
 /** Factory create {@link org.kohsuke.args4j.CmdLineParser} to use in tests */
 public class CmdLineParserFactory {

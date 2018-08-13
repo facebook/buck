@@ -23,7 +23,7 @@ import static org.junit.Assert.fail;
 import com.facebook.buck.core.module.BuckModuleManager;
 import com.facebook.buck.core.module.impl.BuckModuleJarHashProvider;
 import com.facebook.buck.core.module.impl.DefaultBuckModuleManager;
-import com.facebook.buck.plugin.impl.BuckPluginManagerFactory;
+import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import org.pf4j.PluginManager;
 
 public class NonModuleClassTest {

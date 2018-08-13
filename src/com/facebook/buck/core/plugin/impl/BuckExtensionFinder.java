@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.plugin.impl;
+package com.facebook.buck.core.plugin.impl;
 
 import java.util.ArrayList;
 import java.util.HashMap;

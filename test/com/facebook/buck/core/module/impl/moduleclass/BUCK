@@ -5,7 +5,7 @@ java_library(
     srcs = glob(["*.java"]),
     deps = [
         "//src/com/facebook/buck/core/module/impl:impl",
-        "//src/com/facebook/buck/plugin/impl:impl",
+        "//src/com/facebook/buck/core/plugin/impl:impl",
         "//test/com/facebook/buck/core/module/impl:test_extension",
         "//third-party/java/guava:guava",
         "//third-party/java/junit:junit",

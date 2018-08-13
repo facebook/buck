@@ -22,6 +22,7 @@ import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.TestCellBuilder;
+import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.rules.config.impl.PluginBasedKnownConfigurationDescriptionsFactory;
 import com.facebook.buck.core.rules.knowntypes.DefaultKnownRuleTypesFactory;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypes;
@@ -33,7 +34,6 @@ import com.facebook.buck.io.watchman.WatchmanDiagnosticEvent;
 import com.facebook.buck.json.PythonDslProjectBuildFileParser;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.options.ProjectBuildFileParserOptions;
-import com.facebook.buck.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.sandbox.TestSandboxExecutionStrategyFactory;
 import com.facebook.buck.testutil.TestConsole;

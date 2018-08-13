@@ -13,7 +13,7 @@ java_library(
     ],
     visibility = ["PUBLIC"],
     deps = [
-        "//src/com/facebook/buck/plugin:plugin",
+        "//src/com/facebook/buck/core/plugin:plugin",
         "//third-party/java/guava:guava",
     ],
 )
