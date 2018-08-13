@@ -33,7 +33,6 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.Objects;
-import java.util.stream.Stream;
 
 /** Buck-specific implementation of java.nio.file.Path optimized for memory footprint */
 public class BuckUnixPath implements Path {
@@ -295,7 +294,10 @@ public class BuckUnixPath implements Path {
   }
 
   private String[] concatSegments(String[] first, String[] second) {
-    return Stream.concat(Arrays.stream(first), Arrays.stream(second)).toArray(String[]::new);
+    String[] result = new String[first.length + second.length];
+    System.arraycopy(first, 0, result, 0, first.length);
+    System.arraycopy(second, 0, result, first.length, second.length);
+    return result;
   }
 
   @Override
