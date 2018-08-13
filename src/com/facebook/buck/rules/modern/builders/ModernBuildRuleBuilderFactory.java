@@ -27,6 +27,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.rules.modern.builders.grpc.GrpcExecutionFactory;
 import com.facebook.buck.rules.modern.builders.grpc.GrpcProtocol;
 import com.facebook.buck.rules.modern.builders.thrift.ThriftProtocol;
+import com.facebook.buck.rules.modern.builders.thrift.ThriftRemoteExecutionFactory;
 import com.facebook.buck.rules.modern.config.ModernBuildRuleConfig;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
@@ -66,6 +67,18 @@ public class ModernBuildRuleBuilderFactory {
                   hashLoader::get,
                   config.getRemoteHost(),
                   config.getRemotePort()));
+        case THRIFT_REMOTE:
+          return Optional.of(
+              createThriftRemote(
+                  eventBus,
+                  new SourcePathRuleFinder(resolver),
+                  cellResolver,
+                  rootCell,
+                  hashLoader::get,
+                  config.getRemoteHost(),
+                  config.getRemotePort(),
+                  config.getCasHost(),
+                  config.getCasPort()));
         case DEBUG_RECONSTRUCT:
           return Optional.of(
               createReconstructing(new SourcePathRuleFinder(resolver), cellResolver, rootCell));
@@ -190,6 +203,26 @@ public class ModernBuildRuleBuilderFactory {
       throws IOException {
     return IsolatedExecution.createIsolatedExecutionStrategy(
         GrpcExecutionFactory.createRemote(host, port, eventBus),
+        ruleFinder,
+        cellResolver,
+        rootCell,
+        fileHasher);
+  }
+
+  private static BuildRuleStrategy createThriftRemote(
+      BuckEventBus eventBus,
+      SourcePathRuleFinder ruleFinder,
+      CellPathResolver cellResolver,
+      Cell rootCell,
+      ThrowingFunction<Path, HashCode, IOException> fileHasher,
+      String remoteExecutionEngineHost,
+      int remoteExecutionEnginePort,
+      String casHost,
+      int casPort)
+      throws IOException {
+    return IsolatedExecution.createIsolatedExecutionStrategy(
+        ThriftRemoteExecutionFactory.createRemote(
+            remoteExecutionEngineHost, remoteExecutionEnginePort, casHost, casPort, eventBus),
         ruleFinder,
         cellResolver,
         rootCell,

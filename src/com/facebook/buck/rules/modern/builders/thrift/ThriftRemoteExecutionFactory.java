@@ -25,9 +25,21 @@ import org.apache.thrift.transport.TTransportException;
 public class ThriftRemoteExecutionFactory {
 
   /** The remote strategy connects to a remote thrift remote execution service. */
-  public static IsolatedExecution createRemote(String host, int port, BuckEventBus eventBus)
-      throws IOException, TTransportException {
-    ThriftRemoteExecutionClients clients = new ThriftRemoteExecutionClients(host, port);
+  public static IsolatedExecution createRemote(
+      String remoteExecutionEngineHost,
+      int remoteExecutionEnginePort,
+      String casHost,
+      int casPort,
+      BuckEventBus eventBus)
+      throws IOException {
+    ThriftRemoteExecutionClients clients;
+    try {
+      clients =
+          new ThriftRemoteExecutionClients(
+              remoteExecutionEngineHost, remoteExecutionEnginePort, casHost, casPort);
+    } catch (TTransportException e) {
+      throw new IOException("Could not create ThriftRemoteExecutionClients.", e);
+    }
 
     return new ThriftRemoteExecution(eventBus, clients) {
       @Override

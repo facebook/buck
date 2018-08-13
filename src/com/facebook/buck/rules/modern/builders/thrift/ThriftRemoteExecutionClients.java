@@ -35,37 +35,47 @@ class ThriftRemoteExecutionClients implements Closeable {
 
   private static final int SOCKET_TIMEOUT_MILLIS = 1000 * 10; // 10 seconds
 
-  private final TFramedTransport transport;
-  private final TNonblockingTransport nonblockingTransport;
+  private final TFramedTransport casTransport;
+  private final TFramedTransport remoteExecutionTransport;
+  private final TNonblockingTransport nonblockingCasTransport;
   private final TAsyncClientManager clientManager;
 
   private final ContentAddressableStorage.Client casClient;
   private final ContentAddressableStorage.AsyncClient asyncCasClient;
   private final ExecutionEngine.Client executionEngineClient;
 
-  ThriftRemoteExecutionClients(String host, int port) throws TTransportException, IOException {
-    // Sync clients:
-    transport = new TFramedTransport(new TSocket(host, port, SOCKET_TIMEOUT_MILLIS));
-    transport.open();
-    TProtocol protocol = new TBinaryProtocol(transport);
-
-    casClient = new ContentAddressableStorage.Client(protocol);
+  ThriftRemoteExecutionClients(
+      String remoteExecutionEngineHost, int remoteExecutionEnginePort, String casHost, int casPort)
+      throws TTransportException, IOException {
+    // RE client
+    remoteExecutionTransport =
+        new TFramedTransport(
+            new TSocket(
+                remoteExecutionEngineHost, remoteExecutionEnginePort, SOCKET_TIMEOUT_MILLIS));
+    remoteExecutionTransport.open();
+    TProtocol protocol = new TBinaryProtocol(remoteExecutionTransport);
     executionEngineClient = new ExecutionEngine.Client(protocol);
 
-    // Async clients:
-    clientManager = new TAsyncClientManager();
-    nonblockingTransport = new TNonblockingSocket(host, port, SOCKET_TIMEOUT_MILLIS);
-    TProtocolFactory protocolFactory = new TBinaryProtocol.Factory();
+    // CAS Sync client
+    casTransport = new TFramedTransport(new TSocket(casHost, casPort, SOCKET_TIMEOUT_MILLIS));
+    casTransport.open();
+    protocol = new TBinaryProtocol(casTransport);
+    casClient = new ContentAddressableStorage.Client(protocol);
 
+    // CAS Async client
+    clientManager = new TAsyncClientManager();
+    nonblockingCasTransport = new TNonblockingSocket(casHost, casPort, SOCKET_TIMEOUT_MILLIS);
+    TProtocolFactory protocolFactory = new TBinaryProtocol.Factory();
     asyncCasClient =
         new ContentAddressableStorage.AsyncClient(
-            protocolFactory, clientManager, nonblockingTransport);
+            protocolFactory, clientManager, nonblockingCasTransport);
   }
 
   @Override
   public void close() throws IOException {
-    transport.close();
-    nonblockingTransport.close();
+    casTransport.close();
+    nonblockingCasTransport.close();
+    remoteExecutionTransport.close();
     clientManager.stop();
   }
 

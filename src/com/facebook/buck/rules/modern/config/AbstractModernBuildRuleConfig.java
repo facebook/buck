@@ -41,6 +41,14 @@ abstract class AbstractModernBuildRuleConfig implements ConfigView<BuckConfig> {
     return getDelegate().getInteger(SECTION, "remote_port").orElse(19030);
   }
 
+  public String getCasHost() {
+    return getDelegate().getValue(SECTION, "cas_host").orElse("localhost");
+  }
+
+  public int getCasPort() {
+    return getDelegate().getInteger(SECTION, "cas_port").orElse(19031);
+  }
+
   /**
    * These are the supported strategies.
    *
@@ -51,6 +59,8 @@ abstract class AbstractModernBuildRuleConfig implements ConfigView<BuckConfig> {
     NONE,
 
     GRPC_REMOTE,
+
+    THRIFT_REMOTE,
 
     DEBUG_GRPC_SERVICE_IN_PROCESS,
 

@@ -50,6 +50,8 @@ public class ThriftRemoteExecutionClientsIntegrationTest {
 
   private static final String host = "localhost";
   private static final int port = 9001;
+  private static final String casHost = "localhost";
+  private static final int casPort = 9002;
   private static final Digest digest = new Digest("missing-hash", 123);
   private static final List<Digest> digests = Collections.singletonList(digest);
 
@@ -57,7 +59,7 @@ public class ThriftRemoteExecutionClientsIntegrationTest {
 
   @Before
   public void setUp() throws IOException, TTransportException {
-    clients = new ThriftRemoteExecutionClients(host, port);
+    clients = new ThriftRemoteExecutionClients(host, port, casHost, casPort);
   }
 
   @Test

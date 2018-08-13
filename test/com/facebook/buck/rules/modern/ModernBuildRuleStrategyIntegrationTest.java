@@ -81,6 +81,11 @@ public class ModernBuildRuleStrategyIntegrationTest {
   public static Collection<Object[]> data() {
     ImmutableList.Builder<Object[]> dataBuilder = ImmutableList.builder();
     for (ModernBuildRuleConfig.Strategy strategy : ModernBuildRuleConfig.Strategy.values()) {
+      if (strategy.equals(ModernBuildRuleConfig.Strategy.THRIFT_REMOTE)) {
+        // TODO(shivanker): We don't have a dummy implementation for Thrift in this repository.
+        // Probably add this in the future to be able to have unit tests.
+        continue;
+      }
       dataBuilder.add(new Object[] {strategy});
     }
     return dataBuilder.build();
