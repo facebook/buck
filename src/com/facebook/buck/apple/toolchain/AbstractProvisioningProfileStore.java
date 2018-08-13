@@ -19,8 +19,8 @@ package com.facebook.buck.apple.toolchain;
 import com.dd.plist.NSArray;
 import com.dd.plist.NSDictionary;
 import com.dd.plist.NSObject;
-import com.facebook.buck.core.rulekey.RuleKeyAppendable;
-import com.facebook.buck.core.rulekey.RuleKeyObjectSink;
+import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.toolchain.Toolchain;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.log.Logger;
@@ -43,7 +43,7 @@ import org.immutables.value.Value;
 /** A collection of provisioning profiles. */
 @Value.Immutable(builder = false, copy = false)
 @BuckStyleImmutable
-public abstract class AbstractProvisioningProfileStore implements RuleKeyAppendable, Toolchain {
+public abstract class AbstractProvisioningProfileStore implements AddsToRuleKey, Toolchain {
   public static final Optional<ImmutableMap<String, NSObject>> MATCH_ANY_ENTITLEMENT =
       Optional.empty();
   public static final Optional<ImmutableList<CodeSignIdentity>> MATCH_ANY_IDENTITY =
@@ -69,6 +69,7 @@ public abstract class AbstractProvisioningProfileStore implements RuleKeyAppenda
   public abstract Supplier<ImmutableList<ProvisioningProfileMetadata>>
       getProvisioningProfilesSupplier();
 
+  @AddToRuleKey
   public ImmutableList<ProvisioningProfileMetadata> getProvisioningProfiles() {
     return getProvisioningProfilesSupplier().get();
   }
@@ -254,12 +255,6 @@ public abstract class AbstractProvisioningProfileStore implements RuleKeyAppenda
     ImmutableList<String> diagnostics = lines.build();
     diagnosticsBuffer.append(Joiner.on("\n").join(diagnostics));
     return bestMatch;
-  }
-
-  // TODO(yiding): remove this once the precise provisioning profile can be determined.
-  @Override
-  public void appendToRuleKey(RuleKeyObjectSink sink) {
-    sink.setReflectively("provisioning-profile-store", getProvisioningProfiles());
   }
 
   public static ProvisioningProfileStore empty() {
