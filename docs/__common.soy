@@ -617,6 +617,27 @@ docsearch({
 {/call}
 {/template}
 
+/**
+ * @param name            Specify the name of the function to link to.
+ * @param? rendered_text  Optionally, specify the rendered text for the
+ *                        link. If not specified, the rendered text is 
+ *                        the name of the function.
+ *
+ *   Examples
+ *   
+ *   {call buck.function_link}{param name: 'allow_unsafe_import' /}{/call} 
+ *
+ *   {call buck.function_link}{param name: 'allow_unsafe_import' /}{param rendered_text: 'a bad function' /}{/call} 
+ *
+ */
+{template .function_link}
+  {if $rendered_text}
+    <a href="{ROOT}function/{$name}.html">{$rendered_text}</a>
+  {else}
+    <a href="{ROOT}function/{$name}.html"><code>{$name}()</code></a>
+  {/if}
+{/template}
+
 /***/
 {template .fn_add_build_file_dep}
 <a href="{ROOT}function/add_build_file_dep.html"><code>add_build_file_dep()</code></a>
