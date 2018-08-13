@@ -172,7 +172,8 @@ public final class Escaper {
   public static String escapeAsPythonString(String str) {
     StringBuilder builder = new StringBuilder();
     builder.append('"');
-    for (Character ch : str.toCharArray()) {
+    for (int i = 0; i < str.length(); ++i) {
+      char ch = str.charAt(i);
       // Handle Unicode.
       if (ch > 0xfff) {
         builder.append("\\u").append(hex(ch));
