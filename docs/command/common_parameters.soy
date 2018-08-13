@@ -27,7 +27,7 @@ regardless of which subcommand is being run.
   {param name: 'verbose' /}
   {param desc}
   <p>
-  Sets the verbosity level of the console output. For example:
+  Set the verbosity level of the console output. For example:
   </p>
 
 <p>
@@ -45,7 +45,7 @@ buck targets --verbose 10
   {param name: 'no-cache' /}
   {param desc}
   <p>
-  Disables the build artifact cache.
+  Disable the build artifact cache.
   </p>
   {/param}
 {/call}
@@ -55,8 +55,8 @@ buck targets --verbose 10
   {param desc}
 
   <p>
-  Overrides settings specified in {call buck.concept_buckconfig /}.
-  For example:
+  Specify configuration settings or override existing settings 
+  in {call buck.concept_buckconfig /}.  For example:
   </p>
 
 <p>
@@ -106,8 +106,8 @@ reproducing builds difficult.
   {param desc}
 
 <p>
-Enables you to specify build-configuration parameters in a file that uses the same syntax 
-as {call buck.concept_link}{param page: 'buckconfig' /}{param name: '.buckconfig' /}{/call}.
+Specify build-configuration settings in a file that uses the same syntax 
+as {call buck.concept_buckconfig /}.
 </p>
 
 <p>
@@ -176,7 +176,7 @@ specified in <code>.buckconfig</code> and <code>.buckconfig.local</code>.
   {param desc}
 
   <p>
-  Additional command-line arguments can be stored in external files
+  Specify additional command-line arguments in external files
   (<em>flag files</em>), one argument per line. The arguments in these 
   files can themselves be <code>--flagfile</code> or <code>@</code> arguments, 
   which would then include a second file's contents as arguments.
