@@ -1887,6 +1887,58 @@ cxx_library(
 
 {call buckconfig.entry}
   {param section: 'cxx' /}
+  {param name: 'should_remap_host_platform' /}
+  {param example_value: 'true' /}
+  {param description}
+    <p>
+    Whether the <code>default</code> flavor should be remapped to the
+    {sp}<a href="#cxx.host_platform"><code>host_platform</code></a>.
+    If <code>host_platform</code> is not set, Buck will fall back to the
+    inferred host platform.
+    </p>
+
+    <p>
+    Default is <code>false</code>.
+    </p>
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'cxx' /}
+  {param name: 'host_platform' /}
+  {param example_value: 'linux-x86_64' /}
+  {param description}
+    <p>
+    Override the inferred <code>host_platform</code> for build rules. Unused unless
+    {sp}<a href="#cxx.should_remap_host_platform"><code>should_remap_host_platform</code></a>{sp}
+    is also set to true.
+    </p>
+
+    <p>
+    Default is inferred based on the local computer from one of
+    <ul>
+      <li><code>LINUX</code></li>
+      <li><code>MACOS</code></li>
+      <li><code>FREEBSD</code></li>
+      <li><code>WINDOWS</code></li>
+    </ul>
+    </p>
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'cxx' /}
+  {param name: 'default_platform' /}
+  {param example_value: 'iphonesimulator-x86_64' /}
+  {param description}
+    <p>
+      Override the default platform for build rules.
+    </p>
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'cxx' /}
   {param name: 'pch_enabled' /}
   {param example_value: 'false' /}
   {param description}
