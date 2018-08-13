@@ -22,6 +22,7 @@ import com.facebook.buck.event.LeafEvents;
 import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.rules.modern.builders.FileTreeBuilder.ProtocolTreeBuilder;
 import com.facebook.buck.rules.modern.builders.Protocol.Digest;
+import com.facebook.buck.rules.modern.builders.thrift.ThriftProtocol;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.util.Console;

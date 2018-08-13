@@ -26,6 +26,7 @@ import com.facebook.buck.core.rules.build.strategy.BuildRuleStrategy;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.rules.modern.builders.grpc.GrpcExecutionFactory;
 import com.facebook.buck.rules.modern.builders.grpc.GrpcProtocol;
+import com.facebook.buck.rules.modern.builders.thrift.ThriftProtocol;
 import com.facebook.buck.rules.modern.config.ModernBuildRuleConfig;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;

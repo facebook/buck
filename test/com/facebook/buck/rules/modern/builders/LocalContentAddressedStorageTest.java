@@ -21,6 +21,7 @@ import static org.junit.Assert.*;
 import com.facebook.buck.rules.modern.builders.FileTreeBuilder.InputFile;
 import com.facebook.buck.rules.modern.builders.FileTreeBuilder.ProtocolTreeBuilder;
 import com.facebook.buck.rules.modern.builders.Protocol.Digest;
+import com.facebook.buck.rules.modern.builders.thrift.ThriftProtocol;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.function.ThrowingSupplier;
 import com.google.common.base.Charsets;

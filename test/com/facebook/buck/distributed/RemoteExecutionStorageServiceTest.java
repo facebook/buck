@@ -20,7 +20,7 @@ import com.facebook.buck.distributed.testutil.InMemoryRemoteExecutionHttpService
 import com.facebook.buck.distributed.thrift.FrontendResponse;
 import com.facebook.buck.rules.modern.builders.MultiThreadedBlobUploader.UploadData;
 import com.facebook.buck.rules.modern.builders.Protocol.Digest;
-import com.facebook.buck.rules.modern.builders.ThriftProtocol;
+import com.facebook.buck.rules.modern.builders.thrift.ThriftProtocol;
 import com.facebook.buck.slb.ThriftException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
