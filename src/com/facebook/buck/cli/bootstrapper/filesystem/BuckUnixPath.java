@@ -458,7 +458,8 @@ public class BuckUnixPath implements Path {
     int start = startOrEnd ? 0 : (segments.length - that.segments.length);
 
     for (int i = 0; i < that.segments.length; i++) {
-      if (!segments[i + start].equals(that.segments[i])) {
+      // intentional reference compare
+      if (segments[i + start] != that.segments[i]) {
         return false;
       }
     }
@@ -499,10 +500,23 @@ public class BuckUnixPath implements Path {
 
   @Override
   public boolean equals(Object ob) {
-    if ((ob instanceof BuckUnixPath)) {
-      return Arrays.equals(segments, ((BuckUnixPath) ob).segments);
+    if (!(ob instanceof BuckUnixPath)) {
+      return false;
     }
-    return false;
+
+    String[] otherSegments = ((BuckUnixPath) ob).segments;
+    if (segments.length != otherSegments.length) {
+      return false;
+    }
+
+    for (int i = 0; i < segments.length; i++) {
+      // intentional reference compare
+      if (segments[i] != otherSegments[i]) {
+        return false;
+      }
+    }
+
+    return true;
   }
 
   @Override
