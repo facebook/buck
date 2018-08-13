@@ -19,7 +19,7 @@ prebuilt_jar(
     licenses = [
         "LICENSE",
     ],
-    source_jar = "asm-6.0-src.zip",
+    source_jar = "asm-6.0-sources.jar",
 )
 
 prebuilt_jar(
@@ -28,7 +28,7 @@ prebuilt_jar(
     licenses = [
         "LICENSE",
     ],
-    source_jar = "asm-6.0-src.zip",
+    source_jar = "asm-6.0-sources.jar",
 )
 
 prebuilt_jar(
@@ -37,7 +37,7 @@ prebuilt_jar(
     licenses = [
         "LICENSE",
     ],
-    source_jar = "asm-6.0-src.zip",
+    source_jar = "asm-6.0-sources.jar",
 )
 
 prebuilt_jar(
@@ -46,7 +46,7 @@ prebuilt_jar(
     licenses = [
         "LICENSE",
     ],
-    source_jar = "asm-6.0-src.zip",
+    source_jar = "asm-6.0-sources.jar",
 )
 
 prebuilt_jar(
@@ -55,7 +55,7 @@ prebuilt_jar(
     licenses = [
         "LICENSE",
     ],
-    source_jar = "asm-6.0-src.zip",
+    source_jar = "asm-6.0-sources.jar",
 )
 
 prebuilt_jar(
@@ -64,5 +64,5 @@ prebuilt_jar(
     licenses = [
         "LICENSE",
     ],
-    source_jar = "asm-6.0-src.zip",
+    source_jar = "asm-6.0-sources.jar",
 )
