@@ -310,7 +310,7 @@ public class BuckUnixPath implements Path {
 
     // can only relativize paths of the same type
     if (this.isAbsolute() != other.isAbsolute()) {
-      throw new IllegalArgumentException("'other' is different type of Path");
+      throw new IllegalArgumentException("Both paths should be either absolute paths or not");
     }
 
     // this path is the empty path
