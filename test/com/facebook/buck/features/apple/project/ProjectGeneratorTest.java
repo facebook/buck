@@ -2250,17 +2250,18 @@ public class ProjectGeneratorTest {
 
     if (shouldEnableForceLoad && shouldEnableAddLibrariesAsFlags) {
       assertEquals(
-          "$(inherited) -fatal_warnings -ObjC -lhello5 -lhello3 -lhello4 -lhello1 -lhello2 $BUCK_LINKER_FLAGS_FRAMEWORK_LOCAL $BUCK_LINKER_FLAGS_FRAMEWORK_OTHER $BUCK_LINKER_FLAGS_LIBRARY_FORCE_LOAD_LOCAL $BUCK_LINKER_FLAGS_LIBRARY_FORCE_LOAD_OTHER $BUCK_LINKER_FLAGS_LIBRARY_LOCAL $BUCK_LINKER_FLAGS_LIBRARY_OTHER",
+          "$(inherited) -fatal_warnings -ObjC -lhello5 -lhello3 -lhello4 -lhello1 -lhello2 $BUCK_LINKER_FLAGS_FRAMEWORK_LOCAL $BUCK_LINKER_FLAGS_FRAMEWORK_FOCUSED $BUCK_LINKER_FLAGS_FRAMEWORK_OTHER $BUCK_LINKER_FLAGS_LIBRARY_FORCE_LOAD_LOCAL $BUCK_LINKER_FLAGS_LIBRARY_FORCE_LOAD_FOCUSED $BUCK_LINKER_FLAGS_LIBRARY_FORCE_LOAD_OTHER $BUCK_LINKER_FLAGS_LIBRARY_LOCAL $BUCK_LINKER_FLAGS_LIBRARY_FOCUSED $BUCK_LINKER_FLAGS_LIBRARY_OTHER",
           settings.get("OTHER_LDFLAGS"));
     } else if (shouldEnableForceLoad) {
 
       assertEquals(
-          "$(inherited) -fatal_warnings -ObjC -lhello5 -lhello3 -lhello4 -lhello1 -lhello2 $BUCK_LINKER_FLAGS_LIBRARY_FORCE_LOAD_LOCAL $BUCK_LINKER_FLAGS_LIBRARY_FORCE_LOAD_OTHER",
+          "$(inherited) -fatal_warnings -ObjC -lhello5 -lhello3 -lhello4 -lhello1 -lhello2 $BUCK_LINKER_FLAGS_LIBRARY_FORCE_LOAD_LOCAL $BUCK_LINKER_FLAGS_LIBRARY_FORCE_LOAD_FOCUSED $BUCK_LINKER_FLAGS_LIBRARY_FORCE_LOAD_OTHER",
           settings.get("OTHER_LDFLAGS"));
+
     } else if (shouldEnableAddLibrariesAsFlags) {
 
       assertEquals(
-          "$(inherited) -fatal_warnings -ObjC -lhello5 -lhello3 -lhello4 -lhello1 -lhello2 $BUCK_LINKER_FLAGS_FRAMEWORK_LOCAL $BUCK_LINKER_FLAGS_FRAMEWORK_OTHER $BUCK_LINKER_FLAGS_LIBRARY_LOCAL $BUCK_LINKER_FLAGS_LIBRARY_OTHER",
+          "$(inherited) -fatal_warnings -ObjC -lhello5 -lhello3 -lhello4 -lhello1 -lhello2 $BUCK_LINKER_FLAGS_FRAMEWORK_LOCAL $BUCK_LINKER_FLAGS_FRAMEWORK_FOCUSED $BUCK_LINKER_FLAGS_FRAMEWORK_OTHER $BUCK_LINKER_FLAGS_LIBRARY_LOCAL $BUCK_LINKER_FLAGS_LIBRARY_FOCUSED $BUCK_LINKER_FLAGS_LIBRARY_OTHER",
           settings.get("OTHER_LDFLAGS"));
     } else {
       assertEquals(
@@ -2268,29 +2269,51 @@ public class ProjectGeneratorTest {
           settings.get("OTHER_LDFLAGS"));
     }
 
+    if (shouldEnableForceLoad && shouldEnableAddLibrariesAsFlags) {
+      assertEquals(
+          "$(inherited) -lnonForceLoadlib", settings.get("BUCK_LINKER_FLAGS_LIBRARY_LOCAL"));
+
+      assertEquals(
+          "$(inherited) -lremoteNonForceLoadLib",
+          settings.get("BUCK_LINKER_FLAGS_LIBRARY_FOCUSED"));
+
+    } else if (shouldEnableAddLibrariesAsFlags) {
+      assertEquals(
+          "$(inherited) -llocalForceLoadlib -lnonForceLoadlib",
+          settings.get("BUCK_LINKER_FLAGS_LIBRARY_LOCAL"));
+
+      assertEquals(
+          "$(inherited) -lremoteForceLoadLib -lremoteNonForceLoadLib",
+          settings.get("BUCK_LINKER_FLAGS_LIBRARY_FOCUSED"));
+    }
+
     if (shouldEnableForceLoad || shouldEnableAddLibrariesAsFlags) {
       assertEquals(
           "$(inherited) '-Wl,-force_load,$BUILT_PRODUCTS_DIR/libremoteForceLoadLib.a'",
-          settings.get("BUCK_LINKER_FLAGS_LIBRARY_FORCE_LOAD_OTHER"));
+          settings.get("BUCK_LINKER_FLAGS_LIBRARY_FORCE_LOAD_FOCUSED"));
 
       assertEquals(
           "$(inherited) '-Wl,-force_load,$BUILT_PRODUCTS_DIR/liblocalForceLoadlib.a'",
           settings.get("BUCK_LINKER_FLAGS_LIBRARY_FORCE_LOAD_LOCAL"));
     }
+
     if (shouldEnableAddLibrariesAsFlags) {
       assertEquals(
           "$(inherited) -framework remote_framework_2",
-          settings.get("BUCK_LINKER_FLAGS_FRAMEWORK_OTHER"));
-
-      assertEquals(
-          "$(inherited) -lremoteNonForceLoadLib", settings.get("BUCK_LINKER_FLAGS_LIBRARY_OTHER"));
+          settings.get("BUCK_LINKER_FLAGS_FRAMEWORK_FOCUSED"));
 
       assertEquals(
           "$(inherited) -framework framework_1", settings.get("BUCK_LINKER_FLAGS_FRAMEWORK_LOCAL"));
 
-      assertEquals(
-          "$(inherited) -llocalForceLoadlib -lnonForceLoadlib",
-          settings.get("BUCK_LINKER_FLAGS_LIBRARY_LOCAL"));
+      // for tests everything is considered focused so, OTHER should be empty
+      assertEquals("$(inherited) ", settings.get("BUCK_LINKER_FLAGS_LIBRARY_OTHER"));
+
+      assertEquals("$(inherited) ", settings.get("BUCK_LINKER_FLAGS_FRAMEWORK_OTHER"));
+    }
+
+    // for tests everything is considered focused so, OTHER should be empty
+    if (shouldEnableForceLoad) {
+      assertEquals("$(inherited) ", settings.get("BUCK_LINKER_FLAGS_LIBRARY_FORCE_LOAD_OTHER"));
     }
   }
 
