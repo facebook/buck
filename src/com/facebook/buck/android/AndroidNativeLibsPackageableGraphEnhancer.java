@@ -198,7 +198,9 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
       }
     }
 
-    if (nativeLibraryMergeMap.isPresent() && !nativeLibraryMergeMap.get().isEmpty()) {
+    if (nativeLibraryMergeMap.isPresent()
+        && !nativeLibraryMergeMap.get().isEmpty()
+        && !nativePlatforms.isEmpty()) {
       NativeLibraryMergeEnhancementResult enhancement =
           NativeLibraryMergeEnhancer.enhance(
               cellPathResolver,

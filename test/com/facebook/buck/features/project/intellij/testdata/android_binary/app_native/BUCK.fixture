@@ -1,0 +1,14 @@
+android_binary(
+    name = "bin",
+    keystore = ":debug_keystore",
+    manifest = "AndroidManifest.xml",
+    native_library_merge_map = {
+        "libnative.so": [],
+    },
+)
+
+keystore(
+    name = "debug_keystore",
+    properties = "debug.keystore.properties",
+    store = "debug.keystore",
+)
