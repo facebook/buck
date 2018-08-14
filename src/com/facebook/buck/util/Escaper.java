@@ -170,7 +170,9 @@ public final class Escaper {
    *     non-ASCII characters escaped as &#92;u
    */
   public static String escapeAsPythonString(String str) {
-    StringBuilder builder = new StringBuilder();
+    // assume that at most a quarter of the characters will be escaped. This number is completely
+    // random and not based on any real data, so improvements are very welcome.
+    StringBuilder builder = new StringBuilder(str.length() + (str.length() >> 2));
     builder.append('"');
     for (int i = 0; i < str.length(); ++i) {
       char ch = str.charAt(i);
