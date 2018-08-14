@@ -65,22 +65,20 @@ public final class MoreStrings {
       // ensure that str2 is always the smallest one to make space complexity O(min(|str1|, |str2|)
       return getLevenshteinDistance(str2, str1);
     }
-    char[] arr1 = str1.toCharArray();
-    char[] arr2 = str2.toCharArray();
 
     // reduce memory usage by storing only the last 2 rows of the table
     int previous = 0;
-    int[][] levenshteinDist = new int[2][arr2.length + 1];
+    int[][] levenshteinDist = new int[2][str2.length() + 1];
 
-    for (int j = 0; j <= arr2.length; j++) {
+    for (int j = 0; j <= str2.length(); j++) {
       levenshteinDist[previous][j] = j;
     }
 
-    for (int i = 1; i <= arr1.length; i++, previous = 1 - previous) {
+    for (int i = 1; i <= str1.length(); i++, previous = 1 - previous) {
       int current = 1 - previous;
       levenshteinDist[current][0] = i;
-      for (int j = 1; j <= arr2.length; j++) {
-        if (arr1[i - 1] == arr2[j - 1]) {
+      for (int j = 1; j <= str2.length(); j++) {
+        if (str1.charAt(i - 1) == str2.charAt(j - 1)) {
           levenshteinDist[current][j] = levenshteinDist[previous][j - 1];
         } else {
           levenshteinDist[current][j] =
@@ -92,7 +90,7 @@ public final class MoreStrings {
       }
     }
 
-    return levenshteinDist[previous][arr2.length];
+    return levenshteinDist[previous][str2.length()];
   }
 
   public static String regexPatternForAny(String... values) {
