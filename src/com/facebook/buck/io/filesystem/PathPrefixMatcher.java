@@ -64,6 +64,10 @@ public class PathPrefixMatcher implements PathMatcher {
     return path.startsWith(basePath);
   }
 
+  public Path getPath() {
+    return basePath;
+  }
+
   @Override
   public ImmutableList<?> toWatchmanMatchQuery(Path projectRoot, Set<Capability> capabilities) {
     Path ignorePath = basePath;

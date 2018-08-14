@@ -16,12 +16,10 @@
 
 package com.facebook.buck.io.filesystem;
 
-import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.watchman.Capability;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import java.io.File;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.nio.file.PathMatcher;
@@ -35,15 +33,7 @@ public class PathOrGlobMatcher implements com.facebook.buck.io.filesystem.PathMa
   public ImmutableList<?> toWatchmanMatchQuery(Path projectRoot, Set<Capability> capabilities) {
     switch (getType()) {
       case PATH:
-        Path ignorePath = getPath();
-        if (ignorePath.isAbsolute()) {
-          ignorePath = MorePaths.relativize(projectRoot, ignorePath);
-        }
-        if (capabilities.contains(Capability.DIRNAME)) {
-          return ImmutableList.of("dirname", ignorePath.toString());
-        } else {
-          return ImmutableList.of("match", ignorePath + File.separator + "*", "wholename");
-        }
+        return pathPrefixMatcher.get().toWatchmanMatchQuery(projectRoot, capabilities);
       case GLOB:
         String ignoreGlob = getGlob();
         return ImmutableList.of(
@@ -59,13 +49,13 @@ public class PathOrGlobMatcher implements com.facebook.buck.io.filesystem.PathMa
   }
 
   private final Type type;
-  private final Optional<Path> basePath;
+  private final Optional<PathPrefixMatcher> pathPrefixMatcher;
   private final Optional<PathMatcher> globMatcher;
   private final Optional<String> globPattern;
 
   public PathOrGlobMatcher(Path basePath) {
     this.type = Type.PATH;
-    this.basePath = Optional.of(basePath);
+    this.pathPrefixMatcher = Optional.of(PathPrefixMatcher.of(basePath));
     this.globPattern = Optional.empty();
     this.globMatcher = Optional.empty();
   }
@@ -76,7 +66,7 @@ public class PathOrGlobMatcher implements com.facebook.buck.io.filesystem.PathMa
 
   public PathOrGlobMatcher(PathMatcher globMatcher, String globPattern) {
     this.type = Type.GLOB;
-    this.basePath = Optional.empty();
+    this.pathPrefixMatcher = Optional.empty();
     this.globMatcher = Optional.of(globMatcher);
     this.globPattern = Optional.of(globPattern);
   }
@@ -102,7 +92,7 @@ public class PathOrGlobMatcher implements com.facebook.buck.io.filesystem.PathMa
     PathOrGlobMatcher that = (PathOrGlobMatcher) other;
 
     return Objects.equals(type, that.type)
-        && Objects.equals(basePath, that.basePath)
+        && Objects.equals(pathPrefixMatcher, that.pathPrefixMatcher)
         &&
         // We don't compare globMatcher here, since sun.nio.fs.UnixFileSystem.getPathMatcher()
         // returns an anonymous class which doesn't implement equals().
@@ -111,20 +101,21 @@ public class PathOrGlobMatcher implements com.facebook.buck.io.filesystem.PathMa
 
   @Override
   public int hashCode() {
-    return Objects.hash(type, basePath, globPattern);
+    return Objects.hash(type, pathPrefixMatcher, globPattern);
   }
 
   @Override
   public String toString() {
     return String.format(
-        "%s type=%s basePath=%s globPattern=%s", super.toString(), type, basePath, globPattern);
+        "%s type=%s pathPrefixMatcher=%s globPattern=%s",
+        super.toString(), type, pathPrefixMatcher, globPattern);
   }
 
   @Override
   public boolean matches(Path path) {
     switch (type) {
       case PATH:
-        return path.startsWith(basePath.get());
+        return pathPrefixMatcher.get().matches(path);
       case GLOB:
         return globMatcher.get().matches(path);
     }
@@ -133,7 +124,7 @@ public class PathOrGlobMatcher implements com.facebook.buck.io.filesystem.PathMa
 
   public Path getPath() {
     Preconditions.checkState(type == Type.PATH);
-    return basePath.get();
+    return pathPrefixMatcher.get().getPath();
   }
 
   public String getGlob() {
