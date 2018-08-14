@@ -99,7 +99,12 @@ public class AuditConfigCommand extends AbstractCommand {
               (section_name, section) ->
                   section.forEach(
                       (key, val) ->
-                          builder.add(ConfigValue.of(key, section_name, key, Optional.of(val)))));
+                          builder.add(
+                              ConfigValue.of(
+                                  String.join(".", section_name, key),
+                                  section_name,
+                                  key,
+                                  Optional.of(val)))));
     } else {
       // Dump specified sections/values
       getArguments()

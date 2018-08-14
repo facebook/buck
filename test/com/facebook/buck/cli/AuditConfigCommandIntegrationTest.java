@@ -19,12 +19,15 @@ import static com.facebook.buck.util.MoreStringsForTests.equalToIgnoringPlatform
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ExitCode;
+import com.facebook.buck.util.json.ObjectMappers;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.io.StringReader;
@@ -203,5 +206,25 @@ public class AuditConfigCommandIntegrationTest {
         });
 
     assertEquals(workspace.getConfig().getSectionToEntries(), audit_config.build());
+  }
+
+  @Test
+  public void testAuditEntireConfigInJson() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "audit_config", tmp);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckCommand("audit", "config", "--json");
+    result.assertSuccess();
+    JsonNode jsonNode = ObjectMappers.READER.readTree(result.getStdout());
+    // Our integration tests add a few values (one of which changes every time) so we can't do a
+    // direct comparison.
+    // Instead, just verify a few known values
+    assertTrue(jsonNode.has("ignored_section.dotted.value"));
+    assertTrue(jsonNode.has("ignored_section.short_value"));
+    assertTrue(jsonNode.has("second_section.some_property"));
+    // Make sure that we can handle two sections with identical keys
+    assertEquals(jsonNode.get("python#py2.interpreter").asText(), "python2");
+    assertEquals(jsonNode.get("python#py3.interpreter").asText(), "python3");
   }
 }

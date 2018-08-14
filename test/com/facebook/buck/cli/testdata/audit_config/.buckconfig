@@ -10,6 +10,12 @@ some_property = some_value
 [repositories]
     secondary = secondary
 
+[python#py2]
+interpreter=python2
+
+[python#py3]
+interpreter=python3
+
 <file:.buckconfig.include>
 
 # Optional include
