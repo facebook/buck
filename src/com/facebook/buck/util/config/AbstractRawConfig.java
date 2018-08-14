@@ -23,7 +23,7 @@ import java.util.Optional;
 import org.immutables.value.Value;
 
 /**
- * Hierarcical configuration of section/key/value triples.
+ * Hierarchical configuration of section/key/value triples.
  *
  * <p>This class only implements the simple construction/storage/retrieval of these values. Other
  * classes like {@link Config} implements accessors that interpret the values as other types.
@@ -85,7 +85,8 @@ public abstract class AbstractRawConfig {
     }
 
     public RawConfig build() {
-      ImmutableMap.Builder<String, ImmutableMap<String, String>> builder = ImmutableMap.builder();
+      ImmutableMap.Builder<String, ImmutableMap<String, String>> builder =
+          ImmutableMap.builderWithExpectedSize(values.size());
       for (Map.Entry<String, Map<String, String>> entry : values.entrySet()) {
         builder.put(entry.getKey(), ImmutableMap.copyOf(entry.getValue()));
       }
