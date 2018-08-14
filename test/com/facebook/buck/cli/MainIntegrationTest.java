@@ -33,7 +33,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.List;
 import org.hamcrest.Matchers;
 import org.junit.Rule;
@@ -136,9 +135,9 @@ public class MainIntegrationTest {
         tmp.newFile("buckconfig"), ImmutableList.of("[buildfile]", "  includes = //includes.py"));
 
     workspace.runBuckCommand("targets", "--config-file", "buckconfig", "//...").assertSuccess();
-    workspace.runBuckCommand("targets", "--config-file", "//=buckconfig", "//...").assertSuccess();
+    workspace.runBuckCommand("targets", "--config-file", "//buckconfig", "//...").assertSuccess();
     workspace
-        .runBuckCommand("targets", "--config-file", "repo//=buckconfig", "//...")
+        .runBuckCommand("targets", "--config-file", "repo//buckconfig", "//...")
         .assertSuccess();
   }
 
@@ -184,10 +183,11 @@ public class MainIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "includes_override", tmp);
     workspace.setUp();
 
-    Path arg1 = tmp.newFile("buckconfig1");
-    Files.write(arg1, ImmutableList.of("[buildfile]", "  includes = //invalid_includes.py"));
-    Path arg2 = tmp.newFile("buckconfig2");
-    Files.write(arg2, ImmutableList.of("[buildfile]", "  includes = //includes.py"));
+    Files.write(
+        tmp.newFile("buckconfig1"),
+        ImmutableList.of("[buildfile]", "  includes = //invalid_includes.py"));
+    Files.write(
+        tmp.newFile("buckconfig2"), ImmutableList.of("[buildfile]", "  includes = //includes.py"));
 
     workspace
         .runBuckCommand(
@@ -195,11 +195,11 @@ public class MainIntegrationTest {
             "--config",
             "buildfile.includes=//invalid_includes.py",
             "--config-file",
-            arg1.toString(),
+            "buckconfig1",
             "--config",
             "buildfile.includes=//invalid_includes.py",
             "--config-file",
-            arg2.toString(),
+            "buckconfig2",
             "//...")
         .assertSuccess();
   }

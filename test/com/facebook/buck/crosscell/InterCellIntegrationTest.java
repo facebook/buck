@@ -481,7 +481,7 @@ public class InterCellIntegrationTest {
     Files.write(secondary.resolve("buckconfig"), ImmutableList.of("[cxx]", "  cc ="));
 
     ProcessResult result =
-        primary.runBuckBuild("--config-file", "secondary//=buckconfig", "//:cxxbinary");
+        primary.runBuckBuild("--config-file", "secondary//buckconfig", "//:cxxbinary");
 
     result.assertSuccess();
   }

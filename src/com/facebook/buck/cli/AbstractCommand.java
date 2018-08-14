@@ -42,6 +42,7 @@ import com.facebook.buck.rules.keys.TrackedRuleKeyCache;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.ExecutorPool;
 import com.facebook.buck.support.cli.args.GlobalCliOptions;
+import com.facebook.buck.util.BuckCellArg;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.cache.InstrumentingCacheStatsTracker;
@@ -447,17 +448,18 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
     if (filename == null) {
       return;
     }
-    RelativeCellName cellName = RelativeCellName.ALL_CELLS_SPECIAL_NAME;
-    String[] matches = filename.split("=", 2);
-    if (matches.length == 2) {
-      filename = matches[1];
-      if (matches[0].equals("//")) {
-        cellName = RelativeCellName.ROOT_CELL_NAME;
-      } else if (matches[0].matches("^.*//")) {
-        cellName =
-            RelativeCellName.of(ImmutableSet.of(matches[0].substring(0, matches[0].length() - 2)));
-      }
+    BuckCellArg filenameArg = BuckCellArg.of(filename);
+    RelativeCellName cellName;
+    if (!filenameArg.getCellName().isPresent() && filename.startsWith("//")) {
+      cellName = RelativeCellName.ROOT_CELL_NAME;
+    } else {
+      cellName =
+          filenameArg.getCellName().isPresent()
+              ? RelativeCellName.of(ImmutableSet.of(filenameArg.getCellName().get()))
+              : RelativeCellName.ALL_CELLS_SPECIAL_NAME;
     }
+
+    filename = filenameArg.getArg();
 
     Path projectRoot =
         cellMapping.get(
