@@ -168,7 +168,6 @@ public class IjProjectSubCommand extends ProjectSubCommand {
             params.getVersionedTargetGraphCache(),
             params.getTypeCoercerFactory(),
             params.getCell(),
-            params.getRuleKeyConfiguration(),
             projectConfig,
             projectGeneratorParameters.getEnableParserProfiling(),
             processAnnotations,

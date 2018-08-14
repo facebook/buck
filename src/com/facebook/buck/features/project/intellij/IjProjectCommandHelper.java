@@ -31,6 +31,7 @@ import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetGraphAndTargets;
 import com.facebook.buck.core.resources.ResourcesConfig;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
+import com.facebook.buck.core.rules.transformer.TargetNodeToBuildRuleTransformer;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.features.project.intellij.aggregation.AggregationMode;
@@ -51,7 +52,6 @@ import com.facebook.buck.parser.TargetNodePredicateSpec;
 import com.facebook.buck.parser.TargetNodeSpec;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
-import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
 import com.facebook.buck.util.CloseableMemoizedSupplier;
 import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.Console;
@@ -86,7 +86,6 @@ public class IjProjectCommandHelper {
   private final InstrumentedVersionedTargetGraphCache versionedTargetGraphCache;
   private final TypeCoercerFactory typeCoercerFactory;
   private final Cell cell;
-  private final RuleKeyConfiguration ruleKeyConfiguration;
   private final IjProjectConfig projectConfig;
   private final boolean enableParserProfiling;
   private final boolean processAnnotations;
@@ -105,7 +104,6 @@ public class IjProjectCommandHelper {
       InstrumentedVersionedTargetGraphCache versionedTargetGraphCache,
       TypeCoercerFactory typeCoercerFactory,
       Cell cell,
-      RuleKeyConfiguration ruleKeyConfiguration,
       IjProjectConfig projectConfig,
       boolean enableParserProfiling,
       boolean processAnnotations,
@@ -123,7 +121,6 @@ public class IjProjectCommandHelper {
     this.versionedTargetGraphCache = versionedTargetGraphCache;
     this.typeCoercerFactory = typeCoercerFactory;
     this.cell = cell;
-    this.ruleKeyConfiguration = ruleKeyConfiguration;
     this.projectConfig = projectConfig;
     this.enableParserProfiling = enableParserProfiling;
     this.processAnnotations = processAnnotations;
@@ -216,12 +213,16 @@ public class IjProjectCommandHelper {
                     buckConfig.getView(ResourcesConfig.class).getMaximumResourceAmounts().getCpu(),
                     16),
             ForkJoinPool::shutdownNow)) {
-      return actionGraphCache.getActionGraph(
+
+      TargetNodeToBuildRuleTransformer transformer = new ShallowTargetNodeToBuildRuleTransformer();
+      ActionGraphConfig actionGraphConfig = buckConfig.getView(ActionGraphConfig.class);
+      return actionGraphCache.getFreshActionGraph(
           buckEventBus,
+          transformer,
           targetGraph,
           cell.getCellProvider(),
-          buckConfig.getView(ActionGraphConfig.class),
-          ruleKeyConfiguration,
+          actionGraphConfig.getActionGraphParallelizationMode(),
+          actionGraphConfig.getShouldInstrumentActionGraph(),
           forkJoinPoolSupplier);
     }
   }
