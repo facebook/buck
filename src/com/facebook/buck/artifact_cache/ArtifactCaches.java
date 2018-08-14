@@ -597,8 +597,9 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
     if (CharMatcher.ascii().matchesAllOf(str)) {
       return str;
     }
-    StringBuilder builder = new StringBuilder();
-    for (char c : str.toCharArray()) {
+    StringBuilder builder = new StringBuilder(str.length());
+    for (int i = 0; i < str.length(); ++i) {
+      char c = str.charAt(i);
       builder.append(CharMatcher.ascii().matches(c) ? c : '?');
     }
     return builder.toString();
