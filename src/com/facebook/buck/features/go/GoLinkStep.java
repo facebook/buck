@@ -23,6 +23,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class GoLinkStep extends ShellStep {
 
@@ -41,14 +42,31 @@ public class GoLinkStep extends ShellStep {
     }
   }
 
+  enum LinkMode {
+    INTERNAL("internal"),
+    EXTERNAL("external");
+
+    private final String linkMode;
+
+    LinkMode(String linkMode) {
+      this.linkMode = linkMode;
+    }
+
+    String getLinkMode() {
+      return linkMode;
+    }
+  }
+
   private final ImmutableMap<String, String> environment;
   private final ImmutableList<String> cxxLinkCommandPrefix;
   private final ImmutableList<String> linkCommandPrefix;
-  private final ImmutableList<String> flags;
+  private final ImmutableList<String> linkerFlags;
+  private final ImmutableList<String> externalLinkerFlags;
   private final ImmutableList<Path> libraryPaths;
   private final GoPlatform platform;
   private final Path mainArchive;
   private final BuildMode buildMode;
+  private final LinkMode linkMode;
   private final Path output;
 
   public GoLinkStep(
@@ -56,21 +74,25 @@ public class GoLinkStep extends ShellStep {
       ImmutableMap<String, String> environment,
       ImmutableList<String> cxxLinkCommandPrefix,
       ImmutableList<String> linkCommandPrefix,
-      ImmutableList<String> flags,
+      ImmutableList<String> linkerFlags,
+      ImmutableList<String> externalLinkerFlags,
       ImmutableList<Path> libraryPaths,
       GoPlatform platform,
       Path mainArchive,
       BuildMode buildMode,
+      LinkMode linkMode,
       Path output) {
     super(workingDirectory);
     this.environment = environment;
     this.cxxLinkCommandPrefix = cxxLinkCommandPrefix;
     this.linkCommandPrefix = linkCommandPrefix;
-    this.flags = flags;
+    this.linkerFlags = linkerFlags;
+    this.externalLinkerFlags = externalLinkerFlags;
     this.libraryPaths = libraryPaths;
     this.platform = platform;
     this.mainArchive = mainArchive;
     this.buildMode = buildMode;
+    this.linkMode = linkMode;
     this.output = output;
   }
 
@@ -79,27 +101,24 @@ public class GoLinkStep extends ShellStep {
     ImmutableList.Builder<String> command =
         ImmutableList.<String>builder()
             .addAll(linkCommandPrefix)
-            .addAll(flags)
+            .addAll(linkerFlags)
             .add("-o", output.toString())
-            .add("-buildmode", buildMode.getBuildMode());
+            .add("-buildmode", buildMode.getBuildMode())
+            .add("-linkmode", linkMode.getLinkMode());
 
     for (Path libraryPath : libraryPaths) {
       command.add("-L", libraryPath.toString());
     }
 
-    if (cxxLinkCommandPrefix.size() > 0) {
+    if (linkMode == LinkMode.EXTERNAL) {
       command.add("-extld", cxxLinkCommandPrefix.get(0));
-      if (cxxLinkCommandPrefix.size() > 1) {
+      if (cxxLinkCommandPrefix.size() > 1 || externalLinkerFlags.size() > 0) {
         command.add(
             "-extldflags",
-            cxxLinkCommandPrefix
-                .stream()
-                .skip(1)
+            Stream.concat(cxxLinkCommandPrefix.stream().skip(1), externalLinkerFlags.stream())
                 .map(Escaper.BASH_ESCAPER)
                 .collect(Collectors.joining(" ")));
       }
-    } else {
-      command.add("-linkmode", "internal");
     }
     command.add(mainArchive.toString());
 

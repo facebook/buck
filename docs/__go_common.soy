@@ -89,6 +89,19 @@ Note: Buck is currently tested with (and therefore supports) version 1.10 of Go.
 {/template}
 
 /***/
+{template .external_linker_flags_arg}
+{call buck.arg}
+  {param name: 'external_linker_flags' /}
+  {param default: '[]' /}
+  {param desc}
+  Extra external linker flags passed to go link via <code>-extld</code> argument.
+  If argument is non-empty or <code>cgo_library</code> is used, the link mode 
+  will switch to <code>external</code>.
+  {/param}
+{/call}
+{/template}
+
+/***/
 {template .more_examples}
 <p>
   For more examples, check out our <a

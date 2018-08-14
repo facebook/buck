@@ -83,6 +83,7 @@ public class GoBinaryDescription
         args.getCompilerFlags(),
         args.getAssemblerFlags(),
         args.getLinkerFlags(),
+        args.getExternalLinkerFlags(),
         platform);
   }
 
@@ -124,6 +125,8 @@ public class GoBinaryDescription
     ImmutableList<String> getAssemblerFlags();
 
     ImmutableList<String> getLinkerFlags();
+
+    ImmutableList<String> getExternalLinkerFlags();
 
     @Value.NaturalOrder
     ImmutableSortedSet<SourcePath> getResources();

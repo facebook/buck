@@ -203,6 +203,7 @@ public class GoDescriptorsTest {
             ImmutableList.of(),
             ImmutableList.of(),
             ImmutableList.of(),
+            ImmutableList.of(),
             goPlatform);
 
     System.out.println(binary.getBuildDeps());

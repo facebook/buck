@@ -43,14 +43,14 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
-import java.util.Optional;
 
 public class GoBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps implements BinaryBuildRule {
 
   @AddToRuleKey private final Tool linker;
+  @AddToRuleKey private final Linker cxxLinker;
   @AddToRuleKey private final ImmutableList<String> linkerFlags;
-  @AddToRuleKey private final Optional<Linker> cxxLinker;
   @AddToRuleKey private final ImmutableList<Arg> cxxLinkerArgs;
+  @AddToRuleKey private final GoLinkStep.LinkMode linkMode;
   @AddToRuleKey private final GoPlatform platform;
 
   private final Path output;
@@ -62,13 +62,13 @@ public class GoBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps implemen
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      Optional<Linker> cxxLinker,
-      ImmutableList<Arg> cxxLinkerArgs,
       ImmutableSortedSet<SourcePath> resources,
       SymlinkTree linkTree,
       GoCompile mainObject,
       Tool linker,
+      Linker cxxLinker,
       ImmutableList<String> linkerFlags,
+      ImmutableList<Arg> cxxLinkerArgs,
       GoPlatform platform) {
     super(buildTarget, projectFilesystem, params);
     this.cxxLinker = cxxLinker;
@@ -82,6 +82,8 @@ public class GoBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps implemen
         BuildTargetPaths.getGenPath(
             getProjectFilesystem(), buildTarget, "%s/" + buildTarget.getShortName());
     this.linkerFlags = linkerFlags;
+    this.linkMode =
+        (cxxLinkerArgs.size() > 0) ? GoLinkStep.LinkMode.EXTERNAL : GoLinkStep.LinkMode.INTERNAL;
   }
 
   private SymlinkTreeStep getResourceSymlinkTree(
@@ -112,24 +114,26 @@ public class GoBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps implemen
     return new CommandTool.Builder().addArg(SourcePathArg.of(getSourcePathToOutput())).build();
   }
 
+  private ImmutableMap<String, String> getEnvironment(BuildContext context) {
+    ImmutableMap.Builder<String, String> environment = ImmutableMap.builder();
+
+    if (linkMode == GoLinkStep.LinkMode.EXTERNAL) {
+      environment.putAll(cxxLinker.getEnvironment(context.getSourcePathResolver()));
+    }
+    environment.putAll(linker.getEnvironment(context.getSourcePathResolver()));
+
+    return environment.build();
+  }
+
   @Override
   public ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
 
     buildableContext.recordArtifact(output);
 
-    // There is no way to specify real-ld environment variables to the go linker - just hope
-    // that the two sets don't collide.
-    ImmutableList<String> cxxLinkerCommand = ImmutableList.of();
-    ImmutableMap.Builder<String, String> environment = ImmutableMap.builder();
-    if (cxxLinker.isPresent()) {
-      environment.putAll(cxxLinker.get().getEnvironment(context.getSourcePathResolver()));
-      cxxLinkerCommand = cxxLinker.get().getCommandPrefix(context.getSourcePathResolver());
-    }
-    environment.putAll(linker.getEnvironment(context.getSourcePathResolver()));
-
     SourcePathResolver resolver = context.getSourcePathResolver();
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
+
     steps.add(
         MkdirStep.of(
             BuildCellRelativePath.fromCellRelativePath(
@@ -140,9 +144,8 @@ public class GoBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps implemen
         ImmutableList.of(getResourceSymlinkTree(context, output.getParent(), buildableContext)));
 
     // cxxLinkerArgs comes from cgo rules and are reuqired for cxx deps linking
-    ImmutableList.Builder<String> allLinkerFlags = ImmutableList.builder();
-    allLinkerFlags.addAll(linkerFlags);
-    if (cxxLinkerArgs.size() > 0) {
+    ImmutableList.Builder<String> externalLinkerFlags = ImmutableList.builder();
+    if (linkMode == GoLinkStep.LinkMode.EXTERNAL) {
       Path argFilePath =
           getProjectFilesystem()
               .getRootPath()
@@ -159,26 +162,28 @@ public class GoBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps implemen
           CxxPrepareForLinkStep.create(
               argFilePath,
               fileListPath,
-              cxxLinker.get().fileList(fileListPath),
+              cxxLinker.fileList(fileListPath),
               output,
               cxxLinkerArgs,
-              cxxLinker.get(),
+              cxxLinker,
               getBuildTarget().getCellPath(),
               resolver));
-      allLinkerFlags.addAll(ImmutableList.of("-extldflags", String.format("@%s", argFilePath)));
+      externalLinkerFlags.add(String.format("@%s", argFilePath));
     }
 
     steps.add(
         new GoLinkStep(
             getProjectFilesystem().getRootPath(),
-            environment.build(),
-            cxxLinkerCommand,
-            linker.getCommandPrefix(context.getSourcePathResolver()),
-            allLinkerFlags.build(),
+            getEnvironment(context),
+            cxxLinker.getCommandPrefix(resolver),
+            linker.getCommandPrefix(resolver),
+            linkerFlags,
+            externalLinkerFlags.build(),
             ImmutableList.of(linkTree.getRoot()),
             platform,
             resolver.getRelativePath(mainObject.getSourcePathToOutput()),
             GoLinkStep.BuildMode.EXECUTABLE,
+            linkMode,
             output));
     return steps.build();
   }

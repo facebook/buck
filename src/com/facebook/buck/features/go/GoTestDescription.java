@@ -313,6 +313,7 @@ public class GoTestDescription
             args.getCompilerFlags(),
             args.getAssemblerFlags(),
             args.getLinkerFlags(),
+            args.getExternalLinkerFlags(),
             platform);
     graphBuilder.addToIndex(testMain);
     return testMain;
@@ -487,6 +488,8 @@ public class GoTestDescription
     ImmutableList<String> getAssemblerFlags();
 
     ImmutableList<String> getLinkerFlags();
+
+    ImmutableList<String> getExternalLinkerFlags();
 
     @Value.Default
     default boolean getRunTestSeparately() {

@@ -61,4 +61,6 @@ abstract class AbstractGoPlatform implements FlavorConvertible, AddsToRuleKey {
   public abstract Tool getCover();
 
   public abstract CxxPlatform getCxxPlatform();
+
+  public abstract ImmutableList<String> getExternalLinkerFlags();
 }

@@ -42,6 +42,8 @@
 
 {call go_common.linker_flags_arg /}
 
+{call go_common.external_linker_flags_arg /}
+
 {call buck.arg}
   {param name: 'resources' /}
   {param default : '[]' /}

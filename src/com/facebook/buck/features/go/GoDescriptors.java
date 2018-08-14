@@ -54,6 +54,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
 import com.google.common.io.Resources;
 import java.io.IOException;
@@ -212,7 +213,8 @@ abstract class GoDescriptors {
       ActionGraphBuilder graphBuilder,
       CxxPlatform cxxPlatform,
       Iterable<BuildRule> deps,
-      Linker.LinkableDepType linkStyle) {
+      Linker.LinkableDepType linkStyle,
+      Iterable<Arg> externalLinkerFlags) {
 
     // find all the CGoLibraries being in direct or non direct dependency to
     // declared deps
@@ -241,7 +243,7 @@ abstract class GoDescriptors {
             r -> Optional.empty());
 
     // skip setting any arg if no linkable inputs are present
-    if (linkableInput.getArgs().size() == 0) {
+    if (linkableInput.getArgs().size() == 0 && Iterables.size(externalLinkerFlags) == 0) {
       return argsBuilder.build();
     }
 
@@ -254,6 +256,7 @@ abstract class GoDescriptors {
     // add all arguments needed to link in the C/C++ platform runtime.
     argsBuilder.addAll(StringArg.from(cxxPlatform.getRuntimeLdflags().get(linkStyle)));
     argsBuilder.addAll(linkableInput.getArgs());
+    argsBuilder.addAll(externalLinkerFlags);
 
     return argsBuilder.build();
   }
@@ -269,6 +272,7 @@ abstract class GoDescriptors {
       List<String> compilerFlags,
       List<String> assemblerFlags,
       List<String> linkerFlags,
+      List<String> externalLinkerFlags,
       GoPlatform platform) {
     BuildTarget libraryTarget =
         buildTarget.withAppendedFlavors(InternalFlavor.of("compile"), platform.getFlavor());
@@ -331,17 +335,19 @@ abstract class GoDescriptors {
                     .addAll(BuildableSupport.getDepsCollection(cxxLinker, ruleFinder))
                     .build())
             .withoutExtraDeps(),
-        Optional.of(cxxLinker),
-        getCxxLinkerArgs(
-            graphBuilder,
-            platform.getCxxPlatform(),
-            library.getBuildDeps(),
-            Linker.LinkableDepType.STATIC_PIC),
         resources,
         symlinkTree,
         library,
         platform.getLinker(),
+        cxxLinker,
         ImmutableList.copyOf(linkerFlags),
+        getCxxLinkerArgs(
+            graphBuilder,
+            platform.getCxxPlatform(),
+            library.getBuildDeps(),
+            Linker.LinkableDepType.STATIC_PIC,
+            StringArg.from(
+                Iterables.concat(platform.getExternalLinkerFlags(), externalLinkerFlags))),
         platform);
   }
 
@@ -388,6 +394,7 @@ abstract class GoDescriptors {
                   goBuckConfig,
                   ImmutableSet.of(writeFile.getSourcePathToOutput()),
                   ImmutableSortedSet.of(),
+                  ImmutableList.of(),
                   ImmutableList.of(),
                   ImmutableList.of(),
                   ImmutableList.of(),

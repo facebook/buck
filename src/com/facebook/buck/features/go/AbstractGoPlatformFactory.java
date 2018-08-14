@@ -156,6 +156,7 @@ abstract class AbstractGoPlatformFactory {
         .setLinker(getGoTool(section, goRoot, "linker", "link", "linker_flags"))
         .setCover(getGoTool(section, goRoot, "cover", "cover", ""))
         .setCxxPlatform(cxxPlatform)
+        .setExternalLinkerFlags(getFlags(section, "external_linker_flags"))
         .build();
   }
 
