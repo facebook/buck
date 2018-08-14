@@ -63,13 +63,13 @@ public abstract class CxxToolFlags implements AddsToRuleKey {
 
   /** Concatenate multiple flags in a pairwise manner. */
   public static CxxToolFlags concat(CxxToolFlags... parts) {
-    Iterable<Arg> platformFlags = ImmutableList.of();
-    Iterable<Arg> ruleFlags = ImmutableList.of();
+    ImmutableList.Builder<Arg> platformFlags = ImmutableList.builder();
+    ImmutableList.Builder<Arg> ruleFlags = ImmutableList.builder();
     for (CxxToolFlags part : parts) {
-      platformFlags = Iterables.concat(platformFlags, part.getPlatformFlags());
-      ruleFlags = Iterables.concat(ruleFlags, part.getRuleFlags());
+      platformFlags = platformFlags.addAll(part.getPlatformFlags());
+      ruleFlags = ruleFlags.addAll(part.getRuleFlags());
     }
-    return IterableCxxToolFlags.of(platformFlags, ruleFlags);
+    return IterableCxxToolFlags.of(platformFlags.build(), ruleFlags.build());
   }
 }
 
