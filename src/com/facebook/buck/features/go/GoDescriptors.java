@@ -466,18 +466,17 @@ abstract class GoDescriptors {
       SourcePathRuleFinder ruleFinder,
       SourcePathResolver pathResolver,
       ImmutableSet<GoLinkable> linkables) {
-    ImmutableMap.Builder<Path, SourcePath> treeMapBuilder = ImmutableMap.builder();
-    for (GoLinkable linkable : linkables) {
-      for (Map.Entry<Path, SourcePath> linkInput : linkable.getGoLinkInput().entrySet()) {
-        treeMapBuilder.put(
-            getPathInSymlinkTree(pathResolver, linkInput.getKey(), linkInput.getValue()),
-            linkInput.getValue());
-      }
-    }
 
     ImmutableMap<Path, SourcePath> treeMap;
     try {
-      treeMap = treeMapBuilder.build();
+      treeMap =
+          linkables
+              .stream()
+              .flatMap(linkable -> linkable.getGoLinkInput().entrySet().stream())
+              .collect(
+                  ImmutableMap.toImmutableMap(
+                      entry -> getPathInSymlinkTree(pathResolver, entry.getKey(), entry.getValue()),
+                      entry -> entry.getValue()));
     } catch (IllegalArgumentException ex) {
       throw new HumanReadableException(
           ex,

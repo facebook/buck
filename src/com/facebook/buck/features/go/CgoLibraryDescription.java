@@ -52,6 +52,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Optional;
@@ -153,6 +154,11 @@ public class CgoLibraryDescription
       SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
       SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
+      Path packageName =
+          args.getPackageName()
+              .map(Paths::get)
+              .orElse(goBuckConfig.getDefaultPackageName(buildTarget));
+
       ImmutableList<BuildTarget> cxxDeps =
           params
               .getDeclaredDeps()
@@ -177,9 +183,7 @@ public class CgoLibraryDescription
                   args,
                   cxxDeps,
                   platform.get().getCGo(),
-                  args.getPackageName()
-                      .map(Paths::get)
-                      .orElse(goBuckConfig.getDefaultPackageName(buildTarget)));
+                  packageName);
 
       ImmutableList<BuildTarget> nonCxxDeps =
           params
@@ -196,9 +200,7 @@ public class CgoLibraryDescription
           params,
           context.getActionGraphBuilder(),
           goBuckConfig,
-          args.getPackageName()
-              .map(Paths::get)
-              .orElse(goBuckConfig.getDefaultPackageName(buildTarget)),
+          packageName,
           new ImmutableSet.Builder<SourcePath>()
               .addAll(lib.getGeneratedGoSource())
               .addAll(args.getGoSrcs())
@@ -258,10 +260,9 @@ public class CgoLibraryDescription
   }
 
   private static ImmutableList<StringWithMacros> wrapFlags(ImmutableList<String> flags) {
-    ImmutableList.Builder<StringWithMacros> builder = ImmutableList.builder();
-    for (String flag : flags) {
-      builder.add(StringWithMacros.of(ImmutableList.of(Either.ofLeft(flag))));
-    }
-    return builder.build();
+    return flags
+        .stream()
+        .map(flag -> StringWithMacros.of(ImmutableList.of(Either.ofLeft(flag))))
+        .collect(ImmutableList.toImmutableList());
   }
 }

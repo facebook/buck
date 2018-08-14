@@ -39,11 +39,9 @@ import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.SymlinkTreeStep;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Maps;
 import java.nio.file.Path;
 import java.util.Optional;
 
@@ -89,26 +87,24 @@ public class GoBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps implemen
   private SymlinkTreeStep getResourceSymlinkTree(
       BuildContext buildContext, Path outputDirectory, BuildableContext buildableContext) {
 
+    SourcePathResolver resolver = buildContext.getSourcePathResolver();
+
     resources.forEach(
         pth ->
-            buildableContext.recordArtifact(
-                buildContext.getSourcePathResolver().getRelativePath(getProjectFilesystem(), pth)));
+            buildableContext.recordArtifact(resolver.getRelativePath(getProjectFilesystem(), pth)));
 
     return new SymlinkTreeStep(
         "go_binary",
         getProjectFilesystem(),
         outputDirectory,
-        ImmutableMap.copyOf(
-            FluentIterable.from(resources)
-                .transform(
+        resources
+            .stream()
+            .collect(
+                ImmutableMap.toImmutableMap(
                     input ->
-                        Maps.immutableEntry(
-                            getProjectFilesystem()
-                                .getPath(
-                                    buildContext
-                                        .getSourcePathResolver()
-                                        .getSourcePathName(getBuildTarget(), input)),
-                            buildContext.getSourcePathResolver().getAbsolutePath(input)))));
+                        getProjectFilesystem()
+                            .getPath(resolver.getSourcePathName(getBuildTarget(), input)),
+                    input -> resolver.getAbsolutePath(input))));
   }
 
   @Override
@@ -181,7 +177,7 @@ public class GoBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps implemen
             allLinkerFlags.build(),
             ImmutableList.of(linkTree.getRoot()),
             platform,
-            context.getSourcePathResolver().getRelativePath(mainObject.getSourcePathToOutput()),
+            resolver.getRelativePath(mainObject.getSourcePathToOutput()),
             GoLinkStep.BuildMode.EXECUTABLE,
             output));
     return steps.build();

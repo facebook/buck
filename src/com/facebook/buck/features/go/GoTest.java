@@ -48,12 +48,10 @@ import com.facebook.buck.test.result.type.ResultType;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.base.Throwables;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Maps;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -119,9 +117,9 @@ public class GoTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
             ? Optional.of(testRuleTimeoutMs.get() + PROCESS_TIMEOUT_EXTRA_MS)
             : Optional.empty();
 
+    SourcePathResolver resolver = buildContext.getSourcePathResolver();
     ImmutableList.Builder<String> args = ImmutableList.builder();
-    args.addAll(
-        testMain.getExecutableCommand().getCommandPrefix(buildContext.getSourcePathResolver()));
+    args.addAll(testMain.getExecutableCommand().getCommandPrefix(resolver));
     args.add("-test.v");
     if (coverageMode != Mode.NONE) {
       Path coverProfile =
@@ -152,9 +150,7 @@ public class GoTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
                 getProjectFilesystem(),
                 getPathToTestWorkingDirectory(),
                 args.build(),
-                testMain
-                    .getExecutableCommand()
-                    .getEnvironment(buildContext.getSourcePathResolver()),
+                testMain.getExecutableCommand().getEnvironment(resolver),
                 getPathToTestExitCode(),
                 processTimeoutMs,
                 getPathToTestResults()))
@@ -302,6 +298,8 @@ public class GoTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
       Path outputDirectory,
       Optional<BuildableContext> buildableContext) {
 
+    SourcePathResolver resolver = buildContext.getSourcePathResolver();
+
     if (buildableContext.isPresent()) {
       resources.forEach(
           pth ->
@@ -317,17 +315,14 @@ public class GoTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
         "go_test",
         getProjectFilesystem(),
         outputDirectory,
-        ImmutableMap.copyOf(
-            FluentIterable.from(resources)
-                .transform(
+        resources
+            .stream()
+            .collect(
+                ImmutableMap.toImmutableMap(
                     input ->
-                        Maps.immutableEntry(
-                            getProjectFilesystem()
-                                .getPath(
-                                    buildContext
-                                        .getSourcePathResolver()
-                                        .getSourcePathName(getBuildTarget(), input)),
-                            buildContext.getSourcePathResolver().getAbsolutePath(input)))));
+                        getProjectFilesystem()
+                            .getPath(resolver.getSourcePathName(getBuildTarget(), input)),
+                    input -> resolver.getAbsolutePath(input))));
   }
 
   @Override

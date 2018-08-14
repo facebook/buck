@@ -164,7 +164,7 @@ public class GoCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 
     boolean allowExternalReferences = !rawAsmSrcs.isEmpty() || !extraAsmOutputs.isEmpty();
 
-    SourcePathResolver pathResolver = context.getSourcePathResolver();
+    SourcePathResolver resolver = context.getSourcePathResolver();
     if (rawCompileSrcs.isEmpty()) {
       steps.add(new TouchStep(getProjectFilesystem(), output));
     } else {
@@ -175,8 +175,8 @@ public class GoCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
       steps.add(
           new GoCompileStep(
               getProjectFilesystem().getRootPath(),
-              compiler.getEnvironment(pathResolver),
-              compiler.getCommandPrefix(pathResolver),
+              compiler.getEnvironment(resolver),
+              compiler.getCommandPrefix(resolver),
               compilerFlags,
               packageName,
               filteredCompileSrcs,
@@ -235,8 +235,8 @@ public class GoCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
       steps.add(
           new GoAssembleStep(
               getProjectFilesystem().getRootPath(),
-              assembler.getEnvironment(pathResolver),
-              assembler.getCommandPrefix(pathResolver),
+              assembler.getEnvironment(resolver),
+              assembler.getCommandPrefix(resolver),
               assemblerFlags,
               filteredAsmSrcs,
               ImmutableList.<Path>builder()
@@ -252,12 +252,11 @@ public class GoCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
       steps.add(
           new GoPackStep(
               getProjectFilesystem().getRootPath(),
-              packer.getEnvironment(pathResolver),
-              packer.getCommandPrefix(pathResolver),
+              packer.getEnvironment(resolver),
+              packer.getCommandPrefix(resolver),
               GoPackStep.Operation.APPEND,
               asmOutputs
-                  .addAll(
-                      extraAsmOutputs.stream().map(x -> pathResolver.getAbsolutePath(x)).iterator())
+                  .addAll(extraAsmOutputs.stream().map(x -> resolver.getAbsolutePath(x)).iterator())
                   .build(),
               filteredAsmSrcs,
               output));
