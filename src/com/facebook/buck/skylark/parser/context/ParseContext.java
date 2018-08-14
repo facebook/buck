@@ -83,7 +83,7 @@ public class ParseContext {
    *     map with attributes as keys and parameters as values.
    */
   public ImmutableList<ImmutableMap<String, Object>> getRecordedRules() {
-    return rawRules.values().stream().collect(ImmutableList.toImmutableList());
+    return ImmutableList.copyOf(rawRules.values());
   }
 
   /** @return {@code true} if the rule with provided name exists, {@code false} otherwise. */
