@@ -2016,6 +2016,7 @@ public final class Main {
               heartbeatTimeout);
       daemonKillers = new DaemonKillers(housekeepingExecutorService, server, Paths.get(socketPath));
       server.run();
+      System.exit(0);
     }
 
     static DaemonKillers getDaemonKillers() {
