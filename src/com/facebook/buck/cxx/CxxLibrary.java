@@ -414,12 +414,11 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public Iterable<AndroidPackageable> getRequiredPackageables(BuildRuleResolver ruleResolver) {
+    // Both iterables we are concatting are ImmutableSets, so the returned iterator does not support
+    // remove
     return AndroidPackageableCollector.getPackageableRules(
-        RichStream.from(
-                Iterables.concat(
-                    deps.getForAllPlatforms(ruleResolver),
-                    exportedDeps.getForAllPlatforms(ruleResolver)))
-            .toImmutableList());
+        Iterables.concat(
+            deps.getForAllPlatforms(ruleResolver), exportedDeps.getForAllPlatforms(ruleResolver)));
   }
 
   @Override

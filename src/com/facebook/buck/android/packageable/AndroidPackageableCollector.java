@@ -127,7 +127,7 @@ public class AndroidPackageableCollector {
    * dependencies.
    */
   public static Iterable<AndroidPackageable> getPackageableRules(Iterable<BuildRule> rules) {
-    return FluentIterable.from(rules).filter(AndroidPackageable.class).toList();
+    return FluentIterable.from(rules).filter(AndroidPackageable.class);
   }
 
   public AndroidPackageableCollector addStringWhitelistedResourceDirectory(
