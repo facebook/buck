@@ -49,13 +49,13 @@ public class PathOrGlobMatcher implements com.facebook.buck.io.filesystem.PathMa
   }
 
   private final Type type;
-  private final Optional<PathPrefixMatcher> pathPrefixMatcher;
+  private final Optional<RecursiveFileMatcher> pathPrefixMatcher;
   private final Optional<PathMatcher> globMatcher;
   private final Optional<String> globPattern;
 
   public PathOrGlobMatcher(Path basePath) {
     this.type = Type.PATH;
-    this.pathPrefixMatcher = Optional.of(PathPrefixMatcher.of(basePath));
+    this.pathPrefixMatcher = Optional.of(RecursiveFileMatcher.of(basePath));
     this.globPattern = Optional.empty();
     this.globMatcher = Optional.empty();
   }

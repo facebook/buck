@@ -28,28 +28,28 @@ import java.util.EnumSet;
 import org.junit.Rule;
 import org.junit.Test;
 
-public class PathPrefixMatcherTest {
+public class RecursiveFileMatcherTest {
 
   @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
 
   @Test
   public void matchesPathsUnderProvidedBasePath() throws Exception {
     Path root = temporaryFolder.getRoot();
-    PathPrefixMatcher matcher = PathPrefixMatcher.of(root);
+    RecursiveFileMatcher matcher = RecursiveFileMatcher.of(root);
     assertTrue(matcher.matches(root.resolve("foo")));
   }
 
   @Test
   public void doesNotMatchPathsOutsideOfProvidedBasePath() throws Exception {
     Path root = temporaryFolder.getRoot();
-    PathPrefixMatcher matcher = PathPrefixMatcher.of(root);
+    RecursiveFileMatcher matcher = RecursiveFileMatcher.of(root);
     assertFalse(matcher.matches(Paths.get("not_relative_too_root")));
   }
 
   @Test
   public void usesWatchmanQueryToMatchProvidedBasePath() {
     Path root = temporaryFolder.getRoot();
-    PathPrefixMatcher matcher = PathPrefixMatcher.of(root.resolve("path"));
+    RecursiveFileMatcher matcher = RecursiveFileMatcher.of(root.resolve("path"));
     assertEquals(
         matcher.toWatchmanMatchQuery(root, EnumSet.noneOf(Capability.class)),
         ImmutableList.of("match", "path" + File.separator + "**", "wholename"));

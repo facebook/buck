@@ -24,16 +24,16 @@ import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Set;
 
-/** Matcher that matches paths that start with provided path prefix. */
-public class PathPrefixMatcher implements PathMatcher {
+/** Matcher that matches paths within {@code basePath} directory. */
+public class RecursiveFileMatcher implements PathMatcher {
 
   private final Path basePath;
 
-  private PathPrefixMatcher(Path basePath) {
+  private RecursiveFileMatcher(Path basePath) {
     this.basePath = basePath;
   }
 
-  private PathPrefixMatcher(Path root, String basePath) {
+  private RecursiveFileMatcher(Path root, String basePath) {
     this(root.getFileSystem().getPath(basePath));
   }
 
@@ -42,10 +42,10 @@ public class PathPrefixMatcher implements PathMatcher {
     if (this == other) {
       return true;
     }
-    if (!(other instanceof PathPrefixMatcher)) {
+    if (!(other instanceof RecursiveFileMatcher)) {
       return false;
     }
-    PathPrefixMatcher that = (PathPrefixMatcher) other;
+    RecursiveFileMatcher that = (RecursiveFileMatcher) other;
     return Objects.equals(basePath, that.basePath);
   }
 
@@ -82,12 +82,12 @@ public class PathPrefixMatcher implements PathMatcher {
   }
 
   /** @return The matcher for paths that start with {@code basePath}. */
-  public static PathPrefixMatcher of(Path basePath) {
-    return new PathPrefixMatcher(basePath);
+  public static RecursiveFileMatcher of(Path basePath) {
+    return new RecursiveFileMatcher(basePath);
   }
 
   /** @return The matcher for {@code basePath} paths relative to {@code root}. */
-  public static PathPrefixMatcher of(Path root, String basePath) {
-    return new PathPrefixMatcher(root, basePath);
+  public static RecursiveFileMatcher of(Path root, String basePath) {
+    return new RecursiveFileMatcher(root, basePath);
   }
 }
