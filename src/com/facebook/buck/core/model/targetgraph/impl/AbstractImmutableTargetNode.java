@@ -38,7 +38,6 @@ import com.google.common.hash.HashCode;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Stream;
 import org.immutables.value.Value;
 
 /**
@@ -141,18 +140,6 @@ abstract class AbstractImmutableTargetNode<T> implements TargetNode<T> {
   @Override
   public Set<BuildTarget> getParseDeps() {
     return Sets.union(getBuildDeps(), getTargetGraphOnlyDeps());
-  }
-
-  /**
-   * Stream-style API for getting dependencies. This may return duplicates if certain dependencies
-   * are in both declared deps and exported deps.
-   *
-   * <p>This method can be faster than {@link #getBuildDeps()} in cases where repeated traversals
-   * and set operations are not necessary, as it avoids creating the intermediate set.
-   */
-  @Override
-  public Stream<BuildTarget> getBuildDepsStream() {
-    return Stream.concat(getDeclaredDeps().stream(), getExtraDeps().stream());
   }
 
   @Override

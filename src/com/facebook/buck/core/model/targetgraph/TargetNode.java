@@ -33,7 +33,6 @@ import com.google.common.hash.HashCode;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Stream;
 
 /**
  * A {@link TargetNode} represents a node in the target graph which is created by the {@link
@@ -90,15 +89,6 @@ public interface TargetNode<T> extends Comparable<TargetNode<?>>, ObeysVisibilit
    *     into a BuildRule.
    */
   Set<BuildTarget> getParseDeps();
-
-  /**
-   * Stream-style API for getting dependencies. This may return duplicates if certain dependencies
-   * are in both declared deps and exported deps.
-   *
-   * <p>This method can be faster than {@link #getBuildDeps()} in cases where repeated traversals
-   * and set operations are not necessary, as it avoids creating the intermediate set.
-   */
-  Stream<BuildTarget> getBuildDepsStream();
 
   boolean isVisibleTo(TargetNode<?> viewer);
 
