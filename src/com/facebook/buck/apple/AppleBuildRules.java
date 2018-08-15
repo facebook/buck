@@ -306,7 +306,7 @@ public final class AppleBuildRules {
       ImmutableSortedSet.Builder<TargetNode<?>> directDepsBuilder,
       ImmutableSortedSet.Builder<TargetNode<?>> exportedDepsBuilder,
       Optional<AppleCxxPlatform> appleCxxPlatform) {
-    directDepsBuilder.addAll(targetGraph.getAll(targetNode.getBuildDepsStream()::iterator));
+    directDepsBuilder.addAll(targetGraph.getAll(targetNode.getBuildDeps()));
     if (targetNode.getDescription() instanceof AppleLibraryDescription
         || targetNode.getDescription() instanceof CxxLibraryDescription) {
       CxxLibraryDescription.CommonArg arg =
