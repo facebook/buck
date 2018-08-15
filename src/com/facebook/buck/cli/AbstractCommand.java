@@ -326,7 +326,8 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
                 "Buck profile for " + skylarkProfile + " at " + LocalDate.now(),
                 false,
                 clock,
-                clock.nanoTime());
+                clock.nanoTime(),
+                false);
       } catch (IOException e) {
         throw new HumanReadableException(
             "Cannot initialize Skylark profiler for " + skylarkProfile, e);
