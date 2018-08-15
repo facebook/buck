@@ -77,7 +77,7 @@ public class PathPrefixMatcher implements PathMatcher {
     if (capabilities.contains(Capability.DIRNAME)) {
       return ImmutableList.of("dirname", ignorePath.toString());
     } else {
-      return ImmutableList.of("match", ignorePath + File.separator + "*", "wholename");
+      return ImmutableList.of("match", ignorePath + File.separator + "**", "wholename");
     }
   }
 

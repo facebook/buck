@@ -425,10 +425,10 @@ public class WatchmanWatcherTest {
                         ImmutableList.of(
                             "anyof",
                             ImmutableList.of("type", "d"),
-                            ImmutableList.of("match", "foo" + File.separator + "*", "wholename"),
+                            ImmutableList.of("match", "foo" + File.separator + "**", "wholename"),
                             ImmutableList.of(
                                 "match",
-                                "bar" + File.separator + "baz" + File.separator + "*",
+                                "bar" + File.separator + "baz" + File.separator + "**",
                                 "wholename"))),
                 "empty_on_fresh_instance", true,
                 "fields", ImmutableList.of("name", "exists", "new"))),

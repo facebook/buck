@@ -52,6 +52,6 @@ public class PathPrefixMatcherTest {
     PathPrefixMatcher matcher = PathPrefixMatcher.of(root.resolve("path"));
     assertEquals(
         matcher.toWatchmanMatchQuery(root, EnumSet.noneOf(Capability.class)),
-        ImmutableList.of("match", "path" + File.separator + "*", "wholename"));
+        ImmutableList.of("match", "path" + File.separator + "**", "wholename"));
   }
 }
