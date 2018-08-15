@@ -1726,7 +1726,8 @@ public final class Main {
             chromeTraceConfig,
             invocationInfo.getLogFilePath(),
             invocationInfo.getLogDirectoryPath(),
-            invocationInfo.getBuildId()));
+            invocationInfo.getBuildId(),
+            bgTaskManager));
     if (buckConfig.isRuleKeyLoggerEnabled()) {
       eventListenersBuilder.add(
           new RuleKeyLoggerListener(

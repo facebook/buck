@@ -17,9 +17,14 @@
 package com.facebook.buck.event.listener;
 
 import com.facebook.buck.core.model.BuildId;
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.CommandEvent;
 import com.facebook.buck.event.chrome_trace.ChromeTraceBuckConfig;
+import com.facebook.buck.support.bgtasks.BackgroundTask;
+import com.facebook.buck.support.bgtasks.BackgroundTaskManager;
+import com.facebook.buck.support.bgtasks.ImmutableBackgroundTask;
+import com.facebook.buck.support.bgtasks.TaskAction;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.trace.uploader.launcher.UploaderLauncher;
 import com.facebook.buck.util.trace.uploader.types.CompressionType;
@@ -27,6 +32,7 @@ import com.google.common.eventbus.Subscribe;
 import java.net.URI;
 import java.nio.file.Path;
 import java.util.Optional;
+import org.immutables.value.Value;
 
 /** Upload the buck log file to the trace endpoint when the build is finished. */
 public class LogUploaderListener implements BuckEventListener {
@@ -36,18 +42,19 @@ public class LogUploaderListener implements BuckEventListener {
   private final Path logFilePath;
   private final Path logDirectoryPath;
   private final BuildId buildId;
+  private final BackgroundTaskManager bgTaskManager;
 
   public LogUploaderListener(
-      ChromeTraceBuckConfig config, Path logFilePath, Path logDirectoryPath, BuildId buildId) {
+      ChromeTraceBuckConfig config,
+      Path logFilePath,
+      Path logDirectoryPath,
+      BuildId buildId,
+      BackgroundTaskManager bgTaskManager) {
     this.config = config;
     this.logFilePath = logFilePath;
     this.logDirectoryPath = logDirectoryPath;
     this.buildId = buildId;
-  }
-
-  @Override
-  public synchronized void close() {
-    uploadLogIfConfigured();
+    this.bgTaskManager = bgTaskManager;
   }
 
   @Subscribe
@@ -60,15 +67,57 @@ public class LogUploaderListener implements BuckEventListener {
     commandExitCode = Optional.of(interrupted.getExitCode());
   }
 
-  private void uploadLogIfConfigured() {
+  @Override
+  public synchronized void close() {
     Optional<URI> traceUploadUri = config.getTraceUploadUri();
     if (!traceUploadUri.isPresent()
         || !config.getLogUploadMode().shouldUploadLogs(commandExitCode)) {
       return;
     }
 
-    Path logFile = logDirectoryPath.resolve("upload-build-log.log");
-    UploaderLauncher.uploadInBackground(
-        buildId, logFilePath, "build_log", traceUploadUri.get(), logFile, CompressionType.NONE);
+    LogUploaderListenerCloseArgs args =
+        LogUploaderListenerCloseArgs.of(
+            traceUploadUri.get(), logDirectoryPath, logFilePath, buildId);
+    BackgroundTask<LogUploaderListenerCloseArgs> task =
+        ImmutableBackgroundTask.<LogUploaderListenerCloseArgs>builder()
+            .setAction(new LogUploaderListenerCloseAction())
+            .setActionArgs(args)
+            .build();
+    bgTaskManager.schedule(task, "LogUploaderListener_close");
+  }
+
+  /**
+   * {@link TaskAction} implementation for close() in {@link LogUploaderListener}. Uploads log file
+   * in background.
+   */
+  static class LogUploaderListenerCloseAction implements TaskAction<LogUploaderListenerCloseArgs> {
+    @Override
+    public void run(LogUploaderListenerCloseArgs args) {
+      Path logFile = args.getLogDirectoryPath().resolve("upload-build-log.log");
+      UploaderLauncher.uploadInBackground(
+          args.getBuildId(),
+          args.getLogFilePath(),
+          "build_log",
+          args.getTraceUploadURI(),
+          logFile,
+          CompressionType.NONE);
+    }
+  }
+
+  /** Task arguments passed to {@link LogUploaderListenerCloseAction}. */
+  @Value.Immutable
+  @BuckStyleImmutable
+  abstract static class AbstractLogUploaderListenerCloseArgs {
+    @Value.Parameter
+    public abstract URI getTraceUploadURI();
+
+    @Value.Parameter
+    public abstract Path getLogDirectoryPath();
+
+    @Value.Parameter
+    public abstract Path getLogFilePath();
+
+    @Value.Parameter
+    public abstract BuildId getBuildId();
   }
 }
