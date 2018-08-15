@@ -79,7 +79,6 @@ import java.util.SortedMap;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.concurrent.Executors;
-import java.util.stream.Stream;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -95,12 +94,13 @@ public class TargetsCommandTest {
   private ListeningExecutorService executor;
   private CapturingConsoleEventListener capturingConsoleEventListener;
 
-  private Stream<TargetNode<?>> buildTargetNodes(ProjectFilesystem filesystem, String buildTarget) {
+  private SortedSet<TargetNode<?>> buildTargetNodes(
+      ProjectFilesystem filesystem, String buildTarget) {
     SortedSet<TargetNode<?>> buildRules = new TreeSet<>();
     BuildTarget target = BuildTargetFactory.newInstance(filesystem.getRootPath(), buildTarget);
     TargetNode<?> node = JavaLibraryBuilder.createBuilder(target).build();
     buildRules.add(node);
-    return buildRules.stream();
+    return buildRules;
   }
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
@@ -143,7 +143,7 @@ public class TargetsCommandTest {
   @Test
   public void testJsonOutputForBuildTarget() throws IOException, BuildFileParseException {
     // run `buck targets` on the build file and parse the observed JSON.
-    Stream<TargetNode<?>> nodes = buildTargetNodes(filesystem, "//:test-library");
+    SortedSet<TargetNode<?>> nodes = buildTargetNodes(filesystem, "//:test-library");
 
     targetsCommand.printJsonForTargets(
         params, executor, nodes, ImmutableMap.of(), ImmutableSet.of());
@@ -213,7 +213,7 @@ public class TargetsCommandTest {
   @Test
   public void testJsonOutputForMissingBuildTarget() throws BuildFileParseException {
     // nonexistent target should not exist.
-    Stream<TargetNode<?>> buildRules = buildTargetNodes(filesystem, "//:nonexistent");
+    SortedSet<TargetNode<?>> buildRules = buildTargetNodes(filesystem, "//:nonexistent");
     targetsCommand.printJsonForTargets(
         params, executor, buildRules, ImmutableMap.of(), ImmutableSet.of());
 

@@ -388,8 +388,8 @@ public class TargetsCommand extends AbstractCommand {
     if (shouldUseJsonFormat()) {
       ImmutableSortedSet.Builder<BuildTarget> keysBuilder = ImmutableSortedSet.naturalOrder();
       keysBuilder.addAll(showRulesResult.keySet());
-      Stream<TargetNode<?>> matchingNodes =
-          targetGraphAndBuildTargetsForShowRules.getTargetGraph().streamAll(keysBuilder.build());
+      Iterable<TargetNode<?>> matchingNodes =
+          targetGraphAndBuildTargetsForShowRules.getTargetGraph().getAll(keysBuilder.build());
       printJsonForTargets(params, executor, matchingNodes, showRulesResult, outputAttributes.get());
     } else {
       printShowRules(showRulesResult, params);
@@ -588,11 +588,7 @@ public class TargetsCommand extends AbstractCommand {
       throws BuildFileParseException {
     if (shouldUseJsonFormat()) {
       printJsonForTargets(
-          params,
-          executor,
-          matchingNodes.values().stream(),
-          ImmutableMap.of(),
-          outputAttributes.get());
+          params, executor, matchingNodes.values(), ImmutableMap.of(), outputAttributes.get());
     } else if (print0) {
       printNullDelimitedTargets(matchingNodes.keySet(), params.getConsole().getStdOut());
     } else {
@@ -833,7 +829,7 @@ public class TargetsCommand extends AbstractCommand {
   void printJsonForTargets(
       CommandRunnerParams params,
       ListeningExecutorService executor,
-      Stream<TargetNode<?>> targetNodes,
+      Iterable<TargetNode<?>> targetNodes,
       ImmutableMap<BuildTarget, TargetResult> targetResults,
       ImmutableSet<String> outputAttributes)
       throws BuildFileParseException {
