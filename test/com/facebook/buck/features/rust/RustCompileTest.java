@@ -102,7 +102,7 @@ public class RustCompileTest {
       }
 
       @Override
-      public Iterable<Arg> linkWhole(Arg input) {
+      public Iterable<Arg> linkWhole(Arg input, SourcePathResolver pathResolver) {
         return null;
       }
 

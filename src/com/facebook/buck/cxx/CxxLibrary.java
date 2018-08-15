@@ -29,6 +29,7 @@ import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
 import com.facebook.buck.core.rules.impl.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.HeaderVisibility;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
@@ -344,8 +345,10 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
                         ? CxxDescriptionEnhancer.STATIC_FLAVOR
                         : CxxDescriptionEnhancer.STATIC_PIC_FLAVOR);
         if (linkWhole || forceLinkWhole) {
+          SourcePathResolver pathResolver =
+              DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
           Linker linker = cxxPlatform.getLd().resolve(graphBuilder);
-          linkerArgsBuilder.addAll(linker.linkWhole(archive.toArg()));
+          linkerArgsBuilder.addAll(linker.linkWhole(archive.toArg(), pathResolver));
         } else {
           Arg libraryArg = archive.toArg();
           if (libraryArg instanceof SourcePathArg) {

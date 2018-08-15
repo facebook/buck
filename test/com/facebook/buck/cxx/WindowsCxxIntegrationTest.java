@@ -69,6 +69,14 @@ public class WindowsCxxIntegrationTest {
   }
 
   @Test
+  public void simpleBinaryWithWholeLib() throws IOException {
+    ProcessResult runResult =
+        workspace.runBuckCommand("run", "//app_wholelib:app_wholelib#windows-x86_64");
+    runResult.assertSuccess();
+    assertThat(runResult.getStdout(), Matchers.containsString("hello from lib"));
+  }
+
+  @Test
   public void simpleBinaryIsExecutableByCmd() throws IOException {
     ProcessResult runResult = workspace.runBuckCommand("build", "//app:log");
     runResult.assertSuccess();

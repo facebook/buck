@@ -920,7 +920,10 @@ public class HaskellLibraryDescription
                     args.isEnableProfiling());
             linkArgs =
                 args.getLinkWhole() || forceLinkWhole
-                    ? cxxPlatform.getLd().resolve(graphBuilder).linkWhole(archive.toArg())
+                    ? cxxPlatform
+                        .getLd()
+                        .resolve(graphBuilder)
+                        .linkWhole(archive.toArg(), pathResolver)
                     : ImmutableList.of(archive.toArg());
             break;
           case SHARED:

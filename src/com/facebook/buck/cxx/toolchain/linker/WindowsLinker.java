@@ -21,12 +21,14 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.toolchain.tool.DelegatingTool;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.file.FileScrubber;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.args.HasSourcePath;
 import com.facebook.buck.rules.args.StringArg;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -64,8 +66,14 @@ public class WindowsLinker extends DelegatingTool implements Linker, HasImportLi
   }
 
   @Override
-  public Iterable<Arg> linkWhole(Arg input) {
-    return ImmutableList.of();
+  public Iterable<Arg> linkWhole(Arg input, SourcePathResolver resolver) {
+    if (input instanceof HasSourcePath) {
+      SourcePath path = ((HasSourcePath) input).getPath();
+      String fileName = resolver.getAbsolutePath(path).getFileName().toString();
+      return ImmutableList.of(input, StringArg.of("/WHOLEARCHIVE:" + fileName));
+    }
+    throw new UnsupportedOperationException(
+        "linkWhole requires an arg that implements HasSourcePath");
   }
 
   @Override

@@ -1,0 +1,10 @@
+cxx_library(
+    name = "lib",
+    srcs = [
+        "lib.cpp",
+    ],
+    link_style = "static",
+    link_whole = True,
+    preferred_linkage = "static",
+    visibility = ["PUBLIC"],
+)

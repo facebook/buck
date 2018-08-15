@@ -60,7 +60,7 @@ public class DarwinLinker extends DelegatingTool implements Linker, HasLinkerMap
   }
 
   @Override
-  public Iterable<Arg> linkWhole(Arg input) {
+  public Iterable<Arg> linkWhole(Arg input, SourcePathResolver resolver) {
     return ImmutableList.of(
         StringArg.of("-Xlinker"), StringArg.of("-force_load"), StringArg.of("-Xlinker"), input);
   }

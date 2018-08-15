@@ -880,7 +880,8 @@ class NativeLibraryMergeEnhancer {
                   cxxPlatform, Linker.LinkableDepType.STATIC_PIC, graphBuilder);
           builder.add(
               staticPic.withArgs(
-                  FluentIterable.from(staticPic.getArgs()).transformAndConcat(linker::linkWhole)));
+                  FluentIterable.from(staticPic.getArgs())
+                      .transformAndConcat(arg -> linker.linkWhole(arg, pathResolver))));
         }
       }
       return NativeLinkableInput.concat(builder.build());

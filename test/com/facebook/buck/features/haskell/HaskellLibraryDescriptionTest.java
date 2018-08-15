@@ -130,7 +130,7 @@ public class HaskellLibraryDescriptionTest {
     // Lookup the link whole flags.
     Linker linker = CxxPlatformUtils.DEFAULT_PLATFORM.getLd().resolve(graphBuilder);
     ImmutableList<String> linkWholeFlags =
-        FluentIterable.from(linker.linkWhole(StringArg.of("sentinel")))
+        FluentIterable.from(linker.linkWhole(StringArg.of("sentinel"), pathResolver))
             .transformAndConcat((input) -> Arg.stringifyList(input, pathResolver))
             .filter(Predicates.not("sentinel"::equals))
             .toList();

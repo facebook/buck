@@ -28,6 +28,7 @@ import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.toolchain.tool.DelegatingTool;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.BuildCellRelativePath;
@@ -65,7 +66,7 @@ public class GnuLinker extends DelegatingTool implements Linker {
   }
 
   @Override
-  public Iterable<Arg> linkWhole(Arg input) {
+  public Iterable<Arg> linkWhole(Arg input, SourcePathResolver resolver) {
     return ImmutableList.of(
         StringArg.of("-Wl,--whole-archive"), input, StringArg.of("-Wl,--no-whole-archive"));
   }
