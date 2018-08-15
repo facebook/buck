@@ -96,6 +96,8 @@ public interface AndroidGraphEnhancerArgs extends HasDuplicateAndroidResourceTyp
 
   Optional<Map<String, List<String>>> getApplicationModuleDependencies();
 
+  Optional<List<BuildTarget>> getApplicationModuleBlacklist();
+
   @Value.Default
   default boolean getIsCacheable() {
     return true;

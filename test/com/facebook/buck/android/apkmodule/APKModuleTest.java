@@ -368,6 +368,7 @@ public class APKModuleTest {
         new APKModuleGraph(
             Optional.of(seedConfigMap),
             Optional.of(appModuleDependencies),
+            Optional.empty(),
             graph,
             androidBinaryTarget);
 
@@ -513,6 +514,7 @@ public class APKModuleTest {
         new APKModuleGraph(
             Optional.of(seedConfigMap),
             Optional.of(appModuleDependencies),
+            Optional.empty(),
             graph,
             androidBinaryTarget);
 
@@ -674,6 +676,7 @@ public class APKModuleTest {
         new APKModuleGraph(
             Optional.of(seedConfigMap),
             Optional.of(appModuleDependencies),
+            Optional.empty(),
             graph,
             androidBinaryTarget);
 
@@ -840,6 +843,7 @@ public class APKModuleTest {
         new APKModuleGraph(
             Optional.of(seedConfigMap),
             Optional.of(appModuleDependencies),
+            Optional.empty(),
             graph,
             androidBinaryTarget);
 

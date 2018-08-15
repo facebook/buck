@@ -80,6 +80,100 @@ android_binary(
 )
 
 android_binary(
+    name = "app_modular_manifest_debug_with_shared",
+    application_module_configs = {
+        "small_with_shared_with_no_resource_deps": ["//java/com/sample/small_with_shared:small_with_shared_with_no_resource_deps"],
+    },
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifest.xml",
+    module_manifest_skeleton = "ModuleManifest.xml",
+    package_type = "debug",
+    primary_dex_patterns = [
+        "/MyApplication^",
+    ],
+    use_split_dex = True,
+    deps = [
+        "//java/com/sample/app:app",
+        "//java/com/sample/lib:lib",
+        "//java/com/sample/small_with_shared:small_with_shared_with_no_resource_deps",
+        "//res/com/sample/base:base",
+    ],
+)
+
+android_binary(
+    name = "app_modular_manifest_debug_blacklist_shared",
+    application_module_blacklist = [
+        "//java/com/sample/shared:shared_with_no_resource_deps",
+    ],
+    application_module_configs = {
+        "small_with_shared_with_no_resource_deps": ["//java/com/sample/small_with_shared:small_with_shared_with_no_resource_deps"],
+    },
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifest.xml",
+    module_manifest_skeleton = "ModuleManifest.xml",
+    package_type = "debug",
+    primary_dex_patterns = [
+        "/MyApplication^",
+    ],
+    use_split_dex = True,
+    deps = [
+        "//java/com/sample/app:app",
+        "//java/com/sample/lib:lib",
+        "//java/com/sample/small_with_shared:small_with_shared_with_no_resource_deps",
+        "//res/com/sample/base:base",
+    ],
+)
+
+android_binary(
+    name = "app_modular_manifest_debug_blacklist_shared_multiple",
+    application_module_blacklist = [
+        "//java/com/sample/shared:shared_with_no_resource_deps",
+    ],
+    application_module_configs = {
+        "small_with_shared_with_no_resource_deps": ["//java/com/sample/small_with_shared:small_with_shared_with_no_resource_deps"],
+        "small_with_shared2_with_no_resource_deps": ["//java/com/sample/small_with_shared2:small_with_shared2_with_no_resource_deps"],
+    },
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifest.xml",
+    module_manifest_skeleton = "ModuleManifest.xml",
+    package_type = "debug",
+    primary_dex_patterns = [
+        "/MyApplication^",
+    ],
+    use_split_dex = True,
+    deps = [
+        "//java/com/sample/app:app",
+        "//java/com/sample/lib:lib",
+        "//java/com/sample/small_with_shared:small_with_shared_with_no_resource_deps",
+        "//java/com/sample/small_with_shared2:small_with_shared2_with_no_resource_deps",
+        "//res/com/sample/base:base",
+    ],
+)
+
+android_binary(
+    name = "app_modular_manifest_debug_shared_multiple",
+    application_module_configs = {
+        "small_with_shared_with_no_resource_deps": ["//java/com/sample/small_with_shared:small_with_shared_with_no_resource_deps"],
+        "small_with_shared2_with_no_resource_deps": ["//java/com/sample/small_with_shared2:small_with_shared2_with_no_resource_deps"],
+    },
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifest.xml",
+    module_manifest_skeleton = "ModuleManifest.xml",
+    package_type = "debug",
+    primary_dex_patterns = [
+        "/MyApplication^",
+    ],
+    use_split_dex = True,
+    deps = [
+        "//java/com/sample/app:app",
+        "//java/com/sample/lib:lib",
+        "//java/com/sample/small_with_shared:small_with_shared_with_no_resource_deps",
+        "//java/com/sample/small_with_shared2:small_with_shared2_with_no_resource_deps",
+        "//res/com/sample/base:base",
+    ],
+)
+
+android_binary(
     name = "app_modular_manifest_aapt2_debug",
     aapt_mode = "aapt2",
     application_module_configs = {

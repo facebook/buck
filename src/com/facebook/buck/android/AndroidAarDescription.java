@@ -122,7 +122,11 @@ public class AndroidAarDescription implements DescriptionWithTargetGraph<Android
 
     APKModuleGraph apkModuleGraph =
         new APKModuleGraph(
-            Optional.empty(), Optional.empty(), context.getTargetGraph(), buildTarget);
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            context.getTargetGraph(),
+            buildTarget);
 
     /* assemble dirs */
     AndroidPackageableCollector collector =

@@ -30,13 +30,17 @@ import org.hamcrest.Matchers;
 public class DexInspector {
   private final Dex dex;
 
-  public DexInspector(Path apkFile) throws IOException {
+  public DexInspector(Path apkFile, String path) throws IOException {
     try (FileSystem zipFile = FileSystems.newFileSystem(apkFile, null)) {
-      Path dexFilePath = zipFile.getPath("classes.dex");
+      Path dexFilePath = zipFile.getPath(path);
       try (InputStream inputStream = Files.newInputStream(dexFilePath)) {
         dex = new Dex(inputStream);
       }
     }
+  }
+
+  public DexInspector(Path apkFile) throws IOException {
+    this(apkFile, "classes.dex");
   }
 
   public void assertTypeExists(String typeName) {
