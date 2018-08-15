@@ -45,6 +45,22 @@ android_bundle(
 )
 
 android_bundle(
+    name = "app_bundle_1",
+    dex_compression = "jar",
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifest.xml",
+    primary_dex_patterns = [
+        "/MyApplication^",
+    ],
+    use_split_dex = True,
+    deps = [
+        "//java/com/sample/app:app",
+        "//java/com/sample/lib:lib",
+        "//native/cxx:lib",
+    ],
+)
+
+android_bundle(
     name = "app_bundle_wrong_aapt_mode",
     aapt_mode = "aapt1",
     keystore = "//keystores:debug",
