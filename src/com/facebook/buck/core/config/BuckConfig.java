@@ -61,6 +61,7 @@ import java.util.OptionalInt;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 /** Structured representation of data read from a {@code .buckconfig} file. */
 public class BuckConfig {
@@ -223,23 +224,17 @@ public class BuckConfig {
     Optional<ImmutableList<String>> rawPaths =
         config.getOptionalListWithoutComments(section, field);
 
-    if (rawPaths.isPresent()) {
-      ImmutableList<Path> paths =
-          rawPaths
-              .get()
-              .stream()
-              .map(
-                  input ->
-                      convertPath(
-                          input,
-                          resolve,
-                          String.format(
-                              "Error in %s.%s: Cell-relative path not found", section, field)))
-              .collect(ImmutableList.toImmutableList());
-      return Optional.of(paths);
+    if (!rawPaths.isPresent()) {
+      return Optional.empty();
     }
 
-    return Optional.empty();
+    Stream<Path> paths = rawPaths.get().stream().map(this::getPathFromVfs);
+    if (resolve) {
+      paths = paths.map(projectFilesystem::getPathForRelativePath);
+    }
+    paths = paths.filter(projectFilesystem::exists);
+
+    return Optional.of(paths.collect(ImmutableList.toImmutableList()));
   }
 
   public ImmutableSet<String> getBuildTargetForAliasAsString(String possiblyFlavoredAlias) {
@@ -845,12 +840,6 @@ public class BuckConfig {
     return isCellRootRelative
         ? checkPathExistsAndResolve(pathString, error)
         : getPathFromVfs(pathString);
-  }
-
-  private Path convertPath(String pathString, boolean resolve, String error) {
-    return resolve
-        ? checkPathExistsAndResolve(pathString, error)
-        : checkPathExists(pathString, error);
   }
 
   public Path checkPathExistsAndResolve(String pathString, String errorMsg) {

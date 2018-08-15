@@ -178,8 +178,7 @@ public class ParserConfigTest {
             .build()
             .getView(ParserConfig.class);
 
-    thrown.expect(HumanReadableException.class);
-    parserConfig.getReadOnlyPaths();
+    assertTrue(parserConfig.getReadOnlyPaths().get().isEmpty());
   }
 
   @Test
