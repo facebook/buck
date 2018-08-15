@@ -20,8 +20,13 @@ import com.facebook.buck.artifact_cache.ArtifactCacheEvent;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEventFetchData;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEventStoreData;
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.support.bgtasks.BackgroundTask;
+import com.facebook.buck.support.bgtasks.BackgroundTaskManager;
+import com.facebook.buck.support.bgtasks.ImmutableBackgroundTask;
+import com.facebook.buck.support.bgtasks.TaskAction;
 import com.facebook.buck.util.network.BatchingLogger;
 import com.facebook.buck.util.network.HiveRowFormatter;
 import com.google.common.eventbus.Subscribe;
@@ -32,6 +37,7 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import org.immutables.value.Value;
 
 /** Listens to HttpArtifactCacheEvents and logs stats data in Hive row format. */
 public class HttpArtifactCacheEventListener implements BuckEventListener {
@@ -44,26 +50,15 @@ public class HttpArtifactCacheEventListener implements BuckEventListener {
   private final BatchingLogger storeRequestLogger;
   private final BatchingLogger fetchRequestLogger;
 
+  private final BackgroundTaskManager bgTaskManager;
+
   public HttpArtifactCacheEventListener(
-      BatchingLogger storeRequestLogger, BatchingLogger fetchRequestLogger) {
+      BatchingLogger storeRequestLogger,
+      BatchingLogger fetchRequestLogger,
+      BackgroundTaskManager bgTaskManager) {
     this.storeRequestLogger = storeRequestLogger;
     this.fetchRequestLogger = fetchRequestLogger;
-  }
-
-  @Override
-  public void close() {
-    List<ListenableFuture<Void>> futures = new ArrayList<>();
-    futures.add(fetchRequestLogger.forceFlush());
-    futures.add(storeRequestLogger.forceFlush());
-    try {
-      Futures.allAsList(futures).get(TEAR_DOWN_SECONDS, TimeUnit.SECONDS);
-    } catch (InterruptedException e) {
-      LOG.warn(e, "Flushing of logs was interrupted.");
-    } catch (ExecutionException e) {
-      LOG.warn(e, "Execution of log flushing failed.");
-    } catch (TimeoutException e) {
-      LOG.warn(e, "Flushing the logs timed out.");
-    }
+    this.bgTaskManager = bgTaskManager;
   }
 
   @Subscribe
@@ -105,5 +100,51 @@ public class HttpArtifactCacheEventListener implements BuckEventListener {
               .build();
       storeRequestLogger.log(hiveRow);
     }
+  }
+
+  @Override
+  public void close() {
+    HttpArtifactCacheEventListenerCloseArgs args =
+        HttpArtifactCacheEventListenerCloseArgs.of(fetchRequestLogger, storeRequestLogger);
+    BackgroundTask<HttpArtifactCacheEventListenerCloseArgs> task =
+        ImmutableBackgroundTask.<HttpArtifactCacheEventListenerCloseArgs>builder()
+            .setAction(new HttpArtifactCacheEventListenerCloseAction())
+            .setActionArgs(args)
+            .build();
+    bgTaskManager.schedule(task, "HttpArtifactCacheEventListener_close");
+  }
+
+  /**
+   * {@link TaskAction} implementation for {@link HttpArtifactCacheEventListener}. Flushes fetch and
+   * store loggers.
+   */
+  static class HttpArtifactCacheEventListenerCloseAction
+      implements TaskAction<HttpArtifactCacheEventListenerCloseArgs> {
+    @Override
+    public void run(HttpArtifactCacheEventListenerCloseArgs args) {
+      List<ListenableFuture<Void>> futures = new ArrayList<>();
+      futures.add(args.getFetchRequestLogger().forceFlush());
+      futures.add(args.getStoreRequestLogger().forceFlush());
+      try {
+        Futures.allAsList(futures).get(TEAR_DOWN_SECONDS, TimeUnit.SECONDS);
+      } catch (InterruptedException e) {
+        LOG.warn(e, "Flushing of logs was interrupted.");
+      } catch (ExecutionException e) {
+        LOG.warn(e, "Execution of log flushing failed.");
+      } catch (TimeoutException e) {
+        LOG.warn(e, "Flushing the logs timed out.");
+      }
+    }
+  }
+
+  /** Arguments to {@link HttpArtifactCacheEventListenerCloseAction}. */
+  @Value.Immutable
+  @BuckStyleImmutable
+  abstract static class AbstractHttpArtifactCacheEventListenerCloseArgs {
+    @Value.Parameter
+    public abstract BatchingLogger getFetchRequestLogger();
+
+    @Value.Parameter
+    public abstract BatchingLogger getStoreRequestLogger();
   }
 }
