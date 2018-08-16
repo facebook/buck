@@ -19,25 +19,3 @@ kotlin_library(
         "//com/example/ap/kotlinannotation:annotation-lib",
     ],
 )
-
-kotlin_library(
-    name = "kotlin",
-    annotation_processing_tool = "javac",
-    srcs = glob([
-        "*.kt",
-        "*.java",
-    ]),
-    annotation_processor_deps = [
-        "//com/example/ap/javaap:ap-lib",
-    ],
-    annotation_processors = [
-        "com.example.ap.javaap.AnnotationProcessor",
-    ],
-    visibility = [
-        "PUBLIC",
-    ],
-    deps = [
-        "//com/example/ap/javaannotation:annotation-lib",
-        "//com/example/ap/kotlinannotation:annotation-lib",
-    ],
-)
