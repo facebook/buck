@@ -31,6 +31,7 @@ import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
 import com.facebook.buck.artifact_cache.config.ArtifactCacheMode;
 import com.facebook.buck.core.build.event.BuildEvent;
 import com.facebook.buck.core.build.event.BuildRuleEvent;
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.CommandEvent;
@@ -41,6 +42,10 @@ import com.facebook.buck.log.InvocationInfo;
 import com.facebook.buck.log.PerfTimesStats;
 import com.facebook.buck.log.views.JsonViews;
 import com.facebook.buck.parser.ParseEvent;
+import com.facebook.buck.support.bgtasks.BackgroundTask;
+import com.facebook.buck.support.bgtasks.BackgroundTaskManager;
+import com.facebook.buck.support.bgtasks.ImmutableBackgroundTask;
+import com.facebook.buck.support.bgtasks.TaskAction;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.json.ObjectMappers;
@@ -61,10 +66,10 @@ import java.nio.file.Path;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.annotation.Nullable;
+import org.immutables.value.Value;
 
 public class MachineReadableLoggerListener implements BuckEventListener {
 
@@ -78,6 +83,8 @@ public class MachineReadableLoggerListener implements BuckEventListener {
   private final ProjectFilesystem filesystem;
   private final ObjectWriter objectWriter;
   private BufferedOutputStream outputStream;
+
+  private final BackgroundTaskManager bgTaskManager;
 
   private ConcurrentMap<ArtifactCacheMode, AtomicInteger> cacheModeHits = Maps.newConcurrentMap();
   private ConcurrentMap<ArtifactCacheMode, AtomicInteger> cacheModeErrors = Maps.newConcurrentMap();
@@ -98,11 +105,13 @@ public class MachineReadableLoggerListener implements BuckEventListener {
       InvocationInfo info,
       ProjectFilesystem filesystem,
       ExecutorService executor,
-      ImmutableSet<ArtifactCacheMode> cacheModes)
+      ImmutableSet<ArtifactCacheMode> cacheModes,
+      BackgroundTaskManager bgTaskManager)
       throws FileNotFoundException {
     this.info = info;
     this.filesystem = filesystem;
     this.executor = executor;
+    this.bgTaskManager = bgTaskManager;
 
     for (ArtifactCacheMode mode : cacheModes) {
       cacheModeHits.put(mode, new AtomicInteger(0));
@@ -241,52 +250,72 @@ public class MachineReadableLoggerListener implements BuckEventListener {
 
   @Override
   public void close() {
-    // IMPORTANT: logging the ExitCode must happen on the executor, otherwise random
-    // log lines will be overwritten as outputStream access is not thread safe.
+    executor.submit(
+        () -> {
+          try {
+            if (latestPerfTimesStats != null) {
+              writeToLogImpl(PREFIX_PERFTIMES, latestPerfTimesStats);
+            }
+            writeToLogImpl(
+                PREFIX_CACHE_STATS,
+                CacheCountersSummary.of(
+                    cacheModeHits,
+                    cacheModeErrors,
+                    cacheModeHits.values().stream().mapToInt(AtomicInteger::get).sum(),
+                    cacheModeErrors.values().stream().mapToInt(AtomicInteger::get).sum(),
+                    cacheMisses.get(),
+                    cacheIgnores.get(),
+                    localKeyUnchangedHits.get(),
+                    cacheUploadSuccessCount,
+                    cacheUploadFailureCount));
 
-    @SuppressWarnings("unused")
-    Future<?> unused =
-        executor.submit(
-            () -> {
-              try {
-                if (latestPerfTimesStats != null) {
-                  writeToLogImpl(PREFIX_PERFTIMES, latestPerfTimesStats);
-                }
-                writeToLogImpl(
-                    PREFIX_CACHE_STATS,
-                    CacheCountersSummary.of(
-                        cacheModeHits,
-                        cacheModeErrors,
-                        cacheModeHits.values().stream().mapToInt(AtomicInteger::get).sum(),
-                        cacheModeErrors.values().stream().mapToInt(AtomicInteger::get).sum(),
-                        cacheMisses.get(),
-                        cacheIgnores.get(),
-                        localKeyUnchangedHits.get(),
-                        cacheUploadSuccessCount,
-                        cacheUploadFailureCount));
+            outputStream.write(
+                String.format(
+                        PREFIX_EXIT_CODE + " {\"exitCode\":%d}",
+                        exitCode.map(code -> code.getCode()).orElse(-1))
+                    .getBytes(Charsets.UTF_8));
 
-                outputStream.write(
-                    String.format(
-                            PREFIX_EXIT_CODE + " {\"exitCode\":%d}",
-                            exitCode.map(code -> code.getCode()).orElse(-1))
-                        .getBytes(Charsets.UTF_8));
+            outputStream.close();
+          } catch (IOException e) {
+            LOG.warn("Failed to close output stream.");
+          }
+        });
+    BackgroundTask<MachineReadableLoggerListenerCloseArgs> task =
+        ImmutableBackgroundTask.<MachineReadableLoggerListenerCloseArgs>builder()
+            .setAction(new MachineReadableLoggerListenerCloseAction())
+            .setActionArgs(MachineReadableLoggerListenerCloseArgs.of(executor))
+            .build();
+    bgTaskManager.schedule(task, "MachineReadableLoggerListener_close");
+  }
 
-                outputStream.close();
-              } catch (IOException e) {
-                LOG.warn("Failed to close output stream.");
-              }
-            });
-    executor.shutdown();
-    // Allow SHUTDOWN_TIMEOUT_SECONDS seconds for already scheduled writeToLog calls
-    // to complete.
-    try {
-      if (!executor.awaitTermination(SHUTDOWN_TIMEOUT_SECONDS, TimeUnit.SECONDS)) {
-        String error =
-            "Machine readable log failed to complete all jobs within timeout during shutdown";
-        LOG.error(error);
+  /**
+   * {@link TaskAction} implementation for {@link MachineReadableLoggerListener}. Waits for output
+   * executor to finish and close.
+   */
+  static class MachineReadableLoggerListenerCloseAction
+      implements TaskAction<MachineReadableLoggerListenerCloseArgs> {
+    @Override
+    public void run(MachineReadableLoggerListenerCloseArgs args) {
+      args.getExecutor().shutdown();
+      // Allow SHUTDOWN_TIMEOUT_SECONDS seconds for already scheduled writeToLog calls
+      // to complete.
+      try {
+        if (!args.getExecutor().awaitTermination(SHUTDOWN_TIMEOUT_SECONDS, TimeUnit.SECONDS)) {
+          String error =
+              "Machine readable log failed to complete all jobs within timeout during shutdown";
+          LOG.error(error);
+        }
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
       }
-    } catch (InterruptedException e) {
-      Thread.currentThread().interrupt();
     }
+  }
+
+  /** Arguments to {@link MachineReadableLoggerListenerCloseAction}. */
+  @Value.Immutable
+  @BuckStyleImmutable
+  abstract static class AbstractMachineReadableLoggerListenerCloseArgs {
+    @Value.Parameter
+    public abstract ExecutorService getExecutor();
   }
 }

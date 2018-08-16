@@ -21,10 +21,15 @@ import com.facebook.buck.core.rulekey.BuildRuleKeys;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rulekey.RuleKeyDiagnosticsMode;
 import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.InvocationInfo;
+import com.facebook.buck.support.bgtasks.BackgroundTask;
+import com.facebook.buck.support.bgtasks.BackgroundTaskManager;
+import com.facebook.buck.support.bgtasks.ImmutableBackgroundTask;
+import com.facebook.buck.support.bgtasks.TaskAction;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.ThrowingPrintWriter;
 import com.google.common.collect.ImmutableList;
@@ -44,6 +49,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.annotation.concurrent.GuardedBy;
+import org.immutables.value.Value;
 
 public class RuleKeyDiagnosticsListener implements BuckEventListener {
   private static final Logger LOG = Logger.get(RuleKeyDiagnosticsListener.class);
@@ -55,6 +61,8 @@ public class RuleKeyDiagnosticsListener implements BuckEventListener {
   private final ProjectFilesystem projectFilesystem;
   private final InvocationInfo info;
   private final ExecutorService outputExecutor;
+
+  private final BackgroundTaskManager bgTaskManager;
 
   private final int minDiagKeysForAutoFlush;
   private final int minSizeForAutoFlush;
@@ -70,7 +78,10 @@ public class RuleKeyDiagnosticsListener implements BuckEventListener {
   private final ConcurrentHashMap<BuildRule, RuleInfo> rulesInfo = new ConcurrentHashMap<>();
 
   public RuleKeyDiagnosticsListener(
-      ProjectFilesystem projectFilesystem, InvocationInfo info, ExecutorService outputExecutor) {
+      ProjectFilesystem projectFilesystem,
+      InvocationInfo info,
+      ExecutorService outputExecutor,
+      BackgroundTaskManager bgTaskManager) {
     this.projectFilesystem = projectFilesystem;
     this.info = info;
     this.outputExecutor = outputExecutor;
@@ -78,6 +89,7 @@ public class RuleKeyDiagnosticsListener implements BuckEventListener {
     this.minSizeForAutoFlush = DEFAULT_MIN_SIZE_FOR_AUTO_FLUSH;
     this.diagKeys = new ArrayList<>();
     this.diagKeysSize = 0;
+    this.bgTaskManager = bgTaskManager;
   }
 
   @Subscribe
@@ -105,18 +117,6 @@ public class RuleKeyDiagnosticsListener implements BuckEventListener {
                       event.getOutputHash(),
                       diagData.deps));
             });
-  }
-
-  @Override
-  public void close() {
-    submitFlushDiagKeys();
-    outputExecutor.execute(this::writeDiagGraph);
-    outputExecutor.shutdown();
-    try {
-      outputExecutor.awaitTermination(1, TimeUnit.HOURS);
-    } catch (InterruptedException e) {
-      Thread.currentThread().interrupt();
-    }
   }
 
   /** Diagnostic keys flushing logic. */
@@ -224,6 +224,43 @@ public class RuleKeyDiagnosticsListener implements BuckEventListener {
     } catch (IOException e) {
       LOG.error(e, "Failed to write %s.", path);
     }
+  }
+
+  @Override
+  public void close() { // todo same issue w/passed function
+    submitFlushDiagKeys();
+    outputExecutor.execute(this::writeDiagGraph);
+    BackgroundTask<RuleKeyDiagnosticsListenerCloseArgs> task =
+        ImmutableBackgroundTask.<RuleKeyDiagnosticsListenerCloseArgs>builder()
+            .setAction(new RuleKeyDiagnosticsListenerCloseAction())
+            .setActionArgs(RuleKeyDiagnosticsListenerCloseArgs.of(outputExecutor))
+            .build();
+    bgTaskManager.schedule(task, "RuleKeyDiagnosticsListener_close");
+  }
+
+  /**
+   * {@link TaskAction} implementation for close() in {@link RuleKeyDiagnosticsListener}. Waits for
+   * listener's output executor to finish and close.
+   */
+  static class RuleKeyDiagnosticsListenerCloseAction
+      implements TaskAction<RuleKeyDiagnosticsListenerCloseArgs> {
+    @Override
+    public void run(RuleKeyDiagnosticsListenerCloseArgs args) {
+      args.getOutputExecutor().shutdown();
+      try {
+        args.getOutputExecutor().awaitTermination(1, TimeUnit.HOURS);
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+      }
+    }
+  }
+
+  /** Arguments to {@link RuleKeyDiagnosticsListenerCloseAction}. */
+  @Value.Immutable
+  @BuckStyleImmutable
+  abstract static class AbstractRuleKeyDiagnosticsListenerCloseArgs {
+    @Value.Parameter
+    public abstract ExecutorService getOutputExecutor();
   }
 
   private static class RuleInfo {

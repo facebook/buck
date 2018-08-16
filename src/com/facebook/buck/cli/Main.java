@@ -1744,7 +1744,8 @@ public final class Main {
               projectFilesystem,
               invocationInfo,
               MostExecutors.newSingleThreadExecutor(
-                  new CommandThreadFactory(getClass().getName(), commonThreadFactoryState))));
+                  new CommandThreadFactory(getClass().getName(), commonThreadFactoryState)),
+              bgTaskManager));
     }
 
     eventListenersBuilder.add(
@@ -1752,7 +1753,8 @@ public final class Main {
             projectFilesystem,
             invocationInfo,
             MostExecutors.newSingleThreadExecutor(
-                new CommandThreadFactory(getClass().getName(), commonThreadFactoryState))));
+                new CommandThreadFactory(getClass().getName(), commonThreadFactoryState)),
+            bgTaskManager));
 
     if (buckConfig.isMachineReadableLoggerEnabled()) {
       try {
@@ -1762,7 +1764,8 @@ public final class Main {
                 projectFilesystem,
                 MostExecutors.newSingleThreadExecutor(
                     new CommandThreadFactory(getClass().getName(), commonThreadFactoryState)),
-                artifactCacheConfig.getArtifactCacheModes()));
+                artifactCacheConfig.getArtifactCacheModes(),
+                bgTaskManager));
       } catch (FileNotFoundException e) {
         LOG.warn("Unable to open stream for machine readable log file.");
       }
