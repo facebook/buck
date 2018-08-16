@@ -51,8 +51,18 @@ public class KotlinLibraryIntegrationTest {
   }
 
   @Test
-  public void shouldAnnotationProcessorClass() throws Exception {
-    ProcessResult buildResult = workspace.runBuckCommand("build", "//com/example/ap:kotlin");
+  public void shouldAnnotationProcessClassesUsingKapt() throws Exception {
+    ProcessResult buildResult =
+        workspace.runBuckCommand(
+            "build", "//com/example/ap/annotation-processing-tool-kapt:kotlin");
+    buildResult.assertSuccess("Build should have succeeded.");
+  }
+
+  @Test
+  public void shouldAnnotationProcessClassesUsingJavac() throws Exception {
+    ProcessResult buildResult =
+        workspace.runBuckCommand(
+            "build", "//com/example/ap/annotation-processing-tool-javac:kotlin");
     buildResult.assertSuccess("Build should have succeeded.");
   }
 

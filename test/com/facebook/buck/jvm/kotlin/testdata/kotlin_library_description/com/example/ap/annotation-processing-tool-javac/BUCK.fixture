@@ -1,12 +1,15 @@
 kotlin_library(
     name = "kotlin",
+    annotation_processing_tool = "javac",
     srcs = glob([
         "*.kt",
         "*.java",
     ]),
-    plugins = [
-        "//com/example/ap/javaap:ap",
-        "//com/example/ap/kotlinap:ap",
+    annotation_processor_deps = [
+        "//com/example/ap/javaap:ap-lib",
+    ],
+    annotation_processors = [
+        "com.example.ap.javaap.AnnotationProcessor",
     ],
     visibility = [
         "PUBLIC",
