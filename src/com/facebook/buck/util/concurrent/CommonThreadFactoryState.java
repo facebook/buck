@@ -14,8 +14,8 @@
  * under the License.
  */
 
-package com.facebook.buck.log;
+package com.facebook.buck.util.concurrent;
 
-public interface ThreadIdToCommandIdMapper {
-  String threadIdToCommandId(long threadId);
+public interface CommonThreadFactoryState extends ThreadIdToCommandIdMapper {
+  void register(long threadId, String commandId);
 }

@@ -24,7 +24,8 @@ import com.facebook.buck.core.toolchain.ToolchainFactory;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
-import com.facebook.buck.log.CommandThreadFactory;
+import com.facebook.buck.log.GlobalStateManager;
+import com.facebook.buck.util.concurrent.CommandThreadFactory;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.util.Optional;
@@ -57,7 +58,8 @@ public class DxToolchainFactory implements ToolchainFactory<DxToolchain> {
                                 .getDxThreadCount()
                                 .orElse(SmartDexingStep.determineOptimalThreadCount())),
                     dxConfig.getDxMaxThreadCount().orElse(Integer.MAX_VALUE)),
-                new CommandThreadFactory("SmartDexing")));
+                new CommandThreadFactory(
+                    "SmartDexing", GlobalStateManager.singleton().getThreadToCommandRegister())));
 
     return Optional.of(DxToolchain.of(dxExecutorService));
   }

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.log;
 
+import com.facebook.buck.util.concurrent.ThreadIdToCommandIdMapper;
 import java.io.IOException;
 import java.util.logging.Level;
 

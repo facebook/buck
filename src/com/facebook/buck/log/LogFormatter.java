@@ -17,6 +17,7 @@
 package com.facebook.buck.log;
 
 import com.facebook.buck.core.util.log.appendablelogrecord.AppendableLogRecord;
+import com.facebook.buck.util.concurrent.ThreadIdToCommandIdMapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Throwables;
 import java.text.SimpleDateFormat;

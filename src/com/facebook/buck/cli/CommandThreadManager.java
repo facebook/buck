@@ -16,7 +16,8 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.log.CommandThreadFactory;
+import com.facebook.buck.log.GlobalStateManager;
+import com.facebook.buck.util.concurrent.CommandThreadFactory;
 import com.facebook.buck.util.concurrent.ConcurrencyLimit;
 import com.facebook.buck.util.concurrent.ListeningMultiSemaphore;
 import com.facebook.buck.util.concurrent.MostExecutors;
@@ -72,7 +73,10 @@ public class CommandThreadManager implements AutoCloseable {
         MostExecutors.newMultiThreadExecutor(
             new ThreadFactoryBuilder()
                 .setNameFormat(name + "-%d")
-                .setThreadFactory(new CommandThreadFactory(r -> new Thread(threadGroup, r)))
+                .setThreadFactory(
+                    new CommandThreadFactory(
+                        r -> new Thread(threadGroup, r),
+                        GlobalStateManager.singleton().getThreadToCommandRegister()))
                 .build(),
             managedThreadCount);
     this.listeningExecutorService = MoreExecutors.listeningDecorator(executorService);

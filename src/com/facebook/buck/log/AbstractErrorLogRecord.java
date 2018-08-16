@@ -21,6 +21,7 @@ import static com.facebook.buck.util.MoreThrowables.getThrowableOrigin;
 
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.core.util.log.Logger;
+import com.facebook.buck.util.concurrent.ThreadIdToCommandIdMapper;
 import com.facebook.buck.util.environment.BuckBuildType;
 import com.facebook.buck.util.network.hostname.HostnameFetching;
 import com.google.common.collect.ImmutableList;

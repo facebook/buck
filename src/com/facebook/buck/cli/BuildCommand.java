@@ -86,7 +86,7 @@ import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.listener.DistBuildClientEventListener;
 import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.log.CommandThreadFactory;
+import com.facebook.buck.log.GlobalStateManager;
 import com.facebook.buck.log.thrift.ThriftRuleKeyLogger;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.BuildTargetPatternParser;
@@ -111,6 +111,7 @@ import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.ListeningProcessExecutor;
 import com.facebook.buck.util.MoreExceptions;
 import com.facebook.buck.util.cache.FileHashCache;
+import com.facebook.buck.util.concurrent.CommandThreadFactory;
 import com.facebook.buck.util.concurrent.MostExecutors;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.facebook.buck.util.json.ObjectMappers;
@@ -834,14 +835,16 @@ public class BuildCommand extends AbstractCommand {
 
   private ListeningExecutorService createStampedeControllerExecutorService(int maxThreads) {
     CommandThreadFactory stampedeCommandThreadFactory =
-        new CommandThreadFactory("StampedeController");
+        new CommandThreadFactory(
+            "StampedeController", GlobalStateManager.singleton().getThreadToCommandRegister());
     return MoreExecutors.listeningDecorator(
         newMultiThreadExecutor(stampedeCommandThreadFactory, maxThreads));
   }
 
   private ListeningExecutorService createStampedeLocalBuildExecutorService() {
     CommandThreadFactory stampedeCommandThreadFactory =
-        new CommandThreadFactory("StampedeLocalBuild");
+        new CommandThreadFactory(
+            "StampedeLocalBuild", GlobalStateManager.singleton().getThreadToCommandRegister());
     return MoreExecutors.listeningDecorator(
         MostExecutors.newSingleThreadExecutor(stampedeCommandThreadFactory));
   }

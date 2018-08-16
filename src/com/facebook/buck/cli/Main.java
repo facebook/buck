@@ -96,7 +96,6 @@ import com.facebook.buck.io.watchman.WatchmanWatcher;
 import com.facebook.buck.io.watchman.WatchmanWatcher.FreshInstanceAction;
 import com.facebook.buck.io.watchman.WatchmanWatcherException;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
-import com.facebook.buck.log.CommandThreadFactory;
 import com.facebook.buck.log.ConsoleHandlerState;
 import com.facebook.buck.log.GlobalStateManager;
 import com.facebook.buck.log.InvocationInfo;
@@ -147,6 +146,8 @@ import com.facebook.buck.util.cache.InstrumentingCacheStatsTracker;
 import com.facebook.buck.util.cache.ProjectFileHashCache;
 import com.facebook.buck.util.cache.impl.DefaultFileHashCache;
 import com.facebook.buck.util.cache.impl.StackedFileHashCache;
+import com.facebook.buck.util.concurrent.CommandThreadFactory;
+import com.facebook.buck.util.concurrent.CommonThreadFactoryState;
 import com.facebook.buck.util.concurrent.MostExecutors;
 import com.facebook.buck.util.config.Config;
 import com.facebook.buck.util.config.Configs;
@@ -886,6 +887,9 @@ public final class Main {
                       EXECUTOR_SERVICES_TIMEOUT_SECONDS);
           ) {
 
+        CommonThreadFactoryState commonThreadFactoryState =
+            GlobalStateManager.singleton().getThreadToCommandRegister();
+
         try (ThrowingCloseableWrapper<ExecutorService, InterruptedException> diskIoExecutorService =
                 getExecutorWrapper(
                     MostExecutors.newSingleThreadExecutor("Disk I/O"),
@@ -915,7 +919,8 @@ public final class Main {
                 counterAggregatorExecutor =
                     getExecutorWrapper(
                         Executors.newSingleThreadScheduledExecutor(
-                            new CommandThreadFactory("CounterAggregatorThread")),
+                            new CommandThreadFactory(
+                                "CounterAggregatorThread", commonThreadFactoryState)),
                         "CounterAggregatorExecutor",
                         COUNTER_AGGREGATOR_SERVICE_TIMEOUT_SECONDS);
             ThrowingCloseableWrapper<ScheduledExecutorService, InterruptedException>
@@ -923,7 +928,9 @@ public final class Main {
                     getExecutorWrapper(
                         Executors.newScheduledThreadPool(
                             buckConfig.getNumThreadsForSchedulerPool(),
-                            new CommandThreadFactory(getClass().getName() + "SchedulerThreadPool")),
+                            new CommandThreadFactory(
+                                getClass().getName() + "SchedulerThreadPool",
+                                commonThreadFactoryState)),
                         "ScheduledExecutorService",
                         EXECUTOR_SERVICES_TIMEOUT_SECONDS);
             // Create a cached thread pool for cpu intensive tasks
@@ -1721,6 +1728,9 @@ public final class Main {
     ArtifactCacheBuckConfig artifactCacheConfig = new ArtifactCacheBuckConfig(buckConfig);
 
 
+    CommonThreadFactoryState commonThreadFactoryState =
+        GlobalStateManager.singleton().getThreadToCommandRegister();
+
     eventListenersBuilder.add(
         new LogUploaderListener(
             chromeTraceConfig,
@@ -1734,14 +1744,15 @@ public final class Main {
               projectFilesystem,
               invocationInfo,
               MostExecutors.newSingleThreadExecutor(
-                  new CommandThreadFactory(getClass().getName()))));
+                  new CommandThreadFactory(getClass().getName(), commonThreadFactoryState))));
     }
 
     eventListenersBuilder.add(
         new RuleKeyDiagnosticsListener(
             projectFilesystem,
             invocationInfo,
-            MostExecutors.newSingleThreadExecutor(new CommandThreadFactory(getClass().getName()))));
+            MostExecutors.newSingleThreadExecutor(
+                new CommandThreadFactory(getClass().getName(), commonThreadFactoryState))));
 
     if (buckConfig.isMachineReadableLoggerEnabled()) {
       try {
@@ -1750,7 +1761,7 @@ public final class Main {
                 invocationInfo,
                 projectFilesystem,
                 MostExecutors.newSingleThreadExecutor(
-                    new CommandThreadFactory(getClass().getName())),
+                    new CommandThreadFactory(getClass().getName(), commonThreadFactoryState)),
                 artifactCacheConfig.getArtifactCacheModes()));
       } catch (FileNotFoundException e) {
         LOG.warn("Unable to open stream for machine readable log file.");
@@ -1769,7 +1780,8 @@ public final class Main {
               invocationInfo,
               projectFilesystem,
               MostExecutors.newSingleThreadExecutor(
-                  new CommandThreadFactory(BuildTargetDurationListener.class.getName())),
+                  new CommandThreadFactory(
+                      BuildTargetDurationListener.class.getName(), commonThreadFactoryState)),
               buckConfig.getCriticalPathCount()));
     }
     eventListenersBuilder.addAll(commandSpecificEventListeners);

@@ -31,9 +31,10 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.event.TestEventConfigurator;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
-import com.facebook.buck.log.CommandThreadFactory;
+import com.facebook.buck.log.GlobalStateManager;
 import com.facebook.buck.log.InvocationInfo;
 import com.facebook.buck.rules.FakeBuildRule;
+import com.facebook.buck.util.concurrent.CommandThreadFactory;
 import com.facebook.buck.util.concurrent.MostExecutors;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
@@ -59,7 +60,9 @@ public class RuleKeyLoggerListenerTest {
     projectFilesystem =
         TestProjectFilesystems.createProjectFilesystem(tempDirectory.getRoot().toPath());
     outputExecutor =
-        MostExecutors.newSingleThreadExecutor(new CommandThreadFactory(getClass().getName()));
+        MostExecutors.newSingleThreadExecutor(
+            new CommandThreadFactory(
+                getClass().getName(), GlobalStateManager.singleton().getThreadToCommandRegister()));
     info =
         InvocationInfo.of(
             new BuildId(),

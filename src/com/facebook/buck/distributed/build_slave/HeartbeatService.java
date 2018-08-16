@@ -17,7 +17,8 @@
 package com.facebook.buck.distributed.build_slave;
 
 import com.facebook.buck.core.util.log.Logger;
-import com.facebook.buck.log.CommandThreadFactory;
+import com.facebook.buck.log.GlobalStateManager;
+import com.facebook.buck.util.concurrent.CommandThreadFactory;
 import com.google.common.annotations.VisibleForTesting;
 import java.io.Closeable;
 import java.io.IOException;
@@ -47,7 +48,9 @@ public class HeartbeatService implements Closeable {
 
   private static ScheduledExecutorService createNewScheduleExecutor() {
     return Executors.newSingleThreadScheduledExecutor(
-        new CommandThreadFactory(HeartbeatService.class.getSimpleName()));
+        new CommandThreadFactory(
+            HeartbeatService.class.getSimpleName(),
+            GlobalStateManager.singleton().getThreadToCommandRegister()));
   }
 
   /** This service will take care of shutting down the Executor on close(). */

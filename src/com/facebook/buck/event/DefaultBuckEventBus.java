@@ -17,8 +17,9 @@ package com.facebook.buck.event;
 
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.util.log.Logger;
-import com.facebook.buck.log.CommandThreadFactory;
+import com.facebook.buck.log.GlobalStateManager;
 import com.facebook.buck.util.Threads;
+import com.facebook.buck.util.concurrent.CommandThreadFactory;
 import com.facebook.buck.util.concurrent.MostExecutors;
 import com.facebook.buck.util.timing.Clock;
 import com.google.common.annotations.VisibleForTesting;
@@ -63,7 +64,9 @@ public class DefaultBuckEventBus implements com.facebook.buck.event.BuckEventBus
     this.executorService =
         async
             ? MostExecutors.newSingleThreadExecutor(
-                new CommandThreadFactory(BuckEventBus.class.getSimpleName()))
+                new CommandThreadFactory(
+                    BuckEventBus.class.getSimpleName(),
+                    GlobalStateManager.singleton().getThreadToCommandRegister()))
             : MoreExecutors.newDirectExecutorService();
     this.eventBus = new EventBus("buck-build-events");
     this.threadIdSupplier = DEFAULT_THREAD_ID_SUPPLIER;

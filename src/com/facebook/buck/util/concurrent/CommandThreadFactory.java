@@ -14,9 +14,8 @@
  * under the License.
  */
 
-package com.facebook.buck.log;
+package com.facebook.buck.util.concurrent;
 
-import com.facebook.buck.util.concurrent.MostExecutors;
 import java.util.OptionalInt;
 import java.util.concurrent.ThreadFactory;
 import javax.annotation.Nullable;
@@ -32,21 +31,23 @@ public class CommandThreadFactory implements ThreadFactory {
   @Nullable private final String commandId;
   private final OptionalInt optionalPriority;
 
-  public CommandThreadFactory(String threadName, int threadPriority) {
-    this(new MostExecutors.NamedThreadFactory(threadName), OptionalInt.of(threadPriority));
+  public CommandThreadFactory(
+      String threadName, CommonThreadFactoryState state, int threadPriority) {
+    this(new MostExecutors.NamedThreadFactory(threadName), state, OptionalInt.of(threadPriority));
   }
 
-  public CommandThreadFactory(String threadName) {
-    this(new MostExecutors.NamedThreadFactory(threadName), OptionalInt.empty());
+  public CommandThreadFactory(String threadName, CommonThreadFactoryState state) {
+    this(new MostExecutors.NamedThreadFactory(threadName), state, OptionalInt.empty());
   }
 
-  public CommandThreadFactory(ThreadFactory threadFactory) {
-    this(threadFactory, OptionalInt.empty());
+  public CommandThreadFactory(ThreadFactory threadFactory, CommonThreadFactoryState state) {
+    this(threadFactory, state, OptionalInt.empty());
   }
 
-  public CommandThreadFactory(ThreadFactory threadFactory, OptionalInt optionalPriority) {
+  public CommandThreadFactory(
+      ThreadFactory threadFactory, CommonThreadFactoryState state, OptionalInt optionalPriority) {
     this.threadFactory = threadFactory;
-    this.state = GlobalStateManager.singleton().getThreadToCommandRegister();
+    this.state = state;
 
     // This might be null in test environments which bypass `Main.runMainThenExit`.
     this.commandId = state.threadIdToCommandId(Thread.currentThread().getId());

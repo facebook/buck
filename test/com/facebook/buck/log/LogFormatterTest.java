@@ -18,6 +18,7 @@ package com.facebook.buck.log;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.util.concurrent.ThreadIdToCommandIdMapper;
 import java.util.Locale;
 import java.util.TimeZone;
 import java.util.concurrent.ConcurrentHashMap;
