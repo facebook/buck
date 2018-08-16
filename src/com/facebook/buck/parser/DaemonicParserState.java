@@ -214,7 +214,8 @@ public class DaemonicParserState {
       // invalidated mid-way through the parse).
       invalidateIfProjectBuildFileParserStateChanged(cell);
 
-      ImmutableSet.Builder<Map<String, Object>> withoutMetaIncludesBuilder = ImmutableSet.builder();
+      ImmutableSet.Builder<Map<String, Object>> withoutMetaIncludesBuilder =
+          ImmutableSet.builderWithExpectedSize(rawNodes.size());
       ImmutableSet.Builder<Path> dependentsOfEveryNode = ImmutableSet.builder();
       ImmutableMap<String, Optional<String>> env = ImmutableMap.of();
       for (Map<String, Object> rawNode : rawNodes) {
