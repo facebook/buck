@@ -1,4 +1,4 @@
-package cgo
+package simple
 
 /*
 #include "src/cxx/lib.h"

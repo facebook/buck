@@ -25,43 +25,63 @@ import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 public class GoListStep extends ShellStep {
-  enum FileType {
+  enum ListType {
     GoFiles,
     CgoFiles,
     SFiles,
     HFiles,
     TestGoFiles,
-    XTestGoFiles
+    XTestGoFiles,
+    Name
   }
 
-  private final List<FileType> fileTypes;
+  private final List<ListType> listTypes;
   private final GoPlatform platform;
 
-  public GoListStep(Path workingDirectory, GoPlatform platform, List<FileType> fileTypes) {
+  // File relative to the workspace. It should be used only if go list is going
+  // to read the information from specific file (not the directory / package)
+  private final Optional<Path> targetFile;
+
+  public GoListStep(
+      Path workingDirectory,
+      Optional<Path> targetFile,
+      GoPlatform platform,
+      List<ListType> listTypes) {
     super(workingDirectory);
+    this.targetFile = targetFile;
     this.platform = platform;
-    this.fileTypes = fileTypes;
+    this.listTypes = listTypes;
   }
 
   @Override
   protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
-    ImmutableList.Builder<String> commandBuilder =
-        ImmutableList.<String>builder()
-            .add(platform.getGoRoot().resolve("bin").resolve("go").toString())
-            .add("list")
-            .add("-e")
-            .add("-f")
-            .add(
-                String.join(
-                    ":",
-                    fileTypes
-                        .stream()
-                        .map(fileType -> "{{join ." + fileType.name() + " \":\"}}")
-                        .collect(Collectors.toList())));
+    ImmutableList.Builder<String> commandBuilder = ImmutableList.builder();
+    commandBuilder
+        .add(platform.getGoRoot().resolve("bin").resolve("go").toString())
+        .add("list")
+        .add("-e")
+        .add("-f");
+
+    if (listTypes.get(0) == ListType.Name) {
+      commandBuilder.add("{{ ." + listTypes.get(0).name() + "}}");
+    } else {
+      commandBuilder.add(
+          String.join(
+              ":",
+              listTypes
+                  .stream()
+                  .map(fileType -> "{{join ." + fileType.name() + " \":\"}}")
+                  .collect(Collectors.toList())));
+    }
+
+    if (targetFile.isPresent()) {
+      commandBuilder.add(targetFile.get().toString());
+    }
 
     return commandBuilder.build();
   }
@@ -87,6 +107,10 @@ public class GoListStep extends ShellStep {
         .put("GOARCH", platform.getGoArch())
         .put("GOARM", platform.getGoArm())
         .build();
+  }
+
+  public String getRawOutput() {
+    return getStdout().trim();
   }
 
   public Set<Path> getSourceFiles() {

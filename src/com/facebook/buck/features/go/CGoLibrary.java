@@ -100,8 +100,7 @@ public class CGoLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps {
       GoPlatform platform,
       CgoLibraryDescriptionArg args,
       Iterable<BuildTarget> cxxDeps,
-      Tool cgo,
-      Path packageName) {
+      Tool cgo) {
 
     if (args.getLinkStyle().isPresent()
         && args.getLinkStyle().get() != Linker.LinkableDepType.STATIC_PIC) {
@@ -200,7 +199,9 @@ public class CGoLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps {
                     pathResolver,
                     cgo,
                     platform,
-                    packageName,
+                    // take first source file in the list to infer the package
+                    // name via go list
+                    args.getSrcs().first().getSourcePath(),
                     Preconditions.checkNotNull(cgoBin.getSourcePathToOutput())));
 
     // generate final object file (equivalent of _all.o) which includes:

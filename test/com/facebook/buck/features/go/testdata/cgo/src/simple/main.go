@@ -1,7 +1,7 @@
 package main
 
-import "cgo"
+import "src/simple"
 
 func main() {
-	cgo.Test()
+	simple.Test()
 }

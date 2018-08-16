@@ -29,23 +29,27 @@ import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.toolchain.tool.Tool;
+import com.facebook.buck.features.go.GoListStep.ListType;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
+import com.facebook.buck.util.MoreSuppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.Optional;
 import java.util.SortedSet;
 
 public class CGoGenImport extends AbstractBuildRule {
   @AddToRuleKey private final Tool cgo;
   @AddToRuleKey private final GoPlatform platform;
   @AddToRuleKey private final SourcePath cgoBin;
+  @AddToRuleKey private final SourcePath sourceWithPackageName;
 
   private final ImmutableSortedSet<BuildRule> deps;
   private final SourcePathResolver pathResolver;
-  private final Path packageName;
   private final Path outputFile;
   private final Path genDir;
 
@@ -56,14 +60,14 @@ public class CGoGenImport extends AbstractBuildRule {
       SourcePathResolver pathResolver,
       Tool cgo,
       GoPlatform platform,
-      Path packageName,
+      SourcePath sourceWithPackageName,
       SourcePath cgoBin) {
     super(buildTarget, projectFilesystem);
 
     this.pathResolver = pathResolver;
     this.cgo = cgo;
     this.platform = platform;
-    this.packageName = packageName;
+    this.sourceWithPackageName = sourceWithPackageName;
     this.genDir = BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s/gen/");
     this.outputFile = genDir.resolve("_cgo_import.go");
     this.cgoBin = cgoBin;
@@ -83,12 +87,24 @@ public class CGoGenImport extends AbstractBuildRule {
         MakeCleanDirectoryStep.of(
             BuildCellRelativePath.fromCellRelativePath(
                 context.getBuildCellRootPath(), getProjectFilesystem(), genDir)));
+
+    // Read the package name from given source file and use it as source of
+    // truth (other files should have the same package name).
+    Path srcFile = pathResolver.getAbsolutePath(sourceWithPackageName);
+    GoListStep listStep =
+        new GoListStep(
+            srcFile.getParent(),
+            Optional.of(srcFile.getFileName()),
+            platform,
+            Arrays.asList(ListType.Name));
+    steps.add(listStep);
+
     steps.add(
         new CGoGenerateImportStep(
             getProjectFilesystem().getRootPath(),
             cgo.getCommandPrefix(pathResolver),
             platform,
-            packageName,
+            MoreSuppliers.memoize(listStep::getRawOutput),
             pathResolver.getAbsolutePath(cgoBin),
             outputFile));
 

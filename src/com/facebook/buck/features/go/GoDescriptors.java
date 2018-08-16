@@ -38,7 +38,7 @@ import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
-import com.facebook.buck.features.go.GoListStep.FileType;
+import com.facebook.buck.features.go.GoListStep.ListType;
 import com.facebook.buck.file.WriteFile;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -126,7 +126,7 @@ abstract class GoDescriptors {
       GoPlatform platform,
       Iterable<BuildTarget> deps,
       Iterable<BuildTarget> cgoDeps,
-      List<FileType> goFileTypes) {
+      List<ListType> goListTypes) {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
@@ -179,7 +179,7 @@ abstract class GoDescriptors {
         ImmutableList.copyOf(assemblerFlags),
         platform,
         extraAsmOutputsBuilder.build(),
-        goFileTypes);
+        goListTypes);
   }
 
   @VisibleForTesting
@@ -295,7 +295,7 @@ abstract class GoDescriptors {
                 .map(BuildRule::getBuildTarget)
                 .collect(ImmutableList.toImmutableList()),
             ImmutableList.of(),
-            Arrays.asList(FileType.GoFiles));
+            Arrays.asList(ListType.GoFiles));
     graphBuilder.addToIndex(library);
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);

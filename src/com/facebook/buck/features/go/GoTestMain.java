@@ -26,7 +26,7 @@ import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDe
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.tool.Tool;
-import com.facebook.buck.features.go.GoListStep.FileType;
+import com.facebook.buck.features.go.GoListStep.ListType;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.Step;
@@ -92,7 +92,7 @@ public class GoTestMain extends AbstractBuildRuleWithDeclaredAndExtraDeps {
             GoCompile.getSourceFiles(testSources, context),
             ImmutableList.of(),
             platform,
-            ImmutableList.of(FileType.GoFiles, FileType.TestGoFiles, FileType.XTestGoFiles));
+            ImmutableList.of(ListType.GoFiles, ListType.TestGoFiles, ListType.XTestGoFiles));
     steps.addAll(filteredSrcs.getFilterSteps());
     steps.add(
         new GoTestMainStep(

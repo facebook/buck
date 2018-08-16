@@ -290,6 +290,14 @@ public class GoBinaryIntegrationTest {
   }
 
   @Test
+  public void cgoLibraryWithDifferentPackageName() throws IOException {
+    GoAssumptions.assumeGoVersionAtLeast("1.10.0");
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "cgo", tmp);
+    workspace.setUp();
+    workspace.runBuckCommand("run", "//src/different_package/cli:cli").assertSuccess();
+  }
+
+  @Test
   public void binaryWithPrebuilt() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "binary_with_prebuilt", tmp);

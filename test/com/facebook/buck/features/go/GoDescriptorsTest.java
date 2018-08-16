@@ -28,7 +28,7 @@ import com.facebook.buck.core.rules.TestBuildRuleParams;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
-import com.facebook.buck.features.go.GoListStep.FileType;
+import com.facebook.buck.features.go.GoListStep.ListType;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
@@ -159,7 +159,7 @@ public class GoDescriptorsTest {
             goPlatform,
             ImmutableList.of(),
             ImmutableList.of(),
-            Arrays.asList(FileType.GoFiles));
+            Arrays.asList(ListType.GoFiles));
 
     Assert.assertTrue(
         compile

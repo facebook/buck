@@ -39,7 +39,7 @@ import com.facebook.buck.cxx.CxxBinaryDescription;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatforms;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
-import com.facebook.buck.features.go.GoListStep.FileType;
+import com.facebook.buck.features.go.GoListStep.ListType;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.util.types.Either;
@@ -52,7 +52,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Optional;
@@ -154,11 +153,6 @@ public class CgoLibraryDescription
       SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
       SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
-      Path packageName =
-          args.getPackageName()
-              .map(Paths::get)
-              .orElse(goBuckConfig.getDefaultPackageName(buildTarget));
-
       ImmutableList<BuildTarget> cxxDeps =
           params
               .getDeclaredDeps()
@@ -182,8 +176,7 @@ public class CgoLibraryDescription
                   platform.get(),
                   args,
                   cxxDeps,
-                  platform.get().getCGo(),
-                  packageName);
+                  platform.get().getCGo());
 
       ImmutableList<BuildTarget> nonCxxDeps =
           params
@@ -200,7 +193,9 @@ public class CgoLibraryDescription
           params,
           context.getActionGraphBuilder(),
           goBuckConfig,
-          packageName,
+          args.getPackageName()
+              .map(Paths::get)
+              .orElse(goBuckConfig.getDefaultPackageName(buildTarget)),
           new ImmutableSet.Builder<SourcePath>()
               .addAll(lib.getGeneratedGoSource())
               .addAll(args.getGoSrcs())
@@ -210,7 +205,7 @@ public class CgoLibraryDescription
           platform.get(),
           Iterables.concat(nonCxxDeps, args.getExportedDeps()),
           ImmutableList.of(cgoLibTarget),
-          Arrays.asList(FileType.GoFiles, FileType.CgoFiles));
+          Arrays.asList(ListType.GoFiles, ListType.CgoFiles));
     }
 
     return new NoopBuildRuleWithDeclaredAndExtraDeps(buildTarget, projectFilesystem, params);

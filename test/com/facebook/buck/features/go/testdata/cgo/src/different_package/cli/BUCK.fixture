@@ -1,0 +1,5 @@
+go_binary(
+    name = "cli",
+    srcs = ["main.go"],
+    deps = ["//src/different_package/some-pkg:lib"],
+)

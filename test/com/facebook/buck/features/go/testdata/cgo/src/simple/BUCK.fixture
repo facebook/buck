@@ -6,7 +6,6 @@ go_binary(
 
 cgo_library(
     name = "cgo",
-    package_name = "cgo",
     srcs = ["cgosrc.go"],
     deps = ["//src/cxx:lib"],
 )

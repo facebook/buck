@@ -45,7 +45,7 @@ import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.toolchain.CxxPlatforms;
-import com.facebook.buck.features.go.GoListStep.FileType;
+import com.facebook.buck.features.go.GoListStep.ListType;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.versions.Version;
 import com.facebook.buck.versions.VersionRoot;
@@ -416,7 +416,7 @@ public class GoTestDescription
                   .map(BuildRule::getBuildTarget)
                   .collect(ImmutableList.toImmutableList()),
               ImmutableList.of(),
-              Arrays.asList(FileType.GoFiles, FileType.TestGoFiles));
+              Arrays.asList(ListType.GoFiles, ListType.TestGoFiles));
     } else {
       testLibrary =
           GoDescriptors.createGoCompileRule(
@@ -437,7 +437,7 @@ public class GoTestDescription
                   .map(BuildRule::getBuildTarget)
                   .collect(ImmutableList.toImmutableList()),
               ImmutableList.of(),
-              Arrays.asList(FileType.GoFiles, FileType.TestGoFiles, FileType.XTestGoFiles));
+              Arrays.asList(ListType.GoFiles, ListType.TestGoFiles, ListType.XTestGoFiles));
     }
 
     return testLibrary;
