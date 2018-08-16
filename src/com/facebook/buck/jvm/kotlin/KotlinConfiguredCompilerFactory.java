@@ -26,6 +26,7 @@ import com.facebook.buck.jvm.java.Javac;
 import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JvmLibraryArg;
+import com.facebook.buck.jvm.kotlin.KotlinLibraryDescription.AnnotationProcessingTool;
 import com.google.common.base.Preconditions;
 import java.util.function.Function;
 import javax.annotation.Nullable;
@@ -57,11 +58,13 @@ public class KotlinConfiguredCompilerFactory extends ConfiguredCompilerFactory {
       JavacOptions javacOptions,
       BuildRuleResolver buildRuleResolver,
       ToolchainProvider toolchainProvider) {
+    KotlinLibraryDescription.CoreArg kotlinArgs =
+        Preconditions.checkNotNull((KotlinLibraryDescription.CoreArg) args);
     return new KotlincToJarStepFactory(
         kotlinBuckConfig.getKotlinc(),
         kotlinBuckConfig.getKotlinHomeLibraries(),
-        Preconditions.checkNotNull((KotlinLibraryDescription.CoreArg) args)
-            .getExtraKotlincArguments(),
+        kotlinArgs.getExtraKotlincArguments(),
+        kotlinArgs.getAnnotationProcessingTool().orElse(AnnotationProcessingTool.KAPT),
         extraClasspathProviderSupplier.apply(toolchainProvider),
         getJavac(buildRuleResolver, args),
         javacOptions);

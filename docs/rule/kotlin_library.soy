@@ -60,6 +60,18 @@ of the compiled class files and resources.
   {/param}
 {/call}
 
+{call buck.arg}
+  {param name: 'annotation_processing_tool' /}
+  {param default : 'kapt' /}
+  {param desc}
+  Specifies the tool to use for annotation processing. Possible values: "kapt" or "javac".
+  "kapt" allows running Java annotation processors against Kotlin sources while backporting
+  it for Java sources too.
+  "javac" works only against Java sources, Kotlin sources won't have access to generated
+  classes at compile time.
+  {/param}
+{/call}
+
 {call jvm_common.remove_classes_arg /}
 
 {call jvm_common.exported_deps}
