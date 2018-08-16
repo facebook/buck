@@ -11,164 +11,395 @@
     {param content}
       <h2>A bit of history</h2>
       <p>
-        Historically, Buck relied on Python for describing {call buck.build_file /}s and {call buck.macros/}.
-        This allowed Buck users to implement many missing features without having
-        to modify Buck's core. While it worked fine for local builds and small repositories, when used
-        at scale, the ability to access host environment and perform arbitrary actions without Buck's
-        knowledge led to non-deterministic, hard to debug issues and slow parsing.
+        Historically, Buck relied on a Python DSL to describe {call buck.build_file /}s and {call buck.macros/}.
+        This enabled Buck users to implement many features without having
+        to modify Buck's core. Although Python worked fine for local builds and small repositories, when used
+        at scale, the ability to access the host environment and perform arbitrary actions without Buck's
+        knowledge led to non-deterministic builds, hard-to-debug issues, and slow parsing.
       </p>
+
       <p>
-        To address some of these issues, Buck introduced features like <code>allow_unsafe_import</code>, but
-        we were ultimately unable to provide proper sandboxing for deterministic parsing and a new
-        solution had to be put in place.
+        To address some of these issues, we introduced features such
+        as {call buck.function_link}{param name: 'allow_unsafe_import' /}{/call}, 
+        but ultimately we were unable to provide proper sandboxing for 
+        deterministic parsing, and a new solution had to be put in place.  
       </p>
 
       <h2>Present day</h2>
       <p>
-        In order to tackle Python DSL parser limitations, Buck added polyglot language support
-        and provided a built-in parser, <a href="https://docs.bazel.build/versions/master/skylark/language.html">Skylark</a>, as
-        an alternative to the Python DSL parser.
+        In order to tackle the limitations of the Python DSL parser,
+        we added multiple-language support and a built-in parser 
+        for the <a href="https://docs.bazel.build/versions/master/skylark/language.html">Skylark</a> language. 
+        The new parser provides an alternative to the Python DSL parser.
       </p>
 
-      <h2>Enabling Skylark parser</h2>
+      <h2>Enabling the Skylark parser</h2>
       <p>
-        In order to enable Skylark support for your project, please add
-        {literal}<pre>
+        In order to enable Skylark support for your project, add the
+        following section to your {call buck.concept_buckconfig /} file. 
+      </p>
+<p>
+<pre>
+{literal}
 [parser]
   polyglot_parsing_enabled = true
   default_build_file_syntax = SKYLARK
-</pre>{/literal} to your <code>.buckconfig</code> file. This is recommended for new projects and
-      will become the default in the future. If most of your {call buck.build_file/}s or {call buck.macros/} rely
-      on Python DSL features and you're not ready to invest into migrating to Skylark, you can
-      replace <pre>default_build_file_syntax = SKYLARK</pre> with
-      <pre>default_build_file_syntax = PYTHON_DSL</pre> to use Python DSL parser by default.
+{/literal}
+</pre>
+</p>
 
-      Since Skylark will soon be the default, it's highly recommended to start the migration. To
-      make it easier, Buck gives you control over which parser to use for parsing
-      individual {call buck.build_file/}s. Adding
-      <pre># BUILD FILE SYNTAX: SKYLARK</pre> as the very first line of the {call buck.build_file/} will
-      result in Buck using Skylark parser for parsing it. Similarly, <pre># BUILD FILE SYNTAX: PYTHON_DSL</pre> will
-      result in Python DSL parser being used.
+      <p>
+        We recommend Skylark for new projects and it will become the default in the future. 
+        However, if most of your {call buck.build_file/}s or {call buck.macros/} rely
+        on Python DSL features and you're not ready to invest in migrating to Skylark, 
+        replace 
+      </p>
+
+<p>
+<pre>
+{literal}
+default_build_file_syntax = SKYLARK 
+{/literal}
+</pre>
+</p>
+
+      <p>
+        with 
+      </p>
+
+<p>
+<pre>
+{literal}
+default_build_file_syntax = PYTHON_DSL 
+{/literal}
+</pre>
+</p>
+
+      <p>
+        to use the Python DSL parser by default.
       </p>
 
       <p>
-        It's best to enable the Skylark parser globally and add
-        <pre># BUILD FILE SYNTAX: PYTHON_DSL</pre> to all {call buck.build_file/}s that rely on Python
+        Because Skylark will eventually become the default, we
+        recommended that you migrate as soon as possible. To make that
+        easier, Buck gives you control over which parser it uses for
+        individual {call buck.build_file/}s.  If you add 
+      </p>
+
+<p>
+<pre>
+{literal}
+# BUILD FILE SYNTAX: SKYLARK 
+{/literal}
+</pre>
+</p>
+
+      <p>
+        as the first line of a {call buck.build_file/}, Buck uses the
+        Skylark parser.  If instead, you add
+      </p>
+
+<p>
+<pre>
+{literal}
+# BUILD FILE SYNTAX: PYTHON_DSL
+{/literal}
+</pre>
+</p>
+
+      <p>
+        Buck uses the Python DSL parser. If neither of these lines is
+        present, Buck uses the parser specified in 
+        the <code>[parser]</code> section of <code>.buckconfig</code>.
+      </p>
+
+      <p>
+        It's best to enable the Skylark parser globally in
+        <code>.buckconfig</code> and add
+      </p>
+
+<p>
+<pre>
+{literal}
+# BUILD FILE SYNTAX: PYTHON_DSL 
+{/literal}
+</pre>
+</p>
+
+      <p>
+        to any {call buck.build_file/}s that continue to rely on Python
         DSL features.
       </p>
 
       <p>
-        <b>Note</b> that all of the options above require enabled polyglot parsing:
-        {literal}<pre>
+        <b>Note:</b> All of the options above require you to enable
+        support for multi-language (polyglot) parsing:
+      </p>
+<p>
+<pre>
+{literal}
 [parser]
   polyglot_parsing_enabled = true
-</pre>{/literal}
-      </p>
+{/literal}
+</pre>
+</p>
 
       <h2>Migrating from Python to Skylark</h2>
       <p>
         The <a href="https://docs.bazel.build/versions/master/skylark/language.html">Skylark</a> language
-        was specifically created to address all of the above and many other issues, which is why
-        Buck team has decided to replace Python DSL with Skylark as the language for {call buck.build_file/} and
-        extension files. Unfortunately, migration cannot be fully automated, so below some of the
-        ways to resolve common tasks when migrating to Skylark are described.
-
-        <h3>include_defs</h3>
-
-        The <code>include_defs</code> function is not supported in Skylark because it
-        pollutes the execution environment by default and makes automated refactoring much harder. To replace a
-        usage of <pre>include_defs("//tools/my_macro.bzl")</pre> you should:
-        <ul>
-        <li>find all symbols defined in <code>my_macro</code> file that are actually used by this
-          file. Say, for example, it needs <code>foo</code> and <code>bar</code>.
-        <li>replace <code>include_defs</code> invocation with an equivalent {call buck.fn_load /}
-          function invocation explicitly importing the needed symbols:
-          <pre>load("//tools:my_macro.bzl", "foo", "bar")</pre>
-        </ul>
-
-        <b>Note</b> that {call buck.fn_load/} function uses the {call buck.build_target_pattern /} syntax
-        as if there is an <pre>export_file(name="my_macro.bzl")</pre> defined in
-        a <code>tools</code> package {call buck.build_file/}. This means that instead
-        of <code>//package/extension.bzl</code> syntax expected by {call buck.fn_include_defs/}, a
-        similar {call buck.fn_load/} invocation would expect <code>//package:extension.bzl</code>.
+        was specifically created to address the issues mentioned
+        previously&mdash;as well as other issues&mdash;which is why
+        Skylark will eventually replace the Python DSL as the language 
+        for {call buck.build_file/}s and
+        extension files. Unfortunately, migration cannot be fully
+        automated, so here we describe some ways to resolve common
+        issues when migrating from the Python DSL to Skylark.
       </p>
+
+      <h3>include_defs</h3>
+
+      <p>
+        The {call buck.function_link}{param name: 'include_defs' /}{/call} function 
+        is not supported in Skylark because it can contaminate the
+        symbol table of the execution environment and make automated
+        refactoring more difficult. 
+
+      <p>
+        To replace an invocation such as
+      </p>
+
+<p>
+<pre>
+{literal}
+include_defs("//tools/my_macro.bzl") 
+{/literal}
+</pre>
+</p>
+
+      <p>
+        you should:
+      </p>
+
+        <ol>
+          <li>
+            find all symbols defined in the <code>my_macro.bzl</code> file 
+            that are <em>actually used</em> by the including file, say, for 
+            example, <code>foo</code> and <code>bar</code>.
+          </li>
+
+          <li>
+            replace the <code>include_defs</code> invocation with an 
+            equivalent {call buck.function_link}{param name: 'load' /}{/call} 
+            invocation that <em>explicitly</em> imports the needed symbols:
+<p>
+<pre>
+{literal}
+load("&#x2F;&#x2F;tools:my_macro.bzl", "foo", "bar")
+{/literal}
+</pre>
+</p>
+
+          </li>
+        </ol>
+
+      <p>
+        <b>Note:</b> The {call buck.function_link}{param name: 'load' /}{/call} function 
+        uses the {call buck.build_target_pattern /} syntax
+        as though <pre>export_file(name="my_macro.bzl")</pre> were defined in
+        a <code>tools</code> package {call buck.build_file/}. This means that instead
+        of using the <code>&#x2F;&#x2F;package/extension.bzl</code> syntax expected by {call buck.fn_include_defs/}, 
+        you should use the <code>&#x2F;&#x2F;package:extension.bzl</code> syntax expected by {call buck.fn_load/}. 
+      </p>
+
       <h3>Environment variables</h3>
       <p>
-        Environment variables are implicit and frequently result in non-reproducible builds because
-        of environment variable differences across machines. They must be replaced with corresponding
-        configuration variables. For example, instead of <pre>my_var = py_sdk.os.env.get('MY_VAR', 'foo')</pre>
-        you should use <pre>my_var = read_config('my_project', 'my_var', 'foo')</pre>
-        in your {call buck.build_file/} or extension file. When calling buck, instead of passing
-        <pre>env MY_VAR='some_value' buck ...</pre>
-        you should pass a configuration flag
-        <pre>buck ... -c my_project.my_var=foo</pre>
+        For Skylark, replace environment variables with equivalent
+        configuration variables.  The implicit nature of environment
+        variables frequently results in non-reproducible builds because
+        of differences in the values of environment variables across
+        machines. 
+      </p>
+
+      <p>
+        For example, in your {call buck.build_file/} or extension file, 
+        instead of 
+      </p>
+
+      <pre>my_var = py_sdk.os.env.get('MY_VAR', 'foo')</pre>
+      
+      <p>
+        use 
+      </p>
+
+      <pre>my_var = read_config('my_project', 'my_var', 'foo')</pre>
+
+      <p>
+        Then, when calling Buck, instead of passing
+      </p>
+<p>
+<pre>
+{literal}
+export MY_VAR='some_value' 
+buck &lt;args>
+{/literal}
+</pre>
+</p>
+
+      <p>
+        pass a configuration flag
+      </p>
+
+<p>
+<pre>
+{literal}
+buck &lt;args> --config my_project.my_var=foo
+{/literal}
+</pre>
+</p>
+
+      <p>
+        or better yet, define these configuration values in 
+        your {call buck.concept_buckconfig /} file.
+      </p>
+
+      <p>
+        <b>Note:</b> When using the Python DSL parser it's possible to 
+        invoke the {call buck.fn_read_config/} function directly during extension-file
+        evaluation or indirectly through other function invocations. 
+        Indirect invocation of {call buck.fn_read_config/} is not supported 
+        with the Skylark parser in order to track the use of configuration 
+        options more precisely.  Because of this, a 
+        top-level invocation of {call buck.fn_read_config/} such as:
+      </p>
+
+<p>
+<pre>
+{literal}
+bar = read_config(&lt;args>)
+{/literal}
+</pre>
+</p>
 
         <p>
-        <b>Note</b> that while using Python DSL
-        parser it's possible to invoke {call buck.fn_read_config/} function during extension file
-        evaluation directly or through a set of other function invocations, this
-        behavior is not supported with Skylark parser in order to track configuration option usage more precisely.
-        Because of this, a top-level {call buck.fn_read_config/} function invocation like
-        <pre>foo = read_config(...)</pre>
-        would either have to be performed in {call buck.build_file/} directly or, preferably, moved
-        into a well-named function within an extension file. In case configuration options are used
-        to instantiate expensive objects which should be created only once, consider
-        replacing code like
-        <pre>FOO = expensive1() if read_config(...) else expensive2()</pre> with something like
-        {literal}<pre>
+        either has to be performed in a {call buck.build_file/} directly or, preferably, moved
+        into a descriptively-named function within an extension file. In
+        the case where configuration options are used to instantiate
+        expensive objects which should be created only once, consider
+        replacing a top-level invocation such as
+        </p>
+
+<p>
+<pre>
+{literal}
+FOO = expensive1() if read_config(&lt;args>) else expensive2() 
+{/literal}
+</pre>
+</p>
+
+        <p>
+          with something like
+        </p>
+
+<p>
+<pre>
+{literal}
 _EXPENSIVE1 = expensive1()
 _EXPENSIVE2 = expensive2()
 
 def foo():
-  return _EXPENSIVE1 if read_config(...) else _EXPENSIVE2
-</pre>{/literal} While it can result in instantiation of an unnecessary expensive object, it may
-        still be more efficient than instantiating one of the expensive objects during
-        each <code>foo</code> invocation. Having said that, please start simple and optimize only if
-        performance overhead becomes noticeable.
-        </p>
+  return _EXPENSIVE1 if read_config(&lt;args>) else _EXPENSIVE2
+{/literal}
+</pre>
+</p>
+
+      <p>
+        While it can result in the instantiation of an unnecessary and
+        expensive object, it might still be more efficient than
+        instantiating one of the expensive objects during each
+        <code>foo</code> invocation.  Having said that, we recommend
+        that you start simply and optimize only if you notice performance 
+        issues.
       </p>
+
       <h3>isinstance()</h3>
       <p>
-        The <code>isinstance()</code> function is not available in Skylark mostly because it does not support
-        inheritance, but some of its usages can be replaced with the <code>type</code> function.
-        For example,
-
-        <pre>
-        isinstance(foo, str)
-        </pre>
-
-        can be replaced with
-
-        <pre>
-        type(foo) == type('')
-        </pre>
+        The <code>isinstance()</code> function is not available in Skylark 
+        because Skylark does not support inheritance. However, some usages 
+        of <code>isinstance()</code> can be replaced with 
+        the <code>type</code> function. For example,
       </p>
+
+<p>
+<pre>
+{literal}
+isinstance(foo, str)
+{/literal}
+</pre>
+</p>
+
+        <p>
+        can be replaced with
+        </p>
+<p>
+<pre>
+{literal}
+type(foo) == type('str')
+{/literal}
+</pre>
+</p>
 
       <h3>get_base_path</h3>
       <p>
-        The {call buck.fn_get_base_path /} function is replaced with the equivalent, but more appropriately
-        named <a href="https://docs.bazel.build/versions/master/skylark/lib/native.html#package_name">package_name()</a>.
-        Note, that while in {call buck.build_file /}s it's invoked
-        as <code>package_name()</code>, it's invoked as <code>native.package_name()</code>
-        in extension files, as are the rest of built-in functions provided by Buck.
-        It's fairly easy to write an alias if there is a strong desire to use the old name instead.
+        In Skylark, we've replaced the {call buck.fn_get_base_path /}
+        function with the equivalent&mdash;but more appropriately
+        named&mdash;<a
+        href="https://docs.bazel.build/versions/master/skylark/lib/native.html#package_name">package_name()</a> function.
+        Note that in {call buck.build_file /}s, it's invoked
+        as <code>package_name()</code>, but in extension files, it's 
+        invoked as <code>native.package_name()</code>.
+        Using the <code>native</code> prefix is consistent with the rest
+        of the built-in functions provided by Buck.
+        If there is a strong desire to use the old name instead, you
+        can assign the new function to the legacy function name:
+
+<p>
+<pre>
+{literal}
+get_base_path = native.package_name
+get_base_path()
+{/literal}
+</pre>
+</p>
+
+        
       </p>
 
       <h3>del</h3>
       <p>
-        Usage of <code>del arr[1]</code> and <code>del dictionary['key']</code> is not supported.
-        Use <code>arr.pop(1)</code> and <code>dictionary.pop('key')</code> instead respectively.
+        Usage of <code>del arr[1]</code> and <code>del dictionary['key']</code> are 
+        not supported. Instead, use
       </p>
+
+<p>
+<pre>
+{literal}
+arr_val  = arr.pop(1) 
+dict_val = dictionary.pop('key')
+{/literal}
+</pre>
+</p>
 
       <h3>class</h3>
       <p>
-        Classes are not supported.
-        You can replace them with <code>struct</code>s and functions. In addition to language
-        simplification, structs are
+        Classes are not supported.  Replace classes with a combination
+        of structs and functions. In addition to being simpler, structs are
         more <a href="http://blog.explainmydata.com/2012/07/expensive-lessons-in-python-performance.html">memory efficient</a>.
-        For example, a class like
+        For example, a class such as
+      </p>
 
-        {literal}<pre>
+<p>
+<pre>
+{literal}
 class Foo:
 def __init__(self, foo, bar=None):
 ...
@@ -176,49 +407,177 @@ def some_method(self, param):
 ...
 ...
 foo = Foo('foo', bar='yo')
-res = foo.some_method(some_param)</pre>{/literal}
+res = foo.some_method(some_param)
+{/literal}
+</pre>
+</p>
 
-        can be replaced with something like
+      <p>
+        can be replaced with something such as 
+      </p>
 
-        {literal}<pre>
+<p>
+<pre>
+{literal}
 def some_function(foo_instance, param):
 ...
 foo = struct(foo='foo', bar='yo')
 res = some_function(foo, some_param)
-{/literal}</pre>
+{/literal}
+</pre>
+</p>
 
-        You can also track state in variables defined in the same extension file, but you cannot
-        expose any mutators, since all variables are frozen once extension file is evaluated.
-        This is intentional and prevents race conditions, since build files as well as extension
-        files must support efficient parallel evaluation. You can also use <code>provider</code>s
-        in order to create named <code>struct</code> factories.
-
-        {literal}<pre>
-def some_function(foo_instance, param):
-...
-Foo = provider()
-foo = Foo(foo='foo', bar='yo')
-res = some_function(foo, some_param)
-</pre>{/literal}
-      </p>
-      <h3>import re</h3>
       <p>
-        Regular expressions are not supported in Skylark due to unbounded runtime and resource
-        usage, but their usage is often unnecessary and can be replaced with simple
-        string manipulations.
-        Patterns like {literal}re"//libraries/my_lib/.*"{/literal} can be replaced with
-        a {literal}startswith("//libraries/my_lib/"){/literal}.
-        Similarly, the <code>endswith()</code> method can be used to replace a pattern that starts
-        with <code>.*</code> and <code>"some_text" in foo</code> can replace <code>re".*some_text.*"</code>.
+        You can also track state in variables defined in the same extension file, but you cannot
+        expose any mutators, since all variables are immutable once the extension file is evaluated.
+        This is intentional and prevents race conditions because build files as well as extension
+        files must support efficient parallel evaluation. 
+      </p>
+
+
+      <h3>Regular expressions (import re)</h3>
+      <p>
+        Regular expressions are not supported in Skylark due to 
+        unbounded runtime and resource usage, but often 
+        regular expressions can be replaced with string 
+        functions. 
+      </p>
+
+
+      <h5>
+        Example: Match characters at the end of a string
+      </h5>
+
+      <p>
+        Replace 
+      </p>
+
+<p>
+<pre>
+{literal}
+re"//libraries/my_lib/.*"
+{/literal}
+</pre>
+</p>
+
+      <p>
+        with 
+      </p>
+
+<p>
+<pre>
+{literal}
+startswith("//libraries/my_lib/")
+{/literal}
+</pre>
+</p>
+
+      <h5>
+        Example: Match characters at the beginning of a string
+      </h5>
+
+      <p>
+        Replace 
+      </p>
+<p>
+<pre>
+{literal}
+re".*/my_lib/"
+{/literal}
+</pre>
+</p>
+
+      <p>
+        with 
+      </p>
+<p>
+<pre>
+{literal}
+endswith("/my_lib/")
+{/literal}
+</pre>
+</p>
+
+      <h5>
+        Example: Match characters at both the beginning and end of a string
+      </h5>
+
+      <p>
+        Replace 
+      </p>
+
+<p>
+<pre>
+{literal}
+re".*some_text.*"
+{/literal}
+</pre>
+</p>
+
+      <p>
+        with 
+      </p>
+<p>
+<pre>
+{literal}
+"some_text" in foo
+{/literal}
+</pre>
+</p>
       </p>
 
       <h3>raise Exception</h3>
       <p>
-        Raising and catching exceptions is not supported.
-        Use the <a href="https://docs.bazel.build/versions/master/skylark/lib/globals.html#fail">fail function</a> instead.
-        For example, instead of <code>raise Exception("foo")</code> or <code>raise Exception("attribute_name: foo")</code> you
-        can use <code>fail("foo")</code> or <code>fail("foo", "attribute_name")</code> respectively
-        to stop build/exception file evaluation and report an error.
+        Raising and catching exceptions is not supported. Instead, use 
+        the <a href="https://docs.bazel.build/versions/master/skylark/lib/globals.html#fail"><code>fail</code></a> function to 
+        stop the evaluation of a build or extension file, and report an error. 
+      </p>
+      <p>
+        For example, instead of 
+      </p>
+<p>
+<pre>
+{literal}
+raise Exception("foo")
+{/literal}
+</pre>
+</p>
+
+      <p>
+        use
+      </p>
+
+<p>
+<pre>
+{literal}
+fail("foo") 
+{/literal}
+</pre>
+</p>
+
+      <p>
+        Instead of 
+      </p>
+<p>
+<pre>
+{literal}
+raise Exception("attribute_name: foo")
+{/literal}
+</pre>
+</p>
+
+      <p>
+        use
+      </p>
+<p>
+<pre>
+{literal}
+fail("foo", "attribute_name") 
+{/literal}
+</pre>
+</p>
+
+      <p>
         Since usage of <code>fail</code> triggers non-recoverable errors and halts parsing, it
         cannot be used for control flow.
       </p>
@@ -226,73 +585,178 @@ res = some_function(foo, some_param)
       <h3>while loop</h3>
       <p>
         While loops are not supported due to unbounded runtime. Instead, use a <code>for</code> loop
-        with a bounded range.
-        Usage of <code>while True: ...</code> should be replaced with
-        a <code>for _ in range(REASONABLE_LIMIT):</code> followed by an extra check after the loop
-        to make sure that loop has terminated before all iterations were exhausted.
+        with a bounded range. Usage of 
+
+<p>
+<pre>
+{literal}
+while True: ... 
+{/literal}
+</pre>
+</p>
+
+      <p>
+        should be replaced with
       </p>
+<p>
+<pre>
+{literal}
+for _ in range(&lt;reasonable limit>): 
+{/literal}
+</pre>
+</p>
+
+      <p>
+        followed by an extra check after the loop to make sure the loop
+        terminated before all the iterations were exhausted.
+      </p>
+
       <h3>python module</h3>
       <p>
-        Python modules cannot be imported in Skylark. Many safe Python functions
-        like <code>os.path.basepath</code> or <code>os.path.join</code> can be replaced
-        with <code>paths.basename</code> and <code>paths.join</code> from <a href="https://github.com/bazelbuild/bazel-skylib">Skylib</a>.
-        In order to use it, clone it into some directory, configure it as a cell by
-        adding {literal}<pre>
+        Python modules cannot be imported in Skylark. However, you can replace 
+        many safe Python functions with analogous functions 
+        from <a href="https://github.com/bazelbuild/bazel-skylib">Skylib</a>.
+        For example, you can replace <code>os.path.basepath</code> with <code>paths.basename</code>, 
+        and you can replace <code>os.path.join</code> with <code>paths.join</code>.
+      </p>
+
+      <p>
+        In order to use Skylib, clone its repository from GitHub into a
+        local directory. Then, configure that repository as a Buck cell
+        by adding 
+      </p>
+
+<p>
+<pre>
+{literal}
 [repositories]
   bazel_skylib = path/to/skylib_checkout
-</pre>{/literal} to a <code>.buckconfig</code> file, and load corresponding function
-        <pre>load("@bazel_skylib//lib:paths.bzl", "paths")</pre>.
+{/literal}
+</pre>
+</p>
 
-        An example from Skylib website:
+      <p>
+        to your <code>.buckconfig</code> file. 
+      </p>
 
-        {literal}<pre>
+      <p>
+        Load the functions that you need, 
+        using {call buck.function_link}{param name: 'load' /}{/call}. 
+        For example,
+      </p>
+
+<p>
+<pre>
+{literal}
+load("@bazel_skylib//lib:paths.bzl", "paths").
+{/literal}
+</pre>
+</p>
+
+      <p>
+        Here is an example from the Skylib website:
+      </p>
+
+<p>
+<pre>
+{literal}
 load("@bazel_skylib//:lib.bzl", "paths", "shell")
 
 p = paths.basename("foo.bar")
 s = shell.quote(p)
-</pre>{/literal}
+{/literal}
+</pre>
+</p>
 
-        <h3>Skylint</h3>
-        Consider using <a href="https://github.com/bazelbuild/bazel/blob/master/site/docs/skylark/skylint.md">Skylint</a> lint
-        tool which can catch and suggest fixes for some of the common issues. Unfortunately, since
-        it was not designed to handle arbitrary Python files, it can crash.
-        Some of the common reasons for it to crash are:
+     <h3>Skylint</h3>
+     <p>
+       Consider running 
+       the <a href="https://github.com/bazelbuild/bazel/blob/master/site/docs/skylark/skylint.md">Skylint</a> linting 
+       tool on your extension (<code>.bzl</code>) files. 
+       Skylint can catch many common issues and suggest fixes.
+       Unfortunately, some constructs in Python can cause Skylint to
+       crash. Some examples are:
+     </p>
 
-        <ul>
-        <li>usage of nested functions. Nested functions should be moved to the top level.
-        <li>usage of <code>not foo in</code> instead of <code>foo not in</code>. Use <code>foo not in</code> instead - it's recommended by flake8 anyways.
-        </ul>
+     <ul>
+       <li>
+         Nested functions. Nested functions should be moved to top-level scope.
+       </li>
+       <li>
+         Usage of <code>not foo in</code>. You should instead 
+         use <code>foo not in</code>. Note that <code>foo not in</code> is recommended by 
+         the <a href="http://flake8.pycqa.org/en/latest/">flake8</a> style-enforcement tool.
+       </li>
+     </ul>
 
-        You can bisect affected area of code by commenting out parts of the file and rerunning Skylint.
+     <p>
+       When debugging an issue, an effective strategy is to bisect your
+       code by commenting out parts of the file and rerunning Skylint.
+     </p>
 
-        <h3>Testing your changes</h3>
-        <h4>Automated testing</h4>
-        <p>Comming soon...</p>
+     <h3>Testing your changes</h3>
 
-        <h4>Manual testing</h4>
-        The easiest way to check if your changes affected build rules is by checking if target rule
-        keys have changed. You can capture rule keys before making your change using
+     <p>
+       The easiest way to verify that your changes have not affected
+       your build rules is by checking if the corresponding rule keys have changed.
+       Before making your changes, capture rule keys with the following 
+       command:
+     </p>
 
-        <pre>
-        buck targets --show-rulekey //path/to/targets/... > before
-        </pre>
+<p>
+<pre>
+{literal}
+buck targets --show-rulekey //path/to/targets/... > before
+{/literal}
+</pre>
+</p>
 
-        followed by the command below after applying your changes
+     <p>
+       After making your changes, run the command again, redirecting to
+       a different file.
+     </p>
 
-        <pre>
-        buck targets --show-rulekey //path/to/targets/... > after
-        </pre>
+<p>
+<pre>
+{literal}
+buck targets --show-rulekey //path/to/targets/... > after
+{/literal}
+</pre>
+</p>
 
-        Now that before and after rule keys are captured
+     <p>
+       Now that you have captured the before and after rule keys, use
+       the following command to compare them:
+     </p>
 
-        <pre>
-        diff before after
-        </pre>
+<p>
+<pre>
+{literal}
+diff before after
+{/literal}
+</pre>
+</p>
 
-        should be empty unless your changes affected semantics of some macros or build definitions.
-        In order to get more insight into what exactly has you, changed can use <pre>buck audit rules path/to/BUCK</pre> command
-        on individual {call buck.build_file /} files to see how macros are expanded by Buck.
-      </p>
+     <p>
+       There should be no differences unless your changes affected the
+       semantics of some of the build definitions or macros.
+       In order to get more insight into what exactly has changed, you
+       can use the command 
+     </p>
+
+<p>
+<pre>
+{literal}
+buck audit rules path/to/BUCK command
+{/literal}
+</pre>
+</p>
+
+     <p>
+       on individual {call buck.build_file /}s to see how Buck
+       expanded the macros in them.
+     </p>
+
     {/param}
   {/call}
 {/template}
