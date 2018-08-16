@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.log;
 
+import com.facebook.buck.core.util.log.Logger;
 import com.google.common.base.Stopwatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;

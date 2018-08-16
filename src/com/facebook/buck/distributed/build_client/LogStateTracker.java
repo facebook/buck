@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.distributed.build_client;
 
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.DistBuildUtil;
 import com.facebook.buck.distributed.thrift.BuildSlaveInfo;
@@ -24,7 +25,6 @@ import com.facebook.buck.distributed.thrift.LogStreamType;
 import com.facebook.buck.distributed.thrift.SlaveStream;
 import com.facebook.buck.distributed.thrift.StreamLogs;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.log.Logger;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;

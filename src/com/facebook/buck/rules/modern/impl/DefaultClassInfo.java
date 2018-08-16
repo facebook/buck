@@ -23,7 +23,7 @@ import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.core.util.immutables.BuckStylePackageVisibleImmutable;
 import com.facebook.buck.core.util.immutables.BuckStylePackageVisibleTuple;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
-import com.facebook.buck.log.Logger;
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.rules.modern.ClassInfo;
 import com.facebook.buck.rules.modern.FieldInfo;
 import com.facebook.buck.rules.modern.ValueTypeInfo;

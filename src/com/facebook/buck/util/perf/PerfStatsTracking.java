@@ -16,12 +16,12 @@
 
 package com.facebook.buck.util.perf;
 
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.EventKey;
 import com.facebook.buck.log.GlobalStateManager;
 import com.facebook.buck.log.InvocationInfo;
-import com.facebook.buck.log.Logger;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.AbstractScheduledService;

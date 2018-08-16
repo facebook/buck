@@ -21,7 +21,7 @@ java_library(
     visibility = ["PUBLIC"],
     deps = [
         "//src/com/facebook/buck/core/build/event:event",
-        "//src/com/facebook/buck/log:api",
+        "//src/com/facebook/buck/core/util/log:log",
         "//src/com/facebook/buck/util/json:json",
         "//src/com/facebook/buck/util/unarchive:unarchive",
         "//third-party/java/guava:guava",

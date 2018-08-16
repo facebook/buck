@@ -16,8 +16,8 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.WorkAdvanceEvent;
-import com.facebook.buck.log.Logger;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.eventbus.Subscribe;

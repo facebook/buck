@@ -18,7 +18,7 @@ package com.facebook.buck.jvm.java;
 
 import static javax.tools.StandardLocation.CLASS_OUTPUT;
 
-import com.facebook.buck.log.Logger;
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.util.zip.JarBuilder;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;

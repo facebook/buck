@@ -1,25 +1,9 @@
 load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
 
-LOGGER_FILES = ["Logger.java"]
-
-java_library(
-    name = "api",
-    srcs = LOGGER_FILES,
-    visibility = ["PUBLIC"],
-    deps = [
-        # This class is used everywhere. Only depend on
-        # appendablelogrecord and third-party, and then only if strictly
-        # necessary.
-        "//src/com/facebook/buck/core/util/log/appendablelogrecord:appendablelogrecord",
-        "//third-party/java/jsr:jsr305",
-    ],
-)
-
 java_immutables_library(
     name = "log",
     srcs = glob(
         ["*.java"],
-        exclude = LOGGER_FILES,
     ),
     tests = [
         "//test/com/facebook/buck/log:log",
@@ -47,6 +31,7 @@ java_immutables_library(
         "//src/com/facebook/buck/core/config:config",
         "//src/com/facebook/buck/core/model:model",
         "//src/com/facebook/buck/core/util/immutables:immutables",
+        "//src/com/facebook/buck/core/util/log:log",
         "//src/com/facebook/buck/core/util/log/appendablelogrecord:appendablelogrecord",
         "//src/com/facebook/buck/event:interfaces",
         "//src/com/facebook/buck/event/external:external_lib",
@@ -55,7 +40,6 @@ java_immutables_library(
         "//src/com/facebook/buck/io/file:file",
         "//src/com/facebook/buck/io/watchman:transport",
         "//src/com/facebook/buck/io/windowsfs:windowsfs",
-        "//src/com/facebook/buck/log:api",
         "//src/com/facebook/buck/log/views:views",
         "//src/com/facebook/buck/test/result/type:type",
         "//src/com/facebook/buck/util:constants",

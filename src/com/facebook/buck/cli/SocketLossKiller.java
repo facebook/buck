@@ -16,7 +16,7 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.log.Logger;
+import com.facebook.buck.core.util.log.Logger;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;

@@ -12,12 +12,12 @@ java_library(
     ],
     deps = [
         "//src/com/facebook/buck/core/exceptions:exceptions",
+        "//src/com/facebook/buck/core/util/log:log",
         "//src/com/facebook/buck/eden:eden",
         "//src/com/facebook/buck/event:interfaces",
         "//src/com/facebook/buck/io:io",
         "//src/com/facebook/buck/io/file:file",
         "//src/com/facebook/buck/io/windowsfs:windowsfs",
-        "//src/com/facebook/buck/log:api",
         "//src/com/facebook/buck/util:exceptions",
         "//src/com/facebook/buck/util:process_executor",
         "//src/com/facebook/buck/util:util",

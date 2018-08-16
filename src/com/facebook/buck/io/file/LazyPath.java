@@ -15,7 +15,7 @@
  */
 package com.facebook.buck.io.file;
 
-import com.facebook.buck.log.Logger;
+import com.facebook.buck.core.util.log.Logger;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import java.io.IOException;

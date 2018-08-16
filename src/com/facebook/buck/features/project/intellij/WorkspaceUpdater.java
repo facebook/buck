@@ -16,8 +16,8 @@
 
 package com.facebook.buck.features.project.intellij;
 
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.log.Logger;
 import com.google.common.base.Preconditions;
 import java.io.IOException;
 import java.io.InputStream;

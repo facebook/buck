@@ -18,10 +18,10 @@ package com.facebook.buck.event.listener;
 
 import com.facebook.buck.core.build.event.BuildEvent;
 import com.facebook.buck.core.build.event.BuildRuleEvent;
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.ConsoleEvent;
-import com.facebook.buck.log.Logger;
 import com.facebook.buck.step.StepEvent;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.eventbus.Subscribe;

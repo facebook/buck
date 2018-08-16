@@ -11,10 +11,10 @@ java_library(
     ],
     visibility = ["PUBLIC"],
     deps = [
+        "//src/com/facebook/buck/core/util/log:log",
         "//src/com/facebook/buck/event:interfaces",
         "//src/com/facebook/buck/io/unixsocket:unixsocket",
         "//src/com/facebook/buck/io/watchman:transport",
-        "//src/com/facebook/buck/log:api",
         "//src/com/facebook/buck/util:util",
         "//src/com/facebook/buck/util/sha1:sha1",
         "//src/com/facebook/buck/util/timing:timing",

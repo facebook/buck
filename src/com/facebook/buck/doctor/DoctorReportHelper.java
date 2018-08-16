@@ -16,6 +16,7 @@
 
 package com.facebook.buck.doctor;
 
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.doctor.config.BuildLogEntry;
 import com.facebook.buck.doctor.config.DoctorConfig;
 import com.facebook.buck.doctor.config.DoctorEndpointRequest;
@@ -24,7 +25,6 @@ import com.facebook.buck.doctor.config.DoctorIssueCategory;
 import com.facebook.buck.doctor.config.DoctorProtocolVersion;
 import com.facebook.buck.doctor.config.DoctorSuggestion;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DirtyPrintStreamDecorator;
 import com.facebook.buck.util.json.ObjectMappers;

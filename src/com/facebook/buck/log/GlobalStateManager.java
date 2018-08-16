@@ -17,6 +17,7 @@
 package com.facebook.buck.log;
 
 import com.facebook.buck.core.model.BuildId;
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.windowsfs.WindowsFS;
 import com.facebook.buck.util.DirectoryCleaner;

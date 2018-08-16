@@ -17,7 +17,7 @@
 package com.facebook.buck.step;
 
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.log.Logger;
+import com.facebook.buck.core.util.log.Logger;
 import java.io.IOException;
 import java.util.Optional;
 import java.util.UUID;

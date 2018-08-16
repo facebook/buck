@@ -19,7 +19,7 @@ package com.facebook.buck.io.watchman;
 import static com.facebook.buck.util.concurrent.MostExecutors.newSingleThreadExecutor;
 import static com.google.common.util.concurrent.MoreExecutors.listeningDecorator;
 
-import com.facebook.buck.log.Logger;
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.bser.BserDeserializer;
 import com.facebook.buck.util.bser.BserSerializer;

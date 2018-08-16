@@ -20,7 +20,7 @@ import com.facebook.buck.artifact_cache.CacheResultType;
 import com.facebook.buck.core.build.distributed.synchronization.RemoteBuildRuleCompletionNotifier;
 import com.facebook.buck.core.build.distributed.synchronization.RemoteBuildRuleCompletionWaiter;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.log.Logger;
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.util.timing.Clock;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;

@@ -30,7 +30,7 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.log;
+package com.facebook.buck.core.util.log;
 
 import static java.util.logging.Level.FINE;
 import static java.util.logging.Level.FINER;

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.distributed.build_slave;
 
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.distributed.BuildStatusUtil;
 import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.DistBuildUtil;
@@ -27,7 +28,6 @@ import com.facebook.buck.distributed.thrift.MinionRequirement;
 import com.facebook.buck.distributed.thrift.MinionType;
 import com.facebook.buck.distributed.thrift.SchedulingEnvironmentType;
 import com.facebook.buck.distributed.thrift.StampedeId;
-import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.network.hostname.HostnameFetching;
 import com.google.common.base.Preconditions;
 import java.io.IOException;

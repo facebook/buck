@@ -20,6 +20,7 @@ import static com.facebook.buck.util.string.MoreStrings.linesToText;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.exceptions.handler.HumanReadableExceptionAugmentor;
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.EventDispatcher;
 import com.facebook.buck.util.exceptions.ExceptionWithContext;
@@ -43,8 +44,7 @@ import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 
 public class ErrorLogger {
-  private static final com.facebook.buck.log.Logger LOG =
-      com.facebook.buck.log.Logger.get(ErrorLogger.class);
+  private static final Logger LOG = Logger.get(ErrorLogger.class);
   private boolean suppressStackTraces = false;
 
   public ErrorLogger setSuppressStackTraces(boolean enabled) {

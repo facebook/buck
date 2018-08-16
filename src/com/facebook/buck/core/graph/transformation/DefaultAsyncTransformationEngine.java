@@ -16,7 +16,7 @@
 
 package com.facebook.buck.core.graph.transformation;
 
-import com.facebook.buck.log.Logger;
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.util.RichStream;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;

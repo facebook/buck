@@ -24,7 +24,7 @@ import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.Flavored;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.UnflavoredBuildTarget;
-import com.facebook.buck.log.Logger;
+import com.facebook.buck.core.util.log.Logger;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;

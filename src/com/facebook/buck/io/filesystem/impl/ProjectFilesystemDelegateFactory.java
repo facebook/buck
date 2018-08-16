@@ -16,12 +16,12 @@
 
 package com.facebook.buck.io.filesystem.impl;
 
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.eden.EdenClientPool;
 import com.facebook.buck.eden.EdenMount;
 import com.facebook.buck.eden.EdenProjectFilesystemDelegate;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemDelegate;
-import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.config.Config;
 import java.nio.file.Path;
 import java.util.Optional;

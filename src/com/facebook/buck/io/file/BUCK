@@ -7,8 +7,8 @@ java_library(
     deps = [
         "//src/com/facebook/buck/cli/bootstrapper/filesystem:filesystem_lib",
         "//src/com/facebook/buck/core/exceptions:exceptions",
+        "//src/com/facebook/buck/core/util/log:log",
         "//src/com/facebook/buck/io/windowsfs:windowsfs",
-        "//src/com/facebook/buck/log:api",
         "//src/com/facebook/buck/util:exceptions",
         "//src/com/facebook/buck/util:util",
         "//src/com/facebook/buck/util/environment:platform",

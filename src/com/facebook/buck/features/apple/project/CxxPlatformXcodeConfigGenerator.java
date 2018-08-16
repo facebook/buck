@@ -16,8 +16,8 @@
 
 package com.facebook.buck.features.apple.project;
 
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
-import com.facebook.buck.log.Logger;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;

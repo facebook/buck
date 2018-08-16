@@ -6,7 +6,7 @@ java_library(
         "//src/com/facebook/buck/core/config:config",
         "//src/com/facebook/buck/core/exceptions:exceptions",
         "//src/com/facebook/buck/core/exceptions/handler:handler",
-        "//src/com/facebook/buck/log:api",
+        "//src/com/facebook/buck/core/util/log:log",
         "//src/com/facebook/buck/parser/exceptions:exceptions",
         "//src/com/facebook/buck/util:process_executor",
         "//src/com/facebook/buck/util:util",

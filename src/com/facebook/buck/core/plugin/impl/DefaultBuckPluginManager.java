@@ -17,7 +17,7 @@
 package com.facebook.buck.core.plugin.impl;
 
 import com.facebook.buck.core.plugin.BuckPluginManager;
-import com.facebook.buck.log.Logger;
+import com.facebook.buck.core.util.log.Logger;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;

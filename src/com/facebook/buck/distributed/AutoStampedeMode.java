@@ -17,7 +17,7 @@
 package com.facebook.buck.distributed;
 
 import com.facebook.buck.core.model.BuildId;
-import com.facebook.buck.log.Logger;
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.util.randomizedtrial.RandomizedTrial;
 import com.facebook.buck.util.randomizedtrial.WithProbability;
 import com.google.common.base.Preconditions;

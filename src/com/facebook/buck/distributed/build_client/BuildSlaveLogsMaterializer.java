@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.distributed.build_client;
 
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.DistBuildUtil;
 import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
@@ -22,7 +23,6 @@ import com.facebook.buck.distributed.thrift.LogDir;
 import com.facebook.buck.distributed.thrift.MultiGetBuildSlaveLogDirResponse;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.NamedTemporaryFile;
 import com.facebook.buck.util.unarchive.ArchiveFormat;
 import com.facebook.buck.util.unarchive.ExistingFileMode;

@@ -20,7 +20,7 @@ import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.model.impl.ImmutableUnflavoredBuildTarget;
-import com.facebook.buck.log.Logger;
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.facebook.buck.parser.thrift.BuildFileEnvProperty;
 import com.facebook.buck.parser.thrift.RemoteDaemonicCellState;

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.distributed.build_slave;
 
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.distributed.build_slave.ThriftCoordinatorServer.ExitState;
 import com.facebook.buck.distributed.thrift.CoordinatorService;
 import com.facebook.buck.distributed.thrift.GetWorkRequest;
@@ -23,7 +24,6 @@ import com.facebook.buck.distributed.thrift.GetWorkResponse;
 import com.facebook.buck.distributed.thrift.ReportMinionAliveRequest;
 import com.facebook.buck.distributed.thrift.ReportMinionAliveResponse;
 import com.facebook.buck.distributed.thrift.WorkUnit;
-import com.facebook.buck.log.Logger;
 import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 import java.util.concurrent.CompletableFuture;

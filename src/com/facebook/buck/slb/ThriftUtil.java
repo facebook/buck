@@ -16,7 +16,7 @@
 
 package com.facebook.buck.slb;
 
-import com.facebook.buck.log.Logger;
+import com.facebook.buck.core.util.log.Logger;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;

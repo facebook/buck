@@ -16,9 +16,9 @@
 
 package com.facebook.buck.slb;
 
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.log.CommandThreadFactory;
-import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.timing.Clock;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;

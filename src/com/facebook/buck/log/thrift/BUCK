@@ -3,7 +3,7 @@ java_library(
     srcs = ["ThriftRuleKeyLogger.java"],
     exported_deps = [
         "//src-gen:thrift",
-        "//src/com/facebook/buck/log:api",
+        "//src/com/facebook/buck/core/util/log:log",
         "//third-party/java/jsr:jsr305",
     ],
     visibility = ["PUBLIC"],

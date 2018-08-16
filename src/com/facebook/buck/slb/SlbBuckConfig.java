@@ -17,8 +17,8 @@
 package com.facebook.buck.slb;
 
 import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.timing.Clock;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;

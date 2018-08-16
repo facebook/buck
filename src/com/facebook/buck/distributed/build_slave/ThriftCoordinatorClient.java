@@ -16,6 +16,7 @@
 
 package com.facebook.buck.distributed.build_slave;
 
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
 import com.facebook.buck.distributed.thrift.CoordinatorService;
 import com.facebook.buck.distributed.thrift.CoordinatorService.Client;
@@ -24,7 +25,6 @@ import com.facebook.buck.distributed.thrift.GetWorkResponse;
 import com.facebook.buck.distributed.thrift.MinionType;
 import com.facebook.buck.distributed.thrift.ReportMinionAliveRequest;
 import com.facebook.buck.distributed.thrift.StampedeId;
-import com.facebook.buck.log.Logger;
 import com.facebook.buck.log.TimedLogger;
 import com.facebook.buck.slb.ThriftException;
 import com.google.common.base.Preconditions;

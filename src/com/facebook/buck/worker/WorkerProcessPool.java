@@ -16,7 +16,7 @@
 
 package com.facebook.buck.worker;
 
-import com.facebook.buck.log.Logger;
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.util.concurrent.LinkedBlockingStack;
 import com.facebook.buck.util.function.ThrowingSupplier;
 import com.google.common.annotations.VisibleForTesting;

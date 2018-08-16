@@ -17,6 +17,7 @@
 package com.facebook.buck.json;
 
 import com.facebook.buck.core.description.BaseDescription;
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.PerfEventId;
@@ -25,7 +26,6 @@ import com.facebook.buck.io.filesystem.PathOrGlobMatcher;
 import com.facebook.buck.io.watchman.ProjectWatch;
 import com.facebook.buck.io.watchman.WatchmanDiagnostic;
 import com.facebook.buck.io.watchman.WatchmanDiagnosticEvent;
-import com.facebook.buck.log.Logger;
 import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.events.ParseBuckFileEvent;

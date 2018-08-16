@@ -16,7 +16,7 @@
 
 package com.facebook.buck.util.versioncontrol;
 
-import com.facebook.buck.log.Logger;
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.util.MoreMaps;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorFactory;

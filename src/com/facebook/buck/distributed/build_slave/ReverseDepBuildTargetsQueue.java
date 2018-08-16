@@ -15,10 +15,10 @@
  */
 package com.facebook.buck.distributed.build_slave;
 
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.distributed.build_slave.DistributableBuildGraph.DistributableNode;
 import com.facebook.buck.distributed.thrift.CoordinatorBuildProgress;
 import com.facebook.buck.distributed.thrift.WorkUnit;
-import com.facebook.buck.log.Logger;
 import com.facebook.buck.log.TimedLogger;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;

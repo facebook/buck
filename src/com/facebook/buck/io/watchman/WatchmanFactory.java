@@ -16,10 +16,10 @@
 
 package com.facebook.buck.io.watchman;
 
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.unixsocket.UnixDomainSocket;
 import com.facebook.buck.io.windowspipe.WindowsNamedPipe;
-import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ForwardingProcessListener;
 import com.facebook.buck.util.ListeningProcessExecutor;

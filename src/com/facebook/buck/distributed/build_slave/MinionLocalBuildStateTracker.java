@@ -16,8 +16,8 @@
 package com.facebook.buck.distributed.build_slave;
 
 import com.facebook.buck.core.build.engine.BuildResult;
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.distributed.thrift.WorkUnit;
-import com.facebook.buck.log.Logger;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import java.util.ArrayList;

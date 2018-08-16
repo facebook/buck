@@ -17,11 +17,11 @@
 package com.facebook.buck.distributed.build_slave;
 
 import com.facebook.buck.core.model.BuildId;
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.build_slave.HeartbeatService.HeartbeatCallback;
 import com.facebook.buck.distributed.build_slave.ThriftCoordinatorServer.EventListener;
 import com.facebook.buck.distributed.thrift.StampedeId;
-import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.trace.uploader.launcher.UploaderLauncher;

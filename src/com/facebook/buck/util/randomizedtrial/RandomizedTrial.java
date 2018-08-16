@@ -16,7 +16,7 @@
 
 package com.facebook.buck.util.randomizedtrial;
 
-import com.facebook.buck.log.Logger;
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.util.MoreSuppliers;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;

@@ -16,8 +16,8 @@
 
 package com.facebook.buck.log.memory;
 
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.log.LogFormatter;
-import com.facebook.buck.log.Logger;
 import com.facebook.buck.slb.NoHealthyServersException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;

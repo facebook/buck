@@ -16,8 +16,8 @@
 
 package com.facebook.buck.features.project.intellij.lang.android;
 
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.log.Logger;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;

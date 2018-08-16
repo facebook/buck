@@ -77,10 +77,10 @@ To add a pre commit hook:
 
 Buck logs debugging information to `buck-out/log/buck-0.log`. (Older logs are rotated to `buck-out/log/buck-1.log` etc.)
 
-To add more logs to your code, import `com.facebook.buck.log.Logger`, create a static instance, and add your logs:
+To add more logs to your code, import `com.facebook.buck.core.util.log.Logger`, create a static instance, and add your logs:
 
 ```java
-import com.facebook.buck.log.Logger;
+import com.facebook.buck.core.util.log.Logger;
 
 public class MyClass {
   private static final Logger LOG = Logger.get(MyClass.class);
@@ -101,7 +101,7 @@ public class MyClass {
 
 Buck's Logger exposes five log levels:
 
-| `com.facebook.buck.log.Logger` | `java.util.logging.Level` equivalent|
+| `com.facebook.buck.core.util.log.Logger` | `java.util.logging.Level` equivalent|
 | ------------------------------ | ------------------------------------|
 | `error()` | `SEVERE` |
 | `warn()` | `WARNING` |

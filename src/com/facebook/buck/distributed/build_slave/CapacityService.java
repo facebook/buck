@@ -16,6 +16,7 @@
 
 package com.facebook.buck.distributed.build_slave;
 
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.distributed.thrift.BuildSlaveRequest;
 import com.facebook.buck.distributed.thrift.BuildSlaveRequestType;
 import com.facebook.buck.distributed.thrift.BuildSlaveResponse;
@@ -26,7 +27,6 @@ import com.facebook.buck.distributed.thrift.ObtainAllAvailableCapacityRequest;
 import com.facebook.buck.distributed.thrift.ObtainAllAvailableCapacityResponse;
 import com.facebook.buck.distributed.thrift.ObtainCapacityRequest;
 import com.facebook.buck.distributed.thrift.ReturnCapacityRequest;
-import com.facebook.buck.log.Logger;
 import com.google.common.base.Preconditions;
 import java.io.IOException;
 

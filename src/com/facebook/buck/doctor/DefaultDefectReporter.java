@@ -18,12 +18,12 @@ package com.facebook.buck.doctor;
 
 import static com.facebook.buck.util.zip.ZipOutputStreams.HandleDuplicates.APPEND_TO_ZIP;
 
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.doctor.config.DoctorConfig;
 import com.facebook.buck.doctor.config.DoctorJsonResponse;
 import com.facebook.buck.doctor.config.DoctorProtocolVersion;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.log.Logger;
 import com.facebook.buck.slb.ClientSideSlb;
 import com.facebook.buck.slb.HttpResponse;
 import com.facebook.buck.slb.HttpService;

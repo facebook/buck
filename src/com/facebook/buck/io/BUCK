@@ -10,8 +10,8 @@ java_library(
     visibility = ["PUBLIC"],
     deps = [
         "//src/com/facebook/buck/core/exceptions:exceptions",
+        "//src/com/facebook/buck/core/util/log:log",
         "//src/com/facebook/buck/io/file:file",
-        "//src/com/facebook/buck/log:api",
         "//src/com/facebook/buck/util:exceptions",
         "//src/com/facebook/buck/util:util",
         "//src/com/facebook/buck/util/environment:platform",
@@ -31,11 +31,11 @@ java_immutables_library(
     ],
     visibility = ["PUBLIC"],
     deps = [
+        "//src/com/facebook/buck/core/util/log:log",
         "//src/com/facebook/buck/event:interfaces",
         "//src/com/facebook/buck/io/file:file",
         "//src/com/facebook/buck/io/filesystem:filesystem",
         "//src/com/facebook/buck/io/windowsfs:windowsfs",
-        "//src/com/facebook/buck/log:api",
         "//src/com/facebook/buck/util:constants",
         "//src/com/facebook/buck/util:exceptions",
         "//src/com/facebook/buck/util/concurrent:concurrent",

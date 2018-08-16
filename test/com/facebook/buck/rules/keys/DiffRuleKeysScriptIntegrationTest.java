@@ -19,8 +19,8 @@ package com.facebook.buck.rules.keys;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.log.LogFormatter;
-import com.facebook.buck.log.Logger;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;

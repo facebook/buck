@@ -23,7 +23,7 @@ import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.toolchain.Toolchain;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import com.facebook.buck.log.Logger;
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.base.Joiner;
 import com.google.common.base.Suppliers;

@@ -16,8 +16,8 @@
 
 package com.facebook.buck.slb;
 
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.log.Logger;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URL;

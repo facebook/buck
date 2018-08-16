@@ -22,7 +22,7 @@ import com.facebook.buck.core.rulekey.RuleKeyObjectSink;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.sourcepath.NonHashableSourcePathContainer;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.log.Logger;
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.rules.keys.hasher.RuleKeyHasher;
 import com.facebook.buck.util.Scope;
 import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;

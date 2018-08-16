@@ -16,9 +16,9 @@
 
 package com.facebook.buck.util.versioncontrol;
 
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.SimplePerfEvent;
-import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.Threads;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;

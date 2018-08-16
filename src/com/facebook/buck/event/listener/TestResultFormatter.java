@@ -16,8 +16,8 @@
 
 package com.facebook.buck.event.listener;
 
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.file.MostFiles;
-import com.facebook.buck.log.Logger;
 import com.facebook.buck.test.TestCaseSummary;
 import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.TestResultSummaryVerbosity;

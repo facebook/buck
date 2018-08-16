@@ -22,7 +22,7 @@ import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.toolchain.ToolchainCreationContext;
 import com.facebook.buck.core.toolchain.ToolchainFactory;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
-import com.facebook.buck.log.Logger;
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.util.ProcessExecutor;
 import java.nio.file.Files;
 import java.nio.file.Path;

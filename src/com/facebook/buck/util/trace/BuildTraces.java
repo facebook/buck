@@ -17,8 +17,8 @@
 package com.facebook.buck.util.trace;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.trace.ChromeTraceParser.ChromeTraceEventMatcher;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;

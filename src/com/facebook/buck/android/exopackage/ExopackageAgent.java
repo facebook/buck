@@ -18,9 +18,9 @@ package com.facebook.buck.android.exopackage;
 
 import com.android.ddmlib.InstallException;
 import com.facebook.buck.android.agent.util.AgentUtil;
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.SimplePerfEvent;
-import com.facebook.buck.log.Logger;
 import com.google.common.base.Throwables;
 import java.io.File;
 import java.nio.file.Path;

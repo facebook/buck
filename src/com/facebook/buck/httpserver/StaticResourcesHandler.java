@@ -16,7 +16,7 @@
 
 package com.facebook.buck.httpserver;
 
-import com.facebook.buck.log.Logger;
+import com.facebook.buck.core.util.log.Logger;
 import com.google.common.base.Charsets;
 import com.google.common.io.ByteStreams;
 import com.google.common.net.MediaType;

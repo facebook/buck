@@ -16,7 +16,7 @@
 
 package com.facebook.buck.log.thrift;
 
-import com.facebook.buck.log.Logger;
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.log.thrift.rulekeys.FullRuleKey;
 import java.io.BufferedOutputStream;
 import java.io.FileNotFoundException;

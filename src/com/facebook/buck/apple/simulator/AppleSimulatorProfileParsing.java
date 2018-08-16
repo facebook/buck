@@ -21,7 +21,7 @@ import com.dd.plist.NSDictionary;
 import com.dd.plist.NSNumber;
 import com.dd.plist.NSObject;
 import com.dd.plist.PropertyListParser;
-import com.facebook.buck.log.Logger;
+import com.facebook.buck.core.util.log.Logger;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;

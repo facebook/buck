@@ -16,7 +16,7 @@
 
 package com.facebook.buck.util.versioncontrol;
 
-import com.facebook.buck.log.Logger;
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.util.ProcessExecutorFactory;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;

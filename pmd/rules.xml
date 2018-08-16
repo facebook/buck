@@ -182,7 +182,7 @@ interface Bar {
     </properties>
   </rule>
   <rule name="BlacklistedJavaUtilLoggerUsage"
-        message="Use com.facebook.buck.log.Logger instead of java.util.logging.Logger"
+        message="Use com.facebook.buck.core.util.log.Logger instead of java.util.logging.Logger"
         class="com.liveramp.pmd_extensions.BlacklistClassUsages">
     <description>
       Buck uses a custom Logger which does custom formatting and maybe other things.

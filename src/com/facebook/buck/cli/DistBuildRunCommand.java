@@ -18,6 +18,7 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.rulekey.RuleKey;
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.distributed.BuildJobStateSerializer;
 import com.facebook.buck.distributed.DistBuildConfig;
 import com.facebook.buck.distributed.DistBuildMode;
@@ -43,7 +44,6 @@ import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.listener.DistBuildSlaveEventBusListener;
 import com.facebook.buck.event.listener.NoOpCoordinatorBuildRuleEventsPublisher;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.keys.DefaultRuleKeyCache;
 import com.facebook.buck.rules.keys.EventPostingRuleKeyCacheScope;
 import com.facebook.buck.rules.keys.RuleKeyCacheScope;

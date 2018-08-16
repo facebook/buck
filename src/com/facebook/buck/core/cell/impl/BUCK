@@ -13,8 +13,8 @@ java_immutables_library(
     ],
     deps = [
         "//src/com/facebook/buck/core/toolchain/impl:impl",
+        "//src/com/facebook/buck/core/util/log:log",
         "//src/com/facebook/buck/io/file:file",
-        "//src/com/facebook/buck/log:api",
         "//src/com/facebook/buck/parser:parser",
         "//src/com/facebook/buck/parser:rule_pattern",
         "//src/com/facebook/buck/rules/keys/config/impl:impl",

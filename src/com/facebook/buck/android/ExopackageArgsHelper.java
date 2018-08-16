@@ -14,12 +14,11 @@
  * under the License.
  */
 
-
 package com.facebook.buck.android;
 
 import com.facebook.buck.android.exopackage.ExopackageMode;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.log.Logger;
+import com.facebook.buck.core.util.log.Logger;
 import java.util.EnumSet;
 
 public class ExopackageArgsHelper {

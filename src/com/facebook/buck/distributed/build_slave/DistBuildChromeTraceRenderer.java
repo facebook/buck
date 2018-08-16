@@ -16,13 +16,13 @@
 
 package com.facebook.buck.distributed.build_slave;
 
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.distributed.build_slave.DistBuildTrace.MinionThread;
 import com.facebook.buck.distributed.build_slave.DistBuildTrace.MinionTrace;
 import com.facebook.buck.distributed.build_slave.DistBuildTrace.RuleTrace;
 import com.facebook.buck.event.chrome_trace.ChromeTraceEvent;
 import com.facebook.buck.event.chrome_trace.ChromeTraceEvent.Phase;
 import com.facebook.buck.event.chrome_trace.ChromeTraceWriter;
-import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.network.hostname.HostnameFetching;
 import com.google.common.collect.ImmutableMap;
 import java.io.FileOutputStream;

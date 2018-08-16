@@ -14,14 +14,13 @@
  * under the License.
  */
 
-
 package com.facebook.buck.android;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.jvm.core.JavaLibrary;
-import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.RichStream;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;

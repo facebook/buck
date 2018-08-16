@@ -16,9 +16,9 @@
 
 package com.facebook.buck.distributed.build_slave;
 
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.distributed.thrift.BuildSlaveRequest;
 import com.facebook.buck.distributed.thrift.BuildSlaveResponse;
-import com.facebook.buck.log.Logger;
 import com.facebook.buck.slb.ThriftOverHttpService;
 import com.facebook.buck.slb.ThriftOverHttpServiceConfig;
 import java.io.IOException;

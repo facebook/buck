@@ -16,13 +16,13 @@
 
 package com.facebook.buck.io.watchman;
 
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.event.WatchmanStatusEvent;
 import com.facebook.buck.io.filesystem.PathOrGlobMatcher;
 import com.facebook.buck.io.watchman.AbstractWatchmanPathEvent.Kind;
-import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.Threads;
 import com.facebook.buck.util.concurrent.MostExecutors;
 import com.google.common.annotations.VisibleForTesting;

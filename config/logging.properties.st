@@ -6,7 +6,7 @@
 # for docs on the keys and values in this file.
 
 # The log levels in this file come from java.util.logging.Level.
-# Here's how they map to com.buck.log.Logger APIs:
+# Here's how they map to com.buck.core.util.log.Logger APIs:
 
 # j.u.l   | buck
 # ----------------

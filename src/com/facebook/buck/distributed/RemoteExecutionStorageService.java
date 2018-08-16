@@ -16,6 +16,7 @@
 
 package com.facebook.buck.distributed;
 
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.distributed.thrift.DigestAndContent;
 import com.facebook.buck.distributed.thrift.FrontendRequest;
 import com.facebook.buck.distributed.thrift.FrontendRequestType;
@@ -24,7 +25,6 @@ import com.facebook.buck.distributed.thrift.RemoteExecutionContainsRequest;
 import com.facebook.buck.distributed.thrift.RemoteExecutionContainsResponse;
 import com.facebook.buck.distributed.thrift.RemoteExecutionFetchRequest;
 import com.facebook.buck.distributed.thrift.RemoteExecutionStoreRequest;
-import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.modern.builders.AsyncBlobFetcher;
 import com.facebook.buck.rules.modern.builders.CasBlobUploader;
 import com.facebook.buck.rules.modern.builders.MultiThreadedBlobUploader.UploadData;

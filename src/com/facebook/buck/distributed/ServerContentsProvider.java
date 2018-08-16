@@ -16,8 +16,8 @@
 
 package com.facebook.buck.distributed;
 
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashEntry;
-import com.facebook.buck.log.Logger;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
 import com.google.common.util.concurrent.Futures;

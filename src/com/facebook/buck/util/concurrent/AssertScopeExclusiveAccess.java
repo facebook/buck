@@ -16,7 +16,7 @@
 
 package com.facebook.buck.util.concurrent;
 
-import com.facebook.buck.log.Logger;
+import com.facebook.buck.core.util.log.Logger;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 

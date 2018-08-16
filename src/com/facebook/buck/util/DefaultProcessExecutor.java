@@ -18,7 +18,7 @@ package com.facebook.buck.util;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-import com.facebook.buck.log.Logger;
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.util.concurrent.MostExecutors;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Preconditions;

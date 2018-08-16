@@ -18,8 +18,8 @@ package com.facebook.buck.core.cell.impl;
 
 import com.facebook.buck.core.cell.AbstractCellPathResolver;
 import com.facebook.buck.core.cell.name.RelativeCellName;
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.file.MorePaths;
-import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.config.Config;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;

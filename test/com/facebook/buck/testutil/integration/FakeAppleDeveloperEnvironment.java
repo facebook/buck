@@ -23,7 +23,7 @@ import com.facebook.buck.apple.toolchain.ProvisioningProfileMetadata;
 import com.facebook.buck.apple.toolchain.ProvisioningProfileStore;
 import com.facebook.buck.apple.toolchain.impl.CodeSignIdentityStoreFactory;
 import com.facebook.buck.apple.toolchain.impl.ProvisioningProfileStoreFactory;
-import com.facebook.buck.log.Logger;
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.MoreSuppliers;

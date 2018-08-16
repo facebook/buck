@@ -18,11 +18,11 @@ package com.facebook.buck.event.listener;
 
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.chrome_trace.ChromeTraceBuckConfig;
 import com.facebook.buck.event.chrome_trace.ChromeTraceWriter;
 import com.facebook.buck.io.file.PathListing;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.log.Logger;
 import com.facebook.buck.support.bgtasks.TaskAction;
 import com.facebook.buck.util.Threads;
 import com.facebook.buck.util.trace.uploader.launcher.UploaderLauncher;

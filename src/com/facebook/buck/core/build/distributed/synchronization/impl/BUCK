@@ -10,7 +10,7 @@ java_library(
     deps = [
         "//src/com/facebook/buck/artifact_cache:artifact_cache",
         "//src/com/facebook/buck/core/rules/impl:impl",
-        "//src/com/facebook/buck/log:api",
+        "//src/com/facebook/buck/core/util/log:log",
         "//src/com/facebook/buck/util/timing:timing",
         "//third-party/java/guava:guava",
         "//third-party/java/jsr:jsr305",

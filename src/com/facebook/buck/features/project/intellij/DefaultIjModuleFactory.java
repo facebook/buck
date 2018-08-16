@@ -18,12 +18,12 @@ package com.facebook.buck.features.project.intellij;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.features.project.intellij.model.IjModule;
 import com.facebook.buck.features.project.intellij.model.IjModuleFactory;
 import com.facebook.buck.features.project.intellij.model.IjModuleRule;
 import com.facebook.buck.features.project.intellij.model.folders.ExcludeFolder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.log.Logger;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;

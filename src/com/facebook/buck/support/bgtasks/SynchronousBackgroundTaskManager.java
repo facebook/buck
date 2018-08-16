@@ -16,7 +16,7 @@
 
 package com.facebook.buck.support.bgtasks;
 
-import com.facebook.buck.log.Logger;
+import com.facebook.buck.core.util.log.Logger;
 import java.util.ArrayList;
 import java.util.List;
 

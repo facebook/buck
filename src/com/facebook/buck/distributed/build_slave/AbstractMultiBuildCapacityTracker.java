@@ -16,7 +16,7 @@
 
 package com.facebook.buck.distributed.build_slave;
 
-import com.facebook.buck.log.Logger;
+import com.facebook.buck.core.util.log.Logger;
 import java.io.IOException;
 
 /**

@@ -13,7 +13,7 @@ java_library(
         "//test/...",
     ],
     deps = [
-        "//src/com/facebook/buck/log:api",
+        "//src/com/facebook/buck/core/util/log:log",
         "//third-party/java/guava:guava",
     ],
 )

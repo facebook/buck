@@ -19,9 +19,9 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.description.impl.DescriptionCache;
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.file.MostFiles;
-import com.facebook.buck.log.Logger;
 import com.facebook.buck.parser.function.BuckPyFunction;
 import com.facebook.buck.rules.coercer.CoercedTypeCache;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;

@@ -17,9 +17,9 @@
 package com.facebook.buck.distributed.build_slave;
 
 import com.facebook.buck.command.BuildExecutor;
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.thrift.StampedeId;
-import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.ExitCode;
 import com.google.common.util.concurrent.ListenableFuture;
 import java.io.Closeable;

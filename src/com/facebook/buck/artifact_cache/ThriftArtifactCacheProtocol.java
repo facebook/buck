@@ -18,7 +18,7 @@ package com.facebook.buck.artifact_cache;
 import com.facebook.buck.artifact_cache.thrift.BuckCacheRequest;
 import com.facebook.buck.artifact_cache.thrift.BuckCacheResponse;
 import com.facebook.buck.artifact_cache.thrift.PayloadInfo;
-import com.facebook.buck.log.Logger;
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.slb.ThriftProtocol;
 import com.facebook.buck.slb.ThriftUtil;
 import com.google.common.annotations.VisibleForTesting;

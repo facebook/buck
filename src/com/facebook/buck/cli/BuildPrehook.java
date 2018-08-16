@@ -18,9 +18,9 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
-import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.ListeningProcessExecutor;
 import com.facebook.buck.util.NamedTemporaryFile;
 import com.facebook.buck.util.ProcessExecutorParams;

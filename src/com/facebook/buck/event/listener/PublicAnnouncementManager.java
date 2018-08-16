@@ -17,6 +17,7 @@
 package com.facebook.buck.event.listener;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.distributed.FrontendService;
 import com.facebook.buck.distributed.thrift.Announcement;
 import com.facebook.buck.distributed.thrift.AnnouncementRequest;
@@ -24,7 +25,6 @@ import com.facebook.buck.distributed.thrift.FrontendRequest;
 import com.facebook.buck.distributed.thrift.FrontendRequestType;
 import com.facebook.buck.distributed.thrift.FrontendResponse;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.log.Logger;
 import com.facebook.buck.slb.ClientSideSlb;
 import com.facebook.buck.slb.LoadBalancedService;
 import com.facebook.buck.slb.ThriftOverHttpServiceConfig;

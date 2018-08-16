@@ -19,7 +19,7 @@ package com.facebook.buck.util.environment;
 import ca.weblite.objc.Client;
 import ca.weblite.objc.Proxy;
 import ca.weblite.objc.RuntimeUtils;
-import com.facebook.buck.log.Logger;
+import com.facebook.buck.core.util.log.Logger;
 import com.sun.jna.Library;
 import com.sun.jna.Native;
 import com.sun.jna.Pointer;

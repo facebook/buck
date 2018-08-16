@@ -16,8 +16,8 @@
 
 package com.facebook.buck.counters;
 
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.Optionals;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
