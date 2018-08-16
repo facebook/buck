@@ -26,14 +26,12 @@ import com.facebook.buck.core.model.impl.ImmutableUnflavoredBuildTarget;
 import com.facebook.buck.util.RichStream;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Interner;
 import com.google.common.collect.Interners;
 import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 public class BuildTargetParser {
 
@@ -43,7 +41,6 @@ public class BuildTargetParser {
   private static final String BUILD_RULE_PREFIX = "//";
   private static final String BUILD_RULE_SEPARATOR = ":";
   private static final Splitter BUILD_RULE_SEPARATOR_SPLITTER = Splitter.on(BUILD_RULE_SEPARATOR);
-  private static final Set<String> INVALID_BASE_NAME_PARTS = ImmutableSet.of(".", "..");
 
   private final Interner<BuildTarget> flavoredTargetCache = Interners.newWeakInterner();
 
@@ -141,26 +138,37 @@ public class BuildTargetParser {
       throw new BuildTargetParseException(
           String.format("Path in %s must start with %s", buildTargetName, BUILD_RULE_PREFIX));
     }
-    String baseNamePath = baseName.substring(BUILD_RULE_PREFIX.length());
-    if (baseNamePath.startsWith("/")) {
+    int baseNamePathStart = BUILD_RULE_PREFIX.length();
+    if (baseName.charAt(baseNamePathStart) == '/') {
       throw new BuildTargetParseException(
           String.format(
               "Build target path should start with an optional cell name, then // and then a "
                   + "relative directory name, not an absolute directory path (found %s)",
               buildTargetName));
     }
-    for (String baseNamePart : Splitter.on('/').split(baseNamePath)) {
-      if ("".equals(baseNamePart)) {
+    // instead of splitting the path by / and allocating lots of unnecessary garbage, use 2 indices
+    // to track the [start, end) indices of the package part
+    int start = baseNamePathStart;
+    while (start < baseName.length()) {
+      int end = baseName.indexOf('/', start);
+      if (end == -1) end = baseName.length();
+      int len = end - start;
+      if (len == 0) {
         throw new BuildTargetParseException(
             String.format(
                 "Build target path cannot contain // other than at the start "
                     + "(or after a cell name) (found %s)",
                 buildTargetName));
       }
-      if (INVALID_BASE_NAME_PARTS.contains(baseNamePart)) {
+      if (len == 1 && baseName.charAt(start) == '.') {
         throw new BuildTargetParseException(
-            String.format("Build target path cannot contain . or .. (found %s)", buildTargetName));
+            String.format("Build target path cannot contain . (found %s)", buildTargetName));
       }
+      if (len == 2 && baseName.charAt(start) == '.' && baseName.charAt(start + 1) == '.') {
+        throw new BuildTargetParseException(
+            String.format("Build target path cannot contain .. (found %s)", buildTargetName));
+      }
+      start = end + 1;
     }
   }
 
