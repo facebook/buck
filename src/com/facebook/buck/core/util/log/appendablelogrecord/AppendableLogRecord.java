@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.log;
+package com.facebook.buck.core.util.log.appendablelogrecord;
 
 import java.util.Arrays;
 import java.util.ConcurrentModificationException;

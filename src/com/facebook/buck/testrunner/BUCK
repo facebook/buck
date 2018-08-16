@@ -35,7 +35,7 @@ java_library(
         ":base",
         # This is loaded by reflection. Joy.
         "//src/com/facebook/buck/jvm/java/runner:runner",
-        "//src/com/facebook/buck/log:appendablelogrecord",
+        "//src/com/facebook/buck/core/util/log/appendablelogrecord:appendablelogrecord",
         "//src/com/facebook/buck/test/result/type:type",
         "//src/com/facebook/buck/test/selectors:selectors",
         "//src/com/facebook/buck/util:process_executor",

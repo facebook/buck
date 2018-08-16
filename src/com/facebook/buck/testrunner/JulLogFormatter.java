@@ -16,7 +16,7 @@
 
 package com.facebook.buck.testrunner;
 
-import com.facebook.buck.log.AppendableLogRecord;
+import com.facebook.buck.core.util.log.appendablelogrecord.AppendableLogRecord;
 import java.io.PrintWriter; // NOPMD can't depend on Guava
 import java.io.StringWriter;
 import java.text.SimpleDateFormat;

@@ -38,6 +38,7 @@ import static java.util.logging.Level.INFO;
 import static java.util.logging.Level.SEVERE;
 import static java.util.logging.Level.WARNING;
 
+import com.facebook.buck.core.util.log.appendablelogrecord.AppendableLogRecord;
 import java.util.logging.Handler;
 import java.util.logging.Level;
 import javax.annotation.Nullable;
