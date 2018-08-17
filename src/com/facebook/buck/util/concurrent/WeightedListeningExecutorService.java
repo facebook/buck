@@ -48,10 +48,6 @@ public class WeightedListeningExecutorService extends AbstractListeningExecutorS
     this.delegate = delegate;
   }
 
-  public ListeningMultiSemaphore getSemaphore() {
-    return semaphore;
-  }
-
   /**
    * Creates a new service that has different default resource amounts. Useful when you need to
    * propagate explicit default amounts when you submit the job through execute(),

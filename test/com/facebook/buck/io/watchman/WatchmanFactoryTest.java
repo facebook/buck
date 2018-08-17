@@ -21,12 +21,10 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.io.FakeExecutableFinder;
 import com.facebook.buck.io.watchman.WatchmanFactory.InitialWatchmanClientFactory;
 import com.facebook.buck.testutil.TestConsole;
-import com.facebook.buck.util.Console;
 import com.facebook.buck.util.FakeListeningProcessExecutor;
 import com.facebook.buck.util.FakeListeningProcessState;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.bser.BserSerializer;
-import com.facebook.buck.util.timing.Clock;
 import com.facebook.buck.util.timing.SettableFakeClock;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -69,15 +67,11 @@ public class WatchmanFactoryTest {
       long queryElapsedTimeNanos,
       Map<? extends List<? extends Object>, ? extends Map<String, ? extends Object>> queryResults) {
     InitialWatchmanClientFactory factory =
-        new InitialWatchmanClientFactory() {
-          @Override
-          public WatchmanClient tryCreateClientToFetchInitialWatchmanData(
-              Path path, Console console, Clock clock) throws IOException {
-            if (path.equals(socketName)) {
-              return new FakeWatchmanClient(queryElapsedTimeNanos, queryResults);
-            } else {
-              throw new IOException(String.format("bad path (%s != %s", path, socketName));
-            }
+        (path, console, clock) -> {
+          if (path.equals(socketName)) {
+            return new FakeWatchmanClient(queryElapsedTimeNanos, queryResults);
+          } else {
+            throw new IOException(String.format("bad path (%s != %s", path, socketName));
           }
         };
     return new WatchmanFactory(factory);

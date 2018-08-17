@@ -88,7 +88,7 @@ public class WatchmanFactory {
   }
 
   public WatchmanFactory() {
-    this((socketPath, console, clock) -> createWatchmanClient(socketPath, console, clock));
+    this(WatchmanFactory::createWatchmanClient);
   }
 
   public WatchmanFactory(InitialWatchmanClientFactory factory) {
