@@ -28,6 +28,9 @@ import org.immutables.value.Value;
 public abstract class BackgroundTask<T> {
 
   @Value.Parameter
+  public abstract String getName();
+
+  @Value.Parameter
   public abstract TaskAction<T> getAction();
 
   @Value.Parameter

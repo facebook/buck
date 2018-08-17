@@ -36,10 +36,9 @@ public interface BackgroundTaskManager {
    * Schedule a task to be run in the background.
    *
    * @param task Task object to be run
-   * @param taskName Descriptive string to be used in task ID for logging
    * @return Full task ID used by task manager
    */
-  String schedule(BackgroundTask<?> task, String taskName);
+  String schedule(BackgroundTask<?> task);
 
   /**
    * Notify the manager of some event, e.g. command start/end. Exceptions should generally be caught

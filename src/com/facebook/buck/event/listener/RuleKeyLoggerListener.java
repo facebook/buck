@@ -179,8 +179,9 @@ public class RuleKeyLoggerListener implements BuckEventListener {
         ImmutableBackgroundTask.<RuleKeyLoggerListenerCloseArgs>builder()
             .setAction(new RuleKeyLoggerListenerCloseAction())
             .setActionArgs(RuleKeyLoggerListenerCloseArgs.of(outputExecutor))
+            .setName("RuleKeyLoggerListener_close")
             .build();
-    bgTaskManager.schedule(task, "RuleKeyLoggerListener_close");
+    bgTaskManager.schedule(task);
   }
 
   /**

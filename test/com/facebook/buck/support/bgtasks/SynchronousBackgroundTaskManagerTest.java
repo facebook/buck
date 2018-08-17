@@ -38,8 +38,9 @@ public class SynchronousBackgroundTaskManagerTest {
         ImmutableBackgroundTask.<FakeArgs>builder()
             .setAction(new FakeAction())
             .setActionArgs(new FakeArgs(true))
+            .setName("testTask")
             .build();
-    String taskId = manager.schedule(task, "testTask");
+    String taskId = manager.schedule(task);
 
     assertTrue(taskId.contains("testTask"));
     assertEquals(manager.getScheduledTasks().get(0).getTask(), task);
@@ -51,8 +52,9 @@ public class SynchronousBackgroundTaskManagerTest {
         ImmutableBackgroundTask.<FakeArgs>builder()
             .setAction(new FakeAction())
             .setActionArgs(new FakeArgs(true))
+            .setName("successTask")
             .build();
-    manager.schedule(task, "successTask");
+    manager.schedule(task);
     manager.notify(Notification.COMMAND_END);
 
     assertEquals(task.getActionArgs().output, "succeeded");
@@ -66,8 +68,9 @@ public class SynchronousBackgroundTaskManagerTest {
         ImmutableBackgroundTask.<FakeArgs>builder()
             .setAction(new FakeAction())
             .setActionArgs(new FakeArgs(false))
+            .setName("failureTask")
             .build();
-    manager.schedule(task, "failureTask");
+    manager.schedule(task);
     manager.notify(Notification.COMMAND_END);
 
     assertEquals(task.getActionArgs().output, "init");

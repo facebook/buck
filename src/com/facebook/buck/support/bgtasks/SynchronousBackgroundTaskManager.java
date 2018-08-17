@@ -42,8 +42,8 @@ public class SynchronousBackgroundTaskManager implements BackgroundTaskManager {
   }
 
   @Override
-  public String schedule(BackgroundTask<?> task, String taskName) {
-    ManagedBackgroundTask managedTask = ManagedBackgroundTask.of(task, taskName);
+  public String schedule(BackgroundTask<?> task) {
+    ManagedBackgroundTask managedTask = ManagedBackgroundTask.of(task);
     scheduledTasks.add(managedTask);
     return managedTask.getTaskId();
   }

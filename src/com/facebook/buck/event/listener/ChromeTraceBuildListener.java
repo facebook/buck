@@ -252,9 +252,10 @@ public class ChromeTraceBuildListener implements BuckEventListener {
         ImmutableBackgroundTask.<ChromeTraceBuildListenerCloseArgs>builder()
             .setAction(closeAction)
             .setActionArgs(args)
+            .setName("ChromeTraceBuildListener_close")
             .build();
 
-    bgTaskManager.schedule(task, "ChromeTraceBuildListener_close");
+    bgTaskManager.schedule(task);
   }
 
   @Subscribe

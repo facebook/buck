@@ -31,11 +31,8 @@ abstract class AbstractManagedBackgroundTask {
   @Value.Parameter
   public abstract BackgroundTask<?> getTask();
 
-  @Value.Parameter
-  public abstract String getTaskName();
-
   @Value.Derived
   public String getTaskId() {
-    return getTaskName().concat(UUID.randomUUID().toString());
+    return getTask().getName().concat(UUID.randomUUID().toString());
   }
 }

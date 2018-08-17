@@ -284,8 +284,9 @@ public class MachineReadableLoggerListener implements BuckEventListener {
         ImmutableBackgroundTask.<MachineReadableLoggerListenerCloseArgs>builder()
             .setAction(new MachineReadableLoggerListenerCloseAction())
             .setActionArgs(MachineReadableLoggerListenerCloseArgs.of(executor))
+            .setName("MachineReadableLoggerListener_close")
             .build();
-    bgTaskManager.schedule(task, "MachineReadableLoggerListener_close");
+    bgTaskManager.schedule(task);
   }
 
   /**

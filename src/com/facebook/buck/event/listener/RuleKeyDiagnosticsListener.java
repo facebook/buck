@@ -234,8 +234,9 @@ public class RuleKeyDiagnosticsListener implements BuckEventListener {
         ImmutableBackgroundTask.<RuleKeyDiagnosticsListenerCloseArgs>builder()
             .setAction(new RuleKeyDiagnosticsListenerCloseAction())
             .setActionArgs(RuleKeyDiagnosticsListenerCloseArgs.of(outputExecutor))
+            .setName("RuleKeyDiagnosticsListener_close")
             .build();
-    bgTaskManager.schedule(task, "RuleKeyDiagnosticsListener_close");
+    bgTaskManager.schedule(task);
   }
 
   /**

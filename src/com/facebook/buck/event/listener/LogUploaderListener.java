@@ -82,8 +82,9 @@ public class LogUploaderListener implements BuckEventListener {
         ImmutableBackgroundTask.<LogUploaderListenerCloseArgs>builder()
             .setAction(new LogUploaderListenerCloseAction())
             .setActionArgs(args)
+            .setName("LogUploaderListener_close")
             .build();
-    bgTaskManager.schedule(task, "LogUploaderListener_close");
+    bgTaskManager.schedule(task);
   }
 
   /**

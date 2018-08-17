@@ -110,8 +110,9 @@ public class HttpArtifactCacheEventListener implements BuckEventListener {
         ImmutableBackgroundTask.<HttpArtifactCacheEventListenerCloseArgs>builder()
             .setAction(new HttpArtifactCacheEventListenerCloseAction())
             .setActionArgs(args)
+            .setName("HttpArtifactCacheEventListener_close")
             .build();
-    bgTaskManager.schedule(task, "HttpArtifactCacheEventListener_close");
+    bgTaskManager.schedule(task);
   }
 
   /**
