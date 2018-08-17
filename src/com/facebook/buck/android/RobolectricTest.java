@@ -33,7 +33,6 @@ import com.facebook.buck.jvm.java.JavaOptions;
 import com.facebook.buck.jvm.java.JavaTest;
 import com.facebook.buck.jvm.java.TestType;
 import com.facebook.buck.rules.args.Arg;
-import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TargetDevice;
 import com.facebook.buck.step.fs.WriteFileStep;
@@ -159,7 +158,7 @@ public class RobolectricTest extends JavaTest {
   }
 
   @Override
-  protected ImmutableSet<Path> getBootClasspathEntries(ExecutionContext context) {
+  protected ImmutableSet<Path> getBootClasspathEntries() {
     return ImmutableSet.copyOf(androidPlatformTarget.getBootclasspathEntries());
   }
 

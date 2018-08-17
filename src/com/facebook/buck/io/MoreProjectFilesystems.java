@@ -59,12 +59,6 @@ public class MoreProjectFilesystems {
     return target;
   }
 
-  /** @return Whether the input path directs to a file in the buck generated files folder. */
-  public static boolean isGeneratedFile(
-      ProjectFilesystem filesystem, Path pathRelativeToProjectRoot) {
-    return pathRelativeToProjectRoot.startsWith(filesystem.getBuckPaths().getGenDir());
-  }
-
   public static boolean fileContentsDiffer(
       InputStream contents, Path path, ProjectFilesystem projectFilesystem) throws IOException {
     try {

@@ -112,12 +112,6 @@ public final class MostFiles {
     copyRecursively(fromPath, toPath, Functions.identity());
   }
 
-  /** Recursively copies all files under {@code fromPath} to {@code toPath}. */
-  public static void copyRecursivelyWithFilter(
-      Path fromPath, Path toPath, Function<Path, Boolean> filter) throws IOException {
-    copyRecursively(fromPath, toPath, Functions.identity(), filter);
-  }
-
   /**
    * Recursively copies all files under {@code fromPath} to {@code toPath}. The {@code transform}
    * will be applied after the destination path for a file has been relativized. This will remove

@@ -208,8 +208,8 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
     return contacts;
   }
 
-  /** @param context That may be useful in producing the bootclasspath entries. */
-  protected ImmutableSet<Path> getBootClasspathEntries(ExecutionContext context) {
+  /** */
+  protected ImmutableSet<Path> getBootClasspathEntries() {
     return ImmutableSet.of();
   }
 
@@ -703,7 +703,7 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
                                                 .getAbsolutePath(e.getLeft())
                                             : e.getRight())
                                 .collect(ImmutableSet.toImmutableSet()))
-                        .addAll(getBootClasspathEntries(context))
+                        .addAll(getBootClasspathEntries())
                         .build();
                 getProjectFilesystem()
                     .writeLinesToPath(

@@ -16,8 +16,6 @@
 
 package com.facebook.buck.util.concurrent;
 
-import static com.google.common.util.concurrent.MoreExecutors.directExecutor;
-
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
@@ -146,29 +144,6 @@ public class MoreFutures {
         },
         executor);
     return waiter;
-  }
-
-  public static <V> ListenableFuture<Void> addListenableCallback(
-      ListenableFuture<V> future, FutureCallback<? super V> callback) {
-    return addListenableCallback(future, callback, directExecutor());
-  }
-
-  /**
-   * @return a {@link ListenableFuture} which fails if either input future fails or returns the
-   *     value contained in {@code to} if they both succeed.
-   */
-  public static <F, T> ListenableFuture<T> chainExceptions(
-      ListenableFuture<F> from, ListenableFuture<T> to) {
-    return chainExceptions(from, to, directExecutor());
-  }
-
-  /**
-   * @return a {@link ListenableFuture} which fails if either input future fails or returns the
-   *     value contained in {@code to} if they both succeed.
-   */
-  public static <F, T> ListenableFuture<T> chainExceptions(
-      ListenableFuture<F> from, ListenableFuture<T> to, Executor executor) {
-    return Futures.transformAsync(from, result -> to, executor);
   }
 
   public static <X extends Throwable> void propagateCauseIfInstanceOf(Throwable e, Class<X> type) {

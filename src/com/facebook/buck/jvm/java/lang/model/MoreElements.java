@@ -19,7 +19,6 @@ package com.facebook.buck.jvm.java.lang.model;
 import com.facebook.buck.util.liteinfersupport.Nullable;
 import com.facebook.buck.util.liteinfersupport.Preconditions;
 import java.util.Map;
-import java.util.Objects;
 import java.util.stream.Stream;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
@@ -86,11 +85,6 @@ public final class MoreElements {
     }
 
     return false;
-  }
-
-  public static Stream<TypeMirror> getSupersAndInterfaces(TypeElement element) {
-    return Stream.concat(Stream.of(element.getSuperclass()), element.getInterfaces().stream())
-        .filter(Objects::nonNull);
   }
 
   public static TypeElement getTypeElement(Element element) {
