@@ -36,7 +36,7 @@ public class VisibilityChecker {
     if (!viewer.getVisibilityChecker().withinViewPatterns.isEmpty()) {
       boolean withinView = false;
       for (VisibilityPattern pattern : viewer.getVisibilityChecker().withinViewPatterns) {
-        if (pattern.checkVisibility(owner, viewer)) {
+        if (pattern.checkVisibility(owner)) {
           withinView = true;
           break;
         }
@@ -52,7 +52,7 @@ public class VisibilityChecker {
     }
 
     for (VisibilityPattern pattern : visibilityPatterns) {
-      if (pattern.checkVisibility(viewer, owner)) {
+      if (pattern.checkVisibility(viewer)) {
         return true;
       }
     }

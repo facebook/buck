@@ -45,7 +45,7 @@ public class VisibilityPatternParser {
     abstract BuildTargetPattern getViewerPattern();
 
     @Override
-    public boolean checkVisibility(ObeysVisibility viewer, ObeysVisibility viewed) {
+    public boolean checkVisibility(ObeysVisibility viewer) {
       return getViewerPattern().matches(viewer.getBuildTarget());
     }
 
@@ -60,7 +60,7 @@ public class VisibilityPatternParser {
   static class AbstractPublicVisibilityPattern implements VisibilityPattern {
 
     @Override
-    public boolean checkVisibility(ObeysVisibility viewer, ObeysVisibility viewed) {
+    public boolean checkVisibility(ObeysVisibility viewer) {
       return true;
     }
 
