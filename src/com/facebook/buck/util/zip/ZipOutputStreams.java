@@ -42,10 +42,6 @@ public class ZipOutputStreams {
     return newOutputStream(new BufferedOutputStream(Files.newOutputStream(zipFile)));
   }
 
-  public static CustomJarOutputStream newJarOutputStream(Path jarFile) throws IOException {
-    return newJarOutputStream(new BufferedOutputStream(Files.newOutputStream(jarFile)));
-  }
-
   /**
    * Create a new {@link CustomZipOutputStream} that will by default act in the same way as {@link
    * java.util.zip.ZipOutputStream}, notably by throwing an exception if duplicate entries are
