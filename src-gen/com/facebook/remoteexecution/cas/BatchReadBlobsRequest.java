@@ -11,16 +11,16 @@ package com.facebook.remoteexecution.cas;
 public class BatchReadBlobsRequest implements org.apache.thrift.TBase<BatchReadBlobsRequest, BatchReadBlobsRequest._Fields>, java.io.Serializable, Cloneable, Comparable<BatchReadBlobsRequest> {
   private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("BatchReadBlobsRequest");
 
-  private static final org.apache.thrift.protocol.TField REUESTS_FIELD_DESC = new org.apache.thrift.protocol.TField("reuests", org.apache.thrift.protocol.TType.LIST, (short)1);
+  private static final org.apache.thrift.protocol.TField REQUESTS_FIELD_DESC = new org.apache.thrift.protocol.TField("requests", org.apache.thrift.protocol.TType.LIST, (short)1);
 
   private static final org.apache.thrift.scheme.SchemeFactory STANDARD_SCHEME_FACTORY = new BatchReadBlobsRequestStandardSchemeFactory();
   private static final org.apache.thrift.scheme.SchemeFactory TUPLE_SCHEME_FACTORY = new BatchReadBlobsRequestTupleSchemeFactory();
 
-  public java.util.List<ReadBlobRequest> reuests; // required
+  public java.util.List<ReadBlobRequest> requests; // required
 
   /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
   public enum _Fields implements org.apache.thrift.TFieldIdEnum {
-    REUESTS((short)1, "reuests");
+    REQUESTS((short)1, "requests");
 
     private static final java.util.Map<java.lang.String, _Fields> byName = new java.util.HashMap<java.lang.String, _Fields>();
 
@@ -35,8 +35,8 @@ public class BatchReadBlobsRequest implements org.apache.thrift.TBase<BatchReadB
      */
     public static _Fields findByThriftId(int fieldId) {
       switch(fieldId) {
-        case 1: // REUESTS
-          return REUESTS;
+        case 1: // REQUESTS
+          return REQUESTS;
         default:
           return null;
       }
@@ -80,7 +80,7 @@ public class BatchReadBlobsRequest implements org.apache.thrift.TBase<BatchReadB
   public static final java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
   static {
     java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new java.util.EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
-    tmpMap.put(_Fields.REUESTS, new org.apache.thrift.meta_data.FieldMetaData("reuests", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+    tmpMap.put(_Fields.REQUESTS, new org.apache.thrift.meta_data.FieldMetaData("requests", org.apache.thrift.TFieldRequirementType.DEFAULT, 
         new org.apache.thrift.meta_data.ListMetaData(org.apache.thrift.protocol.TType.LIST, 
             new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, ReadBlobRequest.class))));
     metaDataMap = java.util.Collections.unmodifiableMap(tmpMap);
@@ -91,22 +91,22 @@ public class BatchReadBlobsRequest implements org.apache.thrift.TBase<BatchReadB
   }
 
   public BatchReadBlobsRequest(
-    java.util.List<ReadBlobRequest> reuests)
+    java.util.List<ReadBlobRequest> requests)
   {
     this();
-    this.reuests = reuests;
+    this.requests = requests;
   }
 
   /**
    * Performs a deep copy on <i>other</i>.
    */
   public BatchReadBlobsRequest(BatchReadBlobsRequest other) {
-    if (other.isSetReuests()) {
-      java.util.List<ReadBlobRequest> __this__reuests = new java.util.ArrayList<ReadBlobRequest>(other.reuests.size());
-      for (ReadBlobRequest other_element : other.reuests) {
-        __this__reuests.add(new ReadBlobRequest(other_element));
+    if (other.isSetRequests()) {
+      java.util.List<ReadBlobRequest> __this__requests = new java.util.ArrayList<ReadBlobRequest>(other.requests.size());
+      for (ReadBlobRequest other_element : other.requests) {
+        __this__requests.add(new ReadBlobRequest(other_element));
       }
-      this.reuests = __this__reuests;
+      this.requests = __this__requests;
     }
   }
 
@@ -116,55 +116,55 @@ public class BatchReadBlobsRequest implements org.apache.thrift.TBase<BatchReadB
 
   @Override
   public void clear() {
-    this.reuests = null;
+    this.requests = null;
   }
 
-  public int getReuestsSize() {
-    return (this.reuests == null) ? 0 : this.reuests.size();
+  public int getRequestsSize() {
+    return (this.requests == null) ? 0 : this.requests.size();
   }
 
-  public java.util.Iterator<ReadBlobRequest> getReuestsIterator() {
-    return (this.reuests == null) ? null : this.reuests.iterator();
+  public java.util.Iterator<ReadBlobRequest> getRequestsIterator() {
+    return (this.requests == null) ? null : this.requests.iterator();
   }
 
-  public void addToReuests(ReadBlobRequest elem) {
-    if (this.reuests == null) {
-      this.reuests = new java.util.ArrayList<ReadBlobRequest>();
+  public void addToRequests(ReadBlobRequest elem) {
+    if (this.requests == null) {
+      this.requests = new java.util.ArrayList<ReadBlobRequest>();
     }
-    this.reuests.add(elem);
+    this.requests.add(elem);
   }
 
-  public java.util.List<ReadBlobRequest> getReuests() {
-    return this.reuests;
+  public java.util.List<ReadBlobRequest> getRequests() {
+    return this.requests;
   }
 
-  public BatchReadBlobsRequest setReuests(java.util.List<ReadBlobRequest> reuests) {
-    this.reuests = reuests;
+  public BatchReadBlobsRequest setRequests(java.util.List<ReadBlobRequest> requests) {
+    this.requests = requests;
     return this;
   }
 
-  public void unsetReuests() {
-    this.reuests = null;
+  public void unsetRequests() {
+    this.requests = null;
   }
 
-  /** Returns true if field reuests is set (has been assigned a value) and false otherwise */
-  public boolean isSetReuests() {
-    return this.reuests != null;
+  /** Returns true if field requests is set (has been assigned a value) and false otherwise */
+  public boolean isSetRequests() {
+    return this.requests != null;
   }
 
-  public void setReuestsIsSet(boolean value) {
+  public void setRequestsIsSet(boolean value) {
     if (!value) {
-      this.reuests = null;
+      this.requests = null;
     }
   }
 
   public void setFieldValue(_Fields field, java.lang.Object value) {
     switch (field) {
-    case REUESTS:
+    case REQUESTS:
       if (value == null) {
-        unsetReuests();
+        unsetRequests();
       } else {
-        setReuests((java.util.List<ReadBlobRequest>)value);
+        setRequests((java.util.List<ReadBlobRequest>)value);
       }
       break;
 
@@ -173,8 +173,8 @@ public class BatchReadBlobsRequest implements org.apache.thrift.TBase<BatchReadB
 
   public java.lang.Object getFieldValue(_Fields field) {
     switch (field) {
-    case REUESTS:
-      return getReuests();
+    case REQUESTS:
+      return getRequests();
 
     }
     throw new java.lang.IllegalStateException();
@@ -187,8 +187,8 @@ public class BatchReadBlobsRequest implements org.apache.thrift.TBase<BatchReadB
     }
 
     switch (field) {
-    case REUESTS:
-      return isSetReuests();
+    case REQUESTS:
+      return isSetRequests();
     }
     throw new java.lang.IllegalStateException();
   }
@@ -208,12 +208,12 @@ public class BatchReadBlobsRequest implements org.apache.thrift.TBase<BatchReadB
     if (this == that)
       return true;
 
-    boolean this_present_reuests = true && this.isSetReuests();
-    boolean that_present_reuests = true && that.isSetReuests();
-    if (this_present_reuests || that_present_reuests) {
-      if (!(this_present_reuests && that_present_reuests))
+    boolean this_present_requests = true && this.isSetRequests();
+    boolean that_present_requests = true && that.isSetRequests();
+    if (this_present_requests || that_present_requests) {
+      if (!(this_present_requests && that_present_requests))
         return false;
-      if (!this.reuests.equals(that.reuests))
+      if (!this.requests.equals(that.requests))
         return false;
     }
 
@@ -224,9 +224,9 @@ public class BatchReadBlobsRequest implements org.apache.thrift.TBase<BatchReadB
   public int hashCode() {
     int hashCode = 1;
 
-    hashCode = hashCode * 8191 + ((isSetReuests()) ? 131071 : 524287);
-    if (isSetReuests())
-      hashCode = hashCode * 8191 + reuests.hashCode();
+    hashCode = hashCode * 8191 + ((isSetRequests()) ? 131071 : 524287);
+    if (isSetRequests())
+      hashCode = hashCode * 8191 + requests.hashCode();
 
     return hashCode;
   }
@@ -239,12 +239,12 @@ public class BatchReadBlobsRequest implements org.apache.thrift.TBase<BatchReadB
 
     int lastComparison = 0;
 
-    lastComparison = java.lang.Boolean.valueOf(isSetReuests()).compareTo(other.isSetReuests());
+    lastComparison = java.lang.Boolean.valueOf(isSetRequests()).compareTo(other.isSetRequests());
     if (lastComparison != 0) {
       return lastComparison;
     }
-    if (isSetReuests()) {
-      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.reuests, other.reuests);
+    if (isSetRequests()) {
+      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.requests, other.requests);
       if (lastComparison != 0) {
         return lastComparison;
       }
@@ -269,11 +269,11 @@ public class BatchReadBlobsRequest implements org.apache.thrift.TBase<BatchReadB
     java.lang.StringBuilder sb = new java.lang.StringBuilder("BatchReadBlobsRequest(");
     boolean first = true;
 
-    sb.append("reuests:");
-    if (this.reuests == null) {
+    sb.append("requests:");
+    if (this.requests == null) {
       sb.append("null");
     } else {
-      sb.append(this.reuests);
+      sb.append(this.requests);
     }
     first = false;
     sb.append(")");
@@ -319,21 +319,21 @@ public class BatchReadBlobsRequest implements org.apache.thrift.TBase<BatchReadB
           break;
         }
         switch (schemeField.id) {
-          case 1: // REUESTS
+          case 1: // REQUESTS
             if (schemeField.type == org.apache.thrift.protocol.TType.LIST) {
               {
                 org.apache.thrift.protocol.TList _list48 = iprot.readListBegin();
-                struct.reuests = new java.util.ArrayList<ReadBlobRequest>(_list48.size);
+                struct.requests = new java.util.ArrayList<ReadBlobRequest>(_list48.size);
                 ReadBlobRequest _elem49;
                 for (int _i50 = 0; _i50 < _list48.size; ++_i50)
                 {
                   _elem49 = new ReadBlobRequest();
                   _elem49.read(iprot);
-                  struct.reuests.add(_elem49);
+                  struct.requests.add(_elem49);
                 }
                 iprot.readListEnd();
               }
-              struct.setReuestsIsSet(true);
+              struct.setRequestsIsSet(true);
             } else { 
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
@@ -353,11 +353,11 @@ public class BatchReadBlobsRequest implements org.apache.thrift.TBase<BatchReadB
       struct.validate();
 
       oprot.writeStructBegin(STRUCT_DESC);
-      if (struct.reuests != null) {
-        oprot.writeFieldBegin(REUESTS_FIELD_DESC);
+      if (struct.requests != null) {
+        oprot.writeFieldBegin(REQUESTS_FIELD_DESC);
         {
-          oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, struct.reuests.size()));
-          for (ReadBlobRequest _iter51 : struct.reuests)
+          oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, struct.requests.size()));
+          for (ReadBlobRequest _iter51 : struct.requests)
           {
             _iter51.write(oprot);
           }
@@ -383,14 +383,14 @@ public class BatchReadBlobsRequest implements org.apache.thrift.TBase<BatchReadB
     public void write(org.apache.thrift.protocol.TProtocol prot, BatchReadBlobsRequest struct) throws org.apache.thrift.TException {
       org.apache.thrift.protocol.TTupleProtocol oprot = (org.apache.thrift.protocol.TTupleProtocol) prot;
       java.util.BitSet optionals = new java.util.BitSet();
-      if (struct.isSetReuests()) {
+      if (struct.isSetRequests()) {
         optionals.set(0);
       }
       oprot.writeBitSet(optionals, 1);
-      if (struct.isSetReuests()) {
+      if (struct.isSetRequests()) {
         {
-          oprot.writeI32(struct.reuests.size());
-          for (ReadBlobRequest _iter52 : struct.reuests)
+          oprot.writeI32(struct.requests.size());
+          for (ReadBlobRequest _iter52 : struct.requests)
           {
             _iter52.write(oprot);
           }
@@ -405,16 +405,16 @@ public class BatchReadBlobsRequest implements org.apache.thrift.TBase<BatchReadB
       if (incoming.get(0)) {
         {
           org.apache.thrift.protocol.TList _list53 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
-          struct.reuests = new java.util.ArrayList<ReadBlobRequest>(_list53.size);
+          struct.requests = new java.util.ArrayList<ReadBlobRequest>(_list53.size);
           ReadBlobRequest _elem54;
           for (int _i55 = 0; _i55 < _list53.size; ++_i55)
           {
             _elem54 = new ReadBlobRequest();
             _elem54.read(iprot);
-            struct.reuests.add(_elem54);
+            struct.requests.add(_elem54);
           }
         }
-        struct.setReuestsIsSet(true);
+        struct.setRequestsIsSet(true);
       }
     }
   }

@@ -209,7 +209,8 @@ public class ThriftProtocol implements Protocol {
   @Override
   public SymlinkNode newSymlinkNode(String name, Path path) {
     return new ThriftSymlinkNode(
-        new com.facebook.remoteexecution.cas.SymlinkNode(name, path.toString()));
+        new com.facebook.remoteexecution.cas.SymlinkNode(
+            name, path.toString(), path.toFile().isDirectory()));
   }
 
   @Override

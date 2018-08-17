@@ -116,15 +116,18 @@ struct SymlinkNode {
   2: string target;
 
   /*
-   * True if the target is a directory. Knowing this is required to create
-   * symlinks in Windows.
+   * True if the target is a directory. Required for creating symlinks on
+   * Windows.
    */
-  // 3: bool is_directory;
+  3: bool is_directory;
 }
 
 /*
  * Contains all the Directory structs in a single directory Merkle tree,
  * compressed into one message.
+ *
+ * TODO: This is only used in OutputDirectory/ActionResult. Move to execution
+ * engine API?
  */
 struct Tree {
   /*
@@ -142,54 +145,18 @@ struct Tree {
 }
 
 /*
- * Indicates that the received digest is different from the expected digest for
- * the received data, i.e. it was not correctly calculated by the client.
- */
-exception InvalidDigest {
-  /*
-   * A message describing the error.
-   */
-  1: string message;
-
-  /*
-   * The digest received in the request.
-   */
-  2: Digest data_digest;
-
-  /*
-   * The expected (correct) digest for the received data.
-   */
-  3: Digest expected_data_digest;
-}
-
-/*
- * Indicates that the data for the requested digest is missing.
- */
-exception MissingDigest {
-  /*
-   * A message describing the error.
-   */
-  1: string message;
-
-  /*
-   * The digest received in the request.
-   */
-  2: Digest data_digest;
-}
-
-/*
  * Request message for ContentAddressableStorage.updateBlob.
  */
 struct UpdateBlobRequest {
   /*
    * The digest of the blob. This MUST be the digest of the data field.
    */
-  2: Digest content_digest;
+  1: Digest content_digest;
 
   /*
    * The raw binary data.
    */
-  3: binary data;
+  2: binary data;
 }
 
 /*
@@ -256,7 +223,7 @@ struct BatchReadBlobsRequest {
   /*
    * The individual blob requests to read.
    */
-  1: list<ReadBlobRequest> reuests;
+  1: list<ReadBlobRequest> requests;
 }
 
 /*
@@ -290,6 +257,48 @@ struct FindMissingBlobsResponse {
 }
 
 /*
+ * Request message for ContentAddressableStorage.getTree.
+ */
+struct GetTreeRequest {
+  /*
+   * The digest of the root, which must be an encoded Directory stored in the
+   * CAS.
+   */
+  1: Digest root_digest;
+
+  /*
+   * A maximum page size to request. If present, the server will request no
+   * more than this many items. Regardless of whether a page size is specified,
+   * the server may place its own limit on the number of items to be returned
+   * and require the client to retrieve more items using a subsequent request.
+   */
+  2: optional i32 page_size;
+
+  /*
+   * A page token, which must be a value received in a previous getTreeResponse.
+   * If present, the server will use it to return the following page of results.
+   */
+  3: optional string page_token;
+}
+
+/*
+ * Response message for ContentAddressableStorage.getTree.
+ */
+struct GetTreeResponse {
+  /*
+   * The directories descended from the requested root.
+   */
+  1: list<Directory> directories;
+
+  /*
+   * If present, signifies that there are more results which the client can
+   * retrieve by passing this as the page_token in a subsequent to
+   * getTreeRequest. If empty, signifies that this is the last page of results.
+   */
+  2: optional string next_page_token;
+}
+
+/*
  * The CAS (content-addressable storage) is used to store the inputs/outputs
  * from actions and other blobs. Each piece of content is addressed by the
  * digest of its binary data.
@@ -302,11 +311,7 @@ service ContentAddressableStorage {
   /*
    * Upload a single blob.
    */
-  UpdateBlobResponse updateBlob(
-    1: UpdateBlobRequest request,
-  ) throws (
-    1: InvalidDigest invalid_digest,
-  );
+  UpdateBlobResponse updateBlob(1: UpdateBlobRequest request);
 
   /*
    * Upload many blobs at once.
@@ -323,11 +328,7 @@ service ContentAddressableStorage {
   /*
    * Retrieve the contents of a blob.
    */
-  ReadBlobResponse readBlob(
-    1: ReadBlobRequest request,
-  ) throws (
-    1: MissingDigest missing_digest,
-  );
+  ReadBlobResponse readBlob(1: ReadBlobRequest request);
 
   /*
    * Download many blobs at once.
@@ -342,4 +343,17 @@ service ContentAddressableStorage {
    * do not need to be uploaded again.
    */
   FindMissingBlobsResponse findMissingBlobs(1: FindMissingBlobsRequest request);
+
+  /*
+   * Fetch the entire directory tree rooted at a node.
+   *
+   * This request must be targeted at a Directory stored in the CAS. The
+   * server will enumerate the Directory tree recursively and return every
+   * node descended from the root. The exact traversal order is unspecified
+   * and is not guaranteed to be stable across multiple invocations.
+   *
+   * If part of the tree is missing from the CAS, the server will return the
+   * portion present and omit the rest.
+   */
+  GetTreeResponse getTree(1: GetTreeRequest request);
 }

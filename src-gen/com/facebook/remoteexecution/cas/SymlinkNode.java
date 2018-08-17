@@ -13,17 +13,20 @@ public class SymlinkNode implements org.apache.thrift.TBase<SymlinkNode, Symlink
 
   private static final org.apache.thrift.protocol.TField NAME_FIELD_DESC = new org.apache.thrift.protocol.TField("name", org.apache.thrift.protocol.TType.STRING, (short)1);
   private static final org.apache.thrift.protocol.TField TARGET_FIELD_DESC = new org.apache.thrift.protocol.TField("target", org.apache.thrift.protocol.TType.STRING, (short)2);
+  private static final org.apache.thrift.protocol.TField IS_DIRECTORY_FIELD_DESC = new org.apache.thrift.protocol.TField("is_directory", org.apache.thrift.protocol.TType.BOOL, (short)3);
 
   private static final org.apache.thrift.scheme.SchemeFactory STANDARD_SCHEME_FACTORY = new SymlinkNodeStandardSchemeFactory();
   private static final org.apache.thrift.scheme.SchemeFactory TUPLE_SCHEME_FACTORY = new SymlinkNodeTupleSchemeFactory();
 
   public java.lang.String name; // required
   public java.lang.String target; // required
+  public boolean is_directory; // required
 
   /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
   public enum _Fields implements org.apache.thrift.TFieldIdEnum {
     NAME((short)1, "name"),
-    TARGET((short)2, "target");
+    TARGET((short)2, "target"),
+    IS_DIRECTORY((short)3, "is_directory");
 
     private static final java.util.Map<java.lang.String, _Fields> byName = new java.util.HashMap<java.lang.String, _Fields>();
 
@@ -42,6 +45,8 @@ public class SymlinkNode implements org.apache.thrift.TBase<SymlinkNode, Symlink
           return NAME;
         case 2: // TARGET
           return TARGET;
+        case 3: // IS_DIRECTORY
+          return IS_DIRECTORY;
         default:
           return null;
       }
@@ -82,6 +87,8 @@ public class SymlinkNode implements org.apache.thrift.TBase<SymlinkNode, Symlink
   }
 
   // isset id assignments
+  private static final int __IS_DIRECTORY_ISSET_ID = 0;
+  private byte __isset_bitfield = 0;
   public static final java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
   static {
     java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new java.util.EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
@@ -89,6 +96,8 @@ public class SymlinkNode implements org.apache.thrift.TBase<SymlinkNode, Symlink
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
     tmpMap.put(_Fields.TARGET, new org.apache.thrift.meta_data.FieldMetaData("target", org.apache.thrift.TFieldRequirementType.DEFAULT, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
+    tmpMap.put(_Fields.IS_DIRECTORY, new org.apache.thrift.meta_data.FieldMetaData("is_directory", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+        new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.BOOL)));
     metaDataMap = java.util.Collections.unmodifiableMap(tmpMap);
     org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(SymlinkNode.class, metaDataMap);
   }
@@ -98,23 +107,28 @@ public class SymlinkNode implements org.apache.thrift.TBase<SymlinkNode, Symlink
 
   public SymlinkNode(
     java.lang.String name,
-    java.lang.String target)
+    java.lang.String target,
+    boolean is_directory)
   {
     this();
     this.name = name;
     this.target = target;
+    this.is_directory = is_directory;
+    setIs_directoryIsSet(true);
   }
 
   /**
    * Performs a deep copy on <i>other</i>.
    */
   public SymlinkNode(SymlinkNode other) {
+    __isset_bitfield = other.__isset_bitfield;
     if (other.isSetName()) {
       this.name = other.name;
     }
     if (other.isSetTarget()) {
       this.target = other.target;
     }
+    this.is_directory = other.is_directory;
   }
 
   public SymlinkNode deepCopy() {
@@ -125,6 +139,8 @@ public class SymlinkNode implements org.apache.thrift.TBase<SymlinkNode, Symlink
   public void clear() {
     this.name = null;
     this.target = null;
+    setIs_directoryIsSet(false);
+    this.is_directory = false;
   }
 
   public java.lang.String getName() {
@@ -175,6 +191,29 @@ public class SymlinkNode implements org.apache.thrift.TBase<SymlinkNode, Symlink
     }
   }
 
+  public boolean isIs_directory() {
+    return this.is_directory;
+  }
+
+  public SymlinkNode setIs_directory(boolean is_directory) {
+    this.is_directory = is_directory;
+    setIs_directoryIsSet(true);
+    return this;
+  }
+
+  public void unsetIs_directory() {
+    __isset_bitfield = org.apache.thrift.EncodingUtils.clearBit(__isset_bitfield, __IS_DIRECTORY_ISSET_ID);
+  }
+
+  /** Returns true if field is_directory is set (has been assigned a value) and false otherwise */
+  public boolean isSetIs_directory() {
+    return org.apache.thrift.EncodingUtils.testBit(__isset_bitfield, __IS_DIRECTORY_ISSET_ID);
+  }
+
+  public void setIs_directoryIsSet(boolean value) {
+    __isset_bitfield = org.apache.thrift.EncodingUtils.setBit(__isset_bitfield, __IS_DIRECTORY_ISSET_ID, value);
+  }
+
   public void setFieldValue(_Fields field, java.lang.Object value) {
     switch (field) {
     case NAME:
@@ -193,6 +232,14 @@ public class SymlinkNode implements org.apache.thrift.TBase<SymlinkNode, Symlink
       }
       break;
 
+    case IS_DIRECTORY:
+      if (value == null) {
+        unsetIs_directory();
+      } else {
+        setIs_directory((java.lang.Boolean)value);
+      }
+      break;
+
     }
   }
 
@@ -203,6 +250,9 @@ public class SymlinkNode implements org.apache.thrift.TBase<SymlinkNode, Symlink
 
     case TARGET:
       return getTarget();
+
+    case IS_DIRECTORY:
+      return isIs_directory();
 
     }
     throw new java.lang.IllegalStateException();
@@ -219,6 +269,8 @@ public class SymlinkNode implements org.apache.thrift.TBase<SymlinkNode, Symlink
       return isSetName();
     case TARGET:
       return isSetTarget();
+    case IS_DIRECTORY:
+      return isSetIs_directory();
     }
     throw new java.lang.IllegalStateException();
   }
@@ -256,6 +308,15 @@ public class SymlinkNode implements org.apache.thrift.TBase<SymlinkNode, Symlink
         return false;
     }
 
+    boolean this_present_is_directory = true;
+    boolean that_present_is_directory = true;
+    if (this_present_is_directory || that_present_is_directory) {
+      if (!(this_present_is_directory && that_present_is_directory))
+        return false;
+      if (this.is_directory != that.is_directory)
+        return false;
+    }
+
     return true;
   }
 
@@ -270,6 +331,8 @@ public class SymlinkNode implements org.apache.thrift.TBase<SymlinkNode, Symlink
     hashCode = hashCode * 8191 + ((isSetTarget()) ? 131071 : 524287);
     if (isSetTarget())
       hashCode = hashCode * 8191 + target.hashCode();
+
+    hashCode = hashCode * 8191 + ((is_directory) ? 131071 : 524287);
 
     return hashCode;
   }
@@ -298,6 +361,16 @@ public class SymlinkNode implements org.apache.thrift.TBase<SymlinkNode, Symlink
     }
     if (isSetTarget()) {
       lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.target, other.target);
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+    }
+    lastComparison = java.lang.Boolean.valueOf(isSetIs_directory()).compareTo(other.isSetIs_directory());
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    if (isSetIs_directory()) {
+      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.is_directory, other.is_directory);
       if (lastComparison != 0) {
         return lastComparison;
       }
@@ -337,6 +410,10 @@ public class SymlinkNode implements org.apache.thrift.TBase<SymlinkNode, Symlink
       sb.append(this.target);
     }
     first = false;
+    if (!first) sb.append(", ");
+    sb.append("is_directory:");
+    sb.append(this.is_directory);
+    first = false;
     sb.append(")");
     return sb.toString();
   }
@@ -356,6 +433,8 @@ public class SymlinkNode implements org.apache.thrift.TBase<SymlinkNode, Symlink
 
   private void readObject(java.io.ObjectInputStream in) throws java.io.IOException, java.lang.ClassNotFoundException {
     try {
+      // it doesn't seem like you should have to do this, but java serialization is wacky, and doesn't call the default constructor.
+      __isset_bitfield = 0;
       read(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(in)));
     } catch (org.apache.thrift.TException te) {
       throw new java.io.IOException(te);
@@ -396,6 +475,14 @@ public class SymlinkNode implements org.apache.thrift.TBase<SymlinkNode, Symlink
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
             break;
+          case 3: // IS_DIRECTORY
+            if (schemeField.type == org.apache.thrift.protocol.TType.BOOL) {
+              struct.is_directory = iprot.readBool();
+              struct.setIs_directoryIsSet(true);
+            } else { 
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+            }
+            break;
           default:
             org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
         }
@@ -421,6 +508,9 @@ public class SymlinkNode implements org.apache.thrift.TBase<SymlinkNode, Symlink
         oprot.writeString(struct.target);
         oprot.writeFieldEnd();
       }
+      oprot.writeFieldBegin(IS_DIRECTORY_FIELD_DESC);
+      oprot.writeBool(struct.is_directory);
+      oprot.writeFieldEnd();
       oprot.writeFieldStop();
       oprot.writeStructEnd();
     }
@@ -445,19 +535,25 @@ public class SymlinkNode implements org.apache.thrift.TBase<SymlinkNode, Symlink
       if (struct.isSetTarget()) {
         optionals.set(1);
       }
-      oprot.writeBitSet(optionals, 2);
+      if (struct.isSetIs_directory()) {
+        optionals.set(2);
+      }
+      oprot.writeBitSet(optionals, 3);
       if (struct.isSetName()) {
         oprot.writeString(struct.name);
       }
       if (struct.isSetTarget()) {
         oprot.writeString(struct.target);
       }
+      if (struct.isSetIs_directory()) {
+        oprot.writeBool(struct.is_directory);
+      }
     }
 
     @Override
     public void read(org.apache.thrift.protocol.TProtocol prot, SymlinkNode struct) throws org.apache.thrift.TException {
       org.apache.thrift.protocol.TTupleProtocol iprot = (org.apache.thrift.protocol.TTupleProtocol) prot;
-      java.util.BitSet incoming = iprot.readBitSet(2);
+      java.util.BitSet incoming = iprot.readBitSet(3);
       if (incoming.get(0)) {
         struct.name = iprot.readString();
         struct.setNameIsSet(true);
@@ -465,6 +561,10 @@ public class SymlinkNode implements org.apache.thrift.TBase<SymlinkNode, Symlink
       if (incoming.get(1)) {
         struct.target = iprot.readString();
         struct.setTargetIsSet(true);
+      }
+      if (incoming.get(2)) {
+        struct.is_directory = iprot.readBool();
+        struct.setIs_directoryIsSet(true);
       }
     }
   }

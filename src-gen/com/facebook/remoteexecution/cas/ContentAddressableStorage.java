@@ -12,15 +12,17 @@ public class ContentAddressableStorage {
 
   public interface Iface {
 
-    public UpdateBlobResponse updateBlob(UpdateBlobRequest request) throws InvalidDigest, org.apache.thrift.TException;
+    public UpdateBlobResponse updateBlob(UpdateBlobRequest request) throws org.apache.thrift.TException;
 
     public BatchUpdateBlobsResponse batchUpdateBlobs(BatchUpdateBlobsRequest request) throws org.apache.thrift.TException;
 
-    public ReadBlobResponse readBlob(ReadBlobRequest request) throws MissingDigest, org.apache.thrift.TException;
+    public ReadBlobResponse readBlob(ReadBlobRequest request) throws org.apache.thrift.TException;
 
     public BatchReadBlobsResponse batchReadBlobs(BatchReadBlobsRequest request) throws org.apache.thrift.TException;
 
     public FindMissingBlobsResponse findMissingBlobs(FindMissingBlobsRequest request) throws org.apache.thrift.TException;
+
+    public GetTreeResponse getTree(GetTreeRequest request) throws org.apache.thrift.TException;
 
   }
 
@@ -35,6 +37,8 @@ public class ContentAddressableStorage {
     public void batchReadBlobs(BatchReadBlobsRequest request, org.apache.thrift.async.AsyncMethodCallback<BatchReadBlobsResponse> resultHandler) throws org.apache.thrift.TException;
 
     public void findMissingBlobs(FindMissingBlobsRequest request, org.apache.thrift.async.AsyncMethodCallback<FindMissingBlobsResponse> resultHandler) throws org.apache.thrift.TException;
+
+    public void getTree(GetTreeRequest request, org.apache.thrift.async.AsyncMethodCallback<GetTreeResponse> resultHandler) throws org.apache.thrift.TException;
 
   }
 
@@ -58,7 +62,7 @@ public class ContentAddressableStorage {
       super(iprot, oprot);
     }
 
-    public UpdateBlobResponse updateBlob(UpdateBlobRequest request) throws InvalidDigest, org.apache.thrift.TException
+    public UpdateBlobResponse updateBlob(UpdateBlobRequest request) throws org.apache.thrift.TException
     {
       send_updateBlob(request);
       return recv_updateBlob();
@@ -71,15 +75,12 @@ public class ContentAddressableStorage {
       sendBase("updateBlob", args);
     }
 
-    public UpdateBlobResponse recv_updateBlob() throws InvalidDigest, org.apache.thrift.TException
+    public UpdateBlobResponse recv_updateBlob() throws org.apache.thrift.TException
     {
       updateBlob_result result = new updateBlob_result();
       receiveBase(result, "updateBlob");
       if (result.isSetSuccess()) {
         return result.success;
-      }
-      if (result.invalid_digest != null) {
-        throw result.invalid_digest;
       }
       throw new org.apache.thrift.TApplicationException(org.apache.thrift.TApplicationException.MISSING_RESULT, "updateBlob failed: unknown result");
     }
@@ -107,7 +108,7 @@ public class ContentAddressableStorage {
       throw new org.apache.thrift.TApplicationException(org.apache.thrift.TApplicationException.MISSING_RESULT, "batchUpdateBlobs failed: unknown result");
     }
 
-    public ReadBlobResponse readBlob(ReadBlobRequest request) throws MissingDigest, org.apache.thrift.TException
+    public ReadBlobResponse readBlob(ReadBlobRequest request) throws org.apache.thrift.TException
     {
       send_readBlob(request);
       return recv_readBlob();
@@ -120,15 +121,12 @@ public class ContentAddressableStorage {
       sendBase("readBlob", args);
     }
 
-    public ReadBlobResponse recv_readBlob() throws MissingDigest, org.apache.thrift.TException
+    public ReadBlobResponse recv_readBlob() throws org.apache.thrift.TException
     {
       readBlob_result result = new readBlob_result();
       receiveBase(result, "readBlob");
       if (result.isSetSuccess()) {
         return result.success;
-      }
-      if (result.missing_digest != null) {
-        throw result.missing_digest;
       }
       throw new org.apache.thrift.TApplicationException(org.apache.thrift.TApplicationException.MISSING_RESULT, "readBlob failed: unknown result");
     }
@@ -179,6 +177,29 @@ public class ContentAddressableStorage {
       throw new org.apache.thrift.TApplicationException(org.apache.thrift.TApplicationException.MISSING_RESULT, "findMissingBlobs failed: unknown result");
     }
 
+    public GetTreeResponse getTree(GetTreeRequest request) throws org.apache.thrift.TException
+    {
+      send_getTree(request);
+      return recv_getTree();
+    }
+
+    public void send_getTree(GetTreeRequest request) throws org.apache.thrift.TException
+    {
+      getTree_args args = new getTree_args();
+      args.setRequest(request);
+      sendBase("getTree", args);
+    }
+
+    public GetTreeResponse recv_getTree() throws org.apache.thrift.TException
+    {
+      getTree_result result = new getTree_result();
+      receiveBase(result, "getTree");
+      if (result.isSetSuccess()) {
+        return result.success;
+      }
+      throw new org.apache.thrift.TApplicationException(org.apache.thrift.TApplicationException.MISSING_RESULT, "getTree failed: unknown result");
+    }
+
   }
   public static class AsyncClient extends org.apache.thrift.async.TAsyncClient implements AsyncIface {
     public static class Factory implements org.apache.thrift.async.TAsyncClientFactory<AsyncClient> {
@@ -219,7 +240,7 @@ public class ContentAddressableStorage {
         prot.writeMessageEnd();
       }
 
-      public UpdateBlobResponse getResult() throws InvalidDigest, org.apache.thrift.TException {
+      public UpdateBlobResponse getResult() throws org.apache.thrift.TException {
         if (getState() != org.apache.thrift.async.TAsyncMethodCall.State.RESPONSE_READ) {
           throw new java.lang.IllegalStateException("Method call not finished!");
         }
@@ -283,7 +304,7 @@ public class ContentAddressableStorage {
         prot.writeMessageEnd();
       }
 
-      public ReadBlobResponse getResult() throws MissingDigest, org.apache.thrift.TException {
+      public ReadBlobResponse getResult() throws org.apache.thrift.TException {
         if (getState() != org.apache.thrift.async.TAsyncMethodCall.State.RESPONSE_READ) {
           throw new java.lang.IllegalStateException("Method call not finished!");
         }
@@ -357,6 +378,38 @@ public class ContentAddressableStorage {
       }
     }
 
+    public void getTree(GetTreeRequest request, org.apache.thrift.async.AsyncMethodCallback<GetTreeResponse> resultHandler) throws org.apache.thrift.TException {
+      checkReady();
+      getTree_call method_call = new getTree_call(request, resultHandler, this, ___protocolFactory, ___transport);
+      this.___currentMethod = method_call;
+      ___manager.call(method_call);
+    }
+
+    public static class getTree_call extends org.apache.thrift.async.TAsyncMethodCall<GetTreeResponse> {
+      private GetTreeRequest request;
+      public getTree_call(GetTreeRequest request, org.apache.thrift.async.AsyncMethodCallback<GetTreeResponse> resultHandler, org.apache.thrift.async.TAsyncClient client, org.apache.thrift.protocol.TProtocolFactory protocolFactory, org.apache.thrift.transport.TNonblockingTransport transport) throws org.apache.thrift.TException {
+        super(client, protocolFactory, transport, resultHandler, false);
+        this.request = request;
+      }
+
+      public void write_args(org.apache.thrift.protocol.TProtocol prot) throws org.apache.thrift.TException {
+        prot.writeMessageBegin(new org.apache.thrift.protocol.TMessage("getTree", org.apache.thrift.protocol.TMessageType.CALL, 0));
+        getTree_args args = new getTree_args();
+        args.setRequest(request);
+        args.write(prot);
+        prot.writeMessageEnd();
+      }
+
+      public GetTreeResponse getResult() throws org.apache.thrift.TException {
+        if (getState() != org.apache.thrift.async.TAsyncMethodCall.State.RESPONSE_READ) {
+          throw new java.lang.IllegalStateException("Method call not finished!");
+        }
+        org.apache.thrift.transport.TMemoryInputTransport memoryTransport = new org.apache.thrift.transport.TMemoryInputTransport(getFrameBuffer().array());
+        org.apache.thrift.protocol.TProtocol prot = client.getProtocolFactory().getProtocol(memoryTransport);
+        return (new Client(prot)).recv_getTree();
+      }
+    }
+
   }
 
   public static class Processor<I extends Iface> extends org.apache.thrift.TBaseProcessor<I> implements org.apache.thrift.TProcessor {
@@ -375,6 +428,7 @@ public class ContentAddressableStorage {
       processMap.put("readBlob", new readBlob());
       processMap.put("batchReadBlobs", new batchReadBlobs());
       processMap.put("findMissingBlobs", new findMissingBlobs());
+      processMap.put("getTree", new getTree());
       return processMap;
     }
 
@@ -393,11 +447,7 @@ public class ContentAddressableStorage {
 
       public updateBlob_result getResult(I iface, updateBlob_args args) throws org.apache.thrift.TException {
         updateBlob_result result = new updateBlob_result();
-        try {
-          result.success = iface.updateBlob(args.request);
-        } catch (InvalidDigest invalid_digest) {
-          result.invalid_digest = invalid_digest;
-        }
+        result.success = iface.updateBlob(args.request);
         return result;
       }
     }
@@ -437,11 +487,7 @@ public class ContentAddressableStorage {
 
       public readBlob_result getResult(I iface, readBlob_args args) throws org.apache.thrift.TException {
         readBlob_result result = new readBlob_result();
-        try {
-          result.success = iface.readBlob(args.request);
-        } catch (MissingDigest missing_digest) {
-          result.missing_digest = missing_digest;
-        }
+        result.success = iface.readBlob(args.request);
         return result;
       }
     }
@@ -486,6 +532,26 @@ public class ContentAddressableStorage {
       }
     }
 
+    public static class getTree<I extends Iface> extends org.apache.thrift.ProcessFunction<I, getTree_args> {
+      public getTree() {
+        super("getTree");
+      }
+
+      public getTree_args getEmptyArgsInstance() {
+        return new getTree_args();
+      }
+
+      protected boolean isOneway() {
+        return false;
+      }
+
+      public getTree_result getResult(I iface, getTree_args args) throws org.apache.thrift.TException {
+        getTree_result result = new getTree_result();
+        result.success = iface.getTree(args.request);
+        return result;
+      }
+    }
+
   }
 
   public static class AsyncProcessor<I extends AsyncIface> extends org.apache.thrift.TBaseAsyncProcessor<I> {
@@ -504,6 +570,7 @@ public class ContentAddressableStorage {
       processMap.put("readBlob", new readBlob());
       processMap.put("batchReadBlobs", new batchReadBlobs());
       processMap.put("findMissingBlobs", new findMissingBlobs());
+      processMap.put("getTree", new getTree());
       return processMap;
     }
 
@@ -536,11 +603,7 @@ public class ContentAddressableStorage {
             byte msgType = org.apache.thrift.protocol.TMessageType.REPLY;
             org.apache.thrift.TSerializable msg;
             updateBlob_result result = new updateBlob_result();
-            if (e instanceof InvalidDigest) {
-              result.invalid_digest = (InvalidDigest) e;
-              result.setInvalid_digestIsSet(true);
-              msg = result;
-            } else if (e instanceof org.apache.thrift.transport.TTransportException) {
+            if (e instanceof org.apache.thrift.transport.TTransportException) {
               _LOGGER.error("TTransportException inside handler", e);
               fb.close();
               return;
@@ -662,11 +725,7 @@ public class ContentAddressableStorage {
             byte msgType = org.apache.thrift.protocol.TMessageType.REPLY;
             org.apache.thrift.TSerializable msg;
             readBlob_result result = new readBlob_result();
-            if (e instanceof MissingDigest) {
-              result.missing_digest = (MissingDigest) e;
-              result.setMissing_digestIsSet(true);
-              msg = result;
-            } else if (e instanceof org.apache.thrift.transport.TTransportException) {
+            if (e instanceof org.apache.thrift.transport.TTransportException) {
               _LOGGER.error("TTransportException inside handler", e);
               fb.close();
               return;
@@ -817,6 +876,67 @@ public class ContentAddressableStorage {
 
       public void start(I iface, findMissingBlobs_args args, org.apache.thrift.async.AsyncMethodCallback<FindMissingBlobsResponse> resultHandler) throws org.apache.thrift.TException {
         iface.findMissingBlobs(args.request,resultHandler);
+      }
+    }
+
+    public static class getTree<I extends AsyncIface> extends org.apache.thrift.AsyncProcessFunction<I, getTree_args, GetTreeResponse> {
+      public getTree() {
+        super("getTree");
+      }
+
+      public getTree_args getEmptyArgsInstance() {
+        return new getTree_args();
+      }
+
+      public org.apache.thrift.async.AsyncMethodCallback<GetTreeResponse> getResultHandler(final org.apache.thrift.server.AbstractNonblockingServer.AsyncFrameBuffer fb, final int seqid) {
+        final org.apache.thrift.AsyncProcessFunction fcall = this;
+        return new org.apache.thrift.async.AsyncMethodCallback<GetTreeResponse>() { 
+          public void onComplete(GetTreeResponse o) {
+            getTree_result result = new getTree_result();
+            result.success = o;
+            try {
+              fcall.sendResponse(fb, result, org.apache.thrift.protocol.TMessageType.REPLY,seqid);
+            } catch (org.apache.thrift.transport.TTransportException e) {
+              _LOGGER.error("TTransportException writing to internal frame buffer", e);
+              fb.close();
+            } catch (java.lang.Exception e) {
+              _LOGGER.error("Exception writing to internal frame buffer", e);
+              onError(e);
+            }
+          }
+          public void onError(java.lang.Exception e) {
+            byte msgType = org.apache.thrift.protocol.TMessageType.REPLY;
+            org.apache.thrift.TSerializable msg;
+            getTree_result result = new getTree_result();
+            if (e instanceof org.apache.thrift.transport.TTransportException) {
+              _LOGGER.error("TTransportException inside handler", e);
+              fb.close();
+              return;
+            } else if (e instanceof org.apache.thrift.TApplicationException) {
+              _LOGGER.error("TApplicationException inside handler", e);
+              msgType = org.apache.thrift.protocol.TMessageType.EXCEPTION;
+              msg = (org.apache.thrift.TApplicationException)e;
+            } else {
+              _LOGGER.error("Exception inside handler", e);
+              msgType = org.apache.thrift.protocol.TMessageType.EXCEPTION;
+              msg = new org.apache.thrift.TApplicationException(org.apache.thrift.TApplicationException.INTERNAL_ERROR, e.getMessage());
+            }
+            try {
+              fcall.sendResponse(fb,msg,msgType,seqid);
+            } catch (java.lang.Exception ex) {
+              _LOGGER.error("Exception writing to internal frame buffer", ex);
+              fb.close();
+            }
+          }
+        };
+      }
+
+      protected boolean isOneway() {
+        return false;
+      }
+
+      public void start(I iface, getTree_args args, org.apache.thrift.async.AsyncMethodCallback<GetTreeResponse> resultHandler) throws org.apache.thrift.TException {
+        iface.getTree(args.request,resultHandler);
       }
     }
 
@@ -1193,18 +1313,15 @@ public class ContentAddressableStorage {
     private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("updateBlob_result");
 
     private static final org.apache.thrift.protocol.TField SUCCESS_FIELD_DESC = new org.apache.thrift.protocol.TField("success", org.apache.thrift.protocol.TType.STRUCT, (short)0);
-    private static final org.apache.thrift.protocol.TField INVALID_DIGEST_FIELD_DESC = new org.apache.thrift.protocol.TField("invalid_digest", org.apache.thrift.protocol.TType.STRUCT, (short)1);
 
     private static final org.apache.thrift.scheme.SchemeFactory STANDARD_SCHEME_FACTORY = new updateBlob_resultStandardSchemeFactory();
     private static final org.apache.thrift.scheme.SchemeFactory TUPLE_SCHEME_FACTORY = new updateBlob_resultTupleSchemeFactory();
 
     public UpdateBlobResponse success; // required
-    public InvalidDigest invalid_digest; // required
 
     /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
     public enum _Fields implements org.apache.thrift.TFieldIdEnum {
-      SUCCESS((short)0, "success"),
-      INVALID_DIGEST((short)1, "invalid_digest");
+      SUCCESS((short)0, "success");
 
       private static final java.util.Map<java.lang.String, _Fields> byName = new java.util.HashMap<java.lang.String, _Fields>();
 
@@ -1221,8 +1338,6 @@ public class ContentAddressableStorage {
         switch(fieldId) {
           case 0: // SUCCESS
             return SUCCESS;
-          case 1: // INVALID_DIGEST
-            return INVALID_DIGEST;
           default:
             return null;
         }
@@ -1268,8 +1383,6 @@ public class ContentAddressableStorage {
       java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new java.util.EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
       tmpMap.put(_Fields.SUCCESS, new org.apache.thrift.meta_data.FieldMetaData("success", org.apache.thrift.TFieldRequirementType.DEFAULT, 
           new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, UpdateBlobResponse.class)));
-      tmpMap.put(_Fields.INVALID_DIGEST, new org.apache.thrift.meta_data.FieldMetaData("invalid_digest", org.apache.thrift.TFieldRequirementType.DEFAULT, 
-          new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, InvalidDigest.class)));
       metaDataMap = java.util.Collections.unmodifiableMap(tmpMap);
       org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(updateBlob_result.class, metaDataMap);
     }
@@ -1278,12 +1391,10 @@ public class ContentAddressableStorage {
     }
 
     public updateBlob_result(
-      UpdateBlobResponse success,
-      InvalidDigest invalid_digest)
+      UpdateBlobResponse success)
     {
       this();
       this.success = success;
-      this.invalid_digest = invalid_digest;
     }
 
     /**
@@ -1292,9 +1403,6 @@ public class ContentAddressableStorage {
     public updateBlob_result(updateBlob_result other) {
       if (other.isSetSuccess()) {
         this.success = new UpdateBlobResponse(other.success);
-      }
-      if (other.isSetInvalid_digest()) {
-        this.invalid_digest = new InvalidDigest(other.invalid_digest);
       }
     }
 
@@ -1305,7 +1413,6 @@ public class ContentAddressableStorage {
     @Override
     public void clear() {
       this.success = null;
-      this.invalid_digest = null;
     }
 
     public UpdateBlobResponse getSuccess() {
@@ -1332,30 +1439,6 @@ public class ContentAddressableStorage {
       }
     }
 
-    public InvalidDigest getInvalid_digest() {
-      return this.invalid_digest;
-    }
-
-    public updateBlob_result setInvalid_digest(InvalidDigest invalid_digest) {
-      this.invalid_digest = invalid_digest;
-      return this;
-    }
-
-    public void unsetInvalid_digest() {
-      this.invalid_digest = null;
-    }
-
-    /** Returns true if field invalid_digest is set (has been assigned a value) and false otherwise */
-    public boolean isSetInvalid_digest() {
-      return this.invalid_digest != null;
-    }
-
-    public void setInvalid_digestIsSet(boolean value) {
-      if (!value) {
-        this.invalid_digest = null;
-      }
-    }
-
     public void setFieldValue(_Fields field, java.lang.Object value) {
       switch (field) {
       case SUCCESS:
@@ -1366,14 +1449,6 @@ public class ContentAddressableStorage {
         }
         break;
 
-      case INVALID_DIGEST:
-        if (value == null) {
-          unsetInvalid_digest();
-        } else {
-          setInvalid_digest((InvalidDigest)value);
-        }
-        break;
-
       }
     }
 
@@ -1381,9 +1456,6 @@ public class ContentAddressableStorage {
       switch (field) {
       case SUCCESS:
         return getSuccess();
-
-      case INVALID_DIGEST:
-        return getInvalid_digest();
 
       }
       throw new java.lang.IllegalStateException();
@@ -1398,8 +1470,6 @@ public class ContentAddressableStorage {
       switch (field) {
       case SUCCESS:
         return isSetSuccess();
-      case INVALID_DIGEST:
-        return isSetInvalid_digest();
       }
       throw new java.lang.IllegalStateException();
     }
@@ -1428,15 +1498,6 @@ public class ContentAddressableStorage {
           return false;
       }
 
-      boolean this_present_invalid_digest = true && this.isSetInvalid_digest();
-      boolean that_present_invalid_digest = true && that.isSetInvalid_digest();
-      if (this_present_invalid_digest || that_present_invalid_digest) {
-        if (!(this_present_invalid_digest && that_present_invalid_digest))
-          return false;
-        if (!this.invalid_digest.equals(that.invalid_digest))
-          return false;
-      }
-
       return true;
     }
 
@@ -1447,10 +1508,6 @@ public class ContentAddressableStorage {
       hashCode = hashCode * 8191 + ((isSetSuccess()) ? 131071 : 524287);
       if (isSetSuccess())
         hashCode = hashCode * 8191 + success.hashCode();
-
-      hashCode = hashCode * 8191 + ((isSetInvalid_digest()) ? 131071 : 524287);
-      if (isSetInvalid_digest())
-        hashCode = hashCode * 8191 + invalid_digest.hashCode();
 
       return hashCode;
     }
@@ -1469,16 +1526,6 @@ public class ContentAddressableStorage {
       }
       if (isSetSuccess()) {
         lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.success, other.success);
-        if (lastComparison != 0) {
-          return lastComparison;
-        }
-      }
-      lastComparison = java.lang.Boolean.valueOf(isSetInvalid_digest()).compareTo(other.isSetInvalid_digest());
-      if (lastComparison != 0) {
-        return lastComparison;
-      }
-      if (isSetInvalid_digest()) {
-        lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.invalid_digest, other.invalid_digest);
         if (lastComparison != 0) {
           return lastComparison;
         }
@@ -1508,14 +1555,6 @@ public class ContentAddressableStorage {
         sb.append("null");
       } else {
         sb.append(this.success);
-      }
-      first = false;
-      if (!first) sb.append(", ");
-      sb.append("invalid_digest:");
-      if (this.invalid_digest == null) {
-        sb.append("null");
-      } else {
-        sb.append(this.invalid_digest);
       }
       first = false;
       sb.append(")");
@@ -1573,15 +1612,6 @@ public class ContentAddressableStorage {
                 org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
               }
               break;
-            case 1: // INVALID_DIGEST
-              if (schemeField.type == org.apache.thrift.protocol.TType.STRUCT) {
-                struct.invalid_digest = new InvalidDigest();
-                struct.invalid_digest.read(iprot);
-                struct.setInvalid_digestIsSet(true);
-              } else { 
-                org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
-              }
-              break;
             default:
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
           }
@@ -1600,11 +1630,6 @@ public class ContentAddressableStorage {
         if (struct.success != null) {
           oprot.writeFieldBegin(SUCCESS_FIELD_DESC);
           struct.success.write(oprot);
-          oprot.writeFieldEnd();
-        }
-        if (struct.invalid_digest != null) {
-          oprot.writeFieldBegin(INVALID_DIGEST_FIELD_DESC);
-          struct.invalid_digest.write(oprot);
           oprot.writeFieldEnd();
         }
         oprot.writeFieldStop();
@@ -1628,31 +1653,20 @@ public class ContentAddressableStorage {
         if (struct.isSetSuccess()) {
           optionals.set(0);
         }
-        if (struct.isSetInvalid_digest()) {
-          optionals.set(1);
-        }
-        oprot.writeBitSet(optionals, 2);
+        oprot.writeBitSet(optionals, 1);
         if (struct.isSetSuccess()) {
           struct.success.write(oprot);
-        }
-        if (struct.isSetInvalid_digest()) {
-          struct.invalid_digest.write(oprot);
         }
       }
 
       @Override
       public void read(org.apache.thrift.protocol.TProtocol prot, updateBlob_result struct) throws org.apache.thrift.TException {
         org.apache.thrift.protocol.TTupleProtocol iprot = (org.apache.thrift.protocol.TTupleProtocol) prot;
-        java.util.BitSet incoming = iprot.readBitSet(2);
+        java.util.BitSet incoming = iprot.readBitSet(1);
         if (incoming.get(0)) {
           struct.success = new UpdateBlobResponse();
           struct.success.read(iprot);
           struct.setSuccessIsSet(true);
-        }
-        if (incoming.get(1)) {
-          struct.invalid_digest = new InvalidDigest();
-          struct.invalid_digest.read(iprot);
-          struct.setInvalid_digestIsSet(true);
         }
       }
     }
@@ -2767,18 +2781,15 @@ public class ContentAddressableStorage {
     private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("readBlob_result");
 
     private static final org.apache.thrift.protocol.TField SUCCESS_FIELD_DESC = new org.apache.thrift.protocol.TField("success", org.apache.thrift.protocol.TType.STRUCT, (short)0);
-    private static final org.apache.thrift.protocol.TField MISSING_DIGEST_FIELD_DESC = new org.apache.thrift.protocol.TField("missing_digest", org.apache.thrift.protocol.TType.STRUCT, (short)1);
 
     private static final org.apache.thrift.scheme.SchemeFactory STANDARD_SCHEME_FACTORY = new readBlob_resultStandardSchemeFactory();
     private static final org.apache.thrift.scheme.SchemeFactory TUPLE_SCHEME_FACTORY = new readBlob_resultTupleSchemeFactory();
 
     public ReadBlobResponse success; // required
-    public MissingDigest missing_digest; // required
 
     /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
     public enum _Fields implements org.apache.thrift.TFieldIdEnum {
-      SUCCESS((short)0, "success"),
-      MISSING_DIGEST((short)1, "missing_digest");
+      SUCCESS((short)0, "success");
 
       private static final java.util.Map<java.lang.String, _Fields> byName = new java.util.HashMap<java.lang.String, _Fields>();
 
@@ -2795,8 +2806,6 @@ public class ContentAddressableStorage {
         switch(fieldId) {
           case 0: // SUCCESS
             return SUCCESS;
-          case 1: // MISSING_DIGEST
-            return MISSING_DIGEST;
           default:
             return null;
         }
@@ -2842,8 +2851,6 @@ public class ContentAddressableStorage {
       java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new java.util.EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
       tmpMap.put(_Fields.SUCCESS, new org.apache.thrift.meta_data.FieldMetaData("success", org.apache.thrift.TFieldRequirementType.DEFAULT, 
           new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, ReadBlobResponse.class)));
-      tmpMap.put(_Fields.MISSING_DIGEST, new org.apache.thrift.meta_data.FieldMetaData("missing_digest", org.apache.thrift.TFieldRequirementType.DEFAULT, 
-          new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, MissingDigest.class)));
       metaDataMap = java.util.Collections.unmodifiableMap(tmpMap);
       org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(readBlob_result.class, metaDataMap);
     }
@@ -2852,12 +2859,10 @@ public class ContentAddressableStorage {
     }
 
     public readBlob_result(
-      ReadBlobResponse success,
-      MissingDigest missing_digest)
+      ReadBlobResponse success)
     {
       this();
       this.success = success;
-      this.missing_digest = missing_digest;
     }
 
     /**
@@ -2866,9 +2871,6 @@ public class ContentAddressableStorage {
     public readBlob_result(readBlob_result other) {
       if (other.isSetSuccess()) {
         this.success = new ReadBlobResponse(other.success);
-      }
-      if (other.isSetMissing_digest()) {
-        this.missing_digest = new MissingDigest(other.missing_digest);
       }
     }
 
@@ -2879,7 +2881,6 @@ public class ContentAddressableStorage {
     @Override
     public void clear() {
       this.success = null;
-      this.missing_digest = null;
     }
 
     public ReadBlobResponse getSuccess() {
@@ -2906,30 +2907,6 @@ public class ContentAddressableStorage {
       }
     }
 
-    public MissingDigest getMissing_digest() {
-      return this.missing_digest;
-    }
-
-    public readBlob_result setMissing_digest(MissingDigest missing_digest) {
-      this.missing_digest = missing_digest;
-      return this;
-    }
-
-    public void unsetMissing_digest() {
-      this.missing_digest = null;
-    }
-
-    /** Returns true if field missing_digest is set (has been assigned a value) and false otherwise */
-    public boolean isSetMissing_digest() {
-      return this.missing_digest != null;
-    }
-
-    public void setMissing_digestIsSet(boolean value) {
-      if (!value) {
-        this.missing_digest = null;
-      }
-    }
-
     public void setFieldValue(_Fields field, java.lang.Object value) {
       switch (field) {
       case SUCCESS:
@@ -2940,14 +2917,6 @@ public class ContentAddressableStorage {
         }
         break;
 
-      case MISSING_DIGEST:
-        if (value == null) {
-          unsetMissing_digest();
-        } else {
-          setMissing_digest((MissingDigest)value);
-        }
-        break;
-
       }
     }
 
@@ -2955,9 +2924,6 @@ public class ContentAddressableStorage {
       switch (field) {
       case SUCCESS:
         return getSuccess();
-
-      case MISSING_DIGEST:
-        return getMissing_digest();
 
       }
       throw new java.lang.IllegalStateException();
@@ -2972,8 +2938,6 @@ public class ContentAddressableStorage {
       switch (field) {
       case SUCCESS:
         return isSetSuccess();
-      case MISSING_DIGEST:
-        return isSetMissing_digest();
       }
       throw new java.lang.IllegalStateException();
     }
@@ -3002,15 +2966,6 @@ public class ContentAddressableStorage {
           return false;
       }
 
-      boolean this_present_missing_digest = true && this.isSetMissing_digest();
-      boolean that_present_missing_digest = true && that.isSetMissing_digest();
-      if (this_present_missing_digest || that_present_missing_digest) {
-        if (!(this_present_missing_digest && that_present_missing_digest))
-          return false;
-        if (!this.missing_digest.equals(that.missing_digest))
-          return false;
-      }
-
       return true;
     }
 
@@ -3021,10 +2976,6 @@ public class ContentAddressableStorage {
       hashCode = hashCode * 8191 + ((isSetSuccess()) ? 131071 : 524287);
       if (isSetSuccess())
         hashCode = hashCode * 8191 + success.hashCode();
-
-      hashCode = hashCode * 8191 + ((isSetMissing_digest()) ? 131071 : 524287);
-      if (isSetMissing_digest())
-        hashCode = hashCode * 8191 + missing_digest.hashCode();
 
       return hashCode;
     }
@@ -3043,16 +2994,6 @@ public class ContentAddressableStorage {
       }
       if (isSetSuccess()) {
         lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.success, other.success);
-        if (lastComparison != 0) {
-          return lastComparison;
-        }
-      }
-      lastComparison = java.lang.Boolean.valueOf(isSetMissing_digest()).compareTo(other.isSetMissing_digest());
-      if (lastComparison != 0) {
-        return lastComparison;
-      }
-      if (isSetMissing_digest()) {
-        lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.missing_digest, other.missing_digest);
         if (lastComparison != 0) {
           return lastComparison;
         }
@@ -3082,14 +3023,6 @@ public class ContentAddressableStorage {
         sb.append("null");
       } else {
         sb.append(this.success);
-      }
-      first = false;
-      if (!first) sb.append(", ");
-      sb.append("missing_digest:");
-      if (this.missing_digest == null) {
-        sb.append("null");
-      } else {
-        sb.append(this.missing_digest);
       }
       first = false;
       sb.append(")");
@@ -3147,15 +3080,6 @@ public class ContentAddressableStorage {
                 org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
               }
               break;
-            case 1: // MISSING_DIGEST
-              if (schemeField.type == org.apache.thrift.protocol.TType.STRUCT) {
-                struct.missing_digest = new MissingDigest();
-                struct.missing_digest.read(iprot);
-                struct.setMissing_digestIsSet(true);
-              } else { 
-                org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
-              }
-              break;
             default:
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
           }
@@ -3174,11 +3098,6 @@ public class ContentAddressableStorage {
         if (struct.success != null) {
           oprot.writeFieldBegin(SUCCESS_FIELD_DESC);
           struct.success.write(oprot);
-          oprot.writeFieldEnd();
-        }
-        if (struct.missing_digest != null) {
-          oprot.writeFieldBegin(MISSING_DIGEST_FIELD_DESC);
-          struct.missing_digest.write(oprot);
           oprot.writeFieldEnd();
         }
         oprot.writeFieldStop();
@@ -3202,31 +3121,20 @@ public class ContentAddressableStorage {
         if (struct.isSetSuccess()) {
           optionals.set(0);
         }
-        if (struct.isSetMissing_digest()) {
-          optionals.set(1);
-        }
-        oprot.writeBitSet(optionals, 2);
+        oprot.writeBitSet(optionals, 1);
         if (struct.isSetSuccess()) {
           struct.success.write(oprot);
-        }
-        if (struct.isSetMissing_digest()) {
-          struct.missing_digest.write(oprot);
         }
       }
 
       @Override
       public void read(org.apache.thrift.protocol.TProtocol prot, readBlob_result struct) throws org.apache.thrift.TException {
         org.apache.thrift.protocol.TTupleProtocol iprot = (org.apache.thrift.protocol.TTupleProtocol) prot;
-        java.util.BitSet incoming = iprot.readBitSet(2);
+        java.util.BitSet incoming = iprot.readBitSet(1);
         if (incoming.get(0)) {
           struct.success = new ReadBlobResponse();
           struct.success.read(iprot);
           struct.setSuccessIsSet(true);
-        }
-        if (incoming.get(1)) {
-          struct.missing_digest = new MissingDigest();
-          struct.missing_digest.read(iprot);
-          struct.setMissing_digestIsSet(true);
         }
       }
     }
@@ -4693,6 +4601,740 @@ public class ContentAddressableStorage {
         java.util.BitSet incoming = iprot.readBitSet(1);
         if (incoming.get(0)) {
           struct.success = new FindMissingBlobsResponse();
+          struct.success.read(iprot);
+          struct.setSuccessIsSet(true);
+        }
+      }
+    }
+
+    private static <S extends org.apache.thrift.scheme.IScheme> S scheme(org.apache.thrift.protocol.TProtocol proto) {
+      return (org.apache.thrift.scheme.StandardScheme.class.equals(proto.getScheme()) ? STANDARD_SCHEME_FACTORY : TUPLE_SCHEME_FACTORY).getScheme();
+    }
+  }
+
+  public static class getTree_args implements org.apache.thrift.TBase<getTree_args, getTree_args._Fields>, java.io.Serializable, Cloneable, Comparable<getTree_args>   {
+    private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("getTree_args");
+
+    private static final org.apache.thrift.protocol.TField REQUEST_FIELD_DESC = new org.apache.thrift.protocol.TField("request", org.apache.thrift.protocol.TType.STRUCT, (short)1);
+
+    private static final org.apache.thrift.scheme.SchemeFactory STANDARD_SCHEME_FACTORY = new getTree_argsStandardSchemeFactory();
+    private static final org.apache.thrift.scheme.SchemeFactory TUPLE_SCHEME_FACTORY = new getTree_argsTupleSchemeFactory();
+
+    public GetTreeRequest request; // required
+
+    /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
+    public enum _Fields implements org.apache.thrift.TFieldIdEnum {
+      REQUEST((short)1, "request");
+
+      private static final java.util.Map<java.lang.String, _Fields> byName = new java.util.HashMap<java.lang.String, _Fields>();
+
+      static {
+        for (_Fields field : java.util.EnumSet.allOf(_Fields.class)) {
+          byName.put(field.getFieldName(), field);
+        }
+      }
+
+      /**
+       * Find the _Fields constant that matches fieldId, or null if its not found.
+       */
+      public static _Fields findByThriftId(int fieldId) {
+        switch(fieldId) {
+          case 1: // REQUEST
+            return REQUEST;
+          default:
+            return null;
+        }
+      }
+
+      /**
+       * Find the _Fields constant that matches fieldId, throwing an exception
+       * if it is not found.
+       */
+      public static _Fields findByThriftIdOrThrow(int fieldId) {
+        _Fields fields = findByThriftId(fieldId);
+        if (fields == null) throw new java.lang.IllegalArgumentException("Field " + fieldId + " doesn't exist!");
+        return fields;
+      }
+
+      /**
+       * Find the _Fields constant that matches name, or null if its not found.
+       */
+      public static _Fields findByName(java.lang.String name) {
+        return byName.get(name);
+      }
+
+      private final short _thriftId;
+      private final java.lang.String _fieldName;
+
+      _Fields(short thriftId, java.lang.String fieldName) {
+        _thriftId = thriftId;
+        _fieldName = fieldName;
+      }
+
+      public short getThriftFieldId() {
+        return _thriftId;
+      }
+
+      public java.lang.String getFieldName() {
+        return _fieldName;
+      }
+    }
+
+    // isset id assignments
+    public static final java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
+    static {
+      java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new java.util.EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
+      tmpMap.put(_Fields.REQUEST, new org.apache.thrift.meta_data.FieldMetaData("request", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+          new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, GetTreeRequest.class)));
+      metaDataMap = java.util.Collections.unmodifiableMap(tmpMap);
+      org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(getTree_args.class, metaDataMap);
+    }
+
+    public getTree_args() {
+    }
+
+    public getTree_args(
+      GetTreeRequest request)
+    {
+      this();
+      this.request = request;
+    }
+
+    /**
+     * Performs a deep copy on <i>other</i>.
+     */
+    public getTree_args(getTree_args other) {
+      if (other.isSetRequest()) {
+        this.request = new GetTreeRequest(other.request);
+      }
+    }
+
+    public getTree_args deepCopy() {
+      return new getTree_args(this);
+    }
+
+    @Override
+    public void clear() {
+      this.request = null;
+    }
+
+    public GetTreeRequest getRequest() {
+      return this.request;
+    }
+
+    public getTree_args setRequest(GetTreeRequest request) {
+      this.request = request;
+      return this;
+    }
+
+    public void unsetRequest() {
+      this.request = null;
+    }
+
+    /** Returns true if field request is set (has been assigned a value) and false otherwise */
+    public boolean isSetRequest() {
+      return this.request != null;
+    }
+
+    public void setRequestIsSet(boolean value) {
+      if (!value) {
+        this.request = null;
+      }
+    }
+
+    public void setFieldValue(_Fields field, java.lang.Object value) {
+      switch (field) {
+      case REQUEST:
+        if (value == null) {
+          unsetRequest();
+        } else {
+          setRequest((GetTreeRequest)value);
+        }
+        break;
+
+      }
+    }
+
+    public java.lang.Object getFieldValue(_Fields field) {
+      switch (field) {
+      case REQUEST:
+        return getRequest();
+
+      }
+      throw new java.lang.IllegalStateException();
+    }
+
+    /** Returns true if field corresponding to fieldID is set (has been assigned a value) and false otherwise */
+    public boolean isSet(_Fields field) {
+      if (field == null) {
+        throw new java.lang.IllegalArgumentException();
+      }
+
+      switch (field) {
+      case REQUEST:
+        return isSetRequest();
+      }
+      throw new java.lang.IllegalStateException();
+    }
+
+    @Override
+    public boolean equals(java.lang.Object that) {
+      if (that == null)
+        return false;
+      if (that instanceof getTree_args)
+        return this.equals((getTree_args)that);
+      return false;
+    }
+
+    public boolean equals(getTree_args that) {
+      if (that == null)
+        return false;
+      if (this == that)
+        return true;
+
+      boolean this_present_request = true && this.isSetRequest();
+      boolean that_present_request = true && that.isSetRequest();
+      if (this_present_request || that_present_request) {
+        if (!(this_present_request && that_present_request))
+          return false;
+        if (!this.request.equals(that.request))
+          return false;
+      }
+
+      return true;
+    }
+
+    @Override
+    public int hashCode() {
+      int hashCode = 1;
+
+      hashCode = hashCode * 8191 + ((isSetRequest()) ? 131071 : 524287);
+      if (isSetRequest())
+        hashCode = hashCode * 8191 + request.hashCode();
+
+      return hashCode;
+    }
+
+    @Override
+    public int compareTo(getTree_args other) {
+      if (!getClass().equals(other.getClass())) {
+        return getClass().getName().compareTo(other.getClass().getName());
+      }
+
+      int lastComparison = 0;
+
+      lastComparison = java.lang.Boolean.valueOf(isSetRequest()).compareTo(other.isSetRequest());
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+      if (isSetRequest()) {
+        lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.request, other.request);
+        if (lastComparison != 0) {
+          return lastComparison;
+        }
+      }
+      return 0;
+    }
+
+    public _Fields fieldForId(int fieldId) {
+      return _Fields.findByThriftId(fieldId);
+    }
+
+    public void read(org.apache.thrift.protocol.TProtocol iprot) throws org.apache.thrift.TException {
+      scheme(iprot).read(iprot, this);
+    }
+
+    public void write(org.apache.thrift.protocol.TProtocol oprot) throws org.apache.thrift.TException {
+      scheme(oprot).write(oprot, this);
+    }
+
+    @Override
+    public java.lang.String toString() {
+      java.lang.StringBuilder sb = new java.lang.StringBuilder("getTree_args(");
+      boolean first = true;
+
+      sb.append("request:");
+      if (this.request == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.request);
+      }
+      first = false;
+      sb.append(")");
+      return sb.toString();
+    }
+
+    public void validate() throws org.apache.thrift.TException {
+      // check for required fields
+      // check for sub-struct validity
+      if (request != null) {
+        request.validate();
+      }
+    }
+
+    private void writeObject(java.io.ObjectOutputStream out) throws java.io.IOException {
+      try {
+        write(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(out)));
+      } catch (org.apache.thrift.TException te) {
+        throw new java.io.IOException(te);
+      }
+    }
+
+    private void readObject(java.io.ObjectInputStream in) throws java.io.IOException, java.lang.ClassNotFoundException {
+      try {
+        read(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(in)));
+      } catch (org.apache.thrift.TException te) {
+        throw new java.io.IOException(te);
+      }
+    }
+
+    private static class getTree_argsStandardSchemeFactory implements org.apache.thrift.scheme.SchemeFactory {
+      public getTree_argsStandardScheme getScheme() {
+        return new getTree_argsStandardScheme();
+      }
+    }
+
+    private static class getTree_argsStandardScheme extends org.apache.thrift.scheme.StandardScheme<getTree_args> {
+
+      public void read(org.apache.thrift.protocol.TProtocol iprot, getTree_args struct) throws org.apache.thrift.TException {
+        org.apache.thrift.protocol.TField schemeField;
+        iprot.readStructBegin();
+        while (true)
+        {
+          schemeField = iprot.readFieldBegin();
+          if (schemeField.type == org.apache.thrift.protocol.TType.STOP) { 
+            break;
+          }
+          switch (schemeField.id) {
+            case 1: // REQUEST
+              if (schemeField.type == org.apache.thrift.protocol.TType.STRUCT) {
+                struct.request = new GetTreeRequest();
+                struct.request.read(iprot);
+                struct.setRequestIsSet(true);
+              } else { 
+                org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+              }
+              break;
+            default:
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+          }
+          iprot.readFieldEnd();
+        }
+        iprot.readStructEnd();
+
+        // check for required fields of primitive type, which can't be checked in the validate method
+        struct.validate();
+      }
+
+      public void write(org.apache.thrift.protocol.TProtocol oprot, getTree_args struct) throws org.apache.thrift.TException {
+        struct.validate();
+
+        oprot.writeStructBegin(STRUCT_DESC);
+        if (struct.request != null) {
+          oprot.writeFieldBegin(REQUEST_FIELD_DESC);
+          struct.request.write(oprot);
+          oprot.writeFieldEnd();
+        }
+        oprot.writeFieldStop();
+        oprot.writeStructEnd();
+      }
+
+    }
+
+    private static class getTree_argsTupleSchemeFactory implements org.apache.thrift.scheme.SchemeFactory {
+      public getTree_argsTupleScheme getScheme() {
+        return new getTree_argsTupleScheme();
+      }
+    }
+
+    private static class getTree_argsTupleScheme extends org.apache.thrift.scheme.TupleScheme<getTree_args> {
+
+      @Override
+      public void write(org.apache.thrift.protocol.TProtocol prot, getTree_args struct) throws org.apache.thrift.TException {
+        org.apache.thrift.protocol.TTupleProtocol oprot = (org.apache.thrift.protocol.TTupleProtocol) prot;
+        java.util.BitSet optionals = new java.util.BitSet();
+        if (struct.isSetRequest()) {
+          optionals.set(0);
+        }
+        oprot.writeBitSet(optionals, 1);
+        if (struct.isSetRequest()) {
+          struct.request.write(oprot);
+        }
+      }
+
+      @Override
+      public void read(org.apache.thrift.protocol.TProtocol prot, getTree_args struct) throws org.apache.thrift.TException {
+        org.apache.thrift.protocol.TTupleProtocol iprot = (org.apache.thrift.protocol.TTupleProtocol) prot;
+        java.util.BitSet incoming = iprot.readBitSet(1);
+        if (incoming.get(0)) {
+          struct.request = new GetTreeRequest();
+          struct.request.read(iprot);
+          struct.setRequestIsSet(true);
+        }
+      }
+    }
+
+    private static <S extends org.apache.thrift.scheme.IScheme> S scheme(org.apache.thrift.protocol.TProtocol proto) {
+      return (org.apache.thrift.scheme.StandardScheme.class.equals(proto.getScheme()) ? STANDARD_SCHEME_FACTORY : TUPLE_SCHEME_FACTORY).getScheme();
+    }
+  }
+
+  public static class getTree_result implements org.apache.thrift.TBase<getTree_result, getTree_result._Fields>, java.io.Serializable, Cloneable, Comparable<getTree_result>   {
+    private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("getTree_result");
+
+    private static final org.apache.thrift.protocol.TField SUCCESS_FIELD_DESC = new org.apache.thrift.protocol.TField("success", org.apache.thrift.protocol.TType.STRUCT, (short)0);
+
+    private static final org.apache.thrift.scheme.SchemeFactory STANDARD_SCHEME_FACTORY = new getTree_resultStandardSchemeFactory();
+    private static final org.apache.thrift.scheme.SchemeFactory TUPLE_SCHEME_FACTORY = new getTree_resultTupleSchemeFactory();
+
+    public GetTreeResponse success; // required
+
+    /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
+    public enum _Fields implements org.apache.thrift.TFieldIdEnum {
+      SUCCESS((short)0, "success");
+
+      private static final java.util.Map<java.lang.String, _Fields> byName = new java.util.HashMap<java.lang.String, _Fields>();
+
+      static {
+        for (_Fields field : java.util.EnumSet.allOf(_Fields.class)) {
+          byName.put(field.getFieldName(), field);
+        }
+      }
+
+      /**
+       * Find the _Fields constant that matches fieldId, or null if its not found.
+       */
+      public static _Fields findByThriftId(int fieldId) {
+        switch(fieldId) {
+          case 0: // SUCCESS
+            return SUCCESS;
+          default:
+            return null;
+        }
+      }
+
+      /**
+       * Find the _Fields constant that matches fieldId, throwing an exception
+       * if it is not found.
+       */
+      public static _Fields findByThriftIdOrThrow(int fieldId) {
+        _Fields fields = findByThriftId(fieldId);
+        if (fields == null) throw new java.lang.IllegalArgumentException("Field " + fieldId + " doesn't exist!");
+        return fields;
+      }
+
+      /**
+       * Find the _Fields constant that matches name, or null if its not found.
+       */
+      public static _Fields findByName(java.lang.String name) {
+        return byName.get(name);
+      }
+
+      private final short _thriftId;
+      private final java.lang.String _fieldName;
+
+      _Fields(short thriftId, java.lang.String fieldName) {
+        _thriftId = thriftId;
+        _fieldName = fieldName;
+      }
+
+      public short getThriftFieldId() {
+        return _thriftId;
+      }
+
+      public java.lang.String getFieldName() {
+        return _fieldName;
+      }
+    }
+
+    // isset id assignments
+    public static final java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
+    static {
+      java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new java.util.EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
+      tmpMap.put(_Fields.SUCCESS, new org.apache.thrift.meta_data.FieldMetaData("success", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+          new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, GetTreeResponse.class)));
+      metaDataMap = java.util.Collections.unmodifiableMap(tmpMap);
+      org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(getTree_result.class, metaDataMap);
+    }
+
+    public getTree_result() {
+    }
+
+    public getTree_result(
+      GetTreeResponse success)
+    {
+      this();
+      this.success = success;
+    }
+
+    /**
+     * Performs a deep copy on <i>other</i>.
+     */
+    public getTree_result(getTree_result other) {
+      if (other.isSetSuccess()) {
+        this.success = new GetTreeResponse(other.success);
+      }
+    }
+
+    public getTree_result deepCopy() {
+      return new getTree_result(this);
+    }
+
+    @Override
+    public void clear() {
+      this.success = null;
+    }
+
+    public GetTreeResponse getSuccess() {
+      return this.success;
+    }
+
+    public getTree_result setSuccess(GetTreeResponse success) {
+      this.success = success;
+      return this;
+    }
+
+    public void unsetSuccess() {
+      this.success = null;
+    }
+
+    /** Returns true if field success is set (has been assigned a value) and false otherwise */
+    public boolean isSetSuccess() {
+      return this.success != null;
+    }
+
+    public void setSuccessIsSet(boolean value) {
+      if (!value) {
+        this.success = null;
+      }
+    }
+
+    public void setFieldValue(_Fields field, java.lang.Object value) {
+      switch (field) {
+      case SUCCESS:
+        if (value == null) {
+          unsetSuccess();
+        } else {
+          setSuccess((GetTreeResponse)value);
+        }
+        break;
+
+      }
+    }
+
+    public java.lang.Object getFieldValue(_Fields field) {
+      switch (field) {
+      case SUCCESS:
+        return getSuccess();
+
+      }
+      throw new java.lang.IllegalStateException();
+    }
+
+    /** Returns true if field corresponding to fieldID is set (has been assigned a value) and false otherwise */
+    public boolean isSet(_Fields field) {
+      if (field == null) {
+        throw new java.lang.IllegalArgumentException();
+      }
+
+      switch (field) {
+      case SUCCESS:
+        return isSetSuccess();
+      }
+      throw new java.lang.IllegalStateException();
+    }
+
+    @Override
+    public boolean equals(java.lang.Object that) {
+      if (that == null)
+        return false;
+      if (that instanceof getTree_result)
+        return this.equals((getTree_result)that);
+      return false;
+    }
+
+    public boolean equals(getTree_result that) {
+      if (that == null)
+        return false;
+      if (this == that)
+        return true;
+
+      boolean this_present_success = true && this.isSetSuccess();
+      boolean that_present_success = true && that.isSetSuccess();
+      if (this_present_success || that_present_success) {
+        if (!(this_present_success && that_present_success))
+          return false;
+        if (!this.success.equals(that.success))
+          return false;
+      }
+
+      return true;
+    }
+
+    @Override
+    public int hashCode() {
+      int hashCode = 1;
+
+      hashCode = hashCode * 8191 + ((isSetSuccess()) ? 131071 : 524287);
+      if (isSetSuccess())
+        hashCode = hashCode * 8191 + success.hashCode();
+
+      return hashCode;
+    }
+
+    @Override
+    public int compareTo(getTree_result other) {
+      if (!getClass().equals(other.getClass())) {
+        return getClass().getName().compareTo(other.getClass().getName());
+      }
+
+      int lastComparison = 0;
+
+      lastComparison = java.lang.Boolean.valueOf(isSetSuccess()).compareTo(other.isSetSuccess());
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+      if (isSetSuccess()) {
+        lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.success, other.success);
+        if (lastComparison != 0) {
+          return lastComparison;
+        }
+      }
+      return 0;
+    }
+
+    public _Fields fieldForId(int fieldId) {
+      return _Fields.findByThriftId(fieldId);
+    }
+
+    public void read(org.apache.thrift.protocol.TProtocol iprot) throws org.apache.thrift.TException {
+      scheme(iprot).read(iprot, this);
+    }
+
+    public void write(org.apache.thrift.protocol.TProtocol oprot) throws org.apache.thrift.TException {
+      scheme(oprot).write(oprot, this);
+      }
+
+    @Override
+    public java.lang.String toString() {
+      java.lang.StringBuilder sb = new java.lang.StringBuilder("getTree_result(");
+      boolean first = true;
+
+      sb.append("success:");
+      if (this.success == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.success);
+      }
+      first = false;
+      sb.append(")");
+      return sb.toString();
+    }
+
+    public void validate() throws org.apache.thrift.TException {
+      // check for required fields
+      // check for sub-struct validity
+      if (success != null) {
+        success.validate();
+      }
+    }
+
+    private void writeObject(java.io.ObjectOutputStream out) throws java.io.IOException {
+      try {
+        write(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(out)));
+      } catch (org.apache.thrift.TException te) {
+        throw new java.io.IOException(te);
+      }
+    }
+
+    private void readObject(java.io.ObjectInputStream in) throws java.io.IOException, java.lang.ClassNotFoundException {
+      try {
+        read(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(in)));
+      } catch (org.apache.thrift.TException te) {
+        throw new java.io.IOException(te);
+      }
+    }
+
+    private static class getTree_resultStandardSchemeFactory implements org.apache.thrift.scheme.SchemeFactory {
+      public getTree_resultStandardScheme getScheme() {
+        return new getTree_resultStandardScheme();
+      }
+    }
+
+    private static class getTree_resultStandardScheme extends org.apache.thrift.scheme.StandardScheme<getTree_result> {
+
+      public void read(org.apache.thrift.protocol.TProtocol iprot, getTree_result struct) throws org.apache.thrift.TException {
+        org.apache.thrift.protocol.TField schemeField;
+        iprot.readStructBegin();
+        while (true)
+        {
+          schemeField = iprot.readFieldBegin();
+          if (schemeField.type == org.apache.thrift.protocol.TType.STOP) { 
+            break;
+          }
+          switch (schemeField.id) {
+            case 0: // SUCCESS
+              if (schemeField.type == org.apache.thrift.protocol.TType.STRUCT) {
+                struct.success = new GetTreeResponse();
+                struct.success.read(iprot);
+                struct.setSuccessIsSet(true);
+              } else { 
+                org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+              }
+              break;
+            default:
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+          }
+          iprot.readFieldEnd();
+        }
+        iprot.readStructEnd();
+
+        // check for required fields of primitive type, which can't be checked in the validate method
+        struct.validate();
+      }
+
+      public void write(org.apache.thrift.protocol.TProtocol oprot, getTree_result struct) throws org.apache.thrift.TException {
+        struct.validate();
+
+        oprot.writeStructBegin(STRUCT_DESC);
+        if (struct.success != null) {
+          oprot.writeFieldBegin(SUCCESS_FIELD_DESC);
+          struct.success.write(oprot);
+          oprot.writeFieldEnd();
+        }
+        oprot.writeFieldStop();
+        oprot.writeStructEnd();
+      }
+
+    }
+
+    private static class getTree_resultTupleSchemeFactory implements org.apache.thrift.scheme.SchemeFactory {
+      public getTree_resultTupleScheme getScheme() {
+        return new getTree_resultTupleScheme();
+      }
+    }
+
+    private static class getTree_resultTupleScheme extends org.apache.thrift.scheme.TupleScheme<getTree_result> {
+
+      @Override
+      public void write(org.apache.thrift.protocol.TProtocol prot, getTree_result struct) throws org.apache.thrift.TException {
+        org.apache.thrift.protocol.TTupleProtocol oprot = (org.apache.thrift.protocol.TTupleProtocol) prot;
+        java.util.BitSet optionals = new java.util.BitSet();
+        if (struct.isSetSuccess()) {
+          optionals.set(0);
+        }
+        oprot.writeBitSet(optionals, 1);
+        if (struct.isSetSuccess()) {
+          struct.success.write(oprot);
+        }
+      }
+
+      @Override
+      public void read(org.apache.thrift.protocol.TProtocol prot, getTree_result struct) throws org.apache.thrift.TException {
+        org.apache.thrift.protocol.TTupleProtocol iprot = (org.apache.thrift.protocol.TTupleProtocol) prot;
+        java.util.BitSet incoming = iprot.readBitSet(1);
+        if (incoming.get(0)) {
+          struct.success = new GetTreeResponse();
           struct.success.read(iprot);
           struct.setSuccessIsSet(true);
         }

@@ -11,8 +11,8 @@ package com.facebook.remoteexecution.cas;
 public class UpdateBlobRequest implements org.apache.thrift.TBase<UpdateBlobRequest, UpdateBlobRequest._Fields>, java.io.Serializable, Cloneable, Comparable<UpdateBlobRequest> {
   private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("UpdateBlobRequest");
 
-  private static final org.apache.thrift.protocol.TField CONTENT_DIGEST_FIELD_DESC = new org.apache.thrift.protocol.TField("content_digest", org.apache.thrift.protocol.TType.STRUCT, (short)2);
-  private static final org.apache.thrift.protocol.TField DATA_FIELD_DESC = new org.apache.thrift.protocol.TField("data", org.apache.thrift.protocol.TType.STRING, (short)3);
+  private static final org.apache.thrift.protocol.TField CONTENT_DIGEST_FIELD_DESC = new org.apache.thrift.protocol.TField("content_digest", org.apache.thrift.protocol.TType.STRUCT, (short)1);
+  private static final org.apache.thrift.protocol.TField DATA_FIELD_DESC = new org.apache.thrift.protocol.TField("data", org.apache.thrift.protocol.TType.STRING, (short)2);
 
   private static final org.apache.thrift.scheme.SchemeFactory STANDARD_SCHEME_FACTORY = new UpdateBlobRequestStandardSchemeFactory();
   private static final org.apache.thrift.scheme.SchemeFactory TUPLE_SCHEME_FACTORY = new UpdateBlobRequestTupleSchemeFactory();
@@ -22,8 +22,8 @@ public class UpdateBlobRequest implements org.apache.thrift.TBase<UpdateBlobRequ
 
   /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
   public enum _Fields implements org.apache.thrift.TFieldIdEnum {
-    CONTENT_DIGEST((short)2, "content_digest"),
-    DATA((short)3, "data");
+    CONTENT_DIGEST((short)1, "content_digest"),
+    DATA((short)2, "data");
 
     private static final java.util.Map<java.lang.String, _Fields> byName = new java.util.HashMap<java.lang.String, _Fields>();
 
@@ -38,9 +38,9 @@ public class UpdateBlobRequest implements org.apache.thrift.TBase<UpdateBlobRequ
      */
     public static _Fields findByThriftId(int fieldId) {
       switch(fieldId) {
-        case 2: // CONTENT_DIGEST
+        case 1: // CONTENT_DIGEST
           return CONTENT_DIGEST;
-        case 3: // DATA
+        case 2: // DATA
           return DATA;
         default:
           return null;
@@ -397,7 +397,7 @@ public class UpdateBlobRequest implements org.apache.thrift.TBase<UpdateBlobRequ
           break;
         }
         switch (schemeField.id) {
-          case 2: // CONTENT_DIGEST
+          case 1: // CONTENT_DIGEST
             if (schemeField.type == org.apache.thrift.protocol.TType.STRUCT) {
               struct.content_digest = new Digest();
               struct.content_digest.read(iprot);
@@ -406,7 +406,7 @@ public class UpdateBlobRequest implements org.apache.thrift.TBase<UpdateBlobRequ
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
             break;
-          case 3: // DATA
+          case 2: // DATA
             if (schemeField.type == org.apache.thrift.protocol.TType.STRING) {
               struct.data = iprot.readBinary();
               struct.setDataIsSet(true);
