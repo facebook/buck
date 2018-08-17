@@ -72,7 +72,6 @@ RULES_SRCS = [
     "AndroidManifestFactory.java",
     "AndroidNativeLibsPackageableGraphEnhancer.java",
     "AndroidPrebuiltAar.java",
-    "AndroidPrebuiltAarCollection.java",
     "AndroidPrebuiltAarDescription.java",
     "AndroidResource.java",
     "AndroidResourceDescription.java",
