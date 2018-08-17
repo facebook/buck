@@ -3546,10 +3546,7 @@ public class ProjectGenerator {
   private ImmutableList<String> collectLibraryLinkerFlags(
       FluentIterable<TargetNode<?>> targetNodes) {
     return targetNodes
-        .transform(
-            input ->
-                TargetNodes.castArg(input, CxxLibraryDescription.CommonArg.class)
-                    .flatMap(this::getLibraryLinkerFlag))
+        .transform(dep -> getLibraryLinkerFlag(dep))
         .filter(Optional::isPresent)
         .transform(input -> input.get())
         .toList();
@@ -3606,8 +3603,7 @@ public class ProjectGenerator {
     }
   }
 
-  private Optional<String> getLibraryLinkerFlag(
-      TargetNode<? extends CxxLibraryDescription.CommonArg> targetNode) {
+  private Optional<String> getLibraryLinkerFlag(TargetNode<?> targetNode) {
     return Optional.of("-l" + getProductOutputBaseName(targetNode));
   }
 

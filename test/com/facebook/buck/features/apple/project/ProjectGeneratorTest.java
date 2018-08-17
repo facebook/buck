@@ -2195,6 +2195,20 @@ public class ProjectGeneratorTest {
             .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("fooTest.m"))))
             .build();
 
+    BuildTarget compilerTarget =
+        BuildTargetFactory.newInstance(
+            rootPath, "//bar", "libhalide", HalideLibraryDescription.HALIDE_COMPILER_FLAVOR);
+    TargetNode<?> compilerNode =
+        new HalideLibraryBuilder(compilerTarget)
+            .setSrcs(
+                ImmutableSortedSet.of(
+                    SourceWithFlags.of(FakeSourcePath.of("main.cpp")),
+                    SourceWithFlags.of(FakeSourcePath.of("filter.cpp"))))
+            .build();
+
+    BuildTarget halideTarget = BuildTargetFactory.newInstance(rootPath, "//bar", "libhalide");
+    TargetNode<?> halideLibraryNode = new HalideLibraryBuilder(halideTarget).build();
+
     BuildTarget libraryBuildTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "mainLib");
     TargetNode<?> libraryNode =
         AppleLibraryBuilder.createBuilder(libraryBuildTarget)
@@ -2206,7 +2220,8 @@ public class ProjectGeneratorTest {
                     dependentBuildTarget3,
                     dependentBuildTarget4,
                     dependentframeworkTarget1,
-                    dependentframeworkTarget2))
+                    dependentframeworkTarget2,
+                    halideTarget))
             .setLinkWhole(true)
             .setLinkerFlags(ImmutableList.of(StringWithMacrosUtils.format("-lhello5")))
             .build();
@@ -2222,7 +2237,9 @@ public class ProjectGeneratorTest {
                 framework1BinaryNode,
                 framework1Node,
                 framework2BinaryNode,
-                framework2Node), // all deps
+                framework2Node,
+                halideLibraryNode,
+                compilerNode), // all deps
             ImmutableSet.of(
                 libraryNode, dependentNode1, dependentNode2, framework1BinaryNode, framework1Node),
             // local deps to project
@@ -2274,7 +2291,7 @@ public class ProjectGeneratorTest {
           "$(inherited) -lnonForceLoadlib", settings.get("BUCK_LINKER_FLAGS_LIBRARY_LOCAL"));
 
       assertEquals(
-          "$(inherited) -lremoteNonForceLoadLib",
+          "$(inherited) -llibhalide -lremoteNonForceLoadLib",
           settings.get("BUCK_LINKER_FLAGS_LIBRARY_FOCUSED"));
 
     } else if (shouldEnableAddLibrariesAsFlags) {
@@ -2283,7 +2300,7 @@ public class ProjectGeneratorTest {
           settings.get("BUCK_LINKER_FLAGS_LIBRARY_LOCAL"));
 
       assertEquals(
-          "$(inherited) -lremoteForceLoadLib -lremoteNonForceLoadLib",
+          "$(inherited) -llibhalide -lremoteForceLoadLib -lremoteNonForceLoadLib",
           settings.get("BUCK_LINKER_FLAGS_LIBRARY_FOCUSED"));
     }
 
@@ -2432,6 +2449,20 @@ public class ProjectGeneratorTest {
             .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("fooTest.m"))))
             .build();
 
+    BuildTarget compilerTarget =
+        BuildTargetFactory.newInstance(
+            rootPath, "//bar", "libhalide", HalideLibraryDescription.HALIDE_COMPILER_FLAVOR);
+    TargetNode<?> compilerNode =
+        new HalideLibraryBuilder(compilerTarget)
+            .setSrcs(
+                ImmutableSortedSet.of(
+                    SourceWithFlags.of(FakeSourcePath.of("main.cpp")),
+                    SourceWithFlags.of(FakeSourcePath.of("filter.cpp"))))
+            .build();
+
+    BuildTarget halideTarget = BuildTargetFactory.newInstance(rootPath, "//bar", "libhalide");
+    TargetNode<?> halideLibraryNode = new HalideLibraryBuilder(halideTarget).build();
+
     BuildTarget binaryTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "binary");
     TargetNode<?> binaryNode =
         AppleBinaryBuilder.createBuilder(binaryTarget)
@@ -2443,7 +2474,8 @@ public class ProjectGeneratorTest {
                     dependentBuildTarget3,
                     dependentBuildTarget4,
                     dependentframeworkTarget1,
-                    dependentframeworkTarget2))
+                    dependentframeworkTarget2,
+                    halideTarget))
             .setLinkerFlags(ImmutableList.of(StringWithMacrosUtils.format("-lhello5")))
             .build();
 
@@ -2458,7 +2490,9 @@ public class ProjectGeneratorTest {
                 framework1BinaryNode,
                 framework1Node,
                 framework2BinaryNode,
-                framework2Node), // all deps
+                framework2Node,
+                halideLibraryNode,
+                compilerNode), // all deps
             ImmutableSet.of(
                 binaryNode,
                 dependentNode1,
