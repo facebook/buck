@@ -59,12 +59,4 @@ public class VisibilityChecker {
 
     return false;
   }
-
-  public ImmutableSet<VisibilityPattern> getVisibilityPatterns() {
-    return visibilityPatterns;
-  }
-
-  public ImmutableSet<VisibilityPattern> getWithinViewPatterns() {
-    return withinViewPatterns;
-  }
 }
