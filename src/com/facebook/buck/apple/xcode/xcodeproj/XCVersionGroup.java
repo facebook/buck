@@ -59,10 +59,6 @@ public class XCVersionGroup extends PBXReference {
     return Optional.empty();
   }
 
-  public Optional<PBXFileReference> getCurrentVersion() {
-    return currentVersion;
-  }
-
   public void setCurrentVersion(Optional<PBXFileReference> v) {
     currentVersion = v;
   }
