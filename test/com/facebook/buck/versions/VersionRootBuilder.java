@@ -26,11 +26,11 @@ import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTarg
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.AbstractMap;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Optional;
 import org.immutables.value.Value;
@@ -60,10 +60,6 @@ public class VersionRootBuilder
     return this;
   }
 
-  public VersionRootBuilder setDeps(BuildTarget... deps) {
-    return setDeps(ImmutableSortedSet.copyOf(deps));
-  }
-
   public VersionRootBuilder setDeps(String... deps) {
     ImmutableSortedSet.Builder<BuildTarget> builder = ImmutableSortedSet.naturalOrder();
     for (String dep : deps) {
@@ -81,7 +77,7 @@ public class VersionRootBuilder
   @SafeVarargs
   public final VersionRootBuilder setVersionedDeps(
       Map.Entry<BuildTarget, Optional<Constraint>>... deps) {
-    return setVersionedDeps(ImmutableSortedMap.copyOf(ImmutableList.copyOf(deps)));
+    return setVersionedDeps(ImmutableSortedMap.copyOf(Arrays.asList(deps)));
   }
 
   public VersionRootBuilder setVersionedDeps(String target, Constraint constraint) {
