@@ -2660,11 +2660,10 @@ public class ProjectGenerator {
                       pathRelativizer.outputDirToRootRelative(
                           dataModel.getPath().resolve(currentVersionName.toString())),
                       Optional.empty()));
-          versionGroup.setCurrentVersion(Optional.of(ref));
+          versionGroup.setCurrentVersion(ref);
         } catch (NoSuchFileException e) {
           if (versionGroup.getChildren().size() == 1) {
-            versionGroup.setCurrentVersion(
-                Optional.of(Iterables.get(versionGroup.getChildren(), 0)));
+            versionGroup.setCurrentVersion(Iterables.get(versionGroup.getChildren(), 0));
           }
         }
       } else {

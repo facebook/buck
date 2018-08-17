@@ -21,13 +21,13 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import javax.annotation.Nullable;
 
 public class XCVersionGroup extends PBXReference {
-  private Optional<PBXFileReference> currentVersion;
+  @Nullable private PBXFileReference currentVersion;
 
   private final List<PBXFileReference> children;
 
@@ -49,17 +49,17 @@ public class XCVersionGroup extends PBXReference {
                   }
                 });
 
-    currentVersion = Optional.empty();
+    currentVersion = null;
   }
 
   public Optional<String> getVersionGroupType() {
-    if (currentVersion.isPresent()) {
-      return currentVersion.get().getExplicitFileType();
+    if (currentVersion != null) {
+      return currentVersion.getExplicitFileType();
     }
     return Optional.empty();
   }
 
-  public void setCurrentVersion(Optional<PBXFileReference> v) {
+  public void setCurrentVersion(PBXFileReference v) {
     currentVersion = v;
   }
 
@@ -80,11 +80,11 @@ public class XCVersionGroup extends PBXReference {
   public void serializeInto(XcodeprojSerializer s) {
     super.serializeInto(s);
 
-    Collections.sort(children, (o1, o2) -> o1.getName().compareTo(o2.getName()));
+    children.sort(Comparator.comparing(PBXReference::getName));
     s.addField("children", children);
 
-    if (currentVersion.isPresent()) {
-      s.addField("currentVersion", currentVersion.get());
+    if (currentVersion != null) {
+      s.addField("currentVersion", currentVersion);
     }
 
     Optional<String> versionGroupType = getVersionGroupType();
