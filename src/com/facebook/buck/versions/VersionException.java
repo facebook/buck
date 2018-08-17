@@ -21,15 +21,8 @@ import com.facebook.buck.core.model.BuildTarget;
 /** Error thrown when version selection fails. */
 public class VersionException extends Exception {
 
-  /** The root of the version sub-graph that failed. */
-  private final BuildTarget root;
-
+  /** @param root The root of the version sub-graph that failed. */
   public VersionException(BuildTarget root, String message) {
     super(String.format("%s: %s", root, message));
-    this.root = root;
-  }
-
-  public BuildTarget getRoot() {
-    return root;
   }
 }

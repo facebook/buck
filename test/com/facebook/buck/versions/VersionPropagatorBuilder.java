@@ -26,11 +26,8 @@ import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTarg
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
-import java.util.AbstractMap;
-import java.util.Map;
 import java.util.Optional;
 import org.immutables.value.Value;
 
@@ -60,24 +57,6 @@ public class VersionPropagatorBuilder
       builder.add(BuildTargetFactory.newInstance(dep));
     }
     return setDeps(builder.build());
-  }
-
-  public VersionPropagatorBuilder setVersionedDeps(
-      ImmutableSortedMap<BuildTarget, Optional<Constraint>> deps) {
-    getArgForPopulating().setVersionedDeps(deps);
-    return this;
-  }
-
-  @SafeVarargs
-  public final VersionPropagatorBuilder setVersionedDeps(
-      Map.Entry<BuildTarget, Optional<Constraint>>... deps) {
-    return setVersionedDeps(ImmutableSortedMap.copyOf(ImmutableList.copyOf(deps)));
-  }
-
-  public VersionPropagatorBuilder setVersionedDeps(String target, Constraint constraint) {
-    return setVersionedDeps(
-        new AbstractMap.SimpleEntry<>(
-            BuildTargetFactory.newInstance(target), Optional.of(constraint)));
   }
 
   public VersionPropagatorBuilder setTests(ImmutableSortedSet<BuildTarget> tests) {

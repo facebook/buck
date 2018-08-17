@@ -16,7 +16,6 @@
 
 package com.facebook.buck.versions;
 
-import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.facebook.buck.core.util.log.Logger;
@@ -144,23 +143,6 @@ public class VersionedTargetGraphCache {
     } finally {
       eventBus.post(VersionedTargetGraphEvent.finished(started));
     }
-  }
-
-  public TargetGraphAndBuildTargets toVersionedTargetGraph(
-      BuckEventBus eventBus,
-      BuckConfig buckConfig,
-      TypeCoercerFactory typeCoercerFactory,
-      TargetGraphAndBuildTargets targetGraphAndBuildTargets,
-      CacheStatsTracker statsTracker)
-      throws VersionException, TimeoutException, InterruptedException {
-    return getVersionedTargetGraph(
-            eventBus,
-            typeCoercerFactory,
-            targetGraphAndBuildTargets,
-            new VersionBuckConfig(buckConfig).getVersionUniverses(),
-            new ForkJoinPool(buckConfig.getNumThreads()),
-            statsTracker)
-        .getTargetGraphAndBuildTargets();
   }
 
   /**
