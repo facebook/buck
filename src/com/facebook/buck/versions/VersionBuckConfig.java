@@ -20,9 +20,10 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import java.util.List;
 
-public class VersionBuckConfig implements VersionConfig {
+public class VersionBuckConfig {
 
   private static final String UNIVERSES_SECTION = "version_universes";
 
@@ -49,10 +50,11 @@ public class VersionBuckConfig implements VersionConfig {
     return universe.build();
   }
 
-  @Override
   public ImmutableMap<String, VersionUniverse> getVersionUniverses() {
-    ImmutableMap.Builder<String, VersionUniverse> universes = ImmutableMap.builder();
-    for (String name : delegate.getEntriesForSection(UNIVERSES_SECTION).keySet()) {
+    ImmutableSet<String> entries = delegate.getEntriesForSection(UNIVERSES_SECTION).keySet();
+    ImmutableMap.Builder<String, VersionUniverse> universes =
+        ImmutableMap.builderWithExpectedSize(entries.size());
+    for (String name : entries) {
       universes.put(name, getVersionUniverse(name));
     }
     return universes.build();
