@@ -29,7 +29,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
-import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.SetMultimap;
 import com.google.common.collect.Sets;
 import com.google.common.collect.TreeMultimap;
@@ -217,10 +216,12 @@ final class OwnersReport {
 
       // Order cells by cell path length so that nested cells will resolve to the most specific
       // cell.
-      ImmutableSortedSet<Cell> cellsByRootLength =
-          ImmutableSortedSet.copyOf(
-              Comparator.comparing((Cell cell) -> cell.getRoot().toString().length()).reversed(),
-              buildFileTrees.keySet());
+      List<Cell> cellsByRootLength =
+          RichStream.from(buildFileTrees.keySet())
+              .sorted(
+                  Comparator.comparing((Cell cell) -> cell.getRoot().toString().length())
+                      .reversed())
+              .toImmutableList();
 
       Map<Optional<Cell>, List<Path>> argumentsByCell =
           RichStream.from(arguments)
