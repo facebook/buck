@@ -51,6 +51,7 @@ public class AndroidAppModularityDescription
             Optional.of(args.getApplicationModuleConfigs()),
             args.getApplicationModuleDependencies(),
             args.getApplicationModuleBlacklist(),
+            ImmutableSet.of(),
             context.getTargetGraph(),
             buildTarget);
 

@@ -45,7 +45,7 @@ public class AndroidManifestFactory {
         projectFilesystem,
         ruleFinder,
         skeleton,
-        APKModule.of(APKModuleGraph.ROOT_APKMODULE_NAME),
+        APKModule.of(APKModuleGraph.ROOT_APKMODULE_NAME, true),
         manifestFiles);
   }
 }

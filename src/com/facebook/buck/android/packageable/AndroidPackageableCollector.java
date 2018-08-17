@@ -39,7 +39,6 @@ import com.google.common.hash.HashCode;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -72,12 +71,7 @@ public class AndroidPackageableCollector {
         collectionRoot,
         ImmutableSet.of(),
         ImmutableSet.of(),
-        new APKModuleGraph(
-            Optional.empty(),
-            Optional.empty(),
-            Optional.empty(),
-            TargetGraph.EMPTY,
-            collectionRoot));
+        new APKModuleGraph(TargetGraph.EMPTY, collectionRoot));
   }
 
   /**

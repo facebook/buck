@@ -103,6 +103,7 @@ public class AndroidBinaryGraphEnhancerFactory {
               Optional.of(args.getApplicationModuleConfigs()),
               args.getApplicationModuleDependencies(),
               args.getApplicationModuleBlacklist(),
+              args.getApplicationModulesWithResources(),
               targetGraph,
               buildTarget);
     }

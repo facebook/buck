@@ -369,6 +369,7 @@ public class APKModuleTest {
             Optional.of(seedConfigMap),
             Optional.of(appModuleDependencies),
             Optional.empty(),
+            ImmutableSet.of(),
             graph,
             androidBinaryTarget);
 
@@ -515,6 +516,7 @@ public class APKModuleTest {
             Optional.of(seedConfigMap),
             Optional.of(appModuleDependencies),
             Optional.empty(),
+            ImmutableSet.of(),
             graph,
             androidBinaryTarget);
 
@@ -677,6 +679,7 @@ public class APKModuleTest {
             Optional.of(seedConfigMap),
             Optional.of(appModuleDependencies),
             Optional.empty(),
+            ImmutableSet.of(),
             graph,
             androidBinaryTarget);
 
@@ -844,6 +847,7 @@ public class APKModuleTest {
             Optional.of(seedConfigMap),
             Optional.of(appModuleDependencies),
             Optional.empty(),
+            ImmutableSet.of(),
             graph,
             androidBinaryTarget);
 

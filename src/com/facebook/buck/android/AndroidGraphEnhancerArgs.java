@@ -94,6 +94,11 @@ public interface AndroidGraphEnhancerArgs extends HasDuplicateAndroidResourceTyp
 
   Map<String, List<BuildTarget>> getApplicationModuleConfigs();
 
+  @Value.Default
+  default Set<String> getApplicationModulesWithResources() {
+    return ImmutableSet.of();
+  }
+
   Optional<Map<String, List<String>>> getApplicationModuleDependencies();
 
   Optional<List<BuildTarget>> getApplicationModuleBlacklist();

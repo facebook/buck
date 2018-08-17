@@ -26,6 +26,9 @@ abstract class AbstractAPKModule implements Comparable<AbstractAPKModule>, AddsT
   @AddToRuleKey
   public abstract String getName();
 
+  @AddToRuleKey
+  public abstract boolean hasResources();
+
   @Value.Derived
   public boolean isRootModule() {
     return getName().equals(APKModuleGraph.ROOT_APKMODULE_NAME);

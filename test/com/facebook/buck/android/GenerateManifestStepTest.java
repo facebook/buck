@@ -67,7 +67,7 @@ public class GenerateManifestStepTest {
         new GenerateManifestStep(
             filesystem,
             skeletonPath,
-            APKModule.of(APKModuleGraph.ROOT_APKMODULE_NAME),
+            APKModule.of(APKModuleGraph.ROOT_APKMODULE_NAME, true),
             libraryManifestFiles,
             outputPath,
             mergeReportPath);
@@ -106,7 +106,7 @@ public class GenerateManifestStepTest {
         new GenerateManifestStep(
             filesystem,
             skeletonPath,
-            APKModule.of("MODULE_NAME"),
+            APKModule.of("MODULE_NAME", false),
             libraryManifestFiles,
             outputPath,
             mergeReportPath);

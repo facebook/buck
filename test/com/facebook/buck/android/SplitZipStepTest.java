@@ -115,7 +115,7 @@ public class SplitZipStepTest {
 
     StringWriter stringWriter = new StringWriter();
     BufferedWriter writer = new BufferedWriter(stringWriter);
-    ImmutableSet<APKModule> requires = ImmutableSet.of(APKModule.of("dependency"));
+    ImmutableSet<APKModule> requires = ImmutableSet.of(APKModule.of("dependency", false));
     try {
       SplitZipStep.writeMetaList(
           writer, "module", requires, ImmutableList.of(outJar), DexStore.JAR);
