@@ -55,7 +55,7 @@ import javax.annotation.Nullable;
 public class JavaBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
     implements BinaryBuildRule, HasClasspathEntries {
 
-  // We're just propagating the runtime launcher through `getExecutiable`, so don't add it to the
+  // We're just propagating the runtime launcher through `getExecutable`, so don't add it to the
   // rule key.
   private final Tool javaRuntimeLauncher;
 
